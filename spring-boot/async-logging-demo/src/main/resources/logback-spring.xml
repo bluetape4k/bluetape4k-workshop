@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <!-- @formatter:off -->
+    <springProperty scope="context" name="APP_NAME" source="spring.application.name"/>
+
+    <!-- You can override this to have a custom pattern -->
+    <!-- Spring Boot3 에서 TraceId, dd.trace_id 가 다르게 나오는 것은 dd-java-agent 에 버그가 있어서이다. -->
+    <!-- https://github.com/DataDog/dd-trace-java/issues/6307 -->
+    <property name="CONSOLE_LOG_PATTERN"
+              value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %highlight(${LOG_LEVEL_PATTERN:-%5p}) [%X{traceId}]  [%X{spanId}] DD [%X{dd.trace_id}] [%X{dd.span_id}] %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
+
+    <!-- Appender to log to Console -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <!-- Minimum logging level to be presented in the console logs-->
+            <level>DEBUG</level>
+        </filter>
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <charset>utf8</charset>
+        </encoder>
+    </appender>
+    <!-- formatter:on -->
+
+    <appender name="ASYNC_CONSOLE" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="CONSOLE"/>
+        <queueSize>10</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>true</includeCallerData>
+        <neverBlock>false</neverBlock>
+    </appender>
+
+    <property name="LOG_PATH" value="logs"/>
+    <property name="LOG_FILE" value="app.log"/>
+
+    <!-- JSON 포맷으로 로그가 저장되는지 확인하기 위한 File Appender -->
+<!--    <appender name="FILE" class="ch.qos.logback.core.FileAppender">-->
+<!--        <file>${LOG_PATH}/${LOG_FILE}</file> -->
+<!--        &lt;!&ndash; Log 정보를 파일로 저장 시, JSON 포맷으로 변경하기 위해 logstash 를 사용합니다. &ndash;&gt;-->
+<!--        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>-->
+<!--    </appender>-->
+
+
+    <!-- 로그 정보를 시간 단위로 파일로 저장하는 ㅁppender 입니다. -->
+    <appender name="ROLLING_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${LOG_FILE}</file>
+        <!-- Log 정보를 파일로 저장 시, JSON 포맷으로 변경하기 위해 logstash 를 사용합니다. -->
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+        <!-- Rolling file policy -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/app.%d{yyyy-MM-dd}.%d.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>10MB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <!-- 비동기로 롤링 파일에 로그를 출력하는 Appender 입니다 -->
+    <appender name="ASYNC_ROLLING_FILE" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="ROLLING_FILE"/>
+        <queueSize>512</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>true</includeCallerData>
+        <neverBlock>true</neverBlock>
+    </appender>
+
+    <!-- 로그 정보를 Slack 채널로 발생하는 Appender -->
+    <appender name="SLACK" class="com.github.maricn.logback.SlackAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>%d{ISO8601} %-5level [%thread] %logger:%method:%line: %msg%n%throwable</pattern>
+        </layout>
+        <!-- #05_dev_kommons_logging 채널로 메시지가 전송된다. (Slack에서 webhook app 을 설치해야 한다) -->
+        <!-- <webhookUri>https://hooks.slack.com/services/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</webhookUri>-->
+        <username>debop.bae@io.bluetape4k.com</username>
+        <iconEmoji>:stuck_out_tonque_winking_eye:</iconEmoji>
+        <colorCoding>true</colorCoding>
+    </appender>
+
+    <appender name="ASYNC_SLACK" class="ch.qos.logback.classic.AsyncAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>WARN</level>
+        </filter>
+        <appender-ref ref="SLACK"/>
+        <queueSize>30</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <includeCallerData>true</includeCallerData>
+        <neverBlock>true</neverBlock>
+    </appender>
+
+    <springProfile name="dev">
+        <logger name="io.bluetape4k.workshop" level="TRACE"/>
+        <root level="DEBUG">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_ROLLING_FILE"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="test">
+        <logger name="io.bluetape4k.workshop" level="DEBUG"/>
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="ASYNC_ROLLING_FILE"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="prod">
+        <root level="INFO">
+            <appender-ref ref="ASYNC_ROLLING_FILE"/>
+        </root>
+    </springProfile>
+</configuration>

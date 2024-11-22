@@ -434,6 +434,8 @@ object Libs {
     const val logback = "ch.qos.logback:logback-classic:${Versions.logback}"
     const val logback_core = "ch.qos.logback:logback-core:${Versions.logback}"
 
+    const val logstash_logback_encoder = "net.logstash.logback:logstash-logback-encoder:8.0"  // https://mvnrepository.com/artifact/net.logstash.logback/logstash-logback-encoder
+
     fun log4j(module: String) = "org.apache.logging.log4j:log4j-$module:${Versions.log4j}"
     val log4j_bom = log4j("bom")
     val log4j_api = log4j("api")
