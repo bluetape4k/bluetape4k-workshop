@@ -529,6 +529,7 @@ subprojects {
         testImplementation(Libs.jul_to_slf4j)
         testImplementation(Libs.log4j_over_slf4j)
 
+        // JUnit 5
         testImplementation(Libs.bluetape4k_junit5)
         testImplementation(Libs.junit_jupiter)
         testRuntimeOnly(Libs.junit_platform_engine)
@@ -541,8 +542,6 @@ subprojects {
         // Property baesd test
         testImplementation(Libs.datafaker)
         testImplementation(Libs.random_beans)
-
-
     }
 
     tasks.withType<Jar> {

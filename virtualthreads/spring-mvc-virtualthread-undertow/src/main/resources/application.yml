@@ -1,0 +1,39 @@
+spring:
+    application:
+        name: web-virtual-thread
+
+    profiles:
+        default: "dev"
+
+    jackson:
+        serialization:
+            indent-output: true
+    lifecycle:
+        timeout-per-shutdown-phase: 10s     # Graceful Shutdown 시간
+
+    threads:
+        virtual:
+            enabled: true   # Virtual Thread 사용 여부
+
+server:
+    undertow:
+        threads:
+            io: 16
+            worker: 256
+
+        buffer-size: 1024
+        direct-buffers: true
+
+    shutdown: graceful  # WebServer Graceful shutdown (https://www.baeldung.com/spring-boot-web-server-shutdown)
+
+# Build Info
+info:
+    name: ${spring.application.name}
+    description: Virtual Thread with Spring MVC
+    environment: ${spring.profiles.active}
+    version: 0.1.0
+
+# swagger-ui custom path
+springdoc:
+    swagger-ui:
+        path: /swagger-ui.html

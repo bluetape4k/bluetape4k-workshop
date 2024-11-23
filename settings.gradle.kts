@@ -40,7 +40,7 @@ includeModules("spring-cloud", false, false)
 includeModules("spring-data", false, false)
 includeModules("spring-security", false, false)
 includeModules("vertx", false, false)
-includeModules("virtual-thread", false, false)
+includeModules("virtualthreads", false, false)
 
 fun includeModules(baseDir: String, withProjectName: Boolean = true, withBaseDir: Boolean = true) {
     files("$rootDir/$baseDir").files

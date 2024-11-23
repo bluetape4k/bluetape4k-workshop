@@ -6,7 +6,7 @@ object Plugins {
 
     object Versions {
         const val dokka = "1.9.20"      // https://mvnrepository.com/artifact/org.jetbrains.dokka/dokka-gradle-plugin
-        const val detekt = "1.23.6"     // https://mvnrepository.com/artifact/io.gitlab.arturbosch.detekt/detekt-gradle-plugin
+        const val detekt = "1.23.7"     // https://mvnrepository.com/artifact/io.gitlab.arturbosch.detekt/detekt-gradle-plugin
         const val dependency_management = "1.1.6"  // https://mvnrepository.com/artifact/io.spring.gradle/dependency-management-plugin
         const val jooq = "9.0"       // https://mvnrepository.com/artifact/nu.studer.jooq/jooq-gradle-plugin
         const val protobuf = "0.9.4"    // https://mvnrepository.com/artifact/com.google.protobuf/protobuf-gradle-plugin
@@ -19,7 +19,10 @@ object Plugins {
         const val kotlinx_benchmark = "0.4.12" // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-benchmark-plugin
 
         const val spring_boot = "3.3.5"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
-        const val docker_compose = "0.16.12"
+        const val docker_compose = "0.17.8"  // https://plugins.gradle.org/plugin/com.avast.gradle.docker-compose
+
+        // 참고: https://docs.gatling.io/reference/integrations/build-tools/gradle-plugin/
+        const val gatling = "3.12.0"  // https://plugins.gradle.org/plugin/io.gatling.gradle
     }
 
     const val detekt = "io.gitlab.arturbosch.detekt"
@@ -47,6 +50,9 @@ object Plugins {
 
     // docker-compose gradle plugin(https://plugins.gradle.org/plugin/com.avast.gradle.docker-compose)
     const val docker_compose = "com.avast.gradle.docker-compose"
+
+    // https://docs.gatling.io/reference/extensions/build-tools/gradle-plugin/
+    const val gatling = "io.gatling.gradle"
 }
 
 object Versions {
@@ -68,15 +74,14 @@ object Versions {
     const val reactor_bom = "2024.0.0"      // https://mvnrepository.com/artifact/io.projectreactor/reactor-bom
     const val spring_statemachine = "4.0.0" // https://mvnrepository.com/artifact/org.springframework.statemachine/spring-statemachine-core
 
-    // https://mvnrepository.com/artifact/de.codecentric/chaos-monkey-spring-boot
-    const val chaos_monkey = "3.0.2"
-    const val blockhound = "1.0.8.RELEASE"
-
     const val mutiny = "2.6.2"              // https://mvnrepository.com/artifact/io.smallrye.reactive/mutiny
     const val vertx = "4.5.11"               // https://mvnrepository.com/artifact/io.vertx/vertx-core
 
-    const val swagger = "1.6.2"
-    const val springdoc_openapi = "2.2.0"
+    const val chaos_monkey = "3.1.0"        // https://mvnrepository.com/artifact/de.codecentric/chaos-monkey-spring-boot
+    const val blockhound = "1.0.9.RELEASE"  // https://mvnrepository.com/artifact/io.projectreactor.tools/blockhound
+
+    const val swagger = "2.2.23"              // https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-annotations
+    const val springdoc_openapi = "2.6.0"     // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webmvc-ui
     const val springfox_swagger = "3.0.0"
     const val problem = "0.29.1"
 
@@ -186,6 +191,9 @@ object Versions {
     const val sentry_logback = "7.17.0"  // https://mvnrepository.com/artifact/io.sentry/sentry-logback
 
     const val scrimage = "4.2.0"  // https://mvnrepository.com/artifact/com.sksamuel.scrimage/scrimage-core
+
+    // Gatling
+    const val gatling = "3.12.0"  // https://mvnrepository.com/artifact/io.gatling/gatling-core
 }
 
 object Libs {
@@ -1446,6 +1454,19 @@ object Libs {
     val scrimage_core = scrimage("core")
     val scrimage_filters = scrimage("filters")
     val scrimage_webp = scrimage("webp")
+
+    // Gatling (https://docs.gatling.io/)
+    fun gatling(module: String) = "io.gatling:gatling-$module:${Versions.gatling}"
+    val gatling_app = gatling("app")
+    val gatling_core = gatling("core")
+    val gatling_core_java = gatling("core-java")
+    val gatling_http = gatling("http")
+    val gatling_http_java = gatling("http-java")
+    val gatling_jdbc = gatling("jdbc")
+    val gatling_recorder = gatling("recorder")
+    val gatling_test_framework = gatling("test-framework")
+    const val gatling_charts_highcharts = "io.gatling.highcharts:gatling-charts-highcharts:${Versions.gatling}"
+
 }
 
 // @formatter:on
