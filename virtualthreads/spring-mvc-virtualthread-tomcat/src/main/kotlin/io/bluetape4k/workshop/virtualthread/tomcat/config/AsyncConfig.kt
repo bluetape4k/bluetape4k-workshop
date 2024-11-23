@@ -3,12 +3,13 @@ package io.bluetape4k.workshop.virtualthread.tomcat.config
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import org.slf4j.MDC
+import org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.task.AsyncTaskExecutor
 import org.springframework.core.task.TaskDecorator
 import org.springframework.core.task.support.TaskExecutorAdapter
-import org.springframework.scheduling.annotation.AsyncConfigurer
 import org.springframework.scheduling.annotation.EnableAsync
-import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 
 /**
@@ -18,11 +19,12 @@ import java.util.concurrent.Executors
  */
 @Configuration
 @EnableAsync
-class AsyncConfig: AsyncConfigurer {
+class AsyncConfig {
 
     companion object: KLogging()
 
-    override fun getAsyncExecutor(): Executor {
+    @Bean(TaskExecutionAutoConfiguration.APPLICATION_TASK_EXECUTOR_BEAN_NAME)
+    fun asyncTaskExecutor(): AsyncTaskExecutor {
         log.info { "AsyncExecutor with VirtualThread created." }
 
         val factory = Thread.ofVirtual().name("async-vt-exec-", 0).factory()
@@ -34,7 +36,7 @@ class AsyncConfig: AsyncConfigurer {
     class LoggingTaskDecorator: TaskDecorator {
         override fun decorate(task: Runnable): Runnable {
             val callerThreadContext = MDC.getCopyOfContextMap()
-            return Runnable {
+            return kotlinx.coroutines.Runnable {
                 callerThreadContext?.let { MDC.setContextMap(it) }
                 task.run()
             }

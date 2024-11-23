@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.virtualthread.tomcat.controller
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import org.springframework.scheduling.annotation.Async
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -22,7 +23,7 @@ class VirtualThreadController {
     @GetMapping("", "/")
     fun index(): String {
         log.debug { "Virtual thread 환경에서 실행됩니다." }
-        Thread.sleep(SLEEP_TIME)
+        asyncTask()
         return "안녕하세요, Virtual Thread! (${Thread.currentThread()})"
     }
 
@@ -30,6 +31,7 @@ class VirtualThreadController {
     fun multipleTasks(): String {
         val taskSize = 1000
 
+        // ShutdownOnFailure - 하나라도 실패하면 즉시 종료 (진행 중인 다른 Task 들은 중단된다)
         StructuredTaskScope.ShutdownOnFailure().use { scope ->
             repeat(taskSize) {
                 scope.fork {
@@ -42,5 +44,11 @@ class VirtualThreadController {
 
 
         return "Run multiple[$taskSize] tasks. (${Thread.currentThread()})"
+    }
+
+    @Async
+    fun asyncTask() {
+        Thread.sleep(SLEEP_TIME)
+        log.debug { "Async Task is running. (${Thread.currentThread()})" }
     }
 }

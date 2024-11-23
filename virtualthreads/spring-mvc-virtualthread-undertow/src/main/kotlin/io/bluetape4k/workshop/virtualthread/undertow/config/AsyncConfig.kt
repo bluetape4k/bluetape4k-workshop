@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.virtualthread.undertow.config
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.info
 import kotlinx.coroutines.Runnable
 import org.slf4j.MDC
 import org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration
@@ -20,8 +22,12 @@ import java.util.concurrent.Executors
 @EnableAsync
 class AsyncConfig {
 
+    companion object: KLogging()
+
     @Bean(TaskExecutionAutoConfiguration.APPLICATION_TASK_EXECUTOR_BEAN_NAME)
     fun asyncTaskExecutor(): AsyncTaskExecutor {
+        log.info { "AsyncExecutor with VirtualThread created." }
+        
         val factory = Thread.ofVirtual().name("async-vt-exec-", 0).factory()
         return TaskExecutorAdapter(Executors.newThreadPerTaskExecutor(factory)).apply {
             setTaskDecorator(LoggingTaskDecorator())
