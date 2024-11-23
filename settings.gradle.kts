@@ -30,10 +30,10 @@ includeModules("haifa", false, true)
 
 includeModules("json", false, false)
 includeModules("kotlin", false, true)
-includeModules("memory", false, false)
 includeModules("mq", false, false)
 includeModules("observability", false, false)
 includeModules("ratelimit", false, false)
+includeModules("redis", false, false)
 
 includeModules("spring-boot", false, false)
 includeModules("spring-cloud", false, false)
