@@ -58,7 +58,7 @@ object Plugins {
 object Versions {
 
     // Java 21, Kotlin 2.0 이상에서 사용하세요
-    const val bluetape4k = "0.0.1"              // Bluetape4k Github Package 로 배포됩니다.
+    const val bluetape4k = "0.0.2-SNAPSHOT"              // Bluetape4k Github Package 로 배포됩니다.
 
     const val kotlin = "2.0.21"                 // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
     const val kotlinx_coroutines = "1.9.0"      // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
