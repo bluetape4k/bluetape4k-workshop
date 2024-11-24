@@ -127,6 +127,8 @@ object Versions {
     const val hibernate_validator = "8.0.1.Final" // https://mvnrepository.com/artifact/org.hibernate.validator/hibernate-validator
     const val querydsl = "5.1.0"                  // https://mvnrepository.com/artifact/com.querydsl/querydsl-jpa
 
+    const val exposed = "0.56.0"       // https://mvnrepository.com/artifact/org.jetbrains.exposed/exposed-core
+
     const val agroal = "2.5"          // https://mvnrepository.com/artifact/io.agroal/agroal-api
 
     const val blaze_persistence = "3.14.1" // https://mvnrepository.com/artifact/io.quarkus.platform/quarkus-blaze-persistence-bom
@@ -1106,7 +1108,6 @@ object Libs {
     const val nats_spring = "io.nats:nats-spring:0.5.7"  // https://mvnrepository.com/artifact/io.nats/nats-spring
     const val nats_spring_cloud_stream_binder = "io.nats:nats-spring-cloud-stream-binder:0.5.7" //https://mvnrepository.com/artifact/io.nats/nats-spring-cloud-stream-binder
 
-
     // Zipkin
     const val zipkin_brave = "io.zipkin.brave:brave:5.15.1"
     const val zipkin_brave_tests = "io.zipkin.brave:brave-tests:5.15.1"
@@ -1135,6 +1136,23 @@ object Libs {
     const val hibernate_validator = "org.hibernate.validator:hibernate-validator:${Versions.hibernate_validator}"
     const val hibernate_validator_annotation_processor =
         "org.hibernate:hibernate-validator-annotation-processor:${Versions.hibernate_validator}"
+
+    // Exposed
+    fun exposed(module: String) = "org.jetbrains.exposed:exposed-$module:${Versions.exposed}"
+
+    val exposed_bom = exposed("bom")
+    val exposed_core = exposed("core")
+    val exposed_crypt = exposed("crypt")
+    val exposed_dao = exposed("dao")
+    val exposed_java_time = exposed("java-time")
+    val exposed_jdbc = exposed("jdbc")
+    val exposed_json = exposed("json")
+    val exposed_kotlin_datetime = exposed("kotlin-datetime")
+    val exposed_money = exposed("money")
+
+    val exposed_spring_boot_starter = exposed("spring-boot-starter")
+    val exposed_spring_transaction = "org.jetbrains.exposed:spring-transaction:${Versions.exposed}"
+
 
     // R2DBC (버전은 spring-data 버전을 사용한다)
     fun r2dbc(module: String): String = "io.r2dbc:r2dbc-$module"

@@ -69,7 +69,7 @@
         <layout class="ch.qos.logback.classic.PatternLayout">
             <pattern>%d{ISO8601} %-5level [%thread] %logger:%method:%line: %msg%n%throwable</pattern>
         </layout>
-        <!-- #05_dev_kommons_logging 채널로 메시지가 전송된다. (Slack에서 webhook app 을 설치해야 한다) -->
+        <!-- #05_dev_bluetape4k_logging 채널로 메시지가 전송된다. (Slack에서 webhook app 을 설치해야 한다) -->
         <!-- <webhookUri>https://hooks.slack.com/services/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</webhookUri>-->
         <username>debop.bae@io.bluetape4k.com</username>
         <iconEmoji>:stuck_out_tonque_winking_eye:</iconEmoji>
