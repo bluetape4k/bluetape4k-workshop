@@ -41,11 +41,6 @@ dependencies {
     // Sample Data
     implementation(Libs.datafaker)
 
-    // MongoDB
-//    implementation(Libs.mongodb_driver_sync)
-//    implementation(Libs.testcontainers_mongodb)
-//    implementation(Libs.bluetape4k_testcontainers)
-
     // Gatling
     implementation(Libs.gatling_app)
     implementation(Libs.gatling_core_java)
