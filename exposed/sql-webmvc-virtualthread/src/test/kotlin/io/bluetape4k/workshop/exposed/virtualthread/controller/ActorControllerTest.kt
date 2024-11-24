@@ -3,10 +3,10 @@ package io.bluetape4k.workshop.exposed.virtualthread.controller
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.virtualthread.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.virtualthread.delete
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.ActorDTO
-import io.bluetape4k.workshop.exposed.virtualthread.get
-import io.bluetape4k.workshop.exposed.virtualthread.post
+import io.bluetape4k.workshop.shared.webflux.httpDelete
+import io.bluetape4k.workshop.shared.webflux.httpGet
+import io.bluetape4k.workshop.shared.webflux.httpPost
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeNull
@@ -33,7 +33,7 @@ class ActorControllerTest(
     fun `get actor by id`() {
         val id = 1
 
-        val actor = client.get("/actors/$id")
+        val actor = client.httpGet("/actors/$id")
             .expectBody<ActorDTO>().returnResult().responseBody
 
         log.debug { "actor=$actor" }
@@ -46,7 +46,7 @@ class ActorControllerTest(
     fun `find actors by name`() {
         val lastName = "Depp"
 
-        val actors = client.get("/actors?lastName=$lastName")
+        val actors = client.httpGet("/actors?lastName=$lastName")
             .expectBodyList<ActorDTO>().returnResult().responseBody
 
         log.debug { "actors=$actors" }
@@ -55,7 +55,7 @@ class ActorControllerTest(
         actors.size shouldBeEqualTo 1
 
         val firstName = "Angelina"
-        val angelinas = client.get("/actors?firstName=$firstName")
+        val angelinas = client.httpGet("/actors?firstName=$firstName")
             .expectBodyList<ActorDTO>().returnResult().responseBody
 
         log.debug { "angelinas=$angelinas" }
@@ -67,7 +67,7 @@ class ActorControllerTest(
     fun `create actor`() {
         val actor = newActor()
 
-        val newActor = client.post("/actors", actor)
+        val newActor = client.httpPost("/actors", actor)
             .expectBody<ActorDTO>()
             .returnResult().responseBody!!
 
@@ -78,11 +78,11 @@ class ActorControllerTest(
     fun `delete actor`() {
         val actor = newActor()
 
-        val newActor = client.post("/actors", actor)
+        val newActor = client.httpPost("/actors", actor)
             .expectBody<ActorDTO>()
             .returnResult().responseBody!!
 
-        val deletedCount = client.delete("/actors/${newActor.id}")
+        val deletedCount = client.httpDelete("/actors/${newActor.id}")
             .expectBody<Int>()
             .returnResult().responseBody!!
 

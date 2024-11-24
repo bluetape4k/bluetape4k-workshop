@@ -4,7 +4,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.virtualthread.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.MovieDTO
-import io.bluetape4k.workshop.exposed.virtualthread.get
+import io.bluetape4k.workshop.shared.webflux.httpGet
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeNull
@@ -22,7 +22,7 @@ class MovieControllerTest(@Autowired private val client: WebTestClient): Abstrac
     fun `get movie by id`() {
         val id = 1
 
-        val movie = client.get("/movies/$id")
+        val movie = client.httpGet("/movies/$id")
             .expectBody<MovieDTO>().returnResult().responseBody
 
         log.debug { "movie[$id]=$movie" }
@@ -35,7 +35,7 @@ class MovieControllerTest(@Autowired private val client: WebTestClient): Abstrac
     fun `search movies by producer name`() {
         val producerName = "Johnny"
 
-        val movies = client.get("/movies?producerName=$producerName")
+        val movies = client.httpGet("/movies?producerName=$producerName")
             .expectBodyList<MovieDTO>().returnResult().responseBody!!
 
         movies shouldHaveSize 2

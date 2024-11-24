@@ -4,7 +4,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedSqlTest
 import io.bluetape4k.workshop.exposed.domain.dto.MovieDTO
-import io.bluetape4k.workshop.exposed.get
+import io.bluetape4k.workshop.shared.webflux.httpGet
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeNull
@@ -24,7 +24,7 @@ class MovieControllerTest(
     fun `get movie by id`() {
         val id = 1
 
-        val movie = client.get("/movies/$id")
+        val movie = client.httpGet("/movies/$id")
             .expectBody<MovieDTO>().returnResult().responseBody
 
         log.debug { "movie[$id]=$movie" }
@@ -37,7 +37,7 @@ class MovieControllerTest(
     fun `search movies by producer name`() {
         val producerName = "Johnny"
 
-        val movies = client.get("/movies?producerName=$producerName")
+        val movies = client.httpGet("/movies?producerName=$producerName")
             .expectBodyList<MovieDTO>().returnResult().responseBody!!
 
         movies shouldHaveSize 2

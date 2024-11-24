@@ -6,7 +6,7 @@ import io.bluetape4k.workshop.exposed.AbstractExposedSqlTest
 import io.bluetape4k.workshop.exposed.domain.dto.MovieActorCountDTO
 import io.bluetape4k.workshop.exposed.domain.dto.MovieWithActorDTO
 import io.bluetape4k.workshop.exposed.domain.dto.MovieWithProducingActorDTO
-import io.bluetape4k.workshop.exposed.get
+import io.bluetape4k.workshop.shared.webflux.httpGet
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeEmpty
 import org.amshove.kluent.shouldNotBeNull
@@ -26,7 +26,7 @@ class MovieActorsControllerTest(
     fun `get movie with actors`() {
         val movieId = 1
 
-        val movieWithActors = client.get("/movie-actors/$movieId")
+        val movieWithActors = client.httpGet("/movie-actors/$movieId")
             .expectBody<MovieWithActorDTO>().returnResult().responseBody
 
         log.debug { "movieWithActors[$movieId]=$movieWithActors" }
@@ -38,7 +38,7 @@ class MovieActorsControllerTest(
     @Test
     fun `get movie and actor count group by movie name`() {
 
-        val movieActorCounts = client.get("/movie-actors/count")
+        val movieActorCounts = client.httpGet("/movie-actors/count")
             .expectBodyList<MovieActorCountDTO>().returnResult().responseBody!!
 
         movieActorCounts.shouldNotBeEmpty()
@@ -50,7 +50,7 @@ class MovieActorsControllerTest(
 
     @Test
     fun `get movie and acting producer`() {
-        val movieWithProducers = client.get("/movie-actors/acting-producers")
+        val movieWithProducers = client.httpGet("/movie-actors/acting-producers")
             .expectBodyList<MovieWithProducingActorDTO>().returnResult().responseBody!!
 
         movieWithProducers.forEach {
