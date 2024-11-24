@@ -94,6 +94,8 @@ object Versions {
     const val aws2_crt = "0.33.0" // https://mvnrepository.com/artifact/software.amazon.awssdk.crt
     const val aws_kotlin = "1.3.60" // https://mvnrepository.com/artifact/aws.sdk.kotlin
 
+    const val aws_spring_cloud = "3.2.1"  // https://mvnrepository.com/artifact/io.awspring.cloud/spring-cloud-aws-starter
+
     const val grpc = "1.68.1"       // https://mvnrepository.com/artifact/io.grpc/grpc-stub
     const val grpc_kotlin = "1.4.1" // https://mvnrepository.com/artifact/io.grpc/grpc-kotlin-stub
     const val protobuf = "4.28.3"   // https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
@@ -734,6 +736,24 @@ object Libs {
     val aws_kotlin_sesv2 = awsKotlin("sesv2")       // Not yet released
     // deprecated
     // val aws_kotlin_testing = awsKotlin("testing")
+
+    fun springCloudAws(name: String, version: String = Versions.aws_spring_cloud) =
+        "io.awspring.cloud:spring-cloud-aws-$name:$version"
+
+    fun springCloudAwsStarter(name: String, version: String = Versions.aws_spring_cloud) =
+        "io.awspring.cloud:spring-cloud-aws-starter-$name:$version"
+
+    val spring_cloud_aws_dependencies = springCloudAws("dependencies")
+    val spring_cloud_aws_autoconfigure = springCloudAws("autoconfigure")
+    val spring_cloud_aws_context = springCloudAws("context")
+    val spring_cloud_aws_dynamodb = springCloudAws("dynamodb")
+    val spring_cloud_aws_messaging = springCloudAws("messaging")
+    val spring_cloud_aws_s3 = springCloudAws("s3")
+    val spring_cloud_aws_ses = springCloudAws("ses")
+    val spring_cloud_aws_sns = springCloudAws("sns")
+    val spring_cloud_aws_sqs = springCloudAws("sqs")
+    val spring_cloud_aws_secrets_manager = springCloudAws("secrets-manager")
+    val spring_cloud_aws_starter = springCloudAws("starter")
 
     // AsyncHttpClient
     const val async_http_client = "org.asynchttpclient:async-http-client:${Versions.asynchttpclient}"

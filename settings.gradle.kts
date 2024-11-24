@@ -16,8 +16,7 @@ rootProject.name = "$PROJECT_NAME-workshop"
 
 include("shared")
 
-includeModules("aws", false, false)
-includeModules("aws-kotlin", false, true)
+includeModules("aws", false, true)
 includeModules("ddd", false, true)
 includeModules("docker", false, true)
 includeModules("examples", false, false)

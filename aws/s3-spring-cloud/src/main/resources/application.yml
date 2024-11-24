@@ -1,0 +1,9 @@
+spring:
+    cloud:
+        aws:
+            endpoint: ${testcontainers.localstack.url}
+            region:
+                static: us-east-1
+            credentials:
+                access-key: noop
+                secret-key: noop
