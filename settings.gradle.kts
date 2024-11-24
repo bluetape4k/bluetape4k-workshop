@@ -23,11 +23,8 @@ includeModules("docker", false, false)
 includeModules("examples", false, false)
 includeModules("exposed", false, true)
 includeModules("gateway", false, false)
-includeModules("gatling", false, false)
+includeModules("gatling", false, true)
 includeModules("graalvm", false, false)
-
-includeModules("haifa", false, true)
-
 includeModules("json", false, false)
 includeModules("kotlin", false, true)
 includeModules("mq", false, false)
