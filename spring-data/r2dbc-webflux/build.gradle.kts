@@ -1,5 +1,10 @@
 plugins {
     kotlin("plugin.spring")
+    id(Plugins.spring_boot)
+}
+
+springBoot {
+    mainClass.set("io.bluetape4k.workshop.r2dbc.WebfluxR2dbcApplicationKt")
 }
 
 configurations {
@@ -26,6 +31,10 @@ dependencies {
     implementation(Libs.springBootStarter("data-r2dbc"))
     implementation(Libs.r2dbc_h2)
     implementation(Libs.r2dbc_pool)
+
+    // Webflux
+    implementation(Libs.bluetape4k_netty)
+    implementation(Libs.springBootStarter("webflux"))
 
     testImplementation(Libs.bluetape4k_spring_tests)
     testImplementation(Libs.springBootStarter("test")) {
