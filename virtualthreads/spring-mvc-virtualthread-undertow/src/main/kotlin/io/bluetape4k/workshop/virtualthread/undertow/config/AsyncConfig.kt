@@ -27,7 +27,7 @@ class AsyncConfig {
     @Bean(TaskExecutionAutoConfiguration.APPLICATION_TASK_EXECUTOR_BEAN_NAME)
     fun asyncTaskExecutor(): AsyncTaskExecutor {
         log.info { "AsyncExecutor with VirtualThread created." }
-        
+
         val factory = Thread.ofVirtual().name("async-vt-exec-", 0).factory()
         return TaskExecutorAdapter(Executors.newThreadPerTaskExecutor(factory)).apply {
             setTaskDecorator(LoggingTaskDecorator())
