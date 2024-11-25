@@ -2,11 +2,11 @@ package io.bluetape4k.workshop.exposed.virtualthread.controller
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.exposed.virtualthread.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.MovieActorCountDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.MovieWithActorDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.MovieWithProducingActorDTO
-import io.bluetape4k.workshop.shared.webflux.httpGet
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeEmpty
 import org.amshove.kluent.shouldNotBeNull

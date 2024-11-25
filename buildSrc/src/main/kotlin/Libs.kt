@@ -274,8 +274,10 @@ object Libs {
     val bluetape4k_spring_cassandra = bluetape4k("spring-cassandra")
     val bluetape4k_spring_core = bluetape4k("spring-core")
     val bluetape4k_spring_jpa = bluetape4k("spring-jpa")
+    val bluetape4k_spring_r2dbc = bluetape4k("spring-r2dbc")
     val bluetape4k_spring_retrofit2 = bluetape4k("spring-retrofit2")
     // val bluetape4k_spring_security = bluetape4k("spring-security")
+    val bluetape4k_spring_tests = bluetape4k("spring-tests")
     val bluetape4k_spring_webflux = bluetape4k("spring-webflux")
 
     // AWS

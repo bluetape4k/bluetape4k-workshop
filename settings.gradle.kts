@@ -33,9 +33,9 @@ includeModules("redis", false, false)
 
 includeModules("spring-boot", false, false)
 includeModules("spring-cloud", false, false)
-includeModules("spring-data", false, false)
+includeModules("spring-data", false, true)
 includeModules("spring-security", false, false)
-includeModules("vertx", false, false)
+includeModules("vertx", false, true)
 includeModules("virtualthreads", false, false)
 
 fun includeModules(baseDir: String, withProjectName: Boolean = true, withBaseDir: Boolean = true) {
