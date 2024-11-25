@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.mongodb.imperative
+package io.bluetape4k.workshop.mongodbdb.imperative
 
 import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Filters
@@ -6,9 +6,9 @@ import com.mongodb.client.model.Projections
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.uninitialized
-import io.bluetape4k.workshop.mongodb.AbstractMongodbTest
-import io.bluetape4k.workshop.mongodb.Process
-import io.bluetape4k.workshop.mongodb.State
+import io.bluetape4k.workshop.mongodbdb.AbstractMongodbTest
+import io.bluetape4k.workshop.mongodbdb.Process
+import io.bluetape4k.workshop.mongodbdb.State
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach

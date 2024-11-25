@@ -1,8 +1,8 @@
-package io.bluetape4k.workshop.mongodb.coroutine
+package io.bluetape4k.workshop.mongodbdb.coroutine
 
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.workshop.mongodb.Process
-import io.bluetape4k.workshop.mongodb.State
+import io.bluetape4k.workshop.mongodbdb.Process
+import io.bluetape4k.workshop.mongodbdb.State
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.data.mongodb.core.ReactiveMongoOperations

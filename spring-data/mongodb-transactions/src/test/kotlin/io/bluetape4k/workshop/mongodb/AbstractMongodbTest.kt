@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.mongodb
+package io.bluetape4k.workshop.mongodbdb
 
 import com.mongodb.client.MongoClient
 import com.mongodb.client.MongoClients

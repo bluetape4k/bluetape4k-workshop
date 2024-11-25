@@ -1,7 +1,7 @@
-package io.bluetape4k.workshop.mongodb.reactive
+package io.bluetape4k.workshop.mongodbdb.reactive
 
-import io.bluetape4k.workshop.mongodb.Process
-import io.bluetape4k.workshop.mongodb.State
+import io.bluetape4k.workshop.mongodbdb.Process
+import io.bluetape4k.workshop.mongodbdb.State
 import kotlinx.atomicfu.atomic
 import org.springframework.data.mongodb.core.ReactiveMongoOperations
 import org.springframework.data.mongodb.core.query.Criteria

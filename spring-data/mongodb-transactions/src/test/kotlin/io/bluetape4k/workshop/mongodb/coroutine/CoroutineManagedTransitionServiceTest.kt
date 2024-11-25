@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.mongodb.coroutine
+package io.bluetape4k.workshop.mongodbdb.coroutine
 
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Projections
@@ -7,9 +7,9 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
 import io.bluetape4k.support.uninitialized
-import io.bluetape4k.workshop.mongodb.AbstractMongodbTest
-import io.bluetape4k.workshop.mongodb.Process
-import io.bluetape4k.workshop.mongodb.State
+import io.bluetape4k.workshop.mongodbdb.AbstractMongodbTest
+import io.bluetape4k.workshop.mongodbdb.Process
+import io.bluetape4k.workshop.mongodbdb.State
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.reactive.asFlow

@@ -1,6 +1,6 @@
-package io.bluetape4k.workshop.mongodb.imperative
+package io.bluetape4k.workshop.mongodbdb.imperative
 
-import io.bluetape4k.workshop.mongodb.Process
+import io.bluetape4k.workshop.mongodbdb.Process
 import org.springframework.data.repository.CrudRepository
 
 interface ProcessRepository: CrudRepository<Process, Int>
