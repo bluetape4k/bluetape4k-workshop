@@ -29,7 +29,7 @@ includeModules("kotlin", false, true)
 includeModules("mq", false, false)
 includeModules("observability", false, false)
 includeModules("ratelimit", false, false)
-includeModules("redis", false, false)
+includeModules("redis", false, true)
 
 includeModules("spring-boot", false, false)
 includeModules("spring-cloud", false, false)
