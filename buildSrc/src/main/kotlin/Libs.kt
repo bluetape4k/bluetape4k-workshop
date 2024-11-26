@@ -83,7 +83,7 @@ object Versions {
     const val swagger = "2.2.23"              // https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-annotations
     const val springdoc_openapi = "2.6.0"     // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webmvc-ui
     const val springfox_swagger = "3.0.0"
-    const val problem = "0.29.1"
+    const val problem = "0.29.1"              // https://mvnrepository.com/artifact/org.zalando/problem-spring-web
 
     const val bucket4j = "8.10.1"       // https://mvnrepository.com/artifact/com.bucket4j/bucket4j-core
     const val resilience4j = "2.2.0"   // https://mvnrepository.com/artifact/io.github.resilience4j/resilience4j-bom
@@ -1472,6 +1472,7 @@ object Libs {
     const val springfox_boot_starter = "io.springfox:springfox-boot-starter:${Versions.springfox_swagger}"
 
     // Problem for Spring
+    const val problem_jackson_datatype = "org.zalando:jackson-datatype-problem:0.27.1" // https://mvnrepository.com/artifact/org.zalando/jackson-datatype-problem
     const val problem_spring_web = "org.zalando:problem-spring-web:${Versions.problem}"
     const val problem_spring_webflux = "org.zalando:problem-spring-webflux:${Versions.problem}"
 
