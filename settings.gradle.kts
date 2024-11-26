@@ -31,10 +31,10 @@ includeModules("observability", false, false)
 includeModules("ratelimit", false, false)
 includeModules("redis", false, true)
 
-includeModules("spring-boot", false, false)
-includeModules("spring-cloud", false, false)
+includeModules("spring-boot", false, true)
+includeModules("spring-cloud", false, true)
 includeModules("spring-data", false, true)
-includeModules("spring-security", false, false)
+includeModules("spring-security", false, true)
 includeModules("vertx", false, true)
 includeModules("virtualthreads", false, false)
 
