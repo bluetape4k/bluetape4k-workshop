@@ -602,7 +602,7 @@ object Libs {
 
     // Bucket4j Spring Boot
     // https://mvnrepository.com/artifact/com.giffing.bucket4j.spring.boot.starter/bucket4j-spring-boot-starter
-    const val bucket4j_spring_boot = "com.giffing.bucket4j.spring.boot.starter:bucket4j-spring-boot-starter:0.9.1"
+    const val bucket4j_spring_boot_starter = "com.giffing.bucket4j.spring.boot.starter:bucket4j-spring-boot-starter:0.12.8"
 
     // Netty
     fun netty(module: String, version: String = Versions.netty) = "io.netty:netty-$module:$version"
