@@ -20,14 +20,13 @@ abstract class AbstractRateLimitTest {
 
     protected fun successfulWebRequest(url: String, remainingTries: Int) {
         client.httpGet(url)
-            .expectHeader().valueEquals("X-Rate-Limit-Remaining", remainingTries.toString())
+            .expectHeader()
+            .valueEquals("X-Rate-Limit-Remaining", remainingTries.toString())
     }
 
     protected fun blockedWebRequestDueToRateLimit(url: String) {
-        client.get()
-            .uri(url)
-            .exchange()
-            .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
-            .expectBody().jsonPath("error", "Too many requests!")
+        client.httpGet(url, HttpStatus.TOO_MANY_REQUESTS)
+            .expectBody()
+            .jsonPath("error", "Too many requests!")
     }
 }

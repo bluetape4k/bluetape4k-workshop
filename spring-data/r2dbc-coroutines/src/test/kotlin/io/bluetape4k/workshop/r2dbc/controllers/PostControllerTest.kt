@@ -6,13 +6,13 @@ import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.spring.tests.httpPost
 import io.bluetape4k.workshop.r2dbc.AbstractR2dbcApplicationTest
 import io.bluetape4k.workshop.r2dbc.domain.Post
-import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeGreaterOrEqualTo
 import org.amshove.kluent.shouldNotBeEmpty
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
@@ -24,7 +24,7 @@ class PostControllerTest(
     companion object: KLogging()
 
     @Test
-    fun `find all posts`() = runTest {
+    fun `find all posts`() {
         val posts = client.httpGet("/posts")
             .expectBodyList<Post>()
             .returnResult().responseBody!!
@@ -36,7 +36,7 @@ class PostControllerTest(
     }
 
     @Test
-    fun `find one post by id`() = runTest {
+    fun `find one post by id`() {
         val post = client.httpGet("/posts/1")
             .expectBody<Post>()
             .returnResult().responseBody!!
@@ -46,15 +46,12 @@ class PostControllerTest(
     }
 
     @Test
-    fun `find one post by non-existing id`() = runTest {
-        client.get()
-            .uri("/posts/9999")
-            .exchange()
-            .expectStatus().isNotFound
+    fun `find one post by non-existing id`() {
+        client.httpGet("/posts/9999", HttpStatus.NOT_FOUND)
     }
 
     @Test
-    fun `save new post`() = runTest {
+    fun `save new post`() {
         val newPost = createPost()
 
         val savedPost = client.httpPost("/posts", newPost)
@@ -66,7 +63,7 @@ class PostControllerTest(
     }
 
     @Test
-    fun `count of comments by post id`() = runTest {
+    fun `count of comments by post id`() {
         val commentCount1 = countOfCommentByPostId(1L)
         val commentCount2 = countOfCommentByPostId(2L)
 
@@ -75,7 +72,7 @@ class PostControllerTest(
     }
 
     @Test
-    fun `count of comments by non-existing post id`() = runTest {
+    fun `count of comments by non-existing post id`() {
         countOfCommentByPostId(9999L) shouldBeEqualTo 0L
     }
 
