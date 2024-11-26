@@ -16,10 +16,10 @@ import org.springframework.test.web.reactive.server.body
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 
-class CoroutineControllerTest: AbstractCoroutineApplicationTest() {
+class IOCoroutineControllerTest: AbstractCoroutineApplicationTest() {
 
     companion object: KLogging() {
-        private const val BASE_PATH = "/controller"
+        private const val BASE_PATH = "/controller/io"
     }
 
     @Test

@@ -4,12 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
+import io.bluetape4k.spring.webflux.controller.AbstractCoroutineDefaultController
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.coroutines.model.Banner
 import kotlinx.coroutines.CoroutineName
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -28,10 +27,10 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
 
 @RestController
-@RequestMapping("/controller")
-class CoroutineController(
+@RequestMapping("/controller/default")
+class DefaultCoroutineController(
     private val builder: WebClient.Builder,
-): CoroutineScope by CoroutineScope(Dispatchers.IO + CoroutineName("controller")) {
+): AbstractCoroutineDefaultController() {
 
     companion object: KLogging() {
         private const val DEFAULT_DELAY = 500L
