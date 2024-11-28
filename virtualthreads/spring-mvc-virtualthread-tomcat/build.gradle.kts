@@ -17,13 +17,16 @@ allOpen {
 }
 
 kapt {
-    // NOTE: kapt 에서 빌드가 실패하면 `kapt.use.k2=true` 를 추가해보세요.
-    //  # https://kotlinlang.org/docs/kapt.html#try-kotlin-k2-compiler (kotlin 2.0)
-    //kapt.use.k2=true
+    correctErrorTypes = true
+    showProcessorStats = true
 
-    // showProcessorStats = true
-    // kapt 가 제대로 동작하지 않는 경우, 해당 클래스를 약간 수정해보세요. (Comments 추가 등으로)
-    // correctErrorTypes = true
+    arguments {
+        arg("querydsl.entityAccessors", "true")  // Association의 property는 getter/setter를 사용하도록 합니다.
+        arg("querydsl.kotlinCodegen", "true") // QueryDSL Kotlin Codegen 활성화
+    }
+    javacOptions {
+        option("--add-modules", "java.base")
+    }
 }
 
 springBoot {

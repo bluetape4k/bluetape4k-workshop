@@ -62,7 +62,7 @@ class MemberRepositoryImpl: QuerydslRepositorySupport(Member::class.java), Membe
         return queryFactory
             .select(projection)
             .from(qmember)
-            .leftJoin(qmember.team, qteam)
+            .leftJoin(qmember.team(), qteam)
             .where(*whereClauses.toTypedArray())
             .fetch()
     }
