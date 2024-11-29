@@ -163,7 +163,7 @@ object Versions {
 
     const val cassandra = "4.18.1"          // https://mvnrepository.com/artifact/org.apache.cassandra/java-driver-core
     const val scylla_java = "4.13.0.0"
-    const val elasticsearch = "8.16.0"       // https://mvnrepository.com/artifact/org.elasticsearch.client/elasticsearch-rest-client
+    const val elasticsearch = "8.16.1"       // https://mvnrepository.com/artifact/org.elasticsearch.client/elasticsearch-rest-client
 
     const val kafka = "3.9.0"           // https://mvnrepository.com/artifact/org.apache.kafka/kafka
     const val spring_kafka = "3.2.4"    // https://mvnrepository.com/artifact/org.springframework.kafka/spring-kafka
