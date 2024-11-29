@@ -18,6 +18,10 @@ import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
 import java.util.*
 
+fun main(vararg args: String) {
+    runApplication<SpringCloudAwsS3Sample>(*args)
+}
+
 @SpringBootApplication
 class SpringCloudAwsS3Sample {
 
@@ -66,9 +70,6 @@ class SpringCloudAwsS3Sample {
     }
 }
 
-fun main(vararg args: String) {
-    runApplication<SpringCloudAwsS3Sample>(*args)
-}
 
 fun Resource.readContent(): String {
     val scanner = Scanner(this.inputStream).useDelimiter("\\A")

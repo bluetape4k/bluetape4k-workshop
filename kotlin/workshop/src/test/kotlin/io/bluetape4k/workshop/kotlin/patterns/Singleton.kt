@@ -8,7 +8,7 @@ class Singleton {
 
     @Test
     fun `kotlin에서 singleton은 object 키워드를 사용한다`() {
-        val myFavoriteMovies = listOf("The Matrix", "Inception", "Interstellar")
+        // val myFavoriteMovies = listOf("The Matrix", "Inception", "Interstellar")
 
         val myMoviews = NoMoviesList
         val yourMoview = NoMoviesList
@@ -26,20 +26,21 @@ class Singleton {
 
     data object NoMoviesListDataObject
 
-    object NoMoviesList: List<String> {
+    // Kotlin의 delegate pattern 을 사용하면 더 간결하게 구현할 수 있다. (여기서는 class delegate)
+    object NoMoviesList: List<String> by emptyList() {
         private val empty = emptyList<String>()
 
-        override val size: Int get() = empty.size
-        override fun get(index: Int): String = empty[index]
-        override fun isEmpty() = empty.isEmpty()
-        override fun iterator() = empty.iterator()
-        override fun listIterator() = empty.listIterator()
-        override fun listIterator(index: Int) = empty.listIterator(index)
-        override fun subList(fromIndex: Int, toIndex: Int) = empty.subList(fromIndex, toIndex)
-        override fun lastIndexOf(element: String) = empty.lastIndexOf(element)
-        override fun indexOf(element: String) = empty.indexOf(element)
-        override fun containsAll(elements: Collection<String>) = empty.containsAll(elements)
-        override fun contains(element: String) = empty.contains(element)
+//        override val size: Int get() = empty.size
+//        override fun get(index: Int): String = empty[index]
+//        override fun isEmpty() = empty.isEmpty()
+//        override fun iterator() = empty.iterator()
+//        override fun listIterator() = empty.listIterator()
+//        override fun listIterator(index: Int) = empty.listIterator(index)
+//        override fun subList(fromIndex: Int, toIndex: Int) = empty.subList(fromIndex, toIndex)
+//        override fun lastIndexOf(element: String) = empty.lastIndexOf(element)
+//        override fun indexOf(element: String) = empty.indexOf(element)
+//        override fun containsAll(elements: Collection<String>) = empty.containsAll(elements)
+//        override fun contains(element: String) = empty.contains(element)
     }
 
     object Logger {
