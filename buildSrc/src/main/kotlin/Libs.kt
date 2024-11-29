@@ -1260,7 +1260,7 @@ object Libs {
     const val mariadb_java_client = "org.mariadb.jdbc:mariadb-java-client:3.5.1"  // https://mvnrepository.com/artifact/org.mariadb.jdbc/mariadb-java-client
     const val postgresql_driver = "org.postgresql:postgresql:42.7.4"  // https://mvnrepository.com/artifact/org.postgresql/postgresql
     const val oracle_ojdbc8 = "com.oracle.ojdbc:ojdbc8:19.3.0.0"
-    const val clickhouse_jdbc = "com.clickhouse:clickhouse-jdbc:0.6.4" // https://mvnrepository.com/artifact/com.clickhouse/clickhouse-jdbc
+    const val clickhouse_jdbc = "com.clickhouse:clickhouse-jdbc:0.7.1" // https://mvnrepository.com/artifact/com.clickhouse/clickhouse-jdbc
 
     // NOTE: Apache Ignite 에서는 꼭 1.4.197 를 써야 합니다.
     const val h2 = "com.h2database:h2:1.4.197"
