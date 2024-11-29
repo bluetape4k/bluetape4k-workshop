@@ -80,8 +80,8 @@ object Versions {
     const val chaos_monkey = "3.1.0"        // https://mvnrepository.com/artifact/de.codecentric/chaos-monkey-spring-boot
     const val blockhound = "1.0.9.RELEASE"  // https://mvnrepository.com/artifact/io.projectreactor.tools/blockhound
 
-    const val swagger = "2.2.23"              // https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-annotations
-    const val springdoc_openapi = "2.6.0"     // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webmvc-ui
+    const val swagger = "2.2.26"              // https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-annotations
+    const val springdoc_openapi = "2.7.0"     // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webmvc-ui
     const val springfox_swagger = "3.0.0"
     const val problem = "0.29.1"              // https://mvnrepository.com/artifact/org.zalando/problem-spring-web
 
