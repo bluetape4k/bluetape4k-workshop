@@ -1210,9 +1210,9 @@ object Libs {
     val querydsl_kotlin_codegen = querydsl("kotlin-codegen")
 
     // MyBais
-    const val mybatis = "org.mybatis:mybatis:3.5.13"
-    const val mybatis_spring = "org.mybatis:mybatis-spring:2.1.0"
-    const val mybatis_dynamic_sql = "org.mybatis.dynamic-sql:mybatis-dynamic-sql:1.5.0"
+    const val mybatis = "org.mybatis:mybatis:3.5.17"                // https://mvnrepository.com/artifact/org.mybatis/mybatis
+    const val mybatis_spring = "org.mybatis:mybatis-spring:3.0.4"   // https://mvnrepository.com/artifact/org.mybatis/mybatis-spring
+    const val mybatis_dynamic_sql = "org.mybatis.dynamic-sql:mybatis-dynamic-sql:1.5.2"  // https://mvnrepository.com/artifact/org.mybatis.dynamic-sql/mybatis-dynamic-sql
 
     // blaze-persistence
     fun blazePersistence(module: String, version: String = Versions.blaze_persistence): String =
