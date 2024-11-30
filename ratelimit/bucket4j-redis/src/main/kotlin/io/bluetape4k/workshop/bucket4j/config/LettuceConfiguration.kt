@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.bucket4j.controller
+package io.bluetape4k.workshop.bucket4j.config
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug

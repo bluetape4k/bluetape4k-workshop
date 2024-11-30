@@ -1,0 +1,11 @@
+### Simple Greeting
+GET http://localhost:8080/greeting?name=Debop
+
+
+### Greeting and Logging 
+POST http://localhost:8080/greeting
+Content-Type: application/json
+
+{
+  "name": "Debop"
+}
