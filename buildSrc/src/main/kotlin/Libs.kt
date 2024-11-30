@@ -296,6 +296,7 @@ object Libs {
     val bluetape4k_images = bluetape4k("images")
     val bluetape4k_jwt = bluetape4k("jwt")
     val bluetape4k_math = bluetape4k("math")
+    val bluetape4k_mutiny = bluetape4k("mutiny")
     val bluetape4k_money = bluetape4k("money")
     val bluetape4k_times = bluetape4k("times")
     val bluetape4k_units = bluetape4k("unit")
