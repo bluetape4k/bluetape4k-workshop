@@ -1073,7 +1073,7 @@ object Libs {
 
     // Cassandra
     fun cassandra(module: String, version: String = Versions.cassandra): String =
-        "com.datastax.oss:java-driver-$module:$version"
+        "org.apache.cassandra:java-driver-$module:$version"
 
     val cassandra_java_driver_core = cassandra("core")
     val cassandra_java_driver_core_shaded = cassandra("core-shaded")
