@@ -1,0 +1,14 @@
+### GET Customers
+GET http://localhost:8080/customer-service/api/v1/customers
+
+
+### GET Orders
+GET http://localhost:8080/order-service/api/v1/orders
+
+
+### GET Products
+GET http://localhost:8080/order-service/api/v1/products
+
+
+### SWAGGER
+GET http://localhost:8080/swagger-ui.html
