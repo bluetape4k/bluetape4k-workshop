@@ -41,7 +41,7 @@ class CoroutineHandler(
     private val banner = Banner("제목", "동해물과 백두산이 마르고 닳도록")
 
     // API Server에서 다른 API 서버를 호출하는 것을 흉내내기 위해서 사용합니다.
-    private val client by lazy { builder.baseUrl("http://localhost:$port/controller").build() }
+    private val client by lazy { builder.baseUrl("http://localhost:$port").build() }
 
     private suspend fun currentCoroutineName(): String? = coroutineContext[CoroutineName]?.name
 
