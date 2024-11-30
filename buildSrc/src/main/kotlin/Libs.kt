@@ -889,7 +889,7 @@ object Libs {
     val jjwt_extensions = jjwt("extensions")
 
     // Compression
-    const val snappy_java = "org.xerial.snappy:snappy-java:1.1.10.5"  // https://mvnrepository.com/artifact/org.xerial.snappy/snappy-java
+    const val snappy_java = "org.xerial.snappy:snappy-java:1.1.10.7"  // https://mvnrepository.com/artifact/org.xerial.snappy/snappy-java
     const val lz4_java = "org.lz4:lz4-java:1.8.0"                     // https://mvnrepository.com/artifact/org.lz4/lz4-java
 
     // https://github.com/hyperxpro/Brotli4j
