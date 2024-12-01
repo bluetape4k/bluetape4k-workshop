@@ -26,6 +26,7 @@ kapt {
     }
     javacOptions {
         option("--add-modules", "java.base")
+        option("--enable-preview")             // for Java 21 Virtual Threads
     }
 }
 
