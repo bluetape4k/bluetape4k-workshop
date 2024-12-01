@@ -83,7 +83,7 @@ class PersonCoroutineRepositoryTest @Autowired constructor(
     }
 
     /**
-     * NOTE: kommons-coroutines 의 [PublishSubject] 를 이용하여 해결했습니다.
+     * NOTE: bluetape4k-coroutines 의 [PublishSubject] 를 이용하여 해결했습니다.
      */
     @Test
     fun `stream data with tailable cursor with PublishSubject`() = runTest(timeout = 10.seconds) {

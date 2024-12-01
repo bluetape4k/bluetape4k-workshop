@@ -1,0 +1,9 @@
+### **/v1/** 에서 X-BLUETAPE4K-UID 기준으로 Rate Limit 을 수행합니다. (Header 에 X-BLUETAPE4K-REMAINING-TOKEN 을 확인하세요)
+GET http://localhost:8080/coroutines/v1/hello
+X-BLUETAPE4K-UID: XDDAFDFdBDFADSF12312dasfasfsdafBD
+
+### **/v1/** 은 X-BLUETAPE4K-UID 헤더가 없으면 IP Address 기준으로 Rate Limit 을 수행합니다. (Header 에 X-BLUETAPE4K-REMAINING-TOKEN 을 확인하세요)
+GET http://localhost:8080/coroutines/v1/hello
+
+### **/v2/** 는 Rate Limit 를 걸지 않습니다. (Header 에 X-BLUETAPE4K-REMAINING-TOKEN 이 없습니다)
+GET http://localhost:8080/coroutines/v2/hello

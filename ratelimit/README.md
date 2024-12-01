@@ -2,7 +2,7 @@
 
 ## bucket4j-webflux-demo (추천)
 
-`kommons-bucket4j` 에서 제공하는 RateLimiter 를 사용한 예제입니다.
+`bluetape4k-bucket4j` 에서 제공하는 사용자 토큰 기반의 RateLimiter 를 사용한 예제입니다.
 
 IP 기반, 사용자 토큰 기반 모두 제공하고, Redis 를 Bucket 저장소로 사용합니다.
 
