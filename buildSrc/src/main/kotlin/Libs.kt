@@ -18,7 +18,7 @@ object Plugins {
         const val shadow = "7.1.2"
         const val kotlinx_benchmark = "0.4.12" // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-benchmark-plugin
 
-        const val spring_boot = "3.3.5"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
+        const val spring_boot = "3.3.6"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
         const val docker_compose = "0.17.8"  // https://plugins.gradle.org/plugin/com.avast.gradle.docker-compose
 
         // 참고: https://docs.gatling.io/reference/integrations/build-tools/gradle-plugin/
