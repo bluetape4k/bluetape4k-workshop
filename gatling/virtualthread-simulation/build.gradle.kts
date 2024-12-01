@@ -16,9 +16,10 @@ configurations {
 dependencies {
 
     implementation(Libs.bluetape4k_io)
-    implementation(Libs.bluetape4k_spring_core)
     implementation(Libs.bluetape4k_jackson)
-    testImplementation(Libs.bluetape4k_junit5)
+
+    implementation(Libs.bluetape4k_spring_core)
+    testImplementation(Libs.bluetape4k_spring_tests)
 
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))
