@@ -1,5 +1,3 @@
-import jdk.tools.jlink.resources.plugins
-
 plugins {
     kotlin("plugin.spring")
     id(Plugins.spring_boot)
