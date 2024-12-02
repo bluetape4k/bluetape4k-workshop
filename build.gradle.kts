@@ -264,6 +264,7 @@ subprojects {
             mavenBom(Libs.spring_integration_bom)
             mavenBom(Libs.spring_cloud_dependencies)
             mavenBom(Libs.spring_boot_dependencies)
+            mavenBom(Libs.spring_modulith_bom)
 
             mavenBom(Libs.feign_bom)
             mavenBom(Libs.micrometer_bom)

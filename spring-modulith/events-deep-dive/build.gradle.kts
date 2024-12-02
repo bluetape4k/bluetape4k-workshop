@@ -28,31 +28,20 @@ kapt {
     }
 }
 
-@Suppress("UnstableApiUsage")
-configurations {
+@Suppress("UnstableApiUsage") configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
 
 dependencies {
-    implementation(Libs.bluetape4k_hibernate)
+    // Spring Modulith
+    implementation(Libs.spring_modulith_starter_jpa)
+    testImplementation(Libs.spring_modulith_starter_test)
 
-    // NOTE: Java 9+ 환경에서 kapt가 제대로 동작하려면 javax.annotation-api 를 참조해야 합니다.
-    // api(Libs.javax_annotation_api)
     api(Libs.jakarta_annotation_api)
-
     api(Libs.jakarta_persistence_api)
     api(Libs.hibernate_core)
 
-    // QueryDsl
-    implementation(Libs.querydsl_jpa + ":jakarta")
-    kapt(Libs.querydsl_apt + ":jakarta")
-    kaptTest(Libs.querydsl_apt + ":jakarta")
-
-    // Vaidators
-    implementation(Libs.hibernate_validator)
-    runtimeOnly(Libs.jakarta_validation_api)
-
-
+    // Spring Boot
     implementation(Libs.springBootStarter("data-jpa"))
     implementation(Libs.springBootStarter("validation"))
     testImplementation(Libs.springBoot("autoconfigure"))
@@ -61,17 +50,24 @@ dependencies {
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")
     }
+
+    // JPA / Hibernate
+    implementation(Libs.bluetape4k_hibernate)
+
+    // QueryDsl
+    implementation(Libs.querydsl_jpa + ":jakarta")
+    kapt(Libs.querydsl_apt + ":jakarta")
+    kaptTest(Libs.querydsl_apt + ":jakarta")
+
+    implementation(Libs.hikaricp)
+    implementation(Libs.h2_v2)
+
+    // Vaidators
+    implementation(Libs.hibernate_validator)
+    runtimeOnly(Libs.jakarta_validation_api)
+
+    implementation(Libs.bluetape4k_idgenerators)
     testImplementation(Libs.bluetape4k_spring_tests)
 
-    testImplementation(Libs.bluetape4k_testcontainers)
-    testImplementation(Libs.testcontainers_mysql)
-
-    testImplementation(Libs.hikaricp)
-    testImplementation(Libs.h2_v2)
-    testImplementation(Libs.mysql_connector_j)
-
-    // Caching 테스트
-    // testImplementation(Libs.bluetape4k_cache)
-    testImplementation(Libs.hibernate_jcache)
-    testImplementation(Libs.caffeine_jcache)
+    testImplementation(Libs.springmockk)
 }
