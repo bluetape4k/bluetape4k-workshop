@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.spring.modulith.events.a.fundamentals.springdata
+package io.bluetape4k.workshop.spring.modulith.events.b.transactions
 
 import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.workshop.spring.modulith.events.util.StringAggregate
@@ -11,10 +11,9 @@ class Order: StringAggregate<Order>() {
 
     var status: OrderStatus = OrderStatus.OPEN
 
-    fun complete(): Order {
+    fun complete(): Order = apply {
         this.status = OrderStatus.COMPLETED
         registerEvent(OrderCompleted(this))
-        return this
     }
 
     override fun buildStringHelper(): ToStringBuilder {
