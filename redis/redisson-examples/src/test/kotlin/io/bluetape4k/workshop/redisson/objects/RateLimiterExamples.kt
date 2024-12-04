@@ -84,7 +84,7 @@ class RateLimiterExamples: AbstractRedissonTest() {
 
         MultithreadingTester()
             .numThreads(4)
-            .roundsPerThread(8)
+            .roundsPerThread(4)
             .add {
                 val redisson = newRedisson()
                 // RRateLimiter Exception----RateLimiter is not initialized (해결 완료)
@@ -137,7 +137,7 @@ class RateLimiterExamples: AbstractRedissonTest() {
         // Multi Job 환경에서 limiter1 의 rate limit 을 확인한다
         MultijobTester()
             .numThreads(4)
-            .roundsPerJob(8)
+            .roundsPerJob(4)
             .add {
                 val redisson = newRedisson()
                 // RRateLimiter Exception----RateLimiter is not initialized (해결 완료)

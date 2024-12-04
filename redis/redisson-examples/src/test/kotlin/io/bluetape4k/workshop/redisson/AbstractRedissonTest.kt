@@ -26,8 +26,8 @@ abstract class AbstractRedissonTest {
                 redis.url,
                 connectionPoolSize = 256,
                 minimumIdleSize = 16,
-                threads = 64,
-                nettyThreads = 128
+                threads = 128,
+                nettyThreads = 512
             ) as Redisson
         }
 
@@ -51,7 +51,7 @@ abstract class AbstractRedissonTest {
     }
 
     protected fun newRedisson(): RedissonClient {
-        val config = RedisServer.Launcher.RedissonLib.getRedissonConfig(redis.url, 128, 2)
+        val config = RedisServer.Launcher.RedissonLib.getRedissonConfig(redis.url)
         return redissonClientOf(config)
     }
 
