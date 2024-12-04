@@ -1,6 +1,7 @@
 services:
     redis:
         image: redis:7
+        platform: linux/amd64
         hostname: redis
         ports:
             - "6379:6379"
