@@ -65,40 +65,46 @@ class TopicExamples: AbstractRedissonTest() {
         val channelName = randomName()
 
         val redisson1 = newRedisson()
-        val topic1: RReliableTopic = redisson1.getReliableTopic(channelName)
-
         val redisson2 = newRedisson()
-        val topic2 = redisson2.getReliableTopic(channelName)
+        try {
 
-        val receivedCounter = atomic(0)
+            val topic1: RReliableTopic = redisson1.getReliableTopic(channelName)
+            val topic2 = redisson2.getReliableTopic(channelName)
 
-        // topic 예 listener를 등록합니다.
-        // listener id 를 반환한다.
-        val listenerId1 = topic1.addListenerAsync(String::class.java) { channel, msg ->
-            println("Listener1: channel[$channel] received: $msg")
-            receivedCounter.incrementAndGet()
-        }.coAwait()
+            val receivedCounter = atomic(0)
 
-        // topic 예 listener를 등록합니다.
-        val listenerId2 = topic2.addListenerAsync(String::class.java) { channel, msg ->
-            println("Listener2: channel[$channel] received: $msg")
-            receivedCounter.incrementAndGet()
-        }.coAwait()
+            // topic 예 listener를 등록합니다.
+            // listener id 를 반환한다.
+            val listenerId1 = topic1.addListenerAsync(String::class.java) { channel, msg ->
+                println("Listener1: channel[$channel] received: $msg")
+                receivedCounter.incrementAndGet()
+            }.coAwait()
 
-        log.debug { "Listener listener1 Id=$listenerId1, listener2 Id=$listenerId2" }
-        topic1.countListeners() shouldBeEqualTo 1    // topic1에 Listener 는 1개 등록
-        topic1.countSubscribers() shouldBeEqualTo 2  // 2개의 topic 이므로
-        topic2.countListeners() shouldBeEqualTo 1    // topic2에 Listener 는 1개 등록
-        topic2.countSubscribers() shouldBeEqualTo 2  // 2개의 topic 이므로
+            // topic 예 listener를 등록합니다.
+            val listenerId2 = topic2.addListenerAsync(String::class.java) { channel, msg ->
+                println("Listener2: channel[$channel] received: $msg")
+                receivedCounter.incrementAndGet()
+            }.coAwait()
 
-        // topic 에 메시지 전송
-        topic1.publishAsync("message-1").coAwait()
-        topic2.publishAsync("message-2").coAwait()
+            log.debug { "Listener listener1 Id=$listenerId1, listener2 Id=$listenerId2" }
+            topic1.countListeners() shouldBeEqualTo 1    // topic1에 Listener 는 1개 등록
+            topic1.countSubscribers() shouldBeEqualTo 2  // 2개의 topic 이므로
+            topic2.countListeners() shouldBeEqualTo 1    // topic2에 Listener 는 1개 등록
+            topic2.countSubscribers() shouldBeEqualTo 2  // 2개의 topic 이므로
 
-        // topic 에 listener가 2개, 메시지 2개 전송
-        await until { receivedCounter.value >= 2 * 2 }
+            // topic 에 메시지 전송
+            topic1.publishAsync("message-1").coAwait()
+            topic2.publishAsync("message-2").coAwait()
 
-        topic1.removeAllListenersAsync().coAwait()
-        topic2.removeAllListenersAsync().coAwait()
+            // topic 에 listener가 2개, 메시지 2개 전송
+            await until { receivedCounter.value >= 2 * 2 }
+
+            topic1.removeAllListenersAsync().coAwait()
+            topic2.removeAllListenersAsync().coAwait()
+
+        } finally {
+            redisson1.shutdown()
+            redisson2.shutdown()
+        }
     }
 }
