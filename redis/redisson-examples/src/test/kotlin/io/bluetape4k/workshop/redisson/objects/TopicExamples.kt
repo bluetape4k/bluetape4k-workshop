@@ -100,5 +100,8 @@ class TopicExamples: AbstractRedissonTest() {
 
         topic1.removeAllListenersAsync().coAwait()
         topic2.removeAllListenersAsync().coAwait()
+
+        redisson1.shutdown()
+        redisson2.shutdown()
     }
 }
