@@ -35,37 +35,32 @@ class SemaphoreExamples: AbstractRedissonTest() {
         // 3개 획득
         semaphore.acquireAsync(3).coAwait()
 
+        val redisson2 = newRedisson()
+        val redisson3 = newRedisson()
+
         MultijobTester()
             .numThreads(4)
             .roundsPerJob(4)
             .add {
                 // 해당 Job은 semaphore 2개 반납
-                val redisson2 = newRedisson()
-                try {
-                    val s2 = redisson2.getSemaphore(semaphoreName)
-                    delay(1)
+                val s2 = redisson2.getSemaphore(semaphoreName)
+                delay(1)
 
-                    // 2개 반납 (4개 남음)
-                    s2.releaseAsync(2).coAwait()
-                    yield()
-                } finally {
-                    redisson2.shutdown()
-                }
+                // 2개 반납 (4개 남음)
+                s2.releaseAsync(2).coAwait()
+                yield()
             }
             .add {
                 // 해당 Job은 semaphore 2개 획득 
-                val redisson3 = newRedisson()
-                try {
-                    val s3 = redisson3.getSemaphore(semaphoreName)
-                    delay(1)
-                    // 2개 확보
-                    s3.tryAcquireAsync(2, 5.seconds.toJavaDuration()).coAwait().shouldBeTrue()
-                    delay(1)
-                } finally {
-                    redisson3.shutdown()
-                }
+                val s3 = redisson3.getSemaphore(semaphoreName)
+                delay(1)
+                // 2개 확보
+                s3.tryAcquireAsync(2, 5.seconds.toJavaDuration()).coAwait().shouldBeTrue()
+                delay(1)
             }
             .run()
+        redisson2.shutdown()
+        redisson3.shutdown()
 
         semaphore.availablePermitsAsync().coAwait() shouldBeEqualTo 2
 
@@ -91,34 +86,30 @@ class SemaphoreExamples: AbstractRedissonTest() {
         // 3개 획득
         semaphore.acquire(3)
 
+        val redisson2 = newRedisson()
+        val redisson3 = newRedisson()
+
         MultithreadingTester()
             .numThreads(4)
             .roundsPerThread(4)
             .add {
-                val redisson2 = newRedisson()
-                try {
-                    val s2 = redisson2.getSemaphore(semaphoreName)
-                    Thread.sleep(1)
-                    // 2개 반납 (4개 남음)
-                    s2.release(2)
-                    Thread.sleep(1)
-                } finally {
-                    redisson2.shutdown()
-                }
+                val s2 = redisson2.getSemaphore(semaphoreName)
+                Thread.sleep(1)
+                // 2개 반납 (4개 남음)
+                s2.release(2)
+                Thread.sleep(1)
             }
             .add {
-                val redisson3 = newRedisson()
-                try {
-                    val s3 = redisson3.getSemaphore(semaphoreName)
-                    Thread.sleep(1)
-                    // 4개 확보
-                    s3.tryAcquire(2, 5.seconds.toJavaDuration()).shouldBeTrue()
-                    Thread.sleep(1)
-                } finally {
-                    redisson3.shutdown()
-                }
+                val s3 = redisson3.getSemaphore(semaphoreName)
+                Thread.sleep(1)
+                // 4개 확보
+                s3.tryAcquire(2, 5.seconds.toJavaDuration()).shouldBeTrue()
+                Thread.sleep(1)
             }
             .run()
+
+        redisson2.shutdown()
+        redisson3.shutdown()
 
         semaphore.availablePermits() shouldBeEqualTo 2
 
@@ -145,32 +136,28 @@ class SemaphoreExamples: AbstractRedissonTest() {
         // 3개 획득
         semaphore.acquire(3)
 
+        val redisson2 = newRedisson()
+        val redisson3 = newRedisson()
+
         VirtualthreadTester()
             .numThreads(4)
             .roundsPerThread(4)
             .add {
-                val redisson2 = newRedisson()
-                try {
-                    val s2 = redisson2.getSemaphore(semaphoreName)
-                    // 2개 반납 (4개 남음)
-                    s2.release(2)
-                    Thread.sleep(1)
-                } finally {
-                    redisson2.shutdown()
-                }
+                val s2 = redisson2.getSemaphore(semaphoreName)
+                // 2개 반납 (4개 남음)
+                s2.release(2)
+                Thread.sleep(1)
             }
             .add {
-                val redisson3 = newRedisson()
-                try {
-                    val s3 = redisson3.getSemaphore(semaphoreName)
-                    // 4개 확보
-                    s3.tryAcquire(2, 10.seconds.toJavaDuration()).shouldBeTrue()
-                    Thread.sleep(1)
-                } finally {
-                    redisson3.shutdown()
-                }
+                val s3 = redisson3.getSemaphore(semaphoreName)
+                // 4개 확보
+                s3.tryAcquire(2, 10.seconds.toJavaDuration()).shouldBeTrue()
+                Thread.sleep(1)
             }
             .run()
+
+        redisson2.shutdown()
+        redisson3.shutdown()
 
         // 2개의 Job 이 서로 얻고, 반환했으므로, 기존 (5-3=2) 와 같다
         semaphore.availablePermits() shouldBeEqualTo 2
