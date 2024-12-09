@@ -3,6 +3,10 @@ package io.bluetape4k.workshop.elasticsearch.controller
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.trace
+import io.bluetape4k.spring.tests.httpDelete
+import io.bluetape4k.spring.tests.httpGet
+import io.bluetape4k.spring.tests.httpPost
+import io.bluetape4k.spring.tests.httpPut
 import io.bluetape4k.workshop.elasticsearch.AbstractElasticsearchApplicationTest
 import io.bluetape4k.workshop.elasticsearch.domain.dto.toBook
 import io.bluetape4k.workshop.elasticsearch.domain.dto.toModifyBookRequest
@@ -18,6 +22,7 @@ import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 
@@ -40,10 +45,8 @@ class BookControllerTest(
     fun `get all books`() = runSuspendIO {
         val saved = insertRandomBooks(5)
 
-        val loaded = client.get()
-            .uri(BOOK_PATH)
-            .exchange()
-            .expectStatus().isOk
+        val loaded = client
+            .httpGet(BOOK_PATH)
             .returnResult<Book>().responseBody
             .asFlow().toList()
 
@@ -57,10 +60,8 @@ class BookControllerTest(
     fun `find book by isbn`() = runSuspendIO {
         val saved = insertRandomBooks(3)
 
-        val foundBook = client.get()
-            .uri("$BOOK_PATH/${saved.last().isbn}")
-            .exchange()
-            .expectStatus().isOk
+        val foundBook = client
+            .httpGet("$BOOK_PATH/${saved.last().isbn}")
             .returnResult<Book>().responseBody
             .awaitSingle()
 
@@ -72,10 +73,7 @@ class BookControllerTest(
     fun `find book with not exists isbn`() = runTest {
         insertRandomBooks(3)
 
-        client.get()
-            .uri("$BOOK_PATH/not-exists")
-            .exchange()
-            .expectStatus().isNotFound
+        client.httpGet("$BOOK_PATH/not-exists", HttpStatus.NOT_FOUND)
     }
 
     @Test
@@ -85,10 +83,7 @@ class BookControllerTest(
         val title = last.title
         val author = last.authorName
 
-        val foundBooks = client.get()
-            .uri("$BOOK_PATH?title=$title&author=$author")
-            .exchange()
-            .expectStatus().isOk
+        val foundBooks = client.httpGet("$BOOK_PATH?title=$title&author=$author")
             .returnResult<Book>().responseBody
             .asFlow().toList()
 
@@ -102,11 +97,8 @@ class BookControllerTest(
     fun `create book`() = runSuspendIO {
         val book = createBook()
 
-        val createdBook = client.post()
-            .uri(BOOK_PATH)
-            .bodyValue(book.toModifyBookRequest())
-            .exchange()
-            .expectStatus().isCreated
+        val createdBook = client
+            .httpPost(BOOK_PATH, book.toModifyBookRequest(), HttpStatus.CREATED)
             .returnResult<Book>().responseBody
             .awaitSingle()
 
@@ -121,11 +113,8 @@ class BookControllerTest(
 
         val updateRequest = last.toModifyBookRequest().copy(title = "updated title")
 
-        val updatedBook = client.put()
-            .uri("$BOOK_PATH/${last.id}")
-            .bodyValue(updateRequest)
-            .exchange()
-            .expectStatus().isOk
+        val updatedBook = client
+            .httpPut("$BOOK_PATH/${last.id}", updateRequest)
             .returnResult<Book>().responseBody
             .awaitSingle()
 
@@ -139,11 +128,7 @@ class BookControllerTest(
 
         val updateRequest = last.toModifyBookRequest().copy(title = "updated title")
 
-        client.put()
-            .uri("$BOOK_PATH/not-exisis")
-            .bodyValue(updateRequest)
-            .exchange()
-            .expectStatus().isNotFound
+        client.httpPut("$BOOK_PATH/not-exisis", updateRequest, HttpStatus.NOT_FOUND)
     }
 
     @Test
@@ -151,20 +136,13 @@ class BookControllerTest(
         val saved = insertRandomBooks(3)
         val last = saved.last()
 
-        client.delete()
-            .uri("$BOOK_PATH/${last.id}")
-            .exchange()
-            .expectStatus().isOk
+        client.httpDelete("$BOOK_PATH/${last.id}")
     }
 
     @Test
     fun `delete book by invalid id`() = runSuspendIO {
         insertRandomBooks(3)
-
-        client.delete()
-            .uri("$BOOK_PATH/not-exists")
-            .exchange()
-            .expectStatus().isNotFound
+        client.httpDelete("$BOOK_PATH/not-exists", HttpStatus.NOT_FOUND)
     }
 
     private suspend fun insertRandomBooks(size: Int = 10): List<Book> {

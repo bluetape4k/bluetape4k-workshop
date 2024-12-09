@@ -1,9 +1,11 @@
 package io.bluetape4k.workshop.resilience.circuitbreaker
 
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.spring.tests.httpGet
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 
 class FutureCircuitBreakerTest: AbstractCircuitBreakerTest() {
 
@@ -89,23 +91,14 @@ class FutureCircuitBreakerTest: AbstractCircuitBreakerTest() {
     }
 
     private fun procedureFailure(serviceName: String) {
-        webClient.get()
-            .uri("/$serviceName/futureFailure")
-            .exchange()
-            .expectStatus().is5xxServerError
+        webClient.httpGet("/$serviceName/futureFailure", HttpStatus.INTERNAL_SERVER_ERROR)
     }
 
     private fun procedureSuccess(serviceName: String) {
-        webClient.get()
-            .uri("/$serviceName/futureSuccess")
-            .exchange()
-            .expectStatus().isOk
+        webClient.httpGet("/$serviceName/futureSuccess")
     }
 
     private fun procedureTimeout(serviceName: String) {
-        webClient.get()
-            .uri("/$serviceName/futureTimeout")
-            .exchange()
-            .expectStatus().isOk    // fallback 이 작동하므로, 항상 성공한다
+        webClient.httpGet("/$serviceName/futureTimeout")   // fallback 이 작동하므로, 항상 성공한다
     }
 }

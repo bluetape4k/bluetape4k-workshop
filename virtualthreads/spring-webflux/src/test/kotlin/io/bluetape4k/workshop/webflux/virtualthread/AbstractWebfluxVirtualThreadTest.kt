@@ -15,16 +15,4 @@ abstract class AbstractWebfluxVirtualThreadTest {
 
     @Autowired
     protected val client: WebTestClient = uninitialized()
-
-    protected fun getApi(path: String): WebTestClient.ResponseSpec {
-        return client.get().uri(path).exchange()
-    }
-
-    protected fun <B: Any> postApi(path: String, body: B): WebTestClient.ResponseSpec {
-        return client
-            .post()
-            .uri(path)
-            .bodyValue(body)
-            .exchange()
-    }
 }

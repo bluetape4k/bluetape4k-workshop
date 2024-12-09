@@ -2,17 +2,22 @@ package io.bluetape4k.workshop.virtualthread.tomcat.controller
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.virtualthread.tomcat.AbstractVirtualThreadMvcTest
 import io.bluetape4k.workshop.virtualthread.tomcat.domain.dto.MemberDTO
 import io.bluetape4k.workshop.virtualthread.tomcat.domain.dto.MemberSearchCondition
 import io.bluetape4k.workshop.virtualthread.tomcat.domain.dto.MemberWithTeamDTO
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.reactive.asFlow
+import kotlinx.coroutines.reactive.awaitSingle
+import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldNotBeEmpty
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.WebTestClient
-import org.springframework.test.web.reactive.server.expectBody
-import org.springframework.test.web.reactive.server.expectBodyList
+import org.springframework.test.web.reactive.server.returnResult
 
 class MemberRepositoryTest(
     @Autowired private val client: WebTestClient,
@@ -21,9 +26,12 @@ class MemberRepositoryTest(
     companion object: KLogging()
 
     @Test
-    fun `get all members`() {
-        val members = client.get("/member")
-            .expectBodyList<MemberDTO>().returnResult().responseBody!!
+    fun `get all members`() = runTest {
+        val members = client.httpGet("/member")
+            .returnResult<MemberDTO>()
+            .responseBody
+            .asFlow()
+            .toList()
 
         members.shouldNotBeNull()
         members.forEach {
@@ -32,23 +40,26 @@ class MemberRepositoryTest(
     }
 
     @Test
-    fun `get member by id`() {
+    fun `get member by id`() = runTest {
         val member = client.get("/member/1")
-            .expectBody<MemberDTO>().returnResult().responseBody!!
+            .returnResult<MemberDTO>()
+            .responseBody
+            .awaitSingle()
 
         member.id shouldBeEqualTo 1L
     }
 
     @Test
-    fun `search member`() {
+    fun `search member`() = runTest {
         val condition = MemberSearchCondition(teamName = "teamA", ageGoe = 60)
 
         val members = client.post("/member/search", condition)
-            .expectBodyList<MemberWithTeamDTO>()
-            .returnResult()
-            .responseBody!!
+            .returnResult<MemberWithTeamDTO>()
+            .responseBody
+            .asFlow()
+            .toList()
 
-        members.shouldNotBeNull()
+        members.shouldNotBeEmpty()
         members.forEach {
             log.debug { "member: $it" }
         }

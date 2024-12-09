@@ -89,6 +89,7 @@ class ReactiveControllerTest(
                 .awaitSingle() shouldContain "Hello World V2"
         }
 
+        // 모든 Token이 소비되었으므로, TOO_MANY_REQUESTS가 발생합니다.
         client.get()
             .uri(PATH_V2)
             .header(HeaderUtils.X_BLUETAPE4K_UID, userId)
