@@ -513,6 +513,11 @@ subprojects {
         val testCompileOnly by configurations
         val testRuntimeOnly by configurations
 
+        compileOnly(platform(Libs.bluetape4k_bom))
+        compileOnly(platform(Libs.spring_boot_dependencies))
+        compileOnly(platform(Libs.jackson_bom))
+        compileOnly(platform(Libs.kotlinx_coroutines_bom))
+
         api(Libs.kotlin_stdlib)
         api(Libs.kotlin_stdlib_jdk8)
         api(Libs.kotlin_reflect)
