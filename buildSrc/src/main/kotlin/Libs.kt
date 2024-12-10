@@ -19,6 +19,7 @@ object Plugins {
         const val kotlinx_benchmark = "0.4.13" // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-benchmark-plugin
 
         const val spring_boot = "3.4.0"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
+        const val quarkus = "3.17.3"      // https://mvnrepository.com/artifact/io.quarkus/quarkus-bom
         const val docker_compose = "0.17.11"  // https://plugins.gradle.org/plugin/com.avast.gradle.docker-compose
 
         // 참고: https://docs.gatling.io/reference/integrations/build-tools/gradle-plugin/
@@ -29,6 +30,7 @@ object Plugins {
     const val dokka = "org.jetbrains.dokka"
     const val dependency_management = "io.spring.dependency-management"
     const val spring_boot = "org.springframework.boot"
+    const val quarkus = "io.quarkus"
 
     // https://github.com/etiennestuder/gradle-jooq-plugin
     const val jooq = "nu.studer.jooq"
@@ -75,11 +77,23 @@ object Versions {
     const val spring_statemachine = "4.0.0" // https://mvnrepository.com/artifact/org.springframework.statemachine/spring-statemachine-core
     const val spring_modulith = "1.3.0"     // https://mvnrepository.com/artifact/org.springframework.modulith/spring-modulith-bom
 
-    const val mutiny = "2.6.2"              // https://mvnrepository.com/artifact/io.smallrye.reactive/mutiny
-    const val vertx = "4.5.11"               // https://mvnrepository.com/artifact/io.vertx/vertx-core
-
     const val chaos_monkey = "3.1.0"        // https://mvnrepository.com/artifact/de.codecentric/chaos-monkey-spring-boot
     const val blockhound = "1.0.10.RELEASE"  // https://mvnrepository.com/artifact/io.projectreactor.tools/blockhound
+
+    const val quarkus = Plugins.Versions.quarkus
+
+    object Quarkiverse {
+        const val aws = "1.1.3"             //
+        const val junit5_mockk = "1.1.1"
+        const val logging_sentry = "1.2.1"
+        const val vault = "1.1.0"
+        const val reactive_messaging_http = "1.0.3"
+    }
+
+    const val resteasy = "6.2.11.Final"       // https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-bom
+    const val mutiny = "2.6.2"              // https://mvnrepository.com/artifact/io.smallrye.reactive/mutiny
+    const val vertx = "4.5.11"               // https://mvnrepository.com/artifact/io.vertx/vertx-core
+    const val camel_quarkus = "3.16.0"       // https://mvnrepository.com/artifact/org.apache.camel.quarkus/camel-quarkus-bom
 
     const val swagger = "2.2.26"              // https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-annotations
     const val springdoc_openapi = "2.7.0"     // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webmvc-ui
@@ -94,6 +108,7 @@ object Versions {
     const val aws2 = "2.29.29"   // https://mvnrepository.com/artifact/software.amazon.awssdk/aws-sdk-java
     const val aws2_crt = "0.33.5" // https://mvnrepository.com/artifact/software.amazon.awssdk.crt/aws-crt
     const val aws_kotlin = "1.3.89" // https://mvnrepository.com/artifact/aws.sdk.kotlin
+    const val aws_smithy_kotlin = "1.3.28" // https://mvnrepository.com/artifact/aws.smithy.kotlin/http-client-engine-crt-jvm
 
     const val aws_spring_cloud = "3.2.1"  // https://mvnrepository.com/artifact/io.awspring.cloud/spring-cloud-aws-starter
 
@@ -268,6 +283,10 @@ object Libs {
     val bluetape4k_nats = bluetape4k("nats")
     val bluetape4k_otel = bluetape4k("otel")
     val bluetape4k_resilience4j = bluetape4k("resilience4j")
+
+    // Quarkus
+    val bluetape4k_quarkus_core = bluetape4k("quarkus-core")
+    val bluetape4k_quarkus_tests = bluetape4k("quarkus-tests")
 
     // Spring
     val bluetape4k_spring_cassandra = bluetape4k("spring-cassandra")
@@ -574,6 +593,73 @@ object Libs {
     // Chaos Monkey (https://github.com/codecentric/chaos-monkey-spring-boot)
     const val chaos_monkey_spring_boot = "de.codecentric:chaos-monkey-spring-boot:${Versions.chaos_monkey}"
 
+
+    // Quarkus
+    fun quarkus(extension: String) = "io.quarkus:quarkus-$extension:${Versions.quarkus}"
+
+    const val quarkus_bom = "io.quarkus.platform:quarkus-bom:${Versions.quarkus}"
+    val quarkus_universe_bom = quarkus("universe-bom")
+
+    val quarkus_arc = quarkus("arc")
+    val quarkus_hibernate_reactive_panache = quarkus("hibernate-reactive-panache")
+    val quarkus_junit5 = quarkus("junit5")
+    val quarkus_kotlin = quarkus("kotlin")
+    val quarkus_mutiny = quarkus("mutiny")
+    val quarkus_opentelemetry = quarkus("opentelemetry")
+    val quarkus_security = quarkus("security")
+    val quarkus_vertx = quarkus("vertx")
+    val quarkus_vertx_http = quarkus("vertx-http")
+
+    val quarkus_reactive_routes = quarkus("reactive-routes")
+    val quarkus_reactive_mysql_client = quarkus("reactive-routes-mysql-client")
+    val quarkus_reactive_pg_client = quarkus("reactive-routes-pg-client")
+
+    val quarkus_test_security = quarkus("test-security")
+    val quarkus_test_keycloak_server = quarkus("test-keycloak-server")
+
+    // Quarkiverse AWS
+    const val quarkiverse_aws_bom =
+        "io.quarkiverse.amazonservices:quarkus-amazon-services-bom:${Versions.Quarkiverse.aws}"
+
+    fun quarkiverseAws(module: String) = "io.quarkiverse.amazonservices:quarkus-amazon-$module"
+    val quarkiverse_amazon_s3 = quarkiverseAws("s3")
+
+    // Quarkiverse ( https://github.com/quarkiverse/quarkiverse/wiki )
+    // Quarkiverse/quarkus-mockk (https://github.com/quarkiverse/quarkus-mockk)
+    const val quarkiverse_junit5_mockk =
+        "io.quarkiverse.mockk:quarkus-junit5-mockk:${Versions.Quarkiverse.junit5_mockk}"
+    const val quarkiverse_logging_sentry =
+        "io.quarkiverse.loggingsentry:quarkus-logging-sentry:${Versions.Quarkiverse.logging_sentry}"
+    const val quarkiverse_vault = "io.Quarkiverse.vault:quarkus-vault:${Versions.Quarkiverse.vault}"
+
+    const val quarkiverse_reactivemessaing_http = "io.quarkiverse.reactivemessaging.http:quarkus-reactive-messaging-http:${Versions.Quarkiverse.reactive_messaging_http}"
+
+    // Quarkus Blaze Persistence
+    const val quarkus_blaze_persistence_bom = "io.quarkus.platform:quarkus-blaze-persistence-bom:${Versions.quarkus}"
+
+    // Smallrye
+    fun smallrye(module: String) = "io.smallrye:smallrye-$module"
+    fun smallryeReactive(module: String) = "io.smallrye.reactive:smallrye-$module"
+
+    // Resteasy (https://resteasy.dev/)
+    fun resteasy(module: String, version: String = Versions.resteasy) = "org.jboss.resteasy:resteasy-$module:$version"
+    val resteasy_bom = resteasy("bom")
+
+    val resteasy_cdi = resteasy("cdi")
+    val resteasy_client = resteasy("client")
+    val resteasy_jackson2_provider = resteasy("jackson2-provider")
+    val resteasy_spring = resteasy("spring")
+    val resteasy_vertx = resteasy("vertx")
+
+    // Camel Quarkus
+    fun camelQuarkus(extension: String, version: String = Versions.camel_quarkus) =
+        "org.apache.camel.quarkus:camel-quarkus-$extension:$version"
+
+    val camel_quarkus_bom = camelQuarkus("bom")
+    val camel_quarkus_sql = camelQuarkus("sql")
+    val camel_quarkus_kotlin = camelQuarkus("kotlin")
+    val camel_quarkus_vertx = camelQuarkus("vertx")
+
     // Vert.x (https://vertx.io/docs/)
     fun vertx(module: String, version: String = Versions.vertx) = "io.vertx:vertx-$module:$version"
     val vertx_dependencies = vertx("dependencies")
@@ -774,6 +860,14 @@ object Libs {
     val aws_kotlin_sesv2 = awsKotlin("sesv2")       // Not yet released
     // deprecated
     // val aws_kotlin_testing = awsKotlin("testing")
+
+    // Aws Smithy Kotlin
+    fun awsSmithyKotlin(module:String, version:String = Versions.aws_smithy_kotlin) = "aws.smithy.kotlin:$module:$version"
+
+    val aws_smithy_kotlin_http = awsSmithyKotlin("http-jvm")
+    val aws_smithy_kotlin_http_client_engine_crt = awsSmithyKotlin("http-client-engine-crt-jvm")
+    val aws_smithy_kotlin_serde = awsSmithyKotlin("serde-jvm")
+    val aws_smithy_kotlin_serde_json = awsSmithyKotlin("serde-json-jvm")
 
     fun springCloudAws(name: String, version: String = Versions.aws_spring_cloud) =
         "io.awspring.cloud:spring-cloud-aws-$name:$version"
@@ -1483,6 +1577,14 @@ object Libs {
 
     // OpenSearch Testcontainers
     const val testcontainers_opensearch = "org.opensearch:opensearch-testcontainers:2.1.2"  // https://mvnrepository.com/artifact/org.opensearch/opensearch-testcontainers
+
+    // rest-assured
+    fun restAssured(module: String) = "io.rest-assured:$module:${Versions.rest_assured}"
+    val rest_assured = restAssured("rest-assured")
+    val rest_assured_all = restAssured("rest-assured-all")
+    val rest_assured_json_path = restAssured("json-path")
+    val rest_assured_kotlin = restAssured("kotlin-extensions")
+
 
     // -------------------------------------------------------------------------------------
 
