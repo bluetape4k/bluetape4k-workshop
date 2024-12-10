@@ -8,6 +8,7 @@ import org.springframework.cache.CacheManager
 import org.springframework.cache.annotation.EnableCaching
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.task.AsyncTaskExecutor
 import org.springframework.data.redis.cache.RedisCacheConfiguration
 import org.springframework.data.redis.cache.RedisCacheManager
 import org.springframework.data.redis.connection.RedisConnectionFactory
@@ -38,9 +39,13 @@ class LettuceRedisCacheConfiguration {
     }
 
     @Bean
-    fun lettuceConnectionFactory(): LettuceConnectionFactory {
+    fun lettuceConnectionFactory(applicationTaskExecutor: AsyncTaskExecutor): LettuceConnectionFactory {
         val configuration = RedisStandaloneConfiguration(redisHost, redisPort)
-        return LettuceConnectionFactory(configuration)
+
+        // Lettuce 작업을 Virtual Threads로 실행하기 위해 TaskExecutor를 설정 (see AsyncConfig)
+        return LettuceConnectionFactory(configuration).apply {
+            setExecutor(applicationTaskExecutor)
+        }
     }
 
     @Bean

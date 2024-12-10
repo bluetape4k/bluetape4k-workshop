@@ -70,7 +70,7 @@ class ResponseExamples {
                 .send()
                 .coAwait()
 
-            log.debug { "Response body=${response.body().encodePrettily()}" }
+            log.debug { "Response body=\n${response.body().encodePrettily()}" }
             response.statusCode() shouldBeEqualTo 200
         }
     }
@@ -87,7 +87,7 @@ class ResponseExamples {
                 .send()
                 .coAwait()
 
-            log.debug { "Response body=${response.body()}" }
+            log.debug { "Response body=\n${response.body()}" }
             response.statusCode() shouldBeEqualTo 200
             val responseUser = response.body()
             responseUser shouldBeEqualTo expectedUser

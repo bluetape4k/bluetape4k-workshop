@@ -10,8 +10,6 @@ import io.bluetape4k.workshop.exposed.AbstractExposedSqlTest
 import io.bluetape4k.workshop.exposed.domain.mapper.toActorDTO
 import io.bluetape4k.workshop.exposed.domain.schema.Actors
 import org.amshove.kluent.shouldNotBeEmpty
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -43,8 +41,7 @@ class DomainSQLTest: AbstractExposedSqlTest() {
                 .roundsPerJob(4)
                 .add {
                     newSuspendedTransaction {
-                        addLogger(StdOutSqlLogger)
-
+                        // addLogger(StdOutSqlLogger)
                         val actors = Actors.selectAll().map { it.toActorDTO() }
                         actors.shouldNotBeEmpty()
                     }
@@ -73,7 +70,7 @@ class DomainSQLTest: AbstractExposedSqlTest() {
                 .roundsPerThread(4)
                 .add {
                     transaction {
-                        addLogger(StdOutSqlLogger)
+                        // addLogger(StdOutSqlLogger)
                         val actors = Actors.selectAll().map { it.toActorDTO() }
                         actors.shouldNotBeEmpty()
                     }
