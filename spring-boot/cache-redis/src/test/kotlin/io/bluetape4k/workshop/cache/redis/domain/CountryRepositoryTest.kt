@@ -76,14 +76,14 @@ class CountryRepositoryTest(
 
         measureTimeMillis {
             MultithreadingTester()
-                .numThreads(4)
+                .numThreads(8)
                 .roundsPerThread(8)
                 .add {
                     val country = retreiveCountry()
                     codeMap[country.code] = country
                 }
                 .run()
-        } shouldBeLessThan 4 * 8 * EXPECTED_MILLIS
+        } shouldBeLessThan 8 * 8 * EXPECTED_MILLIS
 
         codeMap.size shouldBeLessOrEqualTo CountryRepository.SAMPLE_COUNTRY_CODES.size
     }

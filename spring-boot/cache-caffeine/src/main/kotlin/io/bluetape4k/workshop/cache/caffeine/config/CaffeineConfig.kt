@@ -32,7 +32,7 @@ class CaffeineConfig {
             maximumSize(1000)
             expireAfterAccess(5.minutes.toJavaDuration())
             recordStats()
-            executor(VirtualThreadExecutor)
+            executor(VirtualThreadExecutor)  // Virtual Threads 를 사용하여 Lazy Loading 을 수행합니다.
         }
     }
 }

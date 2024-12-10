@@ -78,14 +78,14 @@ class CountryRepositoryTest(
 
         measureTimeMillis {
             MultithreadingTester()
-                .numThreads(4 * Runtimex.availableProcessors)
+                .numThreads(8 * Runtimex.availableProcessors)
                 .roundsPerThread(8)
                 .add {
                     val country = retreiveCountry()
                     codeMap[country.code] = country
                 }
                 .run()
-        } shouldBeLessThan 4 * Runtimex.availableProcessors * 8 * EXPECTED_MILLIS
+        } shouldBeLessThan 8 * Runtimex.availableProcessors * 8 * EXPECTED_MILLIS
 
         codeMap.size shouldBeLessOrEqualTo CountryRepository.SAMPLE_COUNTRY_CODES.size
     }
@@ -96,14 +96,14 @@ class CountryRepositoryTest(
 
         measureTimeMillis {
             VirtualthreadTester()
-                .numThreads(4 * Runtimex.availableProcessors)
+                .numThreads(8 * Runtimex.availableProcessors)
                 .roundsPerThread(8)
                 .add {
                     val country = retreiveCountry()
                     codeMap[country.code] = country
                 }
                 .run()
-        } shouldBeLessThan 4 * Runtimex.availableProcessors * 8 * EXPECTED_MILLIS
+        } shouldBeLessThan 8 * Runtimex.availableProcessors * 8 * EXPECTED_MILLIS
 
         codeMap.size shouldBeLessOrEqualTo CountryRepository.SAMPLE_COUNTRY_CODES.size
     }
