@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.webflux.virtualthread.controller
 
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.webflux.virtualthread.AbstractWebfluxVirtualThreadTest
 import org.junit.jupiter.api.Test
 
@@ -10,13 +11,11 @@ class HttpbinControllerTest: AbstractWebfluxVirtualThreadTest() {
 
     @Test
     fun `call httpbin delay via mono`() {
-        getApi("/httpbin/delay/mono/1")
-            .expectStatus().isOk
+        client.httpGet("/httpbin/delay/mono/1")
     }
 
     @Test
     fun `call httpbin delay via coroutines`() {
-        getApi("/httpbin/delay/suspend/1")
-            .expectStatus().isOk
+        client.httpGet("/httpbin/delay/suspend/1")
     }
 }

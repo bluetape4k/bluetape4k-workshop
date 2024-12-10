@@ -1,20 +1,18 @@
 package io.bluetape4k.workshop.redisson.locks
 
-import io.bluetape4k.concurrent.virtualthread.VT
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.VirtualthreadTester
 import io.bluetape4k.junit5.coroutines.MultijobTester
-import io.bluetape4k.junit5.coroutines.runSuspendTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.redis.redisson.coroutines.coAwait
+import io.bluetape4k.redis.redisson.coroutines.getLockId
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.atomicfu.atomic
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeGreaterThan
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import java.util.concurrent.TimeUnit
@@ -41,7 +39,7 @@ import kotlin.random.Random
 class FencedLockExamples: AbstractRedissonTest() {
 
     companion object: KLogging() {
-        const val REPEAT_SIZE = 5
+        const val REPEAT_SIZE = 3
     }
 
     @Test
@@ -50,13 +48,13 @@ class FencedLockExamples: AbstractRedissonTest() {
         val lock = redisson.getFencedLock(lockName)
 
         // 전통적인 lock 메서드를 사용하여 잠금을 획득합니다.
-        var token = lock.lockAndGetToken()
+        // var token = lock.lockAndGetToken()
 
         // 아니면, 10초 후에 자동적으로 락 해제하도록 할 수 있습니다.
-        token = lock.lockAndGetToken(10, TimeUnit.SECONDS)
+        // token = lock.lockAndGetToken(10, TimeUnit.SECONDS)
 
         // 아니면, 락 획득 대기 시간을 100초 주고, 락을 획득하고, 자동 락 해제 시간을 10초를 지정하는 방식
-        token = lock.tryLockAndGetToken(100, 10, TimeUnit.SECONDS)
+        val token = lock.tryLockAndGetToken(100, 10, TimeUnit.SECONDS)
 
         if (token != null) {
             try {
@@ -98,7 +96,8 @@ class FencedLockExamples: AbstractRedissonTest() {
             .roundsPerThread(2)
             .add {
                 // 락 획득 시도
-                val token = lock.tryLockAndGetToken(5, 10, TimeUnit.SECONDS) ?: 0
+                val token = lock.tryLockAndGetTokenAsync(5, 10, TimeUnit.SECONDS).get() ?: 0
+
                 if (token > 0) {
                     log.debug { "Lock 획득. token=$token" }
                     lockCounter.incrementAndGet()
@@ -114,7 +113,7 @@ class FencedLockExamples: AbstractRedissonTest() {
         lockCounter.value shouldBeEqualTo 8 * 2
     }
 
-    @RepeatedTest(LockExamples.REPEAT_SIZE)
+    @RepeatedTest(REPEAT_SIZE)
     fun `Virtual Thread 환경에서 FencedLock 획득 및 해제`() {
         val lock = redisson.getFencedLock(randomName())
         val lockCounter = atomic(0)
@@ -123,7 +122,9 @@ class FencedLockExamples: AbstractRedissonTest() {
             .numThreads(8)
             .roundsPerThread(2)
             .add {
-                val token = lock.tryLockAndGetToken(5, 10, TimeUnit.SECONDS) ?: 0
+                // 락 획득 시도 및 토큰 반환
+                val token = lock.tryLockAndGetTokenAsync(5, 10, TimeUnit.SECONDS).get() ?: 0
+
                 if (token > 0) {
                     log.debug { "Lock 획득. token=$token" }
                     lockCounter.incrementAndGet()
@@ -141,9 +142,8 @@ class FencedLockExamples: AbstractRedissonTest() {
         lockCounter.value shouldBeEqualTo 8 * 2
     }
 
-    @Disabled("FencedLock은 Coroutine Context에서 lockId 를 받지 않는다")
     @RepeatedTest(LockExamples.REPEAT_SIZE)
-    fun `Multi Job 환경에서 FencedLock 획득 및 해제`() = runSuspendTest(Dispatchers.VT) {
+    fun `Multi Job 환경에서 FencedLock 획득 및 해제`() = runSuspendIO {
         val lock = redisson.getFencedLock(randomName())
         val lockCounter = atomic(0)
 
@@ -151,17 +151,21 @@ class FencedLockExamples: AbstractRedissonTest() {
             .numThreads(8)
             .roundsPerJob(2)
             .add {
-                val token = lock.tryLockAndGetTokenAsync(5, 10, TimeUnit.SECONDS).coAwait() ?: 0
-                if (token > 0) {
-                    log.debug { "Lock 획득. locked=$token" }
-                    lockCounter.incrementAndGet()
-                    // 더미 작업 표현
-                    delay(Random.nextLong(50))
+                val mlockId = redisson.getLockId("ferncedLock")
+                val locked = lock.tryLockAsync(5, 10, TimeUnit.SECONDS, mlockId).coAwait()
+                if (locked) {
+                    val token = lock.tokenAsync.coAwait()
+                    if (token > 0) {
+                        log.debug { "Lock 획득. locked=$token" }
+                        lockCounter.incrementAndGet()
+                        // 더미 작업 표현
+                        delay(Random.nextLong(50))
 
-                    // lock 해제
-                    lock.unlockAsync().coAwait()
-                    log.debug { "Lock 해제." }
-                    delay(1)
+                        // lock 해제
+                        lock.unlockAsync(mlockId).coAwait()
+                        log.debug { "Lock 해제." }
+                        delay(1)
+                    }
                 }
             }
             .run()

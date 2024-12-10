@@ -27,10 +27,7 @@ class DemoRoutesTest(
 
     @Test
     fun `call root path`() {
-        client.get()
-            .uri("/")
-            .exchange()
-            .expectStatus().isOk
+        client.httpGet("/")
             .expectBody()
             .jsonPath("$.name").isEqualTo("Gateway Application")
     }

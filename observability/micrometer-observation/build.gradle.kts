@@ -14,8 +14,8 @@ configurations {
 
 dependencies {
 
-    platform(Libs.micrometer_bom)
-    platform(Libs.micrometer_tracing_bom)
+    implementation(platform(Libs.micrometer_bom))
+    implementation(platform(Libs.micrometer_tracing_bom))
 
     // Observability
     implementation(Libs.micrometer_observation)

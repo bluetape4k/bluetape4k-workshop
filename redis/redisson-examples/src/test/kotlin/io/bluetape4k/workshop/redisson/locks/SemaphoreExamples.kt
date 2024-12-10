@@ -35,7 +35,6 @@ class SemaphoreExamples: AbstractRedissonTest() {
         // 3개 획득
         semaphore.acquireAsync(3).coAwait()
 
-
         val redisson2 = newRedisson()
         val redisson3 = newRedisson()
 
@@ -60,7 +59,6 @@ class SemaphoreExamples: AbstractRedissonTest() {
                 delay(1)
             }
             .run()
-
         redisson2.shutdown()
         redisson3.shutdown()
 
@@ -100,7 +98,6 @@ class SemaphoreExamples: AbstractRedissonTest() {
                 // 2개 반납 (4개 남음)
                 s2.release(2)
                 Thread.sleep(1)
-
             }
             .add {
                 val s3 = redisson3.getSemaphore(semaphoreName)

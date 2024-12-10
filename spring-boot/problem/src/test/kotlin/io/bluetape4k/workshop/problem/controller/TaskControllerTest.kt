@@ -14,7 +14,6 @@ import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
@@ -156,11 +155,7 @@ class TaskControllerTest(
                 val body = result.responseBody!!
                 log.debug { body.toUtf8String() }
             }
-        client.delete()
-            .uri("/tasks/1")
-            .accept(MediaType.APPLICATION_JSON)
-            .exchange()
-            .expectStatus().isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
+        client.httpDelete("/tasks/1", HttpStatus.INTERNAL_SERVER_ERROR)
             .expectBody()
             .jsonPath("$.detail").isEqualTo("You can't delete this task [1]")
             .consumeWith { result ->

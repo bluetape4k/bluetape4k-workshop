@@ -46,6 +46,7 @@ dependencies {
 
     // JPA/Hibernate
     implementation(Libs.bluetape4k_hibernate)
+    implementation(Libs.bluetape4k_spring_jpa)
     implementation(Libs.hibernate_core)
     implementation(Libs.hibernate_jcache)
     implementation(Libs.hibernate_validator)
@@ -75,6 +76,10 @@ dependencies {
     implementation(Libs.caffeine)
     implementation(Libs.caffeine_jcache)
 
+    // Spring
+    implementation(Libs.bluetape4k_spring_core)
+    testImplementation(Libs.bluetape4k_spring_tests)
+
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))
     annotationProcessor(Libs.springBoot("autoconfigure-processor"))
@@ -93,6 +98,12 @@ dependencies {
     }
     // WebClient 사용을 위해
     implementation(Libs.springBootStarter("webflux"))
+
+    // Coroutines
+    implementation(Libs.bluetape4k_coroutines)
+    implementation(Libs.kotlinx_coroutines_core)
+    implementation(Libs.kotlinx_coroutines_reactor)
+    testImplementation(Libs.kotlinx_coroutines_test)
 
     // SpringDoc - OpenAPI 3.0
     implementation(Libs.springdoc_openapi_starter_webmvc_ui)

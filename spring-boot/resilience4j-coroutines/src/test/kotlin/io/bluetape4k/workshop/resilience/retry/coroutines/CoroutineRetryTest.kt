@@ -1,10 +1,12 @@
 package io.bluetape4k.workshop.resilience.retry.coroutines
 
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.resilience.retry.AbstractRetryTest
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 
 class CoroutineRetryTest: AbstractRetryTest() {
 
@@ -59,16 +61,10 @@ class CoroutineRetryTest: AbstractRetryTest() {
     }
 
     private fun procedureSuspendFailure(serviceName: String) {
-        webClient.get()
-            .uri("/coroutines/$serviceName/suspendFailure")
-            .exchange()
-            .expectStatus().is5xxServerError
+        webClient.httpGet("/coroutines/$serviceName/suspendFailure", HttpStatus.INTERNAL_SERVER_ERROR)
     }
 
     private fun procedureSuspendSuccess(serviceName: String) {
-        webClient.get()
-            .uri("/coroutines/$serviceName/suspendSuccess")
-            .exchange()
-            .expectStatus().is2xxSuccessful
+        webClient.httpGet("/coroutines/$serviceName/suspendSuccess")
     }
 }

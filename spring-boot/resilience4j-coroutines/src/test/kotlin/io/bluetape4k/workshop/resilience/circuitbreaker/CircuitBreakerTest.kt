@@ -1,12 +1,14 @@
 package io.bluetape4k.workshop.resilience.circuitbreaker
 
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.spring.tests.httpGet
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldStartWith
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
 
 class CircuitBreakerTest: AbstractCircuitBreakerTest() {
@@ -43,11 +45,8 @@ class CircuitBreakerTest: AbstractCircuitBreakerTest() {
         }
 
         @Test
-        fun `Backend A - 예외 발생 시 Fallback 이 작동합니다`() = runTest {
-            val response = webClient.get()
-                .uri("/$BACKEND_A/fallback")
-                .exchange()
-                .expectStatus().isOk
+        fun `Backend A - 예외 발생 시 Fallback 이 작동합니다`() = runSuspendIO {
+            val response = webClient.httpGet("/$BACKEND_A/fallback")
                 .returnResult<String>().responseBody
                 .awaitSingle()
 
@@ -55,14 +54,11 @@ class CircuitBreakerTest: AbstractCircuitBreakerTest() {
         }
 
         @Test
-        fun `Backend A - Circuit Breaker에 의해 무시되는 예외가 발생하는 경우에는 상태 변환이 없다`() {
+        fun `Backend A - Circuit Breaker에 의해 무시되는 예외가 발생하는 경우에는 상태 변환이 없다`() = runSuspendIO {
             // 예외가 발생하지만, Circuit Breaker가 무시하는 예외라면 Circuit Breaker 상태에 영향을 미치지 않는다.
             // Backend A의 minimumNumberOfCalls = 5 < 6 회 예외
             repeat(6) {
-                webClient.get()
-                    .uri("/$BACKEND_A/ignore")
-                    .exchange()
-                    .expectStatus().is5xxServerError
+                webClient.httpGet("/$BACKEND_A/ignore", HttpStatus.INTERNAL_SERVER_ERROR)
             }
 
             // Circuit Breaker 가 BusinessException 예외를 무시했기 때문에 상태 변화는 없다
@@ -100,11 +96,8 @@ class CircuitBreakerTest: AbstractCircuitBreakerTest() {
         }
 
         @Test
-        fun `Backend B - 예외 발생 시 Fallback 이 작동합니다`() = runTest {
-            val response = webClient.get()
-                .uri("/$BACKEND_B/fallback")
-                .exchange()
-                .expectStatus().isOk
+        fun `Backend B - 예외 발생 시 Fallback 이 작동합니다`() = runSuspendIO {
+            val response = webClient.httpGet("/$BACKEND_B/fallback")
                 .returnResult<String>().responseBody
                 .awaitSingle()
 
@@ -112,14 +105,11 @@ class CircuitBreakerTest: AbstractCircuitBreakerTest() {
         }
 
         @Test
-        fun `Backend B - Circuit Breaker에 의해 무시되는 예외가 발생하는 경우에는 상태 변환이 없다`() {
+        fun `Backend B - Circuit Breaker에 의해 무시되는 예외가 발생하는 경우에는 상태 변환이 없다`() = runSuspendIO {
             // 예외가 발생하지만, Circuit Breaker가 무시하는 예외라면 Circuit Breaker 상태에 영향을 미치지 않는다.
             // Backend B의 minimumNumberOfCalls = 10 < 11 회 예외
             repeat(11) {
-                webClient.get()
-                    .uri("/$BACKEND_B/ignore")
-                    .exchange()
-                    .expectStatus().is5xxServerError
+                webClient.httpGet("/$BACKEND_B/ignore", HttpStatus.INTERNAL_SERVER_ERROR)
             }
 
             // Circuit Breaker 가 BusinessException 예외를 무시했기 때문에 상태 변화는 없다
@@ -128,16 +118,10 @@ class CircuitBreakerTest: AbstractCircuitBreakerTest() {
     }
 
     private fun procedureFailure(backendName: String) {
-        webClient.get()
-            .uri("/$backendName/failure")
-            .exchange()
-            .expectStatus().is5xxServerError
+        webClient.httpGet("/$backendName/failure", HttpStatus.INTERNAL_SERVER_ERROR)
     }
 
     private fun procedureSuccess(backendName: String) {
-        webClient.get()
-            .uri("/$backendName/success")
-            .exchange()
-            .expectStatus().isOk
+        webClient.httpGet("/$backendName/success")
     }
 }

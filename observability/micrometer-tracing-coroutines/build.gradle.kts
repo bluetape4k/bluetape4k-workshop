@@ -13,7 +13,9 @@ configurations {
 }
 
 dependencies {
-
+    implementation(platform(Libs.micrometer_bom))
+    implementation(platform(Libs.micrometer_tracing_bom))
+    
     implementation(Libs.bluetape4k_micrometer)
     implementation(Libs.bluetape4k_spring_core)
     implementation(Libs.bluetape4k_jackson)
