@@ -7,17 +7,21 @@ import io.bluetape4k.workshop.r2dbc.domain.User
 import io.bluetape4k.workshop.r2dbc.domain.UserDTO
 import io.bluetape4k.workshop.r2dbc.domain.toDto
 import io.bluetape4k.workshop.r2dbc.service.UserService
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.reactive.asFlow
+import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
+import org.amshove.kluent.shouldHaveSize
+import org.amshove.kluent.shouldNotBeEmpty
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
-import org.springframework.test.web.reactive.server.expectBody
-import org.springframework.test.web.reactive.server.expectBodyList
+import org.springframework.test.web.reactive.server.returnResult
 
 class UserHandlerIT(
     @Autowired private val client: WebTestClient,
@@ -35,16 +39,14 @@ class UserHandlerIT(
     inner class Find {
         @Test
         fun `find all users`() = runTest {
-            val response = client.get()
+            val users = client.get()
                 .uri("/users")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().is2xxSuccessful
-                .expectBodyList<UserDTO>()
-                .returnResult()
+                .returnResult<UserDTO>().responseBody.asFlow().toList()
 
-            response.shouldNotBeNull()
-            val users = response.responseBody.shouldNotBeNull()
+            users.shouldNotBeEmpty()
             users.forEach { user ->
                 log.debug { "findAll. user=$user" }
             }
@@ -52,16 +54,15 @@ class UserHandlerIT(
 
         @Test
         fun `find by id - exsting user`() = runTest {
-            client.get()
+            val user = client.get()
                 .uri("/users/1")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().is2xxSuccessful
-                .expectBody<User>()
-                .consumeWith { result ->
-                    val user = result.responseBody.shouldNotBeNull()
-                    log.debug { "Find by Id[1] =$user" }
-                }
+                .returnResult<User>().responseBody.awaitSingle()
+
+            user.shouldNotBeNull()
+            log.debug { "Find by Id[1] =$user" }
         }
 
         @Test
@@ -96,12 +97,9 @@ class UserHandlerIT(
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().is2xxSuccessful
-                .expectBodyList<User>()
-                .hasSize(1)
-                .returnResult()
-                .responseBody
-                .shouldNotBeNull()
+                .returnResult<User>().responseBody.asFlow().toList()
 
+            searchedUsers shouldHaveSize 1
             searchedUsers.all { it.email == searchEmail }.shouldBeTrue()
         }
 
@@ -141,10 +139,7 @@ class UserHandlerIT(
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isCreated
-                .expectBody<User>()
-                .returnResult()
-                .responseBody
-                .shouldNotBeNull()
+                .returnResult<User>().responseBody.awaitSingle()
 
             savedUser.id.shouldNotBeNull()
             savedUser.toDto() shouldBeEqualTo newUser
@@ -180,10 +175,7 @@ class UserHandlerIT(
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().is2xxSuccessful
-                .expectBody<User>()
-                .returnResult()
-                .responseBody
-                .shouldNotBeNull()
+                .returnResult<User>().responseBody.awaitSingle()
 
             updatedUser.toDto() shouldBeEqualTo userToUpdate
         }

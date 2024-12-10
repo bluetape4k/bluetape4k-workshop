@@ -2,11 +2,13 @@ package io.bluetape4k.workshop.resilience.retry
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.resilience.AbstractResilienceTest
 import io.github.resilience4j.retry.RetryRegistry
 import org.amshove.kluent.shouldContain
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.test.web.reactive.server.returnResult
 
 abstract class AbstractRetryTest: AbstractResilienceTest() {
 
@@ -41,6 +43,15 @@ abstract class AbstractRetryTest: AbstractResilienceTest() {
                 log.debug { "metric=$metricName$count" }
                 body shouldContain metricName + count
             }
+
+        val body = webClient.httpGet("/actuator/prometheus")
+            .returnResult<String>().responseBody
+            .toStream()
+            .toList()
+
+        val metricName = getMetricName(kind, serviceName)
+        log.debug { "metric=$metricName$count" }
+        body shouldContain metricName + count
     }
 
     protected fun getMetricName(kind: String, serviceName: String): String? {

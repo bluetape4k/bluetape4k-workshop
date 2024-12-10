@@ -2,15 +2,18 @@ package io.bluetape4k.workshop.r2dbc.controller
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.support.toUtf8String
 import io.bluetape4k.workshop.r2dbc.AbstractWebfluxR2dbcApplicationTest
 import io.bluetape4k.workshop.r2dbc.domain.User
 import io.bluetape4k.workshop.r2dbc.domain.toDto
 import io.bluetape4k.workshop.r2dbc.service.UserService
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.reactive.asFlow
+import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldContain
+import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeEmpty
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Nested
@@ -19,8 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
-import org.springframework.test.web.reactive.server.expectBody
-import org.springframework.test.web.reactive.server.expectBodyList
+import org.springframework.test.web.reactive.server.returnResult
 
 class UserControllerTest(
     @Autowired private val client: WebTestClient,
@@ -38,10 +40,9 @@ class UserControllerTest(
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk
-                .expectBodyList<User>()
-                .returnResult()
-                .responseBody
-                .shouldNotBeNull()
+                .returnResult<User>().responseBody
+                .asFlow()
+                .toList()
 
             users.shouldNotBeEmpty()
             users.forEach { log.debug { it } }
@@ -49,46 +50,41 @@ class UserControllerTest(
 
         @Test
         fun `find by id - existing user`() = runTest {
-            client.get()
+            val user = client.get()
                 .uri("/api/users/1")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().is2xxSuccessful
-                .expectBody<User>()
-                .consumeWith { result ->
-                    val user = result.responseBody.shouldNotBeNull()
-                    log.debug { "Find by id[1] = $user" }
-                }
+                .returnResult<User>().responseBody.awaitSingle()
+
+            log.debug { "Find by id[1] = $user" }
+            user.shouldNotBeNull()
         }
 
         @Test
         fun `find by id - non-existing user`() = runTest {
-            client.get()
+            val message = client.get()
                 .uri("/api/users/9999")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isNotFound
-                .expectBody()
-                .consumeWith { result ->
-                    val message = result.responseBody?.toUtf8String()
-                    log.debug { message }
-                    message.shouldNotBeNull() shouldContain "Not Found"
-                }
+                .returnResult<String>().responseBody.awaitSingle()
+
+            log.debug { message }
+            message.shouldNotBeNull() shouldContain "Not Found"
         }
 
         @Test
         fun `find by id - non-numeric id`() = runTest {
-            client.get()
+            val message = client.get()
                 .uri("/api/users/abc")
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isBadRequest
-                .expectBody()
-                .consumeWith { result ->
-                    val message = result.responseBody?.toUtf8String()
-                    log.debug { message }
-                    message.shouldNotBeNull() shouldContain "Bad Request"
-                }
+                .returnResult<String>().responseBody.awaitSingle()
+
+            log.debug { "message=$message" }
+            message.shouldNotBeNull() shouldContain "Bad Request"
         }
     }
 
@@ -102,12 +98,9 @@ class UserControllerTest(
                 .uri("/api/users/search?email=$searchEmail")
                 .exchange()
                 .expectStatus().is2xxSuccessful
-                .expectBodyList<User>()
-                .hasSize(1)
-                .returnResult()
-                .responseBody
-                .shouldNotBeNull()
+                .returnResult<User>().responseBody.asFlow().toList()
 
+            searchedUsers shouldHaveSize 1
             searchedUsers.all { it.email == searchEmail }.shouldBeTrue()
         }
 
@@ -142,9 +135,7 @@ class UserControllerTest(
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().is2xxSuccessful
-                .expectBody<User>()
-                .returnResult()
-                .responseBody.shouldNotBeNull()
+                .returnResult<User>().responseBody.awaitSingle()
 
             savedUser.id.shouldNotBeNull()
             savedUser.toDto() shouldBeEqualTo newUser
@@ -178,9 +169,7 @@ class UserControllerTest(
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().is2xxSuccessful
-                .expectBody<User>()
-                .returnResult()
-                .responseBody.shouldNotBeNull()
+                .returnResult<User>().responseBody.awaitSingle()
 
             updatedUser.id.shouldNotBeNull()
             updatedUser.toDto() shouldBeEqualTo userToUpdate
@@ -235,9 +224,7 @@ class UserControllerTest(
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk
-                .expectBody<Boolean>()
-                .returnResult()
-                .responseBody.shouldNotBeNull().shouldBeTrue()
+                .returnResult<Boolean>().responseBody.awaitSingle().shouldBeTrue()
         }
 
         @Test

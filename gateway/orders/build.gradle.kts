@@ -16,18 +16,14 @@ springBoot {
     }
 }
 
-dependencyManagement {
-    imports {
-        mavenBom(Libs.micrometer_bom)
-    }
-}
-
 @Suppress("UnstableApiUsage")
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
 
 dependencies {
+    implementation(platform(Libs.micrometer_bom))
+
     implementation(Libs.bluetape4k_spring_core)
     implementation(Libs.bluetape4k_jackson)
     implementation(Libs.bluetape4k_idgenerators)

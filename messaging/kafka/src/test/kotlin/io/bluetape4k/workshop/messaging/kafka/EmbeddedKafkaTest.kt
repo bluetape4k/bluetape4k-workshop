@@ -56,8 +56,7 @@ class EmbeddedKafkaTest {
 
     @TestComponent
     class TestListener {
-
-        companion object {
+        companion object: KLogging() {
             var result: String? = null
         }
 

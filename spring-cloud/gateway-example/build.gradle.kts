@@ -16,19 +16,15 @@ springBoot {
     }
 }
 
-dependencyManagement {
-    imports {
-        mavenBom(Libs.spring_cloud_dependencies)
-        mavenBom(Libs.micrometer_bom)
-    }
-}
-
 @Suppress("UnstableApiUsage")
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
 
 dependencies {
+    implementation(platform(Libs.spring_cloud_dependencies))
+    implementation(platform(Libs.micrometer_bom))
+
     implementation(Libs.bluetape4k_spring_webflux)
     testImplementation(Libs.bluetape4k_spring_tests)
 

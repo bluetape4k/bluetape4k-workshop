@@ -1,8 +1,10 @@
 package io.bluetape4k.workshop.resilience.retry
 
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.spring.tests.httpGet
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 
 class FutureRetryTest: AbstractRetryTest() {
 
@@ -55,16 +57,10 @@ class FutureRetryTest: AbstractRetryTest() {
     }
 
     private fun procedureFutureFailure(serviceName: String) {
-        webClient.get()
-            .uri("/$serviceName/futureFailure")
-            .exchange()
-            .expectStatus().is5xxServerError
+        webClient.httpGet("/$serviceName/futureFailure", HttpStatus.INTERNAL_SERVER_ERROR)
     }
 
     private fun procedureFutureSuccess(serviceName: String) {
-        webClient.get()
-            .uri("/$serviceName/futureSuccess")
-            .exchange()
-            .expectStatus().is2xxSuccessful
+        webClient.httpGet("/$serviceName/futureSuccess")
     }
 }
