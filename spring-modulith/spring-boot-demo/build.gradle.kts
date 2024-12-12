@@ -33,13 +33,18 @@ kapt {
 }
 
 dependencies {
-    // Bluetape4k
-    implementation(Libs.bluetape4k_idgenerators)
-    testImplementation(Libs.bluetape4k_spring_tests)
+    implementation(platform(Libs.spring_modulith_bom))
 
     // Spring Modulith
+    implementation(Libs.spring_modulith_actuator)
+    implementation(Libs.spring_modulith_observability)
+    implementation(Libs.spring_modulith_starter_core)
     implementation(Libs.spring_modulith_starter_jpa)
     testImplementation(Libs.spring_modulith_starter_test)
+
+    // Observability
+    implementation(Libs.micrometer_tracing_bridge_otel)
+    implementation(Libs.opentelemetry_exporter_zipkin)
 
     api(Libs.jakarta_annotation_api)
     api(Libs.jakarta_persistence_api)
@@ -56,9 +61,17 @@ dependencies {
     implementation(Libs.hikaricp)
     implementation(Libs.h2_v2)
 
+    // MapStruct
+    implementation(Libs.mapstruct)
+    kapt(Libs.mapstruct_processor)
+    kaptTest(Libs.mapstruct_processor)
+
     // Vaidators
     implementation(Libs.hibernate_validator)
     runtimeOnly(Libs.jakarta_validation_api)
+
+    // Testcontainers
+    implementation(Libs.bluetape4k_testcontainers)
 
     // Spring Boot
     testImplementation(Libs.springBoot("autoconfigure"))
@@ -66,14 +79,22 @@ dependencies {
     annotationProcessor(Libs.springBoot("configuration-processor"))
     runtimeOnly(Libs.springBoot("devtools"))
 
+    implementation(Libs.springBootStarter("actuator"))
     implementation(Libs.springBootStarter("data-jpa"))
     implementation(Libs.springBootStarter("validation"))
+    implementation(Libs.springBootStarter("web"))
 
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")
     }
-    testImplementation(Libs.springmockk)
 
+    // OpenAPI Documentation
+    implementation(Libs.springdoc_openapi_starter_webmvc_api)
+
+    implementation(Libs.bluetape4k_idgenerators)
+    testImplementation(Libs.bluetape4k_spring_tests)
+
+    testImplementation(Libs.springmockk)
 }

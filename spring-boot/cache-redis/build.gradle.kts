@@ -19,7 +19,7 @@ dependencies {
 
     // Codecs
     implementation(Libs.kryo)
-    implementation(Libs.fury)
+    implementation(Libs.fury_kotlin)
 
     // Compressor
     implementation(Libs.commons_compress)
