@@ -1,8 +1,10 @@
-package io.bluetape4k.workshop.spring.modulith.events.b.transactions
+package io.bluetape4k.workshop.spring.modulith.events.c.architecture.before.order
 
 import io.bluetape4k.ToStringBuilder
-import io.bluetape4k.workshop.spring.modulith.events.util.StringAggregate
+import io.bluetape4k.hibernate.model.AbstractJpaEntity
+import io.bluetape4k.idgenerators.uuid.TimebasedUuid
 import jakarta.persistence.Entity
+import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.hibernate.annotations.DynamicInsert
 import org.hibernate.annotations.DynamicUpdate
@@ -11,13 +13,14 @@ import org.hibernate.annotations.DynamicUpdate
 @Table(name = "MyOrder")
 @DynamicInsert
 @DynamicUpdate
-class Order: StringAggregate<Order>() {
+class Order: AbstractJpaEntity<String>() {
 
+    @Id
+    override var id: String? = TimebasedUuid.Reordered.nextIdAsString()
     var status: OrderStatus = OrderStatus.OPEN
 
-    fun complete(): Order = apply {
+    fun complete() {
         this.status = OrderStatus.COMPLETED
-        registerEvent(OrderCompleted(this))
     }
 
     override fun buildStringHelper(): ToStringBuilder {
@@ -29,6 +32,4 @@ class Order: StringAggregate<Order>() {
         OPEN,
         COMPLETED;
     }
-
-    data class OrderCompleted(val order: Order)
 }

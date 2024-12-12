@@ -33,9 +33,6 @@ kapt {
 }
 
 dependencies {
-    // Bluetape4k
-    implementation(Libs.bluetape4k_idgenerators)
-    testImplementation(Libs.bluetape4k_spring_tests)
 
     // Spring Modulith
     implementation(Libs.spring_modulith_starter_jpa)
@@ -60,6 +57,7 @@ dependencies {
     implementation(Libs.hibernate_validator)
     runtimeOnly(Libs.jakarta_validation_api)
 
+
     // Spring Boot
     testImplementation(Libs.springBoot("autoconfigure"))
     annotationProcessor(Libs.springBoot("autoconfigure-processor"))
@@ -76,4 +74,11 @@ dependencies {
     }
     testImplementation(Libs.springmockk)
 
+    // Bluetape4k
+    implementation(Libs.bluetape4k_idgenerators)
+    testImplementation(Libs.bluetape4k_spring_tests)
+
+    // Mockk
+    testImplementation(Libs.mockk)
+    testImplementation(Libs.springmockk)
 }

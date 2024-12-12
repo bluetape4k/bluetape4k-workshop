@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.spring.modulith.events.b.transactions
+package io.bluetape4k.workshop.spring.modulith.events.d.architecture.after.order
 
 import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.workshop.spring.modulith.events.util.StringAggregate
