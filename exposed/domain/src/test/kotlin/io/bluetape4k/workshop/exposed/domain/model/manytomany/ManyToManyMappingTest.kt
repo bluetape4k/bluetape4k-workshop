@@ -54,7 +54,6 @@ class ManyToManyMappingTest: AbstractExposedDomainTest() {
     @Test
     fun `SQL DSL 로부터 DAO Entity 만들기`() {
         runWithTables(UserTable, GroupTable, MemberTable) {
-
             val query = GroupTable
                 .innerJoin(UserTable)
                 .innerJoin(MemberTable)

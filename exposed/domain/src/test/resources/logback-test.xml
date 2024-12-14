@@ -5,7 +5,7 @@
         <immediateFlush>true</immediateFlush>
         <encoder>
             <!-- @formatter:off -->
-            <pattern>%d{HH:mm:ss.SSS} %highlight(%-5level) [%blue(%36.36t)] %yellow(%logger{36}):%line: %msg%n%ex</pattern>
+            <pattern>%d{HH:mm:ss.SSS} %highlight(%-5level) [%blue(%24.24t)] %yellow(%40.40logger):%line: %msg%n%ex</pattern>
             <!-- @formatter:on -->
             <charset>UTF-8</charset>
         </encoder>
@@ -13,6 +13,9 @@
 
     <logger name="io.bluetape4k.workshop.exposed" level="DEBUG"/>
     <logger name="io.bluetape4k" level="DEBUG"/>
+
+    <logger name="org.jetbrains.exposed" level="DEBUG"/>
+    <logger name="Exposed" level="DEBUG"/>
 
     <root level="INFO">
         <appender-ref ref="Console"/>
