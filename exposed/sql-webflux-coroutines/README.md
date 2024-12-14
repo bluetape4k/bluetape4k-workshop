@@ -1,4 +1,4 @@
-# Kotlin Exposed (SQL library) demo
+# Kotlin Exposed (SQL library) with Coroutines and Webflux demo
 
 This repository accompanies a blog
 post [Kotlin Exposed - A lightweight SQL library](https://blog.jdriven.com/2019/07/kotlin-exposed-a-lightweight-sql-library/).
