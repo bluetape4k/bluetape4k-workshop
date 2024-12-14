@@ -26,6 +26,9 @@ plugins {
     id(Plugins.dokka) version Plugins.Versions.dokka
     id(Plugins.testLogger) version Plugins.Versions.testLogger
     id(Plugins.shadow) version Plugins.Versions.shadow apply false
+
+    // for JMolecules
+    id("net.bytebuddy.byte-buddy-gradle-plugin") version "1.15.10" apply false
 }
 
 // NOTE: Nexus 에 등록된 것 때문에 사용한다
