@@ -38,7 +38,7 @@ dependencies {
     implementation(Libs.exposed_dao)
     implementation(Libs.exposed_kotlin_datetime)
     implementation(Libs.exposed_spring_boot_starter)
-    testImplementation(Libs.bluetape4k_spring_tests)
+    implementation(Libs.exposed_spring_transaction)
 
     // Database Drivers
     implementation(Libs.hikaricp)
