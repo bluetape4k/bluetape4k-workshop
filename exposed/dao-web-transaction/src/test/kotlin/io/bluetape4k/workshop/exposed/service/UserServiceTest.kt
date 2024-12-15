@@ -4,6 +4,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedApplicationTest
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldNotBeEmpty
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
@@ -73,5 +74,16 @@ class UserServiceTest(
 
         user.name shouldBeEqualTo userRequest.name
         user.age shouldBeEqualTo userRequest.age
+    }
+
+    @Test
+    @Order(5)
+    fun `find all users`() {
+        repeat(10) {
+            userService.create(newUserCreateRequest())
+        }
+
+        val users = userService.findAllUsers()
+        users.shouldNotBeEmpty()
     }
 }

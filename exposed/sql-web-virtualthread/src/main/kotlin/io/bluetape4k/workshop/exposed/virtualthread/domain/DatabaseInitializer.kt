@@ -11,8 +11,6 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.atTime
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.insert
@@ -42,8 +40,6 @@ class DatabaseInitializer(
         log.info { "Creating schema and test data ..." }
 
         transaction(database) {
-            addLogger(StdOutSqlLogger)
-
             SchemaUtils.createMissingTablesAndColumns(Actors, Movies, ActorsInMovies)
         }
     }
@@ -111,8 +107,6 @@ class DatabaseInitializer(
         )
 
         transaction(database) {
-            addLogger(StdOutSqlLogger)
-
             Actors.batchInsert(actors) {
                 this[Actors.firstName] = it.firstName
                 this[Actors.lastName] = it.lastName

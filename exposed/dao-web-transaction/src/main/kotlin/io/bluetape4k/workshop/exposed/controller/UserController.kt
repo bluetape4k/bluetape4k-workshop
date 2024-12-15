@@ -25,6 +25,11 @@ class UserController(
 
     companion object: KLogging()
 
+    @GetMapping
+    fun findAllUsers(): List<UserDTO> {
+        return userService.findAllUsers().map { it.toUserDTO() }
+    }
+
     // Read User
     @GetMapping("/{id}")
     fun findUserById(

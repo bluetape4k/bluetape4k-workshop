@@ -35,20 +35,16 @@ dependencies {
 
     // Exposed
     implementation(Libs.exposed_core)
-    implementation(Libs.exposed_jdbc)
+    implementation(Libs.exposed_dao)
     implementation(Libs.exposed_kotlin_datetime)
     implementation(Libs.exposed_spring_boot_starter)
+    testImplementation(Libs.bluetape4k_spring_tests)
 
     // Database Drivers
     implementation(Libs.hikaricp)
 
     // H2
     implementation(Libs.h2_v2)
-
-    // Postgres
-//    implementation(Libs.bluetape4k_testcontainers)
-//    implementation(Libs.testcontainers_postgresql)
-//    implementation(Libs.postgresql_driver)
 
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))
@@ -72,4 +68,19 @@ dependencies {
     testImplementation(Libs.kotlinx_coroutines_core)
     testImplementation(Libs.kotlinx_coroutines_reactor)
     testImplementation(Libs.kotlinx_coroutines_test)
+
+    // Monitoring
+    implementation(Libs.micrometer_core)
+    implementation(Libs.micrometer_registry_prometheus)
+
+    // SpringDoc - OpenAPI 3.0
+    implementation(Libs.springdoc_openapi_starter_webflux_ui)
+
+    // Gatling
+    implementation(Libs.gatling_app)
+    implementation(Libs.gatling_core_java)
+    implementation(Libs.gatling_http_java)
+    implementation(Libs.gatling_recorder)
+    implementation(Libs.gatling_charts_highcharts)
+    testImplementation(Libs.gatling_test_framework)
 }

@@ -9,12 +9,15 @@ import io.bluetape4k.spring.tests.httpPut
 import io.bluetape4k.workshop.exposed.AbstractExposedApplicationTest
 import io.bluetape4k.workshop.exposed.dto.UserCreateResponse
 import io.bluetape4k.workshop.exposed.dto.UserDTO
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeGreaterThan
+import org.amshove.kluent.shouldNotBeEmpty
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
@@ -138,4 +141,23 @@ class UserControllerTest(
         response.age shouldBeEqualTo createRequest.age
     }
 
+    @Test
+    @Order(5)
+    fun `find all users`() = runTest {
+        repeat(10) {
+            val createRequest = newUserCreateRequest()
+            client.httpPost("/api/v1/users", createRequest)
+                .returnResult<UserCreateResponse>()
+                .responseBody
+                .awaitSingle()
+        }
+
+        val response = client.httpGet("/api/v1/users")
+            .returnResult<UserDTO>()
+            .responseBody
+            .asFlow()
+            .toList()
+
+        response.shouldNotBeEmpty()
+    }
 }

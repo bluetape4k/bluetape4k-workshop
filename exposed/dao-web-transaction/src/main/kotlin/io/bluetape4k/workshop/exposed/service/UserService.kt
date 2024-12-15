@@ -23,6 +23,13 @@ class UserService {
     companion object: KLogging()
 
     @Transactional(readOnly = true)
+    fun findAllUsers(): List<User> {
+        log.debug { "find all users" }
+
+        return UserEntity.selectAll().map { it.toUser() }
+    }
+
+    @Transactional(readOnly = true)
     fun findUserById(id: UserId): User? {
         log.debug { "find user by id: ${id.value}" }
 

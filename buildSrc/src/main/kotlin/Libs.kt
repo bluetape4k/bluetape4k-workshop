@@ -1289,9 +1289,10 @@ object Libs {
     val exposed_json = exposed("json")
     val exposed_kotlin_datetime = exposed("kotlin-datetime")
     val exposed_money = exposed("money")
+    val exposed_tests = exposed("tests")
 
     val exposed_spring_boot_starter = exposed("spring-boot-starter")
-    val exposed_spring_transaction = "org.jetbrains.exposed:spring-transaction:${Versions.exposed}"
+    const val exposed_spring_transaction = "org.jetbrains.exposed:spring-transaction:${Versions.exposed}"
 
 
     // R2DBC (버전은 spring-data 버전을 사용한다)
