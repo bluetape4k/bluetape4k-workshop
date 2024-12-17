@@ -8,32 +8,26 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
 import org.jetbrains.exposed.sql.transactions.transaction
 
 
-fun runWithTables(
+inline fun runWithTables(
     vararg tables: Table,
-    block: () -> Unit,
-) {
-    transaction {
-        runCatching { SchemaUtils.createMissingTablesAndColumns(*tables) }
-
-        try {
-            block()
-        } finally {
-            SchemaUtils.drop(*tables)
-        }
+    crossinline block: () -> Unit,
+) = transaction {
+    SchemaUtils.createMissingTablesAndColumns(*tables)
+    try {
+        block()
+    } finally {
+        SchemaUtils.drop(*tables)
     }
 }
 
-suspend fun runSuspendWithTables(
+suspend inline fun runSuspendWithTables(
     vararg tables: Table,
-    block: suspend Transaction.() -> Unit,
-) {
-    newSuspendedTransaction(Dispatchers.IO) {
-        runCatching { SchemaUtils.createMissingTablesAndColumns(*tables) }
-
-        try {
-            block()
-        } finally {
-            SchemaUtils.drop(*tables)
-        }
+    crossinline block: suspend Transaction.() -> Unit,
+) = newSuspendedTransaction(Dispatchers.IO) {
+    SchemaUtils.createMissingTablesAndColumns(*tables)
+    try {
+        block()
+    } finally {
+        SchemaUtils.drop(*tables)
     }
 }
