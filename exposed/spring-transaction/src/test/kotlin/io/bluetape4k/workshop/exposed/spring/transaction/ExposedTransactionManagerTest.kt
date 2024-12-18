@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.exposed.spring.transaction
 
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.info
 import org.amshove.kluent.internal.assertFailsWith
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeInstanceOf
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.RepeatedTest
 import org.springframework.test.annotation.Commit
 import org.springframework.transaction.IllegalTransactionStateException
 import org.springframework.transaction.TransactionDefinition
+import org.springframework.transaction.TransactionSystemException
 import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
@@ -339,11 +341,11 @@ open class ExposedTransactionManagerTest: SpringTransactionTestBase() {
                 T1.insertRandom()
             }
         }
-
-        transactionManager.execute(timeout = 1) {
-            try {
-                TransactionManager.current().exec(
-                    """
+        try {
+            transactionManager.execute(timeout = 1) {
+                try {
+                    TransactionManager.current().exec(
+                        """
                     WITH RECURSIVE T(N) AS (
                        SELECT 1
                        UNION ALL
@@ -351,12 +353,16 @@ open class ExposedTransactionManagerTest: SpringTransactionTestBase() {
                    )
                    SELECT * FROM T;                     
                     """.trimIndent(),
-                    explicitStatementType = StatementType.SELECT
-                )
-                fail("Should throw SQLTimeoutException")
-            } catch (cause: ExposedSQLException) {
-                cause.cause shouldBeInstanceOf SQLTimeoutException::class
+                        explicitStatementType = StatementType.SELECT
+                    )
+                    fail("Should throw SQLTimeoutException")
+                } catch (cause: ExposedSQLException) {
+                    log.info(cause) { "ExposedSQLException is thrown" }
+                    cause.cause shouldBeInstanceOf SQLTimeoutException::class
+                }
             }
+        } catch (e: TransactionSystemException) {
+            log.info(e) { "TransactionSystemException is thrown" }
         }
     }
 

@@ -1,16 +1,16 @@
 package io.bluetape4k.workshop.exposed.spring.transaction
 
+import io.bluetape4k.junit5.awaitility.coUntil
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.debug.junit5.CoroutinesTimeout
-import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldBeEqualTo
 import org.awaitility.kotlin.atMost
 import org.awaitility.kotlin.await
-import org.awaitility.kotlin.until
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insert
@@ -37,16 +37,16 @@ open class SpringCoroutineTest: SpringTransactionTestBase() {
     @RepeatedTest(REPEAT_SIZE)
     @Transactional
     @Commit
-    open fun `test nested coroutine transaction`() = runTest {
+    open fun `test nested coroutine transaction`() = runSuspendIO {
         try {
             newSuspendedTransaction(Dispatchers.IO) {
                 log.debug { "Create schema ..." }
                 SchemaUtils.create(Testing)
             }
 
-            val mainJob = async(Dispatchers.IO) {
+            val mainJob = async {
                 val results = List(5) { indx ->
-                    suspendedTransactionAsync(Dispatchers.IO) {
+                    suspendedTransactionAsync {
                         Testing.insert { }
                         indx
                     }
@@ -55,16 +55,17 @@ open class SpringCoroutineTest: SpringTransactionTestBase() {
                 results.sum() shouldBeEqualTo 10
             }
 
-            await atMost Duration.ofSeconds(60) until { mainJob.isCompleted }
+            // Main Job 을 60초까지 기다린다.
+            await atMost Duration.ofSeconds(60) coUntil { mainJob.isCompleted }
 
             mainJob.getCompletionExceptionOrNull()?.let { throw it }
 
-            newSuspendedTransaction(Dispatchers.IO) {
+            newSuspendedTransaction {
                 log.debug { "Load Testing entities ..." }
                 Testing.selectAll().count() shouldBeEqualTo 5L
             }
         } finally {
-            newSuspendedTransaction(Dispatchers.IO) {
+            newSuspendedTransaction {
                 log.debug { "Drop schema ..." }
                 SchemaUtils.drop(Testing)
             }
