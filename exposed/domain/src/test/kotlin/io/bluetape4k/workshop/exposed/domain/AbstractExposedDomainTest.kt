@@ -39,7 +39,7 @@ abstract class AbstractExposedDomainTest {
     private fun hikariConfigH2(): HikariConfig {
         return HikariConfig().also {
             it.driverClassName = JdbcDrivers.DRIVER_CLASS_H2
-            it.jdbcUrl = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL;"
+            it.jdbcUrl = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;"
             it.username = "sa"
             it.password = ""
         }

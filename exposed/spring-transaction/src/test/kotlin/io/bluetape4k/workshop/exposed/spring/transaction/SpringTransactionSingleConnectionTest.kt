@@ -80,7 +80,7 @@ class SpringTransactionSingleConnectionTest {
         @Bean
         fun singleConnectionH2DataSource(): DataSource {
             return SingleConnectionDataSource(
-                "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL",
+                "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;",
                 "sa",
                 "",
                 true

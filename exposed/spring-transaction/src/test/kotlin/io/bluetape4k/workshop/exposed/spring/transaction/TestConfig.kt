@@ -19,7 +19,7 @@ class TestConfig: TransactionManagementConfigurer {
     @Bean
     fun dataSource(): DataSource {
         val config = HikariConfig().apply {
-            jdbcUrl = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;MODE=PostgreSQL"
+            jdbcUrl = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL"
             driverClassName = "org.h2.Driver"
             username = "sa"
             password = ""

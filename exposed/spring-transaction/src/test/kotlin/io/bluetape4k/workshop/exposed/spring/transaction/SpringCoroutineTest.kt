@@ -4,7 +4,6 @@ import io.bluetape4k.junit5.awaitility.coUntil
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.debug.junit5.CoroutinesTimeout
@@ -39,7 +38,7 @@ open class SpringCoroutineTest: SpringTransactionTestBase() {
     @Commit
     open fun `test nested coroutine transaction`() = runSuspendIO {
         try {
-            newSuspendedTransaction(Dispatchers.IO) {
+            newSuspendedTransaction {
                 log.debug { "Create schema ..." }
                 SchemaUtils.create(Testing)
             }

@@ -17,7 +17,6 @@ import org.springframework.test.annotation.Commit
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
 
-
 class SpringTransactionEntityTest(
     @Autowired private val orderService: OrderService,
 ): SpringTransactionTestBase() {

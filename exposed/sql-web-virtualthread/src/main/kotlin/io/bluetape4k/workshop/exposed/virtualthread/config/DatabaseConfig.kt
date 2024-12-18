@@ -25,7 +25,7 @@ class DatabaseConfig {
     @Profile("h2")
     fun dataSourceH2(): DataSource {
         val config = HikariConfig().apply {
-            jdbcUrl = "jdbc:h2:mem:exposed-vt;DB_CLOSE_DELAY=-1;MODE=MySQL;"
+            jdbcUrl = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;"
             driverClassName = "org.h2.Driver"
             username = "sa"
             password = ""
