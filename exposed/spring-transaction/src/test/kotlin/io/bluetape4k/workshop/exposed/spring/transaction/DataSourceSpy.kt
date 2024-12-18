@@ -8,7 +8,7 @@ import javax.sql.DataSource
 
 
 internal class DataSourceSpy(connectionSpy: (Connection) -> Connection): DataSource {
-    var con: Connection = connectionSpy(DriverManager.getConnection("jdbc:h2:mem:test"))
+    var con: Connection = connectionSpy(DriverManager.getConnection("jdbc:h2:mem:spy", "sa", ""))
 
     override fun getConnection() = con
     override fun getLogWriter(): PrintWriter = throw NotImplementedError()
