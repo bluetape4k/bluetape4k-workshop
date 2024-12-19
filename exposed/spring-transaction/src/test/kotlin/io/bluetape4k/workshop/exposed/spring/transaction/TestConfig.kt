@@ -1,0 +1,44 @@
+package io.bluetape4k.workshop.exposed.spring.transaction
+
+import com.zaxxer.hikari.HikariConfig
+import com.zaxxer.hikari.HikariDataSource
+import io.bluetape4k.workshop.exposed.spring.transaction.SpringTransactionEntityTest.OrderService
+import org.jetbrains.exposed.spring.SpringTransactionManager
+import org.jetbrains.exposed.sql.DatabaseConfig
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.annotation.EnableTransactionManagement
+import org.springframework.transaction.annotation.TransactionManagementConfigurer
+import javax.sql.DataSource
+
+@Configuration
+@EnableTransactionManagement
+class TestConfig: TransactionManagementConfigurer {
+
+    @Bean
+    fun dataSource(): DataSource {
+        val config = HikariConfig().apply {
+            jdbcUrl = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL"
+            driverClassName = "org.h2.Driver"
+            username = "sa"
+            password = ""
+        }
+        return HikariDataSource(config)
+    }
+
+//    @Bean
+//    fun database(): EmbeddedDatabase =
+//        EmbeddedDatabaseBuilder()
+//            .setName("embeddedTest")
+//            .setType(EmbeddedDatabaseType.H2)
+//            .build()
+
+    @Bean
+    override fun annotationDrivenTransactionManager(): PlatformTransactionManager =
+        SpringTransactionManager(dataSource(), DatabaseConfig { useNestedTransactions = true })
+
+    @Bean
+    fun orderService(): OrderService = OrderService()
+
+}

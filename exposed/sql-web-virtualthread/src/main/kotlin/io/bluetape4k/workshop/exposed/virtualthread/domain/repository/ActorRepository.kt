@@ -10,8 +10,6 @@ import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Actors
 import kotlinx.datetime.LocalDate
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.andWhere
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
@@ -31,8 +29,6 @@ class ActorRepository(private val db: Database) {
         log.debug { "Find Actor by id. id: $id" }
 
         transaction(db) {
-            addLogger(StdOutSqlLogger)
-
             Actors.selectAll()
                 .where(Actors.id eq id)
                 .firstOrNull()
@@ -45,8 +41,6 @@ class ActorRepository(private val db: Database) {
         log.debug { "Search Actor by params. params: $params" }
 
         transaction(db) {
-            addLogger(StdOutSqlLogger)
-
             val query = Actors.selectAll()
 
             params.forEach { (key, value) ->
@@ -68,8 +62,6 @@ class ActorRepository(private val db: Database) {
         log.debug { "Create Actor. actor: $actor" }
 
         transaction(db) {
-            addLogger(StdOutSqlLogger)
-
             val actorId = Actors.insert {
                 it[Actors.firstName] = actor.firstName
                 it[Actors.lastName] = actor.lastName
@@ -94,8 +86,6 @@ class ActorRepository(private val db: Database) {
         log.debug { "Delete Actor by id. actorId: $actorId" }
 
         transaction(db) {
-            addLogger(StdOutSqlLogger)
-
             Actors.deleteWhere { Actors.id eq actorId }
         }
     }

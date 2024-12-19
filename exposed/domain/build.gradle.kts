@@ -5,6 +5,8 @@ configurations {
 dependencies {
     implementation(platform(Libs.exposed_bom))
 
+    implementation(project(":shared"))
+
     api(Libs.exposed_core)
     api(Libs.exposed_dao)
     api(Libs.exposed_jdbc)
