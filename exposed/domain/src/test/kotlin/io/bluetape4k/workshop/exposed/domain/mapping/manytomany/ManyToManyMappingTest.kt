@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.exposed.domain.model.manytomany
+package io.bluetape4k.workshop.exposed.domain.mapping.manytomany
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
@@ -7,9 +7,6 @@ import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedDomainTest
 import io.bluetape4k.workshop.exposed.domain.runSuspendWithTables
 import io.bluetape4k.workshop.exposed.domain.runWithTables
-import io.bluetape4k.workshop.exposed.domain.schema.manytomany.GroupTable
-import io.bluetape4k.workshop.exposed.domain.schema.manytomany.MemberTable
-import io.bluetape4k.workshop.exposed.domain.schema.manytomany.UserTable
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction

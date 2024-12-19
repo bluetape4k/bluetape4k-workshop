@@ -1,8 +1,6 @@
-package io.bluetape4k.workshop.exposed.domain.model.manytomany
+package io.bluetape4k.workshop.exposed.domain.mapping.manytomany
 
 import io.bluetape4k.ToStringBuilder
-import io.bluetape4k.workshop.exposed.domain.schema.manytomany.MemberTable
-import io.bluetape4k.workshop.exposed.domain.schema.manytomany.UserTable
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID

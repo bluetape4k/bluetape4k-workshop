@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.exposed.domain.schema.manytomany
+package io.bluetape4k.workshop.exposed.domain.mapping.manytomany
 
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.kotlin.datetime.CurrentDateTime
