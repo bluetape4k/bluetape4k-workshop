@@ -10,7 +10,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 inline fun runWithTables(
     vararg tables: Table,
-    crossinline block: () -> Unit,
+    crossinline block: Transaction.() -> Unit,
 ) = transaction {
     SchemaUtils.createMissingTablesAndColumns(*tables)
     try {

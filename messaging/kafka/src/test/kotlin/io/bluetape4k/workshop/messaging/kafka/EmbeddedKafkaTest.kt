@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.messaging.kafka
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.support.uninitialized
-import io.bluetape4k.workshop.messaging.kafka.EmbeddedKafkaTest.Companion.TOPIC_NAME
+import io.bluetape4k.workshop.messaging.kafka.EmbeddedKafkaTest.Companion.TEST_TOPIC_NAME
 import org.amshove.kluent.shouldBeEqualTo
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilNotNull
@@ -26,14 +26,14 @@ import org.springframework.test.context.ActiveProfiles
 @ActiveProfiles("embedded")
 @SpringBootTest
 @EmbeddedKafka(
-    topics = [TOPIC_NAME],
+    topics = [TEST_TOPIC_NAME],
     bootstrapServersProperty = "spring.kafka.bootstrap-servers",
 )
 @Import(EmbeddedKafkaTest.TestListener::class)
 class EmbeddedKafkaTest {
 
     companion object: KLogging() {
-        private const val TOPIC_NAME = "test-topic.1"
+        internal const val TEST_TOPIC_NAME = "test-topic.1"
 
         init {
             System.setProperty(EmbeddedKafkaBroker.BROKER_LIST_PROPERTY, "spring.kafka.bootstrap-servers")
@@ -46,7 +46,7 @@ class EmbeddedKafkaTest {
     @Test
     fun `send and receive message`() {
         val message = "test message"
-        kafkaTemplate.send(TOPIC_NAME, message)
+        kafkaTemplate.send(TEST_TOPIC_NAME, message)
 
         await untilNotNull { TestListener.result }
 
@@ -60,7 +60,7 @@ class EmbeddedKafkaTest {
             var result: String? = null
         }
 
-        @KafkaListener(topics = [TOPIC_NAME])
+        @KafkaListener(topics = [TEST_TOPIC_NAME])
         fun handle(message: String) {
             log.info { "Received message: $message" }
             result = message

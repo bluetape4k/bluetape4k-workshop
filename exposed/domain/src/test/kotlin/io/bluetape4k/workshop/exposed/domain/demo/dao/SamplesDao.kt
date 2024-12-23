@@ -40,7 +40,7 @@ class SamplesDao: AbstractExposedDomainTest() {
     }
 
     @Test
-    fun `dao entity - one-to-many`() {
+    fun `dao entity - one to many`() {
         runWithTables(Users, Cities) {
             val seoul = City.new {
                 name = "Seoul"
