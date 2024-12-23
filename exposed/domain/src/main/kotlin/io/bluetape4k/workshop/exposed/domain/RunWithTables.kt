@@ -12,7 +12,7 @@ inline fun runWithTables(
     vararg tables: Table,
     crossinline block: Transaction.() -> Unit,
 ) = transaction {
-    SchemaUtils.createMissingTablesAndColumns(*tables)
+    SchemaUtils.create(*tables)
     try {
         block()
     } finally {
@@ -24,7 +24,7 @@ suspend inline fun runSuspendWithTables(
     vararg tables: Table,
     crossinline block: suspend Transaction.() -> Unit,
 ) = newSuspendedTransaction(Dispatchers.IO) {
-    SchemaUtils.createMissingTablesAndColumns(*tables)
+    SchemaUtils.create(*tables)
     try {
         block()
     } finally {

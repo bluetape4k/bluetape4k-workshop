@@ -16,9 +16,9 @@ dependencies {
     implementation(Libs.bluetape4k_jdbc)
     testImplementation(Libs.bluetape4k_junit5)
 
-    testImplementation(Libs.h2_v2)
-    testImplementation(Libs.mysql_connector_j)
-    testImplementation(Libs.postgresql_driver)
+    compileOnly(Libs.h2_v2)
+    compileOnly(Libs.mysql_connector_j)
+    compileOnly(Libs.postgresql_driver)
 
     testImplementation(Libs.bluetape4k_testcontainers)
     testImplementation(Libs.testcontainers)
