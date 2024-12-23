@@ -63,7 +63,7 @@ object Versions {
     const val bluetape4k = "0.0.3-SNAPSHOT"              // Bluetape4k Github Package 로 배포됩니다.
 
     const val kotlin = "2.1.0"                 // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
-    const val kotlinx_coroutines = "1.9.0"      // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
+    const val kotlinx_coroutines = "1.10.1"      // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
     const val kotlinx_serialization = "1.7.3"   // https://mvnrepository.com/search?q=kotlinx-serialization
 
     const val kotlinx_atomicfu = "0.26.1"       // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/atomicfu
