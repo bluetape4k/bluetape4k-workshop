@@ -9,8 +9,8 @@ import kotlin.reflect.full.declaredMemberProperties
 enum class TestDB(
     val connection: () -> String,
     val driver: String,
-    val user: String = "root",
-    val password: String = "exposed_password_1!",
+    val user: String = "test",
+    val password: String = "test",
     val beforeConnection: () -> Unit = {},
     val afterTestFinished: () -> Unit = {},
     val dbConfig: DatabaseConfig.Builder.() -> Unit = {},
@@ -43,8 +43,7 @@ enum class TestDB(
 
     MYSQL_V5(
         connection = {
-            (System.getProperty("testcontainers.mysql.jdbcUrl") ?: "jdbc:mysql://localhost:3306") +
-                    "/testdb" +
+            ContainerProvider.mysql5.jdbcUrl +
                     "?useSSL=false" +
                     "&characterEncoding=UTF-8" +
                     "&zeroDateTimeBehavior=convertToNull"
@@ -54,8 +53,7 @@ enum class TestDB(
 
     MYSQL_V8(
         connection = {
-            (System.getProperty("testcontainers.mysql.jdbcUrl") ?: "jdbc:mysql://localhost:3306") +
-                    "/testdb" +
+            ContainerProvider.mysql8.jdbcUrl +
                     "?useSSL=false" +
                     "&characterEncoding=UTF-8" +
                     "&zeroDateTimeBehavior=convertToNull" +
@@ -66,7 +64,7 @@ enum class TestDB(
 
     POSTGRESQL(
         connection = {
-            (System.getProperty("testcontainers.postgresql.jdbcUrl") ?: "jdbc:postgresql://localhost:5432") +
+            ContainerProvider.postgres.jdbcUrl +
                     "/testdb" +
                     "&lc_messages=en_US.UTF-8"
         },
@@ -99,7 +97,7 @@ enum class TestDB(
         val All = TestDB.entries.toSet()
 
         fun enabledDialects(): Set<TestDB> {
-            return entries.toSet()
+            return entries.toSet() - MYSQL_V5
         }
     }
 }

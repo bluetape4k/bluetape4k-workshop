@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.exposed.domain.demo.dao
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedDomainTest
-import io.bluetape4k.workshop.exposed.domain.runWithTables
+import io.bluetape4k.workshop.exposed.domain.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -41,7 +41,7 @@ class SamplesDao: AbstractExposedDomainTest() {
 
     @Test
     fun `dao entity - one to many`() {
-        runWithTables(Users, Cities) {
+        withTables(Users, Cities) {
             val seoul = City.new {
                 name = "Seoul"
             }

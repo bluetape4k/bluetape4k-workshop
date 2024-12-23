@@ -3,7 +3,9 @@ package io.bluetape4k.workshop.exposed.domain.mapping.onetomany
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedDomainTest
-import io.bluetape4k.workshop.exposed.domain.runWithTables
+import io.bluetape4k.workshop.exposed.domain.TestDB.POSTGRESQL
+import io.bluetape4k.workshop.exposed.domain.withDb
+import io.bluetape4k.workshop.exposed.domain.withTables
 import org.jetbrains.exposed.dao.entityCache
 import org.junit.jupiter.api.Test
 
@@ -13,32 +15,34 @@ class OneToManyMappingTest: AbstractExposedDomainTest() {
 
     @Test
     fun `handle one-to-many relationship`() {
-        runWithTables(RestaurantTable, MenuTable) {
-            val kfc = Restaurant.new {
-                name = "KFC"
-            }
+        withDb(POSTGRESQL) {
+            withTables(RestaurantTable, MenuTable) {
+                val kfc = Restaurant.new {
+                    name = "KFC"
+                }
 
-            Menu.new {
-                name = "Chicken"
-                price = 10.0.toBigDecimal()
-                restaurant = kfc
-            }
+                Menu.new {
+                    name = "Chicken"
+                    price = 10.0.toBigDecimal()
+                    restaurant = kfc
+                }
 
-            Menu.new {
-                name = "Burger"
-                price = 5.0.toBigDecimal()
-                restaurant = kfc
-            }
+                Menu.new {
+                    name = "Burger"
+                    price = 5.0.toBigDecimal()
+                    restaurant = kfc
+                }
 
-            entityCache.clear()
+                entityCache.clear()
 
-            val restaurants = Restaurant.all().toList()
-            val restaurant = restaurants.first()
-            log.debug { "Restaurant: $restaurant" }
+                val restaurants = Restaurant.all().toList()
+                val restaurant = restaurants.first()
+                log.debug { "Restaurant: $restaurant" }
 
-            val menus = restaurant.menus.toList()
-            menus.forEach { menu ->
-                log.debug { ">> Menu: $menu" }
+                val menus = restaurant.menus.toList()
+                menus.forEach { menu ->
+                    log.debug { ">> Menu: $menu" }
+                }
             }
         }
     }

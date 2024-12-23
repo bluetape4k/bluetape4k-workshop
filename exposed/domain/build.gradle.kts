@@ -22,6 +22,7 @@ dependencies {
 
     testImplementation(Libs.bluetape4k_testcontainers)
     testImplementation(Libs.testcontainers)
+    testImplementation(Libs.testcontainers_junit_jupiter)
     testImplementation(Libs.testcontainers_mysql)
     testImplementation(Libs.testcontainers_postgresql)
 

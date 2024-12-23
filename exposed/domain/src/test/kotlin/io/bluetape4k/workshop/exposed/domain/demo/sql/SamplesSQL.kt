@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.exposed.domain.demo.sql
 
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedDomainTest
-import io.bluetape4k.workshop.exposed.domain.runWithTables
+import io.bluetape4k.workshop.exposed.domain.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.Table
@@ -36,7 +36,7 @@ class SamplesSQL: AbstractExposedDomainTest() {
 
     @Test
     fun `Raw SQL을 이용하여 DB 작업을 수행합니다`() {
-        runWithTables(Users, Cities) {
+        withTables(Users, Cities) {
 
             val seoul = Cities.insert {
                 it[name] = "Seoul"

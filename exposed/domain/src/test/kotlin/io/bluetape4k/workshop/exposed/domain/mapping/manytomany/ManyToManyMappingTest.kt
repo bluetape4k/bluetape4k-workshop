@@ -5,8 +5,10 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedDomainTest
-import io.bluetape4k.workshop.exposed.domain.runSuspendWithTables
-import io.bluetape4k.workshop.exposed.domain.runWithTables
+import io.bluetape4k.workshop.exposed.domain.mapping.manytomany.UserStatus.ACTIVE
+import io.bluetape4k.workshop.exposed.domain.mapping.manytomany.UserStatus.INACTIVE
+import io.bluetape4k.workshop.exposed.domain.withSuspendedTables
+import io.bluetape4k.workshop.exposed.domain.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
@@ -18,7 +20,7 @@ class ManyToManyMappingTest: AbstractExposedDomainTest() {
 
     @Test
     fun `generate schema`() {
-        runWithTables(UserTable, GroupTable, MemberTable) {
+        withTables(UserTable, GroupTable, MemberTable) {
             log.info { "Schema generated" }
             val users = UserTable.selectAll().where { UserTable.firstName eq "Alice" }.toList()
             // 현재는 데이터가 없으므로 빈 리스트가 반환된다.
@@ -28,13 +30,13 @@ class ManyToManyMappingTest: AbstractExposedDomainTest() {
 
     @Test
     fun `coroutine support`() = runSuspendIO {
-        runSuspendWithTables(UserTable, GroupTable, MemberTable) {
+        withSuspendedTables(UserTable, GroupTable, MemberTable) {
             val prevCount = User.all().count()
             User.new {
                 username = faker.internet().username()
                 firstName = faker.name().firstName()
                 lastName = faker.name().lastName()
-                status = UserStatus.ACTIVE
+                status = ACTIVE
             }
 
             newSuspendedTransaction {
@@ -42,7 +44,7 @@ class ManyToManyMappingTest: AbstractExposedDomainTest() {
                     username = faker.internet().username()
                     firstName = faker.name().firstName()
                     lastName = faker.name().lastName()
-                    status = UserStatus.INACTIVE
+                    status = INACTIVE
                 }
             }
             rollback()  // 내부의 transaction은 실행되고, 외부의 transaction은 롤백된다.
@@ -57,7 +59,7 @@ class ManyToManyMappingTest: AbstractExposedDomainTest() {
 
     @Test
     fun `SQL DSL 로부터 DAO Entity 만들기`() {
-        runWithTables(UserTable, GroupTable, MemberTable) {
+        withTables(UserTable, GroupTable, MemberTable) {
             val query = GroupTable
                 .innerJoin(UserTable)
                 .innerJoin(MemberTable)
