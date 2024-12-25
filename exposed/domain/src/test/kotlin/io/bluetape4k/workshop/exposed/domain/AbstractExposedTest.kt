@@ -11,7 +11,7 @@ import org.jetbrains.exposed.sql.Database
 import org.junit.jupiter.api.BeforeAll
 import javax.sql.DataSource
 
-abstract class AbstractExposedDomainTest {
+abstract class AbstractExposedTest {
 
     companion object: KLogging() {
         @JvmStatic

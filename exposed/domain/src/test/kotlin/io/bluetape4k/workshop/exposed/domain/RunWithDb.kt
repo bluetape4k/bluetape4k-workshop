@@ -25,10 +25,15 @@ object CurrentTestDBInterceptor: StatementInterceptor {
 }
 
 fun withDb(
+    db: Collection<TestDB>? = null,
+    excludeSettings: Collection<TestDB> = emptyList(),
     configure: (DatabaseConfig.Builder.() -> Unit)? = null,
     statement: Transaction.(TestDB) -> Unit,
 ) {
     TestDB.enabledDialects()
+        .filterNot { db != null && it !in db }
+        .filterNot { it in excludeSettings }
+        .filter { it in TestDB.enabledDialects() }
         .forEach { dbSettings ->
             runCatching {
                 withDb(dbSettings, configure, statement)
@@ -78,6 +83,22 @@ fun withDb(
     }
 }
 
+suspend fun withSuspendedDb(
+    db: Collection<TestDB>? = null,
+    excludeSettings: Collection<TestDB> = emptyList(),
+    configure: (DatabaseConfig.Builder.() -> Unit)? = null,
+    statement: suspend Transaction.(TestDB) -> Unit,
+) {
+    TestDB.enabledDialects()
+        .filterNot { db != null && it !in db }
+        .filterNot { it in excludeSettings }
+        .filter { it in TestDB.enabledDialects() }
+        .forEach { dbSettings ->
+            runCatching {
+                withSuspendedDb(dbSettings, configure, statement)
+            }
+        }
+}
 
 suspend fun withSuspendedDb(
     dbSettings: TestDB,

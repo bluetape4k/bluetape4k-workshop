@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.entities
 
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedDomainTest
+import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.City
 import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.CityTable
 import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.Country
@@ -25,7 +25,7 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.Test
 
-class EntityHookTest: AbstractExposedDomainTest() {
+class EntityHookTest: AbstractExposedTest() {
 
     private val allTables = arrayOf(UserTable, CityTable, UserToCityTable, CountryTable)
 

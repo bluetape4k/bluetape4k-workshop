@@ -28,8 +28,8 @@ dependencies {
     testImplementation(Libs.testcontainers_cockroachdb)
 
     // Identifier 자동 생성
-    api(Libs.bluetape4k_idgenerators)
-    api(Libs.java_uuid_generator)
+    implementation(Libs.bluetape4k_idgenerators)
+    implementation(Libs.java_uuid_generator)
 
     // Coroutines
     implementation(Libs.bluetape4k_coroutines)

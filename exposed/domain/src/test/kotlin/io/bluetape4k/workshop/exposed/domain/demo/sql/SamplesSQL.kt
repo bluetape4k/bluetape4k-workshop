@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.demo.sql
 
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedDomainTest
+import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.domain.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
@@ -17,7 +17,7 @@ import org.jetbrains.exposed.sql.trim
 import org.jetbrains.exposed.sql.update
 import org.junit.jupiter.api.Test
 
-class SamplesSQL: AbstractExposedDomainTest() {
+class SamplesSQL: AbstractExposedTest() {
 
     object Users: Table("user") {
         val id = varchar("id", 10)

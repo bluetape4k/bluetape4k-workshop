@@ -4,7 +4,7 @@ import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedDomainTest
+import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.domain.mapping.manytomany.UserStatus.ACTIVE
 import io.bluetape4k.workshop.exposed.domain.mapping.manytomany.UserStatus.INACTIVE
 import io.bluetape4k.workshop.exposed.domain.withSuspendedTables
@@ -14,7 +14,7 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.junit.jupiter.api.Test
 
-class ManyToManyMappingTest: AbstractExposedDomainTest() {
+class ManyToManyMappingTest: AbstractExposedTest() {
 
     companion object: KLogging()
 

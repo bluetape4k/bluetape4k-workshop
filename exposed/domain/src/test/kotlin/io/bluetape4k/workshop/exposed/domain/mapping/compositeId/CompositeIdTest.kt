@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.compositeId
 
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedDomainTest
+import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.domain.mapping.composite.Authors
 import io.bluetape4k.workshop.exposed.domain.mapping.composite.Books
 import io.bluetape4k.workshop.exposed.domain.mapping.composite.Offices
@@ -13,7 +13,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
 
-class CompositeIdTest: AbstractExposedDomainTest() {
+class CompositeIdTest: AbstractExposedTest() {
 
     companion object: KLogging()
 

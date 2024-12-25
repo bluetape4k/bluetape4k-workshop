@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.exposed.domain.demo.dao
 
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedDomainTest
+import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.domain.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.dao.IntEntity
@@ -10,7 +10,7 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.junit.jupiter.api.Test
 
-class SamplesDao: AbstractExposedDomainTest() {
+class SamplesDao: AbstractExposedTest() {
 
     companion object: KLogging()
 

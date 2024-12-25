@@ -2,14 +2,14 @@ package io.bluetape4k.workshop.exposed.domain.mapping.onetomany
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedDomainTest
+import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.domain.TestDB.POSTGRESQL
 import io.bluetape4k.workshop.exposed.domain.withDb
 import io.bluetape4k.workshop.exposed.domain.withTables
 import org.jetbrains.exposed.dao.entityCache
 import org.junit.jupiter.api.Test
 
-class OneToManyMappingTest: AbstractExposedDomainTest() {
+class OneToManyMappingTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
