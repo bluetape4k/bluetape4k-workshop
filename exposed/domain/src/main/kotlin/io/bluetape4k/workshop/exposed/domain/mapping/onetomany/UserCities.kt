@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.onetomany
 
+import io.bluetape4k.ToStringBuilder
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -14,7 +15,7 @@ object UserTable: IntIdTable() {
 
 object CityTable: IntIdTable() {
     val name = varchar("name", 50).index()
-    val country = reference("country", CountryTable)  // one-to-many
+    val country = reference("country", CountryTable)  // many-to-one
 }
 
 object CountryTable: IntIdTable() {
@@ -34,15 +35,31 @@ class User(id: EntityID<Int>): IntEntity(id) {
 
     var name by UserTable.name
     var age by UserTable.age
-    val cities by City via UserToCityTable
+    var cities by City via UserToCityTable      // many-to-many
+
+    override fun toString(): String {
+        return ToStringBuilder(this)
+            .add("id", id)
+            .add("name", name)
+            .add("age", age)
+            .toString()
+    }
 }
 
 class City(id: EntityID<Int>): IntEntity(id) {
     companion object: IntEntityClass<City>(CityTable)
 
     var name by CityTable.name
-    var users by User via UserToCityTable
-    var country by Country referencedOn CityTable.country
+    var users by User via UserToCityTable           // many-to-many
+    var country by Country referencedOn CityTable.country   // many-to-one
+
+    override fun toString(): String {
+        return ToStringBuilder(this)
+            .add("id", id)
+            .add("name", name)
+            .add("country", country)
+            .toString()
+    }
 }
 
 class Country(id: EntityID<Int>): IntEntity(id) {
@@ -50,4 +67,11 @@ class Country(id: EntityID<Int>): IntEntity(id) {
 
     var name by CountryTable.name
     val cities by City referrersOn CityTable.country   // one-to-many
+
+    override fun toString(): String {
+        return ToStringBuilder(this)
+            .add("id", id)
+            .add("name", name)
+            .toString()
+    }
 }

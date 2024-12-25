@@ -25,6 +25,7 @@ dependencies {
     testImplementation(Libs.testcontainers_junit_jupiter)
     testImplementation(Libs.testcontainers_mysql)
     testImplementation(Libs.testcontainers_postgresql)
+    testImplementation(Libs.testcontainers_cockroachdb)
 
     // Identifier 자동 생성
     api(Libs.bluetape4k_idgenerators)

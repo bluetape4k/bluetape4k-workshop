@@ -4,6 +4,7 @@ import io.bluetape4k.jdbc.JdbcDrivers
 import io.bluetape4k.logging.KLogging
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.DatabaseConfig
+import java.sql.Connection
 import kotlin.reflect.full.declaredMemberProperties
 
 enum class TestDB(
@@ -12,6 +13,7 @@ enum class TestDB(
     val user: String = "test",
     val password: String = "test",
     val beforeConnection: () -> Unit = {},
+    val afterConnection: (connection: Connection) -> Unit = {},
     val afterTestFinished: () -> Unit = {},
     val dbConfig: DatabaseConfig.Builder.() -> Unit = {},
 ) {
@@ -65,10 +67,24 @@ enum class TestDB(
     POSTGRESQL(
         connection = {
             ContainerProvider.postgres.jdbcUrl +
-                    "/testdb" +
                     "&lc_messages=en_US.UTF-8"
         },
         driver = JdbcDrivers.DRIVER_CLASS_POSTGRESQL
+    ),
+
+    COCKROACH(
+        connection = {
+            ContainerProvider.cockroach.getJdbcUrl() + "?allowMultiQueries=true" // + "?sslmode=disable"
+        },
+        driver = JdbcDrivers.DRIVER_CLASS_POSTGRESQL,
+        afterConnection = { connection ->
+            connection.createStatement().use { stmt ->
+                stmt.execute("SET autocommit_before_ddl = on")
+            }
+        },
+        dbConfig = {
+            defaultIsolationLevel = java.sql.Connection.TRANSACTION_SERIALIZABLE
+        }
     );
 
     var db: Database? = null
@@ -83,7 +99,8 @@ enum class TestDB(
             databaseConfig = config,
             user = user,
             password = password,
-            driver = driver
+            driver = driver,
+            setupConnection = { afterConnection(it) },
         )
     }
 
@@ -93,13 +110,15 @@ enum class TestDB(
         val ALL_MYSQL_LIKE = ALL_MYSQL + H2_MYSQL
         val ALL_POSTGRES = setOf(POSTGRESQL)
         val ALL_POSTGRES_LIKE = setOf(POSTGRESQL, H2_PSQL)
+        val ALL_COCKROACH = setOf(COCKROACH)
 
         val All = TestDB.entries.toSet()
 
+        // 이 값을 바꿔서 MySQL, PostgreSQL 등을 testcontainers 를 이용하여 테스트할 수 있습니다.
         const val USE_FAST_DB = true
 
         fun enabledDialects(): Set<TestDB> {
-            return if (USE_FAST_DB) ALL_H2 else (All - MYSQL_V5)
+            return if (USE_FAST_DB) ALL_H2 else (All - MYSQL_V5 - COCKROACH)
         }
     }
 }

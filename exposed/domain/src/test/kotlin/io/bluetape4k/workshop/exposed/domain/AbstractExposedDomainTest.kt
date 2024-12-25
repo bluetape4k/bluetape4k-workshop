@@ -21,7 +21,7 @@ abstract class AbstractExposedDomainTest {
             EntityHook.subscribe { change ->
                 log.info {
                     """
-                    ${change.entityClass.javaClass.kotlin.qualifiedName} with id
+                    ${change.entityClass.javaClass.simpleName} with id
                     ${change.entityId} was ${change.changeType}
                 """.trimIndent()
                 }
@@ -52,5 +52,4 @@ abstract class AbstractExposedDomainTest {
     private fun connectDatabase(dataSource: DataSource): Database {
         return Database.connect(dataSource)
     }
-
 }
