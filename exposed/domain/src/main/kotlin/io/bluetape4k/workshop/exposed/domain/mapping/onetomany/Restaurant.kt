@@ -7,8 +7,14 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 
 object RestaurantTable: IntIdTable("restaurant") {
     val name = varchar("name", 255)
-    // 이게 왜 필요한지 모르겠다.
-    // val menus = reference("restaurant_id", MenuTable, onDelete = ReferenceOption.CASCADE)
+}
+
+object MenuTable: IntIdTable("menu") {
+    val name = varchar("name", 255)
+    val price = decimal("price", 10, 2)
+
+    // reference to Restaurant
+    val restaurant = reference("restaurant_id", RestaurantTable).index()
 }
 
 class Restaurant(id: EntityID<Int>): IntEntity(id) {
@@ -22,14 +28,6 @@ class Restaurant(id: EntityID<Int>): IntEntity(id) {
     override fun toString(): String {
         return "Restaurant(id=$id, name=$name)"
     }
-}
-
-object MenuTable: IntIdTable("menu") {
-    val name = varchar("name", 255)
-    val price = decimal("price", 10, 2)
-
-    // reference to Restaurant
-    val restaurant = reference("restaurant_id", RestaurantTable).index()
 }
 
 class Menu(id: EntityID<Int>): IntEntity(id) {

@@ -96,8 +96,10 @@ enum class TestDB(
 
         val All = TestDB.entries.toSet()
 
+        const val USE_FAST_DB = true
+
         fun enabledDialects(): Set<TestDB> {
-            return entries.toSet() - MYSQL_V5
+            return if (USE_FAST_DB) ALL_H2 else (All - MYSQL_V5)
         }
     }
 }
