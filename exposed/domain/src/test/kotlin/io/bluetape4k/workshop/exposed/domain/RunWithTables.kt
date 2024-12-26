@@ -6,21 +6,21 @@ import org.jetbrains.exposed.sql.Transaction
 
 fun withTables(
     vararg tables: Table,
-    block: Transaction.() -> Unit,
-) = withTables(excludeSettings = emptySet(), tables = tables, block = block)
+    statement: Transaction.(TestDB) -> Unit,
+) = withTables(excludeSettings = emptySet(), tables = tables, statement = statement)
 
 fun withTables(
-    excludeSettings: Set<TestDB>,
+    excludeSettings: Collection<TestDB>,
     vararg tables: Table,
-    block: Transaction.() -> Unit,
+    statement: Transaction.(TestDB) -> Unit,
 ) {
     val settings = TestDB.enabledDialects() - excludeSettings
 
     settings.forEach {
-        withDb(it) {
+        withDb(it) { dialect ->
             SchemaUtils.create(*tables)
             try {
-                block()
+                statement(dialect)
                 commit()
             } finally {
                 SchemaUtils.drop(*tables)
@@ -31,21 +31,21 @@ fun withTables(
 
 suspend fun withSuspendedTables(
     vararg tables: Table,
-    block: suspend Transaction.() -> Unit,
-) = withSuspendedTables(excludeSettings = emptySet(), tables = tables, block = block)
+    statement: suspend Transaction.(TestDB) -> Unit,
+) = withSuspendedTables(excludeSettings = emptySet(), tables = tables, statement = statement)
 
 suspend fun withSuspendedTables(
-    excludeSettings: Set<TestDB>,
+    excludeSettings: Collection<TestDB>,
     vararg tables: Table,
-    block: suspend Transaction.() -> Unit,
+    statement: suspend Transaction.(TestDB) -> Unit,
 ) {
     val settings = TestDB.enabledDialects() - excludeSettings
 
     settings.forEach {
-        withSuspendedDb(it) {
+        withSuspendedDb(it) { dialect ->
             SchemaUtils.create(*tables)
             try {
-                block()
+                statement(dialect)
                 commit()
             } finally {
                 SchemaUtils.drop(*tables)
