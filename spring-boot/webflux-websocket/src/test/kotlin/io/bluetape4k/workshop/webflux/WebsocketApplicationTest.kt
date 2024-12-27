@@ -29,11 +29,6 @@ class WebsocketApplicationTest(
 
     @Test
     fun `get quotes`() = runSuspendIO {
-//        client.get()
-//            .uri("/quotes")
-//            .accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_NDJSON)
-//            .exchange()
-//            .expectStatus().is2xxSuccessful
         client.httpGet("/quotes")
             .expectHeader().contentType(MediaType.APPLICATION_NDJSON)
             .expectBodyList<Event>()
@@ -48,11 +43,6 @@ class WebsocketApplicationTest(
 
     @Test
     fun `fetch quotes by flow`() = runSuspendIO {
-//        client.get()
-//            .uri("/quotes/200")
-//            .accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_NDJSON)
-//            .exchange()
-//            .expectStatus().is2xxSuccessful
         client.httpGet("/quotes/200")
             .expectHeader().contentType(MediaType.APPLICATION_NDJSON)
             .expectBodyList<Quote>()
