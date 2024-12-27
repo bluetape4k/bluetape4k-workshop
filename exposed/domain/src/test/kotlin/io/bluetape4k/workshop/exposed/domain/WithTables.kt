@@ -3,6 +3,8 @@ package io.bluetape4k.workshop.exposed.domain
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
+import org.jetbrains.exposed.sql.transactions.transactionManager
 
 fun withTables(
     vararg tables: Table,
@@ -18,12 +20,26 @@ fun withTables(
 
     settings.forEach {
         withDb(it) { dialect ->
+            try {
+                SchemaUtils.drop(*tables)
+            } catch (_: Throwable) {
+            }
+            
             SchemaUtils.create(*tables)
             try {
                 statement(dialect)
-                commit()
+                commit()  // Need commit to persist data before drop tables
             } finally {
-                SchemaUtils.drop(*tables)
+                try {
+                    SchemaUtils.drop(*tables)
+                    commit()
+                } catch (_: Exception) {
+                    val database = dialect.db!!
+                    inTopLevelTransaction(database.transactionManager.defaultIsolationLevel, db = database) {
+                        maxAttempts = 1
+                        SchemaUtils.drop(*tables)
+                    }
+                }
             }
         }
     }
@@ -43,12 +59,26 @@ suspend fun withSuspendedTables(
 
     settings.forEach {
         withSuspendedDb(it) { dialect ->
+            try {
+                SchemaUtils.drop(*tables)
+            } catch (_: Throwable) {
+            }
+            
             SchemaUtils.create(*tables)
             try {
                 statement(dialect)
                 commit()
             } finally {
-                SchemaUtils.drop(*tables)
+                try {
+                    SchemaUtils.drop(*tables)
+                    commit()
+                } catch (_: Exception) {
+                    val database = dialect.db!!
+                    inTopLevelTransaction(database.transactionManager.defaultIsolationLevel, db = database) {
+                        maxAttempts = 1
+                        SchemaUtils.drop(*tables)
+                    }
+                }
             }
         }
     }
