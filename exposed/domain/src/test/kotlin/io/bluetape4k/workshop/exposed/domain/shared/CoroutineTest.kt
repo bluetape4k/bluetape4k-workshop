@@ -133,7 +133,9 @@ class CoroutineTest: AbstractExposedTest() {
             mainJob.await()
             mainJob.getCompletionExceptionOrNull()?.let { throw it }
 
-            TestingUnique.selectAll().map { it[TestingUnique.id] } shouldBeEqualTo listOf(originalId, updatedId)
+            TestingUnique.selectAll()
+                .orderBy(TestingUnique.id)
+                .map { it[TestingUnique.id] } shouldBeEqualTo listOf(originalId, updatedId)
         }
     }
 
@@ -175,7 +177,9 @@ class CoroutineTest: AbstractExposedTest() {
             mainJob.await()
             mainJob.getCompletionExceptionOrNull()?.let { throw it }
 
-            TestingUnique.selectAll().map { it[TestingUnique.id] } shouldBeEqualTo listOf(originalId, updatedId)
+            TestingUnique.selectAll()
+                .orderBy(TestingUnique.id)
+                .map { it[TestingUnique.id] } shouldBeEqualTo listOf(originalId, updatedId)
         }
     }
 

@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.exposed.domain.entities
+package io.bluetape4k.workshop.exposed.domain.shared.entities
 
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.City
@@ -13,7 +13,9 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldHaveSize
 import org.jetbrains.exposed.dao.EntityChange
-import org.jetbrains.exposed.dao.EntityChangeType
+import org.jetbrains.exposed.dao.EntityChangeType.Created
+import org.jetbrains.exposed.dao.EntityChangeType.Removed
+import org.jetbrains.exposed.dao.EntityChangeType.Updated
 import org.jetbrains.exposed.dao.EntityHook
 import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.registeredChanges
@@ -74,7 +76,7 @@ class EntityHookTest: AbstractExposedTest() {
             }
 
             events shouldHaveSize 1
-            events.single().changeType shouldBeEqualTo EntityChangeType.Removed
+            events.single().changeType shouldBeEqualTo Removed
             events.single().entityId shouldBeEqualTo moscowId
             events.single().transactionId shouldBeEqualTo txId
         }
@@ -198,7 +200,7 @@ class EntityHookTest: AbstractExposedTest() {
 
             events shouldHaveSize 1
             val createEvent = events.single()
-            createEvent.changeType shouldBeEqualTo EntityChangeType.Created
+            createEvent.changeType shouldBeEqualTo Created
             createEvent.entityId shouldBeEqualTo user.id
 
             val (_, event2, _) = trackChanges {
@@ -210,7 +212,7 @@ class EntityHookTest: AbstractExposedTest() {
             event2 shouldHaveSize 1
             val updateEvent = event2.single()
             updateEvent.entityId shouldBeEqualTo user.id
-            updateEvent.changeType shouldBeEqualTo EntityChangeType.Updated
+            updateEvent.changeType shouldBeEqualTo Updated
         }
     }
 

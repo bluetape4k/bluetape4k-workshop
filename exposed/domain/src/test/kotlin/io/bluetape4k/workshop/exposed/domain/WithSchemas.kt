@@ -22,12 +22,15 @@ fun withSchemas(
 
     settings.forEach { dialect ->
         withDb(dialect, configure) {
-            SchemaUtils.createSchema(*schemas)
-            try {
-                statement()
-            } finally {
-                SchemaUtils.dropSchema(*schemas, cascade = true)
-                commit()
+            if (currentDialectTest.supportsCreateSchema) {
+                SchemaUtils.createSchema(*schemas)
+                try {
+                    statement()
+                    commit()     // Need commit to persist data before drop schemas
+                } finally {
+                    SchemaUtils.dropSchema(*schemas, cascade = true)
+                    commit()
+                }
             }
         }
     }

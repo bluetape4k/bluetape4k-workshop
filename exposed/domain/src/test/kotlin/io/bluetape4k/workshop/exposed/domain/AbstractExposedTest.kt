@@ -8,7 +8,11 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import org.jetbrains.exposed.dao.EntityHook
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.Key
+import org.jetbrains.exposed.sql.Schema
+import org.jetbrains.exposed.sql.statements.StatementInterceptor
 import org.junit.jupiter.api.BeforeAll
+import java.util.*
 import javax.sql.DataSource
 
 abstract class AbstractExposedTest {
@@ -21,11 +25,20 @@ abstract class AbstractExposedTest {
             EntityHook.subscribe { change ->
                 log.info {
                     """
-                    ${change.entityClass.javaClass.simpleName} with id
-                    ${change.entityId} was ${change.changeType}
+                    ${change.entityClass.table.tableName} id[${change.entityId}] was ${change.changeType}
                 """.trimIndent()
                 }
             }
+        }
+    }
+
+    init {
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
+    }
+
+    private object CurrentTestDBInterceptor: StatementInterceptor {
+        override fun keepUserDataInTransactionStoreOnCommit(userData: Map<Key<*>, Any?>): Map<Key<*>, Any?> {
+            return userData.filterValues { it is TestDB }
         }
     }
 
@@ -52,4 +65,18 @@ abstract class AbstractExposedTest {
     private fun connectDatabase(dataSource: DataSource): Database {
         return Database.connect(dataSource)
     }
+
+    fun addIfNotExistsIfSupported() = if (currentDialectTest.supportsIfNotExists) {
+        "IF NOT EXISTS "
+    } else {
+        ""
+    }
+
+    protected fun prepareSchemaForTest(schemaName: String): Schema = Schema(
+        schemaName,
+        defaultTablespace = "USERS",
+        temporaryTablespace = "TEMP ",
+        quota = "20M",
+        on = "USERS"
+    )
 }

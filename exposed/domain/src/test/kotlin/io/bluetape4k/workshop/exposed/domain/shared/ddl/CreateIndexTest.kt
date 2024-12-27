@@ -75,7 +75,7 @@ class CreateIndexTest: AbstractExposedTest() {
     fun `create index with table in different schema`() {
         val testTable = object: Table("test_table") {
             val id = integer("id")
-            val name = varchar("name", 42).index("test_table_by_name")
+            val name = varchar("name", 42).index("text_index")
 
             init {
                 index(false, id, name)

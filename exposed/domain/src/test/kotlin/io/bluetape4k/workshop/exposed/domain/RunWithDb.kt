@@ -50,7 +50,7 @@ fun withDb(
         return
     }
 
-    logger.info { "Running withDb for $dbSettings" }
+    logger.info { "Running `withDb` for $dbSettings" }
 
     val unregistered = dbSettings !in registeredOnShutdown
     val newConfiguration = configure != null && !unregistered
