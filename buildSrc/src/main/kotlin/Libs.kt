@@ -268,6 +268,7 @@ object Libs {
 
     // Data
     val bluetape4k_cassandra = bluetape4k("cassandra")
+    val bluetape4k_exposed = bluetape4k("exposed")
     val bluetape4k_hibernate = bluetape4k("hibernate")
     val bluetape4k_hibernate_reactive = bluetape4k("hibernate-reactive")
     val bluetape4k_jdbc = bluetape4k("jdbc")

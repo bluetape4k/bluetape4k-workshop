@@ -7,6 +7,7 @@ dependencies {
 
     implementation(project(":shared"))
 
+    api(Libs.bluetape4k_exposed)
     api(Libs.exposed_core)
     api(Libs.exposed_dao)
     api(Libs.exposed_jdbc)
