@@ -85,7 +85,7 @@ class CreateIndexTest: AbstractExposedTest() {
         val schema1 = Schema("Schema1")
         val schema2 = Schema("Schema2")
 
-        withSchemas(schema1, schema2) {
+        withSchemas(excludeSettings = setOf(TestDB.MYSQL_V8), schema1, schema2) {
             SchemaUtils.setSchema(schema1)
             SchemaUtils.createMissingTablesAndColumns(testTable)
             testTable.exists().shouldBeTrue()

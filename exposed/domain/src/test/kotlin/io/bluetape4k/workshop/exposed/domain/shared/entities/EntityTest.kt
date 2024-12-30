@@ -1352,9 +1352,9 @@ class EntityTest: AbstractExposedTest() {
         }
     }
 
-    object CreditCards: IntIdTable("credit_cards") {
+    object CreditCards: IntIdTable("CreditCards") {
         val number = varchar("number", 16)
-        val spendingLimit = ulong("spending_limit").databaseGenerated()
+        val spendingLimit = ulong("spendingLimit").databaseGenerated()
     }
 
     class CreditCard(id: EntityID<Int>): IntEntity(id) {
@@ -1397,8 +1397,8 @@ class EntityTest: AbstractExposedTest() {
 
                 else              -> {
                     // This table is only used to get the statement that adds the DEFAULT value, and use it with exec
-                    val creditCards2 = object: IntIdTable("credit_cards") {
-                        val spendingLimit = ulong("spending_limit").default(10000uL)
+                    val creditCards2 = object: IntIdTable("CreditCards") {
+                        val spendingLimit = ulong("spendingLimit").default(10000uL)
                     }
                     val missingStatements = SchemaUtils.addMissingColumnsStatements(creditCards2)
                     missingStatements.forEach {
