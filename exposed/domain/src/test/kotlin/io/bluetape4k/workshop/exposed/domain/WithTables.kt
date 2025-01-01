@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.exposed.domain
 
 import io.bluetape4k.junit5.utils.MultiException
 import io.bluetape4k.logging.KotlinLogging
-import io.bluetape4k.logging.error
 import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
@@ -33,7 +32,7 @@ fun withTables(
 
     val me = MultiException()
     settings.forEach { dialect ->
-        runCatching {
+        try {
             withDb(dialect, configure) {
                 try {
                     SchemaUtils.drop(*tables)
@@ -57,9 +56,8 @@ fun withTables(
                     }
                 }
             }
-        }.onFailure {
-            me.add(it)
-            log.error(it) { "Failed to run withTables for $dialect" }
+        } catch (e: Throwable) {
+            me.add(e)
         }
     }
     me.throwIfNotEmpty()
@@ -87,7 +85,7 @@ suspend fun withSuspendedTables(
     val me = MultiException()
 
     settings.forEach { dialect ->
-        runCatching {
+        try {
             withSuspendedDb(dialect, configure) {
                 try {
                     SchemaUtils.drop(*tables)
@@ -111,9 +109,8 @@ suspend fun withSuspendedTables(
                     }
                 }
             }
-        }.onFailure {
-            me.add(it)
-            log.error(it) { "Failed to run withSuspendedTables for $dialect" }
+        } catch (e: Throwable) {
+            me.add(e)
         }
 
         me.throwIfNotEmpty()

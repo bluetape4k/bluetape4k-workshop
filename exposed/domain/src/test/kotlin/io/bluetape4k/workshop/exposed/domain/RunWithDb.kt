@@ -34,7 +34,7 @@ fun withDb(
     val me = MultiException()
 
     TestDB.enabledDialects()
-        .filter { db?.run { it !in this } ?: true }
+        .filter { db?.run { it in db } ?: false }
         .filter { it !in excludeSettings }
         .forEach { dbSettings ->
             try {
@@ -97,7 +97,7 @@ suspend fun withSuspendedDb(
 ) {
     val me = MultiException()
     TestDB.enabledDialects()
-        .filter { db?.run { it !in this } ?: true }
+        .filter { db?.run { it in db } ?: false }
         .filter { it !in excludeSettings }
         .forEach { dbSettings ->
             try {

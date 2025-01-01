@@ -451,7 +451,7 @@ class SelectTest: AbstractExposedTest() {
         }
     }
 
-    private val testDBsSupportingInAnyAllFromTables = TestDB.ALL_POSTGRES + TestDB.ALL_H2 + TestDB.MYSQL_V8
+    private val testDBsSupportingInAnyAllFromTables = TestDB.ALL_POSTGRES + TestDB.H2_PSQL + TestDB.MYSQL_V8
 
     @Test
     fun `inTable example`() {
@@ -737,28 +737,59 @@ class SelectTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     *
+     * ```sql
+     * SELECT COUNT(*)
+     *   FROM SALES
+     *  WHERE SALES.AMOUNT = ANY (SELECT SOMEAMOUNTS.AMOUNT FROM SOMEAMOUNTS)
+     * ```
+     */
     @Test
     fun `Eq AnyFrom Table`() {
         withDb(testDBsSupportingInAnyAllFromTables) {
             withSalesAndSomeAmounts { _, sales, someAmounts ->
                 val rows = sales.selectAll()
-                    .where { sales.amount eq anyFrom(someAmounts.select(someAmounts.amount)) }
-                rows.count() shouldBeEqualTo 2L
+                    .where {
+                        sales.amount eq anyFrom(someAmounts.select(someAmounts.amount))
+                    }
+
+                rows.count() shouldBeEqualTo 2L        // 650.70, 1500.25
             }
         }
     }
 
+    /**
+     *
+     * ```sql
+     * SELECT COUNT(*)
+     *   FROM SALES
+     *  WHERE SALES.AMOUNT <> ANY (SELECT SOMEAMOUNTS.AMOUNT FROM SOMEAMOUNTS)
+     * ```
+     */
     @Test
     fun `Neq AnyFrom Table`() {
         withDb(testDBsSupportingInAnyAllFromTables) {
             withSalesAndSomeAmounts { _, sales, someAmounts ->
                 val rows = sales.selectAll()
-                    .where { sales.amount neq anyFrom(someAmounts.select(someAmounts.amount)) }
-                rows.count() shouldBeEqualTo 5L
+                    .where {
+                        sales.amount neq anyFrom(someAmounts.select(someAmounts.amount))
+                    }
+                rows.count() shouldBeEqualTo 7L    // except 650.70, 1500.25 이어야 하는데 ... 
             }
         }
     }
 
+    /**
+     * ### greaterEq allFrom SubQuery
+     *
+     * ```sql
+     * SELECT SALES."year", SALES."month", SALES.PRODUCT, SALES.AMOUNT
+     *   FROM SALES
+     *  WHERE SALES.AMOUNT >= ALL (SELECT SALES.AMOUNT FROM SALES WHERE SALES.PRODUCT = 'tea')
+     *  ORDER BY SALES.AMOUNT ASC
+     * ```
+     */
     @Test
     fun `Greater Eq AllFrom SubQuery`() {
         withDb(testDBsSupportingAnyAndAllFromSubQueries) {

@@ -1,7 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.shared.dml
 
 import io.bluetape4k.idgenerators.uuid.TimebasedUuid
-import io.bluetape4k.support.toBigDecimal
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.domain.TestDB
 import io.bluetape4k.workshop.exposed.domain.withTables
@@ -150,7 +149,7 @@ fun AbstractExposedTest.withSales(
 ) {
     val sales = DMLTestData.Sales
 
-    withTables(excludeSettings, sales) {
+    withTables(excludeSettings, sales) { testDb ->
         insertSale(2018, 11, "tea", "550.10")
         insertSale(2018, 12, "coffee", "1500.25")
         insertSale(2018, 12, "tea", "900.30")
@@ -159,7 +158,7 @@ fun AbstractExposedTest.withSales(
         insertSale(2019, 2, "coffee", "1870.90")
         insertSale(2019, 2, null, "10.20")
 
-        statement(it, sales)
+        statement(testDb, sales)
     }
 }
 
@@ -184,9 +183,9 @@ fun AbstractExposedTest.withSomeAmounts(
                 it[someAmounts.amount] = amount
             }
         }
-        insertAmount(650.70.toBigDecimal())
-        insertAmount(1500.25.toBigDecimal())
-        insertAmount(1000.00.toBigDecimal())
+        insertAmount("650.70".toBigDecimal())
+        insertAmount("1500.25".toBigDecimal())
+        insertAmount("1000.00".toBigDecimal())
 
         statement(it, someAmounts)
     }
@@ -199,10 +198,29 @@ fun AbstractExposedTest.withSalesAndSomeAmounts(
         someAmounts: DMLTestData.SomeAmounts,
     ) -> Unit,
 ) {
-    withSales { testDb, sales ->
-        withSomeAmounts { _, someAmounts ->
-            statement(testDb, sales, someAmounts)
+    val sales = DMLTestData.Sales
+    val someAmounts = DMLTestData.SomeAmounts
+
+    withTables(sales, someAmounts) { testDb ->
+        insertSale(2018, 11, "tea", "550.10")
+        insertSale(2018, 12, "coffee", "1500.25")
+        insertSale(2018, 12, "tea", "900.30")
+        insertSale(2019, 1, "coffee", "1620.10")
+        insertSale(2019, 1, "tea", "650.70")
+        insertSale(2019, 2, "coffee", "1870.90")
+        insertSale(2019, 2, null, "10.20")
+
+        fun insertAmount(amount: BigDecimal) {
+            someAmounts.insert {
+                it[someAmounts.amount] = amount
+            }
         }
+        insertAmount("650.70".toBigDecimal())
+        insertAmount("1500.25".toBigDecimal())
+        insertAmount("1000.00".toBigDecimal())
+
+
+        statement(testDb, sales, someAmounts)
     }
 }
 
