@@ -37,4 +37,6 @@ dependencies {
     implementation(Libs.kotlinx_coroutines_core)
     testImplementation(Libs.kotlinx_coroutines_test)
 
+    testImplementation("io.github.hakky54:logcaptor:2.10.0")
+
 }

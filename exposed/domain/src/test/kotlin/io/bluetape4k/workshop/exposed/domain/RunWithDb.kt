@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain
 
+import io.bluetape4k.junit5.utils.MultiException
 import io.bluetape4k.logging.KotlinLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.utils.Runtimex
@@ -30,15 +31,20 @@ fun withDb(
     configure: (DatabaseConfig.Builder.() -> Unit)? = null,
     statement: Transaction.(TestDB) -> Unit,
 ) {
+    val me = MultiException()
+
     TestDB.enabledDialects()
-        .filterNot { db != null && it !in db }
-        .filterNot { it in excludeSettings }
-        .filter { it in TestDB.enabledDialects() }
+        .filter { db?.run { it !in this } ?: true }
+        .filter { it !in excludeSettings }
         .forEach { dbSettings ->
-            runCatching {
+            try {
                 withDb(dbSettings, configure, statement)
+            } catch (e: Throwable) {
+                me.add(e)
             }
         }
+
+    me.throwIfNotEmpty()
 }
 
 fun withDb(
@@ -89,15 +95,18 @@ suspend fun withSuspendedDb(
     configure: (DatabaseConfig.Builder.() -> Unit)? = null,
     statement: suspend Transaction.(TestDB) -> Unit,
 ) {
+    val me = MultiException()
     TestDB.enabledDialects()
-        .filterNot { db != null && it !in db }
-        .filterNot { it in excludeSettings }
-        .filter { it in TestDB.enabledDialects() }
+        .filter { db?.run { it !in this } ?: true }
+        .filter { it !in excludeSettings }
         .forEach { dbSettings ->
-            runCatching {
+            try {
                 withSuspendedDb(dbSettings, configure, statement)
+            } catch (e: Throwable) {
+                me.add(e)
             }
         }
+    me.throwIfNotEmpty()
 }
 
 suspend fun withSuspendedDb(

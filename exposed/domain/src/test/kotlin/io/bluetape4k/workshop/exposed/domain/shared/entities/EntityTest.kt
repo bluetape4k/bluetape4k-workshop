@@ -127,6 +127,7 @@ object EntityTestData {
     }
 }
 
+@Suppress("UNUSED_VARIABLE")
 class EntityTest: AbstractExposedTest() {
 
     companion object: KLogging()
@@ -846,6 +847,7 @@ class EntityTest: AbstractExposedTest() {
         override fun toString(): String = "Region(id=$id, name=$name)"
     }
 
+    @Suppress("UNCHECKED_CAST")
     abstract class ComparableLongEntity<T: LongEntity>(id: EntityID<Long>): LongEntity(id) {
         override fun equals(other: Any?): Boolean = (other as? T)?.id?.equals(id) ?: false
         override fun hashCode(): Int = id.hashCode()
@@ -942,7 +944,7 @@ class EntityTest: AbstractExposedTest() {
     @Test
     fun `iteration over sized iterable with preload`() {
         fun HashMap<String, Pair<Int, Long>>.assertEachQueryExecutedOnlyOnce() {
-            forEach { (statement, stats) ->
+            forEach { (_, stats) ->
                 val executionCount = stats.first
                 executionCount shouldBeEqualTo 1
             }
