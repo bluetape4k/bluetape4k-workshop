@@ -15,8 +15,8 @@ class OneToManyMappingTest: AbstractExposedTest() {
 
     @Test
     fun `handle one-to-many relationship`() {
-        withDb(POSTGRESQL) {
-            withTables(RestaurantTable, MenuTable) {
+        withDb(POSTGRESQL) { dialect ->
+            withTables(dialect, RestaurantTable, MenuTable) {
                 val kfc = Restaurant.new {
                     name = "KFC"
                 }

@@ -48,44 +48,46 @@ fun withDb(
 }
 
 fun withDb(
-    dbSettings: TestDB,
+    dialect: TestDB,
     configure: (DatabaseConfig.Builder.() -> Unit)? = null,
     statement: Transaction.(TestDB) -> Unit,
 ) {
-//    if (dbSettings !in TestDB.enabledDialects()) {
+//    if(dialect !in TestDB.enabledDialects()) {
 //        return
 //    }
 
-    logger.info { "Running `withDb` for $dbSettings" }
+    logger.info { "Running `withDb` for $dialect" }
 
-    val unregistered = dbSettings !in registeredOnShutdown
+    val unregistered = dialect !in registeredOnShutdown
     val newConfiguration = configure != null && !unregistered
 
     if (unregistered) {
-        dbSettings.beforeConnection()
+        dialect.beforeConnection()
         Runtimex.addShutdownHook {
-            dbSettings.afterTestFinished()
-            registeredOnShutdown.remove(dbSettings)
+            dialect.afterTestFinished()
+            registeredOnShutdown.remove(dialect)
         }
-        registeredOnShutdown += dbSettings
-        dbSettings.db = dbSettings.connect(configure ?: {})
+        registeredOnShutdown += dialect
+        dialect.db = dialect.connect(configure ?: {})
     }
 
-    val registeredDb = dbSettings.db!!
-    if (newConfiguration) {
-        dbSettings.db = dbSettings.connect(configure ?: {})
-    }
-    val database = dbSettings.db!!
-    transaction(database.transactionManager.defaultIsolationLevel, db = database) {
-        maxAttempts = 1
-        registerInterceptor(CurrentTestDBInterceptor)
-        currentTestDB = dbSettings
-        statement(dbSettings)
-    }
-
-    // revert any new configuration to not be carried over to the next test in suite
-    if (configure != null) {
-        dbSettings.db = registeredDb
+    val registeredDb = dialect.db!!
+    try {
+        if (newConfiguration) {
+            dialect.db = dialect.connect(configure ?: {})
+        }
+        val database = dialect.db!!
+        transaction(database.transactionManager.defaultIsolationLevel, db = database) {
+            maxAttempts = 1
+            registerInterceptor(CurrentTestDBInterceptor)  // interceptor 를 통해 다양한 작업을 할 수 있다
+            currentTestDB = dialect
+            statement(dialect)
+        }
+    } finally {
+        // revert any new configuration to not be carried over to the next test in suite
+        if (configure != null) {
+            dialect.db = registeredDb
+        }
     }
 }
 
@@ -114,9 +116,9 @@ suspend fun withSuspendedDb(
     configure: (DatabaseConfig.Builder.() -> Unit)? = null,
     statement: suspend Transaction.(TestDB) -> Unit,
 ) {
-    if (dbSettings !in TestDB.enabledDialects()) {
-        return
-    }
+//    if (dbSettings !in TestDB.enabledDialects()) {
+//        return
+//    }
 
     logger.info { "Running withSuspendedDb for $dbSettings" }
 
@@ -134,23 +136,26 @@ suspend fun withSuspendedDb(
     }
 
     val registeredDb = dbSettings.db!!
-    if (newConfiguration) {
-        dbSettings.db = dbSettings.connect(configure ?: {})
-    }
-    val database = dbSettings.db!!
 
-    newSuspendedTransaction(
-        db = database,
-        transactionIsolation = database.transactionManager.defaultIsolationLevel
-    ) {
-        maxAttempts = 1
-        registerInterceptor(CurrentTestDBInterceptor)
-        currentTestDB = dbSettings
-        statement(dbSettings)
-    }
+    try {
+        if (newConfiguration) {
+            dbSettings.db = dbSettings.connect(configure ?: {})
+        }
+        val database = dbSettings.db!!
 
-    // revert any new configuration to not be carried over to the next test in suite
-    if (configure != null) {
-        dbSettings.db = registeredDb
+        newSuspendedTransaction(
+            db = database,
+            transactionIsolation = database.transactionManager.defaultIsolationLevel
+        ) {
+            maxAttempts = 1
+            registerInterceptor(CurrentTestDBInterceptor)
+            currentTestDB = dbSettings
+            statement(dbSettings)
+        }
+    } finally {
+        // revert any new configuration to not be carried over to the next test in suite
+        if (configure != null) {
+            dbSettings.db = registeredDb
+        }
     }
 }

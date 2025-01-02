@@ -143,101 +143,13 @@ fun AbstractExposedTest.withCitiesAndUsers(
     }
 }
 
-fun AbstractExposedTest.withCitiesAndUsers(
-    exclude: Collection<TestDB> = emptyList(),
-    statement: Transaction.(
-        cities: DMLTestData.Cities,
-        users: DMLTestData.Users,
-        userData: DMLTestData.UserData,
-    ) -> Unit,
-) {
-    val users = DMLTestData.Users
-    val userFlags = DMLTestData.Users.Flags
-    val cities = DMLTestData.Cities
-    val userData = DMLTestData.UserData
-
-    withTables(exclude, cities, users, userData) {
-        val saintPetersburgId = cities.insert {
-            it[name] = "St. Petersburg"
-        } get cities.id
-
-        val munichId = cities.insert {
-            it[name] = "Munich"
-        } get cities.id
-
-        cities.insert {
-            it[name] = "Prague"
-        }
-
-        users.insert {
-            it[id] = "andrey"
-            it[name] = "Andrey"
-            it[cityId] = saintPetersburgId
-            it[flags] = userFlags.IS_ADMIN
-        }
-
-        users.insert {
-            it[id] = "sergey"
-            it[name] = "Sergey"
-            it[cityId] = munichId
-            it[flags] = userFlags.IS_ADMIN or userFlags.HAS_DATA
-        }
-
-        users.insert {
-            it[id] = "eugene"
-            it[name] = "Eugene"
-            it[cityId] = munichId
-            it[flags] = userFlags.HAS_DATA
-        }
-
-        users.insert {
-            it[id] = "alex"
-            it[name] = "Alex"
-            it[cityId] = null
-        }
-
-        users.insert {
-            it[id] = "smth"
-            it[name] = "Something"
-            it[cityId] = null
-            it[flags] = userFlags.HAS_DATA
-        }
-
-        userData.insert {
-            it[user_id] = "smth"
-            it[comment] = "Something is here"
-            it[value] = 10
-        }
-
-        userData.insert {
-            it[user_id] = "smth"
-            it[comment] = "Comment #2"
-            it[value] = 20
-        }
-
-        userData.insert {
-            it[user_id] = "eugene"
-            it[comment] = "Comment for Eugene"
-            it[value] = 20
-        }
-
-        userData.insert {
-            it[user_id] = "sergey"
-            it[comment] = "Comment for Sergey"
-            it[value] = 30
-        }
-
-        statement(cities, users, userData)
-    }
-}
-
 fun AbstractExposedTest.withSales(
-    excludeSettings: Collection<TestDB> = emptyList(),
+    dialect: TestDB,
     statement: Transaction.(testDb: TestDB, sales: DMLTestData.Sales) -> Unit,
 ) {
     val sales = DMLTestData.Sales
 
-    withTables(excludeSettings, sales) { testDb ->
+    withTables(dialect, sales) { testDb ->
         insertSale(2018, 11, "tea", "550.10")
         insertSale(2018, 12, "coffee", "1500.25")
         insertSale(2018, 12, "tea", "900.30")
@@ -261,11 +173,12 @@ private fun insertSale(year: Int, month: Int, product: String?, amount: String) 
 }
 
 fun AbstractExposedTest.withSomeAmounts(
+    dialect: TestDB,
     statement: Transaction.(testDb: TestDB, someAmounts: DMLTestData.SomeAmounts) -> Unit,
 ) {
     val someAmounts = DMLTestData.SomeAmounts
 
-    withTables(someAmounts) {
+    withTables(dialect, someAmounts) {
         fun insertAmount(amount: BigDecimal) {
             someAmounts.insert {
                 it[someAmounts.amount] = amount
@@ -280,6 +193,7 @@ fun AbstractExposedTest.withSomeAmounts(
 }
 
 fun AbstractExposedTest.withSalesAndSomeAmounts(
+    dialect: TestDB,
     statement: Transaction.(
         testDb: TestDB,
         sales: DMLTestData.Sales,
@@ -289,7 +203,7 @@ fun AbstractExposedTest.withSalesAndSomeAmounts(
     val sales = DMLTestData.Sales
     val someAmounts = DMLTestData.SomeAmounts
 
-    withTables(sales, someAmounts) { testDb ->
+    withTables(dialect, sales, someAmounts) { testDb ->
         insertSale(2018, 11, "tea", "550.10")
         insertSale(2018, 12, "coffee", "1500.25")
         insertSale(2018, 12, "tea", "900.30")

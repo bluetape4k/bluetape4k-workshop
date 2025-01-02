@@ -209,6 +209,6 @@ class EntityReferenceCacheTest: AbstractExposedTest() {
 
     @Test
     fun `via refreence out of transaction`() {
-
+        TODO("구현 중")
     }
 }

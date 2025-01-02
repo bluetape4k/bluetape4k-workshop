@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.exposed.domain.mapping.compositeId
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.domain.TestDB
 import io.bluetape4k.workshop.exposed.domain.mapping.composite.Authors
 import io.bluetape4k.workshop.exposed.domain.mapping.composite.Books
 import io.bluetape4k.workshop.exposed.domain.mapping.composite.Offices
@@ -10,7 +11,8 @@ import io.bluetape4k.workshop.exposed.domain.mapping.composite.Reviews
 import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import kotlin.test.assertFailsWith
 
 class CompositeIdTest: AbstractExposedTest() {
@@ -19,9 +21,10 @@ class CompositeIdTest: AbstractExposedTest() {
 
     private val allTables = arrayOf(Publishers, Authors, Books, Reviews, Offices)
 
-    @Test
-    fun `create and drop composite id tables`() {
-        transaction {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `create and drop composite id tables`(dialect: TestDB) {
+        transaction(db = dialect.db) {
             try {
                 SchemaUtils.create(tables = allTables)
             } finally {
@@ -30,15 +33,16 @@ class CompositeIdTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `composite id 의 컬럼이 없이 정의된 테이블을 사용하는 것은 실패합니다`() {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `composite id 의 컬럼이 없이 정의된 테이블을 사용하는 것은 실패합니다`(dialect: TestDB) {
         val missingIdsTable = object: CompositeIdTable("missing_ids_table") {
             val age = integer("age")
             val name = varchar("name", 50)
             override val primaryKey = PrimaryKey(age, name)
         }
 
-        transaction {
+        transaction(db = dialect.db) {
             // Table can be created with no issue
             SchemaUtils.create(missingIdsTable)
 

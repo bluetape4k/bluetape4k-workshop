@@ -2,13 +2,15 @@ package io.bluetape4k.workshop.exposed.domain.demo.dao
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.domain.TestDB
 import io.bluetape4k.workshop.exposed.domain.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 class SamplesDao: AbstractExposedTest() {
 
@@ -39,9 +41,10 @@ class SamplesDao: AbstractExposedTest() {
         val users by User referrersOn Users.city
     }
 
-    @Test
-    fun `dao entity - one to many`() {
-        withTables(Users, Cities) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `dao entity - one to many`(dialect: TestDB) {
+        withTables(dialect, Users, Cities) {
             val seoul = City.new {
                 name = "Seoul"
             }

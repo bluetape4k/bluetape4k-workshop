@@ -473,24 +473,20 @@ class SelectTest: AbstractExposedTest() {
     @ParameterizedTest
     @FieldSource("testDBsSupportingInAnyAllFromTables")
     fun `inTable example`(dialect: TestDB) {
-        withDb(dialect) {
-            withSalesAndSomeAmounts { _, sales, someAmounts ->
-                val rows = sales.selectAll()
-                    .where { sales.amount inTable someAmounts }
-                rows.count() shouldBeEqualTo 2L
-            }
+        withSalesAndSomeAmounts(dialect) { _, sales, someAmounts ->
+            val rows = sales.selectAll()
+                .where { sales.amount inTable someAmounts }
+            rows.count() shouldBeEqualTo 2L
         }
     }
 
     @ParameterizedTest
     @FieldSource("testDBsSupportingInAnyAllFromTables")
     fun `notInTable example`(dialect: TestDB) {
-        withDb(dialect) {
-            withSalesAndSomeAmounts { _, sales, someAmounts ->
-                val rows = sales.selectAll()
-                    .where { sales.amount notInTable someAmounts }
-                rows.count() shouldBeEqualTo 5L
-            }
+        withSalesAndSomeAmounts(dialect) { _, sales, someAmounts ->
+            val rows = sales.selectAll()
+                .where { sales.amount notInTable someAmounts }
+            rows.count() shouldBeEqualTo 5L
         }
     }
 
@@ -702,23 +698,20 @@ class SelectTest: AbstractExposedTest() {
     @ParameterizedTest
     @FieldSource("testDBsSupportingAnyAndAllFromArrays")
     fun `greater eq AnyFrom Array`(dialect: TestDB) {
-        withDb(dialect) {
-            withSales { _, sales ->
-                val amounts = arrayOf(100, 1000).map { it.toBigDecimal() }.toTypedArray()
+        withSales(dialect) { _, sales ->
+            val amounts = arrayOf(100, 1000).map { it.toBigDecimal() }.toTypedArray()
 
-                val rows = sales.selectAll()
-                    .where {
-                        sales.amount greaterEq anyFrom(amounts)
-                    }
-                    .orderBy(sales.amount)
-                    .map { it[sales.product] }
+            val rows = sales.selectAll()
+                .where {
+                    sales.amount greaterEq anyFrom(amounts)
+                }
+                .orderBy(sales.amount)
+                .map { it[sales.product] }
 
-                rows.subList(0, 3).forEach { it shouldBeEqualTo "tea" }
-                rows.subList(3, 6).forEach { it shouldBeEqualTo "coffee" }
-            }
+            rows.subList(0, 3).forEach { it shouldBeEqualTo "tea" }
+            rows.subList(3, 6).forEach { it shouldBeEqualTo "coffee" }
         }
     }
-
 
     /**
      * ### Greater Eq AnyFrom List
@@ -733,20 +726,19 @@ class SelectTest: AbstractExposedTest() {
     @ParameterizedTest
     @FieldSource("testDBsSupportingAnyAndAllFromArrays")
     fun `greater eq AnyFrom List`(dialect: TestDB) {
-        withDb(dialect) {
-            withSales { _, sales ->
-                val amounts = listOf(100, 1000).map { it.toBigDecimal() }
 
-                val rows = sales.selectAll()
-                    .where {
-                        sales.amount greaterEq anyFrom(amounts)
-                    }
-                    .orderBy(sales.amount)
-                    .map { it[sales.product] }
+        withSales(dialect) { _, sales ->
+            val amounts = listOf(100, 1000).map { it.toBigDecimal() }
 
-                rows.subList(0, 3).forEach { it shouldBeEqualTo "tea" }
-                rows.subList(3, 6).forEach { it shouldBeEqualTo "coffee" }
-            }
+            val rows = sales.selectAll()
+                .where {
+                    sales.amount greaterEq anyFrom(amounts)
+                }
+                .orderBy(sales.amount)
+                .map { it[sales.product] }
+
+            rows.subList(0, 3).forEach { it shouldBeEqualTo "tea" }
+            rows.subList(3, 6).forEach { it shouldBeEqualTo "coffee" }
         }
     }
 
@@ -761,15 +753,13 @@ class SelectTest: AbstractExposedTest() {
     @ParameterizedTest
     @FieldSource("testDBsSupportingInAnyAllFromTables")
     fun `Eq AnyFrom Table`(dialect: TestDB) {
-        withDb(dialect) {
-            withSalesAndSomeAmounts { _, sales, someAmounts ->
-                val rows = sales.selectAll()
-                    .where {
-                        sales.amount eq anyFrom(someAmounts.select(someAmounts.amount))
-                    }
+        withSalesAndSomeAmounts(dialect) { _, sales, someAmounts ->
+            val rows = sales.selectAll()
+                .where {
+                    sales.amount eq anyFrom(someAmounts.select(someAmounts.amount))
+                }
 
-                rows.count() shouldBeEqualTo 2L        // 650.70, 1500.25
-            }
+            rows.count() shouldBeEqualTo 2L        // 650.70, 1500.25
         }
     }
 
@@ -785,12 +775,12 @@ class SelectTest: AbstractExposedTest() {
     @FieldSource("testDBsSupportingInAnyAllFromTables")
     fun `Neq AnyFrom Table`(dialect: TestDB) {
         withDb(dialect) {
-            withSalesAndSomeAmounts { _, sales, someAmounts ->
+            withSalesAndSomeAmounts(dialect) { _, sales, someAmounts ->
                 val rows = sales.selectAll()
                     .where {
                         sales.amount neq anyFrom(someAmounts.select(someAmounts.amount))
                     }
-                rows.count() shouldBeEqualTo 7L    // except 650.70, 1500.25 이어야 하는데 ... 
+                rows.count() shouldBeEqualTo 7L    // except 650.70, 1500.25 이어야 하는데 ...
             }
         }
     }
@@ -810,9 +800,8 @@ class SelectTest: AbstractExposedTest() {
     fun `Greater Eq AllFrom SubQuery`(dialect: TestDB) {
         // MySQL 5.x 에서는 지원되지 않습니다.
         Assumptions.assumeTrue(dialect != TestDB.MYSQL_V5)
-
         withDb(dialect) {
-            withSales { _, sales ->
+            withSales(dialect) { _, sales ->
                 val rows = sales.selectAll()
                     .where {
                         sales.amount greaterEq allFrom(sales.select(sales.amount).where { sales.product eq "tea" })
@@ -839,19 +828,17 @@ class SelectTest: AbstractExposedTest() {
     @ParameterizedTest
     @FieldSource("testDBsSupportingAnyAndAllFromArrays")
     fun `Greater Eq AllFrom Array`(dialect: TestDB) {
-        withDb(dialect) {
-            withSales { _, sales ->
-                val amounts = arrayOf(100, 1000).map { it.toBigDecimal() }.toTypedArray()
+        withSales(dialect) { _, sales ->
+            val amounts = arrayOf(100, 1000).map { it.toBigDecimal() }.toTypedArray()
 
-                val rows = sales.selectAll()
-                    .where {
-                        sales.amount greaterEq allFrom(amounts)
-                    }
-                    .toList()
+            val rows = sales.selectAll()
+                .where {
+                    sales.amount greaterEq allFrom(amounts)
+                }
+                .toList()
 
-                rows shouldHaveSize 3
-                rows.forEach { it[sales.product] shouldBeEqualTo "coffee" }
-            }
+            rows shouldHaveSize 3
+            rows.forEach { it[sales.product] shouldBeEqualTo "coffee" }
         }
     }
 
@@ -869,7 +856,7 @@ class SelectTest: AbstractExposedTest() {
     @FieldSource("testDBsSupportingAnyAndAllFromArrays")
     fun `Greater Eq AllFrom List`(dialect: TestDB) {
         withDb(dialect) {
-            withSales { _, sales ->
+            withSales(dialect) { _, sales ->
                 val amounts = arrayOf(100, 1000).map { it.toBigDecimal() }
 
                 val rows = sales.selectAll()
@@ -888,7 +875,7 @@ class SelectTest: AbstractExposedTest() {
     @FieldSource("testDBsSupportingInAnyAllFromTables")
     fun `Greater Eq AllFrom Table`(dialect: TestDB) {
         withDb(dialect) {
-            withSalesAndSomeAmounts { _, sales, someAmounts ->
+            withSalesAndSomeAmounts(dialect) { _, sales, someAmounts ->
                 val rows = sales.selectAll()
                     .where { sales.amount greaterEq allFrom(someAmounts) }
                     .toList()
