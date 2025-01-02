@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.domain.TestDB
 import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.City
 import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.CityTable
 import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.Country
@@ -25,7 +26,8 @@ import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.emptySized
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 class EntityHookTest: AbstractExposedTest() {
 
@@ -40,9 +42,10 @@ class EntityHookTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun created01() {
-        withTables(*allTables) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun created01(dialect: TestDB) {
+        withTables(dialect, *allTables) {
             val (_, events, txId) = trackChanges {
                 val ru = Country.new { name = "RU" }
                 City.new {
@@ -58,9 +61,10 @@ class EntityHookTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun delete01() {
-        withTables(*allTables) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun delete01(dialect: TestDB) {
+        withTables(dialect, *allTables) {
             val moscowId = transaction {
                 val ru = Country.new { name = "RU" }
                 val x = City.new {
@@ -82,9 +86,10 @@ class EntityHookTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `modified simple 01`() {
-        withTables(*allTables) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `modified simple 01`(dialect: TestDB) {
+        withTables(dialect, *allTables) {
             val (_, events1, txId) = trackChanges {
                 val ru = Country.new { name = "RU" }
                 City.new {
@@ -110,9 +115,10 @@ class EntityHookTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `modified inner table 01`() {
-        withTables(*allTables) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `modified inner table 01`(dialect: TestDB) {
+        withTables(dialect, *allTables) {
             transaction {
                 val ru = Country.new { name = "RU" }
                 val de = Country.new { name = "DE" }
@@ -136,9 +142,10 @@ class EntityHookTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `modified inner table 02`() {
-        withTables(*allTables) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `modified inner table 02`(dialect: TestDB) {
+        withTables(dialect, *allTables) {
             transaction {
                 val ru = Country.new { name = "RU" }
                 val de = Country.new { name = "DE" }
@@ -163,9 +170,10 @@ class EntityHookTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `modified inner table 03`() {
-        withTables(*allTables) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `modified inner table 03`(dialect: TestDB) {
+        withTables(dialect, *allTables) {
             transaction {
                 val ru = Country.new { name = "RU" }
                 val de = Country.new { name = "DE" }
@@ -189,9 +197,10 @@ class EntityHookTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `single entity flush should trigger events`() {
-        withTables(*allTables) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `single entity flush should trigger events`(dialect: TestDB) {
+        withTables(dialect, *allTables) {
             val (user, events, _) = trackChanges {
                 User
                     .new { name = "John"; age = 30 }
@@ -216,9 +225,10 @@ class EntityHookTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `calling flush notifies entity hook subscribers`() {
-        withTables(*allTables) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `calling flush notifies entity hook subscribers`(dialect: TestDB) {
+        withTables(dialect, *allTables) {
             var hookCalls = 0
             val user = User.new {
                 name = "1@test.local"

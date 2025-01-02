@@ -4,6 +4,7 @@ import io.bluetape4k.exposed.dao.id.TimebasedUUIDTable
 import io.bluetape4k.idgenerators.uuid.TimebasedUuid
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.domain.TestDB
 import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables.Address
 import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables.Addresses
 import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables.Cities
@@ -22,7 +23,8 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.with
 import org.jetbrains.exposed.sql.exists
 import org.jetbrains.exposed.sql.insertAndGetId
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.util.*
 
 object TimebasedUUIDTables {
@@ -76,17 +78,19 @@ object TimebasedUUIDTables {
 
 class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
 
-    @Test
-    fun `create tables`() {
-        withTables(Cities, People) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `create tables`(dialect: TestDB) {
+        withTables(dialect, Cities, People) {
             Cities.exists().shouldBeTrue()
             People.exists().shouldBeTrue()
         }
     }
 
-    @Test
-    fun `create records`() {
-        withTables(Cities, People) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `create records`(dialect: TestDB) {
+        withTables(dialect, Cities, People) {
             val seoul = City.new { name = "Seoul" }
             val busan = City.new { name = "Busan" }
 
@@ -117,9 +121,10 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `update and delete records`() {
-        withTables(Cities, People) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `update and delete records`(dialect: TestDB) {
+        withTables(dialect, Cities, People) {
             val seoul = City.new { name = "Seoul" }
             val busan = City.new { name = "Busan" }
 
@@ -150,9 +155,10 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `insert with inner table`() {
-        withTables(Addresses, Cities, People) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `insert with inner table`(dialect: TestDB) {
+        withTables(dialect, Addresses, Cities, People) {
             val city1 = City.new { name = "City1" }
             val person1 = Person.new {
                 name = "Person1"
@@ -177,9 +183,10 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `foreign key between uuid and entity id column`() {
-        withTables(Cities, Towns) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `foreign key between uuid and entity id column`(dialect: TestDB) {
+        withTables(dialect, Cities, Towns) {
             val cId = Cities.insertAndGetId {
                 it[name] = "City A"
             }

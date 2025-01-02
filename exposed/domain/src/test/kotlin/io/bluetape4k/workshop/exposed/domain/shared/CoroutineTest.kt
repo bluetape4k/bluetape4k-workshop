@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.exposed.domain.shared
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.domain.TestDB
 import io.bluetape4k.workshop.exposed.domain.withSuspendedTables
 import io.bluetape4k.workshop.exposed.domain.withTables
 import kotlinx.coroutines.Dispatchers
@@ -33,7 +34,8 @@ import org.jetbrains.exposed.sql.transactions.experimental.suspendedTransactionA
 import org.jetbrains.exposed.sql.transactions.experimental.withSuspendTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
-import org.junit.jupiter.api.RepeatedTest
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.sql.Connection
 import java.util.concurrent.Executors
 import kotlin.test.assertFailsWith
@@ -57,9 +59,11 @@ class CoroutineTest: AbstractExposedTest() {
         Testing.selectAll().where { Testing.id eq id }.singleOrNull()?.getOrNull(Testing.id)
     }
 
-    @RepeatedTest(REPEAT_SIZE)
-    fun `suspended transaction`() = runSuspendIO {
-        withSuspendedTables(Testing) {
+    // @RepeatedTest(REPEAT_SIZE)
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `suspended transaction`(dialect: TestDB) = runSuspendIO {
+        withSuspendedTables(dialect, Testing) {
             val mainJob = async(singleThreadDispatcher) {
                 val job = launch(singleThreadDispatcher) {
                     newSuspendedTransaction(db = db) {
@@ -82,9 +86,11 @@ class CoroutineTest: AbstractExposedTest() {
         }
     }
 
-    @RepeatedTest(REPEAT_SIZE)
-    fun `suspend transaction with repeatation`() = runSuspendIO {
-        withSuspendedTables(TestingUnique) {
+    // @RepeatedTest(REPEAT_SIZE)
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `suspend transaction with repeatation`(dialect: TestDB) = runSuspendIO {
+        withSuspendedTables(dialect, TestingUnique) {
             val (originalId, updatedId) = 1 to 99
 
             val mainJob = async(Dispatchers.Default) {
@@ -139,9 +145,11 @@ class CoroutineTest: AbstractExposedTest() {
         }
     }
 
-    @RepeatedTest(REPEAT_SIZE)
-    fun `suspend transaction async with repeatition`() = runSuspendIO {
-        withSuspendedTables(TestingUnique) {
+    // @RepeatedTest(REPEAT_SIZE)
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `suspend transaction async with repeatition`(dialect: TestDB) = runSuspendIO {
+        withSuspendedTables(dialect, TestingUnique) {
             val (originalId, updatedId) = 1 to 99
 
             val mainJob = async(Dispatchers.Default) {
@@ -183,13 +191,15 @@ class CoroutineTest: AbstractExposedTest() {
         }
     }
 
-    @RepeatedTest(REPEAT_SIZE)
-    fun `nested suspend transaction test`() = runSuspendIO {
+    // @RepeatedTest(REPEAT_SIZE)
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `nested suspend transaction test`(dialect: TestDB) = runSuspendIO {
         suspend fun insertTesting(db: Database) = newSuspendedTransaction(db = db) {
             Testing.insert { }
         }
 
-        withSuspendedTables(Testing) {
+        withSuspendedTables(dialect, Testing) {
             val mainJob = async {
                 val job = launch(Dispatchers.IO) {
                     newSuspendedTransaction(db = db) {
@@ -216,11 +226,13 @@ class CoroutineTest: AbstractExposedTest() {
         }
     }
 
-    @RepeatedTest(REPEAT_SIZE)
-    fun `nested suspend async transaction test`() = runSuspendIO {
+    // @RepeatedTest(REPEAT_SIZE)
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `nested suspend async transaction test`(dialect: TestDB) = runSuspendIO {
         val recordCount = 10
 
-        withSuspendedTables(Testing) {
+        withSuspendedTables(dialect, Testing) {
             val mainJob = async {
                 val job = launch(Dispatchers.IO) {
                     newSuspendedTransaction(db = db) {
@@ -252,11 +264,11 @@ class CoroutineTest: AbstractExposedTest() {
         }
     }
 
-    @RepeatedTest(REPEAT_SIZE)
-    fun `await all`() = runSuspendIO {
+    // @RepeatedTest(REPEAT_SIZE)
+    fun `await all`(dialect: TestDB) = runSuspendIO {
         val recordCount = 5
 
-        withSuspendedTables(Testing) {
+        withSuspendedTables(dialect, Testing) {
             val results = List(recordCount) { index ->
                 suspendedTransactionAsync(Dispatchers.IO, db = db) {
                     Testing.insert { }
@@ -270,9 +282,11 @@ class CoroutineTest: AbstractExposedTest() {
         }
     }
 
-    @RepeatedTest(REPEAT_SIZE)
-    fun `suspended and normal transaction`() {
-        withTables(Testing) {
+    // @RepeatedTest(REPEAT_SIZE)
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `suspended and normal transaction`(dialect: TestDB) = runSuspendIO {
+        withTables(dialect, Testing) {
             val db = this.db
             var suspendedOk = true
             var normalOk = true
@@ -307,9 +321,11 @@ class CoroutineTest: AbstractExposedTest() {
         companion object: IntEntityClass<TestingEntity>(Testing)
     }
 
-    @RepeatedTest(REPEAT_SIZE)
-    fun `coroutines with exception within`() = runSuspendIO {
-        withSuspendedTables(Testing) {
+    // @RepeatedTest(REPEAT_SIZE)
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `coroutines with exception within`(dialect: TestDB) = runSuspendIO {
+        withSuspendedTables(dialect, Testing) {
             val id = Testing.insertAndGetId { }
             commit()
 

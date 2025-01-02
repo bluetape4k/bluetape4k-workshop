@@ -68,7 +68,7 @@ class InsertTest: AbstractExposedTest() {
      * ```
      */
     @ParameterizedTest
-    @MethodSource("enableDialects")
+    @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert and get id 01`(dialect: TestDB) {
         val idTable = object: IntIdTable("tmp") {
             val name = varchar("foo", 10).uniqueIndex()
@@ -130,7 +130,7 @@ class InsertTest: AbstractExposedTest() {
     }
 
     @ParameterizedTest
-    @MethodSource("enableDialects")
+    @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert and get id when column has different name and get value by id column`(dialect: TestDB) {
         val testTableWithId = object: IdTable<Int>("testTableWithId") {
             val code = integer("code")
@@ -163,7 +163,7 @@ class InsertTest: AbstractExposedTest() {
      * ```
      */
     @ParameterizedTest
-    @MethodSource("enableDialects")
+    @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `id and column have different names and get value by original column`(dialect: TestDB) {
         val exampleTable = object: IdTable<String>("test_id_and_column_table") {
             val exampleColumn = varchar("example_column", 200)
@@ -207,7 +207,7 @@ class InsertTest: AbstractExposedTest() {
     }
 
     @ParameterizedTest
-    @MethodSource("enableDialects")
+    @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `batch insert 01`(dialect: TestDB) {
         withCitiesAndUsers(dialect) { cities, users, _ ->
             val cityNames = listOf("Paris", "Moscow", "Helsinki")
@@ -242,7 +242,7 @@ class InsertTest: AbstractExposedTest() {
     }
 
     @ParameterizedTest
-    @MethodSource("enableDialects")
+    @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `batch insert with sequence`(dialect: TestDB) {
         val cities = Cities
         withTables(dialect, cities) {
@@ -258,7 +258,7 @@ class InsertTest: AbstractExposedTest() {
     }
 
     @ParameterizedTest
-    @MethodSource("enableDialects")
+    @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `batch insert using empty sequence should work`(dialect: TestDB) {
         val cities = Cities
         withTables(dialect, cities) {
@@ -273,7 +273,7 @@ class InsertTest: AbstractExposedTest() {
     }
 
     @ParameterizedTest
-    @MethodSource("enableDialects")
+    @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert and get generted key 01`(dialect: TestDB) {
         withTables(dialect, Cities) {
             val id = Cities.insert {
@@ -292,7 +292,7 @@ class InsertTest: AbstractExposedTest() {
     }
 
     @ParameterizedTest
-    @MethodSource("enableDialects")
+    @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert and get generated key 02`(dialect: TestDB) {
         withTables(dialect, LongIdTable) {
             val id = LongIdTable.insert {
@@ -308,7 +308,7 @@ class InsertTest: AbstractExposedTest() {
     }
 
     @ParameterizedTest
-    @MethodSource("enableDialects")
+    @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert and get generated key 03`(dialect: TestDB) {
         withTables(dialect, IntIdTestTable) {
             val id = IntIdTestTable.insertAndGetId {
@@ -319,7 +319,7 @@ class InsertTest: AbstractExposedTest() {
     }
 
     @ParameterizedTest
-    @MethodSource("enableDialects")
+    @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert with predefined id`(dialect: TestDB) {
         val stringTable = object: IdTable<String>("stringTable") {
             override val id: Column<EntityID<String>> = varchar("id", 15).entityId()
@@ -350,7 +350,7 @@ class InsertTest: AbstractExposedTest() {
     }
 
     @ParameterizedTest
-    @MethodSource("enableDialects")
+    @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert with foreign id`(dialect: TestDB) {
         val idTable = object: IntIdTable("idTable") {}
         val standardTable = object: Table("standardTable") {
@@ -368,7 +368,7 @@ class InsertTest: AbstractExposedTest() {
     }
 
     @ParameterizedTest
-    @MethodSource("enableDialects")
+    @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert with expression`(dialect: TestDB) {
         val tbl = object: IntIdTable("testInsert") {
             val nullableInt = integer("nullableInt").nullable()
@@ -406,7 +406,7 @@ class InsertTest: AbstractExposedTest() {
     }
 
     @ParameterizedTest
-    @MethodSource("enableDialects")
+    @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert with column expression`(dialect: TestDB) {
         val tbl1 = object: IntIdTable("testInsert1") {
             val string1 = varchar("stringCol", 20)
@@ -460,7 +460,7 @@ class InsertTest: AbstractExposedTest() {
     }
 
     @ParameterizedTest
-    @MethodSource("enableDialects")
+    @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert with column named with keyword`(dialect: TestDB) {
         withTables(dialect, OrderedDataTable) {
             val foo = OrderedData.new {
@@ -481,7 +481,7 @@ class InsertTest: AbstractExposedTest() {
     }
 
     @ParameterizedTest
-    @MethodSource("enableDialects")
+    @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `check column length on insert`(dialect: TestDB) {
         val stringTable = object: Table("stringTable") {
             val name = varchar("name", 10)
@@ -512,7 +512,7 @@ class InsertTest: AbstractExposedTest() {
      * ```
      */
     @ParameterizedTest
-    @MethodSource("enableDialects")
+    @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `subquery in an insert or update statement`(dialect: TestDB) {
         val tbl1 = object: Table("tab1") {
             val id = varchar("id", 10)
@@ -558,7 +558,7 @@ class InsertTest: AbstractExposedTest() {
     }
 
     @ParameterizedTest
-    @MethodSource("enableDialects")
+    @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `generated key 04`(dialect: TestDB) {
         val charIdTable = object: IdTable<String>("charIdTable") {
             override val id = varchar("id", 50)
@@ -694,7 +694,7 @@ class InsertTest: AbstractExposedTest() {
     }
 
     @ParameterizedTest
-    @MethodSource("enableDialects")
+    @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert into nullable generated column`(testDb: TestDB) {
         withDb(testDb) {
             val generatedTable = object: IntIdTable("generatedTable") {
@@ -749,7 +749,7 @@ class InsertTest: AbstractExposedTest() {
     }
 
     @ParameterizedTest
-    @MethodSource("enableDialects")
+    @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `no auto increment applied to custom string primary key`(dialect: TestDB) {
         val tester = object: IdTable<String>("test_no_auto_increment_table") {
             val customId = varchar("custom_id", 128)
@@ -769,7 +769,7 @@ class InsertTest: AbstractExposedTest() {
     }
 
     @ParameterizedTest
-    @MethodSource("enableDialects")
+    @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert returns values from default expression`(dialect: TestDB) {
         // Postgres 만 지원됩니다.
         Assumptions.assumeTrue(dialect in TestDB.ALL_POSTGRES)
@@ -787,7 +787,7 @@ class InsertTest: AbstractExposedTest() {
     }
 
     @ParameterizedTest
-    @MethodSource("enableDialects")
+    @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `database generated uuid as primary key`(dialect: TestDB) {
         // Postgres 만 지원됩니다.
         Assumptions.assumeTrue(dialect in TestDB.ALL_POSTGRES)
@@ -807,7 +807,7 @@ class InsertTest: AbstractExposedTest() {
     }
 
     @ParameterizedTest
-    @MethodSource("enableDialects")
+    @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `default values and nullable columns not in batch insert arguments`(dialect: TestDB) {
         val tester = object: IntIdTable("test_batch_insert_defaults") {
             val number = integer("number")

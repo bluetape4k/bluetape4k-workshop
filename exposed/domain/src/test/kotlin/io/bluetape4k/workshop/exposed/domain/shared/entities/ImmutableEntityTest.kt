@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.domain.TestDB
 import io.bluetape4k.workshop.exposed.domain.shared.entities.ImmutableEntityTest.Schema.ECachedOrganization
 import io.bluetape4k.workshop.exposed.domain.shared.entities.ImmutableEntityTest.Schema.EOrganization
 import io.bluetape4k.workshop.exposed.domain.shared.entities.ImmutableEntityTest.Schema.Organization
@@ -14,7 +15,8 @@ import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.update
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 class ImmutableEntityTest: AbstractExposedTest() {
 
@@ -42,9 +44,10 @@ class ImmutableEntityTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `immutable entity read after update`() {
-        withTables(Schema.Organization) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `immutable entity read after update`(dialect: TestDB) {
+        withTables(dialect, Schema.Organization) {
             transaction {
                 Organization.insert {
                     it[name] = "JetBrains"
@@ -63,9 +66,10 @@ class ImmutableEntityTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `immutable entity read after update with cached entity`() {
-        withTables(Schema.Organization) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `immutable entity read after update with cached entity`(dialect: TestDB) {
+        withTables(dialect, Schema.Organization) {
             transaction {
                 Organization.insert {
                     it[name] = "JetBrains"

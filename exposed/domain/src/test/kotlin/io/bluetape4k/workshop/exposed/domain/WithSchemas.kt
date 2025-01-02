@@ -5,6 +5,26 @@ import org.jetbrains.exposed.sql.Schema
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Transaction
 
+inline fun withSchemas(
+    dialect: TestDB,
+    vararg schemas: Schema,
+    noinline configure: (DatabaseConfig.Builder.() -> Unit)? = null,
+    crossinline statement: Transaction.() -> Unit,
+) {
+    withDb(dialect, configure) {
+        if (currentDialectTest.supportsCreateSchema) {
+            SchemaUtils.createSchema(*schemas)
+            try {
+                statement()
+                commit()     // Need commit to persist data before drop schemas
+            } finally {
+                SchemaUtils.dropSchema(*schemas, cascade = true)
+                commit()
+            }
+        }
+    }
+}
+
 fun withSchemas(
     vararg schemas: Schema,
     configure: (DatabaseConfig.Builder.() -> Unit)? = null,

@@ -33,6 +33,8 @@ abstract class AbstractExposedTest {
 
         @JvmStatic
         fun enableDialects() = TestDB.enabledDialects()
+
+        const val ENABLE_DIALECTS_METHOD = "enableDialects"
     }
 
     init {

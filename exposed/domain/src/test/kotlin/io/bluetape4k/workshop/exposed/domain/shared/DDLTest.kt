@@ -19,14 +19,16 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.Assumptions
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 class DDLTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
-    @Test
-    fun `table exists`() {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `table exists`(dialect: TestDB) {
         val testTable = object: Table() {
             val id = integer("id")
             val name = varchar("name", length = 42)
@@ -34,11 +36,11 @@ class DDLTest: AbstractExposedTest() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withTables {
+        withTables(dialect) {
             testTable.exists().shouldBeFalse()
         }
 
-        withTables(testTable) {
+        withTables(dialect, testTable) {
             testTable.exists().shouldBeTrue()
         }
     }
@@ -56,9 +58,10 @@ class DDLTest: AbstractExposedTest() {
         )
     }
 
-    @Test
-    fun `keywoard identifiers with opt out`() {
-        Assumptions.assumeTrue { TestDB.H2 in TestDB.enabledDialects() }
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `keywoard identifiers with opt out`(dialect: TestDB) {
+        Assumptions.assumeTrue { dialect == TestDB.H2 }
 
         val keywords = listOf("Integer", "name")
         val tester = object: Table(keywords[0]) {

@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.exposed.domain.shared.entities
 import io.bluetape4k.exposed.dao.id.SnowflakeIdTable
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDTable
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.domain.TestDB
 import io.bluetape4k.workshop.exposed.domain.withTables
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
@@ -32,7 +33,8 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.sql.Connection
 import java.util.*
 import kotlin.reflect.jvm.isAccessible
@@ -104,9 +106,10 @@ class ViaTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `connection 01`() {
-        withTables(*ViaTestData.allTables) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `connection 01`(dialect: TestDB) {
+        withTables(dialect, *ViaTestData.allTables) {
             val n = VNumber.new { number = 42 }
             val s = VString.new { text = "foo" }
 
@@ -118,9 +121,10 @@ class ViaTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `connection 02`() {
-        withTables(*ViaTestData.allTables) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `connection 02`(dialect: TestDB) {
+        withTables(dialect, *ViaTestData.allTables) {
             val n1 = VNumber.new { number = 1 }
             val n2 = VNumber.new { number = 2 }
 
@@ -137,9 +141,10 @@ class ViaTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `connection 03`() {
-        withTables(*ViaTestData.allTables) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `connection 03`(dialect: TestDB) {
+        withTables(dialect, *ViaTestData.allTables) {
             val n1 = VNumber.new { number = 1 }
             val n2 = VNumber.new { number = 2 }
 
@@ -162,9 +167,10 @@ class ViaTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `connection 04`() {
-        withTables(*ViaTestData.allTables) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `connection 04`(dialect: TestDB) {
+        withTables(dialect, *ViaTestData.allTables) {
             val n1 = VNumber.new { number = 1 }
             val n2 = VNumber.new { number = 2 }
 
@@ -207,9 +213,10 @@ class ViaTest: AbstractExposedTest() {
         override fun toString(): String = "Node($id)"
     }
 
-    @Test
-    fun `hierarchy references`() {
-        withTables(NodesTable, NodeToNodes) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `hierarchy references`(dialect: TestDB) {
+        withTables(dialect, NodesTable, NodeToNodes) {
             val root = Node.new { name = "root" }
             val child1 = Node.new {
                 name = "child1"
@@ -227,9 +234,10 @@ class ViaTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `refresh entity`() {
-        withTables(*ViaTestData.allTables) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `refresh entity`(dialect: TestDB) {
+        withTables(dialect, *ViaTestData.allTables) {
             val s = VString.new { text = "foo" }.apply {
                 refresh(true)
             }
@@ -238,9 +246,10 @@ class ViaTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `warm up on hierarchy entities`() {
-        withTables(NodesTable, NodeToNodes) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `warm up on hierarchy entities`(dialect: TestDB) {
+        withTables(dialect, NodesTable, NodeToNodes) {
             val child1 = Node.new { name = "child1" }
             val child2 = Node.new { name = "child2" }
             val root1 = Node.new {
@@ -296,9 +305,10 @@ class ViaTest: AbstractExposedTest() {
         override fun toString(): String = "NodeOrdered($id)"
     }
 
-    @Test
-    fun `order by sized collection`() {
-        withTables(NodesTable, NodeToNodes) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `order by sized collection`(dialect: TestDB) {
+        withTables(dialect, NodesTable, NodeToNodes) {
             val root = NodeOrdered.new { name = "root" }
             listOf("#3", "#0", "#2", "#4", "#1").forEach() {
                 NodeOrdered.new {
@@ -359,9 +369,10 @@ class ViaTest: AbstractExposedTest() {
         var approved by ProjectTasks.approved
     }
 
-    @Test
-    fun `additional link data using composite id inner table`() {
-        withTables(Projects, Tasks, ProjectTasks) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `additional link data using composite id inner table`(dialect: TestDB) {
+        withTables(dialect, Projects, Tasks, ProjectTasks) {
             val p1 = Project.new { name = "Project 1" }
             val p2 = Project.new { name = "Project 2" }
 

@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.domain.TestDB
 import io.bluetape4k.workshop.exposed.domain.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
@@ -12,7 +13,8 @@ import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.update
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import java.util.concurrent.atomic.AtomicInteger
 
 class NonAutoIncEntities: AbstractExposedTest() {
@@ -45,9 +47,10 @@ class NonAutoIncEntities: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `defaults with override new`() {
-        withTables(NotAutoIntIdTable) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `defaults with override new`(dialect: TestDB) {
+        withTables(dialect, NotAutoIntIdTable) {
             val entity1 = NotAutoEntity.new(true)
             entity1.b1.shouldBeTrue()
             entity1.defaultedInNew shouldBeEqualTo NotAutoEntity.defaultInt
@@ -61,9 +64,10 @@ class NonAutoIncEntities: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `not auto inc table`() {
-        withTables(NotAutoIntIdTable) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `not auto inc table`(dialect: TestDB) {
+        withTables(dialect, NotAutoIntIdTable) {
             val e1 = NotAutoEntity.new(true)
             val e2 = NotAutoEntity.new(false)
 
@@ -98,9 +102,10 @@ class NonAutoIncEntities: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `access entity id from override entity method`() {
-        withTables(RequestsTable) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `access entity id from override entity method`(dialect: TestDB) {
+        withTables(dialect, RequestsTable) {
             val request = Request.new {
                 requestId = "requestId"
                 deleted = false

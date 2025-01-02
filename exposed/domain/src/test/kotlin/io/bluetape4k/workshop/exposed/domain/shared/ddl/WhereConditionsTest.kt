@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.exposed.domain.shared.ddl
 
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.domain.TestDB
 import io.bluetape4k.workshop.exposed.domain.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
@@ -9,7 +10,8 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.stringLiteral
 import org.jetbrains.exposed.sql.upperCase
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 class WhereConditionsTest: AbstractExposedTest() {
 
@@ -17,9 +19,10 @@ class WhereConditionsTest: AbstractExposedTest() {
         val name = varchar("name", 20)
     }
 
-    @Test
-    fun `where like expression`() {
-        withTables(Users) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `where like expression`(dialect: TestDB) {
+        withTables(dialect, Users) {
             Users.insert {
                 it[name] = "HICHEM"
             }
@@ -37,9 +40,10 @@ class WhereConditionsTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `where not like expression`() {
-        withTables(Users) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `where not like expression`(dialect: TestDB) {
+        withTables(dialect, Users) {
             Users.insert {
                 it[name] = "HICHEM"
             }

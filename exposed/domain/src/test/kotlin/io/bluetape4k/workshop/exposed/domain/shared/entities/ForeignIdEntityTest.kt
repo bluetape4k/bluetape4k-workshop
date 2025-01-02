@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.exposed.domain.shared.entities
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.domain.TestDB
 import io.bluetape4k.workshop.exposed.domain.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
@@ -17,7 +18,8 @@ import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 class ForeignIdEntityTest: AbstractExposedTest() {
 
@@ -69,9 +71,11 @@ class ForeignIdEntityTest: AbstractExposedTest() {
         var actor by Actor referencedOn Schema.Roles.actor
     }
 
-    @Test
-    fun `foreign id entity update`() {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `foreign id entity update`(dialect: TestDB) {
         withTables(
+            dialect,
             Schema.Projects, Schema.ProjectConfigs,
             configure = { useNestedTransactions = true }
         ) {
@@ -90,9 +94,10 @@ class ForeignIdEntityTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `referenced entities with identitical column names`() {
-        withTables(Schema.Actors, Schema.Roles) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `referenced entities with identitical column names`(dialect: TestDB) {
+        withTables(dialect, Schema.Actors, Schema.Roles) {
             val actorA = Actor.new("3746529") { }
             val roleA = Role.new { actor = actorA }
             val roleB = Role.new { actor = actorA }

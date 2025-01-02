@@ -30,13 +30,17 @@ import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import kotlin.test.expect
 
 class CreateIndexTest: AbstractExposedTest() {
 
-    @Test
-    fun `create standard index`() {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `create standard index`(dialect: TestDB) {
         val testTable = object: Table("test_table") {
             val id = integer("id")
             val name = varchar("name", 42)
@@ -45,15 +49,18 @@ class CreateIndexTest: AbstractExposedTest() {
             val byName = index("test_table_by_name", false, name)
         }
 
-        withTables(testTable) {
+        withTables(dialect, testTable) {
             SchemaUtils.createMissingTablesAndColumns(testTable)
             testTable.exists().shouldBeTrue()
             SchemaUtils.drop(testTable)
         }
     }
 
-    @Test
-    fun `create hash index`() {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `create hash index`(dialect: TestDB) {
+        Assumptions.assumeTrue { dialect != TestDB.H2_MYSQL }
+
         val testTable = object: Table("test_table") {
             val id = integer("id")
             val name = varchar("name", 42)
@@ -62,17 +69,17 @@ class CreateIndexTest: AbstractExposedTest() {
             val byName = index("test_table_by_name", false, name)
         }
 
-        withTables(
-            excludeSettings = setOf(TestDB.H2_MYSQL),
-            testTable
-        ) {
+        withTables(dialect, testTable) {
             SchemaUtils.createMissingTablesAndColumns(testTable)
             testTable.exists().shouldBeTrue()
         }
     }
 
-    @Test
-    fun `create index with table in different schema`() {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `create index with table in different schema`(dialect: TestDB) {
+        Assumptions.assumeTrue { dialect != TestDB.H2_MYSQL }
+
         val testTable = object: Table("test_table") {
             val id = integer("id")
             val name = varchar("name", 42).index("text_index")
@@ -85,7 +92,7 @@ class CreateIndexTest: AbstractExposedTest() {
         val schema1 = Schema("Schema1")
         val schema2 = Schema("Schema2")
 
-        withSchemas(excludeSettings = setOf(TestDB.MYSQL_V8), schema1, schema2) {
+        withSchemas(dialect, schema1, schema2) {
             SchemaUtils.setSchema(schema1)
             SchemaUtils.createMissingTablesAndColumns(testTable)
             testTable.exists().shouldBeTrue()
@@ -96,7 +103,6 @@ class CreateIndexTest: AbstractExposedTest() {
             testTable.exists().shouldBeTrue()
         }
     }
-
 
     @Test
     fun `create and drop partial index with postgres`() {
@@ -230,8 +236,9 @@ class CreateIndexTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `partial index not created`() {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `partial index not created`(dialect: TestDB) {
         val tester = object: Table("tester") {
             val age = integer("age")
 
@@ -240,7 +247,7 @@ class CreateIndexTest: AbstractExposedTest() {
             }
         }
 
-        withTables(tester) {
+        withTables(dialect, tester) {
             SchemaUtils.createMissingTablesAndColumns()
             tester.exists().shouldBeTrue()
 
@@ -253,8 +260,12 @@ class CreateIndexTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `create and drop functional index`() {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `create and drop functional index`(dialect: TestDB) {
+        // H2 does not support functional indexes
+        Assumptions.assumeTrue { dialect !in TestDB.ALL_H2 && dialect != TestDB.MYSQL_V5 }
+
         val tester = object: IntIdTable("tester") {
             val amount = integer("amount")
             val price = integer("price")
@@ -267,8 +278,7 @@ class CreateIndexTest: AbstractExposedTest() {
             }
         }
 
-        val functionsNotSupported = TestDB.ALL_H2 + TestDB.MYSQL_V5
-        withTables(excludeSettings = functionsNotSupported, tester) {
+        withTables(dialect, tester) {
             SchemaUtils.createMissingTablesAndColumns()
             tester.exists().shouldBeTrue()
 

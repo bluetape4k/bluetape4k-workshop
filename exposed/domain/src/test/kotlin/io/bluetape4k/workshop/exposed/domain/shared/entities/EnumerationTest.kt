@@ -20,12 +20,14 @@ import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.FieldSource
 import org.postgresql.util.PGobject
 
 class EnumerationTest: AbstractExposedTest() {
 
-    private val supportsCustomEnumerationDB = TestDB.ALL_MYSQL + TestDB.ALL_POSTGRES + TestDB.ALL_H2
+    // NOTE: MYSQL_V8 은 지원하지 않습니다.
+    private val supportsCustomEnumerationDB = TestDB.ALL_POSTGRES + TestDB.ALL_H2 // + TestDB.MYSQL_V5
 
     internal enum class Foo {
         Bar, Baz;
@@ -64,9 +66,10 @@ class EnumerationTest: AbstractExposedTest() {
         var enum by EnumTable.enumColumn
     }
 
-    @Test
-    fun `custom enumeration 01`() {
-        withDb(supportsCustomEnumerationDB) {
+    @ParameterizedTest
+    @FieldSource("supportsCustomEnumerationDB")
+    fun `custom enumeration 01`(dialect: TestDB) {
+        withDb(dialect) {
             val sqlType = when (currentDialect) {
                 is H2Dialect, is MysqlDialect -> "ENUM('Bar', 'Baz')"
                 is PostgreSQLDialect          -> "FooEnum"
@@ -117,9 +120,10 @@ class EnumerationTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `custom enumeration with default value`() {
-        withDb(supportsCustomEnumerationDB) {
+    @ParameterizedTest
+    @FieldSource("supportsCustomEnumerationDB")
+    fun `custom enumeration with default value`(dialect: TestDB) {
+        withDb(dialect) {
             val sqlType = when (currentDialect) {
                 is H2Dialect, is MysqlDialect -> "ENUM('Bar', 'Baz')"
                 is PostgreSQLDialect          -> "FooEnum"
@@ -153,8 +157,9 @@ class EnumerationTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `custom enumeration with reference`() {
+    @ParameterizedTest
+    @FieldSource("supportsCustomEnumerationDB")
+    fun `custom enumeration with reference`(dialect: TestDB) {
         val referenceTable = object: Table("ref_table") {
             var referenceColumn: Column<Foo> = enumeration("ref_column")
 
@@ -164,7 +169,7 @@ class EnumerationTest: AbstractExposedTest() {
             }
         }
 
-        withDb(supportsCustomEnumerationDB) {
+        withDb(dialect) {
             val sqlType = when (currentDialect) {
                 is H2Dialect, is MysqlDialect -> "ENUM('Bar', 'Baz')"
                 is PostgreSQLDialect          -> "FooEnum"
@@ -206,8 +211,9 @@ class EnumerationTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `enumeration columns with reference`() {
+    @ParameterizedTest
+    @FieldSource("supportsCustomEnumerationDB")
+    fun `enumeration columns with reference`(dialect: TestDB) {
         val tester = object: Table("tester") {
             val enumColumn = enumeration<Foo>("enum_column").uniqueIndex()
             val enumNameColumn = enumerationByName<Foo>("enum_name_column", 32).uniqueIndex()
@@ -217,7 +223,7 @@ class EnumerationTest: AbstractExposedTest() {
             val referenceNameColumn: Column<Foo> = reference("ref_name_column", tester.enumNameColumn)
         }
 
-        withTables(tester, referenceTable) {
+        withTables(dialect, tester, referenceTable) {
             val fooBar = Foo.Bar
             val fooBaz = Foo.Baz
 
