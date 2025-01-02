@@ -52,9 +52,9 @@ fun withDb(
     configure: (DatabaseConfig.Builder.() -> Unit)? = null,
     statement: Transaction.(TestDB) -> Unit,
 ) {
-    if (dbSettings !in TestDB.enabledDialects()) {
-        return
-    }
+//    if (dbSettings !in TestDB.enabledDialects()) {
+//        return
+//    }
 
     logger.info { "Running `withDb` for $dbSettings" }
 

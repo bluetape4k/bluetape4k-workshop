@@ -11,6 +11,38 @@ import org.jetbrains.exposed.sql.transactions.transactionManager
 
 private val log = KotlinLogging.logger {}
 
+inline fun withTables(
+    dialect: TestDB,
+    vararg tables: Table,
+    noinline configure: (DatabaseConfig.Builder.() -> Unit)? = null,
+    crossinline statement: Transaction.(TestDB) -> Unit,
+) {
+    withDb(dialect, configure) {
+        try {
+            SchemaUtils.drop(*tables)
+        } catch (_: Throwable) {
+        }
+
+        SchemaUtils.create(*tables)
+        try {
+            statement(dialect)
+            commit()  // Need commit to persist data before drop tables
+        } finally {
+            try {
+                SchemaUtils.drop(*tables)
+                commit()
+            } catch (_: Exception) {
+                val database = dialect.db!!
+                inTopLevelTransaction(database.transactionManager.defaultIsolationLevel, db = database) {
+                    maxAttempts = 1
+                    SchemaUtils.drop(*tables)
+                }
+            }
+        }
+    }
+}
+
+
 fun withTables(
     vararg tables: Table,
     configure: (DatabaseConfig.Builder.() -> Unit)? = null,
@@ -62,6 +94,38 @@ fun withTables(
     }
     me.throwIfNotEmpty()
 }
+
+suspend inline fun withSuspendedTables(
+    dialect: TestDB,
+    vararg tables: Table,
+    noinline configure: (DatabaseConfig.Builder.() -> Unit)? = null,
+    crossinline statement: suspend Transaction.(TestDB) -> Unit,
+) {
+    withSuspendedDb(dialect, configure) {
+        try {
+            SchemaUtils.drop(*tables)
+        } catch (_: Throwable) {
+        }
+
+        SchemaUtils.create(*tables)
+        try {
+            statement(dialect)
+            commit()
+        } finally {
+            try {
+                SchemaUtils.drop(*tables)
+                commit()
+            } catch (_: Exception) {
+                val database = dialect.db!!
+                inTopLevelTransaction(database.transactionManager.defaultIsolationLevel, db = database) {
+                    maxAttempts = 1
+                    SchemaUtils.drop(*tables)
+                }
+            }
+        }
+    }
+}
+
 
 suspend fun withSuspendedTables(
     vararg tables: Table,

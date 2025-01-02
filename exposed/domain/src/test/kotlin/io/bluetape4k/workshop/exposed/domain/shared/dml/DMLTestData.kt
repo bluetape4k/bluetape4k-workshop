@@ -56,6 +56,94 @@ object DMLTestData {
 }
 
 fun AbstractExposedTest.withCitiesAndUsers(
+    dialect: TestDB,
+    statement: Transaction.(
+        cities: DMLTestData.Cities,
+        users: DMLTestData.Users,
+        userData: DMLTestData.UserData,
+    ) -> Unit,
+) {
+    val users = DMLTestData.Users
+    val userFlags = DMLTestData.Users.Flags
+    val cities = DMLTestData.Cities
+    val userData = DMLTestData.UserData
+
+    withTables(dialect, cities, users, userData) {
+        val saintPetersburgId = cities.insert {
+            it[name] = "St. Petersburg"
+        } get cities.id
+
+        val munichId = cities.insert {
+            it[name] = "Munich"
+        } get cities.id
+
+        cities.insert {
+            it[name] = "Prague"
+        }
+
+        users.insert {
+            it[id] = "andrey"
+            it[name] = "Andrey"
+            it[cityId] = saintPetersburgId
+            it[flags] = userFlags.IS_ADMIN
+        }
+
+        users.insert {
+            it[id] = "sergey"
+            it[name] = "Sergey"
+            it[cityId] = munichId
+            it[flags] = userFlags.IS_ADMIN or userFlags.HAS_DATA
+        }
+
+        users.insert {
+            it[id] = "eugene"
+            it[name] = "Eugene"
+            it[cityId] = munichId
+            it[flags] = userFlags.HAS_DATA
+        }
+
+        users.insert {
+            it[id] = "alex"
+            it[name] = "Alex"
+            it[cityId] = null
+        }
+
+        users.insert {
+            it[id] = "smth"
+            it[name] = "Something"
+            it[cityId] = null
+            it[flags] = userFlags.HAS_DATA
+        }
+
+        userData.insert {
+            it[user_id] = "smth"
+            it[comment] = "Something is here"
+            it[value] = 10
+        }
+
+        userData.insert {
+            it[user_id] = "smth"
+            it[comment] = "Comment #2"
+            it[value] = 20
+        }
+
+        userData.insert {
+            it[user_id] = "eugene"
+            it[comment] = "Comment for Eugene"
+            it[value] = 20
+        }
+
+        userData.insert {
+            it[user_id] = "sergey"
+            it[comment] = "Comment for Sergey"
+            it[value] = 30
+        }
+
+        statement(cities, users, userData)
+    }
+}
+
+fun AbstractExposedTest.withCitiesAndUsers(
     exclude: Collection<TestDB> = emptyList(),
     statement: Transaction.(
         cities: DMLTestData.Cities,

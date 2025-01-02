@@ -3,24 +3,55 @@ package io.bluetape4k.workshop.exposed.domain.shared.dml
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.idgenerators.uuid.TimebasedUuid
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.domain.TestDB
 import io.bluetape4k.workshop.exposed.domain.assertFailAndRollback
+import io.bluetape4k.workshop.exposed.domain.currentTestDB
+import io.bluetape4k.workshop.exposed.domain.expectException
+import io.bluetape4k.workshop.exposed.domain.inProperCase
+import io.bluetape4k.workshop.exposed.domain.shared.dml.DMLTestData.Cities
+import io.bluetape4k.workshop.exposed.domain.withDb
 import io.bluetape4k.workshop.exposed.domain.withTables
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
+import org.amshove.kluent.fail
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
+import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldNotBeNull
+import org.jetbrains.exposed.dao.IntEntity
+import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.CustomFunction
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.UUIDColumnType
 import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.insertIgnore
 import org.jetbrains.exposed.sql.insertIgnoreAndGetId
+import org.jetbrains.exposed.sql.kotlin.datetime.CurrentTimestamp
+import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
 import org.jetbrains.exposed.sql.selectAll
-import org.junit.jupiter.api.Test
+import org.jetbrains.exposed.sql.statements.BatchInsertStatement
+import org.jetbrains.exposed.sql.stringLiteral
+import org.jetbrains.exposed.sql.substring
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.sql.trim
+import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.sql.wrapAsExpression
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.FieldSource
+import org.junit.jupiter.params.provider.MethodSource
+import java.util.*
 
 class InsertTest: AbstractExposedTest() {
 
@@ -36,13 +67,14 @@ class InsertTest: AbstractExposedTest() {
      * INSERT INTO TMP (FOO) VALUES ('2')
      * ```
      */
-    @Test
-    fun `insert and get id 01`() {
+    @ParameterizedTest
+    @MethodSource("enableDialects")
+    fun `insert and get id 01`(dialect: TestDB) {
         val idTable = object: IntIdTable("tmp") {
             val name = varchar("foo", 10).uniqueIndex()
         }
 
-        withTables(idTable) {
+        withTables(dialect, idTable) {
             idTable.insertAndGetId { it[name] = "1" }
             idTable.selectAll().count() shouldBeEqualTo 1L
 
@@ -55,8 +87,8 @@ class InsertTest: AbstractExposedTest() {
         }
     }
 
-    private val insertIgnoreUnsupportedDB = TestDB.entries -
-            listOf(TestDB.MYSQL_V5, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.H2_PSQL)
+    private val insertIgnoreUnsupportedDB =
+        listOf(TestDB.MYSQL_V8, TestDB.H2_MYSQL, TestDB.POSTGRESQL, TestDB.H2_PSQL)
 
     /**
      * insertIgnoreAndGetId
@@ -67,13 +99,14 @@ class InsertTest: AbstractExposedTest() {
      * INSERT INTO tmp (id, foo) VALUES (100, '2') ON CONFLICT DO NOTHING
      * ```
      */
-    @Test
-    fun `insert ignore and get id 01`() {
+    @ParameterizedTest
+    @FieldSource("insertIgnoreUnsupportedDB")
+    fun `insert ignore and get id 01`(dialect: TestDB) {
         val idTable = object: IntIdTable("tmp") {
             val name = varchar("foo", 10).uniqueIndex()
         }
 
-        withTables(excludeSettings = insertIgnoreUnsupportedDB, idTable) {
+        withTables(dialect, idTable) {
             // INSERT INTO tmp (foo) VALUES ('1') ON CONFLICT DO NOTHING
             idTable.insertIgnoreAndGetId { it[name] = "1" }
             idTable.selectAll().count() shouldBeEqualTo 1L
@@ -96,14 +129,15 @@ class InsertTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `insert and get id when column has different name and get value by id column`() {
+    @ParameterizedTest
+    @MethodSource("enableDialects")
+    fun `insert and get id when column has different name and get value by id column`(dialect: TestDB) {
         val testTableWithId = object: IdTable<Int>("testTableWithId") {
             val code = integer("code")
             override val id: Column<EntityID<Int>> = code.entityId()
         }
 
-        withTables(testTableWithId) {
+        withTables(dialect, testTableWithId) {
             val id1 = testTableWithId.insertAndGetId {
                 it[code] = 1
             }
@@ -128,14 +162,15 @@ class InsertTest: AbstractExposedTest() {
      * SELECT TEST_ID_AND_COLUMN_TABLE.EXAMPLE_COLUMN FROM TEST_ID_AND_COLUMN_TABLE
      * ```
      */
-    @Test
-    fun `id and column have different names and get value by original column`() {
+    @ParameterizedTest
+    @MethodSource("enableDialects")
+    fun `id and column have different names and get value by original column`(dialect: TestDB) {
         val exampleTable = object: IdTable<String>("test_id_and_column_table") {
             val exampleColumn = varchar("example_column", 200)
             override val id: Column<EntityID<String>> = exampleColumn.entityId()
         }
 
-        withTables(exampleTable) {
+        withTables(dialect, exampleTable) {
             val value = "value"
             exampleTable.insert {
                 it[exampleColumn] = value
@@ -146,13 +181,14 @@ class InsertTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `insertIgnoreAndGetId with predefined id`() {
+    @ParameterizedTest
+    @FieldSource("insertIgnoreUnsupportedDB")
+    fun `insertIgnoreAndGetId with predefined id`(dialect: TestDB) {
         val idTable = object: IntIdTable("tmp") {
             val name = varchar("foo", 10).uniqueIndex()
         }
 
-        withTables(excludeSettings = insertIgnoreUnsupportedDB, idTable) {
+        withTables(dialect, idTable) {
             val insertedStatement = idTable.insertIgnore {
                 it[idTable.id] = EntityID(1, idTable)
                 it[idTable.name] = "1"
@@ -170,9 +206,10 @@ class InsertTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `batch insert 01`() {
-        withCitiesAndUsers { cities, users, _ ->
+    @ParameterizedTest
+    @MethodSource("enableDialects")
+    fun `batch insert 01`(dialect: TestDB) {
+        withCitiesAndUsers(dialect) { cities, users, _ ->
             val cityNames = listOf("Paris", "Moscow", "Helsinki")
 
             // INSERT INTO CITIES ("name") VALUES ('Paris')
@@ -199,16 +236,16 @@ class InsertTest: AbstractExposedTest() {
             generatedIds.size shouldBeEqualTo userNamesWithCityIds.size
 
             // SELECT COUNT(*) FROM USERS WHERE USERS."name" IN ('UserFromParis', 'UserFromMoscow', 'UserFromHelsinki')
-            users.selectAll()
-                .where { users.name inList userNamesWithCityIds.map { it.first } }
+            users.selectAll().where { users.name inList userNamesWithCityIds.map { it.first } }
                 .count() shouldBeEqualTo userNamesWithCityIds.size.toLong()
         }
     }
 
-    @Test
-    fun `batch insert with sequence`() {
-        val cities = DMLTestData.Cities
-        withTables(cities) {
+    @ParameterizedTest
+    @MethodSource("enableDialects")
+    fun `batch insert with sequence`(dialect: TestDB) {
+        val cities = Cities
+        withTables(dialect, cities) {
             val batchSize = 25
             val names = generateSequence { TimebasedUuid.Epoch.nextIdAsString() }.take(batchSize)
 
@@ -217,6 +254,596 @@ class InsertTest: AbstractExposedTest() {
             }
 
             cities.selectAll().count().toInt() shouldBeEqualTo batchSize
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("enableDialects")
+    fun `batch insert using empty sequence should work`(dialect: TestDB) {
+        val cities = Cities
+        withTables(dialect, cities) {
+            val names = emptySequence<String>()
+
+            cities.batchInsert(names) { name ->
+                this[cities.name] = name
+            }
+
+            cities.selectAll().count().toInt() shouldBeEqualTo 0
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("enableDialects")
+    fun `insert and get generted key 01`(dialect: TestDB) {
+        withTables(dialect, Cities) {
+            val id = Cities.insert {
+                it[name] = "FooCity"
+            } get Cities.id
+
+            Cities.selectAll().last()[Cities.id] shouldBeEqualTo id
+        }
+    }
+
+    object LongIdTable: Table() {
+        val id = long("id").autoIncrement()
+        val name = text("name")
+
+        override val primaryKey = PrimaryKey(id)
+    }
+
+    @ParameterizedTest
+    @MethodSource("enableDialects")
+    fun `insert and get generated key 02`(dialect: TestDB) {
+        withTables(dialect, LongIdTable) {
+            val id = LongIdTable.insert {
+                it[name] = "Foo"
+            } get LongIdTable.id
+
+            LongIdTable.selectAll().last()[LongIdTable.id] shouldBeEqualTo id
+        }
+    }
+
+    object IntIdTestTable: IntIdTable() {
+        val name = text("name")
+    }
+
+    @ParameterizedTest
+    @MethodSource("enableDialects")
+    fun `insert and get generated key 03`(dialect: TestDB) {
+        withTables(dialect, IntIdTestTable) {
+            val id = IntIdTestTable.insertAndGetId {
+                it[name] = "Foo"
+            }
+            IntIdTestTable.selectAll().last()[IntIdTestTable.id] shouldBeEqualTo id
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("enableDialects")
+    fun `insert with predefined id`(dialect: TestDB) {
+        val stringTable = object: IdTable<String>("stringTable") {
+            override val id: Column<EntityID<String>> = varchar("id", 15).entityId()
+            val name = text("name")
+        }
+        withTables(dialect, stringTable) {
+            val entityID = EntityID("id1", stringTable)
+
+            // INSERT INTO stringtable (id, "name") VALUES ('id1', 'Foo')
+            val id1 = stringTable.insertAndGetId {
+                it[stringTable.id] = entityID
+                it[stringTable.name] = "Foo"
+            }
+
+            // INSERT INTO stringtable (id, "name") VALUES ('testId', 'Bar')
+            stringTable.insertAndGetId {
+                it[stringTable.id] = EntityID("testId", stringTable)
+                it[stringTable.name] = "Bar"
+            }
+
+            id1 shouldBeEqualTo entityID
+            val row1 = stringTable.selectAll().where { stringTable.id eq entityID }.singleOrNull()
+            row1?.get(stringTable.id) shouldBeEqualTo entityID
+
+            val row2 = stringTable.selectAll().where { stringTable.id like "id%" }.singleOrNull()
+            row2?.get(stringTable.id) shouldBeEqualTo entityID
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("enableDialects")
+    fun `insert with foreign id`(dialect: TestDB) {
+        val idTable = object: IntIdTable("idTable") {}
+        val standardTable = object: Table("standardTable") {
+            val externalId = reference("externalId", idTable.id)
+        }
+        withTables(dialect, idTable, standardTable) {
+            val id1 = idTable.insertAndGetId {}
+            standardTable.insert {
+                it[externalId] = id1
+            }
+
+            val rows = standardTable.selectAll().map { it[standardTable.externalId] }
+            rows shouldBeEqualTo listOf(id1)
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("enableDialects")
+    fun `insert with expression`(dialect: TestDB) {
+        val tbl = object: IntIdTable("testInsert") {
+            val nullableInt = integer("nullableInt").nullable()
+            val string = varchar("stringCol", 255)
+        }
+
+        fun expression(value: String) = stringLiteral(value).trim().substring(2, 4)
+
+        fun verify(value: String) {
+            val row = tbl.selectAll().where { tbl.string eq value }.single()
+            row[tbl.string] shouldBeEqualTo value
+        }
+
+        withTables(dialect, tbl) {
+            // INSERT INTO testinsert ("stringCol") VALUES (SUBSTRING(TRIM(' _exp1_ '), 2, 4))
+            tbl.insert {
+                it[string] = expression(" _exp1_ ")
+            }
+            verify("exp1")
+
+            // INSERT INTO testinsert ("stringCol", "nullableInt") VALUES (SUBSTRING(TRIM(' _exp2_ '), 2, 4), 5)
+            tbl.insert {
+                it[string] = expression(" _exp2_ ")
+                it[nullableInt] = 5
+            }
+            verify("exp2")
+
+            // INSERT INTO testinsert ("stringCol", "nullableInt") VALUES (SUBSTRING(TRIM(' _exp3_ '), 2, 4), NULL)
+            tbl.insert {
+                it[string] = expression(" _exp3_ ")
+                it[nullableInt] = null
+            }
+            verify("exp3")
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("enableDialects")
+    fun `insert with column expression`(dialect: TestDB) {
+        val tbl1 = object: IntIdTable("testInsert1") {
+            val string1 = varchar("stringCol", 20)
+        }
+        val tbl2 = object: IntIdTable("testInsert2") {
+            val string2 = varchar("stringCol", 20).nullable()
+        }
+
+        fun verify(value: String) {
+            val row = tbl2.selectAll().where { tbl2.string2 eq value }.single()
+            row[tbl2.string2] shouldBeEqualTo value
+        }
+
+        withTables(dialect, tbl1, tbl2) {
+            // INSERT INTO testinsert1 ("stringCol") VALUES ('_exp1_')
+            val id = tbl1.insertAndGetId {
+                it[string1] = "_exp1_"
+            }
+
+            /**
+             * ```sql
+             * INSERT INTO TESTINSERT2 ("stringCol")
+             * VALUES (
+             *         (SELECT SUBSTRING(TRIM(TESTINSERT1."stringCol"), 2, 4)
+             *           FROM TESTINSERT1
+             *           WHERE TESTINSERT1.ID = 1
+             *         )
+             * )
+             * ```
+             */
+            val expr1 = tbl1.string1.trim().substring(2, 4)
+            tbl2.insert {
+                it[string2] = wrapAsExpression(tbl1.select(expr1).where { tbl1.id eq id })
+            }
+            verify("exp1")
+        }
+    }
+
+    private object OrderedDataTable: IntIdTable() {
+        val name = text("name")
+        val order = integer("order")
+    }
+
+    class OrderedData(id: EntityID<Int>): IntEntity(id) {
+        companion object: IntEntityClass<OrderedData>(OrderedDataTable)
+
+        var name by OrderedDataTable.name
+        var order by OrderedDataTable.order
+
+        override fun toString(): String = "OrderedData(id=$id, name=$name, order=$order)"
+    }
+
+    @ParameterizedTest
+    @MethodSource("enableDialects")
+    fun `insert with column named with keyword`(dialect: TestDB) {
+        withTables(dialect, OrderedDataTable) {
+            val foo = OrderedData.new {
+                name = "foo"
+                order = 20
+            }
+            val bar = OrderedData.new {
+                name = "bar"
+                order = 10
+            }
+
+            val orders = OrderedData.all()
+                .orderBy(OrderedDataTable.order to SortOrder.ASC)
+                .toList()
+
+            orders shouldBeEqualTo listOf(bar, foo)
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("enableDialects")
+    fun `check column length on insert`(dialect: TestDB) {
+        val stringTable = object: Table("stringTable") {
+            val name = varchar("name", 10)
+        }
+
+        withTables(dialect, stringTable) {
+            val veryLongString = "1".repeat(255)
+
+            expectException<IllegalArgumentException> {
+                stringTable.insert {
+                    it[name] = veryLongString
+                }
+            }
+        }
+    }
+
+    /**
+     * Use subquery in an insert statement
+     *
+     * ```sql
+     * INSERT INTO TAB1 (ID) VALUES ((SELECT TAB2.ID FROM TAB2 WHERE TAB2.ID = 'foo'))
+     * ```
+     *
+     * Use subquery in an update statement
+     *
+     * ```sql
+     * UPDATE TAB1 SET ID=(SELECT TAB2.ID FROM TAB2 WHERE TAB2.ID = 'bar') WHERE TAB1.ID = 'foo'
+     * ```
+     */
+    @ParameterizedTest
+    @MethodSource("enableDialects")
+    fun `subquery in an insert or update statement`(dialect: TestDB) {
+        val tbl1 = object: Table("tab1") {
+            val id = varchar("id", 10)
+        }
+        val tbl2 = object: Table("tab2") {
+            val id = varchar("id", 10)
+        }
+
+        withTables(dialect, tbl1, tbl2) {
+            // Initial data
+            tbl2.insert { it[id] = "foo" }
+            tbl2.insert { it[id] = "bar" }
+
+            /**
+             * Use subquery in an insert statement
+             *
+             * ```sql
+             * INSERT INTO TAB1 (ID) VALUES ((SELECT TAB2.ID FROM TAB2 WHERE TAB2.ID = 'foo'))
+             * ```
+             */
+            tbl1.insert {
+                it[id] = tbl2.select(tbl2.id).where { tbl2.id eq "foo" }
+            }
+
+            // Check inserted data
+            val insertedId = tbl1.select(tbl1.id).single()[tbl1.id]
+            insertedId shouldBeEqualTo "foo"
+
+            /**
+             * Use subquery in an update statement
+             *
+             * ```sql
+             * UPDATE TAB1 SET ID=(SELECT TAB2.ID FROM TAB2 WHERE TAB2.ID = 'bar') WHERE TAB1.ID = 'foo'
+             * ```
+             */
+            tbl1.update({ tbl1.id eq "foo" }) {
+                it[id] = tbl2.select(tbl2.id).where { tbl2.id eq "bar" }
+            }
+
+            val updatedId = tbl1.select(tbl1.id).single()[tbl1.id]
+            updatedId shouldBeEqualTo "bar"
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("enableDialects")
+    fun `generated key 04`(dialect: TestDB) {
+        val charIdTable = object: IdTable<String>("charIdTable") {
+            override val id = varchar("id", 50)
+                .clientDefault { Base58.randomString(6) }
+                .entityId()
+            val foo = integer("foo")
+
+            override val primaryKey = PrimaryKey(id)
+        }
+        withTables(dialect, charIdTable) {
+            // INSERT INTO charIdTable (id, foo) VALUES ('vLH7J6', 42)
+            val id = charIdTable.insertAndGetId {
+                it[foo] = 42
+            }
+            id.value.shouldNotBeNull()
+        }
+    }
+
+    private fun rollbackSupportDbs() = TestDB.ALL_H2 + TestDB.MYSQL_V8 + TestDB.POSTGRESQL
+
+    @ParameterizedTest
+    @MethodSource("rollbackSupportDbs")
+    fun `rollback on constraint exception with normal transactions`(db: TestDB) {
+        val testTable = object: IntIdTable("TestRollback") {
+            val foo = integer("foo").check { it greater 0 }
+        }
+        try {
+            try {
+                withDb(db) {
+                    SchemaUtils.create(testTable)
+                    testTable.insert { it[foo] = 1 }
+                    testTable.insert { it[foo] = 0 }
+                }
+                fail("예외가 발생해서 Rollback 이 수행되어야 합니다.")
+            } catch (e: Throwable) {
+                // 예외 발생 시 Rollback 이 수행되어야 합니다.
+            }
+            withDb(db) {
+                testTable.selectAll().empty().shouldBeTrue()
+            }
+        } finally {
+            withDb(db) {
+                SchemaUtils.drop(testTable)
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("rollbackSupportDbs")
+    fun `rollback on constraint exception with suspend transactions`(testDb: TestDB) = runTest {
+        val testTable = object: IntIdTable("TestRollback") {
+            val foo = integer("foo").check { it greater 0 }
+        }
+        try {
+            try {
+                withDb(testDb) {
+                    SchemaUtils.create(testTable)
+                }
+                runBlocking {
+                    newSuspendedTransaction(db = testDb.db) {
+                        testTable.insert { it[foo] = 1 }
+                        testTable.insert { it[foo] = 0 }
+                    }
+                }
+                fail("예외가 발생해서 Rollback 이 수행되어야 합니다.")
+            } catch (e: Throwable) {
+                // 예외 발생 시 Rollback 이 수행되어야 합니다.
+            }
+            withDb(testDb) {
+                testTable.selectAll().empty().shouldBeTrue()
+            }
+        } finally {
+            withDb(testDb) {
+                SchemaUtils.drop(testTable)
+            }
+        }
+    }
+
+    class BatchInsertOnConflictDoNothing(table: Table): BatchInsertStatement(table) {
+        override fun prepareSQL(transaction: Transaction, prepared: Boolean): String = buildString {
+            val insertStatement = super.prepareSQL(transaction, prepared)
+            when (val db = currentTestDB) {
+                in TestDB.ALL_MYSQL_LIKE -> {
+                    append("INSERT IGNORE ")
+                    append(insertStatement.substringAfter("INSERT "))
+                }
+
+                else                     -> {
+                    append(insertStatement)
+                    val identifier = if (db == TestDB.H2_PSQL) "" else "(id) "
+                    append(" ON CONFLICT ${identifier}DO NOTHING")
+                }
+            }
+        }
+    }
+
+    /**
+     * Batch Insert with ON CONFLICT DO NOTHING
+     *
+     * H2_MYSQL
+     *
+     * ```sql
+     * INSERT IGNORE INTO TAB (ID) VALUES ('foo')
+     * INSERT IGNORE INTO TAB (ID) VALUES ('bar')
+     * ```
+     *
+     * H2_PSQL
+     * ```
+     * INSERT INTO tab (id) VALUES ('foo') ON CONFLICT DO NOTHING
+     * INSERT INTO tab (id) VALUES ('bar') ON CONFLICT DO NOTHING
+     * ```
+     */
+    @ParameterizedTest
+    @FieldSource("insertIgnoreUnsupportedDB")
+    fun `batch insert number of inserted rows`(dialect: TestDB) {
+        val tab = object: Table("tab") {
+            val id = varchar("id", 10).uniqueIndex()
+        }
+        withTables(dialect, tab) {
+            tab.insert { it[id] = "foo" }
+
+            val numInserted = BatchInsertOnConflictDoNothing(tab).run {
+                addBatch()
+                this[tab.id] = "foo"        // 중복되므로 insert 되지 않음
+
+                addBatch()
+                this[tab.id] = "bar"
+
+                execute(this@withTables)
+            }
+            numInserted shouldBeEqualTo 1
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("enableDialects")
+    fun `insert into nullable generated column`(testDb: TestDB) {
+        withDb(testDb) {
+            val generatedTable = object: IntIdTable("generatedTable") {
+                val amount = integer("amount").nullable()
+                val computedAmount = integer("computed_amount").nullable().databaseGenerated().apply {
+                    if (testDb in TestDB.ALL_H2) {
+                        withDefinition("GENERATED ALWAYS AS (AMOUNT + 1 )")
+                    } else {
+                        withDefinition("GENERATED ALWAYS AS (AMOUNT + 1 ) STORED")
+                    }
+                }
+            }
+            try {
+                val computedName = generatedTable.computedAmount.name.inProperCase()
+                val computedType = generatedTable.computedAmount.columnType.sqlType()
+                val computation = "${generatedTable.amount.name.inProperCase()} + 1"
+
+                val createStatement =
+                    """
+                    CREATE TABLE ${addIfNotExistsIfSupported()}${generatedTable.tableName.inProperCase()} (
+                        ${generatedTable.id.descriptionDdl()},
+                        ${generatedTable.amount.descriptionDdl()},
+                    """.trimIndent()
+
+                SchemaUtils.create(generatedTable)
+
+                assertFailAndRollback("Generated columns are auto-drived and read-only") {
+                    generatedTable.insert {
+                        it[amount] = 99
+                        it[computedAmount] = 100
+                    }
+                }
+
+                generatedTable.insert {
+                    it[amount] = 99
+                }
+
+                val result1 = generatedTable.selectAll().single()
+                result1[generatedTable.computedAmount] shouldBeEqualTo result1[generatedTable.amount]?.plus(1)
+
+                generatedTable.insert {
+                    it[amount] = null
+                }
+
+                val result2 = generatedTable.selectAll().where { generatedTable.amount.isNull() }.single()
+                result2[generatedTable.amount].shouldBeNull()
+                result2[generatedTable.computedAmount].shouldBeNull()
+            } finally {
+                SchemaUtils.drop(generatedTable)
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("enableDialects")
+    fun `no auto increment applied to custom string primary key`(dialect: TestDB) {
+        val tester = object: IdTable<String>("test_no_auto_increment_table") {
+            val customId = varchar("custom_id", 128)
+            override val primaryKey = PrimaryKey(customId)
+            override val id: Column<EntityID<String>> = customId.entityId()
+        }
+
+        val customId = Base58.randomString(8)
+        withTables(dialect, tester) {
+            val result1 = tester.batchInsert(listOf(customId)) {
+                this[tester.customId] = it
+            }.single()
+
+            result1[tester.id].value shouldBeEqualTo customId
+            result1[tester.customId] shouldBeEqualTo customId
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("enableDialects")
+    fun `insert returns values from default expression`(dialect: TestDB) {
+        // Postgres 만 지원됩니다.
+        Assumptions.assumeTrue(dialect in TestDB.ALL_POSTGRES)
+
+        val tester = object: Table() {
+            val defaultDate = timestamp("default_date").defaultExpression(CurrentTimestamp)
+        }
+
+        withTables(dialect, tester) {
+            val entry = tester.insert { }
+
+            log.debug { "default_date=${entry[tester.defaultDate]}" }
+            entry[tester.defaultDate].shouldNotBeNull()
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("enableDialects")
+    fun `database generated uuid as primary key`(dialect: TestDB) {
+        // Postgres 만 지원됩니다.
+        Assumptions.assumeTrue(dialect in TestDB.ALL_POSTGRES)
+
+        val randomPGUUID = object: CustomFunction<UUID>("gen_random_uuid", UUIDColumnType()) {}
+
+        val tester = object: IdTable<UUID>("test_uuid_table") {
+            override val id: Column<EntityID<UUID>> = uuid("id").defaultExpression(randomPGUUID).entityId()
+            override val primaryKey = PrimaryKey(id)
+        }
+
+        withTables(dialect, tester) {
+            val entry = tester.insertAndGetId { }
+            log.debug { "generated uuid id=${entry.value}" }
+            entry.value.shouldNotBeNull()
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("enableDialects")
+    fun `default values and nullable columns not in batch insert arguments`(dialect: TestDB) {
+        val tester = object: IntIdTable("test_batch_insert_defaults") {
+            val number = integer("number")
+            val default = varchar("default", 128).default("default")
+            val defaultExpr = varchar("default_expr", 128).defaultExpression(stringLiteral("defaultExpr"))
+            val nullable = varchar("nullable", 128).nullable()
+            val nullableDefaultNull = varchar("nullable_default_null", 128).nullable().default(null)
+            val nullableDefaultNotNull =
+                varchar("nullable_default_not_null", 128).nullable().default("nullableDefaultNotNull")
+            val databaseGenerated = integer("database_generated").withDefinition("DEFAULT 1").databaseGenerated()
+        }
+
+        val testerWithFakeDefaults = object: IntIdTable("test_batch_insert_defaults") {
+            val number = integer("number")
+            val default = varchar("default", 128).default("default-fake")
+            val defaultExpr = varchar("default_expr", 128).defaultExpression(stringLiteral("defaultExpr-fake"))
+            val nullable = varchar("nullable", 128).nullable().default("null-fake")
+            val nullableDefaultNull = varchar("nullable_default_null", 128).nullable().default("null-fake")
+            val nullableDefaultNotNull =
+                varchar("nullable_default_not_null", 128).nullable().default("nullableDefaultNotNull-fake")
+            val databaseGenerated = integer("database_generated").default(-1)
+        }
+
+        withTables(dialect, tester) {
+            testerWithFakeDefaults.batchInsert(listOf(1, 2, 3)) {
+                this[tester.number] = 10
+            }
+
+            testerWithFakeDefaults.selectAll().forEach {
+                it[testerWithFakeDefaults.default] shouldBeEqualTo "default"
+                it[testerWithFakeDefaults.defaultExpr] shouldBeEqualTo "defaultExpr"
+                it[testerWithFakeDefaults.nullable].shouldBeNull()
+                it[testerWithFakeDefaults.nullableDefaultNull].shouldBeNull()
+                it[testerWithFakeDefaults.nullableDefaultNotNull] shouldBeEqualTo "nullableDefaultNotNull"
+                it[testerWithFakeDefaults.databaseGenerated] shouldBeEqualTo 1
+            }
         }
     }
 }

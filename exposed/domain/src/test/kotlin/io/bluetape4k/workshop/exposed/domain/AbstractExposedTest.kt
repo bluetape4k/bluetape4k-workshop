@@ -30,6 +30,9 @@ abstract class AbstractExposedTest {
                 }
             }
         }
+
+        @JvmStatic
+        fun enableDialects() = TestDB.enabledDialects()
     }
 
     init {
