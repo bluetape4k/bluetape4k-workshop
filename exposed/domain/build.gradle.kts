@@ -12,6 +12,7 @@ dependencies {
     api(Libs.exposed_dao)
     api(Libs.exposed_jdbc)
     api(Libs.exposed_kotlin_datetime)
+    api(Libs.exposed_migration)
     implementation(Libs.exposed_spring_boot_starter)
 
     implementation(Libs.bluetape4k_jdbc)

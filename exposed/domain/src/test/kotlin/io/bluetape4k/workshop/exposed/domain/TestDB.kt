@@ -17,7 +17,20 @@ enum class TestDB(
     val afterTestFinished: () -> Unit = {},
     val dbConfig: DatabaseConfig.Builder.() -> Unit = {},
 ) {
+    /**
+     * H2 v1.+ 를 사용할 때
+     */
+    H2_V1(
+        connection = { "jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;" },
+        driver = JdbcDrivers.DRIVER_CLASS_H2,
+        dbConfig = {
+            defaultIsolationLevel = java.sql.Connection.TRANSACTION_READ_COMMITTED
+        }
+    ),
 
+    /**
+     * H2 v2.+ 를 사용할 때
+     */
     H2(
         connection = { "jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;" },
         driver = JdbcDrivers.DRIVER_CLASS_H2,

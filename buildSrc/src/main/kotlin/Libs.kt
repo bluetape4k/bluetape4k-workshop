@@ -1289,6 +1289,7 @@ object Libs {
     val exposed_jdbc = exposed("jdbc")
     val exposed_json = exposed("json")
     val exposed_kotlin_datetime = exposed("kotlin-datetime")
+    val exposed_migration = exposed("migration")
     val exposed_money = exposed("money")
     val exposed_tests = exposed("tests")
 
