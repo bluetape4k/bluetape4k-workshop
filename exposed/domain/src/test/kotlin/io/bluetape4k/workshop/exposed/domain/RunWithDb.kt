@@ -1,6 +1,5 @@
 package io.bluetape4k.workshop.exposed.domain
 
-import io.bluetape4k.junit5.utils.MultiException
 import io.bluetape4k.logging.KotlinLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.utils.Runtimex
@@ -23,28 +22,6 @@ object CurrentTestDBInterceptor: StatementInterceptor {
     override fun keepUserDataInTransactionStoreOnCommit(userData: Map<Key<*>, Any?>): Map<Key<*>, Any?> {
         return userData.filterValues { it is TestDB }
     }
-}
-
-fun withDb(
-    db: Collection<TestDB>? = null,
-    excludeSettings: Collection<TestDB> = emptyList(),
-    configure: (DatabaseConfig.Builder.() -> Unit)? = null,
-    statement: Transaction.(TestDB) -> Unit,
-) {
-    val me = MultiException()
-
-    TestDB.enabledDialects()
-        .filter { db?.run { it in db } ?: false }
-        .filter { it !in excludeSettings }
-        .forEach { dbSettings ->
-            try {
-                withDb(dbSettings, configure, statement)
-            } catch (e: Throwable) {
-                me.add(e)
-            }
-        }
-
-    me.throwIfNotEmpty()
 }
 
 fun withDb(
@@ -92,27 +69,7 @@ fun withDb(
 }
 
 suspend fun withSuspendedDb(
-    db: Collection<TestDB>? = null,
-    excludeSettings: Collection<TestDB> = emptyList(),
-    configure: (DatabaseConfig.Builder.() -> Unit)? = null,
-    statement: suspend Transaction.(TestDB) -> Unit,
-) {
-    val me = MultiException()
-    TestDB.enabledDialects()
-        .filter { db?.run { it in db } ?: false }
-        .filter { it !in excludeSettings }
-        .forEach { dbSettings ->
-            try {
-                withSuspendedDb(dbSettings, configure, statement)
-            } catch (e: Throwable) {
-                me.add(e)
-            }
-        }
-    me.throwIfNotEmpty()
-}
-
-suspend fun withSuspendedDb(
-    dbSettings: TestDB,
+    dialect: TestDB,
     configure: (DatabaseConfig.Builder.() -> Unit)? = null,
     statement: suspend Transaction.(TestDB) -> Unit,
 ) {
@@ -120,28 +77,28 @@ suspend fun withSuspendedDb(
 //        return
 //    }
 
-    logger.info { "Running withSuspendedDb for $dbSettings" }
+    logger.info { "Running withSuspendedDb for $dialect" }
 
-    val unregistered = dbSettings !in registeredOnShutdown
+    val unregistered = dialect !in registeredOnShutdown
     val newConfiguration = configure != null && !unregistered
 
     if (unregistered) {
-        dbSettings.beforeConnection()
+        dialect.beforeConnection()
         Runtimex.addShutdownHook {
-            dbSettings.afterTestFinished()
-            registeredOnShutdown.remove(dbSettings)
+            dialect.afterTestFinished()
+            registeredOnShutdown.remove(dialect)
         }
-        registeredOnShutdown += dbSettings
-        dbSettings.db = dbSettings.connect(configure ?: {})
+        registeredOnShutdown += dialect
+        dialect.db = dialect.connect(configure ?: {})
     }
 
-    val registeredDb = dbSettings.db!!
+    val registeredDb = dialect.db!!
 
     try {
         if (newConfiguration) {
-            dbSettings.db = dbSettings.connect(configure ?: {})
+            dialect.db = dialect.connect(configure ?: {})
         }
-        val database = dbSettings.db!!
+        val database = dialect.db!!
 
         newSuspendedTransaction(
             db = database,
@@ -149,13 +106,13 @@ suspend fun withSuspendedDb(
         ) {
             maxAttempts = 1
             registerInterceptor(CurrentTestDBInterceptor)
-            currentTestDB = dbSettings
-            statement(dbSettings)
+            currentTestDB = dialect
+            statement(dialect)
         }
     } finally {
         // revert any new configuration to not be carried over to the next test in suite
         if (configure != null) {
-            dbSettings.db = registeredDb
+            dialect.db = registeredDb
         }
     }
 }

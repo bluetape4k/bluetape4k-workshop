@@ -31,7 +31,6 @@ import org.jetbrains.exposed.sql.vendors.SQLServerDialect
 import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.jupiter.api.Assumptions
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import kotlin.test.expect
@@ -104,8 +103,11 @@ class CreateIndexTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `create and drop partial index with postgres`() {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `create and drop partial index with postgres`(dialect: TestDB) {
+        Assumptions.assumeTrue { dialect == TestDB.POSTGRESQL }
+
         val partialIndexTable = object: IntIdTable("PartialIndexTableTest") {
             val name = varchar("name", 50)
             val value = integer("value")
@@ -123,7 +125,7 @@ class CreateIndexTest: AbstractExposedTest() {
             }
         }
 
-        withDb(listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQL)) {
+        withDb(dialect) {
             SchemaUtils.createMissingTablesAndColumns(partialIndexTable)
             partialIndexTable.exists().shouldBeTrue()
 
@@ -168,8 +170,11 @@ class CreateIndexTest: AbstractExposedTest() {
         }
     }
 
-    @Test
-    fun `create and drop partial index`() {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `create and drop partial index`(dialect: TestDB) {
+        Assumptions.assumeTrue { dialect == TestDB.POSTGRESQL }
+
         val tester = object: Table("tester") {
             val name = varchar("name", 32).uniqueIndex()
             val age = integer("age")
@@ -181,7 +186,7 @@ class CreateIndexTest: AbstractExposedTest() {
             }
         }
 
-        withDb(listOf(TestDB.POSTGRESQL)) {
+        withDb(dialect) {
             SchemaUtils.createMissingTablesAndColumns(tester)
             tester.exists().shouldBeTrue()
 
