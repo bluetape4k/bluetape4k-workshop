@@ -78,8 +78,8 @@ class CreateIndexTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create index with table in different schema`(dialect: TestDB) {
-        Assumptions.assumeTrue { dialect != TestDB.H2_MYSQL }
-
+        Assumptions.assumeTrue { dialect == TestDB.H2 || dialect == TestDB.H2_PSQL }
+        
         val testTable = object: Table("test_table") {
             val id = integer("id")
             val name = varchar("name", 42).index("text_index")

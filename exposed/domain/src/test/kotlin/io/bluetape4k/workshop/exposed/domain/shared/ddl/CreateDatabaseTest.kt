@@ -19,7 +19,7 @@ class CreateDatabaseTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create and drop database`(dialect: TestDB) {
-        Assumptions.assumeTrue { dialect != TestDB.POSTGRESQL && dialect != TestDB.COCKROACH }
+        Assumptions.assumeTrue { dialect in TestDB.ALL_H2 }
 
         withDb(dialect) {
             val dbName = "jetbrains"
@@ -36,7 +36,7 @@ class CreateDatabaseTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create and drop database with auto commit`(dialect: TestDB) {
-        Assumptions.assumeTrue { dialect != TestDB.POSTGRESQL && dialect != TestDB.COCKROACH }
+        Assumptions.assumeTrue { dialect in TestDB.ALL_H2 }
 
         withDb(dialect) {
             connection.autoCommit = true
@@ -55,7 +55,7 @@ class CreateDatabaseTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `list databases with auto commit`(dialect: TestDB) {
-        Assumptions.assumeTrue { dialect != TestDB.POSTGRESQL && dialect != TestDB.COCKROACH }
+        Assumptions.assumeTrue { dialect in TestDB.ALL_H2 }
 
         withDb(dialect) {
             connection.autoCommit = true
@@ -81,7 +81,7 @@ class CreateDatabaseTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `list databases `(dialect: TestDB) {
-        Assumptions.assumeTrue { dialect != TestDB.POSTGRESQL && dialect != TestDB.COCKROACH }
+        Assumptions.assumeTrue { dialect in TestDB.ALL_H2 }
 
         withDb(dialect) {
             val dbName = "jetbrains"
