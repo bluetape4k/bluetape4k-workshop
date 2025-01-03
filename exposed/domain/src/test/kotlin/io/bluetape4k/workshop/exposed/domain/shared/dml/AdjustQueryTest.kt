@@ -1,0 +1,304 @@
+package io.bluetape4k.workshop.exposed.domain.shared.dml
+
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.domain.TestDB
+import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldBeNull
+import org.amshove.kluent.shouldHaveSize
+import org.amshove.kluent.shouldNotBeEqualTo
+import org.jetbrains.exposed.sql.ColumnSet
+import org.jetbrains.exposed.sql.FieldSet
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.Query
+import org.jetbrains.exposed.sql.QueryBuilder
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.andHaving
+import org.jetbrains.exposed.sql.count
+import org.jetbrains.exposed.sql.max
+import org.jetbrains.exposed.sql.or
+import org.jetbrains.exposed.sql.orHaving
+import org.jetbrains.exposed.sql.orWhere
+import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+
+class AdjustQueryTest: AbstractExposedTest() {
+
+    companion object: KLogging()
+
+    private val predicate = Op.build {
+        val nameCheck = (DMLTestData.Users.id eq "andrey") or (DMLTestData.Users.name eq "Sergey")
+//        val cityCheck = DMLTestData.Users.cityId eq DMLTestData.Cities.id
+//        nameCheck and cityCheck
+        nameCheck
+    }
+
+    private fun Query.assertQueryResultValid() {
+        val users = DMLTestData.Users
+        val cities = DMLTestData.Cities
+
+        this.forEach { row ->
+            val userName = row[users.name]
+            val cityName = row[cities.name]
+            when (userName) {
+                "Andrey" -> cityName shouldBeEqualTo "St. Petersburg"
+                "Sergey" -> cityName shouldBeEqualTo "Munich"
+                else     -> error { "Unexpected user name: $userName" }
+
+            }
+        }
+    }
+
+    /**
+     * SELECT 컬럼을 변경할 수 있다. (`adjustSelect`).
+     *
+     * ```sql
+     * SELECT USERS."name",
+     *        CITIES."name"
+     *   FROM USERS INNER JOIN CITIES ON CITIES.CITY_ID = USERS.CITY_ID
+     *  WHERE ((USERS.ID = 'andrey') OR (USERS."name" = 'Sergey')) AND (USERS.CITY_ID = CITIES.CITY_ID)
+     * ```
+     */
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `adjust query slice`(dialect: TestDB) {
+        withCitiesAndUsers(dialect) { cities, users, _ ->
+            // [users.name]
+            val queryAdjusted: Query = (users innerJoin cities)
+                .select(users.name)
+                .where(predicate)
+
+            fun Query.sliceIt(): FieldSet = this.set.source.select(users.name, cities.name).set
+
+            // [users.name]
+            val oldSlice = queryAdjusted.set.fields
+
+            // [users.name, cities.name]
+            val expectedSlice = queryAdjusted.sliceIt().fields
+
+            // [users.name, cities.name]
+            queryAdjusted.adjustSelect { select(users.name, cities.name) }
+            val actualSlice = queryAdjusted.set.fields
+
+            log.debug { "Old slice: $oldSlice" }
+            log.debug { "Expected slice: $expectedSlice" }
+            log.debug { "Actual slice: $actualSlice" }
+
+            assertFalse { oldSlice.size == actualSlice.size && oldSlice.all { it in actualSlice } }
+            actualSlice shouldBeEqualTo expectedSlice
+            queryAdjusted.assertQueryResultValid()
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `adjust query slice with empty list will throw`(dialect: TestDB) {
+        withCitiesAndUsers(dialect) { cities, _, _ ->
+            val originalQuery = cities.select(cities.name)
+
+            assertFailsWith<IllegalArgumentException> {
+                originalQuery.adjustSelect { select(emptyList()) }.toList()
+            }
+        }
+    }
+
+    /**
+     * ```sql
+     * SELECT USERS."name", CITIES."name"
+     *   FROM USERS INNER JOIN CITIES ON CITIES.CITY_ID = USERS.CITY_ID
+     *  WHERE (USERS.ID = 'andrey') OR (USERS."name" = 'Sergey')
+     * ```
+     */
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `adjust query column set`(dialect: TestDB) {
+        withCitiesAndUsers(dialect) { cities, users, _ ->
+            val queryAdjusted: Query = users
+                .select(users.name, cities.name)
+                .where(predicate)
+
+            val oldColumnSet = queryAdjusted.set.source
+            val expectedColumnSet = users innerJoin cities
+            queryAdjusted.adjustColumnSet { innerJoin(cities) }
+            val actualColumnSet = queryAdjusted.set.source
+
+            fun ColumnSet.repr(): String = QueryBuilder(false)
+                .also { this.describe(TransactionManager.current(), it) }
+                .toString()
+
+            actualColumnSet.repr() shouldNotBeEqualTo oldColumnSet.repr()
+            actualColumnSet.repr() shouldBeEqualTo expectedColumnSet.repr()
+            queryAdjusted.assertQueryResultValid()
+        }
+    }
+
+    private fun Op<Boolean>.repr(): String {
+        val builder = QueryBuilder(false)
+        builder.append(this)
+        return builder.toString()
+    }
+
+    /**
+     * ```sql
+     * SELECT USERS."name", CITIES."name"
+     *   FROM USERS INNER JOIN CITIES ON CITIES.CITY_ID = USERS.CITY_ID
+     *  WHERE (USERS.ID = 'andrey') OR (USERS."name" = 'Sergey')
+     * ```
+     */
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `adjust query where`(dialect: TestDB) {
+        withCitiesAndUsers(dialect) { cities, users, _ ->
+            val queryAdjusted: Query = (users innerJoin cities)
+                .select(users.name, cities.name)
+            queryAdjusted.adjustWhere {
+                this.shouldBeNull()
+                predicate
+            }
+
+            val actualWhere = queryAdjusted.where
+
+            actualWhere!!.repr() shouldBeEqualTo predicate.repr()
+            queryAdjusted.assertQueryResultValid()
+        }
+    }
+
+    /**
+     * ```sql
+     * SELECT USERS."name", CITIES."name"
+     *   FROM USERS INNER JOIN CITIES ON CITIES.CITY_ID = USERS.CITY_ID
+     *  WHERE (USERS.ID = 'andrey') OR (USERS."name" = 'Sergey') OR (USERS.ID = 'andrey') OR (USERS."name" = 'Sergey')
+     * ```
+     */
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `query or where`(dialect: TestDB) {
+        withCitiesAndUsers(dialect) { cities, users, _ ->
+            val queryAdjusted = (users innerJoin cities)
+                .select(users.name, cities.name)
+                .where { predicate }
+
+            queryAdjusted.orWhere {
+                predicate
+            }
+
+            val actualWhere = queryAdjusted.where
+
+            actualWhere!!.repr() shouldBeEqualTo (predicate or predicate).repr()
+            queryAdjusted.assertQueryResultValid()
+        }
+    }
+
+    /**
+     *
+     * ```sql
+     * SELECT CITIES."name"
+     *   FROM CITIES INNER JOIN USERS ON CITIES.CITY_ID = USERS.CITY_ID
+     *  GROUP BY CITIES."name"
+     *  HAVING COUNT(USERS.ID) = MAX(CITIES.CITY_ID)
+     *  ORDER BY CITIES."name" ASC
+     * ```
+     */
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `adjust query having`(dialect: TestDB) {
+        withCitiesAndUsers(dialect) { cities, users, _ ->
+            val predicateHaving: Op<Boolean> = Op.build {
+                DMLTestData.Users.id.count().eq<Number, Long, Int>(DMLTestData.Cities.id.max())
+            }
+
+            val queryAdjusted: Query = (cities innerJoin users)
+                .select(cities.name)
+                .groupBy(cities.name)
+
+            queryAdjusted.adjustHaving {
+                this.shouldBeNull()
+                predicateHaving
+            }
+
+            val actualHaving = queryAdjusted.having
+
+            actualHaving!!.repr() shouldBeEqualTo predicateHaving.repr()
+            val rows = queryAdjusted.orderBy(cities.name).toList()
+            rows shouldHaveSize 2
+            rows[0][cities.name] shouldBeEqualTo "Munich"
+            rows[1][cities.name] shouldBeEqualTo "St. Petersburg"
+        }
+    }
+
+    /**
+     * ```sql
+     * SELECT CITIES."name"
+     *   FROM CITIES INNER JOIN USERS ON CITIES.CITY_ID = USERS.CITY_ID
+     *  GROUP BY CITIES."name"
+     * HAVING (COUNT(USERS.ID) = MAX(CITIES.CITY_ID)) AND (COUNT(USERS.ID) = MAX(CITIES.CITY_ID))
+     *  ORDER BY CITIES."name" ASC
+     * ```
+     */
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `query and having`(dialect: TestDB) {
+        withCitiesAndUsers(dialect) { cities, users, _ ->
+            val predicateHaving = Op.build {
+                DMLTestData.Users.id.count().eq<Number, Long, Int>(DMLTestData.Cities.id.max())
+            }
+
+            val queryAdjusted = (cities innerJoin users)
+                .select(cities.name)
+                .groupBy(cities.name)
+                .having { predicateHaving }
+
+            queryAdjusted.andHaving {
+                predicateHaving
+            }
+
+            val actualHaving = queryAdjusted.having
+            actualHaving!!.repr() shouldBeEqualTo (predicateHaving and predicateHaving).repr()
+
+            val rows = queryAdjusted.orderBy(cities.name).toList()
+            rows shouldHaveSize 2
+            rows[0][cities.name] shouldBeEqualTo "Munich"
+            rows[1][cities.name] shouldBeEqualTo "St. Petersburg"
+        }
+    }
+
+    /**
+     * ```sql
+     * SELECT CITIES."name"
+     *   FROM CITIES INNER JOIN USERS ON CITIES.CITY_ID = USERS.CITY_ID
+     *  GROUP BY CITIES."name"
+     * HAVING (COUNT(USERS.ID) = MAX(CITIES.CITY_ID)) OR (COUNT(USERS.ID) = MAX(CITIES.CITY_ID))
+     *  ORDER BY CITIES."name" ASC
+     * ```
+     */
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `query or having`(dialect: TestDB) {
+        withCitiesAndUsers(dialect) { cities, users, _ ->
+            val predicateHaving = Op.build {
+                DMLTestData.Users.id.count().eq<Number, Long, Int>(DMLTestData.Cities.id.max())
+            }
+
+            val queryAdjusted = (cities innerJoin users)
+                .select(cities.name)
+                .groupBy(cities.name)
+                .having { predicateHaving }
+
+            queryAdjusted.orHaving {
+                predicateHaving
+            }
+
+            val actualHaving = queryAdjusted.having
+            actualHaving!!.repr() shouldBeEqualTo (predicateHaving or predicateHaving).repr()
+
+            val rows = queryAdjusted.orderBy(cities.name).toList()
+            rows shouldHaveSize 2
+            rows[0][cities.name] shouldBeEqualTo "Munich"
+            rows[1][cities.name] shouldBeEqualTo "St. Petersburg"
+        }
+    }
+}

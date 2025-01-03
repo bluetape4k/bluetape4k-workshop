@@ -693,6 +693,22 @@ class InsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS GENERATEDTABLE (
+     *      ID INT AUTO_INCREMENT PRIMARY KEY,
+     *      AMOUNT INT NULL,
+     *      COMPUTED_AMOUNT INT GENERATED ALWAYS AS (AMOUNT + 1 ) NULL
+     * )
+     * ```
+     *
+     * ```sql
+     * INSERT INTO GENERATEDTABLE (AMOUNT) VALUES (99)
+     * INSERT INTO GENERATEDTABLE (AMOUNT) VALUES (NULL)
+     * ```
+     *
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert into nullable generated column`(testDb: TestDB) {
@@ -748,6 +764,14 @@ class InsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS TEST_NO_AUTO_INCREMENT_TABLE (CUSTOM_ID VARCHAR(128) PRIMARY KEY)
+     *
+     * INSERT INTO TEST_NO_AUTO_INCREMENT_TABLE (CUSTOM_ID) VALUES ('ywHqxb4j')
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `no auto increment applied to custom string primary key`(dialect: TestDB) {
