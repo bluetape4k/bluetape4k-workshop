@@ -25,7 +25,7 @@ object CurrentTestDBInterceptor: StatementInterceptor {
 }
 
 fun withDb(
-    dialect: TestDB,
+    testDb: TestDB,
     configure: (DatabaseConfig.Builder.() -> Unit)? = null,
     statement: Transaction.(TestDB) -> Unit,
 ) {
@@ -33,43 +33,43 @@ fun withDb(
 //        return
 //    }
 
-    logger.info { "Running `withDb` for $dialect" }
+    logger.info { "Running `withDb` for $testDb" }
 
-    val unregistered = dialect !in registeredOnShutdown
+    val unregistered = testDb !in registeredOnShutdown
     val newConfiguration = configure != null && !unregistered
 
     if (unregistered) {
-        dialect.beforeConnection()
+        testDb.beforeConnection()
         Runtimex.addShutdownHook {
-            dialect.afterTestFinished()
-            registeredOnShutdown.remove(dialect)
+            testDb.afterTestFinished()
+            registeredOnShutdown.remove(testDb)
         }
-        registeredOnShutdown += dialect
-        dialect.db = dialect.connect(configure ?: {})
+        registeredOnShutdown += testDb
+        testDb.db = testDb.connect(configure ?: {})
     }
 
-    val registeredDb = dialect.db!!
+    val registeredDb = testDb.db!!
     try {
         if (newConfiguration) {
-            dialect.db = dialect.connect(configure ?: {})
+            testDb.db = testDb.connect(configure ?: {})
         }
-        val database = dialect.db!!
+        val database = testDb.db!!
         transaction(database.transactionManager.defaultIsolationLevel, db = database) {
             maxAttempts = 1
             registerInterceptor(CurrentTestDBInterceptor)  // interceptor 를 통해 다양한 작업을 할 수 있다
-            currentTestDB = dialect
-            statement(dialect)
+            currentTestDB = testDb
+            statement(testDb)
         }
     } finally {
         // revert any new configuration to not be carried over to the next test in suite
         if (configure != null) {
-            dialect.db = registeredDb
+            testDb.db = registeredDb
         }
     }
 }
 
 suspend fun withSuspendedDb(
-    dialect: TestDB,
+    testDb: TestDB,
     configure: (DatabaseConfig.Builder.() -> Unit)? = null,
     statement: suspend Transaction.(TestDB) -> Unit,
 ) {
@@ -77,28 +77,28 @@ suspend fun withSuspendedDb(
 //        return
 //    }
 
-    logger.info { "Running withSuspendedDb for $dialect" }
+    logger.info { "Running withSuspendedDb for $testDb" }
 
-    val unregistered = dialect !in registeredOnShutdown
+    val unregistered = testDb !in registeredOnShutdown
     val newConfiguration = configure != null && !unregistered
 
     if (unregistered) {
-        dialect.beforeConnection()
+        testDb.beforeConnection()
         Runtimex.addShutdownHook {
-            dialect.afterTestFinished()
-            registeredOnShutdown.remove(dialect)
+            testDb.afterTestFinished()
+            registeredOnShutdown.remove(testDb)
         }
-        registeredOnShutdown += dialect
-        dialect.db = dialect.connect(configure ?: {})
+        registeredOnShutdown += testDb
+        testDb.db = testDb.connect(configure ?: {})
     }
 
-    val registeredDb = dialect.db!!
+    val registeredDb = testDb.db!!
 
     try {
         if (newConfiguration) {
-            dialect.db = dialect.connect(configure ?: {})
+            testDb.db = testDb.connect(configure ?: {})
         }
-        val database = dialect.db!!
+        val database = testDb.db!!
 
         newSuspendedTransaction(
             db = database,
@@ -106,13 +106,13 @@ suspend fun withSuspendedDb(
         ) {
             maxAttempts = 1
             registerInterceptor(CurrentTestDBInterceptor)
-            currentTestDB = dialect
-            statement(dialect)
+            currentTestDB = testDb
+            statement(testDb)
         }
     } finally {
         // revert any new configuration to not be carried over to the next test in suite
         if (configure != null) {
-            dialect.db = registeredDb
+            testDb.db = registeredDb
         }
     }
 }
