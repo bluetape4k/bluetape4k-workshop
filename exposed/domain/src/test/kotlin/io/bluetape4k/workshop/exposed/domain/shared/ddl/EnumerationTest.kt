@@ -1,8 +1,10 @@
-package io.bluetape4k.workshop.exposed.domain.shared.entities
+package io.bluetape4k.workshop.exposed.domain.shared.ddl
 
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.domain.TestDB
 import io.bluetape4k.workshop.exposed.domain.demo.dao.SamplesDao.Cities.default
+import io.bluetape4k.workshop.exposed.domain.shared.ddl.EnumerationTest.Foo.Bar
+import io.bluetape4k.workshop.exposed.domain.shared.ddl.EnumerationTest.Foo.Baz
 import io.bluetape4k.workshop.exposed.domain.withDb
 import io.bluetape4k.workshop.exposed.domain.withTables
 import org.amshove.kluent.shouldBeEqualTo
@@ -20,8 +22,9 @@ import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.FieldSource
+import org.junit.jupiter.params.provider.MethodSource
 import org.postgresql.util.PGobject
 
 class EnumerationTest: AbstractExposedTest() {
@@ -67,9 +70,11 @@ class EnumerationTest: AbstractExposedTest() {
     }
 
     @ParameterizedTest
-    @FieldSource("supportsCustomEnumerationDB")
-    fun `custom enumeration 01`(dialect: TestDB) {
-        withDb(dialect) {
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `custom enumeration 01`(testDb: TestDB) {
+        Assumptions.assumeTrue { testDb in supportsCustomEnumerationDB }
+
+        withDb(testDb) {
             val sqlType = when (currentDialect) {
                 is H2Dialect, is MysqlDialect -> "ENUM('Bar', 'Baz')"
                 is PostgreSQLDialect          -> "FooEnum"
@@ -97,21 +102,21 @@ class EnumerationTest: AbstractExposedTest() {
                 }
 
                 EnumTable.insert {
-                    it[EnumTable.enumColumn] = Foo.Bar
+                    it[EnumTable.enumColumn] = Bar
                 }
-                EnumTable.selectAll().single()[EnumTable.enumColumn] shouldBeEqualTo Foo.Bar
+                EnumTable.selectAll().single()[EnumTable.enumColumn] shouldBeEqualTo Bar
 
                 EnumTable.update {
-                    it[EnumTable.enumColumn] = Foo.Baz
+                    it[EnumTable.enumColumn] = Baz
                 }
-                val entity = EnumEntity.new { enum = Foo.Baz }
-                entity.enum shouldBeEqualTo Foo.Baz
+                val entity = EnumEntity.new { enum = Baz }
+                entity.enum shouldBeEqualTo Baz
                 entity.id.value // flush entity
-                entity.enum = Foo.Baz
-                EnumEntity.reload(entity)!!.enum shouldBeEqualTo Foo.Baz
+                entity.enum = Baz
+                EnumEntity.reload(entity)!!.enum shouldBeEqualTo Baz
 
-                entity.enum = Foo.Bar
-                EnumEntity.reload(entity)!!.enum shouldBeEqualTo Foo.Bar
+                entity.enum = Bar
+                EnumEntity.reload(entity)!!.enum shouldBeEqualTo Bar
             } finally {
                 runCatching {
                     SchemaUtils.drop(EnumTable)
@@ -121,9 +126,11 @@ class EnumerationTest: AbstractExposedTest() {
     }
 
     @ParameterizedTest
-    @FieldSource("supportsCustomEnumerationDB")
-    fun `custom enumeration with default value`(dialect: TestDB) {
-        withDb(dialect) {
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `custom enumeration with default value`(testDb: TestDB) {
+        Assumptions.assumeTrue { testDb in supportsCustomEnumerationDB }
+
+        withDb(testDb) {
             val sqlType = when (currentDialect) {
                 is H2Dialect, is MysqlDialect -> "ENUM('Bar', 'Baz')"
                 is PostgreSQLDialect          -> "FooEnum"
@@ -136,7 +143,7 @@ class EnumerationTest: AbstractExposedTest() {
                     exec("CREATE TYPE FooEnum AS ENUM ('Bar', 'Baz');")
                 }
                 EnumTable.initEnumColumn(sqlType)
-                EnumTable.enumColumn.default(Foo.Bar)
+                EnumTable.enumColumn.default(Bar)
                 SchemaUtils.create(EnumTable)
 
                 // drop shared table object's unique index if created in other test
@@ -148,7 +155,7 @@ class EnumerationTest: AbstractExposedTest() {
                 EnumTable.insert {}
 
                 val default = EnumTable.selectAll().single()[EnumTable.enumColumn]
-                default shouldBeEqualTo Foo.Bar
+                default shouldBeEqualTo Bar
             } finally {
                 runCatching {
                     SchemaUtils.drop(EnumTable)
@@ -158,8 +165,10 @@ class EnumerationTest: AbstractExposedTest() {
     }
 
     @ParameterizedTest
-    @FieldSource("supportsCustomEnumerationDB")
-    fun `custom enumeration with reference`(dialect: TestDB) {
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `custom enumeration with reference`(testDb: TestDB) {
+        Assumptions.assumeTrue { testDb in supportsCustomEnumerationDB }
+
         val referenceTable = object: Table("ref_table") {
             var referenceColumn: Column<Foo> = enumeration("ref_column")
 
@@ -169,7 +178,7 @@ class EnumerationTest: AbstractExposedTest() {
             }
         }
 
-        withDb(dialect) {
+        withDb(testDb) {
             val sqlType = when (currentDialect) {
                 is H2Dialect, is MysqlDialect -> "ENUM('Bar', 'Baz')"
                 is PostgreSQLDialect          -> "FooEnum"
@@ -190,7 +199,7 @@ class EnumerationTest: AbstractExposedTest() {
                 referenceTable.initRefColumn()
                 SchemaUtils.create(referenceTable)
 
-                val fooBar = Foo.Bar
+                val fooBar = Bar
                 val id1 = EnumTable.insert {
                     it[enumColumn] = fooBar
                 } get EnumTable.enumColumn
@@ -212,8 +221,10 @@ class EnumerationTest: AbstractExposedTest() {
     }
 
     @ParameterizedTest
-    @FieldSource("supportsCustomEnumerationDB")
-    fun `enumeration columns with reference`(dialect: TestDB) {
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `enumeration columns with reference`(testDb: TestDB) {
+        Assumptions.assumeTrue { testDb in supportsCustomEnumerationDB }
+
         val tester = object: Table("tester") {
             val enumColumn = enumeration<Foo>("enum_column").uniqueIndex()
             val enumNameColumn = enumerationByName<Foo>("enum_name_column", 32).uniqueIndex()
@@ -223,9 +234,9 @@ class EnumerationTest: AbstractExposedTest() {
             val referenceNameColumn: Column<Foo> = reference("ref_name_column", tester.enumNameColumn)
         }
 
-        withTables(dialect, tester, referenceTable) {
-            val fooBar = Foo.Bar
-            val fooBaz = Foo.Baz
+        withTables(testDb, tester, referenceTable) {
+            val fooBar = Bar
+            val fooBaz = Baz
 
             val entry = tester.insert {
                 it[enumColumn] = fooBar
