@@ -21,43 +21,43 @@ class WhereConditionsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `where like expression`(dialect: TestDB) {
-        withTables(dialect, Users) {
+    fun `where like expression`(testDb: TestDB) {
+        withTables(testDb, Users) {
             Users.insert {
-                it[name] = "HICHEM"
+                it[name] = "BOSTON"
             }
             Users.insert {
                 it[name] = "SEOUL"
             }
             val namesResult: List<String> = Users.selectAll()
                 .where {
-                    Users.name like stringLiteral("Hich%").upperCase()
+                    Users.name like stringLiteral("Bost%").upperCase()
                 }
                 .map { it[Users.name] }
 
             namesResult shouldHaveSize 1
-            namesResult.first() shouldBeEqualTo "HICHEM"
+            namesResult.single() shouldBeEqualTo "BOSTON"
         }
     }
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `where not like expression`(dialect: TestDB) {
-        withTables(dialect, Users) {
+    fun `where not like expression`(testDb: TestDB) {
+        withTables(testDb, Users) {
             Users.insert {
-                it[name] = "HICHEM"
+                it[name] = "BOSTON"
             }
             Users.insert {
                 it[name] = "SEOUL"
             }
             val namesResult: List<String> = Users.selectAll()
                 .where {
-                    Users.name notLike stringLiteral("Hich%").upperCase()
+                    Users.name notLike stringLiteral("Bost%").upperCase()
                 }
                 .map { it[Users.name] }
 
             namesResult shouldHaveSize 1
-            namesResult.first() shouldBeEqualTo "SEOUL"
+            namesResult.single() shouldBeEqualTo "SEOUL"
         }
     }
 }
