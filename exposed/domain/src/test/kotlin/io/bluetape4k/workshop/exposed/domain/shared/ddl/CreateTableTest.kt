@@ -5,9 +5,9 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.domain.TestDB
 import io.bluetape4k.workshop.exposed.domain.currentDialectTest
-import io.bluetape4k.workshop.exposed.domain.foreign.Category
-import io.bluetape4k.workshop.exposed.domain.foreign.Item
 import io.bluetape4k.workshop.exposed.domain.inProperCase
+import io.bluetape4k.workshop.exposed.domain.shared.Category
+import io.bluetape4k.workshop.exposed.domain.shared.Item
 import io.bluetape4k.workshop.exposed.domain.withDb
 import io.bluetape4k.workshop.exposed.domain.withTables
 import org.amshove.kluent.shouldBeEqualTo

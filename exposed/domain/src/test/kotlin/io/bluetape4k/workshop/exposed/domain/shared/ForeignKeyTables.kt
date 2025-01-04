@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.exposed.domain.foreign
+package io.bluetape4k.workshop.exposed.domain.shared
 
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.Table

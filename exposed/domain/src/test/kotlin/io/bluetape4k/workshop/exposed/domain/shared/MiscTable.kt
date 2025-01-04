@@ -1,5 +1,6 @@
-package io.bluetape4k.workshop.exposed.domain.misc
+package io.bluetape4k.workshop.exposed.domain.shared
 
+import io.bluetape4k.workshop.exposed.domain.shared.MiscTable.E
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Table
@@ -54,10 +55,10 @@ fun MiscTable.checkRow(
     smn: Short?,
     n: Int,
     nn: Int?,
-    e: MiscTable.E,
-    en: MiscTable.E?,
-    es: MiscTable.E,
-    esn: MiscTable.E?,
+    e: E,
+    en: E?,
+    es: E,
+    esn: E?,
     c: String,
     cn: String?,
     s: String,
@@ -96,10 +97,10 @@ fun MiscTable.checkInsert(
     smn: Short?,
     n: Int,
     nn: Int?,
-    e: MiscTable.E,
-    en: MiscTable.E?,
-    es: MiscTable.E,
-    esn: MiscTable.E?,
+    e: E,
+    en: E?,
+    es: E,
+    esn: E?,
     s: String,
     sn: String?,
     dc: BigDecimal,

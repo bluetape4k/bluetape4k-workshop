@@ -38,7 +38,7 @@ object DMLTestData {
     }
 
     object UserData: Table() {
-        val user_id = reference("user_id", Users.id)
+        val userId = reference("user_id", Users.id)
         val comment = varchar("comment", 30)
         val value = integer("value")
     }
@@ -116,25 +116,25 @@ fun AbstractExposedTest.withCitiesAndUsers(
         }
 
         userData.insert {
-            it[user_id] = "smth"
+            it[userId] = "smth"
             it[comment] = "Something is here"
             it[value] = 10
         }
 
         userData.insert {
-            it[user_id] = "smth"
+            it[userId] = "smth"
             it[comment] = "Comment #2"
             it[value] = 20
         }
 
         userData.insert {
-            it[user_id] = "eugene"
+            it[userId] = "eugene"
             it[comment] = "Comment for Eugene"
             it[value] = 20
         }
 
         userData.insert {
-            it[user_id] = "sergey"
+            it[userId] = "sergey"
             it[comment] = "Comment for Sergey"
             it[value] = 30
         }
