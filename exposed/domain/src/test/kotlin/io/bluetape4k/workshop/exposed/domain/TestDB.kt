@@ -118,7 +118,7 @@ enum class TestDB(
     }
 
     companion object: KLogging() {
-        val ALL_H2 = setOf(H2, H2_MYSQL, H2_PSQL)
+        val ALL_H2 = setOf(H2_V1, H2, H2_MYSQL, H2_PSQL)
         val ALL_MYSQL = setOf(MYSQL_V8)
         val ALL_MYSQL_LIKE = ALL_MYSQL + H2_MYSQL
         val ALL_POSTGRES = setOf(POSTGRESQL)
@@ -128,7 +128,7 @@ enum class TestDB(
         val ALL = TestDB.entries.toSet()
 
         // 이 값을 바꿔서 MySQL, PostgreSQL 등을 testcontainers 를 이용하여 테스트할 수 있습니다.
-        const val USE_FAST_DB = true
+        const val USE_FAST_DB = false
 
         fun enabledDialects(): Set<TestDB> {
             return if (USE_FAST_DB) ALL_H2 else (ALL - MYSQL_V5 - COCKROACH)
