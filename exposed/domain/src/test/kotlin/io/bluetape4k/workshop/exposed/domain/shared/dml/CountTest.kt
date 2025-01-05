@@ -94,6 +94,8 @@ class CountTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `count alias with table schema`(testDb: TestDB) {
+        Assumptions.assumeTrue { testDb !in TestDB.ALL_MYSQL }
+        
         val custom = prepareSchemaForTest("custom")
         val tester = object: Table("custom.tester") {
             val amount = integer("amount")

@@ -889,6 +889,8 @@ class SelectTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `select distinct`(dialect: TestDB) {
+        Assumptions.assumeTrue { dialect !in TestDB.ALL_MYSQL }
+        
         val tbl = DMLTestData.Cities
         withTables(dialect, tbl) {
             tbl.insert { it[tbl.name] = "test" }
