@@ -128,7 +128,7 @@ enum class TestDB(
         val ALL = TestDB.entries.toSet()
 
         // 이 값을 바꿔서 MySQL, PostgreSQL 등을 testcontainers 를 이용하여 테스트할 수 있습니다.
-        const val USE_FAST_DB = false
+        const val USE_FAST_DB = true
 
         fun enabledDialects(): Set<TestDB> {
             return if (USE_FAST_DB) ALL_H2 else (ALL - MYSQL_V5 - COCKROACH)
