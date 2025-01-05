@@ -181,6 +181,19 @@ class InsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * MYSQL V8
+     * ```sql
+     * INSERT IGNORE INTO tmp (id, foo) VALUES (1, '1')
+     * INSERT IGNORE INTO tmp (id, foo) VALUES (1, '2')
+     * ```
+     *
+     * POSTGRES
+     * ```sql
+     * INSERT INTO tmp (id, foo) VALUES (1, '1') ON CONFLICT DO NOTHING
+     * INSERT INTO tmp (id, foo) VALUES (1, '2') ON CONFLICT DO NOTHING
+     * ```
+     */
     @ParameterizedTest
     @FieldSource("insertIgnoreUnsupportedDB")
     fun `insertIgnoreAndGetId with predefined id`(dialect: TestDB) {
@@ -530,7 +543,8 @@ class InsertTest: AbstractExposedTest() {
              * Use subquery in an insert statement
              *
              * ```sql
-             * INSERT INTO TAB1 (ID) VALUES ((SELECT TAB2.ID FROM TAB2 WHERE TAB2.ID = 'foo'))
+             * INSERT INTO TAB1 (ID)
+             * VALUES ((SELECT TAB2.ID FROM TAB2 WHERE TAB2.ID = 'foo'))
              * ```
              */
             tbl1.insert {
@@ -545,7 +559,9 @@ class InsertTest: AbstractExposedTest() {
              * Use subquery in an update statement
              *
              * ```sql
-             * UPDATE TAB1 SET ID=(SELECT TAB2.ID FROM TAB2 WHERE TAB2.ID = 'bar') WHERE TAB1.ID = 'foo'
+             * UPDATE TAB1
+             *    SET ID=(SELECT TAB2.ID FROM TAB2 WHERE TAB2.ID = 'bar')
+             *  WHERE TAB1.ID = 'foo'
              * ```
              */
             tbl1.update({ tbl1.id eq "foo" }) {
@@ -777,6 +793,7 @@ class InsertTest: AbstractExposedTest() {
     fun `no auto increment applied to custom string primary key`(dialect: TestDB) {
         val tester = object: IdTable<String>("test_no_auto_increment_table") {
             val customId = varchar("custom_id", 128)
+
             override val primaryKey = PrimaryKey(customId)
             override val id: Column<EntityID<String>> = customId.entityId()
         }
