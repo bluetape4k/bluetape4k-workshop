@@ -52,13 +52,12 @@ class SequenceTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create sequence statements`(testDb: TestDB) {
         withDb(testDb) {
-            if (currentDialect.supportsCreateSequence) {
-                log.debug { "myseq: ${myseq.ddl.single()}" }
-
-                myseq.ddl.single() shouldBeEqualTo "CREATE SEQUENCE " + addIfNotExistsIfSupported() + "${myseq.identifier} " + "START WITH ${myseq.startWith} " + "INCREMENT BY ${myseq.incrementBy} " + "MINVALUE ${myseq.minValue} " + "MAXVALUE ${myseq.maxValue} " + "CYCLE " + "CACHE ${myseq.cache}"
-            }
+            Assumptions.assumeTrue { currentDialect.supportsCreateSequence }
+            log.debug { "myseq: ${myseq.ddl.single()}" }
+            myseq.ddl.single() shouldBeEqualTo "CREATE SEQUENCE " + addIfNotExistsIfSupported() + "${myseq.identifier} " + "START WITH ${myseq.startWith} " + "INCREMENT BY ${myseq.incrementBy} " + "MINVALUE ${myseq.minValue} " + "MAXVALUE ${myseq.maxValue} " + "CYCLE " + "CACHE ${myseq.cache}"
         }
     }
+
 
     /**
      * ```sql
@@ -144,21 +143,21 @@ class SequenceTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `test insert LongIdTable with auto-increment with sequence`(testDb: TestDB) {
         withDb(testDb) {
-            if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
-                try {
-                    SchemaUtils.create(DeveloperWithAutoIncrementBySequence)
-                    val developerId = DeveloperWithAutoIncrementBySequence.insertAndGetId {
-                        it[name] = "Hichem"
-                    }
-                    developerId.shouldNotBeNull()
+            Assumptions.assumeTrue { currentDialectTest.supportsSequenceAsGeneratedKeys }
 
-                    val developerId2 = DeveloperWithAutoIncrementBySequence.insertAndGetId {
-                        it[name] = "Andrey"
-                    }
-                    developerId2.value shouldBeEqualTo developerId.value + 1
-                } finally {
-                    SchemaUtils.drop(DeveloperWithAutoIncrementBySequence)
+            try {
+                SchemaUtils.create(DeveloperWithAutoIncrementBySequence)
+                val developerId = DeveloperWithAutoIncrementBySequence.insertAndGetId {
+                    it[name] = "Hichem"
                 }
+                developerId.shouldNotBeNull()
+
+                val developerId2 = DeveloperWithAutoIncrementBySequence.insertAndGetId {
+                    it[name] = "Andrey"
+                }
+                developerId2.value shouldBeEqualTo developerId.value + 1
+            } finally {
+                SchemaUtils.drop(DeveloperWithAutoIncrementBySequence)
             }
         }
     }
@@ -167,24 +166,24 @@ class SequenceTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `test select with nextVal`(testDb: TestDB) {
         withTables(testDb, Developer) {
-            if (currentDialectTest.supportsCreateSequence) {
-                try {
-                    SchemaUtils.createSequence(myseq)
-                    val nextVal = myseq.nextIntVal()
-                    Developer.insert {
-                        it[id] = nextVal
-                        it[name] = "Hichem"
-                    }
+            Assumptions.assumeTrue { currentDialectTest.supportsCreateSequence }
 
-                    val firstValue = Developer.select(nextVal).single()[nextVal]
-                    val secondValue = Developer.select(nextVal).single()[nextVal]
-
-                    val expFirstValue = myseq.startWith!! + myseq.incrementBy!!
-                    firstValue.toLong() shouldBeEqualTo expFirstValue
-                    secondValue.toLong() shouldBeEqualTo expFirstValue + myseq.incrementBy!!
-                } finally {
-                    SchemaUtils.dropSequence(myseq)
+            try {
+                SchemaUtils.createSequence(myseq)
+                val nextVal = myseq.nextIntVal()
+                Developer.insert {
+                    it[id] = nextVal
+                    it[name] = "Hichem"
                 }
+
+                val firstValue = Developer.select(nextVal).single()[nextVal]
+                val secondValue = Developer.select(nextVal).single()[nextVal]
+
+                val expFirstValue = myseq.startWith!! + myseq.incrementBy!!
+                firstValue.toLong() shouldBeEqualTo expFirstValue
+                secondValue.toLong() shouldBeEqualTo expFirstValue + myseq.incrementBy!!
+            } finally {
+                SchemaUtils.dropSequence(myseq)
             }
         }
     }
@@ -193,13 +192,12 @@ class SequenceTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testManuallyCreatedSequenceExists(testDb: TestDB) {
         withDb(testDb) {
-            if (currentDialectTest.supportsCreateSequence) {
-                try {
-                    SchemaUtils.createSequence(myseq)
-                    myseq.exists().shouldBeTrue()
-                } finally {
-                    SchemaUtils.dropSequence(myseq)
-                }
+            Assumptions.assumeTrue { currentDialectTest.supportsCreateSequence }
+            try {
+                SchemaUtils.createSequence(myseq)
+                myseq.exists().shouldBeTrue()
+            } finally {
+                SchemaUtils.dropSequence(myseq)
             }
         }
     }
@@ -212,17 +210,16 @@ class SequenceTest: AbstractExposedTest() {
         }
 
         withDb(testDb) {
-            if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
-                try {
-                    SchemaUtils.create(tableWithExplicitSequenceName)
+            Assumptions.assumeTrue { currentDialectTest.supportsSequenceAsGeneratedKeys }
 
-                    val sequences = currentDialectTest.sequences()
+            try {
+                SchemaUtils.create(tableWithExplicitSequenceName)
 
-                    sequences.shouldNotBeEmpty()
-                    sequences.any { it == myseq.name.inProperCase() }.shouldBeTrue()
-                } finally {
-                    SchemaUtils.drop(tableWithExplicitSequenceName)
-                }
+                val sequences = currentDialectTest.sequences()
+                sequences.shouldNotBeEmpty()
+                sequences.any { it == myseq.name.inProperCase() }.shouldBeTrue()
+            } finally {
+                SchemaUtils.drop(tableWithExplicitSequenceName)
             }
         }
     }
@@ -230,24 +227,22 @@ class SequenceTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testExistingSequencesForAutoIncrementWithExplicitSequenceName(testDb: TestDB) {
-
         val sequenceName = "id_seq"
         val tableWithExplicitSequenceName = object: IdTable<Long>() {
             override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequenceName).entityId()
         }
 
         withDb(testDb) {
-            if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
-                try {
-                    SchemaUtils.create(tableWithExplicitSequenceName)
+            Assumptions.assumeTrue { currentDialectTest.supportsSequenceAsGeneratedKeys }
+            try {
+                SchemaUtils.create(tableWithExplicitSequenceName)
 
-                    val sequences = currentDialectTest.sequences()
+                val sequences = currentDialectTest.sequences()
 
-                    sequences.shouldNotBeEmpty()
-                    sequences.any { it == sequenceName.inProperCase() }.shouldBeTrue()
-                } finally {
-                    SchemaUtils.drop(tableWithExplicitSequenceName)
-                }
+                sequences.shouldNotBeEmpty()
+                sequences.any { it == sequenceName.inProperCase() }.shouldBeTrue()
+            } finally {
+                SchemaUtils.drop(tableWithExplicitSequenceName)
             }
         }
     }
@@ -261,18 +256,18 @@ class SequenceTest: AbstractExposedTest() {
         }
 
         withDb(testDb) {
-            if (currentDialect.needsSequenceToAutoInc) {
-                try {
-                    SchemaUtils.create(tableWithoutExplicitSequenceName)
+            Assumptions.assumeTrue { currentDialect.needsSequenceToAutoInc }
 
-                    val sequences = currentDialectTest.sequences()
-                    sequences.shouldNotBeEmpty()
+            try {
+                SchemaUtils.create(tableWithoutExplicitSequenceName)
 
-                    val expected = tableWithoutExplicitSequenceName.id.autoIncColumnType!!.autoincSeq!!
-                    sequences.any { it == expected }.shouldBeTrue()
-                } finally {
-                    SchemaUtils.drop(tableWithoutExplicitSequenceName)
-                }
+                val sequences = currentDialectTest.sequences()
+                sequences.shouldNotBeEmpty()
+
+                val expected = tableWithoutExplicitSequenceName.id.autoIncColumnType!!.autoincSeq!!
+                sequences.any { it == expected }.shouldBeTrue()
+            } finally {
+                SchemaUtils.drop(tableWithoutExplicitSequenceName)
             }
         }
     }
@@ -305,34 +300,33 @@ class SequenceTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testNoCreateStatementForExistingSequence(testDb: TestDB) {
         withDb(testDb) {
-            if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
-                val createSequencePrefix = "CREATE SEQUENCE"
+            Assumptions.assumeTrue { currentDialectTest.supportsSequenceAsGeneratedKeys }
 
-                SchemaUtils.createStatements(DeveloperWithAutoIncrementBySequence)
-                    .onEach { log.debug { "create: $it" } }
-                    .find { it.startsWith(createSequencePrefix) }
-                    .shouldNotBeNull()
+            val createSequencePrefix = "CREATE SEQUENCE"
 
-                SchemaUtils.create(DeveloperWithAutoIncrementBySequence)
+            SchemaUtils.createStatements(DeveloperWithAutoIncrementBySequence)
+                .onEach { log.debug { "create: $it" } }
+                .find { it.startsWith(createSequencePrefix) }
+                .shouldNotBeNull()
 
-                // Remove table without removing sequence
-                exec("DROP TABLE ${DeveloperWithAutoIncrementBySequence.nameInDatabaseCase()}")
+            SchemaUtils.create(DeveloperWithAutoIncrementBySequence)
 
+            // Remove table without removing sequence
+            exec("DROP TABLE ${DeveloperWithAutoIncrementBySequence.nameInDatabaseCase()}")
 
-                SchemaUtils.createStatements(DeveloperWithAutoIncrementBySequence)
-                    .onEach { log.debug { "create: $it" } }
-                    .find { it.startsWith(createSequencePrefix) }
-                    .shouldBeNull()
+            SchemaUtils.createStatements(DeveloperWithAutoIncrementBySequence)
+                .onEach { log.debug { "create: $it" } }
+                .find { it.startsWith(createSequencePrefix) }
+                .shouldBeNull()
 
-                SchemaUtils.statementsRequiredToActualizeScheme(DeveloperWithAutoIncrementBySequence)
-                    .onEach { log.debug { "actualize: $it" } }
-                    .find { it.startsWith(createSequencePrefix) }
-                    .shouldBeNull()
+            SchemaUtils.statementsRequiredToActualizeScheme(DeveloperWithAutoIncrementBySequence)
+                .onEach { log.debug { "actualize: $it" } }
+                .find { it.startsWith(createSequencePrefix) }
+                .shouldBeNull()
 
-                // Clean up: create table and drop it for removing sequence
-                SchemaUtils.create(DeveloperWithAutoIncrementBySequence)
-                SchemaUtils.drop(DeveloperWithAutoIncrementBySequence)
-            }
+            // Clean up: create table and drop it for removing sequence
+            SchemaUtils.create(DeveloperWithAutoIncrementBySequence)
+            SchemaUtils.drop(DeveloperWithAutoIncrementBySequence)
         }
     }
 

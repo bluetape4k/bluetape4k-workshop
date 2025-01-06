@@ -7,6 +7,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
+@Suppress("UnusedReceiverParameter")
 private val Transaction.failedOn: String
     get() = currentTestDB?.name ?: currentDialectTest.name
 

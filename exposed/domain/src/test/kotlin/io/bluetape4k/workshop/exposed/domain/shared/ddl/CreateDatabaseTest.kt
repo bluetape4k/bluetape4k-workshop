@@ -18,10 +18,10 @@ class CreateDatabaseTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create and drop database`(dialect: TestDB) {
-        Assumptions.assumeTrue { dialect in TestDB.ALL_H2 }
+    fun `create and drop database`(testDb: TestDB) {
+        Assumptions.assumeTrue { testDb in TestDB.ALL_H2 }
 
-        withDb(dialect) {
+        withDb(testDb) {
             val dbName = "jetbrains"
             try {
                 SchemaUtils.dropDatabase(dbName)
@@ -35,10 +35,10 @@ class CreateDatabaseTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create and drop database with auto commit`(dialect: TestDB) {
-        Assumptions.assumeTrue { dialect in TestDB.ALL_H2 }
+    fun `create and drop database with auto commit`(testDb: TestDB) {
+        Assumptions.assumeTrue { testDb in TestDB.ALL_H2 }
 
-        withDb(dialect) {
+        withDb(testDb) {
             connection.autoCommit = true
             val dbName = "jetbrains"
             try {
@@ -54,10 +54,10 @@ class CreateDatabaseTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `list databases with auto commit`(dialect: TestDB) {
-        Assumptions.assumeTrue { dialect in TestDB.ALL_H2 }
+    fun `list databases with auto commit`(testDb: TestDB) {
+        Assumptions.assumeTrue { testDb in TestDB.ALL_H2 }
 
-        withDb(dialect) {
+        withDb(testDb) {
             connection.autoCommit = true
 
             val dbName = "jetbrains"
@@ -67,12 +67,10 @@ class CreateDatabaseTest: AbstractExposedTest() {
             }
 
             SchemaUtils.createDatabase(dbName)
-            val created = SchemaUtils.listDatabases()
-            created shouldContain dbName
+            SchemaUtils.listDatabases() shouldContain dbName
 
             SchemaUtils.dropDatabase(dbName)
-            val deleted = SchemaUtils.listDatabases()
-            deleted shouldNotContain dbName
+            SchemaUtils.listDatabases() shouldNotContain dbName
 
             connection.autoCommit = false
         }
@@ -80,10 +78,10 @@ class CreateDatabaseTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `list databases `(dialect: TestDB) {
-        Assumptions.assumeTrue { dialect in TestDB.ALL_H2 }
+    fun `list databases `(testDb: TestDB) {
+        Assumptions.assumeTrue { testDb in TestDB.ALL_H2 }
 
-        withDb(dialect) {
+        withDb(testDb) {
             val dbName = "jetbrains"
             val initial = SchemaUtils.listDatabases()
             if (dbName in initial) {
@@ -91,12 +89,10 @@ class CreateDatabaseTest: AbstractExposedTest() {
             }
 
             SchemaUtils.createDatabase(dbName)
-            val created = SchemaUtils.listDatabases()
-            created shouldContain dbName
+            SchemaUtils.listDatabases() shouldContain dbName
 
             SchemaUtils.dropDatabase(dbName)
-            val deleted = SchemaUtils.listDatabases()
-            deleted shouldNotContain dbName
+            SchemaUtils.listDatabases() shouldNotContain dbName
         }
     }
 }

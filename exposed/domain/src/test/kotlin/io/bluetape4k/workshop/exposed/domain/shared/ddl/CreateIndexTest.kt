@@ -39,7 +39,7 @@ class CreateIndexTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create standard index`(dialect: TestDB) {
+    fun `create standard index`(testDb: TestDB) {
         val testTable = object: Table("test_table") {
             val id = integer("id")
             val name = varchar("name", 42)
@@ -48,7 +48,7 @@ class CreateIndexTest: AbstractExposedTest() {
             val byName = index("test_table_by_name", false, name)
         }
 
-        withTables(dialect, testTable) {
+        withTables(testDb, testTable) {
             SchemaUtils.createMissingTablesAndColumns(testTable)
             testTable.exists().shouldBeTrue()
             SchemaUtils.drop(testTable)
@@ -57,8 +57,8 @@ class CreateIndexTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create hash index`(dialect: TestDB) {
-        Assumptions.assumeTrue { dialect != TestDB.H2_MYSQL }
+    fun `create hash index`(testDb: TestDB) {
+        Assumptions.assumeTrue { testDb !in TestDB.ALL_MYSQL_LIKE }
 
         val testTable = object: Table("test_table") {
             val id = integer("id")
@@ -68,7 +68,7 @@ class CreateIndexTest: AbstractExposedTest() {
             val byName = index("test_table_by_name", false, name)
         }
 
-        withTables(dialect, testTable) {
+        withTables(testDb, testTable) {
             SchemaUtils.createMissingTablesAndColumns(testTable)
             testTable.exists().shouldBeTrue()
         }
@@ -76,8 +76,8 @@ class CreateIndexTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create index with table in different schema`(dialect: TestDB) {
-        Assumptions.assumeTrue { dialect == TestDB.H2 || dialect == TestDB.H2_PSQL }
+    fun `create index with table in different schema`(testDb: TestDB) {
+        Assumptions.assumeTrue { testDb == TestDB.H2 || testDb == TestDB.H2_PSQL }
         
         val testTable = object: Table("test_table") {
             val id = integer("id")
@@ -91,7 +91,7 @@ class CreateIndexTest: AbstractExposedTest() {
         val schema1 = Schema("Schema1")
         val schema2 = Schema("Schema2")
 
-        withSchemas(dialect, schema1, schema2) {
+        withSchemas(testDb, schema1, schema2) {
             SchemaUtils.setSchema(schema1)
             SchemaUtils.createMissingTablesAndColumns(testTable)
             testTable.exists().shouldBeTrue()
@@ -105,8 +105,8 @@ class CreateIndexTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create and drop partial index with postgres`(dialect: TestDB) {
-        Assumptions.assumeTrue { dialect == TestDB.POSTGRESQL }
+    fun `create and drop partial index with postgres`(testDb: TestDB) {
+        Assumptions.assumeTrue { testDb == TestDB.POSTGRESQL }
 
         val partialIndexTable = object: IntIdTable("PartialIndexTableTest") {
             val name = varchar("name", 50)
@@ -125,7 +125,7 @@ class CreateIndexTest: AbstractExposedTest() {
             }
         }
 
-        withDb(dialect) {
+        withDb(testDb) {
             SchemaUtils.createMissingTablesAndColumns(partialIndexTable)
             partialIndexTable.exists().shouldBeTrue()
 
@@ -172,8 +172,8 @@ class CreateIndexTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create and drop partial index`(dialect: TestDB) {
-        Assumptions.assumeTrue { dialect == TestDB.POSTGRESQL }
+    fun `create and drop partial index`(testDb: TestDB) {
+        Assumptions.assumeTrue { testDb == TestDB.POSTGRESQL }
 
         val tester = object: Table("tester") {
             val name = varchar("name", 32).uniqueIndex()
@@ -186,7 +186,7 @@ class CreateIndexTest: AbstractExposedTest() {
             }
         }
 
-        withDb(dialect) {
+        withDb(testDb) {
             SchemaUtils.createMissingTablesAndColumns(tester)
             tester.exists().shouldBeTrue()
 
@@ -243,7 +243,7 @@ class CreateIndexTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `partial index not created`(dialect: TestDB) {
+    fun `partial index not created`(testDb: TestDB) {
         val tester = object: Table("tester") {
             val age = integer("age")
 
@@ -252,7 +252,7 @@ class CreateIndexTest: AbstractExposedTest() {
             }
         }
 
-        withTables(dialect, tester) {
+        withTables(testDb, tester) {
             SchemaUtils.createMissingTablesAndColumns()
             tester.exists().shouldBeTrue()
 
@@ -267,9 +267,9 @@ class CreateIndexTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create and drop functional index`(dialect: TestDB) {
+    fun `create and drop functional index`(testDb: TestDB) {
         // H2 does not support functional indexes
-        Assumptions.assumeTrue { dialect !in TestDB.ALL_H2 && dialect != TestDB.MYSQL_V5 }
+        Assumptions.assumeTrue { testDb !in TestDB.ALL_H2 && testDb != TestDB.MYSQL_V5 }
 
         val tester = object: IntIdTable("tester") {
             val amount = integer("amount")
@@ -283,7 +283,7 @@ class CreateIndexTest: AbstractExposedTest() {
             }
         }
 
-        withTables(dialect, tester) {
+        withTables(testDb, tester) {
             SchemaUtils.createMissingTablesAndColumns()
             tester.exists().shouldBeTrue()
 

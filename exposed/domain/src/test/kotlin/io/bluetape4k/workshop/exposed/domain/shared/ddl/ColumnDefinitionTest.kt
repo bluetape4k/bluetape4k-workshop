@@ -22,7 +22,6 @@ import org.jetbrains.exposed.sql.stringLiteral
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.FieldSource
 import org.junit.jupiter.params.provider.MethodSource
 import java.sql.SQLException
 
@@ -38,26 +37,28 @@ class ColumnDefinitionTest: AbstractExposedTest() {
      * ```
      */
     @ParameterizedTest
-    @FieldSource("columnCommentSupportedDB")
-    fun `column comment`(dialect: TestDB) {
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `column comment`(testDb: TestDB) {
+        Assumptions.assumeTrue { testDb in columnCommentSupportedDB }
+
         val comment = "Amount of testers"
         val tester = object: Table("tester") {
             val amount = integer("amount")
                 .withDefinition("COMMENT", stringLiteral(comment))
         }
 
-        withTables(dialect, tester) {
+        withTables(testDb, tester) {
             SchemaUtils.statementsRequiredToActualizeScheme(tester).shouldBeEmpty()
 
             tester.insert { it[amount] = 9 }
             tester.selectAll().single()[tester.amount] shouldBeEqualTo 9
 
             val tableName = tester.nameInDatabaseCase()
-            val showStatement = when (dialect) {
+            val showStatement = when (testDb) {
                 in TestDB.ALL_MYSQL -> "SHOW FULL COLUMNS FROM $tableName"
                 else                -> "SELECT REMARKS FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '$tableName'"
             }
-            val resultLabel = when (dialect) {
+            val resultLabel = when (testDb) {
                 in TestDB.ALL_MYSQL -> "Comment"
                 else                -> "REMARKS"
             }
@@ -73,9 +74,7 @@ class ColumnDefinitionTest: AbstractExposedTest() {
     @Disabled("SQL Server 에서만 지원됩니다.")
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `column data masking`(dialect: TestDB) {
-        // Assumptions.assumeTrue { dialect == TestDB.SQLSERVER }
-
+    fun `column data masking`(testDb: TestDB) {
         val tester = object: Table("tester") {
             val email = varchar("email", 128)
                 .uniqueIndex()
@@ -108,12 +107,12 @@ class ColumnDefinitionTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `column definition on null`(dialect: TestDB) {
-        Assumptions.assumeTrue { dialect in TestDB.ALL_H2 }
+    fun `column definition on null`(testDb: TestDB) {
+        Assumptions.assumeTrue { testDb in TestDB.ALL_H2 }
 
         val itemA = "Item A"
 
-        withDb(dialect) { testDb ->
+        withDb(testDb) {
             val tester = object: Table("tester") {
                 val amount = integer("amount")
                 val item = varchar("item", 32).apply {
@@ -146,8 +145,8 @@ class ColumnDefinitionTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `column visibility`(dialect: TestDB) {
-        Assumptions.assumeTrue { dialect in (TestDB.ALL_H2 + TestDB.MYSQL_V8) }
+    fun `column visibility`(testDb: TestDB) {
+        Assumptions.assumeTrue { testDb in columnCommentSupportedDB }
 
         val tester = object: Table("tester") {
             val amount = integer("amount")
@@ -163,8 +162,8 @@ class ColumnDefinitionTest: AbstractExposedTest() {
 
         fun FieldSet.selectImplicitAll(): Query = ImplicitQuery(this, null)
 
-        withTables(dialect, tester) {
-            if (dialect == TestDB.MYSQL_V8) {
+        withTables(testDb, tester) {
+            if (testDb == TestDB.MYSQL_V8) {
                 // H2 metadata query does not return invisible column info
                 // Bug in MariaDB with nullable column - metadata default value returns as NULL - EXPOSED-415
                 SchemaUtils.statementsRequiredToActualizeScheme(tester).shouldBeEmpty()

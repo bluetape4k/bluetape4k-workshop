@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.shared.ddl
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.domain.TestDB
 import io.bluetape4k.workshop.exposed.domain.withTables
@@ -14,6 +15,8 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
 class WhereConditionsTest: AbstractExposedTest() {
+
+    companion object: KLogging()
 
     object Users: Table() {
         val name = varchar("name", 20)

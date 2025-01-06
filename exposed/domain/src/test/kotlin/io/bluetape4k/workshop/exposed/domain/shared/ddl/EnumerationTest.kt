@@ -30,7 +30,8 @@ import org.postgresql.util.PGobject
 class EnumerationTest: AbstractExposedTest() {
 
     // NOTE: MYSQL_V8 은 지원하지 않습니다.
-    private val supportsCustomEnumerationDB = TestDB.ALL_POSTGRES + TestDB.ALL_H2 // + TestDB.MYSQL_V5
+    private val supportsCustomEnumerationDB =
+        TestDB.ALL_POSTGRES + TestDB.ALL_H2 // + TestDB.MYSQL_V5
 
     internal enum class Foo {
         Bar, Baz;
