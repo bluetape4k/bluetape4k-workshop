@@ -1,6 +1,10 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
+import io.bluetape4k.exposed.dao.id.SnowflakeIdEntity
+import io.bluetape4k.exposed.dao.id.SnowflakeIdEntityClass
 import io.bluetape4k.exposed.dao.id.SnowflakeIdTable
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntity
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityClass
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDTable
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.domain.TestDB
@@ -13,10 +17,6 @@ import org.jetbrains.exposed.dao.CompositeEntityClass
 import org.jetbrains.exposed.dao.InnerTableLink
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
-import org.jetbrains.exposed.dao.LongEntity
-import org.jetbrains.exposed.dao.LongEntityClass
-import org.jetbrains.exposed.dao.UUIDEntity
-import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.entityCache
 import org.jetbrains.exposed.dao.id.CompositeID
 import org.jetbrains.exposed.dao.id.CompositeIdTable
@@ -75,16 +75,16 @@ object ViaTestData {
     val allTables = arrayOf(NumbersTable, StringsTable, ConnectionTable, ConnectionAutoTable)
 }
 
-class VNumber(id: EntityID<UUID>): UUIDEntity(id) {
-    companion object: UUIDEntityClass<VNumber>(ViaTestData.NumbersTable)
+class VNumber(id: EntityID<UUID>): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<VNumber>(ViaTestData.NumbersTable)
 
     var number: Int by ViaTestData.NumbersTable.number
     var connectedStrings: SizedIterable<VString> by VString via ViaTestData.ConnectionTable
     var connectedAutoStrings: SizedIterable<VString> by VString via ViaTestData.ConnectionAutoTable
 }
 
-class VString(id: EntityID<Long>): LongEntity(id) {
-    companion object: LongEntityClass<VString>(ViaTestData.StringsTable)
+class VString(id: EntityID<Long>): SnowflakeIdEntity(id) {
+    companion object: SnowflakeIdEntityClass<VString>(ViaTestData.StringsTable)
 
     var text: String by ViaTestData.StringsTable.text
 }
@@ -108,8 +108,8 @@ class ViaTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `connection 01`(dialect: TestDB) {
-        withTables(dialect, *ViaTestData.allTables) {
+    fun `connection 01`(testDb: TestDB) {
+        withTables(testDb, *ViaTestData.allTables) {
             val n = VNumber.new { number = 42 }
             val s = VString.new { text = "foo" }
 
@@ -123,8 +123,8 @@ class ViaTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `connection 02`(dialect: TestDB) {
-        withTables(dialect, *ViaTestData.allTables) {
+    fun `connection 02`(testDb: TestDB) {
+        withTables(testDb, *ViaTestData.allTables) {
             val n1 = VNumber.new { number = 1 }
             val n2 = VNumber.new { number = 2 }
 
@@ -143,8 +143,8 @@ class ViaTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `connection 03`(dialect: TestDB) {
-        withTables(dialect, *ViaTestData.allTables) {
+    fun `connection 03`(testDb: TestDB) {
+        withTables(testDb, *ViaTestData.allTables) {
             val n1 = VNumber.new { number = 1 }
             val n2 = VNumber.new { number = 2 }
 
@@ -169,8 +169,8 @@ class ViaTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `connection 04`(dialect: TestDB) {
-        withTables(dialect, *ViaTestData.allTables) {
+    fun `connection 04`(testDb: TestDB) {
+        withTables(testDb, *ViaTestData.allTables) {
             val n1 = VNumber.new { number = 1 }
             val n2 = VNumber.new { number = 2 }
 
@@ -215,8 +215,8 @@ class ViaTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `hierarchy references`(dialect: TestDB) {
-        withTables(dialect, NodesTable, NodeToNodes) {
+    fun `hierarchy references`(testDb: TestDB) {
+        withTables(testDb, NodesTable, NodeToNodes) {
             val root = Node.new { name = "root" }
             val child1 = Node.new {
                 name = "child1"
@@ -236,8 +236,8 @@ class ViaTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `refresh entity`(dialect: TestDB) {
-        withTables(dialect, *ViaTestData.allTables) {
+    fun `refresh entity`(testDb: TestDB) {
+        withTables(testDb, *ViaTestData.allTables) {
             val s = VString.new { text = "foo" }.apply {
                 refresh(true)
             }
@@ -248,8 +248,8 @@ class ViaTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `warm up on hierarchy entities`(dialect: TestDB) {
-        withTables(dialect, NodesTable, NodeToNodes) {
+    fun `warm up on hierarchy entities`(testDb: TestDB) {
+        withTables(testDb, NodesTable, NodeToNodes) {
             val child1 = Node.new { name = "child1" }
             val child2 = Node.new { name = "child2" }
             val root1 = Node.new {
@@ -307,8 +307,8 @@ class ViaTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `order by sized collection`(dialect: TestDB) {
-        withTables(dialect, NodesTable, NodeToNodes) {
+    fun `order by sized collection`(testDb: TestDB) {
+        withTables(testDb, NodesTable, NodeToNodes) {
             val root = NodeOrdered.new { name = "root" }
             listOf("#3", "#0", "#2", "#4", "#1").forEach() {
                 NodeOrdered.new {
@@ -371,8 +371,8 @@ class ViaTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `additional link data using composite id inner table`(dialect: TestDB) {
-        withTables(dialect, Projects, Tasks, ProjectTasks) {
+    fun `additional link data using composite id inner table`(testDb: TestDB) {
+        withTables(testDb, Projects, Tasks, ProjectTasks) {
             val p1 = Project.new { name = "Project 1" }
             val p2 = Project.new { name = "Project 2" }
 
