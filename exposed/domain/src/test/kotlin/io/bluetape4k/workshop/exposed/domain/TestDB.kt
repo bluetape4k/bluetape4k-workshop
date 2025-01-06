@@ -21,7 +21,7 @@ enum class TestDB(
      * H2 v1.+ 를 사용할 때
      */
     H2_V1(
-        connection = { "jdbc:h2:mem:regular-v1;DB_CLOSE_DELAY=-1;" },
+        connection = { "jdbc:h2:mem:regular-v1;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;" },
         driver = JdbcDrivers.DRIVER_CLASS_H2,
         dbConfig = {
             defaultIsolationLevel = java.sql.Connection.TRANSACTION_READ_COMMITTED
@@ -32,14 +32,14 @@ enum class TestDB(
      * H2 v2.+ 를 사용할 때
      */
     H2(
-        connection = { "jdbc:h2:mem:regular-v2;DB_CLOSE_DELAY=-1;" },
+        connection = { "jdbc:h2:mem:regular-v2;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;" },
         driver = JdbcDrivers.DRIVER_CLASS_H2,
         dbConfig = {
             defaultIsolationLevel = java.sql.Connection.TRANSACTION_READ_COMMITTED
         }
     ),
     H2_MYSQL(
-        connection = { "jdbc:h2:mem:mysql;MODE=MySQL;DB_CLOSE_DELAY=-1" },
+        connection = { "jdbc:h2:mem:mysql;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;" },
         driver = JdbcDrivers.DRIVER_CLASS_H2,
         beforeConnection = {
             org.h2.engine.Mode::class.declaredMemberProperties
@@ -52,7 +52,7 @@ enum class TestDB(
         }
     ),
     H2_PSQL(
-        connection = { "jdbc:h2:mem:psql;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1" },
+        connection = { "jdbc:h2:mem:psql;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;" },
         driver = JdbcDrivers.DRIVER_CLASS_H2
     ),
 

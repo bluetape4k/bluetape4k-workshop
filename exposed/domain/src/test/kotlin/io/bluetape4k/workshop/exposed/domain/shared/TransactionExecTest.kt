@@ -18,13 +18,14 @@ class TransactionExecTest: AbstractExposedTest() {
     object ExecTable: Table("exec_table") {
         val id = integer("id").autoIncrement("exec_id_seq")
         val amount = integer("amount")
+
         override val primaryKey = PrimaryKey(id)
     }
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `exec with single statement query`(dialect: TestDB) {
-        withTables(dialect, ExecTable) {
+    fun `exec with single statement query`(testDb: TestDB) {
+        withTables(testDb, ExecTable) {
             val amounts = (90..99).toList()
             ExecTable.batchInsert(amounts, shouldReturnGeneratedValues = false) { amount ->
                 this[ExecTable.id] = (amount % 10 + 1)
@@ -32,7 +33,7 @@ class TransactionExecTest: AbstractExposedTest() {
             }
 
             val results = exec(
-                """SELECT * FROM ${ExecTable.tableName.inProperCase()}""",
+                """SELECT * FROM ${ExecTable.tableName.inProperCase()};""",
                 explicitStatementType = StatementType.SELECT
             ) { resultSet: ResultSet ->
                 val allAmounts = mutableListOf<Int>()
@@ -41,8 +42,7 @@ class TransactionExecTest: AbstractExposedTest() {
                 }
                 allAmounts
             }
-            results.shouldNotBeNull()
-            results shouldBeEqualTo amounts
+            results.shouldNotBeNull() shouldBeEqualTo amounts
         }
     }
 }

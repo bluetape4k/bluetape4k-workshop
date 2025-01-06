@@ -28,7 +28,7 @@ class DDLTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `table exists`(dialect: TestDB) {
+    fun `table exists`(testDb: TestDB) {
         val testTable = object: Table() {
             val id = integer("id")
             val name = varchar("name", length = 42)
@@ -36,11 +36,11 @@ class DDLTest: AbstractExposedTest() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withTables(dialect) {
+        withTables(testDb) {
             testTable.exists().shouldBeFalse()
         }
 
-        withTables(dialect, testTable) {
+        withTables(testDb, testTable) {
             testTable.exists().shouldBeTrue()
         }
     }
@@ -60,8 +60,8 @@ class DDLTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `keywoard identifiers with opt out`(dialect: TestDB) {
-        Assumptions.assumeTrue { dialect == TestDB.H2 }
+    fun `keywoard identifiers with opt out`(testDb: TestDB) {
+        Assumptions.assumeTrue { testDb == TestDB.H2 }
 
         val keywords = listOf("Integer", "name")
         val tester = object: Table(keywords[0]) {
