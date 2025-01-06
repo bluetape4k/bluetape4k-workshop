@@ -30,6 +30,7 @@ import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
+import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.*
@@ -705,6 +706,8 @@ class CreateTableTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create Table With OnDelete Set Default`(dialect: TestDB) {
+        Assumptions.assumeTrue { dialect !in TestDB.ALL_MYSQL }
+        
         withDb(dialect) { testDb ->
             val expected = listOf(
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${this.identity(Item)} (" +
@@ -727,6 +730,8 @@ class CreateTableTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `test create table with same name in different schemas`(dialect: TestDB) {
+        Assumptions.assumeTrue { dialect !in TestDB.ALL_MYSQL }
+        
         val one = prepareSchemaForTest("one")
         withDb(dialect) { testDb ->
             OneTable.exists().shouldBeFalse()

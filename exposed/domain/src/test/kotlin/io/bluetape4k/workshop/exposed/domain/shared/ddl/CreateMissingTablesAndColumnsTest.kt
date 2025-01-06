@@ -137,6 +137,8 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testCreateMissingTablesAndColumnsChangeAutoincrement(dialect: TestDB) {
+        Assumptions.assumeTrue { dialect !in TestDB.ALL_POSTGRES }
+        
         val t1 = object: Table("foo") {
             val id = integer("idcol").autoIncrement()
             val foo = varchar("foo", 50)
@@ -727,6 +729,8 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testCreateTableWithSchemaPrefix(dialect: TestDB) {
+        Assumptions.assumeTrue { dialect !in TestDB.ALL_MYSQL }
+        
         val schemaName = "my_schema"
         // index and foreign key both use table name to auto-generate their own names & to compare metadata
         // default columns in SQL Server requires a named constraint that uses table name

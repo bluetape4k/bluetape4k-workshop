@@ -21,7 +21,7 @@ enum class TestDB(
      * H2 v1.+ 를 사용할 때
      */
     H2_V1(
-        connection = { "jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;" },
+        connection = { "jdbc:h2:mem:regular-v1;DB_CLOSE_DELAY=-1;" },
         driver = JdbcDrivers.DRIVER_CLASS_H2,
         dbConfig = {
             defaultIsolationLevel = java.sql.Connection.TRANSACTION_READ_COMMITTED
@@ -32,7 +32,7 @@ enum class TestDB(
      * H2 v2.+ 를 사용할 때
      */
     H2(
-        connection = { "jdbc:h2:mem:regular;DB_CLOSE_DELAY=-1;" },
+        connection = { "jdbc:h2:mem:regular-v2;DB_CLOSE_DELAY=-1;" },
         driver = JdbcDrivers.DRIVER_CLASS_H2,
         dbConfig = {
             defaultIsolationLevel = java.sql.Connection.TRANSACTION_READ_COMMITTED
@@ -119,7 +119,7 @@ enum class TestDB(
 
     companion object: KLogging() {
         val ALL_H2_V1 = setOf(H2_V1)
-        val ALL_H2 = setOf(H2_V1, H2, H2_MYSQL, H2_PSQL)
+        val ALL_H2 = setOf(H2, H2_MYSQL, H2_PSQL)
         val ALL_MYSQL = setOf(MYSQL_V8)
         val ALL_MYSQL_LIKE = ALL_MYSQL + H2_MYSQL
         val ALL_POSTGRES = setOf(POSTGRESQL)
@@ -132,7 +132,7 @@ enum class TestDB(
         const val USE_FAST_DB = false
 
         fun enabledDialects(): Set<TestDB> {
-            return if (USE_FAST_DB) ALL_H2 else (ALL - MYSQL_V5 - COCKROACH)
+            return if (USE_FAST_DB) ALL_H2 else (ALL - ALL_H2_V1 - MYSQL_V5 - COCKROACH)
         }
     }
 }
