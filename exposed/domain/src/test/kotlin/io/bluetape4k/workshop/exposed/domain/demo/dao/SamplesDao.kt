@@ -19,7 +19,7 @@ class SamplesDao: AbstractExposedTest() {
     object Users: IntIdTable() {
         val name = varchar("name", 50).index()
         val age = integer("age")
-        val city = reference("city_id", Cities)
+        val city = optReference("city_id", Cities)
     }
 
     object Cities: IntIdTable() {
@@ -31,20 +31,20 @@ class SamplesDao: AbstractExposedTest() {
 
         var name by Users.name
         var age by Users.age
-        var city by City referencedOn Users.city
+        var city by City optionalReferencedOn Users.city
     }
 
     class City(id: EntityID<Int>): IntEntity(id) {
         companion object: IntEntityClass<City>(Cities)
 
         var name by Cities.name
-        val users by User referrersOn Users.city
+        val users by User optionalReferrersOn Users.city
     }
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `dao entity - one to many`(dialect: TestDB) {
-        withTables(dialect, Users, Cities) {
+    fun `dao entity - one to many`(testDb: TestDB) {
+        withTables(testDb, Users, Cities) {
             val seoul = City.new {
                 name = "Seoul"
             }
@@ -72,7 +72,6 @@ class SamplesDao: AbstractExposedTest() {
             }
 
             City.all().toList() shouldBeEqualTo listOf(seoul, busan)
-
             City.findById(seoul.id) shouldBeEqualTo seoul
 
             val usersInSeoul = seoul.users.toList()
@@ -81,6 +80,5 @@ class SamplesDao: AbstractExposedTest() {
             val users = User.find { Users.age greaterEq 18 }.toList()
             users shouldBeEqualTo listOf(b, c)
         }
-
     }
 }

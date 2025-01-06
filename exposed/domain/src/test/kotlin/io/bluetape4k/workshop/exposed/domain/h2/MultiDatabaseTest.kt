@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.h2
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.domain.TestDB
 import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.CountryTable
 import org.amshove.kluent.shouldBeEqualTo
@@ -20,6 +21,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class MultiDatabaseTest {
+
+    companion object: KLogging()
 
     private val db1 by lazy {
         Database.connect(
@@ -49,6 +52,7 @@ class MultiDatabaseTest {
     @BeforeEach
     fun beforeEach() {
         Assumptions.assumeTrue { TestDB.H2 in TestDB.enabledDialects() }
+
         if (TransactionManager.isInitialized()) {
             currentDB = TransactionManager.currentOrNull()?.db
         }
@@ -56,6 +60,8 @@ class MultiDatabaseTest {
 
     @AfterEach
     fun afterEach() {
+        Assumptions.assumeTrue { TestDB.H2 in TestDB.enabledDialects() }
+        
         TransactionManager.resetCurrent(currentDB?.transactionManager)
     }
 

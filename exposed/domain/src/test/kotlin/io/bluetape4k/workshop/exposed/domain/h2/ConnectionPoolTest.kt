@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.exposed.domain.h2
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.domain.TestDB
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -43,12 +44,16 @@ class ConnectionPoolTest {
             SchemaUtils.create(TestTable)
         }
 
+        // DataSource의 maximumPoolSize를 초과하는 트랜잭션을 실행합니다.
         val exceedsPoolSize = (hikariDataSource1.maximumPoolSize * 2 + 1).coerceAtMost(50)
+        log.debug { "Exceeds pool size: $exceedsPoolSize" }
+
         runBlocking {
             repeat(exceedsPoolSize) {
                 launch {
                     newSuspendedTransaction {
-                        TestEntity.new { testValue = "test$it" }
+                        val entity = TestEntity.new { testValue = "test$it" }
+                        log.debug { "Created test entity: $entity" }
                     }
                 }
             }
@@ -68,5 +73,7 @@ class ConnectionPoolTest {
         companion object: IntEntityClass<TestEntity>(TestTable)
 
         var testValue by TestTable.testValue
+
+        override fun toString(): String = "TestEntity(id=$id, testValue=$testValue)"
     }
 }

@@ -32,10 +32,10 @@ class H2Test: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `Get H2 Version`(dialect: TestDB) {
-        Assumptions.assumeTrue { dialect in TestDB.ALL_H2 }
+    fun `Get H2 Version`(testDb: TestDB) {
+        Assumptions.assumeTrue { testDb in TestDB.ALL_H2 }
 
-        withDb(dialect) {
+        withDb(testDb) {
             if (currentDialect is H2Dialect) {
                 val version = exec("SELECT H2VERSION();") {
                     it.next()
@@ -49,9 +49,10 @@ class H2Test: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `insert in H2`(dialect: TestDB) {
-        Assumptions.assumeTrue { dialect == TestDB.H2 || dialect == TestDB.H2_MYSQL }
-        withTables(dialect, Testing) {
+    fun `insert in H2`(testDb: TestDB) {
+        Assumptions.assumeTrue { testDb == TestDB.H2 || testDb == TestDB.H2_MYSQL }
+
+        withTables(testDb, Testing) {
             Testing.insert {
                 it[id] = 1
                 it[string] = "one"
@@ -63,10 +64,10 @@ class H2Test: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `replace as insert in H2`(dialect: TestDB) {
-        Assumptions.assumeTrue { dialect == TestDB.H2_MYSQL }
+    fun `replace as insert in H2`(testDb: TestDB) {
+        Assumptions.assumeTrue { testDb == TestDB.H2_MYSQL }
 
-        withTables(dialect, Testing) {
+        withTables(testDb, Testing) {
             Testing.replace {
                 it[id] = 1
                 it[string] = "one"
@@ -78,10 +79,10 @@ class H2Test: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `close and unregister`(dialect: TestDB) {
-        Assumptions.assumeTrue { dialect == TestDB.H2 }
+    fun `close and unregister`(testDb: TestDB) {
+        Assumptions.assumeTrue { testDb == TestDB.H2 }
 
-        withDb(dialect) { testDB ->
+        withDb(testDb) { testDB ->
             val originalManager = TransactionManager.manager
             val db = testDB.db.requireNotNull("testDB.db")
 
@@ -100,15 +101,16 @@ class H2Test: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `add auto primary key`(dialect: TestDB) {
-        Assumptions.assumeTrue { dialect == TestDB.H2 || dialect == TestDB.H2_MYSQL }
+    fun `add auto primary key`(testDb: TestDB) {
+        Assumptions.assumeTrue { testDb == TestDB.H2 || testDb == TestDB.H2_MYSQL }
+        
         val tableName = "Foo"
         val initialTable = object: Table(tableName) {
             val bar = text("bar")
         }
         val t = IntIdTable(tableName)
 
-        withDb(dialect) {
+        withDb(testDb) {
             try {
                 SchemaUtils.createMissingTablesAndColumns(initialTable)
                 t.id.ddl.first() shouldBeEqualTo

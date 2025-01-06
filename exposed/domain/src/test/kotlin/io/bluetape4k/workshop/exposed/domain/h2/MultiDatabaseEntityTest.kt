@@ -1,10 +1,11 @@
 package io.bluetape4k.workshop.exposed.domain.h2
 
 import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData
 import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.BEntity
 import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.XEntity
+import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.XTable
 import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.YEntity
+import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.YTable
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldBeTrue
@@ -60,10 +61,10 @@ class MultiDatabaseEntityTest {
             currentDB = TransactionManager.currentOrNull()?.db
         }
         transaction(db1) {
-            SchemaUtils.create(EntityTestData.XTable, EntityTestData.YTable)
+            SchemaUtils.create(XTable, YTable)
         }
         transaction(db2) {
-            SchemaUtils.create(EntityTestData.XTable, EntityTestData.YTable)
+            SchemaUtils.create(XTable, YTable)
         }
     }
 
@@ -72,10 +73,10 @@ class MultiDatabaseEntityTest {
         if (TestDB.H2 in TestDB.enabledDialects()) {
             TransactionManager.resetCurrent(currentDB?.transactionManager)
             transaction(db1) {
-                SchemaUtils.drop(EntityTestData.XTable, EntityTestData.YTable)
+                SchemaUtils.drop(XTable, YTable)
             }
             transaction(db2) {
-                SchemaUtils.drop(EntityTestData.XTable, EntityTestData.YTable)
+                SchemaUtils.drop(XTable, YTable)
             }
         }
     }

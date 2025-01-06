@@ -3,19 +3,21 @@ package io.bluetape4k.workshop.exposed.domain.mapping.onetomany
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB.POSTGRESQL
+import io.bluetape4k.workshop.exposed.domain.TestDB
 import io.bluetape4k.workshop.exposed.domain.withDb
 import io.bluetape4k.workshop.exposed.domain.withTables
-import org.jetbrains.exposed.dao.entityCache
-import org.junit.jupiter.api.Test
+import org.jetbrains.exposed.dao.flushCache
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
 class OneToManyMappingTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
-    @Test
-    fun `handle one-to-many relationship`() {
-        withDb(POSTGRESQL) { dialect ->
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `handle one-to-many relationship`(testDb: TestDB) {
+        withDb(testDb) { dialect ->
             withTables(dialect, RestaurantTable, MenuTable) {
                 val kfc = Restaurant.new {
                     name = "KFC"
@@ -33,7 +35,7 @@ class OneToManyMappingTest: AbstractExposedTest() {
                     restaurant = kfc
                 }
 
-                entityCache.clear()
+                flushCache()
 
                 val restaurants = Restaurant.all().toList()
                 val restaurant = restaurants.first()

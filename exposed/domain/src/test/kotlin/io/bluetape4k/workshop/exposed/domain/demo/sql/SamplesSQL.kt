@@ -38,8 +38,8 @@ class SamplesSQL: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `Raw SQL을 이용하여 DB 작업을 수행합니다`(dialect: TestDB) {
-        withTables(dialect, Users, Cities) {
+    fun `Raw SQL을 이용하여 DB 작업을 수행합니다`(testDb: TestDB) {
+        withTables(testDb, Users, Cities) {
 
             val seoul = Cities.insert {
                 it[name] = "Seoul"
