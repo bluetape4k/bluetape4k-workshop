@@ -21,6 +21,19 @@ class ManyToManyMappingTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
+    /**
+     *
+     * Postgres:
+     * ```sql
+     * SELECT "User".id,
+     *        "User".first_name,
+     *        "User".last_name,
+     *        "User".username,
+     *        "User".status, "User".created_at
+     *   FROM "User"
+    WHERE "User".first_name = 'Alice'
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `generate schema`(testDb: TestDB) {
@@ -37,6 +50,8 @@ class ManyToManyMappingTest: AbstractExposedTest() {
     fun `coroutine support`(testDb: TestDB) = runSuspendIO {
         withSuspendedTables(testDb, UserTable, GroupTable, MemberTable) {
             val prevCount = User.all().count()
+
+            // rollback()을 호출하면 transaction은 롤백된다.
             User.new {
                 username = faker.internet().username()
                 firstName = faker.name().firstName()
@@ -45,6 +60,13 @@ class ManyToManyMappingTest: AbstractExposedTest() {
             }
 
             newSuspendedTransaction {
+                /**
+                 * Postgres:
+                 * ```sql
+                 * INSERT INTO "User" (id, username, first_name, last_name, status)
+                 * VALUES ('1efcc7ef-d259-69e9-9ff4-2d40c46f118c', 'julius.bartoletti', 'Angel', 'Wisoky', 2)
+                 * ```
+                 */
                 User.new {
                     username = faker.internet().username()
                     firstName = faker.name().firstName()

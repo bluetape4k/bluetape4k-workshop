@@ -1,12 +1,12 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.manytomany
 
-import org.jetbrains.exposed.dao.UUIDEntity
-import org.jetbrains.exposed.dao.UUIDEntityClass
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntity
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import java.util.*
 
-class Group(id: EntityID<UUID>): UUIDEntity(id) {
-    companion object: UUIDEntityClass<Group>(GroupTable)
+class Group(id: EntityID<UUID>): TimebasedUUIDEntity(id) {
+    companion object: TimebasedUUIDEntityClass<Group>(GroupTable)
 
     var name by GroupTable.name
     var description by GroupTable.description
