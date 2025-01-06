@@ -550,7 +550,7 @@ class SelectTest: AbstractExposedTest() {
     @ParameterizedTest
     @FieldSource("testDBsSupportingAnyAndAllFromArrays")
     fun `eq AnyFrom Array`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { cities, users, _ ->
+        withCitiesAndUsers(dialect) { _, users, _ ->
             val rows = users.selectAll()
                 .where {
                     users.id eq anyFrom(arrayOf("andrey", "alex"))
@@ -577,7 +577,7 @@ class SelectTest: AbstractExposedTest() {
     @ParameterizedTest
     @FieldSource("testDBsSupportingAnyAndAllFromArrays")
     fun `eq AnyFrom List`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { cities, users, _ ->
+        withCitiesAndUsers(dialect) { _, users, _ ->
             val rows = users.selectAll()
                 .where {
                     users.id eq anyFrom(listOf("andrey", "alex"))

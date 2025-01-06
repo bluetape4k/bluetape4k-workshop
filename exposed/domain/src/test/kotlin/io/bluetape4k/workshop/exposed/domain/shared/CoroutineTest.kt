@@ -40,7 +40,6 @@ import java.sql.Connection
 import java.util.concurrent.Executors
 import kotlin.test.assertFailsWith
 
-
 class CoroutineTest: AbstractExposedTest() {
 
     companion object: KLogging() {
@@ -265,6 +264,8 @@ class CoroutineTest: AbstractExposedTest() {
     }
 
     // @RepeatedTest(REPEAT_SIZE)
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `await all`(dialect: TestDB) = runSuspendIO {
         val recordCount = 5
 
