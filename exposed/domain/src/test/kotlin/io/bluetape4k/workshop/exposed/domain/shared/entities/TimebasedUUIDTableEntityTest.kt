@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntity
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityClass
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDTable
 import io.bluetape4k.idgenerators.uuid.TimebasedUuid
 import io.bluetape4k.logging.debug
@@ -16,9 +18,7 @@ import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables
 import io.bluetape4k.workshop.exposed.domain.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
-import org.jetbrains.exposed.dao.UUIDEntity
-import org.jetbrains.exposed.dao.UUIDEntityClass
-import org.jetbrains.exposed.dao.entityCache
+import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.with
 import org.jetbrains.exposed.sql.exists
@@ -32,8 +32,8 @@ object TimebasedUUIDTables {
         val name = varchar("name", 50)
     }
 
-    class City(id: EntityID<UUID>): UUIDEntity(id) {
-        companion object: UUIDEntityClass<City>(Cities)
+    class City(id: EntityID<UUID>): TimebasedUUIDEntity(id) {
+        companion object: TimebasedUUIDEntityClass<City>(Cities)
 
         var name by Cities.name
         val towns by Town referrersOn Towns.cityId
@@ -44,8 +44,8 @@ object TimebasedUUIDTables {
         val cityId = reference("city_id", Cities)
     }
 
-    class Person(id: EntityID<UUID>): UUIDEntity(id) {
-        companion object: UUIDEntityClass<Person>(People)
+    class Person(id: EntityID<UUID>): TimebasedUUIDEntity(id) {
+        companion object: TimebasedUUIDEntityClass<Person>(People)
 
         var name by People.name
         var city by City referencedOn People.cityId
@@ -57,8 +57,8 @@ object TimebasedUUIDTables {
         val address = varchar("address", 255)
     }
 
-    class Address(id: EntityID<UUID>): UUIDEntity(id) {
-        companion object: UUIDEntityClass<Address>(Addresses)
+    class Address(id: EntityID<UUID>): TimebasedUUIDEntity(id) {
+        companion object: TimebasedUUIDEntityClass<Address>(Addresses)
 
         var person by Person.referencedOn(Addresses.person)
         var city by City.referencedOn(Addresses.city)
@@ -69,8 +69,8 @@ object TimebasedUUIDTables {
         val cityId = uuid("city_id").references(Cities.id)
     }
 
-    class Town(id: EntityID<UUID>): UUIDEntity(id) {
-        companion object: UUIDEntityClass<Town>(Towns)
+    class Town(id: EntityID<UUID>): TimebasedUUIDEntity(id) {
+        companion object: TimebasedUUIDEntityClass<Town>(Towns)
 
         var city by City referencedOn Towns.cityId
     }
@@ -80,8 +80,8 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create tables`(dialect: TestDB) {
-        withTables(dialect, Cities, People) {
+    fun `create tables`(testDb: TestDB) {
+        withTables(testDb, Cities, People) {
             Cities.exists().shouldBeTrue()
             People.exists().shouldBeTrue()
         }
@@ -89,8 +89,8 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create records`(dialect: TestDB) {
-        withTables(dialect, Cities, People) {
+    fun `create records`(testDb: TestDB) {
+        withTables(testDb, Cities, People) {
             val seoul = City.new { name = "Seoul" }
             val busan = City.new { name = "Busan" }
 
@@ -107,7 +107,7 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
                 city = busan
             }
 
-            entityCache.clear(flush = true)
+            flushCache()
 
             val allCities = City.all().map { it.name }
             allCities shouldBeEqualTo listOf("Seoul", "Busan")
@@ -123,8 +123,8 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `update and delete records`(dialect: TestDB) {
-        withTables(dialect, Cities, People) {
+    fun `update and delete records`(testDb: TestDB) {
+        withTables(testDb, Cities, People) {
             val seoul = City.new { name = "Seoul" }
             val busan = City.new { name = "Busan" }
 
@@ -144,6 +144,8 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
             sam.delete()
             busan.delete()
 
+            flushCache()
+
             val allCities = City.all().map { it.name }
             allCities shouldBeEqualTo listOf("Seoul")
 
@@ -157,8 +159,8 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `insert with inner table`(dialect: TestDB) {
-        withTables(dialect, Addresses, Cities, People) {
+    fun `insert with inner table`(testDb: TestDB) {
+        withTables(testDb, Addresses, Cities, People) {
             val city1 = City.new { name = "City1" }
             val person1 = Person.new {
                 name = "Person1"
@@ -183,10 +185,38 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Lazy loading referencedOn
+     * ```sql
+     * SELECT towns.id, towns.city_id FROM towns
+     * SELECT Cities.id, Cities.`name` FROM Cities WHERE Cities.id = '1efcc4a5-73e6-6e8a-830f-399275c6fb04'
+     * ```
+     *
+     * Eager loading referencedOn
+     * ```sql
+     * SELECT towns.id, towns.city_id FROM towns
+     * SELECT Cities.id, Cities.`name` FROM Cities WHERE Cities.id = '1efcc4a5-73e6-6e8a-830f-399275c6fb04'
+     * SELECT Cities.id, Cities.`name` FROM Cities WHERE Cities.id = '1efcc4a5-73e6-6e8a-830f-399275c6fb04'
+     * ```
+     *
+     * Lazy loading referrersOn
+     * ```sql
+     * SELECT Cities.id, Cities.`name` FROM Cities
+     * SELECT towns.id, towns.city_id FROM towns WHERE towns.city_id = '1efcc4a5-73e6-6e8a-830f-399275c6fb04'
+     * SELECT Cities.id, Cities.`name` FROM Cities WHERE Cities.id = '1efcc4a5-73e6-6e8a-830f-399275c6fb04'
+     * ```
+     *
+     * Eager loading referrersOn
+     * ```sql
+     * SELECT Cities.id, Cities.`name` FROM Cities
+     * SELECT towns.id, towns.city_id, Cities.id FROM towns INNER JOIN Cities ON towns.city_id = Cities.id WHERE towns.city_id = '1efcc4a5-73e6-6e8a-830f-399275c6fb04'
+     * SELECT Cities.id, Cities.`name` FROM Cities WHERE Cities.id = '1efcc4a5-73e6-6e8a-830f-399275c6fb04'
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `foreign key between uuid and entity id column`(dialect: TestDB) {
-        withTables(dialect, Cities, Towns) {
+    fun `foreign key between uuid and entity id column`(testDb: TestDB) {
+        withTables(testDb, Cities, Towns) {
             val cId = Cities.insertAndGetId {
                 it[name] = "City A"
             }
@@ -197,7 +227,7 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
                 it[cityId] = cId.value
             }
 
-            entityCache.clear(flush = true)
+            flushCache()
 
             // lazy loading referencedOn
             log.debug { "Lazy loading referencedOn" }

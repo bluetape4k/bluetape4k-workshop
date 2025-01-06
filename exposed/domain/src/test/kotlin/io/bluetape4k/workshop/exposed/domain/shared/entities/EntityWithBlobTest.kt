@@ -39,8 +39,8 @@ class EntityWithBlobTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `handle blob field`(dialect: TestDB) {
-        withTables(dialect, BlobTable) {
+    fun `handle blob field`(testDb: TestDB) {
+        withTables(testDb, BlobTable) {
             val blobEntity = BlobEntity.new {
                 content = ExposedBlob("foo".toUtf8Bytes())
             }
@@ -51,11 +51,13 @@ class EntityWithBlobTest: AbstractExposedTest() {
 
             y2.content = null
             flushCache()
+
             y2 = BlobEntity.reload(blobEntity)!!
             y2.content.shouldBeNull()
 
             y2.content = ExposedBlob("foo2".toUtf8Bytes())
             flushCache()
+
             y2 = BlobEntity.reload(blobEntity)!!
             y2.content!!.bytes.toUtf8String() shouldBeEqualTo "foo2"
         }

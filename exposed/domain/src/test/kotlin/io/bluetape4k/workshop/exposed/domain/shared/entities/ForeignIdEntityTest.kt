@@ -73,9 +73,9 @@ class ForeignIdEntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `foreign id entity update`(dialect: TestDB) {
+    fun `foreign id entity update`(testDb: TestDB) {
         withTables(
-            dialect,
+            testDb,
             Schema.Projects, Schema.ProjectConfigs,
             configure = { useNestedTransactions = true }
         ) {
@@ -96,8 +96,8 @@ class ForeignIdEntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `referenced entities with identitical column names`(dialect: TestDB) {
-        withTables(dialect, Schema.Actors, Schema.Roles) {
+    fun `referenced entities with identitical column names`(testDb: TestDB) {
+        withTables(testDb, Schema.Actors, Schema.Roles) {
             val actorA = Actor.new("3746529") { }
             val roleA = Role.new { actor = actorA }
             val roleB = Role.new { actor = actorA }

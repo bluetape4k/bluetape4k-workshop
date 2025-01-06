@@ -218,6 +218,7 @@ class DeleteTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `delete with join query`(testDb: TestDB) {
         Assumptions.assumeTrue { testDb !in TestDB.ALL_H2 }
+
         withCitiesAndUsers(testDb) { _, users, userData ->
             val singleJoinQuery = userData.joinQuery(
                 on = { userData.userId eq it[users.id] },
@@ -247,6 +248,7 @@ class DeleteTest: AbstractExposedTest() {
     fun `delete with join and limit`(testDb: TestDB) {
         // SQL Server, Oracle 에서만 지원한다.
         Assumptions.assumeTrue { testDb !in (TestDB.ALL_H2 + TestDB.ALL_MYSQL + TestDB.ALL_POSTGRES) }
+
         withCitiesAndUsers(testDb) { _, users, userData ->
             val join = users innerJoin userData
             val query = join.selectAll().where { userData.userId eq "smth" }

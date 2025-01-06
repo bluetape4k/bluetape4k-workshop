@@ -288,7 +288,7 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `self reference table`(dialect: TestDB) {
+    fun `self reference table`(testDb: TestDB) {
         SchemaUtils.sortTablesByReferences(listOf(Posts, Boards, Categories)) shouldBeEqualTo listOf(
             Boards,
             Categories,
@@ -304,8 +304,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `insert child without flush`(dialect: TestDB) {
-        withTables(dialect, Boards, Posts, Categories) {
+    fun `insert child without flush`(testDb: TestDB) {
+        withTables(testDb, Boards, Posts, Categories) {
             val parent = Post.new { this.category = Category.new { title = "title" } }
             Post.new { this.parent = parent }
 
@@ -318,8 +318,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `insert non child without flush`(dialect: TestDB) {
-        withTables(dialect, Boards, Posts, Categories) {
+    fun `insert non child without flush`(testDb: TestDB) {
+        withTables(testDb, Boards, Posts, Categories) {
             val board = Board.new { name = "ireelevant" }
             Post.new { this.board = board }  // first flush before referencing
 
@@ -329,8 +329,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `queries within other query iterator works fine`(dialect: TestDB) {
-        withTables(dialect, Boards, Posts, Categories) {
+    fun `queries within other query iterator works fine`(testDb: TestDB) {
+        withTables(testDb, Boards, Posts, Categories) {
             val board1 = Board.new { name = "irrelevant" }
             val board2 = Board.new { name = "relavant" }
             val post1 = Post.new { board = board1 }
@@ -347,8 +347,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `insert child with flush`(dialect: TestDB) {
-        withTables(dialect, Boards, Posts, Categories) {
+    fun `insert child with flush`(testDb: TestDB) {
+        withTables(testDb, Boards, Posts, Categories) {
             val parent = Post.new { this.category = Category.new { title = "title" } }
             flushCache()
             parent.id._value.shouldNotBeNull()
@@ -364,8 +364,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `insert child with child`(dialect: TestDB) {
-        withTables(dialect, Boards, Posts, Categories) {
+    fun `insert child with child`(testDb: TestDB) {
+        withTables(testDb, Boards, Posts, Categories) {
             val parent = Post.new { this.category = Category.new { title = "title1" } }
             val child1 = Post.new {
                 this.parent = parent
@@ -382,8 +382,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `optional referrers with different keys`(dialect: TestDB) {
-        withTables(dialect, Boards, Posts, Categories) {
+    fun `optional referrers with different keys`(testDb: TestDB) {
+        withTables(testDb, Boards, Posts, Categories) {
             val board = Board.new { name = "irrelevant" }
             val post1 = Post.new {
                 this.board = board
@@ -399,8 +399,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `error on set to deleted entity`(dialect: TestDB) {
-        withTables(dialect, Boards) {
+    fun `error on set to deleted entity`(testDb: TestDB) {
+        withTables(testDb, Boards) {
             assertFailsWith<EntityNotFoundException> {
                 val board = Board.new { name = "irrelevant" }
                 board.delete()
@@ -411,8 +411,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `cache invalidated on DSL delete`(dialect: TestDB) {
-        withTables(dialect, Boards) {
+    fun `cache invalidated on DSL delete`(testDb: TestDB) {
+        withTables(testDb, Boards) {
             val board1 = Board.new { name = "irrelevant" }
             Board.testCache(board1.id).shouldNotBeNull()
             board1.delete()
@@ -429,8 +429,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `cache invalidated on DSL update`(dialect: TestDB) {
-        withTables(dialect, Boards) {
+    fun `cache invalidated on DSL update`(testDb: TestDB) {
+        withTables(testDb, Boards) {
             val board1 = Board.new { name = "irrelevant" }
             Board.testCache(board1.id).shouldNotBeNull()
             board1.name = "relevant"
@@ -466,8 +466,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `cache invalidated on DSL upsert`(dialect: TestDB) {
-        withTables(dialect, Items) {
+    fun `cache invalidated on DSL upsert`(testDb: TestDB) {
+        withTables(testDb, Items) {
             val oldPrice = 20.0.toBigDecimal()
             val itemA = Item.new {
                 name = "itemA"
@@ -480,8 +480,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `Dao findByIdAndUpdate`(dialect: TestDB) {
-        withTables(dialect, Items) {
+    fun `Dao findByIdAndUpdate`(testDb: TestDB) {
+        withTables(testDb, Items) {
             val oldPrice = 20.0.toBigDecimal()
             val item = Item.new {
                 name = "Item A"
@@ -502,7 +502,7 @@ class EntityTest: AbstractExposedTest() {
             Item.testCache(item.id).shouldNotBeNull()
 
             item.price shouldBeEqualTo newPrice
-            // NOTE: refresh(flush=false)이면 Cache 값으로 다시 채워진다.
+            // NOTE: refresh(flush=false)이면 Cache 값이 다시 채워진다.
             item.refresh(flush = false)
             item.price shouldBeEqualTo oldPrice
             Item.testCache(item.id).shouldNotBeNull()
@@ -514,8 +514,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `Dao findSingleByAndUpdate`(dialect: TestDB) {
-        withTables(dialect, Items) {
+    fun `Dao findSingleByAndUpdate`(testDb: TestDB) {
+        withTables(testDb, Items) {
             val oldPrice = 20.0.toBigDecimal()
             val item = Item.new {
                 name = "Item A"
@@ -536,7 +536,7 @@ class EntityTest: AbstractExposedTest() {
             Item.testCache(item.id).shouldNotBeNull()
 
             item.price shouldBeEqualTo newPrice
-            // NOTE: refresh(flush=false)이면 Cache 값으로 다시 채워진다.
+            // NOTE: refresh(flush=false)이면 Cache 값이 다시 채워진다.
             item.refresh(flush = false)
             item.price shouldBeEqualTo oldPrice
             Item.testCache(item.id).shouldNotBeNull()
@@ -582,8 +582,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `one-to-one reference`(dialect: TestDB) {
-        withTables(dialect, Humans, Users) {
+    fun `one-to-one reference`(testDb: TestDB) {
+        withTables(testDb, Humans, Users) {
             repeat(3) {
                 val user = User("testUser")
                 user.human.h shouldBeEqualTo "te"
@@ -606,8 +606,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `hierarchy entity`(dialect: TestDB) {
-        withTables(dialect, SelfReferenceTable) {
+    fun `hierarchy entity`(testDb: TestDB) {
+        withTables(testDb, SelfReferenceTable) {
             val parent = SelfReferenceEntity.new { }
             val child1 = SelfReferenceEntity.new { this.parent = parent.id }
             val child2 = SelfReferenceEntity.new { this.parent = parent.id }
@@ -622,8 +622,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `self references`(dialect: TestDB) {
-        withTables(dialect, SelfReferenceTable) {
+    fun `self references`(testDb: TestDB) {
+        withTables(testDb, SelfReferenceTable) {
             repeat(5) { SelfReferenceEntity.new { } }
 
             val ref1 = SelfReferenceEntity.new { }
@@ -639,8 +639,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `non entityId reference`(dialect: TestDB) {
-        withTables(dialect, Posts, Boards, Categories) {
+    fun `non entityId reference`(testDb: TestDB) {
+        withTables(testDb, Posts, Boards, Categories) {
             val category1 = Category.new { title = "category1" }
 
             val post1 = Post.new {
@@ -666,8 +666,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `call limit on relation doesnt mutate the cached value`(dialect: TestDB) {
-        withTables(dialect, Posts, Boards, Categories) {
+    fun `call limit on relation doesnt mutate the cached value`(testDb: TestDB) {
+        withTables(testDb, Posts, Boards, Categories) {
             val category1 = Category.new { title = "category1" }
 
             Post.new {
@@ -692,8 +692,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `order by on entities`(dialect: TestDB) {
-        withTables(dialect, Categories) {
+    fun `order by on entities`(testDb: TestDB) {
+        withTables(testDb, Categories) {
             Categories.deleteAll()
 
             val category1 = Category.new { title = "Test1" }
@@ -713,8 +713,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `update of inserted entities goes before an insert`(dialect: TestDB) {
-        withTables(dialect, Categories, Posts, Boards) {
+    fun `update of inserted entities goes before an insert`(testDb: TestDB) {
+        withTables(testDb, Categories, Posts, Boards) {
             val category1 = Category.new { title = "category1" }
             val category2 = Category.new { title = "category2" }
 
@@ -760,8 +760,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `new id with get`(dialect: TestDB) {
-        withTables(dialect, Parents, Children) {
+    fun `new id with get`(testDb: TestDB) {
+        withTables(testDb, Parents, Children) {
             val parentId = Parent.new(10L) { name = "parent" }.id.value
 
             commit()
@@ -779,8 +779,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `newly created entity flushed successfully`(dialect: TestDB) {
-        withTables(dialect, Boards) {
+    fun `newly created entity flushed successfully`(testDb: TestDB) {
+        withTables(testDb, Boards) {
             val board = Board.new { name = "Board1" }.apply {
                 flush().shouldBeTrue()
             }
@@ -801,8 +801,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `shareing entity between transaction`(dialect: TestDB) {
-        withTables(dialect, Humans) {
+    fun `shareing entity between transaction`(testDb: TestDB) {
+        withTables(testDb, Humans) {
             val human1 = newTransaction {
                 maxAttempts = 1
                 Human.new { h = "foo" }
@@ -951,8 +951,8 @@ class EntityTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `preload references on a sized iterable`(dialect: TestDB) {
-        withTables(dialect, Regions, Schools) {
+    fun `preload references on a sized iterable`(testDb: TestDB) {
+        withTables(testDb, Regions, Schools) {
             val region1 = Region.new { name = "United Kingdom" }
             val region2 = Region.new { name = "England" }
             val school1 = School.new { name = "Eton"; region = region1 }
@@ -977,7 +977,7 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `iteration over sized iterable with preload`(dialect: TestDB) {
+    fun `iteration over sized iterable with preload`(testDb: TestDB) {
         fun HashMap<String, Pair<Int, Long>>.assertEachQueryExecutedOnlyOnce() {
             forEach { (_, stats) ->
                 val executionCount = stats.first
@@ -985,7 +985,7 @@ class EntityTest: AbstractExposedTest() {
             }
         }
 
-        withTables(dialect, Regions, Schools) {
+        withTables(testDb, Regions, Schools) {
             val region1 = Region.new { name = "United Kingdom" }
             val school1 = School.new { name = "Eton"; region = region1 }
             val school2 = School.new { name = "Harrow"; region = region1 }
@@ -1040,8 +1040,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `preload optional refrences on an entity`(dialect: TestDB) {
-        withTables(dialect, Regions, Schools) {
+    fun `preload optional refrences on an entity`(testDb: TestDB) {
+        withTables(testDb, Regions, Schools) {
             val region1 = Region.new { name = "United Kingdom" }
             val region2 = Region.new { name = "England" }
             val school1 = School.new {
@@ -1103,8 +1103,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `preload referrers on a entity`(dialect: TestDB) {
-        withTables(dialect, Regions, Schools, Students) {
+    fun `preload referrers on a entity`(testDb: TestDB) {
+        withTables(testDb, Regions, Schools, Students) {
             val region1 = Region.new { name = "United Kingdom" }
             val school1 = School.new { name = "Eton"; region = region1 }
 
@@ -1129,8 +1129,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `preload optional referrers on a sized iterable`(dialect: TestDB) {
-        withTables(dialect, Regions, Schools, Students, Detentions) {
+    fun `preload optional referrers on a sized iterable`(testDb: TestDB) {
+        withTables(testDb, Regions, Schools, Students, Detentions) {
             val region1 = Region.new { name = "United Kingdom" }
             val school1 = School.new { name = "Eton"; region = region1 }
 
@@ -1167,8 +1167,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `preload inner table link on a sized iterable`(dialect: TestDB) {
-        withTables(dialect, Regions, Schools, Holidays, SchoolHolidays) {
+    fun `preload inner table link on a sized iterable`(testDb: TestDB) {
+        withTables(testDb, Regions, Schools, Holidays, SchoolHolidays) {
             val now = System.currentTimeMillis()
             val now10 = now + 10
 
@@ -1208,8 +1208,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `preload inner table link on a entity`(dialect: TestDB) {
-        withTables(dialect, Regions, Schools, Holidays, SchoolHolidays) {
+    fun `preload inner table link on a entity`(testDb: TestDB) {
+        withTables(testDb, Regions, Schools, Holidays, SchoolHolidays) {
             val now = System.currentTimeMillis()
             val now10 = now + 10
 
@@ -1248,8 +1248,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `preload relation at depth`(dialect: TestDB) {
-        withTables(dialect, Regions, Schools, Holidays, SchoolHolidays, Students, Notes) {
+    fun `preload relation at depth`(testDb: TestDB) {
+        withTables(testDb, Regions, Schools, Holidays, SchoolHolidays, Students, Notes) {
             val region1 = Region.new { name = "United Kingdom" }
             val school1 = School.new { name = "Eton"; region = region1 }
             val student1 = Student.new { name = "James Smith"; school = school1 }
@@ -1272,8 +1272,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `preload back referrence on a sized iterable`(dialect: TestDB) {
-        withTables(dialect, Regions, Schools, Students, StudentBios) {
+    fun `preload back referrence on a sized iterable`(testDb: TestDB) {
+        withTables(testDb, Regions, Schools, Students, StudentBios) {
             val region1 = Region.new { name = "United Kingdom" }
             val school1 = School.new { name = "Eton"; region = region1 }
             val student1 = Student.new { name = "James Smith"; school = school1 }
@@ -1297,8 +1297,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `preload back referrence on a entity`(dialect: TestDB) {
-        withTables(dialect, Regions, Schools, Students, StudentBios) {
+    fun `preload back referrence on a entity`(testDb: TestDB) {
+        withTables(testDb, Regions, Schools, Students, StudentBios) {
             val region1 = Region.new { name = "United Kingdom" }
             val school1 = School.new { name = "Eton"; region = region1 }
             val student1 = Student.new { name = "James Smith"; school = school1 }
@@ -1325,8 +1325,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `reference cache doesn't fully invalidated on set entity reference`(dialect: TestDB) {
-        withTables(dialect, Regions, Schools, Students, StudentBios) {
+    fun `reference cache doesn't fully invalidated on set entity reference`(testDb: TestDB) {
+        withTables(testDb, Regions, Schools, Students, StudentBios) {
             val region1 = Region.new { name = "United Kingdom" }
             val school1 = School.new { name = "Eton"; region = region1 }
             val student1 = Student.new { name = "James Smith"; school = school1 }
@@ -1340,8 +1340,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `nested entity initialization`(dialect: TestDB) {
-        withTables(dialect, Posts, Categories, Boards) {
+    fun `nested entity initialization`(testDb: TestDB) {
+        withTables(testDb, Posts, Categories, Boards) {
             val post = Post.new {
                 parent = Post.new {
                     board = Board.new { name = "Parent Board" }
@@ -1361,7 +1361,7 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `explicit entity constructor`(dialect: TestDB) {
+    fun `explicit entity constructor`(testDb: TestDB) {
         var createBoardCalled = false
         fun createBoard(id: EntityID<Int>): Board {
             createBoardCalled = true
@@ -1370,7 +1370,7 @@ class EntityTest: AbstractExposedTest() {
 
         val boardEntityClass = object: IntEntityClass<Board>(Boards, entityCtor = ::createBoard) {}
 
-        withTables(dialect, Boards) {
+        withTables(testDb, Boards) {
             val board = boardEntityClass.new { name = "Test Board" }
 
             board.name shouldBeEqualTo "Test Board"
@@ -1392,8 +1392,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `select from string id table with primary key by column`(dialect: TestDB) {
-        withTables(dialect, RequestsTable) {
+    fun `select from string id table with primary key by column`(testDb: TestDB) {
+        withTables(testDb, RequestsTable) {
             Request.new {
                 requestId = "123"
             }
@@ -1416,8 +1416,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `database generated value`(dialect: TestDB) {
-        withTables(dialect, CreditCards) { testDb ->
+    fun `database generated value`(testDb: TestDB) {
+        withTables(testDb, CreditCards) {
             when (testDb) {
                 TestDB.POSTGRESQL -> {
                     // The value can also be set using a SQL trigger
@@ -1477,8 +1477,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `use entityId parameters`(dialect: TestDB) {
-        withTables(dialect, CreditCards) {
+    fun `use entityId parameters`(testDb: TestDB) {
+        withTables(testDb, CreditCards) {
             val newCard = CreditCard.new {
                 number = "0000111122223333"
                 spendingLimit = 10000uL
@@ -1523,9 +1523,9 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `eager loading with string parent id`(dialect: TestDB) {
+    fun `eager loading with string parent id`(testDb: TestDB) {
 
-        withTables(dialect, Countries, Dishes, configure = { keepLoadedReferencesOutOfTransaction = true }) {
+        withTables(testDb, Countries, Dishes, configure = { keepLoadedReferencesOutOfTransaction = true }) {
             val koreaId = Countries.insertAndGetId {
                 it[id] = "KOR"
                 it[name] = "Korea"
@@ -1592,8 +1592,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `eager loading with reference different from parent id`(dialect: TestDB) {
-        withTables(dialect, Customers, Orders, configure = { keepLoadedReferencesOutOfTransaction = true }) {
+    fun `eager loading with reference different from parent id`(testDb: TestDB) {
+        withTables(testDb, Customers, Orders, configure = { keepLoadedReferencesOutOfTransaction = true }) {
             val customer1 = Customer.new {
                 emailAddress = "customer1@testing.com"
                 name = "Customer1"
@@ -1638,8 +1638,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `different entities mapped to the same table`(dialect: TestDB) {
-        withTables(dialect, TestTable) {
+    fun `different entities mapped to the same table`(testDb: TestDB) {
+        withTables(testDb, TestTable) {
             val entityA = TestEntityA.new {
                 value = 1
             }

@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.domain.TestDB
 import io.bluetape4k.workshop.exposed.domain.withTables
@@ -18,6 +19,8 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.util.concurrent.atomic.AtomicInteger
 
 class NonAutoIncEntities: AbstractExposedTest() {
+
+    companion object: KLogging()
 
     abstract class BaseNonAutoIncTable(name: String): IdTable<Int>(name) {
         override val id = integer("id").entityId()
@@ -49,8 +52,8 @@ class NonAutoIncEntities: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `defaults with override new`(dialect: TestDB) {
-        withTables(dialect, NotAutoIntIdTable) {
+    fun `defaults with override new`(testDb: TestDB) {
+        withTables(testDb, NotAutoIntIdTable) {
             val entity1 = NotAutoEntity.new(true)
             entity1.b1.shouldBeTrue()
             entity1.defaultedInNew shouldBeEqualTo NotAutoEntity.defaultInt
@@ -66,8 +69,8 @@ class NonAutoIncEntities: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `not auto inc table`(dialect: TestDB) {
-        withTables(dialect, NotAutoIntIdTable) {
+    fun `not auto inc table`(testDb: TestDB) {
+        withTables(testDb, NotAutoIntIdTable) {
             val e1 = NotAutoEntity.new(true)
             val e2 = NotAutoEntity.new(false)
 
@@ -104,13 +107,14 @@ class NonAutoIncEntities: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `access entity id from override entity method`(dialect: TestDB) {
-        withTables(dialect, RequestsTable) {
+    fun `access entity id from override entity method`(testDb: TestDB) {
+        withTables(testDb, RequestsTable) {
             val request = Request.new {
                 requestId = "requestId"
                 deleted = false
             }
 
+            // Soft delete the entity
             request.delete()
 
             val updated = Request["requestId"]

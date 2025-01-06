@@ -45,9 +45,15 @@ class CountTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `count works with Query that contains distinct and columns with same name from different tables`(testDb: TestDB) {
         withCitiesAndUsers(testDb) { cities, users, _ ->
-            cities.innerJoin(users).selectAll().withDistinct().count() shouldBeEqualTo 3L
+            cities.innerJoin(users)
+                .selectAll()
+                .withDistinct()
+                .count().toInt() shouldBeEqualTo 3
 
-            cities.innerJoin(users).select(cities.id, users.id).withDistinct().count() shouldBeEqualTo 3L
+            cities.innerJoin(users)
+                .select(cities.id, users.id)
+                .withDistinct()
+                .count().toInt() shouldBeEqualTo 3
         }
     }
 
@@ -109,7 +115,9 @@ class CountTest: AbstractExposedTest() {
             }
 
             // count alias is generated for any query with distinct/groupBy/limit & throws if schema name included
-            tester.select(tester.amount).withDistinct().count().toInt() shouldBeEqualTo 1
+            tester.select(tester.amount)
+                .withDistinct()
+                .count().toInt() shouldBeEqualTo 1
 
             SchemaUtils.drop(tester)
         }

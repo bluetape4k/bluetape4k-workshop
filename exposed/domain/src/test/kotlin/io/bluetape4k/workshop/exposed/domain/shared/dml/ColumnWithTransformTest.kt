@@ -49,6 +49,7 @@ class ColumnWithTransformTest: AbstractExposedTest() {
         override fun wrap(value: Int): TransformDataHolder? = if (value == 0) null else TransformDataHolder(value)
     }
 
+    @Suppress("UNCHECKED_CAST")
     @Test
     fun `recursive unwrap`() {
         val tester1 = object: IntIdTable() {
@@ -86,7 +87,7 @@ class ColumnWithTransformTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `simple transforms`(dialect: TestDB) {
+    fun `simple transforms`(testDb: TestDB) {
         val tester = object: IntIdTable("simple_transforms") {
             val v1 = integer("v1")
                 .transform(
@@ -107,7 +108,7 @@ class ColumnWithTransformTest: AbstractExposedTest() {
                 .nullable()
         }
 
-        withTables(dialect, tester) {
+        withTables(testDb, tester) {
             val id1 = tester.insertAndGetId {
                 it[v1] = TransformDataHolder(1)
                 it[v2] = TransformDataHolder(2)
@@ -133,7 +134,7 @@ class ColumnWithTransformTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `nested transforms`(dialect: TestDB) {
+    fun `nested transforms`(testDb: TestDB) {
         val tester = object: IntIdTable("nested_transformer") {
             val v1: Column<String> = integer("v1")
                 .transform(DataHolderTransformer())
@@ -167,7 +168,7 @@ class ColumnWithTransformTest: AbstractExposedTest() {
                 )
         }
 
-        withTables(dialect, tester) {
+        withTables(testDb, tester) {
             val id1 = tester.insertAndGetId {
                 it[v1] = "1"
                 it[v2] = "2"
@@ -197,13 +198,13 @@ class ColumnWithTransformTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `read transformed values from insert statement`(dialect: TestDB) {
+    fun `read transformed values from insert statement`(testDb: TestDB) {
         val tester = object: IntIdTable("read_transformed_values") {
             val v1: Column<TransformDataHolder> = integer("v1").transform(DataHolderTransformer())
             val v2: Column<TransformDataHolder?> = integer("v2").nullTransform(DataHolderNullTransformer())
         }
 
-        withTables(dialect, tester) {
+        withTables(testDb, tester) {
             val statement = tester.insert {
                 it[tester.v1] = TransformDataHolder(1)
                 it[tester.v2] = null
@@ -233,8 +234,8 @@ class ColumnWithTransformTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `transformed values with DAO`(dialect: TestDB) {
-        withTables(dialect, TransformTable) {
+    fun `transformed values with DAO`(testDb: TestDB) {
+        withTables(testDb, TransformTable) {
             val entity = TransformEntity.new {
                 simple = TransformDataHolder(120)
                 chained = TransformDataHolder(240)
@@ -251,8 +252,8 @@ class ColumnWithTransformTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `entity with default value`(dialect: TestDB) {
-        withTables(dialect, TransformTable) {
+    fun `entity with default value`(testDb: TestDB) {
+        withTables(testDb, TransformTable) {
             val entity = TransformEntity.new { }
             entity.simple shouldBeEqualTo TransformDataHolder(1)
             entity.chained shouldBeEqualTo TransformDataHolder(2)
@@ -268,7 +269,7 @@ class ColumnWithTransformTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `transform id column`(dialect: TestDB) {
+    fun `transform id column`(testDb: TestDB) {
         val tester = object: IdTable<CustomId>() {
             override val id: Column<EntityID<CustomId>> = uuid("id")
                 .transform(wrap = { CustomId(it) }, unwrap = { it.id })
@@ -282,7 +283,7 @@ class ColumnWithTransformTest: AbstractExposedTest() {
         }
 
         val uuid = TimebasedUuid.Epoch.nextId()
-        withTables(dialect, tester, referenceTester) {
+        withTables(testDb, tester, referenceTester) {
             tester.insert {
                 it[id] = CustomId(uuid)
             }
@@ -300,7 +301,7 @@ class ColumnWithTransformTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `null to non-null transform`(dialect: TestDB) {
+    fun `null to non-null transform`(testDb: TestDB) {
         val tester = object: IntIdTable("tester") {
             val value: Column<Int?> = integer("value")
                 .nullable()
@@ -310,7 +311,7 @@ class ColumnWithTransformTest: AbstractExposedTest() {
             val value: Column<Int?> = integer("value").nullable()
         }
 
-        withTables(dialect, tester) {
+        withTables(testDb, tester) {
             tester.insert {
                 it[value] = null
             }
@@ -322,7 +323,7 @@ class ColumnWithTransformTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `null to non-null recursive transform`(dialect: TestDB) {
+    fun `null to non-null recursive transform`(testDb: TestDB) {
         val tester = object: IntIdTable("tester") {
             val value: Column<TransformDataHolder?> = integer("value")
                 .nullable()
@@ -333,7 +334,7 @@ class ColumnWithTransformTest: AbstractExposedTest() {
             val value: Column<Long?> = long("value").nullable()
         }
 
-        withTables(dialect, tester) {
+        withTables(testDb, tester) {
             val id1 = tester.insertAndGetId {
                 it[value] = TransformDataHolder(100)
             }
@@ -351,7 +352,7 @@ class ColumnWithTransformTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `null transform`(dialect: TestDB) {
+    fun `null transform`(testDb: TestDB) {
         val tester = object: IntIdTable("tester") {
             val value: Column<TransformDataHolder?> = integer("value")
                 .nullTransform(DataHolderNullTransformer())
@@ -360,7 +361,7 @@ class ColumnWithTransformTest: AbstractExposedTest() {
             val value: Column<Int> = integer("value")
         }
 
-        withTables(dialect, tester) {
+        withTables(testDb, tester) {
             val result = tester.insert {
                 it[value] = null
             }
@@ -372,14 +373,14 @@ class ColumnWithTransformTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `transform with default`(dialect: TestDB) {
+    fun `transform with default`(testDb: TestDB) {
         val tester = object: IntIdTable("tester") {
             val value: Column<TransformDataHolder> = integer("value")
                 .transform(DataHolderTransformer())
                 .default(TransformDataHolder(1))
         }
 
-        withTables(dialect, tester) {
+        withTables(testDb, tester) {
             val entry = tester.insert { }
             entry[tester.value].value shouldBeEqualTo 1
             tester.selectAll().first()[tester.value].value shouldBeEqualTo 1
@@ -397,13 +398,13 @@ class ColumnWithTransformTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `transform in batch insert`(dialect: TestDB) {
+    fun `transform in batch insert`(testDb: TestDB) {
         val tester = object: IntIdTable("test-batch-insert") {
             val v1 = integer("v1")
                 .transform(wrap = { TransformDataHolder(it) }, unwrap = { it.value })
         }
 
-        withTables(dialect, tester) {
+        withTables(testDb, tester) {
             tester.batchInsert(listOf(1, 2, 3)) {
                 this[tester.v1] = TransformDataHolder(it)
             }
@@ -428,13 +429,13 @@ class ColumnWithTransformTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `transform in update`(dialect: TestDB) {
+    fun `transform in update`(testDb: TestDB) {
         val tester = object: IntIdTable("test-update") {
             val v1 = integer("v1")
                 .transform(wrap = { TransformDataHolder(it) }, unwrap = { it.value })
         }
 
-        withTables(dialect, tester) {
+        withTables(testDb, tester) {
             val id = tester.insertAndGetId {
                 it[v1] = TransformDataHolder(1)
             }

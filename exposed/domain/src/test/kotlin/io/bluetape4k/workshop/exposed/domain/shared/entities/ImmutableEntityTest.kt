@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.domain.TestDB
 import io.bluetape4k.workshop.exposed.domain.shared.entities.ImmutableEntityTest.Schema.ECachedOrganization
@@ -19,6 +20,8 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
 class ImmutableEntityTest: AbstractExposedTest() {
+
+    companion object: KLogging()
 
     object Schema {
         object Organization: LongIdTable() {
@@ -46,8 +49,8 @@ class ImmutableEntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `immutable entity read after update`(dialect: TestDB) {
-        withTables(dialect, Schema.Organization) {
+    fun `immutable entity read after update`(testDb: TestDB) {
+        withTables(testDb, Schema.Organization) {
             transaction {
                 Organization.insert {
                     it[name] = "JetBrains"
@@ -68,8 +71,8 @@ class ImmutableEntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `immutable entity read after update with cached entity`(dialect: TestDB) {
-        withTables(dialect, Schema.Organization) {
+    fun `immutable entity read after update with cached entity`(testDb: TestDB) {
+        withTables(testDb, Schema.Organization) {
             transaction {
                 Organization.insert {
                     it[name] = "JetBrains"
