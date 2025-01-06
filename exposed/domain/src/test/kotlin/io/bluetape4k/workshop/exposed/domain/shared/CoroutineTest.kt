@@ -340,7 +340,7 @@ class CoroutineTest: AbstractExposedTest() {
             }
 
             connection.shouldNotBeNull()
-            connection.isClosed.shouldBeTrue()
+                .isClosed.shouldBeTrue()
 
             Testing.selectAll().count() shouldBeEqualTo 1L
         }
