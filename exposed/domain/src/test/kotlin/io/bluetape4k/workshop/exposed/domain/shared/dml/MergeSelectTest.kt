@@ -21,6 +21,9 @@ import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
+/**
+ * 참고: [MERGE INTO 에 대한 설명](https://www.perplexity.ai/search/sql-merge-into-gumune-daehae-s-y_xKDfwFR8ewN6qIY9jqJw)
+ */
 class MergeSelectTest: MergeBaseTest() {
 
     companion object: KLogging()
@@ -458,7 +461,7 @@ class MergeSelectTest: MergeBaseTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `mergeFro with const condition`(testDb: TestDB) {
+    fun `mergeFrom with const condition`(testDb: TestDB) {
         val filteredSourceQuery = Source.selectAll()
             .where { Source.key eq "only-in-source-1" }
             .alias("sub")
