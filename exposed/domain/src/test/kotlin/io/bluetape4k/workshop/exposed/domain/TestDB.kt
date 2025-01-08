@@ -96,7 +96,7 @@ enum class TestDB(
             }
         },
         dbConfig = {
-            defaultIsolationLevel = java.sql.Connection.TRANSACTION_SERIALIZABLE
+            defaultIsolationLevel = java.sql.Connection.TRANSACTION_READ_COMMITTED
         }
     );
 
