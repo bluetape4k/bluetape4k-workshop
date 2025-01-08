@@ -297,7 +297,7 @@ class InsertTest: AbstractExposedTest() {
         }
     }
 
-    object LongIdTable: Table() {
+    object TestLongIdTable: Table() {
         val id = long("id").autoIncrement()
         val name = text("name")
 
@@ -307,12 +307,12 @@ class InsertTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert and get generated key 02`(dialect: TestDB) {
-        withTables(dialect, LongIdTable) {
-            val id = LongIdTable.insert {
+        withTables(dialect, TestLongIdTable) {
+            val id = TestLongIdTable.insert {
                 it[name] = "Foo"
-            } get LongIdTable.id
+            } get TestLongIdTable.id
 
-            LongIdTable.selectAll().last()[LongIdTable.id] shouldBeEqualTo id
+            TestLongIdTable.selectAll().last()[TestLongIdTable.id] shouldBeEqualTo id
         }
     }
 
