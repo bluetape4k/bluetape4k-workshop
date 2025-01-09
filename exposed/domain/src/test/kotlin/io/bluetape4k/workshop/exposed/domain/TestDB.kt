@@ -61,7 +61,8 @@ enum class TestDB(
             ContainerProvider.mysql5.jdbcUrl +
                     "?useSSL=false" +
                     "&characterEncoding=UTF-8" +
-                    "&zeroDateTimeBehavior=convertToNull"
+                    "&zeroDateTimeBehavior=convertToNull"  // +
+            // "&rewriteBatchedStatements=true"
         },
         driver = JdbcDrivers.DRIVER_CLASS_MYSQL
     ),
@@ -72,7 +73,8 @@ enum class TestDB(
                     "?useSSL=false" +
                     "&characterEncoding=UTF-8" +
                     "&zeroDateTimeBehavior=convertToNull" +
-                    "&allowPublicKeyRetrieval=true"
+                    "&allowPublicKeyRetrieval=true" // +
+            //  "&rewriteBatchedStatements=true"
         },
         driver = JdbcDrivers.DRIVER_CLASS_MYSQL
     ),

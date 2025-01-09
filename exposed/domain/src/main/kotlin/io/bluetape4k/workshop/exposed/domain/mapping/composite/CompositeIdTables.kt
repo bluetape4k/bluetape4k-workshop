@@ -73,6 +73,8 @@ class Publisher(id: EntityID<CompositeID>): CompositeEntity(id) {
 
     var name by Publishers.name
     val authors by Author referrersOn Authors
+    val office by Office optionalBackReferencedOn Offices
+    val allOffices by Office optionalReferrersOn Offices
 }
 
 class Author(id: EntityID<Int>): IntEntity(id) {
