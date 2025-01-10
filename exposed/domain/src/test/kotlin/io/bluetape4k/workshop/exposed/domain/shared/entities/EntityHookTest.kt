@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.domain.TestDB
 import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.City
@@ -44,8 +45,8 @@ class EntityHookTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun created01(testDb: TestDB) {
-        withTables(testDb, *allTables) {
+    fun created01(testDB: TestDB) {
+        withTables(testDB, *allTables) {
             val (_, events, txId) = trackChanges {
                 val ru = Country.new { name = "RU" }
                 City.new {
@@ -63,8 +64,8 @@ class EntityHookTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun delete01(testDb: TestDB) {
-        withTables(testDb, *allTables) {
+    fun delete01(testDB: TestDB) {
+        withTables(testDB, *allTables) {
             val moscowId = transaction {
                 val ru = Country.new { name = "RU" }
                 val x = City.new {
@@ -88,9 +89,9 @@ class EntityHookTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `modified simple 01`(testDb: TestDB) {
-        withTables(testDb, *allTables) {
-            val (_, events1, txId) = trackChanges {
+    fun `modified simple 01`(tesgDB: TestDB) {
+        withTables(tesgDB, *allTables) {
+            val (_, events1, _) = trackChanges {
                 val ru = Country.new { name = "RU" }
                 City.new {
                     name = "Moscow"
@@ -117,8 +118,8 @@ class EntityHookTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `modified inner table 01`(testDb: TestDB) {
-        withTables(testDb, *allTables) {
+    fun `modified inner table 01`(testDB: TestDB) {
+        withTables(testDB, *allTables) {
             transaction {
                 val ru = Country.new { name = "RU" }
                 val de = Country.new { name = "DE" }
@@ -144,8 +145,8 @@ class EntityHookTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `modified inner table 02`(testDb: TestDB) {
-        withTables(testDb, *allTables) {
+    fun `modified inner table 02`(testDB: TestDB) {
+        withTables(testDB, *allTables) {
             transaction {
                 val ru = Country.new { name = "RU" }
                 val de = Country.new { name = "DE" }
@@ -172,8 +173,8 @@ class EntityHookTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `modified inner table 03`(testDb: TestDB) {
-        withTables(testDb, *allTables) {
+    fun `modified inner table 03`(testDB: TestDB) {
+        withTables(testDB, *allTables) {
             transaction {
                 val ru = Country.new { name = "RU" }
                 val de = Country.new { name = "DE" }
@@ -199,8 +200,8 @@ class EntityHookTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `single entity flush should trigger events`(testDb: TestDB) {
-        withTables(testDb, *allTables) {
+    fun `single entity flush should trigger events`(testDB: TestDB) {
+        withTables(testDB, *allTables) {
             val (user, events, _) = trackChanges {
                 User
                     .new { name = "John"; age = 30 }
@@ -227,13 +228,14 @@ class EntityHookTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `calling flush notifies entity hook subscribers`(testDb: TestDB) {
-        withTables(testDb, *allTables) {
+    fun `calling flush notifies entity hook subscribers`(testDB: TestDB) {
+        withTables(testDB, *allTables) {
             var hookCalls = 0
             val user = User.new {
                 name = "1@test.local"
                 age = 30
             }
+            log.debug { "Flush user - insert" }
             user.flush()
 
             EntityHook.subscribe {
@@ -243,12 +245,14 @@ class EntityHookTest: AbstractExposedTest() {
             user.name = "2@test.local"
             hookCalls shouldBeEqualTo 0
 
+            log.debug { "Flush user - update" }
             user.flush()
             hookCalls shouldBeEqualTo 1
 
             user.name = "3@test.local"
             hookCalls shouldBeEqualTo 1
 
+            log.debug { "Flush user - update" }
             user.flush()
             hookCalls shouldBeEqualTo 2
         }
