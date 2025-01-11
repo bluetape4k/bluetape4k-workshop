@@ -32,18 +32,22 @@ class ImmutableEntityTest: AbstractExposedTest() {
         class EOrganization(id: EntityID<Long>): LongEntity(id) {
             companion object: ImmutableEntityClass<Long, EOrganization>(Schema.Organization, EOrganization::class.java)
 
-            val name by Schema.Organization.name
-            val etag by Schema.Organization.etag
+            val name: String by Schema.Organization.name
+            val etag: Long by Schema.Organization.etag
         }
 
         class ECachedOrganization(id: EntityID<Long>): LongEntity(id) {
+            /**
+             * ImmutableCachedEntityClass 를 사용하면 엔티티의 값을 변경할 수 없다.
+             * 엔티티의 값을 변경하려면 forceUpdateEntity 메서드를 사용해야 한다.
+             */
             companion object: ImmutableCachedEntityClass<Long, ECachedOrganization>(
                 Schema.Organization,
                 ECachedOrganization::class.java
             )
 
-            val name by Schema.Organization.name
-            val etag by Schema.Organization.etag
+            val name: String by Schema.Organization.name
+            val etag: Long by Schema.Organization.etag
         }
     }
 
@@ -61,10 +65,21 @@ class ImmutableEntityTest: AbstractExposedTest() {
             transaction {
                 val org = EOrganization.all().single()
 
-                // Immutable 엔티티를 강제로 업데이트
-                EOrganization.forceUpdateEntity(org, Organization.etag, 1)
+                /**
+                 * Immutable 엔티티를 강제로 업데이트
+                 * ```sql
+                 * UPDATE "SCHEMA$ORGANIZATION" SET ETAG=1 WHERE "SCHEMA$ORGANIZATION".ID = 1
+                 * ```
+                 */
+                EOrganization.forceUpdateEntity(org, Organization.etag, 42)
 
-                EOrganization.all().single().etag shouldBeEqualTo 1L
+                /**
+                 * 강제 업데이트된 정보를 DB로부터 읽어온다.
+                 * ```sql
+                 * SELECT "SCHEMA$ORGANIZATION".ID, "SCHEMA$ORGANIZATION"."name", "SCHEMA$ORGANIZATION".ETAG FROM "SCHEMA$ORGANIZATION"
+                 * ```
+                 */
+                EOrganization.all().single().etag shouldBeEqualTo 42L
             }
         }
     }
@@ -107,6 +122,7 @@ class ImmutableEntityTest: AbstractExposedTest() {
             }
 
             transaction {
+                // 모두 캐시되어 있으므로 실제 쿼리를 실행하지 않음
                 val org = ECachedOrganization.all().single()
 
                 org.name shouldBeEqualTo "JetBrains Gmbh"

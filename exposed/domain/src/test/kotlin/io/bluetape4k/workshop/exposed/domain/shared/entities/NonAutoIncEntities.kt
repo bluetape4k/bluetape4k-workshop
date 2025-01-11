@@ -23,17 +23,17 @@ class NonAutoIncEntities: AbstractExposedTest() {
     companion object: KLogging()
 
     abstract class BaseNonAutoIncTable(name: String): IdTable<Int>(name) {
-        override val id = integer("id").entityId()
-        val b1 = bool("b1")
+        override val id: Column<EntityID<Int>> = integer("id").entityId()
+        val b1: Column<Boolean> = bool("b1")
     }
 
     object NotAutoIntIdTable: BaseNonAutoIncTable("") {
-        val defaultedInt = integer("i1")
+        val defaultedInt: Column<Int> = integer("i1")
     }
 
     class NotAutoEntity(id: EntityID<Int>): Entity<Int>(id) {
-        var b1 by NotAutoIntIdTable.b1
-        var defaultedInNew by NotAutoIntIdTable.defaultedInt
+        var b1: Boolean by NotAutoIntIdTable.b1
+        var defaultedInNew: Int by NotAutoIntIdTable.defaultedInt
 
         companion object: EntityClass<Int, NotAutoEntity>(NotAutoIntIdTable) {
             val lastId = AtomicInteger(0)
@@ -52,12 +52,22 @@ class NonAutoIncEntities: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `defaults with override new`(testDb: TestDB) {
-        withTables(testDb, NotAutoIntIdTable) {
+    fun `defaults with override new`(testDB: TestDB) {
+        withTables(testDB, NotAutoIntIdTable) {
+            /**
+             * ```sql
+             * INSERT INTO NOTAUTOINTID (ID, I1, B1) VALUES (1, 42, TRUE)
+             * ```
+             */
             val entity1 = NotAutoEntity.new(true)
             entity1.b1.shouldBeTrue()
             entity1.defaultedInNew shouldBeEqualTo NotAutoEntity.defaultInt
 
+            /**
+             * ```sql
+             * INSERT INTO NOTAUTOINTID (ID, I1, B1) VALUES (2, 1, FALSE)
+             * ```
+             */
             val entity2 = NotAutoEntity.new {
                 b1 = false
                 defaultedInNew = 1
@@ -107,16 +117,27 @@ class NonAutoIncEntities: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `access entity id from override entity method`(testDb: TestDB) {
-        withTables(testDb, RequestsTable) {
+    fun `access entity id from override entity method`(testDB: TestDB) {
+        withTables(testDB, RequestsTable) {
             val request = Request.new {
                 requestId = "requestId"
                 deleted = false
             }
 
-            // Soft delete the entity
+            /**
+             * Soft delete the entity
+             *
+             * ```sql
+             * UPDATE REQUESTS SET DELETED=TRUE WHERE REQUESTS.REQUEST_ID = 'requestId'
+             * ```
+             */
             request.delete()
 
+            /**
+             * ```sql
+             * SELECT REQUESTS.DELETED, REQUESTS.REQUEST_ID FROM REQUESTS WHERE REQUESTS.REQUEST_ID = 'requestId'
+             * ```
+             */
             val updated = Request["requestId"]
             updated.deleted.shouldBeTrue()
         }
