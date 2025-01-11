@@ -43,6 +43,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.sql.batchUpsert
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.idParam
@@ -52,6 +53,8 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.sql.upsert
+import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.sql.Connection
@@ -137,8 +140,9 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `defaults 01`(dialect: TestDB) {
-        withTables(dialect, YTable, XTable) {
+    fun `defaults 01`(testDB: TestDB) {
+        withTables(testDB, YTable, XTable) {
+            // INSERT INTO XTABLE (B1, B2) VALUES (TRUE, FALSE)
             val x = EntityTestData.XEntity.new { }
             x.b1.shouldBeTrue()
             x.b2.shouldBeFalse()
@@ -147,10 +151,13 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `defaults 02`(dialect: TestDB) {
-        withTables(dialect, YTable, XTable) {
+    fun `defaults 02`(testDB: TestDB) {
+        withTables(testDB, YTable, XTable) {
+            // INSERT INTO XTABLE (B1, B2, Y1) VALUES (FALSE, FALSE, NULL)
             val a = EntityTestData.AEntity.create(false, EntityTestData.XType.A)
+            // INSERT INTO XTABLE (B1, B2, Y1) VALUES (FALSE, FALSE, '2ylqB2ttjrAtFxMhKKNxd')
             val b = EntityTestData.AEntity.create(false, EntityTestData.XType.B) as EntityTestData.BEntity
+            // INSERT INTO YTABLE (UUID, X) VALUES ('2ylqB2ttjrAtFxMhKKNxd', FALSE)
             val y = EntityTestData.YEntity.new { x = false }
 
             a.b1.shouldBeFalse()
@@ -166,13 +173,19 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `text field outside the transaction`(dialect: TestDB) {
+    fun `text field outside the transaction`(testDB: TestDB) {
         val objectsToVerify = arrayListOf<Pair<Human, TestDB>>()
 
-        withTables(dialect, Humans) { testDb ->
+        withTables(testDB, Humans) { testDb ->
+            // INSERT INTO HUMAN (H) VALUES ('foo')
             val y1 = Human.new { h = "foo" }
 
             flushCache()
+            /**
+             * ```sql
+             * SELECT HUMAN.ID, HUMAN.H FROM HUMAN WHERE HUMAN.ID = 1
+             * ```
+             */
             y1.refresh(flush = false)
 
             objectsToVerify.add(y1 to testDb)
@@ -186,13 +199,13 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `new with id and refresh`(dialect: TestDB) {
+    fun `new with id and refresh`(testDB: TestDB) {
         val objectsToVerify = arrayListOf<Pair<Human, TestDB>>()
 
-        withTables(dialect, Humans) { testDb ->
+        withTables(testDB, Humans) {
             val x = Human.new(2) { h = "foo" }
             x.refresh(flush = true)
-            objectsToVerify.add(x to testDb)
+            objectsToVerify.add(x to testDB)
         }
 
         objectsToVerify.forEach { (human, testDb) ->
@@ -209,8 +222,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `one field entity`(dialect: TestDB) {
-        withTables(dialect, OneAutoFieldTable) {
+    fun `one field entity`(testDB: TestDB) {
+        withTables(testDB, OneAutoFieldTable) {
             val entity = SingleFieldEntity.new { }
             commit()
             entity.id.value shouldBeGreaterThan 0
@@ -219,28 +232,66 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `back reference 01`(dialect: TestDB) {
-        withTables(dialect, YTable, XTable) {
+    fun `back reference 01`(testDB: TestDB) {
+        withTables(testDB, YTable, XTable) {
+            /**
+             * ```sql
+             * INSERT INTO YTABLE (UUID) VALUES ('2ylqB3I4kotn2yLdTR2uo')
+             * ```
+             */
             val y = EntityTestData.YEntity.new { }
             flushCache()
 
+            /**
+             * ```sql
+             * INSERT INTO XTABLE (B1, B2, Y1) VALUES (TRUE, FALSE, '2ylqB3I4kotn2yLdTR2uo')
+             * ```
+             */
             val b = EntityTestData.BEntity.new { }
             b.y = y
 
+            /**
+             * ```sql
+             * SELECT XTABLE.ID, XTABLE.B1, XTABLE.B2, XTABLE.Y1
+             *   FROM XTABLE
+             *  WHERE XTABLE.Y1 = '2ylqB3I4kotn2yLdTR2uo'
+             * ```
+             */
             y.b shouldBeEqualTo b
         }
     }
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `back reference 02`(dialect: TestDB) {
-        withTables(dialect, YTable, XTable) {
+    fun `back reference 02`(testDB: TestDB) {
+        withTables(testDB, YTable, XTable) {
+            /**
+             * ```sql
+             * INSERT INTO XTABLE (B1, B2) VALUES (TRUE, FALSE)
+             * ```
+             */
             val b = EntityTestData.BEntity.new { }
             flushCache()
 
+            /**
+             * ```sql
+             * INSERT INTO YTABLE (UUID) VALUES ('2ylqB3JvcJDrxvKSTOpll')
+             * ```
+             */
             val y = EntityTestData.YEntity.new { }
+
+            /**
+             * ```sql
+             * UPDATE XTABLE SET Y1='2ylqB3JvcJDrxvKSTOpll' WHERE ID = 1
+             * ```
+             */
             b.y = y
 
+            /**
+             * ```sql
+             * SELECT XTABLE.ID, XTABLE.B1, XTABLE.B2, XTABLE.Y1 FROM XTABLE WHERE XTABLE.Y1 = '2ylqB3JvcJDrxvKSTOpll'
+             * ```
+             */
             y.b shouldBeEqualTo b
         }
     }
@@ -288,7 +339,7 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `self reference table`(testDb: TestDB) {
+    fun `self reference table`(testDB: TestDB) {
         SchemaUtils.sortTablesByReferences(listOf(Posts, Boards, Categories)) shouldBeEqualTo listOf(
             Boards,
             Categories,
@@ -302,24 +353,45 @@ class EntityTest: AbstractExposedTest() {
         SchemaUtils.sortTablesByReferences(listOf(Posts)) shouldBeEqualTo listOf(Boards, Categories, Posts)
     }
 
+    /**
+     * count of Posts
+     * ```sql
+     * SELECT COUNT(*) FROM POSTS
+     * ```
+     *
+     * count of Posts where parent is 1
+     * ```sql
+     * SELECT COUNT(*) FROM POSTS WHERE POSTS.PARENT = 1
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `insert child without flush`(testDb: TestDB) {
-        withTables(testDb, Boards, Posts, Categories) {
+    fun `insert child without flush`(testDB: TestDB) {
+        withTables(testDB, Boards, Posts, Categories) {
             val parent = Post.new { this.category = Category.new { title = "title" } }
             Post.new { this.parent = parent }
 
+            /**
+             * ```sql
+             * SELECT COUNT(*) FROM POSTS
+             * ```
+             */
             Post.all().count() shouldBeEqualTo 2L
 
-            // 이 것도 되네 ㅋㅋ (Hibernate는 안됨)
+            /**
+             * ```sql
+             * SELECT COUNT(*) FROM POSTS WHERE POSTS.PARENT = 1
+             * ```
+             */
+            // one-to-many의 count 만 따로 수행하는 쿼리가 된다. (JPA 에서는 안됨)
             parent.children.count() shouldBeEqualTo 1L
         }
     }
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `insert non child without flush`(testDb: TestDB) {
-        withTables(testDb, Boards, Posts, Categories) {
+    fun `insert non child without flush`(testDB: TestDB) {
+        withTables(testDB, Boards, Posts, Categories) {
             val board = Board.new { name = "ireelevant" }
             Post.new { this.board = board }  // first flush before referencing
 
@@ -329,13 +401,25 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `queries within other query iterator works fine`(testDb: TestDB) {
-        withTables(testDb, Boards, Posts, Categories) {
+    fun `queries within other query iterator works fine`(testDB: TestDB) {
+        withTables(testDB, Boards, Posts, Categories) {
             val board1 = Board.new { name = "irrelevant" }
             val board2 = Board.new { name = "relavant" }
             val post1 = Post.new { board = board1 }
 
             Board.all().forEach { board ->
+                /**
+                 * ```sql
+                 * SELECT COUNT(*) FROM POSTS WHERE POSTS.BOARD = 1
+                 * SELECT POSTS.ID, POSTS.BOARD, POSTS.PARENT, POSTS.CATEGORY, POSTS."optCategory" FROM POSTS WHERE POSTS.BOARD = 1
+                 * SELECT POSTS.ID, POSTS.BOARD, POSTS.PARENT, POSTS.CATEGORY, POSTS."optCategory" FROM POSTS WHERE POSTS.BOARD = 1
+                 * ```
+                 * ```sql
+                 * SELECT COUNT(*) FROM POSTS WHERE POSTS.BOARD = 2
+                 * SELECT POSTS.ID, POSTS.BOARD, POSTS.PARENT, POSTS.CATEGORY, POSTS."optCategory" FROM POSTS WHERE POSTS.BOARD = 2
+                 * SELECT POSTS.ID, POSTS.BOARD, POSTS.PARENT, POSTS.CATEGORY, POSTS."optCategory" FROM POSTS WHERE POSTS.BOARD = 2
+                 * ```
+                 */
                 board.posts.count() to board.posts.toList()
                 val text = Post.find { Posts.board eq board.id }.joinToString { post ->
                     post.board?.name.orEmpty()
@@ -347,8 +431,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `insert child with flush`(testDb: TestDB) {
-        withTables(testDb, Boards, Posts, Categories) {
+    fun `insert child with flush`(testDB: TestDB) {
+        withTables(testDB, Boards, Posts, Categories) {
             val parent = Post.new { this.category = Category.new { title = "title" } }
             flushCache()
             parent.id._value.shouldNotBeNull()
@@ -357,15 +441,18 @@ class EntityTest: AbstractExposedTest() {
 
             flushCache().size shouldBeEqualTo 1
 
+            // SELECT COUNT(*) FROM POSTS
             Post.all().count() shouldBeEqualTo 2L
+
+            // SELECT COUNT(*) FROM POSTS WHERE POSTS.PARENT = 1
             parent.children.count() shouldBeEqualTo 1L
         }
     }
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `insert child with child`(testDb: TestDB) {
-        withTables(testDb, Boards, Posts, Categories) {
+    fun `insert child with child`(testDB: TestDB) {
+        withTables(testDB, Boards, Posts, Categories) {
             val parent = Post.new { this.category = Category.new { title = "title1" } }
             val child1 = Post.new {
                 this.parent = parent
@@ -374,36 +461,60 @@ class EntityTest: AbstractExposedTest() {
             Post.new { this.parent = child1 }
             flushCache()
 
+            // SELECT COUNT(*) FROM POSTS
             Post.all().count() shouldBeEqualTo 3L
+
+            // SELECT COUNT(*) FROM POSTS WHERE POSTS.PARENT = 1
             parent.children.count() shouldBeEqualTo 1L
+
+            // SELECT COUNT(*) FROM POSTS WHERE POSTS.PARENT = 2
             child1.children.count() shouldBeEqualTo 1L
         }
     }
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `optional referrers with different keys`(testDb: TestDB) {
-        withTables(testDb, Boards, Posts, Categories) {
+    fun `optional referrers with different keys`(testDB: TestDB) {
+        withTables(testDB, Boards, Posts, Categories) {
             val board = Board.new { name = "irrelevant" }
             val post1 = Post.new {
                 this.board = board
                 this.category = Category.new { title = "title" }
             }
+            /**
+             * ```sql
+             * SELECT COUNT(*) FROM POSTS WHERE POSTS.BOARD = 1
+             * ```
+             */
             board.posts.count() shouldBeEqualTo 1L
+            /**
+             * ```sql
+             * SELECT POSTS.ID, POSTS.BOARD, POSTS.PARENT, POSTS.CATEGORY, POSTS."optCategory"
+             *   FROM POSTS
+             *  WHERE POSTS.BOARD = 1
+             * ```
+             */
             board.posts.single() shouldBeEqualTo post1
 
             Post.new { this.board = board }
+            /**
+             * ```sql
+             * SELECT COUNT(*) FROM POSTS WHERE POSTS.BOARD = 1
+             * ```
+             */
             board.posts.count() shouldBeEqualTo 2L
         }
     }
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `error on set to deleted entity`(testDb: TestDB) {
-        withTables(testDb, Boards) {
+    fun `error on set to deleted entity`(testDB: TestDB) {
+        withTables(testDB, Boards) {
             assertFailsWith<EntityNotFoundException> {
                 val board = Board.new { name = "irrelevant" }
                 board.delete()
+
+                // 이미 삭제되었음
                 board.name = "new name"
             }
         }
@@ -411,8 +522,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `cache invalidated on DSL delete`(testDb: TestDB) {
-        withTables(testDb, Boards) {
+    fun `cache invalidated on DSL delete`(testDB: TestDB) {
+        withTables(testDB, Boards) {
             val board1 = Board.new { name = "irrelevant" }
             Board.testCache(board1.id).shouldNotBeNull()
             board1.delete()
@@ -421,7 +532,7 @@ class EntityTest: AbstractExposedTest() {
             val board2 = Board.new { name = "irrelevant" }
             Board.testCache(board2.id).shouldNotBeNull()
 
-            // DSL Delete 를 수행하면 Cache가 지워진다.
+            // DSL Delete 를 수행해도 Cache예서 제거된다.
             Boards.deleteWhere { Boards.id eq board2.id }
             Board.testCache(board2.id).shouldBeNull()
         }
@@ -429,8 +540,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `cache invalidated on DSL update`(testDb: TestDB) {
-        withTables(testDb, Boards) {
+    fun `cache invalidated on DSL update`(testDB: TestDB) {
+        withTables(testDB, Boards) {
             val board1 = Board.new { name = "irrelevant" }
             Board.testCache(board1.id).shouldNotBeNull()
             board1.name = "relevant"
@@ -444,6 +555,8 @@ class EntityTest: AbstractExposedTest() {
                 it[name] = "relevant2"
             }
             Board.testCache(board2.id).shouldBeNull()
+
+            // 다시 읽어들인다.
             board2.refresh(flush = false)
             Board.testCache(board2.id).shouldNotBeNull()
             board2.name shouldBeEqualTo "relevant2"
@@ -466,22 +579,79 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `cache invalidated on DSL upsert`(testDb: TestDB) {
-        withTables(testDb, Items) {
+    fun `cache invalidated on DSL upsert`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB != TestDB.H2_V1 }
+
+        withTables(testDB, Items) {
             val oldPrice = 20.0.toBigDecimal()
             val itemA = Item.new {
-                name = "itemA"
+                name = "Item A"
                 price = oldPrice
             }
             itemA.price shouldBeEqualTo oldPrice
+            Item.testCache(itemA.id).shouldNotBeNull()
+
+            val newPrice = 50.0.toBigDecimal()
+            val conflictKeys = if (testDB in TestDB.ALL_MYSQL_LIKE) emptyArray<Column<*>>() else arrayOf(Items.name)
+
+            /**
+             * ```sql
+             * MERGE INTO ITEMS T USING (VALUES ('Item A', 50.0)) S("name", PRICE) ON (T."name"=S."name")
+             * WHEN MATCHED THEN
+             *      UPDATE SET T.PRICE=S.PRICE
+             * WHEN NOT MATCHED THEN
+             *      INSERT ("name", PRICE) VALUES(S."name", S.PRICE)
+             * ```
+             */
+            Items.upsert(*conflictKeys) {
+                it[name] = itemA.name
+                it[price] = newPrice
+            }
+            itemA.price shouldBeEqualTo oldPrice
+            Item.testCache(itemA.id).shouldBeNull()
+
+            /**
+             * ```sql
+             * SELECT ITEMS.ID, ITEMS."name", ITEMS.PRICE FROM ITEMS WHERE ITEMS.ID = 1
+             * ```
+             */
+            itemA.refresh(flush = false)
+            itemA.price shouldBeEqualTo newPrice
+            Item.testCache(itemA.id).shouldNotBeNull()
+
+            /**
+             * ```sql
+             * MERGE INTO ITEMS T USING (VALUES ('Item A', 100.0)) S("name", PRICE) ON (T."name"=S."name") WHEN MATCHED THEN UPDATE SET T.PRICE=S.PRICE WHEN NOT MATCHED THEN INSERT ("name", PRICE) VALUES(S."name", S.PRICE)
+             * MERGE INTO ITEMS T USING (VALUES ('Item B', 100.0)) S("name", PRICE) ON (T."name"=S."name") WHEN MATCHED THEN UPDATE SET T.PRICE=S.PRICE WHEN NOT MATCHED THEN INSERT ("name", PRICE) VALUES(S."name", S.PRICE)
+             * MERGE INTO ITEMS T USING (VALUES ('Item C', 100.0)) S("name", PRICE) ON (T."name"=S."name") WHEN MATCHED THEN UPDATE SET T.PRICE=S.PRICE WHEN NOT MATCHED THEN INSERT ("name", PRICE) VALUES(S."name", S.PRICE)
+             * MERGE INTO ITEMS T USING (VALUES ('Item D', 100.0)) S("name", PRICE) ON (T."name"=S."name") WHEN MATCHED THEN UPDATE SET T.PRICE=S.PRICE WHEN NOT MATCHED THEN INSERT ("name", PRICE) VALUES(S."name", S.PRICE)
+             * MERGE INTO ITEMS T USING (VALUES ('Item E', 100.0)) S("name", PRICE) ON (T."name"=S."name") WHEN MATCHED THEN UPDATE SET T.PRICE=S.PRICE WHEN NOT MATCHED THEN INSERT ("name", PRICE) VALUES(S."name", S.PRICE)
+             * ```
+             */
+            val newPricePlusExtra = 100.0.toBigDecimal()
+            val newItems = List(5) { i -> "Item ${'A' + i}" to newPricePlusExtra }
+            Items.batchUpsert(newItems, *conflictKeys, shouldReturnGeneratedValues = false) { (name, price) ->
+                this[Items.name] = name
+                this[Items.price] = price   // newPricePlusExtra
+            }
+            itemA.price shouldBeEqualTo newPrice
+            Item.testCache(itemA.id).shouldBeNull()
+
+            /**
+             * ```sql
+             * SELECT ITEMS.ID, ITEMS."name", ITEMS.PRICE FROM ITEMS WHERE ITEMS.ID = 1
+             * ```
+             */
+            itemA.refresh(flush = false)
+            itemA.price shouldBeEqualTo newPricePlusExtra
             Item.testCache(itemA.id).shouldNotBeNull()
         }
     }
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `Dao findByIdAndUpdate`(testDb: TestDB) {
-        withTables(testDb, Items) {
+    fun `Dao findByIdAndUpdate`(testDB: TestDB) {
+        withTables(testDB, Items) {
             val oldPrice = 20.0.toBigDecimal()
             val item = Item.new {
                 name = "Item A"
@@ -491,6 +661,12 @@ class EntityTest: AbstractExposedTest() {
             Item.testCache(item.id).shouldNotBeNull()
 
             val newPrice = 50.0.toBigDecimal()
+
+            /**
+             * ```sql
+             * SELECT ITEMS.ID, ITEMS."name", ITEMS.PRICE FROM ITEMS WHERE ITEMS.ID = 1 FOR UPDATE
+             * ```
+             */
             val updatedItem = Item.findByIdAndUpdate(item.id.value) {
                 it.price = newPrice
             }
@@ -502,7 +678,13 @@ class EntityTest: AbstractExposedTest() {
             Item.testCache(item.id).shouldNotBeNull()
 
             item.price shouldBeEqualTo newPrice
+
             // NOTE: refresh(flush=false)이면 Cache 값이 다시 채워진다.
+            /**
+             * ```sql
+             * SELECT ITEMS.ID, ITEMS."name", ITEMS.PRICE FROM ITEMS WHERE ITEMS.ID = 1
+             * ```
+             */
             item.refresh(flush = false)
             item.price shouldBeEqualTo oldPrice
             Item.testCache(item.id).shouldNotBeNull()
@@ -514,8 +696,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `Dao findSingleByAndUpdate`(testDb: TestDB) {
-        withTables(testDb, Items) {
+    fun `Dao findSingleByAndUpdate`(testDB: TestDB) {
+        withTables(testDB, Items) {
             val oldPrice = 20.0.toBigDecimal()
             val item = Item.new {
                 name = "Item A"
@@ -524,6 +706,16 @@ class EntityTest: AbstractExposedTest() {
             item.price shouldBeEqualTo oldPrice
             Item.testCache(item.id).shouldNotBeNull()
 
+            /**
+             * ```sql
+             * SELECT ITEMS.ID,
+             *        ITEMS."name",
+             *        ITEMS.PRICE
+             *   FROM ITEMS
+             *  WHERE ITEMS."name" = 'Item A'
+             *    FOR UPDATE
+             * ```
+             */
             val newPrice = 50.0.toBigDecimal()
             val updatedItem = Item.findSingleByAndUpdate(Items.name eq "Item A") {
                 it.price = newPrice
@@ -536,7 +728,13 @@ class EntityTest: AbstractExposedTest() {
             Item.testCache(item.id).shouldNotBeNull()
 
             item.price shouldBeEqualTo newPrice
+
             // NOTE: refresh(flush=false)이면 Cache 값이 다시 채워진다.
+            /**
+             * ```sql
+             * SELECT ITEMS.ID, ITEMS."name", ITEMS.PRICE FROM ITEMS WHERE ITEMS.ID = 1
+             * ```
+             */
             item.refresh(flush = false)
             item.price shouldBeEqualTo oldPrice
             Item.testCache(item.id).shouldNotBeNull()
@@ -582,9 +780,15 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `one-to-one reference`(testDb: TestDB) {
-        withTables(testDb, Humans, Users) {
+    fun `one-to-one reference`(testDB: TestDB) {
+        withTables(testDB, Humans, Users) {
             repeat(3) {
+                /**
+                 * ```sql
+                 * INSERT INTO HUMAN (H) VALUES ('te')
+                 * INSERT INTO "user" (ID, "name") VALUES (1, 'testUser')
+                 * ```
+                 */
                 val user = User("testUser")
                 user.human.h shouldBeEqualTo "te"
                 user.name shouldBeEqualTo "testUser"
@@ -606,13 +810,21 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `hierarchy entity`(testDb: TestDB) {
-        withTables(testDb, SelfReferenceTable) {
+    fun `hierarchy entity`(testDB: TestDB) {
+        withTables(testDB, SelfReferenceTable) {
             val parent = SelfReferenceEntity.new { }
             val child1 = SelfReferenceEntity.new { this.parent = parent.id }
             val child2 = SelfReferenceEntity.new { this.parent = parent.id }
             val grandChild = SelfReferenceEntity.new { this.parent = child1.id }
 
+            /**
+             * ```sql
+             * SELECT COUNT(*) FROM SELFREFERENCE WHERE SELFREFERENCE.PARENT_ID = 1
+             * SELECT COUNT(*) FROM SELFREFERENCE WHERE SELFREFERENCE.PARENT_ID = 2
+             * SELECT COUNT(*) FROM SELFREFERENCE WHERE SELFREFERENCE.PARENT_ID = 3
+             * SELECT COUNT(*) FROM SELFREFERENCE WHERE SELFREFERENCE.PARENT_ID = 4
+             * ```
+             */
             parent.children.count() shouldBeEqualTo 2
             child1.children.count() shouldBeEqualTo 1
             child2.children.count() shouldBeEqualTo 0
@@ -622,13 +834,27 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `self references`(testDb: TestDB) {
-        withTables(testDb, SelfReferenceTable) {
+    fun `self references`(testDB: TestDB) {
+        withTables(testDB, SelfReferenceTable) {
             repeat(5) { SelfReferenceEntity.new { } }
 
             val ref1 = SelfReferenceEntity.new { }
+            /**
+             * ```sql
+             * UPDATE SELFREFERENCE
+             *    SET PARENT_ID=6
+             *  WHERE ID = 6
+             * ```
+             */
             ref1.parent = ref1.id
 
+            /**
+             * ```sql
+             * SELECT SELFREFERENCE.ID, SELFREFERENCE.PARENT_ID
+             *   FROM SELFREFERENCE
+             *  WHERE SELFREFERENCE.ID = 6
+             * ```
+             */
             val refRow = SelfReferenceTable.selectAll()
                 .where { SelfReferenceTable.id eq ref1.id }
                 .single()
@@ -639,8 +865,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `non entityId reference`(testDb: TestDB) {
-        withTables(testDb, Posts, Boards, Categories) {
+    fun `non entityId reference`(testDB: TestDB) {
+        withTables(testDB, Posts, Boards, Categories) {
             val category1 = Category.new { title = "category1" }
 
             val post1 = Post.new {
@@ -654,11 +880,16 @@ class EntityTest: AbstractExposedTest() {
             }
 
             Post.all().count() shouldBeEqualTo 2L
+
+            // SELECT COUNT(*) FROM POSTS WHERE POSTS."optCategory" = '2ylpPHjEQlD7I6FiOM0Gt'
             category1.posts.count() shouldBeEqualTo 2L
+
+            // SELECT COUNT(*) FROM POSTS WHERE POSTS."optCategory" = '2ylpPHjEQlD7I6FiOM0Gt'
             Posts.selectAll()
                 .where { Posts.optCategory eq category1.uniqueId }
                 .count() shouldBeEqualTo 2L
 
+            // SELECT COUNT(*) FROM POSTS WHERE POSTS."optCategory" = '2ylpPHjEQlD7I6FiOM0Gt'
             Post.find { Posts.optCategory eq category1.uniqueId }
                 .count() shouldBeEqualTo 2
         }
@@ -666,8 +897,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `call limit on relation doesnt mutate the cached value`(testDb: TestDB) {
-        withTables(testDb, Posts, Boards, Categories) {
+    fun `call limit on relation doesnt mutate the cached value`(testDB: TestDB) {
+        withTables(testDB, Posts, Boards, Categories) {
             val category1 = Category.new { title = "category1" }
 
             Post.new {
@@ -681,9 +912,55 @@ class EntityTest: AbstractExposedTest() {
 
             commit()
 
+            /**
+             * ```sql
+             * SELECT COUNT(*) FROM POSTS WHERE POSTS."optCategory" = '2ylpPHssTfbOjIO2XKuqq'
+             * ```
+             */
             category1.posts.count() shouldBeEqualTo 2L
+
+            /**
+             * ```sql
+             * SELECT POSTS.ID,
+             *        POSTS.BOARD,
+             *        POSTS.PARENT,
+             *        POSTS.CATEGORY,
+             *        POSTS."optCategory"
+             *   FROM POSTS
+             *  WHERE POSTS."optCategory" = '2ylpPHssTfbOjIO2XKuqq'
+             * ```
+             */
             category1.posts.toList() shouldHaveSize 2
+
+            /**
+             * ```sql
+             * SELECT POSTS.ID,
+             *        POSTS.BOARD,
+             *        POSTS.PARENT,
+             *        POSTS.CATEGORY,
+             *        POSTS."optCategory"
+             *   FROM POSTS
+             *  WHERE POSTS."optCategory" = '2ylpPHssTfbOjIO2XKuqq'
+             *  LIMIT 1
+             * ```
+             */
             category1.posts.limit(1).toList() shouldHaveSize 1
+
+            /**
+             * ```sql
+             * SELECT COUNT(*)
+             *   FROM (
+             *      SELECT POSTS.ID posts_id,
+             *             POSTS.BOARD posts_board,
+             *             POSTS.PARENT posts_parent,
+             *             POSTS.CATEGORY posts_category,
+             *             POSTS."optCategory" posts_optCategory
+             *        FROM POSTS
+             *       WHERE POSTS."optCategory" = '2ylpPHssTfbOjIO2XKuqq'
+             *       LIMIT 1
+             *  ) subquery
+             * ```
+             */
             category1.posts.limit(1).count() shouldBeEqualTo 1L
             category1.posts.count() shouldBeEqualTo 2L
             category1.posts.toList() shouldHaveSize 2
@@ -692,8 +969,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `order by on entities`(testDb: TestDB) {
-        withTables(testDb, Categories) {
+    fun `order by on entities`(testDB: TestDB) {
+        withTables(testDB, Categories) {
             Categories.deleteAll()
 
             val category1 = Category.new { title = "Test1" }
@@ -701,10 +978,25 @@ class EntityTest: AbstractExposedTest() {
             val category2 = Category.new { title = "Test2" }
 
             Category.all().toList() shouldBeEqualTo listOf(category1, category3, category2)
+
+            /**
+             * ```sql
+             * SELECT CATEGORIES.ID, CATEGORIES."uniqueId", CATEGORIES.TITLE
+             *   FROM CATEGORIES
+             *  ORDER BY CATEGORIES.TITLE ASC
+             * ```
+             */
             Category.all()
                 .orderBy(Categories.title to SortOrder.ASC)
                 .toList() shouldBeEqualTo listOf(category1, category2, category3)
 
+            /**
+             * ```sql
+             * SELECT CATEGORIES.ID, CATEGORIES."uniqueId", CATEGORIES.TITLE
+             *   FROM CATEGORIES
+             *  ORDER BY CATEGORIES.TITLE DESC
+             * ```
+             */
             Category.all()
                 .orderBy(Categories.title to SortOrder.DESC)
                 .toList() shouldBeEqualTo listOf(category3, category2, category1)
@@ -713,8 +1005,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `update of inserted entities goes before an insert`(testDb: TestDB) {
-        withTables(testDb, Categories, Posts, Boards) {
+    fun `update of inserted entities goes before an insert`(testDB: TestDB) {
+        withTables(testDB, Categories, Posts, Boards) {
             val category1 = Category.new { title = "category1" }
             val category2 = Category.new { title = "category2" }
 
@@ -728,7 +1020,17 @@ class EntityTest: AbstractExposedTest() {
             val post2 = Post.new { category = category1 }
 
             flushCache()
+            /**
+             * ```sql
+             * SELECT POSTS.ID, POSTS.BOARD, POSTS.PARENT, POSTS.CATEGORY, POSTS."optCategory" FROM POSTS WHERE POSTS.ID = 1
+             * ```
+             */
             Post.reload(post1)
+            /**
+             * ```sql
+             * SELECT POSTS.ID, POSTS.BOARD, POSTS.PARENT, POSTS.CATEGORY, POSTS."optCategory" FROM POSTS WHERE POSTS.ID = 2
+             * ```
+             */
             Post.reload(post2)
 
             post1.category shouldBeEqualTo category2
@@ -760,8 +1062,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `new id with get`(testDb: TestDB) {
-        withTables(testDb, Parents, Children) {
+    fun `new id with get`(testDB: TestDB) {
+        withTables(testDB, Parents, Children) {
             val parentId = Parent.new(10L) { name = "parent" }.id.value
 
             commit()
@@ -779,11 +1081,12 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `newly created entity flushed successfully`(testDb: TestDB) {
-        withTables(testDb, Boards) {
-            val board = Board.new { name = "Board1" }.apply {
-                flush().shouldBeTrue()
-            }
+    fun `newly created entity flushed successfully`(testDB: TestDB) {
+        withTables(testDB, Boards) {
+            val board = Board.new { name = "Board1" }
+                .apply {
+                    flush().shouldBeTrue()
+                }
 
             board.name shouldBeEqualTo "Board1"
             board.id._value.shouldNotBeNull()
@@ -801,8 +1104,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `shareing entity between transaction`(testDb: TestDB) {
-        withTables(testDb, Humans) {
+    fun `sharing entity between transaction with entity cache`(testDB: TestDB) {
+        withTables(testDB, Humans) {
             val human1 = newTransaction {
                 maxAttempts = 1
                 Human.new { h = "foo" }
@@ -951,8 +1254,8 @@ class EntityTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `preload references on a sized iterable`(testDb: TestDB) {
-        withTables(testDb, Regions, Schools) {
+    fun `preload references on a sized iterable`(testDB: TestDB) {
+        withTables(testDB, Regions, Schools) {
             val region1 = Region.new { name = "United Kingdom" }
             val region2 = Region.new { name = "England" }
             val school1 = School.new { name = "Eton"; region = region1 }
@@ -962,6 +1265,14 @@ class EntityTest: AbstractExposedTest() {
             commit()
 
             inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+                /**
+                 * ```sql
+                 * SELECT SCHOOLS.ID, SCHOOLS."name", SCHOOLS.REGION_ID, SCHOOLS.SECONDARY_REGION_ID FROM SCHOOLS
+                 * ```
+                 * ```sql
+                 * SELECT REGIONS.ID, REGIONS."name" FROM REGIONS WHERE REGIONS.ID IN (1, 2)
+                 * ```
+                 */
                 // with - Fetch Eager Loading (즉시 로딩, N+1 문제 해결)
                 School.all().with(School::region)
                 School.testCache(school1.id).shouldNotBeNull()
@@ -977,7 +1288,7 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `iteration over sized iterable with preload`(testDb: TestDB) {
+    fun `iteration over sized iterable with preload`(testDB: TestDB) {
         fun HashMap<String, Pair<Int, Long>>.assertEachQueryExecutedOnlyOnce() {
             forEach { (_, stats) ->
                 val executionCount = stats.first
@@ -985,7 +1296,7 @@ class EntityTest: AbstractExposedTest() {
             }
         }
 
-        withTables(testDb, Regions, Schools) {
+        withTables(testDB, Regions, Schools) {
             val region1 = Region.new { name = "United Kingdom" }
             val school1 = School.new { name = "Eton"; region = region1 }
             val school2 = School.new { name = "Harrow"; region = region1 }
@@ -995,6 +1306,12 @@ class EntityTest: AbstractExposedTest() {
             inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
                 debug = true
 
+                /**
+                 * ```sql
+                 * SELECT SCHOOLS.ID, SCHOOLS."name", SCHOOLS.REGION_ID, SCHOOLS.SECONDARY_REGION_ID FROM SCHOOLS
+                 * SELECT REGIONS.ID, REGIONS."name" FROM REGIONS WHERE REGIONS.ID = 1
+                 * ```
+                 */
                 val allSchools = School.all().with(School::region).toList()
 
                 allSchools shouldHaveSize 2
@@ -1008,6 +1325,12 @@ class EntityTest: AbstractExposedTest() {
                 statementCount = 0
                 statementStats.clear()
 
+                /**
+                 * ```sql
+                 * SELECT SCHOOLS.ID, SCHOOLS."name", SCHOOLS.REGION_ID, SCHOOLS.SECONDARY_REGION_ID FROM SCHOOLS LIMIT 1
+                 * SELECT REGIONS.ID, REGIONS."name" FROM REGIONS WHERE REGIONS.ID = 1
+                 * ```
+                 */
                 val oneSchool = School.all().limit(1).with(School::region).toList()
 
                 oneSchool shouldHaveSize 1
@@ -1022,6 +1345,13 @@ class EntityTest: AbstractExposedTest() {
             inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
                 debug = true
 
+                /**
+                 * ```sql
+                 * SELECT SCHOOLS.ID, SCHOOLS."name", SCHOOLS.REGION_ID, SCHOOLS.SECONDARY_REGION_ID FROM SCHOOLS
+                 * SELECT REGIONS.ID, REGIONS."name" FROM REGIONS WHERE REGIONS.ID = 1
+                 * SELECT SCHOOLS.ID, SCHOOLS."name", SCHOOLS.REGION_ID, SCHOOLS.SECONDARY_REGION_ID FROM SCHOOLS LIMIT 1
+                 * ```
+                 */
                 val oneSchool = School.all().with(School::region).limit(1).toList()
 
                 oneSchool shouldHaveSize 1
@@ -1040,8 +1370,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `preload optional refrences on an entity`(testDb: TestDB) {
-        withTables(testDb, Regions, Schools) {
+    fun `preload optional refrences on an entity`(testDB: TestDB) {
+        withTables(testDB, Regions, Schools) {
             val region1 = Region.new { name = "United Kingdom" }
             val region2 = Region.new { name = "England" }
             val school1 = School.new {
@@ -1053,6 +1383,13 @@ class EntityTest: AbstractExposedTest() {
 
             inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
+
+                /**
+                 * ```sql
+                 * SELECT SCHOOLS.ID, SCHOOLS."name", SCHOOLS.REGION_ID, SCHOOLS.SECONDARY_REGION_ID FROM SCHOOLS WHERE SCHOOLS.ID = 1
+                 * SELECT REGIONS.ID, REGIONS."name" FROM REGIONS WHERE REGIONS.ID = 2
+                 * ```
+                 */
                 val school2 = School.find {
                     Schools.id eq school1.id
                 }.first().load(School::secondaryRegion)
@@ -1066,8 +1403,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `preload referrers on a sized iterable`(dialect: TestDB) {
-        withTables(dialect, Regions, Schools, Students) {
+    fun `preload referrers on a sized iterable`(testDB: TestDB) {
+        withTables(testDB, Regions, Schools, Students) {
             val region1 = Region.new { name = "United Kingdom" }
             val region2 = Region.new { name = "England" }
             val school1 = School.new { name = "Eton"; region = region1 }
@@ -1085,6 +1422,12 @@ class EntityTest: AbstractExposedTest() {
 
                 val cache = TransactionManager.current().entityCache
 
+                /**
+                 * ```sql
+                 * SELECT SCHOOLS.ID, SCHOOLS."name", SCHOOLS.REGION_ID, SCHOOLS.SECONDARY_REGION_ID FROM SCHOOLS
+                 * SELECT STUDENTS.ID, STUDENTS."name", STUDENTS.SCHOOL_ID FROM STUDENTS WHERE STUDENTS.SCHOOL_ID IN (1, 2, 3)
+                 * ```
+                 */
                 School.all().with(School::students).toList()
 
                 cache.getReferrers<Student>(school1.id, Students.school)?.toList().orEmpty() shouldBeEqualTo listOf(
@@ -1103,8 +1446,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `preload referrers on a entity`(testDb: TestDB) {
-        withTables(testDb, Regions, Schools, Students) {
+    fun `preload referrers on a entity`(testDB: TestDB) {
+        withTables(testDB, Regions, Schools, Students) {
             val region1 = Region.new { name = "United Kingdom" }
             val school1 = School.new { name = "Eton"; region = region1 }
 
@@ -1118,9 +1461,27 @@ class EntityTest: AbstractExposedTest() {
                 maxAttempts = 1
 
                 val cache = TransactionManager.current().entityCache
-
+                /**
+                 * ```sql
+                 * SELECT SCHOOLS.ID,
+                 *        SCHOOLS."name",
+                 *        SCHOOLS.REGION_ID,
+                 *        SCHOOLS.SECONDARY_REGION_ID
+                 *   FROM SCHOOLS
+                 *  WHERE SCHOOLS.ID = 1
+                 * ```
+                 */
                 School.find { Schools.id eq school1.id }.first().load(School::students)
 
+                /**
+                 * ```sql
+                 * SELECT STUDENTS.ID,
+                 *        STUDENTS."name",
+                 *        STUDENTS.SCHOOL_ID
+                 *   FROM STUDENTS
+                 *  WHERE STUDENTS.SCHOOL_ID = 1
+                 * ```
+                 */
                 cache.getReferrers<Student>(school1.id, Students.school)?.toList().orEmpty() shouldBeEqualTo
                         listOf(student1, student2, student3)
             }
@@ -1129,8 +1490,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `preload optional referrers on a sized iterable`(testDb: TestDB) {
-        withTables(testDb, Regions, Schools, Students, Detentions) {
+    fun `preload optional referrers on a sized iterable`(testDB: TestDB) {
+        withTables(testDB, Regions, Schools, Students, Detentions) {
             val region1 = Region.new { name = "United Kingdom" }
             val school1 = School.new { name = "Eton"; region = region1 }
 
@@ -1152,6 +1513,13 @@ class EntityTest: AbstractExposedTest() {
                 maxAttempts = 1
                 val cache = TransactionManager.current().entityCache
 
+                /**
+                 * ```sql
+                 * SELECT SCHOOLS.ID, SCHOOLS."name", SCHOOLS.REGION_ID, SCHOOLS.SECONDARY_REGION_ID FROM SCHOOLS
+                 * SELECT STUDENTS.ID, STUDENTS."name", STUDENTS.SCHOOL_ID FROM STUDENTS WHERE STUDENTS.SCHOOL_ID = 1
+                 * SELECT DATENTIONS.ID, DATENTIONS.REASON, DATENTIONS.STUDENT_ID FROM DATENTIONS WHERE DATENTIONS.STUDENT_ID IN (1, 2)
+                 * ```
+                 */
                 School.all().with(School::students, Student::detentions)
 
                 cache.getReferrers<Student>(school1.id, Students.school)?.toList().orEmpty() shouldBeEqualTo
@@ -1167,8 +1535,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `preload inner table link on a sized iterable`(testDb: TestDB) {
-        withTables(testDb, Regions, Schools, Holidays, SchoolHolidays) {
+    fun `preload inner table link on a sized iterable`(testDB: TestDB) {
+        withTables(testDB, Regions, Schools, Holidays, SchoolHolidays) {
             val now = System.currentTimeMillis()
             val now10 = now + 10
 
@@ -1192,6 +1560,18 @@ class EntityTest: AbstractExposedTest() {
                 maxAttempts = 1
                 val cache = TransactionManager.current().entityCache
 
+                /**
+                 * ```sql
+                 * SELECT SCHOOLS.ID, SCHOOLS."name", SCHOOLS.REGION_ID, SCHOOLS.SECONDARY_REGION_ID FROM SCHOOLS
+                 * SELECT HOLIDAYS.ID,
+                 *        HOLIDAYS.HOLIDAY_START,
+                 *        HOLIDAYS.HOLIDAY_END,
+                 *        SCHOOL_HOLIDAYS.SCHOOL_ID,
+                 *        SCHOOL_HOLIDAYS.HOLIDAY_ID
+                 *   FROM HOLIDAYS INNER JOIN SCHOOL_HOLIDAYS ON SCHOOL_HOLIDAYS.HOLIDAY_ID = HOLIDAYS.ID
+                 *  WHERE SCHOOL_HOLIDAYS.SCHOOL_ID IN (1, 2, 3)
+                 * ```
+                 */
                 School.all().with(School::holidays)
 
                 cache.getReferrers<Holiday>(school1.id, SchoolHolidays.school)?.toList().orEmpty() shouldBeEqualTo
@@ -1208,8 +1588,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `preload inner table link on a entity`(testDb: TestDB) {
-        withTables(testDb, Regions, Schools, Holidays, SchoolHolidays) {
+    fun `preload inner table link on a entity`(testDB: TestDB) {
+        withTables(testDB, Regions, Schools, Holidays, SchoolHolidays) {
             val now = System.currentTimeMillis()
             val now10 = now + 10
 
@@ -1237,6 +1617,18 @@ class EntityTest: AbstractExposedTest() {
 
             commit()
 
+            /**
+             * ```sql
+             * SELECT SCHOOLS.ID, SCHOOLS."name", SCHOOLS.REGION_ID, SCHOOLS.SECONDARY_REGION_ID
+             *   FROM SCHOOLS
+             *  WHERE SCHOOLS.ID = 1
+             * ```
+             * ```sql
+             * SELECT HOLIDAYS.ID, HOLIDAYS.HOLIDAY_START, HOLIDAYS.HOLIDAY_END, SCHOOL_HOLIDAYS.SCHOOL_ID, SCHOOL_HOLIDAYS.HOLIDAY_ID
+             *   FROM HOLIDAYS INNER JOIN SCHOOL_HOLIDAYS ON SCHOOL_HOLIDAYS.HOLIDAY_ID = HOLIDAYS.ID
+             *  WHERE SCHOOL_HOLIDAYS.SCHOOL_ID = 1
+             * ```
+             */
             School.find { Schools.id eq school1.id }.first().load(School::holidays)
 
             val cache = TransactionManager.current().entityCache
@@ -1248,8 +1640,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `preload relation at depth`(testDb: TestDB) {
-        withTables(testDb, Regions, Schools, Holidays, SchoolHolidays, Students, Notes) {
+    fun `preload relation at depth`(testDB: TestDB) {
+        withTables(testDB, Regions, Schools, Holidays, SchoolHolidays, Students, Notes) {
             val region1 = Region.new { name = "United Kingdom" }
             val school1 = School.new { name = "Eton"; region = region1 }
             val student1 = Student.new { name = "James Smith"; school = school1 }
@@ -1259,6 +1651,13 @@ class EntityTest: AbstractExposedTest() {
 
             commit()
 
+            /**
+             * ```sql
+             * SELECT SCHOOLS.ID, SCHOOLS."name", SCHOOLS.REGION_ID, SCHOOLS.SECONDARY_REGION_ID FROM SCHOOLS
+             * SELECT STUDENTS.ID, STUDENTS."name", STUDENTS.SCHOOL_ID FROM STUDENTS WHERE STUDENTS.SCHOOL_ID = 1
+             * SELECT NOTES.ID, NOTES.TEXT, NOTES.STUDENT_ID FROM NOTES WHERE NOTES.STUDENT_ID IN (1, 2)
+             * ```
+             */
             School.all().with(School::students, Student::notes)
 
             val cache = TransactionManager.current().entityCache
@@ -1272,8 +1671,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `preload back referrence on a sized iterable`(testDb: TestDB) {
-        withTables(testDb, Regions, Schools, Students, StudentBios) {
+    fun `preload back referrence on a sized iterable`(testDB: TestDB) {
+        withTables(testDB, Regions, Schools, Students, StudentBios) {
             val region1 = Region.new { name = "United Kingdom" }
             val school1 = School.new { name = "Eton"; region = region1 }
             val student1 = Student.new { name = "James Smith"; school = school1 }
@@ -1287,6 +1686,18 @@ class EntityTest: AbstractExposedTest() {
                 maxAttempts = 1
                 val cache = TransactionManager.current().entityCache
 
+                /**
+                 * Fetch eager loading
+                 *
+                 * ```sql
+                 * SELECT STUDENTS.ID, STUDENTS."name", STUDENTS.SCHOOL_ID
+                 *   FROM STUDENTS;
+                 *
+                 * SELECT STUDENT_BIOS.ID, STUDENT_BIOS.DATE_OF_BIRTH, STUDENT_BIOS.STUDENT_ID
+                 *   FROM STUDENT_BIOS
+                 *  WHERE STUDENT_BIOS.STUDENT_ID IN (1, 2)
+                 * ```
+                 */
                 Student.all().with(Student::bio)
 
                 cache.getReferrers<StudentBio>(student1.id, StudentBios.student)?.single() shouldBeEqualTo bio1
@@ -1297,8 +1708,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `preload back referrence on a entity`(testDb: TestDB) {
-        withTables(testDb, Regions, Schools, Students, StudentBios) {
+    fun `preload back referrence on a entity`(testDB: TestDB) {
+        withTables(testDB, Regions, Schools, Students, StudentBios) {
             val region1 = Region.new { name = "United Kingdom" }
             val school1 = School.new { name = "Eton"; region = region1 }
             val student1 = Student.new { name = "James Smith"; school = school1 }
@@ -1312,6 +1723,19 @@ class EntityTest: AbstractExposedTest() {
                 maxAttempts = 1
                 val cache = TransactionManager.current().entityCache
 
+                /**
+                 * Fetch eager loading
+                 * ```sql
+                 * SELECT STUDENTS.ID, STUDENTS."name", STUDENTS.SCHOOL_ID
+                 *   FROM STUDENTS;
+                 *
+                 * SELECT STUDENT_BIOS.ID,
+                 *        STUDENT_BIOS.DATE_OF_BIRTH,
+                 *        STUDENT_BIOS.STUDENT_ID
+                 *   FROM STUDENT_BIOS
+                 *  WHERE STUDENT_BIOS.STUDENT_ID = 1
+                 * ```
+                 */
                 Student.all().first().load(Student::bio)
 
                 cache.getReferrers<StudentBio>(student1.id, StudentBios.student)
@@ -1325,8 +1749,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `reference cache doesn't fully invalidated on set entity reference`(testDb: TestDB) {
-        withTables(testDb, Regions, Schools, Students, StudentBios) {
+    fun `reference cache doesn't fully invalidated on set entity reference`(testDB: TestDB) {
+        withTables(testDB, Regions, Schools, Students, StudentBios) {
             val region1 = Region.new { name = "United Kingdom" }
             val school1 = School.new { name = "Eton"; region = region1 }
             val student1 = Student.new { name = "James Smith"; school = school1 }
@@ -1340,15 +1764,14 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `nested entity initialization`(testDb: TestDB) {
-        withTables(testDb, Posts, Categories, Boards) {
+    fun `nested entity initialization`(testDB: TestDB) {
+        withTables(testDB, Posts, Categories, Boards) {
             val post = Post.new {
                 parent = Post.new {
                     board = Board.new { name = "Parent Board" }
                     category = Category.new { title = "Parent Category" }
                 }
                 category = Category.new { title = "Child Category" }
-
                 optCategory = parent!!.category
             }
 
@@ -1361,8 +1784,9 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `explicit entity constructor`(testDb: TestDB) {
+    fun `explicit entity constructor`(testDB: TestDB) {
         var createBoardCalled = false
+
         fun createBoard(id: EntityID<Int>): Board {
             createBoardCalled = true
             return Board(id)
@@ -1370,10 +1794,10 @@ class EntityTest: AbstractExposedTest() {
 
         val boardEntityClass = object: IntEntityClass<Board>(Boards, entityCtor = ::createBoard) {}
 
-        withTables(testDb, Boards) {
+        withTables(testDB, Boards) {
             val board = boardEntityClass.new { name = "Test Board" }
-
             board.name shouldBeEqualTo "Test Board"
+
             createBoardCalled.shouldBeTrue()
         }
     }
@@ -1392,8 +1816,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `select from string id table with primary key by column`(testDb: TestDB) {
-        withTables(testDb, RequestsTable) {
+    fun `select from string id table with primary key by column`(testDB: TestDB) {
+        withTables(testDB, RequestsTable) {
             Request.new {
                 requestId = "123"
             }
@@ -1416,9 +1840,9 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `database generated value`(testDb: TestDB) {
-        withTables(testDb, CreditCards) {
-            when (testDb) {
+    fun `database generated value`(testDB: TestDB) {
+        withTables(testDB, CreditCards) {
+            when (testDB) {
                 TestDB.POSTGRESQL -> {
                     // The value can also be set using a SQL trigger
                     exec(
@@ -1458,14 +1882,41 @@ class EntityTest: AbstractExposedTest() {
                 }
             }
 
+            /**
+             * ```sql
+             * INSERT INTO CREDITCARDS ("number") VALUES ('0000111122223333')
+             * ```
+             */
+
             val creditCardId = CreditCards.insertAndGetId {
                 it[number] = "0000111122223333"
             }.value
 
+            /**
+             * ```sql
+             * SELECT CREDITCARDS.ID,
+             *        CREDITCARDS."number",
+             *        CREDITCARDS."spendingLimit"
+             *   FROM CREDITCARDS
+             *  WHERE CREDITCARDS.ID = 1
+             * ```
+             */
             CreditCards.selectAll()
                 .where { CreditCards.id eq creditCardId }
                 .single()[CreditCards.spendingLimit] shouldBeEqualTo 10000uL
 
+            /**
+             * ```sql
+             * INSERT INTO CREDITCARDS ("number") VALUES ('0000111122223333')
+             * ```
+             * ```sql
+             * SELECT CREDITCARDS.ID,
+             *        CREDITCARDS."number",
+             *        CREDITCARDS."spendingLimit"
+             *   FROM CREDITCARDS
+             *  WHERE CREDITCARDS.ID = 2
+             * ```
+             */
             val creditCard = CreditCard.new {
                 number = "0000111122223333"
             }.apply {
@@ -1477,8 +1928,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `use entityId parameters`(testDb: TestDB) {
-        withTables(testDb, CreditCards) {
+    fun `use entityId parameters`(testDB: TestDB) {
+        withTables(testDB, CreditCards) {
             val newCard = CreditCard.new {
                 number = "0000111122223333"
                 spendingLimit = 10000uL
@@ -1488,9 +1939,26 @@ class EntityTest: AbstractExposedTest() {
                 .When(CreditCards.spendingLimit less 500uL, CreditCards.id)
                 .Else(idParam(newCard.id, CreditCards.id))
 
+            /**
+             * ```sql
+             * SELECT
+             *      CASE
+             *          WHEN CREDITCARDS."spendingLimit" < 500 THEN CREDITCARDS.ID
+             *          ELSE 1
+             *      END
+             * FROM CREDITCARDS
+             * ```
+             */
             CreditCards.select(conditionalId)
                 .single()[conditionalId] shouldBeEqualTo newCard.id
 
+            /**
+             * ```sql
+             * SELECT CREDITCARDS."spendingLimit"
+             *   FROM CREDITCARDS
+             *  WHERE CREDITCARDS.ID = 1
+             * ```
+             */
             CreditCards.select(CreditCards.spendingLimit)
                 .where { CreditCards.id eq idParam(newCard.id, CreditCards.id) }
                 .single()[CreditCards.spendingLimit] shouldBeEqualTo 10000uL
@@ -1523,9 +1991,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `eager loading with string parent id`(testDb: TestDB) {
-
-        withTables(testDb, Countries, Dishes, configure = { keepLoadedReferencesOutOfTransaction = true }) {
+    fun `eager loading with string parent id`(testDB: TestDB) {
+        withTables(testDB, Countries, Dishes, configure = { keepLoadedReferencesOutOfTransaction = true }) {
             val koreaId = Countries.insertAndGetId {
                 it[id] = "KOR"
                 it[name] = "Korea"
@@ -1534,24 +2001,32 @@ class EntityTest: AbstractExposedTest() {
 
             Dish.new {
                 name = "Kimchi"
-                country = korea
+                country = Country[koreaId]
             }
             Dish.new {
                 name = "Bibimbap"
-                country = korea
+                country = Country[koreaId]
             }
             Dish.new {
                 name = "Bulgogi"
-                country = korea
+                country = Country[koreaId]
             }
 
+            flushCache()
             debug = true
 
-            // SELECT countries.id, countries."name" FROM countries
-            // INSERT INTO dishes ("name", country_id) VALUES ('Kimchi', 'KOR')
-            // INSERT INTO dishes ("name", country_id) VALUES ('Bibimbap', 'KOR')
-            // INSERT INTO dishes ("name", country_id) VALUES ('Bulgogi', 'KOR')
-            // SELECT dishes.id, dishes."name", dishes.country_id FROM dishes WHERE dishes.country_id = 'KOR'
+            /**
+             * ```sql
+             * SELECT COUNTRIES.ID, COUNTRIES."name" FROM COUNTRIES
+             * ```
+             * ```sql
+             * SELECT DISHES.ID,
+             *        DISHES."name",
+             *        DISHES.COUNTRY_ID
+             *   FROM DISHES
+             *  WHERE DISHES.COUNTRY_ID = 'KOR'
+             * ```
+             */
             Country.all().with(Country::dishes)  // fetch eager loading
 
             statementStats
@@ -1592,11 +2067,15 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `eager loading with reference different from parent id`(testDb: TestDB) {
-        withTables(testDb, Customers, Orders, configure = { keepLoadedReferencesOutOfTransaction = true }) {
+    fun `eager loading with reference different from parent id`(testDB: TestDB) {
+        withTables(testDB, Customers, Orders, configure = { keepLoadedReferencesOutOfTransaction = true }) {
             val customer1 = Customer.new {
                 emailAddress = "customer1@testing.com"
                 name = "Customer1"
+            }
+            val customer2 = Customer.new {
+                emailAddress = "customer2@testing.com"
+                name = "Customer2"
             }
             val order1 = Order.new {
                 name = "Order1"
@@ -1606,17 +2085,28 @@ class EntityTest: AbstractExposedTest() {
                 name = "Order2"
                 customer = customer1
             }
+            val order3 = Order.new {
+                name = "Order1"
+                customer = customer2
+            }
 
-            // SELECT customers.id, customers."emailAddress", customers."fullName" FROM customers
-            // INSERT INTO orders ("orderName", customer_id) VALUES ('Order1', 1)
-            // INSERT INTO orders ("orderName", customer_id) VALUES ('Order2', 1)
-            // SELECT orders.id, orders."orderName", orders.customer_id FROM orders WHERE orders.customer_id = 1
+            commit()
+
+            /**
+             * ```sql
+             * SELECT CUSTOMERS.ID, CUSTOMERS."emailAddress", CUSTOMERS."fullName" FROM CUSTOMERS
+             * SELECT ORDERS.ID, ORDERS."orderName", ORDERS.CUSTOMER_ID FROM ORDERS WHERE ORDERS.CUSTOMER_ID IN (1, 2)
+             * ```
+             */
             Customer.all().with(Customer::orders)
 
             val cache = TransactionManager.current().entityCache
 
             cache.getReferrers<Order>(customer1.id, Orders.customer)
                 ?.toList().orEmpty() shouldBeEqualTo listOf(order1, order2)
+
+            cache.getReferrers<Order>(customer2.id, Orders.customer)
+                ?.toList().orEmpty() shouldBeEqualTo listOf(order3)
         }
     }
 
@@ -1638,8 +2128,8 @@ class EntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `different entities mapped to the same table`(testDb: TestDB) {
-        withTables(testDb, TestTable) {
+    fun `different entities mapped to the same table`(testDB: TestDB) {
+        withTables(testDB, TestTable) {
             val entityA = TestEntityA.new {
                 value = 1
             }
