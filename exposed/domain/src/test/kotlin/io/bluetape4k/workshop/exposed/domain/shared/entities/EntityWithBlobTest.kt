@@ -34,30 +34,58 @@ class EntityWithBlobTest: AbstractExposedTest() {
     class BlobEntity(id: EntityID<String>): Entity<String>(id) {
         companion object: EntityClass<String, BlobEntity>(BlobTable)
 
-        var content by BlobTable.blob
+        var content: ExposedBlob? by BlobTable.blob
     }
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `handle blob field`(testDb: TestDB) {
         withTables(testDb, BlobTable) {
+            /**
+             * ```sql
+             * INSERT INTO BLOBTABLE (UUID_BASE62_ID, CONTENT) VALUES ('2ymBXTjDNVQ14p04fcBwq', X'')
+             * ```
+             */
             val blobEntity = BlobEntity.new {
                 content = ExposedBlob("foo".toUtf8Bytes())
             }
             flushCache()
 
+            /**
+             * ```sql
+             * SELECT BLOBTABLE.UUID_BASE62_ID, BLOBTABLE.CONTENT FROM BLOBTABLE WHERE BLOBTABLE.UUID_BASE62_ID = '2ymBXTjDNVQ14p04fcBwq'
+             * ```
+             */
             var y2 = BlobEntity.reload(blobEntity)!!
             y2.content!!.bytes.toUtf8String() shouldBeEqualTo "foo"
 
+            /**
+             * ```sql
+             * UPDATE BLOBTABLE SET CONTENT=NULL WHERE UUID_BASE62_ID = '2ymBXTjDNVQ14p04fcBwq'
+             * ```
+             */
             y2.content = null
             flushCache()
-
+            /**
+             * ```sql
+             * SELECT BLOBTABLE.UUID_BASE62_ID, BLOBTABLE.CONTENT FROM BLOBTABLE WHERE BLOBTABLE.UUID_BASE62_ID = '2ymBXTjDNVQ14p04fcBwq'
+             * ```
+             */
             y2 = BlobEntity.reload(blobEntity)!!
             y2.content.shouldBeNull()
 
+            /**
+             * ```sql
+             * UPDATE BLOBTABLE SET CONTENT=X'' WHERE UUID_BASE62_ID = '2ymBXTjDNVQ14p04fcBwq'
+             * ```
+             */
             y2.content = ExposedBlob("foo2".toUtf8Bytes())
             flushCache()
-
+            /**
+             * ```sql
+             * SELECT BLOBTABLE.UUID_BASE62_ID, BLOBTABLE.CONTENT FROM BLOBTABLE WHERE BLOBTABLE.UUID_BASE62_ID = '2ymBXTjDNVQ14p04fcBwq'
+             * ```
+             */
             y2 = BlobEntity.reload(blobEntity)!!
             y2.content!!.bytes.toUtf8String() shouldBeEqualTo "foo2"
         }
