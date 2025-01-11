@@ -80,8 +80,8 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create tables`(testDb: TestDB) {
-        withTables(testDb, Cities, People) {
+    fun `create tables`(testDB: TestDB) {
+        withTables(testDB, Cities, People) {
             Cities.exists().shouldBeTrue()
             People.exists().shouldBeTrue()
         }
@@ -89,8 +89,8 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create records`(testDb: TestDB) {
-        withTables(testDb, Cities, People) {
+    fun `create records`(testDB: TestDB) {
+        withTables(testDB, Cities, People) {
             val seoul = City.new { name = "Seoul" }
             val busan = City.new { name = "Busan" }
 
@@ -98,7 +98,7 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
                 name = "Debop"
                 city = seoul
             }
-            Person.new(TimebasedUuid.Reordered.nextId()) {
+            Person.new(TimebasedUuid.Epoch.nextId()) {
                 name = "BTS"
                 city = seoul
             }
@@ -109,10 +109,24 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
 
             flushCache()
 
+            /**
+             * ```sql
+             * SELECT CITIES.ID, CITIES."name" FROM CITIES
+             * ```
+             */
             val allCities = City.all().map { it.name }
             allCities shouldBeEqualTo listOf("Seoul", "Busan")
 
-            val allPeople = Person.all().map { it.name to it.city.name }
+            /**
+             * ```sql
+             * SELECT PEOPLE.ID, PEOPLE."name", PEOPLE.CITY_ID FROM PEOPLE
+             *
+             * SELECT CITIES.ID, CITIES."name"
+             *   FROM CITIES
+             *  WHERE CITIES.ID IN ('1efcff30-9a92-6fd6-b98d-178b68d550e5', '1efcff30-9a92-6fd8-b98d-178b68d550e5')
+             * ```
+             */
+            val allPeople = Person.all().with(Person::city).map { it.name to it.city.name }
             allPeople shouldBeEqualTo listOf(
                 "Debop" to "Seoul",
                 "BTS" to "Seoul",
@@ -141,7 +155,9 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
                 city = busan
             }
 
+            // DELETE FROM PEOPLE WHERE PEOPLE.ID = '1efcff30-9a33-6c52-b98d-178b68d550e5'
             sam.delete()
+            // DELETE FROM CITIES WHERE CITIES.ID = '1efcff30-9a2e-6e2d-b98d-178b68d550e5'
             busan.delete()
 
             flushCache()
@@ -149,7 +165,16 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
             val allCities = City.all().map { it.name }
             allCities shouldBeEqualTo listOf("Seoul")
 
-            val allPeople = Person.all().map { it.name to it.city.name }
+            /**
+             * ```sql
+             * SELECT PEOPLE.ID, PEOPLE."name", PEOPLE.CITY_ID FROM PEOPLE
+             *
+             * SELECT CITIES.ID, CITIES."name"
+             *   FROM CITIES
+             *  WHERE CITIES.ID = '1efcff30-9a2e-6e2b-b98d-178b68d550e5'
+             * ```
+             */
+            val allPeople = Person.all().with(Person::city).map { it.name to it.city.name }
             allPeople shouldBeEqualTo listOf(
                 "Debop" to "Seoul",
                 "BTS" to "Seoul",
