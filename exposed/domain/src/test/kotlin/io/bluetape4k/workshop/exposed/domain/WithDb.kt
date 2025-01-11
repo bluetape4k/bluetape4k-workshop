@@ -29,10 +29,6 @@ fun withDb(
     configure: (DatabaseConfig.Builder.() -> Unit)? = null,
     statement: Transaction.(TestDB) -> Unit,
 ) {
-//    if(dialect !in TestDB.enabledDialects()) {
-//        return
-//    }
-
     logger.info { "Running `withDb` for $testDb" }
 
     val unregistered = testDb !in registeredOnShutdown
@@ -73,10 +69,6 @@ suspend fun withSuspendedDb(
     configure: (DatabaseConfig.Builder.() -> Unit)? = null,
     statement: suspend Transaction.(TestDB) -> Unit,
 ) {
-//    if (dbSettings !in TestDB.enabledDialects()) {
-//        return
-//    }
-
     logger.info { "Running withSuspendedDb for $testDb" }
 
     val unregistered = testDb !in registeredOnShutdown

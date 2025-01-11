@@ -10,11 +10,11 @@ import org.jetbrains.exposed.sql.transactions.transactionManager
 
 private val log = KotlinLogging.logger {}
 
-inline fun withTables(
+fun withTables(
     dialect: TestDB,
     vararg tables: Table,
-    noinline configure: (DatabaseConfig.Builder.() -> Unit)? = null,
-    crossinline statement: Transaction.(TestDB) -> Unit,
+    configure: (DatabaseConfig.Builder.() -> Unit)? = null,
+    statement: Transaction.(TestDB) -> Unit,
 ) {
     withDb(dialect, configure) {
         try {
@@ -41,11 +41,11 @@ inline fun withTables(
     }
 }
 
-suspend inline fun withSuspendedTables(
+suspend fun withSuspendedTables(
     dialect: TestDB,
     vararg tables: Table,
-    noinline configure: (DatabaseConfig.Builder.() -> Unit)? = null,
-    crossinline statement: suspend Transaction.(TestDB) -> Unit,
+    configure: (DatabaseConfig.Builder.() -> Unit)? = null,
+    statement: suspend Transaction.(TestDB) -> Unit,
 ) {
     withSuspendedDb(dialect, configure) {
         try {
