@@ -18,6 +18,7 @@ import org.jetbrains.exposed.dao.InnerTableLink
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.entityCache
+import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.id.CompositeID
 import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.EntityID
@@ -108,8 +109,8 @@ class ViaTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `connection 01`(testDb: TestDB) {
-        withTables(testDb, *ViaTestData.allTables) {
+    fun `connection 01`(testDB: TestDB) {
+        withTables(testDB, *ViaTestData.allTables) {
             val n = VNumber.new { number = 42 }
             val s = VString.new { text = "foo" }
 
@@ -123,8 +124,8 @@ class ViaTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `connection 02`(testDb: TestDB) {
-        withTables(testDb, *ViaTestData.allTables) {
+    fun `connection 02`(testDB: TestDB) {
+        withTables(testDB, *ViaTestData.allTables) {
             val n1 = VNumber.new { number = 1 }
             val n2 = VNumber.new { number = 2 }
 
@@ -143,8 +144,8 @@ class ViaTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `connection 03`(testDb: TestDB) {
-        withTables(testDb, *ViaTestData.allTables) {
+    fun `connection 03`(testDB: TestDB) {
+        withTables(testDB, *ViaTestData.allTables) {
             val n1 = VNumber.new { number = 1 }
             val n2 = VNumber.new { number = 2 }
 
@@ -169,8 +170,8 @@ class ViaTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `connection 04`(testDb: TestDB) {
-        withTables(testDb, *ViaTestData.allTables) {
+    fun `connection 04`(testDB: TestDB) {
+        withTables(testDB, *ViaTestData.allTables) {
             val n1 = VNumber.new { number = 1 }
             val n2 = VNumber.new { number = 2 }
 
@@ -215,18 +216,51 @@ class ViaTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `hierarchy references`(testDb: TestDB) {
-        withTables(testDb, NodesTable, NodeToNodes) {
+    fun `hierarchy references`(testDB: TestDB) {
+        withTables(testDB, NodesTable, NodeToNodes) {
             val root = Node.new { name = "root" }
             val child1 = Node.new {
                 name = "child1"
                 parents = SizedCollection(root)
             }
 
+            flushCache()
+
+            /**
+             * ```sql
+             * SELECT COUNT(*)
+             *   FROM NODES INNER JOIN NODETONODES ON NODES.ID = NODETONODES.PARENT_NODE_ID
+             *  WHERE NODETONODES.CHILD_NODE_ID = 1
+             * ```
+             */
             root.parents.count() shouldBeEqualTo 0L
+            /**
+             * ```sql
+             * SELECT COUNT(*)
+             *   FROM NODES INNER JOIN NODETONODES ON NODES.ID = NODETONODES.CHILD_NODE_ID
+             *  WHERE NODETONODES.PARENT_NODE_ID = 1
+             * ```
+             */
             root.children.count() shouldBeEqualTo 1L
 
+
             val child2 = Node.new { name = "child2" }
+            /**
+             * root.children 을 update 한다.
+             *
+             * ```sql
+             * SELECT NODES.ID, NODES."name", NODETONODES.CHILD_NODE_ID, NODETONODES.PARENT_NODE_ID
+             *   FROM NODES INNER JOIN NODETONODES ON NODES.ID = NODETONODES.CHILD_NODE_ID
+             *  WHERE NODETONODES.PARENT_NODE_ID = 1
+             * ```
+             * ```sql
+             * DELETE FROM NODETONODES
+             *  WHERE (NODETONODES.PARENT_NODE_ID = 1)
+             *    AND (NODETONODES.CHILD_NODE_ID NOT IN (2, 3))
+             *
+             * INSERT INTO NODETONODES (PARENT_NODE_ID, CHILD_NODE_ID) VALUES (1, 3)
+             * ```
+             */
             root.children = SizedCollection(child1, child2)
 
             child1.parents.singleOrNull() shouldBeEqualTo root
@@ -236,20 +270,23 @@ class ViaTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `refresh entity`(testDb: TestDB) {
-        withTables(testDb, *ViaTestData.allTables) {
-            val s = VString.new { text = "foo" }.apply {
-                refresh(true)
-            }
-            // SELECT strings.id, strings.text FROM strings WHERE strings.id = 1323282225663311872
+    fun `refresh entity`(testDB: TestDB) {
+        withTables(testDB, *ViaTestData.allTables) {
+            val s = VString.new { text = "foo" }
+            /**
+             * ```sql
+             * SELECT STRINGS.ID, STRINGS.TEXT FROM STRINGS WHERE STRINGS.ID = 1327632643684040704
+             * ```
+             */
+            s.refresh(true)
             s.text shouldBeEqualTo "foo"
         }
     }
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `warm up on hierarchy entities`(testDb: TestDB) {
-        withTables(testDb, NodesTable, NodeToNodes) {
+    fun `warm up on hierarchy entities`(testDB: TestDB) {
+        withTables(testDB, NodesTable, NodeToNodes) {
             val child1 = Node.new { name = "child1" }
             val child2 = Node.new { name = "child2" }
             val root1 = Node.new {
@@ -261,7 +298,7 @@ class ViaTest: AbstractExposedTest() {
                 children = SizedCollection(child1, child2)
             }
 
-            entityCache.clear(flush = true)
+            flushCache()
 
             fun checkChildrenReferences(node: Node, values: List<Node>) {
                 val sourceColumn = (Node::children
@@ -270,6 +307,14 @@ class ViaTest: AbstractExposedTest() {
                 children?.toList() shouldBeEqualTo values
             }
 
+            /**
+             * ```sql
+             * SELECT NODES.ID, NODES."name" FROM NODES
+             * SELECT NODES.ID, NODES."name", NODETONODES.PARENT_NODE_ID, NODETONODES.CHILD_NODE_ID
+             *   FROM NODES INNER JOIN NODETONODES ON NODETONODES.PARENT_NODE_ID = NODES.ID
+             *  WHERE NODETONODES.CHILD_NODE_ID IN (1, 2, 3, 4)
+             * ```
+             */
             Node.all().with(Node::children).toList()
 
             checkChildrenReferences(child1, emptyList())
@@ -284,6 +329,14 @@ class ViaTest: AbstractExposedTest() {
                 parents?.toList() shouldBeEqualTo values
             }
 
+            /**
+             * ```sql
+             * SELECT NODES.ID, NODES."name" FROM NODES
+             * SELECT NODES.ID, NODES."name", NODETONODES.PARENT_NODE_ID, NODETONODES.CHILD_NODE_ID
+             *   FROM NODES INNER JOIN NODETONODES ON NODETONODES.PARENT_NODE_ID = NODES.ID
+             *  WHERE NODETONODES.CHILD_NODE_ID IN (1, 2, 3, 4)
+             * ```
+             */
             Node.all().with(Node::parents).toList()
             checkParentsReferences(child1, listOf(root1, root2))
             checkParentsReferences(child2, listOf(root2))
@@ -298,7 +351,8 @@ class ViaTest: AbstractExposedTest() {
         var name by NodesTable.name
         var parents by NodeOrdered.via(NodeToNodes.child, NodeToNodes.parent)
         var children by NodeOrdered
-            .via(NodeToNodes.parent, NodeToNodes.child) orderBy (NodesTable.name to SortOrder.ASC)
+            .via(NodeToNodes.parent, NodeToNodes.child)
+            .orderBy(NodesTable.name to SortOrder.ASC)
 
         override fun equals(other: Any?): Boolean = (other as? NodeOrdered)?.id == id
         override fun hashCode(): Int = Objects.hash(id)
@@ -307,10 +361,10 @@ class ViaTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `order by sized collection`(testDb: TestDB) {
-        withTables(testDb, NodesTable, NodeToNodes) {
+    fun `order by sized collection`(testDB: TestDB) {
+        withTables(testDB, NodesTable, NodeToNodes) {
             val root = NodeOrdered.new { name = "root" }
-            listOf("#3", "#0", "#2", "#4", "#1").forEach() {
+            listOf("#3", "#0", "#2", "#4", "#1").forEach {
                 NodeOrdered.new {
                     name = it
                     parents = SizedCollection(root)
@@ -321,8 +375,16 @@ class ViaTest: AbstractExposedTest() {
                 node.name shouldBeEqualTo "#$index"
             }
 
-            entityCache.clear(flush = true)
+            flushCache()
 
+            /**
+             * ```sql
+             * SELECT NODES.ID, NODES."name", NODETONODES.CHILD_NODE_ID, NODETONODES.PARENT_NODE_ID
+             *   FROM NODES INNER JOIN NODETONODES ON NODES.ID = NODETONODES.CHILD_NODE_ID
+             *  WHERE NODETONODES.PARENT_NODE_ID = 1
+             *  ORDER BY NODES."name" ASC
+             * ```
+             */
             root.children.map { it.name } shouldBeEqualTo listOf("#0", "#1", "#2", "#3", "#4")
         }
     }
@@ -371,8 +433,8 @@ class ViaTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `additional link data using composite id inner table`(testDb: TestDB) {
-        withTables(testDb, Projects, Tasks, ProjectTasks) {
+    fun `additional link data using composite id inner table`(testDB: TestDB) {
+        withTables(testDB, Projects, Tasks, ProjectTasks) {
             val p1 = Project.new { name = "Project 1" }
             val p2 = Project.new { name = "Project 2" }
 
@@ -411,6 +473,15 @@ class ViaTest: AbstractExposedTest() {
 
             inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
+
+                /**
+                 * ```sql
+                 * SELECT PROJECTS.ID, PROJECTS."name" FROM PROJECTS
+                 * SELECT TASKS.ID, TASKS.TITLE, PROJECT_TASKS.PROJECT_ID, PROJECT_TASKS.TASK_ID, PROJECT_TASKS.APPROVED
+                 *   FROM TASKS INNER JOIN PROJECT_TASKS ON PROJECT_TASKS.TASK_ID = TASKS.ID
+                 *  WHERE PROJECT_TASKS.PROJECT_ID IN (1, 2)
+                 * ```
+                 */
                 Project.all().with(Project::tasks).toList()
                 val cache = TransactionManager.current().entityCache
 
