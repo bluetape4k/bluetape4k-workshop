@@ -1,25 +1,24 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
-import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntity
-import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityClass
-import io.bluetape4k.exposed.dao.id.TimebasedUUIDTable
-import io.bluetape4k.idgenerators.uuid.TimebasedUuid
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables.Address
-import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables.Addresses
-import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables.Cities
-import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables.City
-import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables.People
-import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables.Person
-import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables.Town
-import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables.Towns
+import io.bluetape4k.workshop.exposed.domain.shared.entities.UUIDTables.Address
+import io.bluetape4k.workshop.exposed.domain.shared.entities.UUIDTables.Addresses
+import io.bluetape4k.workshop.exposed.domain.shared.entities.UUIDTables.Cities
+import io.bluetape4k.workshop.exposed.domain.shared.entities.UUIDTables.City
+import io.bluetape4k.workshop.exposed.domain.shared.entities.UUIDTables.People
+import io.bluetape4k.workshop.exposed.domain.shared.entities.UUIDTables.Person
+import io.bluetape4k.workshop.exposed.domain.shared.entities.UUIDTables.Town
+import io.bluetape4k.workshop.exposed.domain.shared.entities.UUIDTables.Towns
 import io.bluetape4k.workshop.exposed.domain.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
+import org.jetbrains.exposed.dao.UUIDEntity
+import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.dao.with
 import org.jetbrains.exposed.sql.exists
 import org.jetbrains.exposed.sql.insertAndGetId
@@ -27,56 +26,56 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.*
 
-object TimebasedUUIDTables {
-    object Cities: TimebasedUUIDTable() {
+object UUIDTables {
+    object Cities: UUIDTable() {
         val name = varchar("name", 50)
     }
 
-    class City(id: EntityID<UUID>): TimebasedUUIDEntity(id) {
-        companion object: TimebasedUUIDEntityClass<City>(Cities)
+    class City(id: EntityID<UUID>): UUIDEntity(id) {
+        companion object: UUIDEntityClass<City>(Cities)
 
         var name by Cities.name
         val towns by Town referrersOn Towns.cityId
     }
 
-    object People: TimebasedUUIDTable() {
+    object People: UUIDTable() {
         val name = varchar("name", 80)
         val cityId = reference("city_id", Cities)
     }
 
-    class Person(id: EntityID<UUID>): TimebasedUUIDEntity(id) {
-        companion object: TimebasedUUIDEntityClass<Person>(People)
+    class Person(id: EntityID<UUID>): UUIDEntity(id) {
+        companion object: UUIDEntityClass<Person>(People)
 
         var name by People.name
         var city by City referencedOn People.cityId
     }
 
-    object Addresses: TimebasedUUIDTable() {
+    object Addresses: UUIDTable() {
         val person = reference("person_id", People)
         val city = reference("city_id", Cities)
         val address = varchar("address", 255)
     }
 
-    class Address(id: EntityID<UUID>): TimebasedUUIDEntity(id) {
-        companion object: TimebasedUUIDEntityClass<Address>(Addresses)
+    class Address(id: EntityID<UUID>): UUIDEntity(id) {
+        companion object: UUIDEntityClass<Address>(Addresses)
 
         var person by Person.referencedOn(Addresses.person)
         var city by City.referencedOn(Addresses.city)
         var address by Addresses.address
     }
 
-    object Towns: TimebasedUUIDTable("towns") {
+    object Towns: UUIDTable("towns") {
         val cityId = uuid("city_id").references(Cities.id)
     }
 
-    class Town(id: EntityID<UUID>): TimebasedUUIDEntity(id) {
-        companion object: TimebasedUUIDEntityClass<Town>(Towns)
+    class Town(id: EntityID<UUID>): UUIDEntity(id) {
+        companion object: UUIDEntityClass<Town>(Towns)
 
         var city by City referencedOn Towns.cityId
     }
 }
 
-class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
+class UUIDTableEntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -94,11 +93,11 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
             val seoul = City.new { name = "Seoul" }
             val busan = City.new { name = "Busan" }
 
-            Person.new(TimebasedUuid.Epoch.nextId()) {
+            Person.new(UUID.randomUUID()) {
                 name = "Debop"
                 city = seoul
             }
-            Person.new(TimebasedUuid.Epoch.nextId()) {
+            Person.new(UUID.randomUUID()) {
                 name = "BTS"
                 city = seoul
             }
@@ -142,11 +141,11 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
             val seoul = City.new { name = "Seoul" }
             val busan = City.new { name = "Busan" }
 
-            Person.new(TimebasedUuid.Epoch.nextId()) {
+            Person.new(UUID.randomUUID()) {
                 name = "Debop"
                 city = seoul
             }
-            Person.new(TimebasedUuid.Epoch.nextId()) {
+            Person.new(UUID.randomUUID()) {
                 name = "BTS"
                 city = seoul
             }
