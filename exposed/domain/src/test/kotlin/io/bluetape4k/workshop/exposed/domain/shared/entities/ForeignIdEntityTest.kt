@@ -90,7 +90,9 @@ class ForeignIdEntityTest: AbstractExposedTest() {
                 val projectId = Project.new { name = "Space" }.id.value
                 // ProjectConfig is a one-to-one relationship with Project
                 ProjectConfig.new(projectId) { setting = true }
+            }
 
+            transaction {
                 /**
                  * ```sql
                  * INSERT INTO "SCHEMA$PROJECTS" ("name") VALUES ('Earth')
@@ -102,11 +104,11 @@ class ForeignIdEntityTest: AbstractExposedTest() {
             }
 
             transaction {
-                ProjectConfig.all().first().setting = false
+                ProjectConfig.findById(1L)!!.setting = false
             }
 
             transaction {
-                ProjectConfig.all().first().setting.shouldBeFalse()
+                ProjectConfig.findById(1L)!!.setting.shouldBeFalse()
             }
         }
     }

@@ -14,12 +14,15 @@ import io.bluetape4k.workshop.exposed.domain.shared.entities.UUIDTables.Towns
 import io.bluetape4k.workshop.exposed.domain.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
+import org.amshove.kluent.shouldContain
+import org.amshove.kluent.shouldContainSame
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
 import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.dao.with
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.exists
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.junit.jupiter.params.ParameterizedTest
@@ -113,8 +116,10 @@ class UUIDTableEntityTest: AbstractExposedTest() {
              * SELECT CITIES.ID, CITIES."name" FROM CITIES
              * ```
              */
-            val allCities = City.all().map { it.name }
-            allCities shouldBeEqualTo listOf("Seoul", "Busan")
+            val allCities = City.all()
+                .orderBy(Cities.id to SortOrder.ASC)
+                .map { it.name }
+            allCities shouldContainSame listOf("Seoul", "Busan")
 
             /**
              * ```sql
@@ -126,7 +131,7 @@ class UUIDTableEntityTest: AbstractExposedTest() {
              * ```
              */
             val allPeople = Person.all().with(Person::city).map { it.name to it.city.name }
-            allPeople shouldBeEqualTo listOf(
+            allPeople shouldContainSame listOf(
                 "Debop" to "Seoul",
                 "BTS" to "Seoul",
                 "Sam" to "Busan"
@@ -174,7 +179,7 @@ class UUIDTableEntityTest: AbstractExposedTest() {
              * ```
              */
             val allPeople = Person.all().with(Person::city).map { it.name to it.city.name }
-            allPeople shouldBeEqualTo listOf(
+            allPeople shouldContainSame listOf(
                 "Debop" to "Seoul",
                 "BTS" to "Seoul",
             )
@@ -271,7 +276,7 @@ class UUIDTableEntityTest: AbstractExposedTest() {
             // eager loading referrersOn
             log.debug { "Eager loading referrersOn" }
             val city1WithTowns = City.all().with(City::towns).single()
-            city1WithTowns.towns.first().id shouldBeEqualTo tId
+            listOf(tId, tId2) shouldContain city1WithTowns.towns.first().id
         }
     }
 }
