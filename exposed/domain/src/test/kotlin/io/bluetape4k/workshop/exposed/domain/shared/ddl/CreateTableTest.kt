@@ -20,16 +20,21 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.autoIncColumnType
+import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.exists
 import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.name
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.sql.update
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
+import org.jetbrains.exposed.sql.vendors.SQLiteDialect
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -729,7 +734,7 @@ class CreateTableTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `test create table with same name in different schemas`(testDb: TestDB) {
+    fun `create table with same name in different schemas`(testDb: TestDB) {
         Assumptions.assumeTrue { testDb !in TestDB.ALL_MYSQL }
 
         val one = prepareSchemaForTest("one")
@@ -741,14 +746,9 @@ class CreateTableTest: AbstractExposedTest() {
                 OneTable.exists().shouldBeTrue()
                 OneOneTable.exists().shouldBeFalse()
 
-                val defaultSchemaName = when (currentDialectTest) {
-                    is SQLServerDialect -> "dbo"
-                    is OracleDialect    -> testDb.user
-                    is MysqlDialect     -> testDb.db!!.name
-                    else                -> "public"
-                }
+                val schemaPrefixedName = testDb.getDefaultSchemaPrefixedTableName(OneTable.tableName)
                 SchemaUtils.listTables().any {
-                    it.equals("$defaultSchemaName.${OneTable.tableName}", ignoreCase = true)
+                    it.equals(schemaPrefixedName, ignoreCase = true)
                 }.shouldBeTrue()
 
                 SchemaUtils.createSchema(one)
@@ -756,7 +756,7 @@ class CreateTableTest: AbstractExposedTest() {
                 OneTable.exists().shouldBeTrue()
                 OneOneTable.exists().shouldBeTrue()
 
-                SchemaUtils.listTables().any {
+                SchemaUtils.listTablesInAllSchemas().any {
                     it.equals(OneOneTable.tableName, ignoreCase = true)
                 }.shouldBeTrue()
             } finally {
@@ -765,6 +765,14 @@ class CreateTableTest: AbstractExposedTest() {
                 SchemaUtils.dropSchema(one, cascade = cascade)
             }
         }
+    }
+
+    private fun TestDB.getDefaultSchemaPrefixedTableName(tableName: String): String = when (currentDialectTest) {
+        is SQLServerDialect -> "dbo.$tableName"
+        is OracleDialect    -> "${this.user}.$tableName"
+        is MysqlDialect     -> "${this.db!!.name}.$tableName"
+        is SQLiteDialect    -> tableName
+        else                -> "public.$tableName"
     }
 
     @ParameterizedTest
@@ -783,6 +791,70 @@ class CreateTableTest: AbstractExposedTest() {
                 testTable.selectAll().singleOrNull()?.get(testTable.int) shouldBeEqualTo 10
             } finally {
                 SchemaUtils.drop(testTable)
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `list Tables in all schemas`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
+        withDb(testDB) {
+            if (currentDialectTest.supportsCreateSchema) {
+                val one = prepareSchemaForTest("one")
+
+                try {
+                    SchemaUtils.createSchema(one)
+                    // table "one.one" is created in new schema by db because of name
+                    // even though current schema has not been set to the new one above
+                    SchemaUtils.create(OneOneTable)
+
+                    // so new table will not appear in list of tables in current schema
+                    SchemaUtils.listTables()
+                        .any { it.equals(OneOneTable.tableName, ignoreCase = true) }.shouldBeFalse()
+
+                    // but new table appears in list of tables from all schema
+                    SchemaUtils.listTablesInAllSchemas()
+                        .any { it.equals(OneOneTable.tableName, ignoreCase = true) }.shouldBeTrue()
+
+                    OneOneTable.exists().shouldBeTrue()
+                } finally {
+                    SchemaUtils.drop(OneOneTable)
+                    SchemaUtils.dropSchema(one, cascade = true)
+                }
+            }
+        }
+    }
+
+    /**
+     * Note on Oracle exclusion in this test:
+     * Oracle names are not case-sensitive. They can be made case-sensitive by using quotes around them. The Oracle JDBC
+     * driver converts the entire SQL INSERT statement to upper case before extracting the table name from it. This
+     * happens regardless of whether there is a dot in the name. Even when a name is quoted, the driver converts
+     * it to upper case. Therefore, the INSERT statement fails when it contains a quoted table name because it attempts
+     * to insert into a table that does not exist (“SOMENAMESPACE.SOMETABLE” is not found) . It does not fail when the
+     * table name is not quoted because the case would not matter in that scenario.
+     */
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `create table with dot in name without creating schema beforehand`(testDB: TestDB) {
+        withDb(testDB) {
+            val q = db.identifierManager.quoteString
+            val tableName = "${q}SomeNamespace.SomeTable$q"
+
+            val tester = object: IntIdTable(tableName) {
+                val text_col = text("text_col")
+            }
+
+            try {
+                SchemaUtils.create(tester)
+                tester.exists().shouldBeTrue()
+
+                val id = tester.insertAndGetId { it[text_col] = "Inserted text" }
+                tester.update({ tester.id eq id }) { it[text_col] = "Updated text" }
+                tester.deleteWhere { tester.id eq id }
+            } finally {
+                SchemaUtils.drop(tester)
             }
         }
     }
