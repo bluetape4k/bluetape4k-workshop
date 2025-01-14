@@ -11,7 +11,7 @@ enum class TestDB(
     val connection: () -> String,
     val driver: String,
     val user: String = "test",
-    val password: String = "test",
+    val pass: String = "test",
     val beforeConnection: () -> Unit = {},
     val afterConnection: (connection: Connection) -> Unit = {},
     val afterTestFinished: () -> Unit = {},
@@ -113,7 +113,7 @@ enum class TestDB(
             url = connection(),
             databaseConfig = config,
             user = user,
-            password = password,
+            password = pass,
             driver = driver,
             setupConnection = { afterConnection(it) },
         )
