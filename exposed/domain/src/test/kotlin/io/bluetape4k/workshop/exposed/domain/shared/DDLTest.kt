@@ -181,11 +181,14 @@ class DDLTest: AbstractExposedTest() {
     fun `unnamed table with quoted SQL`(testDB: TestDB) {
         withTables(testDB, unnamedTable) {
             val q = db.identifierManager.quoteString
-            val tableName = if (currentDialectTest.needsQuotesWhenSymbolsInNames) {
+
+            // MySQL V8 테이블 명에는 back-quote(`) 를 사용하지 않네요.
+            val tableName = if (currentDialectTest.needsQuotesWhenSymbolsInNames && testDB != TestDB.MYSQL_V8) {
                 "$q${"unnamedTable$1".inProperCase()}$q"
             } else {
                 "unnamedTable$1".inProperCase()
             }
+            log.debug { "Table Name: $tableName" }
 
             val integerType = currentDialectTest.dataTypeProvider.integerType()
             val varCharType = currentDialectTest.dataTypeProvider.varcharType(42)
