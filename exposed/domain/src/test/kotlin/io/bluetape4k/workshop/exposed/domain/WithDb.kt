@@ -11,6 +11,7 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
 import org.jetbrains.exposed.sql.transactions.nullableTransactionScope
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
+import kotlin.coroutines.CoroutineContext
 
 private val logger = KotlinLogging.logger {}
 
@@ -66,6 +67,7 @@ fun withDb(
 
 suspend fun withSuspendedDb(
     testDb: TestDB,
+    context: CoroutineContext? = null,
     configure: (DatabaseConfig.Builder.() -> Unit)? = null,
     statement: suspend Transaction.(TestDB) -> Unit,
 ) {
@@ -93,6 +95,7 @@ suspend fun withSuspendedDb(
         val database = testDb.db!!
 
         newSuspendedTransaction(
+            context = context,
             db = database,
             transactionIsolation = database.transactionManager.defaultIsolationLevel
         ) {

@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.exposed.domain.shared
 
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.domain.TestDB
 import io.bluetape4k.workshop.exposed.domain.inProperCase
@@ -15,6 +17,8 @@ import java.sql.ResultSet
 
 class TransactionExecTest: AbstractExposedTest() {
 
+    companion object: KLogging()
+
     object ExecTable: Table("exec_table") {
         val id = integer("id").autoIncrement("exec_id_seq")
         val amount = integer("amount")
@@ -24,25 +28,29 @@ class TransactionExecTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `exec with single statement query`(testDb: TestDB) {
-        withTables(testDb, ExecTable) {
+    fun `exec with single statement query`(testDB: TestDB) {
+        withTables(testDB, ExecTable) {
             val amounts = (90..99).toList()
+
             ExecTable.batchInsert(amounts, shouldReturnGeneratedValues = false) { amount ->
-                this[ExecTable.id] = (amount % 10 + 1)
+                // this[ExecTable.id] = (amount % 10 + 1)  // autoIncrement 라 지정할 필요 없지 않나? - 속도 문제일 뿐
                 this[ExecTable.amount] = amount
             }
 
-            val results = exec(
+            val results: MutableList<Int> = exec(
                 """SELECT * FROM ${ExecTable.tableName.inProperCase()};""",
                 explicitStatementType = StatementType.SELECT
             ) { resultSet: ResultSet ->
                 val allAmounts = mutableListOf<Int>()
                 while (resultSet.next()) {
-                    allAmounts.add(resultSet.getInt("amount"))
+                    val id = resultSet.getInt("id")
+                    val loadedAmount = resultSet.getInt("amount")
+                    log.debug { "Loaded id=$id, amount: $loadedAmount" }
+                    allAmounts.add(loadedAmount)
                 }
                 allAmounts
-            }
-            results.shouldNotBeNull() shouldBeEqualTo amounts
+            }.shouldNotBeNull()
+            results shouldBeEqualTo amounts
         }
     }
 }

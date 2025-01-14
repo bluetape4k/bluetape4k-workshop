@@ -1,22 +1,24 @@
 package io.bluetape4k.workshop.exposed.domain
 
 import io.bluetape4k.logging.KotlinLogging
+import io.bluetape4k.logging.error
 import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.sql.transactions.transactionManager
+import kotlin.coroutines.CoroutineContext
 
 private val log = KotlinLogging.logger {}
 
 fun withTables(
-    dialect: TestDB,
+    testDB: TestDB,
     vararg tables: Table,
     configure: (DatabaseConfig.Builder.() -> Unit)? = null,
     statement: Transaction.(TestDB) -> Unit,
 ) {
-    withDb(dialect, configure) {
+    withDb(testDB, configure) {
         try {
             SchemaUtils.drop(*tables)
         } catch (_: Throwable) {
@@ -24,14 +26,15 @@ fun withTables(
 
         SchemaUtils.create(*tables)
         try {
-            statement(dialect)
+            statement(testDB)
             commit()  // Need commit to persist data before drop tables
         } finally {
             try {
                 SchemaUtils.drop(*tables)
                 commit()
-            } catch (_: Exception) {
-                val database = dialect.db!!
+            } catch (ex: Exception) {
+                log.error(ex) { "Fail to drop tables, ${tables.joinToString { it.tableName }}" }
+                val database = testDB.db!!
                 inTopLevelTransaction(database.transactionManager.defaultIsolationLevel, db = database) {
                     maxAttempts = 1
                     SchemaUtils.drop(*tables)
@@ -42,12 +45,13 @@ fun withTables(
 }
 
 suspend fun withSuspendedTables(
-    dialect: TestDB,
+    testDB: TestDB,
     vararg tables: Table,
+    context: CoroutineContext? = null,
     configure: (DatabaseConfig.Builder.() -> Unit)? = null,
     statement: suspend Transaction.(TestDB) -> Unit,
 ) {
-    withSuspendedDb(dialect, configure) {
+    withSuspendedDb(testDB, context, configure) {
         try {
             SchemaUtils.drop(*tables)
         } catch (_: Throwable) {
@@ -55,14 +59,15 @@ suspend fun withSuspendedTables(
 
         SchemaUtils.create(*tables)
         try {
-            statement(dialect)
+            statement(testDB)
             commit()
         } finally {
             try {
                 SchemaUtils.drop(*tables)
                 commit()
-            } catch (_: Exception) {
-                val database = dialect.db!!
+            } catch (ex: Exception) {
+                log.error(ex) { "Fail to drop tables, ${tables.joinToString { it.tableName }}" }
+                val database = testDB.db!!
                 inTopLevelTransaction(database.transactionManager.defaultIsolationLevel, db = database) {
                     maxAttempts = 1
                     SchemaUtils.drop(*tables)
