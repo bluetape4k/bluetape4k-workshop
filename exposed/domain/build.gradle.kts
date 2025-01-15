@@ -21,6 +21,7 @@ dependencies {
     compileOnly(Libs.h2_v2)
     compileOnly(Libs.mysql_connector_j)
     compileOnly(Libs.postgresql_driver)
+    compileOnly(Libs.pgjdbc_ng)
 
     testImplementation(Libs.bluetape4k_testcontainers)
     testImplementation(Libs.testcontainers)
