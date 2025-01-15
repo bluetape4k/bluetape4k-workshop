@@ -87,6 +87,11 @@ enum class TestDB(
         driver = JdbcDrivers.DRIVER_CLASS_POSTGRESQL
     ),
 
+    POSTGRESQLNG(
+        connection = { POSTGRESQL.connection().replace(":postgresql:", ":pgsql:") },
+        driver = "com.impossibl.postgres.jdbc.PGDriver"
+    ),
+
     COCKROACH(
         connection = {
             ContainerProvider.cockroach.getJdbcUrl() + "?allowMultiQueries=true" // + "?sslmode=disable"
@@ -124,8 +129,8 @@ enum class TestDB(
         val ALL_H2 = setOf(H2, H2_MYSQL, H2_PSQL)
         val ALL_MYSQL = setOf(MYSQL_V8)
         val ALL_MYSQL_LIKE = ALL_MYSQL + H2_MYSQL
-        val ALL_POSTGRES = setOf(POSTGRESQL)
-        val ALL_POSTGRES_LIKE = setOf(POSTGRESQL, H2_PSQL)
+        val ALL_POSTGRES = setOf(POSTGRESQL, POSTGRESQLNG)
+        val ALL_POSTGRES_LIKE = setOf(POSTGRESQL, POSTGRESQLNG, H2_PSQL)
         val ALL_COCKROACH = setOf(COCKROACH)
 
         val ALL = TestDB.entries.toSet()

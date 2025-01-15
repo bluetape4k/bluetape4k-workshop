@@ -438,7 +438,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        val complexAlterTable = listOf(TestDB.POSTGRESQL, TestDB.H2_PSQL)
+        val complexAlterTable = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_PSQL)
 
         withDb(testDb) {
             try {

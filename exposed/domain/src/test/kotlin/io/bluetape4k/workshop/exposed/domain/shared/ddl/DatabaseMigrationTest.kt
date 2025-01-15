@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.exposed.domain.shared.ddl
 
 import MigrationUtils
+import io.bluetape4k.collections.tryForEach
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.domain.TestDB
 import io.bluetape4k.workshop.exposed.domain.currentDialectTest
@@ -45,13 +46,12 @@ class DatabaseMigrationTest: AbstractExposedTest() {
     private fun TestDB.dropAllSequence() {
         withDb(this) {
             if (currentDialectTest.supportsCreateSequence) {
-                val allSequences =
-                    currentDialectTest.sequences().map { name -> org.jetbrains.exposed.sql.Sequence(name) }.toSet()
+                val allSequences = currentDialectTest.sequences()
+                    .map { name -> org.jetbrains.exposed.sql.Sequence(name) }
+                    .toSet()
+
                 allSequences.forEach { sequence ->
-                    val dropStatements = sequence.dropStatement()
-                    dropStatements.forEach { statement ->
-                        exec(statement)
-                    }
+                    sequence.dropStatement().tryForEach { statement -> exec(statement) }
                 }
             }
         }
@@ -259,8 +259,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
         }
 
         withTables(testDb, noPKTable) {
-            val primaryKey: PrimaryKeyMetadata? = currentDialectTest
-                .existingPrimaryKeys(singlePKTable)[singlePKTable]
+            val primaryKey: PrimaryKeyMetadata? = currentDialectTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
             primaryKey.shouldBeNull()
 
             val expected =
@@ -403,14 +402,14 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                 )
 
             when (testDb) {
-                TestDB.POSTGRESQL -> {
+                in TestDB.ALL_POSTGRES -> {
                     statements.size shouldBeEqualTo 3
                     statements[0] shouldBeEqualTo expectedCreateSequenceStatement("test_table_id_seq")
                     statements[1] shouldBeEqualTo "ALTER TABLE test_table ALTER COLUMN id SET DEFAULT nextval('test_table_id_seq')"
                     statements[2] shouldBeEqualTo "ALTER SEQUENCE test_table_id_seq OWNED BY test_table.id"
                 }
 
-                else              -> {
+                else                   -> {
                     statements.size shouldBeEqualTo 1
                     val alterColumnWord = if (currentDialectTest is MysqlDialect) "MODIFY" else "ALTER"
                     statements[0].startsWith(
@@ -496,19 +495,18 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                 withLogs = false
             ).shouldBeEmpty()
 
-            val statements = MigrationUtils
-                .statementsRequiredForDatabaseMigration(
-                    tableWithoutAutoIncrement,
-                    withLogs = false
-                )
+            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(
+                tableWithoutAutoIncrement,
+                withLogs = false
+            )
             when (testDb) {
-                TestDB.POSTGRESQL -> {
+                in TestDB.ALL_POSTGRES -> {
                     statements.size shouldBeEqualTo 2
                     statements[0] shouldBeEqualTo "ALTER TABLE test_table ALTER COLUMN id TYPE BIGINT"
                     statements[1] shouldBeEqualTo expectedDropSequenceStatement("test_table_id_seq")
                 }
 
-                else              -> {
+                else                   -> {
                     statements.size shouldBeEqualTo 1
                     val alterColumnWord = if (currentDialectTest is MysqlDialect) "MODIFY" else "ALTER"
                     statements[0] shouldBeEqualToIgnoringCase "ALTER TABLE test_table $alterColumnWord COLUMN id BIGINT"
@@ -551,7 +549,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                 statements[0] shouldBeEqualTo expectedCreateSequenceStatement(sequenceName)
 
                 when (testDb) {
-                    TestDB.POSTGRESQL -> {
+                    in TestDB.ALL_POSTGRES -> {
                         statements.size shouldBeEqualTo 3
                         statements[1] shouldBeEqualTo
                                 "ALTER TABLE test_table ALTER COLUMN id TYPE BIGINT, ALTER COLUMN id DROP DEFAULT"
@@ -559,7 +557,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                                 expectedDropSequenceStatement("test_table_id_seq")
                     }
 
-                    else              -> {
+                    else                   -> {
                         val alterColumnWord = if (currentDialectTest is MysqlDialect) "MODIFY" else "ALTER"
                         statements[1] shouldStartWithIgnoringCase
                                 "ALTER TABLE test_table $alterColumnWord COLUMN id BIGINT"
@@ -594,7 +592,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                         )
                     statements[0] shouldBeEqualTo expectedCreateSequenceStatement(sequence.name)
                     when (testDb) {
-                        TestDB.POSTGRESQL -> {
+                        in TestDB.ALL_POSTGRES -> {
                             statements.size shouldBeEqualTo 3
                             statements[1] shouldBeEqualTo
                                     "ALTER TABLE test_table ALTER COLUMN id TYPE BIGINT, ALTER COLUMN id DROP DEFAULT"
@@ -602,7 +600,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                                     expectedDropSequenceStatement("test_table_id_seq")
                         }
 
-                        else              -> {
+                        else                   -> {
                             statements.size shouldBeEqualTo 2
                             val alterColumnWord = if (currentDialectTest is MysqlDialect) "MODIFY" else "ALTER"
                             statements[1] shouldStartWithIgnoringCase
@@ -675,7 +673,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                         )
 
                     when (testDb) {
-                        TestDB.POSTGRESQL -> {
+                        in TestDB.ALL_POSTGRES -> {
                             statements.size shouldBeEqualTo 4
                             statements[0] shouldBeEqualTo
                                     expectedCreateSequenceStatement("test_table_id_seq")
@@ -767,6 +765,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                         tableWithoutAutoIncrement,
                         withLogs = false
                     )
+
                     when (testDb) {
                         TestDB.H2_V1 -> {
                             statements.size shouldBeEqualTo 0
@@ -806,7 +805,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                             withLogs = false
                         )
                     when (testDb) {
-                        TestDB.POSTGRESQL -> {
+                        in TestDB.ALL_POSTGRES -> {
                             statements.size shouldBeEqualTo 4
                             statements[0] shouldBeEqualTo
                                     expectedCreateSequenceStatement("test_table_id_seq")
@@ -818,13 +817,13 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                                     expectedDropSequenceStatement(sequence.name)
                         }
 
-                        TestDB.H2_V1      -> {
+                        TestDB.H2_V1           -> {
                             statements.size shouldBeEqualTo 1
                             statements[0] shouldBeEqualTo
                                     "ALTER TABLE TEST_TABLE ALTER COLUMN ID BIGINT AUTO_INCREMENT NOT NULL"
                         }
 
-                        else              -> {
+                        else                   -> {
                             statements.size shouldBeEqualTo 2
                             statements[0] shouldStartWithIgnoringCase
                                     "ALTER TABLE TEST_TABLE ALTER COLUMN ID"
