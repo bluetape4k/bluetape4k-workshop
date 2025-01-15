@@ -31,7 +31,7 @@ inline fun PlatformTransactionManager.execute(
     crossinline block: (TransactionStatus) -> Unit,
 ) {
     if (this !is SpringTransactionManager) {
-        error("Wrong transaction manager. ${this.javaClass.name}")
+        error("Wrong transaction manager. ${this.javaClass.name}, use Exposed's SpringTransactionManager")
     }
 
     val tt = TransactionTemplate(this).also {
@@ -40,6 +40,7 @@ inline fun PlatformTransactionManager.execute(
         if (readOnly) it.isReadOnly = true
         timeout?.run { it.timeout = timeout }
     }
+
     tt.executeWithoutResult {
         block(it)
     }

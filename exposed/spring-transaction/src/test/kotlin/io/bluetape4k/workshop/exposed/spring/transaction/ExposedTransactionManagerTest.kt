@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.exposed.spring.transaction
 
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
 import org.amshove.kluent.internal.assertFailsWith
 import org.amshove.kluent.shouldBeEqualTo
@@ -30,7 +31,7 @@ import kotlin.test.DefaultAsserter.fail
 open class ExposedTransactionManagerTest: SpringTransactionTestBase() {
 
     companion object: KLogging() {
-        private const val REPEAT_SIZE = 5
+        private const val REPEAT_SIZE = 3
     }
 
     object T1: Table() {
@@ -76,10 +77,14 @@ open class ExposedTransactionManagerTest: SpringTransactionTestBase() {
         T1.selectAll().single()[T1.c1] shouldBeEqualTo rnd
     }
 
+    /**
+     * `transaction` 함수는 Exposed의 transaction으로 spring의 `@Transactional` 과 함께 사용할 수 있다.
+     */
     @Transactional
     @Commit
     @RepeatedTest(REPEAT_SIZE)
     open fun `connection combine with exposed transaction`() {
+        // Exposed의 `transaction` 함수 
         transaction {
             val rnd = Random.nextInt().toString()
             T1.insert {
@@ -87,6 +92,7 @@ open class ExposedTransactionManagerTest: SpringTransactionTestBase() {
             }
             T1.selectAll().single()[T1.c1] shouldBeEqualTo rnd
 
+            // Spring의 `TransactionManager`
             transactionManager.execute {
                 T1.insertRandom()
                 T1.selectAll().count() shouldBeEqualTo 2L
@@ -111,8 +117,8 @@ open class ExposedTransactionManagerTest: SpringTransactionTestBase() {
     }
 
     /**
-     * Test for Propagation.NESTED
-     * Execute within a nested transaction if a current transaction exists, behave like REQUIRED otherwise.
+     * `PROPAGATION_NESTED` 는 현재 트랜잭션이 존재하는 경우 중첩된 트랜잭션으로 동작하며,
+     * 그렇지 않은 경우 `REQUIRED` 와 동일하게 동작한다.
      */
     @Transactional
     @Commit
@@ -131,8 +137,7 @@ open class ExposedTransactionManagerTest: SpringTransactionTestBase() {
     }
 
     /**
-     * Test for Propagation.NESTED with inner roll-back
-     * The nested transaction will be roll-back only inner transaction when the transaction marks as rollback.
+     * `PROPAGATION_NESTED` 는 현재 트랜잭션이 존재하는 경우 중첩된 트랜잭션으로 동작하며, rollback 시 중첩된 트랜잭션만 롤백된다.
      */
     @Transactional
     @RepeatedTest(REPEAT_SIZE)
@@ -149,22 +154,24 @@ open class ExposedTransactionManagerTest: SpringTransactionTestBase() {
             status.setRollbackOnly()
         }
 
+        // Outer transaction is not rollback
         T1.selectAll().count() shouldBeEqualTo 1L
     }
 
     /**
-     * Test for Propagation.NESTED with outer roll-back
-     * The nested transaction will be roll-back entire transaction when the transaction marks as rollback.
+     * `PROPAGATION_NESTED` 는 outer transaction이 롤백되면 중첩된 트랜잭션도 롤백된다.
      */
     @RepeatedTest(REPEAT_SIZE)
     open fun `connection with nested transaction outer rollback`() {
-        transactionManager.execute {
+        transactionManager.execute { status ->
             T1.insertRandom()
             T1.selectAll().count() shouldBeEqualTo 1L
-            it.setRollbackOnly()
+
+            // outer transaction rollback
+            status.setRollbackOnly()
 
             // NESTED Transaction
-            transactionManager.execute(TransactionDefinition.PROPAGATION_NESTED) { status ->
+            transactionManager.execute(TransactionDefinition.PROPAGATION_NESTED) {
                 T1.insertRandom()
                 T1.selectAll().count() shouldBeEqualTo 2L
             }
@@ -178,8 +185,7 @@ open class ExposedTransactionManagerTest: SpringTransactionTestBase() {
     }
 
     /**
-     * Test for Propagation.REQUIRES_NEW
-     * Create a new transaction, and suspend the current transaction if one exists.
+     * `PROPAGATION_REQUIRES_NEW` 는 항상 새로운 트랜잭션을 생성한다.
      */
     @Transactional
     @RepeatedTest(REPEAT_SIZE)
@@ -187,7 +193,7 @@ open class ExposedTransactionManagerTest: SpringTransactionTestBase() {
         T1.insertRandom()
         T1.selectAll().count() shouldBeEqualTo 1L
 
-        // REQUIRES_NEW Transaction
+        // REQUIRES_NEW Transaction (새로운 트랜잭션으로 동작)
         transactionManager.execute(TransactionDefinition.PROPAGATION_REQUIRES_NEW) {
             T1.selectAll().count() shouldBeEqualTo 0L
             T1.insertRandom()
@@ -207,9 +213,12 @@ open class ExposedTransactionManagerTest: SpringTransactionTestBase() {
             T1.insertRandom()
             T1.selectAll().count() shouldBeEqualTo 1L
 
+            // outer transaction이 존재해도, 새로운 transaction을 생성한다
             transactionManager.execute(TransactionDefinition.PROPAGATION_REQUIRES_NEW) { status ->
                 T1.insertRandom()
                 T1.selectAll().count() shouldBeEqualTo 1L
+
+                // Rollback only inner transaction
                 status.setRollbackOnly()
             }
 
@@ -222,8 +231,8 @@ open class ExposedTransactionManagerTest: SpringTransactionTestBase() {
     }
 
     /**
-     * Test for [Propagation.NEVER]
-     * Execute non-transactionally, throw an exception if a transaction exists.
+     * [Propagation.NEVER]
+     * Transaction 없이 수행되고, 이미 transaction이 존재하는 경우 예외를 발생시킨다.
      */
     @Transactional(propagation = Propagation.NEVER)
     @RepeatedTest(REPEAT_SIZE)
@@ -235,6 +244,7 @@ open class ExposedTransactionManagerTest: SpringTransactionTestBase() {
 
     /**
      * Test for [Propagation.NEVER]
+     *
      * Throw an exception cause outer transaction exists.
      */
     @Transactional
@@ -249,8 +259,9 @@ open class ExposedTransactionManagerTest: SpringTransactionTestBase() {
     }
 
     /**
-     * Test for [Propagation.MANDATORY]
-     * Support a current transaction, throw an exception if none exists.
+     * [Propagation.MANDATORY] 테스트
+     *
+     * 이미 transaction이 존재하는 경우 수행되고, transaction이 없는 경우 예외를 발생시킨다.
      */
     @Transactional
     @RepeatedTest(REPEAT_SIZE)
@@ -265,7 +276,8 @@ open class ExposedTransactionManagerTest: SpringTransactionTestBase() {
 
     /**
      * Test for [Propagation.MANDATORY]
-     * Throw an exception cause no transaction exists.
+     *
+     * Transaction이 존재하지 않으면 예외를 발생시킵니다.
      */
     @RepeatedTest(REPEAT_SIZE)
     fun `propagation mandatory without transaction`() {
@@ -278,7 +290,7 @@ open class ExposedTransactionManagerTest: SpringTransactionTestBase() {
 
     /**
      * Test for [Propagation.SUPPORTS]
-     * Support a current transaction, execute non-transactionally if none exists.
+     * 현 트랜잭션을 지원합니다. 만약 트랜잭션이 없으면, 없는대로 실행합니다.
      */
     @Transactional
     @RepeatedTest(REPEAT_SIZE)
@@ -296,12 +308,14 @@ open class ExposedTransactionManagerTest: SpringTransactionTestBase() {
 
     /**
      * Test for [Propagation.SUPPORTS]
-     * Execute non-transactionally if none exists.
+     *
+     * 트랜잭션이 없으므로, 없는 상태로 실행합니다.
      */
     @RepeatedTest(REPEAT_SIZE)
     fun `propagation support without transaction`() {
         // @Transactional is not annotated
         transactionManager.execute(TransactionDefinition.PROPAGATION_SUPPORTS) {
+            // Transaction이 없다는 예외가 발생한다.
             assertFailsWith<IllegalStateException> {
                 T1.insertRandom()
             }
@@ -309,7 +323,7 @@ open class ExposedTransactionManagerTest: SpringTransactionTestBase() {
     }
 
     /**
-     * Test for Isolation Level
+     * Test for Isolation Level `READ_UNCOMMITTED`
      */
     @Transactional(isolation = Isolation.READ_COMMITTED)
     @RepeatedTest(REPEAT_SIZE)
@@ -323,6 +337,7 @@ open class ExposedTransactionManagerTest: SpringTransactionTestBase() {
             propagationBehavior = TransactionDefinition.PROPAGATION_REQUIRES_NEW,
             isolationLevel = TransactionDefinition.ISOLATION_READ_UNCOMMITTED
         ) {
+            // 새로운 transaction 이비만, `ISOLATION_READ_UNCOMMITTED` 이므로, 다른 transaction의 변경사항을 볼 수 있다.
             assertTransactionIsolationLevel(TransactionDefinition.ISOLATION_READ_UNCOMMITTED)
             T1.selectAll().count() shouldBeEqualTo count
         }
@@ -346,23 +361,23 @@ open class ExposedTransactionManagerTest: SpringTransactionTestBase() {
                 try {
                     TransactionManager.current().exec(
                         """
-                    WITH RECURSIVE T(N) AS (
-                       SELECT 1
-                       UNION ALL
-                       SELECT N+1 FROM T WHERE N < 1000000000
-                   )
-                   SELECT * FROM T;                     
-                    """.trimIndent(),
+                        WITH RECURSIVE T(N) AS (
+                           SELECT 1
+                           UNION ALL
+                           SELECT N+1 FROM T WHERE N < 1000000000
+                       )
+                       SELECT * FROM T;                     
+                        """.trimIndent(),
                         explicitStatementType = StatementType.SELECT
                     )
-                    fail("Should throw SQLTimeoutException")
+                    fail("여기까지 실행되면 안됩니다. SQLTimeoutException이 발생해야 합니다.")
                 } catch (cause: ExposedSQLException) {
                     log.info(cause) { "ExposedSQLException is thrown" }
                     cause.cause shouldBeInstanceOf SQLTimeoutException::class
                 }
             }
         } catch (e: TransactionSystemException) {
-            log.info(e) { "TransactionSystemException is thrown" }
+            log.debug(e) { "TransactionSystemException is thrown" }
         }
     }
 

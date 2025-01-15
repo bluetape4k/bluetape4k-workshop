@@ -77,7 +77,7 @@ open class EntityUpdateTest: SpringTransactionTestBase() {
     @Commit
     @Order(2)
     open fun `find updated entity`() {
-        val entity = DAO.findById(1) ?: fail("Entity not found")
+        val entity = DAO.findById(1) ?: fail("Entity not found [1]")
         entity.c1 shouldBeEqualTo "updated"
     }
 }

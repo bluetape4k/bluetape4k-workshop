@@ -1,11 +1,13 @@
 package io.bluetape4k.workshop.exposed.spring.transaction
 
+import io.bluetape4k.codec.Base58
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.spring.SpringTransactionManager
 import org.jetbrains.exposed.sql.DatabaseConfig
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.selectAll
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Qualifier
@@ -18,7 +20,6 @@ import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.TransactionDefinition
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import javax.sql.DataSource
-import kotlin.test.AfterTest
 
 class SpringTransactionSingleConnectionTest {
 
@@ -37,7 +38,7 @@ class SpringTransactionSingleConnectionTest {
         }
     }
 
-    @AfterTest
+    @AfterEach
     fun afterEach() {
         transactionManager.execute {
             SchemaUtils.drop(T1)
@@ -80,8 +81,8 @@ class SpringTransactionSingleConnectionTest {
         @Bean
         fun singleConnectionH2DataSource(): DataSource {
             return SingleConnectionDataSource(
-                "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;",
-                "sa",
+                "jdbc:h2:mem:${Base58.randomString(8)};DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;",
+                "root",
                 "",
                 true
             )
@@ -91,7 +92,11 @@ class SpringTransactionSingleConnectionTest {
         fun transactionManager(
             @Qualifier("singleConnectionH2DataSource") dataSource: DataSource,
         ): PlatformTransactionManager {
-            return SpringTransactionManager(dataSource = dataSource, DatabaseConfig { useNestedTransactions = true })
+            // Exposed의 SpringTransactionManager는 기본적으로 Nested Transactions를 지원하지 않는다.
+            return SpringTransactionManager(
+                dataSource = dataSource,
+                DatabaseConfig { useNestedTransactions = true }
+            )
         }
     }
 }

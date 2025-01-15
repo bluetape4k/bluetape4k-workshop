@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.exposed.spring.transaction
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import io.bluetape4k.codec.Base58
 import io.bluetape4k.workshop.exposed.spring.transaction.SpringTransactionEntityTest.OrderService
 import org.jetbrains.exposed.spring.SpringTransactionManager
 import org.jetbrains.exposed.sql.DatabaseConfig
@@ -19,9 +20,9 @@ class TestConfig: TransactionManagementConfigurer {
     @Bean
     fun dataSource(): DataSource {
         val config = HikariConfig().apply {
-            jdbcUrl = "jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL"
+            jdbcUrl = "jdbc:h2:mem:${Base58.randomString(8)};DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL"
             driverClassName = "org.h2.Driver"
-            username = "sa"
+            username = "root"
             password = ""
         }
         return HikariDataSource(config)

@@ -5,9 +5,9 @@ import org.jetbrains.exposed.sql.ResultRow
 
 fun ResultRow.toUser(): User {
     return User(
-        id = UserId(this@toUser[UserEntity.id].value),
-        name = this@toUser[UserEntity.name],
-        age = this@toUser[UserEntity.age],
+        id = UserId(this@toUser[UserTable.id].value),
+        name = this@toUser[UserTable.name],
+        age = this@toUser[UserTable.age],
     )
 }
 

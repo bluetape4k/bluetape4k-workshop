@@ -3,8 +3,8 @@ package io.bluetape4k.workshop.exposed.service
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.domain.User
-import io.bluetape4k.workshop.exposed.domain.UserEntity
 import io.bluetape4k.workshop.exposed.domain.UserId
+import io.bluetape4k.workshop.exposed.domain.UserTable
 import io.bluetape4k.workshop.exposed.domain.toUser
 import io.bluetape4k.workshop.exposed.dto.UserCreateRequest
 import io.bluetape4k.workshop.exposed.dto.UserUpdateRequest
@@ -26,15 +26,15 @@ class UserService {
     fun findAllUsers(): List<User> {
         log.debug { "find all users" }
 
-        return UserEntity.selectAll().map { it.toUser() }
+        return UserTable.selectAll().map { it.toUser() }
     }
 
     @Transactional(readOnly = true)
     fun findUserById(id: UserId): User? {
         log.debug { "find user by id: ${id.value}" }
 
-        return UserEntity.selectAll()
-            .where { UserEntity.id eq id.value }
+        return UserTable.selectAll()
+            .where { UserTable.id eq id.value }
             .firstOrNull()
             ?.toUser()
     }
@@ -43,9 +43,9 @@ class UserService {
      * 사용자 정보를 생성합니다.
      */
     fun create(request: UserCreateRequest): UserId {
-        val id = UserEntity.insertAndGetId { entity ->
-            entity[UserEntity.name] = request.name
-            entity[UserEntity.age] = request.age
+        val id = UserTable.insertAndGetId { entity ->
+            entity[UserTable.name] = request.name
+            entity[UserTable.age] = request.age
         }
 
         return UserId(id.value)
@@ -55,9 +55,9 @@ class UserService {
      * 사용자 정보를 수정합니다.
      */
     fun update(userId: UserId, request: UserUpdateRequest): Int {
-        return UserEntity.update({ UserEntity.id eq userId.value }) { entity ->
-            request.name?.let { entity[UserEntity.name] = it }
-            request.age?.let { entity[UserEntity.age] = it }
+        return UserTable.update({ UserTable.id eq userId.value }) { entity ->
+            request.name?.let { entity[UserTable.name] = it }
+            request.age?.let { entity[UserTable.age] = it }
         }
     }
 
@@ -65,6 +65,6 @@ class UserService {
      * 사용자 정보를 삭제합니다.
      */
     fun delete(userId: UserId): Int {
-        return UserEntity.deleteWhere { UserEntity.id eq userId.value }
+        return UserTable.deleteWhere { UserTable.id eq userId.value }
     }
 }
