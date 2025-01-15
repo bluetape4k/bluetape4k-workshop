@@ -23,7 +23,7 @@ import javax.sql.DataSource
 
 class SpringTransactionSingleConnectionTest {
 
-    object T1: Table() {
+    private object T1: Table() {
         val c1 = varchar("c1", Int.MIN_VALUE.toString().length)
     }
 
@@ -79,14 +79,13 @@ class SpringTransactionSingleConnectionTest {
     class SingleConnectionH2TestConfig {
 
         @Bean
-        fun singleConnectionH2DataSource(): DataSource {
-            return SingleConnectionDataSource(
+        fun singleConnectionH2DataSource(): DataSource =
+            SingleConnectionDataSource(
                 "jdbc:h2:mem:${Base58.randomString(8)};DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;",
                 "root",
                 "",
                 true
             )
-        }
 
         @Bean
         fun transactionManager(

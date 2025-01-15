@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.exposed.spring.transaction
 
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.logging.info
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.dao.UUIDEntity
@@ -69,15 +71,15 @@ class SpringTransactionEntityTest(
     }
 
     object OrderTable: UUIDTable(name = "orders") {
-        val customer = reference(name = "customer_id", foreign = CustomerTable)
+        val customer = reference("customer_id", CustomerTable)
         val product = varchar(name = "product", length = 255)
     }
 
     class OrderEntity(id: EntityID<UUID>): UUIDEntity(id) {
         companion object: UUIDEntityClass<OrderEntity>(OrderTable)
 
-        var customer by CustomerEntity.referencedOn(OrderTable.customer)
-        var product by OrderTable.product
+        var customer: CustomerEntity by CustomerEntity referencedOn OrderTable.customer  // many-to-one
+        var product: String by OrderTable.product
     }
 
     /**
@@ -89,16 +91,19 @@ class SpringTransactionEntityTest(
         companion object: KLogging()
 
         fun init() {
+            log.info { "Create schema. ${CustomerTable.tableName}, ${OrderTable.tableName}" }
             SchemaUtils.create(CustomerTable, OrderTable)
         }
 
         fun createCustomer(name: String): CustomerEntity {
+            log.debug { "Create customer: $name" }
             return CustomerEntity.new {
                 this.name = name
             }
         }
 
         fun createOrder(customer: CustomerEntity, product: String): OrderEntity {
+            log.debug { "Create order: customer=$customer, product=$product" }
             return OrderEntity.new {
                 this.customer = customer
                 this.product = product
@@ -110,6 +115,7 @@ class SpringTransactionEntityTest(
         }
 
         fun findOrderByProduct(product: String): OrderEntity? {
+            log.debug { "Find order by product: $product" }
             return OrderEntity.find { OrderTable.product eq product }.singleOrNull()
         }
 
@@ -118,6 +124,7 @@ class SpringTransactionEntityTest(
         }
 
         fun cleanUp() {
+            log.info { "Drop schema. ${CustomerTable.tableName}, ${OrderTable.tableName}" }
             SchemaUtils.drop(CustomerTable, OrderTable)
         }
     }

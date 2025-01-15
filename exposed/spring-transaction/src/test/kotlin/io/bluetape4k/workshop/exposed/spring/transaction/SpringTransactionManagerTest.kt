@@ -395,7 +395,10 @@ class SpringTransactionManagerTest {
         tt.executeWithoutResult {
             TransactionManager.managerFor(TransactionManager.currentOrNull()?.db) shouldBeEqualTo TransactionManager.manager
 
-            if (initializeConnection) TransactionManager.current().connection
+            if (initializeConnection) {
+                TransactionManager.current().connection
+            }
+
             body(it)
         }
     }

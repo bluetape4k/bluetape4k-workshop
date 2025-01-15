@@ -28,13 +28,6 @@ class TestConfig: TransactionManagementConfigurer {
         return HikariDataSource(config)
     }
 
-//    @Bean
-//    fun database(): EmbeddedDatabase =
-//        EmbeddedDatabaseBuilder()
-//            .setName("embeddedTest")
-//            .setType(EmbeddedDatabaseType.H2)
-//            .build()
-
     @Bean
     override fun annotationDrivenTransactionManager(): PlatformTransactionManager =
         SpringTransactionManager(dataSource(), DatabaseConfig { useNestedTransactions = true })

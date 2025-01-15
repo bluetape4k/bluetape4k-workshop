@@ -1,14 +1,20 @@
 package io.bluetape4k.workshop.exposed.spring.transaction
 
+import io.bluetape4k.codec.Base58
 import java.io.PrintWriter
 import java.sql.Connection
 import java.sql.DriverManager
 import java.util.logging.Logger
 import javax.sql.DataSource
 
-
 internal class DataSourceSpy(connectionSpy: (Connection) -> Connection): DataSource {
-    var con: Connection = connectionSpy(DriverManager.getConnection("jdbc:h2:mem:spy", "sa", ""))
+    var con: Connection = connectionSpy(
+        DriverManager.getConnection(
+            "jdbc:h2:mem:spy-${Base58.randomString(4)}",
+            "sa",
+            ""
+        )
+    )
 
     override fun getConnection() = con
     override fun getLogWriter(): PrintWriter = throw NotImplementedError()
