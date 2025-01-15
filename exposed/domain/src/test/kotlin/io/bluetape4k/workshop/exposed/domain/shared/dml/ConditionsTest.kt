@@ -1,0 +1,476 @@
+package io.bluetape4k.workshop.exposed.domain.shared.dml
+
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.domain.TestDB
+import io.bluetape4k.workshop.exposed.domain.expectException
+import io.bluetape4k.workshop.exposed.domain.withTables
+import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldBeNull
+import org.amshove.kluent.shouldBeTrue
+import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.exceptions.ExposedSQLException
+import org.jetbrains.exposed.sql.Case
+import org.jetbrains.exposed.sql.CaseWhenElse
+import org.jetbrains.exposed.sql.Coalesce
+import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.SqlExpressionBuilder
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
+import org.jetbrains.exposed.sql.alias
+import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.insertAndGetId
+import org.jetbrains.exposed.sql.intLiteral
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.stringLiteral
+import org.jetbrains.exposed.sql.update
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
+
+class ConditionsTest: AbstractExposedTest() {
+
+    companion object: KLogging()
+
+    /**
+     * ```sql
+     * SELECT COUNT(*) FROM CITIES WHERE FALSE
+     * SELECT COUNT(*) FROM CITIES WHERE TRUE
+     * ```
+     */
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `TRUE and FALSE Ops`(testDb: TestDB) {
+        withCitiesAndUsers(testDb) { cities, _, _ ->
+            val allCities = cities.selectAll().toCityNameList()
+
+            cities.selectAll().where { Op.FALSE }.count() shouldBeEqualTo 0L
+            cities.selectAll().where { Op.TRUE }.count() shouldBeEqualTo allCities.size.toLong()
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `null safe equality Ops`(testDb: TestDB) {
+        val table = object: IntIdTable("foo") {
+            val number1 = integer("number1").nullable()
+            val number2 = integer("number2").nullable()
+        }
+
+        withTables(testDb, table) {
+            val sameNumberId = table.insertAndGetId {
+                it[number1] = 0
+                it[number2] = 0
+            }
+            val differentNumberId = table.insertAndGetId {
+                it[number1] = 0
+                it[number2] = 1
+            }
+            val oneNullId = table.insertAndGetId {
+                it[number1] = 0
+                it[number2] = null
+            }
+            val bothNullId = table.insertAndGetId {
+                it[number1] = null
+                it[number2] = null
+            }
+
+            // null == null returns null
+            table.selectAll()
+                .where { table.number1 eq table.number2 }
+                .map { it[table.id] } shouldBeEqualTo listOf(sameNumberId)
+
+            // null == null returns true
+            table.selectAll()
+                .where { table.number1 isNotDistinctFrom table.number2 }
+                .map { it[table.id] } shouldBeEqualTo listOf(sameNumberId, bothNullId)
+
+            // number != null return null
+            table.selectAll()
+                .where { table.number1 neq table.number2 }
+                .map { it[table.id] } shouldBeEqualTo listOf(differentNumberId)
+
+            // number != null return true
+            table.selectAll()
+                .where { table.number1 isDistinctFrom table.number2 }
+                .map { it[table.id] } shouldBeEqualTo listOf(differentNumberId, oneNullId)
+
+            // (number1 is not null) != (number2 is null) returns true when both are null or neither is null
+            table.selectAll()
+                .where { table.number1.isNotNull() isDistinctFrom table.number2.isNull() }
+                .map { it[table.id] } shouldBeEqualTo listOf(sameNumberId, differentNumberId, bothNullId)
+
+            // (number1 is not null) == (number2 is null) returns true when only 1 is null
+            table.selectAll()
+                .where { table.number1.isNotNull() isNotDistinctFrom table.number2.isNull() }
+                .map { it[table.id] } shouldBeEqualTo listOf(oneNullId)
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `comparison operations with EntityID columns`(testDb: TestDB) {
+        val longTable = object: LongIdTable("long_table") {
+            val amount = long("amount")
+        }
+
+        fun selectIdWhere(condition: SqlExpressionBuilder.() -> Op<Boolean>): List<Long> {
+            val query = longTable.select(longTable.id).where(SqlExpressionBuilder.condition())
+            return query.map { it[longTable.id].value }
+        }
+
+        withTables(testDb, longTable) {
+            val id1 = longTable.insertAndGetId {
+                it[id] = 1
+                it[amount] = 9999
+            }.value
+            val id2 = longTable.insertAndGetId {
+                it[id] = 2
+                it[amount] = 2
+            }.value
+            val id3 = longTable.insertAndGetId {
+                it[id] = 3
+                it[amount] = 1
+            }.value
+
+
+            selectIdWhere { longTable.id eq longTable.amount } shouldBeEqualTo listOf(id2)
+            selectIdWhere { longTable.id neq longTable.amount } shouldBeEqualTo listOf(id1, id3)
+
+            selectIdWhere { longTable.id less longTable.amount } shouldBeEqualTo listOf(id1)
+            selectIdWhere { longTable.id less 2L } shouldBeEqualTo listOf(id1)
+
+            selectIdWhere { longTable.id lessEq longTable.amount } shouldBeEqualTo listOf(id1, id2)
+            selectIdWhere { longTable.id lessEq 2L } shouldBeEqualTo listOf(id1, id2)
+
+            selectIdWhere { longTable.id greater longTable.amount } shouldBeEqualTo listOf(id3)
+            selectIdWhere { longTable.id greater 2L } shouldBeEqualTo listOf(id3)
+
+            selectIdWhere { longTable.id greaterEq longTable.amount } shouldBeEqualTo listOf(id2, id3)
+            selectIdWhere { longTable.id greaterEq 2L } shouldBeEqualTo listOf(id2, id3)
+
+            selectIdWhere { longTable.id.between(2, 3) } shouldBeEqualTo listOf(id2, id3)
+
+            selectIdWhere { longTable.id isNotDistinctFrom longTable.amount } shouldBeEqualTo listOf(id2)
+            selectIdWhere { longTable.id isNotDistinctFrom 2 } shouldBeEqualTo listOf(id2)
+
+            selectIdWhere { longTable.id isDistinctFrom longTable.amount } shouldBeEqualTo listOf(id1, id3)
+            selectIdWhere { longTable.id isDistinctFrom 2 } shouldBeEqualTo listOf(id1, id3)
+
+            // symmetric operators (EntityID value on right) should not show a warning either
+            selectIdWhere { longTable.amount eq longTable.id } shouldBeEqualTo listOf(id2)
+            selectIdWhere { longTable.amount neq longTable.id } shouldBeEqualTo listOf(id1, id3)
+            selectIdWhere { longTable.amount less longTable.id } shouldBeEqualTo listOf(id3)
+            selectIdWhere { longTable.amount lessEq longTable.id } shouldBeEqualTo listOf(id2, id3)
+            selectIdWhere { longTable.amount greater longTable.id } shouldBeEqualTo listOf(id1)
+            selectIdWhere { longTable.amount greaterEq longTable.id } shouldBeEqualTo listOf(id1, id2)
+            selectIdWhere { longTable.amount isNotDistinctFrom longTable.id } shouldBeEqualTo listOf(id2)
+            selectIdWhere { longTable.amount isDistinctFrom longTable.id } shouldBeEqualTo listOf(id1, id3)
+
+            selectIdWhere { longTable.amount.between(1L, 2L) } shouldBeEqualTo listOf(id2, id3)
+        }
+    }
+
+    /**
+     * 중복된 컬럼은 한 번만 사용하도록 수정된다.
+     *
+     * ```sql
+     * SELECT CITIES."name",
+     *        CITIES.CITY_ID
+     *   FROM CITIES
+     *  WHERE CITIES."name" = 'Munich'
+     * ```
+     */
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `same column used in slice multiple times`(testDb: TestDB) {
+        withCitiesAndUsers(testDb) { cities, _, _ ->
+            val row = cities
+                .select(cities.name, cities.name, cities.id)
+                .where { cities.name eq "Munich" }
+                .toList()
+                .single()
+
+            row[cities.id] shouldBeEqualTo 2
+            row[cities.name] shouldBeEqualTo "Munich"
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `throw when slice with empty list`(testDb: TestDB) {
+        withCitiesAndUsers(testDb) { cities, _, _ ->
+            expectException<IllegalArgumentException> {
+                cities.select(emptyList()).toList()
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `compare to nullable column`(testDb: TestDB) {
+        val table = object: IntIdTable("foo") {
+            val c1 = integer("c1")
+            val c2 = integer("c2").nullable()
+        }
+
+        withTables(testDb, table) {
+            table.insertAndGetId { it[c1] = 0; it[c2] = 0 }
+            table.insertAndGetId { it[c1] = 1; it[c2] = 2 }
+            table.insertAndGetId { it[c1] = 2; it[c2] = 1 }
+
+            table.selectAll()
+                .where { table.c1 less table.c2 }
+                .map { it[table.c1] } shouldBeEqualTo listOf(1)
+
+            table.selectAll()
+                .where { table.c1 lessEq table.c2 }
+                .orderBy(table.c1)
+                .map { it[table.c1] } shouldBeEqualTo listOf(0, 1)
+
+            table.selectAll()
+                .where { table.c1 greater table.c2 }
+                .map { it[table.c1] } shouldBeEqualTo listOf(2)
+
+            table.selectAll()
+                .where { table.c1 greaterEq table.c2 }
+                .orderBy(table.c1)
+                .map { it[table.c1] } shouldBeEqualTo listOf(0, 2)
+
+
+            table.selectAll()
+                .where { table.c2 less table.c1 }
+                .map { it[table.c1] } shouldBeEqualTo listOf(2)
+
+            table.selectAll()
+                .where { table.c2 lessEq table.c1 }
+                .orderBy(table.c1)
+                .map { it[table.c1] } shouldBeEqualTo listOf(0, 2)
+
+            table.selectAll()
+                .where { table.c2 greater table.c1 }
+                .map { it[table.c1] } shouldBeEqualTo listOf(1)
+
+            table.selectAll()
+                .where { table.c2 greaterEq table.c1 }
+                .orderBy(table.c1)
+                .map { it[table.c1] } shouldBeEqualTo listOf(0, 1)
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `nullOp update and select`(testDb: TestDB) {
+        withCitiesAndUsers(testDb) { _, users, _ ->
+            val allUserCount = users.selectAll().count()
+
+            // UPDATE USERS SET CITY_ID=NULL
+            users.update {
+                it[users.cityId] = Op.nullOp()
+            }
+
+            val nullUsersOp = users.selectAll().where { users.cityId eq Op.nullOp() }.count()
+            nullUsersOp shouldBeEqualTo allUserCount
+
+            // UPDATE USERS SET CITY_ID=NULL
+            users.update {
+                it[users.cityId] = null
+            }
+
+            val nullUsers = users.selectAll().where { users.cityId.isNull() }.count()
+            nullUsers shouldBeEqualTo allUserCount
+
+            val nullUsersEq = users.selectAll().where { users.cityId eq null }.count()
+            nullUsersEq shouldBeEqualTo allUserCount
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `nullOp update fails when apply to non-null column`(testDb: TestDB) {
+        withCitiesAndUsers(testDb) { _, users, _ ->
+            expectException<ExposedSQLException> {
+                users.update {
+                    it[users.name] = Op.nullOp()
+                }
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `nullOp in case`(testDb: TestDB) {
+        withCitiesAndUsers(testDb) { cities, _, _ ->
+            val caseCondition = Case()
+                .When(Op.build { cities.id eq 1 }, Op.nullOp<String>())
+                .Else(cities.name)
+
+            var nullBranchWasExecuted = false
+
+            cities.select(cities.id, cities.name, caseCondition).forEach {
+                val result = it[caseCondition]
+                if (it[cities.id] == 1) {
+                    nullBranchWasExecuted = true
+                    result.shouldBeNull()
+                } else {
+                    result shouldBeEqualTo it[cities.name]
+                }
+            }
+            nullBranchWasExecuted.shouldBeTrue()
+        }
+    }
+
+    /**
+     *
+     * ```sql
+     * SELECT CITIES.CITY_ID,
+     *        COALESCE(CASE WHEN CITIES.CITY_ID = 1 THEN 'ORIGINAL' ELSE NULL END, 'COPY')
+     *   FROM CITIES
+     * ```
+     */
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `CaseWhenElse as argument`(testDb: TestDB) {
+        withCitiesAndUsers(testDb) { cities, _, _ ->
+            val original = "ORIGINAL"
+            val copy = "COPY"
+            val condition = Op.build { cities.id eq 1 }
+
+            val caseCondition1 = Case()
+                .When(condition, stringLiteral(original))
+                .Else(Op.nullOp())
+
+            // Case().When().Else() invokes CaseWhenElse() so the 2 formats should be interchangeable as arguments
+            val caseCondition2 = CaseWhenElse(
+                Case().When(condition, stringLiteral(original)),
+                Op.nullOp()
+            )
+
+            val function1 = Coalesce(caseCondition1, stringLiteral(copy))
+            val function2 = Coalesce(caseCondition2, stringLiteral(copy))
+
+            // confirm both formats produce identical SQL
+            val query1 = cities.select(cities.id, function1).prepareSQL(this, prepared = false)
+            val query2 = cities.select(cities.id, function2).prepareSQL(this, prepared = false)
+            log.debug { "Query: $query1" }
+            query1 shouldBeEqualTo query2
+
+            val results1 = cities.select(cities.id, function1).toList()
+
+            cities.select(cities.id, function2).forEachIndexed { i, row ->
+                val currentId = row[cities.id]
+                val functionResult = row[function2]
+                log.debug { "currentId: $currentId, functionResult: $functionResult" }
+
+                functionResult shouldBeEqualTo (if (currentId == 1) original else copy)
+                results1[i][cities.id] shouldBeEqualTo currentId
+                results1[i][function1] shouldBeEqualTo functionResult
+            }
+        }
+    }
+
+    /**
+     * Nested CaseWhenElse syntax
+     * ```sql
+     * SELECT CITIES."name",
+     *        CASE
+     *            WHEN CITIES."name" LIKE 'M%' THEN 0
+     *            WHEN CITIES."name" LIKE 'St. %' THEN
+     *                CASE
+     *                    WHEN CITIES.CITY_ID = 1 THEN 1
+     *                    ELSE -1
+     *                END
+     *            WHEN CITIES."name" LIKE 'P%' THEN 2
+     *            ELSE -1
+     *        END
+     *  FROM CITIES
+     * ```
+     */
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `chained and nested CaseWhenElse syntax`(testDb: TestDB) {
+        withCitiesAndUsers(testDb) { cities, _, _ ->
+            val nestedCondition = Case()
+                .When(Op.build { cities.id eq 1 }, intLiteral(1))
+                .Else(intLiteral(-1))
+
+            val chainedCondition = Case()
+                .When(Op.build { cities.name like "M%" }, intLiteral(0))
+                .When(Op.build { cities.name like "St. %" }, nestedCondition)
+                .When(Op.build { cities.name like "P%" }, intLiteral(2))
+                .Else(intLiteral(-1))
+
+            val results = cities.select(cities.name, chainedCondition)
+
+            results.forEach {
+                val cityName = it[cities.name]
+                val expectedNumber = when {
+                    cityName.startsWith("M")    -> 0
+                    cityName.startsWith("St. ") -> 1
+                    cityName.startsWith("P")    -> 2
+                    else                        -> -1
+                }
+                it[chainedCondition] shouldBeEqualTo expectedNumber
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `select aliased comparison result`(testDb: TestDB) {
+        val table = object: IntIdTable("foo") {
+            val c1 = integer("c1")
+            val c2 = integer("c2").nullable()
+        }
+
+        withTables(testDb, table) {
+            table.insert { it[c1] = 0; it[c2] = 0 }
+            table.insert { it[c1] = 1; it[c2] = 2 }
+            table.insert { it[c1] = 2; it[c2] = 1 }
+
+            val c1_lt_c2 = table.c1.less(table.c2).alias("c1_lt_c2")
+            table.select(c1_lt_c2)
+                .orderBy(table.c1)
+                .map { it[c1_lt_c2] } shouldBeEqualTo listOf(false, true, false)
+
+            val c1_lte_c2 = table.c1.lessEq(table.c2).alias("c1_lte_c2")
+            table.select(c1_lte_c2)
+                .orderBy(table.c1)
+                .map { it[c1_lte_c2] } shouldBeEqualTo listOf(true, true, false)
+
+            val c1_gt_c2 = table.c1.greater(table.c2).alias("c1_gt_c2")
+            table.select(c1_gt_c2)
+                .orderBy(table.c1)
+                .map { it[c1_gt_c2] } shouldBeEqualTo listOf(false, false, true)
+
+            val c1_gte_c2 = table.c1.greaterEq(table.c2).alias("c1_gte_c2")
+            table.select(c1_gte_c2)
+                .orderBy(table.c1)
+                .map { it[c1_gte_c2] } shouldBeEqualTo listOf(true, false, true)
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `null or empty`(testDb: TestDB) {
+        val tester = object: IntIdTable("tester") {
+            val name = text("name").nullable()
+        }
+
+        withTables(testDb, tester) {
+            tester.insert { it[name] = null }
+            tester.insert { it[name] = "" }
+            tester.insert { it[name] = "a" }
+
+            tester.selectAll().where { tester.name.isNull() }.count() shouldBeEqualTo 1L
+            tester.selectAll().where { tester.name.isNullOrEmpty() }.count() shouldBeEqualTo 2L
+            tester.selectAll().where { tester.name eq "" }.count() shouldBeEqualTo 1L
+
+            tester.selectAll().where { tester.name neq "" }.count() shouldBeEqualTo 1L // null 은 비교 대상이 안된다.
+            tester.selectAll().where { tester.name neq null }.count() shouldBeEqualTo 2L
+        }
+    }
+}

@@ -16,7 +16,7 @@ val USER_ROW_MAPPER: RowMapper<User> = RowMapper { row ->
 @JvmField
 val USER_TUPLE_MAPPER: TupleMapper<User> = TupleMapper.mapper { user ->
     // Reflection 을 이용
-    user.javaClass.kotlin.memberProperties.associate {
+    User::class.memberProperties.associate {
         it.name to it.get(user)
     }
 

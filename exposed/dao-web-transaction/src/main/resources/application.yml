@@ -1,0 +1,52 @@
+server:
+    port: 8080
+    compression:
+        enabled: true
+
+    tomcat:
+        threads:
+            max: 800
+            min-spare: 20
+
+    shutdown: graceful  # WebServer Graceful shutdown (https://www.baeldung.com/spring-boot-web-server-shutdown)
+
+spring:
+    application:
+        name: Exposed SQL Demo
+
+    profiles:
+        default: "dev"
+
+    datasource:
+        url: jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;
+        username: sa
+        password: password
+        driver-class-name: org.h2.Driver
+
+
+    threads:
+        virtual:
+            enabled: true   # Virtual Thread 사용 여부
+
+    jackson:
+        serialization:
+            indent-output: true
+    lifecycle:
+        timeout-per-shutdown-phase: 10s     # Graceful Shutdown 시간
+
+management:
+    endpoints:
+        web:
+            exposure:
+                include: "*"
+    endpoint:
+        health:
+            show-details: always
+
+    metrics:
+        tags:
+            application: ${spring.application.name}
+        distribution:
+            percentiles-histogram:
+                http.server.requests: true
+                resilience4j.circuitbreaker.calls: true

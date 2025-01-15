@@ -18,8 +18,9 @@ object Plugins {
         const val shadow = "7.1.2"
         const val kotlinx_benchmark = "0.4.13" // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-benchmark-plugin
 
-        const val spring_boot = "3.4.0"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
-        const val quarkus = "3.17.4"      // https://mvnrepository.com/artifact/io.quarkus/quarkus-bom
+        const val spring_boot = "3.4.1"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
+        const val quarkus = "3.17.3"      // https://mvnrepository.com/artifact/io.quarkus/quarkus-bom
+
         const val docker_compose = "0.17.11"  // https://plugins.gradle.org/plugin/com.avast.gradle.docker-compose
 
         // 참고: https://docs.gatling.io/reference/integrations/build-tools/gradle-plugin/
@@ -63,7 +64,7 @@ object Versions {
     const val bluetape4k = "0.0.3-SNAPSHOT"              // Bluetape4k Github Package 로 배포됩니다.
 
     const val kotlin = "2.1.0"                 // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
-    const val kotlinx_coroutines = "1.9.0"      // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
+    const val kotlinx_coroutines = "1.10.1"      // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
     const val kotlinx_serialization = "1.7.3"   // https://mvnrepository.com/search?q=kotlinx-serialization
 
     const val kotlinx_atomicfu = "0.26.1"       // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/atomicfu
@@ -73,9 +74,9 @@ object Versions {
     const val spring_boot = Plugins.Versions.spring_boot
     const val spring_cloud = "2024.0.0"     // https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-dependencies
     const val spring_integration = "6.4.0"  // https://mvnrepository.com/artifact/org.springframework.integration/spring-integration-core
-    const val reactor_bom = "2024.0.0"      // https://mvnrepository.com/artifact/io.projectreactor/reactor-bom
+    const val reactor_bom = "2024.0.1"      // https://mvnrepository.com/artifact/io.projectreactor/reactor-bom
     const val spring_statemachine = "4.0.0" // https://mvnrepository.com/artifact/org.springframework.statemachine/spring-statemachine-core
-    const val spring_modulith = "1.3.0"     // https://mvnrepository.com/artifact/org.springframework.modulith/spring-modulith-bom
+    const val spring_modulith = "1.3.1"     // https://mvnrepository.com/artifact/org.springframework.modulith/spring-modulith-bom
 
     const val chaos_monkey = "3.1.0"        // https://mvnrepository.com/artifact/de.codecentric/chaos-monkey-spring-boot
     const val blockhound = "1.0.10.RELEASE"  // https://mvnrepository.com/artifact/io.projectreactor.tools/blockhound
@@ -145,7 +146,7 @@ object Versions {
     const val hibernate_validator = "8.0.1.Final" // https://mvnrepository.com/artifact/org.hibernate.validator/hibernate-validator
     const val querydsl = "5.1.0"                  // https://mvnrepository.com/artifact/com.querydsl/querydsl-jpa
 
-    const val exposed = "0.57.0"       // https://mvnrepository.com/artifact/org.jetbrains.exposed/exposed-core
+    const val exposed = "0.58.0"       // https://mvnrepository.com/artifact/org.jetbrains.exposed/exposed-core
 
     const val agroal = "2.5"          // https://mvnrepository.com/artifact/io.agroal/agroal-api
 
@@ -268,6 +269,7 @@ object Libs {
 
     // Data
     val bluetape4k_cassandra = bluetape4k("cassandra")
+    val bluetape4k_exposed = bluetape4k("exposed")
     val bluetape4k_hibernate = bluetape4k("hibernate")
     val bluetape4k_hibernate_reactive = bluetape4k("hibernate-reactive")
     val bluetape4k_jdbc = bluetape4k("jdbc")
@@ -1288,10 +1290,12 @@ object Libs {
     val exposed_jdbc = exposed("jdbc")
     val exposed_json = exposed("json")
     val exposed_kotlin_datetime = exposed("kotlin-datetime")
+    val exposed_migration = exposed("migration")
     val exposed_money = exposed("money")
+    val exposed_tests = exposed("tests")
 
     val exposed_spring_boot_starter = exposed("spring-boot-starter")
-    val exposed_spring_transaction = "org.jetbrains.exposed:spring-transaction:${Versions.exposed}"
+    const val exposed_spring_transaction = "org.jetbrains.exposed:spring-transaction:${Versions.exposed}"
 
 
     // R2DBC (버전은 spring-data 버전을 사용한다)
@@ -1377,6 +1381,7 @@ object Libs {
     const val mysql_connector_j = "com.mysql:mysql-connector-j:9.1.0"  // https://mvnrepository.com/artifact/com.mysql/mysql-connector-j
     const val mariadb_java_client = "org.mariadb.jdbc:mariadb-java-client:3.5.1"  // https://mvnrepository.com/artifact/org.mariadb.jdbc/mariadb-java-client
     const val postgresql_driver = "org.postgresql:postgresql:42.7.4"  // https://mvnrepository.com/artifact/org.postgresql/postgresql
+    const val pgjdbc_ng = "com.impossibl.pgjdbc-ng:pgjdbc-ng:0.8.9"  // https://mvnrepository.com/artifact/com.impossibl.pgjdbc-ng/pgjdbc-ng
     const val oracle_ojdbc8 = "com.oracle.ojdbc:ojdbc8:19.3.0.0"
     const val clickhouse_jdbc = "com.clickhouse:clickhouse-jdbc:0.7.1" // https://mvnrepository.com/artifact/com.clickhouse/clickhouse-jdbc
 

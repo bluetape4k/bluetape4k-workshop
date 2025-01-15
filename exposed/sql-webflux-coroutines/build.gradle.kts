@@ -29,12 +29,14 @@ dependencies {
 
     // bluetape4k
     implementation(Libs.bluetape4k_jdbc)
+    testImplementation(Libs.bluetape4k_spring_tests)
 
     // Exposed
     implementation(Libs.exposed_core)
     implementation(Libs.exposed_jdbc)
     implementation(Libs.exposed_kotlin_datetime)
     implementation(Libs.exposed_spring_boot_starter)
+    implementation(Libs.exposed_spring_transaction)
 
     // Database Drivers
     implementation(Libs.hikaricp)

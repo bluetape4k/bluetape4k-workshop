@@ -1,23 +1,25 @@
 package io.bluetape4k.workshop.exposed.domain.demo.dao
 
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedDomainTest
-import io.bluetape4k.workshop.exposed.domain.runWithTables
+import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.domain.TestDB
+import io.bluetape4k.workshop.exposed.domain.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
-class SamplesDao: AbstractExposedDomainTest() {
+class SamplesDao: AbstractExposedTest() {
 
     companion object: KLogging()
 
     object Users: IntIdTable() {
         val name = varchar("name", 50).index()
         val age = integer("age")
-        val city = reference("city_id", Cities)
+        val city = optReference("city_id", Cities)
     }
 
     object Cities: IntIdTable() {
@@ -29,19 +31,20 @@ class SamplesDao: AbstractExposedDomainTest() {
 
         var name by Users.name
         var age by Users.age
-        var city by City referencedOn Users.city
+        var city by City optionalReferencedOn Users.city
     }
 
     class City(id: EntityID<Int>): IntEntity(id) {
         companion object: IntEntityClass<City>(Cities)
 
         var name by Cities.name
-        val users by User referrersOn Users.city
+        val users by User optionalReferrersOn Users.city
     }
 
-    @Test
-    fun `dao entity - one-to-many`() {
-        runWithTables(Users, Cities) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `dao entity - one to many`(testDb: TestDB) {
+        withTables(testDb, Users, Cities) {
             val seoul = City.new {
                 name = "Seoul"
             }
@@ -69,7 +72,6 @@ class SamplesDao: AbstractExposedDomainTest() {
             }
 
             City.all().toList() shouldBeEqualTo listOf(seoul, busan)
-
             City.findById(seoul.id) shouldBeEqualTo seoul
 
             val usersInSeoul = seoul.users.toList()
@@ -78,6 +80,5 @@ class SamplesDao: AbstractExposedDomainTest() {
             val users = User.find { Users.age greaterEq 18 }.toList()
             users shouldBeEqualTo listOf(b, c)
         }
-
     }
 }

@@ -1,7 +1,8 @@
 package io.bluetape4k.workshop.exposed.domain.demo.sql
 
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedDomainTest
-import io.bluetape4k.workshop.exposed.domain.runWithTables
+import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.domain.TestDB
+import io.bluetape4k.workshop.exposed.domain.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.Table
@@ -15,9 +16,10 @@ import org.jetbrains.exposed.sql.stringLiteral
 import org.jetbrains.exposed.sql.substring
 import org.jetbrains.exposed.sql.trim
 import org.jetbrains.exposed.sql.update
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 
-class SamplesSQL: AbstractExposedDomainTest() {
+class SamplesSQL: AbstractExposedTest() {
 
     object Users: Table("user") {
         val id = varchar("id", 10)
@@ -34,9 +36,10 @@ class SamplesSQL: AbstractExposedDomainTest() {
         override val primaryKey = PrimaryKey(id, name = "PK_Cities_ID")
     }
 
-    @Test
-    fun `Raw SQL을 이용하여 DB 작업을 수행합니다`() {
-        runWithTables(Users, Cities) {
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `Raw SQL을 이용하여 DB 작업을 수행합니다`(testDb: TestDB) {
+        withTables(testDb, Users, Cities) {
 
             val seoul = Cities.insert {
                 it[name] = "Seoul"
