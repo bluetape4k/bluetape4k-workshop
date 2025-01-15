@@ -498,6 +498,7 @@ class ArrayColumnTypeTest: AbstractExposedTest() {
         // POSTGRESQLNG is excluded because the problem may be on their side.
         // Related issue: https://github.com/impossibl/pgjdbc-ng/issues/600
         // Recheck on our side when the issue is resolved.
+        Assumptions.assumeTrue { testDB in (arrayTypeSupportedDB - TestDB.POSTGRESQLNG) }
         withArrayTestTable(testDB) {
             val testByteArrayList = listOf(byteArrayOf(0), byteArrayOf(1, 2, 3))
 
