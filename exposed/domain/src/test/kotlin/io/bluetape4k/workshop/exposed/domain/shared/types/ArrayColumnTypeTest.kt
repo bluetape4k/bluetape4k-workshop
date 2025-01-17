@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.shared.types
 
+import MigrationUtils
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.domain.TestDB
@@ -53,9 +54,7 @@ class ArrayColumnTypeTest: AbstractExposedTest() {
 
     object ArrayTestTable: IntIdTable("array_test_table") {
         val numbers: Column<List<Int>> = array<Int>("numbers").default(listOf(5))
-
-        // val strings: Column<List<String?>> = array<String?>("strings", TextColumnType()).default(emptyList())
-        val strings = array<String?>("strings", TextColumnType()).default(emptyList())
+        val strings: Column<List<String?>> = array<String?>("strings", TextColumnType()).default(emptyList())
         val doubles: Column<List<Double>?> = array<Double>("doubles").nullable()
         val byteArray: Column<List<ByteArray>?> = array("byte_array", BinaryColumnType(32)).nullable()
     }
@@ -92,8 +91,10 @@ class ArrayColumnTypeTest: AbstractExposedTest() {
     fun `create missing columns with array defaults`(testDB: TestDB) {
         withArrayTestTable(testDB) {
             try {
-                SchemaUtils.createMissingTablesAndColumns(ArrayTestTable)
-                SchemaUtils.statementsRequiredToActualizeScheme(ArrayTestTable).shouldBeEmpty()
+//                SchemaUtils.createMissingTablesAndColumns(ArrayTestTable)
+//                SchemaUtils.statementsRequiredToActualizeScheme(ArrayTestTable).shouldBeEmpty()
+                val stmts: List<String> = MigrationUtils.statementsRequiredForDatabaseMigration(ArrayTestTable)
+                stmts.shouldBeEmpty()
             } finally {
                 SchemaUtils.drop(ArrayTestTable)
             }
