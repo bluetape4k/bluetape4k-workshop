@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.exposed.sql.crypt
+package io.bluetape4k.workshop.exposed.crypt
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug

@@ -1,11 +1,15 @@
-package io.bluetape4k.workshop.exposed.sql.json
+package io.bluetape4k.workshop.exposed.json
 
 import MigrationUtils
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.domain.TestDB
 import io.bluetape4k.workshop.exposed.domain.currentDialectTest
 import io.bluetape4k.workshop.exposed.domain.expectException
 import io.bluetape4k.workshop.exposed.domain.withDb
 import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.json.JsonTestData.JsonBArrays
+import io.bluetape4k.workshop.exposed.json.JsonTestData.JsonBEntity
+import io.bluetape4k.workshop.exposed.json.JsonTestData.JsonBTable
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.ArraySerializer
@@ -19,14 +23,14 @@ import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.dao.entityCache
 import org.jetbrains.exposed.dao.flushCache
-import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.ComparisonOp
+import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.ExpressionWithColumnType
 import org.jetbrains.exposed.sql.IntegerColumnType
-import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.SqlExpressionBuilder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.StdOutSqlLogger
@@ -40,7 +44,7 @@ import org.jetbrains.exposed.sql.json.Exists
 import org.jetbrains.exposed.sql.json.contains
 import org.jetbrains.exposed.sql.json.exists
 import org.jetbrains.exposed.sql.json.extract
-import org.jetbrains.exposed.sql.json.json
+import org.jetbrains.exposed.sql.json.jsonb
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.stringLiteral
 import org.jetbrains.exposed.sql.update
@@ -52,145 +56,122 @@ import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
-class JsonColumnTest: AbstractExposedJsonTest() {
+class JsonBColumnTest: AbstractExposedJsonTest() {
 
-    /**
-     * Insert and Select
-     *
-     * Postgres:
-     * ```sql
-     * CREATE TABLE IF NOT EXISTS j_table (id SERIAL PRIMARY KEY, j_column JSON NOT NULL)
-     * INSERT INTO j_table (j_column) VALUES ({"user":{"name":"Admin","team":null},"logins":10,"active":true,"team":null})
-     *
-     * INSERT INTO j_table (j_column) VALUES ({"user":{"name":"Pro","team":"Alpha"},"logins":999,"active":true,"team":"A"})
-     * SELECT j_table.id, j_table.j_column FROM j_table WHERE j_table.id = 2
-     * ```
-     */
+    companion object: KLogging()
+
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert and select`(testDB: TestDB) {
-        withJsonTable(testDB) { tester, _, _ ->
+        withJsonBTable(testDB) { tester, _, _ ->
             val newData = DataHolder(User("Pro", "Alpha"), 999, true, "A")
             val newId = tester.insertAndGetId {
-                it[jsonColumn] = newData
+                it[JsonBTable.jsonBColumn] = newData
             }
 
-            entityCache.clear()
-
-            val newResult = tester.selectAll()
-                .where { tester.id eq newId }
-                .singleOrNull()
-
-            newResult?.get(tester.jsonColumn) shouldBeEqualTo newData
+            val newResult = tester.selectAll().where { tester.id eq newId }.singleOrNull()
+            newResult?.get(JsonBTable.jsonBColumn) shouldBeEqualTo newData
         }
     }
 
     /**
-     * Update with JSON
+     * Update JSON column
      *
      * Postgres:
      * ```sql
-     * CREATE TABLE IF NOT EXISTS j_table (id SERIAL PRIMARY KEY, j_column JSON NOT NULL)
-     * INSERT INTO j_table (j_column) VALUES ({"user":{"name":"Admin","team":null},"logins":10,"active":true,"team":null})
-     * SELECT j_table.id, j_table.j_column FROM j_table
-     *
-     * UPDATE j_table SET j_column={"user":{"name":"Admin","team":null},"logins":10,"active":false,"team":"Update Team"}
-     * SELECT j_table.id, j_table.j_column FROM j_table
+     * CREATE TABLE IF NOT EXISTS j_b_table (id SERIAL PRIMARY KEY, j_b_column JSONB NOT NULL);
+     * INSERT INTO j_b_table (j_b_column) VALUES ({"user":{"name":"Admin","team":null},"logins":10,"active":true,"team":null})
+     * ```
+     * ```sql
+     * UPDATE j_b_table SET j_b_column={"user":{"name":"Admin","team":null},"logins":10,"active":false,"team":null}
+     * SELECT j_b_table.id, j_b_table.j_b_column FROM j_b_table
      * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `update with json`(testDB: TestDB) {
-        withJsonTable(testDB) { tester, _, data1 ->
-            tester.selectAll().single()[tester.jsonColumn] shouldBeEqualTo data1
+    fun `update json`(testDB: TestDB) {
+        withJsonBTable(testDB) { tester, _, data1 ->
+            tester.selectAll().single()[JsonBTable.jsonBColumn] shouldBeEqualTo data1
 
-            val updatedData = data1.copy(active = false, team = "Update Team")
+            val updatedData = data1.copy(active = false)
             tester.update {
-                it[jsonColumn] = updatedData
+                it[JsonBTable.jsonBColumn] = updatedData
             }
 
-            entityCache.clear()
-
-            tester.selectAll().single()[tester.jsonColumn] shouldBeEqualTo updatedData
+            tester.selectAll().single()[JsonBTable.jsonBColumn] shouldBeEqualTo updatedData
         }
     }
 
-    /**
-     * Select with slice extract
-     *
-     * MySQL_V8:
-     * ```sql
-     * SELECT JSON_EXTRACT(j_table.j_column, "$.active") FROM j_table
-     * SELECT JSON_EXTRACT(j_table.j_column, "$.user") FROM j_table
-     * SELECT JSON_UNQUOTE(JSON_EXTRACT(j_table.j_column, "$.user.name")) FROM j_table
-     * ```
-     *
-     * Postgres:
-     * ```sql
-     * SELECT JSON_EXTRACT_PATH(j_table.j_column, 'active') FROM j_table
-     * SELECT JSON_EXTRACT_PATH(j_table.j_column, 'user') FROM j_table
-     * SELECT JSON_EXTRACT_PATH_TEXT(j_table.j_column, 'user', 'name') FROM j_table
-     * ```
-     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `select with slice extract`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB !in TestDB.ALL_H2 }
 
-        withJsonTable(testDB) { tester, user1, data1 ->
+        withJsonBTable(testDB) { tester, user1, data1 ->
             val pathPrefix = if (currentDialectTest is PostgreSQLDialect) "" else "."
             // SQLServer & Oracle return null if extracted JSON is not scalar
             val requiresScalar = currentDialectTest is SQLServerDialect || currentDialectTest is OracleDialect
 
-            val isActive = tester.jsonColumn.extract<Boolean>("${pathPrefix}active", toScalar = requiresScalar)
+            /**
+             * ```sql
+             * SELECT JSONB_EXTRACT_PATH(j_b_table.j_b_column, 'active') FROM j_b_table
+             * ```
+             */
+            val isActive = JsonBTable.jsonBColumn.extract<Boolean>("${pathPrefix}active", toScalar = requiresScalar)
             val result1 = tester.select(isActive).singleOrNull()
             result1?.get(isActive) shouldBeEqualTo data1.active
 
-            val storedUser = tester.jsonColumn.extract<User>("${pathPrefix}user", toScalar = requiresScalar)
+            /**
+             * ```sql
+             * SELECT JSONB_EXTRACT_PATH(j_b_table.j_b_column, 'user') FROM j_b_table
+             * ```
+             */
+            val storedUser = JsonBTable.jsonBColumn.extract<User>("${pathPrefix}user", toScalar = requiresScalar)
             val result2 = tester.select(storedUser).singleOrNull()
             result2?.get(storedUser) shouldBeEqualTo user1
 
+            /**
+             * ```sql
+             * SELECT JSONB_EXTRACT_PATH_TEXT(j_b_table.j_b_column, 'user', 'name') FROM j_b_table
+             * ```
+             */
             val path = when (currentDialectTest) {
                 is PostgreSQLDialect -> arrayOf("user", "name")
                 else                 -> arrayOf(".user.name")
             }
-            val username = tester.jsonColumn.extract<String>(*path)
+            val username = JsonBTable.jsonBColumn.extract<String>(*path)
             val result3 = tester.select(username).singleOrNull()
             result3?.get(username) shouldBeEqualTo user1.name
         }
     }
 
-    /**
-     * Select where with extract
-     *
-     * Postgres:
-     * ```sql
-     * SELECT j_table.id
-     *   FROM j_table
-     *  WHERE CAST(JSON_EXTRACT_PATH_TEXT(j_table.j_column, 'logins') AS INT) >= 1000
-     * ```
-     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `select where with extract`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB !in TestDB.ALL_H2 }
 
-        withJsonTable(testDB) { tester, user1, data1 ->
+        withJsonBTable(testDB) { tester, user1, data1 ->
             val newId = tester.insertAndGetId {
-                it[jsonColumn] = data1.copy(logins = 1000)
+                it[JsonBTable.jsonBColumn] = data1.copy(logins = 1000)
             }
 
             // Postgres requires type casting to compare json field as integer value in DB
             val logins = when (currentDialectTest) {
                 is PostgreSQLDialect ->
-                    tester.jsonColumn.extract<Int>("logins").castTo(IntegerColumnType())
+                    JsonBTable.jsonBColumn.extract<Int>("logins").castTo(IntegerColumnType())
 
                 else                 ->
-                    tester.jsonColumn.extract<Int>(".logins")
+                    JsonBTable.jsonBColumn.extract<Int>(".logins")
             }
 
+            /**
+             * ```sql
+             * SELECT j_b_table.id
+             *   FROM j_b_table
+             *  WHERE CAST(JSONB_EXTRACT_PATH_TEXT(j_b_table.j_b_column, 'logins') AS INT) >= 1000
+             * ```
+             */
             val tooManyLogins = logins greaterEq 1000
-
             val result = tester.select(tester.id)
                 .where { tooManyLogins }
                 .singleOrNull()
@@ -208,7 +189,7 @@ class JsonColumnTest: AbstractExposedJsonTest() {
                 // Throws with message: Serializer for class 'Fake' is not found.
                 // Please ensure that class is marked as '@Serializable' and that the serialization compiler plugin is applied.
                 object: Table("tester") {
-                    val jCol = json<Fake>("J_col", Json.Default)
+                    val jCol = jsonb<Fake>("J_col", Json.Default)
                 }
             }
         }
@@ -217,34 +198,36 @@ class JsonColumnTest: AbstractExposedJsonTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `DAO Functions with Json Column`(testDB: TestDB) {
-        val dataTable = JsonTestData.JsonTable
-        val dataEntity = JsonTestData.JsonEntity
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_H2_V1 }
+
+        val dataTable = JsonBTable
+        val dataEntity = JsonBEntity
 
         withTables(testDB, dataTable) {
             val jsonA = DataHolder(User("Admin", "Alpha"), 10, true, null)
             val newUser = dataEntity.new {
-                jsonColumn = jsonA
+                jsonBColumn = jsonA
             }
 
             entityCache.clear()
 
-            dataEntity.findById(newUser.id)?.jsonColumn shouldBeEqualTo jsonA
+            dataEntity.findById(newUser.id)?.jsonBColumn shouldBeEqualTo jsonA
 
             /**
              * Update
              *
              * Postgres:
              * ```sql
-             * UPDATE j_table
-             *   SET j_column={"user":{"name":"Lead","team":"Beta"},"logins":10,"active":true,"team":null}
+             * UPDATE j_b_table
+             *   SET j_b_column={"user":{"name":"Lead","team":"Beta"},"logins":10,"active":true,"team":null}
              * ```
              */
             val updatedJson = jsonA.copy(user = User("Lead", "Beta"))
             dataTable.update {
-                it[jsonColumn] = updatedJson
+                it[jsonBColumn] = updatedJson
             }
 
-            dataEntity.all().single().jsonColumn shouldBeEqualTo updatedJson
+            dataEntity.all().single().jsonBColumn shouldBeEqualTo updatedJson
 
             // Json Path
             Assumptions.assumeTrue { testDB !in TestDB.ALL_H2 }
@@ -253,10 +236,11 @@ class JsonColumnTest: AbstractExposedJsonTest() {
              * Insert new entity
              *
              * ```sql
-             * INSERT INTO j_table (j_column) VALUES ({"user":{"name":"Admin","team":"Alpha"},"logins":10,"active":true,"team":null})
+             * INSERT INTO j_b_table (j_b_column)
+             * VALUES ({"user":{"name":"Admin","team":"Alpha"},"logins":10,"active":true,"team":null})
              * ```
              */
-            dataEntity.new { jsonColumn = jsonA }
+            dataEntity.new { jsonBColumn = jsonA }
             val path = when (currentDialectTest) {
                 is PostgreSQLDialect -> arrayOf("user", "team")
                 else                 -> arrayOf(".user.team")
@@ -265,62 +249,41 @@ class JsonColumnTest: AbstractExposedJsonTest() {
             /**
              * Postgres:
              * ```sql
-             * SELECT j_table.id, j_table.j_column
-             *   FROM j_table
-             *  WHERE JSON_EXTRACT_PATH_TEXT(j_table.j_column, 'user', 'team') LIKE 'B%'
+             * SELECT j_b_table.id, j_b_table.j_b_column
+             *   FROM j_b_table
+             *  WHERE JSONB_EXTRACT_PATH_TEXT(j_b_table.j_b_column, 'user', 'team') LIKE 'B%'
              * ```
              */
-            val userTeam = dataTable.jsonColumn.extract<String>(*path)
+            val userTeam = JsonBTable.jsonBColumn.extract<String>(*path)
             val userInTeamB = dataEntity.find { userTeam like "B%" }.single()
 
-            userInTeamB.jsonColumn shouldBeEqualTo updatedJson
+            userInTeamB.jsonBColumn shouldBeEqualTo updatedJson
         }
     }
-
-    private val jsonContainsSupported = TestDB.ALL_POSTGRES + TestDB.MYSQL_V5
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `json contains`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB in jsonContainsSupported }
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_H2 }
 
-        withJsonTable(testDB) { tester, user1, data1 ->
-            /**
-             * Insert new entity
-             * Postgres:
-             * ```sql
-             * INSERT INTO j_table (j_column) VALUES ({"user":{"name":"Admin","team":"Alpha"},"logins":10,"active":true,"team":null})
-             * ```
-             */
+        withJsonBTable(testDB) { tester, user1, data1 ->
             val alphaTeamUser = user1.copy(team = "Alpha")
             val newId = tester.insertAndGetId {
-                it[jsonColumn] = data1.copy(user = alphaTeamUser)
+                it[JsonBTable.jsonBColumn] = data1.copy(user = alphaTeamUser)
             }
 
-            /**
-             * Postgres:
-             * ```sql
-             * SELECT j_table.id, j_table.j_column FROM j_table WHERE j_table.j_column::jsonb @> '{"active":false}'::jsonb
-             * ```
-             */
-            val userIsInactive = tester.jsonColumn.contains("""{"active":false}""")
+            val userIsInactive = JsonBTable.jsonBColumn.contains("""{"active":false}""")
             val result = tester.selectAll().where { userIsInactive }.toList()
             result.shouldBeEmpty()
 
-            /**
-             * Postgres:
-             * ```sql
-             * SELECT COUNT(*) FROM j_table WHERE j_table.j_column::jsonb @> '{"user":{"name":"Admin","team":"Alpha"}}'::jsonb
-             * ```
-             */
             val alphaTreamUserAsJson = """{"user":${Json.Default.encodeToString(alphaTeamUser)}}"""
-            val userIsInAlphaTeam = tester.jsonColumn.contains(stringLiteral(alphaTreamUserAsJson))
+            val userIsInAlphaTeam = JsonBTable.jsonBColumn.contains(stringLiteral(alphaTreamUserAsJson))
             tester.selectAll().where { userIsInAlphaTeam }.count() shouldBeEqualTo 1L
 
             // test target contains candidate at specified path
             if (testDB in TestDB.ALL_MYSQL_LIKE) {
                 // Path 를 이용하여 특정 필드를 비교할 수 있습니다.
-                val userIsInAlphaTeam2 = tester.jsonColumn.contains("\"Alpha\"", path = ".user.team")
+                val userIsInAlphaTeam2 = JsonBTable.jsonBColumn.contains("\"Alpha\"", path = ".user.team")
                 val alphaTeamUsers = tester.selectAll().where { userIsInAlphaTeam2 }
                 alphaTeamUsers.single()[tester.id] shouldBeEqualTo newId
             }
@@ -332,23 +295,23 @@ class JsonColumnTest: AbstractExposedJsonTest() {
     fun `json exists`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB !in TestDB.ALL_H2 }
 
-        withJsonTable(testDB) { tester, user1, data1 ->
+        withJsonBTable(testDB) { tester, user1, data1 ->
             val maximumLogins = 1000
             val teamA = "A"
             val newId = tester.insertAndGetId {
-                it[jsonColumn] = data1.copy(user = data1.user.copy(team = teamA), logins = maximumLogins)
+                it[JsonBTable.jsonBColumn] = data1.copy(user = data1.user.copy(team = teamA), logins = maximumLogins)
             }
 
             /**
              * Postgres:
              * ```sql
-             * SELECT COUNT(*) FROM j_table WHERE JSONB_PATH_EXISTS(CAST(j_table.j_column as jsonb), '$')
+             * SELECT COUNT(*) FROM j_b_table WHERE JSONB_PATH_EXISTS(CAST(j_table.j_column as jsonb), '$')
              * ```
              */
             val optional = if (testDB in TestDB.ALL_MYSQL_LIKE) "one" else null
 
             // test data at path root `$` exists by providing no path arguments
-            val hasAnyData = tester.jsonColumn.exists(optional = optional)
+            val hasAnyData = JsonBTable.jsonBColumn.exists(optional = optional)
             tester.selectAll().where { hasAnyData }.count() shouldBeEqualTo 2L
 
             /**
@@ -357,7 +320,7 @@ class JsonColumnTest: AbstractExposedJsonTest() {
              * SELECT COUNT(*) FROM j_table WHERE JSONB_PATH_EXISTS(CAST(j_table.j_column as jsonb), '$.fakeKey')
              * ```
              */
-            val hasFakeKey = tester.jsonColumn.exists(".fakeKey", optional = optional)
+            val hasFakeKey = JsonBTable.jsonBColumn.exists(".fakeKey", optional = optional)
             tester.selectAll().where { hasFakeKey }.count() shouldBeEqualTo 0L
 
             /**
@@ -366,7 +329,7 @@ class JsonColumnTest: AbstractExposedJsonTest() {
              * SELECT COUNT(*) FROM j_table WHERE JSONB_PATH_EXISTS(CAST(j_table.j_column as jsonb), '$.logins')
              * ```
              */
-            val hasLogins = tester.jsonColumn.exists(".logins", optional = optional)
+            val hasLogins = JsonBTable.jsonBColumn.exists(".logins", optional = optional)
             tester.selectAll().where { hasLogins }.count() shouldBeEqualTo 2L
 
             // test data at path exists with filter condition & optional arguments
@@ -381,7 +344,7 @@ class JsonColumnTest: AbstractExposedJsonTest() {
                  * ```
                  */
                 val filterPath = ".logins ? (@ == $maximumLogins)"
-                val hasMaxLogins: Exists = tester.jsonColumn.exists(filterPath)
+                val hasMaxLogins: Exists = JsonBTable.jsonBColumn.exists(filterPath)
                 val usersWithMaxLogin: Query = tester.select(tester.id).where { hasMaxLogins }
                 usersWithMaxLogin.single()[tester.id] shouldBeEqualTo newId
 
@@ -396,7 +359,7 @@ class JsonColumnTest: AbstractExposedJsonTest() {
                  */
                 val jsonPath = ".user.team ? (@ == \$team)"
                 val optionalArg = """{"team":"$teamA"}"""
-                val isOnTeamA: Exists = tester.jsonColumn.exists(jsonPath, optional = optionalArg)
+                val isOnTeamA: Exists = JsonBTable.jsonBColumn.exists(jsonPath, optional = optionalArg)
                 val usersOnTeamA: Query = tester.select(tester.id).where { isOnTeamA }
                 usersOnTeamA.single()[tester.id] shouldBeEqualTo newId
             }
@@ -406,7 +369,7 @@ class JsonColumnTest: AbstractExposedJsonTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `json extract with arrays`(testDB: TestDB) {
-        withJsonArrays(testDB) { tester, singleId, tripleId ->
+        withJsonBArrays(testDB) { tester, singleId, tripleId ->
             val path1 = when (currentDialectTest) {
                 is PostgreSQLDialect -> arrayOf("users", "0", "team")
                 else                 -> arrayOf(".users[0].team")
@@ -420,7 +383,7 @@ class JsonColumnTest: AbstractExposedJsonTest() {
              *  WHERE JSON_EXTRACT_PATH_TEXT(j_arrays."groups", 'users', '0', 'team') = 'Team A'
              * ```
              */
-            val firstIsOnTeamA = tester.groups.extract<String>(*path1) eq "Team A"
+            val firstIsOnTeamA = JsonBArrays.groups.extract<String>(*path1) eq "Team A"
             tester.selectAll()
                 .where { firstIsOnTeamA }
                 .single()[tester.id] shouldBeEqualTo singleId
@@ -434,7 +397,7 @@ class JsonColumnTest: AbstractExposedJsonTest() {
             // older MySQL and MariaDB versions require non-scalar extracted value from JSON Array
             val toScala = testDB != TestDB.MYSQL_V5
             val path2 = if (currentDialectTest is PostgreSQLDialect) "0" else "[0]"
-            val firstNumber = tester.numbers.extract<Int>(path2, toScalar = toScala)
+            val firstNumber = JsonBArrays.numbers.extract<Int>(path2, toScalar = toScala)
             tester.select(firstNumber).map { it[firstNumber] } shouldBeEqualTo listOf(100, 3)
         }
     }
@@ -442,7 +405,7 @@ class JsonColumnTest: AbstractExposedJsonTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `json contains with array`(testDB: TestDB) {
-        withJsonArrays(testDB) { tester, _, tripleId ->
+        withJsonBArrays(testDB) { tester, _, tripleId ->
             /**
              * Postgres:
              * ```sql
@@ -451,7 +414,7 @@ class JsonColumnTest: AbstractExposedJsonTest() {
              *  WHERE j_arrays.numbers::jsonb @> '[3, 5]'::jsonb
              * ```
              */
-            val hasSmallNumbers = tester.numbers.contains("[3, 5]")
+            val hasSmallNumbers = JsonBArrays.numbers.contains("[3, 5]")
             tester.selectAll()
                 .where { hasSmallNumbers }
                 .single()[tester.id] shouldBeEqualTo tripleId
@@ -466,7 +429,7 @@ class JsonColumnTest: AbstractExposedJsonTest() {
              * ```
              */
             if (testDB in TestDB.ALL_MYSQL_LIKE) {
-                val hasSmallNumbers2 = tester.groups.contains("\"B\"", path = ".users[0].name")
+                val hasSmallNumbers2 = JsonBArrays.groups.contains("\"B\"", path = ".users[0].name")
                 tester.selectAll()
                     .where { hasSmallNumbers2 }
                     .single()[tester.id] shouldBeEqualTo tripleId
@@ -478,7 +441,8 @@ class JsonColumnTest: AbstractExposedJsonTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `json exists with array`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB !in TestDB.ALL_H2 }
-        withJsonArrays(testDB) { tester, singleId, tripleId ->
+
+        withJsonBArrays(testDB) { tester, singleId, tripleId ->
             val optional = if (testDB in TestDB.ALL_MYSQL_LIKE) "one" else null
 
             /**
@@ -489,7 +453,7 @@ class JsonColumnTest: AbstractExposedJsonTest() {
              *  WHERE JSONB_PATH_EXISTS(CAST(j_arrays."groups" as jsonb), '$.users[1]')
              * ```
              */
-            val hasMultipleUsers = tester.groups.exists(".users[1]", optional = optional)
+            val hasMultipleUsers = JsonBArrays.groups.exists(".users[1]", optional = optional)
             tester.selectAll().where { hasMultipleUsers }.single()[tester.id] shouldBeEqualTo tripleId
 
             /**
@@ -500,62 +464,8 @@ class JsonColumnTest: AbstractExposedJsonTest() {
              *  WHERE JSONB_PATH_EXISTS(CAST(j_arrays.numbers as jsonb), '$[2]')
              * ```
              */
-            val hasAtLeast3Numbers = tester.numbers.exists("[2]", optional = optional)
+            val hasAtLeast3Numbers = JsonBArrays.numbers.exists("[2]", optional = optional)
             tester.selectAll().where { hasAtLeast3Numbers }.single()[tester.id] shouldBeEqualTo tripleId
-        }
-    }
-
-    @ParameterizedTest
-    @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `json contains with iterables`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB in jsonContainsSupported }
-
-        val iterables = object: IntIdTable("iterables") {
-            val userList = json<List<User>>("user_list", Json.Default)
-            val userSet = json<Set<User>>("user_set", Json.Default)
-            val userArray = json<Array<User>>("user_array", Json.Default)
-        }
-
-        fun selectIdWhere(condition: SqlExpressionBuilder.() -> Op<Boolean>): List<EntityID<Int>> {
-            val query = iterables.select(iterables.id).where(SqlExpressionBuilder.condition())
-            return query.map { it[iterables.id] }
-        }
-
-        withTables(testDB, iterables) {
-            val user1 = User("A", "Team A")
-            val user2 = User("B", "Team B")
-
-            val id1 = iterables.insertAndGetId {
-                it[userList] = listOf(user1, user2)
-                it[userSet] = setOf(user1)
-                it[userArray] = arrayOf(user1, user2)
-            }
-            val id2 = iterables.insertAndGetId {
-                it[userList] = listOf(user2)
-                it[userSet] = setOf(user2, user1)
-                it[userArray] = arrayOf(user1, user2)
-            }
-
-            /**
-             * Postgres:
-             *
-             * ```sql
-             * SELECT iterables.id
-             *   FROM iterables
-             *  WHERE iterables.user_list::jsonb @> '[{"name":"A","team":"Team A"}]'::jsonb
-             *
-             * SELECT iterables.id
-             *   FROM iterables
-             *  WHERE iterables.user_set::jsonb @> '[{"name":"B","team":"Team B"}]'::jsonb
-             *
-             * SELECT iterables.id
-             *   FROM iterables
-             *  WHERE iterables.user_array::jsonb @> '[{"name":"A","team":"Team A"},{"name":"B","team":"Team B"}]'::jsonb
-             * ```
-             */
-            selectIdWhere { iterables.userList.contains(listOf(user1)) } shouldBeEqualTo listOf(id1)
-            selectIdWhere { iterables.userSet.contains(setOf(user2)) } shouldBeEqualTo listOf(id2)
-            selectIdWhere { iterables.userArray.contains(arrayOf(user1, user2)) } shouldBeEqualTo listOf(id1, id2)
         }
     }
 
@@ -564,8 +474,8 @@ class JsonColumnTest: AbstractExposedJsonTest() {
     fun `json with defaults`(testDB: TestDB) {
         val defaultUser = User("UNKNOWN", "UNASSIGNED")
         val defaultTester = object: Table("default_tester") {
-            val user1 = json<User>("user_1", Json.Default).default(defaultUser)
-            val user2 = json<User>("user_2", Json.Default).clientDefault { defaultUser }
+            val user1 = jsonb<User>("user_1", Json.Default).default(defaultUser)
+            val user2 = jsonb<User>("user_2", Json.Default).clientDefault { defaultUser }
         }
 
         withDb(testDB) {
@@ -611,10 +521,10 @@ class JsonColumnTest: AbstractExposedJsonTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `logger with json collections`(testDB: TestDB) {
         val iterables = object: Table("iterables_tester") {
-            val userList = json<List<User>>("user_list", Json.Default, ListSerializer(User.serializer()))
-            val intList = json<List<Int>>("int_list", Json.Default)
-            val userArray = json<Array<User>>("user_array", Json.Default, ArraySerializer(User.serializer()))
-            val intArray = json<IntArray>("int_array", Json.Default)
+            val userList = jsonb<List<User>>("user_list", Json.Default, ListSerializer(User.serializer()))
+            val intList = jsonb<List<Int>>("int_list", Json.Default)
+            val userArray = jsonb<Array<User>>("user_array", Json.Default, ArraySerializer(User.serializer()))
+            val intArray = jsonb<IntArray>("int_array", Json.Default)
         }
 
         withTables(testDB, iterables) {
@@ -645,7 +555,7 @@ class JsonColumnTest: AbstractExposedJsonTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `json with nullable column`(testDB: TestDB) {
         val tester = object: IntIdTable("nullable_tester") {
-            val user = json<User>("user", Json.Default).nullable()
+            val user = jsonb<User>("user", Json.Default).nullable()
         }
 
         withTables(testDB, tester) {
@@ -668,13 +578,13 @@ class JsonColumnTest: AbstractExposedJsonTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `json with upsert`(testDB: TestDB) {
+    fun `jsonb with upsert`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB !in TestDB.ALL_H2_V1 }
 
-        withJsonTable(testDB) { tester, _, _ ->
+        withJsonBTable(testDB) { tester, _, _ ->
             val newData = DataHolder(User("Pro", "Alpha"), 999, true, "A")
             val newId = tester.insertAndGetId {
-                it[jsonColumn] = newData
+                it[JsonBTable.jsonBColumn] = newData
             }
 
             /**
@@ -694,19 +604,21 @@ class JsonColumnTest: AbstractExposedJsonTest() {
             val newData2 = newData.copy(active = false)
             tester.upsert {
                 it[tester.id] = newId
-                it[jsonColumn] = newData2
+                it[JsonBTable.jsonBColumn] = newData2
             }
 
             val newResult = tester.selectAll().where { tester.id eq newId }.singleOrNull()
-            newResult?.get(tester.jsonColumn) shouldBeEqualTo newData2
+            newResult?.get(JsonBTable.jsonBColumn) shouldBeEqualTo newData2
         }
     }
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `json with transformer`(testDB: TestDB) {
+    fun `jsonb with transformer`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_H2_V1 }
+
         val tester = object: Table("tester") {
-            val numbers: Column<DoubleArray> = json<IntArray>("numbers", Json.Default)
+            val numbers: Column<DoubleArray> = jsonb<IntArray>("numbers", Json.Default)
                 .transform(
                     wrap = { DoubleArray(it.size) { i -> it[i].toDouble() } },
                     unwrap = { IntArray(it.size) { i -> it[i].toInt() } }
@@ -730,15 +642,15 @@ class JsonColumnTest: AbstractExposedJsonTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `json as default`(testDB: TestDB) {
+    fun `jsonb as default`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB == TestDB.MYSQL_V5 }
 
         val defaultUser = User("name", "team")
         val tester = object: IntIdTable("testJsonAsDefault") {
-            val value = json<User>("value", Json.Default).default(defaultUser)
+            val value = jsonb<User>("value", Json.Default).default(defaultUser)
         }
         val testerDatabaseGenerated = object: IntIdTable("testJsonAsDefault") {
-            val value = json<User>("value", Json.Default).databaseGenerated()
+            val value = jsonb<User>("value", Json.Default).databaseGenerated()
         }
 
         // MySQL versions prior to 8.0.13 do not accept default values on JSON columns
@@ -747,6 +659,35 @@ class JsonColumnTest: AbstractExposedJsonTest() {
 
             val value = testerDatabaseGenerated.selectAll().single()[tester.value]
             value shouldBeEqualTo defaultUser
+        }
+    }
+
+    private class KeyExistsOp(left: Expression<*>, right: Expression<*>): ComparisonOp(left, right, "??")
+
+    private infix fun ExpressionWithColumnType<*>.keyExists(other: String) =
+        KeyExistsOp(this, stringLiteral(other))
+
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `escaped placeholder in custom operator`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in TestDB.ALL_POSTGRES }
+
+        withJsonBTable(testDB) { tester, _, data1 ->
+
+            // `.logins`, `.active`, `.team` 이 top level 에 있다.
+            val topLevelKeyResult = tester
+                .selectAll()
+                .where { JsonBTable.jsonBColumn keyExists "logins" }
+                .single()
+            topLevelKeyResult[JsonBTable.jsonBColumn] shouldBeEqualTo data1
+
+            // `.user.name` 이 있지, `.name` 은 없다.
+            val nestedKeyResult = tester
+                .selectAll()
+                .where { JsonBTable.jsonBColumn keyExists "name" }
+                .toList()
+            nestedKeyResult.shouldBeEmpty()
+
         }
     }
 }
