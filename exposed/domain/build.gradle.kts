@@ -1,3 +1,7 @@
+plugins {
+    kotlin("plugin.serialization")
+}
+
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
@@ -9,8 +13,10 @@ dependencies {
 
     api(Libs.bluetape4k_exposed)
     api(Libs.exposed_core)
+    api(Libs.exposed_crypt)
     api(Libs.exposed_dao)
     api(Libs.exposed_jdbc)
+    api(Libs.exposed_json)
     api(Libs.exposed_kotlin_datetime)
     api(Libs.exposed_migration)
     implementation(Libs.exposed_spring_boot_starter)
@@ -40,5 +46,9 @@ dependencies {
     testImplementation(Libs.kotlinx_coroutines_test)
 
     testImplementation("io.github.hakky54:logcaptor:2.10.0")
+
+    // Kotlin Serialization Json
+    implementation(platform(Libs.kotlinx_serialization_bom))
+    implementation(Libs.kotlinx_serialization_json)
 
 }
