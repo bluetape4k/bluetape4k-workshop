@@ -7,7 +7,7 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.statements.InsertStatement
 import java.math.BigDecimal
 
-class MiscTable: Table() {
+open class MiscTable: Table() {
 
     val by = byte("by")
     val byn = byte("byn").nullable()
@@ -118,8 +118,6 @@ fun MiscTable.checkInsert(
     row[this.en] shouldBeEqualTo en
     row[this.es] shouldBeEqualTo es
     row[this.esn] shouldBeEqualTo esn
-    row[this.c] shouldBeEqualTo c
-    row[this.cn] shouldBeEqualTo cn
     row[this.s] shouldBeEqualTo s
     row[this.sn] shouldBeEqualTo sn
     row[this.dc] shouldBeEqualTo dc

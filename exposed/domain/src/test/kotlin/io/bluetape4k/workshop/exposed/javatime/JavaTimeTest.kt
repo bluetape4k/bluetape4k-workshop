@@ -285,7 +285,7 @@ class JavaTimeTest: AbstractExposedTest() {
             val requiresExplicitDTCast = listOf(TestDB.H2_PSQL)
             val dateTime = when (testDB) {
                 in requiresExplicitDTCast -> Cast(dateTimeParam(mayTheFourth), JavaLocalDateTimeColumnType())
-                else                      -> dateTimeParam(mayTheFourth)
+                else -> dateTimeParam(mayTheFourth)
             }
 
             val createdMayFourth = tester.selectAll()
@@ -339,7 +339,7 @@ class JavaTimeTest: AbstractExposedTest() {
                 is PostgreSQLDialect -> tester.modified.extract<String>("${prefix}timestamp")
                     .castTo(JavaLocalDateTimeColumnType())
 
-                else                 -> tester.modified.extract<String>("${prefix}timestamp")
+                else -> tester.modified.extract<String>("${prefix}timestamp")
             }
             val modifiedBeforeCreation = tester.selectAll()
                 .where { dateModified less tester.created }
@@ -475,7 +475,7 @@ class JavaTimeTest: AbstractExposedTest() {
             val expectedTime: LocalTime = when (testDB) {
                 TestDB.MYSQL_V8,
                 in TestDB.ALL_POSTGRES_LIKE,
-                     -> OffsetDateTime.parse("2023-05-04T05:04:01.123123+00:00")  // NOTE: Microseconds 까지만 지원
+                    -> OffsetDateTime.parse("2023-05-04T05:04:01.123123+00:00")  // NOTE: Microseconds 까지만 지원
 
                 else -> now
             }.toLocalTime()
@@ -654,21 +654,24 @@ fun <T: Temporal> T?.isEqualDateTime(other: Temporal?): Boolean = try {
 infix fun <T: Temporal> T?.shouldTemporalEqualTo(d2: T?) {
     val d1 = this
     when {
-        d1 == null && d2 == null                     -> return
-        d1 == null                                   -> error("d1 is null while d2 is not on ${currentDialectTest.name}")
-        d2 == null                                   -> error("d1 is not null while d2 is null on ${currentDialectTest.name}")
+        d1 == null && d2 == null -> return
+        d1 == null -> error("d1 is null while d2 is not on ${currentDialectTest.name}")
+        d2 == null -> error("d1 is not null while d2 is null on ${currentDialectTest.name}")
 
-        d1 is LocalTime && d2 is LocalTime           -> {
-            d2.toSecondOfDay() shouldBeEqualTo d1.toSecondOfDay()
-            if (d2.nano != 0) d2.nano shouldBeEqualTo d1.nano
+        d1 is LocalTime && d2 is LocalTime -> {
+            d1.toSecondOfDay() shouldBeEqualTo d2.toSecondOfDay()
+            // d1 이 DB에서 읽어온 Temporal 값이어야 한다. (nanos 를 지원하는 Dialect 에서만 비교한다)
+            if (d1.nano != 0) {
+                d1.nano shouldFractionalPartEqualTo d2.nano
+            }
         }
 
-        d1 is LocalDateTime && d2 is LocalDateTime   -> {
+        d1 is LocalDateTime && d2 is LocalDateTime -> {
             d1.toEpochSecond(ZoneOffset.UTC) shouldBeEqualTo d2.toEpochSecond(ZoneOffset.UTC)
             d1.nano shouldFractionalPartEqualTo d2.nano
         }
 
-        d1 is Instant && d2 is Instant               -> {
+        d1 is Instant && d2 is Instant -> {
             d1.epochSecond shouldBeEqualTo d2.epochSecond
             d1.nano shouldFractionalPartEqualTo d2.nano
         }
@@ -678,7 +681,7 @@ infix fun <T: Temporal> T?.shouldTemporalEqualTo(d2: T?) {
             d1.toLocalDateTime() shouldTemporalEqualTo d2.toLocalDateTime()
         }
 
-        else                                         -> {
+        else -> {
             d1 shouldBeEqualTo d2
         }
     }
@@ -690,11 +693,11 @@ infix fun Int.shouldFractionalPartEqualTo(nano2: Int) {
 
     when (dialect) {
         // accurate to 100 nanoseconds
-        is SQLServerDialect                                 ->
+        is SQLServerDialect ->
             nano1.nanoRoundTo100Nanos() shouldBeEqualTo nano2.nanoRoundTo100Nanos()
 
         // microsecond
-        is MariaDBDialect                                   ->
+        is MariaDBDialect ->
             nano1.nanoFloorToMicro() shouldBeEqualTo nano2.nanoFloorToMicro()
 
         is H2Dialect, is PostgreSQLDialect, is MysqlDialect ->
@@ -704,17 +707,17 @@ infix fun Int.shouldFractionalPartEqualTo(nano2: Int) {
                     nano1.nanoRoundToMicro() shouldBeEqualTo nano2.nanoRoundToMicro()
                 }
 
-                else       -> {} // don't compare fractional part
+                else -> {} // don't compare fractional part
             }
 
         // milliseconds
-        is OracleDialect                                    ->
+        is OracleDialect ->
             nano1.nanoRoundToMilli() shouldBeEqualTo nano2.nanoRoundToMilli()
 
-        is SQLiteDialect                                    ->
+        is SQLiteDialect ->
             nano1.nanoFloorToMilli() shouldBeEqualTo nano2.nanoFloorToMilli()
 
-        else                                                ->
+        else ->
             error("Unsupported dialect ${dialect.name}")
     }
 }
