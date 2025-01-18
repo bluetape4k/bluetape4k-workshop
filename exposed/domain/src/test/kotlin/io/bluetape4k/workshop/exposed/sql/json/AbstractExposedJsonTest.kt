@@ -1,12 +1,12 @@
-package io.bluetape4k.workshop.exposed.json
+package io.bluetape4k.workshop.exposed.sql.json
 
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.domain.TestDB
 import io.bluetape4k.workshop.exposed.domain.withTables
-import io.bluetape4k.workshop.exposed.json.JsonTestData.JsonArrays
-import io.bluetape4k.workshop.exposed.json.JsonTestData.JsonBArrays
-import io.bluetape4k.workshop.exposed.json.JsonTestData.JsonBTable
-import io.bluetape4k.workshop.exposed.json.JsonTestData.JsonTable
+import io.bluetape4k.workshop.exposed.sql.json.JsonTestData.JsonArrays
+import io.bluetape4k.workshop.exposed.sql.json.JsonTestData.JsonBArrays
+import io.bluetape4k.workshop.exposed.sql.json.JsonTestData.JsonBTable
+import io.bluetape4k.workshop.exposed.sql.json.JsonTestData.JsonTable
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.insert

@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.exposed.javatime
+package io.bluetape4k.workshop.exposed.sql.javatime
 
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.domain.TestDB

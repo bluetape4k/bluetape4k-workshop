@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.exposed.javatime
+package io.bluetape4k.workshop.exposed.sql.javatime
 
 import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.domain.TestDB
@@ -409,7 +409,7 @@ class MiscTableTest: AbstractExposedTest() {
             )
 
             tbl.checkRowFull(
-                tbl.selectAll().where { tbl.d.eq(date) }.single(),
+                tbl.selectAll().where { Misc.d.eq(date) }.single(),
                 by = 13,
                 byn = null,
                 sm = -10,
@@ -440,7 +440,7 @@ class MiscTableTest: AbstractExposedTest() {
                 dblcn = null
             )
             tbl.checkRowFull(
-                tbl.selectAll().where { tbl.dn.isNull() }.single(),
+                tbl.selectAll().where { Misc.dn.isNull() }.single(),
                 by = 13,
                 byn = null,
                 sm = -10,
@@ -476,7 +476,7 @@ class MiscTableTest: AbstractExposedTest() {
                 else -> dateTimeParam(dateTime)
             }
             tbl.checkRowFull(
-                tbl.selectAll().where { tbl.dt.eq(dtValue) }.single(),
+                tbl.selectAll().where { Misc.dt.eq(dtValue) }.single(),
                 by = 13,
                 byn = null,
                 sm = -10,
@@ -507,7 +507,7 @@ class MiscTableTest: AbstractExposedTest() {
                 dblcn = null
             )
             tbl.checkRowFull(
-                tbl.selectAll().where { tbl.dtn.isNull() }.single(),
+                tbl.selectAll().where { Misc.dtn.isNull() }.single(),
                 by = 13,
                 byn = null,
                 sm = -10,
@@ -836,7 +836,7 @@ class MiscTableTest: AbstractExposedTest() {
             )
 
             tbl.checkRowFull(
-                tbl.selectAll().where { tbl.dn.eq(date) }.single(),
+                tbl.selectAll().where { Misc.dn.eq(date) }.single(),
                 by = 13,
                 byn = 13,
                 sm = -10,
@@ -867,7 +867,7 @@ class MiscTableTest: AbstractExposedTest() {
                 dblcn = 567.89
             )
             tbl.checkRowFull(
-                tbl.selectAll().where { tbl.dn.isNotNull() }.single(),
+                tbl.selectAll().where { Misc.dn.isNotNull() }.single(),
                 by = 13,
                 byn = 13,
                 sm = -10,
@@ -903,7 +903,7 @@ class MiscTableTest: AbstractExposedTest() {
                 else -> dateTimeParam(dateTime)
             }
             tbl.checkRowFull(
-                tbl.selectAll().where { tbl.dt.eq(dtValue) }.single(),
+                tbl.selectAll().where { Misc.dt.eq(dtValue) }.single(),
                 by = 13,
                 byn = 13,
                 sm = -10,
@@ -934,7 +934,7 @@ class MiscTableTest: AbstractExposedTest() {
                 dblcn = 567.89
             )
             tbl.checkRowFull(
-                tbl.selectAll().where { tbl.dtn.isNotNull() }.single(),
+                tbl.selectAll().where { Misc.dtn.isNotNull() }.single(),
                 by = 13,
                 byn = 13,
                 sm = -10,
@@ -1361,14 +1361,14 @@ fun Misc.checkRowDates(
     dr: Duration,
     drn: Duration? = null,
 ) {
-    row[this.d] shouldTemporalEqualTo d
-    row[this.dn] shouldTemporalEqualTo dn
-    row[this.t] shouldTemporalEqualTo t
-    row[this.tn] shouldTemporalEqualTo tn
-    row[this.dt] shouldTemporalEqualTo dt
-    row[this.dtn] shouldTemporalEqualTo dtn
-    row[this.ts] shouldTemporalEqualTo ts
-    row[this.tsn] shouldTemporalEqualTo tsn
-    row[this.dr] shouldBeEqualTo dr
-    row[this.drn] shouldBeEqualTo drn
+    row[Misc.d] shouldTemporalEqualTo d
+    row[Misc.dn] shouldTemporalEqualTo dn
+    row[Misc.t] shouldTemporalEqualTo t
+    row[Misc.tn] shouldTemporalEqualTo tn
+    row[Misc.dt] shouldTemporalEqualTo dt
+    row[Misc.dtn] shouldTemporalEqualTo dtn
+    row[Misc.ts] shouldTemporalEqualTo ts
+    row[Misc.tsn] shouldTemporalEqualTo tsn
+    row[Misc.dr] shouldBeEqualTo dr
+    row[Misc.drn] shouldBeEqualTo drn
 }

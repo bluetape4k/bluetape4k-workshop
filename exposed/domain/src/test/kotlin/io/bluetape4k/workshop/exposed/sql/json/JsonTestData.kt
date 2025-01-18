@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.exposed.json
+package io.bluetape4k.workshop.exposed.sql.json
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
