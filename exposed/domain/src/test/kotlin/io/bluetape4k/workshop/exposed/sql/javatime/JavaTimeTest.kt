@@ -677,8 +677,8 @@ infix fun <T: Temporal> T?.shouldTemporalEqualTo(d2: T?) {
         }
 
         d1 is OffsetDateTime && d2 is OffsetDateTime -> {
-            d1.offset shouldBeEqualTo d2.offset
             d1.toLocalDateTime() shouldTemporalEqualTo d2.toLocalDateTime()
+            d1.offset shouldBeEqualTo d2.offset
         }
 
         else -> {
