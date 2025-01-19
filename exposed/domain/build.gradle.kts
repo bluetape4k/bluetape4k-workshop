@@ -53,4 +53,9 @@ dependencies {
     implementation(platform(Libs.kotlinx_serialization_bom))
     implementation(Libs.kotlinx_serialization_json)
 
+    // Java Money
+    implementation(Libs.bluetape4k_money)
+    implementation(Libs.javax_money_api)
+    implementation(Libs.javamoney_moneta)
+
 }
