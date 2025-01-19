@@ -5,7 +5,7 @@ server:
 
     tomcat:
         threads:
-            max: 800
+            max: 200
             min-spare: 20
 
     shutdown: graceful  # WebServer Graceful shutdown (https://www.baeldung.com/spring-boot-web-server-shutdown)
@@ -19,10 +19,15 @@ spring:
 
     datasource:
         url: jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;
+        driver-class-name: org.h2.Driver
         username: sa
         password: password
-        driver-class-name: org.h2.Driver
-
+        hikari:
+            maximum-pool-size: 10
+            minimum-idle: 5
+            idle-timeout: 30000
+            max-lifetime: 60000
+            connection-timeout: 30000
 
     threads:
         virtual:

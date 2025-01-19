@@ -13,6 +13,7 @@ dependencies {
     implementation(project(":exposed-domain"))
 
     // Exposed
+    implementation(Libs.bluetape4k_exposed)
     implementation(Libs.exposed_core)
     implementation(Libs.exposed_dao)
     implementation(Libs.exposed_kotlin_datetime)

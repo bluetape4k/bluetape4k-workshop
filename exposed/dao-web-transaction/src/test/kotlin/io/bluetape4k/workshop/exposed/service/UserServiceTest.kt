@@ -4,6 +4,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedApplicationTest
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldBeGreaterOrEqualTo
 import org.amshove.kluent.shouldNotBeEmpty
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
@@ -50,7 +51,7 @@ class UserServiceTest(
 
         affectedRow shouldBeEqualTo 1
 
-        val updatedUser = userService.findUserById(userId)!!
+        val updatedUser = userService.findUserById(userId) ?: error("User not found")
         updatedUser.name shouldBeEqualTo updateRequest.name
         updatedUser.age shouldBeEqualTo (updateRequest.age ?: createRequest.age)
     }
@@ -85,5 +86,6 @@ class UserServiceTest(
 
         val users = userService.findAllUsers()
         users.shouldNotBeEmpty()
+        users.size shouldBeGreaterOrEqualTo 10
     }
 }
