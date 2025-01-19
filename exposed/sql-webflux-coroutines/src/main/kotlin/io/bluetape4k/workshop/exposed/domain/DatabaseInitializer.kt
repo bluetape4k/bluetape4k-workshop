@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain
 
+import MigrationUtils
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.exposed.domain.dto.ActorDTO
@@ -9,9 +10,6 @@ import io.bluetape4k.workshop.exposed.domain.schema.ActorsInMovies
 import io.bluetape4k.workshop.exposed.domain.schema.Movies
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.atTime
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.insert
@@ -47,9 +45,11 @@ class DatabaseInitializer: ApplicationRunner {
         log.info { "Creating schema and test data ..." }
 
         transaction {
-            addLogger(StdOutSqlLogger)
-
-            SchemaUtils.createMissingTablesAndColumns(Actors, Movies, ActorsInMovies)
+            // SchemaUtils.createMissingTablesAndColumns(Actors, Movies, ActorsInMovies)
+            val stmts = MigrationUtils.statementsRequiredForDatabaseMigration(Actors, Movies, ActorsInMovies)
+            if (stmts.isNotEmpty()) {
+                exec(stmts.joinToString(";"))
+            }
         }
     }
 
@@ -116,8 +116,6 @@ class DatabaseInitializer: ApplicationRunner {
         )
 
         transaction {
-            addLogger(StdOutSqlLogger)
-
             Actors.batchInsert(actors) {
                 this[Actors.firstName] = it.firstName
                 this[Actors.lastName] = it.lastName

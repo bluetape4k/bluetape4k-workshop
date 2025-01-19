@@ -24,8 +24,10 @@ class MovieActorControllerTest(@Autowired private val client: WebTestClient): Ab
     fun `get movie with actors`() {
         val movieId = 1
 
-        val movieWithActors = client.httpGet("/movie-actors/$movieId")
-            .expectBody<MovieWithActorDTO>().returnResult().responseBody
+        val movieWithActors = client
+            .httpGet("/movie-actors/$movieId")
+            .expectBody<MovieWithActorDTO>()
+            .returnResult().responseBody
 
         log.debug { "movieWithActors[$movieId]=$movieWithActors" }
 
@@ -36,8 +38,10 @@ class MovieActorControllerTest(@Autowired private val client: WebTestClient): Ab
     @Test
     fun `get movie and actor count group by movie name`() {
 
-        val movieActorCounts = client.httpGet("/movie-actors/count")
-            .expectBodyList<MovieActorCountDTO>().returnResult().responseBody!!
+        val movieActorCounts = client
+            .httpGet("/movie-actors/count")
+            .expectBodyList<MovieActorCountDTO>()
+            .returnResult().responseBody!!
 
         movieActorCounts.shouldNotBeEmpty()
 
@@ -48,8 +52,10 @@ class MovieActorControllerTest(@Autowired private val client: WebTestClient): Ab
 
     @Test
     fun `get movie and acting producer`() {
-        val movieWithProducers = client.httpGet("/movie-actors/acting-producers")
-            .expectBodyList<MovieWithProducingActorDTO>().returnResult().responseBody!!
+        val movieWithProducers = client
+            .httpGet("/movie-actors/acting-producers")
+            .expectBodyList<MovieWithProducingActorDTO>()
+            .returnResult().responseBody!!
 
         movieWithProducers.forEach {
             log.debug { "movieWithProducer=$it" }

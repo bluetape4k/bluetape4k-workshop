@@ -35,6 +35,7 @@ dependencies {
     // Exposed
     implementation(Libs.exposed_core)
     implementation(Libs.exposed_jdbc)
+    implementation(Libs.exposed_migration)
     implementation(Libs.exposed_kotlin_datetime)
     // implementation(Libs.exposed_spring_boot_starter) // 직접 DatabaseConfig 에서 Database를 설정해서, 중복됨
 

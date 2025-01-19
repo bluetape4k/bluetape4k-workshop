@@ -22,7 +22,7 @@
     <!-- formatter:on -->
 
     <logger name="io.bluetape4k.workshop.exposed" level="DEBUG"/>
-    
+
     <root level="INFO">
         <appender-ref ref="console"/>
     </root>

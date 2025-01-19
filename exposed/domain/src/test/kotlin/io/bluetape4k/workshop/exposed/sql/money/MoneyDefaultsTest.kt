@@ -114,6 +114,16 @@ class MoneyDefaultsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * H2:
+     * ```sql
+     * -- insert
+     * INSERT INTO TABLEWITHDBDEFAULT (FIELD, T1, "t1_C", "clientDefault") VALUES ('1', 1, 'USD', 0)
+     *
+     * -- update
+     * UPDATE TABLEWITHDBDEFAULT SET T2=10, "t2_C"='USD' WHERE TABLEWITHDBDEFAULT.ID = 1
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `nullable composite column type`(testDB: TestDB) {

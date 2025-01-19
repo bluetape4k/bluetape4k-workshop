@@ -4,6 +4,7 @@ import io.bluetape4k.concurrent.virtualthread.VirtualFuture
 import io.bluetape4k.concurrent.virtualthread.virtualFuture
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.utils.ShutdownQueue
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.ActorDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.MovieActorCountDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.MovieDTO
@@ -32,6 +33,9 @@ class MovieRepository(private val db: Database) {
 
     companion object: KLogging() {
         private val virtualExecutor = Executors.newVirtualThreadPerTaskExecutor()
+            .apply {
+                ShutdownQueue.register(this)
+            }
     }
 
     fun findById(movieId: Int): VirtualFuture<MovieDTO?> = virtualFuture(virtualExecutor) {
@@ -50,10 +54,10 @@ class MovieRepository(private val db: Database) {
 
             params.forEach { (key, value) ->
                 when (key) {
-                    Movies::id.name           -> value?.run { query.andWhere { Movies.id eq value.toInt() } }
-                    Movies::name.name         -> value?.run { query.andWhere { Movies.name eq value } }
+                    Movies::id.name -> value?.run { query.andWhere { Movies.id eq value.toInt() } }
+                    Movies::name.name -> value?.run { query.andWhere { Movies.name eq value } }
                     Movies::producerName.name -> value?.run { query.andWhere { Movies.producerName eq value } }
-                    Movies::releaseDate.name  -> value?.run {
+                    Movies::releaseDate.name -> value?.run {
                         query.andWhere { Movies.releaseDate eq LocalDateTime.parse(value) }
                     }
                 }

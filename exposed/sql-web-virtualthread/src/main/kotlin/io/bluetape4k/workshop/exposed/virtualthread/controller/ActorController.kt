@@ -15,9 +15,8 @@ import org.springframework.web.bind.annotation.RestController
  * 영화 배우에 대한 정보를 제공하는 컨트롤러
  */
 @RestController
-class ActorController(
-    private val actorRepo: ActorRepository,
-) {
+class ActorController(private val actorRepo: ActorRepository) {
+    
     companion object: KLogging()
 
     @GetMapping("/actors/{id}")

@@ -46,8 +46,10 @@ class ActorControllerTest(
     fun `find actors by name`() {
         val lastName = "Depp"
 
-        val actors = client.httpGet("/actors?lastName=$lastName")
-            .expectBodyList<ActorDTO>().returnResult().responseBody
+        val actors = client
+            .httpGet("/actors?lastName=$lastName")
+            .expectBodyList<ActorDTO>()
+            .returnResult().responseBody
 
         log.debug { "actors=$actors" }
 
@@ -55,8 +57,10 @@ class ActorControllerTest(
         actors.size shouldBeEqualTo 1
 
         val firstName = "Angelina"
-        val angelinas = client.httpGet("/actors?firstName=$firstName")
-            .expectBodyList<ActorDTO>().returnResult().responseBody
+        val angelinas = client
+            .httpGet("/actors?firstName=$firstName")
+            .expectBodyList<ActorDTO>()
+            .returnResult().responseBody
 
         log.debug { "angelinas=$angelinas" }
         angelinas.shouldNotBeNull()
@@ -67,7 +71,8 @@ class ActorControllerTest(
     fun `create actor`() {
         val actor = newActor()
 
-        val newActor = client.httpPost("/actors", actor)
+        val newActor = client
+            .httpPost("/actors", actor)
             .expectBody<ActorDTO>()
             .returnResult().responseBody!!
 
@@ -78,11 +83,13 @@ class ActorControllerTest(
     fun `delete actor`() {
         val actor = newActor()
 
-        val newActor = client.httpPost("/actors", actor)
+        val newActor = client
+            .httpPost("/actors", actor)
             .expectBody<ActorDTO>()
             .returnResult().responseBody!!
 
-        val deletedCount = client.httpDelete("/actors/${newActor.id}")
+        val deletedCount = client
+            .httpDelete("/actors/${newActor.id}")
             .expectBody<Int>()
             .returnResult().responseBody!!
 

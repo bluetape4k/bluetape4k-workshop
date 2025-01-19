@@ -10,8 +10,6 @@ import io.bluetape4k.workshop.exposed.virtualthread.domain.mapper.toActorDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Actors
 import org.amshove.kluent.shouldNotBeEmpty
 import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.Nested
@@ -45,7 +43,6 @@ class DomainSQLTest(
                 .roundsPerThread(4)
                 .add {
                     transaction(db) {
-                        addLogger(StdOutSqlLogger)
                         val actors = Actors.selectAll().map { it.toActorDTO() }
                         actors.shouldNotBeEmpty()
                     }
@@ -73,7 +70,6 @@ class DomainSQLTest(
                 .roundsPerThread(4)
                 .add {
                     transaction(db) {
-                        addLogger(StdOutSqlLogger)
                         val actors = Actors.selectAll().map { it.toActorDTO() }
                         actors.shouldNotBeEmpty()
                     }

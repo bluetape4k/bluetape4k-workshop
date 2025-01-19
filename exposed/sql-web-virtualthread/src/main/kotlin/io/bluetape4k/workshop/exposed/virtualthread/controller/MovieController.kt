@@ -44,5 +44,4 @@ class MovieController(private val movieRepo: MovieRepository) {
     fun deleteMovie(@PathVariable("id") movieId: Int): Int {
         return movieRepo.deleteById(movieId).await()
     }
-
 }

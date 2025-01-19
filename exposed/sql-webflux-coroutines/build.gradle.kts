@@ -35,6 +35,7 @@ dependencies {
     implementation(Libs.exposed_core)
     implementation(Libs.exposed_jdbc)
     implementation(Libs.exposed_kotlin_datetime)
+    implementation(Libs.exposed_migration)
     implementation(Libs.exposed_spring_boot_starter)
     implementation(Libs.exposed_spring_transaction)
 

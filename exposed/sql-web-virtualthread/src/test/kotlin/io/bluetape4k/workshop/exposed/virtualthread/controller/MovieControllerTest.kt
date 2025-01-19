@@ -22,8 +22,10 @@ class MovieControllerTest(@Autowired private val client: WebTestClient): Abstrac
     fun `get movie by id`() {
         val id = 1
 
-        val movie = client.httpGet("/movies/$id")
-            .expectBody<MovieDTO>().returnResult().responseBody
+        val movie = client
+            .httpGet("/movies/$id")
+            .expectBody<MovieDTO>()
+            .returnResult().responseBody
 
         log.debug { "movie[$id]=$movie" }
 
@@ -35,8 +37,10 @@ class MovieControllerTest(@Autowired private val client: WebTestClient): Abstrac
     fun `search movies by producer name`() {
         val producerName = "Johnny"
 
-        val movies = client.httpGet("/movies?producerName=$producerName")
-            .expectBodyList<MovieDTO>().returnResult().responseBody!!
+        val movies = client
+            .httpGet("/movies?producerName=$producerName")
+            .expectBodyList<MovieDTO>()
+            .returnResult().responseBody!!
 
         movies shouldHaveSize 2
     }

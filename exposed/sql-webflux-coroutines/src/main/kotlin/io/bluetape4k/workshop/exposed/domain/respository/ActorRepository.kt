@@ -7,8 +7,6 @@ import io.bluetape4k.workshop.exposed.domain.mapper.toActorDTO
 import io.bluetape4k.workshop.exposed.domain.schema.Actors
 import kotlinx.datetime.LocalDate
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.andWhere
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insertAndGetId
@@ -27,8 +25,6 @@ class ActorRepository {
         log.debug { "Find Actor by id. id: $id" }
 
         return newSuspendedTransaction {
-            addLogger(StdOutSqlLogger)
-
             Actors.selectAll()
                 .where { Actors.id eq id }
                 .firstOrNull()
@@ -40,15 +36,13 @@ class ActorRepository {
         log.debug { "Search Actor by params. params: $params" }
 
         return newSuspendedTransaction {
-            addLogger(StdOutSqlLogger)
-
             val query = Actors.selectAll()
 
             params.forEach { (key, value) ->
                 when (key) {
-                    "id"          -> query.andWhere { Actors.id eq value.toInt() }
-                    "firstName"   -> query.andWhere { Actors.firstName eq value }
-                    "lastName"    -> query.andWhere { Actors.lastName eq value }
+                    "id" -> query.andWhere { Actors.id eq value.toInt() }
+                    "firstName" -> query.andWhere { Actors.firstName eq value }
+                    "lastName" -> query.andWhere { Actors.lastName eq value }
                     "dateOfBirth" -> query.andWhere { Actors.dateOfBirth eq LocalDate.parse(value) }
                 }
             }
@@ -62,8 +56,6 @@ class ActorRepository {
         log.debug { "Create Actor. actor: $actor" }
 
         return newSuspendedTransaction {
-            addLogger(StdOutSqlLogger)
-
             val actorId = Actors.insertAndGetId {
                 it[Actors.firstName] = actor.firstName
                 it[Actors.lastName] = actor.lastName
@@ -88,8 +80,6 @@ class ActorRepository {
         log.debug { "Delete Actor by id. actorId: $actorId" }
 
         return newSuspendedTransaction {
-            addLogger(StdOutSqlLogger)
-
             Actors.deleteWhere { Actors.id eq actorId }
         }
     }
