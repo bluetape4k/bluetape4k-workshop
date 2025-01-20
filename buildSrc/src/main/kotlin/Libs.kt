@@ -778,6 +778,7 @@ object Libs {
     val protobuf_bom = protobuf("protobuf-bom")
     val protobuf_protoc = protobuf("protoc")
     val protobuf_java = protobuf("protobuf-java")
+    val protobuf_java_format = protobuf("protobuf-java-format")
     val protobuf_java_util = protobuf("protobuf-java-util")
     val protobuf_kotlin = protobuf("protobuf-kotlin")
 
