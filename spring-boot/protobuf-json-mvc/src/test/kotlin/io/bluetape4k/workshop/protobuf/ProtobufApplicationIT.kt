@@ -1,14 +1,15 @@
 package io.bluetape4k.workshop.protobuf
 
-import com.google.protobuf.util.JsonFormat
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.protobuf.School.Course
+import io.bluetape4k.workshop.protobuf.convert.toJson
 import kotlinx.coroutines.reactive.awaitSingle
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldContain
 import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeNull
 import org.apache.http.client.methods.HttpGet
@@ -139,7 +140,9 @@ class ProtobufApplicationIT {
             .awaitBody<Course>()
 
         // JSON Format Text
-        val jsonText = JsonFormat.printer().print(course1)
+        val jsonText = course1.toJson()
         log.debug { "jsonText=$jsonText" }
+        jsonText shouldContain "Kotlin Programming"
+        jsonText shouldContain "john.doe@example.com"
     }
 }
