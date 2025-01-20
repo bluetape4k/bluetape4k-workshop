@@ -5,7 +5,6 @@ import io.bluetape4k.workshop.protobuf.StudentKt.phoneNumber
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.converter.protobuf.ProtobufHttpMessageConverter
-import org.springframework.web.client.RestTemplate
 
 @Configuration
 class ConurceConfig {
@@ -13,11 +12,6 @@ class ConurceConfig {
     @Bean
     fun protobufHttpMessageConverter(): ProtobufHttpMessageConverter {
         return ProtobufHttpMessageConverter()
-    }
-
-    @Bean
-    fun restTemplate(hmc: ProtobufHttpMessageConverter): RestTemplate {
-        return RestTemplate(listOf(hmc))
     }
 
     @Bean

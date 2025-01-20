@@ -3,7 +3,6 @@ package io.bluetape4k.workshop.protobuf
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.protobuf.School.Course
 import io.bluetape4k.workshop.protobuf.convert.toJson
 import kotlinx.coroutines.reactive.awaitSingle
@@ -15,10 +14,10 @@ import org.amshove.kluent.shouldNotBeNull
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.impl.client.HttpClients
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.MediaType
+import org.springframework.http.converter.protobuf.ProtobufHttpMessageConverter
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 import org.springframework.web.client.RestTemplate
@@ -35,8 +34,9 @@ class ProtobufApplicationIT {
 
     companion object: KLogging()
 
-    @Autowired
-    private val restTemplate: RestTemplate = uninitialized()
+    private val restTemplate: RestTemplate by lazy {
+        RestTemplate(listOf(ProtobufHttpMessageConverter()))
+    }
 
     @LocalServerPort
     private var port: Int = 8080
