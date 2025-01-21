@@ -1,6 +1,4 @@
-package io.bluetape4k.workshop.protobuf
-
-import io.bluetape4k.workshop.protobuf.School.Course
+package io.bluetape4k.workshop.cbor.course
 
 class CourseRepository(private val courses: MutableMap<Int, Course>) {
 
