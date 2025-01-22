@@ -941,10 +941,12 @@ class JoinTest {
          * ```sql
          * SELECT ol1.ORDER_ID, ol1.LINE_NUMBER
          *   FROM ORDER_LINES ol1
-         *      INNER JOIN (SELECT ORDER_LINES.ORDER_ID,
-         *                         MAX(ORDER_LINES.LINE_NUMBER) maxLineNumber
-         *                    FROM ORDER_LINES GROUP BY ORDER_LINES.ORDER_ID) ol2
-         *              ON ((ol1.ORDER_ID = ol2.ORDER_ID) AND (ol1.LINE_NUMBER = ol2.maxLineNumber))
+         *  WHERE ol1.LINE_NUMBER IN (
+         *                  SELECT MAX(ol2.LINE_NUMBER)
+         *                    FROM ORDER_LINES ol2
+         *                   WHERE ol2.ORDER_ID = ol1.ORDER_ID
+         *                   -- GROUP BY ol2.ORDER_ID
+         *       )
          *  ORDER BY ol1.ID ASC
          * ```
          */
@@ -953,17 +955,16 @@ class JoinTest {
         fun `aliases propagate to subquery condition`(testDB: TestDB) {
             withOrdersTables(testDB) { _, _, _, orderLines, _ ->
                 val ol1 = orderLines.alias("ol1")
-                val maxLineNumber = orderLines.lineNumber.max().alias("maxLineNumber")
-                val ol2 = orderLines.select(orderLines.orderId, maxLineNumber)
-                    .groupBy(orderLines.orderId)
-                    .alias("ol2")
+                val ol2 = orderLines.alias("ol2")
 
-                val rows = ol1
-                    .innerJoin(ol2) {
-                        (ol1[orderLines.orderId] eq ol2[orderLines.orderId]) and
-                                (ol1[orderLines.lineNumber] eq ol2[maxLineNumber])
+                val rows = ol1.select(ol1[orderLines.orderId], ol1[orderLines.lineNumber])
+                    .where {
+                        ol1[orderLines.lineNumber] inSubQuery
+                                ol2.select(ol2[orderLines.lineNumber].max())
+                                    .where { ol2[orderLines.orderId] eq ol1[orderLines.orderId] }
+                        //.groupBy(ol2[orderLines.orderId])
+
                     }
-                    .select(ol1[orderLines.orderId], ol1[orderLines.lineNumber])
                     .orderBy(ol1[orderLines.id])
                     .toList()
 
