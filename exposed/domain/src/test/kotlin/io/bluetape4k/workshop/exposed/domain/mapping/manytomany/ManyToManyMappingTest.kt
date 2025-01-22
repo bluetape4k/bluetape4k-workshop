@@ -4,12 +4,12 @@ import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.domain.mapping.manytomany.UserStatus.ACTIVE
 import io.bluetape4k.workshop.exposed.domain.mapping.manytomany.UserStatus.INACTIVE
-import io.bluetape4k.workshop.exposed.domain.withSuspendedTables
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.withSuspendedTables
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.selectAll
@@ -60,6 +60,13 @@ class ManyToManyMappingTest: AbstractExposedTest() {
             }
 
             newSuspendedTransaction {
+                /**
+                 * Postgres:
+                 * ```sql
+                 * INSERT INTO "User" (id, username, first_name, last_name, status)
+                 * VALUES ('1efcc7ef-d259-69e9-9ff4-2d40c46f118c', 'julius.bartoletti', 'Angel', 'Wisoky', 2)
+                 * ```
+                 */
                 /**
                  * Postgres:
                  * ```sql

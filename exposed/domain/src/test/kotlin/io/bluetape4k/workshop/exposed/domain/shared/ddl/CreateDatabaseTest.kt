@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.exposed.domain.shared.ddl
 
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.withDb
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.withDb
 import org.amshove.kluent.shouldContain
 import org.amshove.kluent.shouldNotContain
 import org.jetbrains.exposed.sql.SchemaUtils

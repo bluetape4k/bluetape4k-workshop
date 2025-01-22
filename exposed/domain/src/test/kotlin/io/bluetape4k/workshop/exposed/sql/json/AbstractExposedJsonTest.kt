@@ -1,12 +1,12 @@
 package io.bluetape4k.workshop.exposed.sql.json
 
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.sql.json.JsonTestData.JsonArrays
 import io.bluetape4k.workshop.exposed.sql.json.JsonTestData.JsonBArrays
 import io.bluetape4k.workshop.exposed.sql.json.JsonTestData.JsonBTable
 import io.bluetape4k.workshop.exposed.sql.json.JsonTestData.JsonTable
+import io.bluetape4k.workshop.exposed.withTables
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.insert
@@ -25,7 +25,7 @@ abstract class AbstractExposedJsonTest: AbstractExposedTest() {
             val user1 = User("Admin", null)
             val data1 = DataHolder(user1, 10, true, null)
 
-            tester.insert { it[JsonTable.jsonColumn] = data1 }
+            tester.insert { it[jsonColumn] = data1 }
 
             statement(tester, user1, data1)
         }
@@ -41,7 +41,7 @@ abstract class AbstractExposedJsonTest: AbstractExposedTest() {
             val user1 = User("Admin", null)
             val data1 = DataHolder(user1, 10, true, null)
 
-            tester.insert { it[JsonBTable.jsonBColumn] = data1 }
+            tester.insert { it[jsonBColumn] = data1 }
 
             statement(tester, user1, data1)
         }

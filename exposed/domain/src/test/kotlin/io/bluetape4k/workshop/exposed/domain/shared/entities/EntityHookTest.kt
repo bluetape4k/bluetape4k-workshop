@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
 import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.City
 import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.CityTable
 import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.Country
@@ -10,7 +10,7 @@ import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.CountryTable
 import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.User
 import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.UserTable
 import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.UserToCityTable
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldHaveSize

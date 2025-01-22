@@ -1,12 +1,14 @@
 package io.bluetape4k.workshop.exposed.sql.javatime
 
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.domain.shared.MiscTable
+import io.bluetape4k.workshop.exposed.domain.shared.MiscTable.E
+import io.bluetape4k.workshop.exposed.domain.shared.MiscTable.E.ONE
 import io.bluetape4k.workshop.exposed.domain.shared.checkInsert
 import io.bluetape4k.workshop.exposed.domain.shared.checkRow
-import io.bluetape4k.workshop.exposed.domain.withDb
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.withDb
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.sql.Cast
 import org.jetbrains.exposed.sql.ResultRow
@@ -74,8 +76,8 @@ class MiscTableTest: AbstractExposedTest() {
                 it[dt] = dateTime
                 it[ts] = timestamp
                 it[dr] = duration
-                it[e] = MiscTable.E.ONE
-                it[es] = MiscTable.E.ONE
+                it[e] = ONE
+                it[es] = ONE
                 it[c] = "test"
                 it[s] = "test"
                 it[dc] = BigDecimal("239.42")
@@ -84,7 +86,7 @@ class MiscTableTest: AbstractExposedTest() {
 
             val row = tbl.selectAll().single()
             tbl.checkRow(
-                row, 13, null, -10, null, 42, null, MiscTable.E.ONE, null, MiscTable.E.ONE,
+                row, 13, null, -10, null, 42, null, ONE, null, ONE,
                 null, "test", null, "test", null, BigDecimal("239.42"), null, null, null
             )
 
@@ -121,9 +123,9 @@ class MiscTableTest: AbstractExposedTest() {
                 it[tsn] = null
                 it[dr] = duration
                 it[drn] = null
-                it[e] = MiscTable.E.ONE
+                it[e] = ONE
                 it[en] = null
-                it[es] = MiscTable.E.ONE
+                it[es] = ONE
                 it[esn] = null
                 it[c] = "test"
                 it[cn] = null
@@ -136,7 +138,7 @@ class MiscTableTest: AbstractExposedTest() {
 
             val row = tbl.selectAll().single()
             tbl.checkRow(
-                row, 13, null, -10, null, 42, null, MiscTable.E.ONE, null, MiscTable.E.ONE,
+                row, 13, null, -10, null, 42, null, ONE, null, ONE,
                 null, "test", null, "test", null, BigDecimal("239.42"), null, null, null
             )
             tbl.checkRowDates(row, date, null, time, null, dateTime, null, timestamp, null, duration, null)
@@ -171,10 +173,10 @@ class MiscTableTest: AbstractExposedTest() {
                 it[tsn] = timestamp
                 it[dr] = duration
                 it[drn] = duration
-                it[e] = MiscTable.E.ONE
-                it[en] = MiscTable.E.ONE
-                it[es] = MiscTable.E.ONE
-                it[esn] = MiscTable.E.ONE
+                it[e] = ONE
+                it[en] = ONE
+                it[es] = ONE
+                it[esn] = ONE
                 it[c] = "test"
                 it[cn] = "test"
                 it[s] = "test"
@@ -187,7 +189,7 @@ class MiscTableTest: AbstractExposedTest() {
 
             val row = tbl.selectAll().single()
             tbl.checkRow(
-                row, 13, 13, -10, -10, 42, 42, MiscTable.E.ONE, MiscTable.E.ONE, MiscTable.E.ONE, MiscTable.E.ONE,
+                row, 13, 13, -10, -10, 42, 42, ONE, ONE, ONE, ONE,
                 "test", "test", "test", "test", BigDecimal("239.42"), BigDecimal("239.42"), 239.42f, 567.89
             )
             tbl.checkRowDates(row, date, date, time, time, dateTime, dateTime, timestamp, timestamp, duration, duration)
@@ -216,8 +218,8 @@ class MiscTableTest: AbstractExposedTest() {
                 it[dt] = dateTime
                 it[ts] = timestamp
                 it[dr] = duration
-                it[e] = MiscTable.E.ONE
-                it[es] = MiscTable.E.ONE
+                it[e] = ONE
+                it[es] = ONE
                 it[c] = shortStringThatNeedsEscaping
                 it[s] = stringThatNeedsEscaping
                 it[dc] = BigDecimal("239.42")
@@ -225,7 +227,7 @@ class MiscTableTest: AbstractExposedTest() {
 
             val row = tbl.selectAll().single()
             tbl.checkRow(
-                row, 13, null, -10, null, 42, null, MiscTable.E.ONE, null, MiscTable.E.ONE, null,
+                row, 13, null, -10, null, 42, null, ONE, null, ONE, null,
                 shortStringThatNeedsEscaping, null, stringThatNeedsEscaping, null,
                 BigDecimal("239.42"), null, null, null
             )
@@ -253,8 +255,8 @@ class MiscTableTest: AbstractExposedTest() {
                 it[dt] = dateTime
                 it[ts] = timestamp
                 it[dr] = duration
-                it[e] = MiscTable.E.ONE
-                it[es] = MiscTable.E.ONE
+                it[e] = ONE
+                it[es] = ONE
                 it[c] = "test"
                 it[s] = "test"
                 it[dc] = BigDecimal("239.42")
@@ -262,7 +264,7 @@ class MiscTableTest: AbstractExposedTest() {
             }
 
             tbl.checkInsert(
-                row, 13, null, -10, null, 42, null, MiscTable.E.ONE, null, MiscTable.E.ONE,
+                row, 13, null, -10, null, 42, null, ONE, null, ONE,
                 null, "test", null, BigDecimal("239.42"), null, null, null
             )
             tbl.checkRowDates(
@@ -307,8 +309,8 @@ class MiscTableTest: AbstractExposedTest() {
                 it[dt] = dateTime
                 it[ts] = timestamp
                 it[dr] = duration
-                it[e] = MiscTable.E.ONE
-                it[es] = MiscTable.E.ONE
+                it[e] = ONE
+                it[es] = ONE
                 it[c] = sTest
                 it[s] = sTest
                 it[dc] = dec
@@ -332,9 +334,9 @@ class MiscTableTest: AbstractExposedTest() {
                 tsn = null,
                 dr = duration,
                 drn = null,
-                e = MiscTable.E.ONE,
+                e = ONE,
                 en = null,
-                es = MiscTable.E.ONE,
+                es = ONE,
                 esn = null,
                 c = sTest,
                 cn = null,
@@ -363,9 +365,9 @@ class MiscTableTest: AbstractExposedTest() {
                 tsn = null,
                 dr = duration,
                 drn = null,
-                e = MiscTable.E.ONE,
+                e = ONE,
                 en = null,
-                es = MiscTable.E.ONE,
+                es = ONE,
                 esn = null,
                 c = sTest,
                 cn = null,
@@ -394,9 +396,9 @@ class MiscTableTest: AbstractExposedTest() {
                 tsn = null,
                 dr = duration,
                 drn = null,
-                e = MiscTable.E.ONE,
+                e = ONE,
                 en = null,
-                es = MiscTable.E.ONE,
+                es = ONE,
                 esn = null,
                 c = sTest,
                 cn = null,
@@ -426,9 +428,9 @@ class MiscTableTest: AbstractExposedTest() {
                 tsn = null,
                 dr = duration,
                 drn = null,
-                e = MiscTable.E.ONE,
+                e = ONE,
                 en = null,
-                es = MiscTable.E.ONE,
+                es = ONE,
                 esn = null,
                 c = sTest,
                 cn = null,
@@ -457,9 +459,9 @@ class MiscTableTest: AbstractExposedTest() {
                 tsn = null,
                 dr = duration,
                 drn = null,
-                e = MiscTable.E.ONE,
+                e = ONE,
                 en = null,
-                es = MiscTable.E.ONE,
+                es = ONE,
                 esn = null,
                 c = sTest,
                 cn = null,
@@ -493,9 +495,9 @@ class MiscTableTest: AbstractExposedTest() {
                 tsn = null,
                 dr = duration,
                 drn = null,
-                e = MiscTable.E.ONE,
+                e = ONE,
                 en = null,
-                es = MiscTable.E.ONE,
+                es = ONE,
                 esn = null,
                 c = sTest,
                 cn = null,
@@ -524,9 +526,9 @@ class MiscTableTest: AbstractExposedTest() {
                 tsn = null,
                 dr = duration,
                 drn = null,
-                e = MiscTable.E.ONE,
+                e = ONE,
                 en = null,
-                es = MiscTable.E.ONE,
+                es = ONE,
                 esn = null,
                 c = sTest,
                 cn = null,
@@ -539,7 +541,7 @@ class MiscTableTest: AbstractExposedTest() {
             )
 
             tbl.checkRowFull(
-                tbl.selectAll().where { tbl.e.eq(MiscTable.E.ONE) }.single(),
+                tbl.selectAll().where { tbl.e.eq(ONE) }.single(),
                 by = 13,
                 byn = null,
                 sm = -10,
@@ -556,9 +558,9 @@ class MiscTableTest: AbstractExposedTest() {
                 tsn = null,
                 dr = duration,
                 drn = null,
-                e = MiscTable.E.ONE,
+                e = ONE,
                 en = null,
-                es = MiscTable.E.ONE,
+                es = ONE,
                 esn = null,
                 c = sTest,
                 cn = null,
@@ -587,9 +589,9 @@ class MiscTableTest: AbstractExposedTest() {
                 tsn = null,
                 dr = duration,
                 drn = null,
-                e = MiscTable.E.ONE,
+                e = ONE,
                 en = null,
-                es = MiscTable.E.ONE,
+                es = ONE,
                 esn = null,
                 c = sTest,
                 cn = null,
@@ -601,7 +603,7 @@ class MiscTableTest: AbstractExposedTest() {
                 dblcn = null
             )
             tbl.checkRowFull(
-                tbl.selectAll().where { tbl.en.eq(null as MiscTable.E?) }.single(),
+                tbl.selectAll().where { tbl.en.eq(null as E?) }.single(),
                 by = 13,
                 byn = null,
                 sm = -10,
@@ -618,9 +620,9 @@ class MiscTableTest: AbstractExposedTest() {
                 tsn = null,
                 dr = duration,
                 drn = null,
-                e = MiscTable.E.ONE,
+                e = ONE,
                 en = null,
-                es = MiscTable.E.ONE,
+                es = ONE,
                 esn = null,
                 c = sTest,
                 cn = null,
@@ -650,9 +652,9 @@ class MiscTableTest: AbstractExposedTest() {
                 tsn = null,
                 dr = duration,
                 drn = null,
-                e = MiscTable.E.ONE,
+                e = ONE,
                 en = null,
-                es = MiscTable.E.ONE,
+                es = ONE,
                 esn = null,
                 c = sTest,
                 cn = null,
@@ -681,9 +683,9 @@ class MiscTableTest: AbstractExposedTest() {
                 tsn = null,
                 dr = duration,
                 drn = null,
-                e = MiscTable.E.ONE,
+                e = ONE,
                 en = null,
-                es = MiscTable.E.ONE,
+                es = ONE,
                 esn = null,
                 c = sTest,
                 cn = null,
@@ -712,9 +714,9 @@ class MiscTableTest: AbstractExposedTest() {
                 tsn = null,
                 dr = duration,
                 drn = null,
-                e = MiscTable.E.ONE,
+                e = ONE,
                 en = null,
-                es = MiscTable.E.ONE,
+                es = ONE,
                 esn = null,
                 c = sTest,
                 cn = null,
@@ -739,7 +741,7 @@ class MiscTableTest: AbstractExposedTest() {
             val timestamp = Instant.now()
             val duration = Duration.ofMinutes(1)
             val sTest = "test"
-            val eOne = MiscTable.E.ONE
+            val eOne = ONE
             val dec = BigDecimal("239.42")
             tbl.insert {
                 it[by] = 13
@@ -1101,7 +1103,7 @@ class MiscTableTest: AbstractExposedTest() {
             val date = today
             val time = LocalTime.now()
             val dateTime = LocalDateTime.now()
-            val eOne = MiscTable.E.ONE
+            val eOne = ONE
             val sTest = "test"
             val dec = BigDecimal("239.42")
             val timestamp = Instant.now()

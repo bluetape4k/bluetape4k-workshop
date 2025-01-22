@@ -3,12 +3,15 @@ package io.bluetape4k.workshop.exposed.sql.javatime
 import MigrationUtils
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.currentDialectTest
-import io.bluetape4k.workshop.exposed.domain.expectException
-import io.bluetape4k.workshop.exposed.domain.withDb
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.TestDB.H2_PSQL
+import io.bluetape4k.workshop.exposed.TestDB.MYSQL_V8
+import io.bluetape4k.workshop.exposed.TestDB.POSTGRESQL
+import io.bluetape4k.workshop.exposed.currentDialectTest
+import io.bluetape4k.workshop.exposed.expectException
+import io.bluetape4k.workshop.exposed.withDb
+import io.bluetape4k.workshop.exposed.withTables
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -74,8 +77,9 @@ import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
-import java.time.temporal.ChronoUnit
+import java.time.temporal.ChronoUnit.MILLIS
 import java.time.temporal.Temporal
+import java.util.*
 
 class JavaTimeTest: AbstractExposedTest() {
 
@@ -92,6 +96,14 @@ class JavaTimeTest: AbstractExposedTest() {
         withTables(testDB, CitiesTime) {
             val now = LocalDateTime.now()
 
+            /**
+             * Insert a city with local time
+             *
+             * H2:
+             * ```sql
+             * INSERT INTO CITIESTIME ("name", LOCAL_TIME) VALUES ('Seoul', '2025-01-17T09:21:19.842087')
+             * ```
+             */
             /**
              * Insert a city with local time
              *
@@ -142,6 +154,12 @@ class JavaTimeTest: AbstractExposedTest() {
                 it[tsn] = now
             }
 
+            /**
+             * select max timestamp
+             * ```sql
+             *
+             * ```
+             */
             /**
              * select max timestamp
              * ```sql
@@ -242,6 +260,21 @@ class JavaTimeTest: AbstractExposedTest() {
              *  WHERE Extract(YEAR FROM test_table.created) = Extract(YEAR FROM CAST('2024-05-04' AS DATE))
              * ```
              */
+            /**
+             * MySQL_V8:
+             * ```sql
+             * SELECT test_table.created, test_table.deleted
+             *   FROM test_table
+             *  WHERE YEAR(test_table.created) = YEAR('2024-05-04')
+             * ```
+             *
+             * Postgres:
+             * ```sql
+             * SELECT test_table.created, test_table.deleted
+             *   FROM test_table
+             *  WHERE Extract(YEAR FROM test_table.created) = Extract(YEAR FROM CAST('2024-05-04' AS DATE))
+             * ```
+             */
             val year2024 = if (currentDialect is PostgreSQLDialect) {
                 // PostgreSQL requires explicit type cast to resolve function date_part
                 dateParam(mayTheFourth).castTo(JavaLocalDateColumnType()).year()
@@ -282,7 +315,7 @@ class JavaTimeTest: AbstractExposedTest() {
             }
 
             // these DB take the nanosecond value 871_130_789 and round up to default precision (e.g. in Oracle: 871_131)
-            val requiresExplicitDTCast = listOf(TestDB.H2_PSQL)
+            val requiresExplicitDTCast = listOf(H2_PSQL)
             val dateTime = when (testDB) {
                 in requiresExplicitDTCast -> Cast(dateTimeParam(mayTheFourth), JavaLocalDateTimeColumnType())
                 else -> dateTimeParam(mayTheFourth)
@@ -358,7 +391,7 @@ class JavaTimeTest: AbstractExposedTest() {
 
         withTables(testDB, tester) {
             // Africa/Cairo time zone
-            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Africa/Cairo"))
+            TimeZone.setDefault(TimeZone.getTimeZone("Africa/Cairo"))
             ZoneId.systemDefault().id shouldBeEqualTo "Africa/Cairo"
 
             val cairoNow = OffsetDateTime.now(ZoneId.systemDefault())
@@ -372,7 +405,7 @@ class JavaTimeTest: AbstractExposedTest() {
                 .single()[tester.timestampWithTimeZone]
 
             // UTC time zone
-            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(ZoneOffset.UTC))
+            TimeZone.setDefault(TimeZone.getTimeZone(ZoneOffset.UTC))
             ZoneId.systemDefault().id shouldBeEqualTo "UTC"
 
             val cairoNowRetrievedInUTCTimeZone = tester.selectAll()
@@ -389,7 +422,7 @@ class JavaTimeTest: AbstractExposedTest() {
 
 
             // Seoul time zone
-            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Asia/Seoul"))
+            TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"))
             ZoneId.systemDefault().id shouldBeEqualTo "Asia/Seoul"
 
             val cairoNowRetrievedInSeoulTimeZone = tester.selectAll()
@@ -426,7 +459,7 @@ class JavaTimeTest: AbstractExposedTest() {
             }
 
             // Reset to original time zone as set up in DatabaseTestsBase init block
-            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(ZoneOffset.UTC))
+            TimeZone.setDefault(TimeZone.getTimeZone(ZoneOffset.UTC))
             ZoneId.systemDefault().id shouldBeEqualTo "UTC"
         }
     }
@@ -458,7 +491,7 @@ class JavaTimeTest: AbstractExposedTest() {
 
         withTables(testDB, tester) {
             // UTC time zone
-            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(ZoneOffset.UTC))
+            TimeZone.setDefault(TimeZone.getTimeZone(ZoneOffset.UTC))
             ZoneId.systemDefault().id shouldBeEqualTo "UTC"
 
             val nowText = "2023-05-04T05:04:01.123123123+00:00"
@@ -473,7 +506,7 @@ class JavaTimeTest: AbstractExposedTest() {
                 .single()[tester.timestampWithTimeZone.date()] shouldBeEqualTo now.toLocalDate()
 
             val expectedTime: LocalTime = when (testDB) {
-                TestDB.MYSQL_V8,
+                MYSQL_V8,
                 in TestDB.ALL_POSTGRES_LIKE,
                     -> OffsetDateTime.parse("2023-05-04T05:04:01.123123+00:00")  // NOTE: Microseconds 까지만 지원
 
@@ -542,12 +575,22 @@ class JavaTimeTest: AbstractExposedTest() {
             val result1 = tester.selectAll().single()
             log.debug { "datetimes=${result1[tester.datetimes]}" }
             result1[tester.dates] shouldBeEqualTo defaultDates
-            if (testDB == TestDB.POSTGRESQL) {
-                result1[tester.datetimes] shouldBeEqualTo defaultDateTimes.map { it.truncatedTo(ChronoUnit.MILLIS) }
+            if (testDB == POSTGRESQL) {
+                result1[tester.datetimes] shouldBeEqualTo defaultDateTimes.map { it.truncatedTo(MILLIS) }
             } else {
                 result1[tester.datetimes] shouldBeEqualTo defaultDateTimes
             }
 
+            /**
+             * H2:
+             * ```sql
+             * INSERT INTO ARRAY_TESTER (DATES, "dateTimes")
+             * VALUES (
+             *      ARRAY ['2020-05-04','2021-05-04','2022-05-04'],
+             *      ARRAY ['2020-05-04T09:09:09','2021-05-04T09:09:09','2022-05-04T09:09:09']
+             * )
+             * ```
+             */
             /**
              * H2:
              * ```sql
@@ -565,6 +608,15 @@ class JavaTimeTest: AbstractExposedTest() {
                 it[tester.datetimes] = datetimeInput
             }
 
+            /**
+             * H2:
+             * ```sql
+             * SELECT ARRAY_TESTER.DATES[3],
+             *        ARRAY_SLICE(ARRAY_TESTER."dateTimes",1,2)
+             *   FROM ARRAY_TESTER
+             *  WHERE YEAR(ARRAY_TESTER.DATES[1]) = 2020
+             * ```
+             */
             /**
              * H2:
              * ```sql
@@ -596,12 +648,21 @@ class JavaTimeTest: AbstractExposedTest() {
             val localTimeLiteral = timeLiteral(localTime)
 
             // UTC time zone
-            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(ZoneOffset.UTC))
+            TimeZone.setDefault(TimeZone.getTimeZone(ZoneOffset.UTC))
             ZoneId.systemDefault().id shouldBeEqualTo "UTC"
 
             tester.insert {
                 it[time] = localTime
             }
+
+            /**
+             * H2:
+             * ```sql
+             * SELECT TABLEWITHTIME.ID, TABLEWITHTIME."time"
+             *   FROM TABLEWITHTIME
+             *  WHERE TABLEWITHTIME."time" = '13:05:00'
+             * ```
+             */
 
             /**
              * H2:

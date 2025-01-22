@@ -1,14 +1,15 @@
 package io.bluetape4k.workshop.exposed.sql.json
 
 import MigrationUtils
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.currentDialectTest
-import io.bluetape4k.workshop.exposed.domain.expectException
-import io.bluetape4k.workshop.exposed.domain.withDb
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.TestDB.MYSQL_V5
+import io.bluetape4k.workshop.exposed.currentDialectTest
+import io.bluetape4k.workshop.exposed.expectException
 import io.bluetape4k.workshop.exposed.sql.json.JsonTestData.JsonArrays
 import io.bluetape4k.workshop.exposed.sql.json.JsonTestData.JsonEntity
 import io.bluetape4k.workshop.exposed.sql.json.JsonTestData.JsonTable
+import io.bluetape4k.workshop.exposed.withDb
+import io.bluetape4k.workshop.exposed.withTables
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.ArraySerializer
@@ -211,7 +212,7 @@ class JsonColumnTest: AbstractExposedJsonTest() {
                 // Throws with message: Serializer for class 'Fake' is not found.
                 // Please ensure that class is marked as '@Serializable' and that the serialization compiler plugin is applied.
                 object: Table("tester") {
-                    val jCol = json<Fake>("J_col", Json.Default)
+                    val jCol = json<Fake>("J_col", Json)
                 }
             }
         }
@@ -242,6 +243,15 @@ class JsonColumnTest: AbstractExposedJsonTest() {
              *   SET j_column={"user":{"name":"Lead","team":"Beta"},"logins":10,"active":true,"team":null}
              * ```
              */
+            /**
+             * Update
+             *
+             * Postgres:
+             * ```sql
+             * UPDATE j_table
+             *   SET j_column={"user":{"name":"Lead","team":"Beta"},"logins":10,"active":true,"team":null}
+             * ```
+             */
             val updatedJson = jsonA.copy(user = User("Lead", "Beta"))
             dataTable.update {
                 it[jsonColumn] = updatedJson
@@ -259,12 +269,28 @@ class JsonColumnTest: AbstractExposedJsonTest() {
              * INSERT INTO j_table (j_column) VALUES ({"user":{"name":"Admin","team":"Alpha"},"logins":10,"active":true,"team":null})
              * ```
              */
+
+            /**
+             * Insert new entity
+             *
+             * ```sql
+             * INSERT INTO j_table (j_column) VALUES ({"user":{"name":"Admin","team":"Alpha"},"logins":10,"active":true,"team":null})
+             * ```
+             */
             dataEntity.new { jsonColumn = jsonA }
             val path = when (currentDialectTest) {
                 is PostgreSQLDialect -> arrayOf("user", "team")
                 else                 -> arrayOf(".user.team")
             }
 
+            /**
+             * Postgres:
+             * ```sql
+             * SELECT j_table.id, j_table.j_column
+             *   FROM j_table
+             *  WHERE JSON_EXTRACT_PATH_TEXT(j_table.j_column, 'user', 'team') LIKE 'B%'
+             * ```
+             */
             /**
              * Postgres:
              * ```sql
@@ -556,6 +582,24 @@ class JsonColumnTest: AbstractExposedJsonTest() {
              *  WHERE iterables.user_array::jsonb @> '[{"name":"A","team":"Team A"},{"name":"B","team":"Team B"}]'::jsonb
              * ```
              */
+
+            /**
+             * Postgres:
+             *
+             * ```sql
+             * SELECT iterables.id
+             *   FROM iterables
+             *  WHERE iterables.user_list::jsonb @> '[{"name":"A","team":"Team A"}]'::jsonb
+             *
+             * SELECT iterables.id
+             *   FROM iterables
+             *  WHERE iterables.user_set::jsonb @> '[{"name":"B","team":"Team B"}]'::jsonb
+             *
+             * SELECT iterables.id
+             *   FROM iterables
+             *  WHERE iterables.user_array::jsonb @> '[{"name":"A","team":"Team A"},{"name":"B","team":"Team B"}]'::jsonb
+             * ```
+             */
             selectIdWhere { iterables.userList.contains(listOf(user1)) } shouldBeEqualTo listOf(id1)
             selectIdWhere { iterables.userSet.contains(setOf(user2)) } shouldBeEqualTo listOf(id2)
             selectIdWhere { iterables.userArray.contains(arrayOf(user1, user2)) } shouldBeEqualTo listOf(id1, id2)
@@ -572,13 +616,22 @@ class JsonColumnTest: AbstractExposedJsonTest() {
         }
 
         withDb(testDB) {
-            if (testDB == TestDB.MYSQL_V5) {
+            if (testDB == MYSQL_V5) {
                 expectException<IllegalArgumentException> {
                     // SchemaUtils.createMissingTablesAndColumns(defaultTester)
                     exec(MigrationUtils.statementsRequiredForDatabaseMigration(defaultTester).single())
                     db.dialect.resetCaches()
                 }
             } else {
+                /**
+                 * Postgres:
+                 * ```sql
+                 * CREATE TABLE IF NOT EXISTS default_tester (
+                 *      user_1 JSON DEFAULT '{"name":"UNKNOWN","team":"UNASSIGNED"}'::json NOT NULL,
+                 *      user_2 JSON NOT NULL
+                 * )
+                 * ```
+                 */
                 /**
                  * Postgres:
                  * ```sql
@@ -717,6 +770,11 @@ class JsonColumnTest: AbstractExposedJsonTest() {
         }
 
         withTables(testDB, tester) {
+            /**
+             * ```sql
+             * INSERT INTO tester (numbers) VALUES ([1,2,3])
+             * ```
+             */
             /**
              * ```sql
              * INSERT INTO tester (numbers) VALUES ([1,2,3])

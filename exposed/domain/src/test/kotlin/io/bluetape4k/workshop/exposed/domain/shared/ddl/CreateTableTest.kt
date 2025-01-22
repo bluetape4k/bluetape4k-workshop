@@ -2,14 +2,14 @@ package io.bluetape4k.workshop.exposed.domain.shared.ddl
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.currentDialectTest
-import io.bluetape4k.workshop.exposed.domain.inProperCase
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.currentDialectTest
 import io.bluetape4k.workshop.exposed.domain.shared.Category
 import io.bluetape4k.workshop.exposed.domain.shared.Item
-import io.bluetape4k.workshop.exposed.domain.withDb
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.inProperCase
+import io.bluetape4k.workshop.exposed.withDb
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeTrue
@@ -767,7 +767,8 @@ class CreateTableTest: AbstractExposedTest() {
         }
     }
 
-    private fun TestDB.getDefaultSchemaPrefixedTableName(tableName: String): String = when (currentDialectTest) {
+    private fun TestDB.getDefaultSchemaPrefixedTableName(tableName: String): String =
+        when (io.bluetape4k.workshop.exposed.currentDialectTest) {
         is SQLServerDialect -> "dbo.$tableName"
         is OracleDialect    -> "${this.user}.$tableName"
         is MysqlDialect     -> "${this.db!!.name}.$tableName"

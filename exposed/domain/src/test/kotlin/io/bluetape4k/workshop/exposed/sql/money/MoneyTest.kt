@@ -3,10 +3,10 @@ package io.bluetape4k.workshop.exposed.sql.money
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.money.currencyUnitOf
 import io.bluetape4k.money.moneyOf
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.expectException
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.expectException
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.javamoney.moneta.Money
 import org.jetbrains.exposed.exceptions.ExposedSQLException
@@ -86,13 +86,13 @@ class MoneyTest: AbstractExposedTest() {
         withTables(testDB, Account) {
             expectException<ExposedSQLException> {
                 Account.insertAndGetId {
-                    it[Account.composite_money] = toInsert
+                    it[composite_money] = toInsert
                 }
             }
             expectException<ExposedSQLException> {
                 Account.insertAndGetId {
-                    it[Account.composite_money.amount] = amount
-                    it[Account.composite_money.currency] = toInsert.currency
+                    it[composite_money.amount] = amount
+                    it[composite_money.currency] = toInsert.currency
                 }
             }
         }
@@ -121,7 +121,7 @@ class MoneyTest: AbstractExposedTest() {
 
         withTables(testDB, Account) {
             Account.insertAndGetId {
-                it[Account.composite_money] = money
+                it[composite_money] = money
             }
 
             val predicates = listOf(

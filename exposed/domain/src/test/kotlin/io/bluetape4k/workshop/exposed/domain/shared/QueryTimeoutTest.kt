@@ -1,9 +1,11 @@
 package io.bluetape4k.workshop.exposed.domain.shared
 
 import com.impossibl.postgres.jdbc.PGSQLSimpleException
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.withDb
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.TestDB.POSTGRESQL
+import io.bluetape4k.workshop.exposed.TestDB.POSTGRESQLNG
+import io.bluetape4k.workshop.exposed.withDb
 import org.amshove.kluent.shouldBeInstanceOf
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -46,9 +48,9 @@ class QueryTimeoutTest: AbstractExposedTest() {
             } catch (cause: ExposedSQLException) {
                 when (testDB) {
                     // PostgreSQL throws a regular PgSQLException with a cancelled statement message
-                    TestDB.POSTGRESQL   -> cause.cause shouldBeInstanceOf PSQLException::class
+                    POSTGRESQL -> cause.cause shouldBeInstanceOf PSQLException::class
                     // PostgreSQLNG throws a regular PGSQLSimpleException with a cancelled statement message
-                    TestDB.POSTGRESQLNG -> cause.cause shouldBeInstanceOf PGSQLSimpleException::class
+                    POSTGRESQLNG -> cause.cause shouldBeInstanceOf PGSQLSimpleException::class
                     else                -> cause.cause shouldBeInstanceOf SQLTimeoutException::class
                 }
             }
@@ -97,9 +99,9 @@ class QueryTimeoutTest: AbstractExposedTest() {
             } catch (cause: ExposedSQLException) {
                 when (testDB) {
                     // PostgreSQL throws a regular PSQLException with a minus timeout value
-                    TestDB.POSTGRESQL                           -> cause.cause shouldBeInstanceOf PSQLException::class
+                    POSTGRESQL -> cause.cause shouldBeInstanceOf PSQLException::class
                     // MySQL, POSTGRESQLNG throws a regular SQLException with a minus timeout value
-                    in (TestDB.ALL_MYSQL + TestDB.POSTGRESQLNG) -> cause.cause shouldBeInstanceOf SQLException::class
+                    in (TestDB.ALL_MYSQL + POSTGRESQLNG) -> cause.cause shouldBeInstanceOf SQLException::class
                     // MariaDB throws a regular SQLSyntaxErrorException with a minus timeout value
                     // in TestDB.ALL_MARIADB -> assertTrue(cause.cause is SQLSyntaxErrorException)
                     // SqlServer throws a regular SQLServerException with a minus timeout value

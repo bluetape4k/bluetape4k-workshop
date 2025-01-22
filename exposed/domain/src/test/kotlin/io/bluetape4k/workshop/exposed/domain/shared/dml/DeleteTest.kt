@@ -1,11 +1,11 @@
 package io.bluetape4k.workshop.exposed.domain.shared.dml
 
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.currentDialectTest
-import io.bluetape4k.workshop.exposed.domain.currentTestDB
-import io.bluetape4k.workshop.exposed.domain.expectException
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.currentDialectTest
+import io.bluetape4k.workshop.exposed.currentTestDB
+import io.bluetape4k.workshop.exposed.expectException
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeGreaterThan

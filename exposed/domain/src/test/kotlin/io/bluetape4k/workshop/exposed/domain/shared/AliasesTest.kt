@@ -1,11 +1,13 @@
 package io.bluetape4k.workshop.exposed.domain.shared
 
 import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.domain.shared.dml.withCitiesAndUsers
-import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.XEntity
+import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.XTable
+import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.YTable
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
@@ -21,6 +23,8 @@ import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.Join
 import org.jetbrains.exposed.sql.JoinType
+import org.jetbrains.exposed.sql.JoinType.INNER
+import org.jetbrains.exposed.sql.JoinType.LEFT
 import org.jetbrains.exposed.sql.QueryBuilder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder
 import org.jetbrains.exposed.sql.Table
@@ -91,7 +95,19 @@ class AliasesTest: AbstractExposedTest() {
              *  GROUP BY STABLES.ID, STABLES."name", f.fc
              * ```
              */
-            val stats: Map<String, Long?> = stables.join(fAlias, JoinType.LEFT, stables.id, fAlias[facilities.stableId])
+            /**
+             * ```sql
+             * SELECT STABLES.ID,
+             *        STABLES."name",
+             *        f.fc
+             *   FROM STABLES LEFT JOIN (SELECT FACILITIES.STABLE_ID,
+             *                                  COUNT(FACILITIES."name") fc
+             *                             FROM FACILITIES
+             *                            GROUP BY FACILITIES.STABLE_ID) f ON STABLES.ID = f.STABLE_ID
+             *  GROUP BY STABLES.ID, STABLES."name", f.fc
+             * ```
+             */
+            val stats: Map<String, Long?> = stables.join(fAlias, LEFT, stables.id, fAlias[facilities.stableId])
                 .select(sliceColumns)
                 .groupBy(*sliceColumns.toTypedArray())
                 .associate {
@@ -251,16 +267,16 @@ class AliasesTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `wrapRow with aliased table`(testDB: TestDB) {
-        withTables(testDB, EntityTestData.XTable, EntityTestData.YTable) {
-            val entity1 = EntityTestData.XEntity.new {
+        withTables(testDB, XTable, YTable) {
+            val entity1 = XEntity.new {
                 b1 = false
             }
             flushCache()
             entityCache.clear()
 
-            val alias = EntityTestData.XTable.alias("xAlias")
+            val alias = XTable.alias("xAlias")
             val entityFromAlias = alias.selectAll()
-                .map { EntityTestData.XEntity.wrapRow(it, alias) }  // alias 를 이용한 wrapRow 에는 alias 를 전달해야 한다.
+                .map { XEntity.wrapRow(it, alias) }  // alias 를 이용한 wrapRow 에는 alias 를 전달해야 한다.
                 .singleOrNull()
 
             entityFromAlias.shouldNotBeNull()
@@ -280,16 +296,16 @@ class AliasesTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `wrapRow with aliased query`(testDB: TestDB) {
-        withTables(testDB, EntityTestData.XTable, EntityTestData.YTable) {
-            val entity1 = EntityTestData.XEntity.new {
+        withTables(testDB, XTable, YTable) {
+            val entity1 = XEntity.new {
                 b1 = false
             }
             flushCache()
             entityCache.clear()
 
-            val alias = EntityTestData.XTable.selectAll().alias("xAlias")
+            val alias = XTable.selectAll().alias("xAlias")
             val entityFromAlias = alias.selectAll()
-                .map { EntityTestData.XEntity.wrapRow(it, alias) }  // alias 를 이용한 wrapRow 에는 alias 를 전달해야 한다.
+                .map { XEntity.wrapRow(it, alias) }  // alias 를 이용한 wrapRow 에는 alias 를 전달해야 한다.
                 .singleOrNull()
 
             entityFromAlias.shouldNotBeNull()
@@ -311,24 +327,24 @@ class AliasesTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `aliased expression with aliased query`(testDB: TestDB) {
-        withTables(testDB, EntityTestData.XTable, EntityTestData.YTable) {
+        withTables(testDB, XTable, YTable) {
             val dataToInsert = listOf(true, true, false, true)
-            EntityTestData.XTable.batchInsert(dataToInsert) {
-                this[EntityTestData.XTable.b1] = it
+            XTable.batchInsert(dataToInsert) {
+                this[XTable.b1] = it
             }
 
-            val aliasedExpr = EntityTestData.XTable.id.max().alias("maxId")
-            val aliasedQuery = EntityTestData.XTable
-                .select(EntityTestData.XTable.b1, aliasedExpr)
-                .groupBy(EntityTestData.XTable.b1)
+            val aliasedExpr = XTable.id.max().alias("maxId")
+            val aliasedQuery = XTable
+                .select(XTable.b1, aliasedExpr)
+                .groupBy(XTable.b1)
                 .alias("maxBoolean")
 
-            val aliasedBool = aliasedQuery[EntityTestData.XTable.b1]
+            val aliasedBool = aliasedQuery[XTable.b1]
             val exprToCheck = aliasedQuery[aliasedExpr]
             exprToCheck.toString() shouldBeEqualTo "maxBoolean.maxId"
 
             val resultQuery = aliasedQuery
-                .leftJoin(EntityTestData.XTable, { this[aliasedExpr] }, { id })
+                .leftJoin(XTable, { this[aliasedExpr] }, { id })
                 .select(aliasedBool, exprToCheck)
 
             val result = resultQuery.map {
@@ -350,20 +366,20 @@ class AliasesTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `alias for same table with join`(testDB: TestDB) {
-        withTables(testDB, EntityTestData.XTable, EntityTestData.YTable) {
+        withTables(testDB, XTable, YTable) {
             val dataToInsert = listOf(true, true, false, true)
-            EntityTestData.XTable.batchInsert(dataToInsert) {
-                this[EntityTestData.XTable.b1] = it
+            XTable.batchInsert(dataToInsert) {
+                this[XTable.b1] = it
             }
 
-            val table1Count = EntityTestData.XTable.id.max().alias("t1max")
-            val table2Count = EntityTestData.XTable.id.max().alias("t2max")
+            val table1Count = XTable.id.max().alias("t1max")
+            val table2Count = XTable.id.max().alias("t2max")
 
-            val t1Alias = EntityTestData.XTable.select(table1Count).groupBy(EntityTestData.XTable.b1).alias("t1")
-            val t2Alias = EntityTestData.XTable.select(table2Count).groupBy(EntityTestData.XTable.b1).alias("t2")
+            val t1Alias = XTable.select(table1Count).groupBy(XTable.b1).alias("t1")
+            val t2Alias = XTable.select(table2Count).groupBy(XTable.b1).alias("t2")
 
             val query = t1Alias
-                .join(t2Alias, JoinType.INNER) {
+                .join(t2Alias, INNER) {
                     t1Alias[table1Count] eq t2Alias[table2Count]
                 }
                 .select(t1Alias[table1Count])

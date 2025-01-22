@@ -1,9 +1,10 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.joins
 
+import com.impossibl.postgres.jdbc.PGSQLSimpleException
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.domain.mapping.OrderSchema
 import io.bluetape4k.workshop.exposed.domain.mapping.OrderSchema.OrderRecord
 import io.bluetape4k.workshop.exposed.domain.mapping.withOrdersTables
@@ -928,11 +929,18 @@ class JoinTest {
                 val u3 = users.alias("u3")
 
                 // u3 는 조인 조건이 없다
-                assertFailsWith<ExposedSQLException> {
-                    users.innerJoin(u2) { users.id eq u3[users.id] }
-                        .selectAll()
-                        .where { u2[users.id] eq 4L }
-                        .toList()
+                val query = users.innerJoin(u2) { users.id eq u3[users.id] }
+                    .selectAll()
+                    .where { u2[users.id] eq 4L }
+
+                if (testDB == TestDB.POSTGRESQLNG) {
+                    assertFailsWith<PGSQLSimpleException> {
+                        query.toList()
+                    }
+                } else {
+                    assertFailsWith<ExposedSQLException> {
+                        query.toList()
+                    }
                 }
             }
         }

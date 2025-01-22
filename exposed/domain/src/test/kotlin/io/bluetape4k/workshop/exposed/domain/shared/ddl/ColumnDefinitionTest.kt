@@ -1,10 +1,12 @@
 package io.bluetape4k.workshop.exposed.domain.shared.ddl
 
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.expectException
-import io.bluetape4k.workshop.exposed.domain.withDb
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.TestDB.MYSQL_V5
+import io.bluetape4k.workshop.exposed.TestDB.MYSQL_V8
+import io.bluetape4k.workshop.exposed.expectException
+import io.bluetape4k.workshop.exposed.withDb
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
@@ -17,7 +19,7 @@ import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.statements.StatementType
+import org.jetbrains.exposed.sql.statements.StatementType.OTHER
 import org.jetbrains.exposed.sql.stringLiteral
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Disabled
@@ -82,7 +84,7 @@ class ColumnDefinitionTest: AbstractExposedTest() {
         }
 
         // withTables(TestDB.SQLSERVER, tester) {
-        withTables(TestDB.MYSQL_V5, tester) {
+        withTables(MYSQL_V5, tester) {
             SchemaUtils.statementsRequiredToActualizeScheme(tester).shouldBeEmpty()
 
             val testEmail = "mysecretemail123@gmail.com"
@@ -93,7 +95,7 @@ class ColumnDefinitionTest: AbstractExposedTest() {
             // create a new user with limited permissions
             exec("CREATE USER MaskingTestUser WITHOUT LOGIN;")
             exec("GRANT SELECT ON ${tester.nameInDatabaseCase()} TO MaskingTestUser;")
-            exec("EXECUTE AS USER = 'MaskingTestUser';", explicitStatementType = StatementType.OTHER)
+            exec("EXECUTE AS USER = 'MaskingTestUser';", explicitStatementType = OTHER)
 
             // Email function obfuscates data of all length to form 'aXXX@XXXX.com', where 'a' is original first letter
             val maskedEmail = "${testEmail.first()}XXX@XXXX.com"
@@ -163,7 +165,7 @@ class ColumnDefinitionTest: AbstractExposedTest() {
         fun FieldSet.selectImplicitAll(): Query = ImplicitQuery(this, null)
 
         withTables(testDb, tester) {
-            if (testDb == TestDB.MYSQL_V8) {
+            if (testDb == MYSQL_V8) {
                 // H2 metadata query does not return invisible column info
                 // Bug in MariaDB with nullable column - metadata default value returns as NULL - EXPOSED-415
                 SchemaUtils.statementsRequiredToActualizeScheme(tester).shouldBeEmpty()

@@ -6,9 +6,9 @@ import io.bluetape4k.exposed.dao.id.SnowflakeIdTable
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntity
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityClass
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDTable
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
@@ -233,7 +233,22 @@ class ViaTest: AbstractExposedTest() {
              *  WHERE NODETONODES.CHILD_NODE_ID = 1
              * ```
              */
+
+            /**
+             * ```sql
+             * SELECT COUNT(*)
+             *   FROM NODES INNER JOIN NODETONODES ON NODES.ID = NODETONODES.PARENT_NODE_ID
+             *  WHERE NODETONODES.CHILD_NODE_ID = 1
+             * ```
+             */
             root.parents.count() shouldBeEqualTo 0L
+            /**
+             * ```sql
+             * SELECT COUNT(*)
+             *   FROM NODES INNER JOIN NODETONODES ON NODES.ID = NODETONODES.CHILD_NODE_ID
+             *  WHERE NODETONODES.PARENT_NODE_ID = 1
+             * ```
+             */
             /**
              * ```sql
              * SELECT COUNT(*)
@@ -245,6 +260,22 @@ class ViaTest: AbstractExposedTest() {
 
 
             val child2 = Node.new { name = "child2" }
+            /**
+             * root.children 을 update 한다.
+             *
+             * ```sql
+             * SELECT NODES.ID, NODES."name", NODETONODES.CHILD_NODE_ID, NODETONODES.PARENT_NODE_ID
+             *   FROM NODES INNER JOIN NODETONODES ON NODES.ID = NODETONODES.CHILD_NODE_ID
+             *  WHERE NODETONODES.PARENT_NODE_ID = 1
+             * ```
+             * ```sql
+             * DELETE FROM NODETONODES
+             *  WHERE (NODETONODES.PARENT_NODE_ID = 1)
+             *    AND (NODETONODES.CHILD_NODE_ID NOT IN (2, 3))
+             *
+             * INSERT INTO NODETONODES (PARENT_NODE_ID, CHILD_NODE_ID) VALUES (1, 3)
+             * ```
+             */
             /**
              * root.children 을 update 한다.
              *
@@ -273,6 +304,11 @@ class ViaTest: AbstractExposedTest() {
     fun `refresh entity`(testDB: TestDB) {
         withTables(testDB, *ViaTestData.allTables) {
             val s = VString.new { text = "foo" }
+            /**
+             * ```sql
+             * SELECT STRINGS.ID, STRINGS.TEXT FROM STRINGS WHERE STRINGS.ID = 1327632643684040704
+             * ```
+             */
             /**
              * ```sql
              * SELECT STRINGS.ID, STRINGS.TEXT FROM STRINGS WHERE STRINGS.ID = 1327632643684040704
@@ -315,6 +351,15 @@ class ViaTest: AbstractExposedTest() {
              *  WHERE NODETONODES.CHILD_NODE_ID IN (1, 2, 3, 4)
              * ```
              */
+
+            /**
+             * ```sql
+             * SELECT NODES.ID, NODES."name" FROM NODES
+             * SELECT NODES.ID, NODES."name", NODETONODES.PARENT_NODE_ID, NODETONODES.CHILD_NODE_ID
+             *   FROM NODES INNER JOIN NODETONODES ON NODETONODES.PARENT_NODE_ID = NODES.ID
+             *  WHERE NODETONODES.CHILD_NODE_ID IN (1, 2, 3, 4)
+             * ```
+             */
             Node.all().with(Node::children).toList()
 
             checkChildrenReferences(child1, emptyList())
@@ -328,6 +373,15 @@ class ViaTest: AbstractExposedTest() {
                 val parents = entityCache.getReferrers<Node>(node.id, sourceColumn)
                 parents?.toList() shouldBeEqualTo values
             }
+
+            /**
+             * ```sql
+             * SELECT NODES.ID, NODES."name" FROM NODES
+             * SELECT NODES.ID, NODES."name", NODETONODES.PARENT_NODE_ID, NODETONODES.CHILD_NODE_ID
+             *   FROM NODES INNER JOIN NODETONODES ON NODETONODES.PARENT_NODE_ID = NODES.ID
+             *  WHERE NODETONODES.CHILD_NODE_ID IN (1, 2, 3, 4)
+             * ```
+             */
 
             /**
              * ```sql
@@ -376,6 +430,15 @@ class ViaTest: AbstractExposedTest() {
             }
 
             flushCache()
+
+            /**
+             * ```sql
+             * SELECT NODES.ID, NODES."name", NODETONODES.CHILD_NODE_ID, NODETONODES.PARENT_NODE_ID
+             *   FROM NODES INNER JOIN NODETONODES ON NODES.ID = NODETONODES.CHILD_NODE_ID
+             *  WHERE NODETONODES.PARENT_NODE_ID = 1
+             *  ORDER BY NODES."name" ASC
+             * ```
+             */
 
             /**
              * ```sql
@@ -473,6 +536,15 @@ class ViaTest: AbstractExposedTest() {
 
             inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
+
+                /**
+                 * ```sql
+                 * SELECT PROJECTS.ID, PROJECTS."name" FROM PROJECTS
+                 * SELECT TASKS.ID, TASKS.TITLE, PROJECT_TASKS.PROJECT_ID, PROJECT_TASKS.TASK_ID, PROJECT_TASKS.APPROVED
+                 *   FROM TASKS INNER JOIN PROJECT_TASKS ON PROJECT_TASKS.TASK_ID = TASKS.ID
+                 *  WHERE PROJECT_TASKS.PROJECT_ID IN (1, 2)
+                 * ```
+                 */
 
                 /**
                  * ```sql

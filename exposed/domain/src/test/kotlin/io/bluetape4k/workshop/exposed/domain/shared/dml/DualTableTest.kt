@@ -1,10 +1,10 @@
 package io.bluetape4k.workshop.exposed.domain.shared.dml
 
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.withDb
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.withDb
 import org.amshove.kluent.shouldBeEqualTo
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Table.Dual
 import org.jetbrains.exposed.sql.intLiteral
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -24,7 +24,7 @@ class DualTableTest: AbstractExposedTest() {
     fun testDualTable(testDb: TestDB) {
         withDb(testDb) {
             val resultColumn = intLiteral(1)
-            val result = Table.Dual.select(resultColumn).single()
+            val result = Dual.select(resultColumn).single()
             result[resultColumn] shouldBeEqualTo 1
         }
     }

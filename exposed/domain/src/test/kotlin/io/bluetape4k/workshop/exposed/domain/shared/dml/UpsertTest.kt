@@ -3,10 +3,11 @@ package io.bluetape4k.workshop.exposed.domain.shared.dml
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.expectException
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.TestDB.H2_MYSQL
+import io.bluetape4k.workshop.exposed.expectException
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldHaveSize
@@ -72,11 +73,38 @@ class UpsertTest: AbstractExposedTest() {
              * ON CONFLICT (id) DO UPDATE SET "name"=EXCLUDED."name"
              * ```
              */
+
+            /**
+             * MySQL:
+             * ```sql
+             * INSERT INTO auto_inc_table (`name`) VALUES ('B')
+             *    AS NEW ON DUPLICATE KEY UPDATE `name`=NEW.`name`
+             * ```
+             *
+             * Postgres:
+             * ```sql
+             * INSERT INTO auto_inc_table ("name") VALUES ('B')
+             * ON CONFLICT (id) DO UPDATE SET "name"=EXCLUDED."name"
+             * ```
+             */
             AutoIncTable.upsert {
                 if (testDB in upsertViaMergeDB)
                     it[id] = 2
                 it[name] = "B"
             }
+
+            /**
+             * MySQL:
+             * ```sql
+             * INSERT INTO auto_inc_table (id, `name`) VALUES (1, 'C')
+             * AS NEW ON DUPLICATE KEY UPDATE id=NEW.id, `name`=NEW.`name`
+             * ```
+             * Postgres:
+             * ```sql
+             * INSERT INTO auto_inc_table (id, "name") VALUES (1, 'C')
+             * ON CONFLICT (id) DO UPDATE SET "name"=EXCLUDED."name"
+             * ```
+             */
 
             /**
              * MySQL:
@@ -335,6 +363,12 @@ class UpsertTest: AbstractExposedTest() {
                  * INSERT INTO tester (`name`) VALUES ('A') AS NEW ON DUPLICATE KEY UPDATE `name`=NEW.`name`
                  * ```
                  */
+                /**
+                 * MySQL:
+                 * ```sql
+                 * INSERT INTO tester (`name`) VALUES ('A') AS NEW ON DUPLICATE KEY UPDATE `name`=NEW.`name`
+                 * ```
+                 */
                 tester.upsert {
                     it[name] = "A"
                 }
@@ -364,6 +398,16 @@ class UpsertTest: AbstractExposedTest() {
             }
             Words.selectAll().single()[Words.count] shouldBeEqualTo 3
 
+            /**
+             * MySQL:
+             * ```sql
+             * INSERT INTO words (`name`) VALUES ('Test') AS NEW ON DUPLICATE KEY UPDATE `count`=1000
+             * ```
+             * Postgres:
+             * ```sql
+             * INSERT INTO words ("name") VALUES ('Test') ON CONFLICT ("name") DO UPDATE SET "count"=1000
+             * ```
+             */
             /**
              * MySQL:
              * ```sql
@@ -743,6 +787,17 @@ class UpsertTest: AbstractExposedTest() {
              * ON CONFLICT (id) DO UPDATE SET "name"=EXCLUDED."name"
              * ```
              */
+            /**
+             * MySQL:
+             * ```sql
+             * INSERT INTO tester_2 (`name`) VALUES ((SELECT tester_1.`name` FROM tester_1 WHERE tester_1.id = 1)) AS NEW ON DUPLICATE KEY UPDATE `name`=NEW.`name`
+             * ```
+             * Postgres:
+             * ```sql
+             * INSERT INTO tester_2 ("name") VALUES ((SELECT tester_1."name" FROM tester_1 WHERE tester_1.id = 1))
+             * ON CONFLICT (id) DO UPDATE SET "name"=EXCLUDED."name"
+             * ```
+             */
             val query1 = tester1.select(tester1.name).where { tester1.id eq id1 }
             val id3 = tester2.upsert {
                 if (testDB in upsertViaMergeDB)
@@ -752,6 +807,17 @@ class UpsertTest: AbstractExposedTest() {
 
             tester2.selectAll().single()[tester2.name] shouldBeEqualTo "foo"
 
+            /**
+             * MySQL:
+             * ```sql
+             * INSERT INTO tester_2 (id, `name`) VALUES (1, (SELECT tester_1.`name` FROM tester_1 WHERE tester_1.id = 2)) AS NEW ON DUPLICATE KEY UPDATE id=NEW.id, `name`=NEW.`name`
+             * ```
+             * Postgres:
+             * ```sql
+             * INSERT INTO tester_2 (id, "name") VALUES (1, (SELECT tester_1."name" FROM tester_1 WHERE tester_1.id = 2))
+             * ON CONFLICT (id) DO UPDATE SET "name"=EXCLUDED."name"
+             * ```
+             */
             /**
              * MySQL:
              * ```sql
@@ -936,7 +1002,7 @@ class UpsertTest: AbstractExposedTest() {
             statement.insertedCount shouldBeEqualTo newDataSize
 
             // all existing rows set to their current values
-            val isH2MysqlMode = testDB == TestDB.H2_MYSQL // || testDB == TestDB.H2_MARIADB
+            val isH2MysqlMode = testDB == H2_MYSQL // || testDB == TestDB.H2_MARIADB
             var expected = if (isH2MysqlMode) 0 else newDataSize
             AutoIncTable.batchUpsert(data, shouldReturnGeneratedValues = isNotSqlServer) { (id, name) ->
                 statement = this

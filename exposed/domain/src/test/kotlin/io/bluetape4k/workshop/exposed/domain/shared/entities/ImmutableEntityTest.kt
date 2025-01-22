@@ -1,12 +1,12 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.domain.shared.entities.ImmutableEntityTest.Schema.ECachedOrganization
 import io.bluetape4k.workshop.exposed.domain.shared.entities.ImmutableEntityTest.Schema.EOrganization
 import io.bluetape4k.workshop.exposed.domain.shared.entities.ImmutableEntityTest.Schema.Organization
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.dao.ImmutableCachedEntityClass
 import org.jetbrains.exposed.dao.ImmutableEntityClass
@@ -54,7 +54,7 @@ class ImmutableEntityTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `immutable entity read after update`(testDb: TestDB) {
-        withTables(testDb, Schema.Organization) {
+        withTables(testDb, Organization) {
             transaction {
                 Organization.insert {
                     it[name] = "JetBrains"
@@ -71,7 +71,21 @@ class ImmutableEntityTest: AbstractExposedTest() {
                  * UPDATE "SCHEMA$ORGANIZATION" SET ETAG=1 WHERE "SCHEMA$ORGANIZATION".ID = 1
                  * ```
                  */
+
+                /**
+                 * Immutable 엔티티를 강제로 업데이트
+                 * ```sql
+                 * UPDATE "SCHEMA$ORGANIZATION" SET ETAG=1 WHERE "SCHEMA$ORGANIZATION".ID = 1
+                 * ```
+                 */
                 EOrganization.forceUpdateEntity(org, Organization.etag, 42)
+
+                /**
+                 * 강제 업데이트된 정보를 DB로부터 읽어온다.
+                 * ```sql
+                 * SELECT "SCHEMA$ORGANIZATION".ID, "SCHEMA$ORGANIZATION"."name", "SCHEMA$ORGANIZATION".ETAG FROM "SCHEMA$ORGANIZATION"
+                 * ```
+                 */
 
                 /**
                  * 강제 업데이트된 정보를 DB로부터 읽어온다.
@@ -87,7 +101,7 @@ class ImmutableEntityTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `immutable entity read after update with cached entity`(testDb: TestDB) {
-        withTables(testDb, Schema.Organization) {
+        withTables(testDb, Organization) {
             transaction {
                 Organization.insert {
                     it[name] = "JetBrains"

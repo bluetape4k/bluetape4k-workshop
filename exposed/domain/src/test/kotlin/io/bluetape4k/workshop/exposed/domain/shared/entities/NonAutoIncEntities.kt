@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeTrue
@@ -59,10 +59,20 @@ class NonAutoIncEntities: AbstractExposedTest() {
              * INSERT INTO NOTAUTOINTID (ID, I1, B1) VALUES (1, 42, TRUE)
              * ```
              */
+            /**
+             * ```sql
+             * INSERT INTO NOTAUTOINTID (ID, I1, B1) VALUES (1, 42, TRUE)
+             * ```
+             */
             val entity1 = NotAutoEntity.new(true)
             entity1.b1.shouldBeTrue()
             entity1.defaultedInNew shouldBeEqualTo NotAutoEntity.defaultInt
 
+            /**
+             * ```sql
+             * INSERT INTO NOTAUTOINTID (ID, I1, B1) VALUES (2, 1, FALSE)
+             * ```
+             */
             /**
              * ```sql
              * INSERT INTO NOTAUTOINTID (ID, I1, B1) VALUES (2, 1, FALSE)
@@ -131,8 +141,21 @@ class NonAutoIncEntities: AbstractExposedTest() {
              * UPDATE REQUESTS SET DELETED=TRUE WHERE REQUESTS.REQUEST_ID = 'requestId'
              * ```
              */
+
+            /**
+             * Soft delete the entity
+             *
+             * ```sql
+             * UPDATE REQUESTS SET DELETED=TRUE WHERE REQUESTS.REQUEST_ID = 'requestId'
+             * ```
+             */
             request.delete()
 
+            /**
+             * ```sql
+             * SELECT REQUESTS.DELETED, REQUESTS.REQUEST_ID FROM REQUESTS WHERE REQUESTS.REQUEST_ID = 'requestId'
+             * ```
+             */
             /**
              * ```sql
              * SELECT REQUESTS.DELETED, REQUESTS.REQUEST_ID FROM REQUESTS WHERE REQUESTS.REQUEST_ID = 'requestId'

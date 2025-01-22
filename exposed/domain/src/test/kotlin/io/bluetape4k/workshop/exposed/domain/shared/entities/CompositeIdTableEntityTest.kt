@@ -3,10 +3,10 @@ package io.bluetape4k.workshop.exposed.domain.shared.entities
 import MigrationUtils
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.currentTestDB
-import io.bluetape4k.workshop.exposed.domain.expectException
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.TestDB.H2_V1
+import io.bluetape4k.workshop.exposed.currentTestDB
 import io.bluetape4k.workshop.exposed.domain.mapping.composite.Author
 import io.bluetape4k.workshop.exposed.domain.mapping.composite.Authors
 import io.bluetape4k.workshop.exposed.domain.mapping.composite.Book
@@ -17,8 +17,9 @@ import io.bluetape4k.workshop.exposed.domain.mapping.composite.Publisher
 import io.bluetape4k.workshop.exposed.domain.mapping.composite.Publishers
 import io.bluetape4k.workshop.exposed.domain.mapping.composite.Review
 import io.bluetape4k.workshop.exposed.domain.mapping.composite.Reviews
-import io.bluetape4k.workshop.exposed.domain.withDb
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.expectException
+import io.bluetape4k.workshop.exposed.withDb
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
@@ -202,7 +203,7 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
             found2.id shouldBeEqualTo p2.id
 
             val expectedNextVal1 =
-                if (currentTestDB in TestDB.ALL_MYSQL_LIKE || currentTestDB == TestDB.H2_V1) 579 else 1
+                if (currentTestDB in TestDB.ALL_MYSQL_LIKE || currentTestDB == H2_V1) 579 else 1
             found2.id.value[Publishers.pubId].value shouldBeEqualTo expectedNextVal1
         }
     }
@@ -255,7 +256,7 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
             }
             // MYSQL 을 제외하면, pubId 는 autoIncrement 이므로 1 이어야 한다.
             val expectedNextVal1 =
-                if (currentTestDB in TestDB.ALL_MYSQL_LIKE || currentTestDB == TestDB.H2_V1) 726 else 1
+                if (currentTestDB in TestDB.ALL_MYSQL_LIKE || currentTestDB == H2_V1) 726 else 1
             id2.value[Publishers.pubId].value shouldBeEqualTo expectedNextVal1
 
             // insert as composite ID
@@ -297,7 +298,7 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
                 it[name] = "Publisher F"
             }
             val expectedNextVal2 =
-                if (currentTestDB in TestDB.ALL_MYSQL_LIKE || currentTestDB == TestDB.H2_V1) 1002 else 2
+                if (currentTestDB in TestDB.ALL_MYSQL_LIKE || currentTestDB == H2_V1) 1002 else 2
             id6.value[Publishers.pubId].value shouldBeEqualTo expectedNextVal2
         }
     }
@@ -418,6 +419,14 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
              *    AND (PUBLISHERS.PUB_ID = 1)
              * ```
              */
+
+            /**
+             *```sql
+             * DELETE FROM PUBLISHERS
+             *  WHERE (PUBLISHERS.ISBN_CODE = '85d5d225-0c36-41dc-a992-cb57de316dc2')
+             *    AND (PUBLISHERS.PUB_ID = 1)
+             * ```
+             */
             p1.delete()
 
             val result = Publisher.all().single()
@@ -427,7 +436,7 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
 
             // test delete using partial match to composite column unwrapped value
             val existingPubIdValue: Int = p2.id.value[Publishers.pubId].value
-            Publishers.deleteWhere { Publishers.pubId eq existingPubIdValue }
+            Publishers.deleteWhere { pubId eq existingPubIdValue }
             Publisher.all().count().toInt() shouldBeEqualTo 0
         }
     }
@@ -468,6 +477,14 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
              *    AND (small_city.zip_code = '1A2 3B4') AND (small_city."name" = 'Town A')
              * ```
              */
+            /**
+             * ```sql
+             * SELECT small_city.zip_code, small_city."name", small_city.population
+             *   FROM towns small_city
+             *  WHERE (small_city.population IS NULL)
+             *    AND (small_city.zip_code = '1A2 3B4') AND (small_city."name" = 'Town A')
+             * ```
+             */
             val result1 = smallCity.selectAll()
                 .where {
                     smallCity[Towns.population].isNull() and (smallCity[Towns.id] eq townAId)
@@ -476,6 +493,13 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
 
             result1[smallCity[Towns.population]].shouldBeNull()
 
+            /**
+             * ```sql
+             * SELECT small_city."name"
+             *   FROM towns small_city
+             *  WHERE (small_city.zip_code = '1A2 3B4') AND (small_city."name" = 'Town A')
+             * ```
+             */
             /**
              * ```sql
              * SELECT small_city."name"
@@ -507,6 +531,13 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
 
             flushCache()
 
+            /**
+             * ```sql
+             * SELECT TOWNS.ZIP_CODE, TOWNS."name", TOWNS.POPULATION
+             *   FROM TOWNS
+             *  WHERE (TOWNS.ZIP_CODE = ?) AND (TOWNS."name" = ?)
+             * ```
+             */
             /**
              * ```sql
              * SELECT TOWNS.ZIP_CODE, TOWNS."name", TOWNS.POPULATION
@@ -692,6 +723,24 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
              *  WHERE (publishers.pub_id, publishers.isbn_code) = (1, 'd2090a50-3290-4026-88c1-1aa92bd775b0')
              * ```
              */
+
+            /**
+             * Preload referencedOn - child to single parent
+             *
+             * ```sql
+             * SELECT authors.id, authors.publisher_id, authors.publisher_isbn, authors.pen_name
+             *   FROM authors
+             *  WHERE authors.id = 1
+             * ```
+             *
+             * ```sql
+             * SELECT publishers.pub_id,
+             *        publishers.isbn_code,
+             *        publishers.publisher_name
+             *   FROM publishers
+             *  WHERE (publishers.pub_id, publishers.isbn_code) = (1, 'd2090a50-3290-4026-88c1-1aa92bd775b0')
+             * ```
+             */
             inTopLevelTransaction(Connection.TRANSACTION_READ_COMMITTED) {
                 maxAttempts = 1
                 // preload referencedOn - child to single parent
@@ -701,6 +750,29 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
                 foundAuthor.shouldNotBeNull()
                 Publisher.testCache(foundAuthor.readCompositeIDValues(Publishers))?.id shouldBeEqualTo publisherA.id
             }
+
+            /**
+             * Preload optionalReferencedOn - child to single parent?
+             *
+             * ```sql
+             * SELECT offices.zip_code,
+             *        offices."name",
+             *        offices.area_code,
+             *        offices.staff,
+             *        offices.publisher_id,
+             *        offices.publisher_isbn
+             *   FROM offices
+             * ```
+             *
+             * ```sql
+             * SELECT publishers.pub_id,
+             *        publishers.isbn_code,
+             *        publishers.publisher_name
+             *   FROM publishers
+             *  WHERE (publishers.pub_id, publishers.isbn_code) = (1, 'd2090a50-3290-4026-88c1-1aa92bd775b0')
+             * ```
+             *
+             */
 
             /**
              * Preload optionalReferencedOn - child to single parent?
@@ -785,6 +857,21 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
              *
              * ```
              */
+
+            /**
+             * Preload backReferencedOn - parent to single child
+             * ```sql
+             * SELECT books.book_id, books.title, books.author_id
+             *   FROM books
+             *  WHERE books.book_id = 1
+             * ```
+             * ```sql
+             * SELECT reviews.code, reviews."rank", reviews.book_id
+             *   FROM reviews
+             *  WHERE reviews.book_id = (1)
+             *
+             * ```
+             */
             inTopLevelTransaction(Connection.TRANSACTION_READ_COMMITTED) {
                 maxAttempts = 1
                 // preload backReferencedOn - parent to single child
@@ -794,6 +881,28 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
                 val result = cache.getReferrers<Review>(bookA.id, Reviews.book)?.map { it.id }.orEmpty()
                 result shouldBeEqualTo listOf(reviewA.id)
             }
+
+            /**
+             * Preload optionalBackReferencedOn - parent to single child?
+             *
+             * ```
+             * SELECT publishers.pub_id,
+             *        publishers.isbn_code,
+             *        publishers.publisher_name
+             *   FROM publishers
+             *  WHERE (publishers.isbn_code = '24bbfafe-1de3-4b9e-9601-4955b9f0b360') AND (publishers.pub_id = 1)
+             * ```
+             * ```sql
+             * SELECT offices.zip_code,
+             *        offices."name",
+             *        offices.area_code,
+             *        offices.staff,
+             *        offices.publisher_id,
+             *        offices.publisher_isbn
+             *   FROM offices
+             *  WHERE (offices.publisher_id, offices.publisher_isbn) = (1, '24bbfafe-1de3-4b9e-9601-4955b9f0b360')
+             * ```
+             */
 
             /**
              * Preload optionalBackReferencedOn - parent to single child?
@@ -879,6 +988,26 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
              *  WHERE (authors.publisher_id, authors.publisher_isbn) = (1, 'e36de68c-3425-4188-8f73-ae4b658d86c9')
              * ```
              */
+
+            /**
+             * Preload referrersOn - parent to multiple children
+             *
+             * ```sql
+             * SELECT publishers.pub_id,
+             *        publishers.isbn_code,
+             *        publishers.publisher_name
+             *   FROM publishers
+             *  WHERE (publishers.isbn_code = 'e36de68c-3425-4188-8f73-ae4b658d86c9') AND (publishers.pub_id = 1)
+             * ```
+             * ```sql
+             * SELECT authors.id,
+             *        authors.publisher_id,
+             *        authors.publisher_isbn,
+             *        authors.pen_name
+             *   FROM authors
+             *  WHERE (authors.publisher_id, authors.publisher_isbn) = (1, 'e36de68c-3425-4188-8f73-ae4b658d86c9')
+             * ```
+             */
             inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 // preload referrersOn - parent to multiple children
@@ -889,6 +1018,25 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
                 val result = cache.getReferrers<Author>(publisherA.id, Authors.publisherId)?.map { it.id }.orEmpty()
                 result shouldContainSame listOf(authorA.id, authorB.id)
             }
+
+            /**
+             * Preload optionalReferrersOn - parent to multiple children?
+             *
+             * ```sql
+             * SELECT publishers.pub_id, publishers.isbn_code, publishers.publisher_name
+             *   FROM publishers
+             * ```
+             * ```sql
+             * SELECT offices.zip_code,
+             *        offices."name",
+             *        offices.area_code,
+             *        offices.staff,
+             *        offices.publisher_id,
+             *        offices.publisher_isbn
+             *   FROM offices
+             *  WHERE (offices.publisher_id, offices.publisher_isbn) = (1, 'e36de68c-3425-4188-8f73-ae4b658d86c9')
+             * ```
+             */
 
             /**
              * Preload optionalReferrersOn - parent to multiple children?

@@ -2,14 +2,14 @@ package io.bluetape4k.workshop.exposed.sql.kotlin.datetime
 
 import MigrationUtils
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.constraintNamePart
-import io.bluetape4k.workshop.exposed.domain.currentDialectTest
-import io.bluetape4k.workshop.exposed.domain.expectException
-import io.bluetape4k.workshop.exposed.domain.inProperCase
-import io.bluetape4k.workshop.exposed.domain.insertAndWait
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.constraintNamePart
+import io.bluetape4k.workshop.exposed.currentDialectTest
+import io.bluetape4k.workshop.exposed.expectException
+import io.bluetape4k.workshop.exposed.inProperCase
+import io.bluetape4k.workshop.exposed.insertAndWait
+import io.bluetape4k.workshop.exposed.withTables
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
@@ -70,7 +70,7 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.update
-import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.H2Dialect.H2CompatibilityMode.Oracle
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.OracleDialect
 import org.jetbrains.exposed.sql.vendors.SQLServerDialect
@@ -86,6 +86,7 @@ import java.time.ZoneOffset
 import java.util.concurrent.atomic.AtomicInteger
 
 import kotlin.time.DurationUnit
+import kotlin.time.DurationUnit.DAYS
 import kotlin.time.toDuration
 
 fun now() = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
@@ -159,7 +160,7 @@ class DefaultsTest: AbstractExposedTest() {
                 DBDefault.new { field = "1" },
                 DBDefault.new {
                     field = "2"
-                    t1 = localDateTimeNowMinusUnit(5, DurationUnit.DAYS)
+                    t1 = localDateTimeNowMinusUnit(5, DAYS)
                 }
             )
             commit()
@@ -181,7 +182,7 @@ class DefaultsTest: AbstractExposedTest() {
             val created = listOf(
                 DBDefault.new {
                     field = "2"
-                    t1 = localDateTimeNowMinusUnit(5, DurationUnit.DAYS)
+                    t1 = localDateTimeNowMinusUnit(5, DAYS)
                 },
                 DBDefault.new { field = "1" }
             )
@@ -341,7 +342,7 @@ class DefaultsTest: AbstractExposedTest() {
                     ")"
 
             val expected =
-                if (currentDialectTest is OracleDialect || currentDialectTest.h2Mode == H2Dialect.H2CompatibilityMode.Oracle) {
+                if (currentDialectTest is OracleDialect || currentDialectTest.h2Mode == Oracle) {
                     arrayListOf(
                         "CREATE SEQUENCE t_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807",
                         baseExpression
@@ -514,7 +515,7 @@ class DefaultsTest: AbstractExposedTest() {
                     ")"
 
             val expected = if (currentDialectTest is OracleDialect ||
-                currentDialectTest.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
+                currentDialectTest.h2Mode == Oracle
             ) {
                 arrayListOf(
                     "CREATE SEQUENCE t_id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807",

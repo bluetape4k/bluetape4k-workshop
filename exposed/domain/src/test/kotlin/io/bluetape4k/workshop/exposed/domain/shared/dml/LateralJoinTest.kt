@@ -1,12 +1,13 @@
 package io.bluetape4k.workshop.exposed.domain.shared.dml
 
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.expectException
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.expectException
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.JoinType
+import org.jetbrains.exposed.sql.JoinType.LEFT
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.alias
 import org.jetbrains.exposed.sql.insert
@@ -105,12 +106,12 @@ class LateralJoinTest: AbstractExposedTest() {
         withTestTables(dialect) { parent, child, _ ->
             // Explicit notation
             expectException<IllegalArgumentException> {
-                parent.join(child, JoinType.LEFT, onColumn = parent.id, otherColumn = child.parent, lateral = true)
+                parent.join(child, LEFT, onColumn = parent.id, otherColumn = child.parent, lateral = true)
             }
 
             // Implicit notation
             expectException<IllegalArgumentException> {
-                parent.join(child, JoinType.LEFT, lateral = true).selectAll().toList()
+                parent.join(child, LEFT, lateral = true).selectAll().toList()
             }
         }
     }

@@ -1,11 +1,11 @@
 package io.bluetape4k.workshop.exposed.domain.shared.ddl
 
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.currentDialectTest
-import io.bluetape4k.workshop.exposed.domain.withDb
-import io.bluetape4k.workshop.exposed.domain.withSchemas
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.currentDialectTest
+import io.bluetape4k.workshop.exposed.withDb
+import io.bluetape4k.workshop.exposed.withSchemas
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
@@ -15,7 +15,7 @@ import org.amshove.kluent.shouldStartWith
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Coalesce
 import org.jetbrains.exposed.sql.Index
-import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.Op.TRUE
 import org.jetbrains.exposed.sql.Schema
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.neq
@@ -210,7 +210,7 @@ class CreateIndexTest: AbstractExposedTest() {
                 true,
                 "team_only_index",
                 null,
-                Op.TRUE
+                TRUE
             ).dropStatement().first()
 
             val dropStatements = indices.map { it.dropStatement().first() }

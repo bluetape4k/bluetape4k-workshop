@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.exposed.sql.crypt
 
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.crypt.Algorithms
 import org.jetbrains.exposed.crypt.encryptedBinary
@@ -78,6 +78,15 @@ class EncryptedColumnDaoTest: AbstractExposedTest() {
         withTables(testDB, TestTable) {
             val varcharValue = "varchar"
             val binaryValue = "binary".toByteArray()
+
+            /**
+             * Insert a new record with encrypted values
+             *
+             * ```sql
+             * INSERT INTO TEST ("varchar", "binary")
+             * VALUES (UagVRR403hrjcUmKvA3j/Zs43+2UjmcC4XJl7DoaiWuktd2SHYKr, [B@31f295b6)
+             * ```
+             */
 
             /**
              * Insert a new record with encrypted values

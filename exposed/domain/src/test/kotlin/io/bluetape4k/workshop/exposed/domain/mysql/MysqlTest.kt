@@ -1,15 +1,16 @@
 package io.bluetape4k.workshop.exposed.domain.mysql
 
-import com.mysql.cj.conf.PropertyKey
+import com.mysql.cj.conf.PropertyKey.rewriteBatchedStatements
 import com.mysql.cj.jdbc.ConnectionImpl
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.expectException
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.TestDB.MYSQL_V8
 import io.bluetape4k.workshop.exposed.domain.shared.dml.DMLTestData
-import io.bluetape4k.workshop.exposed.domain.withDb
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.expectException
+import io.bluetape4k.workshop.exposed.withDb
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldContainAll
@@ -19,6 +20,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.CustomFunction
 import org.jetbrains.exposed.sql.Query
+import org.jetbrains.exposed.sql.Query.CommentPosition.AFTER_SELECT
 import org.jetbrains.exposed.sql.QueryBuilder
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.and
@@ -42,7 +44,7 @@ class MysqlTest: AbstractExposedTest() {
     fun `embedded connection`() {
         Assumptions.assumeTrue { TestDB.MYSQL_V8 in TestDB.enabledDialects() }
 
-        withDb(TestDB.MYSQL_V8) {
+        withDb(MYSQL_V8) {
             val version = TransactionManager.current().exec("SELECT VERSION();") {
                 it.next()
                 it.getString(1)
@@ -56,14 +58,19 @@ class MysqlTest: AbstractExposedTest() {
         Assumptions.assumeTrue { TestDB.MYSQL_V8 in TestDB.enabledDialects() }
 
         val cities = DMLTestData.Cities
-        withTables(TestDB.MYSQL_V8, cities) {
+        withTables(MYSQL_V8, cities) {
+            /**
+             * jdbc url 에 rewriteBatchedStatements=true 옵션을 추가하는 방식을 프로그래밍 방식으로 표현한 것입니다.
+             *
+             * jdbc url: `jdbc:mysql://localhost:3306/exposed?rewriteBatchedStatements=true`
+             */
             /**
              * jdbc url 에 rewriteBatchedStatements=true 옵션을 추가하는 방식을 프로그래밍 방식으로 표현한 것입니다.
              *
              * jdbc url: `jdbc:mysql://localhost:3306/exposed?rewriteBatchedStatements=true`
              */
             val mysqlConn = this.connection.connection as ConnectionImpl
-            mysqlConn.propertySet.getBooleanProperty(PropertyKey.rewriteBatchedStatements).value = true
+            mysqlConn.propertySet.getBooleanProperty(rewriteBatchedStatements).value = true
 
             val cityNames = listOf("FooCity", "BarCity")
             val generatedValues = cities.batchInsert(cityNames) { city ->
@@ -105,7 +112,7 @@ class MysqlTest: AbstractExposedTest() {
             val amount = integer("amount")
         }
 
-        withTables(TestDB.MYSQL_V8, tester) {
+        withTables(MYSQL_V8, tester) {
             val originalText = "Original SQL"
             val originalQuery = tester.selectAll()
                 .withDistinct()
@@ -113,6 +120,18 @@ class MysqlTest: AbstractExposedTest() {
                 .limit(1)
                 .comment(originalText)
 
+            /**
+             * 강제로 PRIMARY 인덱스를 사용하도록 hint를 추가합니다.
+             *
+             * ```sql
+             * /*Original SQL*/
+             * SELECT DISTINCT tester.id, tester.item, tester.amount
+             *   FROM tester FORCE INDEX (PRIMARY)
+             *  WHERE tester.id = ?
+             *  LIMIT 1
+             * ```
+             *
+             */
             /**
              * 강제로 PRIMARY 인덱스를 사용하도록 hint를 추가합니다.
              *
@@ -134,6 +153,20 @@ class MysqlTest: AbstractExposedTest() {
 
             hintQuery1.toList()
 
+            /**
+             * 강제로 item 인덱스를 사용하도록 hint를 추가합니다.
+             *
+             * ```sql
+             * SELECT tester.id,
+             *        tester.item,
+             *        tester.amount
+             *   FROM tester USE INDEX (tester_item_unique)
+             *  WHERE (tester.id = ?) AND (tester.item = ?)
+             *  GROUP BY tester.id
+             * HAVING COUNT(tester.id) = ?
+             *  ORDER BY tester.amount ASC
+             * ```
+             */
             /**
              * 강제로 item 인덱스를 사용하도록 hint를 추가합니다.
              *
@@ -185,6 +218,13 @@ class MysqlTest: AbstractExposedTest() {
              * SELECT SLEEP(tester.seconds) FROM tester
              * ```
              */
+            /**
+             * SLEEP(N) 함수는 N초 동안 실행을 일시 중지하고, 중단되지 않으면 0을 반환합니다.
+             *
+             * ```sql
+             * SELECT SLEEP(tester.seconds) FROM tester
+             * ```
+             */
             val sleepNSeconds: CustomFunction<Int?> = tester.seconds.function("SLEEP")
             val queryWithoutHint = tester.select(sleepNSeconds)
             queryWithoutHint.single()[sleepNSeconds] shouldBeEqualTo 0
@@ -200,9 +240,16 @@ class MysqlTest: AbstractExposedTest() {
              * SELECT /*+ MAX_EXECUTION_TIME(1000)*/ SLEEP(tester.seconds) FROM tester
              * ```
              */
+            /**
+             * Hint places a limit of N milliseconds on how long a query should take before termination
+             *
+             * ```sql
+             * SELECT /*+ MAX_EXECUTION_TIME(1000)*/ SLEEP(tester.seconds) FROM tester
+             * ```
+             */
             val queryWithHint = tester
                 .select(sleepNSeconds)
-                .comment("+ MAX_EXECUTION_TIME(1000)", Query.CommentPosition.AFTER_SELECT)
+                .comment("+ MAX_EXECUTION_TIME(1000)", AFTER_SELECT)
 
             log.debug { "Query with hint: ${queryWithHint.prepareSQL(this)}" }
 

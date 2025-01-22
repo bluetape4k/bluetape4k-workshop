@@ -1,14 +1,14 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.domain.shared.entities.LongIdTables.Cities
 import io.bluetape4k.workshop.exposed.domain.shared.entities.LongIdTables.City
 import io.bluetape4k.workshop.exposed.domain.shared.entities.LongIdTables.People
 import io.bluetape4k.workshop.exposed.domain.shared.entities.LongIdTables.Person
 import io.bluetape4k.workshop.exposed.domain.shared.entities.LongIdTables.Town
 import io.bluetape4k.workshop.exposed.domain.shared.entities.LongIdTables.Towns
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldContainSame
@@ -65,9 +65,9 @@ class LongIdTableEntityTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create tables`(testDB: TestDB) {
-        withTables(testDB, LongIdTables.Cities, LongIdTables.People) {
-            LongIdTables.Cities.exists().shouldBeTrue()
-            LongIdTables.People.exists().shouldBeTrue()
+        withTables(testDB, Cities, People) {
+            Cities.exists().shouldBeTrue()
+            People.exists().shouldBeTrue()
         }
     }
 
@@ -159,9 +159,26 @@ class LongIdTableEntityTest: AbstractExposedTest() {
              * SELECT CITIES.ID, CITIES."name" FROM CITIES WHERE CITIES.ID = 1
              * ```
              */
+            /**
+             * lazy loaded referencedOn
+             *
+             * ```sql
+             * SELECT TOWNS.ID, TOWNS.CITY_ID FROM TOWNS
+             * SELECT CITIES.ID, CITIES."name" FROM CITIES WHERE CITIES.ID = 1
+             * ```
+             */
             val town1 = Town.all().first()
             town1.city.id shouldBeEqualTo cId
 
+            /**
+             * eager loaded referrersOn
+             *
+             * ```sql
+             * SELECT TOWNS.ID, TOWNS.CITY_ID FROM TOWNS
+             * SELECT CITIES.ID, CITIES."name" FROM CITIES WHERE CITIES.ID = 1
+             * SELECT CITIES.ID, CITIES."name" FROM CITIES WHERE CITIES.ID = 1
+             * ```
+             */
             /**
              * eager loaded referrersOn
              *
@@ -183,10 +200,32 @@ class LongIdTableEntityTest: AbstractExposedTest() {
              * SELECT CITIES.ID, CITIES."name" FROM CITIES WHERE CITIES.ID = 1
              * ```
              */
+            /**
+             * lazy loaded referrersOn
+             *
+             * ```sql
+             * SELECT CITIES.ID, CITIES."name" FROM CITIES
+             * SELECT TOWNS.ID, TOWNS.CITY_ID FROM TOWNS WHERE TOWNS.CITY_ID = 1
+             * SELECT CITIES.ID, CITIES."name" FROM CITIES WHERE CITIES.ID = 1
+             * ```
+             */
             val city1 = City.all().single()
             val towns = city1.towns
             towns.first().city.id shouldBeEqualTo cId
 
+            /**
+             * eager loaded referrersOn
+             *
+             * ```sql
+             * SELECT CITIES.ID, CITIES."name" FROM CITIES
+             * SELECT TOWNS.ID, TOWNS.CITY_ID, CITIES.ID
+             *   FROM TOWNS INNER JOIN CITIES ON TOWNS.CITY_ID = CITIES.ID
+             *  WHERE TOWNS.CITY_ID = 1
+             *
+             * SELECT CITIES.ID, CITIES."name" FROM CITIES WHERE CITIES.ID = 1
+             * SELECT CITIES.ID, CITIES."name" FROM CITIES WHERE CITIES.ID = 1
+             * ```
+             */
             /**
              * eager loaded referrersOn
              *

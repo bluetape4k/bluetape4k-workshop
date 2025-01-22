@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
 import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.domain.shared.entities.UUIDTables.Address
 import io.bluetape4k.workshop.exposed.domain.shared.entities.UUIDTables.Addresses
 import io.bluetape4k.workshop.exposed.domain.shared.entities.UUIDTables.Cities
@@ -11,7 +11,7 @@ import io.bluetape4k.workshop.exposed.domain.shared.entities.UUIDTables.People
 import io.bluetape4k.workshop.exposed.domain.shared.entities.UUIDTables.Person
 import io.bluetape4k.workshop.exposed.domain.shared.entities.UUIDTables.Town
 import io.bluetape4k.workshop.exposed.domain.shared.entities.UUIDTables.Towns
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldContain
@@ -22,7 +22,7 @@ import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
 import org.jetbrains.exposed.dao.with
-import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.SortOrder.ASC
 import org.jetbrains.exposed.sql.exists
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.junit.jupiter.params.ParameterizedTest
@@ -116,11 +116,25 @@ class UUIDTableEntityTest: AbstractExposedTest() {
              * SELECT CITIES.ID, CITIES."name" FROM CITIES
              * ```
              */
+            /**
+             * ```sql
+             * SELECT CITIES.ID, CITIES."name" FROM CITIES
+             * ```
+             */
             val allCities = City.all()
-                .orderBy(Cities.id to SortOrder.ASC)
+                .orderBy(Cities.id to ASC)
                 .map { it.name }
             allCities shouldContainSame listOf("Seoul", "Busan")
 
+            /**
+             * ```sql
+             * SELECT PEOPLE.ID, PEOPLE."name", PEOPLE.CITY_ID FROM PEOPLE
+             *
+             * SELECT CITIES.ID, CITIES."name"
+             *   FROM CITIES
+             *  WHERE CITIES.ID IN ('1efcff30-9a92-6fd6-b98d-178b68d550e5', '1efcff30-9a92-6fd8-b98d-178b68d550e5')
+             * ```
+             */
             /**
              * ```sql
              * SELECT PEOPLE.ID, PEOPLE."name", PEOPLE.CITY_ID FROM PEOPLE
@@ -169,6 +183,15 @@ class UUIDTableEntityTest: AbstractExposedTest() {
             val allCities = City.all().map { it.name }
             allCities shouldBeEqualTo listOf("Seoul")
 
+            /**
+             * ```sql
+             * SELECT PEOPLE.ID, PEOPLE."name", PEOPLE.CITY_ID FROM PEOPLE
+             *
+             * SELECT CITIES.ID, CITIES."name"
+             *   FROM CITIES
+             *  WHERE CITIES.ID = '1efcff30-9a2e-6e2b-b98d-178b68d550e5'
+             * ```
+             */
             /**
              * ```sql
              * SELECT PEOPLE.ID, PEOPLE."name", PEOPLE.CITY_ID FROM PEOPLE

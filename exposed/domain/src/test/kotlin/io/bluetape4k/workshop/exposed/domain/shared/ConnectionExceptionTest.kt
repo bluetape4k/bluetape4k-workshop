@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.shared
 
-import io.bluetape4k.workshop.exposed.domain.TestDB
+import io.bluetape4k.workshop.exposed.TestDB
 import org.amshove.kluent.fail
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeTrue

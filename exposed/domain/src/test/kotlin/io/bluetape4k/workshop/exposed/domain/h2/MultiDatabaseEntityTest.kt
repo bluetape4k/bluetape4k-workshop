@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.h2
 
-import io.bluetape4k.workshop.exposed.domain.TestDB
+import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.BEntity
 import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.XEntity
 import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.XTable

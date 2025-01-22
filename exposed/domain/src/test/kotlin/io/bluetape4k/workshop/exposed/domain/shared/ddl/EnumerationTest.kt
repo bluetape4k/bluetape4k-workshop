@@ -1,12 +1,12 @@
 package io.bluetape4k.workshop.exposed.domain.shared.ddl
 
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.domain.demo.dao.SamplesDao.Cities.default
 import io.bluetape4k.workshop.exposed.domain.shared.ddl.EnumerationTest.Foo.Bar
 import io.bluetape4k.workshop.exposed.domain.shared.ddl.EnumerationTest.Foo.Baz
-import io.bluetape4k.workshop.exposed.domain.withDb
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.withDb
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -103,12 +103,12 @@ class EnumerationTest: AbstractExposedTest() {
                 }
 
                 EnumTable.insert {
-                    it[EnumTable.enumColumn] = Bar
+                    it[enumColumn] = Bar
                 }
                 EnumTable.selectAll().single()[EnumTable.enumColumn] shouldBeEqualTo Bar
 
                 EnumTable.update {
-                    it[EnumTable.enumColumn] = Baz
+                    it[enumColumn] = Baz
                 }
                 val entity = EnumEntity.new { enum = Baz }
                 entity.enum shouldBeEqualTo Baz

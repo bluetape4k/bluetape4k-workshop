@@ -2,13 +2,15 @@ package io.bluetape4k.workshop.exposed.domain.shared.ddl
 
 import MigrationUtils
 import io.bluetape4k.collections.tryForEach
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.currentDialectTest
-import io.bluetape4k.workshop.exposed.domain.expectException
-import io.bluetape4k.workshop.exposed.domain.inProperCase
-import io.bluetape4k.workshop.exposed.domain.withDb
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.TestDB.H2
+import io.bluetape4k.workshop.exposed.TestDB.H2_V1
+import io.bluetape4k.workshop.exposed.currentDialectTest
+import io.bluetape4k.workshop.exposed.expectException
+import io.bluetape4k.workshop.exposed.inProperCase
+import io.bluetape4k.workshop.exposed.withDb
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeEqualToIgnoringCase
@@ -635,7 +637,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                             withLogs = false
                         )
                     when (testDb) {
-                        TestDB.H2 -> {
+                        H2 -> {
                             statements.size shouldBeEqualTo 1
                         }
 
@@ -685,7 +687,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                                     expectedDropSequenceStatement(sequenceName)
                         }
 
-                        TestDB.H2_V1      -> {
+                        H2_V1 -> {
                             statements.size shouldBeEqualTo 1
                             statements[0] shouldBeEqualTo
                                     "ALTER TABLE TEST_TABLE ALTER COLUMN ID BIGINT AUTO_INCREMENT NOT NULL"
@@ -729,7 +731,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                             withLogs = false
                         )
                     when (testDb) {
-                        TestDB.H2_V1 -> {
+                        H2_V1 -> {
                             statements.size shouldBeEqualTo 1
                             statements[0] shouldBeEqualTo expectedCreateSequenceStatement(sequence.name)
                         }
@@ -767,7 +769,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                     )
 
                     when (testDb) {
-                        TestDB.H2_V1 -> {
+                        H2_V1 -> {
                             statements.size shouldBeEqualTo 0
                         }
 
@@ -817,7 +819,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                                     expectedDropSequenceStatement(sequence.name)
                         }
 
-                        TestDB.H2_V1           -> {
+                        H2_V1 -> {
                             statements.size shouldBeEqualTo 1
                             statements[0] shouldBeEqualTo
                                     "ALTER TABLE TEST_TABLE ALTER COLUMN ID BIGINT AUTO_INCREMENT NOT NULL"
@@ -860,7 +862,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                         )
 
                     when (testDb) {
-                        TestDB.H2_V1 -> {
+                        H2_V1 -> {
                             statements.size shouldBeEqualTo 1
                             statements[0] shouldBeEqualTo expectedCreateSequenceStatement(sequenceName)
                         }

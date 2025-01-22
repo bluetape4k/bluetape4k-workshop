@@ -1,10 +1,10 @@
 package io.bluetape4k.workshop.exposed.domain.shared.types
 
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.withDb
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.withDb
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -50,6 +50,15 @@ class DoubleColumnTypeTest: AbstractExposedTest() {
         withDb(testDB) {
             val originalColumnDDL = TestTable.amount.descriptionDdl()
             val realColumnDDL = originalColumnDDL.replace(" DOUBLE PRECISION ", " REAL ")
+
+            /**
+             * create table with double() column that uses SQL type REAL
+             *
+             * Postgres:
+             * ```sql
+             * CREATE TABLE IF NOT EXISTS double_table (id SERIAL PRIMARY KEY, amount REAL NOT NULL)
+             * ```
+             */
 
             /**
              * create table with double() column that uses SQL type REAL

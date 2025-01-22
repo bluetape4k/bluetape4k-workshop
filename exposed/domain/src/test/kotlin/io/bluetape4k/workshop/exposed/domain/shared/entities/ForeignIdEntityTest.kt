@@ -1,9 +1,13 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.domain.shared.entities.ForeignIdEntityTest.Schema.Actors
+import io.bluetape4k.workshop.exposed.domain.shared.entities.ForeignIdEntityTest.Schema.ProjectConfigs
+import io.bluetape4k.workshop.exposed.domain.shared.entities.ForeignIdEntityTest.Schema.Projects
+import io.bluetape4k.workshop.exposed.domain.shared.entities.ForeignIdEntityTest.Schema.Roles
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
 import org.jetbrains.exposed.dao.Entity
@@ -77,10 +81,16 @@ class ForeignIdEntityTest: AbstractExposedTest() {
     fun `foreign id entity update`(testDB: TestDB) {
         withTables(
             testDB,
-            Schema.Projects, Schema.ProjectConfigs,
+            Projects, ProjectConfigs,
             configure = { useNestedTransactions = true }
         ) {
             transaction {
+                /**
+                 * ```sql
+                 * INSERT INTO "SCHEMA$PROJECTS" ("name") VALUES ('Space')
+                 * INSERT INTO "SCHEMA$PROJECTCONFIGS" (ID, SETTING) VALUES (1, TRUE)
+                 * ```
+                 */
                 /**
                  * ```sql
                  * INSERT INTO "SCHEMA$PROJECTS" ("name") VALUES ('Space')
@@ -93,6 +103,12 @@ class ForeignIdEntityTest: AbstractExposedTest() {
             }
 
             transaction {
+                /**
+                 * ```sql
+                 * INSERT INTO "SCHEMA$PROJECTS" ("name") VALUES ('Earth')
+                 * INSERT INTO "SCHEMA$PROJECTCONFIGS" (ID, SETTING) VALUES (2, TRUE)
+                 * ```
+                 */
                 /**
                  * ```sql
                  * INSERT INTO "SCHEMA$PROJECTS" ("name") VALUES ('Earth')
@@ -116,12 +132,18 @@ class ForeignIdEntityTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `referenced entities with identitical column names`(testDB: TestDB) {
-        withTables(testDB, Schema.Actors, Schema.Roles) {
+        withTables(testDB, Actors, Roles) {
             val actorA = Actor.new("3746529") { }
             val roleA = Role.new { actor = actorA }
             val roleB = Role.new { actor = actorA }
 
             flushCache()
+
+            /**
+             * ```sql
+             * SELECT ROLES.ID, ROLES.GUILD_ID FROM ROLES WHERE ROLES.GUILD_ID = '3746529'
+             * ```
+             */
 
             /**
              * ```sql

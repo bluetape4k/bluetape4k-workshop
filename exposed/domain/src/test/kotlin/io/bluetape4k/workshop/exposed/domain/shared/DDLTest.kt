@@ -3,13 +3,15 @@ package io.bluetape4k.workshop.exposed.domain.shared
 import MigrationUtils
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.currentDialectTest
-import io.bluetape4k.workshop.exposed.domain.expectException
-import io.bluetape4k.workshop.exposed.domain.inProperCase
-import io.bluetape4k.workshop.exposed.domain.withDb
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.TestDB.H2
+import io.bluetape4k.workshop.exposed.TestDB.MYSQL_V8
+import io.bluetape4k.workshop.exposed.currentDialectTest
+import io.bluetape4k.workshop.exposed.expectException
+import io.bluetape4k.workshop.exposed.inProperCase
+import io.bluetape4k.workshop.exposed.withDb
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
@@ -33,6 +35,7 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.H2Dialect
+import org.jetbrains.exposed.sql.vendors.H2Dialect.H2CompatibilityMode.Oracle
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
@@ -183,7 +186,7 @@ class DDLTest: AbstractExposedTest() {
             val q = db.identifierManager.quoteString
 
             // MySQL V8 테이블 명에는 back-quote(`) 를 사용하지 않네요.
-            val tableName = if (currentDialectTest.needsQuotesWhenSymbolsInNames && testDB != TestDB.MYSQL_V8) {
+            val tableName = if (currentDialectTest.needsQuotesWhenSymbolsInNames && testDB != MYSQL_V8) {
                 "$q${"unnamedTable$1".inProperCase()}$q"
             } else {
                 "unnamedTable$1".inProperCase()
@@ -208,7 +211,7 @@ class DDLTest: AbstractExposedTest() {
     @Test
     fun `namedEmptyTable without quotes SQL`() {
         val testTable = object: Table("test_named_table") {}
-        withDb(TestDB.H2) {
+        withDb(H2) {
             testTable.ddl.single() shouldBeEqualTo
                     "CREATE TABLE IF NOT EXISTS ${"test_named_table".inProperCase()}"
         }
@@ -331,7 +334,7 @@ class DDLTest: AbstractExposedTest() {
 
         withDb(testDB) {
             val h2Dialect = currentDialectTest as H2Dialect
-            val isOracleMode = h2Dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
+            val isOracleMode = h2Dialect.h2Mode == Oracle
             val singleColumnDescription = testTable.columns.single().descriptionDdl(false)
 
             singleColumnDescription shouldContainIgnoringCase "PRIMARY KEY"
@@ -415,7 +418,7 @@ class DDLTest: AbstractExposedTest() {
 
         withDb(testDB) {
             val h2Dialect = currentDialectTest as H2Dialect
-            val isOracleMode = h2Dialect.h2Mode == H2Dialect.H2CompatibilityMode.Oracle
+            val isOracleMode = h2Dialect.h2Mode == Oracle
             val tableProperName = testTable.tableName.inProperCase()
             val columnProperName = testTable.columns.first().name.inProperCase()
             val indexProperName = "${tableProperName}_${columnProperName}"

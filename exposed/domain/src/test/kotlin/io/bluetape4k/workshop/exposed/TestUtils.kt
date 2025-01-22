@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.exposed.domain
+package io.bluetape4k.workshop.exposed
 
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Table

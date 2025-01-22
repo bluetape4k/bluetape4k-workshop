@@ -2,12 +2,17 @@ package io.bluetape4k.workshop.exposed.domain.shared.dml
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.expectException
-import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTest
-import io.bluetape4k.workshop.exposed.domain.withDb
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTest.Board
+import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTest.Boards
+import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTest.Categories
+import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTest.Category
+import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTest.Post
+import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTest.Posts
+import io.bluetape4k.workshop.exposed.expectException
+import io.bluetape4k.workshop.exposed.withDb
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
@@ -393,34 +398,34 @@ class SelectTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `inList with entityID columns`(dialect: TestDB) {
-        withTables(dialect, EntityTest.Posts, EntityTest.Boards, EntityTest.Categories) {
-            val board1 = EntityTest.Board.new {
+        withTables(dialect, Posts, Boards, Categories) {
+            val board1 = Board.new {
                 name = "board1"
             }
-            val post1 = EntityTest.Post.new {
+            val post1 = Post.new {
                 board = board1
             }
-            EntityTest.Post.new {
-                category = EntityTest.Category.new { title = "category1" }
+            Post.new {
+                category = Category.new { title = "category1" }
             }
 
             // SELECT posts.id, posts.board, posts.parent, posts.category, posts."optCategory" FROM posts WHERE posts.board = 1
-            val result1 = EntityTest.Posts.selectAll()
+            val result1 = Posts.selectAll()
                 .where {
-                    EntityTest.Posts.board inList listOf(board1.id)
+                    Posts.board inList listOf(board1.id)
                 }
-                .singleOrNull()?.get(EntityTest.Posts.id)
+                .singleOrNull()?.get(Posts.id)
             result1 shouldBeEqualTo post1.id
 
             // SELECT board.id, board."name" FROM board WHERE board.id IN (1, 2, 3, 4, 5)
-            val result2 = EntityTest.Board.find {
-                EntityTest.Boards.id inList listOf(1, 2, 3, 4, 5)
+            val result2 = Board.find {
+                Boards.id inList listOf(1, 2, 3, 4, 5)
             }.singleOrNull()
             result2 shouldBeEqualTo board1
 
             // SELECT board.id, board."name" FROM board WHERE board.id NOT IN (1, 2, 3, 4, 5)
-            val result3 = EntityTest.Board.find {
-                EntityTest.Boards.id notInList listOf(1, 2, 3, 4, 5)
+            val result3 = Board.find {
+                Boards.id notInList listOf(1, 2, 3, 4, 5)
             }.singleOrNull()
             result3.shouldBeNull()
         }

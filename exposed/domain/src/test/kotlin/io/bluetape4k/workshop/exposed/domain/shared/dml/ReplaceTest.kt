@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.exposed.domain.shared.dml
 
-import io.bluetape4k.idgenerators.uuid.TimebasedUuid
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.idgenerators.uuid.TimebasedUuid.Epoch
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
@@ -354,7 +354,7 @@ class ReplaceTest: AbstractExposedTest() {
         withTables(testDb, cities) {
             val amountOfNames = 25
             val names = List(amountOfNames) { index ->
-                index + 1 to TimebasedUuid.Epoch.nextIdAsString()
+                index + 1 to Epoch.nextIdAsString()
             }.asSequence()
 
             cities.batchReplace(names) { (index, name) ->
@@ -367,7 +367,7 @@ class ReplaceTest: AbstractExposedTest() {
             namesFromDB1 shouldBeEqualTo names.unzip().second
 
             val namesToReplace = List(amountOfNames) { index ->
-                index + 1 to TimebasedUuid.Epoch.nextIdAsString()
+                index + 1 to Epoch.nextIdAsString()
             }.asSequence()
 
             cities.batchReplace(namesToReplace) { (index, name) ->

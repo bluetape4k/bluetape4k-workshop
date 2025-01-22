@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.exposed.domain.shared.dml
 
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
@@ -192,9 +192,9 @@ class ReturningTest: AbstractExposedTest() {
                 returning = listOf(Items.name, Items.price),
                 onUpdate = { it[Items.price] = Items.price * 10.0 }
             ) {
-                it[Items.id] = 1
-                it[Items.name] = "B"
-                it[Items.price] = 200.0
+                it[id] = 1
+                it[name] = "B"
+                it[price] = 200.0
             }.single()
 
             result2[Items.name] shouldBeEqualTo "A"
@@ -206,9 +206,9 @@ class ReturningTest: AbstractExposedTest() {
                 onUpdateExclude = listOf(Items.price),
                 where = { Items.price greater 500.0 }
             ) {
-                it[Items.id] = 1
-                it[Items.name] = "B"
-                it[Items.price] = 200.0
+                it[id] = 1
+                it[name] = "B"
+                it[price] = 200.0
             }.single()
 
             result3[Items.name] shouldBeEqualTo "B"
@@ -338,7 +338,7 @@ class ReturningTest: AbstractExposedTest() {
 
             val result1: ResultRow = Items
                 .updateReturning(where = { Items.price lessEq 99.0 }) {
-                    it[Items.price] = price * 10.0
+                    it[price] = price * 10.0
                 }
                 .single()
 
@@ -356,7 +356,7 @@ class ReturningTest: AbstractExposedTest() {
             val newPrice = Items.price.alias("new_price")
             val result3: List<Double> = Items
                 .updateReturning(listOf(newPrice)) {
-                    it[Items.price] = 0.0
+                    it[price] = 0.0
                 }
                 .map { it[newPrice] }
 

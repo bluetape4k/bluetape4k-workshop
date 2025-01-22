@@ -1,18 +1,18 @@
 package io.bluetape4k.workshop.exposed.domain.shared.dml
 
 import io.bluetape4k.codec.Base58
-import io.bluetape4k.idgenerators.uuid.TimebasedUuid
+import io.bluetape4k.idgenerators.uuid.TimebasedUuid.Epoch
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.assertFailAndRollback
-import io.bluetape4k.workshop.exposed.domain.currentTestDB
-import io.bluetape4k.workshop.exposed.domain.expectException
-import io.bluetape4k.workshop.exposed.domain.inProperCase
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.assertFailAndRollback
+import io.bluetape4k.workshop.exposed.currentTestDB
 import io.bluetape4k.workshop.exposed.domain.shared.dml.DMLTestData.Cities
-import io.bluetape4k.workshop.exposed.domain.withDb
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.expectException
+import io.bluetape4k.workshop.exposed.inProperCase
+import io.bluetape4k.workshop.exposed.withDb
+import io.bluetape4k.workshop.exposed.withTables
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.fail
@@ -28,7 +28,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.CustomFunction
 import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.SortOrder.ASC
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.UUIDColumnType
@@ -260,7 +260,7 @@ class InsertTest: AbstractExposedTest() {
         val cities = Cities
         withTables(testDB, cities) {
             val batchSize = 25
-            val names = generateSequence { TimebasedUuid.Epoch.nextIdAsString() }.take(batchSize)
+            val names = generateSequence { Epoch.nextIdAsString() }.take(batchSize)
 
             cities.batchInsert(names) { name ->
                 this[cities.name] = name
@@ -450,6 +450,17 @@ class InsertTest: AbstractExposedTest() {
              * )
              * ```
              */
+            /**
+             * ```sql
+             * INSERT INTO TESTINSERT2 ("stringCol")
+             * VALUES (
+             *         (SELECT SUBSTRING(TRIM(TESTINSERT1."stringCol"), 2, 4)
+             *           FROM TESTINSERT1
+             *           WHERE TESTINSERT1.ID = 1
+             *         )
+             * )
+             * ```
+             */
             val expr1 = tbl1.string1.trim().substring(2, 4)
             tbl2.insert {
                 it[string2] = wrapAsExpression(tbl1.select(expr1).where { tbl1.id eq id })
@@ -486,7 +497,7 @@ class InsertTest: AbstractExposedTest() {
             }
 
             val orders = OrderedData.all()
-                .orderBy(OrderedDataTable.order to SortOrder.ASC)
+                .orderBy(OrderedDataTable.order to ASC)
                 .toList()
 
             orders shouldBeEqualTo listOf(bar, foo)
@@ -547,6 +558,15 @@ class InsertTest: AbstractExposedTest() {
              * VALUES ((SELECT TAB2.ID FROM TAB2 WHERE TAB2.ID = 'foo'))
              * ```
              */
+
+            /**
+             * Use subquery in an insert statement
+             *
+             * ```sql
+             * INSERT INTO TAB1 (ID)
+             * VALUES ((SELECT TAB2.ID FROM TAB2 WHERE TAB2.ID = 'foo'))
+             * ```
+             */
             tbl1.insert {
                 it[id] = tbl2.select(tbl2.id).where { tbl2.id eq "foo" }
             }
@@ -554,6 +574,16 @@ class InsertTest: AbstractExposedTest() {
             // Check inserted data
             val insertedId = tbl1.select(tbl1.id).single()[tbl1.id]
             insertedId shouldBeEqualTo "foo"
+
+            /**
+             * Use subquery in an update statement
+             *
+             * ```sql
+             * UPDATE TAB1
+             *    SET ID=(SELECT TAB2.ID FROM TAB2 WHERE TAB2.ID = 'bar')
+             *  WHERE TAB1.ID = 'foo'
+             * ```
+             */
 
             /**
              * Use subquery in an update statement

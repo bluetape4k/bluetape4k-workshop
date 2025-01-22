@@ -1,12 +1,15 @@
 package io.bluetape4k.workshop.exposed.sql.kotlin.datetime
 
 import MigrationUtils
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.currentDialectTest
-import io.bluetape4k.workshop.exposed.domain.expectException
-import io.bluetape4k.workshop.exposed.domain.withDb
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.TestDB.H2_PSQL
+import io.bluetape4k.workshop.exposed.TestDB.MYSQL_V8
+import io.bluetape4k.workshop.exposed.TestDB.POSTGRESQL
+import io.bluetape4k.workshop.exposed.currentDialectTest
+import io.bluetape4k.workshop.exposed.expectException
+import io.bluetape4k.workshop.exposed.withDb
+import io.bluetape4k.workshop.exposed.withTables
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
@@ -78,7 +81,7 @@ import java.math.RoundingMode
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
-import java.time.temporal.ChronoUnit
+import java.time.temporal.ChronoUnit.MILLIS
 import kotlin.time.Duration
 
 class KotlinTimeTest: AbstractExposedTest() {
@@ -257,7 +260,7 @@ class KotlinTimeTest: AbstractExposedTest() {
             // these DB take the nanosecond value 871_130_789 and round up to default precision (e.g. in Oracle: 871_131)
 //            val requiresExplicitDTCast =
 //                listOf(TestDB.ORACLE, TestDB.H2_V2_ORACLE, TestDB.H2_V2_PSQL, TestDB.H2_V2_SQLSERVER)
-            val requiresExplicitDTCast = listOf(TestDB.H2_PSQL)
+            val requiresExplicitDTCast = listOf(H2_PSQL)
 
             val dateTime = when (testDB) {
                 in requiresExplicitDTCast -> Cast(dateTimeParam(mayTheFourthDT), KotlinLocalDateTimeColumnType())
@@ -448,7 +451,7 @@ class KotlinTimeTest: AbstractExposedTest() {
             val expectedTime =
                 when (testDB) {
                     // TestDB.SQLITE -> OffsetDateTime.parse("2023-05-04T05:04:01.123+00:00")
-                    TestDB.MYSQL_V8, // TestDB.SQLSERVER,
+                    MYSQL_V8, // TestDB.SQLSERVER,
                         // in TestDB.ALL_ORACLE_LIKE,
                     in TestDB.ALL_POSTGRES_LIKE,
                         -> OffsetDateTime.parse("2023-05-04T05:04:01.123123+00:00")
@@ -537,9 +540,9 @@ class KotlinTimeTest: AbstractExposedTest() {
             tester.insert { }
             val result1 = tester.selectAll().single()
             result1[tester.dates] shouldBeEqualTo defaultDates
-            if (testDB == TestDB.POSTGRESQL) {
+            if (testDB == POSTGRESQL) {
                 result1[tester.datetimes] shouldBeEqualTo defaultDateTimes
-                    .map { it.toJavaLocalDateTime().truncatedTo(ChronoUnit.MILLIS).toKotlinLocalDateTime() }
+                    .map { it.toJavaLocalDateTime().truncatedTo(MILLIS).toKotlinLocalDateTime() }
             } else {
                 result1[tester.datetimes] shouldBeEqualTo defaultDateTimes
             }

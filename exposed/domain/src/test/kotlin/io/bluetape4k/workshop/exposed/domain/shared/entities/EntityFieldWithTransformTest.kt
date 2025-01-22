@@ -2,9 +2,9 @@ package io.bluetape4k.workshop.exposed.domain.shared.entities
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldBeTrue
@@ -12,7 +12,7 @@ import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.Op
+import org.jetbrains.exposed.sql.Op.TRUE
 import org.jetbrains.exposed.sql.selectAll
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
@@ -61,7 +61,7 @@ class EntityFieldWithTransformTest: AbstractExposedTest() {
             entity.value shouldBeEqualTo "stuff"
 
             val row = TransformationsTable.selectAll()
-                .where(Op.TRUE)
+                .where(TRUE)
                 .first()
 
             row[TransformationsTable.value] shouldBeEqualTo "transformed-stuff"
@@ -81,7 +81,7 @@ class EntityFieldWithTransformTest: AbstractExposedTest() {
             entity.value shouldBeEqualTo "stuff"
 
             val row = NullableTransformationTable.selectAll()
-                .where(Op.TRUE)
+                .where(TRUE)
                 .first()
 
             row[NullableTransformationTable.value] shouldBeEqualTo "transformed-stuff"
@@ -101,7 +101,7 @@ class EntityFieldWithTransformTest: AbstractExposedTest() {
             entity.value.shouldBeNull()
 
             val row = NullableTransformationTable.selectAll()
-                .where(Op.TRUE)
+                .where(TRUE)
                 .first()
 
             row[NullableTransformationTable.value].shouldBeNull()

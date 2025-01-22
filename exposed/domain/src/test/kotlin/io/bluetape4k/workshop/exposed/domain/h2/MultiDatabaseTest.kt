@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.exposed.domain.h2
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.workshop.exposed.domain.TestDB
+import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.CountryTable
 import io.bluetape4k.workshop.exposed.domain.shared.dml.DMLTestData
 import kotlinx.coroutines.DelicateCoroutinesApi

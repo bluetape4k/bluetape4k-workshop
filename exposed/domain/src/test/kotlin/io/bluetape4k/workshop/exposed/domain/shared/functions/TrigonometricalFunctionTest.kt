@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.shared.functions
 
-import io.bluetape4k.workshop.exposed.domain.TestDB
+import io.bluetape4k.workshop.exposed.TestDB
 import org.jetbrains.exposed.sql.decimalLiteral
 import org.jetbrains.exposed.sql.doubleLiteral
 import org.jetbrains.exposed.sql.functions.math.ACosFunction

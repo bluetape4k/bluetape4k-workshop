@@ -5,11 +5,18 @@ import io.bluetape4k.exposed.sql.timebasedGenerated
 import io.bluetape4k.idgenerators.uuid.TimebasedUuid
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.TestDB.POSTGRESQL
+import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.AEntity
+import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.BEntity
+import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.XEntity
 import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.XTable
+import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.XType.A
+import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.XType.B
+import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.YEntity
 import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.YTable
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
@@ -38,7 +45,8 @@ import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.SizedCollection
-import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.SortOrder.ASC
+import org.jetbrains.exposed.sql.SortOrder.DESC
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.sql.Table
@@ -143,7 +151,7 @@ class EntityTest: AbstractExposedTest() {
     fun `defaults 01`(testDB: TestDB) {
         withTables(testDB, YTable, XTable) {
             // INSERT INTO XTABLE (B1, B2) VALUES (TRUE, FALSE)
-            val x = EntityTestData.XEntity.new { }
+            val x = XEntity.new { }
             x.b1.shouldBeTrue()
             x.b2.shouldBeFalse()
         }
@@ -154,11 +162,11 @@ class EntityTest: AbstractExposedTest() {
     fun `defaults 02`(testDB: TestDB) {
         withTables(testDB, YTable, XTable) {
             // INSERT INTO XTABLE (B1, B2, Y1) VALUES (FALSE, FALSE, NULL)
-            val a = EntityTestData.AEntity.create(false, EntityTestData.XType.A)
+            val a = AEntity.create(false, A)
             // INSERT INTO XTABLE (B1, B2, Y1) VALUES (FALSE, FALSE, '2ylqB2ttjrAtFxMhKKNxd')
-            val b = EntityTestData.AEntity.create(false, EntityTestData.XType.B) as EntityTestData.BEntity
+            val b = AEntity.create(false, B) as BEntity
             // INSERT INTO YTABLE (UUID, X) VALUES ('2ylqB2ttjrAtFxMhKKNxd', FALSE)
-            val y = EntityTestData.YEntity.new { x = false }
+            val y = YEntity.new { x = false }
 
             a.b1.shouldBeFalse()
             b.b1.shouldBeFalse()
@@ -181,6 +189,11 @@ class EntityTest: AbstractExposedTest() {
             val y1 = Human.new { h = "foo" }
 
             flushCache()
+            /**
+             * ```sql
+             * SELECT HUMAN.ID, HUMAN.H FROM HUMAN WHERE HUMAN.ID = 1
+             * ```
+             */
             /**
              * ```sql
              * SELECT HUMAN.ID, HUMAN.H FROM HUMAN WHERE HUMAN.ID = 1
@@ -239,7 +252,12 @@ class EntityTest: AbstractExposedTest() {
              * INSERT INTO YTABLE (UUID) VALUES ('2ylqB3I4kotn2yLdTR2uo')
              * ```
              */
-            val y = EntityTestData.YEntity.new { }
+            /**
+             * ```sql
+             * INSERT INTO YTABLE (UUID) VALUES ('2ylqB3I4kotn2yLdTR2uo')
+             * ```
+             */
+            val y = YEntity.new { }
             flushCache()
 
             /**
@@ -247,8 +265,21 @@ class EntityTest: AbstractExposedTest() {
              * INSERT INTO XTABLE (B1, B2, Y1) VALUES (TRUE, FALSE, '2ylqB3I4kotn2yLdTR2uo')
              * ```
              */
-            val b = EntityTestData.BEntity.new { }
+            /**
+             * ```sql
+             * INSERT INTO XTABLE (B1, B2, Y1) VALUES (TRUE, FALSE, '2ylqB3I4kotn2yLdTR2uo')
+             * ```
+             */
+            val b = BEntity.new { }
             b.y = y
+
+            /**
+             * ```sql
+             * SELECT XTABLE.ID, XTABLE.B1, XTABLE.B2, XTABLE.Y1
+             *   FROM XTABLE
+             *  WHERE XTABLE.Y1 = '2ylqB3I4kotn2yLdTR2uo'
+             * ```
+             */
 
             /**
              * ```sql
@@ -270,7 +301,12 @@ class EntityTest: AbstractExposedTest() {
              * INSERT INTO XTABLE (B1, B2) VALUES (TRUE, FALSE)
              * ```
              */
-            val b = EntityTestData.BEntity.new { }
+            /**
+             * ```sql
+             * INSERT INTO XTABLE (B1, B2) VALUES (TRUE, FALSE)
+             * ```
+             */
+            val b = BEntity.new { }
             flushCache()
 
             /**
@@ -278,7 +314,18 @@ class EntityTest: AbstractExposedTest() {
              * INSERT INTO YTABLE (UUID) VALUES ('2ylqB3JvcJDrxvKSTOpll')
              * ```
              */
-            val y = EntityTestData.YEntity.new { }
+            /**
+             * ```sql
+             * INSERT INTO YTABLE (UUID) VALUES ('2ylqB3JvcJDrxvKSTOpll')
+             * ```
+             */
+            val y = YEntity.new { }
+
+            /**
+             * ```sql
+             * UPDATE XTABLE SET Y1='2ylqB3JvcJDrxvKSTOpll' WHERE ID = 1
+             * ```
+             */
 
             /**
              * ```sql
@@ -286,6 +333,12 @@ class EntityTest: AbstractExposedTest() {
              * ```
              */
             b.y = y
+
+            /**
+             * ```sql
+             * SELECT XTABLE.ID, XTABLE.B1, XTABLE.B2, XTABLE.Y1 FROM XTABLE WHERE XTABLE.Y1 = '2ylqB3JvcJDrxvKSTOpll'
+             * ```
+             */
 
             /**
              * ```sql
@@ -376,7 +429,19 @@ class EntityTest: AbstractExposedTest() {
              * SELECT COUNT(*) FROM POSTS
              * ```
              */
+
+            /**
+             * ```sql
+             * SELECT COUNT(*) FROM POSTS
+             * ```
+             */
             Post.all().count() shouldBeEqualTo 2L
+
+            /**
+             * ```sql
+             * SELECT COUNT(*) FROM POSTS WHERE POSTS.PARENT = 1
+             * ```
+             */
 
             /**
              * ```sql
@@ -408,6 +473,18 @@ class EntityTest: AbstractExposedTest() {
             val post1 = Post.new { board = board1 }
 
             Board.all().forEach { board ->
+                /**
+                 * ```sql
+                 * SELECT COUNT(*) FROM POSTS WHERE POSTS.BOARD = 1
+                 * SELECT POSTS.ID, POSTS.BOARD, POSTS.PARENT, POSTS.CATEGORY, POSTS."optCategory" FROM POSTS WHERE POSTS.BOARD = 1
+                 * SELECT POSTS.ID, POSTS.BOARD, POSTS.PARENT, POSTS.CATEGORY, POSTS."optCategory" FROM POSTS WHERE POSTS.BOARD = 1
+                 * ```
+                 * ```sql
+                 * SELECT COUNT(*) FROM POSTS WHERE POSTS.BOARD = 2
+                 * SELECT POSTS.ID, POSTS.BOARD, POSTS.PARENT, POSTS.CATEGORY, POSTS."optCategory" FROM POSTS WHERE POSTS.BOARD = 2
+                 * SELECT POSTS.ID, POSTS.BOARD, POSTS.PARENT, POSTS.CATEGORY, POSTS."optCategory" FROM POSTS WHERE POSTS.BOARD = 2
+                 * ```
+                 */
                 /**
                  * ```sql
                  * SELECT COUNT(*) FROM POSTS WHERE POSTS.BOARD = 1
@@ -486,7 +563,19 @@ class EntityTest: AbstractExposedTest() {
              * SELECT COUNT(*) FROM POSTS WHERE POSTS.BOARD = 1
              * ```
              */
+            /**
+             * ```sql
+             * SELECT COUNT(*) FROM POSTS WHERE POSTS.BOARD = 1
+             * ```
+             */
             board.posts.count() shouldBeEqualTo 1L
+            /**
+             * ```sql
+             * SELECT POSTS.ID, POSTS.BOARD, POSTS.PARENT, POSTS.CATEGORY, POSTS."optCategory"
+             *   FROM POSTS
+             *  WHERE POSTS.BOARD = 1
+             * ```
+             */
             /**
              * ```sql
              * SELECT POSTS.ID, POSTS.BOARD, POSTS.PARENT, POSTS.CATEGORY, POSTS."optCategory"
@@ -497,6 +586,11 @@ class EntityTest: AbstractExposedTest() {
             board.posts.single() shouldBeEqualTo post1
 
             Post.new { this.board = board }
+            /**
+             * ```sql
+             * SELECT COUNT(*) FROM POSTS WHERE POSTS.BOARD = 1
+             * ```
+             */
             /**
              * ```sql
              * SELECT COUNT(*) FROM POSTS WHERE POSTS.BOARD = 1
@@ -533,7 +627,7 @@ class EntityTest: AbstractExposedTest() {
             Board.testCache(board2.id).shouldNotBeNull()
 
             // DSL Delete 를 수행해도 Cache예서 제거된다.
-            Boards.deleteWhere { Boards.id eq board2.id }
+            Boards.deleteWhere { id eq board2.id }
             Board.testCache(board2.id).shouldBeNull()
         }
     }
@@ -603,12 +697,28 @@ class EntityTest: AbstractExposedTest() {
              *      INSERT ("name", PRICE) VALUES(S."name", S.PRICE)
              * ```
              */
+
+            /**
+             * ```sql
+             * MERGE INTO ITEMS T USING (VALUES ('Item A', 50.0)) S("name", PRICE) ON (T."name"=S."name")
+             * WHEN MATCHED THEN
+             *      UPDATE SET T.PRICE=S.PRICE
+             * WHEN NOT MATCHED THEN
+             *      INSERT ("name", PRICE) VALUES(S."name", S.PRICE)
+             * ```
+             */
             Items.upsert(*conflictKeys) {
                 it[name] = itemA.name
                 it[price] = newPrice
             }
             itemA.price shouldBeEqualTo oldPrice
             Item.testCache(itemA.id).shouldBeNull()
+
+            /**
+             * ```sql
+             * SELECT ITEMS.ID, ITEMS."name", ITEMS.PRICE FROM ITEMS WHERE ITEMS.ID = 1
+             * ```
+             */
 
             /**
              * ```sql
@@ -628,6 +738,15 @@ class EntityTest: AbstractExposedTest() {
              * MERGE INTO ITEMS T USING (VALUES ('Item E', 100.0)) S("name", PRICE) ON (T."name"=S."name") WHEN MATCHED THEN UPDATE SET T.PRICE=S.PRICE WHEN NOT MATCHED THEN INSERT ("name", PRICE) VALUES(S."name", S.PRICE)
              * ```
              */
+            /**
+             * ```sql
+             * MERGE INTO ITEMS T USING (VALUES ('Item A', 100.0)) S("name", PRICE) ON (T."name"=S."name") WHEN MATCHED THEN UPDATE SET T.PRICE=S.PRICE WHEN NOT MATCHED THEN INSERT ("name", PRICE) VALUES(S."name", S.PRICE)
+             * MERGE INTO ITEMS T USING (VALUES ('Item B', 100.0)) S("name", PRICE) ON (T."name"=S."name") WHEN MATCHED THEN UPDATE SET T.PRICE=S.PRICE WHEN NOT MATCHED THEN INSERT ("name", PRICE) VALUES(S."name", S.PRICE)
+             * MERGE INTO ITEMS T USING (VALUES ('Item C', 100.0)) S("name", PRICE) ON (T."name"=S."name") WHEN MATCHED THEN UPDATE SET T.PRICE=S.PRICE WHEN NOT MATCHED THEN INSERT ("name", PRICE) VALUES(S."name", S.PRICE)
+             * MERGE INTO ITEMS T USING (VALUES ('Item D', 100.0)) S("name", PRICE) ON (T."name"=S."name") WHEN MATCHED THEN UPDATE SET T.PRICE=S.PRICE WHEN NOT MATCHED THEN INSERT ("name", PRICE) VALUES(S."name", S.PRICE)
+             * MERGE INTO ITEMS T USING (VALUES ('Item E', 100.0)) S("name", PRICE) ON (T."name"=S."name") WHEN MATCHED THEN UPDATE SET T.PRICE=S.PRICE WHEN NOT MATCHED THEN INSERT ("name", PRICE) VALUES(S."name", S.PRICE)
+             * ```
+             */
             val newPricePlusExtra = 100.0.toBigDecimal()
             val newItems = List(5) { i -> "Item ${'A' + i}" to newPricePlusExtra }
             Items.batchUpsert(newItems, *conflictKeys, shouldReturnGeneratedValues = false) { (name, price) ->
@@ -636,6 +755,12 @@ class EntityTest: AbstractExposedTest() {
             }
             itemA.price shouldBeEqualTo newPrice
             Item.testCache(itemA.id).shouldBeNull()
+
+            /**
+             * ```sql
+             * SELECT ITEMS.ID, ITEMS."name", ITEMS.PRICE FROM ITEMS WHERE ITEMS.ID = 1
+             * ```
+             */
 
             /**
              * ```sql
@@ -667,6 +792,11 @@ class EntityTest: AbstractExposedTest() {
              * SELECT ITEMS.ID, ITEMS."name", ITEMS.PRICE FROM ITEMS WHERE ITEMS.ID = 1 FOR UPDATE
              * ```
              */
+            /**
+             * ```sql
+             * SELECT ITEMS.ID, ITEMS."name", ITEMS.PRICE FROM ITEMS WHERE ITEMS.ID = 1 FOR UPDATE
+             * ```
+             */
             val updatedItem = Item.findByIdAndUpdate(item.id.value) {
                 it.price = newPrice
             }
@@ -680,6 +810,11 @@ class EntityTest: AbstractExposedTest() {
             item.price shouldBeEqualTo newPrice
 
             // NOTE: refresh(flush=false)이면 Cache 값이 다시 채워진다.
+            /**
+             * ```sql
+             * SELECT ITEMS.ID, ITEMS."name", ITEMS.PRICE FROM ITEMS WHERE ITEMS.ID = 1
+             * ```
+             */
             /**
              * ```sql
              * SELECT ITEMS.ID, ITEMS."name", ITEMS.PRICE FROM ITEMS WHERE ITEMS.ID = 1
@@ -716,6 +851,16 @@ class EntityTest: AbstractExposedTest() {
              *    FOR UPDATE
              * ```
              */
+            /**
+             * ```sql
+             * SELECT ITEMS.ID,
+             *        ITEMS."name",
+             *        ITEMS.PRICE
+             *   FROM ITEMS
+             *  WHERE ITEMS."name" = 'Item A'
+             *    FOR UPDATE
+             * ```
+             */
             val newPrice = 50.0.toBigDecimal()
             val updatedItem = Item.findSingleByAndUpdate(Items.name eq "Item A") {
                 it.price = newPrice
@@ -730,6 +875,11 @@ class EntityTest: AbstractExposedTest() {
             item.price shouldBeEqualTo newPrice
 
             // NOTE: refresh(flush=false)이면 Cache 값이 다시 채워진다.
+            /**
+             * ```sql
+             * SELECT ITEMS.ID, ITEMS."name", ITEMS.PRICE FROM ITEMS WHERE ITEMS.ID = 1
+             * ```
+             */
             /**
              * ```sql
              * SELECT ITEMS.ID, ITEMS."name", ITEMS.PRICE FROM ITEMS WHERE ITEMS.ID = 1
@@ -789,6 +939,12 @@ class EntityTest: AbstractExposedTest() {
                  * INSERT INTO "user" (ID, "name") VALUES (1, 'testUser')
                  * ```
                  */
+                /**
+                 * ```sql
+                 * INSERT INTO HUMAN (H) VALUES ('te')
+                 * INSERT INTO "user" (ID, "name") VALUES (1, 'testUser')
+                 * ```
+                 */
                 val user = User("testUser")
                 user.human.h shouldBeEqualTo "te"
                 user.name shouldBeEqualTo "testUser"
@@ -825,6 +981,15 @@ class EntityTest: AbstractExposedTest() {
              * SELECT COUNT(*) FROM SELFREFERENCE WHERE SELFREFERENCE.PARENT_ID = 4
              * ```
              */
+
+            /**
+             * ```sql
+             * SELECT COUNT(*) FROM SELFREFERENCE WHERE SELFREFERENCE.PARENT_ID = 1
+             * SELECT COUNT(*) FROM SELFREFERENCE WHERE SELFREFERENCE.PARENT_ID = 2
+             * SELECT COUNT(*) FROM SELFREFERENCE WHERE SELFREFERENCE.PARENT_ID = 3
+             * SELECT COUNT(*) FROM SELFREFERENCE WHERE SELFREFERENCE.PARENT_ID = 4
+             * ```
+             */
             parent.children.count() shouldBeEqualTo 2
             child1.children.count() shouldBeEqualTo 1
             child2.children.count() shouldBeEqualTo 0
@@ -846,8 +1011,22 @@ class EntityTest: AbstractExposedTest() {
              *  WHERE ID = 6
              * ```
              */
+            /**
+             * ```sql
+             * UPDATE SELFREFERENCE
+             *    SET PARENT_ID=6
+             *  WHERE ID = 6
+             * ```
+             */
             ref1.parent = ref1.id
 
+            /**
+             * ```sql
+             * SELECT SELFREFERENCE.ID, SELFREFERENCE.PARENT_ID
+             *   FROM SELFREFERENCE
+             *  WHERE SELFREFERENCE.ID = 6
+             * ```
+             */
             /**
              * ```sql
              * SELECT SELFREFERENCE.ID, SELFREFERENCE.PARENT_ID
@@ -917,7 +1096,25 @@ class EntityTest: AbstractExposedTest() {
              * SELECT COUNT(*) FROM POSTS WHERE POSTS."optCategory" = '2ylpPHssTfbOjIO2XKuqq'
              * ```
              */
+
+            /**
+             * ```sql
+             * SELECT COUNT(*) FROM POSTS WHERE POSTS."optCategory" = '2ylpPHssTfbOjIO2XKuqq'
+             * ```
+             */
             category1.posts.count() shouldBeEqualTo 2L
+
+            /**
+             * ```sql
+             * SELECT POSTS.ID,
+             *        POSTS.BOARD,
+             *        POSTS.PARENT,
+             *        POSTS.CATEGORY,
+             *        POSTS."optCategory"
+             *   FROM POSTS
+             *  WHERE POSTS."optCategory" = '2ylpPHssTfbOjIO2XKuqq'
+             * ```
+             */
 
             /**
              * ```sql
@@ -944,7 +1141,36 @@ class EntityTest: AbstractExposedTest() {
              *  LIMIT 1
              * ```
              */
+
+            /**
+             * ```sql
+             * SELECT POSTS.ID,
+             *        POSTS.BOARD,
+             *        POSTS.PARENT,
+             *        POSTS.CATEGORY,
+             *        POSTS."optCategory"
+             *   FROM POSTS
+             *  WHERE POSTS."optCategory" = '2ylpPHssTfbOjIO2XKuqq'
+             *  LIMIT 1
+             * ```
+             */
             category1.posts.limit(1).toList() shouldHaveSize 1
+
+            /**
+             * ```sql
+             * SELECT COUNT(*)
+             *   FROM (
+             *      SELECT POSTS.ID posts_id,
+             *             POSTS.BOARD posts_board,
+             *             POSTS.PARENT posts_parent,
+             *             POSTS.CATEGORY posts_category,
+             *             POSTS."optCategory" posts_optCategory
+             *        FROM POSTS
+             *       WHERE POSTS."optCategory" = '2ylpPHssTfbOjIO2XKuqq'
+             *       LIMIT 1
+             *  ) subquery
+             * ```
+             */
 
             /**
              * ```sql
@@ -986,8 +1212,16 @@ class EntityTest: AbstractExposedTest() {
              *  ORDER BY CATEGORIES.TITLE ASC
              * ```
              */
+
+            /**
+             * ```sql
+             * SELECT CATEGORIES.ID, CATEGORIES."uniqueId", CATEGORIES.TITLE
+             *   FROM CATEGORIES
+             *  ORDER BY CATEGORIES.TITLE ASC
+             * ```
+             */
             Category.all()
-                .orderBy(Categories.title to SortOrder.ASC)
+                .orderBy(Categories.title to ASC)
                 .toList() shouldBeEqualTo listOf(category1, category2, category3)
 
             /**
@@ -997,8 +1231,16 @@ class EntityTest: AbstractExposedTest() {
              *  ORDER BY CATEGORIES.TITLE DESC
              * ```
              */
+
+            /**
+             * ```sql
+             * SELECT CATEGORIES.ID, CATEGORIES."uniqueId", CATEGORIES.TITLE
+             *   FROM CATEGORIES
+             *  ORDER BY CATEGORIES.TITLE DESC
+             * ```
+             */
             Category.all()
-                .orderBy(Categories.title to SortOrder.DESC)
+                .orderBy(Categories.title to DESC)
                 .toList() shouldBeEqualTo listOf(category3, category2, category1)
         }
     }
@@ -1025,7 +1267,17 @@ class EntityTest: AbstractExposedTest() {
              * SELECT POSTS.ID, POSTS.BOARD, POSTS.PARENT, POSTS.CATEGORY, POSTS."optCategory" FROM POSTS WHERE POSTS.ID = 1
              * ```
              */
+            /**
+             * ```sql
+             * SELECT POSTS.ID, POSTS.BOARD, POSTS.PARENT, POSTS.CATEGORY, POSTS."optCategory" FROM POSTS WHERE POSTS.ID = 1
+             * ```
+             */
             Post.reload(post1)
+            /**
+             * ```sql
+             * SELECT POSTS.ID, POSTS.BOARD, POSTS.PARENT, POSTS.CATEGORY, POSTS."optCategory" FROM POSTS WHERE POSTS.ID = 2
+             * ```
+             */
             /**
              * ```sql
              * SELECT POSTS.ID, POSTS.BOARD, POSTS.PARENT, POSTS.CATEGORY, POSTS."optCategory" FROM POSTS WHERE POSTS.ID = 2
@@ -1273,6 +1525,15 @@ class EntityTest: AbstractExposedTest() {
                  * SELECT REGIONS.ID, REGIONS."name" FROM REGIONS WHERE REGIONS.ID IN (1, 2)
                  * ```
                  */
+                /**
+                 * ```sql
+                 * SELECT SCHOOLS.ID, SCHOOLS."name", SCHOOLS.REGION_ID, SCHOOLS.SECONDARY_REGION_ID FROM SCHOOLS
+                 * ```
+                 * ```sql
+                 * SELECT REGIONS.ID, REGIONS."name" FROM REGIONS WHERE REGIONS.ID IN (1, 2)
+                 * ```
+                 */
+
                 // with - Fetch Eager Loading (즉시 로딩, N+1 문제 해결)
                 School.all().with(School::region)
                 School.testCache(school1.id).shouldNotBeNull()
@@ -1312,6 +1573,12 @@ class EntityTest: AbstractExposedTest() {
                  * SELECT REGIONS.ID, REGIONS."name" FROM REGIONS WHERE REGIONS.ID = 1
                  * ```
                  */
+                /**
+                 * ```sql
+                 * SELECT SCHOOLS.ID, SCHOOLS."name", SCHOOLS.REGION_ID, SCHOOLS.SECONDARY_REGION_ID FROM SCHOOLS
+                 * SELECT REGIONS.ID, REGIONS."name" FROM REGIONS WHERE REGIONS.ID = 1
+                 * ```
+                 */
                 val allSchools = School.all().with(School::region).toList()
 
                 allSchools shouldHaveSize 2
@@ -1325,6 +1592,12 @@ class EntityTest: AbstractExposedTest() {
                 statementCount = 0
                 statementStats.clear()
 
+                /**
+                 * ```sql
+                 * SELECT SCHOOLS.ID, SCHOOLS."name", SCHOOLS.REGION_ID, SCHOOLS.SECONDARY_REGION_ID FROM SCHOOLS LIMIT 1
+                 * SELECT REGIONS.ID, REGIONS."name" FROM REGIONS WHERE REGIONS.ID = 1
+                 * ```
+                 */
                 /**
                  * ```sql
                  * SELECT SCHOOLS.ID, SCHOOLS."name", SCHOOLS.REGION_ID, SCHOOLS.SECONDARY_REGION_ID FROM SCHOOLS LIMIT 1
@@ -1345,6 +1618,13 @@ class EntityTest: AbstractExposedTest() {
             inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
                 debug = true
 
+                /**
+                 * ```sql
+                 * SELECT SCHOOLS.ID, SCHOOLS."name", SCHOOLS.REGION_ID, SCHOOLS.SECONDARY_REGION_ID FROM SCHOOLS
+                 * SELECT REGIONS.ID, REGIONS."name" FROM REGIONS WHERE REGIONS.ID = 1
+                 * SELECT SCHOOLS.ID, SCHOOLS."name", SCHOOLS.REGION_ID, SCHOOLS.SECONDARY_REGION_ID FROM SCHOOLS LIMIT 1
+                 * ```
+                 */
                 /**
                  * ```sql
                  * SELECT SCHOOLS.ID, SCHOOLS."name", SCHOOLS.REGION_ID, SCHOOLS.SECONDARY_REGION_ID FROM SCHOOLS
@@ -1390,6 +1670,12 @@ class EntityTest: AbstractExposedTest() {
                  * SELECT REGIONS.ID, REGIONS."name" FROM REGIONS WHERE REGIONS.ID = 2
                  * ```
                  */
+                /**
+                 * ```sql
+                 * SELECT SCHOOLS.ID, SCHOOLS."name", SCHOOLS.REGION_ID, SCHOOLS.SECONDARY_REGION_ID FROM SCHOOLS WHERE SCHOOLS.ID = 1
+                 * SELECT REGIONS.ID, REGIONS."name" FROM REGIONS WHERE REGIONS.ID = 2
+                 * ```
+                 */
                 val school2 = School.find {
                     Schools.id eq school1.id
                 }.first().load(School::secondaryRegion)
@@ -1421,6 +1707,13 @@ class EntityTest: AbstractExposedTest() {
                 maxAttempts = 1
 
                 val cache = TransactionManager.current().entityCache
+
+                /**
+                 * ```sql
+                 * SELECT SCHOOLS.ID, SCHOOLS."name", SCHOOLS.REGION_ID, SCHOOLS.SECONDARY_REGION_ID FROM SCHOOLS
+                 * SELECT STUDENTS.ID, STUDENTS."name", STUDENTS.SCHOOL_ID FROM STUDENTS WHERE STUDENTS.SCHOOL_ID IN (1, 2, 3)
+                 * ```
+                 */
 
                 /**
                  * ```sql
@@ -1471,7 +1764,27 @@ class EntityTest: AbstractExposedTest() {
                  *  WHERE SCHOOLS.ID = 1
                  * ```
                  */
+                /**
+                 * ```sql
+                 * SELECT SCHOOLS.ID,
+                 *        SCHOOLS."name",
+                 *        SCHOOLS.REGION_ID,
+                 *        SCHOOLS.SECONDARY_REGION_ID
+                 *   FROM SCHOOLS
+                 *  WHERE SCHOOLS.ID = 1
+                 * ```
+                 */
                 School.find { Schools.id eq school1.id }.first().load(School::students)
+
+                /**
+                 * ```sql
+                 * SELECT STUDENTS.ID,
+                 *        STUDENTS."name",
+                 *        STUDENTS.SCHOOL_ID
+                 *   FROM STUDENTS
+                 *  WHERE STUDENTS.SCHOOL_ID = 1
+                 * ```
+                 */
 
                 /**
                  * ```sql
@@ -1520,6 +1833,14 @@ class EntityTest: AbstractExposedTest() {
                  * SELECT DATENTIONS.ID, DATENTIONS.REASON, DATENTIONS.STUDENT_ID FROM DATENTIONS WHERE DATENTIONS.STUDENT_ID IN (1, 2)
                  * ```
                  */
+
+                /**
+                 * ```sql
+                 * SELECT SCHOOLS.ID, SCHOOLS."name", SCHOOLS.REGION_ID, SCHOOLS.SECONDARY_REGION_ID FROM SCHOOLS
+                 * SELECT STUDENTS.ID, STUDENTS."name", STUDENTS.SCHOOL_ID FROM STUDENTS WHERE STUDENTS.SCHOOL_ID = 1
+                 * SELECT DATENTIONS.ID, DATENTIONS.REASON, DATENTIONS.STUDENT_ID FROM DATENTIONS WHERE DATENTIONS.STUDENT_ID IN (1, 2)
+                 * ```
+                 */
                 School.all().with(School::students, Student::detentions)
 
                 cache.getReferrers<Student>(school1.id, Students.school)?.toList().orEmpty() shouldBeEqualTo
@@ -1559,6 +1880,19 @@ class EntityTest: AbstractExposedTest() {
             inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 val cache = TransactionManager.current().entityCache
+
+                /**
+                 * ```sql
+                 * SELECT SCHOOLS.ID, SCHOOLS."name", SCHOOLS.REGION_ID, SCHOOLS.SECONDARY_REGION_ID FROM SCHOOLS
+                 * SELECT HOLIDAYS.ID,
+                 *        HOLIDAYS.HOLIDAY_START,
+                 *        HOLIDAYS.HOLIDAY_END,
+                 *        SCHOOL_HOLIDAYS.SCHOOL_ID,
+                 *        SCHOOL_HOLIDAYS.HOLIDAY_ID
+                 *   FROM HOLIDAYS INNER JOIN SCHOOL_HOLIDAYS ON SCHOOL_HOLIDAYS.HOLIDAY_ID = HOLIDAYS.ID
+                 *  WHERE SCHOOL_HOLIDAYS.SCHOOL_ID IN (1, 2, 3)
+                 * ```
+                 */
 
                 /**
                  * ```sql
@@ -1629,6 +1963,19 @@ class EntityTest: AbstractExposedTest() {
              *  WHERE SCHOOL_HOLIDAYS.SCHOOL_ID = 1
              * ```
              */
+
+            /**
+             * ```sql
+             * SELECT SCHOOLS.ID, SCHOOLS."name", SCHOOLS.REGION_ID, SCHOOLS.SECONDARY_REGION_ID
+             *   FROM SCHOOLS
+             *  WHERE SCHOOLS.ID = 1
+             * ```
+             * ```sql
+             * SELECT HOLIDAYS.ID, HOLIDAYS.HOLIDAY_START, HOLIDAYS.HOLIDAY_END, SCHOOL_HOLIDAYS.SCHOOL_ID, SCHOOL_HOLIDAYS.HOLIDAY_ID
+             *   FROM HOLIDAYS INNER JOIN SCHOOL_HOLIDAYS ON SCHOOL_HOLIDAYS.HOLIDAY_ID = HOLIDAYS.ID
+             *  WHERE SCHOOL_HOLIDAYS.SCHOOL_ID = 1
+             * ```
+             */
             School.find { Schools.id eq school1.id }.first().load(School::holidays)
 
             val cache = TransactionManager.current().entityCache
@@ -1650,6 +1997,14 @@ class EntityTest: AbstractExposedTest() {
             val note2 = Note.new { text = "Note text"; student = student2 }
 
             commit()
+
+            /**
+             * ```sql
+             * SELECT SCHOOLS.ID, SCHOOLS."name", SCHOOLS.REGION_ID, SCHOOLS.SECONDARY_REGION_ID FROM SCHOOLS
+             * SELECT STUDENTS.ID, STUDENTS."name", STUDENTS.SCHOOL_ID FROM STUDENTS WHERE STUDENTS.SCHOOL_ID = 1
+             * SELECT NOTES.ID, NOTES.TEXT, NOTES.STUDENT_ID FROM NOTES WHERE NOTES.STUDENT_ID IN (1, 2)
+             * ```
+             */
 
             /**
              * ```sql
@@ -1698,6 +2053,19 @@ class EntityTest: AbstractExposedTest() {
                  *  WHERE STUDENT_BIOS.STUDENT_ID IN (1, 2)
                  * ```
                  */
+
+                /**
+                 * Fetch eager loading
+                 *
+                 * ```sql
+                 * SELECT STUDENTS.ID, STUDENTS."name", STUDENTS.SCHOOL_ID
+                 *   FROM STUDENTS;
+                 *
+                 * SELECT STUDENT_BIOS.ID, STUDENT_BIOS.DATE_OF_BIRTH, STUDENT_BIOS.STUDENT_ID
+                 *   FROM STUDENT_BIOS
+                 *  WHERE STUDENT_BIOS.STUDENT_ID IN (1, 2)
+                 * ```
+                 */
                 Student.all().with(Student::bio)
 
                 cache.getReferrers<StudentBio>(student1.id, StudentBios.student)?.single() shouldBeEqualTo bio1
@@ -1722,6 +2090,20 @@ class EntityTest: AbstractExposedTest() {
             inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 val cache = TransactionManager.current().entityCache
+
+                /**
+                 * Fetch eager loading
+                 * ```sql
+                 * SELECT STUDENTS.ID, STUDENTS."name", STUDENTS.SCHOOL_ID
+                 *   FROM STUDENTS;
+                 *
+                 * SELECT STUDENT_BIOS.ID,
+                 *        STUDENT_BIOS.DATE_OF_BIRTH,
+                 *        STUDENT_BIOS.STUDENT_ID
+                 *   FROM STUDENT_BIOS
+                 *  WHERE STUDENT_BIOS.STUDENT_ID = 1
+                 * ```
+                 */
 
                 /**
                  * Fetch eager loading
@@ -1843,7 +2225,7 @@ class EntityTest: AbstractExposedTest() {
     fun `database generated value`(testDB: TestDB) {
         withTables(testDB, CreditCards) {
             when (testDB) {
-                TestDB.POSTGRESQL -> {
+                POSTGRESQL -> {
                     // The value can also be set using a SQL trigger
                     exec(
                         """
@@ -1888,9 +2270,25 @@ class EntityTest: AbstractExposedTest() {
              * ```
              */
 
+            /**
+             * ```sql
+             * INSERT INTO CREDITCARDS ("number") VALUES ('0000111122223333')
+             * ```
+             */
+
             val creditCardId = CreditCards.insertAndGetId {
                 it[number] = "0000111122223333"
             }.value
+
+            /**
+             * ```sql
+             * SELECT CREDITCARDS.ID,
+             *        CREDITCARDS."number",
+             *        CREDITCARDS."spendingLimit"
+             *   FROM CREDITCARDS
+             *  WHERE CREDITCARDS.ID = 1
+             * ```
+             */
 
             /**
              * ```sql
@@ -1905,6 +2303,18 @@ class EntityTest: AbstractExposedTest() {
                 .where { CreditCards.id eq creditCardId }
                 .single()[CreditCards.spendingLimit] shouldBeEqualTo 10000uL
 
+            /**
+             * ```sql
+             * INSERT INTO CREDITCARDS ("number") VALUES ('0000111122223333')
+             * ```
+             * ```sql
+             * SELECT CREDITCARDS.ID,
+             *        CREDITCARDS."number",
+             *        CREDITCARDS."spendingLimit"
+             *   FROM CREDITCARDS
+             *  WHERE CREDITCARDS.ID = 2
+             * ```
+             */
             /**
              * ```sql
              * INSERT INTO CREDITCARDS ("number") VALUES ('0000111122223333')
@@ -1949,8 +2359,27 @@ class EntityTest: AbstractExposedTest() {
              * FROM CREDITCARDS
              * ```
              */
+
+            /**
+             * ```sql
+             * SELECT
+             *      CASE
+             *          WHEN CREDITCARDS."spendingLimit" < 500 THEN CREDITCARDS.ID
+             *          ELSE 1
+             *      END
+             * FROM CREDITCARDS
+             * ```
+             */
             CreditCards.select(conditionalId)
                 .single()[conditionalId] shouldBeEqualTo newCard.id
+
+            /**
+             * ```sql
+             * SELECT CREDITCARDS."spendingLimit"
+             *   FROM CREDITCARDS
+             *  WHERE CREDITCARDS.ID = 1
+             * ```
+             */
 
             /**
              * ```sql
@@ -2014,6 +2443,19 @@ class EntityTest: AbstractExposedTest() {
 
             flushCache()
             debug = true
+
+            /**
+             * ```sql
+             * SELECT COUNTRIES.ID, COUNTRIES."name" FROM COUNTRIES
+             * ```
+             * ```sql
+             * SELECT DISHES.ID,
+             *        DISHES."name",
+             *        DISHES.COUNTRY_ID
+             *   FROM DISHES
+             *  WHERE DISHES.COUNTRY_ID = 'KOR'
+             * ```
+             */
 
             /**
              * ```sql
@@ -2091,6 +2533,13 @@ class EntityTest: AbstractExposedTest() {
             }
 
             commit()
+
+            /**
+             * ```sql
+             * SELECT CUSTOMERS.ID, CUSTOMERS."emailAddress", CUSTOMERS."fullName" FROM CUSTOMERS
+             * SELECT ORDERS.ID, ORDERS."orderName", ORDERS.CUSTOMER_ID FROM ORDERS WHERE ORDERS.CUSTOMER_ID IN (1, 2)
+             * ```
+             */
 
             /**
              * ```sql

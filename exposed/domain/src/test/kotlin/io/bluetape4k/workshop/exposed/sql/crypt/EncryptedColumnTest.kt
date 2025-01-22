@@ -4,9 +4,9 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.support.toUtf8String
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.withTables
 import nl.altindag.log.LogCaptor
 import org.amshove.kluent.internal.assertFailsWith
 import org.amshove.kluent.shouldBeEqualTo
@@ -109,6 +109,10 @@ class EncryptedColumnTest: AbstractExposedTest() {
             stringTable.selectAll()
                 .where { stringTable.id eq id1 }
                 .first()[stringTable.age] shouldBeEqualTo insertedAge
+
+            /**
+             * TODO: 암호화된 컬럼으로 검색은 불가능하다. --> 이거 개선해야 한다.
+             */
 
             /**
              * TODO: 암호화된 컬럼으로 검색은 불가능하다. --> 이거 개선해야 한다.

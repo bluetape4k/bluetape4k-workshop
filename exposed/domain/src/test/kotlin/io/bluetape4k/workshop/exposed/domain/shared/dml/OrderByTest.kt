@@ -1,13 +1,17 @@
 package io.bluetape4k.workshop.exposed.domain.shared.dml
 
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.currentDialectTest
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.currentDialectTest
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.SortOrder.ASC_NULLS_FIRST
+import org.jetbrains.exposed.sql.SortOrder.ASC_NULLS_LAST
+import org.jetbrains.exposed.sql.SortOrder.DESC_NULLS_FIRST
+import org.jetbrains.exposed.sql.SortOrder.DESC_NULLS_LAST
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.count
 import org.jetbrains.exposed.sql.insert
@@ -313,10 +317,10 @@ class OrderByTest: AbstractExposedTest() {
                 ordered shouldBeEqualTo expected
                 assertContentEquals(expected, ordered)
             }
-            assertOrdered(listOf(4, 2, 1, 3), SortOrder.DESC_NULLS_LAST) // c, b, a, null
-            assertOrdered(listOf(1, 2, 4, 3), SortOrder.ASC_NULLS_LAST) // a, b, c, null
-            assertOrdered(listOf(3, 4, 2, 1), SortOrder.DESC_NULLS_FIRST) // null, c, b, a
-            assertOrdered(listOf(3, 1, 2, 4), SortOrder.ASC_NULLS_FIRST) // null, a, b, c
+            assertOrdered(listOf(4, 2, 1, 3), DESC_NULLS_LAST) // c, b, a, null
+            assertOrdered(listOf(1, 2, 4, 3), ASC_NULLS_LAST) // a, b, c, null
+            assertOrdered(listOf(3, 4, 2, 1), DESC_NULLS_FIRST) // null, c, b, a
+            assertOrdered(listOf(3, 1, 2, 4), ASC_NULLS_FIRST) // null, a, b, c
         }
     }
 }

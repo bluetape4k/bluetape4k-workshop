@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.exposed.domain
+package io.bluetape4k.workshop.exposed
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.database.CockroachServer

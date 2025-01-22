@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.exposed.domain.shared
 
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.inProperCase
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.inProperCase
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.jetbrains.exposed.sql.BooleanColumnType
@@ -16,6 +16,7 @@ import org.jetbrains.exposed.sql.VarCharColumnType
 import org.jetbrains.exposed.sql.addLogger
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.statements.StatementType
+import org.jetbrains.exposed.sql.statements.StatementType.INSERT
 import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.Assumptions
@@ -39,7 +40,7 @@ class ParameterizationTest: AbstractExposedTest() {
             exec(
                 "INSERT INTO ${TempTable.tableName} (foo) VALUES (?)",
                 listOf(VarCharColumnType() to "John \"Johny\" Johnson"),
-                StatementType.INSERT
+                INSERT
             )
 
             TempTable.selectAll().single()[TempTable.name] shouldBeEqualTo "John \"Johny\" Johnson"

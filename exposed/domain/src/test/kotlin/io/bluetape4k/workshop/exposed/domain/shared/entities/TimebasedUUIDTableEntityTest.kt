@@ -3,10 +3,10 @@ package io.bluetape4k.workshop.exposed.domain.shared.entities
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntity
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityClass
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDTable
-import io.bluetape4k.idgenerators.uuid.TimebasedUuid
+import io.bluetape4k.idgenerators.uuid.TimebasedUuid.Epoch
 import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables.Address
 import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables.Addresses
 import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables.Cities
@@ -15,7 +15,7 @@ import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables
 import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables.Person
 import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables.Town
 import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables.Towns
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.jetbrains.exposed.dao.flushCache
@@ -94,11 +94,11 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
             val seoul = City.new { name = "Seoul" }
             val busan = City.new { name = "Busan" }
 
-            Person.new(TimebasedUuid.Epoch.nextId()) {
+            Person.new(Epoch.nextId()) {
                 name = "Debop"
                 city = seoul
             }
-            Person.new(TimebasedUuid.Epoch.nextId()) {
+            Person.new(Epoch.nextId()) {
                 name = "BTS"
                 city = seoul
             }
@@ -114,9 +114,23 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
              * SELECT CITIES.ID, CITIES."name" FROM CITIES
              * ```
              */
+            /**
+             * ```sql
+             * SELECT CITIES.ID, CITIES."name" FROM CITIES
+             * ```
+             */
             val allCities = City.all().map { it.name }
             allCities shouldBeEqualTo listOf("Seoul", "Busan")
 
+            /**
+             * ```sql
+             * SELECT PEOPLE.ID, PEOPLE."name", PEOPLE.CITY_ID FROM PEOPLE
+             *
+             * SELECT CITIES.ID, CITIES."name"
+             *   FROM CITIES
+             *  WHERE CITIES.ID IN ('1efcff30-9a92-6fd6-b98d-178b68d550e5', '1efcff30-9a92-6fd8-b98d-178b68d550e5')
+             * ```
+             */
             /**
              * ```sql
              * SELECT PEOPLE.ID, PEOPLE."name", PEOPLE.CITY_ID FROM PEOPLE
@@ -142,11 +156,11 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
             val seoul = City.new { name = "Seoul" }
             val busan = City.new { name = "Busan" }
 
-            Person.new(TimebasedUuid.Epoch.nextId()) {
+            Person.new(Epoch.nextId()) {
                 name = "Debop"
                 city = seoul
             }
-            Person.new(TimebasedUuid.Epoch.nextId()) {
+            Person.new(Epoch.nextId()) {
                 name = "BTS"
                 city = seoul
             }
@@ -165,6 +179,15 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
             val allCities = City.all().map { it.name }
             allCities shouldBeEqualTo listOf("Seoul")
 
+            /**
+             * ```sql
+             * SELECT PEOPLE.ID, PEOPLE."name", PEOPLE.CITY_ID FROM PEOPLE
+             *
+             * SELECT CITIES.ID, CITIES."name"
+             *   FROM CITIES
+             *  WHERE CITIES.ID = '1efcff30-9a2e-6e2b-b98d-178b68d550e5'
+             * ```
+             */
             /**
              * ```sql
              * SELECT PEOPLE.ID, PEOPLE."name", PEOPLE.CITY_ID FROM PEOPLE

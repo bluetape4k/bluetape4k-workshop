@@ -2,11 +2,13 @@ package io.bluetape4k.workshop.exposed.domain.shared.dml
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.currentDialectTest
-import io.bluetape4k.workshop.exposed.domain.expectException
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.TestDB.MYSQL_V5
+import io.bluetape4k.workshop.exposed.TestDB.MYSQL_V8
+import io.bluetape4k.workshop.exposed.currentDialectTest
+import io.bluetape4k.workshop.exposed.expectException
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.jetbrains.exposed.dao.id.IntIdTable
@@ -164,7 +166,7 @@ class ExplainTest: AbstractExposedTest() {
             }
 
             // In MySql prior 8 the EXPLAIN command should be used without ANALYZE modifier
-            val analyze = testDb != TestDB.MYSQL_V5
+            val analyze = testDb != MYSQL_V5
             // EXPLAIN ANALYZE SELECT COUNTRIES.ID, COUNTRIES.COUNTRY_CODE FROM COUNTRIES
             explain(analyze = analyze) { Countries.selectAll() }.toList()
         }
@@ -221,8 +223,8 @@ class ExplainTest: AbstractExposedTest() {
             }
 
             // test analyze + options
-            val analyze = testDb != TestDB.MYSQL_V5
-            val combinedOption = if (testDb == TestDB.MYSQL_V8) "FORMAT=TREE" else formatOption
+            val analyze = testDb != MYSQL_V5
+            val combinedOption = if (testDb == MYSQL_V8) "FORMAT=TREE" else formatOption
             explain(analyze, combinedOption) { query }.toList()
         }
     }

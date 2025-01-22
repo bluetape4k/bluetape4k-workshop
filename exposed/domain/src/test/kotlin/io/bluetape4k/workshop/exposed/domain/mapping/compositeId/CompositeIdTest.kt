@@ -1,14 +1,14 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.compositeId
 
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.expectException
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.domain.mapping.composite.Authors
 import io.bluetape4k.workshop.exposed.domain.mapping.composite.Books
 import io.bluetape4k.workshop.exposed.domain.mapping.composite.Offices
 import io.bluetape4k.workshop.exposed.domain.mapping.composite.Publishers
 import io.bluetape4k.workshop.exposed.domain.mapping.composite.Reviews
+import io.bluetape4k.workshop.exposed.expectException
 import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction

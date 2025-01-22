@@ -1,17 +1,18 @@
 package io.bluetape4k.workshop.exposed.domain.shared.dml
 
-import io.bluetape4k.idgenerators.uuid.TimebasedUuid
+import io.bluetape4k.idgenerators.uuid.TimebasedUuid.Epoch
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.expectException
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.domain.shared.dml.DMLTestData.UserData
+import io.bluetape4k.workshop.exposed.expectException
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.SortOrder.DESC
 import org.jetbrains.exposed.sql.alias
 import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.insert
@@ -48,7 +49,7 @@ class FetchBatchedResultsTest: AbstractExposedTest() {
     fun `fetchBatchedResults with where and set batchSize`(testDb: TestDB) {
         val cities = DMLTestData.Cities
         withTables(testDb, cities) {
-            val names = List(100) { TimebasedUuid.Epoch.nextIdAsString() }
+            val names = List(100) { Epoch.nextIdAsString() }
             cities.batchInsert(names) { name -> this[cities.name] = name }
 
             val batches = cities.selectAll().where { cities.id less 51 }
@@ -83,11 +84,11 @@ class FetchBatchedResultsTest: AbstractExposedTest() {
     fun `when sortOrder is given, fetchBatchedResults should return batches in the given order`(testDb: TestDB) {
         val cities = DMLTestData.Cities
         withTables(testDb, cities) {
-            val names = List(100) { TimebasedUuid.Epoch.nextIdAsString() }
+            val names = List(100) { Epoch.nextIdAsString() }
             cities.batchInsert(names) { name -> this[cities.name] = name }
 
             val batches = cities.selectAll().where { cities.id less 51 }
-                .fetchBatchedResults(batchSize = BATCH_SIZE, sortOrder = SortOrder.DESC)
+                .fetchBatchedResults(batchSize = BATCH_SIZE, sortOrder = DESC)
                 .toList()
                 .map { it.toCityNameList() }
 
@@ -120,7 +121,7 @@ class FetchBatchedResultsTest: AbstractExposedTest() {
     ) {
         val cities = DMLTestData.Cities
         withTables(testDb, cities) {
-            val names = List(25) { TimebasedUuid.Epoch.nextIdAsString() }
+            val names = List(25) { Epoch.nextIdAsString() }
             cities.batchInsert(names) { name -> this[cities.name] = name }
 
             val batches = cities.selectAll()
@@ -177,9 +178,9 @@ class FetchBatchedResultsTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `autoinc 컬럼이 없으면 fetchBatchedResults를 사용할 수 없다`(testDb: TestDB) {
-        withTables(testDb, DMLTestData.UserData) {
+        withTables(testDb, UserData) {
             expectException<UnsupportedOperationException> {
-                DMLTestData.UserData.selectAll().fetchBatchedResults()
+                UserData.selectAll().fetchBatchedResults()
             }
         }
     }

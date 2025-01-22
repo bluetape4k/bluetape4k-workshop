@@ -2,8 +2,9 @@ package io.bluetape4k.workshop.exposed.domain.h2
 
 
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.TestDB.H2
 import io.bluetape4k.workshop.exposed.domain.demo.dao.SamplesDao.Cities
 import io.bluetape4k.workshop.exposed.domain.demo.dao.SamplesDao.City
 import io.bluetape4k.workshop.exposed.domain.demo.dao.SamplesDao.User
@@ -20,7 +21,7 @@ import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.YTab
 import io.bluetape4k.workshop.exposed.domain.shared.entities.VNumber
 import io.bluetape4k.workshop.exposed.domain.shared.entities.VString
 import io.bluetape4k.workshop.exposed.domain.shared.entities.ViaTestData
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
@@ -366,7 +367,7 @@ class EntityReferenceCacheTest: AbstractExposedTest() {
 
     @Test
     fun `dont flush indirectly related entities on insert`() {
-        withTables(TestDB.H2, Customers, Orders, OrderItems, Addresses) {
+        withTables(H2, Customers, Orders, OrderItems, Addresses) {
             val customer1 = Customer.new { name = "Test" }
             val order1 = Order.new {
                 customer = customer1
@@ -412,7 +413,7 @@ class EntityReferenceCacheTest: AbstractExposedTest() {
 
     @Test
     fun `dont flush indirectly related entities on delete`() {
-        withTables(TestDB.H2, Customers, Orders, OrderItems, Addresses) {
+        withTables(H2, Customers, Orders, OrderItems, Addresses) {
             val customer1 = Customer.new { name = "Test" }
             val order1 = Order.new {
                 customer = customer1
@@ -475,7 +476,7 @@ class EntityReferenceCacheTest: AbstractExposedTest() {
 
     @Test
     fun `dont flush indirectly related entities with inner table`() {
-        withTables(TestDB.H2, Customers, Roles, CustomerRoles) {
+        withTables(H2, Customers, Roles, CustomerRoles) {
             val customer1 = Customer.new { name = "Test" }
             val role1 = Role.new { name = "Test" }
             val customerRole1 = CustomerRole.new {

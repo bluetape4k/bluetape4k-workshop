@@ -1,8 +1,9 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.entities
 
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.domain.mapping.entities.TaskStatusType.TO_DO
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.dao.flushCache
 import org.junit.jupiter.params.ParameterizedTest
@@ -18,7 +19,7 @@ class EmbeddedClassTest: AbstractExposedTest() {
     fun `create embedded class`(testDB: TestDB) {
         withTables(testDB, TaskTable) {
             val task = TaskEntity.new {
-                status = TaskStatusType.TO_DO
+                status = TO_DO
                 changedOn = today
                 changedBy = "admin"
             }
@@ -28,7 +29,7 @@ class EmbeddedClassTest: AbstractExposedTest() {
 
             val loadedTask = TaskEntity.findById(task.id.value)!!
 
-            loadedTask.status shouldBeEqualTo TaskStatusType.TO_DO
+            loadedTask.status shouldBeEqualTo TO_DO
             loadedTask.changedOn shouldBeEqualTo today
             loadedTask.changedBy shouldBeEqualTo "admin"
         }

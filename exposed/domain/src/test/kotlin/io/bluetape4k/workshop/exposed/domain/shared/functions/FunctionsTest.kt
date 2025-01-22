@@ -3,12 +3,13 @@ package io.bluetape4k.workshop.exposed.domain.shared.functions
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.asBigDecimal
-import io.bluetape4k.workshop.exposed.domain.TestDB
-import io.bluetape4k.workshop.exposed.domain.currentDialectTest
+import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.currentDialectTest
 import io.bluetape4k.workshop.exposed.domain.shared.dml.DMLTestData
+import io.bluetape4k.workshop.exposed.domain.shared.dml.DMLTestData.Cities
 import io.bluetape4k.workshop.exposed.domain.shared.dml.withCitiesAndUsers
-import io.bluetape4k.workshop.exposed.domain.withDb
-import io.bluetape4k.workshop.exposed.domain.withTables
+import io.bluetape4k.workshop.exposed.withDb
+import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeNull
@@ -920,11 +921,11 @@ class FunctionsTest: AbstractFunctionsTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `And operator doesn't mutate`(testDB: TestDB) {
         withDb(testDB) {
-            val initialOp = Op.build { DMLTestData.Cities.name eq "foo" }
-            val secondOp = Op.build { DMLTestData.Cities.name.isNotNull() }
+            val initialOp = Op.build { Cities.name eq "foo" }
+            val secondOp = Op.build { Cities.name.isNotNull() }
             (initialOp and secondOp).toString() shouldBeEqualTo "($initialOp) AND ($secondOp)"
 
-            val thirdOp = exists(DMLTestData.Cities.selectAll())
+            val thirdOp = exists(Cities.selectAll())
             (initialOp and thirdOp).toString() shouldBeEqualTo "($initialOp) AND $thirdOp"
 
             (initialOp and secondOp and thirdOp).toString() shouldBeEqualTo
@@ -936,11 +937,11 @@ class FunctionsTest: AbstractFunctionsTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `Or operator doesn't mutate`(testDB: TestDB) {
         withDb(testDB) {
-            val initialOp = Op.build { DMLTestData.Cities.name eq "foo" }
-            val secondOp = Op.build { DMLTestData.Cities.name.isNotNull() }
+            val initialOp = Op.build { Cities.name eq "foo" }
+            val secondOp = Op.build { Cities.name.isNotNull() }
             (initialOp or secondOp).toString() shouldBeEqualTo "($initialOp) OR ($secondOp)"
 
-            val thirdOp = exists(DMLTestData.Cities.selectAll())
+            val thirdOp = exists(Cities.selectAll())
             (initialOp or thirdOp).toString() shouldBeEqualTo "($initialOp) OR $thirdOp"
 
             (initialOp or secondOp or thirdOp).toString() shouldBeEqualTo
@@ -952,8 +953,8 @@ class FunctionsTest: AbstractFunctionsTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `And Or combinations`(testDB: TestDB) {
         withDb(testDB) {
-            val initialOp = Op.build { DMLTestData.Cities.name eq "foo" }
-            val secondOp = exists(DMLTestData.Cities.selectAll())
+            val initialOp = Op.build { Cities.name eq "foo" }
+            val secondOp = exists(Cities.selectAll())
 
             (initialOp or initialOp and initialOp).toString() shouldBeEqualTo
                     "(($initialOp) OR ($initialOp)) AND ($initialOp)"

@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.shared
 
-import io.bluetape4k.workshop.exposed.domain.AbstractExposedTest
+import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import org.amshove.kluent.fail
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeInstanceOf
