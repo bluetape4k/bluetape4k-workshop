@@ -11,5 +11,5 @@ class Group(id: EntityID<UUID>): TimebasedUUIDEntity(id) {
     var name by GroupTable.name
     var description by GroupTable.description
     var owner by User referencedOn GroupTable.owner
-    val members by User via MemberTable
+    val members by User.via(MemberTable.group, MemberTable.user)
 }

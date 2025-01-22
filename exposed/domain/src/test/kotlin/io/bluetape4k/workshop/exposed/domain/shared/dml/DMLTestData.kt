@@ -56,7 +56,7 @@ object DMLTestData {
 }
 
 fun AbstractExposedTest.withCitiesAndUsers(
-    dialect: TestDB,
+    testDB: TestDB,
     statement: Transaction.(
         cities: DMLTestData.Cities,
         users: DMLTestData.Users,
@@ -68,7 +68,7 @@ fun AbstractExposedTest.withCitiesAndUsers(
     val cities = DMLTestData.Cities
     val userData = DMLTestData.UserData
 
-    withTables(dialect, cities, users, userData) {
+    withTables(testDB, cities, users, userData) {
         val saintPetersburgId = cities.insert {
             it[name] = "St. Petersburg"
         } get cities.id
