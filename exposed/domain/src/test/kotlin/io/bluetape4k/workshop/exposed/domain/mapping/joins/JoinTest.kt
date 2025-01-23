@@ -949,12 +949,9 @@ class JoinTest {
          * ```sql
          * SELECT ol1.ORDER_ID, ol1.LINE_NUMBER
          *   FROM ORDER_LINES ol1
-         *  WHERE ol1.LINE_NUMBER IN (
-         *                  SELECT MAX(ol2.LINE_NUMBER)
-         *                    FROM ORDER_LINES ol2
-         *                   WHERE ol2.ORDER_ID = ol1.ORDER_ID
-         *                   -- GROUP BY ol2.ORDER_ID
-         *       )
+         *  WHERE ol1.LINE_NUMBER = (SELECT MAX(ol2.LINE_NUMBER)
+         *                             FROM ORDER_LINES ol2
+         *                            WHERE ol2.ORDER_ID = ol1.ORDER_ID)
          *  ORDER BY ol1.ID ASC
          * ```
          */
@@ -967,11 +964,9 @@ class JoinTest {
 
                 val rows = ol1.select(ol1[orderLines.orderId], ol1[orderLines.lineNumber])
                     .where {
-                        ol1[orderLines.lineNumber] inSubQuery
+                        ol1[orderLines.lineNumber] eqSubQuery
                                 ol2.select(ol2[orderLines.lineNumber].max())
                                     .where { ol2[orderLines.orderId] eq ol1[orderLines.orderId] }
-                        //.groupBy(ol2[orderLines.orderId])
-
                     }
                     .orderBy(ol1[orderLines.id])
                     .toList()

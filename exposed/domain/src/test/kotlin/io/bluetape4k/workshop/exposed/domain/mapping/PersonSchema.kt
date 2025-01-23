@@ -7,6 +7,7 @@ import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.javatime.date
 import java.time.LocalDate
@@ -31,6 +32,22 @@ object PersonSchema {
         val addressId = reference("address_id", AddressTable)  // many to one
     }
 
+    /**
+     * INSERT SELECT 등 SQL 만을 위해서 사용하기 위한 테이블 정의. `PersonTable` 은 엔티티인 `Person` 을 위한 테이블이다.
+     * 하지만 같은 테이블을 바라보고 있다.
+     */
+    object PersonTableDML: Table("persons") {
+        val id = long("id")   // autoIncrement() 를 지정하면 insert select 같은 id 에 값을 지정하는 것이 불가능하다.
+        val firstName = varchar("first_name", 50)
+        val lastName = varchar("last_name", 50)
+        val birthDate = date("birth_date")
+        val employeed = bool("employeed").default(true)
+        val occupation = varchar("occupation", 255).nullable()
+        val addressId = long("address_id")  // many to one
+
+        override val primaryKey = PrimaryKey(id)
+    }
+
     class Address(id: EntityID<Long>): LongEntity(id), java.io.Serializable {
         companion object: LongEntityClass<Address>(AddressTable)
 
@@ -38,6 +55,12 @@ object PersonSchema {
         var city by AddressTable.city
         var state by AddressTable.state
         var zip by AddressTable.zip
+
+        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
+        override fun equals(other: Any?): Boolean = other is Address && other.id == id
+        override fun toString(): String {
+            return "Address(id=$id, street=$street, city=$city, state=$state, zip=$zip)"
+        }
     }
 
     class Person(id: EntityID<Long>): LongEntity(id), java.io.Serializable {
@@ -49,7 +72,24 @@ object PersonSchema {
         var employeed by PersonTable.employeed
         var occupation by PersonTable.occupation
         var address by Address referencedOn PersonTable.addressId
+
+        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
+        override fun equals(other: Any?): Boolean = other is Person && other.id == id
+
+        override fun toString(): String {
+            return "Person(id=$id, firstName=$firstName, lastName=$lastName)"
+        }
     }
+
+    data class PersonRecord(
+        val id: Long? = null,
+        val firstName: String? = null,
+        val lastName: String? = null,
+        val birthDate: java.time.LocalDate? = null,
+        val employeed: Boolean? = null,
+        val occupation: String? = null,
+        val address: Long? = null,
+    ): java.io.Serializable
 
     data class PersonWithAddress(
         var id: Long? = null,

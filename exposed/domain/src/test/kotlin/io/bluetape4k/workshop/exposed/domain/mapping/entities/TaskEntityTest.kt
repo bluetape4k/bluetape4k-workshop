@@ -10,13 +10,13 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
 
-class EmbeddedClassTest: AbstractExposedTest() {
+class TaskEntityTest: AbstractExposedTest() {
 
     val today = LocalDate.now()
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create embedded class`(testDB: TestDB) {
+    fun `create task entity with enum as string`(testDB: TestDB) {
         withTables(testDB, TaskTable) {
             val task = TaskEntity.new {
                 status = TO_DO
@@ -34,6 +34,4 @@ class EmbeddedClassTest: AbstractExposedTest() {
             loadedTask.changedBy shouldBeEqualTo "admin"
         }
     }
-
-
 }

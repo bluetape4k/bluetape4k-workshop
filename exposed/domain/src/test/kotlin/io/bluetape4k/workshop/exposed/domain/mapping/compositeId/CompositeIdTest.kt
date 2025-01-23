@@ -9,9 +9,9 @@ import io.bluetape4k.workshop.exposed.domain.mapping.composite.Offices
 import io.bluetape4k.workshop.exposed.domain.mapping.composite.Publishers
 import io.bluetape4k.workshop.exposed.domain.mapping.composite.Reviews
 import io.bluetape4k.workshop.exposed.expectException
+import io.bluetape4k.workshop.exposed.withDb
 import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
@@ -23,8 +23,8 @@ class CompositeIdTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create and drop composite id tables`(testDb: TestDB) {
-        transaction(db = testDb.db) {
+    fun `create and drop composite id tables`(testDB: TestDB) {
+        withDb(testDB) {
             try {
                 SchemaUtils.create(tables = allTables)
             } finally {
@@ -35,14 +35,14 @@ class CompositeIdTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `composite id 의 컬럼이 없이 정의된 테이블을 사용하는 것은 실패합니다`(testDb: TestDB) {
+    fun `composite id 의 컬럼이 없이 정의된 테이블을 사용하는 것은 실패합니다`(testDB: TestDB) {
         val missingIdsTable = object: CompositeIdTable("missing_ids_table") {
             val age = integer("age")                    // .entityId()
             val name = varchar("name", 50)     // .entityId()
             override val primaryKey = PrimaryKey(age, name)
         }
 
-        transaction(db = testDb.db) {
+        withDb(testDB) {
             // Table can be created with no issue
             SchemaUtils.create(missingIdsTable)
 
