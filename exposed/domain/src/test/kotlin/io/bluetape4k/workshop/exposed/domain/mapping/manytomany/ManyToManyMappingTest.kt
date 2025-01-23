@@ -6,8 +6,13 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.domain.mapping.manytomany.UserStatus.ACTIVE
-import io.bluetape4k.workshop.exposed.domain.mapping.manytomany.UserStatus.INACTIVE
+import io.bluetape4k.workshop.exposed.domain.mapping.manytomany.MemberSchema.Group
+import io.bluetape4k.workshop.exposed.domain.mapping.manytomany.MemberSchema.GroupTable
+import io.bluetape4k.workshop.exposed.domain.mapping.manytomany.MemberSchema.MemberTable
+import io.bluetape4k.workshop.exposed.domain.mapping.manytomany.MemberSchema.User
+import io.bluetape4k.workshop.exposed.domain.mapping.manytomany.MemberSchema.UserStatus.ACTIVE
+import io.bluetape4k.workshop.exposed.domain.mapping.manytomany.MemberSchema.UserStatus.INACTIVE
+import io.bluetape4k.workshop.exposed.domain.mapping.manytomany.MemberSchema.UserTable
 import io.bluetape4k.workshop.exposed.withSuspendedTables
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
@@ -37,7 +42,7 @@ class ManyToManyMappingTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `generate schema`(testDb: TestDB) {
-        withTables(testDb, UserTable, GroupTable, MemberTable) {
+        withTables(testDb, *MemberSchema.memberTables) {
             log.info { "Schema generated" }
             val users = UserTable.selectAll().where { UserTable.firstName eq "Alice" }.toList()
             // 현재는 데이터가 없으므로 빈 리스트가 반환된다.
@@ -60,7 +65,7 @@ class ManyToManyMappingTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `coroutine support`(testDb: TestDB) = runSuspendIO {
-        withSuspendedTables(testDb, UserTable, GroupTable, MemberTable) {
+        withSuspendedTables(testDb, *MemberSchema.memberTables) {
             val prevCount = User.all().count()
 
             // rollback()을 호출하면 transaction은 롤백된다.
@@ -103,7 +108,7 @@ class ManyToManyMappingTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `SQL DSL 로부터 DAO Entity 만들기`(testDb: TestDB) {
-        withTables(testDb, UserTable, GroupTable, MemberTable) {
+        withTables(testDb, *MemberSchema.memberTables) {
             val query: Query = GroupTable
                 .innerJoin(UserTable)
                 .innerJoin(MemberTable)

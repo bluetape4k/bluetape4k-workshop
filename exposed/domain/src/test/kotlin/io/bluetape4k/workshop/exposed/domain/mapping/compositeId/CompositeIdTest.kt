@@ -3,11 +3,6 @@ package io.bluetape4k.workshop.exposed.domain.mapping.compositeId
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.domain.mapping.composite.Authors
-import io.bluetape4k.workshop.exposed.domain.mapping.composite.Books
-import io.bluetape4k.workshop.exposed.domain.mapping.composite.Offices
-import io.bluetape4k.workshop.exposed.domain.mapping.composite.Publishers
-import io.bluetape4k.workshop.exposed.domain.mapping.composite.Reviews
 import io.bluetape4k.workshop.exposed.expectException
 import io.bluetape4k.workshop.exposed.withDb
 import org.jetbrains.exposed.dao.id.CompositeIdTable
@@ -19,16 +14,14 @@ class CompositeIdTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
-    private val allTables = arrayOf(Publishers, Authors, Books, Reviews, Offices)
-
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create and drop composite id tables`(testDB: TestDB) {
         withDb(testDB) {
             try {
-                SchemaUtils.create(tables = allTables)
+                SchemaUtils.create(tables = BookSchema.allTables)
             } finally {
-                SchemaUtils.drop(tables = allTables)
+                SchemaUtils.drop(tables = BookSchema.allTables)
             }
         }
     }

@@ -7,16 +7,17 @@ import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.TestDB.H2_V1
 import io.bluetape4k.workshop.exposed.currentTestDB
-import io.bluetape4k.workshop.exposed.domain.mapping.composite.Author
-import io.bluetape4k.workshop.exposed.domain.mapping.composite.Authors
-import io.bluetape4k.workshop.exposed.domain.mapping.composite.Book
-import io.bluetape4k.workshop.exposed.domain.mapping.composite.Books
-import io.bluetape4k.workshop.exposed.domain.mapping.composite.Office
-import io.bluetape4k.workshop.exposed.domain.mapping.composite.Offices
-import io.bluetape4k.workshop.exposed.domain.mapping.composite.Publisher
-import io.bluetape4k.workshop.exposed.domain.mapping.composite.Publishers
-import io.bluetape4k.workshop.exposed.domain.mapping.composite.Review
-import io.bluetape4k.workshop.exposed.domain.mapping.composite.Reviews
+import io.bluetape4k.workshop.exposed.domain.mapping.compositeId.BookSchema
+import io.bluetape4k.workshop.exposed.domain.mapping.compositeId.BookSchema.Author
+import io.bluetape4k.workshop.exposed.domain.mapping.compositeId.BookSchema.Authors
+import io.bluetape4k.workshop.exposed.domain.mapping.compositeId.BookSchema.Book
+import io.bluetape4k.workshop.exposed.domain.mapping.compositeId.BookSchema.Books
+import io.bluetape4k.workshop.exposed.domain.mapping.compositeId.BookSchema.Office
+import io.bluetape4k.workshop.exposed.domain.mapping.compositeId.BookSchema.Offices
+import io.bluetape4k.workshop.exposed.domain.mapping.compositeId.BookSchema.Publisher
+import io.bluetape4k.workshop.exposed.domain.mapping.compositeId.BookSchema.Publishers
+import io.bluetape4k.workshop.exposed.domain.mapping.compositeId.BookSchema.Review
+import io.bluetape4k.workshop.exposed.domain.mapping.compositeId.BookSchema.Reviews
 import io.bluetape4k.workshop.exposed.expectException
 import io.bluetape4k.workshop.exposed.withDb
 import io.bluetape4k.workshop.exposed.withTables
@@ -63,7 +64,7 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
-    private val allTables = arrayOf(Publishers, Authors, Books, Reviews, Offices)
+    private val allTables = BookSchema.allTables
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -87,13 +88,13 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert and select using DAO`(testDB: TestDB) {
         withTables(testDB, Publishers) {
-            val p1 = Publisher.new {
+            val p1 = BookSchema.Publisher.new {
                 name = "Publisher A"
             }
 
             flushCache()
 
-            val result1 = Publisher.all().single()
+            val result1 = BookSchema.Publisher.all().single()
             result1.name shouldBeEqualTo "Publisher A"
 
             // can compare entire entity object
@@ -127,6 +128,7 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
             }
 
             flushCache()
+            entityCache.clear()
 
             val result = Publishers.selectAll().single()
             result[Publishers.name] shouldBeEqualTo "Publisher A"
