@@ -45,6 +45,18 @@ class ManyToManyMappingTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Postgres:
+     * ```sql
+     * INSERT INTO "User" (id, username, first_name, last_name, status)
+     * VALUES ('1efcc7ef-d259-69e9-9ff4-2d40c46f118c', 'julius.bartoletti', 'Angel', 'Wisoky', 2)
+     * ```
+     * Postgres:
+     * ```sql
+     * INSERT INTO "User" (id, username, first_name, last_name, status)
+     * VALUES ('1efcc7ef-d259-69e9-9ff4-2d40c46f118c', 'julius.bartoletti', 'Angel', 'Wisoky', 2)
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `coroutine support`(testDb: TestDB) = runSuspendIO {
@@ -60,20 +72,6 @@ class ManyToManyMappingTest: AbstractExposedTest() {
             }
 
             newSuspendedTransaction {
-                /**
-                 * Postgres:
-                 * ```sql
-                 * INSERT INTO "User" (id, username, first_name, last_name, status)
-                 * VALUES ('1efcc7ef-d259-69e9-9ff4-2d40c46f118c', 'julius.bartoletti', 'Angel', 'Wisoky', 2)
-                 * ```
-                 */
-                /**
-                 * Postgres:
-                 * ```sql
-                 * INSERT INTO "User" (id, username, first_name, last_name, status)
-                 * VALUES ('1efcc7ef-d259-69e9-9ff4-2d40c46f118c', 'julius.bartoletti', 'Angel', 'Wisoky', 2)
-                 * ```
-                 */
                 User.new {
                     username = faker.internet().username()
                     firstName = faker.name().firstName()

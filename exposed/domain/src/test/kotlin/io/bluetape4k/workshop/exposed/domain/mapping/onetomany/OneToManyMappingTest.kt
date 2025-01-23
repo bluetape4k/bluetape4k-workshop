@@ -7,6 +7,7 @@ import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withDb
 import io.bluetape4k.workshop.exposed.withTables
 import org.jetbrains.exposed.dao.flushCache
+import org.jetbrains.exposed.dao.with
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
@@ -14,6 +15,19 @@ class OneToManyMappingTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
+    /**
+     * ```sql
+     * INSERT INTO MENU ("name", PRICE, RESTAURANT_ID) VALUES ('Chicken', 10.0, 1)
+     * INSERT INTO MENU ("name", PRICE, RESTAURANT_ID) VALUES ('Burger', 5.0, 1)
+     * ```
+     *
+     * ```sql
+     * SELECT RESTAURANT.ID, RESTAURANT."name" FROM RESTAURANT
+     * SELECT MENU.ID, MENU."name", MENU.PRICE, MENU.RESTAURANT_ID FROM MENU WHERE MENU.RESTAURANT_ID = 1
+     * ```
+     *
+     * 참고: [Eager Loaing](https://jetbrains.github.io/Exposed/dao-relationships.html#eager-loading)
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `handle one-to-many relationship`(testDb: TestDB) {
@@ -37,7 +51,9 @@ class OneToManyMappingTest: AbstractExposedTest() {
 
                 flushCache()
 
-                val restaurants = Restaurant.all().toList()
+                // fetch earger loading `Menu` entities
+                //
+                val restaurants = Restaurant.all().with(Restaurant::menus).toList()
                 val restaurant = restaurants.first()
                 log.debug { "Restaurant: $restaurant" }
 
