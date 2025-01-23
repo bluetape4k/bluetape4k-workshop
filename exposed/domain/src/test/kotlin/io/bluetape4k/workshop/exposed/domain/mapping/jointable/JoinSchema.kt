@@ -31,14 +31,13 @@ object JoinSchema {
     }
 
     object UserAddressTable: IntIdTable("user_address") {
-        val userId = reference("user_id", UserTable, onDelete = CASCADE, onUpdate = CASCADE)
+        val userId = reference("user_id", UserTable, onDelete = CASCADE, onUpdate = CASCADE).index()
         val addressId = reference("address_id", AddressTable, onDelete = CASCADE, onUpdate = CASCADE)
 
         val type = varchar("addr_type", 255)
 
         init {
             uniqueIndex(type, userId)
-            uniqueIndex(userId, addressId)
         }
     }
 
