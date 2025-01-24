@@ -15,6 +15,7 @@ import io.bluetape4k.workshop.exposed.domain.mapping.OrderSchema.UserTable
 import io.bluetape4k.workshop.exposed.withTables
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
+import org.jetbrains.exposed.dao.entityCache
 import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.LongIdTable
@@ -216,6 +217,7 @@ fun AbstractExposedTest.withOrdersTables(
         }
 
         flushCache()
+        entityCache.clear()
 
         statement(orders, orderDetails, items, orderLines, users)
     }

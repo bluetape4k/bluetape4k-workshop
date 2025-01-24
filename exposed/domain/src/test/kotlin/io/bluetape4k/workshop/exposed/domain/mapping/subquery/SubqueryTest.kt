@@ -189,13 +189,14 @@ class SubqueryTest: AbstractExposedTest() {
         Assumptions.assumeTrue(testDB in TestDB.ALL_H2)
 
         // implement a +/- operator using CustomOperator
+        // NOTE: EntityID<ID> 는 CustomOperator를 사용할 수 없다
         infix fun Expression<*>.plus(operand: Long) =
             CustomOperator("+", LongColumnType(), this, longLiteral(operand))
 
         infix fun Expression<*>.minus(operand: Long) =
             CustomOperator("-", LongColumnType(), this, longLiteral(operand))
 
-        withPersonsAndAddress(testDB) { persons, addresses ->
+        withPersonsAndAddress(testDB) { persons, _ ->
             val affectedRows = persons.update({ persons.id eq 3L }) {
                 it[persons.addressId] = persons.select(persons.addressId.max() minus 1L)
             }

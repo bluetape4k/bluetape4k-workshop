@@ -34,7 +34,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
-import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 object Misc: MiscTable() {
@@ -280,7 +279,8 @@ class MiscTableTest: AbstractExposedTest() {
                 duration,
                 null
             )
-            assertEquals('(', row[tbl.char])
+
+            row[tbl.char] shouldBeEqualTo '('
         }
     }
 

@@ -31,7 +31,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.util.concurrent.Executors
-import kotlin.test.assertEquals
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class MultiDatabaseTest {
@@ -150,8 +149,8 @@ class MultiDatabaseTest {
                 SchemaUtils.drop(DMLTestData.Cities)
             }
 
-            assertEquals(1L, DMLTestData.Cities.selectAll().count())
-            assertEquals("city1", DMLTestData.Cities.selectAll().single()[DMLTestData.Cities.name])
+            DMLTestData.Cities.selectAll().count() shouldBeEqualTo 1L
+            DMLTestData.Cities.selectAll().single()[DMLTestData.Cities.name] shouldBeEqualTo "city1"
             SchemaUtils.drop(DMLTestData.Cities)
         }
     }
@@ -178,27 +177,28 @@ class MultiDatabaseTest {
                 DMLTestData.Cities.selectAll().last()[DMLTestData.Cities.name] shouldBeEqualTo "city3"
 
                 transaction(db1) {
-                    assertEquals(1L, DMLTestData.Cities.selectAll().count())
+                    DMLTestData.Cities.selectAll().count() shouldBeEqualTo 1L
                     DMLTestData.Cities.insert {
                         it[DMLTestData.Cities.name] = "city4"
                     }
                     DMLTestData.Cities.insert {
                         it[DMLTestData.Cities.name] = "city5"
                     }
-                    assertEquals(3L, DMLTestData.Cities.selectAll().count())
+                    DMLTestData.Cities.selectAll().count() shouldBeEqualTo 3L
                 }
 
-                assertEquals(2L, DMLTestData.Cities.selectAll().count())
-                assertEquals("city3", DMLTestData.Cities.selectAll().last()[DMLTestData.Cities.name])
+                DMLTestData.Cities.selectAll().count() shouldBeEqualTo 2L
+                DMLTestData.Cities.selectAll().last()[DMLTestData.Cities.name] shouldBeEqualTo "city3"
                 SchemaUtils.drop(DMLTestData.Cities)
             }
 
-            assertEquals(3L, DMLTestData.Cities.selectAll().count())
-            DMLTestData.Cities.selectAll().map { it[DMLTestData.Cities.name] } shouldBeEqualTo listOf(
-                "city1",
-                "city4",
-                "city5"
-            )
+            DMLTestData.Cities.selectAll().count() shouldBeEqualTo 3L
+
+            DMLTestData.Cities.selectAll()
+                .map {
+                    it[DMLTestData.Cities.name]
+                } shouldBeEqualTo listOf("city1", "city4", "city5")
+
             SchemaUtils.drop(DMLTestData.Cities)
         }
     }
@@ -226,27 +226,27 @@ class MultiDatabaseTest {
                 DMLTestData.Cities.selectAll().last()[DMLTestData.Cities.name] shouldBeEqualTo "city3"
 
                 tr1.withSuspendTransaction {
-                    assertEquals(1L, DMLTestData.Cities.selectAll().count())
+                    DMLTestData.Cities.selectAll().count() shouldBeEqualTo 1L
                     DMLTestData.Cities.insert {
                         it[DMLTestData.Cities.name] = "city4"
                     }
                     DMLTestData.Cities.insert {
                         it[DMLTestData.Cities.name] = "city5"
                     }
-                    assertEquals(3L, DMLTestData.Cities.selectAll().count())
+                    DMLTestData.Cities.selectAll().count() shouldBeEqualTo 3L
                 }
 
-                assertEquals(2L, DMLTestData.Cities.selectAll().count())
-                assertEquals("city3", DMLTestData.Cities.selectAll().last()[DMLTestData.Cities.name])
+                DMLTestData.Cities.selectAll().count() shouldBeEqualTo 2L
+                DMLTestData.Cities.selectAll().last()[DMLTestData.Cities.name] shouldBeEqualTo "city3"
                 SchemaUtils.drop(DMLTestData.Cities)
             }
 
             DMLTestData.Cities.selectAll().count().toInt() shouldBeEqualTo 3
-            DMLTestData.Cities.selectAll().map { it[DMLTestData.Cities.name] } shouldBeEqualTo listOf(
-                "city1",
-                "city4",
-                "city5"
-            )
+            DMLTestData.Cities.selectAll()
+                .map {
+                    it[DMLTestData.Cities.name]
+                } shouldBeEqualTo listOf("city1", "city4", "city5")
+
             SchemaUtils.drop(DMLTestData.Cities)
         }
     }
@@ -255,7 +255,7 @@ class MultiDatabaseTest {
     fun `when default database is not explicitly set - should return the latest connection`() {
         db1
         db2
-        assertEquals(TransactionManager.defaultDatabase, db2)
+        db2 shouldBeEqualTo TransactionManager.defaultDatabase
     }
 
     @Test
@@ -263,7 +263,7 @@ class MultiDatabaseTest {
         db1
         db2
         TransactionManager.defaultDatabase = db1
-        assertEquals(TransactionManager.defaultDatabase, db1)
+        db1 shouldBeEqualTo TransactionManager.defaultDatabase
         TransactionManager.defaultDatabase = null
     }
 
@@ -273,7 +273,7 @@ class MultiDatabaseTest {
         db2
         TransactionManager.defaultDatabase = db1
         TransactionManager.closeAndUnregister(db1)
-        assertEquals(TransactionManager.defaultDatabase, db2)
+        db2 shouldBeEqualTo TransactionManager.defaultDatabase
         TransactionManager.defaultDatabase = null
     }
 
@@ -286,21 +286,20 @@ class MultiDatabaseTest {
         val coroutineDispatcher1 = newSingleThreadContext("first")
         TransactionManager.defaultDatabase = db1
         newSuspendedTransaction(coroutineDispatcher1) {
-            assertEquals(
-                db1.name,
-                TransactionManager.current().db.name
-            ) // when running all tests together, this one usually fails
+            TransactionManager.current().db.name shouldBeEqualTo db1.name
+            // when running all tests together, this one usually fails
+            // `Dual.select(intLiteral(1))`
             TransactionManager.current().exec("SELECT 1") { rs ->
                 rs.next()
-                assertEquals(1, rs.getInt(1))
+                rs.getInt(1) shouldBeEqualTo 1
             }
         }
         TransactionManager.defaultDatabase = db2
         newSuspendedTransaction(coroutineDispatcher1) {
-            assertEquals(db2.name, TransactionManager.current().db.name) // fails??
+            TransactionManager.current().db.name shouldBeEqualTo db2.name // fails??
             TransactionManager.current().exec("SELECT 1") { rs ->
                 rs.next()
-                assertEquals(1, rs.getInt(1))
+                rs.getInt(1) shouldBeEqualTo 1
             }
         }
         TransactionManager.defaultDatabase = null
@@ -314,21 +313,21 @@ class MultiDatabaseTest {
         TransactionManager.defaultDatabase = db1
         threadpool.submit {
             transaction {
-                assertEquals(db1.name, TransactionManager.current().db.name)
+                TransactionManager.current().db.name shouldBeEqualTo db1.name
                 TransactionManager.current().exec("SELECT 1") { rs ->
                     rs.next()
-                    assertEquals(1, rs.getInt(1))
+                    rs.getInt(1) shouldBeEqualTo 1
                 }
             }
-        }
-            .get()
+        }.get()
+
         TransactionManager.defaultDatabase = db2
         threadpool.submit {
             transaction {
-                assertEquals(db2.name, TransactionManager.current().db.name)
+                TransactionManager.current().db.name shouldBeEqualTo db2.name
                 TransactionManager.current().exec("SELECT 1") { rs ->
                     rs.next()
-                    assertEquals(1, rs.getInt(1))
+                    rs.getInt(1) shouldBeEqualTo 1
                 }
             }
         }.get()
