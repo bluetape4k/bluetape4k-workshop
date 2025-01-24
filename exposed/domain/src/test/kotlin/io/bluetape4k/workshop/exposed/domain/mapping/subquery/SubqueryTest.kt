@@ -43,7 +43,7 @@ class SubqueryTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `select notEqSubQuery`(testDB: TestDB) {
-        withPersonsAndAddress(testDB) { persons, addresses ->
+        withPersonsAndAddress(testDB) { persons, _ ->
             val query = persons
                 .selectAll()
                 .where {
@@ -77,7 +77,7 @@ class SubqueryTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `select eqSubQuery`(testDB: TestDB) {
-        withPersonsAndAddress(testDB) { persons, addresses ->
+        withPersonsAndAddress(testDB) { persons, _ ->
             val query = persons
                 .selectAll()
                 .where {
@@ -112,7 +112,7 @@ class SubqueryTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `select inSubQuery`(testDB: TestDB) {
-        withPersonsAndAddress(testDB) { persons, addresses ->
+        withPersonsAndAddress(testDB) { persons, _ ->
             val query = persons
                 .selectAll()
                 .where {

@@ -4,7 +4,7 @@ import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.ReferenceOption
+import org.jetbrains.exposed.sql.ReferenceOption.RESTRICT
 import org.jetbrains.exposed.sql.Table
 
 /**
@@ -32,8 +32,8 @@ object BankSchema {
      * 은행 계좌 - 계좌 소유자에 대한 Many-to-Many Mapping Table
      */
     object OwnerAccountMapTable: Table("owner_account_map") {
-        val ownerId = reference("owner_id", AccountOwnerTable, onDelete = ReferenceOption.NO_ACTION)
-        val accountId = reference("account_id", BankAccountTable, onDelete = ReferenceOption.NO_ACTION)
+        val ownerId = reference("owner_id", AccountOwnerTable, onDelete = RESTRICT)
+        val accountId = reference("account_id", BankAccountTable, onDelete = RESTRICT)
     }
 
     /**

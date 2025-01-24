@@ -121,4 +121,79 @@ class BankSchemaTest: AbstractExposedTest() {
             removedAccount.owners.count() shouldBeEqualTo 0L
         }
     }
+
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `many-to-many manipulation by account`(testDB: TestDB) {
+        withTables(testDB, *BankSchema.allTables) {
+            val owner1 = AccountOwner.new { ssn = faker.idNumber().ssnValid() }
+            val owner2 = AccountOwner.new { ssn = faker.idNumber().ssnValid() }
+
+            val account1 = BankAccount.new { number = faker.finance().creditCard() }
+            val account2 = BankAccount.new { number = faker.finance().creditCard() }
+            val account3 = BankAccount.new { number = faker.finance().creditCard() }
+            val account4 = BankAccount.new { number = faker.finance().creditCard() }
+
+            OwnerAccountMapTable.insert {
+                it[ownerId] = owner1.id
+                it[accountId] = account1.id
+            }
+            OwnerAccountMapTable.insert {
+                it[ownerId] = owner1.id
+                it[accountId] = account2.id
+            }
+            OwnerAccountMapTable.insert {
+                it[ownerId] = owner2.id
+                it[accountId] = account1.id
+            }
+            OwnerAccountMapTable.insert {
+                it[ownerId] = owner2.id
+                it[accountId] = account3.id
+            }
+            OwnerAccountMapTable.insert {
+                it[ownerId] = owner2.id
+                it[accountId] = account4.id
+            }
+
+            flushCache()
+            entityCache.clear()
+
+            account1.assertAccountExists()
+            account2.assertAccountExists()
+            account3.assertAccountExists()
+            account4.assertAccountExists()
+
+            flushCache()
+            entityCache.clear()
+
+            /**
+             * ```sql
+             * DELETE FROM OWNER_ACCOUNT_MAP
+             *  WHERE (OWNER_ACCOUNT_MAP.ACCOUNT_ID = 3)
+             *    AND (OWNER_ACCOUNT_MAP.OWNER_ID = 2)
+             * ```
+             */
+            OwnerAccountMapTable.deleteWhere { (accountId eq account3.id) and (ownerId eq owner2.id) }
+
+            /**
+             * ```sql
+             * SELECT ACCOUNT_OWNER.ID, ACCOUNT_OWNER.SSN FROM ACCOUNT_OWNER WHERE ACCOUNT_OWNER.ID = 2;
+             *
+             * SELECT COUNT(*)
+             *   FROM BANK_ACCOUNT INNER JOIN OWNER_ACCOUNT_MAP ON BANK_ACCOUNT.ID = OWNER_ACCOUNT_MAP.ACCOUNT_ID
+             *  WHERE OWNER_ACCOUNT_MAP.OWNER_ID = 2
+             * ```
+             */
+            val loaded = AccountOwner.findById(owner2.id)!!
+            loaded.accounts.count().toInt() shouldBeEqualTo 2
+
+        }
+    }
+
+    private fun BankAccount.assertAccountExists() {
+        val account = this
+        val loaded = BankAccount.findById(account.id)!!
+        loaded shouldBeEqualTo account
+        loaded.owners.count().toInt() shouldBeEqualTo account.owners.size()
+    }
 }
