@@ -8,6 +8,7 @@ import io.bluetape4k.workshop.exposed.withDb
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
+import org.jetbrains.exposed.dao.entityCache
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.exists
 import org.junit.jupiter.params.ParameterizedTest
@@ -22,14 +23,11 @@ class BlogEntitiesTest: AbstractExposedTest() {
         PostTable, PostDetailsTable, PostCommentTable, PostTagTable, TagTable
     )
 
-    private val today = LocalDate.now()
-
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create blog entities`(testDB: TestDB) {
         withDb(testDB) {
             SchemaUtils.create(*blogTables)
-
             try {
                 blogTables.all { it.exists() }.shouldBeTrue()
             } finally {
@@ -38,27 +36,45 @@ class BlogEntitiesTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * INSERT INTO POSTS (TITLE) VALUES ('Post 1');
+     * INSERT INTO POST_DETAILS (ID, CREATED_ON, CREATED_BY) VALUES (1, '2025-01-24', 'admin')
+     * ```
+     *
+     * ```sql
+     * SELECT POSTS.ID,
+     *        POSTS.TITLE
+     *   FROM POSTS
+     *  WHERE POSTS.ID = 1;
+     *
+     * SELECT POST_DETAILS.ID,
+     *        POST_DETAILS.CREATED_ON,
+     *        POST_DETAILS.CREATED_BY
+     *   FROM POST_DETAILS
+     *  WHERE POST_DETAILS.ID = 1;
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create post by DAO`(testDB: TestDB) {
         withTables(testDB, *blogTables) {
 
-            val post = Post.new {
-                title = "Post 1"
-            }
+            val post = Post.new { title = "Post 1" }
             log.debug { "Post=$post" }
 
             val postDetails = PostDetails.new(post.id.value) {
-                createdOn = today
+                createdOn = LocalDate.now()
                 createdBy = "admin"
             }
             log.debug { "PostDetails=$postDetails" }
 
+            entityCache.clear()
+
             val loadedPost = Post.findById(post.id)!!
 
-            loadedPost.title shouldBeEqualTo "Post 1"
-            loadedPost.details.createdOn shouldBeEqualTo today
-            loadedPost.details.createdBy shouldBeEqualTo "admin"
+            loadedPost shouldBeEqualTo post
+            loadedPost.details shouldBeEqualTo postDetails
         }
     }
 }

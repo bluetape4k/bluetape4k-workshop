@@ -17,9 +17,9 @@ class AccountEntity(id: EntityID<Long>): LongEntity(id) {
     var name by AccountTable.name
     var balance by AccountTable.balance
 
+    override fun equals(other: Any?): Boolean = other is AccountEntity && this.id._value == other.id._value
     override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
-    override fun equals(other: Any?): Boolean = other is AccountEntity && other.id == this.id
     override fun toString(): String {
-        return "AccountEntity(id=$id, name=$name, balance=$balance)"
+        return "AccountEntity(id=${id._value}, name=$name, balance=$balance)"
     }
 }
