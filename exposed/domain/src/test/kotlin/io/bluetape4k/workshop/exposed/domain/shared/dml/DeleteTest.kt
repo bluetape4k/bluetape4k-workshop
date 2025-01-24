@@ -115,7 +115,7 @@ class DeleteTest: AbstractExposedTest() {
     }
 
     /**
-     * Delete with single join
+     * ### Delete with single join
      *
      * ```sql
      * MERGE INTO USERDATA USING USERS ON USERS.ID = USERDATA.USER_ID

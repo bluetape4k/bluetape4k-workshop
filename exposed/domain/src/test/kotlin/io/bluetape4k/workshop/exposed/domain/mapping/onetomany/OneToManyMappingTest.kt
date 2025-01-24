@@ -4,9 +4,14 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.ResturantSchema.Menu
+import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.ResturantSchema.MenuTable
+import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.ResturantSchema.Restaurant
+import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.ResturantSchema.RestaurantTable
 import io.bluetape4k.workshop.exposed.withDb
 import io.bluetape4k.workshop.exposed.withTables
-import org.jetbrains.exposed.dao.flushCache
+import org.amshove.kluent.shouldBeEqualTo
+import org.jetbrains.exposed.dao.entityCache
 import org.jetbrains.exposed.dao.with
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -49,7 +54,7 @@ class OneToManyMappingTest: AbstractExposedTest() {
                     restaurant = kfc
                 }
 
-                flushCache()
+                entityCache.clear()
 
                 // fetch earger loading `Menu` entities
                 //
@@ -57,8 +62,8 @@ class OneToManyMappingTest: AbstractExposedTest() {
                 val restaurant = restaurants.first()
                 log.debug { "Restaurant: $restaurant" }
 
-                val menus = restaurant.menus.toList()
-                menus.forEach { menu ->
+                restaurant.menus.count() shouldBeEqualTo 2
+                restaurant.menus.forEach { menu ->
                     log.debug { ">> Menu: $menu" }
                 }
             }
