@@ -89,7 +89,7 @@ class MapIdOneToOneTest: AbstractExposedTest() {
         companion object: IntEntityClass<Picture>(Pictures)
 
         var path by Pictures.path
-        var author by Author referencedOn Pictures.id
+        val author by Author referencedOn Pictures.id
 
         override fun equals(other: Any?): Boolean = other is Picture && id._value == other.id._value
         override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
@@ -100,7 +100,7 @@ class MapIdOneToOneTest: AbstractExposedTest() {
         companion object: IntEntityClass<Biography>(Biographys)
 
         var infomation by Biographys.infomation
-        var author by Author referencedOn Biographys.id
+        val author by Author referencedOn Biographys.id
 
         override fun equals(other: Any?): Boolean = other is Biography && id._value == other.id._value
         override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
@@ -114,13 +114,11 @@ class MapIdOneToOneTest: AbstractExposedTest() {
             val author = Author.new {
                 name = faker.name().name()
             }
-            val picture = Picture.new {
+            val picture = Picture.new(author.id.value) {
                 path = faker.internet().url()
-                this.author = author
             }
-            val biography = Biography.new {
+            val biography = Biography.new(author.id.value) {
                 infomation = faker.name().fullName()
-                this.author = author
             }
 
             entityCache.clear()
