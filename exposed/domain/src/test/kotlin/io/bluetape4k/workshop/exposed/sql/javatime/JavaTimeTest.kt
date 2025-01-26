@@ -104,14 +104,6 @@ class JavaTimeTest: AbstractExposedTest() {
              * INSERT INTO CITIESTIME ("name", LOCAL_TIME) VALUES ('Seoul', '2025-01-17T09:21:19.842087')
              * ```
              */
-            /**
-             * Insert a city with local time
-             *
-             * H2:
-             * ```sql
-             * INSERT INTO CITIESTIME ("name", LOCAL_TIME) VALUES ('Seoul', '2025-01-17T09:21:19.842087')
-             * ```
-             */
             val cityID = CitiesTime.insertAndGetId {
                 it[name] = "Seoul"
                 it[local_time] = now
@@ -156,15 +148,17 @@ class JavaTimeTest: AbstractExposedTest() {
 
             /**
              * select max timestamp
-             * ```sql
              *
-             * ```
-             */
-            /**
-             * select max timestamp
              * ```sql
-             *
+             * SELECT MAX(TS_TABLE.TS) FROM TS_TABLE
              * ```
+             *
+             * select min timestamp
+             *
+             * ```sql
+             * SELECT MIN(TS_TABLE.TS) FROM TS_TABLE
+             * ```
+             *
              */
             val maxTsExpr = testTable.ts.max()
             val maxTimestamp = testTable.select(maxTsExpr).single()[maxTsExpr]
@@ -189,6 +183,16 @@ class JavaTimeTest: AbstractExposedTest() {
     fun `Storing LocalDateTime with nanos`(testDB: TestDB) {
         // Assumptions.assumeTrue { testDB != TestDB.H2_PSQL }
 
+        /**
+         * Table to store LocalDateTime with nanos
+         *
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS TESTLOCALDATETIME (
+         *      ID INT AUTO_INCREMENT PRIMARY KEY,
+         *      "time" DATETIME(9) NOT NULL
+         * )
+         * ```
+         */
         val testDate = object: IntIdTable("TestLocalDateTime") {
             val time: Column<LocalDateTime> = datetime("time")
         }
@@ -197,7 +201,15 @@ class JavaTimeTest: AbstractExposedTest() {
             val dateTime = LocalDateTime.now()
             val nanos = 111111
 
-            // insert 2 separate nanosecond constants to ensure test's rounding mode matches DB precision
+            /**
+             * insert 2 separate nanosecond constants to ensure test's rounding mode matches DB precision
+             *
+             * H2:
+             * ```sql
+             * INSERT INTO TESTLOCALDATETIME ("time") VALUES ('2025-01-26T14:14:43.000111111')
+             * INSERT INTO TESTLOCALDATETIME ("time") VALUES ('2025-01-26T14:14:43.000111118')
+             * ```
+             */
             val dateTimeWithFewNanos = dateTime.withNano(nanos)
             val dateTimeWithManyNanos = dateTime.withNano(nanos + 7)
 
@@ -244,22 +256,6 @@ class JavaTimeTest: AbstractExposedTest() {
                 .toList()
             sameMonthResult shouldHaveSize 2
 
-
-            /**
-             * MySQL_V8:
-             * ```sql
-             * SELECT test_table.created, test_table.deleted
-             *   FROM test_table
-             *  WHERE YEAR(test_table.created) = YEAR('2024-05-04')
-             * ```
-             *
-             * Postgres:
-             * ```sql
-             * SELECT test_table.created, test_table.deleted
-             *   FROM test_table
-             *  WHERE Extract(YEAR FROM test_table.created) = Extract(YEAR FROM CAST('2024-05-04' AS DATE))
-             * ```
-             */
             /**
              * MySQL_V8:
              * ```sql
@@ -591,16 +587,6 @@ class JavaTimeTest: AbstractExposedTest() {
              * )
              * ```
              */
-            /**
-             * H2:
-             * ```sql
-             * INSERT INTO ARRAY_TESTER (DATES, "dateTimes")
-             * VALUES (
-             *      ARRAY ['2020-05-04','2021-05-04','2022-05-04'],
-             *      ARRAY ['2020-05-04T09:09:09','2021-05-04T09:09:09','2022-05-04T09:09:09']
-             * )
-             * ```
-             */
             val datesInput = List(3) { LocalDate.of(2020 + it, 5, 4) }
             val datetimeInput = List(3) { LocalDateTime.of(2020 + it, 5, 4, 9, 9, 9) }
             tester.insert {
@@ -608,15 +594,6 @@ class JavaTimeTest: AbstractExposedTest() {
                 it[tester.datetimes] = datetimeInput
             }
 
-            /**
-             * H2:
-             * ```sql
-             * SELECT ARRAY_TESTER.DATES[3],
-             *        ARRAY_SLICE(ARRAY_TESTER."dateTimes",1,2)
-             *   FROM ARRAY_TESTER
-             *  WHERE YEAR(ARRAY_TESTER.DATES[1]) = 2020
-             * ```
-             */
             /**
              * H2:
              * ```sql
@@ -654,15 +631,6 @@ class JavaTimeTest: AbstractExposedTest() {
             tester.insert {
                 it[time] = localTime
             }
-
-            /**
-             * H2:
-             * ```sql
-             * SELECT TABLEWITHTIME.ID, TABLEWITHTIME."time"
-             *   FROM TABLEWITHTIME
-             *  WHERE TABLEWITHTIME."time" = '13:05:00'
-             * ```
-             */
 
             /**
              * H2:

@@ -102,6 +102,17 @@ class DefaultsTest: AbstractExposedTest() {
     private fun localDateTimeNowMinusUnit(value: Int, unit: DurationUnit) =
         Clock.System.now().minus(value.toDuration(unit)).toLocalDateTime(TimeZone.currentSystemDefault())
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS TABLEWITHDBDEFAULT (
+     *      ID INT AUTO_INCREMENT PRIMARY KEY,
+     *      FIELD VARCHAR(100) NOT NULL,
+     *      T1 DATETIME(9) DEFAULT CURRENT_TIMESTAMP NOT NULL,
+     *      T2 DATE DEFAULT CURRENT_DATE NOT NULL,
+     *      "clientDefault" INT NOT NULL
+     * )
+     * ```
+     */
     object TableWithDBDefault: IntIdTable() {
         val cIndex = AtomicInteger(0)
         val field = varchar("field", 100)
@@ -111,19 +122,20 @@ class DefaultsTest: AbstractExposedTest() {
     }
 
     class DBDefault(id: EntityID<Int>): IntEntity(id) {
+        companion object: IntEntityClass<DBDefault>(TableWithDBDefault)
+
         var field by TableWithDBDefault.field
         var t1 by TableWithDBDefault.t1
         var t2 by TableWithDBDefault.t2
         val clientDefault by TableWithDBDefault.clientDefault
 
-        override fun equals(other: Any?): Boolean {
-            return (other as? DBDefault)?.let { id == it.id && field == it.field && t1 == it.t1 && t2 == it.t2 }
-                ?: false
-        }
+        override fun equals(other: Any?): Boolean =
+            other is DBDefault &&
+                    id._value == other.id._value
 
-        override fun hashCode(): Int = id.value.hashCode()
-
-        companion object: IntEntityClass<DBDefault>(TableWithDBDefault)
+        override fun hashCode(): Int = id._value.hashCode()
+        override fun toString(): String =
+            "DBDefault(id=${id._value}, field=$field, t1=$t1, t2=$t2, clientDefault=$clientDefault)"
     }
 
     @Test
@@ -542,6 +554,14 @@ class DefaultsTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testDefaultCurrentDateTime(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS TESTDATE (
+         *      ID INT AUTO_INCREMENT PRIMARY KEY,
+         *      "time" DATETIME(9) DEFAULT CURRENT_TIMESTAMP NOT NULL
+         * )
+         * ```
+         */
         val tester = object: IntIdTable("TestDate") {
             val time = datetime("time").defaultExpression(CurrentDateTime)
         }

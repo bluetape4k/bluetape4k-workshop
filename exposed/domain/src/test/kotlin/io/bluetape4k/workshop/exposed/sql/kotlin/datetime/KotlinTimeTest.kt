@@ -102,6 +102,19 @@ class KotlinTimeTest: AbstractExposedTest() {
                 it[local_time] = now
             }
 
+            /**
+             * Time functions
+             *
+             * ```sql
+             * SELECT CITIESTIME.ID, CITIESTIME."name", CITIESTIME.LOCAL_TIME FROM CITIESTIME
+             * SELECT YEAR(CITIESTIME.LOCAL_TIME) FROM CITIESTIME WHERE CITIESTIME.ID = 1
+             * SELECT MONTH(CITIESTIME.LOCAL_TIME) FROM CITIESTIME WHERE CITIESTIME.ID = 1
+             * SELECT DAY(CITIESTIME.LOCAL_TIME) FROM CITIESTIME WHERE CITIESTIME.ID = 1
+             * SELECT HOUR(CITIESTIME.LOCAL_TIME) FROM CITIESTIME WHERE CITIESTIME.ID = 1
+             * SELECT MINUTE(CITIESTIME.LOCAL_TIME) FROM CITIESTIME WHERE CITIESTIME.ID = 1
+             * SELECT SECOND(CITIESTIME.LOCAL_TIME) FROM CITIESTIME WHERE CITIESTIME.ID = 1
+             * ```
+             */
             CitiesTime.selectAll().single()[CitiesTime.local_time] shouldDateTimeEqualTo now
 
             val insertedYear = CitiesTime.select(CitiesTime.local_time.year())
@@ -135,6 +148,14 @@ class KotlinTimeTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testStoringLocalDateTimeWithNanos(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS TESTLOCALDATETIME (
+         *      ID INT AUTO_INCREMENT PRIMARY KEY,
+         *      "time" DATETIME(9) NOT NULL
+         * )
+         * ```
+         */
         val testDate = object: IntIdTable("TestLocalDateTime") {
             val time = datetime("time")
         }
@@ -145,9 +166,20 @@ class KotlinTimeTest: AbstractExposedTest() {
             // insert 2 separate constants to ensure test's rounding mode matches DB precision
             val dateTimeWithFewNanos = dateTime.plus(1, nanos).toLocalDateTime(TimeZone.currentSystemDefault())
             val dateTimeWithManyNanos = dateTime.plus(7, nanos).toLocalDateTime(TimeZone.currentSystemDefault())
+
+            /**
+             * ```sql
+             * INSERT INTO TESTLOCALDATETIME ("time") VALUES ('2023-05-04T05:04:00.000111111')
+             * ```
+             */
             testDate.insert {
                 it[testDate.time] = dateTimeWithFewNanos
             }
+            /**
+             * ```sql
+             * INSERT INTO TESTLOCALDATETIME ("time") VALUES ('2023-05-04T05:04:00.000777777')
+             * ```
+             */
             testDate.insert {
                 it[testDate.time] = dateTimeWithManyNanos
             }
@@ -286,6 +318,14 @@ class KotlinTimeTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testDateTimeAsJsonB(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS tester (
+         *      created TIMESTAMP NOT NULL,
+         *      modified JSONB NOT NULL
+         * )
+         * ```
+         */
         val tester = object: Table("tester") {
             val created = datetime("created")
             val modified = jsonb<ModifierData>("modified", Json.Default)
@@ -296,6 +336,12 @@ class KotlinTimeTest: AbstractExposedTest() {
         withTables(testDB, tester) {
             val dateTimeNow = now()
 
+            /**
+             * ```sql
+             * INSERT INTO tester (created, modified)
+             * VALUES ('2024-01-26T00:00:00', {"userId":1,"timestamp":"2025-01-26T14:23:29.649312"})
+             * ```
+             */
             tester.insert {
                 it[created] = dateTimeNow.date.minus(1, DateTimeUnit.YEAR).atTime(0, 0, 0)
                 it[modified] = ModifierData(1, dateTimeNow)
@@ -307,17 +353,38 @@ class KotlinTimeTest: AbstractExposedTest() {
 
             val prefix = if (currentDialectTest is PostgreSQLDialect) "" else "."
 
-            // value extracted in same manner it is stored, a json string
+            /**
+             * value extracted in same manner it is stored, a json string
+             *
+             * ```sql
+             * SELECT JSONB_EXTRACT_PATH_TEXT(tester.modified, 'timestamp') FROM tester
+             * ```
+             */
             val modifiedAsString = tester.modified.extract<String>("${prefix}timestamp")
             val allModifiedAsString = tester.select(modifiedAsString)
             allModifiedAsString.all { it[modifiedAsString] == dateTimeNow.toString() }.shouldBeTrue()
 
-            // value extracted as json, with implicit LocalDateTime serializer() performing conversions
+            /**
+             * value extracted as json, with implicit LocalDateTime serializer() performing conversions
+             *
+             * ```sql
+             * SELECT JSONB_EXTRACT_PATH(tester.modified, 'timestamp') FROM tester
+             * ```
+             */
             val modifiedAsJson = tester.modified.extract<LocalDateTime>("${prefix}timestamp", toScalar = false)
             val allModifiedAsJson = tester.select(modifiedAsJson)
             allModifiedAsJson.all { it[modifiedAsJson] == dateTimeNow }.shouldBeTrue()
 
-            // PostgreSQL requires explicit type cast to timestamp for in-DB comparison
+            /**
+             * PostgreSQL requires explicit type cast to timestamp for in-DB comparison
+             *
+             * ```sql
+             * SELECT tester.created,
+             *        tester.modified
+             *   FROM tester
+             *  WHERE CAST(JSONB_EXTRACT_PATH_TEXT(tester.modified, 'timestamp') AS TIMESTAMP) < tester.created
+             * ```
+             */
             val dateModified = if (currentDialectTest is PostgreSQLDialect) {
                 tester.modified.extract<LocalDateTime>("${prefix}timestamp").castTo(KotlinLocalDateTimeColumnType())
             } else {
@@ -678,6 +745,15 @@ private fun Int.nanoFloorToMilli(): Int = this / 1_000_000
 
 val today: LocalDate = now().date
 
+/**
+ * ```sql
+ * CREATE TABLE IF NOT EXISTS CITIESTIME (
+ *      ID INT AUTO_INCREMENT PRIMARY KEY,
+ *      "name" VARCHAR(50) NOT NULL,
+ *      LOCAL_TIME DATETIME(9) NULL
+ * )
+ * ```
+ */
 object CitiesTime: IntIdTable("CitiesTime") {
     val name = varchar("name", 50) // Column<String>
     val local_time = datetime("local_time").nullable() // Column<datetime>

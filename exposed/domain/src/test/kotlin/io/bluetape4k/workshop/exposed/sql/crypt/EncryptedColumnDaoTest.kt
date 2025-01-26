@@ -11,7 +11,6 @@ import org.jetbrains.exposed.crypt.encryptedVarchar
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.entityCache
-import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.selectAll
@@ -38,6 +37,14 @@ class EncryptedColumnDaoTest: AbstractExposedTest() {
         var binary by TestTable.binary
     }
 
+    /**
+     * Create a new record with encrypted values
+     *
+     * ```sql
+     * INSERT INTO TEST ("varchar", "binary")
+     * VALUES (bIPLXMhvfla/2yj0pA6nVN+xaLtVVDSUzncKmU2nNAcZQWqouIes, [B@546394ed)
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `encrypted columns with DAO`(testDB: TestDB) {
@@ -50,11 +57,10 @@ class EncryptedColumnDaoTest: AbstractExposedTest() {
                 binary = binaryValue
             }
 
+            entityCache.clear()
+
             entity.varchar shouldBeEqualTo varcharValue
             entity.binary shouldBeEqualTo binaryValue
-
-            flushCache()
-            entityCache.clear()
 
             ETest.all().first().let {
                 it.varchar shouldBeEqualTo varcharValue
@@ -68,7 +74,14 @@ class EncryptedColumnDaoTest: AbstractExposedTest() {
         }
     }
 
-
+    /**
+     * Insert a new record with encrypted values
+     *
+     * ```sql
+     * INSERT INTO TEST ("varchar", "binary")
+     * VALUES (UagVRR403hrjcUmKvA3j/Zs43+2UjmcC4XJl7DoaiWuktd2SHYKr, [B@31f295b6)
+     * ```
+     */
     @Disabled("Exposed Encryptor는 매번 다른 값으로 암호화하기 때문에, WHERE 절에 쓸 수는 없습니다.")
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -79,29 +92,11 @@ class EncryptedColumnDaoTest: AbstractExposedTest() {
             val varcharValue = "varchar"
             val binaryValue = "binary".toByteArray()
 
-            /**
-             * Insert a new record with encrypted values
-             *
-             * ```sql
-             * INSERT INTO TEST ("varchar", "binary")
-             * VALUES (UagVRR403hrjcUmKvA3j/Zs43+2UjmcC4XJl7DoaiWuktd2SHYKr, [B@31f295b6)
-             * ```
-             */
-
-            /**
-             * Insert a new record with encrypted values
-             *
-             * ```sql
-             * INSERT INTO TEST ("varchar", "binary")
-             * VALUES (UagVRR403hrjcUmKvA3j/Zs43+2UjmcC4XJl7DoaiWuktd2SHYKr, [B@31f295b6)
-             * ```
-             */
             ETest.new {
                 varchar = varcharValue
                 binary = binaryValue
             }
 
-            flushCache()
             entityCache.clear()
 
             // Hibernate 처럼 암호화된 컬럼으로 검색이 불가능합니다.

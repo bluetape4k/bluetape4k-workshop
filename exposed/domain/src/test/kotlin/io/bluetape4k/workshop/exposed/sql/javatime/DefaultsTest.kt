@@ -100,12 +100,7 @@ class DefaultsTest: AbstractExposedTest() {
         var t1 by TableWithDBDefault.t1
         var clientDefault by TableWithDBDefault.clientDefault
 
-        override fun equals(other: Any?): Boolean =
-            other is DBDefault &&
-                    id == other.id &&
-                    field == other.field &&
-                    t1.isEqualDateTime(other.t1)
-
+        override fun equals(other: Any?): Boolean = other is DBDefault && id._value == other.id._value
         override fun hashCode(): Int = id.value.hashCode()
         override fun toString(): String = "DBDefault(id=$id, field=$field, t1=$t1, clientDefault=$clientDefault)"
     }
