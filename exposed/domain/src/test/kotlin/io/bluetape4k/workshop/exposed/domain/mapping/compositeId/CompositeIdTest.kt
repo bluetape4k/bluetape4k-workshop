@@ -14,6 +14,7 @@ class CompositeIdTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
+
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create and drop composite id tables`(testDB: TestDB) {

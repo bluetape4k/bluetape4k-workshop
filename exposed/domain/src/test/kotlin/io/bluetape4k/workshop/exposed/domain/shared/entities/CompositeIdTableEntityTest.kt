@@ -88,11 +88,17 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert and select using DAO`(testDB: TestDB) {
         withTables(testDB, Publishers) {
-            val p1 = BookSchema.Publisher.new {
+            /**
+             * ```sql
+             * INSERT INTO PUBLISHERS (PUBLISHER_NAME, ISBN_CODE)
+             * VALUES ('Publisher A', 'f0ca4ab7-5324-4162-a99d-815e9a34ded7')
+             * ```
+             */
+            val p1 = BookSchema.Publisher.new(UUID.randomUUID()) {
                 name = "Publisher A"
             }
 
-            flushCache()
+            entityCache.clear()
 
             val result1 = BookSchema.Publisher.all().single()
             result1.name shouldBeEqualTo "Publisher A"
@@ -114,6 +120,8 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
                 name = "Publisher C"
             }
 
+            entityCache.clear()
+
             val result2 = Publisher.all().toList()
             result2 shouldHaveSize 3
         }
@@ -126,8 +134,6 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
             Publishers.insert {
                 it[name] = "Publisher A"
             }
-
-            flushCache()
             entityCache.clear()
 
             val result = Publishers.selectAll().single()
@@ -775,29 +781,6 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
              * ```
              *
              */
-
-            /**
-             * Preload optionalReferencedOn - child to single parent?
-             *
-             * ```sql
-             * SELECT offices.zip_code,
-             *        offices."name",
-             *        offices.area_code,
-             *        offices.staff,
-             *        offices.publisher_id,
-             *        offices.publisher_isbn
-             *   FROM offices
-             * ```
-             *
-             * ```sql
-             * SELECT publishers.pub_id,
-             *        publishers.isbn_code,
-             *        publishers.publisher_name
-             *   FROM publishers
-             *  WHERE (publishers.pub_id, publishers.isbn_code) = (1, 'd2090a50-3290-4026-88c1-1aa92bd775b0')
-             * ```
-             *
-             */
             inTopLevelTransaction(Connection.TRANSACTION_READ_COMMITTED) {
                 maxAttempts = 1
 
@@ -859,21 +842,6 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
              *
              * ```
              */
-
-            /**
-             * Preload backReferencedOn - parent to single child
-             * ```sql
-             * SELECT books.book_id, books.title, books.author_id
-             *   FROM books
-             *  WHERE books.book_id = 1
-             * ```
-             * ```sql
-             * SELECT reviews.code, reviews."rank", reviews.book_id
-             *   FROM reviews
-             *  WHERE reviews.book_id = (1)
-             *
-             * ```
-             */
             inTopLevelTransaction(Connection.TRANSACTION_READ_COMMITTED) {
                 maxAttempts = 1
                 // preload backReferencedOn - parent to single child
@@ -883,28 +851,6 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
                 val result = cache.getReferrers<Review>(bookA.id, Reviews.book)?.map { it.id }.orEmpty()
                 result shouldBeEqualTo listOf(reviewA.id)
             }
-
-            /**
-             * Preload optionalBackReferencedOn - parent to single child?
-             *
-             * ```
-             * SELECT publishers.pub_id,
-             *        publishers.isbn_code,
-             *        publishers.publisher_name
-             *   FROM publishers
-             *  WHERE (publishers.isbn_code = '24bbfafe-1de3-4b9e-9601-4955b9f0b360') AND (publishers.pub_id = 1)
-             * ```
-             * ```sql
-             * SELECT offices.zip_code,
-             *        offices."name",
-             *        offices.area_code,
-             *        offices.staff,
-             *        offices.publisher_id,
-             *        offices.publisher_isbn
-             *   FROM offices
-             *  WHERE (offices.publisher_id, offices.publisher_isbn) = (1, '24bbfafe-1de3-4b9e-9601-4955b9f0b360')
-             * ```
-             */
 
             /**
              * Preload optionalBackReferencedOn - parent to single child?
@@ -990,26 +936,6 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
              *  WHERE (authors.publisher_id, authors.publisher_isbn) = (1, 'e36de68c-3425-4188-8f73-ae4b658d86c9')
              * ```
              */
-
-            /**
-             * Preload referrersOn - parent to multiple children
-             *
-             * ```sql
-             * SELECT publishers.pub_id,
-             *        publishers.isbn_code,
-             *        publishers.publisher_name
-             *   FROM publishers
-             *  WHERE (publishers.isbn_code = 'e36de68c-3425-4188-8f73-ae4b658d86c9') AND (publishers.pub_id = 1)
-             * ```
-             * ```sql
-             * SELECT authors.id,
-             *        authors.publisher_id,
-             *        authors.publisher_isbn,
-             *        authors.pen_name
-             *   FROM authors
-             *  WHERE (authors.publisher_id, authors.publisher_isbn) = (1, 'e36de68c-3425-4188-8f73-ae4b658d86c9')
-             * ```
-             */
             inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 // preload referrersOn - parent to multiple children
@@ -1020,25 +946,6 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
                 val result = cache.getReferrers<Author>(publisherA.id, Authors.publisherId)?.map { it.id }.orEmpty()
                 result shouldContainSame listOf(authorA.id, authorB.id)
             }
-
-            /**
-             * Preload optionalReferrersOn - parent to multiple children?
-             *
-             * ```sql
-             * SELECT publishers.pub_id, publishers.isbn_code, publishers.publisher_name
-             *   FROM publishers
-             * ```
-             * ```sql
-             * SELECT offices.zip_code,
-             *        offices."name",
-             *        offices.area_code,
-             *        offices.staff,
-             *        offices.publisher_id,
-             *        offices.publisher_isbn
-             *   FROM offices
-             *  WHERE (offices.publisher_id, offices.publisher_isbn) = (1, 'e36de68c-3425-4188-8f73-ae4b658d86c9')
-             * ```
-             */
 
             /**
              * Preload optionalReferrersOn - parent to multiple children?
