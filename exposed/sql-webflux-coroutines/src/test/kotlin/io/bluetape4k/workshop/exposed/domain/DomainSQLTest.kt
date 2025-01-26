@@ -70,7 +70,6 @@ class DomainSQLTest: AbstractExposedSqlTest() {
                 .roundsPerThread(4)
                 .add {
                     transaction {
-                        // addLogger(StdOutSqlLogger)
                         val actors = Actors.selectAll().map { it.toActorDTO() }
                         actors.shouldNotBeEmpty()
                     }
