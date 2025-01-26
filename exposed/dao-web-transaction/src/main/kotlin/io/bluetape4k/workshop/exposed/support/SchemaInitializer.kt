@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.exposed.support
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
+import io.bluetape4k.workshop.exposed.domain.UserEntity
 import io.bluetape4k.workshop.exposed.domain.UserTable
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.springframework.boot.ApplicationArguments
@@ -18,5 +19,14 @@ class SchemaInitializer: ApplicationRunner {
     override fun run(args: ApplicationArguments?) {
         log.info { "Initialize Database Schema" }
         SchemaUtils.create(UserTable)
+
+        UserEntity.new {
+            name = "Alice"
+            age = 20
+        }
+        UserEntity.new {
+            name = "Bob"
+            age = 30
+        }
     }
 }

@@ -43,11 +43,8 @@ class UserController(
      * 사용자 정보를 생성합니다. 생성된 사용자의 id 를 반환합니다.
      */
     @PostMapping
-    fun create(
-        @RequestBody createRequest: UserCreateRequest,
-    ): UserCreateResponse {
+    fun create(@RequestBody createRequest: UserCreateRequest): UserCreateResponse {
         val userId = userService.create(createRequest)
-
         return UserCreateResponse(id = userId.value)
     }
 
