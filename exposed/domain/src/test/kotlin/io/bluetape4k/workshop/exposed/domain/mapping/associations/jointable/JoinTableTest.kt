@@ -1,12 +1,12 @@
-package io.bluetape4k.workshop.exposed.domain.mapping.jointable
+package io.bluetape4k.workshop.exposed.domain.mapping.associations.jointable
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.domain.mapping.jointable.JoinSchema.User
-import io.bluetape4k.workshop.exposed.domain.mapping.jointable.JoinSchema.newUser
-import io.bluetape4k.workshop.exposed.domain.mapping.jointable.JoinSchema.withJoinSchema
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.jointable.JoinSchema.User
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.jointable.JoinSchema.newUser
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.jointable.JoinSchema.withJoinSchema
 import io.bluetape4k.workshop.exposed.withDb
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.dao.entityCache

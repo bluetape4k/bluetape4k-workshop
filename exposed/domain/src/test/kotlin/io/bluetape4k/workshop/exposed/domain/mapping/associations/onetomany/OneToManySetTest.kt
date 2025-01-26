@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.exposed.domain.mapping.onetomany
+package io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany
 
 import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.exposed.dao.id.KsuidEntity

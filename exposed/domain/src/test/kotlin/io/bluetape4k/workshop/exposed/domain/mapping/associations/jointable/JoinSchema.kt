@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.exposed.domain.mapping.jointable
+package io.bluetape4k.workshop.exposed.domain.mapping.associations.jointable
 
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.workshop.exposed.TestDB

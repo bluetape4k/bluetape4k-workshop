@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.exposed.domain.mapping.onetoone
+package io.bluetape4k.workshop.exposed.domain.mapping.associations.onetoone
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
@@ -50,11 +50,13 @@ class UnidirectionalOneToOneTest: AbstractExposedTest() {
         val name = varchar("name", 255)
         val diameter = double("diameter").nullable()
 
-        override val primaryKey = PrimaryKey(id)
+        override val primaryKey = PrimaryKey(WheelTable.id)
     }
 
     class Car(id: EntityID<Long>): LongEntity(id) {
-        companion object: LongEntityClass<Car>(CarTable)
+        companion object: LongEntityClass<Car>(
+            CarTable
+        )
 
         var brand by CarTable.brand
         val wheel by Wheel optionalBackReferencedOn WheelTable.id
@@ -65,7 +67,9 @@ class UnidirectionalOneToOneTest: AbstractExposedTest() {
     }
 
     class Wheel(id: EntityID<Long>): LongEntity(id) {
-        companion object: LongEntityClass<Wheel>(WheelTable)
+        companion object: LongEntityClass<Wheel>(
+            WheelTable
+        )
 
         var name by WheelTable.name
         var diameter by WheelTable.diameter
@@ -79,7 +83,11 @@ class UnidirectionalOneToOneTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `unidirectional one to one with @MapsId`(testDB: TestDB) {
-        withTables(testDB, CarTable, WheelTable) {
+        withTables(
+            testDB,
+            CarTable,
+            WheelTable
+        ) {
             val car = Car.new { brand = "BMW" }
             val wheel = Wheel.new(car.id.value) {
                 name = "18-inch"

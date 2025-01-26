@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.exposed.domain.mapping.unidirection
+package io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest

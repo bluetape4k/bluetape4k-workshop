@@ -1,12 +1,12 @@
-package io.bluetape4k.workshop.exposed.domain.mapping.onetomany
+package io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.BatchSchema.Batch
-import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.BatchSchema.BatchItem
-import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.BatchSchema.BatchItemTable
-import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.BatchSchema.BatchTable
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.BatchSchema.Batch
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.BatchSchema.BatchItem
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.BatchSchema.BatchItemTable
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.BatchSchema.BatchTable
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.dao.entityCache

@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.exposed.domain.mapping.manytoone
+package io.bluetape4k.workshop.exposed.domain.mapping.associations.manytoone
 
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withTables

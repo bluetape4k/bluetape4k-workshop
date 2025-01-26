@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.exposed.domain.mapping.manytomany
+package io.bluetape4k.workshop.exposed.domain.mapping.associations.manytomany
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
@@ -6,13 +6,13 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.domain.mapping.manytomany.MemberSchema.Group
-import io.bluetape4k.workshop.exposed.domain.mapping.manytomany.MemberSchema.GroupTable
-import io.bluetape4k.workshop.exposed.domain.mapping.manytomany.MemberSchema.MemberTable
-import io.bluetape4k.workshop.exposed.domain.mapping.manytomany.MemberSchema.User
-import io.bluetape4k.workshop.exposed.domain.mapping.manytomany.MemberSchema.UserStatus.ACTIVE
-import io.bluetape4k.workshop.exposed.domain.mapping.manytomany.MemberSchema.UserStatus.INACTIVE
-import io.bluetape4k.workshop.exposed.domain.mapping.manytomany.MemberSchema.UserTable
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.manytomany.MemberSchema.Group
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.manytomany.MemberSchema.GroupTable
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.manytomany.MemberSchema.MemberTable
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.manytomany.MemberSchema.User
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.manytomany.MemberSchema.UserStatus.ACTIVE
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.manytomany.MemberSchema.UserStatus.INACTIVE
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.manytomany.MemberSchema.UserTable
 import io.bluetape4k.workshop.exposed.withSuspendedTables
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo

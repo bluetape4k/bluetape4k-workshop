@@ -1,16 +1,16 @@
-package io.bluetape4k.workshop.exposed.domain.mapping.manytoone
+package io.bluetape4k.workshop.exposed.domain.mapping.associations.manytoone
 
 import io.bluetape4k.collections.size
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.domain.mapping.manytoone.ManyToOneSchema.Brewery
-import io.bluetape4k.workshop.exposed.domain.mapping.manytoone.ManyToOneSchema.Jug
-import io.bluetape4k.workshop.exposed.domain.mapping.manytoone.ManyToOneSchema.JugMeter
-import io.bluetape4k.workshop.exposed.domain.mapping.manytoone.ManyToOneSchema.SalesForce
-import io.bluetape4k.workshop.exposed.domain.mapping.manytoone.ManyToOneSchema.SalesGuy
-import io.bluetape4k.workshop.exposed.domain.mapping.manytoone.ManyToOneSchema.withBeerTables
-import io.bluetape4k.workshop.exposed.domain.mapping.manytoone.ManyToOneSchema.withJugTables
-import io.bluetape4k.workshop.exposed.domain.mapping.manytoone.ManyToOneSchema.withSalesTables
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.manytoone.ManyToOneSchema.Brewery
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.manytoone.ManyToOneSchema.Jug
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.manytoone.ManyToOneSchema.JugMeter
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.manytoone.ManyToOneSchema.SalesForce
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.manytoone.ManyToOneSchema.SalesGuy
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.manytoone.ManyToOneSchema.withBeerTables
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.manytoone.ManyToOneSchema.withJugTables
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.manytoone.ManyToOneSchema.withSalesTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeGreaterThan
 import org.amshove.kluent.shouldHaveSize

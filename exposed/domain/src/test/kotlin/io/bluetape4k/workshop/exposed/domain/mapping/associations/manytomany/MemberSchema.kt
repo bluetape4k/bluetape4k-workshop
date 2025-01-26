@@ -1,10 +1,10 @@
-package io.bluetape4k.workshop.exposed.domain.mapping.manytomany
+package io.bluetape4k.workshop.exposed.domain.mapping.associations.manytomany
 
 import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntity
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityClass
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDTable
-import io.bluetape4k.workshop.exposed.domain.mapping.manytomany.MemberSchema.UserStatus.UNKNOWN
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.manytomany.MemberSchema.UserStatus.UNKNOWN
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.kotlin.datetime.CurrentDateTime

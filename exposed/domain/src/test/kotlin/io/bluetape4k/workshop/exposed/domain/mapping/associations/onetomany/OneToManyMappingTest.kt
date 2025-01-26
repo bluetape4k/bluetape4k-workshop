@@ -1,13 +1,13 @@
-package io.bluetape4k.workshop.exposed.domain.mapping.onetomany
+package io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.ResturantSchema.Menu
-import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.ResturantSchema.MenuTable
-import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.ResturantSchema.Restaurant
-import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.ResturantSchema.RestaurantTable
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.ResturantSchema.Menu
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.ResturantSchema.MenuTable
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.ResturantSchema.Restaurant
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.ResturantSchema.RestaurantTable
 import io.bluetape4k.workshop.exposed.withDb
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo

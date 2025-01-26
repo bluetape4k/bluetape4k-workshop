@@ -1,12 +1,12 @@
-package io.bluetape4k.workshop.exposed.domain.mapping.manytomany
+package io.bluetape4k.workshop.exposed.domain.mapping.associations.manytomany
 
 import io.bluetape4k.collections.size
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.domain.mapping.manytomany.BankSchema.AccountOwner
-import io.bluetape4k.workshop.exposed.domain.mapping.manytomany.BankSchema.BankAccount
-import io.bluetape4k.workshop.exposed.domain.mapping.manytomany.BankSchema.OwnerAccountMapTable
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.manytomany.BankSchema.AccountOwner
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.manytomany.BankSchema.BankAccount
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.manytomany.BankSchema.OwnerAccountMapTable
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldContainSame

@@ -1,12 +1,12 @@
-package io.bluetape4k.workshop.exposed.domain.mapping.onetomany
+package io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.FamilySchema.Child
-import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.FamilySchema.ChildTable
-import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.FamilySchema.Father
-import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.FamilySchema.FatherTable
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.FamilySchema.Child
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.FamilySchema.ChildTable
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.FamilySchema.Father
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.FamilySchema.FatherTable
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.dao.entityCache

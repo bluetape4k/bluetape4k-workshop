@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.exposed.domain.mapping.onetoone
+package io.bluetape4k.workshop.exposed.domain.mapping.associations.onetoone
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
@@ -51,7 +51,7 @@ class MapIdOneToOneTest: AbstractExposedTest() {
         override val id = reference("author_id", Authors, onDelete = CASCADE, onUpdate = CASCADE)
         val path = varchar("path", 255)
 
-        override val primaryKey = PrimaryKey(id)
+        override val primaryKey = PrimaryKey(Pictures.id)
     }
 
     /**
@@ -70,7 +70,7 @@ class MapIdOneToOneTest: AbstractExposedTest() {
         override val id = reference("author_id", Authors, onDelete = CASCADE, onUpdate = CASCADE)
         val infomation = varchar("information", 255).nullable()
 
-        override val primaryKey = PrimaryKey(id)
+        override val primaryKey = PrimaryKey(Biographys.id)
     }
 
     class Author(id: EntityID<Int>): IntEntity(id) {
@@ -78,7 +78,7 @@ class MapIdOneToOneTest: AbstractExposedTest() {
 
         var name by Authors.name
         val picture by Picture backReferencedOn Pictures
-        val biography by Biography backReferencedOn Biographys
+        val biography by MapIdOneToOneTest.Biography backReferencedOn Biographys
 
         override fun equals(other: Any?): Boolean = other is Author && id._value == other.id._value
         override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
@@ -86,7 +86,9 @@ class MapIdOneToOneTest: AbstractExposedTest() {
     }
 
     class Picture(id: EntityID<Int>): IntEntity(id) {
-        companion object: IntEntityClass<Picture>(Pictures)
+        companion object: IntEntityClass<Picture>(
+            Pictures
+        )
 
         var path by Pictures.path
         val author by Author referencedOn Pictures.id
@@ -97,7 +99,9 @@ class MapIdOneToOneTest: AbstractExposedTest() {
     }
 
     class Biography(id: EntityID<Int>): IntEntity(id) {
-        companion object: IntEntityClass<Biography>(Biographys)
+        companion object: IntEntityClass<Biography>(
+            Biographys
+        )
 
         var infomation by Biographys.infomation
         val author by Author referencedOn Biographys.id
@@ -110,7 +114,12 @@ class MapIdOneToOneTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `one-to-one share main entity identifier`(testDB: TestDB) {
-        withTables(testDB, Authors, Pictures, Biographys) {
+        withTables(
+            testDB,
+            Authors,
+            Pictures,
+            Biographys
+        ) {
             val author = Author.new {
                 name = faker.name().name()
             }
@@ -145,12 +154,16 @@ class MapIdOneToOneTest: AbstractExposedTest() {
              * SELECT PICTURES.ID, PICTURES."path" FROM PICTURES WHERE PICTURES.ID = 1
              * ```
              */
-            val author3 = Author.findById(author.id)!!.load(Author::picture, Author::biography)
+            val author3 = Author.findById(author.id)!!.load(
+                Author::picture, Author::biography
+            )
 
             entityCache.clear()
 
             // Load by join
-            val authors = Authors.innerJoin(Pictures).innerJoin(Biographys)
+            val authors = Authors.innerJoin(
+                Pictures
+            ).innerJoin(Biographys)
                 .selectAll()
                 .where { Authors.id eq author.id }
                 .map { Author.wrapRow(it) }

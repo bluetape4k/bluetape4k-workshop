@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.exposed.domain.mapping.manytomany
+package io.bluetape4k.workshop.exposed.domain.mapping.associations.manytomany
 
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass

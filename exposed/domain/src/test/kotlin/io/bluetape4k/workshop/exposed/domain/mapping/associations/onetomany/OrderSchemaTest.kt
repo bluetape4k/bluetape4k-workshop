@@ -1,12 +1,12 @@
-package io.bluetape4k.workshop.exposed.domain.mapping.onetomany
+package io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.OrderSchema.Order
-import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.OrderSchema.OrderItem
-import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.OrderSchema.OrderItemTable
-import io.bluetape4k.workshop.exposed.domain.mapping.onetomany.OrderSchema.OrderTable
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.OrderSchema.Order
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.OrderSchema.OrderItem
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.OrderSchema.OrderItemTable
+import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.OrderSchema.OrderTable
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue

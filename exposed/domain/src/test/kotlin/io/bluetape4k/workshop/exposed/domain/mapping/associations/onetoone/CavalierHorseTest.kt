@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.exposed.domain.mapping.onetoone
+package io.bluetape4k.workshop.exposed.domain.mapping.associations.onetoone
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
