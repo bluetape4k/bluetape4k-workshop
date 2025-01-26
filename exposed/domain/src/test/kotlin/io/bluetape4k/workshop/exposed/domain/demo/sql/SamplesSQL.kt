@@ -21,14 +21,40 @@ import org.junit.jupiter.params.provider.MethodSource
 
 class SamplesSQL: AbstractExposedTest() {
 
+    /**
+     * 사용자 정보를 저장하는 테이블
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS "user" (
+     *      ID VARCHAR(10),
+     *      "name" VARCHAR(50) NOT NULL,
+     *      CITY_ID INT NULL,
+     *
+     *      CONSTRAINT PK_User_ID PRIMARY KEY (ID),
+     *      CONSTRAINT FK_USER_CITY_ID__ID FOREIGN KEY (CITY_ID) REFERENCES CITY(ID)
+     *          ON DELETE RESTRICT ON UPDATE RESTRICT
+     * )
+     * ```
+     */
     object Users: Table("user") {
         val id = varchar("id", 10)
         val name = varchar("name", length = 50)
-        val cityId = (integer("city_id") references Cities.id).nullable()
+        val cityId = integer("city_id").references(Cities.id).nullable()
 
         override val primaryKey = PrimaryKey(id, name = "PK_User_ID")
     }
 
+    /**
+     * 도시 정보를 저장하는 테이블
+     *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS CITY (
+     *      ID INT AUTO_INCREMENT,
+     *      "name" VARCHAR(50) NOT NULL,
+     *
+     *      CONSTRAINT PK_Cities_ID PRIMARY KEY (ID)
+     * )
+     * ```
+     */
     object Cities: Table("city") {
         val id = integer("id").autoIncrement()
         val name = varchar("name", 50)
@@ -86,10 +112,20 @@ class SamplesSQL: AbstractExposedTest() {
                 it[cityId] = null
             }
 
+            /**
+             * ```sql
+             * UPDATE "user" SET "name"='Alexey' WHERE "user".ID = 'alex'
+             * ```
+             */
             Users.update({ Users.id eq "alex" }) {
                 it[name] = "Alexey"
             }
 
+            /**
+             * ```sql
+             * DELETE FROM "user" WHERE "user"."name" LIKE '%thing'
+             * ```
+             */
             Users.deleteWhere { name like "%thing" }
 
             println("All cities:")

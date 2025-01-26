@@ -7,6 +7,7 @@ import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
+import org.jetbrains.exposed.dao.entityCache
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.junit.jupiter.params.ParameterizedTest
@@ -16,12 +17,35 @@ class SamplesDao: AbstractExposedTest() {
 
     companion object: KLogging()
 
+    /**
+     * 사용자 정보를 저장하는 테이블
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS USERS (
+     *      ID INT AUTO_INCREMENT PRIMARY KEY,
+     *      "name" VARCHAR(50) NOT NULL,
+     *      AGE INT NOT NULL,
+     *      CITY_ID INT NULL,
+     *
+     *      CONSTRAINT FK_USERS_CITY_ID__ID FOREIGN KEY (CITY_ID) REFERENCES CITIES(ID)
+     *          ON DELETE RESTRICT ON UPDATE RESTRICT
+     * )
+     * ```
+     */
     object Users: IntIdTable() {
         val name = varchar("name", 50).index()
         val age = integer("age")
         val city = optReference("city_id", Cities)
     }
 
+    /**
+     * 도시 정보를 저장하는 테이블
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS CITIES (
+     *      ID INT AUTO_INCREMENT PRIMARY KEY,
+     *      "name" VARCHAR(50) NOT NULL
+     * )
+     * ```
+     */
     object Cities: IntIdTable() {
         val name = varchar("name", 50)
     }
@@ -32,6 +56,10 @@ class SamplesDao: AbstractExposedTest() {
         var name by Users.name
         var age by Users.age
         var city by City optionalReferencedOn Users.city
+
+        override fun equals(other: Any?): Boolean = other is User && id._value == other.id._value
+        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
+        override fun toString(): String = "User(id=$id, name=$name, age=$age, city=${city?.name})"
     }
 
     class City(id: EntityID<Int>): IntEntity(id) {
@@ -39,6 +67,10 @@ class SamplesDao: AbstractExposedTest() {
 
         var name by Cities.name
         val users by User optionalReferrersOn Users.city
+
+        override fun equals(other: Any?): Boolean = other is City && id._value == other.id._value
+        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
+        override fun toString(): String = "City(id=$id, name=$name)"
     }
 
     @ParameterizedTest
@@ -70,6 +102,8 @@ class SamplesDao: AbstractExposedTest() {
                 age = 42
                 city = busan
             }
+
+            entityCache.clear()
 
             City.all().toList() shouldBeEqualTo listOf(seoul, busan)
             City.findById(seoul.id) shouldBeEqualTo seoul
