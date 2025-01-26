@@ -3,8 +3,9 @@ package io.bluetape4k.workshop.exposed.service
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedApplicationTest
+import io.bluetape4k.workshop.exposed.domain.UserEntity
 import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeGreaterOrEqualTo
+import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeEmpty
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
@@ -37,6 +38,14 @@ class UserServiceTest(
             val userId = userService.create(newUserCreateRequest())
             log.debug { "Create user. userId=${userId.value}" }
         }
+    }
+
+    @Test
+    @Order(2)
+    fun `create multiple users with batch insert`() {
+        val requests = List(newUserSize) { newUserCreateRequest() }
+        val userIds = userService.createBatch(requests)
+        userIds shouldHaveSize newUserSize
     }
 
     @Test
@@ -80,12 +89,13 @@ class UserServiceTest(
     @Test
     @Order(5)
     fun `find all users`() {
-        repeat(10) {
-            userService.create(newUserCreateRequest())
-        }
+        val userCount = UserEntity.all().count().toInt()
+
+        val requests = List(10) { newUserCreateRequest() }
+        userService.createBatch(requests)
 
         val users = userService.findAllUsers()
         users.shouldNotBeEmpty()
-        users.size shouldBeGreaterOrEqualTo 10
+        users.size shouldBeEqualTo userCount + 10
     }
 }

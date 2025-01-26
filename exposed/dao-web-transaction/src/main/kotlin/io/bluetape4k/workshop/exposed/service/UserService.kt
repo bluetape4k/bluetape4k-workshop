@@ -9,6 +9,7 @@ import io.bluetape4k.workshop.exposed.domain.UserTable
 import io.bluetape4k.workshop.exposed.dto.UserCreateRequest
 import io.bluetape4k.workshop.exposed.dto.UserUpdateRequest
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.update
 import org.springframework.stereotype.Service
@@ -56,6 +57,17 @@ class UserService {
 //        }
 //
 //        return UserId(id.value)
+    }
+
+    /**
+     * 복수의 사용자를 Batch 방식으로 생성합니다.
+     */
+    fun createBatch(requests: List<UserCreateRequest>): List<UserId> {
+        val rows = UserTable.batchInsert(requests) { request ->
+            this[UserTable.name] = request.name
+            this[UserTable.age] = request.age
+        }
+        return rows.map { UserId(it[UserTable.id].value) }
     }
 
     /**

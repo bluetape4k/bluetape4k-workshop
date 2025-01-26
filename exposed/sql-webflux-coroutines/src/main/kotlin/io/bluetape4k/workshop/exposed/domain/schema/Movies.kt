@@ -5,6 +5,15 @@ import org.jetbrains.exposed.sql.kotlin.datetime.datetime
 
 /**
  * 영화 정보를 담은 Table
+ *
+ * ```sql
+ * CREATE TABLE IF NOT EXISTS MOVIES (
+ *      ID INT AUTO_INCREMENT PRIMARY KEY,
+ *      "name" VARCHAR(255) NOT NULL,
+ *      PRODUCER_NAME VARCHAR(255) NOT NULL,
+ *      RELEASE_DATE DATETIME(9) NOT NULL
+ * );
+ * ```
  */
 object Movies: IntIdTable("movies") {
     val name = varchar("name", 255)

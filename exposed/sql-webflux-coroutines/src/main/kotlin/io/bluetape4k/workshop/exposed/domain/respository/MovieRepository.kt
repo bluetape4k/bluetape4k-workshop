@@ -81,7 +81,7 @@ class MovieRepository {
         return newSuspendedTransaction {
             MovieInnerJoinActors
                 .selectAll()
-                .toList()
+                //.toList()
                 .groupingBy { it[Movies.id] }
                 .fold(mutableListOf<MovieWithActorDTO>()) { acc, element ->
                     val lastMovieId = acc.lastOrNull()?.id
@@ -120,7 +120,8 @@ class MovieRepository {
 
         log.debug { "query: ${query.prepareSQL(this, true)}" }
 
-        query.groupingBy { it[Movies.id] }
+        query
+            .groupingBy { it[Movies.id] }
             .fold(mutableListOf<MovieWithActorDTO>()) { acc, row ->
                 val prevId = acc.lastOrNull()?.id
                 if (prevId != row[Movies.id].value) {
