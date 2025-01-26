@@ -13,8 +13,13 @@ import org.jetbrains.exposed.dao.entityCache
 import org.jetbrains.exposed.dao.id.CompositeID
 import org.jetbrains.exposed.dao.id.CompositeIdTable
 import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.insertAndGetId
+import org.jetbrains.exposed.sql.selectAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import kotlin.test.assertIs
 
 class IdClassCarTest: AbstractExposedTest() {
 
@@ -59,8 +64,8 @@ class IdClassCarTest: AbstractExposedTest() {
             }
         }
 
-        var brand by CarTable.brand
-        var carYear by CarTable.carYear
+        val brand by CarTable.brand
+        val carYear by CarTable.carYear
         var serialNo by CarTable.serialNo
 
         val carIdentifier get() = CarIdentifier(id.value)
@@ -144,6 +149,89 @@ class IdClassCarTest: AbstractExposedTest() {
 
             val searched1 = IdClassCar.find { CarTable.brand eq car1.brand }.single()
             searched1 shouldBeEqualTo car1
+
+
+            /**
+             * ```sql
+             * DELETE FROM CAR_TABLE
+             *  WHERE (CAR_TABLE.CAR_BRAND = 'Fisher, Sipes and Kulas')
+             *    AND (CAR_TABLE.CAR_YEAR = 2019)
+             * ```
+             */
+            val deletedCount = CarTable.deleteWhere { CarTable.id eq compositeId }
+            deletedCount shouldBeEqualTo 1
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `compoisite id with DSL`(testDB: TestDB) {
+        withTables(testDB, CarTable) {
+
+            val brand = faker.company().name()
+            val carYear = faker.random().nextInt(1950, 2023)
+            val serialNo = faker.random().nextLong().toString(32)
+
+            val id = CarTable.insertAndGetId {
+                it[CarTable.brand] = brand
+                it[CarTable.carYear] = carYear
+                it[CarTable.serialNo] = serialNo
+            }
+            entityCache.clear()
+
+            val result = CarTable.selectAll().single()
+
+            result[CarTable.serialNo] shouldBeEqualTo serialNo
+
+            val idResult: EntityID<CompositeID> = result[CarTable.id]
+            assertIs<EntityID<CompositeID>>(idResult)
+
+            val resultBrand: EntityID<String> = idResult.value[CarTable.brand]
+            val resultCarYear: EntityID<Int> = idResult.value[CarTable.carYear]
+
+            resultBrand.value shouldBeEqualTo brand
+            resultCarYear.value shouldBeEqualTo carYear
+
+
+            // Query by CompositeID
+            /**
+             * ```sql
+             * SELECT CAR_TABLE.CAR_BRAND,
+             *        CAR_TABLE.CAR_YEAR
+             *   FROM CAR_TABLE
+             *  WHERE (CAR_TABLE.CAR_BRAND = ?)
+             *    AND (CAR_TABLE.CAR_YEAR = ?)
+             * ```
+             */
+            val dslQuery = CarTable.select(CarTable.id)
+                .where { CarTable.id eq idResult }
+                .prepareSQL(this, true)
+
+            log.debug { "DSL Query: $dslQuery" }
+
+            val entityId = EntityID(
+                CompositeID {
+                    it[CarTable.brand] = brand
+                    it[CarTable.carYear] = carYear
+                },
+                CarTable
+            )
+
+            /**
+             * CompositeID를 이용하여 Entity를 조회합니다.
+             * ```sql
+             * SELECT CAR_TABLE.CAR_BRAND, CAR_TABLE.CAR_YEAR, CAR_TABLE.SERIAL_NO FROM CAR_TABLE WHERE (CAR_TABLE.CAR_BRAND = 'Ondricka and Sons') AND (CAR_TABLE.CAR_YEAR = 1978)
+             * ```
+             */
+            CarTable.selectAll().where { CarTable.id eq entityId }.toList() shouldHaveSize 1
+
+            /**
+             * Composite ID의 부분 컬럼만 사용하여 조회합니다.
+             */
+            CarTable.selectAll()
+                .where { CarTable.brand neq resultBrand }
+                .count() shouldBeEqualTo 0L
+
         }
     }
 }
