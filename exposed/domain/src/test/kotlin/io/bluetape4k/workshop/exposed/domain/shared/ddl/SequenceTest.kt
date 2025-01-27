@@ -369,6 +369,16 @@ class SequenceTest: AbstractExposedTest() {
         var name by TesterTable.name
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS DEVELOPER (
+     *      ID INT,
+     *      "name" VARCHAR(25),
+     *
+     *      CONSTRAINT pk_Developer PRIMARY KEY (ID, "name")
+     * )
+     * ```
+     */
     private object Developer: Table() {
         val id = integer("id")
         val name = varchar("name", 25)
@@ -396,6 +406,11 @@ class SequenceTest: AbstractExposedTest() {
         val name = varchar("name", 25)
     }
 
+    /**
+     * ```sql
+     * CREATE SEQUENCE IF NOT EXISTS my_sequence START WITH 4 INCREMENT BY 2 MINVALUE 1 MAXVALUE 100 CYCLE CACHE 20
+     * ```
+     */
     private val myseq = org.jetbrains.exposed.sql.Sequence(
         name = "my_sequence", startWith = 4, incrementBy = 2, minValue = 1, maxValue = 100, cycle = true, cache = 20
     )

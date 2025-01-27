@@ -193,6 +193,15 @@ class DatabaseMigrationTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS FOO (
+     *      COL1 INT NOT NULL,
+     *      "CoL2" INT NOT NULL,
+     *      "CoL3" INT NOT NULL
+     * )
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testDropUnmappedColumnsStatementsIdentical(testDb: TestDB) {
@@ -216,6 +225,14 @@ class DatabaseMigrationTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS FOO (
+     *      ID INT NOT NULL,
+     *      "name" TEXT NOT NULL
+     * )
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testDropUnmappedColumns(testDb: TestDB) {
@@ -323,6 +340,16 @@ class DatabaseMigrationTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS TEST_TABLE (
+     *      ID INT PRIMARY KEY,
+     *      "name" VARCHAR(42) NOT NULL
+     * );
+     * CREATE INDEX test_table_by_name ON TEST_TABLE ("name");
+     * CREATE INDEX test_table_by_name_2 ON TEST_TABLE ("name");
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testDropExtraIndexOnSameColumn(testDb: TestDB) {
@@ -355,6 +382,15 @@ class DatabaseMigrationTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS TEST_TABLE (
+     *      ID INT PRIMARY KEY,
+     *      "name" VARCHAR(42) NOT NULL
+     * );
+     * CREATE INDEX test_table_by_name ON TEST_TABLE ("name");
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testDropUnmappedIndex(testDb: TestDB) {
@@ -411,7 +447,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                     statements[2] shouldBeEqualTo "ALTER SEQUENCE test_table_id_seq OWNED BY test_table.id"
                 }
 
-                else                   -> {
+                else -> {
                     statements.size shouldBeEqualTo 1
                     val alterColumnWord = if (currentDialectTest is MysqlDialect) "MODIFY" else "ALTER"
                     statements[0].startsWith(
@@ -475,6 +511,13 @@ class DatabaseMigrationTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS TEST_TABLE (
+     *      ID BIGINT AUTO_INCREMENT PRIMARY KEY
+     * )
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testDropAutoIncrementOnExistingColumn(testDb: TestDB) {
@@ -508,7 +551,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                     statements[1] shouldBeEqualTo expectedDropSequenceStatement("test_table_id_seq")
                 }
 
-                else                   -> {
+                else -> {
                     statements.size shouldBeEqualTo 1
                     val alterColumnWord = if (currentDialectTest is MysqlDialect) "MODIFY" else "ALTER"
                     statements[0] shouldBeEqualToIgnoringCase "ALTER TABLE test_table $alterColumnWord COLUMN id BIGINT"
@@ -559,7 +602,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                                 expectedDropSequenceStatement("test_table_id_seq")
                     }
 
-                    else                   -> {
+                    else -> {
                         val alterColumnWord = if (currentDialectTest is MysqlDialect) "MODIFY" else "ALTER"
                         statements[1] shouldStartWithIgnoringCase
                                 "ALTER TABLE test_table $alterColumnWord COLUMN id BIGINT"
@@ -602,7 +645,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                                     expectedDropSequenceStatement("test_table_id_seq")
                         }
 
-                        else                   -> {
+                        else -> {
                             statements.size shouldBeEqualTo 2
                             val alterColumnWord = if (currentDialectTest is MysqlDialect) "MODIFY" else "ALTER"
                             statements[1] shouldStartWithIgnoringCase
@@ -616,6 +659,12 @@ class DatabaseMigrationTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * CREATE SEQUENCE IF NOT EXISTS custom_sequence START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807;
+     * CREATE TABLE IF NOT EXISTS TEST_TABLE (ID BIGINT NOT NULL);
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testDropAutoIncrementWithSequenceNameOnExistingColumn(testDb: TestDB) {
@@ -641,7 +690,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                             statements.size shouldBeEqualTo 1
                         }
 
-                        else      -> {
+                        else -> {
                             statements.size shouldBeEqualTo 1
                             statements[0] shouldBeEqualToIgnoringCase
                                     expectedDropSequenceStatement(sequenceName)
@@ -693,7 +742,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                                     "ALTER TABLE TEST_TABLE ALTER COLUMN ID BIGINT AUTO_INCREMENT NOT NULL"
                         }
 
-                        else              -> {
+                        else -> {
                             statements.size shouldBeEqualTo 2
                             statements[0] shouldStartWithIgnoringCase
                                     "ALTER TABLE TEST_TABLE ALTER COLUMN ID"
@@ -736,7 +785,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                             statements[0] shouldBeEqualTo expectedCreateSequenceStatement(sequence.name)
                         }
 
-                        else         -> {
+                        else -> {
                             statements.size shouldBeEqualTo 2
                             statements[0] shouldBeEqualTo expectedCreateSequenceStatement(sequence.name)
                             statements[1] shouldBeEqualToIgnoringCase expectedDropSequenceStatement(sequenceName)
@@ -773,7 +822,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                             statements.size shouldBeEqualTo 0
                         }
 
-                        else         -> {
+                        else -> {
                             statements.size shouldBeEqualTo 1
                             statements[0] shouldBeEqualToIgnoringCase
                                     expectedDropSequenceStatement(sequence.name)
@@ -825,7 +874,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                                     "ALTER TABLE TEST_TABLE ALTER COLUMN ID BIGINT AUTO_INCREMENT NOT NULL"
                         }
 
-                        else                   -> {
+                        else -> {
                             statements.size shouldBeEqualTo 2
                             statements[0] shouldStartWithIgnoringCase
                                     "ALTER TABLE TEST_TABLE ALTER COLUMN ID"
@@ -867,7 +916,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                             statements[0] shouldBeEqualTo expectedCreateSequenceStatement(sequenceName)
                         }
 
-                        else         -> {
+                        else -> {
                             statements.size shouldBeEqualTo 2
                             statements[0] shouldBeEqualTo
                                     expectedCreateSequenceStatement(sequenceName)
@@ -927,10 +976,20 @@ class DatabaseMigrationTest: AbstractExposedTest() {
 
     private val sequenceName = "custom_sequence"
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS TEST_TABLE (ID BIGINT NOT NULL)
+     * ```
+     */
     private val tableWithoutAutoIncrement = object: IdTable<Long>("test_table") {
         override val id: Column<EntityID<Long>> = long("id").entityId()
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS TEST_TABLE (ID BIGINT NOT NULL)
+     * ```
+     */
     private val tableWithAutoIncrement = object: IdTable<Long>("test_table") {
         override val id: Column<EntityID<Long>> = long("id").autoIncrement().entityId()
     }

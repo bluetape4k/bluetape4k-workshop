@@ -92,13 +92,6 @@ class EnumerationTest: AbstractExposedTest() {
                 else                          -> error("Unsupported case")
             }
 
-
-//            open class EnumEntity(id: EntityID<Int>): IntEntity(id) {
-//                var enum by EnumTable.enumColumn
-//            }
-//
-//            val enumClass = object: IntEntityClass<EnumEntity>(EnumTable, EnumEntity::class.java) {}
-
             try {
                 if (currentDialect is PostgreSQLDialect) {
                     exec("DROP TYPE IF EXISTS FooEnum;")
@@ -246,7 +239,10 @@ class EnumerationTest: AbstractExposedTest() {
 
         /**
          * ```sql
-         * CREATE TABLE IF NOT EXISTS TESTER (ENUM_COLUMN INT NOT NULL, ENUM_NAME_COLUMN VARCHAR(32) NOT NULL);
+         * CREATE TABLE IF NOT EXISTS TESTER (
+         *      ENUM_COLUMN INT NOT NULL,
+         *      ENUM_NAME_COLUMN VARCHAR(32) NOT NULL
+         * );
          * ALTER TABLE TESTER ADD CONSTRAINT TESTER_ENUM_COLUMN_UNIQUE UNIQUE (ENUM_COLUMN);
          * ALTER TABLE TESTER ADD CONSTRAINT TESTER_ENUM_NAME_COLUMN_UNIQUE UNIQUE (ENUM_NAME_COLUMN);
          * ```
@@ -286,11 +282,15 @@ class EnumerationTest: AbstractExposedTest() {
                 it[referenceNameColumn] = entry[tester.enumNameColumn]
             }
 
-            tester.selectAll().single()[tester.enumColumn] shouldBeEqualTo fooBar
-            tester.selectAll().single()[tester.enumNameColumn] shouldBeEqualTo fooBaz
+            tester.selectAll().single().apply {
+                this[tester.enumColumn] shouldBeEqualTo fooBar
+                this[tester.enumNameColumn] shouldBeEqualTo fooBaz
+            }
 
-            referenceTable.selectAll().single()[referenceTable.referenceColumn] shouldBeEqualTo fooBar
-            referenceTable.selectAll().single()[referenceTable.referenceNameColumn] shouldBeEqualTo fooBaz
+            referenceTable.selectAll().single().apply {
+                this[referenceTable.referenceColumn] shouldBeEqualTo fooBar
+                this[referenceTable.referenceNameColumn] shouldBeEqualTo fooBaz
+            }
         }
     }
 }
