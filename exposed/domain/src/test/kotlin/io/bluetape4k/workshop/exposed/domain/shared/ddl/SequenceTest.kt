@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.shared.ddl
 
+import MigrationUtils
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
@@ -319,7 +320,8 @@ class SequenceTest: AbstractExposedTest() {
                 .find { it.startsWith(createSequencePrefix) }
                 .shouldBeNull()
 
-            SchemaUtils.statementsRequiredToActualizeScheme(DeveloperWithAutoIncrementBySequence)
+            // SchemaUtils.statementsRequiredToActualizeScheme(DeveloperWithAutoIncrementBySequence)
+            MigrationUtils.statementsRequiredForDatabaseMigration(DeveloperWithAutoIncrementBySequence)
                 .onEach { log.debug { "actualize: $it" } }
                 .find { it.startsWith(createSequencePrefix) }
                 .shouldBeNull()
@@ -378,6 +380,17 @@ class SequenceTest: AbstractExposedTest() {
         val name = varchar("name", 25)
     }
 
+    /**
+     * ```sql
+     * CREATE SEQUENCE IF NOT EXISTS id_seq START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807
+     * ```
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS DEVELOPERWITHAUTOINCREMENTBYSEQUENCE (
+     *      ID BIGINT NOT NULL,
+     *      "name" VARCHAR(25) NOT NULL
+     * )
+     * ```
+     */
     private object DeveloperWithAutoIncrementBySequence: IdTable<Long>() {
         override val id: Column<EntityID<Long>> = long("id").autoIncrement("id_seq").entityId()
         val name = varchar("name", 25)

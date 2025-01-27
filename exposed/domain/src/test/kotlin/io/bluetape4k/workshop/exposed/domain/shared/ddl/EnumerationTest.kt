@@ -46,6 +46,16 @@ class EnumerationTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS ENUMTABLE (
+     *      ID INT AUTO_INCREMENT PRIMARY KEY,
+     *      "enumColumn" ENUM('Bar', 'Baz') NOT NULL
+     * );
+     *
+     * ALTER TABLE ENUMTABLE ADD CONSTRAINT ENUMTABLE_ENUMCOLUMN_UNIQUE UNIQUE ("enumColumn");
+     * ```
+     */
     object EnumTable: IntIdTable("EnumTable") {
         internal var enumColumn: Column<Foo> = enumeration("enumColumn")
 
@@ -170,6 +180,14 @@ class EnumerationTest: AbstractExposedTest() {
     fun `custom enumeration with reference`(testDb: TestDB) {
         Assumptions.assumeTrue { testDb in supportsCustomEnumerationDB }
 
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS TESTER (
+         *      ENUM_COLUMN INT NOT NULL,
+         *      ENUM_NAME_COLUMN VARCHAR(32) NOT NULL
+         * )
+         * ```
+         */
         val referenceTable = object: Table("ref_table") {
             var referenceColumn: Column<Foo> = enumeration("ref_column")
 
@@ -226,10 +244,29 @@ class EnumerationTest: AbstractExposedTest() {
     fun `enumeration columns with reference`(testDb: TestDB) {
         Assumptions.assumeTrue { testDb in supportsCustomEnumerationDB }
 
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS TESTER (ENUM_COLUMN INT NOT NULL, ENUM_NAME_COLUMN VARCHAR(32) NOT NULL);
+         * ALTER TABLE TESTER ADD CONSTRAINT TESTER_ENUM_COLUMN_UNIQUE UNIQUE (ENUM_COLUMN);
+         * ALTER TABLE TESTER ADD CONSTRAINT TESTER_ENUM_NAME_COLUMN_UNIQUE UNIQUE (ENUM_NAME_COLUMN);
+         * ```
+         */
         val tester = object: Table("tester") {
             val enumColumn = enumeration<Foo>("enum_column").uniqueIndex()
             val enumNameColumn = enumerationByName<Foo>("enum_name_column", 32).uniqueIndex()
         }
+
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS REF_TABLE (
+         *      REF_COLUMN ENUM('Bar', 'Baz') NOT NULL,
+         *
+         *      CONSTRAINT FK_REF_TABLE_REF_COLUMN__ENUMCOLUMN
+         *          FOREIGN KEY (REF_COLUMN) REFERENCES ENUMTABLE("enumColumn")
+         *          ON DELETE RESTRICT ON UPDATE RESTRICT
+         * )
+         * ```
+         */
         val referenceTable = object: Table("ref_table") {
             val referenceColumn: Column<Foo> = reference("ref_column", tester.enumColumn)
             val referenceNameColumn: Column<Foo> = reference("ref_name_column", tester.enumNameColumn)

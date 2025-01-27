@@ -18,10 +18,22 @@ class WhereConditionsTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS USERS ("name" VARCHAR(20) NOT NULL)
+     * ```
+     */
     object Users: Table() {
         val name = varchar("name", 20)
     }
 
+    /**
+     * ```sql
+     * SELECT USERS."name"
+     *   FROM USERS
+     *  WHERE USERS."name" LIKE UPPER('Bost%')
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `where like expression`(testDb: TestDB) {
@@ -43,6 +55,13 @@ class WhereConditionsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * SELECT USERS."name"
+     *   FROM USERS
+     *  WHERE USERS."name" NOT LIKE UPPER('Bost%')
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `where not like expression`(testDb: TestDB) {
