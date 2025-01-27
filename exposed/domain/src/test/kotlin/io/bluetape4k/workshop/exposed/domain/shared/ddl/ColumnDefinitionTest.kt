@@ -1,20 +1,17 @@
 package io.bluetape4k.workshop.exposed.domain.shared.ddl
 
+import MigrationUtils
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.TestDB.MYSQL_V5
 import io.bluetape4k.workshop.exposed.TestDB.MYSQL_V8
 import io.bluetape4k.workshop.exposed.expectException
+import io.bluetape4k.workshop.exposed.sql.selectImplicitAll
 import io.bluetape4k.workshop.exposed.withDb
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldNotBeNull
-import org.jetbrains.exposed.sql.FieldSet
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.Query
-import org.jetbrains.exposed.sql.QueryBuilder
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insert
@@ -40,8 +37,8 @@ class ColumnDefinitionTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `column comment`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in columnCommentSupportedDB }
+    fun `column comment`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in columnCommentSupportedDB }
 
         val comment = "Amount of testers"
         val tester = object: Table("tester") {
@@ -49,20 +46,21 @@ class ColumnDefinitionTest: AbstractExposedTest() {
                 .withDefinition("COMMENT", stringLiteral(comment))
         }
 
-        withTables(testDb, tester) {
-            SchemaUtils.statementsRequiredToActualizeScheme(tester).shouldBeEmpty()
+        withTables(testDB, tester) {
+            // SchemaUtils.statementsRequiredToActualizeScheme(tester).shouldBeEmpty()
+            MigrationUtils.statementsRequiredForDatabaseMigration(tester).shouldBeEmpty()
 
             tester.insert { it[amount] = 9 }
             tester.selectAll().single()[tester.amount] shouldBeEqualTo 9
 
             val tableName = tester.nameInDatabaseCase()
-            val showStatement = when (testDb) {
+            val showStatement = when (testDB) {
                 in TestDB.ALL_MYSQL -> "SHOW FULL COLUMNS FROM $tableName"
-                else                -> "SELECT REMARKS FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '$tableName'"
+                else -> "SELECT REMARKS FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '$tableName'"
             }
-            val resultLabel = when (testDb) {
+            val resultLabel = when (testDB) {
                 in TestDB.ALL_MYSQL -> "Comment"
-                else                -> "REMARKS"
+                else -> "REMARKS"
             }
 
             val result = exec(showStatement) { rs ->
@@ -76,7 +74,7 @@ class ColumnDefinitionTest: AbstractExposedTest() {
     @Disabled("SQL Server 에서만 지원됩니다.")
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `column data masking`(testDb: TestDB) {
+    fun `column data masking`(testDB: TestDB) {
         val tester = object: Table("tester") {
             val email = varchar("email", 128)
                 .uniqueIndex()
@@ -84,8 +82,9 @@ class ColumnDefinitionTest: AbstractExposedTest() {
         }
 
         // withTables(TestDB.SQLSERVER, tester) {
-        withTables(MYSQL_V5, tester) {
-            SchemaUtils.statementsRequiredToActualizeScheme(tester).shouldBeEmpty()
+        withTables(testDB, tester) {
+            // SchemaUtils.statementsRequiredToActualizeScheme(tester).shouldBeEmpty()
+            MigrationUtils.statementsRequiredForDatabaseMigration(tester).shouldBeEmpty()
 
             val testEmail = "mysecretemail123@gmail.com"
             tester.insert {
@@ -109,12 +108,12 @@ class ColumnDefinitionTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `column definition on null`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in TestDB.ALL_H2 }
+    fun `column definition on null`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 }
 
         val itemA = "Item A"
 
-        withDb(testDb) {
+        withDb(testDB) {
             val tester = object: Table("tester") {
                 val amount = integer("amount")
                 val item = varchar("item", 32).apply {
@@ -124,7 +123,8 @@ class ColumnDefinitionTest: AbstractExposedTest() {
 
             SchemaUtils.create(tester)
 
-            SchemaUtils.statementsRequiredToActualizeScheme(tester).shouldBeEmpty()
+            // SchemaUtils.statementsRequiredToActualizeScheme(tester).shouldBeEmpty()
+            MigrationUtils.statementsRequiredForDatabaseMigration(tester).shouldBeEmpty()
 
             tester.insert {
                 it[amount] = 111
@@ -147,28 +147,20 @@ class ColumnDefinitionTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `column visibility`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in columnCommentSupportedDB }
+    fun `column visibility`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in columnCommentSupportedDB }
 
         val tester = object: Table("tester") {
             val amount = integer("amount")
             val active = bool("active").nullable().withDefinition("INVISIBLE")
         }
 
-        // this Query uses SELECT * FROM instead of the usual SELECT column_1, column_2, ... FROM
-        class ImplicitQuery(set: FieldSet, where: Op<Boolean>?): Query(set, where) {
-            override fun prepareSQL(builder: QueryBuilder): String {
-                return super.prepareSQL(builder).replaceBefore(" FROM ", "SELECT *")
-            }
-        }
-
-        fun FieldSet.selectImplicitAll(): Query = ImplicitQuery(this, null)
-
-        withTables(testDb, tester) {
-            if (testDb == MYSQL_V8) {
+        withTables(testDB, tester) {
+            if (testDB == MYSQL_V8) {
                 // H2 metadata query does not return invisible column info
                 // Bug in MariaDB with nullable column - metadata default value returns as NULL - EXPOSED-415
-                SchemaUtils.statementsRequiredToActualizeScheme(tester).shouldBeEmpty()
+                // SchemaUtils.statementsRequiredToActualizeScheme(tester).shouldBeEmpty()
+                MigrationUtils.statementsRequiredForDatabaseMigration(tester).shouldBeEmpty()
             }
 
             tester.insert {
@@ -176,25 +168,37 @@ class ColumnDefinitionTest: AbstractExposedTest() {
             }
 
             // an invisible column is only returned in ResultSet if explicitly named
+            /**
+             * ```sql
+             * SELECT TESTER.AMOUNT, TESTER.ACTIVE FROM TESTER WHERE TESTER.AMOUNT > 100
+             * ```
+             */
             tester.selectAll()
                 .where { tester.amount greater 100 }
-                .execute(this)
-                .use { result1 ->
-                    result1.shouldNotBeNull()
-                    result1.next()
-                    result1.getInt(tester.amount.name) shouldBeEqualTo 999
-                    result1.getBoolean(tester.active.name).shouldBeFalse()
+                .execute(this)       // HINT: 이렇게 Statement.execute(transaction) 을 수행하면 java.sql.ResultSet 를 반환합니다.
+                .use { rs ->
+                    rs.shouldNotBeNull()
+                    rs.next()
+                    rs.getInt(tester.amount.name) shouldBeEqualTo 999
+                    rs.getBoolean(tester.active.name).shouldBeFalse()
                 }
 
+            /**
+             * 컬럼 전체를 뜻하는 `*` 를 사용합니다.
+             *
+             * ```sql
+             * SELECT * FROM TESTER WHERE TESTER.AMOUNT > 100
+             * ```
+             */
             tester.selectImplicitAll()
                 .where { tester.amount greater 100 }
-                .execute(this)
-                .use { result2 ->
-                    result2.shouldNotBeNull()
-                    result2.next()
-                    result2.getInt(tester.amount.name) shouldBeEqualTo 999
+                .execute(this)     // HINT: 이렇게 Statement.execute(transaction) 을 수행하면 java.sql.ResultSet 를 반환합니다.
+                .use { rs ->
+                    rs.shouldNotBeNull()
+                    rs.next()
+                    rs.getInt(tester.amount.name) shouldBeEqualTo 999
                     expectException<SQLException> {
-                        result2.getBoolean(tester.active.name)
+                        rs.getBoolean(tester.active.name)
                     }
                 }
         }
