@@ -8,6 +8,7 @@ import io.bluetape4k.workshop.exposed.assertFailAndRollback
 import io.bluetape4k.workshop.exposed.currentDialectTest
 import io.bluetape4k.workshop.exposed.expectException
 import io.bluetape4k.workshop.exposed.inProperCase
+import io.bluetape4k.workshop.exposed.sql.execCreateMissingTablesAndColumns
 import io.bluetape4k.workshop.exposed.withDb
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEmpty
@@ -69,7 +70,9 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
         }
 
         withTables(testDb, testTable) {
-            SchemaUtils.createMissingTablesAndColumns(testTable)
+            // SchemaUtils.createMissingTablesAndColumns(testTable)
+            execCreateMissingTablesAndColumns(testTable)
+
             testTable.exists().shouldBeTrue()
             SchemaUtils.drop(testTable)
         }
@@ -91,10 +94,13 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
         }
 
         withDb(testDb) {
-            SchemaUtils.createMissingTablesAndColumns(testTable)
+            // SchemaUtils.createMissingTablesAndColumns(testTable)
+            execCreateMissingTablesAndColumns(testTable)
+            
             testTable.exists().shouldBeTrue()
             try {
-                SchemaUtils.createMissingTablesAndColumns(testTable)
+                // SchemaUtils.createMissingTablesAndColumns(testTable)
+                execCreateMissingTablesAndColumns(testTable)
             } finally {
                 SchemaUtils.drop(testTable)
             }
@@ -113,21 +119,26 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
         }
 
         withDb(testDb) {
-            SchemaUtils.createMissingTablesAndColumns(t1)
+            // SchemaUtils.createMissingTablesAndColumns(t1)
+            execCreateMissingTablesAndColumns(t1)
+
             t1.insert { it[foo] = "ABC" }
             assertFailAndRollback("Can't insert to not-null column") {
                 t2.insert { it[foo] = null }
             }
 
-            SchemaUtils.createMissingTablesAndColumns(t2)
+            // SchemaUtils.createMissingTablesAndColumns(t2)
+            execCreateMissingTablesAndColumns(t2)
             t2.insert { it[foo] = null }
             assertFailAndRollback("Can't make column non-null while has null value") {
-                SchemaUtils.createMissingTablesAndColumns(t1)
+                // SchemaUtils.createMissingTablesAndColumns(t1)
+                execCreateMissingTablesAndColumns(t1)
             }
 
             t2.deleteWhere { t2.foo.isNull() }
 
-            SchemaUtils.createMissingTablesAndColumns(t1)
+            // SchemaUtils.createMissingTablesAndColumns(t1)
+            execCreateMissingTablesAndColumns(t1)
             assertFailAndRollback("Can't insert to nullable column") {
                 t2.insert { it[foo] = null }
             }
@@ -155,10 +166,14 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
         }
 
         withDb(testDb) {
-            SchemaUtils.createMissingTablesAndColumns(t1)
+            // SchemaUtils.createMissingTablesAndColumns(t1)
+            execCreateMissingTablesAndColumns(t1)
+
             t1.insert { it[foo] = "ABC" }
 
-            SchemaUtils.createMissingTablesAndColumns(t2)
+            // SchemaUtils.createMissingTablesAndColumns(t2)
+            execCreateMissingTablesAndColumns(t2)
+
             assertFailAndRollback("Can't insert without primaryKey value") {
                 t2.insert { it[foo] = "ABC" }
             }
@@ -189,14 +204,15 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
         withDb(testDb) {
             if (db.supportsAlterTableWithAddColumn) {
-                SchemaUtils.createMissingTablesAndColumns(t1)
+                // SchemaUtils.createMissingTablesAndColumns(t1)
+                execCreateMissingTablesAndColumns(t1)
 
                 val missingStatements = SchemaUtils.addMissingColumnsStatements(t2)
 
                 val alterColumnWord = when (currentDialectTest) {
-                    is MysqlDialect  -> "MODIFY COLUMN"
+                    is MysqlDialect -> "MODIFY COLUMN"
                     is OracleDialect -> "MODIFY"
-                    else             -> "ALTER COLUMN"
+                    else -> "ALTER COLUMN"
                 }
 
                 val expected = if (t1.id.nameInDatabaseCase() != t2.id.nameInDatabaseCase()) {
@@ -227,7 +243,9 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
         }
 
         withDb(testDb) {
-            SchemaUtils.createMissingTablesAndColumns(t1)
+            // SchemaUtils.createMissingTablesAndColumns(t1)
+            execCreateMissingTablesAndColumns(t1)
+
             val missingStatements = SchemaUtils.addMissingColumnsStatements(t2)
             missingStatements.shouldBeEmpty()
             SchemaUtils.drop(t1)
@@ -250,7 +268,8 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
         }
 
         withDb(testDb) {
-            SchemaUtils.createMissingTablesAndColumns(t1)
+            // SchemaUtils.createMissingTablesAndColumns(t1)
+            execCreateMissingTablesAndColumns(t1)
 
             val missingStatements = SchemaUtils.addMissingColumnsStatements(t2)
             missingStatements.shouldBeEmpty()
@@ -275,7 +294,10 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
         }
 
         withTables(testDb, fooTable, barTable1) {
-            SchemaUtils.createMissingTablesAndColumns(barTable2)
+            // SchemaUtils.createMissingTablesAndColumns(barTable2)
+            execCreateMissingTablesAndColumns(barTable2)
+
+            barTable2.exists().shouldBeTrue()
         }
     }
 
@@ -292,7 +314,8 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
         withTables(testDb, initialTable) {
             t.id.ddl.single() shouldBeEqualTo "ALTER TABLE ${tableName.inProperCase()} ADD ${"id".inProperCase()} ${t.id.columnType.sqlType()} PRIMARY KEY"
             currentDialectTest.tableColumns(t)[t]!!.size shouldBeEqualTo 1
-            SchemaUtils.createMissingTablesAndColumns(t)
+            // SchemaUtils.createMissingTablesAndColumns(t)
+            execCreateMissingTablesAndColumns(t)
             currentDialectTest.tableColumns(t)[t]!!.size shouldBeEqualTo 2
         }
     }
@@ -312,7 +335,8 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
         }
 
         withDb(testDb) {
-            SchemaUtils.createMissingTablesAndColumns(noPKTable)
+            // SchemaUtils.createMissingTablesAndColumns(noPKTable)
+            execCreateMissingTablesAndColumns(noPKTable)
             var primaryKey: PrimaryKeyMetadata? = currentDialectTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
             primaryKey.shouldBeNull()
 
@@ -321,7 +345,8 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
             val statements = SchemaUtils.statementsRequiredToActualizeScheme(singlePKTable)
             statements.single() shouldBeEqualTo expected
 
-            SchemaUtils.createMissingTablesAndColumns(singlePKTable)
+            // SchemaUtils.createMissingTablesAndColumns(singlePKTable)
+            execCreateMissingTablesAndColumns(singlePKTable)
 
             primaryKey = currentDialectTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
             primaryKey.shouldNotBeNull()
@@ -442,15 +467,16 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
         withDb(testDb) {
             try {
-                SchemaUtils.createMissingTablesAndColumns(t1)
+                // SchemaUtils.createMissingTablesAndColumns(t1)
+                execCreateMissingTablesAndColumns(t1)
 
                 val missingStatements = SchemaUtils.addMissingColumnsStatements(t2)
 
                 if (testDb !in complexAlterTable) {
                     val alterColumnWord = when (currentDialectTest) {
-                        is MysqlDialect  -> "MODIFY COLUMN"
+                        is MysqlDialect -> "MODIFY COLUMN"
                         is OracleDialect -> "MODIFY"
-                        else             -> "ALTER COLUMN"
+                        else -> "ALTER COLUMN"
                     }
                     val expected = setOf(
                         "ALTER TABLE ${t2.nameInDatabaseCase()} $alterColumnWord ${t2.col.nameInDatabaseCase()} ${t2.col.columnType.sqlType()} DEFAULT 1 NOT NULL",
@@ -471,15 +497,16 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
         withDb(testDb) {
             try {
-                SchemaUtils.createMissingTablesAndColumns(t2)
+                // SchemaUtils.createMissingTablesAndColumns(t2)
+                execCreateMissingTablesAndColumns(t2)
 
                 val missingStatements = SchemaUtils.addMissingColumnsStatements(t1)
 
                 if (testDb !in complexAlterTable) {
                     val alterColumnWord = when (currentDialectTest) {
-                        is MysqlDialect  -> "MODIFY COLUMN"
+                        is MysqlDialect -> "MODIFY COLUMN"
                         is OracleDialect -> "MODIFY"
-                        else             -> "ALTER COLUMN"
+                        else -> "ALTER COLUMN"
                     }
                     val expected = setOf(
                         "ALTER TABLE ${t2.nameInDatabaseCase()} $alterColumnWord ${t1.col.nameInDatabaseCase()} ${t1.col.columnType.sqlType()} NULL",
@@ -530,7 +557,8 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
     fun createTableWithMultipleIndexes(testDb: TestDB) {
         withDb(testDb) {
             try {
-                SchemaUtils.createMissingTablesAndColumns(MultipleIndexesTable)
+                // SchemaUtils.createMissingTablesAndColumns(MultipleIndexesTable)
+                execCreateMissingTablesAndColumns(MultipleIndexesTable)
             } finally {
                 SchemaUtils.drop(MultipleIndexesTable)
             }
@@ -547,7 +575,8 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
         }
 
         withDb(testDb) {
-            SchemaUtils.createMissingTablesAndColumns(usersTable, spacesTable)
+            // SchemaUtils.createMissingTablesAndColumns(usersTable, spacesTable)
+            execCreateMissingTablesAndColumns(usersTable, spacesTable)
             usersTable.exists().shouldBeTrue()
             spacesTable.exists().shouldBeTrue()
             SchemaUtils.drop(usersTable, spacesTable)
@@ -566,7 +595,8 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
         // Oracle metadata only returns foreign keys that reference primary keys
         withDb(testDb) {
-            SchemaUtils.createMissingTablesAndColumns(ordersTable, receiptsTable)
+            // SchemaUtils.createMissingTablesAndColumns(ordersTable, receiptsTable)
+            execCreateMissingTablesAndColumns(ordersTable, receiptsTable)
             ordersTable.exists().shouldBeTrue()
             receiptsTable.exists().shouldBeTrue()
             SchemaUtils.drop(ordersTable, receiptsTable)
@@ -588,8 +618,13 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testCreateTableWithReferenceMultipleTimes(testDb: TestDB) {
         withTables(testDb, PlayerTable, SessionsTable) {
-            SchemaUtils.createMissingTablesAndColumns(PlayerTable, SessionsTable)
-            SchemaUtils.createMissingTablesAndColumns(PlayerTable, SessionsTable)
+//            SchemaUtils.createMissingTablesAndColumns(PlayerTable, SessionsTable)
+//            SchemaUtils.createMissingTablesAndColumns(PlayerTable, SessionsTable)
+            execCreateMissingTablesAndColumns(PlayerTable, SessionsTable)
+            execCreateMissingTablesAndColumns(PlayerTable, SessionsTable)
+
+            PlayerTable.exists().shouldBeTrue()
+            SessionsTable.exists().shouldBeTrue()
         }
     }
 
@@ -607,8 +642,10 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
         Assumptions.assumeTrue(testDb == TestDB.MYSQL_V5)
 
         withDb(testDb) {
-            SchemaUtils.createMissingTablesAndColumns(T1, T2)
-            SchemaUtils.createMissingTablesAndColumns(T1, T2)
+            // SchemaUtils.createMissingTablesAndColumns(T1, T2)
+            // SchemaUtils.createMissingTablesAndColumns(T1, T2)
+            execCreateMissingTablesAndColumns(T1, T2)
+            execCreateMissingTablesAndColumns(T1, T2)
 
             T1.exists().shouldBeTrue()
             T2.exists().shouldBeTrue()
@@ -656,7 +693,8 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
         }
         withDb(testDb) {
             try {
-                SchemaUtils.createMissingTablesAndColumns(usersTable)
+                // SchemaUtils.createMissingTablesAndColumns(usersTable)
+                execCreateMissingTablesAndColumns(usersTable)
                 usersTable.exists().shouldBeTrue()
             } finally {
                 SchemaUtils.drop(usersTable)
@@ -755,14 +793,16 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
             try {
                 // Try in different schema
-                SchemaUtils.createMissingTablesAndColumns(parentTable, childTable)
+                // SchemaUtils.createMissingTablesAndColumns(parentTable, childTable)
+                execCreateMissingTablesAndColumns(parentTable, childTable)
                 parentTable.exists().shouldBeTrue()
                 childTable.exists().shouldBeTrue()
 
                 // Try in the same schema
 
                 SchemaUtils.setSchema(schema)
-                SchemaUtils.createMissingTablesAndColumns(parentTable, childTable)
+                // SchemaUtils.createMissingTablesAndColumns(parentTable, childTable)
+                execCreateMissingTablesAndColumns(parentTable, childTable)
                 parentTable.exists().shouldBeTrue()
                 childTable.exists().shouldBeTrue()
 
