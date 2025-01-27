@@ -64,6 +64,13 @@ class CreateTableTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS TEST_TABLE (
+     *      COLUMN_1 VARCHAR(30) PRIMARY KEY
+     * )
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create id table with primary key by EntityID`(testDb: TestDB) {
@@ -86,6 +93,13 @@ class CreateTableTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS TEST_TABLE (
+     *      COLUMN_1 VARCHAR(30) PRIMARY KEY
+     * )
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create id table with primary key by column`(testDb: TestDB) {
@@ -108,6 +122,15 @@ class CreateTableTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS TEST_TABLE (
+     *      COLUMN_1 VARCHAR(30),
+     *
+     *      CONSTRAINT PK_Constraint_name PRIMARY KEY (COLUMN_1)
+     * )
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create id table with named primary key by column`(testDb: TestDB) {
@@ -134,6 +157,7 @@ class CreateTableTest: AbstractExposedTest() {
 
     /**
      * String primary key Table
+     *
      * ```sql
      * CREATE TABLE IF NOT EXISTS STRING_PK_TABLE (COLUMN_1 VARCHAR(30) PRIMARY KEY)
      * ```
@@ -176,6 +200,16 @@ class CreateTableTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS ACCOUNT (
+     *      ID1 INT,
+     *      ID2 INT,
+     *
+     *      CONSTRAINT pk_Account PRIMARY KEY (ID1, ID2)
+     * )
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `primary key create table`(testDb: TestDB) {
@@ -191,6 +225,7 @@ class CreateTableTest: AbstractExposedTest() {
             val id2ProperName = account.id2.name.inProperCase()
             val tableName = account.tableName
 
+            log.debug { "Account DDL: ${account.ddl.single()}" }
             account.ddl.single() shouldBeEqualTo
                     "CREATE TABLE " + addIfNotExistsIfSupported() + "${tableName.inProperCase()} (" +
                     "${account.columns.joinToString { it.descriptionDdl(false) }}, " +
@@ -298,7 +333,7 @@ class CreateTableTest: AbstractExposedTest() {
                     Person.id2.ddl.last() shouldBeEqualTo "ALTER TABLE $tableProperName ADD CONSTRAINT $pkConstraintName PRIMARY KEY ($id1ProperName, $id2ProperName)"
                 }
 
-                else             -> {
+                else -> {
                     log.debug { "ddlId2: ${ddlId2.first()}" }
                     ddlId2 shouldHaveSize 1
                     ddlId2.first() shouldBeEqualTo
@@ -326,7 +361,7 @@ class CreateTableTest: AbstractExposedTest() {
                                 "ALTER TABLE $tableProperName ADD CONSTRAINT $pkConstraintName PRIMARY KEY ($id1ProperName)"
                             )
 
-                else             ->
+                else ->
                     ddlId1.first() shouldBeEqualTo
                             "ALTER TABLE $tableProperName ADD ${Book.id.descriptionDdl(false)}, " +
                             "ADD CONSTRAINT $pkConstraintName PRIMARY KEY ($id1ProperName)"
@@ -402,7 +437,6 @@ class CreateTableTest: AbstractExposedTest() {
     }
 
     /**
-     *
      * ```sql
      * CREATE TABLE IF NOT EXISTS "Child" (
      *      ID BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -441,6 +475,7 @@ class CreateTableTest: AbstractExposedTest() {
      * CREATE TABLE IF NOT EXISTS "'CHILD2'" (
      *      ID BIGINT AUTO_INCREMENT PRIMARY KEY,
      *      PARENT_ID BIGINT NOT NULL,
+     *      
      *      CONSTRAINT FK_CHILD2_PARENT_ID__ID FOREIGN KEY (PARENT_ID) REFERENCES "'PARENT2'"(ID)
      * )
      * ```
@@ -470,7 +505,6 @@ class CreateTableTest: AbstractExposedTest() {
     }
 
     /**
-     *
      * ```sql
      * CREATE TABLE IF NOT EXISTS CHILD2 (
      *      ID BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -769,13 +803,21 @@ class CreateTableTest: AbstractExposedTest() {
 
     private fun TestDB.getDefaultSchemaPrefixedTableName(tableName: String): String =
         when (io.bluetape4k.workshop.exposed.currentDialectTest) {
-        is SQLServerDialect -> "dbo.$tableName"
-        is OracleDialect    -> "${this.user}.$tableName"
-        is MysqlDialect     -> "${this.db!!.name}.$tableName"
-        is SQLiteDialect    -> tableName
-        else                -> "public.$tableName"
-    }
+            is SQLServerDialect -> "dbo.$tableName"
+            is OracleDialect -> "${this.user}.$tableName"
+            is MysqlDialect -> "${this.db!!.name}.$tableName"
+            is SQLiteDialect -> tableName
+            else -> "public.$tableName"
+        }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS QUOTEDTABLE (
+     *      ID INT AUTO_INCREMENT PRIMARY KEY,
+     *      "intColumn" INT NOT NULL
+     * )
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create table with quoted name with camel case`(testDb: TestDB) {
@@ -796,6 +838,13 @@ class CreateTableTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * CREATE SCHEMA IF NOT EXISTS one;
+     * CREATE TABLE IF NOT EXISTS ONE.ONE (ID INT AUTO_INCREMENT PRIMARY KEY);
+     * DROP TABLE IF EXISTS ONE.ONE;
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `list Tables in all schemas`(testDB: TestDB) {
@@ -835,6 +884,13 @@ class CreateTableTest: AbstractExposedTest() {
      * it to upper case. Therefore, the INSERT statement fails when it contains a quoted table name because it attempts
      * to insert into a table that does not exist (“SOMENAMESPACE.SOMETABLE” is not found) . It does not fail when the
      * table name is not quoted because the case would not matter in that scenario.
+     *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS "SomeNamespace.SomeTable" (
+     *      ID INT AUTO_INCREMENT PRIMARY KEY,
+     *      TEXT_COL TEXT NOT NULL
+     * )
+     * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
