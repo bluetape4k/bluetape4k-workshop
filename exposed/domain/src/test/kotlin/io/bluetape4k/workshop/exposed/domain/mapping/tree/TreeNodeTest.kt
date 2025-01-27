@@ -1,18 +1,23 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.tree
 
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldContainSame
+import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.entityCache
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.sql.alias
+import org.jetbrains.exposed.sql.innerJoin
+import org.jetbrains.exposed.sql.selectAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
@@ -117,6 +122,107 @@ class TreeNodeTest: AbstractExposedTest() {
 //            val loadedGrandChild1 = TreeNode.findById(grandChild1.id)
 //            loadedGrandChild1.shouldNotBeNull()
 //            log.debug { "loadedGrandChild1: $loadedGrandChild1" }
+        }
+    }
+
+    /**
+     * [TreeNode]의 자식과의 Join 을 이용하여 부모와 자식노드를 구하기
+     *
+     * ```sql
+     * SELECT parent.TITLE,
+     *        child.TITLE
+     *   FROM TREE_NODES parent
+     *        INNER JOIN TREE_NODES child ON  (parent.ID = child.PARENT_ID)
+     *  WHERE parent.TITLE = 'child1'
+     * ```
+     */
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `join with children`(testDB: TestDB) {
+        withTables(testDB, TreeNodeTable) {
+            buildTreeNodes()
+
+            val parent = TreeNodeTable.alias("parent")
+            val child = TreeNodeTable.alias("child")
+
+            val join = parent.innerJoin(child) { parent[TreeNodeTable.id] eq child[TreeNodeTable.parentId] }
+
+            val titles = join
+                .select(parent[TreeNodeTable.title], child[TreeNodeTable.title])
+                .where { parent[TreeNodeTable.title] eq "child1" }
+                .map { row ->
+                    row[parent[TreeNodeTable.title]] to row[child[TreeNodeTable.title]]
+                }
+
+            titles shouldHaveSize 2
+            titles.forEach {
+                log.debug { "parent: ${it.first}, child: ${it.second}" }
+            }
+        }
+    }
+
+    /**
+     * SubQuery 를 이용하여 Covering Index 를 사용하여 조회하기
+     * ```sql
+     * SELECT TREE_NODES.ID,
+     *        TREE_NODES.TITLE,
+     *        TREE_NODES.DESCRIPTION,
+     *        TREE_NODES.PARENT_ID
+     *   FROM TREE_NODES
+     *  WHERE TREE_NODES.ID IN (SELECT sub.ID FROM TREE_NODES sub WHERE sub.TITLE LIKE 'grand%')
+     * ```
+     */
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `using subquery - inSubQuery`(testDB: TestDB) {
+        withTables(testDB, TreeNodeTable) {
+            buildTreeNodes()
+
+            val sub = TreeNodeTable.alias("sub")
+
+            val subQuery = sub
+                .select(sub[TreeNodeTable.parentId])
+                .where { sub[TreeNodeTable.title] like "grand%" }
+
+            val query = TreeNodeTable.selectAll()
+                .where { TreeNodeTable.id inSubQuery subQuery }
+
+            val nodes = TreeNode.wrapRows(query).toList()
+            nodes shouldHaveSize 1
+            nodes.single().title shouldBeEqualTo "child1"
+        }
+    }
+
+    /**
+     * SubQuery 를 Convering 인덱스로 활용하기
+     *
+     * ```sql
+     * SELECT TREE_NODES.ID,
+     *        TREE_NODES.TITLE,
+     *        TREE_NODES.DESCRIPTION,
+     *        TREE_NODES.PARENT_ID
+     *   FROM TREE_NODES INNER JOIN (SELECT TREE_NODES.ID
+     *                                 FROM TREE_NODES
+     *                                WHERE TREE_NODES.TITLE LIKE 'child%'
+     *                               ) sub ON  (TREE_NODES.PARENT_ID = sub.ID)
+     * ```
+     */
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `using join subquery`(testDB: TestDB) {
+        withTables(testDB, TreeNodeTable) {
+            buildTreeNodes()
+
+            val sub = TreeNodeTable.select(TreeNodeTable.id)
+                .where { TreeNodeTable.title like "child%" }
+                .alias("sub")
+
+            val joinQuery = TreeNodeTable.innerJoin(sub) { TreeNodeTable.parentId eq sub[TreeNodeTable.id] }
+                .select(TreeNodeTable.columns)
+
+            val nodes = TreeNode.wrapRows(joinQuery).toList()
+            nodes shouldHaveSize 2
+            nodes.map { it.title } shouldContainSame listOf("grandChild1", "grandChild2")
         }
     }
 }
