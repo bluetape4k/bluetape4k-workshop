@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.shared.ddl
 
+import MigrationUtils
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.currentDialectTest
@@ -37,6 +38,14 @@ import kotlin.test.expect
 
 class CreateIndexTest: AbstractExposedTest() {
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS TEST_TABLE (
+     *      ID INT PRIMARY KEY,
+     *      "name" VARCHAR(42) NOT NULL
+     * )
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create standard index`(testDb: TestDB) {
@@ -49,12 +58,25 @@ class CreateIndexTest: AbstractExposedTest() {
         }
 
         withTables(testDb, testTable) {
-            SchemaUtils.createMissingTablesAndColumns(testTable)
+            // SchemaUtils.createMissingTablesAndColumns(testTable)
+            val statemnts = MigrationUtils.statementsRequiredForDatabaseMigration(testTable)
+            exec(statemnts.joinToString(";"))
+
             testTable.exists().shouldBeTrue()
             SchemaUtils.drop(testTable)
         }
     }
 
+    /**
+     * Postgres:
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS test_table (
+     *      id INT PRIMARY KEY,
+     *      "name" VARCHAR(42) NOT NULL
+     * );
+     * CREATE INDEX test_table_by_name ON test_table ("name");
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create hash index`(testDb: TestDB) {
@@ -69,16 +91,30 @@ class CreateIndexTest: AbstractExposedTest() {
         }
 
         withTables(testDb, testTable) {
-            SchemaUtils.createMissingTablesAndColumns(testTable)
+            // SchemaUtils.createMissingTablesAndColumns(testTable)
+            val statemnts = MigrationUtils.statementsRequiredForDatabaseMigration(testTable)
+            exec(statemnts.joinToString(";"))
+
             testTable.exists().shouldBeTrue()
         }
     }
 
+    /**
+     * Postgres:
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS test_table (
+     *      id INT NOT NULL,
+     *      "name" VARCHAR(42) NOT NULL
+     * );
+     * CREATE INDEX text_index ON test_table ("name");
+     * CREATE INDEX test_table_id_name ON test_table (id, "name");
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create index with table in different schema`(testDb: TestDB) {
         Assumptions.assumeTrue { testDb == TestDB.H2 || testDb == TestDB.H2_PSQL }
-        
+
         val testTable = object: Table("test_table") {
             val id = integer("id")
             val name = varchar("name", 42).index("text_index")
@@ -94,15 +130,38 @@ class CreateIndexTest: AbstractExposedTest() {
         withSchemas(testDb, schema1, schema2) {
             SchemaUtils.setSchema(schema1)
             SchemaUtils.createMissingTablesAndColumns(testTable)
+//            val statemnts = MigrationUtils.statementsRequiredForDatabaseMigration(testTable)
+//            exec(statemnts.joinToString(";"))
             testTable.exists().shouldBeTrue()
 
             SchemaUtils.setSchema(schema2)
             testTable.exists().shouldBeFalse()
+
             SchemaUtils.createMissingTablesAndColumns(testTable)
+//            val statemnts2 = MigrationUtils.statementsRequiredForDatabaseMigration(testTable)
+//            exec(statemnts2.joinToString(";"))
             testTable.exists().shouldBeTrue()
         }
     }
 
+    /**
+     * Postgres:
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS partialindextabletest (
+     *      id SERIAL PRIMARY KEY,
+     *      "name" VARCHAR(50) NOT NULL,
+     *      "value" INT NOT NULL,
+     *      "anotherValue" INT NOT NULL,
+     *      flag BOOLEAN NOT NULL
+     * );
+     *
+     * CREATE INDEX flag_index ON partialindextabletest (flag, "name") WHERE partialindextabletest.flag = TRUE;
+     *
+     * CREATE INDEX partialindextabletest_value_name ON partialindextabletest ("value", "name") WHERE (partialindextabletest."name" = 'aaa') AND (partialindextabletest."value" >= 6);
+     *
+     * ALTER TABLE partialindextabletest ADD CONSTRAINT partialindextabletest_anothervalue_unique UNIQUE ("anotherValue");
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create and drop partial index with postgres`(testDb: TestDB) {
@@ -143,8 +202,8 @@ class CreateIndexTest: AbstractExposedTest() {
                     val filter = it.getString("FILTER_CONDITION")
 
                     when (it.getString("INDEX_NAME")) {
-                        "partialindextabletest_value_name"          -> filter shouldBeEqualTo "(((name)::text = 'aaa'::text) AND (value >= 6))"
-                        "flag_index"                                -> filter shouldBeEqualTo "(flag = true)"
+                        "partialindextabletest_value_name" -> filter shouldBeEqualTo "(((name)::text = 'aaa'::text) AND (value >= 6))"
+                        "flag_index" -> filter shouldBeEqualTo "(flag = true)"
                         "partialindextabletest_anothervalue_unique" -> filter.shouldStartWith(" UNIQUE INDEX ")
                     }
                 }
@@ -222,8 +281,8 @@ class CreateIndexTest: AbstractExposedTest() {
             // test for non-unique partial index with type
             val type: String? = when (currentDialectTest) {
                 is PostgreSQLDialect -> "BTREE"
-                is SQLServerDialect  -> "NONCLUSTERED"
-                else                 -> null
+                is SQLServerDialect -> "NONCLUSTERED"
+                else -> null
             }
             val typedPartialIndex = Index(
                 listOf(tester.name),
@@ -241,6 +300,13 @@ class CreateIndexTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Postgres:
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS tester (age INT NOT NULL);
+     * CREATE INDEX age_index ON tester (age) WHERE tester.age >= 10;
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `partial index not created`(testDb: TestDB) {
@@ -253,18 +319,34 @@ class CreateIndexTest: AbstractExposedTest() {
         }
 
         withTables(testDb, tester) {
-            SchemaUtils.createMissingTablesAndColumns()
+//            SchemaUtils.createMissingTablesAndColumns()
+            val statemnts = MigrationUtils.statementsRequiredForDatabaseMigration()
+            exec(statemnts.joinToString(";"))
             tester.exists().shouldBeTrue()
 
             val expectedIndexCount = when (currentDialectTest) {
                 is PostgreSQLDialect, is SQLServerDialect, is SQLiteDialect -> 1
-                else                                                        -> 0
+                else -> 0
             }
             val actualIndexCount = currentDialectTest.existingIndices(tester)[tester].orEmpty().size
             actualIndexCount shouldBeEqualTo expectedIndexCount
         }
     }
 
+    /**
+     * Postgres:
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS tester (
+     *      id SERIAL PRIMARY KEY,
+     *      amount INT NOT NULL,
+     *      price INT NOT NULL,
+     *      item VARCHAR(32) NULL
+     * );
+     * CREATE INDEX tester_plus_index ON tester ((tester.amount + tester.price));
+     * CREATE INDEX tester_lower ON tester (LOWER(tester.item));
+     * CREATE UNIQUE INDEX tester_price_coalesce_unique ON tester (price, COALESCE(tester.item, '*'));
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create and drop functional index`(testDb: TestDB) {
@@ -285,6 +367,9 @@ class CreateIndexTest: AbstractExposedTest() {
 
         withTables(testDb, tester) {
             SchemaUtils.createMissingTablesAndColumns()
+//            val statemnts = MigrationUtils.statementsRequiredForDatabaseMigration()
+//            exec(statemnts.joinToString(";"))
+            
             tester.exists().shouldBeTrue()
 
             var indices = getIndices(tester)
