@@ -1,38 +1,42 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
-import io.bluetape4k.idgenerators.uuid.TimebasedUuid
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDBase62Entity
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDBase62EntityClass
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDBase62EntityID
+import io.bluetape4k.exposed.dao.id.TimebasedUUIDBase62Table
 import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.support.toUtf8String
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.sql.statements.api.toUtf8String
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
-import org.jetbrains.exposed.dao.Entity
-import org.jetbrains.exposed.dao.EntityClass
-import org.jetbrains.exposed.dao.flushCache
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IdTable
+import org.jetbrains.exposed.dao.entityCache
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
 class EntityWithBlobTest: AbstractExposedTest() {
 
-    object BlobTable: IdTable<String>("BlobTable") {
-        override val id = varchar("uuid_base62_id", 22)
-            .entityId()
-            .clientDefault {
-                EntityID(TimebasedUuid.Epoch.nextIdAsString(), BlobTable)
-            }
-
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS BLOBTABLE (
+     *      ID VARCHAR(22) PRIMARY KEY,
+     *      CONTENT BLOB NULL
+     * )
+     * ```
+     */
+    object BlobTable: TimebasedUUIDBase62Table("BlobTable") {
         val blob = blob("content").nullable()
-
-        override val primaryKey = PrimaryKey(id)
     }
 
-    class BlobEntity(id: EntityID<String>): Entity<String>(id) {
-        companion object: EntityClass<String, BlobEntity>(BlobTable)
+    class BlobEntity(id: TimebasedUUIDBase62EntityID): TimebasedUUIDBase62Entity(id) {
+        companion object: TimebasedUUIDBase62EntityClass<BlobEntity>(BlobTable) {
+            operator fun invoke(bytes: ByteArray): BlobEntity {
+                return new { content = ExposedBlob(bytes) }
+            }
+        }
 
         var content: ExposedBlob? by BlobTable.blob
     }
@@ -43,27 +47,18 @@ class EntityWithBlobTest: AbstractExposedTest() {
         withTables(testDb, BlobTable) {
             /**
              * ```sql
-             * INSERT INTO BLOBTABLE (UUID_BASE62_ID, CONTENT) VALUES ('2ymBXTjDNVQ14p04fcBwq', X'')
+             * INSERT INTO BLOBTABLE (ID, CONTENT) VALUES ('wTkxePceefMUJFdP7d4X2', X'')
              * ```
              */
-            /**
-             * ```sql
-             * INSERT INTO BLOBTABLE (UUID_BASE62_ID, CONTENT) VALUES ('2ymBXTjDNVQ14p04fcBwq', X'')
-             * ```
-             */
-            val blobEntity = BlobEntity.new {
-                content = ExposedBlob("foo".toUtf8Bytes())
-            }
-            flushCache()
+//            val blobEntity = BlobEntity.new {
+//                content = ExposedBlob("foo".toUtf8Bytes())
+//            }
+            val blobEntity = BlobEntity("foo".toUtf8Bytes())
+            entityCache.clear()
 
             /**
              * ```sql
-             * SELECT BLOBTABLE.UUID_BASE62_ID, BLOBTABLE.CONTENT FROM BLOBTABLE WHERE BLOBTABLE.UUID_BASE62_ID = '2ymBXTjDNVQ14p04fcBwq'
-             * ```
-             */
-            /**
-             * ```sql
-             * SELECT BLOBTABLE.UUID_BASE62_ID, BLOBTABLE.CONTENT FROM BLOBTABLE WHERE BLOBTABLE.UUID_BASE62_ID = '2ymBXTjDNVQ14p04fcBwq'
+             * SELECT BLOBTABLE.ID, BLOBTABLE.CONTENT FROM BLOBTABLE WHERE BLOBTABLE.ID = 'wTkxePceefMUJFdP7d4X2'
              * ```
              */
             var y2 = BlobEntity.reload(blobEntity)!!
@@ -71,25 +66,14 @@ class EntityWithBlobTest: AbstractExposedTest() {
 
             /**
              * ```sql
-             * UPDATE BLOBTABLE SET CONTENT=NULL WHERE UUID_BASE62_ID = '2ymBXTjDNVQ14p04fcBwq'
-             * ```
-             */
-
-            /**
-             * ```sql
-             * UPDATE BLOBTABLE SET CONTENT=NULL WHERE UUID_BASE62_ID = '2ymBXTjDNVQ14p04fcBwq'
+             * UPDATE BLOBTABLE SET CONTENT=NULL WHERE ID = 'wTkxePceefMUJFdP7d4X2'
              * ```
              */
             y2.content = null
-            flushCache()
+            entityCache.clear()
             /**
              * ```sql
-             * SELECT BLOBTABLE.UUID_BASE62_ID, BLOBTABLE.CONTENT FROM BLOBTABLE WHERE BLOBTABLE.UUID_BASE62_ID = '2ymBXTjDNVQ14p04fcBwq'
-             * ```
-             */
-            /**
-             * ```sql
-             * SELECT BLOBTABLE.UUID_BASE62_ID, BLOBTABLE.CONTENT FROM BLOBTABLE WHERE BLOBTABLE.UUID_BASE62_ID = '2ymBXTjDNVQ14p04fcBwq'
+             * SELECT BLOBTABLE.ID, BLOBTABLE.CONTENT FROM BLOBTABLE WHERE BLOBTABLE.ID = 'wTkxePceefMUJFdP7d4X2'
              * ```
              */
             y2 = BlobEntity.reload(blobEntity)!!
@@ -97,29 +81,18 @@ class EntityWithBlobTest: AbstractExposedTest() {
 
             /**
              * ```sql
-             * UPDATE BLOBTABLE SET CONTENT=X'' WHERE UUID_BASE62_ID = '2ymBXTjDNVQ14p04fcBwq'
-             * ```
-             */
-
-            /**
-             * ```sql
-             * UPDATE BLOBTABLE SET CONTENT=X'' WHERE UUID_BASE62_ID = '2ymBXTjDNVQ14p04fcBwq'
+             * UPDATE BLOBTABLE SET CONTENT=X'' WHERE ID = 'wTkxePceefMUJFdP7d4X2'
              * ```
              */
             y2.content = ExposedBlob("foo2".toUtf8Bytes())
-            flushCache()
+            entityCache.clear()
             /**
              * ```sql
-             * SELECT BLOBTABLE.UUID_BASE62_ID, BLOBTABLE.CONTENT FROM BLOBTABLE WHERE BLOBTABLE.UUID_BASE62_ID = '2ymBXTjDNVQ14p04fcBwq'
-             * ```
-             */
-            /**
-             * ```sql
-             * SELECT BLOBTABLE.UUID_BASE62_ID, BLOBTABLE.CONTENT FROM BLOBTABLE WHERE BLOBTABLE.UUID_BASE62_ID = '2ymBXTjDNVQ14p04fcBwq'
+             * SELECT BLOBTABLE.ID, BLOBTABLE.CONTENT FROM BLOBTABLE WHERE BLOBTABLE.ID = 'wTkxePceefMUJFdP7d4X2'
              * ```
              */
             y2 = BlobEntity.reload(blobEntity)!!
-            y2.content!!.bytes.toUtf8String() shouldBeEqualTo "foo2"
+            y2.content!!.toUtf8String() shouldBeEqualTo "foo2"
         }
     }
 }
