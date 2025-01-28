@@ -278,9 +278,34 @@ fun AbstractExposedTest.withSalesAndSomeAmounts(
     }
 }
 
+/**
+ * ```sql
+ * CREATE TABLE IF NOT EXISTS ORGS (
+ *      ID INT AUTO_INCREMENT PRIMARY KEY,
+ *      UID VARCHAR(36) NOT NULL,
+ *      "name" VARCHAR(255) NOT NULL
+ * );
+ * ALTER TABLE ORGS ADD CONSTRAINT ORGS_UID_UNIQUE UNIQUE (UID)
+ * ```
+ */
 object Orgs: IntIdTable() {
     val uid = varchar("uid", 36).uniqueIndex().clientDefault { TimebasedUuid.nextBase62String() }
     val name = varchar("name", 255)
+}
+
+/**
+ * ```sql
+ * CREATE TABLE IF NOT EXISTS ORGMEMBERSHIPS (
+ *      ID INT AUTO_INCREMENT PRIMARY KEY,
+ *      ORG VARCHAR(36) NOT NULL,
+ *
+ *      CONSTRAINT FK_ORGMEMBERSHIPS_ORG__UID FOREIGN KEY (ORG) REFERENCES ORGS(UID)
+ *          ON DELETE RESTRICT ON UPDATE RESTRICT
+ * );
+ * ```
+ */
+object OrgMemberships: IntIdTable() {
+    val orgId = reference("org", Orgs.uid)
 }
 
 class Org(id: EntityID<Int>): IntEntity(id) {
@@ -288,10 +313,6 @@ class Org(id: EntityID<Int>): IntEntity(id) {
 
     var uid by Orgs.uid
     var name by Orgs.name
-}
-
-object OrgMemberships: IntIdTable() {
-    val orgId = reference("org", Orgs.uid)
 }
 
 class OrgMembership(id: EntityID<Int>): IntEntity(id) {

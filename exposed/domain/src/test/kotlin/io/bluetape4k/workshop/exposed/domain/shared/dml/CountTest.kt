@@ -21,6 +21,8 @@ class CountTest: AbstractExposedTest() {
     companion object: KLogging()
 
     /**
+     * `withDistinct` is used to add `DISTINCT` to the query.
+     *
      * ```sql
      * SELECT COUNT(*)
      *   FROM (
@@ -58,25 +60,37 @@ class CountTest: AbstractExposedTest() {
     }
 
     /**
-     * Count for distinct
+     * Count for DISTINCT
      * ```sql
-     * SELECT COUNT(*) FROM (SELECT DISTINCT USERDATA.USER_ID UserData_user_id FROM USERDATA) subquery
+     * SELECT COUNT(*)
+     *   FROM (SELECT DISTINCT USERDATA.USER_ID UserData_user_id
+     *           FROM USERDATA
+     *        ) subquery
      * ```
      *
-     * Count for group by
+     * Count for GROUP BY
      * ```sql
-     * SELECT COUNT(*) FROM (SELECT MAX(USERDATA."value") exp0 FROM USERDATA GROUP BY USERDATA.USER_ID) subquery
+     * SELECT COUNT(*)
+     *   FROM (SELECT MAX(USERDATA."value") exp0
+     *           FROM USERDATA
+     *          GROUP BY USERDATA.USER_ID
+     *        ) subquery
      * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `count returns right value for Query with group by`(testDb: TestDB) {
         withCitiesAndUsers(testDb) { _, _, userData ->
-            val uniqueUsersInData = userData.select(userData.userId).withDistinct().count()
+            val uniqueUsersInData = userData
+                .select(userData.userId)
+                .withDistinct()
+                .count()
+
             val sameQueryWithGrouping = userData
                 .select(userData.value.max())
                 .groupBy(userData.userId)
                 .count()
+
             sameQueryWithGrouping shouldBeEqualTo uniqueUsersInData
         }
 
@@ -84,11 +98,17 @@ class CountTest: AbstractExposedTest() {
             val org1 = Org.new { name = "FOo" }
             OrgMembership.new { org = org1 }
 
+            /**
+             * ```
+             * SELECT COUNT(*) FROM ORGMEMBERSHIPS
+             * ```
+             */
             OrgMemberships.selectAll().count().toInt() shouldBeEqualTo 1
         }
     }
 
     /**
+     *
      * ```sql
      * SELECT COUNT(*)
      *   FROM (
@@ -101,7 +121,7 @@ class CountTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `count alias with table schema`(testDb: TestDB) {
         Assumptions.assumeTrue { testDb !in TestDB.ALL_MYSQL }
-        
+
         val custom = prepareSchemaForTest("custom")
         val tester = object: Table("custom.tester") {
             val amount = integer("amount")
@@ -123,6 +143,37 @@ class CountTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * OFFSET, LIMIT 을 사용하는 조회 쿼리의 ROW 수를 COUNT 하는 예제
+     *
+     * offset, limit 적용:
+     * ```sql
+     * SELECT COUNT(*)
+     *   FROM (SELECT TESTER."value" tester_value
+     *           FROM TESTER
+     *          LIMIT 2
+     *         OFFSET 1
+     *        ) subquery
+     * ```
+     *
+     * limit 적용:
+     * ```sql
+     * SELECT COUNT(*)
+     *   FROM (SELECT TESTER."value" tester_value
+     *           FROM TESTER
+     *          LIMIT 2
+     *        ) subquery
+     * ```
+     *
+     * offset 적용:
+     * ```sql
+     * SELECT COUNT(*)
+     *   FROM (SELECT TESTER."value" tester_value
+     *           FROM TESTER
+     *         OFFSET 2
+     *        ) subquery
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `count with offset and limit`(testDb: TestDB) {
@@ -138,14 +189,8 @@ class CountTest: AbstractExposedTest() {
             }
 
             tester.selectAll().count().toInt() shouldBeEqualTo 5
-
-            // SELECT COUNT(*) FROM (SELECT TESTER."value" tester_value FROM TESTER LIMIT 2 OFFSET 1) subquery
             tester.selectAll().offset(1).limit(2).count().toInt() shouldBeEqualTo 2
-
-            // SELECT COUNT(*) FROM (SELECT TESTER."value" tester_value FROM TESTER LIMIT 2) subquery
             tester.selectAll().limit(2).count().toInt() shouldBeEqualTo 2
-
-            // SELECT COUNT(*) FROM (SELECT TESTER."value" tester_value FROM TESTER OFFSET 2) subquery
             tester.selectAll().offset(2).count().toInt() shouldBeEqualTo 3
         }
     }
