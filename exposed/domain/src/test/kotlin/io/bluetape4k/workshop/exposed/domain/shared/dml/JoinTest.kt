@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.shared.dml
 
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.expectException
@@ -16,10 +17,12 @@ import org.jetbrains.exposed.sql.JoinType.LEFT
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.alias
 import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.andWhere
 import org.jetbrains.exposed.sql.exposedLogger
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.or
+import org.jetbrains.exposed.sql.orWhere
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.stringLiteral
 import org.junit.jupiter.params.ParameterizedTest
@@ -31,24 +34,27 @@ class JoinTest: AbstractExposedTest() {
      * inner join 이 자동으로 지정되지만, 수동으로 where 절에 추가할 수도 있다
      *
      * ```sql
-     * SELECT users."name", cities."name"
-     * FROM users INNER JOIN cities ON cities.city_id = users.city_id
-     * WHERE ((users.id = 'andrey') OR (users."name" = 'Sergey')) AND (users.city_id = cities.city_id)
+     * SELECT users."name",
+     *        cities."name"
+     *   FROM users INNER JOIN cities ON cities.city_id = users.city_id
+     *  WHERE ((users.id = 'andrey') OR (users."name" = 'Sergey'))
+     *    AND (users.city_id = cities.city_id)
      * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `manual join`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { cities, users, _ ->
+    fun `manual join`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, _ ->
             (users innerJoin cities).select(users.name, cities.name)
-                .where { (users.id.eq("andrey") or users.name.eq("Sergey")) and users.cityId.eq(cities.id) }
+                .where { (users.id.eq("andrey") or users.name.eq("Sergey")) }
+                .andWhere { users.cityId eq cities.id }
                 .forEach {
                     val userName = it[users.name]
                     val cityName = it[cities.name]
                     when (userName) {
                         "Andrey" -> cityName shouldBeEqualTo "St. Petersburg"
                         "Sergey" -> cityName shouldBeEqualTo "Munich"
-                        else     -> error("Unexpected user $userName")
+                        else -> error("Unexpected user $userName")
                     }
                 }
 
@@ -56,19 +62,26 @@ class JoinTest: AbstractExposedTest() {
     }
 
     /**
+     * Join with foreign key
+     *
      * ```sql
-     * SELECT users."name", users.city_id, cities."name"
-     * FROM users INNER JOIN cities ON cities.city_id = users.city_id
-     * WHERE (cities."name" = 'St. Petersburg')
-     *    OR (users.city_id IS NULL)
+     * SELECT users."name",
+     *        users.city_id,
+     *        cities."name"
+     *   FROM users INNER JOIN cities ON cities.city_id = users.city_id
+     *  WHERE (cities."name" = 'St. Petersburg')
+     *     OR (users.city_id IS NULL)
      * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `join with foreign key`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { cities, users, _ ->
-            val stPetersburgUser = (users innerJoin cities).select(users.name, users.cityId, cities.name)
-                .where { cities.name.eq("St. Petersburg") or users.cityId.isNull() }.single()
+    fun `join with foreign key`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, _ ->
+            val stPetersburgUser = (users innerJoin cities)
+                .select(users.name, users.cityId, cities.name)
+                .where { cities.name eq "St. Petersburg" }
+                .orWhere { users.cityId.isNull() }
+                .single()
 
             stPetersburgUser[users.name] shouldBeEqualTo "Andrey"
             stPetersburgUser[cities.name] shouldBeEqualTo "St. Petersburg"
@@ -96,8 +109,8 @@ class JoinTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `triple join`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { cities, users, userData ->
+    fun `triple join`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, userData ->
             val rows = (cities innerJoin users innerJoin userData)
                 .selectAll()
                 .orderBy(users.id)
@@ -130,7 +143,8 @@ class JoinTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `many-to-many join`(dialect: TestDB) {
+    fun `many-to-many join`(testDB: TestDB) {
+
         val numbers = object: Table("numbers") {
             val id = integer("id")
             override val primaryKey = PrimaryKey(id)
@@ -139,12 +153,26 @@ class JoinTest: AbstractExposedTest() {
             val name = varchar("name", 10)
             override val primaryKey = PrimaryKey(name)
         }
+
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS "map" (
+         *      ID_REF INT NOT NULL,
+         *      NAME_REF VARCHAR(10) NOT NULL,
+         *
+         *      CONSTRAINT FK_MAP_ID_REF__ID FOREIGN KEY (ID_REF) REFERENCES NUMBERS(ID)
+         *          ON DELETE RESTRICT ON UPDATE RESTRICT,
+         *      CONSTRAINT FK_MAP_NAME_REF__NAME FOREIGN KEY (NAME_REF) REFERENCES "names"("name")
+         *          ON DELETE RESTRICT ON UPDATE RESTRICT
+         * )
+         * ```
+         */
         val map = object: Table("map") {
-            val idRef = integer("id_ref") references numbers.id
-            val nameRef = varchar("name_ref", 10) references names.name
+            val idRef = reference("id_ref", numbers.id) // integer("id_ref") references numbers.id
+            val nameRef = reference("name_ref", names.name) // varchar("name_ref", 10) references names.name
         }
 
-        withTables(dialect, numbers, names, map) {
+        withTables(testDB, numbers, names, map) {
             numbers.insert { it[id] = 1 }
             numbers.insert { it[id] = 2 }
             names.insert { it[name] = "Foo" }
@@ -175,12 +203,15 @@ class JoinTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `cross join`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { cities, users, _ ->
+    fun `cross join`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, _ ->
             val allUsersToStPetersburg = (cities crossJoin users)
                 .select(users.name, users.cityId, cities.name)
                 .where { cities.name.eq("St. Petersburg") }
                 .map { it[users.name] to it[cities.name] }
+                .onEach { (userName, cityName) ->
+                    log.debug { "user=$userName, city=$cityName" }
+                }
 
             val allUsers = setOf(
                 "Andrey",
@@ -196,7 +227,27 @@ class JoinTest: AbstractExposedTest() {
     }
 
     /**
-     * Multiple reference join
+     * FK 가 복수 개인 2개의 테이블의 JOIN
+     *
+     * H2:
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS FOO (
+     *      ID INT AUTO_INCREMENT PRIMARY KEY,
+     *      BAZ INT NOT NULL
+     * );
+     * ALTER TABLE FOO ADD CONSTRAINT FOO_BAZ_UNIQUE UNIQUE (BAZ);
+     *
+     * CREATE TABLE IF NOT EXISTS BAR (
+     *      ID INT AUTO_INCREMENT PRIMARY KEY,
+     *      FOO INT NOT NULL,
+     *      BAZ INT NOT NULL,
+     *
+     *      CONSTRAINT FK_BAR_FOO__ID FOREIGN KEY (FOO) REFERENCES FOO(ID)
+     *          ON DELETE RESTRICT ON UPDATE RESTRICT,
+     *      CONSTRAINT FK_BAR_BAZ__BAZ FOREIGN KEY (BAZ) REFERENCES FOO(BAZ)
+     *          ON DELETE RESTRICT ON UPDATE RESTRICT
+     * )
+     * ```
      *
      * ```sql
      * SELECT COUNT(*)
@@ -206,15 +257,16 @@ class JoinTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `multiple reference join 01`(dialect: TestDB) {
+    fun `multiple reference join 01`(testDB: TestDB) {
         val foo = object: IntIdTable("foo") {
             val baz = integer("baz").uniqueIndex()
         }
         val bar = object: IntIdTable("bar") {
             val foo = reference("foo", foo)
-            val baz = integer("baz") references foo.baz
+            val baz = reference("baz", foo.baz) // integer("baz") references foo.baz
         }
-        withTables(dialect, foo, bar) {
+
+        withTables(testDB, foo, bar) {
             val fooId = foo.insertAndGetId {
                 it[baz] = 5
             }
@@ -230,31 +282,55 @@ class JoinTest: AbstractExposedTest() {
     }
 
     /**
-     * Multiple primary key <-> foreign key join 은 허용되지 않습니다.
+     * Primary Key 를 참조하는 FK를 복수개를 가진다면, INNER JOIN 을 할 수 없다.
+     *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS FOO (
+     *      ID INT AUTO_INCREMENT PRIMARY KEY,
+     *      BAZ INT NOT NULL
+     * );
+     * ALTER TABLE FOO ADD CONSTRAINT FOO_BAZ_UNIQUE UNIQUE (BAZ);
+     * ```
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS BAR (
+     *      ID INT AUTO_INCREMENT PRIMARY KEY,
+     *      FOO INT NOT NULL,       -- Foo 테이블의 ID를 참조하는 FK
+     *      FOO2 INT NOT NULL,      -- Foo 테이블의 ID를 참조하는 FK
+     *      BAZ INT NOT NULL,
+     *
+     *      CONSTRAINT FK_BAR_FOO__ID FOREIGN KEY (FOO) REFERENCES FOO(ID)
+     *          ON DELETE RESTRICT ON UPDATE RESTRICT,
+     *      CONSTRAINT FK_BAR_FOO2__ID FOREIGN KEY (FOO2) REFERENCES FOO(ID)
+     *          ON DELETE RESTRICT ON UPDATE RESTRICT,
+     *      CONSTRAINT FK_BAR_BAZ__BAZ FOREIGN KEY (BAZ) REFERENCES FOO(BAZ)
+     *          ON DELETE RESTRICT ON UPDATE RESTRICT
+     * )
+     * ```
+     *
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `multiple reference join 02`(dialect: TestDB) {
+    fun `multiple reference join 02`(testDB: TestDB) {
         val foo = object: IntIdTable("foo") {
             val baz = integer("baz").uniqueIndex()
         }
         val bar = object: IntIdTable("bar") {
-            val foo = reference("foo", foo)       // foreign key to foo primary key
-            val foo2 = reference("foo2", foo)     // foreign key to foo primary key
+            val foo = reference("foo", foo)       // FK to foo's PK
+            val foo2 = reference("foo2", foo)     // FK to foo's PK
             val baz = integer("baz") references foo.baz
         }
-        withTables(dialect, foo, bar) {
+
+        withTables(testDB, foo, bar) {
+            val fooId = foo.insertAndGetId {
+                it[baz] = 5
+            }
+            bar.insert {
+                it[this.foo] = fooId
+                it[this.foo2] = fooId
+                it[baz] = 5
+            }
+
             expectException<IllegalStateException> {
-                val fooId = foo.insertAndGetId {
-                    it[baz] = 5
-                }
-
-                bar.insert {
-                    it[this.foo] = fooId
-                    it[this.foo2] = fooId
-                    it[baz] = 5
-                }
-
                 val result = foo.innerJoin(bar).selectAll()
                 result.count() shouldBeEqualTo 1L
             }
@@ -262,26 +338,25 @@ class JoinTest: AbstractExposedTest() {
     }
 
     /**
-     * 동일 테이블을 Alias 를 이용해 Join 하기
+     * 동일 테이블을 Alias 를 이용해 Left Join 하기
      *
      * ```sql
-     * SELECT
-     *      users.id,
-     *      users."name",
-     *      users.city_id,
-     *      users.flags,
-     *      u2.id,
-     *      u2."name",
-     *      u2.city_id,
-     *      u2.flags
+     * SELECT users.id,
+     *        users."name",
+     *        users.city_id,
+     *        users.flags,
+     *        u2.id,
+     *        u2."name",
+     *        u2.city_id,
+     *        u2.flags
      * FROM users LEFT JOIN users u2 ON u2.id = 'smth'
      * WHERE users.id = 'alex'
      * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `join with alias 01`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { _, users, _ ->
+    fun `join with alias 01`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             val usersAlias = users.alias("u2")
             val resultRow = Join(users)
                 .join(usersAlias, JoinType.LEFT, usersAlias[users.id], stringLiteral("smth"))
@@ -297,7 +372,7 @@ class JoinTest: AbstractExposedTest() {
     /**
      * Nested Join
      *
-     * ```
+     * ```sql
      * SELECT COUNT(*)
      *   FROM cities
      *       INNER JOIN (users INNER JOIN userdata ON users.id = userdata.user_id)
@@ -306,8 +381,8 @@ class JoinTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `join with join`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { cities, users, userData ->
+    fun `join with join`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, userData ->
             val rows = (cities innerJoin (users innerJoin userData)).selectAll()
             rows.count() shouldBeEqualTo 2L
         }
@@ -318,19 +393,18 @@ class JoinTest: AbstractExposedTest() {
      *
      * ```sql
      * SELECT COUNT(*)
-     *   FROM cities
-     *        INNER JOIN users "name" ON cities.city_id = "name".city_id
-     *        AND ((cities.city_id > 1) AND (cities."name" <> "name"."name"))
+     *   FROM CITIES INNER JOIN USERS u2
+     *      ON CITIES.CITY_ID = u2.CITY_ID AND ((CITIES.CITY_ID > 1) AND (CITIES."name" <> u2."name"))
      * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `join with additional constraint`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { cities, users, _ ->
-            val usersAlias = users.alias("name")
+    fun `join with additional constraint`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, _ ->
+            val u2 = users.alias("u2")
             val join = cities
-                .join(usersAlias, JoinType.INNER, cities.id, usersAlias[users.cityId]) {
-                    cities.id greater 1 and (cities.name.neq(usersAlias[users.name]))
+                .join(u2, JoinType.INNER, cities.id, u2[users.cityId]) {
+                    cities.id greater 1 and (cities.name.neq(u2[users.name]))
                 }
 
             val rows = join.selectAll()
@@ -341,14 +415,14 @@ class JoinTest: AbstractExposedTest() {
     /**
      * Left join regression
      *
-     * ```
+     * ```sql
      * SELECT jointable."dataCol"
      *   FROM maintable LEFT JOIN jointable ON jointable."idCol" = maintable."idCol"
      * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `no warnings on left join regression`(dialect: TestDB) {
+    fun `no warnings on left join regression`(testDB: TestDB) {
         val logCaptor = LogCaptor.forName(exposedLogger.name)
 
         val mainTable = object: Table("maintable") {
@@ -359,7 +433,7 @@ class JoinTest: AbstractExposedTest() {
             val data = integer("dataCol").default(42)
         }
 
-        withTables(dialect, mainTable, joinTable) {
+        withTables(testDB, mainTable, joinTable) {
             mainTable.insert { it[id] = 2 }
 
             val data = mainTable.join(joinTable, LEFT, joinTable.id, mainTable.id)
