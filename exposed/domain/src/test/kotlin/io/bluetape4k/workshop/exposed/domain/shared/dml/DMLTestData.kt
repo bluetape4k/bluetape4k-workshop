@@ -1,3 +1,5 @@
+@file:Suppress("UnusedReceiverParameter")
+
 package io.bluetape4k.workshop.exposed.domain.shared.dml
 
 import io.bluetape4k.idgenerators.uuid.TimebasedUuid
@@ -107,6 +109,10 @@ object DMLTestData {
         val amount = decimal("amount", 8, 2)
     }
 }
+
+internal fun Iterable<ResultRow>.toCityNameList(): List<String> =
+    map { it[DMLTestData.Cities.name] }
+
 
 fun AbstractExposedTest.withCitiesAndUsers(
     testDB: TestDB,
@@ -321,6 +327,3 @@ class OrgMembership(id: EntityID<Int>): IntEntity(id) {
     var orgId by OrgMemberships.orgId
     var org by Org referencedOn OrgMemberships.orgId
 }
-
-internal fun Iterable<ResultRow>.toCityNameList(): List<String> =
-    map { it[DMLTestData.Cities.name] }
