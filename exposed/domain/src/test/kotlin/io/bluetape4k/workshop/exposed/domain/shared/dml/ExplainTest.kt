@@ -10,6 +10,7 @@ import io.bluetape4k.workshop.exposed.currentDialectTest
 import io.bluetape4k.workshop.exposed.expectException
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeTrue
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -40,23 +41,32 @@ class ExplainTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS COUNTRIES (
+     *      ID INT AUTO_INCREMENT PRIMARY KEY,
+     *      COUNTRY_CODE VARCHAR(8) NOT NULL
+     * )
+     * ```
+     */
     private object Countries: IntIdTable("countries") {
         val code = varchar("country_code", 8)
     }
 
+    /**
+     * `EXPLAIN` 으로 시작하는 SQL 구문은 실행되지 않는다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `explain with statements not executed`(testDb: TestDB) {
         withTables(testDb, Countries) {
             val originalCode = "ABC"
 
-            // any statements with explain should not be executed
-            // EXPLAIN INSERT INTO COUNTRIES (COUNTRY_CODE) VALUES ('ABC')
-            explain { Countries.insert { it[code] = originalCode } }.toList()
+            explain { Countries.insert { it[code] = originalCode } }.toList()  //
             Countries.selectAll().empty().shouldBeTrue()
 
             Countries.insert { it[code] = originalCode }
-            Countries.selectAll().count().toInt() shouldBeEqualTo 1
+            Countries.selectAll().count() shouldBeEqualTo 1L
 
             // EXPLAIN UPDATE COUNTRIES SET COUNTRY_CODE = 'DEF'
             explain { Countries.update { it[code] = "DEF" } }.toList()
@@ -71,18 +81,42 @@ class ExplainTest: AbstractExposedTest() {
         }
     }
 
-
+    /**
+     * `EXPLAIN` 으로 시작하는 SQL 구문은 실행되지 않는다.
+     *
+     * ```sql
+     * EXPLAIN SELECT CITIES.CITY_ID FROM CITIES WHERE CITIES."name" LIKE 'A%';
+     *
+     * EXPLAIN SELECT USERS."name", CITIES."name" FROM USERS INNER JOIN CITIES ON CITIES.CITY_ID = USERS.CITY_ID WHERE ((USERS.ID = 'andrey') OR (USERS."name" = 'sergey')) AND (USERS.CITY_ID = CITIES.CITY_ID);
+     *
+     * EXPLAIN SELECT USERS.ID, USERS."name", USERS.CITY_ID, USERS.FLAGS FROM USERS WHERE USERS.ID = 'andrey' UNION SELECT USERS.ID, USERS."name", USERS.CITY_ID, USERS.FLAGS FROM USERS WHERE USERS.ID = 'sergey' LIMIT 1;
+     *
+     * EXPLAIN INSERT INTO CITIES ("name") VALUES ('City A');
+     *
+     * EXPLAIN INSERT INTO USERDATA (USER_ID, COMMENT, "value") SELECT USERDATA.USER_ID, USERDATA.COMMENT, 42 FROM USERDATA;
+     *
+     * EXPLAIN MERGE INTO CITIES T USING (VALUES (1, 'City A')) S(CITY_ID, "name") ON (T.CITY_ID=S.CITY_ID) WHEN MATCHED THEN UPDATE SET T."name"=S."name" WHEN NOT MATCHED THEN INSERT ("name") VALUES(S."name");
+     *
+     * EXPLAIN UPDATE CITIES SET "name"='City A';
+     *
+     * EXPLAIN MERGE INTO USERDATA USING USERS ON USERS.ID = USERDATA.USER_ID WHEN MATCHED THEN UPDATE SET USERDATA."value"=123;
+     *
+     * EXPLAIN DELETE FROM CITIES WHERE CITIES.CITY_ID = 1;
+     *
+     * EXPLAIN DELETE FROM CITIES;
+     * ```
+     *
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `explain with all valid statements not executed`(testDb: TestDB) {
         var explainCount = 0
         val cityName = "City A"
 
-        fun Transaction.explainAndIncrement(body: Transaction.() -> Any?) =
-            explain(body = body).also {
-                it.toList() // as with select queries, explain is only executed when iterated over
-                explainCount++
-            }
+        fun Transaction.explainAndIncrement(body: Transaction.() -> Any?) = explain(body = body).also {
+            it.toList() // as with select queries, explain is only executed when iterated over
+            explainCount++
+        }
 
         withCitiesAndUsers(testDb) { cities, users, userData ->
             val testDialect = currentDialectTest
@@ -94,8 +128,7 @@ class ExplainTest: AbstractExposedTest() {
                 cities.select(cities.id).where { cities.name like "A%" }
             }
             explainAndIncrement {
-                (users innerJoin cities)
-                    .select(users.name, cities.name)
+                (users innerJoin cities).select(users.name, cities.name)
                     .where { (users.id.eq("andrey") or users.name.eq("sergey")) and users.cityId.eq(cities.id) }
             }
             explainAndIncrement {
@@ -143,6 +176,27 @@ class ExplainTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * `EXPLAIN` 명령어를 사용할 때 `ANALYZE` 옵션을 사용할 수 있다.
+     *
+     * 단, MySQL V8만 SELECT 구문에 `ANALYZE` 옵션을 지원한다.
+     *
+     * ```sql
+     * EXPLAIN ANALYZE INSERT INTO COUNTRIES (COUNTRY_CODE) VALUES ('ABC')
+     * ```
+     *
+     * ```sql
+     * EXPLAIN ANALYZE UPDATE COUNTRIES SET COUNTRY_CODE='DEF'
+     * ```
+     *
+     * ```sql
+     * EXPLAIN ANALYZE DELETE FROM COUNTRIES
+     * ```
+     *
+     * ```sql
+     * EXPLAIN ANALYZE SELECT COUNTRIES.ID, COUNTRIES.COUNTRY_CODE FROM COUNTRIES
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `explain with alalyze`(testDb: TestDB) {
@@ -174,11 +228,12 @@ class ExplainTest: AbstractExposedTest() {
 
     /**
      * MYSQL V8
+     *
      * ```sql
      * EXPLAIN FORMAT=JSON SELECT countries.id FROM countries WHERE countries.country_code LIKE 'A%'
+     * ```
      *
      * POSTGRESQL
-     * ```
      * ```sql
      * EXPLAIN (FORMAT JSON) SELECT countries.id FROM countries WHERE countries.country_code LIKE 'A%'
      * ```
@@ -203,8 +258,8 @@ class ExplainTest: AbstractExposedTest() {
         withTables(testDb, Countries) {
             val formatOption = when (testDb) {
                 in TestDB.ALL_MYSQL_LIKE -> "FORMAT=JSON"
-                in TestDB.ALL_POSTGRES   -> "FORMAT JSON"
-                else                     -> throw UnsupportedOperationException("Format option not provided for this dialect")
+                in TestDB.ALL_POSTGRES -> "FORMAT JSON"
+                else -> throw UnsupportedOperationException("Format option not provided for this dialect")
             }
 
             val query = Countries.select(Countries.id).where { Countries.code like "A%" }
@@ -213,7 +268,7 @@ class ExplainTest: AbstractExposedTest() {
             log.debug { "JSON: $jsonString" }
             when (testDb) {
                 in TestDB.ALL_MYSQL_LIKE -> jsonString.startsWith('{').shouldBeTrue()
-                else                     -> jsonString.startsWith('[').shouldBeTrue()
+                else -> jsonString.startsWith('[').shouldBeTrue()
             }
 
             // test multiple options only
@@ -229,6 +284,15 @@ class ExplainTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * 1. 유효하지 않은 SQL 구문을 `EXPLAIN` 명령어로 실행하면 `IllegalStateException` 예외가 발생한다.
+     *
+     * 2. `EXPLAIN` 명령어는 마지막 구문만 실행된다.
+     *
+     * ```sql
+     * EXPLAIN SELECT COUNTRIES.ID, COUNTRIES.COUNTRY_CODE FROM COUNTRIES
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `explain with invalid statements`(testDb: TestDB) {
@@ -247,11 +311,11 @@ class ExplainTest: AbstractExposedTest() {
             debug = true
             statementCount = 0
 
-            // only the last statement will be executed with explain
+            // explain 는 마지막 구문만 실행된다.
             explain {
-                // EXPLAIN DELETE FROM COUNTRIES
+                // EXPLAIN DELETE FROM COUNTRIES --> Not executed
                 Countries.deleteAll()
-                // EXPLAIN SELECT * FROM COUNTRIES
+                // EXPLAIN SELECT COUNTRIES.ID, COUNTRIES.COUNTRY_CODE FROM COUNTRIES
                 Countries.selectAll()
             }.toList()
 
@@ -260,7 +324,7 @@ class ExplainTest: AbstractExposedTest() {
 
             executed.startsWith("EXPLAIN ").shouldBeTrue()
             ("SELECT " in executed).shouldBeTrue()
-            ("DELETE " !in executed).shouldBeTrue()
+            ("DELETE " in executed).shouldBeFalse()
 
             debug = false
         }
