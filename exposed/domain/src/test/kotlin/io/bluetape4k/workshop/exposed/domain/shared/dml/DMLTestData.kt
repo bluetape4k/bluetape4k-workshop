@@ -16,6 +16,14 @@ import java.math.BigDecimal
 
 object DMLTestData {
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS CITIES (
+     *      CITY_ID INT AUTO_INCREMENT PRIMARY KEY,
+     *      "name" VARCHAR(50) NOT NULL
+     * )
+     * ```
+     */
     object Cities: Table() {
         val id = integer("city_id").autoIncrement()
         val name = varchar("name", 50)
@@ -23,6 +31,19 @@ object DMLTestData {
         override val primaryKey = PrimaryKey(id)
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS USERS (
+     *      ID VARCHAR(10) PRIMARY KEY,
+     *      "name" VARCHAR(50) NOT NULL,
+     *      CITY_ID INT NULL,
+     *      FLAGS INT DEFAULT 0 NOT NULL,
+     *
+     *      CONSTRAINT FK_USERS_CITY_ID__CITY_ID FOREIGN KEY (CITY_ID)
+     *          REFERENCES CITIES(CITY_ID) ON DELETE RESTRICT ON UPDATE RESTRICT
+     * )
+     * ```
+     */
     object Users: Table() {
         val id = varchar("id", 10)
         val name = varchar("name", 50)
@@ -37,6 +58,18 @@ object DMLTestData {
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS USERDATA (
+     *      USER_ID VARCHAR(10) NOT NULL,
+     *      COMMENT VARCHAR(30) NOT NULL,
+     *      "value" INT NOT NULL,
+     *
+     *      CONSTRAINT FK_USERDATA_USER_ID__ID FOREIGN KEY (USER_ID)
+     *          REFERENCES USERS(ID) ON DELETE RESTRICT ON UPDATE RESTRICT
+     * )
+     * ```
+     */
     object UserData: Table() {
         val userId = reference("user_id", Users.id)
         val comment = varchar("comment", 30)

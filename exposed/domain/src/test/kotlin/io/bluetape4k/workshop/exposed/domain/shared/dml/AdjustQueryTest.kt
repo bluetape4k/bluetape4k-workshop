@@ -26,6 +26,9 @@ import org.junit.jupiter.params.provider.MethodSource
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 
+/**
+ * 기존 Query 에 대한 변경이나 추가를 할 수 있는 `adjustSelect`, `adjustColumnSet`, `adjustWhere`, `adjustHaving` 등의 함수를 테스트한다.
+ */
 class AdjustQueryTest: AbstractExposedTest() {
 
     companion object: KLogging()
@@ -47,7 +50,7 @@ class AdjustQueryTest: AbstractExposedTest() {
             when (userName) {
                 "Andrey" -> cityName shouldBeEqualTo "St. Petersburg"
                 "Sergey" -> cityName shouldBeEqualTo "Munich"
-                else     -> error { "Unexpected user name: $userName" }
+                else -> error { "Unexpected user name: $userName" }
 
             }
         }
@@ -123,6 +126,7 @@ class AdjustQueryTest: AbstractExposedTest() {
 
             val oldColumnSet = queryAdjusted.set.source
             val expectedColumnSet = users innerJoin cities
+
             queryAdjusted.adjustColumnSet { innerJoin(cities) }
             val actualColumnSet = queryAdjusted.set.source
 
@@ -155,12 +159,15 @@ class AdjustQueryTest: AbstractExposedTest() {
         withCitiesAndUsers(testDb) { cities, users, _ ->
             val queryAdjusted: Query = (users innerJoin cities)
                 .select(users.name, cities.name)
+
             queryAdjusted.adjustWhere {
-                this.shouldBeNull()
+                this.shouldBeNull()  // queryAdjusted.where should be null
                 predicate
             }
 
+            // (USERS.ID = 'andrey') OR (USERS."name" = 'Sergey')
             val actualWhere = queryAdjusted.where
+            log.debug { "actual where=${actualWhere?.repr()}" }
 
             actualWhere!!.repr() shouldBeEqualTo predicate.repr()
             queryAdjusted.assertQueryResultValid()
@@ -171,7 +178,10 @@ class AdjustQueryTest: AbstractExposedTest() {
      * ```sql
      * SELECT USERS."name", CITIES."name"
      *   FROM USERS INNER JOIN CITIES ON CITIES.CITY_ID = USERS.CITY_ID
-     *  WHERE (USERS.ID = 'andrey') OR (USERS."name" = 'Sergey') OR (USERS.ID = 'andrey') OR (USERS."name" = 'Sergey')
+     *  WHERE (USERS.ID = 'andrey')
+     *     OR (USERS."name" = 'Sergey')
+     *     OR (USERS.ID = 'andrey')
+     *     OR (USERS."name" = 'Sergey')
      * ```
      */
     @ParameterizedTest
@@ -186,7 +196,9 @@ class AdjustQueryTest: AbstractExposedTest() {
                 predicate
             }
 
+            // (USERS.ID = 'andrey') OR (USERS."name" = 'Sergey') OR (USERS.ID = 'andrey') OR (USERS."name" = 'Sergey')
             val actualWhere = queryAdjusted.where
+            log.debug { "actual where=${actualWhere?.repr()}" }
 
             actualWhere!!.repr() shouldBeEqualTo (predicate or predicate).repr()
             queryAdjusted.assertQueryResultValid()
@@ -194,12 +206,13 @@ class AdjustQueryTest: AbstractExposedTest() {
     }
 
     /**
-     *
+     * `adjustHaving` 함수를 사용하여 HAVING 절을 변경할 수 있다.
+     * 
      * ```sql
      * SELECT CITIES."name"
      *   FROM CITIES INNER JOIN USERS ON CITIES.CITY_ID = USERS.CITY_ID
      *  GROUP BY CITIES."name"
-     *  HAVING COUNT(USERS.ID) = MAX(CITIES.CITY_ID)
+     * HAVING COUNT(USERS.ID) = MAX(CITIES.CITY_ID)
      *  ORDER BY CITIES."name" ASC
      * ```
      */
@@ -231,6 +244,8 @@ class AdjustQueryTest: AbstractExposedTest() {
     }
 
     /**
+     * `adjustHaving` 함수를 사용하여 HAVING 절을 변경할 수 있다.
+     * 
      * ```sql
      * SELECT CITIES."name"
      *   FROM CITIES INNER JOIN USERS ON CITIES.CITY_ID = USERS.CITY_ID
@@ -267,6 +282,8 @@ class AdjustQueryTest: AbstractExposedTest() {
     }
 
     /**
+     * `adjustHaving` 함수를 사용하여 HAVING 절에 `OR` 을 추가합니다.
+     *
      * ```sql
      * SELECT CITIES."name"
      *   FROM CITIES INNER JOIN USERS ON CITIES.CITY_ID = USERS.CITY_ID
