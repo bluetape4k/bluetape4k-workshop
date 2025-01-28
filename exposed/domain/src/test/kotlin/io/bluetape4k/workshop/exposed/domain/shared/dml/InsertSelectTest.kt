@@ -4,6 +4,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldHaveSize
 import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.Random
 import org.jetbrains.exposed.sql.SortOrder
@@ -20,6 +21,9 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
+/**
+ * `INSERT INTO ... SELECT ... FROM ...` 구문 예제 모음
+ */
 class InsertSelectTest: AbstractExposedTest() {
 
     companion object: KLogging()
@@ -49,7 +53,7 @@ class InsertSelectTest: AbstractExposedTest() {
                 .limit(2)
                 .toList()
 
-            rows.size shouldBeEqualTo 2
+            rows shouldHaveSize 2
             rows[0][cities.name] shouldBeEqualTo "An"   // Andrey
             rows[1][cities.name] shouldBeEqualTo "Al"   // Alex
         }
@@ -73,11 +77,13 @@ class InsertSelectTest: AbstractExposedTest() {
                 userData.select(userData.userId, userData.comment, intParam(42))
             )
 
-            val rows = userData.selectAll().where { userData.value eq 42 }
+            // 새롭게 추가된 데이터 조회 (value = 42)
+            val rows = userData.selectAll()
+                .where { userData.value eq 42 }
                 .orderBy(userData.userId)
                 .toList()
 
-            rows.size.toLong() shouldBeEqualTo allUserData
+            rows.size shouldBeEqualTo allUserData.toInt()
         }
     }
 
@@ -85,15 +91,18 @@ class InsertSelectTest: AbstractExposedTest() {
      * H2
      * ```sql
      * INSERT INTO USERS (ID, "name", CITY_ID, FLAGS)
-     * SELECT SUBSTRING(CAST(RANDOM() AS VARCHAR(255)), 1, 10), 'Foo', 1, 0 FROM USERS
+     * SELECT SUBSTRING(CAST(RANDOM() AS VARCHAR(255)), 1, 10), 'Foo', 1, 0
+     *   FROM USERS
      * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert select example 03`(testDb: TestDB) {
         withCitiesAndUsers(testDb) { _, users, _ ->
+            // 이렇게 Expresssion 을 사용할 수 있습니다.
+            // Random() 은 org.jetbrains.exposed.sql.Random() 이다. 
             val userCount = users.selectAll().count()
-            val nullableExpression = Random() as Expression<BigDecimal?>
+            val nullableExpression: Expression<BigDecimal?> = Random() as Expression<BigDecimal?>
 
             users.insert(
                 users.select(
@@ -131,15 +140,17 @@ class InsertSelectTest: AbstractExposedTest() {
             )
 
             val rows = users.selectAll().where { users.name eq "Foo" }.toList()
-            rows.size.toLong() shouldBeEqualTo userCount
+            rows.size shouldBeEqualTo userCount.toInt()
         }
     }
 
     /**
+     * INSERT INTO ... SELECT ... FROM ... 구문에서 INSERT 할 컬럼을 지정하는 예제
      * H2
      * ```sql
      * INSERT INTO USERS ("name", ID)
-     * SELECT 'Foo', 'Foo' FROM USERS LIMIT 1
+     * SELECT 'Foo', 'Foo'
+     *   FROM USERS LIMIT 1
      * ```
      */
     @ParameterizedTest
@@ -155,7 +166,7 @@ class InsertSelectTest: AbstractExposedTest() {
 
             users.selectAll()
                 .where { users.name eq "Foo" }
-                .count().toInt() shouldBeEqualTo 1
+                .count() shouldBeEqualTo 1L
         }
     }
 }
