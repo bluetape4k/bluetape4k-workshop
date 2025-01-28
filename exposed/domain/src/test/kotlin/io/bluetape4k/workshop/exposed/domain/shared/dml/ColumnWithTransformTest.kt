@@ -27,6 +27,9 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.io.Serializable
 import java.util.*
 
+/**
+ * 컬럼의 수형이나 값을 변환하는 [ColumnTransformer] 를 활용하는 예제
+ */
 class ColumnWithTransformTest: AbstractExposedTest() {
 
     companion object: KLogging()
@@ -215,10 +218,20 @@ class ColumnWithTransformTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS TRANSFORM_TABLE (
+     *      ID INT AUTO_INCREMENT PRIMARY KEY,
+     *      "simple" INT DEFAULT 1 NOT NULL,
+     *      CHAINED VARCHAR(128) DEFAULT '2' NOT NULL
+     * )
+     * ```
+     */
     object TransformTable: IntIdTable("transform_table") {
         val simple: Column<TransformDataHolder> = integer("simple")
             .default(1)
             .transform(DataHolderTransformer())
+
         val chained: Column<TransformDataHolder> = varchar("chained", 128)
             .transform(wrap = { it.toInt() }, unwrap = { it.toString() })
             .transform(DataHolderTransformer())
@@ -302,10 +315,18 @@ class ColumnWithTransformTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `null to non-null transform`(testDb: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS TESTER (
+         *      ID INT AUTO_INCREMENT PRIMARY KEY,
+         *      "value" INT NULL
+         * )
+         * ```
+         */
         val tester = object: IntIdTable("tester") {
             val value: Column<Int?> = integer("value")
                 .nullable()
-                .transform(wrap = { if (it == -1) null else it }, unwrap = { it ?: -1 })
+                .transform(wrap = { if (it == -1) null else it }, unwrap = { it ?: -1 })   // null 이 지정되면 -1로 DB에 저장
         }
         val rawTester = object: IntIdTable("tester") {
             val value: Column<Int?> = integer("value").nullable()

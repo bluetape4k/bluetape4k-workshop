@@ -199,6 +199,9 @@ class ConditionsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * SELECT 절에 아무런 컬럼이 없다면 [IllegalArgumentException] 예외가 발생한다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `throw when slice with empty list`(testDb: TestDB) {
@@ -209,6 +212,9 @@ class ConditionsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Nullable 컬럼과의 비교
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `compare to nullable column`(testDb: TestDB) {
@@ -261,6 +267,9 @@ class ConditionsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * FK에 해당하는 컬럼 값은 `Op.nullOp()` 을 사용하여 NULL 로 지정할 수 있다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `nullOp update and select`(testDb: TestDB) {
@@ -272,6 +281,7 @@ class ConditionsTest: AbstractExposedTest() {
                 it[users.cityId] = Op.nullOp()
             }
 
+            // SELECT COUNT(*) FROM USERS WHERE USERS.CITY_ID IS NULL
             val nullUsersOp = users.selectAll().where { users.cityId eq Op.nullOp() }.count()
             nullUsersOp shouldBeEqualTo allUserCount
 
@@ -288,6 +298,9 @@ class ConditionsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * NON NULL 컬럼에 `Op.nullOp()` 을 사용하면 [ExposedSQLException] 예외가 발생한다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `nullOp update fails when apply to non-null column`(testDb: TestDB) {
@@ -300,6 +313,19 @@ class ConditionsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * `Case` 구문에 `Op.nullOp()` 을 사용하여 NULL 값을 반환할 수 있다.
+     *
+     * ```sql
+     * SELECT CITIES.CITY_ID,
+     *        CITIES."name",
+     *        CASE
+     *          WHEN CITIES.CITY_ID = 1 THEN NULL
+     *          ELSE CITIES."name"
+     *        END
+     *   FROM CITIES
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `nullOp in case`(testDb: TestDB) {
@@ -324,10 +350,16 @@ class ConditionsTest: AbstractExposedTest() {
     }
 
     /**
+     * `Case` 구문에 `Op.nullOp()` 을 사용하여 NULL 값을 반환할 수 있다.
      *
      * ```sql
      * SELECT CITIES.CITY_ID,
-     *        COALESCE(CASE WHEN CITIES.CITY_ID = 1 THEN 'ORIGINAL' ELSE NULL END, 'COPY')
+     *        COALESCE(CASE
+     *                  WHEN CITIES.CITY_ID = 1 THEN 'ORIGINAL'
+     *                  ELSE NULL
+     *                 END,
+     *                 'COPY'
+     *        )
      *   FROM CITIES
      * ```
      */
@@ -394,6 +426,7 @@ class ConditionsTest: AbstractExposedTest() {
     fun `chained and nested CaseWhenElse syntax`(testDb: TestDB) {
         withCitiesAndUsers(testDb) { cities, _, _ ->
             val nestedCondition = Case()
+                // .When(cities.id eq 1, intLiteral(1))  // Op.build {} 를 안 써도 된다.
                 .When(Op.build { cities.id eq 1 }, intLiteral(1))
                 .Else(intLiteral(-1))
 
@@ -408,10 +441,10 @@ class ConditionsTest: AbstractExposedTest() {
             results.forEach {
                 val cityName = it[cities.name]
                 val expectedNumber = when {
-                    cityName.startsWith("M")    -> 0
+                    cityName.startsWith("M") -> 0
                     cityName.startsWith("St. ") -> 1
-                    cityName.startsWith("P")    -> 2
-                    else                        -> -1
+                    cityName.startsWith("P") -> 2
+                    else -> -1
                 }
                 it[chainedCondition] shouldBeEqualTo expectedNumber
             }
@@ -431,21 +464,25 @@ class ConditionsTest: AbstractExposedTest() {
             table.insert { it[c1] = 1; it[c2] = 2 }
             table.insert { it[c1] = 2; it[c2] = 1 }
 
+            // SELECT FOO.C1 < FOO.C2 c1_lt_c2 FROM FOO ORDER BY FOO.C1 ASC
             val c1_lt_c2 = table.c1.less(table.c2).alias("c1_lt_c2")
             table.select(c1_lt_c2)
                 .orderBy(table.c1)
                 .map { it[c1_lt_c2] } shouldBeEqualTo listOf(false, true, false)
 
+            // SELECT FOO.C1 <= FOO.C2 c1_lte_c2 FROM FOO ORDER BY FOO.C1 ASC
             val c1_lte_c2 = table.c1.lessEq(table.c2).alias("c1_lte_c2")
             table.select(c1_lte_c2)
                 .orderBy(table.c1)
                 .map { it[c1_lte_c2] } shouldBeEqualTo listOf(true, true, false)
 
+            // SELECT FOO.C1 > FOO.C2 c1_gt_c2 FROM FOO ORDER BY FOO.C1 ASC
             val c1_gt_c2 = table.c1.greater(table.c2).alias("c1_gt_c2")
             table.select(c1_gt_c2)
                 .orderBy(table.c1)
                 .map { it[c1_gt_c2] } shouldBeEqualTo listOf(false, false, true)
 
+            // SELECT FOO.C1 >= FOO.C2 c1_gte_c2 FROM FOO ORDER BY FOO.C1 ASC
             val c1_gte_c2 = table.c1.greaterEq(table.c2).alias("c1_gte_c2")
             table.select(c1_gte_c2)
                 .orderBy(table.c1)
@@ -466,11 +503,14 @@ class ConditionsTest: AbstractExposedTest() {
             tester.insert { it[name] = "a" }
 
             tester.selectAll().where { tester.name.isNull() }.count() shouldBeEqualTo 1L
+            // SELECT COUNT(*) FROM TESTER WHERE (TESTER."name" IS NULL) OR (CHAR_LENGTH(TESTER."name") = 0)
             tester.selectAll().where { tester.name.isNullOrEmpty() }.count() shouldBeEqualTo 2L
             tester.selectAll().where { tester.name eq "" }.count() shouldBeEqualTo 1L
 
-            tester.selectAll().where { tester.name neq "" }.count() shouldBeEqualTo 1L // null 은 비교 대상이 안된다.
             tester.selectAll().where { tester.name neq null }.count() shouldBeEqualTo 2L
+            tester.selectAll().where { tester.name.isNotNull() }.count() shouldBeEqualTo 2L
+            // SELECT COUNT(*) FROM TESTER WHERE TESTER."name" <> ''
+            tester.selectAll().where { tester.name neq "" }.count() shouldBeEqualTo 1L // null 은 비교 대상이 안된다.
         }
     }
 }
