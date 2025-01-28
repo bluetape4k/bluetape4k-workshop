@@ -21,16 +21,29 @@ class DistinctOnTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
+    /**
+     * `DISTINCT ON` (`withDistinctOn`) 은 Postgres와 H2 에서민 지원됩니다.
+     */
     private val distinctOnSupportedDb = TestDB.ALL_POSTGRES + TestDB.ALL_H2
 
     /**
-     * DistinctOn is supported by Postgres and H2
+     * `withDistinctOn` (`DISTINCT ON`) 은 Postgres와 H2 에서민 지원됩니다.
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `distinctOn method`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB in distinctOnSupportedDb }
 
+        /**
+         * H2
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS TESTER (
+         *      ID INT AUTO_INCREMENT PRIMARY KEY,
+         *      V1 INT NOT NULL,
+         *      V2 INT NOT NULL
+         * );
+         * ```
+         */
         val tester = object: IntIdTable("tester") {
             val v1 = integer("v1")
             val v2 = integer("v2")
@@ -47,11 +60,10 @@ class DistinctOnTest: AbstractExposedTest() {
                 this[tester.v1] = it[0]
                 this[tester.v2] = it[1]
             }
-
             /**
-             * DistinctOn is supported by Postgres and H2
+             * `withDistinctOn` (`DISTINCT ON`) 은 Postgres와 H2 에서민 지원됩니다.
              *
-             * H2
+             * H2:
              * ```sql
              * SELECT DISTINCT ON (TESTER.V1)
              *        TESTER.ID,
@@ -61,30 +73,7 @@ class DistinctOnTest: AbstractExposedTest() {
              *  ORDER BY TESTER.V1 ASC, TESTER.V2 ASC
              * ```
              *
-             * Postgres
-             * ```sql
-             * SELECT DISTINCT ON (tester.v1)
-             *        tester.id,
-             *        tester.v1,
-             *        tester.v2
-             *   FROM tester
-             *  ORDER BY tester.v1 ASC, tester.v2 ASC
-             *  ```
-             */
-            /**
-             * DistinctOn is supported by Postgres and H2
-             *
-             * H2
-             * ```sql
-             * SELECT DISTINCT ON (TESTER.V1)
-             *        TESTER.ID,
-             *        TESTER.V1,
-             *        TESTER.V2
-             *   FROM TESTER
-             *  ORDER BY TESTER.V1 ASC, TESTER.V2 ASC
-             * ```
-             *
-             * Postgres
+             * Postgres:
              * ```sql
              * SELECT DISTINCT ON (tester.v1)
              *        tester.id,
@@ -101,29 +90,6 @@ class DistinctOnTest: AbstractExposedTest() {
 
             distinctValue1 shouldBeEqualTo listOf(1 to 1, 2 to 1, 4 to 4)
 
-            /**
-             * DistinctOn is supported by Postgres and H2
-             *
-             * H2
-             * ```sql
-             * SELECT DISTINCT ON (TESTER.V2)
-             *        TESTER.ID,
-             *        TESTER.V1,
-             *        TESTER.V2
-             *   FROM TESTER
-             *  ORDER BY TESTER.V2 ASC, TESTER.V1 ASC
-             * ```
-             *
-             * Postgres
-             * ```sql
-             * SELECT DISTINCT ON (tester.v2)
-             *        tester.id,
-             *        tester.v1,
-             *        tester.v2
-             *   FROM tester
-             *  ORDER BY tester.v2 ASC, tester.v1 ASC
-             *  ```
-             */
             /**
              * DistinctOn is supported by Postgres and H2
              *
@@ -165,17 +131,6 @@ class DistinctOnTest: AbstractExposedTest() {
              *  ORDER BY TESTER.V1 ASC, TESTER.V2 ASC
              *  ```
              */
-            /**
-             * H2
-             * ```sql
-             * SELECT DISTINCT ON (TESTER.V1, TESTER.V2)
-             *        TESTER.ID,
-             *        TESTER.V1,
-             *        TESTER.V2
-             *   FROM TESTER
-             *  ORDER BY TESTER.V1 ASC, TESTER.V2 ASC
-             *  ```
-             */
             val distinctBoth = tester.selectAll()
                 .withDistinctOn(tester.v1, tester.v2)
                 .orderBy(tester.v1 to ASC, tester.v2 to ASC)
@@ -183,17 +138,6 @@ class DistinctOnTest: AbstractExposedTest() {
 
             distinctBoth shouldBeEqualTo listOf(1 to 1, 1 to 2, 2 to 1, 2 to 2, 4 to 4)
 
-            /**
-             * H2
-             * ```sql
-             * SELECT DISTINCT ON (TESTER.V1, TESTER.V2)
-             *        TESTER.ID,
-             *        TESTER.V1,
-             *        TESTER.V2
-             *   FROM TESTER
-             *  ORDER BY TESTER.V1 ASC, TESTER.V2 ASC
-             * ```
-             */
             /**
              * H2
              * ```sql
@@ -214,11 +158,23 @@ class DistinctOnTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * `withDistinct` 와 `withDistinctOn` 을 동시에 사용하면 예외가 발생합니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `exception when distinct and distinctOn`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB in distinctOnSupportedDb }
 
+        /**
+         * H2
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS TESTER (
+         *      ID INT AUTO_INCREMENT PRIMARY KEY,
+         *      V1 INT NOT NULL
+         * )
+         * ```
+         */
         val tester = object: IntIdTable("tester") {
             val v1 = integer("v1")
         }
@@ -241,6 +197,15 @@ class DistinctOnTest: AbstractExposedTest() {
     fun `empty distinctOn`(testDb: TestDB) {
         Assumptions.assumeTrue { testDb in distinctOnSupportedDb }
 
+        /**
+         * H2
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS TESTER (
+         *      ID INT AUTO_INCREMENT PRIMARY KEY,
+         *      V1 INT NOT NULL
+         * )
+         * ```
+         */
         val tester = object: IntIdTable("tester") {
             val v1 = integer("v1")
         }
@@ -250,9 +215,10 @@ class DistinctOnTest: AbstractExposedTest() {
                 it[tester.v1] = 1
             }
 
-            // Empty list of columns should not cause exception
+            // `withDistinctOn` 에 컬럼을 지정하지 않으면 예외가 발생하지 않습니다.
             val query = tester.selectAll()
                 .withDistinctOn(columns = emptyArray<Column<*>>())
+
             query.distinctOn.shouldBeNull()
 
             // SELECT TESTER.ID, TESTER.V1 FROM TESTER;  (DistinctOn is not used)
@@ -262,15 +228,15 @@ class DistinctOnTest: AbstractExposedTest() {
     }
 
     /**
+     * `withDistinctOn` 을 사용한 쿼리에 대한 COUNT 쿼리를 실행합니다. (다른 DB에서는 group by 를 사용해야 합니다.)
+     *
      * H2
      * ```sql
      * SELECT COUNT(*)
      *   FROM (
-     *      SELECT DISTINCT ON (TESTER."name")
-     *             TESTER.ID tester_id,
-     *             TESTER."name" tester_name
-     *        FROM TESTER
-     *   ) subquery
+     *          SELECT DISTINCT ON (TESTER."name") TESTER."name" tester_name
+     *            FROM TESTER
+     *        ) subquery
      * ```
      */
     @ParameterizedTest
@@ -287,11 +253,11 @@ class DistinctOnTest: AbstractExposedTest() {
                 this[tester.name] = it
             }
 
-            val count = tester.selectAll()
+            val count = tester.select(tester.name)
                 .withDistinctOn(tester.name)
                 .count()
 
-            count.toInt() shouldBeEqualTo 3
+            count shouldBeEqualTo names.distinct().size.toLong()  // 3L
         }
     }
 }
