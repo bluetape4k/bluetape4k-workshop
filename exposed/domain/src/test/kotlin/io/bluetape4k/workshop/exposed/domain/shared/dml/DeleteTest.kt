@@ -9,7 +9,6 @@ import io.bluetape4k.workshop.exposed.expectException
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeGreaterThan
-import org.amshove.kluent.shouldBeNull
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.Join
@@ -43,8 +42,7 @@ class DeleteTest: AbstractExposedTest() {
 
         withCitiesAndUsers(testDb) { cities, users, userData ->
             userData.deleteAll()
-            val userDataExists = userData.selectAll().count() > 0L
-            userDataExists.shouldBeFalse()
+            userData.selectAll().count() shouldBeEqualTo 0L
 
             val smthId = users.select(users.id).where { users.name like "%thing" }.single()[users.id]
             smthId shouldBeEqualTo "smth"
@@ -59,13 +57,15 @@ class DeleteTest: AbstractExposedTest() {
                 expectException<ExposedSQLException> {
                     // a regular delete throws SQLIntegrityConstraintViolationException because Users reference Cities
                     // Cannot delete or update a parent row: a foreign key constraint fails
+                    // Users가 Cities를 참조합니다. 해당 City를 참조하는 User를 먼저 삭제해야 City를 삭제할 수 있습니다.
                     cities.deleteWhere { cities.id eq 1 }
                 }
 
                 // the error is now ignored and the record is skipped
+                // 에러가 무시되고 레코드가 건너뛰어진다.
                 cities.deleteIgnoreWhere { cities.id eq 1 } shouldBeEqualTo 0
-
-                cities.selectAll().where { cities.id eq 1 }.count().toInt() shouldBeEqualTo 1
+                // 삭제되지 않았다.
+                cities.selectAll().where { cities.id eq 1 }.count() shouldBeEqualTo 1L
             }
         }
     }
@@ -75,24 +75,30 @@ class DeleteTest: AbstractExposedTest() {
     fun `delete table in context`(testDb: TestDB) {
         withCitiesAndUsers(testDb) { _, users, userData ->
             userData.deleteAll()
-            val userDataExists = userData.selectAll().any()
-            userDataExists.shouldBeFalse()
+            userData.selectAll().any().shouldBeFalse()
 
-            val smthId = users.select(users.id)
+            val smthId = users
+                .select(users.id)
                 .where { users.name like "%thing" }
                 .single()[users.id]
+
             smthId shouldBeEqualTo "smth"
 
-            // Now deleteWhere and deleteIgnoreWhere should bring the table it operates on into context
             users.deleteWhere { users.name like "%thing" }
 
-            val hasSmth = users.selectAll()
+            users.selectAll()
                 .where { users.name.like("%thing") }
-                .firstOrNull()
-            hasSmth.shouldBeNull()
+                .any().shouldBeFalse()
         }
     }
 
+    /**
+     * ### Delete with limit
+     *
+     * ```sql
+     * DELETE FROM USERDATA WHERE USERDATA."value" = 20 LIMIT 1
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `delete with limit`(testDb: TestDB) {
@@ -141,10 +147,10 @@ class DeleteTest: AbstractExposedTest() {
             query1.count().toInt() shouldBeEqualTo 0
 
             val query2 = join.selectAll()
-            query2.count().toInt() shouldBeGreaterThan 0
+            query2.count() shouldBeGreaterThan 0L
 
             join.delete(userData)
-            query2.count().toInt() shouldBeEqualTo 0
+            query2.count() shouldBeEqualTo 0L
         }
     }
 
@@ -182,16 +188,20 @@ class DeleteTest: AbstractExposedTest() {
                 .innerJoin(people, { towns[cities.id] }, { people[users.cityId] })
                 .innerJoin(stats, { people[users.id] }, { stats[userData.userId] })
 
-            val query = aliasedJoin.selectAll().where { towns[cities.name] eq "Munich" }
-            query.count().toInt() shouldBeGreaterThan 0
+            val query = aliasedJoin
+                .selectAll()
+                .where { towns[cities.name] eq "Munich" }
+
+            query.count() shouldBeGreaterThan 0L
 
             aliasedJoin.delete(stats) { towns[cities.name] eq "Munich" }
-            query.count().toInt() shouldBeEqualTo 0
+
+            query.count() shouldBeEqualTo 0L
         }
     }
 
     /**
-     * ### Delete with join query
+     * ### Delete with join sub query
      *
      * MySQL
      * ```sql
@@ -225,7 +235,7 @@ class DeleteTest: AbstractExposedTest() {
                 joinPart = { users.select(users.id, users.name).where { users.cityId eq 2 } }
             )
 
-            val joinCount = singleJoinQuery.selectAll().count().toInt()
+            val joinCount = singleJoinQuery.selectAll().count()
             joinCount shouldBeGreaterThan 0
 
             val joinCountWithCondition = singleJoinQuery.selectAll()
@@ -233,30 +243,30 @@ class DeleteTest: AbstractExposedTest() {
                     singleJoinQuery.lastQueryAlias!![users.name] like "%ey"
                 }
                 .count()
-                .toInt()
-            joinCountWithCondition shouldBeGreaterThan 0
+
+            joinCountWithCondition shouldBeGreaterThan 0L
 
             singleJoinQuery.delete(userData) {
                 singleJoinQuery.lastQueryAlias!![users.name] like "%ey"
             }
-            singleJoinQuery.selectAll().count().toInt() shouldBeEqualTo joinCount - joinCountWithCondition
+            singleJoinQuery.selectAll().count() shouldBeEqualTo joinCount - joinCountWithCondition
         }
     }
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `delete with join and limit`(testDb: TestDB) {
-        // SQL Server, Oracle 에서만 지원한다.
+        // limit 기능은 SQL Server, Oracle 에서만 지원한다.
         Assumptions.assumeTrue { testDb !in (TestDB.ALL_H2 + TestDB.ALL_MYSQL + TestDB.ALL_POSTGRES) }
 
         withCitiesAndUsers(testDb) { _, users, userData ->
             val join = users innerJoin userData
             val query = join.selectAll().where { userData.userId eq "smth" }
-            val originalCount = query.count().toInt()
-            originalCount shouldBeGreaterThan 1
+            val originalCount = query.count()
+            originalCount shouldBeGreaterThan 1L
 
             join.delete(userData, limit = 1) { userData.userId eq "smth" }
-            query.count().toInt() shouldBeEqualTo originalCount - 1
+            query.count() shouldBeEqualTo originalCount - 1L
         }
     }
 
@@ -278,14 +288,15 @@ class DeleteTest: AbstractExposedTest() {
         withCitiesAndUsers(testDb) { _, users, userData ->
             val join = users innerJoin userData
             val query = join.selectAll().where { userData.userId eq "smth" }
-            query.count().toInt() shouldBeGreaterThan 0
+            query.count() shouldBeGreaterThan 0L
 
             expectException<ExposedSQLException> {
-                // 일반적으로는 UserData 테이블은 Users 테이블을 참조하고 있기 때문에, Users 테이블을 먼저 삭제할 수 없습니다.
+                // UserData 테이블은 Users 테이블을 참조하고 있기 때문에, Users 테이블을 먼저 삭제할 수 없습니다.
                 join.delete(users, userData) { users.id eq "smth" }
             }
 
-            // UserData 참조 관련 에러는 무시된다. User 테이블은 건너뛰고 UserData 테이블의 행을 삭제된다.
+            // ignore=true 를 지정하여, UserData 참조 관련 에러는 무시된다.
+            // User 테이블은 건너뛰고 UserData 테이블의 행을 삭제된다.
             join.delete(users, userData, ignore = true) { users.id eq "smth" } shouldBeEqualTo 2
 
             query.count().toInt() shouldBeEqualTo 0
