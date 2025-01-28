@@ -76,6 +76,17 @@ object DMLTestData {
         val value = integer("value")
     }
 
+    /**
+     * Postgres:
+     *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS sales (
+     *      "year" INT NOT NULL,
+     *      "month" INT NOT NULL,
+     *      product VARCHAR(30) NULL, amount DECIMAL(8, 2) NOT NULL
+     * )
+     * ```
+     */
     object Sales: Table() {
         val year = integer("year")
         val month = integer("month")
@@ -83,6 +94,15 @@ object DMLTestData {
         val amount = decimal("amount", 8, 2)
     }
 
+    /**
+     * Postgres:
+     *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS someamounts (
+     *      amount DECIMAL(8, 2) NOT NULL
+     * )
+     * ```
+     */
     object SomeAmounts: Table() {
         val amount = decimal("amount", 8, 2)
     }
@@ -254,11 +274,9 @@ fun AbstractExposedTest.withSalesAndSomeAmounts(
         insertAmount("1500.25".toBigDecimal())
         insertAmount("1000.00".toBigDecimal())
 
-
         statement(testDb, sales, someAmounts)
     }
 }
-
 
 object Orgs: IntIdTable() {
     val uid = varchar("uid", 36).uniqueIndex().clientDefault { TimebasedUuid.nextBase62String() }

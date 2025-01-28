@@ -12,11 +12,17 @@ import org.jetbrains.exposed.sql.decimalLiteral
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
+/**
+ * Calculate column values using arithmetic operators.
+ * 단, EntityID<T> 는 산술 연산을 지원하지 않는다.
+ */
 class ArithmeticTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * SELECT USERDATA."value", (((USERDATA."value" - 5) * 2) / 2) FROM USERDATA
+     * SELECT USERDATA."value",
+     *        (((USERDATA."value" - 5) * 2) / 2)
+     *   FROM USERDATA
      * ```
      */
     @ParameterizedTest

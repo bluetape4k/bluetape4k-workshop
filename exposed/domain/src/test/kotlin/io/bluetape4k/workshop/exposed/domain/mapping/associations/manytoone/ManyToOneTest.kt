@@ -120,8 +120,17 @@ class ManyToOneTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * SELECT SALES_FORCES.ID, SALES_FORCES."name" FROM SALES_FORCES WHERE SALES_FORCES.ID = 1
-     * SELECT SALES_GUYS.ID, SALES_GUYS."name", SALES_GUYS.SALES_FORCE_ID FROM SALES_GUYS WHERE SALES_GUYS.SALES_FORCE_ID = 1
+     * SELECT SALES_FORCES.ID,
+     *        SALES_FORCES."name"
+     *   FROM SALES_FORCES
+     *  WHERE SALES_FORCES.ID = 1;
+     * ```
+     * ```sql
+     * SELECT SALES_GUYS.ID,
+     *        SALES_GUYS."name",
+     *        SALES_GUYS.SALES_FORCE_ID
+     *   FROM SALES_GUYS
+     *  WHERE SALES_GUYS.SALES_FORCE_ID = 1
      * ```
      */
     @ParameterizedTest
