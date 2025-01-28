@@ -8,6 +8,7 @@ import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.assertFailAndRollback
 import io.bluetape4k.workshop.exposed.currentTestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.domain.shared.dml.DMLTestData.Cities
 import io.bluetape4k.workshop.exposed.expectException
 import io.bluetape4k.workshop.exposed.inProperCase
@@ -16,9 +17,11 @@ import io.bluetape4k.workshop.exposed.withTables
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.fail
+import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldBeTrue
+import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -87,12 +90,15 @@ class InsertTest: AbstractExposedTest() {
     }
 
     /**
-     * insertIgnoreAndGetId
+     * `insertIgnoreAndGetId` 는 INSERT 시 예외가 발생하면, 아무 일도 하지 않고,
+     * 예외가 발생하지 않으면, INSERT 된 ROW의 ID를 반환합니다.
      *
      * ```sql
-     * INSERT INTO tmp (foo) VALUES ('1') ON CONFLICT DO NOTHING
-     * INSERT INTO tmp (foo) VALUES ('2') ON CONFLICT DO NOTHING
-     * INSERT INTO tmp (id, foo) VALUES (100, '2') ON CONFLICT DO NOTHING
+     * INSERT INTO tmp (foo) VALUES ('1') ON CONFLICT DO NOTHING;
+     * INSERT INTO tmp (foo) VALUES ('2') ON CONFLICT DO NOTHING;
+     *
+     * -- 예외가 발생하므로 아무 일도 하지 않습니다.
+     * INSERT INTO tmp (id, foo) VALUES (100, '2') ON CONFLICT DO NOTHING;
      * ```
      */
     @ParameterizedTest
@@ -130,6 +136,14 @@ class InsertTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert and get id when column has different name and get value by id column`(testDB: TestDB) {
+        /**
+         * code 컬럼은 Identity 컬럼으로도 사용된다.
+         *
+         * Postgres:
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS testtablewithid (code INT NOT NULL)
+         * ```
+         */
         val testTableWithId = object: IdTable<Int>("testTableWithId") {
             val code = integer("code")
             override val id: Column<EntityID<Int>> = code.entityId()
@@ -152,12 +166,19 @@ class InsertTest: AbstractExposedTest() {
     }
 
     /**
+     * ID 컬럼 명이 다른 경우에도, ID 컬럼을 통해 INSERT, SELECT 가 가능해야 합니다.
+     *
+     * Postgres:
      * ```sql
-     * CREATE TABLE IF NOT EXISTS TEST_ID_AND_COLUMN_TABLE (EXAMPLE_COLUMN VARCHAR(200) NOT NULL)
+     * CREATE TABLE IF NOT EXISTS test_id_and_column_table (
+     *      example_column VARCHAR(200) NOT NULL
+     * );
      *
-     * INSERT INTO TEST_ID_AND_COLUMN_TABLE (EXAMPLE_COLUMN) VALUES ('value')
+     * INSERT INTO test_id_and_column_table (example_column)
+     * VALUES ('Mkf9JW');
      *
-     * SELECT TEST_ID_AND_COLUMN_TABLE.EXAMPLE_COLUMN FROM TEST_ID_AND_COLUMN_TABLE
+     * SELECT test_id_and_column_table.example_column
+     *   FROM test_id_and_column_table
      * ```
      */
     @ParameterizedTest
@@ -169,39 +190,42 @@ class InsertTest: AbstractExposedTest() {
         }
 
         withTables(testDB, exampleTable) {
-            val value = "value"
+            val value = Base58.randomString(6)
             exampleTable.insert {
                 it[exampleColumn] = value
             }
 
             val resultValues = exampleTable.selectAll().map { it[exampleTable.exampleColumn] }
-            resultValues.first() shouldBeEqualTo value
+            resultValues.single() shouldBeEqualTo value
         }
     }
 
     /**
+     * `insertIgnore` 는 INSERT 시 예외가 발생하면, 예외를 무시합니다.
+     *
      * MYSQL V8
      * ```sql
-     * INSERT IGNORE INTO tmp (id, foo) VALUES (1, '1')
-     * INSERT IGNORE INTO tmp (id, foo) VALUES (1, '2')
+     * INSERT IGNORE INTO tmp (id, foo) VALUES (1, '1');
+     * INSERT IGNORE INTO tmp (id, foo) VALUES (1, '2');
      * ```
      *
      * POSTGRES
      * ```sql
-     * INSERT INTO tmp (id, foo) VALUES (1, '1') ON CONFLICT DO NOTHING
-     * INSERT INTO tmp (id, foo) VALUES (1, '2') ON CONFLICT DO NOTHING
+     * INSERT INTO tmp (id, foo) VALUES (1, '1') ON CONFLICT DO NOTHING;
+     * INSERT INTO tmp (id, foo) VALUES (1, '2') ON CONFLICT DO NOTHING;
      * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `insertIgnoreAndGetId with predefined id`(testDB: TestDB) {
+    fun `insertIgnore with predefined id`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB in (TestDB.ALL_MYSQL_LIKE - TestDB.MYSQL_V5) + TestDB.ALL_POSTGRES_LIKE }
-        
+
         val idTable = object: IntIdTable("tmp") {
             val name = varchar("foo", 10).uniqueIndex()
         }
 
         withTables(testDB, idTable) {
+            // ID가 중복되지 않아서, INSERT가 수행됩니다.
             val insertedStatement = idTable.insertIgnore {
                 it[idTable.id] = EntityID(1, idTable)
                 it[idTable.name] = "1"
@@ -209,7 +233,7 @@ class InsertTest: AbstractExposedTest() {
             insertedStatement[idTable.id].value shouldBeEqualTo 1
             insertedStatement.insertedCount shouldBeEqualTo 1
 
-            // ID가 중복되므로 insert가 되지 않음
+            // ID가 중복되었다는 예외가 발생하는 것을 무시하고, INSERT가 취소됩니다.
             val notInsertedStatement = idTable.insertIgnore {
                 it[idTable.id] = EntityID(1, idTable)
                 it[idTable.name] = "2"
@@ -225,31 +249,50 @@ class InsertTest: AbstractExposedTest() {
         withCitiesAndUsers(testDB) { cities, users, _ ->
             val cityNames = listOf("Paris", "Moscow", "Helsinki")
 
-            // INSERT INTO CITIES ("name") VALUES ('Paris')
-            // INSERT INTO CITIES ("name") VALUES ('Moscow')
-            // INSERT INTO CITIES ("name") VALUES ('Helsinki')
+            /**
+             * Postgres:
+             * ```sql
+             * INSERT INTO cities ("name") VALUES ('Paris');
+             * INSERT INTO cities ("name") VALUES ('Moscow');
+             * INSERT INTO cities ("name") VALUES ('Helsinki');
+             * ```
+             */
             val allCitiesID = cities.batchInsert(cityNames) { name ->
                 this[cities.name] = name
             }
-            allCitiesID.size shouldBeEqualTo cityNames.size
+            allCitiesID shouldHaveSize cityNames.size
 
             val userNamesWithCityIds = allCitiesID.mapIndexed { index, rows ->
                 "UserFrom${cityNames[index]}" to rows[cities.id] as Number
             }
 
-            // INSERT INTO USERS (ID, "name", CITY_ID) VALUES ('vLH7J6', 'UserFromParis', 4)
-            // INSERT INTO USERS (ID, "name", CITY_ID) VALUES ('NGE25y', 'UserFromMoscow', 5)
-            // INSERT INTO USERS (ID, "name", CITY_ID) VALUES ('9M7E68', 'UserFromHelsinki', 6)
+            /**
+             * Postgres:
+             * ```sql
+             * INSERT INTO users (id, "name", city_id) VALUES ('mdhXRY', 'UserFromParis', 4)
+             * INSERT INTO users (id, "name", city_id) VALUES ('c5vVGN', 'UserFromMoscow', 5)
+             * INSERT INTO users (id, "name", city_id) VALUES ('niR8mW', 'UserFromHelsinki', 6)
+             * ```
+             */
             val generatedIds = users.batchInsert(userNamesWithCityIds) { (userName, cityId) ->
                 this[users.id] = Base58.randomString(6)
                 this[users.name] = userName
                 this[users.cityId] = cityId.toInt()
             }
 
-            generatedIds.size shouldBeEqualTo userNamesWithCityIds.size
+            generatedIds shouldHaveSize userNamesWithCityIds.size
 
-            // SELECT COUNT(*) FROM USERS WHERE USERS."name" IN ('UserFromParis', 'UserFromMoscow', 'UserFromHelsinki')
-            users.selectAll().where { users.name inList userNamesWithCityIds.map { it.first } }
+            /**
+             * Postgres:
+             *
+             * ```sql
+             * SELECT COUNT(*)
+             *   FROM users
+             *  WHERE users."name" IN ('UserFromParis', 'UserFromMoscow', 'UserFromHelsinki')
+             * ```
+             */
+            users.selectAll()
+                .where { users.name inList userNamesWithCityIds.map { it.first } }
                 .count() shouldBeEqualTo userNamesWithCityIds.size.toLong()
         }
     }
@@ -262,11 +305,12 @@ class InsertTest: AbstractExposedTest() {
             val batchSize = 25
             val names = generateSequence { Epoch.nextIdAsString() }.take(batchSize)
 
-            cities.batchInsert(names) { name ->
+            val inserted = cities.batchInsert(names) { name ->
                 this[cities.name] = name
             }
+            inserted shouldHaveSize batchSize
 
-            cities.selectAll().count().toInt() shouldBeEqualTo batchSize
+            cities.selectAll().count() shouldBeEqualTo batchSize.toLong()
         }
     }
 
@@ -277,11 +321,12 @@ class InsertTest: AbstractExposedTest() {
         withTables(testDB, cities) {
             val names = emptySequence<String>()
 
-            cities.batchInsert(names) { name ->
+            val inserted = cities.batchInsert(names) { name ->
                 this[cities.name] = name
             }
 
-            cities.selectAll().count().toInt() shouldBeEqualTo 0
+            inserted.shouldBeEmpty()
+            cities.selectAll().count() shouldBeEqualTo 0L
         }
     }
 
@@ -297,6 +342,15 @@ class InsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Postgres:
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS testlongid (
+     *      id BIGSERIAL PRIMARY KEY,
+     *      "name" TEXT NOT NULL
+     * )
+     * ```
+     */
     object TestLongIdTable: Table() {
         val id = long("id").autoIncrement()
         val name = text("name")
@@ -316,10 +370,22 @@ class InsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Postgres:
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS intidtest (
+     *      id SERIAL PRIMARY KEY,
+     *      "name" TEXT NOT NULL
+     * )
+     * ```
+     */
     object IntIdTestTable: IntIdTable() {
         val name = text("name")
     }
 
+    /**
+     * IntIdTable의 id 컬럼은 SERIAL 이므로 자동으로 증가되는 값이 삽입됩니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert and get generated key 03`(testDB: TestDB) {
@@ -331,6 +397,17 @@ class InsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * 제공되는 ID 값을 사용하여 데이터를 삽입합니다.
+     *
+     * Postgres:
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS stringtable (
+     *      id VARCHAR(15) NOT NULL,
+     *      "name" TEXT NOT NULL
+     * )
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert with predefined id`(testDB: TestDB) {
@@ -339,16 +416,16 @@ class InsertTest: AbstractExposedTest() {
             val name = text("name")
         }
         withTables(testDB, stringTable) {
-            val entityID = EntityID("id1", stringTable)
 
             // INSERT INTO stringtable (id, "name") VALUES ('id1', 'Foo')
+            val entityID = EntityID("id1", stringTable)
             val id1 = stringTable.insertAndGetId {
                 it[stringTable.id] = entityID
                 it[stringTable.name] = "Foo"
             }
 
             // INSERT INTO stringtable (id, "name") VALUES ('testId', 'Bar')
-            stringTable.insertAndGetId {
+            val id2 = stringTable.insertAndGetId {
                 it[stringTable.id] = EntityID("testId", stringTable)
                 it[stringTable.name] = "Bar"
             }
@@ -362,6 +439,26 @@ class InsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Foreign key 를 가지는 테이블에 데이터를 삽입합니다.
+     *
+     * Postgres:
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS idtable (id SERIAL PRIMARY KEY);
+     *
+     * CREATE TABLE IF NOT EXISTS standardtable (
+     *      "externalId" INT NOT NULL,
+     *
+     *      CONSTRAINT fk_standardtable_externalid__id FOREIGN KEY ("externalId") REFERENCES idtable(id)
+     *      ON DELETE RESTRICT ON UPDATE RESTRICT
+     * );
+     * ```
+     *
+     * ```sql
+     * INSERT INTO idtable  DEFAULT VALUES;
+     * INSERT INTO standardtable ("externalId") VALUES (1);
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert with foreign id`(testDB: TestDB) {
@@ -375,7 +472,8 @@ class InsertTest: AbstractExposedTest() {
                 it[externalId] = id1
             }
 
-            val rows = standardTable.selectAll().map { it[standardTable.externalId] }
+            val externalIdColumn = standardTable.externalId
+            val rows = standardTable.select(externalIdColumn).map { it[externalIdColumn] }
             rows shouldBeEqualTo listOf(id1)
         }
     }
@@ -383,6 +481,16 @@ class InsertTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert with expression`(testDB: TestDB) {
+        /**
+         * Postgres:
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS testinsert (
+         *      id SERIAL PRIMARY KEY,
+         *      "nullableInt" INT NULL,
+         *      "stringCol" VARCHAR(255) NOT NULL
+         * )
+         * ```
+         */
         val tbl = object: IntIdTable("testInsert") {
             val nullableInt = integer("nullableInt").nullable()
             val string = varchar("stringCol", 255)
@@ -396,20 +504,35 @@ class InsertTest: AbstractExposedTest() {
         }
 
         withTables(testDB, tbl) {
-            // INSERT INTO testinsert ("stringCol") VALUES (SUBSTRING(TRIM(' _exp1_ '), 2, 4))
+            /**
+             * Postgres:
+             * ```sql
+             * INSERT INTO testinsert ("stringCol") VALUES (SUBSTRING(TRIM(' _exp1_ '), 2, 4))
+             * ```
+             */
             tbl.insert {
                 it[string] = expression(" _exp1_ ")
             }
             verify("exp1")
 
-            // INSERT INTO testinsert ("stringCol", "nullableInt") VALUES (SUBSTRING(TRIM(' _exp2_ '), 2, 4), 5)
+            /**
+             * Postgres:
+             * ```sql
+             * INSERT INTO testinsert ("stringCol", "nullableInt") VALUES (SUBSTRING(TRIM(' _exp2_ '), 2, 4), 5)
+             * ```
+             */
             tbl.insert {
                 it[string] = expression(" _exp2_ ")
                 it[nullableInt] = 5
             }
             verify("exp2")
 
-            // INSERT INTO testinsert ("stringCol", "nullableInt") VALUES (SUBSTRING(TRIM(' _exp3_ '), 2, 4), NULL)
+            /**
+             * Postgres:
+             * ```sql
+             * INSERT INTO testinsert ("stringCol", "nullableInt") VALUES (SUBSTRING(TRIM(' _exp3_ '), 2, 4), NULL)
+             * ```
+             */
             tbl.insert {
                 it[string] = expression(" _exp3_ ")
                 it[nullableInt] = null
@@ -418,6 +541,23 @@ class InsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * 컬럼에 Expression을 사용하여 값을 INSERT 합니다.
+     *
+     * Postgres:
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS testinsert1 (
+     *      id SERIAL PRIMARY KEY,
+     *      "stringCol" VARCHAR(20) NOT NULL
+     * )
+     * ```
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS testinsert2 (
+     *      id SERIAL PRIMARY KEY,
+     *      "stringCol" VARCHAR(20) NULL
+     * )
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert with column expression`(testDB: TestDB) {
@@ -434,31 +574,23 @@ class InsertTest: AbstractExposedTest() {
         }
 
         withTables(testDB, tbl1, tbl2) {
-            // INSERT INTO testinsert1 ("stringCol") VALUES ('_exp1_')
+            /**
+             * Postgres:
+             * ```sql
+             * INSERT INTO testinsert1 ("stringCol") VALUES ('_exp1_')
+             * ```
+             */
             val id = tbl1.insertAndGetId {
                 it[string1] = "_exp1_"
             }
 
             /**
+             * Postgres:
              * ```sql
-             * INSERT INTO TESTINSERT2 ("stringCol")
-             * VALUES (
-             *         (SELECT SUBSTRING(TRIM(TESTINSERT1."stringCol"), 2, 4)
-             *           FROM TESTINSERT1
-             *           WHERE TESTINSERT1.ID = 1
-             *         )
-             * )
-             * ```
-             */
-            /**
-             * ```sql
-             * INSERT INTO TESTINSERT2 ("stringCol")
-             * VALUES (
-             *         (SELECT SUBSTRING(TRIM(TESTINSERT1."stringCol"), 2, 4)
-             *           FROM TESTINSERT1
-             *           WHERE TESTINSERT1.ID = 1
-             *         )
-             * )
+             * INSERT INTO testinsert2 ("stringCol")
+             * VALUES ((SELECT SUBSTRING(TRIM(testinsert1."stringCol"), 2, 4)
+             *            FROM testinsert1
+             *           WHERE testinsert1.id = 1))
              * ```
              */
             val expr1 = tbl1.string1.trim().substring(2, 4)
@@ -469,6 +601,15 @@ class InsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS ordereddata (
+     *      id SERIAL PRIMARY KEY,
+     *      "name" TEXT NOT NULL,
+     *      "order" INT NOT NULL
+     * )
+     * ```
+     */
     private object OrderedDataTable: IntIdTable() {
         val name = text("name")
         val order = integer("order")
@@ -480,9 +621,16 @@ class InsertTest: AbstractExposedTest() {
         var name by OrderedDataTable.name
         var order by OrderedDataTable.order
 
-        override fun toString(): String = "OrderedData(id=$id, name=$name, order=$order)"
+        override fun equals(other: Any?): Boolean = other is OrderedData && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "OrderedData(id=$idValue, name=$name, order=$order)"
     }
 
+    /**
+     * DAO 를 사용하여 데이터를 INSERT 합니다.
+     *
+     *
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert with column named with keyword`(testDB: TestDB) {
@@ -496,7 +644,16 @@ class InsertTest: AbstractExposedTest() {
                 order = 10
             }
 
-            val orders = OrderedData.all()
+            /**
+             * ```sql
+             * SELECT ordereddata.id,
+             *        ordereddata."name",
+             *        ordereddata."order"
+             *   FROM ordereddata
+             *  ORDER BY ordereddata."order" ASC
+             * ```
+             */
+            val orders: List<OrderedData> = OrderedData.all()
                 .orderBy(OrderedDataTable.order to ASC)
                 .toList()
 
@@ -504,6 +661,9 @@ class InsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * 컬럼 길이보다 큰 값을 INSERT 할 때 예외가 발생해야 합니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `check column length on insert`(testDB: TestDB) {
@@ -523,16 +683,30 @@ class InsertTest: AbstractExposedTest() {
     }
 
     /**
-     * Use subquery in an insert statement
+     * INSERT, UPDATE 시에 Subquery를 사용하는 예제
      *
+     * Postgres:
      * ```sql
-     * INSERT INTO TAB1 (ID) VALUES ((SELECT TAB2.ID FROM TAB2 WHERE TAB2.ID = 'foo'))
+     * CREATE TABLE IF NOT EXISTS tab1 (id VARCHAR(10) NOT NULL);
+     * CREATE TABLE IF NOT EXISTS tab2 (id VARCHAR(10) NOT NULL);
      * ```
      *
-     * Use subquery in an update statement
+     * Insert using subquery in Postgres:
+     * ```sql
+     * INSERT INTO TAB1 (ID)
+     * VALUES ((SELECT TAB2.ID
+     *            FROM TAB2
+     *           WHERE TAB2.ID = 'foo'))
+     * ```
+     *
+     * Update using subquery in Postgres:
      *
      * ```sql
-     * UPDATE TAB1 SET ID=(SELECT TAB2.ID FROM TAB2 WHERE TAB2.ID = 'bar') WHERE TAB1.ID = 'foo'
+     * UPDATE TAB1
+     *    SET ID=(SELECT TAB2.ID
+     *              FROM TAB2
+     *             WHERE TAB2.ID = 'bar')
+     *  WHERE TAB1.ID = 'foo'
      * ```
      */
     @ParameterizedTest
@@ -550,23 +724,7 @@ class InsertTest: AbstractExposedTest() {
             tbl2.insert { it[id] = "foo" }
             tbl2.insert { it[id] = "bar" }
 
-            /**
-             * Use subquery in an insert statement
-             *
-             * ```sql
-             * INSERT INTO TAB1 (ID)
-             * VALUES ((SELECT TAB2.ID FROM TAB2 WHERE TAB2.ID = 'foo'))
-             * ```
-             */
-
-            /**
-             * Use subquery in an insert statement
-             *
-             * ```sql
-             * INSERT INTO TAB1 (ID)
-             * VALUES ((SELECT TAB2.ID FROM TAB2 WHERE TAB2.ID = 'foo'))
-             * ```
-             */
+            // Insert using subquery
             tbl1.insert {
                 it[id] = tbl2.select(tbl2.id).where { tbl2.id eq "foo" }
             }
@@ -575,25 +733,8 @@ class InsertTest: AbstractExposedTest() {
             val insertedId = tbl1.select(tbl1.id).single()[tbl1.id]
             insertedId shouldBeEqualTo "foo"
 
-            /**
-             * Use subquery in an update statement
-             *
-             * ```sql
-             * UPDATE TAB1
-             *    SET ID=(SELECT TAB2.ID FROM TAB2 WHERE TAB2.ID = 'bar')
-             *  WHERE TAB1.ID = 'foo'
-             * ```
-             */
 
-            /**
-             * Use subquery in an update statement
-             *
-             * ```sql
-             * UPDATE TAB1
-             *    SET ID=(SELECT TAB2.ID FROM TAB2 WHERE TAB2.ID = 'bar')
-             *  WHERE TAB1.ID = 'foo'
-             * ```
-             */
+            //Update using subquery
             tbl1.update({ tbl1.id eq "foo" }) {
                 it[id] = tbl2.select(tbl2.id).where { tbl2.id eq "bar" }
             }
@@ -606,6 +747,14 @@ class InsertTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `generated key 04`(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS charidtable (
+         *      id VARCHAR(50) PRIMARY KEY,
+         *      foo INT NOT NULL
+         * )
+         * ```
+         */
         val charIdTable = object: IdTable<String>("charIdTable") {
             override val id = varchar("id", 50)
                 .clientDefault { Base58.randomString(6) }
@@ -615,16 +764,34 @@ class InsertTest: AbstractExposedTest() {
             override val primaryKey = PrimaryKey(id)
         }
         withTables(testDB, charIdTable) {
-            // INSERT INTO charIdTable (id, foo) VALUES ('vLH7J6', 42)
+            /**
+             * ```sql
+             * INSERT INTO charidtable (id, foo) VALUES ('XfwhfY', 42)
+             * ```
+             */
             val id = charIdTable.insertAndGetId {
                 it[foo] = 42
             }
+
             id.value.shouldNotBeNull()
         }
     }
 
     private fun rollbackSupportDbs() = TestDB.ALL_H2 + TestDB.MYSQL_V8 + TestDB.POSTGRESQL
 
+    /**
+     * 일반적인 트랜잭션에서 Constraint 예외가 발생하면, 해당 트랜잭션은 Rollback 되어야 합니다.
+     *
+     * Postgres:
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS testrollback (
+     *      id SERIAL PRIMARY KEY,
+     *      foo INT NOT NULL,
+     *
+     *      CONSTRAINT check_TestRollback_0 CHECK (foo > 0)
+     * )
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `rollback on constraint exception with normal transactions`(testDB: TestDB) {
@@ -638,7 +805,7 @@ class InsertTest: AbstractExposedTest() {
                 withDb(testDB) {
                     SchemaUtils.create(testTable)
                     testTable.insert { it[foo] = 1 }
-                    testTable.insert { it[foo] = 0 }
+                    testTable.insert { it[foo] = 0 }    // foo > 0 조건을 만족하지 않음 (예외 발생)
                 }
                 fail("예외가 발생해서 Rollback 이 수행되어야 합니다.")
             } catch (e: Throwable) {
@@ -654,6 +821,19 @@ class InsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Suspend 트랜잭션에서 Constraint 예외가 발생하면, 해당 트랜잭션은 Rollback 되어야 합니다.
+     *
+     * Postgres:
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS testrollback (
+     *      id SERIAL PRIMARY KEY,
+     *      foo INT NOT NULL,
+     *
+     *      CONSTRAINT check_TestRollback_0 CHECK (foo > 0)
+     * )
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `rollback on constraint exception with suspend transactions`(testDB: TestDB) = runTest {
@@ -670,7 +850,7 @@ class InsertTest: AbstractExposedTest() {
                 runBlocking {
                     newSuspendedTransaction(db = testDB.db) {
                         testTable.insert { it[foo] = 1 }
-                        testTable.insert { it[foo] = 0 }
+                        testTable.insert { it[foo] = 0 }// foo > 0 조건을 만족하지 않음 (예외 발생)
                     }
                 }
                 fail("예외가 발생해서 Rollback 이 수행되어야 합니다.")
@@ -696,7 +876,7 @@ class InsertTest: AbstractExposedTest() {
                     append(insertStatement.substringAfter("INSERT "))
                 }
 
-                else                     -> {
+                else -> {
                     append(insertStatement)
                     val identifier = if (db == TestDB.H2_PSQL) "" else "(id) "
                     append(" ON CONFLICT ${identifier}DO NOTHING")
@@ -706,26 +886,23 @@ class InsertTest: AbstractExposedTest() {
     }
 
     /**
-     * Batch Insert with ON CONFLICT DO NOTHING
+     * Batch Insert with ON CONFLICT DO NOTHING - 예외 발생 시 해당 예외를 무시하고, 다음 작업을 수행합니다.
      *
-     * H2_MYSQL
-     *
+     * Postgres:
      * ```sql
-     * INSERT IGNORE INTO TAB (ID) VALUES ('foo')
-     * INSERT IGNORE INTO TAB (ID) VALUES ('bar')
-     * ```
+     * CREATE TABLE IF NOT EXISTS tab (id VARCHAR(10) NOT NULL);
+     * ALTER TABLE tab ADD CONSTRAINT tab_id_unique UNIQUE (id);
      *
-     * H2_PSQL
-     * ```
-     * INSERT INTO tab (id) VALUES ('foo') ON CONFLICT DO NOTHING
-     * INSERT INTO tab (id) VALUES ('bar') ON CONFLICT DO NOTHING
+     * INSERT INTO tab (id) VALUES ('foo');
+     * INSERT INTO tab (id) VALUES ('foo') ON CONFLICT (id) DO NOTHING;
+     * INSERT INTO tab (id) VALUES ('bar') ON CONFLICT (id) DO NOTHING;
      * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `batch insert number of inserted rows`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB in (TestDB.ALL_MYSQL_LIKE - TestDB.MYSQL_V5) + TestDB.ALL_POSTGRES_LIKE }
-        
+
         val tab = object: Table("tab") {
             val id = varchar("id", 10).uniqueIndex()
         }
@@ -746,18 +923,20 @@ class InsertTest: AbstractExposedTest() {
     }
 
     /**
+     * INSERT 시 `databaseGenerated()` 를 사용하여 특정 컬럼 값을 입력합니다.
      *
+     * Postgres:
      * ```sql
-     * CREATE TABLE IF NOT EXISTS GENERATEDTABLE (
-     *      ID INT AUTO_INCREMENT PRIMARY KEY,
-     *      AMOUNT INT NULL,
-     *      COMPUTED_AMOUNT INT GENERATED ALWAYS AS (AMOUNT + 1 ) NULL
+     * CREATE TABLE IF NOT EXISTS generatedtable (
+     *      id SERIAL PRIMARY KEY,
+     *      amount INT NULL,
+     *      computed_amount INT GENERATED ALWAYS AS (AMOUNT + 1 ) STORED NULL
      * )
      * ```
      *
      * ```sql
-     * INSERT INTO GENERATEDTABLE (AMOUNT) VALUES (99)
-     * INSERT INTO GENERATEDTABLE (AMOUNT) VALUES (NULL)
+     * INSERT INTO GENERATEDTABLE (AMOUNT) VALUES (99);
+     * INSERT INTO GENERATEDTABLE (AMOUNT) VALUES (NULL);
      * ```
      *
      */
@@ -817,11 +996,17 @@ class InsertTest: AbstractExposedTest() {
     }
 
     /**
+     * 문자열 기본 키에 대해서는 자동 증가가 적용되지 않아야 합니다.
+     *
+     * Postgres:
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS test_no_auto_increment_table (
+     *      custom_id VARCHAR(128) PRIMARY KEY
+     * )
+     * ```
      *
      * ```sql
-     * CREATE TABLE IF NOT EXISTS TEST_NO_AUTO_INCREMENT_TABLE (CUSTOM_ID VARCHAR(128) PRIMARY KEY)
-     *
-     * INSERT INTO TEST_NO_AUTO_INCREMENT_TABLE (CUSTOM_ID) VALUES ('ywHqxb4j')
+     * INSERT INTO test_no_auto_increment_table (custom_id) VALUES ('P6iqe9Uh')
      * ```
      */
     @ParameterizedTest
@@ -834,8 +1019,8 @@ class InsertTest: AbstractExposedTest() {
             override val id: Column<EntityID<String>> = customId.entityId()
         }
 
-        val customId = Base58.randomString(8)
         withTables(testDB, tester) {
+            val customId = Base58.randomString(8)
             val result1 = tester.batchInsert(listOf(customId)) {
                 this[tester.customId] = it
             }.single()
@@ -845,13 +1030,27 @@ class InsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * 기본값이나 NULL 값을 제공하지 않은 컬럼은 기본값이나 NULL 로 설정됩니다.
+     *
+     * Postgres:
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS tester (
+     *      default_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+     * )
+     * ```
+     * 아무런 값을 제공하지 않으면 기본값이 설정됩니다.
+     * ```sql
+     * INSERT INTO tester DEFAULT VALUES
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert returns values from default expression`(testDB: TestDB) {
         // Postgres 만 지원됩니다.
         Assumptions.assumeTrue(testDB in TestDB.ALL_POSTGRES)
 
-        val tester = object: Table() {
+        val tester = object: Table("tester") {
             val defaultDate = timestamp("default_date").defaultExpression(CurrentTimestamp)
         }
 
@@ -863,6 +1062,15 @@ class InsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Postgres 에서는 UUID 를 생성하는 함수를 사용하여 기본키로 사용할 수 있습니다.
+     *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS test_uuid_table (
+     *      id uuid DEFAULT gen_random_uuid() PRIMARY KEY
+     * )
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `database generated uuid as primary key`(testDB: TestDB) {
@@ -877,12 +1085,29 @@ class InsertTest: AbstractExposedTest() {
         }
 
         withTables(testDB, tester) {
-            val entry = tester.insertAndGetId { }
+            val entry: EntityID<UUID> = tester.insertAndGetId { }
             log.debug { "generated uuid id=${entry.value}" }
             entry.value.shouldNotBeNull()
         }
     }
 
+    /**
+     * Batch Insert 시에 기본값이나 NULL 값을 제공하지 않은 컬럼은 기본값이나 NULL 로 설정됩니다.
+     *
+     * Postgres:
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS test_batch_insert_defaults (
+     *      id SERIAL PRIMARY KEY,
+     *      "number" INT NOT NULL,
+     *      "default" VARCHAR(128) DEFAULT 'default' NOT NULL,
+     *      default_expr VARCHAR(128) DEFAULT 'defaultExpr' NOT NULL,
+     *      "nullable" VARCHAR(128) NULL,
+     *      nullable_default_null VARCHAR(128) DEFAULT NULL NULL,
+     *      nullable_default_not_null VARCHAR(128) DEFAULT 'nullableDefaultNotNull' NULL,
+     *      database_generated INT DEFAULT 1 NOT NULL
+     * );
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `default values and nullable columns not in batch insert arguments`(testDB: TestDB) {
@@ -891,10 +1116,15 @@ class InsertTest: AbstractExposedTest() {
             val default = varchar("default", 128).default("default")
             val defaultExpr = varchar("default_expr", 128).defaultExpression(stringLiteral("defaultExpr"))
             val nullable = varchar("nullable", 128).nullable()
-            val nullableDefaultNull = varchar("nullable_default_null", 128).nullable().default(null)
-            val nullableDefaultNotNull =
-                varchar("nullable_default_not_null", 128).nullable().default("nullableDefaultNotNull")
-            val databaseGenerated = integer("database_generated").withDefinition("DEFAULT 1").databaseGenerated()
+            val nullableDefaultNull = varchar("nullable_default_null", 128)
+                .nullable()
+                .default(null)
+            val nullableDefaultNotNull = varchar("nullable_default_not_null", 128)
+                .nullable()
+                .default("nullableDefaultNotNull")
+            val databaseGenerated = integer("database_generated")
+                .withDefinition("DEFAULT 1")
+                .databaseGenerated()
         }
 
         val testerWithFakeDefaults = object: IntIdTable("test_batch_insert_defaults") {
