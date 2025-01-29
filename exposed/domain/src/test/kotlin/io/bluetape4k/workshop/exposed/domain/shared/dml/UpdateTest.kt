@@ -7,6 +7,7 @@ import io.bluetape4k.workshop.exposed.currentTestDB
 import io.bluetape4k.workshop.exposed.expectException
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldBeTrue
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.alias
@@ -24,9 +25,7 @@ class UpdateTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
-    private val limitNotSupported by lazy {
-        TestDB.ALL_POSTGRES_LIKE
-    }
+    private val limitNotSupported = TestDB.ALL_POSTGRES_LIKE
 
     /**
      * ```sql
@@ -37,8 +36,8 @@ class UpdateTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `update 01`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, users, _ ->
+    fun `update 01`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             val alexId = "alex"
             val alexName = users
                 .select(users.name)
@@ -70,8 +69,8 @@ class UpdateTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `update with limit`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, users, _ ->
+    fun `update with limit`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             if (currentTestDB in limitNotSupported) {
                 expectException<UnsupportedByDialectException> {
                     users.update({ users.id like "a%" }, limit = 1) {
@@ -124,8 +123,8 @@ class UpdateTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `update with single join`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, users, userData ->
+    fun `update with single join`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, userData ->
             val join = users.innerJoin(userData)
             join.update {
                 it[userData.comment] = users.name
@@ -155,11 +154,11 @@ class UpdateTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `update with join and limit`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb !in TestDB.ALL_H2 + TestDB.ALL_MYSQL + TestDB.ALL_POSTGRES }
+    fun `update with join and limit`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_H2 + TestDB.ALL_MYSQL + TestDB.ALL_POSTGRES }
         // val supportsUpdateWithJoinAndLimit = TestDB.ALL_MARIADB + TestDB.ORACLE + TestDB.SQLSERVER
         // Assumptions.assumeTrue(testDb !in supportsUpdateWithJoinAndLimit)
-        withCitiesAndUsers(testDb) { _, users, userData ->
+        withCitiesAndUsers(testDB) { _, users, userData ->
             val join = users.innerJoin(userData)
 
             val maxToUpdate = 2
@@ -199,10 +198,10 @@ class UpdateTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `update with multiple joins`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb !in TestDB.ALL_H2 }
+    fun `update with multiple joins`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_H2 }
 
-        withCitiesAndUsers(testDb) { cities, users, userData ->
+        withCitiesAndUsers(testDB) { cities, users, userData ->
             val join = cities.innerJoin(users).innerJoin(userData)
             join.update {
                 it[userData.comment] = users.name
@@ -237,7 +236,7 @@ class UpdateTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `update with join and where`(testDb: TestDB) {
+    fun `update with join and where`(testDB: TestDB) {
         val supportWhereDb = TestDB.entries - TestDB.ALL_H2
 
         val tableA = object: LongIdTable("table_a") {
@@ -248,7 +247,7 @@ class UpdateTest: AbstractExposedTest() {
             val tableAId = reference("table_a_id", tableA)
         }
 
-        withTables(testDb, tableA, tableB) {
+        withTables(testDB, tableA, tableB) {
             val aId = tableA.insertAndGetId { it[foo] = "foo" }
             tableB.insert {
                 it[bar] = "zip"
@@ -257,7 +256,7 @@ class UpdateTest: AbstractExposedTest() {
 
             val join = tableA.innerJoin(tableB)
 
-            if (testDb in supportWhereDb) {
+            if (testDB in supportWhereDb) {
                 join.update({ tableA.foo eq "foo" }) {
                     it[tableB.bar] = "baz"
                 }
@@ -285,10 +284,10 @@ class UpdateTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `update with join query`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb !in TestDB.ALL_H2_V1 }
+    fun `update with join query`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_H2_V1 }
 
-        withCitiesAndUsers(testDb) { _, users, userData ->
+        withCitiesAndUsers(testDB) { _, users, userData ->
             // single join query using join()
             val userAlias = users.selectAll().where { users.cityId eq 1 }.alias("u2")
             val joinWithSubQuery = userData.innerJoin(userAlias, { userData.userId }, { userAlias[users.id] })
@@ -311,12 +310,10 @@ class UpdateTest: AbstractExposedTest() {
                 it[userData.value] = 123
             }
 
-            joinWithSubQuery.selectAll().forEach {
-                it[userData.value] shouldBeEqualTo 123
-            }
+            joinWithSubQuery.selectAll().all { it[userData.value] == 123 }.shouldBeTrue()
 
             // does not support either multi-table joins or update(where)
-            Assumptions.assumeTrue { testDb !in TestDB.ALL_H2 }
+            Assumptions.assumeTrue { testDB !in TestDB.ALL_H2 }
 
             /**
              * ```sql
@@ -384,12 +381,12 @@ class UpdateTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `column length checked in update`(testDb: TestDB) {
+    fun `column length checked in update`(testDB: TestDB) {
         val stringTable = object: LongIdTable("StringTable") {
             val name = varchar("name", 10)
         }
 
-        withTables(testDb, stringTable) {
+        withTables(testDB, stringTable) {
             stringTable.insert {
                 it[name] = "TestName"
             }
@@ -405,8 +402,8 @@ class UpdateTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `update fails with empty body`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, _, _ ->
+    fun `update fails with empty body`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, _, _ ->
             expectException<IllegalArgumentException> {
                 cities.update(where = { cities.id.isNull() }) {
                     // empty
