@@ -30,6 +30,8 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
 /**
+ * `MERGE INTO` 문을 테스트합니다.
+ *
  * 참고: [MERGE INTO 에 대한 설명](https://www.perplexity.ai/search/sql-merge-into-gumune-daehae-s-y_xKDfwFR8ewN6qIY9jqJw)
  */
 class MergeTableTest: MergeBaseTest() {
@@ -43,11 +45,11 @@ class MergeTableTest: MergeBaseTest() {
      * [mergeFrom] 함수를 사용하여 [org.jetbrains.exposed.sql.statements.MergeStatement.whenNotMatchedInsert] 를 테스트합니다.
      *
      * ```sql
-     * MERGE INTO MERGE_TEST_DEST
-     * USING MERGE_TEST_SOURCE ON MERGE_TEST_SOURCE.MERGE_TEST_KEY = MERGE_TEST_DEST.MERGE_TEST_KEY
-     * WHEN NOT MATCHED THEN
-     *      INSERT (MERGE_TEST_AT, MERGE_TEST_KEY, MERGE_TEST_VALUE, MERGE_TEST_OPTIONAL_VALUE)
-     *      VALUES ('2000-01-01T00:00:00', MERGE_TEST_SOURCE.MERGE_TEST_KEY, (MERGE_TEST_SOURCE.MERGE_TEST_VALUE * 2), CONCAT('optional::', MERGE_TEST_SOURCE.MERGE_TEST_KEY))
+     * MERGE INTO dest
+     * USING "source" ON "source"."key" = dest."key"
+     *  WHEN NOT MATCHED THEN
+     *      INSERT ("at", "key", "value", optional_value)
+     *      VALUES ('2000-01-01T00:00:00', "source"."key", ("source"."value" * 2), CONCAT('optional::', "source"."key"))
      * ```
      */
     @ParameterizedTest
@@ -77,12 +79,11 @@ class MergeTableTest: MergeBaseTest() {
      * [mergeFrom] 함수를 사용하여 [org.jetbrains.exposed.sql.statements.MergeStatement.whenMatchedThenUpdate] 를 테스트합니다.
      *
      * ```sql
-     * MERGE INTO MERGE_TEST_DEST dest_alias
-     * USING MERGE_TEST_SOURCE source_alias
-     *    ON source_alias.MERGE_TEST_KEY = dest_alias.MERGE_TEST_KEY
-     * WHEN NOT MATCHED THEN
-     *      INSERT (MERGE_TEST_AT, MERGE_TEST_KEY, MERGE_TEST_VALUE)
-     *      VALUES ('2000-01-01T00:00:00', source_alias.MERGE_TEST_KEY, (source_alias.MERGE_TEST_VALUE * 2))
+     * MERGE INTO dest dest_alias
+     * USING "source" source_alias ON source_alias."key" = dest_alias."key"
+     *  WHEN NOT MATCHED THEN
+     *      INSERT ("at", "key", "value")
+     *      VALUES ('2000-01-01T00:00:00', source_alias."key", (source_alias."value" * 2))
      * ```
      */
     @ParameterizedTest
@@ -111,12 +112,11 @@ class MergeTableTest: MergeBaseTest() {
      * [mergeFrom] 함수를 사용하여 [org.jetbrains.exposed.sql.statements.MergeStatement.whenMatchedUpdate] 를 테스트합니다.
      *
      * ```sql
-     * MERGE INTO MERGE_TEST_DEST
-     * USING MERGE_TEST_SOURCE
-     *    ON MERGE_TEST_SOURCE.MERGE_TEST_KEY = MERGE_TEST_DEST.MERGE_TEST_KEY
+     * MERGE INTO dest
+     * USING "source" ON "source"."key" = dest."key"
      *  WHEN MATCHED THEN
-     *          UPDATE SET MERGE_TEST_VALUE=((MERGE_TEST_SOURCE.MERGE_TEST_VALUE + MERGE_TEST_DEST.MERGE_TEST_VALUE) * 2),
-     *                     MERGE_TEST_OPTIONAL_VALUE=CONCAT(CONCAT(MERGE_TEST_SOURCE.MERGE_TEST_KEY, '::'), MERGE_TEST_DEST.MERGE_TEST_KEY)
+     *      UPDATE SET "value"=(("source"."value" + dest."value") * 2),
+     *                 optional_value=CONCAT(CONCAT("source"."key", '::'), dest."key")
      * ```
      */
     @ParameterizedTest
@@ -145,13 +145,11 @@ class MergeTableTest: MergeBaseTest() {
      * MergeFrom with whenMatchedUpdate
      *
      * ```sql
-     * MERGE INTO MERGE_TEST_DEST dest_alias
-     * USING MERGE_TEST_SOURCE
-     *    ON MERGE_TEST_SOURCE.MERGE_TEST_KEY = dest_alias.MERGE_TEST_KEY
-     * WHEN MATCHED THEN
-     *      UPDATE SET
-     *          MERGE_TEST_VALUE=((MERGE_TEST_SOURCE.MERGE_TEST_VALUE + dest_alias.MERGE_TEST_VALUE) * 2),
-     *          MERGE_TEST_OPTIONAL_VALUE=CONCAT(CONCAT(MERGE_TEST_SOURCE.MERGE_TEST_KEY, '::'), dest_alias.MERGE_TEST_KEY)
+     * MERGE INTO dest dest_alias
+     * USING "source" ON "source"."key" = dest_alias."key"
+     *  WHEN MATCHED THEN
+     *      UPDATE SET "value"=(("source"."value" + dest_alias."value") * 2),
+     *                 optional_value=CONCAT(CONCAT("source"."key", '::'), dest_alias."key")
      * ```
      */
     @ParameterizedTest
@@ -181,10 +179,10 @@ class MergeTableTest: MergeBaseTest() {
      * MergeFrom with whenMatchedDelete
      *
      * ```sql
-     * MERGE INTO MERGE_TEST_DEST
-     * USING MERGE_TEST_SOURCE
-     *    ON MERGE_TEST_DEST.MERGE_TEST_KEY = MERGE_TEST_SOURCE.MERGE_TEST_KEY
-     * WHEN MATCHED THEN DELETE
+     * MERGE INTO dest
+     * USING "source" ON "source"."key" = dest."key"
+     * WHEN MATCHED THEN
+     *      DELETE
      * ```
      */
     @ParameterizedTest
@@ -209,14 +207,13 @@ class MergeTableTest: MergeBaseTest() {
      * MergeFrom with whenNotMatchedInsert and whenMatchedUpdate
      *
      * ```sql
-     * MERGE INTO MERGE_TEST_DEST
-     * USING MERGE_TEST_SOURCE
-     *    ON MERGE_TEST_DEST.MERGE_TEST_KEY = MERGE_TEST_SOURCE.MERGE_TEST_KEY
-     * WHEN NOT MATCHED AND (MERGE_TEST_SOURCE.MERGE_TEST_VALUE > 2) THEN
-     *      INSERT (MERGE_TEST_AT, MERGE_TEST_KEY, MERGE_TEST_VALUE)
-     *      VALUES ('2000-01-01T00:00:00', sub.MERGE_TEST_KEY, sub.MERGE_TEST_VALUE)
-     * WHEN MATCHED AND (MERGE_TEST_DEST.MERGE_TEST_VALUE > 20) THEN
-     *      UPDATE SET MERGE_TEST_VALUE=(MERGE_TEST_SOURCE.MERGE_TEST_VALUE + MERGE_TEST_DEST.MERGE_TEST_VALUE)
+     * MERGE INTO dest
+     * USING "source" ON "source"."key" = dest."key"
+     *  WHEN NOT MATCHED AND ("source"."value" > 2) THEN
+     *      INSERT ("at", "key", "value")
+     *      VALUES ('2000-01-01T00:00:00', "source"."key", "source"."value")
+     *  WHEN MATCHED AND (dest."value" > 20) THEN
+     *      UPDATE SET "value"=("source"."value" + dest."value")
      * ```
      */
     @ParameterizedTest
@@ -253,11 +250,10 @@ class MergeTableTest: MergeBaseTest() {
      * MergeFrom with whenMatchedDelete and condition
      *
      * ```sql
-     * MERGE INTO MERGE_TEST_DEST
-     * USING MERGE_TEST_SOURCE
-     *    ON MERGE_TEST_DEST.MERGE_TEST_KEY = MERGE_TEST_SOURCE.MERGE_TEST_KEY
-     *  WHEN MATCHED AND ((MERGE_TEST_SOURCE.MERGE_TEST_VALUE > 2) AND (MERGE_TEST_DEST.MERGE_TEST_VALUE > 20))
-     *  THEN DELETE
+     * MERGE INTO dest
+     * USING "source" ON "source"."key" = dest."key"
+     *  WHEN MATCHED AND (("source"."value" > 2) AND (dest."value" > 20)) THEN
+     *      DELETE
      * ```
      */
     @ParameterizedTest
@@ -282,30 +278,31 @@ class MergeTableTest: MergeBaseTest() {
      * MergeFrom with multiple clauses
      *
      * ```sql
-     * MERGE INTO MERGE_TEST_DEST
-     * USING MERGE_TEST_SOURCE ON MERGE_TEST_DEST.MERGE_TEST_KEY = MERGE_TEST_SOURCE.MERGE_TEST_KEY
-     * WHEN NOT MATCHED AND (MERGE_TEST_SOURCE.MERGE_TEST_VALUE = 1) THEN
-     *      INSERT (MERGE_TEST_AT, MERGE_TEST_KEY, MERGE_TEST_VALUE, MERGE_TEST_OPTIONAL_VALUE)
-     *      VALUES ('2000-01-01T00:00:00', MERGE_TEST_SOURCE.MERGE_TEST_KEY, MERGE_TEST_SOURCE.MERGE_TEST_VALUE, 'one')
-     * WHEN NOT MATCHED AND (MERGE_TEST_SOURCE.MERGE_TEST_VALUE = 2) THEN
-     *      INSERT (MERGE_TEST_AT, MERGE_TEST_KEY, MERGE_TEST_VALUE, MERGE_TEST_OPTIONAL_VALUE)
-     *      VALUES ('2000-01-01T00:00:00', MERGE_TEST_SOURCE.MERGE_TEST_KEY, MERGE_TEST_SOURCE.MERGE_TEST_VALUE, 'two')
-     * WHEN NOT MATCHED THEN
-     *      INSERT (MERGE_TEST_AT, MERGE_TEST_KEY, MERGE_TEST_VALUE, MERGE_TEST_OPTIONAL_VALUE)
-     *      VALUES ('2000-01-01T00:00:00', MERGE_TEST_SOURCE.MERGE_TEST_KEY, MERGE_TEST_SOURCE.MERGE_TEST_VALUE, 'three-and-more')
-     * WHEN MATCHED AND (MERGE_TEST_SOURCE.MERGE_TEST_VALUE = 1) THEN
+     * MERGE INTO dest
+     * USING "source" ON "source"."key" = dest."key"
+     *  WHEN NOT MATCHED AND ("source"."value" = 1) THEN
+     *      INSERT ("at", "key", "value", optional_value)
+     *      VALUES ('2000-01-01T00:00:00', "source"."key", "source"."value", 'one')
+     *  WHEN NOT MATCHED AND ("source"."value" = 2) THEN
+     *      INSERT ("at", "key", "value", optional_value)
+     *      VALUES ('2000-01-01T00:00:00', "source"."key", "source"."value", 'two')
+     *  WHEN NOT MATCHED THEN
+     *      INSERT ("at", "key", "value", optional_value)
+     *      VALUES ('2000-01-01T00:00:00', "source"."key", "source"."value", 'three-and-more')
+     *  WHEN MATCHED AND ("source"."value" = 1) THEN
      *      DELETE
-     * WHEN MATCHED AND (MERGE_TEST_SOURCE.MERGE_TEST_VALUE = 1) THEN
-     *      UPDATE SET MERGE_TEST_KEY=sub.MERGE_TEST_KEY,
-     *                 MERGE_TEST_VALUE=((MERGE_TEST_DEST.MERGE_TEST_VALUE + MERGE_TEST_SOURCE.MERGE_TEST_VALUE) * 10)
-     * WHEN MATCHED AND (MERGE_TEST_SOURCE.MERGE_TEST_VALUE = 2) THEN
-     *      UPDATE SET MERGE_TEST_KEY=sub.MERGE_TEST_KEY,
-     *                 MERGE_TEST_VALUE=((MERGE_TEST_DEST.MERGE_TEST_VALUE + MERGE_TEST_SOURCE.MERGE_TEST_VALUE) * 100)
-     * WHEN MATCHED AND (MERGE_TEST_SOURCE.MERGE_TEST_VALUE = 3) THEN
+     *  WHEN MATCHED AND ("source"."value" = 1) THEN
+     *      UPDATE SET "key"="source"."key",
+     *                 "value"=((dest."value" + "source"."value") * 10)
+     *  WHEN MATCHED AND ("source"."value" = 2) THEN
+     *      UPDATE SET "key"="source"."key",
+     *                 "value"=((dest."value" + "source"."value") * 100)
+     *  WHEN MATCHED AND ("source"."value" = 3) THEN
      *      DELETE
-     * WHEN MATCHED THEN
-     *      UPDATE SET MERGE_TEST_KEY=MERGE_TEST_SOURCE.MERGE_TEST_KEY,
-     *                 MERGE_TEST_VALUE=1000
+     *  WHEN MATCHED THEN
+     *      UPDATE SET "key"="source"."key",
+     *                 "value"=1000
+     * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -361,20 +358,20 @@ class MergeTableTest: MergeBaseTest() {
     /**
      * MergeFrom with auto generated on condition
      *
-     * H2:
+     * Postgres:
      * ```sql
-     * MERGE INTO TEST_DEST
-     * USING TEST_SOURCE ON TEST_DEST.ID=TEST_SOURCE.ID
+     * MERGE INTO dest
+     * USING "source" ON dest.id="source".id
      *  WHEN NOT MATCHED THEN
-     *      INSERT (ID, TEST_VALUE) VALUES (TEST_SOURCE.ID, TEST_SOURCE.TEST_VALUE)
+     *      INSERT (id, "value") VALUES ("source".id, "source".test_value)
      * ```
      *
      * With alias:
      * ```sql
-     * MERGE INTO TEST_DEST dest_alias
-     * USING TEST_SOURCE source_alias ON dest_alias.ID=source_alias.ID
+     * MERGE INTO dest dest_alias
+     * USING "source" source_alias ON dest_alias.id=source_alias.id
      *  WHEN NOT MATCHED THEN
-     *      INSERT (ID, TEST_VALUE) VALUES (source_alias.ID, source_alias.TEST_VALUE)
+     *      INSERT (id, "value") VALUES (source_alias.id, source_alias.test_value)
      * ```
      */
     @ParameterizedTest
@@ -382,14 +379,14 @@ class MergeTableTest: MergeBaseTest() {
     fun `auto generated on condition`(testDb: TestDB) {
         Assumptions.assumeTrue { testDb !in TestDB.ALL_MYSQL }
 
-        val source = object: IdTable<Int>("test_source") {
+        val source = object: IdTable<Int>("source") {
             override val id = integer("id").entityId()
             val value = varchar("test_value", 128)
             override val primaryKey = PrimaryKey(id)
         }
-        val dest = object: IdTable<Int>("test_dest") {
+        val dest = object: IdTable<Int>("dest") {
             override val id = integer("id").entityId()
-            val value = varchar("test_value", 128)
+            val value = varchar("value", 128)
             override val primaryKey = PrimaryKey(id)
         }
 
@@ -426,12 +423,13 @@ class MergeTableTest: MergeBaseTest() {
      * MergeFrom with whenNotMatchedDoNothing
      *
      * ```sql
-     * MERGE INTO merge_test_dest
-     * USING merge_test_source ON merge_test_dest.merge_test_key = merge_test_source.merge_test_key
-     * WHEN NOT MATCHED AND (merge_test_source.merge_test_value > 1) THEN DO NOTHING
-     * WHEN NOT MATCHED THEN
-     *      INSERT (merge_test_at, merge_test_key, merge_test_value)
-     *      VALUES ('2000-01-01T00:00:00', merge_test_source.merge_test_key, (merge_test_source.merge_test_value + 100))
+     * MERGE INTO dest
+     * USING "source" ON "source"."key" = dest."key"
+     *  WHEN NOT MATCHED AND ("source"."value" > 1) THEN
+     *      DO NOTHING
+     *  WHEN NOT MATCHED THEN
+     *      INSERT ("at", "key", "value")
+     *      VALUES ('2000-01-01T00:00:00', "source"."key", ("source"."value" + 100))
      * ```
      */
     @ParameterizedTest
@@ -461,6 +459,18 @@ class MergeTableTest: MergeBaseTest() {
         }
     }
 
+    /**
+     * Postgres 에서는 `whenMatchedDoNothing` 을 지원하지 않습니다.
+     *
+     * ```sql
+     * MERGE INTO dest
+     * USING "source" ON "source"."key" = dest."key"
+     *  WHEN MATCHED AND ("source"."value" = 1) THEN
+     *      DO NOTHING
+     *  WHEN MATCHED THEN
+     *      DELETE
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `mergeFrom with whenMatched do nothing in postgres`(testDb: TestDB) {
@@ -486,13 +496,23 @@ class MergeTableTest: MergeBaseTest() {
         }
     }
 
+    /**
+     * Postgres 에서 `OVERRIDING SYSTEM VALUE` 옵션을 사용하여 DEST 테이블의 ID 값을 덮어쓰는 테스트입니다.
+     *
+     * ```sql
+     * MERGE INTO dest
+     * USING src ON dest.id=src.id
+     *  WHEN NOT MATCHED THEN
+     *      INSERT (id) OVERRIDING SYSTEM VALUE VALUES (1)
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `with overridingSystemValue option in postgres`(testDb: TestDB) {
         Assumptions.assumeTrue(testDb in TestDB.ALL_POSTGRES)
 
-        val source = object: IntIdTable() {}
-        val dest = object: IdTable<Int>() {
+        val source = object: IntIdTable("src") {}
+        val dest = object: IdTable<Int>("dest") {
             override val id = integer("id")
                 .withDefinition("generated always as identity")
                 .entityId()
@@ -515,14 +535,13 @@ class MergeTableTest: MergeBaseTest() {
     }
 
     /**
-     * MergeFrom with overridingUserValue option
+     * Postgres 에서 `OVERRIDING USER VALUE` 옵션을 사용하여 DEST 테이블의 ID 값을 덮어쓰는 테스트입니다.
      *
      * ```sql
-     * MERGE INTO "with overridinguservalue option in postgres$dest$1"
-     * USING "with overridinguservalue option in postgres$source$1" ON "with overridinguservalue option in postgres$dest$1".id="with overridinguservalue option in postgres$source$1".id
+     * MERGE INTO dest
+     * USING src ON dest.id=src.id
      *  WHEN NOT MATCHED THEN
-     *          INSERT (id) OVERRIDING USER VALUE
-     *          VALUES ("with overridinguservalue option in postgres$source$1".id)
+     *      INSERT (id) OVERRIDING USER VALUE VALUES (src.id)
      * ```
      */
     @ParameterizedTest
@@ -530,12 +549,19 @@ class MergeTableTest: MergeBaseTest() {
     fun `with overridingUserValue option in postgres`(testDb: TestDB) {
         Assumptions.assumeTrue(testDb in TestDB.ALL_POSTGRES)
 
-        val source = object: IntIdTable() {}
+        val source = object: IntIdTable("src") {}
 
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS dest (
+         *      id INT GENERATED BY DEFAULT AS IDENTITY(SEQUENCE NAME test_seq START WITH 100)PRIMARY KEY
+         * )
+         * ```
+         */
         val sequenceStartNumber = 100
-        val dest = object: IdTable<Int>() {
+        val dest = object: IdTable<Int>("dest") {
             override val id = integer("id")
-                .withDefinition("GENERATED BY DEFAULT AS IDENTITY(SEQUENCE NAME testOverridingUserValueSequence START WITH $sequenceStartNumber)")
+                .withDefinition("GENERATED BY DEFAULT AS IDENTITY(SEQUENCE NAME test_seq START WITH $sequenceStartNumber)")
                 .entityId()
 
             override val primaryKey = PrimaryKey(id)
@@ -560,15 +586,25 @@ class MergeTableTest: MergeBaseTest() {
         }
     }
 
+    /**
+     * MergeFrom with default value
+     *
+     * ```sql
+     * MERGE INTO dest
+     * USING source ON dest.id=source.id
+     *  WHEN NOT MATCHED THEN
+     *      INSERT DEFAULT VALUES
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert default value`(testDb: TestDB) {
         Assumptions.assumeTrue(testDb in TestDB.ALL_POSTGRES)
 
-        val source = object: IntIdTable("test_source") {
+        val source = object: IntIdTable("source") {
             val value = varchar("value", 128)
         }
-        val dest = object: IntIdTable("test_dest") {
+        val dest = object: IntIdTable("dest") {
             // `withDefinition()` here is a workaround to avoid insert explicitly pass default value
             val value = varchar("value", 128)
                 .withDefinition("DEFAULT", stringLiteral("default-test-value"))
@@ -581,7 +617,7 @@ class MergeTableTest: MergeBaseTest() {
             }
 
             dest.mergeFrom(source) {
-                whenNotMatchedInsert {}
+                whenNotMatchedInsert {}  // WHEN NOT MATCHED THEN INSERT DEFAULT VALUES
             }
 
             dest.selectAll().single()[dest.value] shouldBeEqualTo "default-test-value"
@@ -591,19 +627,19 @@ class MergeTableTest: MergeBaseTest() {
     /**
      * MergeFrom with const condition
      * ```sql
-     * MERGE INTO MERGE_TEST_DEST
+     * MERGE INTO dest
      * USING (
-     *      SELECT MERGE_TEST_SOURCE.ID,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_KEY,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_VALUE,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_OPTIONAL_VALUE,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_AT
-     *        FROM MERGE_TEST_SOURCE
-     *       WHERE MERGE_TEST_SOURCE.MERGE_TEST_KEY = 'only-in-source-1'
-     * ) as sub ON MERGE_TEST_DEST.MERGE_TEST_KEY = sub.MERGE_TEST_KEY
+     *      SELECT "source".id,
+     *             "source"."key",
+     *             "source"."value",
+     *             "source".optional_value,
+     *             "source"."at"
+     *        FROM "source"
+     *       WHERE "source"."key" = 'only-in-source-1'
+     *      ) as src ON dest."key" = src."key"
      * WHEN NOT MATCHED THEN
-     *      INSERT (MERGE_TEST_AT, MERGE_TEST_KEY, MERGE_TEST_VALUE)
-     *      VALUES ('2000-01-01T00:00:00', sub.MERGE_TEST_KEY, sub.MERGE_TEST_VALUE)
+     *      INSERT ("at", "key", "value")
+     *      VALUES ('2000-01-01T00:00:00', src."key", src."value")
      * ```
      */
     @ParameterizedTest
@@ -611,7 +647,7 @@ class MergeTableTest: MergeBaseTest() {
     fun `mergeFrom with const condition`(testDb: TestDB) {
         val filteredSourceQuery = Source.selectAll()
             .where { Source.key eq "only-in-source-1" }
-            .alias("sub")
+            .alias("src")
 
         withMergeTestTablesAndDefaultData(testDb) { dest, source ->
             dest.mergeFrom(
@@ -631,6 +667,9 @@ class MergeTableTest: MergeBaseTest() {
         }
     }
 
+    /**
+     * Postgres 가 지원하지 않는 기능 테스트
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `postgres features are unsupported in other databases`(testDb: TestDB) {

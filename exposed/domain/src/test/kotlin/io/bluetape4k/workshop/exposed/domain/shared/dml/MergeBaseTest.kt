@@ -6,6 +6,7 @@ import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withTables
 import kotlinx.datetime.LocalDateTime
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.kotlin.datetime.datetime
@@ -68,11 +69,23 @@ abstract class MergeBaseTest: AbstractExposedTest() {
         }
     }
 
-    object Source: IntIdTable("merge_test_source") {
-        val key = varchar("merge_test_key", 128)
-        val value = integer("merge_test_value")
-        val optional = text("merge_test_optional_value").nullable()
-        val at = datetime("merge_test_at").clientDefault { TEST_DEFAULT_DATE_TIME }
+    /**
+     * Postgres:
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS "source" (
+     *      id SERIAL PRIMARY KEY,
+     *      "key" VARCHAR(128) NOT NULL,
+     *      "value" INT NOT NULL,
+     *      optional_value TEXT NULL,
+     *      "at" TIMESTAMP NOT NULL
+     * )
+     * ```
+     */
+    object Source: IntIdTable("source") {
+        val key = varchar("key", 128)
+        val value = integer("value")
+        val optional = text("optional_value").nullable()
+        val at = datetime("at").clientDefault { TEST_DEFAULT_DATE_TIME }
 
         fun insert(key: String, value: Int, optional: String? = null, at: LocalDateTime? = null) {
             Source.insert {
@@ -84,11 +97,22 @@ abstract class MergeBaseTest: AbstractExposedTest() {
         }
     }
 
-    object Dest: IntIdTable("merge_test_dest") {
-        val key = varchar("merge_test_key", 128)
-        val value = integer("merge_test_value")
-        val optional = text("merge_test_optional_value").nullable()
-        val at = datetime("merge_test_at").clientDefault { TEST_DEFAULT_DATE_TIME }
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS dest (
+     *      id SERIAL PRIMARY KEY,
+     *      "key" VARCHAR(128) NOT NULL,
+     *      "value" INT NOT NULL,
+     *      optional_value TEXT NULL,
+     *      "at" TIMESTAMP NOT NULL
+     * )
+     * ```
+     */
+    object Dest: IntIdTable("dest") {
+        val key = varchar("key", 128)
+        val value = integer("value")
+        val optional = text("optional_value").nullable()
+        val at = datetime("at").clientDefault { TEST_DEFAULT_DATE_TIME }
 
         fun insert(key: String, value: Int, optional: String? = null, at: LocalDateTime? = null) {
             Dest.insert {
@@ -99,7 +123,7 @@ abstract class MergeBaseTest: AbstractExposedTest() {
             }
         }
 
-        fun getByKey(key: String) = Dest.selectAll().where { Dest.key eq key }.single()
-        fun getByKeyOrNull(key: String) = Dest.selectAll().where { Dest.key eq key }.singleOrNull()
+        fun getByKey(key: String): ResultRow = Dest.selectAll().where { Dest.key eq key }.single()
+        fun getByKeyOrNull(key: String): ResultRow? = Dest.selectAll().where { Dest.key eq key }.singleOrNull()
     }
 }
