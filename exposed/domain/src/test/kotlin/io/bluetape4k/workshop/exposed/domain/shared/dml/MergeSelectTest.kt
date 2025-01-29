@@ -37,18 +37,17 @@ class MergeSelectTest: MergeBaseTest() {
      * Mrget into from a select query
      *
      * ```sql
-     * MERGE INTO MERGE_TEST_DEST
-     * USING (
-     *      SELECT MERGE_TEST_SOURCE.ID,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_KEY,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_VALUE,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_OPTIONAL_VALUE,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_AT
-     *        FROM MERGE_TEST_SOURCE
-     * ) as sub ON MERGE_TEST_DEST.MERGE_TEST_KEY = sub.MERGE_TEST_KEY
-     * WHEN NOT MATCHED
-     * THEN INSERT (MERGE_TEST_AT, MERGE_TEST_KEY, MERGE_TEST_VALUE, MERGE_TEST_OPTIONAL_VALUE)
-     *      VALUES ('2000-01-01T00:00:00', sub.MERGE_TEST_KEY, (sub.MERGE_TEST_VALUE * 2), CONCAT('optional::', sub.MERGE_TEST_KEY))
+     * MERGE INTO dest
+     * USING ( SELECT "source".id,
+     *                "source"."key",
+     *                "source"."value",
+     *                "source".optional_value,
+     *                "source"."at"
+     *           FROM "source"
+     *       ) as sub ON dest."key" = sub."key"
+     *  WHEN NOT MATCHED THEN
+     *      INSERT ("at", "key", "value", optional_value)
+     *      VALUES ('2000-01-01T00:00:00', sub."key", (sub."value" * 2), CONCAT('optional::', sub."key"))
      * ```
      */
     @ParameterizedTest
@@ -76,18 +75,17 @@ class MergeSelectTest: MergeBaseTest() {
     /**
      * Merge into from a select query with alias
      * ```sql
-     * MERGE INTO MERGE_TEST_DEST dest_alias
-     * USING (
-     *      SELECT MERGE_TEST_SOURCE.ID,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_KEY,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_VALUE,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_OPTIONAL_VALUE,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_AT
-     *        FROM MERGE_TEST_SOURCE
-     * ) as sub ON sub.MERGE_TEST_KEY = dest_alias.MERGE_TEST_KEY
-     * WHEN NOT MATCHED THEN
-     *      INSERT (MERGE_TEST_AT, MERGE_TEST_KEY, MERGE_TEST_VALUE)
-     *      VALUES ('2000-01-01T00:00:00', sub.MERGE_TEST_KEY, (sub.MERGE_TEST_VALUE * 2))
+     * MERGE INTO dest dest_alias
+     * USING ( SELECT "source".id,
+     *                "source"."key",
+     *                "source"."value",
+     *                "source".optional_value,
+     *                "source"."at"
+     *           FROM "source"
+     *       ) as sub ON sub."key" = dest_alias."key"
+     *  WHEN NOT MATCHED THEN
+     *      INSERT ("at", "key", "value")
+     *      VALUES ('2000-01-01T00:00:00', sub."key", (sub."value" * 2))
      * ```
      */
     @ParameterizedTest
@@ -115,19 +113,17 @@ class MergeSelectTest: MergeBaseTest() {
      * MergeFrom with whenMatchedUpdate
      *
      * ```sql
-     * MERGE INTO MERGE_TEST_DEST
-     * USING (
-     *      SELECT MERGE_TEST_SOURCE.ID,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_KEY,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_VALUE,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_OPTIONAL_VALUE,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_AT
-     *        FROM MERGE_TEST_SOURCE
-     * ) as sub ON MERGE_TEST_DEST.MERGE_TEST_KEY = sub.MERGE_TEST_KEY
-     * WHEN MATCHED THEN
-     *      UPDATE SET
-     *          MERGE_TEST_VALUE=((sub.MERGE_TEST_VALUE + MERGE_TEST_DEST.MERGE_TEST_VALUE) * 2),
-     *          MERGE_TEST_OPTIONAL_VALUE=CONCAT(CONCAT(sub.MERGE_TEST_KEY, '::'), MERGE_TEST_DEST.MERGE_TEST_KEY)
+     * MERGE INTO dest
+     * USING ( SELECT "source".id,
+     *                "source"."key",
+     *                "source"."value",
+     *                "source".optional_value,
+     *                "source"."at"
+     *           FROM "source"
+     *       ) as sub ON dest."key" = sub."key"
+     *  WHEN MATCHED THEN
+     *      UPDATE SET "value"=((sub."value" + dest."value") * 2),
+     *                 optional_value=CONCAT(CONCAT(sub."key", '::'), dest."key")
      * ```
      */
     @ParameterizedTest
@@ -155,19 +151,17 @@ class MergeSelectTest: MergeBaseTest() {
      * MergeFrom with whenMatchedUpdate
      *
      * ```sql
-     * MERGE INTO MERGE_TEST_DEST dest_alias
-     * USING (
-     *      SELECT MERGE_TEST_SOURCE.ID,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_KEY,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_VALUE,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_OPTIONAL_VALUE,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_AT
-     *        FROM MERGE_TEST_SOURCE
-     * ) as sub ON sub.MERGE_TEST_KEY = dest_alias.MERGE_TEST_KEY
-     * WHEN MATCHED THEN
-     *      UPDATE SET
-     *          MERGE_TEST_VALUE=((sub.MERGE_TEST_VALUE + dest_alias.MERGE_TEST_VALUE) * 2),
-     *          MERGE_TEST_OPTIONAL_VALUE=CONCAT(CONCAT(sub.MERGE_TEST_KEY, '::'), dest_alias.MERGE_TEST_KEY)
+     * MERGE INTO dest dest_alias
+     * USING ( SELECT "source".id,
+     *                "source"."key",
+     *                "source"."value",
+     *                "source".optional_value,
+     *                "source"."at"
+     *           FROM "source"
+     *       ) as sub ON sub."key" = dest_alias."key"
+     *  WHEN MATCHED THEN
+     *      UPDATE SET "value"=((sub."value" + dest_alias."value") * 2),
+     *                 optional_value=CONCAT(CONCAT(sub."key", '::'), dest_alias."key")
      * ```
      */
     @ParameterizedTest
@@ -197,16 +191,16 @@ class MergeSelectTest: MergeBaseTest() {
      * MergeFrom with whenMatchedDelete
      *
      * ```sql
-     * MERGE INTO MERGE_TEST_DEST
-     * USING (
-     *      SELECT MERGE_TEST_SOURCE.ID,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_KEY,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_VALUE,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_OPTIONAL_VALUE,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_AT
-     *        FROM MERGE_TEST_SOURCE
-     * ) as sub ON MERGE_TEST_DEST.MERGE_TEST_KEY = sub.MERGE_TEST_KEY
-     * WHEN MATCHED THEN DELETE
+     * MERGE INTO dest
+     * USING ( SELECT "source".id,
+     *                "source"."key",
+     *                "source"."value",
+     *                "source".optional_value,
+     *                "source"."at"
+     *           FROM "source"
+     *       ) as sub ON dest."key" = sub."key"
+     *  WHEN MATCHED THEN
+     *      DELETE
      * ```
      */
     @ParameterizedTest
@@ -231,20 +225,19 @@ class MergeSelectTest: MergeBaseTest() {
      * MergeFrom with whenNotMatchedInsert and whenMatchedUpdate
      *
      * ```sql
-     * MERGE INTO MERGE_TEST_DEST
-     * USING (
-     *      SELECT MERGE_TEST_SOURCE.ID,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_KEY,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_VALUE,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_OPTIONAL_VALUE,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_AT
-     *        FROM MERGE_TEST_SOURCE
-     * ) as sub ON MERGE_TEST_DEST.MERGE_TEST_KEY = sub.MERGE_TEST_KEY
-     * WHEN NOT MATCHED AND (sub.MERGE_TEST_VALUE > 2) THEN
-     *      INSERT (MERGE_TEST_AT, MERGE_TEST_KEY, MERGE_TEST_VALUE)
-     *      VALUES ('2000-01-01T00:00:00', sub.MERGE_TEST_KEY, sub.MERGE_TEST_VALUE)
-     * WHEN MATCHED AND (MERGE_TEST_DEST.MERGE_TEST_VALUE > 20) THEN
-     *      UPDATE SET MERGE_TEST_VALUE=(sub.MERGE_TEST_VALUE + MERGE_TEST_DEST.MERGE_TEST_VALUE)
+     * MERGE INTO dest
+     * USING ( SELECT "source".id,
+     *                "source"."key",
+     *                "source"."value",
+     *                "source".optional_value,
+     *                "source"."at"
+     *           FROM "source"
+     *       ) as sub ON dest."key" = sub."key"
+     *  WHEN NOT MATCHED AND (sub."value" > 2) THEN
+     *      INSERT ("at", "key", "value")
+     *      VALUES ('2000-01-01T00:00:00', sub."key", sub."value")
+     *  WHEN MATCHED AND (dest."value" > 20) THEN
+     *      UPDATE SET "value"=(sub."value" + dest."value")
      * ```
      */
     @ParameterizedTest
@@ -281,16 +274,16 @@ class MergeSelectTest: MergeBaseTest() {
      * MergeFrom with whenMatchedDelete and condition
      *
      * ```sql
-     * MERGE INTO MERGE_TEST_DEST
-     * USING (
-     *      SELECT MERGE_TEST_SOURCE.ID,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_KEY,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_VALUE,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_OPTIONAL_VALUE,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_AT
-     *        FROM MERGE_TEST_SOURCE
-     * ) as sub ON MERGE_TEST_DEST.MERGE_TEST_KEY = sub.MERGE_TEST_KEY
-     * WHEN MATCHED AND ((sub.MERGE_TEST_VALUE > 2) AND (MERGE_TEST_DEST.MERGE_TEST_VALUE > 20)) THEN DELETE
+     * MERGE INTO dest
+     * USING ( SELECT "source".id,
+     *                "source"."key",
+     *                "source"."value",
+     *                "source".optional_value,
+     *                "source"."at"
+     *           FROM "source"
+     *        ) as sub ON dest."key" = sub."key"
+     *  WHEN MATCHED AND ((sub."value" > 2) AND (dest."value" > 20)) THEN
+     *      DELETE
      * ```
      */
     @ParameterizedTest
@@ -315,37 +308,36 @@ class MergeSelectTest: MergeBaseTest() {
      * MergeFrom with multiple clauses
      *
      * ```sql
-     * MERGE INTO MERGE_TEST_DEST
-     * USING (
-     *      SELECT MERGE_TEST_SOURCE.ID,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_KEY,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_VALUE,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_OPTIONAL_VALUE,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_AT
-     *        FROM MERGE_TEST_SOURCE
-     * ) as sub ON MERGE_TEST_DEST.MERGE_TEST_KEY = sub.MERGE_TEST_KEY
-     * WHEN NOT MATCHED AND (sub.MERGE_TEST_VALUE = 1) THEN
-     *      INSERT (MERGE_TEST_AT, MERGE_TEST_KEY, MERGE_TEST_VALUE, MERGE_TEST_OPTIONAL_VALUE)
-     *      VALUES ('2000-01-01T00:00:00', sub.MERGE_TEST_KEY, sub.MERGE_TEST_VALUE, 'one')
-     * WHEN NOT MATCHED AND (sub.MERGE_TEST_VALUE = 2) THEN
-     *      INSERT (MERGE_TEST_AT, MERGE_TEST_KEY, MERGE_TEST_VALUE, MERGE_TEST_OPTIONAL_VALUE)
-     *      VALUES ('2000-01-01T00:00:00', sub.MERGE_TEST_KEY, sub.MERGE_TEST_VALUE, 'two')
-     * WHEN NOT MATCHED THEN
-     *      INSERT (MERGE_TEST_AT, MERGE_TEST_KEY, MERGE_TEST_VALUE, MERGE_TEST_OPTIONAL_VALUE)
-     *      VALUES ('2000-01-01T00:00:00', sub.MERGE_TEST_KEY, sub.MERGE_TEST_VALUE, 'three-and-more')
-     * WHEN MATCHED AND (sub.MERGE_TEST_VALUE = 1) THEN
+     * MERGE INTO dest
+     * USING ( SELECT "source".id,
+     *                "source"."key",
+     *                "source"."value",
+     *                "source".optional_value,
+     *                "source"."at"
+     *           FROM "source"
+     *        ) as sub ON dest."key" = sub."key"
+     *  WHEN NOT MATCHED AND (sub."value" = 1) THEN
+     *      INSERT ("at", "key", "value", optional_value)
+     *      VALUES ('2000-01-01T00:00:00', sub."key", sub."value", 'one')
+     *  WHEN NOT MATCHED AND (sub."value" = 2) THEN
+     *      INSERT ("at", "key", "value", optional_value)
+     *      VALUES ('2000-01-01T00:00:00', sub."key", sub."value", 'two')
+     *  WHEN NOT MATCHED THEN
+     *      INSERT ("at", "key", "value", optional_value)
+     *      VALUES ('2000-01-01T00:00:00', sub."key", sub."value", 'three-and-more')
+     *  WHEN MATCHED AND (sub."value" = 1) THEN
      *      DELETE
-     * WHEN MATCHED AND (sub.MERGE_TEST_VALUE = 1) THEN
-     *      UPDATE SET MERGE_TEST_KEY=sub.MERGE_TEST_KEY,
-     *                 MERGE_TEST_VALUE=((MERGE_TEST_DEST.MERGE_TEST_VALUE + sub.MERGE_TEST_VALUE) * 10)
-     * WHEN MATCHED AND (sub.MERGE_TEST_VALUE = 2) THEN
-     *      UPDATE SET MERGE_TEST_KEY=sub.MERGE_TEST_KEY,
-     *                 MERGE_TEST_VALUE=((MERGE_TEST_DEST.MERGE_TEST_VALUE + sub.MERGE_TEST_VALUE) * 100)
-     * WHEN MATCHED AND (sub.MERGE_TEST_VALUE = 3) THEN
+     *  WHEN MATCHED AND (sub."value" = 1) THEN
+     *      UPDATE SET "key"=sub."key",
+     *                 "value"=((dest."value" + sub."value") * 10)
+     *  WHEN MATCHED AND (sub."value" = 2) THEN
+     *      UPDATE SET "key"=sub."key",
+     *                 "value"=((dest."value" + sub."value") * 100)
+     *  WHEN MATCHED AND (sub."value" = 3) THEN
      *      DELETE
-     * WHEN MATCHED THEN
-     *      UPDATE SET MERGE_TEST_KEY=sub.MERGE_TEST_KEY,
-     *                 MERGE_TEST_VALUE=1000
+     *  WHEN MATCHED THEN
+     *      UPDATE SET "key"=sub."key",
+     *                 "value"=1000
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -399,22 +391,21 @@ class MergeSelectTest: MergeBaseTest() {
     }
 
     /**
-     * MergeFrom with whenNotMatchedDoNothing
+     * Subquery 를 Source로 사용하는 MergeFrom 예제 (PostgreSQL 전용)
      *
      * ```sql
-     * MERGE INTO merge_test_dest
-     * USING (
-     *      SELECT merge_test_source.id,
-     *             merge_test_source.merge_test_key,
-     *             merge_test_source.merge_test_value,
-     *             merge_test_source.merge_test_optional_value,
-     *             merge_test_source.merge_test_at
-     *        FROM merge_test_source
-     * ) as sub ON merge_test_dest.merge_test_key = sub.merge_test_key
-     * WHEN NOT MATCHED AND (sub.merge_test_value > 1) THEN DO NOTHING
-     * WHEN NOT MATCHED THEN
-     *      INSERT (merge_test_at, merge_test_key, merge_test_value)
-     *      VALUES ('2000-01-01T00:00:00', sub.merge_test_key, (sub.merge_test_value + 100))
+     * MERGE INTO dest
+     * USING ( SELECT "source".id,
+     *                "source"."key",
+     *                "source"."value",
+     *                "source".optional_value,
+     *                "source"."at"
+     *           FROM "source" ) as sub ON dest."key" = sub."key"
+     *  WHEN NOT MATCHED AND (sub."value" > 1) THEN
+     *      DO NOTHING
+     *  WHEN NOT MATCHED THEN
+     *      INSERT ("at", "key", "value")
+     *      VALUES ('2000-01-01T00:00:00', sub."key", (sub."value" + 100))
      * ```
      */
     @ParameterizedTest
@@ -443,20 +434,20 @@ class MergeSelectTest: MergeBaseTest() {
 
     /**
      * MergeFrom with const condition
+     *
      * ```sql
-     * MERGE INTO MERGE_TEST_DEST
-     * USING (
-     *      SELECT MERGE_TEST_SOURCE.ID,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_KEY,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_VALUE,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_OPTIONAL_VALUE,
-     *             MERGE_TEST_SOURCE.MERGE_TEST_AT
-     *        FROM MERGE_TEST_SOURCE
-     *       WHERE MERGE_TEST_SOURCE.MERGE_TEST_KEY = 'only-in-source-1'
-     * ) as sub ON MERGE_TEST_DEST.MERGE_TEST_KEY = sub.MERGE_TEST_KEY
-     * WHEN NOT MATCHED THEN
-     *      INSERT (MERGE_TEST_AT, MERGE_TEST_KEY, MERGE_TEST_VALUE)
-     *      VALUES ('2000-01-01T00:00:00', sub.MERGE_TEST_KEY, sub.MERGE_TEST_VALUE)
+     * MERGE INTO dest
+     * USING ( SELECT "source".id,
+     *                "source"."key",
+     *                "source"."value",
+     *                "source".optional_value,
+     *                "source"."at"
+     *           FROM "source"
+     *          WHERE "source"."key" = 'only-in-source-1'
+     *       ) as sub ON dest."key" = sub."key"
+     *  WHEN NOT MATCHED THEN
+     *      INSERT ("at", "key", "value")
+     *      VALUES ('2000-01-01T00:00:00', sub."key", sub."value")
      * ```
      */
     @ParameterizedTest
