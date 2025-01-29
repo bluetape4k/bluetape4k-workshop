@@ -20,10 +20,25 @@ import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
+/**
+ * `REPLACE INTO` 문은 `INSERT INTO` 문과 유사하지만, 기존 데이터가 있으면 삭제하고 새로운 데이터를 추가한다.
+ *
+ * **`REPLACE INTO` 문은 MySQL 에서만 지원한다.**
+ */
 class ReplaceTest: AbstractExposedTest() {
 
     private val replaceSupported = TestDB.ALL_MYSQL_LIKE
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS new_auth (
+     *      username VARCHAR(16) PRIMARY KEY,
+     *      `session` VARBINARY(64) NOT NULL,
+     *      `timestamp` BIGINT DEFAULT 0 NOT NULL,
+     *      serverID VARCHAR(64) DEFAULT '' NOT NULL
+     * )
+     * ```
+     */
     private object NewAuth: Table("new_auth") {
         val username = varchar("username", 16)
         val session = binary("session", 64)
@@ -35,18 +50,6 @@ class ReplaceTest: AbstractExposedTest() {
 
     /**
      * Test for [Table.replace] function.
-     *
-     * ```sql
-     * REPLACE INTO new_auth (username, `session`) VALUES ('username1', session)
-     * REPLACE INTO new_auth (username, `session`) VALUES ('username2', session)
-     * ```
-     *
-     * ```sql
-     * REPLACE INTO new_auth (username, `session`, `timestamp`, serverID)
-     *  SELECT new_auth.username, new_auth.`session`, 1736313121797, 'special server id'
-     *    FROM new_auth
-     * ```
-     *
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -54,8 +57,14 @@ class ReplaceTest: AbstractExposedTest() {
         Assumptions.assumeTrue { testDb in replaceSupported }
 
         withTables(testDb, NewAuth) {
-
-            // inserts 2 new non-conflict rows with defaults
+            /**
+             * inserts 2 new non-conflict rows with defaults
+             *
+             * ```sql
+             * REPLACE INTO new_auth (username, `session`) VALUES ('username1', session);
+             * REPLACE INTO new_auth (username, `session`) VALUES ('username2', session);
+             * ```
+             */
             NewAuth.batchReplace(listOf("username1", "username2")) {
                 this[NewAuth.username] = it
                 this[NewAuth.session] = "session".toByteArray()
@@ -74,6 +83,14 @@ class ReplaceTest: AbstractExposedTest() {
                 stringLiteral(specialId)
             )
 
+            /**
+             * MySQL V8:
+             * ```sql
+             * REPLACE INTO new_auth (username, `session`, `timestamp`, serverID)
+             *  SELECT new_auth.username, new_auth.`session`, 1738147874965, 'special server id'
+             *    FROM new_auth
+             * ```
+             */
             val affectedRowCount = NewAuth.replace(allRowsWithNewDefaults)
 
             // MySQL returns 1 for every insert + 1 for every delete on conflict, while others only count inserts
@@ -88,17 +105,6 @@ class ReplaceTest: AbstractExposedTest() {
 
     /**
      * Test for [Table.replace] function with specific columns.
-     *
-     * ```sql
-     * REPLACE INTO new_auth (username, `session`) VALUES ('username1', session1)
-     * REPLACE INTO new_auth (username, `session`) VALUES ('username2', session1)
-     * ```
-     * ```sql
-     * REPLACE INTO new_auth (username, `session`)
-     *  SELECT new_auth.username, 'session2'
-     *    FROM new_auth
-     *   WHERE new_auth.username = 'username1'
-     * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -106,8 +112,15 @@ class ReplaceTest: AbstractExposedTest() {
         Assumptions.assumeTrue { testDb in replaceSupported }
 
         withTables(testDb, NewAuth) {
-            val (name1, name2, oldSession) = Triple("username1", "username2", "session1".toByteArray())
+            val (name1, name2, oldSession) =
+                Triple("username1", "username2", "session1".toByteArray())
 
+            /**
+             * ```sql
+             * REPLACE INTO new_auth (username, `session`) VALUES ('username1', session1)
+             * REPLACE INTO new_auth (username, `session`) VALUES ('username2', session1)
+             * ```
+             */
             NewAuth.batchReplace(listOf(name1, name2)) {
                 this[NewAuth.username] = it
                 this[NewAuth.session] = oldSession
@@ -118,6 +131,18 @@ class ReplaceTest: AbstractExposedTest() {
                 .select(NewAuth.username, stringLiteral(newSession))
                 .where { NewAuth.username eq name1 }
 
+            /**
+             * 특정 컬럼만 변경하는 REPLACE 문
+             *
+             * MySQL V8:
+             *
+             * ```sql
+             * REPLACE INTO new_auth (username, `session`)
+             *  SELECT new_auth.username, 'session2'
+             *    FROM new_auth
+             *   WHERE new_auth.username = 'username1'
+             * ```
+             */
             val affectedRowCount = NewAuth.replace(name1Row, columns = listOf(NewAuth.username, NewAuth.session))
 
             // MySQL returns 1 for every insert + 1 for every delete on conflict, while others only count inserts
@@ -134,16 +159,6 @@ class ReplaceTest: AbstractExposedTest() {
         }
     }
 
-    /**
-     * ```sql
-     * REPLACE INTO new_auth (username, `session`) VALUES ('username', session)
-     * ```
-     *
-     * ```sql
-     * REPLACE INTO new_auth (username, `session`, `timestamp`, serverID)
-     *  VALUES ('username', session, 1736314898253, 'username-session')
-     * ```
-     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `replace with PK conflict`(testDb: TestDB) {
@@ -152,6 +167,12 @@ class ReplaceTest: AbstractExposedTest() {
         withTables(testDb, NewAuth) {
             val (name1, session1) = "username" to "session"
 
+            /**
+             * ```sql
+             * REPLACE INTO new_auth (username, `session`)
+             *  VALUES ('username', session)
+             * ```
+             */
             NewAuth.replace {
                 it[username] = name1
                 it[session] = session1.toByteArray()
@@ -161,6 +182,12 @@ class ReplaceTest: AbstractExposedTest() {
             result1[NewAuth.timestamp] shouldBeEqualTo 0L
             result1[NewAuth.serverID].shouldBeEmpty()
 
+            /**
+             * ```sql
+             * REPLACE INTO new_auth (username, `session`, `timestamp`, serverID)
+             *  VALUES ('username', session, 1738147874872, 'username-session')
+             * ```
+             */
             val timeNow = System.currentTimeMillis()
             val concatId = "$name1-$session1"
             NewAuth.replace {
@@ -176,24 +203,22 @@ class ReplaceTest: AbstractExposedTest() {
         }
     }
 
-    /**
-     * ```sql
-     * REPLACE INTO test_table (key_1, key_2) VALUES ('A', 'B')
-     * ```
-     *
-     * ```sql
-     * REPLACE INTO test_table (key_1, key_2, replaced) VALUES ('A', 'B 2', 1736315489343)
-     * ```
-     *
-     * ```sql
-     * REPLACE INTO test_table (key_1, key_2, replaced) VALUES ('A', 'B', 1736315489343)
-     * ```
-     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `replace With Composite PK Conflict`(testDb: TestDB) {
         Assumptions.assumeTrue { testDb in replaceSupported }
 
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS test_table (
+         *      key_1 VARCHAR(16),
+         *      key_2 VARCHAR(16),
+         *      replaced BIGINT DEFAULT 0 NOT NULL,
+         *
+         *      CONSTRAINT pk_test_table PRIMARY KEY (key_1, key_2)
+         * )
+         * ```
+         */
         val tester = object: Table("test_table") {
             val key1 = varchar("key_1", 16)
             val key2 = varchar("key_2", 16)
@@ -203,6 +228,11 @@ class ReplaceTest: AbstractExposedTest() {
         }
 
         withTables(testDb, tester) {
+            /**
+             * ```sql
+             * REPLACE INTO test_table (key_1, key_2) VALUES ('A', 'B')
+             * ```
+             */
             val (id1, id2) = "A" to "B"
             tester.replace {
                 it[key1] = id1
@@ -211,6 +241,11 @@ class ReplaceTest: AbstractExposedTest() {
 
             tester.selectAll().single()[tester.replaced] shouldBeEqualTo 0L
 
+            /**
+             * ```sql
+             * REPLACE INTO test_table (key_1, key_2, replaced) VALUES ('A', 'B 2', 1738147874913)
+             * ```
+             */
             val timeNow = System.currentTimeMillis()
             tester.replace { // insert because only 1 constraint is equal
                 it[key1] = id1
@@ -223,6 +258,13 @@ class ReplaceTest: AbstractExposedTest() {
                 .where { tester.key2 eq id2 }
                 .single()[tester.replaced] shouldBeEqualTo 0L
 
+            /**
+             * 기본 키에 해당하는 데이터가 일치하는 레코드가 있으므로, 삭제하고 새로운 레코드를 추가한다.
+             *
+             * ```sql
+             * REPLACE INTO test_table (key_1, key_2, replaced) VALUES ('A', 'B', 1738147874913)
+             * ```
+             */
             tester.replace { // delete & insert because both constraints match
                 it[key1] = id1
                 it[key2] = id2
@@ -237,6 +279,8 @@ class ReplaceTest: AbstractExposedTest() {
     }
 
     /**
+     * Expression 을 사용한 REPLACE 문
+     *
      * ```sql
      * REPLACE INTO new_auth (username, `session`, serverID)
      *  VALUES ('username', session, TRIM('  serverID1 '))
@@ -285,7 +329,9 @@ class ReplaceTest: AbstractExposedTest() {
      * REPLACE INTO Cities (city_id, `name`) VALUES (2, 'München')
      * REPLACE INTO Cities (city_id, `name`) VALUES (3, 'Prague')
      * REPLACE INTO Cities (city_id, `name`) VALUES (1, 'Saint Petersburg')
-     *
+     * ```
+     * ```sql
+     * -- REPLACE 가 적용된 데이터를 조회
      * SELECT Cities.`name`
      *   FROM Cities
      *  WHERE Cities.city_id IN (2, 3, 1)
@@ -320,8 +366,9 @@ class ReplaceTest: AbstractExposedTest() {
                 this[cities.name] = it.second
             }
 
-            val cityNames = cities.select(cities.name)
-                .where { cities.id inList cityUpdates.unzip().first }
+            val cityNames = cities
+                .select(cities.name)
+                .where { cities.id inList cityUpdates.unzip().first }  // REPLACE 가 적용된 데이터를 조회
                 .orderBy(cities.name)
                 .toCityNameList()
 
@@ -330,6 +377,10 @@ class ReplaceTest: AbstractExposedTest() {
     }
 
     /**
+     * [batchReplace] 는 기존 데이터가 없으면 INSERT, 있으면 기존 데이터를 삭제하고 INSERT 한다.
+     *
+     * Upsert 와는 다르게 기존 데이터를 삭제하고 새로운 데이터를 추가한다.
+     *
      * ```sql
      * REPLACE INTO Cities (city_id, `name`) VALUES (1, '2ykXqvsnet6hF1DQ3MZES')
      * REPLACE INTO Cities (city_id, `name`) VALUES (2, '2ykXqvsnet6hF1DQ3MZET')
@@ -347,11 +398,11 @@ class ReplaceTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `Batch Replace With Sequence`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in replaceSupported }
+    fun `Batch Replace With Sequence`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in replaceSupported }
 
         val cities = DMLTestData.Cities
-        withTables(testDb, cities) {
+        withTables(testDB, cities) {
             val amountOfNames = 25
             val names = List(amountOfNames) { index ->
                 index + 1 to Epoch.nextIdAsString()
@@ -383,11 +434,11 @@ class ReplaceTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `batch Replace With Empty Sequence`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in replaceSupported }
+    fun `batch Replace With Empty Sequence`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in replaceSupported }
 
         val cities = DMLTestData.Cities
-        withTables(testDb, cities) {
+        withTables(testDB, cities) {
             val names = emptySequence<String>()
             cities.batchReplace(names) { name -> this[cities.name] = name }
 
