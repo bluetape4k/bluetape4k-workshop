@@ -1,7 +1,9 @@
 package io.bluetape4k.workshop.exposed.domain.shared.dml
 
+import io.bluetape4k.codec.Base58
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.toBigDecimal
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTest.Board
@@ -11,7 +13,6 @@ import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTest.Category
 import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTest.Post
 import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTest.Posts
 import io.bluetape4k.workshop.exposed.expectException
-import io.bluetape4k.workshop.exposed.withDb
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
@@ -23,6 +24,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.Query
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.VarCharColumnType
 import org.jetbrains.exposed.sql.allFrom
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.anyFrom
@@ -36,9 +38,11 @@ import org.jetbrains.exposed.sql.selectAll
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.FieldSource
 import org.junit.jupiter.params.provider.MethodSource
 
+/**
+ * SELECT 문을 테스트합니다.
+ */
 class SelectTest: AbstractExposedTest() {
 
     companion object: KLogging()
@@ -57,8 +61,8 @@ class SelectTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `select all with where clause`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { _, users, _ ->
+    fun `select all with where clause`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             users.selectAll()
                 .where { users.id eq "andrey" }
                 .forEach {
@@ -68,7 +72,7 @@ class SelectTest: AbstractExposedTest() {
 
                     when (userId) {
                         "andrey" -> userName shouldBeEqualTo "Andrey"
-                        else     -> error("Unexpected user id: $userId")
+                        else -> error("Unexpected user id: $userId")
                     }
                 }
         }
@@ -88,8 +92,8 @@ class SelectTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `select all with where clause - multiple conditions - and`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { _, users, _ ->
+    fun `select all with where clause - multiple conditions - and`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             users.selectAll()
                 .where { users.id.eq("andrey") and users.name.isNotNull() }
                 .forEach {
@@ -99,7 +103,7 @@ class SelectTest: AbstractExposedTest() {
 
                     when (userId) {
                         "andrey" -> userName shouldBeEqualTo "Andrey"
-                        else     -> error("Unexpected user id: $userId")
+                        else -> error("Unexpected user id: $userId")
                     }
                 }
         }
@@ -118,8 +122,8 @@ class SelectTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `select all with where clause - multiple conditions - or`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { _, users, _ ->
+    fun `select all with where clause - multiple conditions - or`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             users.selectAll()
                 .where { users.id.eq("andrey") or users.name.eq("Andrey") }
                 .forEach {
@@ -129,7 +133,7 @@ class SelectTest: AbstractExposedTest() {
 
                     when (userId) {
                         "andrey" -> userName shouldBeEqualTo "Andrey"
-                        else     -> error("Unexpected user id: $userId")
+                        else -> error("Unexpected user id: $userId")
                     }
                 }
         }
@@ -147,8 +151,8 @@ class SelectTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `select not equal`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { _, users, _ ->
+    fun `select not equal`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             users.selectAll()
                 .where { users.id.neq("andrey") }
                 .forEach {
@@ -160,10 +164,14 @@ class SelectTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `select sized iterable`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { cities, users, _ ->
+    fun `select sized iterable`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, _ ->
             cities.selectAll().shouldNotBeEmpty()
+
+            // SELECT cities.city_id, cities."name" FROM cities WHERE cities."name" = 'Qwertt'
             cities.selectAll().where { cities.name eq "Qwertt" }.shouldBeEmpty()
+
+            // SELECT COUNT(*) FROM cities WHERE cities."name" = 'Qwertt'
             cities.selectAll().where { cities.name eq "Qwertt" }.count() shouldBeEqualTo 0L
             cities.selectAll().count() shouldBeEqualTo 3L
 
@@ -175,9 +183,18 @@ class SelectTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `inList with single expression 01`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { _, users, _ ->
-            val r1 = users.selectAll()
+    fun `inList with single expression 01`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
+            /**
+             * ```sql
+             * SELECT users.id, users."name", users.city_id, users.flags
+             *   FROM users
+             *  WHERE users.id IN ('andrey', 'alex')
+             *  ORDER BY users."name" ASC
+             * ```
+             */
+            val r1 = users
+                .selectAll()
                 .where { users.id inList listOf("andrey", "alex") }
                 .orderBy(users.name)
                 .toList()
@@ -186,22 +203,36 @@ class SelectTest: AbstractExposedTest() {
             r1[0][users.name] shouldBeEqualTo "Alex"
             r1[1][users.name] shouldBeEqualTo "Andrey"
 
+            /**
+             * ```sql
+             * SELECT users.id, users."name", users.city_id, users.flags
+             *   FROM users
+             *  WHERE users.id NOT IN ('ABC', 'DEF')
+             * ```
+             */
             val r2 = users.selectAll()
                 .where { users.id notInList listOf("ABC", "DEF") }
                 .toList()
 
-            users.selectAll().count().toInt() shouldBeEqualTo r2.size
+            users.selectAll().count() shouldBeEqualTo r2.size.toLong()
         }
     }
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `inList with single expression 02`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { cities, _, _ ->
+    fun `inList with single expression 02`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, _, _ ->
             val cityIds = cities.selectAll().map { it[cities.id] }.take(2)
+
+            /**
+             * ```sql
+             * SELECT COUNT(*)
+             *   FROM cities
+             *  WHERE cities.city_id IN (1, 2)
+             * ```
+             */
             val r = cities.selectAll()
                 .where { cities.id inList cityIds }
-            // .where { cities.id inSubQuery cities.select(cities.id) }
 
             r.count() shouldBeEqualTo 2L
         }
@@ -209,11 +240,21 @@ class SelectTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `inList with pair expression 01`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { _, users, _ ->
-            val rows = users.selectAll()
+    fun `inList with pair expression 01`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
+            /**
+             * `inList` 의 인자로 Pair 를 전달하면, `IN` 조건이 생성됩니다.
+             *
+             * ```sql
+             * SELECT users.id, users."name", users.city_id, users.flags
+             *   FROM users
+             *  WHERE (users.id, users."name") IN (('andrey', 'Andrey'), ('alex', 'Alex')) ORDER BY users."name" ASC
+             * ```
+             */
+            val rows = users
+                .selectAll()
                 .where {
-                    users.id to users.name inList listOf("andrey" to "Andrey", "alex" to "Alex")
+                    (users.id to users.name) inList listOf("andrey" to "Andrey", "alex" to "Alex")
                 }
                 .orderBy(users.name)
                 .toList()
@@ -226,8 +267,8 @@ class SelectTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `inList with pair expression 02`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { _, users, _ ->
+    fun `inList with pair expression 02`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             val rows = users.selectAll()
                 .where {
                     users.id to users.name inList listOf("andrey" to "Andrey")
@@ -241,9 +282,19 @@ class SelectTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `inList with pair expression and emptyList`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { _, users, _ ->
-            val rows = users.selectAll()
+    fun `inList with pair expression and emptyList`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
+            /**
+             * `inList` 의 인자로 emptyList 를 전달하면, `FALSE` 조건이 생성됩니다.
+             *
+             * ```sql
+             * SELECT users.id, users."name", users.city_id, users.flags
+             *   FROM users
+             *  WHERE FALSE
+             * ```
+             */
+            val rows = users
+                .selectAll()
                 .where {
                     users.id to users.name inList emptyList()
                 }
@@ -253,10 +304,19 @@ class SelectTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ### `notInList` 에 emptyList 를 전달하면, `TRUE` 조건이 생성됩니다.
+     *
+     * ```sql
+     * SELECT users.id, users."name", users.city_id, users.flags
+     *   FROM users
+     *  WHERE TRUE
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `notInList with pair expression and emptyList`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { _, users, _ ->
+    fun `notInList with pair expression and emptyList`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             val rows = users.selectAll()
                 .where {
                     users.id to users.name notInList emptyList()
@@ -287,8 +347,8 @@ class SelectTest: AbstractExposedTest() {
     @Disabled("제대로 작동하지 않는다. notInList 시에는 3개가 조회되어야 하는데, eugene 만 조회된다.")
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `inList with triple expressions`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { _, users, _ ->
+    fun `inList with triple expressions`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             log.debug { "users count=${users.selectAll().count()}" }
 
             val userExpr = Triple(users.id, users.name, users.cityId)
@@ -323,7 +383,7 @@ class SelectTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `inList with Multiple columns`(dialect: TestDB) {
+    fun `inList with Multiple columns`(testDB: TestDB) {
         val tester = object: Table("tester") {
             val num1 = integer("num_1")
             val num2 = double("num_2")
@@ -332,13 +392,13 @@ class SelectTest: AbstractExposedTest() {
         }
 
         fun Int.toColumnValue(index: Int) = when (index) {
-            1    -> toDouble()
-            2    -> toString()
-            3    -> toLong()
+            1 -> toDouble()
+            2 -> toString()
+            3 -> toLong()
             else -> this
         }
 
-        withTables(dialect, tester) {
+        withTables(testDB, tester) {
             repeat(3) { n ->
                 tester.insert {
                     it[num1] = n
@@ -353,15 +413,23 @@ class SelectTest: AbstractExposedTest() {
             // (0, 0.0, '0', 0), (1, 1.0, '1', 1), (2, 2.0, '2', 2)
             val allSameNumbers = List(3) { n -> List(4) { n.toColumnValue(it) } }
 
-            // SELECT tester.num_1, tester.num_2, tester.num_3, tester.num_4
-            //   FROM tester
-            //  WHERE (tester.num_1, tester.num_2, tester.num_3, tester.num_4) IN ((0, 0.0, '0', 0), (1, 1.0, '1', 1), (2, 2.0, '2', 2))
+            /**
+             * ```sql
+             * SELECT tester.num_1, tester.num_2, tester.num_3, tester.num_4
+             *   FROM tester
+             *  WHERE (tester.num_1, tester.num_2, tester.num_3, tester.num_4) IN ((0, 0.0, '0', 0), (1, 1.0, '1', 1), (2, 2.0, '2', 2))
+             * ```
+             */
             val result1 = tester.selectAll().where { tester.columns inList allSameNumbers }.toList()
             result1.size shouldBeEqualTo expected
 
-            // SELECT tester.num_1, tester.num_2, tester.num_3, tester.num_4
-            //   FROM tester
-            //  WHERE (tester.num_1, tester.num_2, tester.num_3, tester.num_4) = (0, 0.0, '0', 0)
+            /**
+             * ```sql
+             * SELECT tester.num_1, tester.num_2, tester.num_3, tester.num_4
+             *   FROM tester
+             *  WHERE (tester.num_1, tester.num_2, tester.num_3, tester.num_4) = (0, 0.0, '0', 0)
+             * ```
+             */
             val result2 = tester.selectAll().where { tester.columns inList listOf(allSameNumbers.first()) }.toList()
             result2.size shouldBeEqualTo 1
 
@@ -369,27 +437,43 @@ class SelectTest: AbstractExposedTest() {
             // (0, 1.0, '2', 3), (1, 2.0, '3', 4), (2, 3.0, '4', 5)
             val allDifferentNumbers = List(3) { n -> List(4) { (n + it).toColumnValue(it) } }
 
-            // SELECT tester.num_1, tester.num_2, tester.num_3, tester.num_4
-            //   FROM tester
-            //  WHERE (tester.num_1, tester.num_2, tester.num_3, tester.num_4) NOT IN ((0, 1.0, '2', 3), (1, 2.0, '3', 4), (2, 3.0, '4', 5))
+            /**
+             * ```sql
+             * SELECT tester.num_1, tester.num_2, tester.num_3, tester.num_4
+             *   FROM tester
+             *  WHERE (tester.num_1, tester.num_2, tester.num_3, tester.num_4) NOT IN ((0, 1.0, '2', 3), (1, 2.0, '3', 4), (2, 3.0, '4', 5))
+             * ```
+             */
             val result3 = tester.selectAll().where { tester.columns notInList allDifferentNumbers }.toList()
             result3.size shouldBeEqualTo expected
 
-            // SELECT tester.num_1, tester.num_2, tester.num_3, tester.num_4
-            //   FROM tester
-            //  WHERE TRUE
+            /**
+             * ```sql
+             * SELECT tester.num_1, tester.num_2, tester.num_3, tester.num_4
+             *   FROM tester
+             *  WHERE TRUE
+             * ```
+             */
             val result4 = tester.selectAll().where { tester.columns notInList emptyList() }.toList()
             result4.size shouldBeEqualTo expected
 
-            // SELECT tester.num_1, tester.num_2, tester.num_3, tester.num_4
-            //   FROM tester
-            //  WHERE (tester.num_1, tester.num_2, tester.num_3, tester.num_4) NOT IN ((0, 0.0, '0', 0), (1, 1.0, '1', 1), (2, 2.0, '2', 2))
+            /**
+             * ```sql
+             * SELECT tester.num_1, tester.num_2, tester.num_3, tester.num_4
+             *   FROM tester
+             *  WHERE (tester.num_1, tester.num_2, tester.num_3, tester.num_4) NOT IN ((0, 0.0, '0', 0), (1, 1.0, '1', 1), (2, 2.0, '2', 2))
+             * ```
+             */
             val result5 = tester.selectAll().where { tester.columns notInList allSameNumbers }.toList()
             result5.shouldBeEmpty()
 
-            // SELECT tester.num_1, tester.num_2, tester.num_3, tester.num_4
-            //   FROM tester
-            //  WHERE FALSE
+            /**
+             * ```sql
+             * SELECT tester.num_1, tester.num_2, tester.num_3, tester.num_4
+             *   FROM tester
+             *  WHERE FALSE
+             * ```
+             */
             val result6 = tester.selectAll().where { tester.columns inList emptyList() }.toList()
             result6.shouldBeEmpty()
         }
@@ -397,8 +481,8 @@ class SelectTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `inList with entityID columns`(dialect: TestDB) {
-        withTables(dialect, Posts, Boards, Categories) {
+    fun `inList with entityID columns`(testDB: TestDB) {
+        withTables(testDB, Posts, Boards, Categories) {
             val board1 = Board.new {
                 name = "board1"
             }
@@ -409,21 +493,45 @@ class SelectTest: AbstractExposedTest() {
                 category = Category.new { title = "category1" }
             }
 
-            // SELECT posts.id, posts.board, posts.parent, posts.category, posts."optCategory" FROM posts WHERE posts.board = 1
-            val result1 = Posts.selectAll()
+            /**
+             * ```sql
+             * SELECT posts.id, posts.board, posts.parent, posts.category, posts."optCategory"
+             *   FROM posts
+             *  WHERE posts.board = 1
+             * ```
+             */
+            val result1 = Posts
+                .selectAll()
                 .where {
-                    Posts.board inList listOf(board1.id)
+                    Posts.board inList listOf(board1.id)   // 항목이 한개라면 `eq` 로 대체 가능
                 }
-                .singleOrNull()?.get(Posts.id)
+                .singleOrNull()
+                ?.get(Posts.id)
             result1 shouldBeEqualTo post1.id
 
-            // SELECT board.id, board."name" FROM board WHERE board.id IN (1, 2, 3, 4, 5)
+            /**
+             * `inList` with `EntityID` columns
+             *
+             * ```sql
+             * SELECT board.id, board."name"
+             *   FROM board
+             *  WHERE board.id IN (1, 2, 3, 4, 5)
+             * ```
+             */
             val result2 = Board.find {
                 Boards.id inList listOf(1, 2, 3, 4, 5)
             }.singleOrNull()
             result2 shouldBeEqualTo board1
 
-            // SELECT board.id, board."name" FROM board WHERE board.id NOT IN (1, 2, 3, 4, 5)
+            /**
+             * `notInList` with entityID columns
+             *
+             * ```sql
+             * SELECT board.id, board."name"
+             *   FROM board
+             *  WHERE board.id  NOT IN (1, 2, 3, 4, 5)
+             * ```
+             */
             val result3 = Board.find {
                 Boards.id notInList listOf(1, 2, 3, 4, 5)
             }.singleOrNull()
@@ -433,20 +541,22 @@ class SelectTest: AbstractExposedTest() {
 
     /**
      * ### In with SubQuery
-     *
-     * ```sql
-     * SELECT COUNT(*)
-     *   FROM cities
-     *  WHERE cities.city_id IN (SELECT cities.city_id
-     *                             FROM cities
-     *                            WHERE cities.city_id = 2)
-     * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `inSubQuery 01`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { cities, _, _ ->
-            val r = cities.selectAll()
+    fun `inSubQuery 01`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, _, _ ->
+            /**
+             * ```sql
+             * SELECT COUNT(*)
+             *   FROM cities
+             *  WHERE cities.city_id IN (SELECT cities.city_id
+             *                             FROM cities
+             *                            WHERE cities.city_id = 2)
+             * ```
+             */
+            val r = cities
+                .selectAll()
                 .where { cities.id inSubQuery cities.select(cities.id).where { cities.id eq 2 } }
 
             r.count() shouldBeEqualTo 1L
@@ -454,18 +564,18 @@ class SelectTest: AbstractExposedTest() {
     }
 
     /**
-     * ### NOT IN with SubQuery
+     * ### `notInSubQuery` with SubQuery
      *
      * ```sql
      * SELECT COUNT(*)
-     *   FROM CITIES
-     *  WHERE CITIES.CITY_ID NOT IN (SELECT CITIES.CITY_ID FROM CITIES)
+     *   FROM cities
+     *  WHERE cities.city_id NOT IN (SELECT cities.city_id FROM cities)
      * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `notInSubQuery with NoData`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { cities, _, _ ->
+    fun `notInSubQuery with NoData`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, _, _ ->
             val r = cities.selectAll()
                 .where { cities.id notInSubQuery cities.select(cities.id) }
 
@@ -473,47 +583,73 @@ class SelectTest: AbstractExposedTest() {
         }
     }
 
-    private val testDBsSupportingInAnyAllFromTables = TestDB.ALL_POSTGRES + TestDB.H2_PSQL + TestDB.MYSQL_V8
+    private val supportingInAnyAllFromTables = TestDB.ALL_POSTGRES + TestDB.H2_PSQL + TestDB.MYSQL_V8
 
     @ParameterizedTest
-    @FieldSource("testDBsSupportingInAnyAllFromTables")
-    fun `inTable example`(dialect: TestDB) {
-        withSalesAndSomeAmounts(dialect) { _, sales, someAmounts ->
-            val rows = sales.selectAll()
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `inTable example`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in supportingInAnyAllFromTables }
+
+        withSalesAndSomeAmounts(testDB) { _, sales, someAmounts ->
+            /**
+             * ```sql
+             * SELECT COUNT(*)
+             *   FROM sales
+             *  WHERE sales.amount IN (TABLE SomeAmounts)
+             * ```
+             */
+            val rows = sales
+                .selectAll()
                 .where { sales.amount inTable someAmounts }
             rows.count() shouldBeEqualTo 2L
         }
     }
 
+    /**
+     * ### `notInTable` example
+     *
+     * ```sql
+     * SELECT COUNT(*)
+     *   FROM sales
+     *  WHERE sales.amount NOT IN (TABLE SomeAmounts)
+     * ```
+     */
     @ParameterizedTest
-    @FieldSource("testDBsSupportingInAnyAllFromTables")
-    fun `notInTable example`(dialect: TestDB) {
-        withSalesAndSomeAmounts(dialect) { _, sales, someAmounts ->
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `notInTable example`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in supportingInAnyAllFromTables }
+
+        withSalesAndSomeAmounts(testDB) { _, sales, someAmounts ->
             val rows = sales.selectAll()
                 .where { sales.amount notInTable someAmounts }
             rows.count() shouldBeEqualTo 5L
         }
     }
 
-    private val testDBsSupportingAnyAndAllFromSubQueries = TestDB.ALL
-    private val testDBsSupportingAnyAndAllFromArrays = TestDB.ALL_POSTGRES // + TestDB.ALL_H2
+    private val supportingAnyAndAllFromSubQueries = TestDB.ALL
+    private val supportingAnyAndAllFromArrays = TestDB.ALL_POSTGRES + TestDB.ALL_H2
 
     /**
-     * ### Eq AnyFrom SubQuery
+     * ### Eq [anyFrom] with SubQuery
      *
      * ```sql
      * SELECT COUNT(*)
-     *   FROM CITIES
-     *  WHERE CITIES.CITY_ID = ANY (SELECT CITIES.CITY_ID FROM CITIES WHERE CITIES.CITY_ID = 2)
+     *   FROM cities
+     *  WHERE cities.city_id = ANY (SELECT cities.city_id
+     *                                FROM cities
+     *                               WHERE cities.city_id = 2)
      * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `eq AnyFrom SubQuery`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { cities, _, _ ->
-            val rows = cities.selectAll()
+    fun `eq AnyFrom SubQuery`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, _, _ ->
+            val subquery = cities.select(cities.id).where { cities.id eq 2 }
+
+            val rows = cities
+                .selectAll()
                 .where {
-                    cities.id eq anyFrom(cities.select(cities.id).where { cities.id eq 2 })
+                    cities.id eq anyFrom(subquery)
                 }
 
             rows.count() shouldBeEqualTo 1L
@@ -521,21 +657,26 @@ class SelectTest: AbstractExposedTest() {
     }
 
     /**
-     * ### Neq AnyFrom SubQuery
-     *
-     * ```sql
-     * SELECT COUNT(*)
-     *   FROM CITIES
-     *  WHERE CITIES.CITY_ID <> ANY (SELECT CITIES.CITY_ID FROM CITIES WHERE CITIES.CITY_ID = 2)
-     * ```
+     * ### `neq` and [anyFrom] with SubQuery
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `neq AnyFrom SubQuery`(dialect: TestDB) {
         withCitiesAndUsers(dialect) { cities, _, _ ->
+            val subquery = cities.select(cities.id).where { cities.id eq 2 }
+
+            /**
+             * ```sql
+             * SELECT COUNT(*)
+             *   FROM cities
+             *  WHERE cities.city_id <> ANY (SELECT cities.city_id
+             *                                 FROM cities
+             *                                WHERE cities.city_id = 2)
+             * ```
+             */
             val rows = cities.selectAll()
                 .where {
-                    cities.id neq anyFrom(cities.select(cities.id).where { cities.id eq 2 })
+                    cities.id neq anyFrom(subquery)
                 }
 
             rows.count() shouldBeEqualTo 2L
@@ -543,19 +684,23 @@ class SelectTest: AbstractExposedTest() {
     }
 
     /**
-     * ### Eq AnyFrom Array
+     * ### eq [anyFrom] with Array
+     *
+     * 참고: Postgres, H2 만 지원합니다.
      *
      * ```sql
-     * SELECT USERS.ID, USERS."name", USERS.CITY_ID, USERS.FLAGS
-     *   FROM USERS
-     *  WHERE USERS.ID = ANY (ARRAY ['andrey','alex'])
-     *  ORDER BY USERS."name" ASC
+     * SELECT users.id, users."name", users.city_id, users.flags
+     *   FROM users
+     *  WHERE users.id = ANY (ARRAY['andrey','alex'])
+     *  ORDER BY users."name" ASC
      * ```
      */
     @ParameterizedTest
-    @FieldSource("testDBsSupportingAnyAndAllFromArrays")
-    fun `eq AnyFrom Array`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { _, users, _ ->
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `eq AnyFrom Array`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in supportingAnyAndAllFromArrays }
+
+        withCitiesAndUsers(testDB) { _, users, _ ->
             val rows = users.selectAll()
                 .where {
                     users.id eq anyFrom(arrayOf("andrey", "alex"))
@@ -570,19 +715,23 @@ class SelectTest: AbstractExposedTest() {
     }
 
     /**
-     * ### Eq AnyFrom List
+     * ### eq [anyFrom] with List
+     *
+     * 참고: Postgres, H2 만 지원합니다.
      *
      * ```sql
-     * SELECT USERS.ID, USERS."name", USERS.CITY_ID, USERS.FLAGS
-     *   FROM USERS
-     *  WHERE USERS.ID = ANY (ARRAY ['andrey','alex'])
-     *  ORDER BY USERS."name" ASC
+     * SELECT users.id, users."name", users.city_id, users.flags
+     *   FROM users
+     *  WHERE users.id = ANY (ARRAY['andrey','alex'])
+     *  ORDER BY users."name" ASC
      * ```
      */
     @ParameterizedTest
-    @FieldSource("testDBsSupportingAnyAndAllFromArrays")
-    fun `eq AnyFrom List`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { _, users, _ ->
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `eq AnyFrom List`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in supportingAnyAndAllFromArrays }
+
+        withCitiesAndUsers(testDB) { _, users, _ ->
             val rows = users.selectAll()
                 .where {
                     users.id eq anyFrom(listOf("andrey", "alex"))
@@ -598,18 +747,22 @@ class SelectTest: AbstractExposedTest() {
 
     /**
      * ### Neq AnyFrom Array
-     *
-     * ```sql
-     * SELECT COUNT(*)
-     *   FROM USERS
-     *  WHERE USERS.ID <> ANY (ARRAY ['andrey'])
-     * ```
      */
     @ParameterizedTest
-    @FieldSource("testDBsSupportingAnyAndAllFromArrays")
-    fun `neq AnyFrom Array`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { _, users, _ ->
-            val rows = users.selectAll()
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `neq AnyFrom Array`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in supportingAnyAndAllFromArrays }
+
+        withCitiesAndUsers(testDB) { _, users, _ ->
+            /**
+             * ```sql
+             * SELECT COUNT(*)
+             *   FROM users
+             *  WHERE users.id <> ANY (ARRAY['andrey'])
+             * ```
+             */
+            val rows = users
+                .selectAll()
                 .where {
                     users.id neq anyFrom(arrayOf("andrey"))
                 }
@@ -621,17 +774,20 @@ class SelectTest: AbstractExposedTest() {
 
     /**
      * ### Neq AnyFrom List
-     *
-     * ```sql
-     * SELECT COUNT(*)
-     *   FROM USERS
-     *  WHERE USERS.ID <> ANY (ARRAY ['andrey'])
-     * ```
      */
     @ParameterizedTest
-    @FieldSource("testDBsSupportingAnyAndAllFromArrays")
-    fun `neq AnyFrom List`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { _, users, _ ->
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `neq AnyFrom List`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in supportingAnyAndAllFromArrays }
+
+        withCitiesAndUsers(testDB) { _, users, _ ->
+            /**
+             * ```sql
+             * SELECT COUNT(*)
+             *   FROM users
+             *  WHERE users.id <> ANY (ARRAY['andrey'])
+             * ```
+             */
             val rows = users.selectAll()
                 .where {
                     users.id neq anyFrom(listOf("andrey"))
@@ -644,18 +800,21 @@ class SelectTest: AbstractExposedTest() {
 
     /**
      * ### Neq AnyFrom Empty Array
-     *
-     * ```sql
-     * SELECT USERS.ID, USERS."name", USERS.CITY_ID, USERS.FLAGS
-     *   FROM USERS
-     *  WHERE USERS.ID = ANY (ARRAY [])
-     *  ORDER BY USERS."name" ASC
-     * ```
      */
     @ParameterizedTest
-    @FieldSource("testDBsSupportingAnyAndAllFromArrays")
-    fun `neq AnyFrom empty array`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { _, users, _ ->
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `neq AnyFrom empty array`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in supportingAnyAndAllFromArrays }
+
+        withCitiesAndUsers(testDB) { _, users, _ ->
+            /**
+             * ```sql
+             * SELECT users.id, users."name", users.city_id, users.flags
+             *   FROM users
+             *  WHERE users.id = ANY (ARRAY[])
+             *  ORDER BY users."name" ASC
+             * ```
+             */
             val rows = users.selectAll()
                 .where {
                     users.id eq anyFrom(emptyArray())
@@ -668,18 +827,21 @@ class SelectTest: AbstractExposedTest() {
 
     /**
      * ### Neq AnyFrom Empty List
-     *
-     * ```sql
-     * SELECT USERS.ID, USERS."name", USERS.CITY_ID, USERS.FLAGS
-     *   FROM USERS
-     *  WHERE USERS.ID = ANY (ARRAY [])
-     *  ORDER BY USERS."name" ASC
-     * ```
      */
     @ParameterizedTest
-    @FieldSource("testDBsSupportingAnyAndAllFromArrays")
-    fun `neq AnyFrom empty list`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { _, users, _ ->
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `neq AnyFrom empty list`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in supportingAnyAndAllFromArrays }
+
+        withCitiesAndUsers(testDB) { _, users, _ ->
+            /**
+             * ```sql
+             * SELECT users.id, users."name", users.city_id, users.flags
+             *   FROM users
+             *  WHERE users.id = ANY (ARRAY[])
+             *  ORDER BY users."name" ASC
+             *  ```
+             */
             val rows = users.selectAll()
                 .where {
                     users.id eq anyFrom(emptyList())
@@ -701,9 +863,11 @@ class SelectTest: AbstractExposedTest() {
      * ```
      */
     @ParameterizedTest
-    @FieldSource("testDBsSupportingAnyAndAllFromArrays")
-    fun `greater eq AnyFrom Array`(dialect: TestDB) {
-        withSales(dialect) { _, sales ->
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `greater eq AnyFrom Array`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in supportingAnyAndAllFromArrays }
+
+        withSales(testDB) { _, sales ->
             val amounts = arrayOf(100, 1000).map { it.toBigDecimal() }.toTypedArray()
 
             val rows = sales.selectAll()
@@ -724,18 +888,20 @@ class SelectTest: AbstractExposedTest() {
      * ```sql
      * SELECT SALES."year", SALES."month", SALES.PRODUCT, SALES.AMOUNT
      *   FROM SALES
-     *  WHERE SALES.AMOUNT >= ANY (ARRAY [100,1000])
+     *  WHERE SALES.AMOUNT >= ANY (ARRAY [100.0,1000.0])
      *  ORDER BY SALES.AMOUNT ASC
      * ```
      */
     @ParameterizedTest
-    @FieldSource("testDBsSupportingAnyAndAllFromArrays")
-    fun `greater eq AnyFrom List`(dialect: TestDB) {
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `greater eq AnyFrom List`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in supportingAnyAndAllFromArrays }
 
-        withSales(dialect) { _, sales ->
-            val amounts = listOf(100, 1000).map { it.toBigDecimal() }
+        withSales(testDB) { _, sales ->
+            val amounts = listOf(100.0, 1000.0).map { it.toBigDecimal() }
 
-            val rows = sales.selectAll()
+            val rows = sales
+                .selectAll()
                 .where {
                     sales.amount greaterEq anyFrom(amounts)
                 }
@@ -748,20 +914,24 @@ class SelectTest: AbstractExposedTest() {
     }
 
     /**
+     * eq [anyFrom] with Table
      *
      * ```sql
      * SELECT COUNT(*)
-     *   FROM SALES
-     *  WHERE SALES.AMOUNT = ANY (SELECT SOMEAMOUNTS.AMOUNT FROM SOMEAMOUNTS)
+     *   FROM sales
+     *  WHERE sales.amount = ANY (TABLE SomeAmounts)
      * ```
      */
     @ParameterizedTest
-    @FieldSource("testDBsSupportingInAnyAllFromTables")
-    fun `Eq AnyFrom Table`(dialect: TestDB) {
-        withSalesAndSomeAmounts(dialect) { _, sales, someAmounts ->
-            val rows = sales.selectAll()
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `Eq AnyFrom Table`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in supportingInAnyAllFromTables }
+
+        withSalesAndSomeAmounts(testDB) { _, sales, someAmounts ->
+            val rows = sales
+                .selectAll()
                 .where {
-                    sales.amount eq anyFrom(someAmounts.select(someAmounts.amount))
+                    sales.amount eq anyFrom(someAmounts)
                 }
 
             rows.count() shouldBeEqualTo 2L        // 650.70, 1500.25
@@ -769,74 +939,85 @@ class SelectTest: AbstractExposedTest() {
     }
 
     /**
+     * ### Neq AnyFrom of Table
      *
      * ```sql
      * SELECT COUNT(*)
-     *   FROM SALES
-     *  WHERE SALES.AMOUNT <> ANY (SELECT SOMEAMOUNTS.AMOUNT FROM SOMEAMOUNTS)
+     *   FROM sales
+     *  WHERE sales.amount <> ANY (TABLE SomeAmounts)
      * ```
+     *
      */
     @ParameterizedTest
-    @FieldSource("testDBsSupportingInAnyAllFromTables")
-    fun `Neq AnyFrom Table`(dialect: TestDB) {
-        withDb(dialect) {
-            withSalesAndSomeAmounts(dialect) { _, sales, someAmounts ->
-                val rows = sales.selectAll()
-                    .where {
-                        sales.amount neq anyFrom(someAmounts.select(someAmounts.amount))
-                    }
-                rows.count() shouldBeEqualTo 7L    // except 650.70, 1500.25 이어야 하는데 ...
-            }
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `Neq AnyFrom Table`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in supportingInAnyAllFromTables }
+
+        withSalesAndSomeAmounts(testDB) { _, sales, someAmounts ->
+            val rows = sales
+                .selectAll()
+                .where {
+                    sales.amount neq anyFrom(someAmounts)
+                }
+            rows.count() shouldBeEqualTo 7L    // except 650.70, 1500.25 이어야 하는데 ...
         }
     }
 
     /**
-     * ### greaterEq allFrom SubQuery
+     * ### `greaterEq` [allFrom] of SubQuery
      *
      * ```sql
-     * SELECT SALES."year", SALES."month", SALES.PRODUCT, SALES.AMOUNT
-     *   FROM SALES
-     *  WHERE SALES.AMOUNT >= ALL (SELECT SALES.AMOUNT FROM SALES WHERE SALES.PRODUCT = 'tea')
-     *  ORDER BY SALES.AMOUNT ASC
+     * SELECT sales."year", sales."month", sales.product, sales.amount
+     *   FROM sales
+     *  WHERE sales.amount >= ALL (SELECT sales.amount
+     *                               FROM sales
+     *                              WHERE sales.product = 'tea')
+     *  ORDER BY sales.amount ASC
      * ```
      */
     @ParameterizedTest
-    @FieldSource("testDBsSupportingAnyAndAllFromSubQueries")
-    fun `Greater Eq AllFrom SubQuery`(dialect: TestDB) {
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `Greater Eq AllFrom SubQuery`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in supportingAnyAndAllFromSubQueries }
         // MySQL 5.x 에서는 지원되지 않습니다.
-        Assumptions.assumeTrue(dialect != TestDB.MYSQL_V5)
-        withDb(dialect) {
-            withSales(dialect) { _, sales ->
-                val rows = sales.selectAll()
-                    .where {
-                        sales.amount greaterEq allFrom(sales.select(sales.amount).where { sales.product eq "tea" })
-                    }
-                    .orderBy(sales.amount)
-                    .map { it[sales.product] }
+        Assumptions.assumeTrue { testDB != TestDB.MYSQL_V5 }
 
-                rows shouldHaveSize 4
-                rows.first() shouldBeEqualTo "tea"
-                rows.drop(1).forEach { it shouldBeEqualTo "coffee" }
-            }
+        withSales(testDB) { _, sales ->
+            val subquery = sales.select(sales.amount).where { sales.product eq "tea" }
+
+            val rows = sales
+                .selectAll()
+                .where {
+                    sales.amount greaterEq allFrom(subquery)
+                }
+                .orderBy(sales.amount)
+                .map { it[sales.product] }
+
+            rows shouldHaveSize 4
+            rows.first() shouldBeEqualTo "tea"
+            rows.drop(1).forEach { it shouldBeEqualTo "coffee" }
         }
     }
 
     /**
-     * ### Greater Eq AllFrom Array
+     * ### `greaterEq`  [allFrom] with Array
      *
      * ```sql
-     * SELECT SALES."year", SALES."month", SALES.PRODUCT, SALES.AMOUNT
-     *   FROM SALES
-     *  WHERE SALES.AMOUNT >= ALL (ARRAY [100,1000])
+     * SELECT sales."year", sales."month", sales.product, sales.amount
+     *   FROM sales
+     *  WHERE sales.amount >= ALL (ARRAY[100.0,1000.0])
      * ```
      */
     @ParameterizedTest
-    @FieldSource("testDBsSupportingAnyAndAllFromArrays")
-    fun `Greater Eq AllFrom Array`(dialect: TestDB) {
-        withSales(dialect) { _, sales ->
-            val amounts = arrayOf(100, 1000).map { it.toBigDecimal() }.toTypedArray()
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `Greater Eq AllFrom Array`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in supportingAnyAndAllFromArrays }
 
-            val rows = sales.selectAll()
+        withSales(testDB) { _, sales ->
+            val amounts = arrayOf(100.0, 1000.0).map { it.toBigDecimal() }.toTypedArray()
+
+            val rows = sales
+                .selectAll()
                 .where {
                     sales.amount greaterEq allFrom(amounts)
                 }
@@ -847,64 +1028,103 @@ class SelectTest: AbstractExposedTest() {
         }
     }
 
-
     /**
-     * ### Greater Eq AllFrom Array
+     * ### `greaterEq` with [allFrom] of List
      *
      * ```sql
-     * SELECT SALES."year", SALES."month", SALES.PRODUCT, SALES.AMOUNT
-     *   FROM SALES
-     *  WHERE SALES.AMOUNT >= ALL (ARRAY [100,1000])
+     * SELECT sales."year", sales."month", sales.product, sales.amount
+     *   FROM sales
+     *  WHERE sales.amount >= ALL (ARRAY[100.0,1000.0])
      * ```
      */
     @ParameterizedTest
-    @FieldSource("testDBsSupportingAnyAndAllFromArrays")
-    fun `Greater Eq AllFrom List`(dialect: TestDB) {
-        withDb(dialect) {
-            withSales(dialect) { _, sales ->
-                val amounts = arrayOf(100, 1000).map { it.toBigDecimal() }
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `Greater Eq AllFrom List`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in supportingAnyAndAllFromArrays }
 
-                val rows = sales.selectAll()
-                    .where {
-                        sales.amount greaterEq allFrom(amounts)
-                    }
-                    .toList()
+        withSales(testDB) { _, sales ->
+            val amounts = arrayOf(100.0, 1000.0).map { it.toBigDecimal() }
 
-                rows shouldHaveSize 3
-                rows.forEach { it[sales.product] shouldBeEqualTo "coffee" }
-            }
+            val rows = sales
+                .selectAll()
+                .where {
+                    sales.amount greaterEq allFrom(amounts)
+                }
+                .toList()
+
+            rows shouldHaveSize 3
+            rows.forEach { it[sales.product] shouldBeEqualTo "coffee" }
         }
+
     }
 
-    @ParameterizedTest
-    @FieldSource("testDBsSupportingInAnyAllFromTables")
-    fun `Greater Eq AllFrom Table`(dialect: TestDB) {
-        withDb(dialect) {
-            withSalesAndSomeAmounts(dialect) { _, sales, someAmounts ->
-                val rows = sales.selectAll()
-                    .where { sales.amount greaterEq allFrom(someAmounts) }
-                    .toList()
-
-                rows shouldHaveSize 3
-                rows.forEach { it[sales.product] shouldBeEqualTo "coffee" }
-            }
-        }
-    }
-
+    /**
+     * ### `greaterEq` with [allFrom] of Table
+     *
+     * ```sql
+     * SELECT sales."year", sales."month", sales.product, sales.amount
+     *   FROM sales
+     *  WHERE sales.amount >= ALL (TABLE SomeAmounts)
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `select distinct`(dialect: TestDB) {
-        Assumptions.assumeTrue { dialect !in TestDB.ALL_MYSQL }
-        
+    fun `Greater Eq AllFrom Table`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in supportingInAnyAllFromTables }
+
+        withSalesAndSomeAmounts(testDB) { _, sales, someAmounts ->
+            val rows = sales.selectAll()
+                .where { sales.amount greaterEq allFrom(someAmounts) }
+                .toList()
+
+            rows shouldHaveSize 3
+            rows.forEach { it[sales.product] shouldBeEqualTo "coffee" }
+        }
+    }
+
+    /**
+     * select distinct 예제
+     */
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `select distinct`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
+
         val tbl = DMLTestData.Cities
-        withTables(dialect, tbl) {
+        withTables(testDB, tbl) {
             tbl.insert { it[tbl.name] = "test" }
             tbl.insert { it[tbl.name] = "test" }
 
             tbl.selectAll().count() shouldBeEqualTo 2L
+
+            /**
+             * ```sql
+             * SELECT COUNT(*)
+             *   FROM (SELECT DISTINCT cities.city_id Cities_city_id,
+             *                         cities."name" Cities_name
+             *           FROM cities
+             *        ) subquery
+             * ```
+             */
             tbl.selectAll().withDistinct().count() shouldBeEqualTo 2L
 
+            /**
+             * ```sql
+             * SELECT COUNT(*)
+             *   FROM (SELECT DISTINCT cities."name" Cities_name FROM cities) subquery
+             * ```
+             */
             tbl.select(tbl.name).withDistinct().count() shouldBeEqualTo 1L
+
+            /**
+             * ```sql
+             * SELECT COUNT(*)
+             *   FROM (SELECT DISTINCT ON (cities."name") cities.city_id Cities_city_id,
+             *                                            cities."name" Cities_name
+             *           FROM cities
+             *        ) subquery
+             * ```
+             */
             tbl.selectAll().withDistinctOn(tbl.name).count() shouldBeEqualTo 1L
         }
     }
@@ -912,33 +1132,13 @@ class SelectTest: AbstractExposedTest() {
     /**
      * ### Compound Operations
      *
-     * Compound OR
-     * ```sql
-     * SELECT USERS.ID, USERS."name", USERS.CITY_ID, USERS.FLAGS
-     *   FROM USERS
-     *  WHERE (USERS."name" = 'Andrey')
-     *     OR (USERS."name" = 'Sergey')
-     *     OR (USERS."name" = 'Eugene')
-     *     OR (USERS."name" = 'Alex')
-     *     OR (USERS."name" = 'Something')
-     * ```
-     *
-     * Compound AND
-     * ```sql
-     * SELECT COUNT(*)
-     *   FROM USERS
-     *  WHERE (USERS."name" = 'Andrey')
-     *    AND (USERS."name" = 'Sergey')
-     *    AND (USERS."name" = 'Eugene')
-     *    AND (USERS."name" = 'Alex')
-     *    AND (USERS."name" = 'Something')
-     * ```
-     *
+     * * [compoundOr] 함수는 여러 개의 [Op]를 OR 연산자로 결합합니다.
+     * * [compoundAnd] 함수는 여러 개의 [Op]를 AND 연산자로 결합합니다.
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `compound operations`(dialect: TestDB) {
-        withCitiesAndUsers(dialect) { _, users, _ ->
+    fun `compound operations`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             val allUsers = setOf(
                 "Andrey",
                 "Sergey",
@@ -946,24 +1146,51 @@ class SelectTest: AbstractExposedTest() {
                 "Alex",
                 "Something"
             )
+
+            /**
+             * [compoundOr] 함수는 여러 개의 [Op]를 OR 연산자로 결합합니다.
+             *
+             * ```sql
+             * SELECT users.id, users."name", users.city_id, users.flags
+             *   FROM users
+             *  WHERE (users."name" = 'Andrey')
+             *     OR (users."name" = 'Sergey')
+             *     OR (users."name" = 'Eugene')
+             *     OR (users."name" = 'Alex')
+             *     OR (users."name" = 'Something')
+             * ```
+             */
             val orOp = allUsers.map { Op.build { users.name eq it } }.compoundOr()
             val userNameOr = users.selectAll().where(orOp).map { it[users.name] }.toSet()
             userNameOr shouldBeEqualTo allUsers
 
+            /**
+             * [compoundAnd] 함수는 여러 개의 [Op]를 AND 연산자로 결합합니다.
+             *
+             * ```sql
+             * SELECT COUNT(*)
+             *   FROM users
+             *  WHERE (users."name" = 'Andrey')
+             *    AND (users."name" = 'Sergey')
+             *    AND (users."name" = 'Eugene')
+             *    AND (users."name" = 'Alex')
+             *    AND (users."name" = 'Something')
+             * ```
+             */
             val andOp = allUsers.map { Op.build { users.name eq it } }.compoundAnd()
-            users.selectAll().where(andOp).count() shouldBeEqualTo 0
+            users.selectAll().where(andOp).count() shouldBeEqualTo 0L
         }
     }
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `select on nullable reference column`(dialect: TestDB) {
+    fun `select on nullable reference column`(testDB: TestDB) {
         val firstTable = object: IntIdTable("firstTable") {}
         val secondTable = object: IntIdTable("secondTable") {
             val firstOpt = optReference("firstOpt", firstTable)
         }
 
-        withTables(dialect, firstTable, secondTable) {
+        withTables(testDB, firstTable, secondTable) {
             val firstId = firstTable.insertAndGetId { }
             secondTable.insert {
                 it[firstOpt] = firstId
@@ -971,38 +1198,62 @@ class SelectTest: AbstractExposedTest() {
             secondTable.insert { }
 
             secondTable.selectAll().count() shouldBeEqualTo 2L
-            // SELECT COUNT(*) FROM SECONDTABLE WHERE SECONDTABLE."firstOpt" = 1
+
+            // SELECT COUNT(*) FROM secondtable WHERE secondtable."firstOpt" = 1
             secondTable.selectAll().where { secondTable.firstOpt eq firstId.value }.count() shouldBeEqualTo 1L
 
-            // SELECT COUNT(*) FROM SECONDTABLE WHERE SECONDTABLE."firstOpt" <> 1  // 1 != null
+            // SELECT COUNT(*) FROM secondtable WHERE secondtable."firstOpt" <> 1  -- 1 != null
             secondTable.selectAll().where { secondTable.firstOpt neq firstId.value }.count() shouldBeEqualTo 0L
 
-            // SELECT COUNT(*) FROM SECONDTABLE WHERE SECONDTABLE."firstOpt" IS NULL
+            // SELECT COUNT(*) FROM secondtable WHERE secondtable."firstOpt" IS NULL
             secondTable.selectAll().where { secondTable.firstOpt eq null }.count() shouldBeEqualTo 1L
 
-            // SELECT COUNT(*) FROM SECONDTABLE WHERE SECONDTABLE."firstOpt" IS NOT NULL
+            // SELECT COUNT(*) FROM secondtable WHERE secondtable."firstOpt" IS NOT NULL
             secondTable.selectAll().where { secondTable.firstOpt neq null }.count() shouldBeEqualTo 1L
         }
     }
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `SELECT 쿼리에서는 컬럼 길이를 검사하지 않습니다`(dialect: TestDB) {
+    fun `SELECT 쿼리에서는 컬럼 길이를 검사하지 않습니다`(testDB: TestDB) {
+
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS stringtable (
+         *      id SERIAL PRIMARY KEY,
+         *      "name" VARCHAR(10) NOT NULL
+         * )
+         * ```
+         */
         val stringTable = object: IntIdTable("StringTable") {
             val name = varchar("name", 10)
         }
-        withTables(dialect, stringTable) {
+        withTables(testDB, stringTable) {
             stringTable.insert {
                 it[name] = "TestName"
             }
-
+            /**
+             * ```sql
+             * SELECT COUNT(*)
+             *   FROM stringtable
+             *  WHERE stringtable."name" = 'TestName'
+             * ```
+             */
             stringTable.selectAll()
                 .where { stringTable.name eq "TestName" }
                 .count() shouldBeEqualTo 1L
 
-            val veryLongString = "1".repeat(255)
+            /**
+             * ```sql
+             * SELECT COUNT(*)
+             *   FROM stringtable
+             *  WHERE stringtable."name" = 'YeM6yYtAorWNE2aWkchi'  -- 검색할 TEXT 길이가 컬럼 길이보다 길어도 실행된다.
+             * ```
+             */
+            val moreLength = (stringTable.name.columnType as VarCharColumnType).colLength * 2
+            val nameToSearch = Base58.randomString(moreLength)
             stringTable.selectAll()
-                .where { stringTable.name eq veryLongString }
+                .where { stringTable.name eq nameToSearch }
                 .count() shouldBeEqualTo 0L
         }
     }
@@ -1014,32 +1265,35 @@ class SelectTest: AbstractExposedTest() {
      * Prefix Comment
      * ```sql
      * SELECT COUNT(*)
-     *   FROM (/*additional_info*/ SELECT CITIES.CITY_ID Cities_city_id, CITIES."name" Cities_name
-     *                               FROM CITIES
-     *                              WHERE CITIES."name" = 'Munich'
-     *                              GROUP BY CITIES.CITY_ID, CITIES."name" LIMIT 1
+     *   FROM (/*additional_info*/ SELECT cities.city_id Cities_city_id,
+     *                                    cities."name" Cities_name
+     *                               FROM cities
+     *                              WHERE cities."name" = 'Munich'
+     *                              GROUP BY cities.city_id, cities."name"
+     *                              LIMIT 1
      *        ) subquery
      * ```
      *
      * Suffix Comment
      * ```sql
      * SELECT COUNT(*)
-     *   FROM (/*additional_info*/ SELECT CITIES.CITY_ID Cities_city_id, CITIES."name" Cities_name
-     *                               FROM CITIES
-     *                              WHERE CITIES."name" = 'Munich'
-     *                              GROUP BY CITIES.CITY_ID, CITIES."name" LIMIT 1
-     *    *         /*additional_info*/
-     *         ) subquery
+     *   FROM (/*additional_info*/ SELECT cities.city_id Cities_city_id,
+     *                                    cities."name" Cities_name
+     *                               FROM cities
+     *                              WHERE cities."name" = 'Munich'
+     *                              GROUP BY cities.city_id, cities."name"
+     *                              LIMIT 1 /*additional_info*/
+     *       ) subquery
      * ```
      *
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `select with comment`(dialect: TestDB) {
+    fun `select with comment`(testDB: TestDB) {
         val text = "additional_info"
         val updatedText = "${text}_updated"
 
-        withCitiesAndUsers(dialect) { cities, _, _ ->
+        withCitiesAndUsers(testDB) { cities, _, _ ->
             val query = cities.selectAll()
                 .where { cities.name eq "Munich" }
                 .limit(1)
@@ -1089,12 +1343,12 @@ class SelectTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `select with limit and offset`(dialect: TestDB) {
+    fun `select with limit and offset`(testDB: TestDB) {
         val alphabet = object: Table("alphabet") {
             val letter = char("letter")
         }
 
-        withTables(dialect, alphabet) { testDb ->
+        withTables(testDB, alphabet) {
             val allLetters = ('A'..'Z').toList()
             val amount = 10
             val start = 8L
@@ -1103,14 +1357,23 @@ class SelectTest: AbstractExposedTest() {
                 this[alphabet.letter] = letter
             }
 
-            val limitResult = alphabet.selectAll().limit(amount).map { it[alphabet.letter] }
+            val limitResult = alphabet
+                .selectAll()
+                .limit(amount)
+                .map { it[alphabet.letter] }
             limitResult shouldBeEqualTo allLetters.take(amount)
 
-            val limitOffsetResult = alphabet.selectAll().limit(amount).offset(start).map { it[alphabet.letter] }
+            val limitOffsetResult = alphabet.selectAll()
+                .limit(amount)
+                .offset(start)
+                .map { it[alphabet.letter] }
             limitOffsetResult shouldBeEqualTo allLetters.drop(start.toInt()).take(amount)
 
-            if (testDb !in TestDB.ALL_MYSQL) {
-                val offsetResult = alphabet.selectAll().offset(start).map { it[alphabet.letter] }
+            if (testDB !in TestDB.ALL_MYSQL) {
+                val offsetResult = alphabet
+                    .selectAll()
+                    .offset(start)
+                    .map { it[alphabet.letter] }
                 offsetResult shouldBeEqualTo allLetters.drop(start.toInt())
             }
         }

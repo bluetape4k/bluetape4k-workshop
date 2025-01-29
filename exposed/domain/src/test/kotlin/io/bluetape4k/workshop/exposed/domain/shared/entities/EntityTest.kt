@@ -7,6 +7,7 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.TestDB.POSTGRESQL
+import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.AEntity
 import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.BEntity
 import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.XEntity
@@ -264,10 +265,38 @@ class EntityTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS board (id SERIAL PRIMARY KEY, "name" VARCHAR(255) NOT NULL);
+     * ALTER TABLE board ADD CONSTRAINT board_name_unique UNIQUE ("name");
+     * ```
+     */
     object Boards: IntIdTable("board") {
         val name = varchar("name", 255).uniqueIndex()
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS posts (
+     *      id BIGSERIAL PRIMARY KEY,
+     *      board INT NULL,
+     *      parent BIGINT NULL,
+     *      category VARCHAR(22) NULL,
+     *      "optCategory" VARCHAR(22) NULL
+     * );
+     *
+     * ALTER TABLE posts ADD CONSTRAINT posts_category_unique UNIQUE (category);
+     *
+     * ALTER TABLE posts ADD CONSTRAINT fk_posts_board__id FOREIGN KEY (board) REFERENCES board(id)
+     *      ON DELETE RESTRICT ON UPDATE RESTRICT;
+     * ALTER TABLE posts ADD CONSTRAINT fk_posts_parent__id FOREIGN KEY (parent) REFERENCES posts(id)
+     *      ON DELETE RESTRICT ON UPDATE RESTRICT;
+     * ALTER TABLE posts ADD CONSTRAINT fk_posts_category__uniqueid FOREIGN KEY (category) REFERENCES categories("uniqueId")
+     *      ON DELETE RESTRICT ON UPDATE RESTRICT;
+     * ALTER TABLE posts ADD CONSTRAINT fk_posts_optcategory__uniqueid FOREIGN KEY ("optCategory") REFERENCES categories("uniqueId")
+     *      ON DELETE RESTRICT ON UPDATE RESTRICT;
+     * ```
+     */
     object Posts: LongIdTable("posts") {
         val board = optReference("board", Boards.id)
         val parent = optReference("parent", this)
@@ -275,6 +304,16 @@ class EntityTest: AbstractExposedTest() {
         val optCategory = optReference("optCategory", Categories.uniqueId)
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS categories (
+     *      id SERIAL PRIMARY KEY,
+     *      "uniqueId" VARCHAR(22) NOT NULL,
+     *      title VARCHAR(50) NOT NULL
+     * );
+     * ALTER TABLE categories ADD CONSTRAINT categories_uniqueid_unique UNIQUE ("uniqueId");
+     * ```
+     */
     object Categories: IntIdTable("categories") {
         val uniqueId = varchar("uniqueId", 22).timebasedGenerated().uniqueIndex()
         val title = varchar("title", 50)
@@ -285,6 +324,10 @@ class EntityTest: AbstractExposedTest() {
 
         var name by Boards.name
         val posts by Post optionalReferrersOn Posts.board  // one-to-many
+
+        override fun equals(other: Any?): Boolean = other is Board && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Board(id=$idValue, name=$name)"
     }
 
     class Post(id: EntityID<Long>): LongEntity(id) {
@@ -295,6 +338,11 @@ class EntityTest: AbstractExposedTest() {
         val children by Post optionalReferrersOn Posts.parent   // one-to-many
         var category by Category optionalReferencedOn Posts.category
         var optCategory by Category optionalReferencedOn Posts.optCategory
+
+        override fun equals(other: Any?): Boolean = other is Post && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String =
+            "Post(id=$idValue, parent=${parent?.idValue}, board=${board?.id}, category=${category?.id})"
     }
 
     class Category(id: EntityID<Int>): IntEntity(id) {
@@ -303,6 +351,10 @@ class EntityTest: AbstractExposedTest() {
         val uniqueId by Categories.uniqueId
         var title by Categories.title
         val posts by Post optionalReferrersOn Posts.optCategory  // one-to-many
+
+        override fun equals(other: Any?): Boolean = other is Category && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Category(id=$idValue, title=$title)"
     }
 
     @ParameterizedTest
