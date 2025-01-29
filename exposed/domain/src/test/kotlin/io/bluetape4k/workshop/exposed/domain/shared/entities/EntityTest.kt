@@ -1830,11 +1830,12 @@ class EntityTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `nested entity initialization`(testDB: TestDB) {
         withTables(testDB, Posts, Categories, Boards) {
+            val parentPost = Post.new {
+                board = Board.new { name = "Parent Board" }
+                category = Category.new { title = "Parent Category" }
+            }
             val post = Post.new {
-                parent = Post.new {
-                    board = Board.new { name = "Parent Board" }
-                    category = Category.new { title = "Parent Category" }
-                }
+                parent = parentPost 
                 category = Category.new { title = "Child Category" }
                 optCategory = parent!!.category
             }

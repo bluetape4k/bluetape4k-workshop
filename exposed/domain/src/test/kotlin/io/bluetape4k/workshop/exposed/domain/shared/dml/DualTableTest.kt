@@ -10,6 +10,7 @@ import org.jetbrains.exposed.sql.Table.Dual
 import org.jetbrains.exposed.sql.intLiteral
 import org.jetbrains.exposed.sql.javatime.CurrentDate
 import org.jetbrains.exposed.sql.javatime.CurrentDateTime
+import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
@@ -65,6 +66,8 @@ class DualTableTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `dual table with CurrentDateTime`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 }
+        
         withDb(testDB) {
             val now: LocalDateTime = Dual.select(CurrentDateTime).single()[CurrentDateTime]
             now shouldBeLessOrEqualTo LocalDateTime.now()

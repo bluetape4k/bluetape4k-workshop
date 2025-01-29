@@ -237,7 +237,7 @@ class GroupByTest: AbstractExposedTest() {
     fun `groupBy example 07`(testDb: TestDB) {
         withCitiesAndUsers(testDb) { cities, users, _ ->
             val avgIdExpr = cities.id.avg()
-            val avgId = cities.select(cities.id).map { it[cities.id] }.average().toBigDecimal()
+            val avgId = cities.select(cities.id).map { it[cities.id] }.average().toBigDecimal().setScale(2)
 
             cities.select(avgIdExpr)
                 .map { it[avgIdExpr] }

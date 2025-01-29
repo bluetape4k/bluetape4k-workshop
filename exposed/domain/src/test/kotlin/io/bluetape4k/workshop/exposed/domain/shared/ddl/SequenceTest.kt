@@ -31,6 +31,7 @@ import org.jetbrains.exposed.sql.nextIntVal
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.*
@@ -108,14 +109,14 @@ class SequenceTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testInsertWithCustomSequence(testDb: TestDB) {
+    fun testInsertWithCustomSequence(testDB: TestDB) {
         val tester = object: Table("tester") {
             val id = integer("id").autoIncrement(myseq)  // myseq is a sequence
             val name = varchar("name", 25)
 
             override val primaryKey = PrimaryKey(id, name)
         }
-        withDb(testDb) {
+        withDb(testDB) {
             if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
                 try {
                     SchemaUtils.create(tester)
@@ -142,8 +143,8 @@ class SequenceTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `test insert LongIdTable with auto-increment with sequence`(testDb: TestDB) {
-        withDb(testDb) {
+    fun `test insert LongIdTable with auto-increment with sequence`(testDB: TestDB) {
+        withDb(testDB) {
             Assumptions.assumeTrue { currentDialectTest.supportsSequenceAsGeneratedKeys }
 
             try {
@@ -165,8 +166,8 @@ class SequenceTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `test select with nextVal`(testDb: TestDB) {
-        withTables(testDb, Developer) {
+    fun `test select with nextVal`(testDB: TestDB) {
+        withTables(testDB, Developer) {
             Assumptions.assumeTrue { currentDialectTest.supportsCreateSequence }
 
             try {
@@ -191,8 +192,8 @@ class SequenceTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testManuallyCreatedSequenceExists(testDb: TestDB) {
-        withDb(testDb) {
+    fun testManuallyCreatedSequenceExists(testDB: TestDB) {
+        withDb(testDB) {
             Assumptions.assumeTrue { currentDialectTest.supportsCreateSequence }
             try {
                 SchemaUtils.createSequence(myseq)
@@ -205,12 +206,12 @@ class SequenceTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testExistingSequencesForAutoIncrementWithCustomSequence(testDb: TestDB) {
+    fun testExistingSequencesForAutoIncrementWithCustomSequence(testDB: TestDB) {
         val tableWithExplicitSequenceName = object: IdTable<Long>() {
             override val id: Column<EntityID<Long>> = long("id").autoIncrement(myseq).entityId()
         }
 
-        withDb(testDb) {
+        withDb(testDB) {
             Assumptions.assumeTrue { currentDialectTest.supportsSequenceAsGeneratedKeys }
 
             try {
@@ -227,13 +228,13 @@ class SequenceTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testExistingSequencesForAutoIncrementWithExplicitSequenceName(testDb: TestDB) {
+    fun testExistingSequencesForAutoIncrementWithExplicitSequenceName(testDB: TestDB) {
         val sequenceName = "id_seq"
         val tableWithExplicitSequenceName = object: IdTable<Long>() {
             override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequenceName).entityId()
         }
 
-        withDb(testDb) {
+        withDb(testDB) {
             Assumptions.assumeTrue { currentDialectTest.supportsSequenceAsGeneratedKeys }
             try {
                 SchemaUtils.create(tableWithExplicitSequenceName)
@@ -250,13 +251,13 @@ class SequenceTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testExistingSequencesForAutoIncrementWithoutExplicitSequenceName(testDb: TestDB) {
+    fun testExistingSequencesForAutoIncrementWithoutExplicitSequenceName(testDB: TestDB) {
 
         val tableWithoutExplicitSequenceName = object: IdTable<Long>() {
             override val id: Column<EntityID<Long>> = long("id").autoIncrement().entityId()
         }
 
-        withDb(testDb) {
+        withDb(testDB) {
             Assumptions.assumeTrue { currentDialect.needsSequenceToAutoInc }
 
             try {
@@ -299,8 +300,8 @@ class SequenceTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testNoCreateStatementForExistingSequence(testDb: TestDB) {
-        withDb(testDb) {
+    fun testNoCreateStatementForExistingSequence(testDB: TestDB) {
+        withDb(testDB) {
             Assumptions.assumeTrue { currentDialectTest.supportsSequenceAsGeneratedKeys }
 
             val createSequencePrefix = "CREATE SEQUENCE"
@@ -332,11 +333,8 @@ class SequenceTest: AbstractExposedTest() {
         }
     }
 
-    @ParameterizedTest
-    @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testAutoIncrementColumnAccessWithEntity(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb == TestDB.POSTGRESQL }
-
+    @Test
+    fun testAutoIncrementColumnAccessWithEntity() {
         TestDB.POSTGRESQL.connect()
 
         try {

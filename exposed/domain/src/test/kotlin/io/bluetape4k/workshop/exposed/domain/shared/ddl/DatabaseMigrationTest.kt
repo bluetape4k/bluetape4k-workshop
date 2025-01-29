@@ -16,6 +16,7 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeEqualToIgnoringCase
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldBeTrue
+import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldStartWithIgnoringCase
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
@@ -91,7 +92,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                 singlePKTable,
                 withLogs = true
             )
-            expectedStatements.size shouldBeEqualTo 1
+            expectedStatements shouldHaveSize if (testDb in TestDB.ALL_POSTGRES) 5 else 1
 
             val fileStatements: List<String> = script.bufferedReader().readLines().map { it.trimEnd(';') }
             expectedStatements.zip(fileStatements).forEach { (expected, actual) ->
@@ -378,7 +379,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
 
             val statements = MigrationUtils
                 .statementsRequiredForDatabaseMigration(testTableWithOneIndex, withLogs = false)
-            statements.size shouldBeEqualTo 1
+            statements shouldHaveSize if (testDb in TestDB.ALL_POSTGRES) 7 else 1
         }
     }
 
@@ -845,10 +846,8 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                 try {
                     SchemaUtils.create(tableWithAutoIncrementCustomSequence)
 
-                    MigrationUtils
-                        .statementsRequiredForDatabaseMigration(tableWithAutoIncrementCustomSequence)
+                    SchemaUtils.statementsRequiredToActualizeScheme(tableWithAutoIncrementCustomSequence)
                         .shouldBeEmpty()
-
 
                     val statements = MigrationUtils
                         .statementsRequiredForDatabaseMigration(

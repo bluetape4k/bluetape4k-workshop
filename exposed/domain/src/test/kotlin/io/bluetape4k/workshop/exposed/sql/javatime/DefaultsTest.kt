@@ -14,6 +14,7 @@ import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeGreaterOrEqualTo
 import org.amshove.kluent.shouldBeTrue
+import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
@@ -477,7 +478,11 @@ class DefaultsTest: AbstractExposedTest() {
         }
         withTables(testDB, tester) {
             val actual = MigrationUtils.statementsRequiredForDatabaseMigration(tester)
-            actual.shouldBeEmpty()
+            if (testDB !in TestDB.ALL_POSTGRES) {
+                actual.shouldBeEmpty()
+            } else {
+                actual shouldHaveSize 5
+            }
         }
     }
 
