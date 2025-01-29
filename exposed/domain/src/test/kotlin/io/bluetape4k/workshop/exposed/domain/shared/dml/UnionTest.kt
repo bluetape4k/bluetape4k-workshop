@@ -45,8 +45,8 @@ class UnionTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `union within limit`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, users, userData ->
+    fun `union within limit`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, userData ->
             val andreyQuery = users.selectAll().where { users.id eq "andrey" }
             val sergeyQuery = users.selectAll().where { users.id eq "sergey" }
 
@@ -74,8 +74,8 @@ class UnionTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `union with limit and offset`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, users, userData ->
+    fun `union with limit and offset`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, userData ->
             val andreyQuery = users.selectAll().where { users.id eq "andrey" }
             val sergeyQuery = users.selectAll().where { users.id eq "sergey" }
 
@@ -106,8 +106,8 @@ class UnionTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `count of union query`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, users, userData ->
+    fun `count of union query`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, userData ->
             val andreyQuery = users.selectAll().where { users.id eq "andrey" }
             val sergeyQuery = users.selectAll().where { users.id eq "sergey" }
 
@@ -136,8 +136,8 @@ class UnionTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `union within orderBy`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, users, userData ->
+    fun `union within orderBy`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, userData ->
             val idAlias = users.id.alias("id_alias")
 
             val idQuery: Query = users.select(idAlias).where { users.id inList setOf("andrey", "sergey") }
@@ -163,8 +163,8 @@ class UnionTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `union of two queries`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, users, userData ->
+    fun `union of two queries`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, userData ->
             val andreyQuery = users.selectAll().where { users.id eq "andrey" }
             val sergeyQuery = users.selectAll().where { users.id eq "sergey" }
 
@@ -191,10 +191,10 @@ class UnionTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `intersect with three queries`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb !in TestDB.ALL_MYSQL }
+    fun `intersect with three queries`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
 
-        withCitiesAndUsers(testDb) { cities, users, userData ->
+        withCitiesAndUsers(testDB) { cities, users, userData ->
             val usersQuery = users.selectAll()
             val sergeyQuery = users.selectAll().where { users.id eq "sergey" }
 
@@ -240,10 +240,10 @@ class UnionTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `except with two query`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb !in TestDB.ALL_MYSQL }
+    fun `except with two query`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
 
-        withCitiesAndUsers(testDb) { cities, users, userData ->
+        withCitiesAndUsers(testDB) { cities, users, userData ->
             val usersQuery = users.selectAll()
             val expectedUsers = usersQuery.map { it[users.id] } - "sergey"
             val sergeyQuery = users.selectAll().where { users.id eq "sergey" }
@@ -267,10 +267,10 @@ class UnionTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `except of three queries`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb !in TestDB.ALL_MYSQL }
+    fun `except of three queries`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
 
-        withCitiesAndUsers(testDb) { cities, users, userData ->
+        withCitiesAndUsers(testDB) { _, users, _ ->
             val usersQuery = users.selectAll()
             val expectedUsers = usersQuery.map { it[users.id] } - "sergey"
             val sergeyQuery = users.selectAll().where { users.id eq "sergey" }
@@ -298,10 +298,10 @@ class UnionTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `except of two excepts queries`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb !in TestDB.ALL_MYSQL }
+    fun `except of two excepts queries`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
 
-        withCitiesAndUsers(testDb) { cities, users, userData ->
+        withCitiesAndUsers(testDB) { _, users, _ ->
             val usersQuery = users.selectAll()
             val expectedUsers = usersQuery.map { it[users.id] } - "sergey" - "andrey"
             val sergeyQuery = users.selectAll().where { users.id eq "sergey" }
@@ -321,19 +321,29 @@ class UnionTest: AbstractExposedTest() {
      * union multiple queries
      *
      * ```sql
-     * SELECT users.id, users."name", users.city_id, users.flags FROM users WHERE users.id = 'andrey'
+     * SELECT users.id, users."name", users.city_id, users.flags
+     *   FROM users
+     *  WHERE users.id = 'andrey'
+     *
      * UNION
-     * SELECT users.id, users."name", users.city_id, users.flags FROM users WHERE users.id = 'sergey'
+     *
+     * SELECT users.id, users."name", users.city_id, users.flags
+     *   FROM users
+     *  WHERE users.id = 'sergey'
+     *
      * UNION
-     * SELECT users.id, users."name", users.city_id, users.flags FROM users WHERE users.id = 'eugene'
+     *
+     * SELECT users.id, users."name", users.city_id, users.flags
+     *   FROM users
+     *  WHERE users.id = 'eugene'
      * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `union of more than two query`(testDb: TestDB) {
+    fun `union of more than two query`(testDB: TestDB) {
         // Assumptions.assumeTrue { testDb !in TestDB.ALL_MYSQL }
 
-        withCitiesAndUsers(testDb) { cities, users, userData ->
+        withCitiesAndUsers(testDB) { _, users, _ ->
             val andreyQuery = users.selectAll().where { users.id eq "andrey" }
             val sergeyQuery = users.selectAll().where { users.id eq "sergey" }
             val eugeneQuery = users.selectAll().where { users.id eq "eugene" }
@@ -371,8 +381,8 @@ class UnionTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `union of sorted queries`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, users, userData ->
+    fun `union of sorted queries`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             val andreyOrSergeyQuery = users.selectAll()
                 .where { users.id inList setOf("andrey", "sergey") }
                 .orderBy(users.id, SortOrder.DESC)
@@ -414,8 +424,8 @@ class UnionTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `union of limited queries`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, users, userData ->
+    fun `union of limited queries`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             val andreyOrSergeyQuery = users.selectAll()
                 .where { users.id inList setOf("andrey", "sergey") }
                 .limit(1)
@@ -458,9 +468,10 @@ class UnionTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `union of sorted and limited queries`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, users, userData ->
-            val andreyOrSergeyQuery = users.selectAll()
+    fun `union of sorted and limited queries`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
+            val andreyOrSergeyQuery = users
+                .selectAll()
                 .where { users.id inList setOf("andrey", "sergey") }
                 .orderBy(users.id, SortOrder.DESC)
                 .limit(1)
@@ -493,8 +504,8 @@ class UnionTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `union with distinct results`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, users, _ ->
+    fun `union with distinct results`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             val andreyQuery = users.selectAll().where { users.id eq "andrey" }
 
             val result = andreyQuery
@@ -518,8 +529,8 @@ class UnionTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `union with all results`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, users, _ ->
+    fun `union with all results`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             val andreyQuery = users.selectAll().where { users.id eq "andrey" }
 
             val result = andreyQuery
@@ -546,8 +557,8 @@ class UnionTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `union with all results of three queries`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, users, _ ->
+    fun `union with all results of three queries`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             val andreyQuery = users.selectAll().where { users.id eq "andrey" }
 
             val result = andreyQuery
@@ -572,8 +583,8 @@ class UnionTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `union with expressions`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, users, _ ->
+    fun `union with expressions`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             val exp1a = intLiteral(10)
             val exp1b = intLiteral(100)
             val exp2a = stringLiteral("aaa")
@@ -597,7 +608,9 @@ class UnionTest: AbstractExposedTest() {
      *      SELECT users.id, 10 exp1, 'aaa' exp2
      *        FROM users
      *       WHERE users.id = 'andrey'
+     *
      *      UNION ALL
+     *
      *      SELECT users.id, 100, 'bbb'
      *        FROM users
      *       WHERE users.id = 'andrey'
@@ -606,8 +619,8 @@ class UnionTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `union with expression and alias`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, users, _ ->
+    fun `union with expression and alias`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             val exp1a = intLiteral(10)
             val exp1b = intLiteral(100)
             val exp2a = stringLiteral("aaa")
