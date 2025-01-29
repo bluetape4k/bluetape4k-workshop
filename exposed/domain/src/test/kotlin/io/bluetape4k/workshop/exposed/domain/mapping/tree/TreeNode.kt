@@ -1,0 +1,74 @@
+package io.bluetape4k.workshop.exposed.domain.mapping.tree
+
+import org.jetbrains.exposed.dao.LongEntity
+import org.jetbrains.exposed.dao.LongEntityClass
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.LongIdTable
+import org.jetbrains.exposed.sql.Transaction
+
+
+/**
+ * 트리 노드 테이블
+ *
+ * ```sql
+ * CREATE TABLE IF NOT EXISTS TREE_NODES (
+ *      ID BIGINT AUTO_INCREMENT PRIMARY KEY,
+ *      TITLE VARCHAR(255) NOT NULL,
+ *      DESCRIPTION TEXT NULL,
+ *      DEPTH INT DEFAULT 0,
+ *      PARENT_ID BIGINT NULL
+ * )
+ * ```
+ */
+object TreeNodeTable: LongIdTable("tree_nodes") {
+    val title = varchar("title", 255)
+    val description = text("description").nullable()
+    val depth = integer("depth").default(0)
+
+    val parentId = reference("parent_id", TreeNodeTable).nullable()
+}
+
+class TreeNode(id: EntityID<Long>): LongEntity(id) {
+    companion object: LongEntityClass<TreeNode>(TreeNodeTable) {
+        override fun new(init: TreeNode.() -> Unit): TreeNode {
+            val node = super.new { }
+            node.init()
+            node.depth = (node.parent?.depth ?: 0) + 1
+            return node
+        }
+    }
+
+    var title by TreeNodeTable.title
+    var description by TreeNodeTable.description
+    var depth by TreeNodeTable.depth
+    var parent by TreeNode optionalReferencedOn TreeNodeTable.parentId
+
+    // 자식 노드 조회
+    val children
+        get() = TreeNode.find { TreeNodeTable.parentId eq id }
+
+    /**
+     * 자신뿐 아니라 모든 자손까지 삭제한다.
+     */
+    fun deleteDescendants() {
+        children.forEach { it.deleteDescendants() }
+        delete()
+    }
+
+    override fun equals(other: Any?): Boolean = other is TreeNode && id._value == other.id._value
+    override fun hashCode(): Int = id._value.hashCode()
+    override fun toString(): String = "TreeNode(id=${id._value}, title=$title), parent_id=${parent?.id?._value})"
+}
+
+internal fun Transaction.buildTreeNodes() {
+    val root = TreeNode.new { title = "root" }
+    commit()
+
+    val child1 = TreeNode.new { title = "child1"; parent = root }
+    val child2 = TreeNode.new { title = "child2"; parent = root }
+    commit()
+
+    val grandChild1 = TreeNode.new { title = "grandChild1"; parent = child1; }
+    val grandChild2 = TreeNode.new { title = "grandChild2"; parent = child1; }
+    commit()
+}

@@ -10,11 +10,7 @@ import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldContainSame
 import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeNull
-import org.jetbrains.exposed.dao.LongEntity
-import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.entityCache
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.alias
 import org.jetbrains.exposed.sql.innerJoin
 import org.jetbrains.exposed.sql.selectAll
@@ -24,58 +20,6 @@ import org.junit.jupiter.params.provider.MethodSource
 class TreeNodeTest: AbstractExposedTest() {
 
     companion object: KLogging()
-
-    /**
-     * 트리 노드 테이블
-     *
-     * ```sql
-     * CREATE TABLE IF NOT EXISTS TREE_NODES (
-     *      ID BIGINT AUTO_INCREMENT PRIMARY KEY,
-     *      TITLE VARCHAR(255) NOT NULL,
-     *      DESCRIPTION TEXT NULL,
-     *      PARENT_ID BIGINT NULL
-     * )
-     * ```
-     */
-    object TreeNodeTable: LongIdTable("tree_nodes") {
-        val title = varchar("title", 255)
-        val description = text("description").nullable()
-
-        val parentId = reference("parent_id", TreeNodeTable).nullable()
-    }
-
-    class TreeNode(id: EntityID<Long>): LongEntity(id) {
-        companion object: LongEntityClass<TreeNode>(TreeNodeTable)
-
-        var title by TreeNodeTable.title
-        var description by TreeNodeTable.description
-        var parent by TreeNode optionalReferencedOn TreeNodeTable.parentId
-
-        // 자식 노드 조회
-        val children
-            get() = TreeNode.find { TreeNodeTable.parentId eq id }
-
-        /**
-         * 자신뿐 아니라 모든 자손까지 삭제한다.
-         */
-        fun deleteDescendants() {
-            children.forEach { it.deleteDescendants() }
-            delete()
-        }
-
-        override fun equals(other: Any?): Boolean = other is TreeNode && id._value == other.id._value
-        override fun hashCode(): Int = id._value.hashCode()
-        override fun toString(): String = "TreeNode(id=${id._value}, title=$title), parent_id=${parent?.id?._value})"
-    }
-
-    private fun buildTreeNodes() {
-        val root = TreeNode.new { title = "root" }
-        val child1 = TreeNode.new { title = "child1"; parent = root }
-        val child2 = TreeNode.new { title = "child2"; parent = root }
-
-        val grandChild1 = TreeNode.new { title = "grandChild1"; parent = child1 }
-        val grandChild2 = TreeNode.new { title = "grandChild2"; parent = child1 }
-    }
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -129,11 +73,11 @@ class TreeNodeTest: AbstractExposedTest() {
      * [TreeNode]의 자식과의 Join 을 이용하여 부모와 자식노드를 구하기
      *
      * ```sql
-     * SELECT parent.TITLE,
-     *        child.TITLE
-     *   FROM TREE_NODES parent
-     *        INNER JOIN TREE_NODES child ON  (parent.ID = child.PARENT_ID)
-     *  WHERE parent.TITLE = 'child1'
+     * SELECT parent.title,
+     *        child.title
+     *   FROM tree_nodes parent
+     *      INNER JOIN tree_nodes child ON (parent.id = child.parent_id)
+     *  WHERE parent.title = 'child1'
      * ```
      */
     @ParameterizedTest
@@ -164,12 +108,14 @@ class TreeNodeTest: AbstractExposedTest() {
     /**
      * SubQuery 를 이용하여 Covering Index 를 사용하여 조회하기
      * ```sql
-     * SELECT TREE_NODES.ID,
-     *        TREE_NODES.TITLE,
-     *        TREE_NODES.DESCRIPTION,
-     *        TREE_NODES.PARENT_ID
-     *   FROM TREE_NODES
-     *  WHERE TREE_NODES.ID IN (SELECT sub.ID FROM TREE_NODES sub WHERE sub.TITLE LIKE 'grand%')
+     * SELECT tree_nodes.id,
+     *        tree_nodes.title,
+     *        tree_nodes.description,
+     *        tree_nodes.parent_id
+     *   FROM tree_nodes
+     *  WHERE tree_nodes.id IN (SELECT sub.parent_id
+     *                            FROM tree_nodes sub
+     *                           WHERE sub.title LIKE 'grand%')
      * ```
      */
     @ParameterizedTest
@@ -197,14 +143,16 @@ class TreeNodeTest: AbstractExposedTest() {
      * SubQuery 를 Convering 인덱스로 활용하기
      *
      * ```sql
-     * SELECT TREE_NODES.ID,
-     *        TREE_NODES.TITLE,
-     *        TREE_NODES.DESCRIPTION,
-     *        TREE_NODES.PARENT_ID
-     *   FROM TREE_NODES INNER JOIN (SELECT TREE_NODES.ID
-     *                                 FROM TREE_NODES
-     *                                WHERE TREE_NODES.TITLE LIKE 'child%'
-     *                               ) sub ON  (TREE_NODES.PARENT_ID = sub.ID)
+     * SELECT tree_nodes.id,
+     *        tree_nodes.title,
+     *        tree_nodes.description,
+     *        tree_nodes.parent_id
+     *   FROM tree_nodes
+     *      INNER JOIN (
+     *          SELECT tree_nodes.id
+     *            FROM tree_nodes
+     *           WHERE tree_nodes.title LIKE 'child%'
+     *      ) sub ON  (tree_nodes.parent_id = sub.id)
      * ```
      */
     @ParameterizedTest
