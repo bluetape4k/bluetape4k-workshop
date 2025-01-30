@@ -2,25 +2,31 @@ package io.bluetape4k.workshop.exposed.domain.shared.dml
 
 import io.bluetape4k.idgenerators.uuid.TimebasedUuid
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
+import org.jetbrains.exposed.dao.entityCache
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ColumnTransformer
 import org.jetbrains.exposed.sql.ColumnWithTransform
+import org.jetbrains.exposed.sql.alias
 import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.statements.InsertStatement
 import org.jetbrains.exposed.sql.update
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -52,6 +58,11 @@ class ColumnWithTransformTest: AbstractExposedTest() {
         override fun wrap(value: Int): TransformDataHolder? = if (value == 0) null else TransformDataHolder(value)
     }
 
+    /**
+     * 회귀적으로 transform을 적용하는 경우, ColumnWithTransform의 수형이 변환된 수형이어야 한다.
+     *
+     * 예를 들어, Binary Serializer를 적용한 후, Compressor 를 적용하는 경우 등이 있다.
+     */
     @Suppress("UNCHECKED_CAST")
     @Test
     fun `recursive unwrap`() {
@@ -91,6 +102,18 @@ class ColumnWithTransformTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `simple transforms`(testDB: TestDB) {
+        /**
+         * `transform` 함수를 이용해 wrapping, unwrapping을 수행하는 예제
+         *
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS simple_transforms (
+         *      id SERIAL PRIMARY KEY,
+         *      v1 INT NOT NULL,
+         *      v2 INT NULL,
+         *      v3 INT NULL
+         * )
+         * ```
+         */
         val tester = object: IntIdTable("simple_transforms") {
             val v1 = integer("v1")
                 .transform(
@@ -112,6 +135,7 @@ class ColumnWithTransformTest: AbstractExposedTest() {
         }
 
         withTables(testDB, tester) {
+            // INSERT INTO simple_transforms (v1, v2, v3) VALUES (1, 2, 3)
             val id1 = tester.insertAndGetId {
                 it[v1] = TransformDataHolder(1)
                 it[v2] = TransformDataHolder(2)
@@ -123,6 +147,7 @@ class ColumnWithTransformTest: AbstractExposedTest() {
             entry1[tester.v2]?.value shouldBeEqualTo 2
             entry1[tester.v3]?.value shouldBeEqualTo 3
 
+            // INSERT INTO simple_transforms (v1, v2, v3) VALUES (1, NULL, NULL)
             val id2 = tester.insertAndGetId {
                 it[v1] = TransformDataHolder(1)
                 it[v2] = null
@@ -135,9 +160,24 @@ class ColumnWithTransformTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * 여러 개의 `transform` 을 중첩해서 적용하는 예
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `nested transforms`(testDB: TestDB) {
+        /**
+         * Postgres:
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS nested_transformer (
+         *      id SERIAL PRIMARY KEY,
+         *      v1 INT NOT NULL,
+         *      v2 INT NULL,
+         *      v3 INT NULL,
+         *      v4 INT NULL
+         * )
+         * ```
+         */
         val tester = object: IntIdTable("nested_transformer") {
             val v1: Column<String> = integer("v1")
                 .transform(DataHolderTransformer())
@@ -199,6 +239,10 @@ class ColumnWithTransformTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * [InsertStatement] 에서 transform 된 값을 읽어오는 예제
+     *
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `read transformed values from insert statement`(testDB: TestDB) {
@@ -208,12 +252,17 @@ class ColumnWithTransformTest: AbstractExposedTest() {
         }
 
         withTables(testDB, tester) {
-            val statement = tester.insert {
+            /**
+             * ```sql
+             * INSERT INTO read_transformed_values (v1, v2) VALUES (1, 0)
+             * ```
+             */
+            val statement: InsertStatement<Number> = tester.insert {
                 it[tester.v1] = TransformDataHolder(1)
                 it[tester.v2] = null
             }
 
-            statement[tester.v1].value shouldBeEqualTo 1
+            statement[tester.v1] shouldBeEqualTo TransformDataHolder(1)
             statement[tester.v2].shouldBeNull()
         }
     }
@@ -243,6 +292,10 @@ class ColumnWithTransformTest: AbstractExposedTest() {
 
         var simple: TransformDataHolder by TransformTable.simple
         var chained: TransformDataHolder by TransformTable.chained
+
+        override fun equals(other: Any?): Boolean = other is TransformEntity && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "TransformEntity($idValue, simple=$simple, chained=$chained)"
     }
 
     @ParameterizedTest
@@ -253,7 +306,7 @@ class ColumnWithTransformTest: AbstractExposedTest() {
                 simple = TransformDataHolder(120)
                 chained = TransformDataHolder(240)
             }
-
+            log.debug { "entity: $entity" }
             entity.simple shouldBeEqualTo TransformDataHolder(120)
             entity.chained shouldBeEqualTo TransformDataHolder(240)
 
@@ -280,29 +333,65 @@ class ColumnWithTransformTest: AbstractExposedTest() {
     @JvmInline
     value class CustomId(val id: UUID): Serializable
 
+    /**
+     * value class 를 entity id 로 사용하는 예제 (`transform` 함수를 이용해 wrapping, unwrapping을 수행)
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `transform id column`(testDB: TestDB) {
-        val tester = object: IdTable<CustomId>() {
+
+        /**
+         * value class인 [CustomId]의 value 수형이 UUID 이므로, 테이블 기본 키의 수형은 UUID 이다.
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS tester (id uuid PRIMARY KEY)
+         * ```
+         */
+        val tester = object: IdTable<CustomId>("tester") {
             override val id: Column<EntityID<CustomId>> = uuid("id")
-                .transform(wrap = { CustomId(it) }, unwrap = { it.id })
+                .transform(wrap = { CustomId(it) }, unwrap = { it.id })  // value class 는 이렇게 사용하면 된다.
                 .entityId()
 
             override val primaryKey = PrimaryKey(id)
         }
 
-        val referenceTester = object: IntIdTable() {
+        /**
+         * `reference` 컬럼은 `tester` 테이블의 기본 키를 참조한다. 같은 수형인 UUID 수형으로 정의됩니다.
+         *
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS ref_tester (
+         *      id SERIAL PRIMARY KEY,
+         *      reference uuid NOT NULL,
+         *
+         *      CONSTRAINT fk_ref_tester_reference__id FOREIGN KEY (reference) REFERENCES tester(id)
+         *          ON DELETE RESTRICT ON UPDATE RESTRICT
+         * )
+         * ```
+         */
+        val referenceTester = object: IntIdTable("ref_tester") {
             val reference: Column<EntityID<CustomId>> = reference("reference", tester)
         }
 
         val uuid = TimebasedUuid.Epoch.nextId()
         withTables(testDB, tester, referenceTester) {
+            // CustomId 를 지정 (UUID 값만 저장됨)
+            /**
+             * ```sql
+             * INSERT INTO tester (id) VALUES ('${uuid}')
+             * ```
+             */
             tester.insert {
                 it[id] = CustomId(uuid)
             }
             val transformedId: EntityID<CustomId> = tester.selectAll().single()[tester.id]
             transformedId.value shouldBeEqualTo CustomId(uuid)
 
+            /**
+             * `ref_tester` 테이블에 `tester` 테이블의 기본 키를 참조하는 레코드를 추가한다.
+             *
+             * ```sql
+             * INSERT INTO ref_tester (reference) VALUES (0194b78c-d028-73a2-933b-2fe80bf31095)
+             * ```
+             */
             referenceTester.insert {
                 it[reference] = transformedId
             }
@@ -312,6 +401,9 @@ class ColumnWithTransformTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Application에서 null 을 지정하면, DB에는 특정 값으로 저장되도록 하는 예제
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `null to non-null transform`(testDB: TestDB) {
@@ -392,6 +484,18 @@ class ColumnWithTransformTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * [ColumnTransformer]를 상속받아 구현한 [DataHolderTransformer] 를 사용하는 예제
+     *
+     * 여기에 기본 값을 value class로 지정할 수 있다.
+     *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS tester (
+     *      id SERIAL PRIMARY KEY,
+     *      "value" INT DEFAULT 1 NOT NULL
+     * );
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `transform with default`(testDB: TestDB) {
@@ -402,14 +506,17 @@ class ColumnWithTransformTest: AbstractExposedTest() {
         }
 
         withTables(testDB, tester) {
+            // 기본 값이 지정되어 있으므로, 값을 지정하지 않아도 된다.
             val entry = tester.insert { }
-            entry[tester.value].value shouldBeEqualTo 1
-            tester.selectAll().first()[tester.value].value shouldBeEqualTo 1
+            entry[tester.value] shouldBeEqualTo TransformDataHolder(1)
+
+            // INSERT INTO tester  DEFAULT VALUES
+            tester.selectAll().first()[tester.value] shouldBeEqualTo TransformDataHolder(1)
         }
     }
 
     /**
-     * Batch Insert
+     * Batch Insert 시에도 transform 이 적용되는지 확인
      *
      * ```sql
      * INSERT INTO "TEST-BATCH-INSERT" (V1) VALUES (1)
@@ -437,7 +544,7 @@ class ColumnWithTransformTest: AbstractExposedTest() {
     }
 
     /**
-     * INSERT
+     * INSERT 시 뿐 아니라 UPDATE 시에도 transform 이 적용되는지 확인
      *
      * ```sql
      * INSERT INTO "TEST-UPDATE" (V1) VALUES (1)
@@ -466,6 +573,28 @@ class ColumnWithTransformTest: AbstractExposedTest() {
             }
 
             tester.selectAll().first()[tester.v1].value shouldBeEqualTo 2
+        }
+    }
+
+    @Disabled("0.58.0 에서는 아직 지원되지 않습니다")
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `wrapRow with aliases`(testDB: TestDB) {
+        withTables(testDB, TransformTable) {
+            TransformEntity.new {
+                simple = TransformDataHolder(10)
+            }
+            entityCache.clear()
+
+            val tableAlias = TransformTable.alias("tableAlias")
+            val e2 = tableAlias.selectAll().map { TransformEntity.wrapRow(it, tableAlias) }.single()
+            e2.simple shouldBeEqualTo TransformDataHolder(10)
+
+            entityCache.clear()
+
+            val queryAlias = TransformTable.selectAll().alias("queryAlias")
+            val e3 = queryAlias.selectAll().map { TransformEntity.wrapRow(it, queryAlias) }.single()
+            e3.simple shouldBeEqualTo TransformDataHolder(10)
         }
     }
 }

@@ -9,6 +9,7 @@ import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldBeTrue
+import org.jetbrains.exposed.dao.entityCache
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.exceptions.ExposedSQLException
@@ -31,6 +32,9 @@ import org.jetbrains.exposed.sql.update
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
+/**
+ * 조건문 (WHERE Clause) 테스트
+ */
 class ConditionsTest: AbstractExposedTest() {
 
     companion object: KLogging()
@@ -406,6 +410,7 @@ class ConditionsTest: AbstractExposedTest() {
 
     /**
      * Nested CaseWhenElse syntax
+     *
      * ```sql
      * SELECT CITIES."name",
      *        CASE
@@ -426,7 +431,7 @@ class ConditionsTest: AbstractExposedTest() {
     fun `chained and nested CaseWhenElse syntax`(testDB: TestDB) {
         withCitiesAndUsers(testDB) { cities, _, _ ->
             val nestedCondition = Case()
-                // .When(cities.id eq 1, intLiteral(1))  // Op.build {} 를 안 써도 된다.
+                // .When(cities.id eq 1, intLiteral(1)) 처럼 Op.build {} 를 안 써도 된다.
                 .When(Op.build { cities.id eq 1 }, intLiteral(1))
                 .Else(intLiteral(-1))
 
@@ -464,25 +469,49 @@ class ConditionsTest: AbstractExposedTest() {
             table.insert { it[c1] = 1; it[c2] = 2 }
             table.insert { it[c1] = 2; it[c2] = 1 }
 
-            // SELECT FOO.C1 < FOO.C2 c1_lt_c2 FROM FOO ORDER BY FOO.C1 ASC
+            /**
+             * ```sql
+             * SELECT FOO.C1 < FOO.C2 c1_lt_c2
+             *   FROM FOO
+             *  ORDER BY FOO.C1 ASC
+             * ```
+             */
             val c1_lt_c2 = table.c1.less(table.c2).alias("c1_lt_c2")
             table.select(c1_lt_c2)
                 .orderBy(table.c1)
                 .map { it[c1_lt_c2] } shouldBeEqualTo listOf(false, true, false)
 
-            // SELECT FOO.C1 <= FOO.C2 c1_lte_c2 FROM FOO ORDER BY FOO.C1 ASC
+            /**
+             * ```sql
+             * SELECT FOO.C1 <= FOO.C2 c1_lte_c2
+             *   FROM FOO
+             *  ORDER BY FOO.C1 ASC
+             *  ```
+             */
             val c1_lte_c2 = table.c1.lessEq(table.c2).alias("c1_lte_c2")
             table.select(c1_lte_c2)
                 .orderBy(table.c1)
                 .map { it[c1_lte_c2] } shouldBeEqualTo listOf(true, true, false)
 
-            // SELECT FOO.C1 > FOO.C2 c1_gt_c2 FROM FOO ORDER BY FOO.C1 ASC
+            /**
+             * ```sql
+             * SELECT FOO.C1 > FOO.C2 c1_gt_c2
+             *   FROM FOO
+             *  ORDER BY FOO.C1 ASC
+             * ```
+             */
             val c1_gt_c2 = table.c1.greater(table.c2).alias("c1_gt_c2")
             table.select(c1_gt_c2)
                 .orderBy(table.c1)
                 .map { it[c1_gt_c2] } shouldBeEqualTo listOf(false, false, true)
 
-            // SELECT FOO.C1 >= FOO.C2 c1_gte_c2 FROM FOO ORDER BY FOO.C1 ASC
+            /**
+             * ```sql
+             * SELECT FOO.C1 >= FOO.C2 c1_gte_c2
+             *   FROM FOO
+             *  ORDER BY FOO.C1 ASC
+             * ```
+             */
             val c1_gte_c2 = table.c1.greaterEq(table.c2).alias("c1_gte_c2")
             table.select(c1_gte_c2)
                 .orderBy(table.c1)
@@ -490,27 +519,95 @@ class ConditionsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * `null`, `empty` 조건문 테스트
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `null or empty`(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS tester (
+         *      id SERIAL PRIMARY KEY,
+         *      "name" TEXT NULL
+         * )
+         * ```
+         */
         val tester = object: IntIdTable("tester") {
             val name = text("name").nullable()
         }
 
         withTables(testDB, tester) {
+
             tester.insert { it[name] = null }
             tester.insert { it[name] = "" }
             tester.insert { it[name] = "a" }
 
-            tester.selectAll().where { tester.name.isNull() }.count() shouldBeEqualTo 1L
-            // SELECT COUNT(*) FROM TESTER WHERE (TESTER."name" IS NULL) OR (CHAR_LENGTH(TESTER."name") = 0)
-            tester.selectAll().where { tester.name.isNullOrEmpty() }.count() shouldBeEqualTo 2L
-            tester.selectAll().where { tester.name eq "" }.count() shouldBeEqualTo 1L
+            entityCache.clear()
 
-            tester.selectAll().where { tester.name neq null }.count() shouldBeEqualTo 2L
-            tester.selectAll().where { tester.name.isNotNull() }.count() shouldBeEqualTo 2L
-            // SELECT COUNT(*) FROM TESTER WHERE TESTER."name" <> ''
-            tester.selectAll().where { tester.name neq "" }.count() shouldBeEqualTo 1L // null 은 비교 대상이 안된다.
+            /**
+             * ```sql
+             * SELECT COUNT(*)
+             *   FROM tester
+             *  WHERE tester."name" IS NULL
+             * ```
+             */
+            tester.selectAll()
+                .where { tester.name.isNull() }
+                .count() shouldBeEqualTo 1L
+
+            /**
+             * ```sql
+             * SELECT COUNT(*)
+             *   FROM tester
+             *  WHERE (tester."name" IS NULL) OR (CHAR_LENGTH(tester."name") = 0)
+             * ```
+             */
+            tester.selectAll()
+                .where { tester.name.isNullOrEmpty() }
+                .count() shouldBeEqualTo 2L
+
+            /**
+             * ```sql
+             * SELECT COUNT(*)
+             *   FROM tester
+             *  WHERE tester."name" = ''
+             * ```
+             */
+            tester.selectAll()
+                .where { tester.name eq "" }
+                .count() shouldBeEqualTo 1L
+
+            /**
+             * ```sql
+             * SELECT COUNT(*)
+             *   FROM tester
+             *  WHERE tester."name" IS NOT NULL
+             * ```
+             */
+            tester.selectAll()
+                .where { tester.name neq null }
+                .count() shouldBeEqualTo 2L
+
+            /**
+             * ```sql
+             * SELECT COUNT(*)
+             *   FROM tester
+             *  WHERE tester."name" IS NOT NULL
+             */
+            tester.selectAll()
+                .where { tester.name.isNotNull() }
+                .count() shouldBeEqualTo 2L
+
+            /**
+             * ```sql
+             * SELECT COUNT(*)
+             *   FROM tester
+             *  WHERE tester."name" <> ''
+             */
+            tester.selectAll()
+                .where { tester.name neq "" }
+                .count() shouldBeEqualTo 1L
         }
     }
 }
