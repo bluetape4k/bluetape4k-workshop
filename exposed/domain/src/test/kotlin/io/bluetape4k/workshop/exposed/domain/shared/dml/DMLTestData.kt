@@ -19,9 +19,10 @@ import java.math.BigDecimal
 object DMLTestData {
 
     /**
+     * Postgres:
      * ```sql
-     * CREATE TABLE IF NOT EXISTS CITIES (
-     *      CITY_ID INT AUTO_INCREMENT PRIMARY KEY,
+     * CREATE TABLE IF NOT EXISTS cities (
+     *      city_id SERIAL PRIMARY KEY,
      *      "name" VARCHAR(50) NOT NULL
      * )
      * ```
@@ -34,15 +35,16 @@ object DMLTestData {
     }
 
     /**
+     * Postgres:
      * ```sql
-     * CREATE TABLE IF NOT EXISTS USERS (
-     *      ID VARCHAR(10) PRIMARY KEY,
+     * CREATE TABLE IF NOT EXISTS users (
+     *      id VARCHAR(10) PRIMARY KEY,
      *      "name" VARCHAR(50) NOT NULL,
-     *      CITY_ID INT NULL,
-     *      FLAGS INT DEFAULT 0 NOT NULL,
+     *      city_id INT NULL,
+     *      flags INT DEFAULT 0 NOT NULL,
      *
-     *      CONSTRAINT FK_USERS_CITY_ID__CITY_ID FOREIGN KEY (CITY_ID)
-     *          REFERENCES CITIES(CITY_ID) ON DELETE RESTRICT ON UPDATE RESTRICT
+     *      CONSTRAINT fk_users_city_id__city_id FOREIGN KEY (city_id) REFERENCES cities(city_id)
+     *          ON DELETE RESTRICT ON UPDATE RESTRICT
      * )
      * ```
      */
@@ -61,14 +63,15 @@ object DMLTestData {
     }
 
     /**
+     * Postgres:
      * ```sql
-     * CREATE TABLE IF NOT EXISTS USERDATA (
-     *      USER_ID VARCHAR(10) NOT NULL,
-     *      COMMENT VARCHAR(30) NOT NULL,
+     * CREATE TABLE IF NOT EXISTS userdata (
+     *      user_id VARCHAR(10) NOT NULL,
+     *      "comment" VARCHAR(30) NOT NULL,
      *      "value" INT NOT NULL,
      *
-     *      CONSTRAINT FK_USERDATA_USER_ID__ID FOREIGN KEY (USER_ID)
-     *          REFERENCES USERS(ID) ON DELETE RESTRICT ON UPDATE RESTRICT
+     *      CONSTRAINT fk_userdata_user_id__id FOREIGN KEY (user_id) REFERENCES users(id)
+     *          ON DELETE RESTRICT ON UPDATE RESTRICT
      * )
      * ```
      */
@@ -285,29 +288,33 @@ fun AbstractExposedTest.withSalesAndSomeAmounts(
 }
 
 /**
+ * Postgres:
  * ```sql
- * CREATE TABLE IF NOT EXISTS ORGS (
- *      ID INT AUTO_INCREMENT PRIMARY KEY,
- *      UID VARCHAR(36) NOT NULL,
+ * CREATE TABLE IF NOT EXISTS orgs (
+ *      id SERIAL PRIMARY KEY,
+ *      uid VARCHAR(36) NOT NULL,
  *      "name" VARCHAR(255) NOT NULL
  * );
- * ALTER TABLE ORGS ADD CONSTRAINT ORGS_UID_UNIQUE UNIQUE (UID)
+ * ALTER TABLE orgs ADD CONSTRAINT orgs_uid_unique UNIQUE (uid)
  * ```
  */
 object Orgs: IntIdTable() {
-    val uid = varchar("uid", 36).uniqueIndex().clientDefault { TimebasedUuid.nextBase62String() }
+    val uid = varchar("uid", 36)
+        .uniqueIndex()
+        .clientDefault { TimebasedUuid.nextBase62String() }
     val name = varchar("name", 255)
 }
 
 /**
+ * Postgres:
  * ```sql
- * CREATE TABLE IF NOT EXISTS ORGMEMBERSHIPS (
- *      ID INT AUTO_INCREMENT PRIMARY KEY,
- *      ORG VARCHAR(36) NOT NULL,
+ * CREATE TABLE IF NOT EXISTS orgmemberships (
+ *      id SERIAL PRIMARY KEY,
+ *      org VARCHAR(36) NOT NULL,
  *
- *      CONSTRAINT FK_ORGMEMBERSHIPS_ORG__UID FOREIGN KEY (ORG) REFERENCES ORGS(UID)
+ *      CONSTRAINT fk_orgmemberships_org__uid FOREIGN KEY (org) REFERENCES orgs(uid)
  *          ON DELETE RESTRICT ON UPDATE RESTRICT
- * );
+ * )
  * ```
  */
 object OrgMemberships: IntIdTable() {

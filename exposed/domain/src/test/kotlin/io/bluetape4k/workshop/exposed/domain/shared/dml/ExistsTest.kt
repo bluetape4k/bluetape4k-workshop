@@ -10,7 +10,6 @@ import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldHaveSize
 import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.case
-import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.andWhere
 import org.jetbrains.exposed.sql.booleanLiteral
 import org.jetbrains.exposed.sql.exists
@@ -24,6 +23,9 @@ import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
+/**
+ * `EXISTS` 키워드를 사용하는 예제입니다.
+ */
 class ExistsTest: AbstractExposedTest() {
 
     companion object: KLogging()
@@ -80,49 +82,41 @@ class ExistsTest: AbstractExposedTest() {
      * EXISTS
      * ```sql
      * SELECT EXISTS (
-     *        SELECT USERDATA.USER_ID,
-     *               USERDATA.COMMENT,
-     *               USERDATA."value"
-     *          FROM USERDATA
-     *         WHERE (USERDATA.USER_ID = USERS.ID)
-     *           AND (USERDATA.COMMENT LIKE '%here%')
-     *        )
-     *  FROM USERS;                -- return FALSE
+     *          SELECT userdata.user_id, userdata."comment", userdata."value"
+     *            FROM userdata
+     *           WHERE (userdata.user_id = users.id)
+     *             AND (userdata."comment" LIKE '%here%')
+     *         )
+     *   FROM users;
      *
      * SELECT EXISTS (
-     *        SELECT USERDATA.USER_ID,
-     *               USERDATA.COMMENT,
-     *               USERDATA."value"
-     *          FROM USERDATA
-     *         WHERE (USERDATA.USER_ID = USERS.ID)
-     *           AND (USERDATA.COMMENT LIKE '%here%')
-     *       )
-     *   FROM USERS
-     *  WHERE USERS.ID = 'smth'    -- return TRUE
+     *          SELECT userdata.user_id, userdata."comment", userdata."value"
+     *            FROM userdata
+     *           WHERE (userdata.user_id = users.id)
+     *             AND (userdata."comment" LIKE '%here%')
+     *        )
+     *   FROM users
+     *  WHERE users.id = 'smth';
      * ```
      *
      * NOT EXISTS
      * ```sql
      * SELECT NOT EXISTS (
-     *        SELECT USERDATA.USER_ID,
-     *               USERDATA.COMMENT,
-     *               USERDATA."value"
-     *          FROM USERDATA
-     *         WHERE (USERDATA.USER_ID = USERS.ID)
-     *           AND (USERDATA.COMMENT LIKE '%here%')
+     *          SELECT userdata.user_id, userdata."comment", userdata."value"
+     *            FROM userdata
+     *           WHERE (userdata.user_id = users.id)
+     *             AND (userdata."comment" LIKE '%here%')
      *        )
-     *  FROM USERS;              -- return TRUE
+     *   FROM users;
      *
      * SELECT NOT EXISTS (
-     *        SELECT USERDATA.USER_ID,
-     *               USERDATA.COMMENT,
-     *               USERDATA."value"
-     *          FROM USERDATA
-     *         WHERE (USERDATA.USER_ID = USERS.ID)
-     *           AND (USERDATA.COMMENT LIKE '%here%')
+     *          SELECT userdata.user_id, userdata."comment", userdata."value"
+     *            FROM userdata
+     *           WHERE (userdata.user_id = users.id)
+     *             AND (userdata."comment" LIKE '%here%')
      *        )
-     *   FROM USERS
-     *  WHERE USERS.ID = 'smth'   -- return FALSE
+     *   FROM users
+     *  WHERE users.id = 'smth';
      * ```
      */
     @ParameterizedTest
@@ -167,18 +161,14 @@ class ExistsTest: AbstractExposedTest() {
      * "EXISTS" 키워드를 WHERE 절에 이용한 예제입니다.
      *
      * ```sql
-     * SELECT USERS.ID,
-     *        USERS."name",
-     *        USERS.CITY_ID,
-     *        USERS.FLAGS
-     *   FROM USERS
-     *  WHERE EXISTS (
-     *        SELECT USERDATA.USER_ID
-     *          FROM USERDATA
-     *         WHERE (USERDATA.USER_ID = USERS.ID)
-     *           AND ((USERDATA.COMMENT LIKE '%here%') OR (USERDATA.COMMENT LIKE '%Sergey'))
-     *        )
-     *  ORDER BY USERS.ID ASC
+     * SELECT users.id, users."name", users.city_id, users.flags
+     *   FROM users
+     *  WHERE EXISTS (SELECT userdata.user_id
+     *                  FROM userdata
+     *                 WHERE (userdata.user_id = users.id)
+     *                   AND ((userdata."comment" LIKE '%here%') OR (userdata."comment" LIKE '%Sergey'))
+     *               )
+     *  ORDER BY users.id ASC;
      * ```
      */
     @ParameterizedTest
@@ -190,9 +180,9 @@ class ExistsTest: AbstractExposedTest() {
                 .where {
                     exists(
                         userData.select(userData.userId)
-                            .where {
-                                (userData.userId eq users.id) and
-                                        ((userData.comment like "%here%") or (userData.comment like "%Sergey"))
+                            .where { userData.userId eq users.id }
+                            .andWhere {
+                                (userData.comment like "%here%") or (userData.comment like "%Sergey")
                             }
                     )
                 }
@@ -209,19 +199,19 @@ class ExistsTest: AbstractExposedTest() {
      * "EXISTS" 키워드를 WHERE 절에 이용한 예제입니다.
      *
      * ```sql
-     * SELECT USERS.ID, USERS."name", USERS.CITY_ID, USERS.FLAGS
-     *   FROM USERS
-     *  WHERE EXISTS (
-     *          SELECT USERDATA.USER_ID
-     *            FROM USERDATA
-     *           WHERE (USERDATA.USER_ID = USERS.ID) AND (USERDATA.COMMENT LIKE '%here%')
-     *        )
-     *     OR EXISTS (
-     *          SELECT USERDATA.USER_ID
-     *            FROM USERDATA
-     *           WHERE (USERDATA.USER_ID = USERS.ID) AND (USERDATA.COMMENT LIKE '%Sergey')
-     *     )
-     * ORDER BY USERS.ID ASC
+     * SELECT users.id, users."name", users.city_id, users.flags
+     *   FROM users
+     *  WHERE EXISTS (SELECT userdata.user_id
+     *                  FROM userdata
+     *                 WHERE (userdata.user_id = users.id)
+     *                   AND (userdata."comment" LIKE '%here%')
+     *               )
+     *     OR EXISTS (SELECT userdata.user_id
+     *                  FROM userdata
+     *                 WHERE (userdata.user_id = users.id)
+     *                   AND (userdata."comment" LIKE '%Sergey')
+     *               )
+     *  ORDER BY users.id ASC
      * ```
      */
     @ParameterizedTest
