@@ -9,6 +9,7 @@ import io.bluetape4k.workshop.exposed.expectException
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeGreaterThan
+import org.amshove.kluent.shouldNotBeEmpty
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.Join
@@ -38,8 +39,6 @@ class DeleteTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `delete 01`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB !in limitNotSupported }
-
         withCitiesAndUsers(testDB) { cities, users, userData ->
             userData.deleteAll()
             userData.selectAll().count() shouldBeEqualTo 0L
@@ -74,8 +73,15 @@ class DeleteTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `delete table in context`(testDB: TestDB) {
         withCitiesAndUsers(testDB) { _, users, userData ->
+            userData.selectAll().shouldNotBeEmpty()
+
+            /**
+             * ```sql
+             * DELETE FROM userdata
+             * ```
+             */
             userData.deleteAll()
-            userData.selectAll().any().shouldBeFalse()
+            userData.selectAll().any().shouldBeFalse()  // no rows in UserData
 
             val smthId = users
                 .select(users.id)
@@ -84,6 +90,11 @@ class DeleteTest: AbstractExposedTest() {
 
             smthId shouldBeEqualTo "smth"
 
+            /**
+             * ```sql
+             * DELETE FROM users WHERE users."name" LIKE '%thing'
+             * ```
+             */
             users.deleteWhere { users.name like "%thing" }
 
             users.selectAll()
@@ -122,33 +133,58 @@ class DeleteTest: AbstractExposedTest() {
 
     /**
      * ### Delete with single join
-     *
-     * ```sql
-     * MERGE INTO USERDATA USING USERS ON USERS.ID = USERDATA.USER_ID
-     *  WHEN MATCHED AND USERDATA.USER_ID LIKE '%ey'
-     *  THEN DELETE
-     * ```
-     *
-     * ```sql
-     * MERGE INTO USERDATA USING USERS ON USERS.ID = USERDATA.USER_ID
-     *  WHEN MATCHED
-     *  THEN DELETE
-     * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `delete with single join`(testDB: TestDB) {
         withCitiesAndUsers(testDB) { _, users, userData ->
             val join = users innerJoin userData
-            val query1 = join.selectAll().where { userData.userId like "%ey" }
-            query1.count().toInt() shouldBeGreaterThan 0
 
+            val query1 = join.selectAll().where { userData.userId like "%ey" }
+            query1.count() shouldBeGreaterThan 0L
+
+            /**
+             * `Users` 테이블과 `UserData` 테이블을 조인하여, `UserData` 테이블의 일부 행을 삭제합니다.
+             *
+             * MySQL V8:
+             *
+             * ```sql
+             * DELETE UserData
+             *   FROM Users INNER JOIN UserData ON Users.id = UserData.user_id
+             *  WHERE UserData.user_id LIKE '%ey'
+             * ```
+             *
+             * Postgres:
+             *
+             * ```sql
+             * DELETE
+             *   FROM userdata USING users
+             *  WHERE users.id = userdata.user_id
+             *    AND userdata.user_id LIKE '%ey'
+             * ```
+             */
             join.delete(userData) { userData.userId like "%ey" }
-            query1.count().toInt() shouldBeEqualTo 0
+            query1.count() shouldBeEqualTo 0L
 
             val query2 = join.selectAll()
             query2.count() shouldBeGreaterThan 0L
 
+            /**
+             * Users 테이블과 UserData 테이블을 조인하여, UserData 테이블의 모든 행을 삭제합니다.
+             *
+             * MySQL V8:
+             *
+             * ```sql
+             * DELETE UserData
+             *   FROM Users INNER JOIN UserData ON Users.id = UserData.user_id
+             * ```
+             *
+             * Postgres:
+             *
+             * ```sql
+             * DELETE FROM userdata USING users WHERE users.id = userdata.user_id
+             * ```
+             */
             join.delete(userData)
             query2.count() shouldBeEqualTo 0L
         }
@@ -201,28 +237,7 @@ class DeleteTest: AbstractExposedTest() {
     }
 
     /**
-     * ### Delete with join sub query
-     *
-     * MySQL
-     * ```sql
-     * DELETE UserData
-     *   FROM UserData
-     *        INNER JOIN (
-     *              SELECT Users.id, Users.`name`
-     *                FROM Users
-     *               WHERE Users.city_id = 2
-     *             ) q0 ON  (UserData.user_id = q0.id)
-     *  WHERE q0.`name` LIKE '%ey'
-     * ```
-     *
-     * Postgres
-     * ```sql
-     * DELETE
-     *   FROM userdata
-     *  USING (SELECT users.id, users."name" FROM users WHERE users.city_id = 2) q0
-     *  WHERE (userdata.user_id = q0.id)
-     *    AND q0."name" LIKE '%ey'
-     * ```
+     * ### Delete with join sub query (`joinQuery`)
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -246,6 +261,31 @@ class DeleteTest: AbstractExposedTest() {
 
             joinCountWithCondition shouldBeGreaterThan 0L
 
+            /**
+             * MySQL V8:
+             * ```sql
+             * DELETE UserData
+             *   FROM UserData INNER JOIN (
+             *      SELECT Users.id,
+             *             Users.`name`
+             *        FROM Users
+             *       WHERE Users.city_id = 2
+             *   ) q0 ON  (UserData.user_id = q0.id)
+             *  WHERE q0.`name` LIKE '%ey'
+             * ```
+             *
+             * Postgres:
+             * ```sql
+             * DELETE FROM userdata
+             *  USING (SELECT users.id,
+             *                users."name"
+             *           FROM users
+             *          WHERE users.city_id = 2
+             *        ) q0
+             *  WHERE (userdata.user_id = q0.id)
+             *    AND q0."name" LIKE '%ey'
+             * ```
+             */
             singleJoinQuery.delete(userData) {
                 singleJoinQuery.lastQueryAlias!![users.name] like "%ey"
             }
@@ -253,10 +293,14 @@ class DeleteTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ### Delete with join and limit
+     *
+     * **SQL Server, Oracle 에서만 지원한다.**
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `delete with join and limit`(testDB: TestDB) {
-        // limit 기능은 SQL Server, Oracle 에서만 지원한다.
         Assumptions.assumeTrue { testDB !in (TestDB.ALL_H2 + TestDB.ALL_MYSQL + TestDB.ALL_POSTGRES) }
 
         withCitiesAndUsers(testDB) { _, users, userData ->
@@ -271,7 +315,10 @@ class DeleteTest: AbstractExposedTest() {
     }
 
     /**
-     * ### Delete ignore with join
+     * ### Join 을 사용하여 DELETE 를 수행할 때, 참조 위배 등의 예외 발생 시 무시한다.
+     *
+     * `delete(table, ignore = true) { ... }` 와 같이 `ignore = true` 를 지정하여, 참조 위배 등의 예외를 무시할 수 있다.
+     * 단, MySQL 에서만 지원한다.
      *
      * MySQL
      * ```sql

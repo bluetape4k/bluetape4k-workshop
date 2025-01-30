@@ -39,7 +39,8 @@ class CountTest: AbstractExposedTest() {
      * ```sql
      * SELECT COUNT(*)
      *   FROM (
-     *      SELECT DISTINCT CITIES.CITY_ID Cities_city_id, USERS.ID Users_id
+     *      SELECT DISTINCT CITIES.CITY_ID Cities_city_id,
+     *                      USERS.ID Users_id
      *        FROM CITIES INNER JOIN USERS ON CITIES.CITY_ID = USERS.CITY_ID
      *   ) subquery
      */
@@ -188,10 +189,10 @@ class CountTest: AbstractExposedTest() {
                 this[tester.value] = it
             }
 
-            tester.selectAll().count().toInt() shouldBeEqualTo 5
-            tester.selectAll().offset(1).limit(2).count().toInt() shouldBeEqualTo 2
-            tester.selectAll().limit(2).count().toInt() shouldBeEqualTo 2
-            tester.selectAll().offset(2).count().toInt() shouldBeEqualTo 3
+            tester.selectAll().count() shouldBeEqualTo 5L
+            tester.selectAll().offset(1).limit(2).count() shouldBeEqualTo 2L
+            tester.selectAll().limit(2).count() shouldBeEqualTo 2L
+            tester.selectAll().offset(2).count() shouldBeEqualTo 3L
         }
     }
 }
