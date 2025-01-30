@@ -38,8 +38,8 @@ class OrderByTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `orderBy 01`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, users, _ ->
+    fun `orderBy 01`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             val rows = users.selectAll().orderBy(users.id).toList()
 
             rows shouldHaveSize 5
@@ -67,8 +67,8 @@ class OrderByTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `orderBy 02`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, users, _ ->
+    fun `orderBy 02`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             val rows = users.selectAll()
                 .orderBy(users.cityId, SortOrder.DESC)
                 .orderBy(users.id)
@@ -97,8 +97,8 @@ class OrderByTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `orderBy 03`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, users, _ ->
+    fun `orderBy 03`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             val rows = users.selectAll()
                 .orderBy(users.cityId to SortOrder.DESC, users.id to SortOrder.ASC)
                 .toList()
@@ -127,8 +127,8 @@ class OrderByTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `orderBy 04`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, users, _ ->
+    fun `orderBy 04`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, _ ->
             val r = (cities innerJoin users)
                 .select(
                     cities.name,
@@ -155,8 +155,8 @@ class OrderByTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `orderBy 05`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, users, _ ->
+    fun `orderBy 05`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             val rows = users.selectAll()
                 .orderBy(users.cityId to SortOrder.DESC, users.id to SortOrder.ASC)
                 .toList()
@@ -186,8 +186,8 @@ class OrderByTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `orderBy 06`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, users, _ ->
+    fun `orderBy 06`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             val orderByExpression = users.id.substring(2, 1)
             val rows = users.selectAll()
                 .orderBy(orderByExpression to SortOrder.ASC)
@@ -210,8 +210,8 @@ class OrderByTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `orderBy Expressions`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, users, _ ->
+    fun `orderBy Expressions`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, _ ->
             // NOTE: wrapAsExpression 은 subquery를 wrap해서 expression으로 사용할 수 있다.
             val expression = wrapAsExpression<Int>(
                 users
@@ -243,7 +243,7 @@ class OrderByTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `orderBy NullsFirst`(testDb: TestDB) {
+    fun `orderBy NullsFirst`(testDB: TestDB) {
         // city IDs null, user IDs sorted ascending
         val usersWithoutCities = listOf("alex", "smth")
         // city IDs sorted descending, user IDs sorted ascending
@@ -257,7 +257,7 @@ class OrderByTest: AbstractExposedTest() {
             SortOrder.DESC_NULLS_FIRST to usersWithoutCities + otherUsers,
             SortOrder.DESC_NULLS_LAST to otherUsers + usersWithoutCities,
         )
-        withCitiesAndUsers(testDb) { _, users, _ ->
+        withCitiesAndUsers(testDB) { _, users, _ ->
             cases.forEach { (sortOrder, expected) ->
                 val rows = users.selectAll()
                     .orderBy(
@@ -293,8 +293,8 @@ class OrderByTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `Nullable String Ordering`(testDb: TestDB) {
-        withTables(testDb, NullableStrings) {
+    fun `Nullable String Ordering`(testDB: TestDB) {
+        withTables(testDB, NullableStrings) {
             NullableStrings.insert {
                 it[name] = "a"
             }

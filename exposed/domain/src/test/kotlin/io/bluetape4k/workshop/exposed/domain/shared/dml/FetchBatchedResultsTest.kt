@@ -85,10 +85,10 @@ class FetchBatchedResultsTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `fetchBatchedResults with where and set batchSize`(testDb: TestDB) {
+    fun `fetchBatchedResults with where and set batchSize`(testDB: TestDB) {
         val cities = DMLTestData.Cities
 
-        withTables(testDb, cities) {
+        withTables(testDB, cities) {
             // 100개의 도시 이름을 저장합니다.
             val names = List(100) { TimebasedUuid.Epoch.nextIdAsString() }
             cities.batchInsert(names) { name ->
@@ -137,9 +137,9 @@ class FetchBatchedResultsTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `when sortOrder is given, fetchBatchedResults should return batches in the given order`(testDb: TestDB) {
+    fun `when sortOrder is given, fetchBatchedResults should return batches in the given order`(testDB: TestDB) {
         val cities = DMLTestData.Cities
-        withTables(testDb, cities) {
+        withTables(testDB, cities) {
             val names = List(100) { TimebasedUuid.Epoch.nextIdAsString() }
             cities.batchInsert(names) { name -> this[cities.name] = name }
 
@@ -175,10 +175,10 @@ class FetchBatchedResultsTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `when batch size is greater than the amount of available items, fetchBatchedResults should return 1 batch`(
-        testDb: TestDB,
+        testDB: TestDB,
     ) {
         val cities = DMLTestData.Cities
-        withTables(testDb, cities) {
+        withTables(testDB, cities) {
             val names = List(25) { Epoch.nextIdAsString() }
             cities.batchInsert(names) { name -> this[cities.name] = name }
 
@@ -206,9 +206,9 @@ class FetchBatchedResultsTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `when there are no items, fetchBatchedResults should return an empty list`(testDb: TestDB) {
+    fun `when there are no items, fetchBatchedResults should return an empty list`(testDB: TestDB) {
         val cities = DMLTestData.Cities
-        withTables(testDb, cities) {
+        withTables(testDB, cities) {
             val batches = cities.selectAll()
                 .fetchBatchedResults(batchSize = 100)
                 .toList()
@@ -232,9 +232,9 @@ class FetchBatchedResultsTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `when there are no items of the given condition, should return an empty iterable`(testDb: TestDB) {
+    fun `when there are no items of the given condition, should return an empty iterable`(testDB: TestDB) {
         val cities = DMLTestData.Cities
-        withTables(testDb, cities) {
+        withTables(testDB, cities) {
             val names = List(25) { UUID.randomUUID().toString() }
             cities.batchInsert(names) { name -> this[cities.name] = name }
 
@@ -249,8 +249,8 @@ class FetchBatchedResultsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `autoinc 컬럼이 없으면 fetchBatchedResults를 사용할 수 없다`(testDb: TestDB) {
-        withTables(testDb, UserData) {
+    fun `autoinc 컬럼이 없으면 fetchBatchedResults를 사용할 수 없다`(testDB: TestDB) {
+        withTables(testDB, UserData) {
             expectException<UnsupportedOperationException> {
                 UserData.selectAll().fetchBatchedResults()
             }
@@ -259,8 +259,8 @@ class FetchBatchedResultsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `batch size 가 0이거나 음수이면 fetchBatchedResults를 사용할 수 없다`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, _, _ ->
+    fun `batch size 가 0이거나 음수이면 fetchBatchedResults를 사용할 수 없다`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, _, _ ->
             expectException<IllegalArgumentException> {
                 cities.selectAll().fetchBatchedResults(-1)
             }
@@ -286,7 +286,7 @@ class FetchBatchedResultsTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `fetchBatchedResults with auto increment EntityID`(testDb: TestDB) {
+    fun `fetchBatchedResults with auto increment EntityID`(testDB: TestDB) {
         val tester1 = object: IntIdTable("table_1") {
             val data = varchar("data", 255)
         }
@@ -295,7 +295,7 @@ class FetchBatchedResultsTest: AbstractExposedTest() {
             val prevData = reference("prev_data", tester1, onUpdate = ReferenceOption.CASCADE)
         }
 
-        withTables(testDb, tester1, tester2) {
+        withTables(testDB, tester1, tester2) {
             val join = (tester2 innerJoin tester1)
 
             join.selectAll().fetchBatchedResults(10_000).flatten()
@@ -326,12 +326,12 @@ class FetchBatchedResultsTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `fetchBatchedResults with alias`(testDb: TestDB) {
+    fun `fetchBatchedResults with alias`(testDB: TestDB) {
         val tester = object: IntIdTable("tester") {
             val name = varchar("name", 1)
         }
 
-        withTables(testDb, tester) {
+        withTables(testDB, tester) {
             tester.insert { it[name] = "a" }
             tester.insert { it[name] = "b" }
 

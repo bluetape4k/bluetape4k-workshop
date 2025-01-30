@@ -57,8 +57,8 @@ class ExistsTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `exists example 01`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, users, userData ->
+    fun `exists example 01`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, userData ->
             val rows = users.selectAll()
                 .where {
                     exists(
@@ -127,8 +127,8 @@ class ExistsTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `exists in a slice`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, users, userData ->
+    fun `exists in a slice`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, userData ->
             var exists: Expression<Boolean> = exists(
                 userData
                     .selectAll()
@@ -183,8 +183,8 @@ class ExistsTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `exists examples 02`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, users, userData ->
+    fun `exists examples 02`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, userData ->
             val rows = users
                 .selectAll()
                 .where {
@@ -226,8 +226,8 @@ class ExistsTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `exists examples 03`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, users, userData ->
+    fun `exists examples 03`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, userData ->
             val rows = users
                 .selectAll()
                 .where {

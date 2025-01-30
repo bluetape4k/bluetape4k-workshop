@@ -53,10 +53,10 @@ class ReplaceTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `replaice select`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in replaceSupported }
+    fun `replaice select`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in replaceSupported }
 
-        withTables(testDb, NewAuth) {
+        withTables(testDB, NewAuth) {
             /**
              * inserts 2 new non-conflict rows with defaults
              *
@@ -94,7 +94,7 @@ class ReplaceTest: AbstractExposedTest() {
             val affectedRowCount = NewAuth.replace(allRowsWithNewDefaults)
 
             // MySQL returns 1 for every insert + 1 for every delete on conflict, while others only count inserts
-            val expectedRowCount = if (testDb in TestDB.ALL_MYSQL_LIKE) 4 else 2
+            val expectedRowCount = if (testDB in TestDB.ALL_MYSQL_LIKE) 4 else 2
             affectedRowCount shouldBeEqualTo expectedRowCount
 
             val result2 = NewAuth.selectAll().toList()
@@ -108,10 +108,10 @@ class ReplaceTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `replace select with specific columns`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in replaceSupported }
+    fun `replace select with specific columns`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in replaceSupported }
 
-        withTables(testDb, NewAuth) {
+        withTables(testDB, NewAuth) {
             val (name1, name2, oldSession) =
                 Triple("username1", "username2", "session1".toByteArray())
 
@@ -146,7 +146,7 @@ class ReplaceTest: AbstractExposedTest() {
             val affectedRowCount = NewAuth.replace(name1Row, columns = listOf(NewAuth.username, NewAuth.session))
 
             // MySQL returns 1 for every insert + 1 for every delete on conflict, while others only count inserts
-            val expectedRowCount = if (testDb in TestDB.ALL_MYSQL_LIKE) 2 else 1
+            val expectedRowCount = if (testDB in TestDB.ALL_MYSQL_LIKE) 2 else 1
             affectedRowCount shouldBeEqualTo expectedRowCount
 
             NewAuth.selectAll()
@@ -161,10 +161,10 @@ class ReplaceTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `replace with PK conflict`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in replaceSupported }
+    fun `replace with PK conflict`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in replaceSupported }
 
-        withTables(testDb, NewAuth) {
+        withTables(testDB, NewAuth) {
             val (name1, session1) = "username" to "session"
 
             /**
@@ -205,8 +205,8 @@ class ReplaceTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `replace With Composite PK Conflict`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in replaceSupported }
+    fun `replace With Composite PK Conflict`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in replaceSupported }
 
         /**
          * ```sql
@@ -227,7 +227,7 @@ class ReplaceTest: AbstractExposedTest() {
             override val primaryKey = PrimaryKey(key1, key2)
         }
 
-        withTables(testDb, tester) {
+        withTables(testDB, tester) {
             /**
              * ```sql
              * REPLACE INTO test_table (key_1, key_2) VALUES ('A', 'B')
@@ -288,10 +288,10 @@ class ReplaceTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `replace With Expression`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in replaceSupported }
+    fun `replace With Expression`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in replaceSupported }
 
-        withTables(testDb, NewAuth) {
+        withTables(testDB, NewAuth) {
             NewAuth.replace {
                 it[username] = "username"
                 it[session] = "session".toByteArray()
@@ -309,8 +309,8 @@ class ReplaceTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `empty replace`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in replaceSupported }
+    fun `empty replace`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in replaceSupported }
 
         val tester = object: Table("tester") {
             val id = integer("id").autoIncrement()
@@ -318,7 +318,7 @@ class ReplaceTest: AbstractExposedTest() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withTables(testDb, tester) {
+        withTables(testDB, tester) {
             tester.replace { }
             tester.selectAll().count() shouldBeEqualTo 1L
         }
@@ -340,10 +340,10 @@ class ReplaceTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `Batch Replace 01`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in replaceSupported }
+    fun `Batch Replace 01`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in replaceSupported }
 
-        withCitiesAndUsers(testDb) { cities, users, userData ->
+        withCitiesAndUsers(testDB) { cities, users, userData ->
             val (munichId, pragueId, saintPetersburgId) = cities
                 .select(cities.id)
                 .where { cities.name inList listOf("Munich", "Prague", "St. Petersburg") }

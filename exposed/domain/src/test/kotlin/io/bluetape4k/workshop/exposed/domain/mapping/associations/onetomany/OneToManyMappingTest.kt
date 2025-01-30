@@ -8,7 +8,6 @@ import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.Rest
 import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.ResturantSchema.MenuTable
 import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.ResturantSchema.Restaurant
 import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.ResturantSchema.RestaurantTable
-import io.bluetape4k.workshop.exposed.withDb
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.dao.entityCache
@@ -27,45 +26,47 @@ class OneToManyMappingTest: AbstractExposedTest() {
      * ```
      *
      * ```sql
-     * SELECT RESTAURANT.ID, RESTAURANT."name" FROM RESTAURANT
-     * SELECT MENU.ID, MENU."name", MENU.PRICE, MENU.RESTAURANT_ID FROM MENU WHERE MENU.RESTAURANT_ID = 1
+     * SELECT RESTAURANT.ID, RESTAURANT."name" FROM RESTAURANT;
+     *
+     * SELECT MENU.ID, MENU."name", MENU.PRICE, MENU.RESTAURANT_ID
+     *   FROM MENU
+     *  WHERE MENU.RESTAURANT_ID = 1;
      * ```
      *
      * 참고: [Eager Loaing](https://jetbrains.github.io/Exposed/dao-relationships.html#eager-loading)
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `handle one-to-many relationship`(testDb: TestDB) {
-        withDb(testDb) { dialect ->
-            withTables(dialect, RestaurantTable, MenuTable) {
-                val kfc = Restaurant.new {
-                    name = "KFC"
-                }
+    fun `handle one-to-many relationship`(testDB: TestDB) {
+        withTables(testDB, RestaurantTable, MenuTable) {
+            val kfc = Restaurant.new {
+                name = "KFC"
+            }
 
-                Menu.new {
-                    name = "Chicken"
-                    price = 10.0.toBigDecimal()
-                    restaurant = kfc
-                }
+            Menu.new {
+                name = "Chicken"
+                price = 10.0.toBigDecimal()
+                restaurant = kfc
+            }
 
-                Menu.new {
-                    name = "Burger"
-                    price = 5.0.toBigDecimal()
-                    restaurant = kfc
-                }
+            Menu.new {
+                name = "Burger"
+                price = 5.0.toBigDecimal()
+                restaurant = kfc
+            }
 
-                entityCache.clear()
+            entityCache.clear()
 
-                // fetch earger loading `Menu` entities
-                //
-                val restaurants = Restaurant.all().with(Restaurant::menus).toList()
-                val restaurant = restaurants.first()
-                log.debug { "Restaurant: $restaurant" }
+            /**
+             * fetch earger loading `Menu` entities (`with(Restaurant::menus)`)
+             */
+            val restaurants = Restaurant.all().with(Restaurant::menus).toList()
+            val restaurant = restaurants.first()
+            log.debug { "Restaurant: $restaurant" }
 
-                restaurant.menus.count() shouldBeEqualTo 2
-                restaurant.menus.forEach { menu ->
-                    log.debug { ">> Menu: $menu" }
-                }
+            restaurant.menus.count() shouldBeEqualTo 2L
+            restaurant.menus.forEach { menu ->
+                log.debug { ">> Menu: $menu" }
             }
         }
     }

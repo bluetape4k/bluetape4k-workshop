@@ -43,8 +43,8 @@ class ConditionsTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `TRUE and FALSE Ops`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, _, _ ->
+    fun `TRUE and FALSE Ops`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, _, _ ->
             val allCities = cities.selectAll().toCityNameList()
 
             cities.selectAll().where { Op.FALSE }.count() shouldBeEqualTo 0L
@@ -54,13 +54,13 @@ class ConditionsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `null safe equality Ops`(testDb: TestDB) {
+    fun `null safe equality Ops`(testDB: TestDB) {
         val table = object: IntIdTable("foo") {
             val number1 = integer("number1").nullable()
             val number2 = integer("number2").nullable()
         }
 
-        withTables(testDb, table) {
+        withTables(testDB, table) {
             val sameNumberId = table.insertAndGetId {
                 it[number1] = 0
                 it[number2] = 0
@@ -112,7 +112,7 @@ class ConditionsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `comparison operations with EntityID columns`(testDb: TestDB) {
+    fun `comparison operations with EntityID columns`(testDB: TestDB) {
         val longTable = object: LongIdTable("long_table") {
             val amount = long("amount")
         }
@@ -122,7 +122,7 @@ class ConditionsTest: AbstractExposedTest() {
             return query.map { it[longTable.id].value }
         }
 
-        withTables(testDb, longTable) {
+        withTables(testDB, longTable) {
             val id1 = longTable.insertAndGetId {
                 it[id] = 1
                 it[amount] = 9999
@@ -186,8 +186,8 @@ class ConditionsTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `same column used in slice multiple times`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, _, _ ->
+    fun `same column used in slice multiple times`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, _, _ ->
             val row = cities
                 .select(cities.name, cities.name, cities.id)
                 .where { cities.name eq "Munich" }
@@ -204,8 +204,8 @@ class ConditionsTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `throw when slice with empty list`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, _, _ ->
+    fun `throw when slice with empty list`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, _, _ ->
             expectException<IllegalArgumentException> {
                 cities.select(emptyList()).toList()
             }
@@ -217,13 +217,13 @@ class ConditionsTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `compare to nullable column`(testDb: TestDB) {
+    fun `compare to nullable column`(testDB: TestDB) {
         val table = object: IntIdTable("foo") {
             val c1 = integer("c1")
             val c2 = integer("c2").nullable()
         }
 
-        withTables(testDb, table) {
+        withTables(testDB, table) {
             table.insertAndGetId { it[c1] = 0; it[c2] = 0 }
             table.insertAndGetId { it[c1] = 1; it[c2] = 2 }
             table.insertAndGetId { it[c1] = 2; it[c2] = 1 }
@@ -272,8 +272,8 @@ class ConditionsTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `nullOp update and select`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, users, _ ->
+    fun `nullOp update and select`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             val allUserCount = users.selectAll().count()
 
             // UPDATE USERS SET CITY_ID=NULL
@@ -303,8 +303,8 @@ class ConditionsTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `nullOp update fails when apply to non-null column`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, users, _ ->
+    fun `nullOp update fails when apply to non-null column`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             expectException<ExposedSQLException> {
                 users.update {
                     it[users.name] = Op.nullOp()
@@ -328,8 +328,8 @@ class ConditionsTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `nullOp in case`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, _, _ ->
+    fun `nullOp in case`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, _, _ ->
             val caseCondition = Case()
                 .When(Op.build { cities.id eq 1 }, Op.nullOp<String>())
                 .Else(cities.name)
@@ -365,8 +365,8 @@ class ConditionsTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `CaseWhenElse as argument`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, _, _ ->
+    fun `CaseWhenElse as argument`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, _, _ ->
             val original = "ORIGINAL"
             val copy = "COPY"
             val condition = Op.build { cities.id eq 1 }
@@ -423,8 +423,8 @@ class ConditionsTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `chained and nested CaseWhenElse syntax`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, _, _ ->
+    fun `chained and nested CaseWhenElse syntax`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, _, _ ->
             val nestedCondition = Case()
                 // .When(cities.id eq 1, intLiteral(1))  // Op.build {} 를 안 써도 된다.
                 .When(Op.build { cities.id eq 1 }, intLiteral(1))
@@ -453,13 +453,13 @@ class ConditionsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `select aliased comparison result`(testDb: TestDB) {
+    fun `select aliased comparison result`(testDB: TestDB) {
         val table = object: IntIdTable("foo") {
             val c1 = integer("c1")
             val c2 = integer("c2").nullable()
         }
 
-        withTables(testDb, table) {
+        withTables(testDB, table) {
             table.insert { it[c1] = 0; it[c2] = 0 }
             table.insert { it[c1] = 1; it[c2] = 2 }
             table.insert { it[c1] = 2; it[c2] = 1 }
@@ -492,12 +492,12 @@ class ConditionsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `null or empty`(testDb: TestDB) {
+    fun `null or empty`(testDB: TestDB) {
         val tester = object: IntIdTable("tester") {
             val name = text("name").nullable()
         }
 
-        withTables(testDb, tester) {
+        withTables(testDB, tester) {
             tester.insert { it[name] = null }
             tester.insert { it[name] = "" }
             tester.insert { it[name] = "a" }

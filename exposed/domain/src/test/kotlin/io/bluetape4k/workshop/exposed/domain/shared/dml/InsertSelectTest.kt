@@ -40,8 +40,8 @@ class InsertSelectTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `insert select example 01`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, users, _ ->
+    fun `insert select example 01`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, _ ->
             val nextVal = cities.id.autoIncColumnType?.nextValExpression
             val substring = users.name.substring(1, 2)
             val slice = listOfNotNull(nextVal, substring)
@@ -69,8 +69,8 @@ class InsertSelectTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `insert select example 02`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, _, userData ->
+    fun `insert select example 02`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, _, userData ->
             val allUserData = userData.selectAll().count()
 
             userData.insert(
@@ -97,8 +97,8 @@ class InsertSelectTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `insert select example 03`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, users, _ ->
+    fun `insert select example 03`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             // 이렇게 Expresssion 을 사용할 수 있습니다.
             // Random() 은 org.jetbrains.exposed.sql.Random() 이다. 
             val userCount = users.selectAll().count()
@@ -127,8 +127,8 @@ class InsertSelectTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `insert select example 04`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, users, _ ->
+    fun `insert select example 04`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             val userCount = users.selectAll().count()
 
             users.insert(
@@ -155,8 +155,8 @@ class InsertSelectTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `insert-select with same columns in a query`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, users, _ ->
+    fun `insert-select with same columns in a query`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, _ ->
             val fooParam = stringParam("Foo")
 
             users.insert(

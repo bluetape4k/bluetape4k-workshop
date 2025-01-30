@@ -45,8 +45,8 @@ class CountTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `count works with Query that contains distinct and columns with same name from different tables`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, users, _ ->
+    fun `count works with Query that contains distinct and columns with same name from different tables`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, _ ->
             cities.innerJoin(users)
                 .selectAll()
                 .withDistinct()
@@ -79,8 +79,8 @@ class CountTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `count returns right value for Query with group by`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, _, userData ->
+    fun `count returns right value for Query with group by`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, _, userData ->
             val uniqueUsersInData = userData
                 .select(userData.userId)
                 .withDistinct()
@@ -94,7 +94,7 @@ class CountTest: AbstractExposedTest() {
             sameQueryWithGrouping shouldBeEqualTo uniqueUsersInData
         }
 
-        withTables(testDb, OrgMemberships, Orgs) {
+        withTables(testDB, OrgMemberships, Orgs) {
             val org1 = Org.new { name = "FOo" }
             OrgMembership.new { org = org1 }
 
@@ -119,15 +119,15 @@ class CountTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `count alias with table schema`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb !in TestDB.ALL_MYSQL }
+    fun `count alias with table schema`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
 
         val custom = prepareSchemaForTest("custom")
         val tester = object: Table("custom.tester") {
             val amount = integer("amount")
         }
 
-        withSchemas(testDb, custom) {
+        withSchemas(testDB, custom) {
             SchemaUtils.create(tester)
 
             repeat(3) {
@@ -176,14 +176,14 @@ class CountTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `count with offset and limit`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb !in TestDB.ALL_MYSQL }
+    fun `count with offset and limit`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
 
         val tester = object: Table("tester") {
             val value = integer("value")
         }
 
-        withTables(testDb, tester) {
+        withTables(testDB, tester) {
             tester.batchInsert(listOf(1, 2, 3, 4, 5)) {
                 this[tester.value] = it
             }

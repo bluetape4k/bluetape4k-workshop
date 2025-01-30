@@ -251,10 +251,10 @@ class ReturningTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `upsert returning with DAO`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in returningSupportedDb }
+    fun `upsert returning with DAO`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in returningSupportedDb }
 
-        withTables(testDb, Items) {
+        withTables(testDB, Items) {
             /**
              * 기본 사용 시에는 모든 컬럼을 반환합니다. `wrapRow`를 사용하여 엔티티로 변환합니다.
              *

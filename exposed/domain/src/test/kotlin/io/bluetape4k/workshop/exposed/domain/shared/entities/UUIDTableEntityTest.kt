@@ -155,8 +155,8 @@ class UUIDTableEntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `update and delete records`(testDb: TestDB) {
-        withTables(testDb, Cities, People) {
+    fun `update and delete records`(testDB: TestDB) {
+        withTables(testDB, Cities, People) {
             val seoul = City.new { name = "Seoul" }
             val busan = City.new { name = "Busan" }
 
@@ -211,8 +211,8 @@ class UUIDTableEntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `insert with inner table`(testDb: TestDB) {
-        withTables(testDb, Addresses, Cities, People) {
+    fun `insert with inner table`(testDB: TestDB) {
+        withTables(testDB, Addresses, Cities, People) {
             val city1 = City.new { name = "City1" }
             val person1 = Person.new {
                 name = "Person1"
@@ -267,8 +267,8 @@ class UUIDTableEntityTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `foreign key between uuid and entity id column`(testDb: TestDB) {
-        withTables(testDb, Cities, Towns) {
+    fun `foreign key between uuid and entity id column`(testDB: TestDB) {
+        withTables(testDB, Cities, Towns) {
             val cId = Cities.insertAndGetId {
                 it[name] = "City A"
             }

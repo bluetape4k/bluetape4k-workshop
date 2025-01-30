@@ -194,8 +194,8 @@ class DistinctOnTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `empty distinctOn`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in distinctOnSupportedDb }
+    fun `empty distinctOn`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in distinctOnSupportedDb }
 
         /**
          * H2
@@ -210,7 +210,7 @@ class DistinctOnTest: AbstractExposedTest() {
             val v1 = integer("v1")
         }
 
-        withTables(testDb, tester) {
+        withTables(testDB, tester) {
             tester.insert {
                 it[tester.v1] = 1
             }
@@ -241,13 +241,13 @@ class DistinctOnTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `distinctOn with count`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in distinctOnSupportedDb }
+    fun `distinctOn with count`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in distinctOnSupportedDb }
 
         val tester = object: IntIdTable("tester") {
             val name = varchar("name", 50)
         }
-        withTables(testDb, tester) {
+        withTables(testDB, tester) {
             val names = listOf("tester1", "tester1", "tester2", "tester3", "tester2")
             tester.batchInsert(names) {
                 this[tester.name] = it

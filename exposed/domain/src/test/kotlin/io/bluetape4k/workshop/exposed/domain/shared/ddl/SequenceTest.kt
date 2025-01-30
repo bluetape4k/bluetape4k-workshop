@@ -52,8 +52,8 @@ class SequenceTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create sequence statements`(testDb: TestDB) {
-        withDb(testDb) {
+    fun `create sequence statements`(testDB: TestDB) {
+        withDb(testDB) {
             Assumptions.assumeTrue { currentDialect.supportsCreateSequence }
             log.debug { "myseq: ${myseq.ddl.single()}" }
             myseq.ddl.single() shouldBeEqualTo "CREATE SEQUENCE " + addIfNotExistsIfSupported() + "${myseq.identifier} " + "START WITH ${myseq.startWith} " + "INCREMENT BY ${myseq.incrementBy} " + "MINVALUE ${myseq.minValue} " + "MAXVALUE ${myseq.maxValue} " + "CYCLE " + "CACHE ${myseq.cache}"
@@ -71,8 +71,8 @@ class SequenceTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `insert with sequence`(testDb: TestDB) {
-        withTables(testDb, Developer) {
+    fun `insert with sequence`(testDB: TestDB) {
+        withTables(testDB, Developer) {
             if (currentDialectTest.supportsCreateSequence) {
                 try {
                     SchemaUtils.createSequence(myseq)

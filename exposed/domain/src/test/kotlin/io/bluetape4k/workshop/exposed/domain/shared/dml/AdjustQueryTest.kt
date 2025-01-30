@@ -68,8 +68,8 @@ class AdjustQueryTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `adjust query slice`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, users, _ ->
+    fun `adjust query slice`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, _ ->
             // [users.name]
             val queryAdjusted: Query = (users innerJoin cities)
                 .select(users.name)
@@ -99,8 +99,8 @@ class AdjustQueryTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `adjust query slice with empty list will throw`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, _, _ ->
+    fun `adjust query slice with empty list will throw`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, _, _ ->
             val originalQuery = cities.select(cities.name)
 
             assertFailsWith<IllegalArgumentException> {
@@ -118,8 +118,8 @@ class AdjustQueryTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `adjust query column set`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, users, _ ->
+    fun `adjust query column set`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, _ ->
             val queryAdjusted: Query = users
                 .select(users.name, cities.name)
                 .where(predicate)
@@ -155,8 +155,8 @@ class AdjustQueryTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `adjust query where`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, users, _ ->
+    fun `adjust query where`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, _ ->
             val queryAdjusted: Query = (users innerJoin cities)
                 .select(users.name, cities.name)
 
@@ -186,8 +186,8 @@ class AdjustQueryTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `query or where`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, users, _ ->
+    fun `query or where`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, _ ->
             val queryAdjusted = (users innerJoin cities)
                 .select(users.name, cities.name)
                 .where { predicate }
@@ -218,8 +218,8 @@ class AdjustQueryTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `adjust query having`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, users, _ ->
+    fun `adjust query having`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, _ ->
             val predicateHaving: Op<Boolean> = Op.build {
                 DMLTestData.Users.id.count().eq<Number, Long, Int>(DMLTestData.Cities.id.max())
             }
@@ -256,8 +256,8 @@ class AdjustQueryTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `query and having`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, users, _ ->
+    fun `query and having`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, _ ->
             val predicateHaving = Op.build {
                 DMLTestData.Users.id.count().eq<Number, Long, Int>(DMLTestData.Cities.id.max())
             }
@@ -294,8 +294,8 @@ class AdjustQueryTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `query or having`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, users, _ ->
+    fun `query or having`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, _ ->
             val predicateHaving = Op.build {
                 DMLTestData.Users.id.count().eq<Number, Long, Int>(DMLTestData.Cities.id.max())
             }

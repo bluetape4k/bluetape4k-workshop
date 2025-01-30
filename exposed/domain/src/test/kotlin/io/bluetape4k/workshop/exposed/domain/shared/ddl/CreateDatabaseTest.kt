@@ -18,10 +18,10 @@ class CreateDatabaseTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create and drop database`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in TestDB.ALL_H2 }
+    fun `create and drop database`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 }
 
-        withDb(testDb) {
+        withDb(testDB) {
             val dbName = "jetbrains"
             try {
                 SchemaUtils.dropDatabase(dbName)
@@ -33,12 +33,15 @@ class CreateDatabaseTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Postgres 는 DROP DATABASE 같은 작업 시 `autoCommit` 이 `true` 여야 합니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create and drop database with auto commit`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in TestDB.ALL_H2 }
+    fun `create and drop database with auto commit`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 + TestDB.ALL_POSTGRES }
 
-        withDb(testDb) {
+        withDb(testDB) {
             connection.autoCommit = true
             val dbName = "jetbrains"
             try {
@@ -54,10 +57,33 @@ class CreateDatabaseTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `list databases with auto commit`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in TestDB.ALL_H2 }
+    fun `list databases `(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 }
 
-        withDb(testDb) {
+        withDb(testDB) {
+            val dbName = "jetbrains"
+            val initial = SchemaUtils.listDatabases()
+            if (dbName in initial) {
+                SchemaUtils.dropDatabase(dbName)
+            }
+
+            SchemaUtils.createDatabase(dbName)
+            SchemaUtils.listDatabases() shouldContain dbName
+
+            SchemaUtils.dropDatabase(dbName)
+            SchemaUtils.listDatabases() shouldNotContain dbName
+        }
+    }
+
+    /**
+     * Postgres 는 DROP DATABASE 같은 작업 시 `autoCommit` 이 `true` 여야 합니다.
+     */
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `list databases with auto commit`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 + TestDB.ALL_POSTGRES }
+
+        withDb(testDB) {
             connection.autoCommit = true
 
             val dbName = "jetbrains"
@@ -73,26 +99,6 @@ class CreateDatabaseTest: AbstractExposedTest() {
             SchemaUtils.listDatabases() shouldNotContain dbName
 
             connection.autoCommit = false
-        }
-    }
-
-    @ParameterizedTest
-    @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `list databases `(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in TestDB.ALL_H2 }
-
-        withDb(testDb) {
-            val dbName = "jetbrains"
-            val initial = SchemaUtils.listDatabases()
-            if (dbName in initial) {
-                SchemaUtils.dropDatabase(dbName)
-            }
-
-            SchemaUtils.createDatabase(dbName)
-            SchemaUtils.listDatabases() shouldContain dbName
-
-            SchemaUtils.dropDatabase(dbName)
-            SchemaUtils.listDatabases() shouldNotContain dbName
         }
     }
 }

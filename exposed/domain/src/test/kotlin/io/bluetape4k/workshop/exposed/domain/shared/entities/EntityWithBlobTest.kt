@@ -43,8 +43,8 @@ class EntityWithBlobTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `handle blob field`(testDb: TestDB) {
-        withTables(testDb, BlobTable) {
+    fun `handle blob field`(testDB: TestDB) {
+        withTables(testDB, BlobTable) {
             /**
              * ```sql
              * INSERT INTO BLOBTABLE (ID, CONTENT) VALUES ('wTkxePceefMUJFdP7d4X2', X'')

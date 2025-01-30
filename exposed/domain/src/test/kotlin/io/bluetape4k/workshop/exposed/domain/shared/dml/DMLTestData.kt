@@ -204,11 +204,11 @@ fun AbstractExposedTest.withCitiesAndUsers(
 
 fun AbstractExposedTest.withSales(
     dialect: TestDB,
-    statement: Transaction.(testDb: TestDB, sales: DMLTestData.Sales) -> Unit,
+    statement: Transaction.(testDB: TestDB, sales: DMLTestData.Sales) -> Unit,
 ) {
     val sales = DMLTestData.Sales
 
-    withTables(dialect, sales) { testDb ->
+    withTables(dialect, sales) { testDB ->
         insertSale(2018, 11, "tea", "550.10")
         insertSale(2018, 12, "coffee", "1500.25")
         insertSale(2018, 12, "tea", "900.30")
@@ -217,7 +217,7 @@ fun AbstractExposedTest.withSales(
         insertSale(2019, 2, "coffee", "1870.90")
         insertSale(2019, 2, null, "10.20")
 
-        statement(testDb, sales)
+        statement(testDB, sales)
     }
 }
 
@@ -233,7 +233,7 @@ private fun insertSale(year: Int, month: Int, product: String?, amount: String) 
 
 fun AbstractExposedTest.withSomeAmounts(
     dialect: TestDB,
-    statement: Transaction.(testDb: TestDB, someAmounts: DMLTestData.SomeAmounts) -> Unit,
+    statement: Transaction.(testDB: TestDB, someAmounts: DMLTestData.SomeAmounts) -> Unit,
 ) {
     val someAmounts = DMLTestData.SomeAmounts
 
@@ -254,7 +254,7 @@ fun AbstractExposedTest.withSomeAmounts(
 fun AbstractExposedTest.withSalesAndSomeAmounts(
     dialect: TestDB,
     statement: Transaction.(
-        testDb: TestDB,
+        testDB: TestDB,
         sales: DMLTestData.Sales,
         someAmounts: DMLTestData.SomeAmounts,
     ) -> Unit,
@@ -262,7 +262,7 @@ fun AbstractExposedTest.withSalesAndSomeAmounts(
     val sales = DMLTestData.Sales
     val someAmounts = DMLTestData.SomeAmounts
 
-    withTables(dialect, sales, someAmounts) { testDb ->
+    withTables(dialect, sales, someAmounts) { testDB ->
         insertSale(2018, 11, "tea", "550.10")
         insertSale(2018, 12, "coffee", "1500.25")
         insertSale(2018, 12, "tea", "900.30")
@@ -280,7 +280,7 @@ fun AbstractExposedTest.withSalesAndSomeAmounts(
         insertAmount("1500.25".toBigDecimal())
         insertAmount("1000.00".toBigDecimal())
 
-        statement(testDb, sales, someAmounts)
+        statement(testDB, sales, someAmounts)
     }
 }
 

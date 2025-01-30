@@ -82,10 +82,10 @@ class EnumerationTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `custom enumeration 01`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in supportsCustomEnumerationDB }
+    fun `custom enumeration 01`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in supportsCustomEnumerationDB }
 
-        withDb(testDb) {
+        withDb(testDB) {
             val sqlType = when (currentDialect) {
                 is H2Dialect, is MysqlDialect -> "ENUM('Bar', 'Baz')"
                 is PostgreSQLDialect          -> "FooEnum"
@@ -131,10 +131,10 @@ class EnumerationTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `custom enumeration with default value`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in supportsCustomEnumerationDB }
+    fun `custom enumeration with default value`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in supportsCustomEnumerationDB }
 
-        withDb(testDb) {
+        withDb(testDB) {
             val sqlType = when (currentDialect) {
                 is H2Dialect, is MysqlDialect -> "ENUM('Bar', 'Baz')"
                 is PostgreSQLDialect          -> "FooEnum"
@@ -170,8 +170,8 @@ class EnumerationTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `custom enumeration with reference`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in supportsCustomEnumerationDB }
+    fun `custom enumeration with reference`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in supportsCustomEnumerationDB }
 
         /**
          * ```sql
@@ -190,7 +190,7 @@ class EnumerationTest: AbstractExposedTest() {
             }
         }
 
-        withDb(testDb) {
+        withDb(testDB) {
             val sqlType = when (currentDialect) {
                 is H2Dialect, is MysqlDialect -> "ENUM('Bar', 'Baz')"
                 is PostgreSQLDialect          -> "FooEnum"
@@ -234,8 +234,8 @@ class EnumerationTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `enumeration columns with reference`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in supportsCustomEnumerationDB }
+    fun `enumeration columns with reference`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in supportsCustomEnumerationDB }
 
         /**
          * ```sql
@@ -268,7 +268,7 @@ class EnumerationTest: AbstractExposedTest() {
             val referenceNameColumn: Column<Foo> = reference("ref_name_column", tester.enumNameColumn)
         }
 
-        withTables(testDb, tester, referenceTable) {
+        withTables(testDB, tester, referenceTable) {
             val fooBar = Bar
             val fooBaz = Baz
 

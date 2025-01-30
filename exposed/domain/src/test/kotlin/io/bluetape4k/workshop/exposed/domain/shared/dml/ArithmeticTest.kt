@@ -27,8 +27,8 @@ class ArithmeticTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `operator precedence of minus, plus, div times`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, _, userData ->
+    fun `operator precedence of minus, plus, div times`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, _, userData ->
             val calculatedColumn = ((DMLTestData.UserData.value - 5) * 2) / 2
 
             userData
@@ -57,8 +57,8 @@ class ArithmeticTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `big decimal division with scale and without`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, _, _ ->
+    fun `big decimal division with scale and without`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, _, _ ->
             val ten = decimalLiteral(10.toBigDecimal())
             val three = decimalLiteral(3.toBigDecimal())
 

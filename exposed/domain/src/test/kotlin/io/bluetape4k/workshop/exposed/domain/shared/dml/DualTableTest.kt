@@ -32,8 +32,8 @@ class DualTableTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testDualTable(testDb: TestDB) {
-        withDb(testDb) {
+    fun testDualTable(testDB: TestDB) {
+        withDb(testDB) {
             val resultColumn = intLiteral(1)
             val result: Int = Dual.select(resultColumn).single()[resultColumn]
             result shouldBeEqualTo 1

@@ -36,8 +36,8 @@ class WhereConditionsTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `where like expression`(testDb: TestDB) {
-        withTables(testDb, Users) {
+    fun `where like expression`(testDB: TestDB) {
+        withTables(testDB, Users) {
             Users.insert {
                 it[name] = "BOSTON"
             }
@@ -64,8 +64,8 @@ class WhereConditionsTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `where not like expression`(testDb: TestDB) {
-        withTables(testDb, Users) {
+    fun `where not like expression`(testDB: TestDB) {
+        withTables(testDB, Users) {
             Users.insert {
                 it[name] = "BOSTON"
             }

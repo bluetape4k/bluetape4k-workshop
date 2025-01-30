@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.exposed.domain.shared.ddl
 
 import MigrationUtils
 import io.bluetape4k.collections.tryForEach
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.TestDB.H2
@@ -62,8 +63,8 @@ class DatabaseMigrationTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testMigrationScriptDirectoryAndContent(testDb: TestDB) {
-        testDb.dropAllSequence()
+    fun testMigrationScriptDirectoryAndContent(testDB: TestDB) {
+        testDB.dropAllSequence()
 
         val tableName = "tester"
         val noPKTable = object: Table(tableName) {
@@ -78,7 +79,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
         val scriptName = "V2__Add_primary_key"
         val scriptDirectory = "src/test/resources"
 
-        withTables(testDb, noPKTable) {
+        withTables(testDB, noPKTable) {
             val script = MigrationUtils.generateMigrationScript(
                 singlePKTable,
                 scriptDirectory = scriptDirectory,
@@ -106,8 +107,8 @@ class DatabaseMigrationTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testMigrationScriptOverwrittenIfAlreadyExists(testDb: TestDB) {
-        testDb.dropAllSequence()
+    fun testMigrationScriptOverwrittenIfAlreadyExists(testDB: TestDB) {
+        testDB.dropAllSequence()
 
         val tableName = "tester"
         val noPKTable = object: Table(tableName) {
@@ -122,7 +123,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
         val directory = "src/test/resources"
         val name = "V2__Test"
 
-        withTables(testDb, noPKTable) {
+        withTables(testDB, noPKTable) {
             // Create initial script
             val initialScript = File("$directory/$name.sql")
             initialScript.createNewFile()
@@ -159,10 +160,10 @@ class DatabaseMigrationTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testNoTablesPassedWhenGeneratingMigrationScript(testDb: TestDB) {
-        testDb.dropAllSequence()
+    fun testNoTablesPassedWhenGeneratingMigrationScript(testDB: TestDB) {
+        testDB.dropAllSequence()
 
-        withDb(testDb) {
+        withDb(testDB) {
             expectException<IllegalArgumentException> {
                 MigrationUtils.generateMigrationScript(
                     scriptDirectory = "src/test/resources",
@@ -175,14 +176,14 @@ class DatabaseMigrationTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testCreateStatementsGeneratedForTablesThatDoNotExist(testDb: TestDB) {
-        testDb.dropAllSequence()
+    fun testCreateStatementsGeneratedForTablesThatDoNotExist(testDB: TestDB) {
+        testDB.dropAllSequence()
 
         val tester = object: Table("tester") {
             val bar = char("bar")
         }
 
-        withDb(testDb) {
+        withDb(testDB) {
             val statements = MigrationUtils.statementsRequiredForDatabaseMigration(
                 tester,
                 withLogs = false
@@ -205,8 +206,8 @@ class DatabaseMigrationTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testDropUnmappedColumnsStatementsIdentical(testDb: TestDB) {
-        testDb.dropAllSequence()
+    fun testDropUnmappedColumnsStatementsIdentical(testDB: TestDB) {
+        testDB.dropAllSequence()
 
         val t1 = object: Table("foo") {
             val col1 = integer("col1")
@@ -220,7 +221,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
             val col3 = integer("\"CoL3\"")
         }
 
-        withTables(testDb, t1) {
+        withTables(testDB, t1) {
             val statements = MigrationUtils.dropUnmappedColumnsStatements(t2, withLogs = false)
             statements.shouldBeEmpty()
         }
@@ -236,8 +237,8 @@ class DatabaseMigrationTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testDropUnmappedColumns(testDb: TestDB) {
-        testDb.dropAllSequence()
+    fun testDropUnmappedColumns(testDB: TestDB) {
+        testDB.dropAllSequence()
 
         val t1 = object: Table("foo") {
             val id = integer("id")
@@ -248,7 +249,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
             val id = integer("id")
         }
 
-        withTables(testDb, t1) {
+        withTables(testDB, t1) {
             MigrationUtils.statementsRequiredForDatabaseMigration(
                 t1,
                 withLogs = false
@@ -264,8 +265,8 @@ class DatabaseMigrationTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testAddNewPrimaryKeyOnExistingColumn(testDb: TestDB) {
-        testDb.dropAllSequence()
+    fun testAddNewPrimaryKeyOnExistingColumn(testDB: TestDB) {
+        testDB.dropAllSequence()
 
         val tableName = "tester"
         val noPKTable = object: Table(tableName) {
@@ -278,7 +279,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
             override val primaryKey = PrimaryKey(bar)
         }
 
-        withTables(testDb, noPKTable) {
+        withTables(testDB, noPKTable) {
             val primaryKey: PrimaryKeyMetadata? = currentDialectTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
             primaryKey.shouldBeNull()
 
@@ -295,13 +296,13 @@ class DatabaseMigrationTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun columnsWithDefaultValuesThatHaveNotChangedShouldNotTriggerChange(testDb: TestDB) {
-        testDb.dropAllSequence()
+    fun columnsWithDefaultValuesThatHaveNotChangedShouldNotTriggerChange(testDB: TestDB) {
+        testDB.dropAllSequence()
 
         var table by Delegates.notNull<Table>()
-        withDb(testDb) {
+        withDb(testDB) {
             // MySQL doesn't support default values on text columns, hence excluded
-            table = if (testDb !in TestDB.ALL_MYSQL) {
+            table = if (testDB !in TestDB.ALL_MYSQL) {
                 object: Table("varchar_test") {
                     val varchar = varchar("varchar_col", 255).default(" ")
                     val text = text("text_col").default(" ")
@@ -324,15 +325,15 @@ class DatabaseMigrationTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testCreateTableWithQuotedIdentifiers(testDb: TestDB) {
-        testDb.dropAllSequence()
+    fun testCreateTableWithQuotedIdentifiers(testDB: TestDB) {
+        testDB.dropAllSequence()
 
         val identifiers = listOf("\"IdentifierTable\"", "\"IDentiFierCoLUmn\"")
         val quotedTable = object: Table(identifiers[0]) {
             val column1 = varchar(identifiers[1], 32)
         }
 
-        withTables(testDb, quotedTable) {
+        withTables(testDB, quotedTable) {
             quotedTable.exists() shouldBeEqualTo true
 
             val statements = MigrationUtils
@@ -353,8 +354,8 @@ class DatabaseMigrationTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testDropExtraIndexOnSameColumn(testDb: TestDB) {
-        testDb.dropAllSequence()
+    fun testDropExtraIndexOnSameColumn(testDB: TestDB) {
+        testDB.dropAllSequence()
 
         val testTableWithTwoIndices = object: Table("test_table") {
             val id = integer("id")
@@ -374,7 +375,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
         }
 
         // Oracle does not allow more than one index on a column
-        withTables(testDb, testTableWithTwoIndices) {
+        withTables(testDB, testTableWithTwoIndices) {
             testTableWithTwoIndices.exists().shouldBeTrue()
 
             val statements = MigrationUtils
@@ -394,8 +395,8 @@ class DatabaseMigrationTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testDropUnmappedIndex(testDb: TestDB) {
-        testDb.dropAllSequence()
+    fun testDropUnmappedIndex(testDB: TestDB) {
+        testDB.dropAllSequence()
 
         val testTableWithIndex = object: Table("test_table") {
             val id = integer("id")
@@ -412,7 +413,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withTables(testDb, testTableWithIndex) {
+        withTables(testDB, testTableWithIndex) {
             testTableWithIndex.exists().shouldBeTrue()
 
             val statements =
@@ -423,10 +424,10 @@ class DatabaseMigrationTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testAddAutoIncrementToExistingColumn(testDb: TestDB) {
-        testDb.dropAllSequence()
+    fun testAddAutoIncrementToExistingColumn(testDB: TestDB) {
+        testDB.dropAllSequence()
 
-        withTables(testDb, tableWithoutAutoIncrement) {
+        withTables(testDB, tableWithoutAutoIncrement) {
             MigrationUtils
                 .statementsRequiredForDatabaseMigration(
                     tableWithoutAutoIncrement,
@@ -440,7 +441,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                     withLogs = false
                 )
 
-            when (testDb) {
+            when (testDB) {
                 in TestDB.ALL_POSTGRES -> {
                     statements.size shouldBeEqualTo 3
                     statements[0] shouldBeEqualTo expectedCreateSequenceStatement("test_table_id_seq")
@@ -462,10 +463,10 @@ class DatabaseMigrationTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testAddAutoIncrementWithSequenceNameToExistingColumn(testDb: TestDB) {
-        testDb.dropAllSequence()
+    fun testAddAutoIncrementWithSequenceNameToExistingColumn(testDB: TestDB) {
+        testDB.dropAllSequence()
 
-        withTables(testDb, tableWithoutAutoIncrement) {
+        withTables(testDB, tableWithoutAutoIncrement) {
             MigrationUtils.statementsRequiredForDatabaseMigration(
                 tableWithoutAutoIncrement,
                 withLogs = false
@@ -491,10 +492,10 @@ class DatabaseMigrationTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testAddAutoIncrementWithCustomSequenceToExistingColumn(testDb: TestDB) {
-        testDb.dropAllSequence()
+    fun testAddAutoIncrementWithCustomSequenceToExistingColumn(testDB: TestDB) {
+        testDB.dropAllSequence()
 
-        withTables(testDb, tableWithoutAutoIncrement) {
+        withTables(testDB, tableWithoutAutoIncrement) {
             if (currentDialectTest.supportsCreateSequence) {
                 MigrationUtils.statementsRequiredForDatabaseMigration(
                     tableWithoutAutoIncrement,
@@ -521,8 +522,8 @@ class DatabaseMigrationTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testDropAutoIncrementOnExistingColumn(testDb: TestDB) {
-        testDb.dropAllSequence()
+    fun testDropAutoIncrementOnExistingColumn(testDB: TestDB) {
+        testDB.dropAllSequence()
 
         val tableWithAutoIncrement = object: IdTable<Long>("test_table") {
             override val id: Column<EntityID<Long>> = long("id").autoIncrement().entityId()
@@ -535,7 +536,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withTables(testDb, tableWithAutoIncrement) {
+        withTables(testDB, tableWithAutoIncrement) {
             MigrationUtils.statementsRequiredForDatabaseMigration(
                 tableWithAutoIncrement,
                 withLogs = false
@@ -545,7 +546,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                 tableWithoutAutoIncrement,
                 withLogs = false
             )
-            when (testDb) {
+            when (testDB) {
                 in TestDB.ALL_POSTGRES -> {
                     statements.size shouldBeEqualTo 2
                     statements[0] shouldBeEqualTo "ALTER TABLE test_table ALTER COLUMN id TYPE BIGINT"
@@ -563,8 +564,8 @@ class DatabaseMigrationTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testAddSequenceNameToExistingAutoIncrementColumn(testDb: TestDB) {
-        testDb.dropAllSequence()
+    fun testAddSequenceNameToExistingAutoIncrementColumn(testDB: TestDB) {
+        testDB.dropAllSequence()
 
         val sequenceName = "custom_sequence"
         val tableWithAutoIncrement = object: IdTable<Long>("test_table") {
@@ -578,7 +579,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withTables(testDb, tableWithAutoIncrement) {
+        withTables(testDB, tableWithAutoIncrement) {
             if (currentDialectTest.supportsCreateSequence) {
                 MigrationUtils
                     .statementsRequiredForDatabaseMigration(
@@ -594,7 +595,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                     )
                 statements[0] shouldBeEqualTo expectedCreateSequenceStatement(sequenceName)
 
-                when (testDb) {
+                when (testDB) {
                     in TestDB.ALL_POSTGRES -> {
                         statements.size shouldBeEqualTo 3
                         statements[1] shouldBeEqualTo
@@ -615,10 +616,10 @@ class DatabaseMigrationTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testAddCustomSequenceToExistingAutoIncrementColumn(testDb: TestDB) {
-        testDb.dropAllSequence()
+    fun testAddCustomSequenceToExistingAutoIncrementColumn(testDB: TestDB) {
+        testDB.dropAllSequence()
 
-        withDb(testDb) {
+        withDb(testDB) {
             if (currentDialectTest.supportsCreateSequence) {
                 try {
                     SchemaUtils.create(tableWithAutoIncrement)
@@ -637,7 +638,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                             withLogs = false
                         )
                     statements[0] shouldBeEqualTo expectedCreateSequenceStatement(sequence.name)
-                    when (testDb) {
+                    when (testDB) {
                         in TestDB.ALL_POSTGRES -> {
                             statements.size shouldBeEqualTo 3
                             statements[1] shouldBeEqualTo
@@ -668,10 +669,10 @@ class DatabaseMigrationTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testDropAutoIncrementWithSequenceNameOnExistingColumn(testDb: TestDB) {
-        testDb.dropAllSequence()
+    fun testDropAutoIncrementWithSequenceNameOnExistingColumn(testDB: TestDB) {
+        testDB.dropAllSequence()
 
-        withDb(testDb) {
+        withDb(testDB) {
             if (currentDialectTest.supportsCreateSequence) {
                 try {
                     SchemaUtils.create(tableWithAutoIncrementSequenceName)
@@ -686,7 +687,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                             tableWithoutAutoIncrement,
                             withLogs = false
                         )
-                    when (testDb) {
+                    when (testDB) {
                         H2 -> {
                             statements.size shouldBeEqualTo 1
                         }
@@ -706,10 +707,10 @@ class DatabaseMigrationTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testDropSequenceNameOnExistingAutoIncrementColumn(testDb: TestDB) {
-        testDb.dropAllSequence()
+    fun testDropSequenceNameOnExistingAutoIncrementColumn(testDB: TestDB) {
+        testDB.dropAllSequence()
 
-        withDb(testDb) {
+        withDb(testDB) {
             if (currentDialectTest.supportsCreateSequence) {
                 try {
                     SchemaUtils.create(tableWithAutoIncrementSequenceName)
@@ -724,7 +725,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                             withLogs = false
                         )
 
-                    when (testDb) {
+                    when (testDB) {
                         in TestDB.ALL_POSTGRES -> {
                             statements.size shouldBeEqualTo 4
                             statements[0] shouldBeEqualTo
@@ -760,10 +761,10 @@ class DatabaseMigrationTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testAddCustomSequenceToExistingAutoIncrementColumnWithSequenceName(testDb: TestDB) {
-        testDb.dropAllSequence()
+    fun testAddCustomSequenceToExistingAutoIncrementColumnWithSequenceName(testDB: TestDB) {
+        testDB.dropAllSequence()
 
-        withDb(testDb) {
+        withDb(testDB) {
             if (currentDialectTest.supportsCreateSequence) {
                 try {
                     SchemaUtils.create(tableWithAutoIncrementSequenceName)
@@ -780,7 +781,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                             tableWithAutoIncrementCustomSequence,
                             withLogs = false
                         )
-                    when (testDb) {
+                    when (testDB) {
                         H2_V1 -> {
                             statements.size shouldBeEqualTo 1
                             statements[0] shouldBeEqualTo expectedCreateSequenceStatement(sequence.name)
@@ -801,10 +802,10 @@ class DatabaseMigrationTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testDropAutoIncrementWithCustomSequenceOnExistingColumn(testDb: TestDB) {
-        testDb.dropAllSequence()
+    fun testDropAutoIncrementWithCustomSequenceOnExistingColumn(testDB: TestDB) {
+        testDB.dropAllSequence()
 
-        withDb(testDb) {
+        withDb(testDB) {
             if (currentDialectTest.supportsCreateSequence) {
                 try {
                     SchemaUtils.create(tableWithAutoIncrementCustomSequence)
@@ -818,7 +819,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                         withLogs = false
                     )
 
-                    when (testDb) {
+                    when (testDB) {
                         H2_V1 -> {
                             statements.size shouldBeEqualTo 0
                         }
@@ -838,63 +839,65 @@ class DatabaseMigrationTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testDropCustomSequenceOnExistingAutoIncrementColumn(testDb: TestDB) {
-        testDb.dropAllSequence()
+    fun testDropCustomSequenceOnExistingAutoIncrementColumn(testDB: TestDB) {
+        testDB.dropAllSequence()
 
-        withDb(testDb) {
-            if (currentDialectTest.supportsCreateSequence) {
-                try {
-                    SchemaUtils.create(tableWithAutoIncrementCustomSequence)
+        withDb(testDB) {
+            if (!currentDialectTest.supportsCreateSequence) {
+                log.debug { "${currentDialectTest.name} does not support CREATE SEQUENCE" }
+                return@withDb
+            }
+            try {
+                SchemaUtils.create(tableWithAutoIncrementCustomSequence)
 
-                    SchemaUtils.statementsRequiredToActualizeScheme(tableWithAutoIncrementCustomSequence)
-                        .shouldBeEmpty()
+                SchemaUtils.statementsRequiredToActualizeScheme(tableWithAutoIncrementCustomSequence)
+                    .shouldBeEmpty()
 
-                    val statements = MigrationUtils
-                        .statementsRequiredForDatabaseMigration(
-                            tableWithAutoIncrement,
-                            withLogs = false
-                        )
-                    when (testDb) {
-                        in TestDB.ALL_POSTGRES -> {
-                            statements.size shouldBeEqualTo 4
-                            statements[0] shouldBeEqualTo
-                                    expectedCreateSequenceStatement("test_table_id_seq")
-                            statements[1] shouldBeEqualTo
-                                    "ALTER TABLE test_table ALTER COLUMN id SET DEFAULT nextval('test_table_id_seq')"
-                            statements[2] shouldBeEqualTo
-                                    "ALTER SEQUENCE test_table_id_seq OWNED BY test_table.id"
-                            statements[3] shouldBeEqualTo
-                                    expectedDropSequenceStatement(sequence.name)
-                        }
-
-                        H2_V1 -> {
-                            statements.size shouldBeEqualTo 1
-                            statements[0] shouldBeEqualTo
-                                    "ALTER TABLE TEST_TABLE ALTER COLUMN ID BIGINT AUTO_INCREMENT NOT NULL"
-                        }
-
-                        else -> {
-                            statements.size shouldBeEqualTo 2
-                            statements[0] shouldStartWithIgnoringCase
-                                    "ALTER TABLE TEST_TABLE ALTER COLUMN ID"
-                            statements[1] shouldBeEqualToIgnoringCase
-                                    expectedDropSequenceStatement(sequence.name)
-
-                        }
+                val statements = MigrationUtils
+                    .statementsRequiredForDatabaseMigration(
+                        tableWithAutoIncrement,
+                        withLogs = false
+                    )
+                when (testDB) {
+                    in TestDB.ALL_POSTGRES -> {
+                        statements.size shouldBeEqualTo 4
+                        statements[0] shouldBeEqualTo
+                                expectedCreateSequenceStatement("test_table_id_seq")
+                        statements[1] shouldBeEqualTo
+                                "ALTER TABLE test_table ALTER COLUMN id SET DEFAULT nextval('test_table_id_seq')"
+                        statements[2] shouldBeEqualTo
+                                "ALTER SEQUENCE test_table_id_seq OWNED BY test_table.id"
+                        statements[3] shouldBeEqualTo
+                                expectedDropSequenceStatement(sequence.name)
                     }
-                } finally {
-                    SchemaUtils.drop(tableWithAutoIncrementCustomSequence)
+
+                    H2_V1 -> {
+                        statements.size shouldBeEqualTo 1
+                        statements[0] shouldBeEqualTo
+                                "ALTER TABLE TEST_TABLE ALTER COLUMN ID BIGINT AUTO_INCREMENT NOT NULL"
+                    }
+
+                    else -> {
+                        statements.size shouldBeEqualTo 2
+                        statements[0] shouldStartWithIgnoringCase
+                                "ALTER TABLE TEST_TABLE ALTER COLUMN ID"
+                        statements[1] shouldBeEqualToIgnoringCase
+                                expectedDropSequenceStatement(sequence.name)
+
+                    }
                 }
+            } finally {
+                SchemaUtils.drop(tableWithAutoIncrementCustomSequence)
             }
         }
     }
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testAddSequenceNameToExistingAutoIncrementColumnWithCustomSequence(testDb: TestDB) {
-        testDb.dropAllSequence()
+    fun testAddSequenceNameToExistingAutoIncrementColumnWithCustomSequence(testDB: TestDB) {
+        testDB.dropAllSequence()
 
-        withDb(testDb) {
+        withDb(testDB) {
             if (currentDialectTest.supportsCreateSequence) {
                 try {
                     SchemaUtils.create(tableWithAutoIncrementCustomSequence)
@@ -909,7 +912,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                             withLogs = false
                         )
 
-                    when (testDb) {
+                    when (testDB) {
                         H2_V1 -> {
                             statements.size shouldBeEqualTo 1
                             statements[0] shouldBeEqualTo expectedCreateSequenceStatement(sequenceName)
@@ -932,8 +935,8 @@ class DatabaseMigrationTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testNumericTypeLiteralsAsDefaultsDoNotTriggerMigrationStatements(testDb: TestDB) {
-        testDb.dropAllSequence()
+    fun testNumericTypeLiteralsAsDefaultsDoNotTriggerMigrationStatements(testDB: TestDB) {
+        testDB.dropAllSequence()
 
         val tester = object: Table("tester") {
             val byte = byte("byte_column").defaultExpression(byteLiteral(Byte.MIN_VALUE))
@@ -949,7 +952,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
             val decimal = decimal("decimal_column", 6, 3).defaultExpression(decimalLiteral(123.456.toBigDecimal()))
         }
 
-        withTables(testDb, tester) {
+        withTables(testDB, tester) {
             MigrationUtils
                 .statementsRequiredForDatabaseMigration(
                     tester,

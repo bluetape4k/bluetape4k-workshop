@@ -504,19 +504,19 @@ class DefaultsTest: AbstractExposedTest() {
             else -> "NULL"
         }
 
-        withTables(testDB, testTable) { testDb ->
+        withTables(testDB, testTable) { testDB ->
             val timestampWithTimeZoneType = currentDialectTest.dataTypeProvider.timestampWithTimeZoneType()
 
             val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +
                     "${"t".inProperCase()} (" +
                     "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()}${
                         " PRIMARY KEY"
-                        // testDb.takeIf { it != TestDB.SQLITE }?.let { " PRIMARY KEY" } ?: ""
+                        // testDB.takeIf { it != TestDB.SQLITE }?.let { " PRIMARY KEY" } ?: ""
                     }, " +
                     "${"t1".inProperCase()} $timestampWithTimeZoneType${testTable.t1.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}, " +
                     "${"t2".inProperCase()} $timestampWithTimeZoneType${testTable.t2.constraintNamePart()} ${timestampWithTimeZoneLiteral.itOrNull()}, " +
                     "${"t3".inProperCase()} $timestampWithTimeZoneType${testTable.t3.constraintNamePart()} ${CurrentTimestampWithTimeZone.itOrNull()}" +
-//                    when (testDb) {
+//                    when (testDB) {
 //                        TestDB.SQLITE, TestDB.ORACLE ->
 //                            ", CONSTRAINT chk_t_signed_integer_id CHECK (${"id".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
 //                        else -> ""

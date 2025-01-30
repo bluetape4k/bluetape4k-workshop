@@ -90,8 +90,8 @@ class MergeSelectTest: MergeBaseTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `mergeFrom with whenNotMatchedInsert by alias`(testDb: TestDB) {
-        withMergeTestTablesAndDefaultData(testDb) { dest, source ->
+    fun `mergeFrom with whenNotMatchedInsert by alias`(testDB: TestDB) {
+        withMergeTestTablesAndDefaultData(testDB) { dest, source ->
             val destAlias = dest.alias("dest_alias")
 
             destAlias.mergeFrom(
@@ -128,8 +128,8 @@ class MergeSelectTest: MergeBaseTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `mergeFrom with whenMatchedUpdate`(testDb: TestDB) {
-        withMergeTestTablesAndDefaultData(testDb) { dest, source ->
+    fun `mergeFrom with whenMatchedUpdate`(testDB: TestDB) {
+        withMergeTestTablesAndDefaultData(testDB) { dest, source ->
             dest.mergeFrom(
                 sourceQuery,
                 on = { defaultOnCondition() }
@@ -166,8 +166,8 @@ class MergeSelectTest: MergeBaseTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `mergeFrom with whenMatchedUpdate by alias`(testDb: TestDB) {
-        withMergeTestTablesAndDefaultData(testDb) { dest, source ->
+    fun `mergeFrom with whenMatchedUpdate by alias`(testDB: TestDB) {
+        withMergeTestTablesAndDefaultData(testDB) { dest, source ->
             val destAlias = dest.alias("dest_alias")
 
             destAlias.mergeFrom(
@@ -205,8 +205,8 @@ class MergeSelectTest: MergeBaseTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `mergeFrom with whenMatchedDelete`(testDb: TestDB) {
-        withMergeTestTablesAndDefaultData(testDb) { dest, source ->
+    fun `mergeFrom with whenMatchedDelete`(testDB: TestDB) {
+        withMergeTestTablesAndDefaultData(testDB) { dest, source ->
             dest.mergeFrom(
                 sourceQuery,
                 on = { defaultOnCondition() }
@@ -242,8 +242,8 @@ class MergeSelectTest: MergeBaseTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `mergeFrom with whenNotMatchedInsert and whenMatchedUpdate`(testDb: TestDB) {
-        withMergeTestTablesAndDefaultData(testDb) { dest, source ->
+    fun `mergeFrom with whenNotMatchedInsert and whenMatchedUpdate`(testDB: TestDB) {
+        withMergeTestTablesAndDefaultData(testDB) { dest, source ->
             dest.mergeFrom(
                 sourceQuery,
                 on = { defaultOnCondition() }
@@ -288,8 +288,8 @@ class MergeSelectTest: MergeBaseTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `mergeFrom with whenMatchedDelete and condition`(testDb: TestDB) {
-        withMergeTestTablesAndDefaultData(testDb) { dest, source ->
+    fun `mergeFrom with whenMatchedDelete and condition`(testDB: TestDB) {
+        withMergeTestTablesAndDefaultData(testDB) { dest, source ->
             dest.mergeFrom(
                 sourceQuery,
                 on = { defaultOnCondition() }
@@ -341,8 +341,8 @@ class MergeSelectTest: MergeBaseTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `mergeFrom with multiple clauses`(testDb: TestDB) {
-        withMergeTestTablesAndDefaultData(testDb) { dest, source ->
+    fun `mergeFrom with multiple clauses`(testDB: TestDB) {
+        withMergeTestTablesAndDefaultData(testDB) { dest, source ->
             dest.mergeFrom(sourceQuery, on = { defaultOnCondition() }) {
                 whenNotMatchedInsert(and = (sourceQuery[source.value] eq 1)) {
                     it[dest.key] = sourceQuery[source.key]
@@ -410,10 +410,10 @@ class MergeSelectTest: MergeBaseTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `do nothing in postgres`(testDb: TestDB) {
-        Assumptions.assumeTrue(testDb in TestDB.ALL_POSTGRES)
+    fun `do nothing in postgres`(testDB: TestDB) {
+        Assumptions.assumeTrue(testDB in TestDB.ALL_POSTGRES)
 
-        withMergeTestTablesAndDefaultData(testDb) { dest, source ->
+        withMergeTestTablesAndDefaultData(testDB) { dest, source ->
             dest.mergeFrom(sourceQuery, on = { defaultOnCondition() }) {
                 whenNotMatchedDoNothing(and = sourceQuery[source.value] greater 1)
                 whenNotMatchedInsert {
@@ -452,12 +452,12 @@ class MergeSelectTest: MergeBaseTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `mergeFrom with const condition`(testDb: TestDB) {
+    fun `mergeFrom with const condition`(testDB: TestDB) {
         val filteredSourceQuery = Source.selectAll()
             .where { Source.key eq "only-in-source-1" }
             .alias("sub")
 
-        withMergeTestTablesAndDefaultData(testDb) { dest, source ->
+        withMergeTestTablesAndDefaultData(testDB) { dest, source ->
             dest.mergeFrom(
                 filteredSourceQuery,
                 on = { Dest.key eq filteredSourceQuery[Source.key] },
