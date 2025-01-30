@@ -41,8 +41,8 @@ class ManyToManyMappingTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `generate schema`(testDb: TestDB) {
-        withTables(testDb, *MemberSchema.memberTables) {
+    fun `generate schema`(testDB: TestDB) {
+        withTables(testDB, *MemberSchema.memberTables) {
             log.info { "Schema generated" }
             val users = UserTable.selectAll().where { UserTable.firstName eq "Alice" }.toList()
             // 현재는 데이터가 없으므로 빈 리스트가 반환된다.
@@ -64,8 +64,8 @@ class ManyToManyMappingTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `coroutine support`(testDb: TestDB) = runSuspendIO {
-        withSuspendedTables(testDb, *MemberSchema.memberTables) {
+    fun `coroutine support`(testDB: TestDB) = runSuspendIO {
+        withSuspendedTables(testDB, *MemberSchema.memberTables) {
             val prevCount = User.all().count()
 
             // rollback()을 호출하면 transaction은 롤백된다.
@@ -107,8 +107,8 @@ class ManyToManyMappingTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `SQL DSL 로부터 DAO Entity 만들기`(testDb: TestDB) {
-        withTables(testDb, *MemberSchema.memberTables) {
+    fun `SQL DSL 로부터 DAO Entity 만들기`(testDB: TestDB) {
+        withTables(testDB, *MemberSchema.memberTables) {
             val query: Query = GroupTable
                 .innerJoin(UserTable)
                 .innerJoin(MemberTable)

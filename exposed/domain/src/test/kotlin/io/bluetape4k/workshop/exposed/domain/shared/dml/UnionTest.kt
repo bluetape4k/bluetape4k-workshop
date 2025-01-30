@@ -341,7 +341,7 @@ class UnionTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `union of more than two query`(testDB: TestDB) {
-        // Assumptions.assumeTrue { testDb !in TestDB.ALL_MYSQL }
+        // Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
 
         withCitiesAndUsers(testDB) { _, users, _ ->
             val andreyQuery = users.selectAll().where { users.id eq "andrey" }

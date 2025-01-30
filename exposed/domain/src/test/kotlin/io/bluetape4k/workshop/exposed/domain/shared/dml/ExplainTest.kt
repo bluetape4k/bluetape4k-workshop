@@ -58,8 +58,8 @@ class ExplainTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `explain with statements not executed`(testDb: TestDB) {
-        withTables(testDb, Countries) {
+    fun `explain with statements not executed`(testDB: TestDB) {
+        withTables(testDB, Countries) {
             val originalCode = "ABC"
 
             explain { Countries.insert { it[code] = originalCode } }.toList()  //
@@ -109,7 +109,7 @@ class ExplainTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `explain with all valid statements not executed`(testDb: TestDB) {
+    fun `explain with all valid statements not executed`(testDB: TestDB) {
         var explainCount = 0
         val cityName = "City A"
 
@@ -118,7 +118,7 @@ class ExplainTest: AbstractExposedTest() {
             explainCount++
         }
 
-        withCitiesAndUsers(testDb) { cities, users, userData ->
+        withCitiesAndUsers(testDB) { cities, users, userData ->
             val testDialect = currentDialectTest
             debug = true
             statementCount = 0
@@ -199,12 +199,12 @@ class ExplainTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `explain with alalyze`(testDb: TestDB) {
-        withTables(testDb, Countries) {
+    fun `explain with alalyze`(testDB: TestDB) {
+        withTables(testDB, Countries) {
             val originalCode = "ABC"
 
             // MySQL only allows ANALYZE with SELECT queries
-            if (testDb !in TestDB.ALL_MYSQL) {
+            if (testDB !in TestDB.ALL_MYSQL) {
                 // analyze means all wrapped statements should also be executed
                 // EXPLAIN ANALYZE INSERT INTO COUNTRIES (COUNTRY_CODE) VALUES ('ABC')
                 explain(analyze = true) { Countries.insert { it[code] = originalCode } }.toList()
@@ -220,7 +220,7 @@ class ExplainTest: AbstractExposedTest() {
             }
 
             // In MySql prior 8 the EXPLAIN command should be used without ANALYZE modifier
-            val analyze = testDb != MYSQL_V5
+            val analyze = testDB != MYSQL_V5
             // EXPLAIN ANALYZE SELECT COUNTRIES.ID, COUNTRIES.COUNTRY_CODE FROM COUNTRIES
             explain(analyze = analyze) { Countries.selectAll() }.toList()
         }
@@ -250,13 +250,13 @@ class ExplainTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `explain with options`(testDb: TestDB) {
+    fun `explain with options`(testDB: TestDB) {
         val optionsAvailableDb = TestDB.ALL_POSTGRES + TestDB.ALL_MYSQL
 
-        Assumptions.assumeTrue { testDb in optionsAvailableDb }
+        Assumptions.assumeTrue { testDB in optionsAvailableDb }
 
-        withTables(testDb, Countries) {
-            val formatOption = when (testDb) {
+        withTables(testDB, Countries) {
+            val formatOption = when (testDB) {
                 in TestDB.ALL_MYSQL_LIKE -> "FORMAT=JSON"
                 in TestDB.ALL_POSTGRES -> "FORMAT JSON"
                 else -> throw UnsupportedOperationException("Format option not provided for this dialect")
@@ -266,20 +266,20 @@ class ExplainTest: AbstractExposedTest() {
             val result = explain(options = formatOption) { query }.single()
             val jsonString = result.toString().substringAfter("=")
             log.debug { "JSON: $jsonString" }
-            when (testDb) {
+            when (testDB) {
                 in TestDB.ALL_MYSQL_LIKE -> jsonString.startsWith('{').shouldBeTrue()
                 else -> jsonString.startsWith('[').shouldBeTrue()
             }
 
             // test multiple options only
-            if (testDb in TestDB.ALL_POSTGRES) {
+            if (testDB in TestDB.ALL_POSTGRES) {
                 // EXPLAIN (VERBOSE TRUE, COSTS FALSE) SELECT countries.id FROM countries WHERE countries.country_code LIKE 'A%'
                 explain(options = "VERBOSE TRUE, COSTS FALSE") { query }.toList()
             }
 
             // test analyze + options
-            val analyze = testDb != MYSQL_V5
-            val combinedOption = if (testDb == MYSQL_V8) "FORMAT=TREE" else formatOption
+            val analyze = testDB != MYSQL_V5
+            val combinedOption = if (testDB == MYSQL_V8) "FORMAT=TREE" else formatOption
             explain(analyze, combinedOption) { query }.toList()
         }
     }
@@ -295,8 +295,8 @@ class ExplainTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `explain with invalid statements`(testDb: TestDB) {
-        withTables(testDb, Countries) {
+    fun `explain with invalid statements`(testDB: TestDB) {
+        withTables(testDB, Countries) {
             expectException<IllegalStateException> {
                 // EXPLAIN INSERT INTO COUNTRIES (COUNTRY_CODE) VALUES ('ABC')
                 explain { Countries.insertAndGetId { it[code] = "ABC" } }

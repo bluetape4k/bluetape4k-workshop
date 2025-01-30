@@ -48,7 +48,7 @@ class CreateIndexTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create standard index`(testDb: TestDB) {
+    fun `create standard index`(testDB: TestDB) {
         val testTable = object: Table("test_table") {
             val id = integer("id")
             val name = varchar("name", 42)
@@ -57,7 +57,7 @@ class CreateIndexTest: AbstractExposedTest() {
             val byName = index("test_table_by_name", false, name)
         }
 
-        withTables(testDb, testTable) {
+        withTables(testDB, testTable) {
             // SchemaUtils.createMissingTablesAndColumns(testTable)
             val statemnts = MigrationUtils.statementsRequiredForDatabaseMigration(testTable)
             exec(statemnts.joinToString(";"))
@@ -79,8 +79,8 @@ class CreateIndexTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create hash index`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb !in TestDB.ALL_MYSQL_LIKE }
+    fun `create hash index`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL_LIKE }
 
         val testTable = object: Table("test_table") {
             val id = integer("id")
@@ -90,7 +90,7 @@ class CreateIndexTest: AbstractExposedTest() {
             val byName = index("test_table_by_name", false, name)
         }
 
-        withTables(testDb, testTable) {
+        withTables(testDB, testTable) {
             // SchemaUtils.createMissingTablesAndColumns(testTable)
             val statemnts = MigrationUtils.statementsRequiredForDatabaseMigration(testTable)
             exec(statemnts.joinToString(";"))
@@ -112,8 +112,8 @@ class CreateIndexTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create index with table in different schema`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb == TestDB.H2 || testDb == TestDB.H2_PSQL }
+    fun `create index with table in different schema`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB == TestDB.H2 || testDB == TestDB.H2_PSQL }
 
         val testTable = object: Table("test_table") {
             val id = integer("id")
@@ -127,7 +127,7 @@ class CreateIndexTest: AbstractExposedTest() {
         val schema1 = Schema("Schema1")
         val schema2 = Schema("Schema2")
 
-        withSchemas(testDb, schema1, schema2) {
+        withSchemas(testDB, schema1, schema2) {
             SchemaUtils.setSchema(schema1)
             SchemaUtils.createMissingTablesAndColumns(testTable)
 //            val statemnts = MigrationUtils.statementsRequiredForDatabaseMigration(testTable)
@@ -164,8 +164,8 @@ class CreateIndexTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create and drop partial index with postgres`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb == TestDB.POSTGRESQL }
+    fun `create and drop partial index with postgres`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB == TestDB.POSTGRESQL }
 
         val partialIndexTable = object: IntIdTable("PartialIndexTableTest") {
             val name = varchar("name", 50)
@@ -184,7 +184,7 @@ class CreateIndexTest: AbstractExposedTest() {
             }
         }
 
-        withDb(testDb) {
+        withDb(testDB) {
             SchemaUtils.createMissingTablesAndColumns(partialIndexTable)
             partialIndexTable.exists().shouldBeTrue()
 
@@ -231,8 +231,8 @@ class CreateIndexTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create and drop partial index`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb == TestDB.POSTGRESQL }
+    fun `create and drop partial index`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB == TestDB.POSTGRESQL }
 
         val tester = object: Table("tester") {
             val name = varchar("name", 32).uniqueIndex()
@@ -245,7 +245,7 @@ class CreateIndexTest: AbstractExposedTest() {
             }
         }
 
-        withDb(testDb) {
+        withDb(testDB) {
             SchemaUtils.createMissingTablesAndColumns(tester)
             tester.exists().shouldBeTrue()
 
@@ -309,7 +309,7 @@ class CreateIndexTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `partial index not created`(testDb: TestDB) {
+    fun `partial index not created`(testDB: TestDB) {
         val tester = object: Table("tester") {
             val age = integer("age")
 
@@ -318,7 +318,7 @@ class CreateIndexTest: AbstractExposedTest() {
             }
         }
 
-        withTables(testDb, tester) {
+        withTables(testDB, tester) {
 //            SchemaUtils.createMissingTablesAndColumns()
             val statemnts = MigrationUtils.statementsRequiredForDatabaseMigration()
             exec(statemnts.joinToString(";"))
@@ -349,9 +349,9 @@ class CreateIndexTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create and drop functional index`(testDb: TestDB) {
+    fun `create and drop functional index`(testDB: TestDB) {
         // H2 does not support functional indexes
-        Assumptions.assumeTrue { testDb !in TestDB.ALL_H2 && testDb != TestDB.MYSQL_V5 }
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_H2 && testDB != TestDB.MYSQL_V5 }
 
         val tester = object: IntIdTable("tester") {
             val amount = integer("amount")
@@ -365,7 +365,7 @@ class CreateIndexTest: AbstractExposedTest() {
             }
         }
 
-        withTables(testDb, tester) {
+        withTables(testDB, tester) {
             SchemaUtils.createMissingTablesAndColumns()
 //            val statemnts = MigrationUtils.statementsRequiredForDatabaseMigration()
 //            exec(statemnts.joinToString(";"))

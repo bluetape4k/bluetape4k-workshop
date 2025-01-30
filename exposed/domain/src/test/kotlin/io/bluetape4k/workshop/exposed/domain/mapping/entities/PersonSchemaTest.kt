@@ -329,8 +329,8 @@ class PersonSchemaTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `insert select example 01`(testDb: TestDB) {
-        withPersonsAndAddress(testDb) { persons, _ ->
+    fun `insert select example 01`(testDB: TestDB) {
+        withPersonsAndAddress(testDB) { persons, _ ->
             persons.selectAll().count() shouldBeEqualTo 6L
 
             val inserted = persons.insert(
@@ -370,24 +370,25 @@ class PersonSchemaTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `insert select example 02`(testDb: TestDB) {
-        withPersonsAndAddress(testDb) { persons, _ ->
+    fun `insert select example 02`(testDB: TestDB) {
+        withPersonsAndAddress(testDB) { persons, _ ->
             persons.selectAll().count() shouldBeEqualTo 6L
 
-            // PersonTaleDML 은 PersonTable과 같은 테이블을 사용하지만,
+            // PersonTaleDML 은 PersonTable과 물리적으로 같은 테이블을 사용하지만,
             // id에 AutoIncrement 를 지정하지 않아, 이렇게 id를 직접 지정할 수 있습니다.
             val personsDml = PersonSchema.PersonTableDML
 
             val inserted = personsDml.insert(
-                personsDml.select(
-                    personsDml.id + 100L,
-                    personsDml.firstName,
-                    personsDml.lastName,
-                    personsDml.birthDate,
-                    personsDml.employeed,
-                    personsDml.occupation,
-                    personsDml.addressId
-                )
+                personsDml
+                    .select(
+                        personsDml.id + 100L,
+                        personsDml.firstName,
+                        personsDml.lastName,
+                        personsDml.birthDate,
+                        personsDml.employeed,
+                        personsDml.occupation,
+                        personsDml.addressId
+                    )
                     .orderBy(personsDml.id)
             )
 

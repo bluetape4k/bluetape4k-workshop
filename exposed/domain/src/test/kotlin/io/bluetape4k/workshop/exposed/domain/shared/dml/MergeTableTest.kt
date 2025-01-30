@@ -54,8 +54,8 @@ class MergeTableTest: MergeBaseTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `mergeFrom with whenNotMatchedInsert`(testDb: TestDB) {
-        withMergeTestTablesAndDefaultData(testDb) { dest, source ->
+    fun `mergeFrom with whenNotMatchedInsert`(testDB: TestDB) {
+        withMergeTestTablesAndDefaultData(testDB) { dest, source ->
             dest.mergeFrom(
                 source,
                 on = { defaultOnCondition() }
@@ -88,8 +88,8 @@ class MergeTableTest: MergeBaseTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `mergeFrom with whenNotMatchedInsert by alias`(testDb: TestDB) {
-        withMergeTestTablesAndDefaultData(testDb) { dest, source ->
+    fun `mergeFrom with whenNotMatchedInsert by alias`(testDB: TestDB) {
+        withMergeTestTablesAndDefaultData(testDB) { dest, source ->
             val destAlias = dest.alias("dest_alias")
             val sourceAlias = source.alias("source_alias")
 
@@ -121,8 +121,8 @@ class MergeTableTest: MergeBaseTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `mergeFrom with whenMatchedUpdate`(testDb: TestDB) {
-        withMergeTestTablesAndDefaultData(testDb) { dest, source ->
+    fun `mergeFrom with whenMatchedUpdate`(testDB: TestDB) {
+        withMergeTestTablesAndDefaultData(testDB) { dest, source ->
             dest.mergeFrom(
                 source,
                 on = { defaultOnCondition() }
@@ -154,8 +154,8 @@ class MergeTableTest: MergeBaseTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `mergeFrom with whenMatchedUpdate by alias`(testDb: TestDB) {
-        withMergeTestTablesAndDefaultData(testDb) { dest, source ->
+    fun `mergeFrom with whenMatchedUpdate by alias`(testDB: TestDB) {
+        withMergeTestTablesAndDefaultData(testDB) { dest, source ->
             val destAlias = dest.alias("dest_alias")
 
             destAlias.mergeFrom(
@@ -187,8 +187,8 @@ class MergeTableTest: MergeBaseTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `mergeFrom with whenMatchedDelete`(testDb: TestDB) {
-        withMergeTestTablesAndDefaultData(testDb) { dest, source ->
+    fun `mergeFrom with whenMatchedDelete`(testDB: TestDB) {
+        withMergeTestTablesAndDefaultData(testDB) { dest, source ->
             dest.mergeFrom(
                 source,
                 on = { defaultOnCondition() }
@@ -218,8 +218,8 @@ class MergeTableTest: MergeBaseTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `mergeFrom with whenNotMatchedInsert and whenMatchedUpdate`(testDb: TestDB) {
-        withMergeTestTablesAndDefaultData(testDb) { dest, source ->
+    fun `mergeFrom with whenNotMatchedInsert and whenMatchedUpdate`(testDB: TestDB) {
+        withMergeTestTablesAndDefaultData(testDB) { dest, source ->
             dest.mergeFrom(
                 source,
                 on = { defaultOnCondition() }
@@ -258,8 +258,8 @@ class MergeTableTest: MergeBaseTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `mergeFrom with whenMatchedDelete and condition`(testDb: TestDB) {
-        withMergeTestTablesAndDefaultData(testDb) { dest, source ->
+    fun `mergeFrom with whenMatchedDelete and condition`(testDB: TestDB) {
+        withMergeTestTablesAndDefaultData(testDB) { dest, source ->
             dest.mergeFrom(
                 source,
                 on = { defaultOnCondition() }
@@ -306,8 +306,8 @@ class MergeTableTest: MergeBaseTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `mergeFrom with multiple clauses`(testDb: TestDB) {
-        withMergeTestTablesAndDefaultData(testDb) { dest, source ->
+    fun `mergeFrom with multiple clauses`(testDB: TestDB) {
+        withMergeTestTablesAndDefaultData(testDB) { dest, source ->
             dest.mergeFrom(source, on = { defaultOnCondition() }) {
                 whenNotMatchedInsert(and = (source.value eq 1)) {
                     it[dest.key] = source.key
@@ -376,8 +376,8 @@ class MergeTableTest: MergeBaseTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `auto generated on condition`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb !in TestDB.ALL_MYSQL }
+    fun `auto generated on condition`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
 
         val source = object: IdTable<Int>("source") {
             override val id = integer("id").entityId()
@@ -390,7 +390,7 @@ class MergeTableTest: MergeBaseTest() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withTables(testDb, source, dest) {
+        withTables(testDB, source, dest) {
             source.insert {
                 it[id] = 1
                 it[value] = "1"
@@ -434,10 +434,10 @@ class MergeTableTest: MergeBaseTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `mergeFrom with whenNotMatched do nothing in postgres`(testDb: TestDB) {
-        Assumptions.assumeTrue(testDb in TestDB.ALL_POSTGRES)
+    fun `mergeFrom with whenNotMatched do nothing in postgres`(testDB: TestDB) {
+        Assumptions.assumeTrue(testDB in TestDB.ALL_POSTGRES)
 
-        withMergeTestTablesAndDefaultData(testDb) { dest, source ->
+        withMergeTestTablesAndDefaultData(testDB) { dest, source ->
             dest.mergeFrom(
                 source,
                 on = { defaultOnCondition() }
@@ -473,10 +473,10 @@ class MergeTableTest: MergeBaseTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `mergeFrom with whenMatched do nothing in postgres`(testDb: TestDB) {
-        Assumptions.assumeTrue(testDb in TestDB.ALL_POSTGRES)
+    fun `mergeFrom with whenMatched do nothing in postgres`(testDB: TestDB) {
+        Assumptions.assumeTrue(testDB in TestDB.ALL_POSTGRES)
 
-        withMergeTestTablesAndDefaultData(testDb) { dest, source ->
+        withMergeTestTablesAndDefaultData(testDB) { dest, source ->
             dest.mergeFrom(
                 source,
                 on = { defaultOnCondition() }
@@ -508,8 +508,8 @@ class MergeTableTest: MergeBaseTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `with overridingSystemValue option in postgres`(testDb: TestDB) {
-        Assumptions.assumeTrue(testDb in TestDB.ALL_POSTGRES)
+    fun `with overridingSystemValue option in postgres`(testDB: TestDB) {
+        Assumptions.assumeTrue(testDB in TestDB.ALL_POSTGRES)
 
         val source = object: IntIdTable("src") {}
         val dest = object: IdTable<Int>("dest") {
@@ -519,7 +519,7 @@ class MergeTableTest: MergeBaseTest() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withTables(testDb, source, dest) {
+        withTables(testDB, source, dest) {
             val id = source.insertAndGetId { }
 
             dest.mergeFrom(source) {
@@ -546,8 +546,8 @@ class MergeTableTest: MergeBaseTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `with overridingUserValue option in postgres`(testDb: TestDB) {
-        Assumptions.assumeTrue(testDb in TestDB.ALL_POSTGRES)
+    fun `with overridingUserValue option in postgres`(testDB: TestDB) {
+        Assumptions.assumeTrue(testDB in TestDB.ALL_POSTGRES)
 
         val source = object: IntIdTable("src") {}
 
@@ -567,7 +567,7 @@ class MergeTableTest: MergeBaseTest() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withTables(testDb, source, dest) {
+        withTables(testDB, source, dest) {
             try {
                 source.insertAndGetId { }
 
@@ -598,8 +598,8 @@ class MergeTableTest: MergeBaseTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `insert default value`(testDb: TestDB) {
-        Assumptions.assumeTrue(testDb in TestDB.ALL_POSTGRES)
+    fun `insert default value`(testDB: TestDB) {
+        Assumptions.assumeTrue(testDB in TestDB.ALL_POSTGRES)
 
         val source = object: IntIdTable("source") {
             val value = varchar("value", 128)
@@ -611,7 +611,7 @@ class MergeTableTest: MergeBaseTest() {
                 .databaseGenerated()
         }
 
-        withTables(testDb, source, dest) {
+        withTables(testDB, source, dest) {
             source.insert {
                 it[value] = "user-defined-value"
             }
@@ -644,12 +644,12 @@ class MergeTableTest: MergeBaseTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `mergeFrom with const condition`(testDb: TestDB) {
+    fun `mergeFrom with const condition`(testDB: TestDB) {
         val filteredSourceQuery = Source.selectAll()
             .where { Source.key eq "only-in-source-1" }
             .alias("src")
 
-        withMergeTestTablesAndDefaultData(testDb) { dest, source ->
+        withMergeTestTablesAndDefaultData(testDB) { dest, source ->
             dest.mergeFrom(
                 filteredSourceQuery,
                 on = { Dest.key eq filteredSourceQuery[Source.key] },
@@ -672,10 +672,10 @@ class MergeTableTest: MergeBaseTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `postgres features are unsupported in other databases`(testDb: TestDB) {
-        Assumptions.assumeTrue(testDb !in TestDB.ALL_POSTGRES)
+    fun `postgres features are unsupported in other databases`(testDB: TestDB) {
+        Assumptions.assumeTrue(testDB !in TestDB.ALL_POSTGRES)
 
-        withMergeTestTablesAndDefaultData(testDb) { dest, source ->
+        withMergeTestTablesAndDefaultData(testDB) { dest, source ->
 
             // DO NOTHING
             expectException<UnsupportedByDialectException> {

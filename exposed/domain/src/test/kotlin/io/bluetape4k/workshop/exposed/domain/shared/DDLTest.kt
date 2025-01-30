@@ -48,7 +48,7 @@ class DDLTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `table exists`(testDb: TestDB) {
+    fun `table exists`(testDB: TestDB) {
         val testTable = object: Table() {
             val id = integer("id")
             val name = varchar("name", length = 42)
@@ -56,11 +56,11 @@ class DDLTest: AbstractExposedTest() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withTables(testDb) {
+        withTables(testDB) {
             testTable.exists().shouldBeFalse()
         }
 
-        withTables(testDb, testTable) {
+        withTables(testDB, testTable) {
             testTable.exists().shouldBeTrue()
         }
     }

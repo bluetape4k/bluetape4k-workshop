@@ -32,20 +32,20 @@ abstract class MergeBaseTest: AbstractExposedTest() {
     protected val defaultExcludeSettings = TestDB.ALL_MYSQL + TestDB.ALL_H2_V1
 
     protected fun withMergeTestTables(
-        testDb: TestDB,
+        testDB: TestDB,
         statement: Transaction.(dest: Dest, source: Source) -> Unit,
     ) {
-        Assumptions.assumeTrue(testDb !in defaultExcludeSettings)
-        withTables(testDb, Source, Dest) {
+        Assumptions.assumeTrue(testDB !in defaultExcludeSettings)
+        withTables(testDB, Source, Dest) {
             statement(Dest, Source)
         }
     }
 
     protected fun withMergeTestTablesAndDefaultData(
-        testDb: TestDB,
+        testDB: TestDB,
         statement: Transaction.(dest: Dest, source: Source) -> Unit,
     ) {
-        withMergeTestTables(testDb) { dest, source ->
+        withMergeTestTables(testDB) { dest, source ->
             source.insert(key = "only-in-source-1", value = 1)
             source.insert(key = "only-in-source-2", value = 2)
             source.insert(key = "only-in-source-3", value = 3, optional = "optional-is-present")

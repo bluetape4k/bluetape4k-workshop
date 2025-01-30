@@ -37,10 +37,10 @@ class DeleteTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `delete 01`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb !in limitNotSupported }
+    fun `delete 01`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB !in limitNotSupported }
 
-        withCitiesAndUsers(testDb) { cities, users, userData ->
+        withCitiesAndUsers(testDB) { cities, users, userData ->
             userData.deleteAll()
             userData.selectAll().count() shouldBeEqualTo 0L
 
@@ -72,8 +72,8 @@ class DeleteTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `delete table in context`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, users, userData ->
+    fun `delete table in context`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, userData ->
             userData.deleteAll()
             userData.selectAll().any().shouldBeFalse()
 
@@ -101,8 +101,8 @@ class DeleteTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `delete with limit`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, _, userData ->
+    fun `delete with limit`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, _, userData ->
             if (currentTestDB in limitNotSupported) {
                 expectException<UnsupportedByDialectException> {
                     userData.deleteWhere(limit = 1) { userData.value eq 20 }
@@ -137,8 +137,8 @@ class DeleteTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `delete with single join`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { _, users, userData ->
+    fun `delete with single join`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { _, users, userData ->
             val join = users innerJoin userData
             val query1 = join.selectAll().where { userData.userId like "%ey" }
             query1.count().toInt() shouldBeGreaterThan 0
@@ -176,10 +176,10 @@ class DeleteTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `delete with multiple alias joins`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb !in TestDB.ALL_H2 }
+    fun `delete with multiple alias joins`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_H2 }
 
-        withCitiesAndUsers(testDb) { cities, users, userData ->
+        withCitiesAndUsers(testDB) { cities, users, userData ->
             val towns = cities.alias("towns")
             val people = users.alias("people")
             val stats = userData.alias("stats")
@@ -226,10 +226,10 @@ class DeleteTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `delete with join query`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb !in TestDB.ALL_H2 }
+    fun `delete with join query`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_H2 }
 
-        withCitiesAndUsers(testDb) { _, users, userData ->
+        withCitiesAndUsers(testDB) { _, users, userData ->
             val singleJoinQuery = userData.joinQuery(
                 on = { userData.userId eq it[users.id] },
                 joinPart = { users.select(users.id, users.name).where { users.cityId eq 2 } }
@@ -255,11 +255,11 @@ class DeleteTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `delete with join and limit`(testDb: TestDB) {
+    fun `delete with join and limit`(testDB: TestDB) {
         // limit 기능은 SQL Server, Oracle 에서만 지원한다.
-        Assumptions.assumeTrue { testDb !in (TestDB.ALL_H2 + TestDB.ALL_MYSQL + TestDB.ALL_POSTGRES) }
+        Assumptions.assumeTrue { testDB !in (TestDB.ALL_H2 + TestDB.ALL_MYSQL + TestDB.ALL_POSTGRES) }
 
-        withCitiesAndUsers(testDb) { _, users, userData ->
+        withCitiesAndUsers(testDB) { _, users, userData ->
             val join = users innerJoin userData
             val query = join.selectAll().where { userData.userId eq "smth" }
             val originalCount = query.count()
@@ -282,10 +282,10 @@ class DeleteTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `delete ignore with join`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in TestDB.ALL_MYSQL }
+    fun `delete ignore with join`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in TestDB.ALL_MYSQL }
 
-        withCitiesAndUsers(testDb) { _, users, userData ->
+        withCitiesAndUsers(testDB) { _, users, userData ->
             val join = users innerJoin userData
             val query = join.selectAll().where { userData.userId eq "smth" }
             query.count() shouldBeGreaterThan 0L

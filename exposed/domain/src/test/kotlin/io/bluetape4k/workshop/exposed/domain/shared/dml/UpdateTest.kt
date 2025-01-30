@@ -157,7 +157,7 @@ class UpdateTest: AbstractExposedTest() {
     fun `update with join and limit`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB !in TestDB.ALL_H2 + TestDB.ALL_MYSQL + TestDB.ALL_POSTGRES }
         // val supportsUpdateWithJoinAndLimit = TestDB.ALL_MARIADB + TestDB.ORACLE + TestDB.SQLSERVER
-        // Assumptions.assumeTrue(testDb !in supportsUpdateWithJoinAndLimit)
+        // Assumptions.assumeTrue(testDB !in supportsUpdateWithJoinAndLimit)
         withCitiesAndUsers(testDB) { _, users, userData ->
             val join = users.innerJoin(userData)
 

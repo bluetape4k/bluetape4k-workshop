@@ -216,8 +216,8 @@ class LateralJoinTest: AbstractExposedTest() {
     }
 
     private fun withTestTables(dialect: TestDB, statement: Transaction.(Parent, Child, TestDB) -> Unit) {
-        withTables(dialect, Parent, Child) { testDb ->
-            statement(Parent, Child, testDb)
+        withTables(dialect, Parent, Child) { testDB ->
+            statement(Parent, Child, testDB)
         }
     }
 
@@ -225,7 +225,7 @@ class LateralJoinTest: AbstractExposedTest() {
         testDB: TestDB,
         statement: Transaction.(Parent, Child, TestDB) -> Unit,
     ) {
-        withTestTables(testDB) { parent, child, testDb ->
+        withTestTables(testDB) { parent, child, testDB ->
             val id = parent.insertAndGetId { it[value] = 20 }
 
             child.batchInsert(listOf(10, 30)) { value ->
@@ -233,7 +233,7 @@ class LateralJoinTest: AbstractExposedTest() {
                 this[child.value] = value
             }
 
-            statement(parent, child, testDb)
+            statement(parent, child, testDB)
         }
     }
 

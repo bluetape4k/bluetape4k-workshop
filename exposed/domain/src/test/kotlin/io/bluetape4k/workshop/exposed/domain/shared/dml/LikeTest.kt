@@ -94,8 +94,8 @@ class LikeTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `select with like`(testDb: TestDB) {
-        withTables(testDb, T1) {
+    fun `select with like`(testDB: TestDB) {
+        withTables(testDB, T1) {
             var i = 1
             T1.insert {
                 it[id] = i++

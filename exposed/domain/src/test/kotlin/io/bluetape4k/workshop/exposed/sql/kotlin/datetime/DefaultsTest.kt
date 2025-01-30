@@ -330,7 +330,7 @@ class DefaultsTest: AbstractExposedTest() {
                     "${"t".inProperCase()} (" +
                     "${"id".inProperCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()}${
                         " PRIMARY KEY"
-                        // testDb.takeIf { it != TestDB.SQLITE }?.let { " PRIMARY KEY" } ?: ""
+                        // testDB.takeIf { it != TestDB.SQLITE }?.let { " PRIMARY KEY" } ?: ""
                     }, " +
                     "${"s".inProperCase()} $varCharType${tester.s.constraintNamePart()} DEFAULT 'test' NOT NULL, " +
                     "${"sn".inProperCase()} $varCharType${tester.sn.constraintNamePart()} DEFAULT 'testNullable' NULL, " +
@@ -346,7 +346,7 @@ class DefaultsTest: AbstractExposedTest() {
                     "${"t8".inProperCase()} $longType${tester.t8.constraintNamePart()} ${durLiteral.itOrNull()}, " +
                     "${"t9".inProperCase()} $timeType${tester.t9.constraintNamePart()} ${tLiteral.itOrNull()}, " +
                     "${"t10".inProperCase()} $timeType${tester.t10.constraintNamePart()} ${tLiteral.itOrNull()}" +
-//                    when (testDb) {
+//                    when (testDB) {
 //                        TestDB.SQLITE, TestDB.ORACLE ->
 //                            ", CONSTRAINT chk_t_signed_integer_id CHECK (${"id".inProperCase()} BETWEEN ${Int.MIN_VALUE} AND ${Int.MAX_VALUE})"
 //                        else -> ""

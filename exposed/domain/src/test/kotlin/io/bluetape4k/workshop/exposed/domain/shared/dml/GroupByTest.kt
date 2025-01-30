@@ -53,8 +53,8 @@ class GroupByTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `groupBy example 01`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, users, _ ->
+    fun `groupBy example 01`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, _ ->
             val cAlias = users.id.count().alias("c")
 
             val rows = (cities innerJoin users)
@@ -89,8 +89,8 @@ class GroupByTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `groupBy example 02`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, users, _ ->
+    fun `groupBy example 02`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, _ ->
             val rows = (cities innerJoin users)
                 .select(cities.name, users.id.count())
                 .groupBy(cities.name)
@@ -117,8 +117,8 @@ class GroupByTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `groupBy example 03`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, users, _ ->
+    fun `groupBy example 03`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, _ ->
             val maxExpr: Max<Int, Int> = cities.id.max()
 
             val rows: List<ResultRow> = (cities innerJoin users)
@@ -162,8 +162,8 @@ class GroupByTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `groupBy example 04`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, users, _ ->
+    fun `groupBy example 04`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, _ ->
 
             val rows = (cities innerJoin users)
                 .select(cities.name, users.id.count(), cities.id.max())
@@ -198,8 +198,8 @@ class GroupByTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `groupBy example 06`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, users, _ ->
+    fun `groupBy example 06`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, _ ->
             val maxNullableId = cities.id.max()
 
             cities.select(maxNullableId)
@@ -234,8 +234,8 @@ class GroupByTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `groupBy example 07`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, users, _ ->
+    fun `groupBy example 07`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, _ ->
             val avgIdExpr = cities.id.avg()
             val avgId = cities.select(cities.id).map { it[cities.id] }.average().toBigDecimal().setScale(2)
 
@@ -291,8 +291,8 @@ class GroupByTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `group concat`(testDb: TestDB) {
-        withCitiesAndUsers(testDb) { cities, users, _ ->
+    fun `group concat`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, _ ->
             fun <T: String?> GroupConcat<T>.checkExcept(
                 vararg dialects: VendorDialect.DialectNameProvider,
                 assert: (Map<String, String?>) -> Unit,

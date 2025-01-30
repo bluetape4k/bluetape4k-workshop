@@ -112,7 +112,7 @@ class EntityTest: AbstractExposedTest() {
     fun `text field outside the transaction`(testDB: TestDB) {
         val objectsToVerify = arrayListOf<Pair<Human, TestDB>>()
 
-        withTables(testDB, Humans) { testDb ->
+        withTables(testDB, Humans) { testDB ->
             // INSERT INTO HUMAN (H) VALUES ('foo')
             val y1 = Human.new { h = "foo" }
 
@@ -129,11 +129,11 @@ class EntityTest: AbstractExposedTest() {
              */
             y1.refresh(flush = false)
 
-            objectsToVerify.add(y1 to testDb)
+            objectsToVerify.add(y1 to testDB)
         }
 
-        objectsToVerify.forEach { (human, testDb) ->
-            log.debug { "Verifying $human in $testDb" }
+        objectsToVerify.forEach { (human, testDB) ->
+            log.debug { "Verifying $human in $testDB" }
             human.h shouldBeEqualTo "foo"
         }
     }
@@ -149,8 +149,8 @@ class EntityTest: AbstractExposedTest() {
             objectsToVerify.add(x to testDB)
         }
 
-        objectsToVerify.forEach { (human, testDb) ->
-            log.debug { "Verifying $human in $testDb" }
+        objectsToVerify.forEach { (human, testDB) ->
+            log.debug { "Verifying $human in $testDB" }
             human.h shouldBeEqualTo "foo"
             human.id.value shouldBeEqualTo 2
         }

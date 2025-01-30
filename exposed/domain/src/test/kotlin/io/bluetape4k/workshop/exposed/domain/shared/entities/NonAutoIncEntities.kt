@@ -89,8 +89,8 @@ class NonAutoIncEntities: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `not auto inc table`(testDb: TestDB) {
-        withTables(testDb, NotAutoIntIdTable) {
+    fun `not auto inc table`(testDB: TestDB) {
+        withTables(testDB, NotAutoIntIdTable) {
             val e1 = NotAutoEntity.new(true)
             val e2 = NotAutoEntity.new(false)
 

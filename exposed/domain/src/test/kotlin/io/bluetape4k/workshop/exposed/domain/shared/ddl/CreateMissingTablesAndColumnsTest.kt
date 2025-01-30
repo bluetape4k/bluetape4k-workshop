@@ -60,7 +60,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testCreateMissingTablesAndColumns01(testDb: TestDB) {
+    fun testCreateMissingTablesAndColumns01(testDB: TestDB) {
         val testTable = object: Table("test_table") {
             val id = integer("id")
             val name = varchar("name", length = 42)
@@ -69,7 +69,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withTables(testDb, testTable) {
+        withTables(testDB, testTable) {
             // SchemaUtils.createMissingTablesAndColumns(testTable)
             execCreateMissingTablesAndColumns(testTable)
 
@@ -80,7 +80,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testCreateMissingTablesAndColumns02(testDb: TestDB) {
+    fun testCreateMissingTablesAndColumns02(testDB: TestDB) {
         val testTable = object: IdTable<String>("Users2") {
             override val id: Column<EntityID<String>> = varchar("id", 22)
                 .clientDefault { TimebasedUuid.Epoch.nextIdAsString() }
@@ -93,7 +93,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withDb(testDb) {
+        withDb(testDB) {
             // SchemaUtils.createMissingTablesAndColumns(testTable)
             execCreateMissingTablesAndColumns(testTable)
             
@@ -109,7 +109,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testCreateMissingTablesAndColumnsChangeNullability(testDb: TestDB) {
+    fun testCreateMissingTablesAndColumnsChangeNullability(testDB: TestDB) {
         val t1 = object: IntIdTable("foo") {
             val foo = varchar("foo", 50)
         }
@@ -118,7 +118,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
             val foo = varchar("foo", 50).nullable()
         }
 
-        withDb(testDb) {
+        withDb(testDB) {
             // SchemaUtils.createMissingTablesAndColumns(t1)
             execCreateMissingTablesAndColumns(t1)
 
@@ -148,8 +148,8 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testCreateMissingTablesAndColumnsChangeAutoincrement(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb !in TestDB.ALL_POSTGRES }
+    fun testCreateMissingTablesAndColumnsChangeAutoincrement(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_POSTGRES }
 
         val t1 = object: Table("foo") {
             val id = integer("idcol").autoIncrement()
@@ -165,7 +165,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withDb(testDb) {
+        withDb(testDB) {
             // SchemaUtils.createMissingTablesAndColumns(t1)
             execCreateMissingTablesAndColumns(t1)
 
@@ -189,7 +189,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testAddMissingColumnsStatementsChangeCasing(testDb: TestDB) {
+    fun testAddMissingColumnsStatementsChangeCasing(testDB: TestDB) {
         val t1 = object: Table("foo") {
             val id = integer("idCol")
 
@@ -202,7 +202,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withDb(testDb) {
+        withDb(testDB) {
             if (db.supportsAlterTableWithAddColumn) {
                 // SchemaUtils.createMissingTablesAndColumns(t1)
                 execCreateMissingTablesAndColumns(t1)
@@ -229,7 +229,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testAddMissingColumnsStatementsIdentical(testDb: TestDB) {
+    fun testAddMissingColumnsStatementsIdentical(testDB: TestDB) {
         val t1 = object: Table("foo") {
             val id = integer("idcol")
 
@@ -242,7 +242,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withDb(testDb) {
+        withDb(testDB) {
             // SchemaUtils.createMissingTablesAndColumns(t1)
             execCreateMissingTablesAndColumns(t1)
 
@@ -254,7 +254,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testAddMissingColumnsStatementsIdentical2(testDb: TestDB) {
+    fun testAddMissingColumnsStatementsIdentical2(testDB: TestDB) {
         val t1 = object: Table("foo") {
             val id = integer("idCol")
 
@@ -267,7 +267,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withDb(testDb) {
+        withDb(testDB) {
             // SchemaUtils.createMissingTablesAndColumns(t1)
             execCreateMissingTablesAndColumns(t1)
 
@@ -280,7 +280,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testCreateMissingTablesAndColumnsChangeCascadeType(testDb: TestDB) {
+    fun testCreateMissingTablesAndColumnsChangeCascadeType(testDB: TestDB) {
         val fooTable = object: IntIdTable("foo") {
             val foo = varchar("foo", 50)
         }
@@ -293,7 +293,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
             val foo = optReference("foo", fooTable, onDelete = ReferenceOption.CASCADE)
         }
 
-        withTables(testDb, fooTable, barTable1) {
+        withTables(testDB, fooTable, barTable1) {
             SchemaUtils.createMissingTablesAndColumns(barTable2)
             // execCreateMissingTablesAndColumns(barTable2)
 
@@ -303,15 +303,15 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun addAutoPrimaryKey(testDb: TestDB) {
-        Assumptions.assumeTrue(testDb !in TestDB.ALL_H2)
+    fun addAutoPrimaryKey(testDB: TestDB) {
+        Assumptions.assumeTrue(testDB !in TestDB.ALL_H2)
         val tableName = "Foo"
         val initialTable = object: Table(tableName) {
             val bar = text("bar")
         }
         val t = IntIdTable(tableName)
 
-        withTables(testDb, initialTable) {
+        withTables(testDB, initialTable) {
             t.id.ddl.single() shouldBeEqualTo "ALTER TABLE ${tableName.inProperCase()} ADD ${"id".inProperCase()} ${t.id.columnType.sqlType()} PRIMARY KEY"
             currentDialectTest.tableColumns(t)[t]!!.size shouldBeEqualTo 1
 
@@ -323,7 +323,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testAddNewPrimaryKeyOnExistingColumn(testDb: TestDB) {
+    fun testAddNewPrimaryKeyOnExistingColumn(testDB: TestDB) {
         val tableName = "tester"
         val noPKTable = object: Table(tableName) {
             val bar = integer("bar")
@@ -335,7 +335,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
             override val primaryKey = PrimaryKey(bar)
         }
 
-        withDb(testDb) {
+        withDb(testDB) {
             SchemaUtils.createMissingTablesAndColumns(noPKTable)
             // execCreateMissingTablesAndColumns(noPKTable)
             var primaryKey: PrimaryKeyMetadata? = currentDialectTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
@@ -359,13 +359,13 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun columnsWithDefaultValuesThatHaveNotChangedShouldNotTriggerChange(testDb: TestDB) {
+    fun columnsWithDefaultValuesThatHaveNotChangedShouldNotTriggerChange(testDB: TestDB) {
         var table by Delegates.notNull<Table>()
 
-        withDb(testDb) {
+        withDb(testDB) {
             try {
                 // MySQL doesn't support default values on text columns, hence excluded
-                table = if (testDb !in TestDB.ALL_MYSQL) {
+                table = if (testDB !in TestDB.ALL_MYSQL) {
                     object: Table("varchar_test") {
                         val varchar = varchar("varchar_column", 255).default(" ")
                         val text = text("text_column").default(" ")
@@ -400,16 +400,16 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun columnsWithDefaultValuesThatAreWhitespacesShouldNotBeTreatedAsEmptyStrings(testDb: TestDB) {
+    fun columnsWithDefaultValuesThatAreWhitespacesShouldNotBeTreatedAsEmptyStrings(testDB: TestDB) {
         val tableWhitespaceDefaultVarchar = StringFieldTable("varchar_whitespace_test", false, " ")
         val tableWhitespaceDefaultText = StringFieldTable("text_whitespace_test", true, " ")
         val tableEmptyStringDefaultVarchar = StringFieldTable("varchar_whitespace_test", false, "")
         val tableEmptyStringDefaultText = StringFieldTable("text_whitespace_test", true, "")
 
         // SQLite doesn't support alter table with add column, so it doesn't generate the statements, hence excluded
-        withDb(testDb) {
+        withDb(testDB) {
             // MySQL doesn't support default values on text columns, hence excluded
-            val supportsTextDefault = testDb !in TestDB.ALL_MYSQL
+            val supportsTextDefault = testDB !in TestDB.ALL_MYSQL
             val tablesToTest = listOfNotNull(
                 tableWhitespaceDefaultVarchar to tableEmptyStringDefaultVarchar,
                 (tableWhitespaceDefaultText to tableEmptyStringDefaultText).takeIf { supportsTextDefault },
@@ -425,7 +425,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
                     }.single()[whiteSpaceTable.column] shouldBeEqualTo " "
 
                     val actual = SchemaUtils.statementsRequiredToActualizeScheme(emptyTable)
-                    val expected = 1 // if (testDb == TestDB.SQLSERVER) 2 else 1
+                    val expected = 1 // if (testDB == TestDB.SQLSERVER) 2 else 1
                     actual.size shouldBeEqualTo expected
 
                     SchemaUtils.drop(whiteSpaceTable)
@@ -447,7 +447,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     @Suppress("MaximumLineLength")
-    fun testAddMissingColumnsStatementsChangeDefault(testDb: TestDB) {
+    fun testAddMissingColumnsStatementsChangeDefault(testDB: TestDB) {
         val t1 = object: Table("foo") {
             val id = integer("idcol")
             val col = integer("col").nullable()
@@ -466,14 +466,14 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
         val complexAlterTable = listOf(TestDB.POSTGRESQL, TestDB.POSTGRESQLNG, TestDB.H2_PSQL)
 
-        withDb(testDb) {
+        withDb(testDB) {
             try {
                 SchemaUtils.createMissingTablesAndColumns(t1)
                 // execCreateMissingTablesAndColumns(t1)
 
                 val missingStatements = SchemaUtils.addMissingColumnsStatements(t2)
 
-                if (testDb !in complexAlterTable) {
+                if (testDB !in complexAlterTable) {
                     val alterColumnWord = when (currentDialectTest) {
                         is MysqlDialect -> "MODIFY COLUMN"
                         is OracleDialect -> "MODIFY"
@@ -496,14 +496,14 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
             }
         }
 
-        withDb(testDb) {
+        withDb(testDB) {
             try {
                 SchemaUtils.createMissingTablesAndColumns(t2)
                 // execCreateMissingTablesAndColumns(t2)
 
                 val missingStatements = SchemaUtils.addMissingColumnsStatements(t1)
 
-                if (testDb !in complexAlterTable) {
+                if (testDB !in complexAlterTable) {
                     val alterColumnWord = when (currentDialectTest) {
                         is MysqlDialect -> "MODIFY COLUMN"
                         is OracleDialect -> "MODIFY"
@@ -531,7 +531,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `check that running addMissingTablesAndColumns multiple time doesnt affect schema`(testDb: TestDB) {
+    fun `check that running addMissingTablesAndColumns multiple time doesnt affect schema`(testDB: TestDB) {
         val table = object: Table("defaults2") {
             val bool1 = bool("boolCol1").default(false)
             val bool2 = bool("boolCol2").default(true)
@@ -543,7 +543,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
             val enum2 = enumerationByName("enumCol2", 25, TestEnum::class).default(TestEnum.B)
         }
 
-        withDb(testDb) {
+        withDb(testDB) {
             try {
                 SchemaUtils.create(table)
                 SchemaUtils.statementsRequiredToActualizeScheme(table).shouldBeEmpty()
@@ -555,8 +555,8 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun createTableWithMultipleIndexes(testDb: TestDB) {
-        withDb(testDb) {
+    fun createTableWithMultipleIndexes(testDB: TestDB) {
+        withDb(testDB) {
             try {
                 SchemaUtils.createMissingTablesAndColumns(MultipleIndexesTable)
                 // execCreateMissingTablesAndColumns(MultipleIndexesTable)
@@ -569,13 +569,13 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testForeignKeyCreation(testDb: TestDB) {
+    fun testForeignKeyCreation(testDB: TestDB) {
         val usersTable = object: IntIdTable("tmpusers") {}
         val spacesTable = object: IntIdTable("spaces") {
             val userId = reference("userId", usersTable)
         }
 
-        withDb(testDb) {
+        withDb(testDB) {
             SchemaUtils.createMissingTablesAndColumns(usersTable, spacesTable)
             // execCreateMissingTablesAndColumns(usersTable, spacesTable)
             usersTable.exists().shouldBeTrue()
@@ -586,7 +586,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testCamelCaseForeignKeyCreation(testDb: TestDB) {
+    fun testCamelCaseForeignKeyCreation(testDB: TestDB) {
         val ordersTable = object: IntIdTable("tmporders") {
             val traceNumber = char("traceNumber", 10).uniqueIndex()
         }
@@ -595,7 +595,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
         }
 
         // Oracle metadata only returns foreign keys that reference primary keys
-        withDb(testDb) {
+        withDb(testDB) {
             SchemaUtils.createMissingTablesAndColumns(ordersTable, receiptsTable)
             // execCreateMissingTablesAndColumns(ordersTable, receiptsTable)
             ordersTable.exists().shouldBeTrue()
@@ -617,8 +617,8 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testCreateTableWithReferenceMultipleTimes(testDb: TestDB) {
-        withTables(testDb, PlayerTable, SessionsTable) {
+    fun testCreateTableWithReferenceMultipleTimes(testDB: TestDB) {
+        withTables(testDB, PlayerTable, SessionsTable) {
             SchemaUtils.createMissingTablesAndColumns(PlayerTable, SessionsTable)
             SchemaUtils.createMissingTablesAndColumns(PlayerTable, SessionsTable)
             // execCreateMissingTablesAndColumns(PlayerTable, SessionsTable)
@@ -639,10 +639,10 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun createTableWithReservedIdentifierInColumnName(testDb: TestDB) {
-        Assumptions.assumeTrue(testDb == TestDB.MYSQL_V5)
+    fun createTableWithReservedIdentifierInColumnName(testDB: TestDB) {
+        Assumptions.assumeTrue(testDB == TestDB.MYSQL_V5)
 
-        withDb(testDb) {
+        withDb(testDB) {
             SchemaUtils.createMissingTablesAndColumns(T1, T2)
             SchemaUtils.createMissingTablesAndColumns(T1, T2)
 //            execCreateMissingTablesAndColumns(T1, T2)
@@ -668,8 +668,8 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun explicitFkNameIsExplicit(testDb: TestDB) {
-        withTables(testDb, PlayerTable, ExplicitTable, NonExplicitTable) {
+    fun explicitFkNameIsExplicit(testDB: TestDB) {
+        withTables(testDB, PlayerTable, ExplicitTable, NonExplicitTable) {
             ExplicitTable.playerId.foreignKey!!.customFkName shouldBeEqualTo "Explicit_FK_NAME"
             NonExplicitTable.playerId.foreignKey!!.customFkName.shouldBeNull()
         }
@@ -686,13 +686,13 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `test create table with name from system scheme`(testDb: TestDB) {
+    fun `test create table with name from system scheme`(testDB: TestDB) {
         val usersTable = object: IdTable<String>("users") {
             override var id: Column<EntityID<String>> = varchar("id", 190).entityId()
 
             override val primaryKey = PrimaryKey(id)
         }
-        withDb(testDb) {
+        withDb(testDB) {
             try {
                 SchemaUtils.createMissingTablesAndColumns(usersTable)
                 // execCreateMissingTablesAndColumns(usersTable)
@@ -720,8 +720,8 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testCreateCompositePrimaryKeyTableAndCompositeForeignKeyTableMultipleTimes(testDb: TestDB) {
-        withTables(testDb, CompositePrimaryKeyTable, CompositeForeignKeyTable) {
+    fun testCreateCompositePrimaryKeyTableAndCompositeForeignKeyTableMultipleTimes(testDB: TestDB) {
+        withTables(testDB, CompositePrimaryKeyTable, CompositeForeignKeyTable) {
             SchemaUtils.createMissingTablesAndColumns(CompositePrimaryKeyTable, CompositeForeignKeyTable)
             SchemaUtils.createMissingTablesAndColumns(CompositePrimaryKeyTable, CompositeForeignKeyTable)
             val statements =
@@ -732,13 +732,13 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testCreateTableWithQuotedIdentifiers(testDb: TestDB) {
+    fun testCreateTableWithQuotedIdentifiers(testDB: TestDB) {
         val identifiers = listOf("\"IdentifierTable\"", "\"IDentiFierCoLUmn\"")
         val quotedTable = object: Table(identifiers[0]) {
             val column1 = varchar(identifiers[1], 32)
         }
 
-        withDb(testDb) {
+        withDb(testDB) {
             try {
                 SchemaUtils.createMissingTablesAndColumns(quotedTable)
                 quotedTable.exists().shouldBeTrue()
@@ -753,25 +753,25 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testCreateCompositePrimaryKeyTableAndCompositeForeignKeyInVariousOrder(testDb: TestDB) {
-        withTables(testDb, CompositeForeignKeyTable, CompositePrimaryKeyTable) {
+    fun testCreateCompositePrimaryKeyTableAndCompositeForeignKeyInVariousOrder(testDB: TestDB) {
+        withTables(testDB, CompositeForeignKeyTable, CompositePrimaryKeyTable) {
             SchemaUtils.createMissingTablesAndColumns(CompositePrimaryKeyTable, CompositeForeignKeyTable)
         }
-        withTables(testDb, CompositeForeignKeyTable, CompositePrimaryKeyTable) {
+        withTables(testDB, CompositeForeignKeyTable, CompositePrimaryKeyTable) {
             SchemaUtils.createMissingTablesAndColumns(CompositeForeignKeyTable, CompositePrimaryKeyTable)
         }
-        withTables(testDb, CompositePrimaryKeyTable, CompositeForeignKeyTable) {
+        withTables(testDB, CompositePrimaryKeyTable, CompositeForeignKeyTable) {
             SchemaUtils.createMissingTablesAndColumns(CompositePrimaryKeyTable, CompositeForeignKeyTable)
         }
-        withTables(testDb, CompositePrimaryKeyTable, CompositeForeignKeyTable) {
+        withTables(testDB, CompositePrimaryKeyTable, CompositeForeignKeyTable) {
             SchemaUtils.createMissingTablesAndColumns(CompositeForeignKeyTable, CompositePrimaryKeyTable)
         }
     }
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testCreateTableWithSchemaPrefix(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb !in TestDB.ALL_MYSQL }
+    fun testCreateTableWithSchemaPrefix(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
 
         val schemaName = "my_schema"
         // index and foreign key both use table name to auto-generate their own names & to compare metadata
@@ -785,7 +785,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
         }
 
         // SQLite does not recognize creation of schema other than the attached database
-        withDb(testDb) {
+        withDb(testDB) {
             val schema = Schema(schemaName)
 
             // Should not require to be in the same schema
@@ -815,7 +815,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testNoChangesOnCreateMissingNullableColumns(testDb: TestDB) {
+    fun testNoChangesOnCreateMissingNullableColumns(testDB: TestDB) {
         val testerWithDefaults = object: Table("tester") {
             val defaultNullNumber = integer("default_null_number").nullable().default(null)
             val defaultNullWord = varchar("default_null_word", 8).nullable().default(null)
@@ -840,7 +840,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
             testerWithoutDefaults to testerWithDefaults,
             testerWithoutDefaults to testerWithoutDefaults
         ).forEach { (existingTable, definedTable) ->
-            withTables(testDb, existingTable) {
+            withTables(testDB, existingTable) {
                 SchemaUtils.statementsRequiredToActualizeScheme(definedTable).also {
                     it.shouldBeEmpty()
                 }
@@ -850,7 +850,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testChangesOnCreateMissingNullableColumns(testDb: TestDB) {
+    fun testChangesOnCreateMissingNullableColumns(testDB: TestDB) {
         val testerWithDefaults = object: Table("tester") {
             val defaultNullString = varchar("default_null_string", 8).nullable().default("NULL")
             val defaultNumber = integer("default_number").default(999).nullable()
@@ -867,7 +867,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
             testerWithDefaults to testerWithoutDefaults,
             testerWithoutDefaults to testerWithDefaults,
         ).forEach { (existingTable, definedTable) ->
-            withTables(testDb, existingTable) {
+            withTables(testDB, existingTable) {
                 SchemaUtils.statementsRequiredToActualizeScheme(definedTable).also {
                     it.shouldNotBeEmpty()
                 }
@@ -878,7 +878,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
             testerWithDefaults to testerWithDefaults,
             testerWithoutDefaults to testerWithoutDefaults
         ).forEach { (existingTable, definedTable) ->
-            withTables(testDb, existingTable) {
+            withTables(testDB, existingTable) {
                 SchemaUtils.statementsRequiredToActualizeScheme(definedTable).also {
                     it.shouldBeEmpty()
                 }
@@ -888,21 +888,21 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testFloatDefaultColumnValue(testDb: TestDB) {
+    fun testFloatDefaultColumnValue(testDB: TestDB) {
         val tester = object: Table("testFloatDefaultColumnValue") {
             val float = float("float_value").default(30.0f)
             val double = double("double_value").default(30.0)
             val floatExpression = float("float_expression_value").defaultExpression(floatLiteral(30.0f))
             val doubleExpression = double("double_expression_value").defaultExpression(doubleLiteral(30.0))
         }
-        withTables(testDb, tester) {
+        withTables(testDB, tester) {
             SchemaUtils.statementsRequiredToActualizeScheme(tester).shouldBeEmpty()
         }
     }
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun testColumnTypesWithDefinedSizeAndScale(testDb: TestDB) {
+    fun testColumnTypesWithDefinedSizeAndScale(testDB: TestDB) {
         val originalTable = object: Table("tester") {
             val tax = decimal("tax", 3, 1)
             val address = varchar("address", 8)
@@ -922,7 +922,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
         val provinceValue = "CC"
 
         // SQLite doesn't support alter table with add column, so it doesn't generate alter statements
-        withTables(testDb, originalTable) {
+        withTables(testDB, originalTable) {
             expectException<IllegalArgumentException> {
                 originalTable.insert {
                     it[tax] = taxValue

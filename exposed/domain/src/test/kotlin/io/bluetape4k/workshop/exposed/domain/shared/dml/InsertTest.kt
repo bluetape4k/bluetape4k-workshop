@@ -942,12 +942,12 @@ class InsertTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `insert into nullable generated column`(testDb: TestDB) {
-        withDb(testDb) {
+    fun `insert into nullable generated column`(testDB: TestDB) {
+        withDb(testDB) {
             val generatedTable = object: IntIdTable("generatedTable") {
                 val amount = integer("amount").nullable()
                 val computedAmount = integer("computed_amount").nullable().databaseGenerated().apply {
-                    if (testDb in TestDB.ALL_H2) {
+                    if (testDB in TestDB.ALL_H2) {
                         withDefinition("GENERATED ALWAYS AS (AMOUNT + 1 )")
                     } else {
                         withDefinition("GENERATED ALWAYS AS (AMOUNT + 1 ) STORED")

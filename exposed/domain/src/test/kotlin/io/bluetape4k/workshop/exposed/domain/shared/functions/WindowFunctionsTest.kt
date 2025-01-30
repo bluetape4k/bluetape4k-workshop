@@ -184,7 +184,7 @@ class WindowFunctionsTest: AbstractExposedTest() {
     fun testAggregateFunctionsAsWindowFunctions(testDB: TestDB) {
         Assumptions.assumeTrue { testDB != TestDB.MYSQL_V5 }
 
-        withSales(testDB) { testDb, sales ->
+        withSales(testDB) { testDB, sales ->
             sales.assertWindowFunctionDefinition(
                 sales.amount.min().over().partitionBy(sales.year, sales.product),
                 listOfBigDecimal("550.1", "1500.25", "550.1", "1620.1", "650.7", "10.2", "1620.1")
@@ -206,7 +206,7 @@ class WindowFunctionsTest: AbstractExposedTest() {
                 listOf(2, 1, 2, 2, 1, 1, 2)
             )
 
-            if (testDb in supportsStatisticsAggregateFunctions) {
+            if (testDB in supportsStatisticsAggregateFunctions) {
                 sales.assertWindowFunctionDefinition(
                     sales.amount.stdDevPop().over().partitionBy(sales.year, sales.product),
                     listOfBigDecimal("175.1", "0", "175.1", "125.4", "0", "0", "125.4")
@@ -225,7 +225,7 @@ class WindowFunctionsTest: AbstractExposedTest() {
                 )
             }
 
-            if (testDb in supportsCountDistinctAsWindowFunction) {
+            if (testDB in supportsCountDistinctAsWindowFunction) {
                 sales.assertWindowFunctionDefinition(
                     sales.amount.countDistinct().over().partitionBy(sales.year, sales.product),
                     listOf(2, 1, 2, 2, 1, 1, 2)
@@ -290,7 +290,7 @@ class WindowFunctionsTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testWindowFrameClause(testDB: TestDB) {
         Assumptions.assumeTrue { testDB != TestDB.MYSQL_V5 }
-        withSales(testDB) { testDb, sales ->
+        withSales(testDB) { testDB, sales ->
             sales.assertWindowFunctionDefinition(
                 sumAmountPartitionByYearProductOrderByAmount(sales).rows(WindowFrameBound.unboundedPreceding()),
                 listOfBigDecimal("550.1", "1500.25", "1450.4", "1620.1", "650.7", "10.2", "3491")
@@ -334,7 +334,7 @@ class WindowFunctionsTest: AbstractExposedTest() {
                 listOfBigDecimal("550.1", "1500.25", "900.3", "1620.1", "650.7", "10.2", "1870.9")
             )
 
-            if (testDb in supportsExpressionsInWindowFrameClause) {
+            if (testDB in supportsExpressionsInWindowFrameClause) {
                 sales.assertWindowFunctionDefinition(
                     sumAmountPartitionByYearProductOrderByAmount(sales).rows(
                         WindowFrameBound.offsetPreceding(intLiteral(1) + intLiteral(1)),
@@ -359,7 +359,7 @@ class WindowFunctionsTest: AbstractExposedTest() {
                 listOfBigDecimal("550.1", "1500.25", "900.3", "1620.1", "650.7", "10.2", "1870.9")
             )
 
-            if (testDb in supportsRangeModeWithOffsetFrameBound) {
+            if (testDB in supportsRangeModeWithOffsetFrameBound) {
                 sales.assertWindowFunctionDefinition(
                     sumAmountPartitionByYearProductOrderByAmount(sales).range(WindowFrameBound.offsetPreceding(1)),
                     listOfBigDecimal("550.1", "1500.25", "900.3", "1620.1", "650.7", "10.2", "1870.9")
@@ -390,7 +390,7 @@ class WindowFunctionsTest: AbstractExposedTest() {
                     listOfBigDecimal("550.1", "1500.25", "900.3", "1620.1", "650.7", "10.2", "1870.9")
                 )
 
-                if (testDb in supportsExpressionsInWindowFrameClause) {
+                if (testDB in supportsExpressionsInWindowFrameClause) {
                     sales.assertWindowFunctionDefinition(
                         sumAmountPartitionByYearProductOrderByAmount(sales).range(
                             WindowFrameBound.offsetPreceding(intLiteral(1) + intLiteral(1)),

@@ -48,10 +48,10 @@ class CreateTableTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create table with duplicated column`(testDb: TestDB) {
+    fun `create table with duplicated column`(testDB: TestDB) {
         val assertionFailureMessage = "Can't create a table with multiple columns having the same name"
 
-        withDb(testDb) {
+        withDb(testDB) {
             assertFails(assertionFailureMessage) {
                 SchemaUtils.create(TableWithDuplicatedColumn)
             }
@@ -73,7 +73,7 @@ class CreateTableTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create id table with primary key by EntityID`(testDb: TestDB) {
+    fun `create id table with primary key by EntityID`(testDB: TestDB) {
         val tester = object: IdTable<String>("test_table") {
             val column1 = varchar("column_1", 30)
             override val id = column1.entityId()
@@ -81,7 +81,7 @@ class CreateTableTest: AbstractExposedTest() {
             override val primaryKey = PrimaryKey(id)
         }
 
-        withDb(testDb) {
+        withDb(testDB) {
             val singleColumnDescription = tester.columns.single().descriptionDdl(false)
 
             singleColumnDescription shouldContain "PRIMARY KEY"
@@ -102,7 +102,7 @@ class CreateTableTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create id table with primary key by column`(testDb: TestDB) {
+    fun `create id table with primary key by column`(testDB: TestDB) {
         val tester = object: IdTable<String>("test_table") {
             val column1 = varchar("column_1", 30)
             override val id = column1.entityId()
@@ -110,7 +110,7 @@ class CreateTableTest: AbstractExposedTest() {
             override val primaryKey = PrimaryKey(column1)
         }
 
-        withDb(testDb) {
+        withDb(testDB) {
             val singleColumnDescription = tester.columns.single().descriptionDdl(false)
 
             singleColumnDescription shouldContain "PRIMARY KEY"
@@ -133,7 +133,7 @@ class CreateTableTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create id table with named primary key by column`(testDb: TestDB) {
+    fun `create id table with named primary key by column`(testDB: TestDB) {
         val pkConstraintName = "PK_Constraint_name"
         val testTable = object: IdTable<String>("test_table") {
             val column1 = varchar("column_1", 30)
@@ -142,7 +142,7 @@ class CreateTableTest: AbstractExposedTest() {
             override val primaryKey = PrimaryKey(column1, name = pkConstraintName)
         }
 
-        withDb(testDb) {
+        withDb(testDB) {
             val singleColumn = testTable.columns.single()
 
             log.debug { "DDL: ${testTable.ddl.single()}" }
@@ -169,7 +169,7 @@ class CreateTableTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create table with single column primary key`(testDb: TestDB) {
+    fun `create table with single column primary key`(testDB: TestDB) {
         val stringPKTable = object: Table("string_pk_table") {
             val column1 = varchar("column_1", 30)
 
@@ -181,7 +181,7 @@ class CreateTableTest: AbstractExposedTest() {
             override val primaryKey = PrimaryKey(column1)
         }
 
-        withDb(testDb) {
+        withDb(testDB) {
             val stringColumnDescription = stringPKTable.columns.single().descriptionDdl(false)
             val intColumnDescription = intPKTable.columns.single().descriptionDdl(false)
 
@@ -212,7 +212,7 @@ class CreateTableTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `primary key create table`(testDb: TestDB) {
+    fun `primary key create table`(testDB: TestDB) {
         val account = object: Table("Account") {
             val id1 = integer("id1")
             val id2 = integer("id2")
@@ -220,7 +220,7 @@ class CreateTableTest: AbstractExposedTest() {
             override val primaryKey = PrimaryKey(id1, id2)
         }
 
-        withDb(testDb) {
+        withDb(testDB) {
             val id1ProperName = account.id1.name.inProperCase()
             val id2ProperName = account.id2.name.inProperCase()
             val tableName = account.tableName
@@ -254,11 +254,11 @@ class CreateTableTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `primary key with constraint name create table`(testDb: TestDB) {
+    fun `primary key with constraint name create table`(testDB: TestDB) {
         val pkConstraintName = "PKConstraintName"
 
         // Table with composite primary key
-        withDb(testDb) {
+        withDb(testDB) {
             val id1ProperName = Person.id1.name.inProperCase()
             val id2ProperName = Person.id2.name.inProperCase()
             val tableName = Person.tableName
@@ -277,7 +277,7 @@ class CreateTableTest: AbstractExposedTest() {
 
             override val primaryKey = PrimaryKey(user_name, name = pkConstraintName)
         }
-        withDb(testDb) {
+        withDb(testDB) {
             val userNameProperName = user.user_name.name.inProperCase()
             val tableName = TransactionManager.current().identity(user)
 
@@ -310,8 +310,8 @@ class CreateTableTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `add Composite PrimaryKey To Table`(testDb: TestDB) {
-        withDb(testDb) {
+    fun `add Composite PrimaryKey To Table`(testDB: TestDB) {
+        withDb(testDB) {
             val tableName = Person.tableName
             val tableProperName = tableName.inProperCase()
             val id1ProperName = Person.id1.name.inProperCase()
@@ -324,7 +324,7 @@ class CreateTableTest: AbstractExposedTest() {
             ddlId1.size shouldBeEqualTo 1
             ddlId1.first() shouldBeEqualTo "ALTER TABLE $tableProperName ADD ${Person.id1.descriptionDdl(false)}"
 
-            when (testDb) {
+            when (testDB) {
                 in TestDB.ALL_H2 -> {
                     log.debug { "ddlId2: ${ddlId2.first()}" }
                     log.debug { "Person.id2.ddl: ${Person.id2.ddl.last()}" }
@@ -346,14 +346,14 @@ class CreateTableTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `add One Column PrimaryKey To Table`(testDb: TestDB) {
-        withTables(testDb, Book) {
+    fun `add One Column PrimaryKey To Table`(testDB: TestDB) {
+        withTables(testDB, Book) {
             val tableProperName = Book.tableName.inProperCase()
             val pkConstraintName = Book.primaryKey.name
             val id1ProperName = Book.id.name.inProperCase()
             val ddlId1 = Book.id.ddl
 
-            when (testDb) {
+            when (testDB) {
                 in TestDB.ALL_H2 ->
                     ddlId1 shouldBeEqualTo
                             listOf(
@@ -408,7 +408,7 @@ class CreateTableTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create Table With Explicit Foreign Key Name1`(testDb: TestDB) {
+    fun `create Table With Explicit Foreign Key Name1`(testDB: TestDB) {
         val fkName = "MyForeignKey1"
         val parent = object: LongIdTable("parent1") {}
         val child = object: LongIdTable("child1") {
@@ -420,7 +420,7 @@ class CreateTableTest: AbstractExposedTest() {
                 fkName = fkName
             )
         }
-        withDb(testDb) {
+        withDb(testDB) {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
                 child.autoIncColumn?.autoIncColumnType?.sequence?.createStatement()?.single(),
@@ -447,7 +447,7 @@ class CreateTableTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create Table With Quotes`(testDb: TestDB) {
+    fun `create Table With Quotes`(testDB: TestDB) {
         val parent = object: LongIdTable("\"Parent\"") {}
         val child = object: LongIdTable("\"Child\"") {
             val parentId = reference(
@@ -457,7 +457,7 @@ class CreateTableTest: AbstractExposedTest() {
                 onDelete = ReferenceOption.NO_ACTION,
             )
         }
-        withDb(testDb) {
+        withDb(testDB) {
             val expected = "CREATE TABLE " + addIfNotExistsIfSupported() + "${this.identity(child)} (" +
                     "${child.columns.joinToString { it.descriptionDdl(false) }}," +
                     " CONSTRAINT ${"fk_Child_parent_id__id".inProperCase()}" +
@@ -475,14 +475,14 @@ class CreateTableTest: AbstractExposedTest() {
      * CREATE TABLE IF NOT EXISTS "'CHILD2'" (
      *      ID BIGINT AUTO_INCREMENT PRIMARY KEY,
      *      PARENT_ID BIGINT NOT NULL,
-     *      
+     *
      *      CONSTRAINT FK_CHILD2_PARENT_ID__ID FOREIGN KEY (PARENT_ID) REFERENCES "'PARENT2'"(ID)
      * )
      * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create Table With Single Quotes`(testDb: TestDB) {
+    fun `create Table With Single Quotes`(testDB: TestDB) {
         val parent = object: LongIdTable("'Parent2'") {}
         val child = object: LongIdTable("'Child2'") {
             val parentId = reference(
@@ -492,7 +492,7 @@ class CreateTableTest: AbstractExposedTest() {
                 onDelete = ReferenceOption.NO_ACTION,
             )
         }
-        withDb(testDb) {
+        withDb(testDB) {
             val expected = "CREATE TABLE " + addIfNotExistsIfSupported() + "${this.identity(child)} (" +
                     "${child.columns.joinToString { it.descriptionDdl(false) }}," +
                     " CONSTRAINT ${"fk_Child2_parent_id__id".inProperCase()}" +
@@ -514,7 +514,7 @@ class CreateTableTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create Table With Explicit ForeignKey Name2`(testDb: TestDB) {
+    fun `create Table With Explicit ForeignKey Name2`(testDB: TestDB) {
         val fkName = "MyForeignKey2"
         val parent = object: LongIdTable("parent2") {
             val uniqueId = uuid("uniqueId").clientDefault { UUID.randomUUID() }.uniqueIndex()
@@ -528,7 +528,7 @@ class CreateTableTest: AbstractExposedTest() {
                 fkName = fkName
             )
         }
-        withDb(testDb) {
+        withDb(testDB) {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
                 child.autoIncColumn?.autoIncColumnType?.sequence?.createStatement()?.single(),
@@ -556,7 +556,7 @@ class CreateTableTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create Table With Explicit Foreign Key Name3`(testDb: TestDB) {
+    fun `create Table With Explicit Foreign Key Name3`(testDB: TestDB) {
         val fkName = "MyForeignKey3"
         val parent = object: LongIdTable("parent3") {}
         val child = object: LongIdTable("child3") {
@@ -569,7 +569,7 @@ class CreateTableTest: AbstractExposedTest() {
             )
         }
 
-        withDb(testDb) {
+        withDb(testDB) {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
                 child.autoIncColumn?.autoIncColumnType?.sequence?.createStatement()?.single(),
@@ -598,7 +598,7 @@ class CreateTableTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create Table With Explicit ForeignKey Name4`(testDb: TestDB) {
+    fun `create Table With Explicit ForeignKey Name4`(testDB: TestDB) {
         val fkName = "MyForeignKey4"
         val parent = object: LongIdTable() {
             override val tableName get() = "parent4"
@@ -613,7 +613,7 @@ class CreateTableTest: AbstractExposedTest() {
                 fkName = fkName
             )
         }
-        withDb(testDb) {
+        withDb(testDB) {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
                 child.autoIncColumn?.autoIncColumnType?.sequence?.createStatement()?.single(),
@@ -641,7 +641,7 @@ class CreateTableTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create Table With Explicit Composite ForeignKey Name1`(testDb: TestDB) {
+    fun `create Table With Explicit Composite ForeignKey Name1`(testDB: TestDB) {
         val fkName = "MyForeignKey1"
         val parent = object: Table("parent1") {
             val idA = integer("id_a")
@@ -662,7 +662,7 @@ class CreateTableTest: AbstractExposedTest() {
                 )
             }
         }
-        withDb(testDb) {
+        withDb(testDB) {
             val t = TransactionManager.current()
             val updateCascadePart = " ON UPDATE CASCADE"
             val expected = listOfNotNull(
@@ -691,7 +691,7 @@ class CreateTableTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create Table With Explicit Composite ForeignKey Name2`(testDb: TestDB) {
+    fun `create Table With Explicit Composite ForeignKey Name2`(testDB: TestDB) {
         val fkName = "MyForeignKey2"
         val parent = object: Table("parent2") {
             val idA = integer("id_a")
@@ -715,7 +715,7 @@ class CreateTableTest: AbstractExposedTest() {
             }
         }
 
-        withDb(testDb) {
+        withDb(testDB) {
             val t = TransactionManager.current()
             val expected = listOfNotNull(
                 child.autoIncColumn?.autoIncColumnType?.sequence?.createStatement()?.single(),
@@ -744,10 +744,10 @@ class CreateTableTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create Table With OnDelete Set Default`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb !in TestDB.ALL_MYSQL }
+    fun `create Table With OnDelete Set Default`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
 
-        withDb(testDb) {
+        withDb(testDB) {
             val expected = listOf(
                 "CREATE TABLE " + addIfNotExistsIfSupported() + "${this.identity(Item)} (" +
                         "${Item.columns.joinToString { it.descriptionDdl(false) }}," +
@@ -768,11 +768,11 @@ class CreateTableTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create table with same name in different schemas`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb !in TestDB.ALL_MYSQL }
+    fun `create table with same name in different schemas`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
 
         val one = prepareSchemaForTest("one")
-        withDb(testDb) {
+        withDb(testDB) {
             OneTable.exists().shouldBeFalse()
             OneOneTable.exists().shouldBeFalse()
             try {
@@ -780,7 +780,7 @@ class CreateTableTest: AbstractExposedTest() {
                 OneTable.exists().shouldBeTrue()
                 OneOneTable.exists().shouldBeFalse()
 
-                val schemaPrefixedName = testDb.getDefaultSchemaPrefixedTableName(OneTable.tableName)
+                val schemaPrefixedName = testDB.getDefaultSchemaPrefixedTableName(OneTable.tableName)
                 SchemaUtils.listTables().any {
                     it.equals(schemaPrefixedName, ignoreCase = true)
                 }.shouldBeTrue()
@@ -795,7 +795,7 @@ class CreateTableTest: AbstractExposedTest() {
                 }.shouldBeTrue()
             } finally {
                 SchemaUtils.drop(OneTable, OneOneTable)
-                val cascade = true //testDb != TestDB.SQLSERVER
+                val cascade = true //testDB != TestDB.SQLSERVER
                 SchemaUtils.dropSchema(one, cascade = cascade)
             }
         }
@@ -820,12 +820,12 @@ class CreateTableTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create table with quoted name with camel case`(testDb: TestDB) {
+    fun `create table with quoted name with camel case`(testDB: TestDB) {
         val testTable = object: IntIdTable("quotedTable") {
             val int = integer("intColumn")
         }
 
-        withDb(testDb) {
+        withDb(testDB) {
             try {
                 SchemaUtils.create(testTable)
                 testTable.exists().shouldBeTrue()

@@ -18,10 +18,10 @@ class CreateDatabaseTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create and drop database`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in TestDB.ALL_H2 }
+    fun `create and drop database`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 }
 
-        withDb(testDb) {
+        withDb(testDB) {
             val dbName = "jetbrains"
             try {
                 SchemaUtils.dropDatabase(dbName)
@@ -35,10 +35,10 @@ class CreateDatabaseTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `create and drop database with auto commit`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in TestDB.ALL_H2 }
+    fun `create and drop database with auto commit`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 }
 
-        withDb(testDb) {
+        withDb(testDB) {
             connection.autoCommit = true
             val dbName = "jetbrains"
             try {
@@ -54,10 +54,10 @@ class CreateDatabaseTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `list databases with auto commit`(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in TestDB.ALL_H2 }
+    fun `list databases with auto commit`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 }
 
-        withDb(testDb) {
+        withDb(testDB) {
             connection.autoCommit = true
 
             val dbName = "jetbrains"
@@ -78,10 +78,10 @@ class CreateDatabaseTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `list databases `(testDb: TestDB) {
-        Assumptions.assumeTrue { testDb in TestDB.ALL_H2 }
+    fun `list databases `(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 }
 
-        withDb(testDb) {
+        withDb(testDB) {
             val dbName = "jetbrains"
             val initial = SchemaUtils.listDatabases()
             if (dbName in initial) {

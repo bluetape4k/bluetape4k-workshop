@@ -75,8 +75,8 @@ class SamplesDao: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `dao entity - one to many`(testDb: TestDB) {
-        withTables(testDb, Users, Cities) {
+    fun `dao entity - one to many`(testDB: TestDB) {
+        withTables(testDB, Users, Cities) {
             val seoul = City.new {
                 name = "Seoul"
             }

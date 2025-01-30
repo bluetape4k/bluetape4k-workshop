@@ -53,8 +53,8 @@ class ImmutableEntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `immutable entity read after update`(testDb: TestDB) {
-        withTables(testDb, Organization) {
+    fun `immutable entity read after update`(testDB: TestDB) {
+        withTables(testDB, Organization) {
             transaction {
                 Organization.insert {
                     it[name] = "JetBrains"
@@ -100,8 +100,8 @@ class ImmutableEntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `immutable entity read after update with cached entity`(testDb: TestDB) {
-        withTables(testDb, Organization) {
+    fun `immutable entity read after update with cached entity`(testDB: TestDB) {
+        withTables(testDB, Organization) {
             transaction {
                 Organization.insert {
                     it[name] = "JetBrains"
