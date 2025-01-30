@@ -57,13 +57,14 @@ class AdjustQueryTest: AbstractExposedTest() {
     }
 
     /**
-     * SELECT 컬럼을 변경할 수 있다. (`adjustSelect`).
+     * `adjustSelect` 를 사용하면 Query 의 SELECT 절을 변경할 수 있다.
      *
      * ```sql
      * SELECT USERS."name",
      *        CITIES."name"
      *   FROM USERS INNER JOIN CITIES ON CITIES.CITY_ID = USERS.CITY_ID
-     *  WHERE ((USERS.ID = 'andrey') OR (USERS."name" = 'Sergey')) AND (USERS.CITY_ID = CITIES.CITY_ID)
+     *  WHERE ((USERS.ID = 'andrey') OR (USERS."name" = 'Sergey'))
+     *    AND (USERS.CITY_ID = CITIES.CITY_ID)
      * ```
      */
     @ParameterizedTest
@@ -113,7 +114,8 @@ class AdjustQueryTest: AbstractExposedTest() {
      * ```sql
      * SELECT USERS."name", CITIES."name"
      *   FROM USERS INNER JOIN CITIES ON CITIES.CITY_ID = USERS.CITY_ID
-     *  WHERE (USERS.ID = 'andrey') OR (USERS."name" = 'Sergey')
+     *  WHERE (USERS.ID = 'andrey')
+     *     OR (USERS."name" = 'Sergey')
      * ```
      */
     @ParameterizedTest
@@ -150,7 +152,8 @@ class AdjustQueryTest: AbstractExposedTest() {
      * ```sql
      * SELECT USERS."name", CITIES."name"
      *   FROM USERS INNER JOIN CITIES ON CITIES.CITY_ID = USERS.CITY_ID
-     *  WHERE (USERS.ID = 'andrey') OR (USERS."name" = 'Sergey')
+     *  WHERE (USERS.ID = 'andrey')
+     *     OR (USERS."name" = 'Sergey')
      * ```
      */
     @ParameterizedTest
