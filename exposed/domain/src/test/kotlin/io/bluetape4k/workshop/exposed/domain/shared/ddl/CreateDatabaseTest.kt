@@ -33,10 +33,13 @@ class CreateDatabaseTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Postgres 는 DROP DATABASE 같은 작업 시 `autoCommit` 이 `true` 여야 합니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create and drop database with auto commit`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 }
+        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 + TestDB.ALL_POSTGRES }
 
         withDb(testDB) {
             connection.autoCommit = true
@@ -48,30 +51,6 @@ class CreateDatabaseTest: AbstractExposedTest() {
             }
             SchemaUtils.createDatabase(dbName)
             SchemaUtils.dropDatabase(dbName)
-            connection.autoCommit = false
-        }
-    }
-
-    @ParameterizedTest
-    @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `list databases with auto commit`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 }
-
-        withDb(testDB) {
-            connection.autoCommit = true
-
-            val dbName = "jetbrains"
-            val initial = SchemaUtils.listDatabases()
-            if (dbName in initial) {
-                SchemaUtils.dropDatabase(dbName)
-            }
-
-            SchemaUtils.createDatabase(dbName)
-            SchemaUtils.listDatabases() shouldContain dbName
-
-            SchemaUtils.dropDatabase(dbName)
-            SchemaUtils.listDatabases() shouldNotContain dbName
-
             connection.autoCommit = false
         }
     }
@@ -93,6 +72,33 @@ class CreateDatabaseTest: AbstractExposedTest() {
 
             SchemaUtils.dropDatabase(dbName)
             SchemaUtils.listDatabases() shouldNotContain dbName
+        }
+    }
+
+    /**
+     * Postgres 는 DROP DATABASE 같은 작업 시 `autoCommit` 이 `true` 여야 합니다.
+     */
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `list databases with auto commit`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 + TestDB.ALL_POSTGRES }
+
+        withDb(testDB) {
+            connection.autoCommit = true
+
+            val dbName = "jetbrains"
+            val initial = SchemaUtils.listDatabases()
+            if (dbName in initial) {
+                SchemaUtils.dropDatabase(dbName)
+            }
+
+            SchemaUtils.createDatabase(dbName)
+            SchemaUtils.listDatabases() shouldContain dbName
+
+            SchemaUtils.dropDatabase(dbName)
+            SchemaUtils.listDatabases() shouldNotContain dbName
+
+            connection.autoCommit = false
         }
     }
 }
