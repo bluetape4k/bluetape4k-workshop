@@ -1,6 +1,5 @@
 package io.bluetape4k.workshop.exposed.sql.javatime
 
-import MigrationUtils
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
@@ -663,8 +662,7 @@ class JavaTimeTest: AbstractExposedTest() {
             val date: Column<LocalDate> = date("date").index().defaultExpression(CurrentDate)
         }
         withTables(testDB, tester) {
-            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(tester)
-            statements.shouldBeEmpty()
+            SchemaUtils.statementsRequiredToActualizeScheme(tester).shouldBeEmpty()
         }
     }
 }

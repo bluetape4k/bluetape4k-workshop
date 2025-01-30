@@ -123,8 +123,8 @@ class ColumnDefinitionTest: AbstractExposedTest() {
 
             SchemaUtils.create(tester)
 
-            // SchemaUtils.statementsRequiredToActualizeScheme(tester).shouldBeEmpty()
-            MigrationUtils.statementsRequiredForDatabaseMigration(tester).shouldBeEmpty()
+            SchemaUtils.statementsRequiredToActualizeScheme(tester).shouldBeEmpty()
+            // MigrationUtils.statementsRequiredForDatabaseMigration(tester).shouldBeEmpty()
 
             tester.insert {
                 it[amount] = 111

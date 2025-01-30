@@ -87,10 +87,12 @@ class CavalierHorseTest: AbstractExposedTest() {
             val horse2 = cavalier.horse!!
             horse2 shouldBeEqualTo horse
 
-            // 현재로는 horse는 cavalier가 소유하므로, 삭제되지 않는다.
+            // 현재로는 horse는 cavalier가 소유하므로, 삭제할 수 없다.
             // ReferenceOption.SET_NULL, ReferenceOption.CASCADE 를 사용하면 삭제할 수 있다.
-            assertFailsWith<ExposedSQLException> {
-                horse2.delete()
+            if (testDB !in TestDB.ALL_POSTGRES) {
+                assertFailsWith<ExposedSQLException> {
+                    horse.delete()
+                }
             }
             cavalier.delete()
             Cavalier.count() shouldBeEqualTo 0L

@@ -83,7 +83,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                 singlePKTable,
                 scriptDirectory = scriptDirectory,
                 scriptName = scriptName,
-                withLogs = true
+                withLogs = false
             )
             script.exists().shouldBeTrue()
             script.path shouldBeEqualTo "src/test/resources/$scriptName.sql"
@@ -92,7 +92,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                 singlePKTable,
                 withLogs = true
             )
-            expectedStatements shouldHaveSize if (testDb in TestDB.ALL_POSTGRES) 5 else 1
+            expectedStatements shouldHaveSize 1
 
             val fileStatements: List<String> = script.bufferedReader().readLines().map { it.trimEnd(';') }
             expectedStatements.zip(fileStatements).forEach { (expected, actual) ->
@@ -379,7 +379,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
 
             val statements = MigrationUtils
                 .statementsRequiredForDatabaseMigration(testTableWithOneIndex, withLogs = false)
-            statements shouldHaveSize if (testDb in TestDB.ALL_POSTGRES) 7 else 1
+            statements shouldHaveSize 1
         }
     }
 

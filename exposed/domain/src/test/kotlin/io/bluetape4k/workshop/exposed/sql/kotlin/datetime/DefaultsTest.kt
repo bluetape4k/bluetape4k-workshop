@@ -479,8 +479,7 @@ class DefaultsTest: AbstractExposedTest() {
         }
 
         withTables(testDB, tester) {
-            val actual = MigrationUtils.statementsRequiredForDatabaseMigration(tester)
-            actual.shouldBeEmpty()
+            SchemaUtils.statementsRequiredToActualizeScheme(tester).shouldBeEmpty()
         }
     }
 

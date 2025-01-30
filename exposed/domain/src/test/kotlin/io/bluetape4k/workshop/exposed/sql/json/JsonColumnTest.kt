@@ -618,9 +618,7 @@ class JsonColumnTest: AbstractExposedJsonTest() {
         withDb(testDB) {
             if (testDB == MYSQL_V5) {
                 expectException<IllegalArgumentException> {
-                    // SchemaUtils.createMissingTablesAndColumns(defaultTester)
-                    exec(MigrationUtils.statementsRequiredForDatabaseMigration(defaultTester).single())
-                    db.dialect.resetCaches()
+                    SchemaUtils.createMissingTablesAndColumns(defaultTester)
                 }
             } else {
                 /**
@@ -632,18 +630,7 @@ class JsonColumnTest: AbstractExposedJsonTest() {
                  * )
                  * ```
                  */
-                /**
-                 * Postgres:
-                 * ```sql
-                 * CREATE TABLE IF NOT EXISTS default_tester (
-                 *      user_1 JSON DEFAULT '{"name":"UNKNOWN","team":"UNASSIGNED"}'::json NOT NULL,
-                 *      user_2 JSON NOT NULL
-                 * )
-                 * ```
-                 */
-                // SchemaUtils.createMissingTablesAndColumns(defaultTester)
-                exec(MigrationUtils.statementsRequiredForDatabaseMigration(defaultTester).single())
-                db.dialect.resetCaches()
+                SchemaUtils.createMissingTablesAndColumns(defaultTester)
                 defaultTester.exists().shouldBeTrue()
 
                 // ensure defaults match returned metadata defaults

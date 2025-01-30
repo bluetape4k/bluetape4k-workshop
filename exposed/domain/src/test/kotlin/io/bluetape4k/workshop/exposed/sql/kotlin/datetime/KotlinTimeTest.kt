@@ -1,6 +1,5 @@
 package io.bluetape4k.workshop.exposed.sql.kotlin.datetime
 
-import MigrationUtils
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.TestDB.H2_PSQL
@@ -665,8 +664,7 @@ class KotlinTimeTest: AbstractExposedTest() {
             val date: Column<LocalDate> = date("date").index().defaultExpression(CurrentDate)
         }
         withTables(testDB, testTable) {
-            val statements = MigrationUtils.statementsRequiredForDatabaseMigration(testTable)
-            statements.shouldBeEmpty()
+            SchemaUtils.statementsRequiredToActualizeScheme(testTable).shouldBeEmpty()
         }
     }
 }

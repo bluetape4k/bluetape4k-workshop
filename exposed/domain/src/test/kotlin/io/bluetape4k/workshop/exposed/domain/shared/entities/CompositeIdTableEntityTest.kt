@@ -1,6 +1,5 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
-import MigrationUtils
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
@@ -76,7 +75,7 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
                 allTables.forEach { it.exists().shouldBeTrue() }
 
                 if (testDB !in TestDB.ALL_H2) {
-                    MigrationUtils.statementsRequiredForDatabaseMigration(tables = allTables).shouldBeEmpty()
+                    SchemaUtils.statementsRequiredToActualizeScheme(tables = allTables).shouldBeEmpty()
                 }
             } finally {
                 SchemaUtils.drop(tables = allTables)

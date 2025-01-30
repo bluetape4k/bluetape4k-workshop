@@ -1,6 +1,5 @@
 package io.bluetape4k.workshop.exposed.sql.json
 
-import MigrationUtils
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.TestDB.MYSQL_V5
@@ -138,7 +137,7 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
              */
             val path = when (currentDialectTest) {
                 is PostgreSQLDialect -> arrayOf("user", "name")
-                else                 -> arrayOf(".user.name")
+                else -> arrayOf(".user.name")
             }
             val username = JsonBTable.jsonBColumn.extract<String>(*path)
             val result3 = tester.select(username).singleOrNull()
@@ -161,7 +160,7 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
                 is PostgreSQLDialect ->
                     JsonBTable.jsonBColumn.extract<Int>("logins").castTo(IntegerColumnType())
 
-                else                 ->
+                else ->
                     JsonBTable.jsonBColumn.extract<Int>(".logins")
             }
 
@@ -262,7 +261,7 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
             dataEntity.new { jsonBColumn = jsonA }
             val path = when (currentDialectTest) {
                 is PostgreSQLDialect -> arrayOf("user", "team")
-                else                 -> arrayOf(".user.team")
+                else -> arrayOf(".user.team")
             }
 
             /**
@@ -399,7 +398,7 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
         withJsonBArrays(testDB) { tester, singleId, tripleId ->
             val path1 = when (currentDialectTest) {
                 is PostgreSQLDialect -> arrayOf("users", "0", "team")
-                else                 -> arrayOf(".users[0].team")
+                else -> arrayOf(".users[0].team")
             }
 
             /**
@@ -508,9 +507,7 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
         withDb(testDB) {
             if (testDB == MYSQL_V5) {
                 expectException<IllegalArgumentException> {
-                    // SchemaUtils.createMissingTablesAndColumns(defaultTester)
-                    exec(MigrationUtils.statementsRequiredForDatabaseMigration(defaultTester).single())
-                    db.dialect.resetCaches()
+                    SchemaUtils.createMissingTablesAndColumns(defaultTester)
                 }
             } else {
                 /**
@@ -522,22 +519,11 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
                  * )
                  * ```
                  */
-                /**
-                 * Postgres:
-                 * ```sql
-                 * CREATE TABLE IF NOT EXISTS default_tester (
-                 *      user_1 JSON DEFAULT '{"name":"UNKNOWN","team":"UNASSIGNED"}'::json NOT NULL,
-                 *      user_2 JSON NOT NULL
-                 * )
-                 * ```
-                 */
-                // SchemaUtils.createMissingTablesAndColumns(defaultTester)
-                exec(MigrationUtils.statementsRequiredForDatabaseMigration(defaultTester).single())
-                db.dialect.resetCaches()
+                SchemaUtils.createMissingTablesAndColumns(defaultTester)
                 defaultTester.exists().shouldBeTrue()
 
                 // ensure defaults match returned metadata defaults
-                val alters = MigrationUtils.statementsRequiredForDatabaseMigration(defaultTester)
+                val alters = SchemaUtils.statementsRequiredToActualizeScheme(defaultTester)
                 alters.shouldBeEmpty()
 
                 defaultTester.insert { }
