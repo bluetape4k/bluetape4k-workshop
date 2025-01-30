@@ -12,14 +12,17 @@ import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldHaveSize
 import org.jetbrains.exposed.sql.CustomOperator
 import org.jetbrains.exposed.sql.Expression
+import org.jetbrains.exposed.sql.IntegerColumnType
 import org.jetbrains.exposed.sql.LongColumnType
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.alias
+import org.jetbrains.exposed.sql.intLiteral
 import org.jetbrains.exposed.sql.longLiteral
 import org.jetbrains.exposed.sql.max
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
 import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
@@ -106,7 +109,11 @@ class SubqueryTest: AbstractExposedTest() {
      *        PERSONS.OCCUPATION,
      *        PERSONS.ADDRESS_ID
      *   FROM PERSONS
-     *  WHERE PERSONS.ID IN (SELECT PERSONS.ID FROM PERSONS WHERE PERSONS.LAST_NAME = 'Rubble')
+     *  WHERE PERSONS.ID IN (
+     *          SELECT PERSONS.ID
+     *            FROM PERSONS
+     *           WHERE PERSONS.LAST_NAME = 'Rubble'
+     *        )
      * ```
      */
     @ParameterizedTest
@@ -183,22 +190,13 @@ class SubqueryTest: AbstractExposedTest() {
      *  WHERE PERSONS.ID = 3
      * ```
      */
-    @ParameterizedTest
-    @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `update set to subquery in H2`(testDB: TestDB) {
-        Assumptions.assumeTrue(testDB in TestDB.ALL_H2)
-
+    @Test
+    fun `update set to subquery in H2`() {
         // implement a +/- operator using CustomOperator
         // NOTE: EntityID<ID> 는 CustomOperator를 사용할 수 없다
-        infix fun Expression<*>.plus(operand: Long) =
-            CustomOperator("+", LongColumnType(), this, longLiteral(operand))
-
-        infix fun Expression<*>.minus(operand: Long) =
-            CustomOperator("-", LongColumnType(), this, longLiteral(operand))
-
-        withPersonsAndAddress(testDB) { persons, _ ->
+        withPersonsAndAddress(TestDB.H2) { persons, _ ->
             val affectedRows = persons.update({ persons.id eq 3L }) {
-                it[persons.addressId] = persons.select(persons.addressId.max() minus 1L)
+                it[persons.addressId] = persons.select(persons.addressId.max() - 1L)
             }
             affectedRows shouldBeEqualTo 1
 
@@ -223,15 +221,8 @@ class SubqueryTest: AbstractExposedTest() {
     fun `update set to subquery in MYSQL`(testDB: TestDB) {
         Assumptions.assumeTrue(testDB in TestDB.ALL_MYSQL_LIKE)
 
-        // implement a +/- operator using CustomOperator
-        infix fun Expression<*>.plus(operand: Long) =
-            CustomOperator("+", LongColumnType(), this, longLiteral(operand))
-
-        infix fun Expression<*>.minus(operand: Long) =
-            CustomOperator("-", LongColumnType(), this, longLiteral(operand))
-
-        withPersonsAndAddress(testDB) { persons, addresses ->
-            val calcAddressId = (persons.addressId minus 1L).alias("addressId")
+        withPersonsAndAddress(testDB) { persons, _ ->
+            val calcAddressId = (persons.addressId - 1L).alias("addressId")
             val query = persons.select(calcAddressId)
                 .groupBy(persons.addressId)
                 .orderBy(persons.addressId, SortOrder.DESC)
@@ -249,4 +240,22 @@ class SubqueryTest: AbstractExposedTest() {
             person.address.id.value shouldBeEqualTo 1L      // 2 - 1
         }
     }
+
+    // implement a +/- operator using CustomOperator
+    @JvmName("expressionPlusInt")
+    infix operator fun Expression<*>.plus(operand: Int): CustomOperator<Int> =
+        CustomOperator("+", IntegerColumnType(), this, intLiteral(operand))
+
+    @JvmName("expressionMinusInt")
+    infix operator fun Expression<*>.minus(operand: Int): CustomOperator<Int> =
+        CustomOperator("-", IntegerColumnType(), this, intLiteral(operand))
+
+    @JvmName("expressionPlusLong")
+    infix operator fun Expression<*>.plus(operand: Long): CustomOperator<Long> =
+        CustomOperator("+", LongColumnType(), this, longLiteral(operand))
+
+    @JvmName("expressionMinusLong")
+    infix operator fun Expression<*>.minus(operand: Long): CustomOperator<Long> =
+        CustomOperator("-", LongColumnType(), this, longLiteral(operand))
+
 }
