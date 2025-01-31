@@ -22,6 +22,8 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
 /**
+ * SQL MERGE INTO 구문은 데이터베이스에서 조건에 따라 데이터를 삽입, 갱신, 삭제하는 작업을 한 번에 수행할 수 있게 해주는 강력한 기능입니다
+ * 
  * 참고: [MERGE INTO 에 대한 설명](https://www.perplexity.ai/search/sql-merge-into-gumune-daehae-s-y_xKDfwFR8ewN6qIY9jqJw)
  */
 class MergeSelectTest: MergeBaseTest() {
@@ -34,8 +36,9 @@ class MergeSelectTest: MergeBaseTest() {
         Dest.key eq sourceQuery[Source.key]
 
     /**
-     * Mrget into from a select query
+     * Meget into from a select query
      *
+     * Postgres:
      * ```sql
      * MERGE INTO dest
      * USING ( SELECT "source".id,
@@ -74,6 +77,8 @@ class MergeSelectTest: MergeBaseTest() {
 
     /**
      * Merge into from a select query with alias
+     *
+     * Postgres:
      * ```sql
      * MERGE INTO dest dest_alias
      * USING ( SELECT "source".id,
@@ -112,6 +117,7 @@ class MergeSelectTest: MergeBaseTest() {
     /**
      * MergeFrom with whenMatchedUpdate
      *
+     * Postgres:
      * ```sql
      * MERGE INTO dest
      * USING ( SELECT "source".id,
@@ -150,6 +156,7 @@ class MergeSelectTest: MergeBaseTest() {
     /**
      * MergeFrom with whenMatchedUpdate
      *
+     * Postgres:
      * ```sql
      * MERGE INTO dest dest_alias
      * USING ( SELECT "source".id,
@@ -190,6 +197,7 @@ class MergeSelectTest: MergeBaseTest() {
     /**
      * MergeFrom with whenMatchedDelete
      *
+     * Postgres:
      * ```sql
      * MERGE INTO dest
      * USING ( SELECT "source".id,
@@ -224,6 +232,7 @@ class MergeSelectTest: MergeBaseTest() {
     /**
      * MergeFrom with whenNotMatchedInsert and whenMatchedUpdate
      *
+     * Postgres:
      * ```sql
      * MERGE INTO dest
      * USING ( SELECT "source".id,
@@ -273,6 +282,7 @@ class MergeSelectTest: MergeBaseTest() {
     /**
      * MergeFrom with whenMatchedDelete and condition
      *
+     * Postgres:
      * ```sql
      * MERGE INTO dest
      * USING ( SELECT "source".id,
@@ -307,6 +317,7 @@ class MergeSelectTest: MergeBaseTest() {
     /**
      * MergeFrom with multiple clauses
      *
+     * Postgres:
      * ```sql
      * MERGE INTO dest
      * USING ( SELECT "source".id,
@@ -393,6 +404,7 @@ class MergeSelectTest: MergeBaseTest() {
     /**
      * Subquery 를 Source로 사용하는 MergeFrom 예제 (PostgreSQL 전용)
      *
+     * Postgres:
      * ```sql
      * MERGE INTO dest
      * USING ( SELECT "source".id,
@@ -435,6 +447,7 @@ class MergeSelectTest: MergeBaseTest() {
     /**
      * MergeFrom with const condition
      *
+     * Postgres:
      * ```sql
      * MERGE INTO dest
      * USING ( SELECT "source".id,

@@ -32,6 +32,8 @@ import org.junit.jupiter.params.provider.MethodSource
 /**
  * `MERGE INTO` 문을 테스트합니다.
  *
+ * SQL MERGE INTO 구문은 데이터베이스에서 조건에 따라 데이터를 삽입, 갱신, 삭제하는 작업을 한 번에 수행할 수 있게 해주는 강력한 기능입니다
+ *
  * 참고: [MERGE INTO 에 대한 설명](https://www.perplexity.ai/search/sql-merge-into-gumune-daehae-s-y_xKDfwFR8ewN6qIY9jqJw)
  */
 class MergeTableTest: MergeBaseTest() {
@@ -44,12 +46,18 @@ class MergeTableTest: MergeBaseTest() {
     /**
      * [mergeFrom] 함수를 사용하여 [org.jetbrains.exposed.sql.statements.MergeStatement.whenNotMatchedInsert] 를 테스트합니다.
      *
+     * Postgres:
      * ```sql
      * MERGE INTO dest
      * USING "source" ON "source"."key" = dest."key"
      *  WHEN NOT MATCHED THEN
      *      INSERT ("at", "key", "value", optional_value)
-     *      VALUES ('2000-01-01T00:00:00', "source"."key", ("source"."value" * 2), CONCAT('optional::', "source"."key"))
+     *      VALUES (
+     *          '2000-01-01T00:00:00',
+     *          "source"."key",
+     *          ("source"."value" * 2),
+     *          CONCAT('optional::', "source"."key")
+     *      )
      * ```
      */
     @ParameterizedTest
@@ -78,12 +86,17 @@ class MergeTableTest: MergeBaseTest() {
     /**
      * [mergeFrom] 함수를 사용하여 [org.jetbrains.exposed.sql.statements.MergeStatement.whenMatchedThenUpdate] 를 테스트합니다.
      *
+     * Postgres:
      * ```sql
      * MERGE INTO dest dest_alias
      * USING "source" source_alias ON source_alias."key" = dest_alias."key"
      *  WHEN NOT MATCHED THEN
      *      INSERT ("at", "key", "value")
-     *      VALUES ('2000-01-01T00:00:00', source_alias."key", (source_alias."value" * 2))
+     *      VALUES (
+     *          '2000-01-01T00:00:00',
+     *          source_alias."key",
+     *          (source_alias."value" * 2)
+     *      )
      * ```
      */
     @ParameterizedTest
@@ -111,6 +124,7 @@ class MergeTableTest: MergeBaseTest() {
     /**
      * [mergeFrom] 함수를 사용하여 [org.jetbrains.exposed.sql.statements.MergeStatement.whenMatchedUpdate] 를 테스트합니다.
      *
+     * Postgres:
      * ```sql
      * MERGE INTO dest
      * USING "source" ON "source"."key" = dest."key"
@@ -144,6 +158,7 @@ class MergeTableTest: MergeBaseTest() {
     /**
      * MergeFrom with whenMatchedUpdate
      *
+     * Postgres:
      * ```sql
      * MERGE INTO dest dest_alias
      * USING "source" ON "source"."key" = dest_alias."key"
@@ -178,6 +193,7 @@ class MergeTableTest: MergeBaseTest() {
     /**
      * MergeFrom with whenMatchedDelete
      *
+     * Postgres:
      * ```sql
      * MERGE INTO dest
      * USING "source" ON "source"."key" = dest."key"
@@ -206,6 +222,7 @@ class MergeTableTest: MergeBaseTest() {
     /**
      * MergeFrom with whenNotMatchedInsert and whenMatchedUpdate
      *
+     * Postgres:
      * ```sql
      * MERGE INTO dest
      * USING "source" ON "source"."key" = dest."key"
@@ -277,6 +294,7 @@ class MergeTableTest: MergeBaseTest() {
     /**
      * MergeFrom with multiple clauses
      *
+     * Postgres
      * ```sql
      * MERGE INTO dest
      * USING "source" ON "source"."key" = dest."key"
@@ -422,6 +440,7 @@ class MergeTableTest: MergeBaseTest() {
     /**
      * MergeFrom with whenNotMatchedDoNothing
      *
+     * Postgres:
      * ```sql
      * MERGE INTO dest
      * USING "source" ON "source"."key" = dest."key"
@@ -460,8 +479,9 @@ class MergeTableTest: MergeBaseTest() {
     }
 
     /**
-     * Postgres 에서는 `whenMatchedDoNothing` 을 지원하지 않습니다.
+     * Postgres에서만 `whenMatchedDoNothing` 을 지원합니다.
      *
+     * Postgres:
      * ```sql
      * MERGE INTO dest
      * USING "source" ON "source"."key" = dest."key"
@@ -499,6 +519,7 @@ class MergeTableTest: MergeBaseTest() {
     /**
      * Postgres 에서 `OVERRIDING SYSTEM VALUE` 옵션을 사용하여 DEST 테이블의 ID 값을 덮어쓰는 테스트입니다.
      *
+     * Postgres:
      * ```sql
      * MERGE INTO dest
      * USING src ON dest.id=src.id
@@ -537,6 +558,7 @@ class MergeTableTest: MergeBaseTest() {
     /**
      * Postgres 에서 `OVERRIDING USER VALUE` 옵션을 사용하여 DEST 테이블의 ID 값을 덮어쓰는 테스트입니다.
      *
+     * Postgres:
      * ```sql
      * MERGE INTO dest
      * USING src ON dest.id=src.id
@@ -589,6 +611,7 @@ class MergeTableTest: MergeBaseTest() {
     /**
      * MergeFrom with default value
      *
+     * Postgres:
      * ```sql
      * MERGE INTO dest
      * USING source ON dest.id=source.id
@@ -626,6 +649,8 @@ class MergeTableTest: MergeBaseTest() {
 
     /**
      * MergeFrom with const condition
+     *
+     * Postgres:
      * ```sql
      * MERGE INTO dest
      * USING (
@@ -668,7 +693,7 @@ class MergeTableTest: MergeBaseTest() {
     }
 
     /**
-     * Postgres 가 지원하지 않는 기능 테스트
+     * Postgres 기능 중에 다른 DB에서 지원되지 않는 기능을 확인합니다.
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
