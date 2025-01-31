@@ -42,13 +42,15 @@ class GroupByTest: AbstractExposedTest() {
     companion object: KLogging()
 
     /**
-     * H2
+     * Group BY 예제 01 with Alias
+     *
+     * Postgres:
      * ```sql
-     * SELECT CITIES."name",
-     *        COUNT(USERS.ID),
-     *        COUNT(USERS.ID) c
-     *   FROM CITIES INNER JOIN USERS ON CITIES.CITY_ID = USERS.CITY_ID
-     *  GROUP BY CITIES."name"
+     * SELECT cities."name",
+     *        COUNT(users.id),
+     *        COUNT(users.id) c
+     *   FROM cities INNER JOIN users ON cities.city_id = users.city_id
+     *  GROUP BY cities."name"
      * ```
      */
     @ParameterizedTest
@@ -64,12 +66,13 @@ class GroupByTest: AbstractExposedTest() {
 
             rows.forEach {
                 val cityName = it[cities.name]
-                val userCount = it[users.id.count()].toInt()
-                val userCountAlias = it[cAlias].toInt()
+                val userCount = it[users.id.count()]
+                val userCountAlias = it[cAlias]
+                log.debug { "cityName=$cityName, userCount=$userCount, userCountAlias=$userCountAlias" }
                 when (cityName) {
-                    "Munich" -> userCount shouldBeEqualTo 2
-                    "Prague" -> userCount shouldBeEqualTo 0
-                    "St. Petersburg" -> userCount shouldBeEqualTo 1
+                    "Munich" -> userCount shouldBeEqualTo 2L
+                    "Prague" -> userCount shouldBeEqualTo 0L
+                    "St. Petersburg" -> userCount shouldBeEqualTo 1L
                     else -> error("Unknown city $cityName")
                 }
                 userCountAlias shouldBeEqualTo userCount
@@ -78,13 +81,13 @@ class GroupByTest: AbstractExposedTest() {
     }
 
     /**
-     * H2
+     * Postgres:
      * ```sql
-     * SELECT CITIES."name",
-     *        COUNT(USERS.ID)
-     *   FROM CITIES INNER JOIN USERS ON CITIES.CITY_ID = USERS.CITY_ID
-     *  GROUP BY CITIES."name"
-     * HAVING COUNT(USERS.ID) = 1
+     * SELECT cities."name",
+     *        COUNT(users.id)
+     *   FROM cities INNER JOIN users ON cities.city_id = users.city_id
+     *  GROUP BY cities."name"
+     * HAVING COUNT(users.id) = 1
      * ```
      */
     @ParameterizedTest
@@ -104,15 +107,15 @@ class GroupByTest: AbstractExposedTest() {
     }
 
     /**
-     * H2
+     * Postgres:
      * ```sql
-     * SELECT CITIES."name",
-     *        COUNT(USERS.ID),
-     *        MAX(CITIES.CITY_ID)
-     *   FROM CITIES INNER JOIN USERS ON CITIES.CITY_ID = USERS.CITY_ID
-     *  GROUP BY CITIES."name"
-     * HAVING COUNT(USERS.ID) = MAX(CITIES.CITY_ID)
-     *  ORDER BY CITIES."name" ASC
+     * SELECT cities."name",
+     *        COUNT(users.id),
+     *        MAX(cities.city_id)
+     *   FROM cities INNER JOIN users ON cities.city_id = users.city_id
+     *  GROUP BY cities."name"
+     * HAVING COUNT(users.id) = MAX(cities.city_id)
+     *  ORDER BY cities."name" ASC
      * ```
      */
     @ParameterizedTest
@@ -149,15 +152,15 @@ class GroupByTest: AbstractExposedTest() {
     }
 
     /**
-     * H2
+     * Postgres
      * ```sql
-     * SELECT CITIES."name",
-     *        COUNT(USERS.ID),
-     *        MAX(CITIES.CITY_ID)
-     *   FROM CITIES INNER JOIN USERS ON CITIES.CITY_ID = USERS.CITY_ID
-     *  GROUP BY CITIES."name"
-     * HAVING COUNT(USERS.ID) <= 42
-     *  ORDER BY CITIES."name" ASC
+     * SELECT cities."name",
+     *        COUNT(users.id),
+     *        MAX(cities.city_id)
+     *   FROM cities INNER JOIN users ON cities.city_id = users.city_id
+     *  GROUP BY cities."name"
+     * HAVING COUNT(users.id) <= 42
+     *  ORDER BY cities."name" ASC
      * ```
      */
     @ParameterizedTest
@@ -186,14 +189,14 @@ class GroupByTest: AbstractExposedTest() {
     }
 
     /**
-     * H2
+     * Postgres:
      * ```sql
-     * SELECT MAX(CITIES.CITY_ID) FROM CITIES
-     * ```
+     * SELECT MAX(cities.city_id)
+     *   FROM cities;
      *
-     * ```sql
-     * SELECT MAX(CITIES.CITY_ID) FROM CITIES
-     *  WHERE CITIES.CITY_ID IS NULL
+     * SELECT MAX(cities.city_id)
+     *   FROM cities
+     *  WHERE cities.city_id IS NULL;
      * ```
      */
     @ParameterizedTest
@@ -220,16 +223,14 @@ class GroupByTest: AbstractExposedTest() {
     }
 
     /**
-     * H2
+     * Postgres:
      * ```sql
-     * SELECT AVG(CITIES.CITY_ID)
-     *   FROM CITIES
-     * ```
+     * SELECT AVG(cities.city_id)
+     *   FROM cities;
      *
-     * ```sql
-     * SELECT AVG(CITIES.CITY_ID)
-     *   FROM CITIES
-     *  WHERE CITIES.CITY_ID IS NULL
+     * SELECT AVG(cities.city_id)
+     *   FROM cities
+     *  WHERE cities.city_id IS NULL;
      * ```
      */
     @ParameterizedTest
@@ -237,7 +238,12 @@ class GroupByTest: AbstractExposedTest() {
     fun `groupBy example 07`(testDB: TestDB) {
         withCitiesAndUsers(testDB) { cities, users, _ ->
             val avgIdExpr = cities.id.avg()
-            val avgId = cities.select(cities.id).map { it[cities.id] }.average().toBigDecimal().setScale(2)
+
+            val avgId = cities.select(cities.id)
+                .map { it[cities.id] }
+                .average()
+                .toBigDecimal()
+                .setScale(2)
 
             cities.select(avgIdExpr)
                 .map { it[avgIdExpr] }
@@ -257,41 +263,31 @@ class GroupByTest: AbstractExposedTest() {
     }
 
     /**
-     * H2
+     * [GroupConcat] 을 이용하여 컬럼 값을 집계한다.
+     *
+     * Postgres:
      * ```sql
-     * SELECT CITIES."name",
-     *        GROUP_CONCAT(USERS."name")
-     *   FROM CITIES LEFT JOIN USERS ON CITIES.CITY_ID = USERS.CITY_ID
-     *  GROUP BY CITIES.CITY_ID, CITIES."name"
-     * ```
-     * ```sql
-     * SELECT CITIES."name",
-     *        GROUP_CONCAT(USERS."name" SEPARATOR ', ')
-     *   FROM CITIES LEFT JOIN USERS ON CITIES.CITY_ID = USERS.CITY_ID
-     *  GROUP BY CITIES.CITY_ID, CITIES."name"
-     * ```
-     * ```sql
-     * SELECT CITIES."name",
-     *        GROUP_CONCAT(DISTINCT USERS."name" SEPARATOR ' | ')
-     *   FROM CITIES LEFT JOIN USERS ON CITIES.CITY_ID = USERS.CITY_ID
-     *  GROUP BY CITIES.CITY_ID, CITIES."name"
-     * ```
-     * ```sql
-     * SELECT CITIES."name",
-     *        GROUP_CONCAT(USERS."name" ORDER BY USERS."name" ASC SEPARATOR ' | ')
-     *   FROM CITIES LEFT JOIN USERS ON CITIES.CITY_ID = USERS.CITY_ID
-     *  GROUP BY CITIES.CITY_ID, CITIES."name"
-     * ```
-     * ```sql
-     * SELECT CITIES."name",
-     *        GROUP_CONCAT(USERS."name" ORDER BY USERS."name" DESC SEPARATOR ' | ')
-     *   FROM CITIES LEFT JOIN USERS ON CITIES.CITY_ID = USERS.CITY_ID
-     *  GROUP BY CITIES.CITY_ID, CITIES."name"
+     * SELECT cities."name", STRING_AGG(users."name", ', ')
+     *   FROM cities LEFT JOIN users ON cities.city_id = users.city_id
+     *  GROUP BY cities.city_id, cities."name";
+     *
+     * SELECT cities."name", STRING_AGG( DISTINCT users."name", ' | ')
+     *   FROM cities LEFT JOIN users ON cities.city_id = users.city_id
+     *  GROUP BY cities.city_id, cities."name";
+     *
+     * SELECT cities."name", STRING_AGG(users."name", ' | ' ORDER BY users."name" ASC)
+     *   FROM cities LEFT JOIN users ON cities.city_id = users.city_id
+     *  GROUP BY cities.city_id, cities."name";
+     *
+     * SELECT cities."name", STRING_AGG(users."name", ' | ' ORDER BY users."name" DESC)
+     *   FROM cities LEFT JOIN users ON cities.city_id = users.city_id
+     *  GROUP BY cities.city_id, cities."name";
      * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `group concat`(testDB: TestDB) {
+
         withCitiesAndUsers(testDB) { cities, users, _ ->
             fun <T: String?> GroupConcat<T>.checkExcept(
                 vararg dialects: VendorDialect.DialectNameProvider,
@@ -319,7 +315,7 @@ class GroupByTest: AbstractExposedTest() {
                 }
             }
 
-            // separator must be specified by PostgreSQL and SQL Server
+            // NOTE: Postgres 와 SQL Server 에서는 separator 를 반드시 지정해야 한다.
             users.name.groupConcat().checkExcept(PostgreSQLDialect, PostgreSQLNGDialect, SQLServerDialect) {
                 it.size shouldBeEqualTo 3
             }
