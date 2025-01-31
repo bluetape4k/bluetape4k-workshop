@@ -40,15 +40,13 @@ class FetchBatchedResultsTest: AbstractExposedTest() {
      * ```sql
      * SELECT Cities.city_id, Cities.`name`
      *   FROM Cities
-     *  WHERE (Cities.city_id < 51)
-     *    AND (Cities.city_id > 0)
+     *  WHERE (Cities.city_id < 51) AND (Cities.city_id > 0)
      *  ORDER BY Cities.city_id ASC
      *  LIMIT 25;
      *
      * SELECT Cities.city_id, Cities.`name`
      *   FROM Cities
-     *  WHERE (Cities.city_id < 51)
-     *    AND (Cities.city_id > 25)
+     *  WHERE (Cities.city_id < 51) AND (Cities.city_id > 25)
      *  ORDER BY Cities.city_id ASC
      *  LIMIT 25;
      *
@@ -63,22 +61,19 @@ class FetchBatchedResultsTest: AbstractExposedTest() {
      * ```sql
      * SELECT cities.city_id, cities."name"
      *   FROM cities
-     *  WHERE (cities.city_id < 51)
-     *    AND (cities.city_id > 0)
+     *  WHERE (cities.city_id < 51) AND (cities.city_id > 0)
      *  ORDER BY cities.city_id ASC
      *  LIMIT 25;
      *
      * SELECT cities.city_id, cities."name"
      *   FROM cities
-     *  WHERE (cities.city_id < 51)
-     *    AND (cities.city_id > 25)
+     *  WHERE (cities.city_id < 51) AND (cities.city_id > 25)
      *  ORDER BY cities.city_id ASC
      *  LIMIT 25;
      *
      * SELECT cities.city_id, cities."name"
      *   FROM cities
-     *  WHERE (cities.city_id < 51)
-     *    AND (cities.city_id > 50)
+     *  WHERE (cities.city_id < 51) AND (cities.city_id > 50)
      *  ORDER BY cities.city_id ASC
      *  LIMIT 25;
      * ```
@@ -113,26 +108,27 @@ class FetchBatchedResultsTest: AbstractExposedTest() {
     }
 
     /**
-     * `fetchBatchedResults` 함수의 `sortOrder` 옵션을 이용하여 정렬할 수 있다. 
-     * H2
+     * `fetchBatchedResults` 함수의 `sortOrder` 옵션을 이용하여 정렬할 수 있다.
+     *
+     * Postgres:
      * ```sql
-     * SELECT CITIES.CITY_ID, CITIES."name"
-     *   FROM CITIES
-     *  WHERE CITIES.CITY_ID < 51
-     *  ORDER BY CITIES.CITY_ID DESC
+     * SELECT cities.city_id, cities."name"
+     *   FROM cities
+     *  WHERE cities.city_id < 51
+     *  ORDER BY cities.city_id DESC
      *  LIMIT 25;
      *
-     * SELECT CITIES.CITY_ID, CITIES."name"
-     *   FROM CITIES
-     *  WHERE (CITIES.CITY_ID < 51) AND (CITIES.CITY_ID < 26)
-     *  ORDER BY CITIES.CITY_ID DESC
+     * SELECT cities.city_id, cities."name"
+     *   FROM cities
+     *  WHERE (cities.city_id < 51) AND (cities.city_id < 26)
+     *  ORDER BY cities.city_id DESC
      *  LIMIT 25;
      *
-     * SELECT CITIES.CITY_ID, CITIES."name"
-     *   FROM CITIES
-     *  WHERE (CITIES.CITY_ID < 51) AND (CITIES.CITY_ID < 1)
-     *  ORDER BY CITIES.CITY_ID DESC
-     *  LIMIT 25
+     * SELECT cities.city_id, cities."name"
+     *   FROM cities
+     *  WHERE (cities.city_id < 51) AND (cities.city_id < 1)
+     *  ORDER BY cities.city_id DESC
+     *  LIMIT 25;
      * ```
      */
     @ParameterizedTest
@@ -141,7 +137,9 @@ class FetchBatchedResultsTest: AbstractExposedTest() {
         val cities = DMLTestData.Cities
         withTables(testDB, cities) {
             val names = List(100) { TimebasedUuid.Epoch.nextIdAsString() }
-            cities.batchInsert(names) { name -> this[cities.name] = name }
+            cities.batchInsert(names) { name ->
+                this[cities.name] = name
+            }
 
             val batches = cities.selectAll().where { cities.id less 51 }
                 .fetchBatchedResults(batchSize = BATCH_SIZE, sortOrder = DESC)
@@ -163,12 +161,13 @@ class FetchBatchedResultsTest: AbstractExposedTest() {
     /**
      * batchSize 가 전체 레코드 수보다 크면, 한 번에 모든 레코드를 가져온다.
      *
-     * H2
+     * Postgres:
      * ```sql
-     * SELECT CITIES.CITY_ID, CITIES."name"
-     *   FROM CITIES
-     *  WHERE TRUE AND (CITIES.CITY_ID > 0)
-     *  ORDER BY CITIES.CITY_ID ASC
+     * SELECT cities.city_id,
+     *        cities."name"
+     *   FROM cities
+     *  WHERE TRUE AND (cities.city_id > 0)
+     *  ORDER BY cities.city_id ASC
      *  LIMIT 100
      * ```
      */
@@ -180,7 +179,9 @@ class FetchBatchedResultsTest: AbstractExposedTest() {
         val cities = DMLTestData.Cities
         withTables(testDB, cities) {
             val names = List(25) { Epoch.nextIdAsString() }
-            cities.batchInsert(names) { name -> this[cities.name] = name }
+            cities.batchInsert(names) { name ->
+                this[cities.name] = name
+            }
 
             val batches = cities.selectAll()
                 .fetchBatchedResults(batchSize = 100)
@@ -194,13 +195,15 @@ class FetchBatchedResultsTest: AbstractExposedTest() {
 
     /**
      * 레코드가 없을 때, 빈 리스트를 반환한다.
-     * 
-     * H2
+     *
+     * Postgres:
      * ```sql
-     * SELECT CITIES.CITY_ID, CITIES."name"
-     *   FROM CITIES
-     *  WHERE TRUE AND (CITIES.CITY_ID > 0)
-     *  ORDER BY CITIES.CITY_ID ASC
+     * SELECT cities.city_id,
+     *        cities."name"
+     *   FROM cities
+     *  WHERE TRUE
+     *    AND (cities.city_id > 0)
+     *  ORDER BY cities.city_id ASC
      *  LIMIT 100
      * ```
      */
@@ -221,12 +224,12 @@ class FetchBatchedResultsTest: AbstractExposedTest() {
     /**
      * 조건에 맞는 레코드가 없을 때, 빈 리스트를 반환한다.
      *
+     * Postgres:
      * ```sql
-     * SELECT CITIES.CITY_ID, CITIES."name"
-     *   FROM CITIES
-     *  WHERE (CITIES.CITY_ID > 50)
-     *    AND (CITIES.CITY_ID > 0)
-     *  ORDER BY CITIES.CITY_ID ASC
+     * SELECT cities.city_id, cities."name"
+     *   FROM cities
+     *  WHERE (cities.city_id > 50) AND (cities.city_id > 0)
+     *  ORDER BY cities.city_id ASC
      *  LIMIT 100
      * ```
      */
@@ -270,17 +273,33 @@ class FetchBatchedResultsTest: AbstractExposedTest() {
     /**
      * Auto Increment EntityID 를 가진 테이블에 대해서 `fetchBatchedResults` 함수를 사용할 수 있다.
      *
-     * H2
+     * Postgres:
+     * ```
+     * CREATE TABLE IF NOT EXISTS table_1 (
+     *      id SERIAL PRIMARY KEY,
+     *      "data" VARCHAR(255) NOT NULL
+     * );
+     *
+     * CREATE TABLE IF NOT EXISTS table_2 (
+     *      id SERIAL PRIMARY KEY,
+     *      more_data VARCHAR(100) NOT NULL,
+     *      prev_data INT NOT NULL,
+     *
+     *      CONSTRAINT fk_table_2_prev_data__id FOREIGN KEY (prev_data) REFERENCES table_1(id)
+     *          ON DELETE RESTRICT ON UPDATE CASCADE
+     * );
+     * ```
+     *
      * ```sql
-     * SELECT TABLE_2.ID,
-     *        TABLE_2.MORE_DATA,
-     *        TABLE_2.PREV_DATA,
-     *        TABLE_1.ID,
-     *        TABLE_1."data"
-     *   FROM TABLE_2 INNER JOIN TABLE_1 ON TABLE_1.ID = TABLE_2.PREV_DATA
+     * SELECT table_2.id,
+     *        table_2.more_data,
+     *        table_2.prev_data,
+     *        table_1.id,
+     *        table_1."data"
+     *   FROM table_2 INNER JOIN table_1 ON table_1.id = table_2.prev_data
      *  WHERE TRUE
-     *    AND (TABLE_2.ID > 0)
-     *  ORDER BY TABLE_2.ID ASC
+     *    AND (table_2.id > 0)
+     *  ORDER BY table_2.id ASC
      *  LIMIT 10000;
      * ```
      */
@@ -303,24 +322,26 @@ class FetchBatchedResultsTest: AbstractExposedTest() {
     }
 
     /**
-     * H2
+     * Alias 를 사용하여 `fetchBatchedResults` 함수를 사용할 수 있다.
+     *
+     * Postgres:
      * ```sql
-     * SELECT tester_alias.ID, tester_alias."name"
-     *   FROM TESTER tester_alias
-     *  WHERE TRUE AND (tester_alias.ID > 0)
-     *  ORDER BY tester_alias.ID ASC
+     * SELECT tester_alias.id, tester_alias."name"
+     *   FROM tester tester_alias
+     *  WHERE TRUE AND (tester_alias.id > 0)
+     *  ORDER BY tester_alias.id ASC
      *  LIMIT 1;
      *
-     * SELECT tester_alias.ID, tester_alias."name"
-     *   FROM TESTER tester_alias
-     *  WHERE TRUE AND (tester_alias.ID > 1)
-     *  ORDER BY tester_alias.ID ASC
+     * SELECT tester_alias.id, tester_alias."name"
+     *   FROM tester tester_alias
+     *  WHERE TRUE AND (tester_alias.id > 1)
+     *  ORDER BY tester_alias.id ASC
      *  LIMIT 1;
      *
-     * SELECT tester_alias.ID, tester_alias."name"
-     *   FROM TESTER tester_alias
-     *  WHERE TRUE AND (tester_alias.ID > 2)
-     *  ORDER BY tester_alias.ID ASC
+     * SELECT tester_alias.id, tester_alias."name"
+     *   FROM tester tester_alias
+     *  WHERE TRUE AND (tester_alias.id > 2)
+     *  ORDER BY tester_alias.id ASC
      *  LIMIT 1;
      * ```
      */
