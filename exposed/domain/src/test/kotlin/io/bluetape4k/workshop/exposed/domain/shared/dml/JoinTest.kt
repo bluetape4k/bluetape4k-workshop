@@ -33,6 +33,7 @@ class JoinTest: AbstractExposedTest() {
     /**
      * inner join 이 자동으로 지정되지만, 수동으로 where 절에 추가할 수도 있다
      *
+     * Postgres:
      * ```sql
      * SELECT users."name",
      *        cities."name"
@@ -64,6 +65,7 @@ class JoinTest: AbstractExposedTest() {
     /**
      * Join with foreign key
      *
+     * Postgres:
      * ```sql
      * SELECT users."name",
      *        users.city_id,
@@ -91,6 +93,7 @@ class JoinTest: AbstractExposedTest() {
     /**
      * Triple join
      *
+     * Postgres:
      * ```sql
      * SELECT cities.city_id,
      *        cities."name",
@@ -131,12 +134,13 @@ class JoinTest: AbstractExposedTest() {
     /**
      * Many-to-many Join
      *
+     * Postgres:
      * ```sql
      * SELECT numbers.id,
      *        "map".id_ref,
      *        "map".name_ref,
      *        "names"."name"
-     * FROM numbers
+     *   FROM numbers
      *      INNER JOIN "map" ON numbers.id = "map".id_ref
      *      INNER JOIN "names" ON "names"."name" = "map".name_ref
      * ```
@@ -157,12 +161,12 @@ class JoinTest: AbstractExposedTest() {
         /**
          * ```sql
          * CREATE TABLE IF NOT EXISTS "map" (
-         *      ID_REF INT NOT NULL,
-         *      NAME_REF VARCHAR(10) NOT NULL,
+         *      id_ref INT NOT NULL,
+         *      name_ref VARCHAR(10) NOT NULL,
          *
-         *      CONSTRAINT FK_MAP_ID_REF__ID FOREIGN KEY (ID_REF) REFERENCES NUMBERS(ID)
+         *      CONSTRAINT fk_map_id_ref__id FOREIGN KEY (id_ref) REFERENCES numbers(id)
          *          ON DELETE RESTRICT ON UPDATE RESTRICT,
-         *      CONSTRAINT FK_MAP_NAME_REF__NAME FOREIGN KEY (NAME_REF) REFERENCES "names"("name")
+         *      CONSTRAINT fk_map_name_ref__name FOREIGN KEY (name_ref) REFERENCES "names"("name")
          *          ON DELETE RESTRICT ON UPDATE RESTRICT
          * )
          * ```
@@ -192,6 +196,7 @@ class JoinTest: AbstractExposedTest() {
     /**
      * Cross Join
      *
+     * Postgres:
      * ```sql
      * SELECT
      *      users."name",
@@ -229,24 +234,26 @@ class JoinTest: AbstractExposedTest() {
     /**
      * FK 가 복수 개인 2개의 테이블의 JOIN
      *
-     * H2:
+     * Postgres:
      * ```sql
-     * CREATE TABLE IF NOT EXISTS FOO (
-     *      ID INT AUTO_INCREMENT PRIMARY KEY,
-     *      BAZ INT NOT NULL
+     * CREATE TABLE IF NOT EXISTS foo (
+     *      id SERIAL PRIMARY KEY,
+     *      baz INT NOT NULL
      * );
-     * ALTER TABLE FOO ADD CONSTRAINT FOO_BAZ_UNIQUE UNIQUE (BAZ);
      *
-     * CREATE TABLE IF NOT EXISTS BAR (
-     *      ID INT AUTO_INCREMENT PRIMARY KEY,
-     *      FOO INT NOT NULL,
-     *      BAZ INT NOT NULL,
+     * ALTER TABLE foo ADD CONSTRAINT foo_baz_unique UNIQUE (baz);
      *
-     *      CONSTRAINT FK_BAR_FOO__ID FOREIGN KEY (FOO) REFERENCES FOO(ID)
+     * CREATE TABLE IF NOT EXISTS bar (
+     *      id SERIAL PRIMARY KEY,
+     *      foo INT NOT NULL,
+     *      baz INT NOT NULL,
+     *
+     *      CONSTRAINT fk_bar_foo__id FOREIGN KEY (foo) REFERENCES foo(id)
      *          ON DELETE RESTRICT ON UPDATE RESTRICT,
-     *      CONSTRAINT FK_BAR_BAZ__BAZ FOREIGN KEY (BAZ) REFERENCES FOO(BAZ)
+     *
+     *      CONSTRAINT fk_bar_baz__baz FOREIGN KEY (baz) REFERENCES foo(baz)
      *          ON DELETE RESTRICT ON UPDATE RESTRICT
-     * )
+     * );
      * ```
      *
      * ```sql
@@ -284,27 +291,31 @@ class JoinTest: AbstractExposedTest() {
     /**
      * Primary Key 를 참조하는 FK를 복수개를 가진다면, INNER JOIN 을 할 수 없다.
      *
+     * Postgres:
      * ```sql
-     * CREATE TABLE IF NOT EXISTS FOO (
-     *      ID INT AUTO_INCREMENT PRIMARY KEY,
-     *      BAZ INT NOT NULL
+     * CREATE TABLE IF NOT EXISTS foo (
+     *      id SERIAL PRIMARY KEY,
+     *      baz INT NOT NULL
      * );
-     * ALTER TABLE FOO ADD CONSTRAINT FOO_BAZ_UNIQUE UNIQUE (BAZ);
-     * ```
-     * ```sql
-     * CREATE TABLE IF NOT EXISTS BAR (
-     *      ID INT AUTO_INCREMENT PRIMARY KEY,
-     *      FOO INT NOT NULL,       -- Foo 테이블의 ID를 참조하는 FK
-     *      FOO2 INT NOT NULL,      -- Foo 테이블의 ID를 참조하는 FK
-     *      BAZ INT NOT NULL,
      *
-     *      CONSTRAINT FK_BAR_FOO__ID FOREIGN KEY (FOO) REFERENCES FOO(ID)
+     * ALTER TABLE foo ADD CONSTRAINT foo_baz_unique UNIQUE (baz);
+     *
+     *
+     * CREATE TABLE IF NOT EXISTS bar (
+     *      id SERIAL PRIMARY KEY,
+     *      foo INT NOT NULL,
+     *      foo2 INT NOT NULL,
+     *      baz INT NOT NULL,
+     *
+     *      CONSTRAINT fk_bar_foo__id FOREIGN KEY (foo) REFERENCES foo(id)
      *          ON DELETE RESTRICT ON UPDATE RESTRICT,
-     *      CONSTRAINT FK_BAR_FOO2__ID FOREIGN KEY (FOO2) REFERENCES FOO(ID)
+     *
+     *      CONSTRAINT fk_bar_foo2__id FOREIGN KEY (foo2) REFERENCES foo(id)
      *          ON DELETE RESTRICT ON UPDATE RESTRICT,
-     *      CONSTRAINT FK_BAR_BAZ__BAZ FOREIGN KEY (BAZ) REFERENCES FOO(BAZ)
+     *
+     *      CONSTRAINT fk_bar_baz__baz FOREIGN KEY (baz) REFERENCES foo(baz)
      *          ON DELETE RESTRICT ON UPDATE RESTRICT
-     * )
+     * );
      * ```
      *
      */
@@ -340,6 +351,7 @@ class JoinTest: AbstractExposedTest() {
     /**
      * 동일 테이블을 Alias 를 이용해 Left Join 하기
      *
+     * Postgres:
      * ```sql
      * SELECT users.id,
      *        users."name",
@@ -349,8 +361,8 @@ class JoinTest: AbstractExposedTest() {
      *        u2."name",
      *        u2.city_id,
      *        u2.flags
-     * FROM users LEFT JOIN users u2 ON u2.id = 'smth'
-     * WHERE users.id = 'alex'
+     *   FROM users LEFT JOIN users u2 ON u2.id = 'smth'
+     *  WHERE users.id = 'alex'
      * ```
      */
     @ParameterizedTest
@@ -389,12 +401,14 @@ class JoinTest: AbstractExposedTest() {
     }
 
     /**
-     * Join with additional constraint
+     * 추가적인 조건절을 가진 Join
      *
+     * Postgres:
      * ```sql
      * SELECT COUNT(*)
      *   FROM CITIES INNER JOIN USERS u2
-     *      ON CITIES.CITY_ID = u2.CITY_ID AND ((CITIES.CITY_ID > 1) AND (CITIES."name" <> u2."name"))
+     *          ON CITIES.CITY_ID = u2.CITY_ID
+     *              AND ((CITIES.CITY_ID > 1) AND (CITIES."name" <> u2."name"))
      * ```
      */
     @ParameterizedTest
@@ -413,8 +427,9 @@ class JoinTest: AbstractExposedTest() {
     }
 
     /**
-     * Left join regression
+     * Main table에만 데이터가 있고, Main table을 참조하는 Join table에 데이터가 없는 경우에는 null을 반환해야 한다.
      *
+     * Postgres:
      * ```sql
      * SELECT jointable."dataCol"
      *   FROM maintable LEFT JOIN jointable ON jointable."idCol" = maintable."idCol"
