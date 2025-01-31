@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.shared.dml
 
-import io.bluetape4k.junit5.faker.Fakers
+import io.bluetape4k.codec.Base58
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
@@ -52,6 +52,32 @@ class UpsertTest: AbstractExposedTest() {
     // these DB require key columns from ON clause to be included in the derived source table (USING clause)
     private val upsertViaMergeDB = TestDB.ALL_H2
 
+    /**
+     * Upsert with PK Conflict
+     *
+     * MySQL:
+     * ```sql
+     * INSERT INTO auto_inc_table (`name`) VALUES ('B')
+     *    AS NEW ON DUPLICATE KEY UPDATE `name`=NEW.`name`
+     * ```
+     *
+     * Postgres:
+     * ```sql
+     * INSERT INTO auto_inc_table ("name") VALUES ('B')
+     *  ON CONFLICT (id) DO UPDATE SET "name"=EXCLUDED."name"
+     * ```
+     *
+     * MySQL:
+     * ```sql
+     * INSERT INTO auto_inc_table (id, `name`) VALUES (1, 'C')
+     * AS NEW ON DUPLICATE KEY UPDATE id=NEW.id, `name`=NEW.`name`
+     * ```
+     * Postgres:
+     * ```sql
+     * INSERT INTO auto_inc_table (id, "name") VALUES (1, 'C')
+     * ON CONFLICT (id) DO UPDATE SET "name"=EXCLUDED."name"
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `upsert with PK conflict`(testDB: TestDB) {
@@ -60,37 +86,13 @@ class UpsertTest: AbstractExposedTest() {
                 it[name] = "A"
             } get AutoIncTable.id
 
-            /**
-             * MySQL:
-             * ```sql
-             * INSERT INTO auto_inc_table (`name`) VALUES ('B')
-             *    AS NEW ON DUPLICATE KEY UPDATE `name`=NEW.`name`
-             * ```
-             *
-             * Postgres:
-             * ```sql
-             * INSERT INTO auto_inc_table ("name") VALUES ('B')
-             * ON CONFLICT (id) DO UPDATE SET "name"=EXCLUDED."name"
-             * ```
-             */
+
             AutoIncTable.upsert {
                 if (testDB in upsertViaMergeDB)
                     it[id] = 2
                 it[name] = "B"
             }
 
-            /**
-             * MySQL:
-             * ```sql
-             * INSERT INTO auto_inc_table (id, `name`) VALUES (1, 'C')
-             * AS NEW ON DUPLICATE KEY UPDATE id=NEW.id, `name`=NEW.`name`
-             * ```
-             * Postgres:
-             * ```sql
-             * INSERT INTO auto_inc_table (id, "name") VALUES (1, 'C')
-             * ON CONFLICT (id) DO UPDATE SET "name"=EXCLUDED."name"
-             * ```
-             */
             AutoIncTable.upsert {
                 it[id] = id1
                 it[name] = "C"
@@ -106,6 +108,26 @@ class UpsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Upsert with Composite PK Conflict
+     *
+     * Postgres:
+     * ```sql
+     * INSERT INTO tester (id_a, id_b, "name") VALUES (1, 1, 'A')
+     * ```
+     * ```sql
+     * INSERT INTO tester (id_a, id_b, "name") VALUES (7, 1, 'B')
+     *      ON CONFLICT (id_a, id_b) DO UPDATE SET "name"=EXCLUDED."name"
+     * ```
+     * ```sql
+     * INSERT INTO tester (id_a, id_b, "name") VALUES (99, 99, 'C')
+     *          ON CONFLICT (id_a, id_b) DO UPDATE SET "name"=EXCLUDED."name"
+     * ```
+     * ```sql
+     * INSERT INTO tester (id_a, id_b, "name") VALUES (1, 1, 'D')
+     *      ON CONFLICT (id_a, id_b) DO UPDATE SET "name"=EXCLUDED."name"
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `upsert with composite PK conflict`(testDB: TestDB) {
@@ -137,21 +159,21 @@ class UpsertTest: AbstractExposedTest() {
                 it[name] = "A"
             }
 
-            // insert because only 1 constraint is equal
+            // Insert - PK 컬럼 2개 중 1개의 constraint 만 일치하는 경우
             tester.upsert {
                 it[idA] = 7
                 it[idB] = insertStmt get tester.idB
                 it[name] = "B"
             }
 
-            // insert because both constraints differ
+            // Insert - 2개의 constraint 가 모두 일치하지 않는 경우
             tester.upsert {
                 it[idA] = 99
                 it[idB] = 99
                 it[name] = "C"
             }
 
-            // update because both constraints match
+            // Update - 2개의 constraint 가 모두 일치하는 경우
             tester.upsert {
                 it[idA] = insertStmt get tester.idA     // 1
                 it[idB] = insertStmt get tester.idB     // 1
@@ -165,6 +187,13 @@ class UpsertTest: AbstractExposedTest() {
                 }
             tester.selectAll().count() shouldBeEqualTo 3L
 
+            /**
+             * ```sql
+             * SELECT tester.id_a, tester.id_b, tester."name"
+             *   FROM tester
+             *  WHERE tester.id_a = 1
+             * ```
+             */
             val updatedResult = tester
                 .selectAll()
                 .where { tester.idA eq insertStmt[tester.idA] }
@@ -174,6 +203,9 @@ class UpsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Upsert 할 모든 컬럼이 PK 에 속한 경우, conflict 시에 update 를 수행한다. (그래봐야 모든 컬럼이 PK 이므로 Update 해도 동일한 값이다)
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `upsert with all columns in PK`(testDB: TestDB) {
@@ -192,15 +224,16 @@ class UpsertTest: AbstractExposedTest() {
         val tester = object: Table("tester") {
             val userId = varchar("user_id", 32)
             val keyId = varchar("key_id", 32)
+
             override val primaryKey = PrimaryKey(userId, keyId)
         }
 
         /**
          * ```sql
-         * INSERT INTO tester (user_id, key_id)
-         * VALUES ('User A', 'Key A')
+         * INSERT INTO tester (user_id, key_id) VALUES ('User A', 'Key A')
          * ON CONFLICT (user_id, key_id) DO
-         *      UPDATE SET user_id=EXCLUDED.user_id, key_id=EXCLUDED.key_id
+         *      UPDATE SET user_id=EXCLUDED.user_id,
+         *                 key_id=EXCLUDED.key_id
          * ```
          */
         fun upsertOnlyKeyColumns(values: Pair<String, String>) {
@@ -213,10 +246,10 @@ class UpsertTest: AbstractExposedTest() {
         withTables(testDB, tester) {
             val primaryKeyValues = Pair("User A", "Key A")
 
-            // insert new row
+            // 새로운 행 추가
             upsertOnlyKeyColumns(primaryKeyValues)
 
-            // `update` existing row to have identical values
+            // 기존 컬럼을 `update`
             upsertOnlyKeyColumns(primaryKeyValues)
 
             tester.selectAll().forEach {
@@ -230,28 +263,49 @@ class UpsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Upsert with Unique Index Conflict
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `upsert with unique index conflict`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB !in TestDB.ALL_H2_V1 }
 
         withTables(testDB, Words) {
-            // insert
-            // INSERT INTO words ("name", "count") VALUES ('A', 10) ON CONFLICT ("name") DO UPDATE SET "count"=EXCLUDED."count"
+            /**
+             * Insert
+             * ```sql
+             * INSERT INTO words ("name", "count") VALUES ('A', 10)
+             *  ON CONFLICT ("name") DO UPDATE SET "count"=EXCLUDED."count"
+             * ```
+             */
             val wordA = Words.upsert {
                 it[word] = "A"
                 it[count] = 10
             } get Words.word
 
-            // insert
-            // INSERT INTO words ("name", "count") VALUES ('B', 10) ON CONFLICT ("name") DO UPDATE SET "count"=EXCLUDED."count"
+            /**
+             * Insert - word 가 conflict 되지 않는 경우
+             * ```sql
+             * INSERT INTO words ("name", "count") VALUES ('B', 10)
+             *  ON CONFLICT ("name") DO UPDATE SET "count"=EXCLUDED."count"
+             * ```
+             */
             Words.upsert {
                 it[word] = "B"
                 it[count] = 10
             }
 
-            // update
-            // INSERT INTO words ("name", "count") VALUES ('A', 9) ON CONFLICT ("name") DO UPDATE SET "count"=EXCLUDED."count"
+            /**
+             * Update - word 가 conflict 되는 경우
+             *
+             * Postgres:
+             * ```sql
+             * INSERT INTO words ("name", "count") VALUES ('A', 9)
+             *      ON CONFLICT ("name") DO
+             *      UPDATE SET "count"=EXCLUDED."count"
+             * ```
+             */
             Words.upsert {
                 it[word] = wordA     // "A"
                 it[count] = 9
@@ -260,13 +314,17 @@ class UpsertTest: AbstractExposedTest() {
             Words.selectAll().forEach {
                 log.debug { "word: ${it[Words.word]}, count: ${it[Words.count]}" }
             }
-            Words.selectAll().count().toInt() shouldBeEqualTo 2
+            Words.selectAll().count() shouldBeEqualTo 2L   // A, B
 
+            // SELECT words."name", words."count" FROM words WHERE words."name" = 'A'
             val updatedResult = Words.selectAll().where { Words.word eq wordA }.single()
             updatedResult[Words.count] shouldBeEqualTo 9
         }
     }
 
+    /**
+     * Upsert with manual conflict keys
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `upsert with manual conflict keys`(testDB: TestDB) {
@@ -291,13 +349,23 @@ class UpsertTest: AbstractExposedTest() {
         }
 
         withTables(testDB, tester) {
+            // insert
             val oldIdA = tester.insert {
                 it[idA] = 1
                 it[idB] = 1
                 it[name] = "A"
             } get tester.idA
 
-            // updated
+            /**
+             * updated - idA 가 충돌
+             * Postgres:
+             * ```sql
+             * INSERT INTO tester (id_a, id_b, "name") VALUES (1, 2, 'B')
+             *      ON CONFLICT (id_a) DO
+             *      UPDATE SET id_b=EXCLUDED.id_b,
+             *                 "name"=EXCLUDED."name"
+             * ```
+             */
             val newIdB = tester.upsert(tester.idA) {
                 it[idA] = oldIdA
                 it[idB] = 2
@@ -306,7 +374,7 @@ class UpsertTest: AbstractExposedTest() {
 
             tester.selectAll().single()[tester.name] shouldBeEqualTo "B"
 
-            // updated
+            // updated - idB 가 충돌
             val newIdA = tester.upsert(tester.idB) {
                 it[idA] = 99
                 it[idB] = newIdB
@@ -320,8 +388,10 @@ class UpsertTest: AbstractExposedTest() {
             tester.selectAll().single()[tester.name] shouldBeEqualTo "C"
 
             if (testDB in upsertViaMergeDB) {
-                // passes since these DB use 'AND' within ON clause (other DB require single uniqueness constraint)
                 /**
+                 * upsert 시에 conflict keys 를 지정할 수 있다.
+                 * passes since these DB use 'AND' within ON clause (other DB require single uniqueness constraint)
+                 *
                  * H2:
                  * ```sql
                  * MERGE INTO TESTER T
@@ -346,6 +416,9 @@ class UpsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Upsert with UUID Key Conflict
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `upsert with UUID Key conflict`(testDB: TestDB) {
@@ -375,8 +448,7 @@ class UpsertTest: AbstractExposedTest() {
              * ```sql
              * INSERT INTO tester (id, title)
              * VALUES ('2a6167bc-d495-4de7-b9f7-0b52b3ab8c3c', 'A')
-             * ON CONFLICT (id) DO
-             *      UPDATE SET title=EXCLUDED.title
+             *      ON CONFLICT (id) DO UPDATE SET title=EXCLUDED.title
              * ```
              */
             val uuid1 = tester.upsert {
@@ -384,14 +456,13 @@ class UpsertTest: AbstractExposedTest() {
             } get tester.id
 
             /**
-             * Update
+             * Update (id가 동일한 경우)
              *
              * Postgres:
              * ```sql
              * INSERT INTO tester (id, title)
              * VALUES ('2a6167bc-d495-4de7-b9f7-0b52b3ab8c3c', 'B')
-             * ON CONFLICT (id) DO
-             *      UPDATE SET title=EXCLUDED.title
+             *      ON CONFLICT (id) DO UPDATE SET title=EXCLUDED.title
              * ```
              */
             tester.upsert {
@@ -405,9 +476,19 @@ class UpsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Unique 제약조건이 없는 테이블에 대한 Upsert 는 INSERT 만 수행한다. (단, MySQL, SQLite 에서만 가능)
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `upsert with no unique constraints`(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS tester (
+         *      "name" VARCHAR(64) NOT NULL
+         * )
+         * ```
+         */
         val tester = object: Table("tester") {
             val name = varchar("name", 64)
         }
@@ -417,6 +498,7 @@ class UpsertTest: AbstractExposedTest() {
         withTables(testDB, tester) {
             if (testDB in okWithNoUniquenessDB) {
                 /**
+                 * MySQL 만 이 기능을 제공합니다.
                  * MySQL V8:
                  * ```sql
                  * INSERT INTO tester (`name`) VALUES ('A')
@@ -445,15 +527,19 @@ class UpsertTest: AbstractExposedTest() {
         withTables(testDB, Words) {
             val testWord = "Test"
 
+            /**
+             * `upsert` 실행 시, `update` 작업이라면 `count` 컬럼이 1씩 증가한다.
+             *
+             * 첫번째는 Insert, 두번째, 세번째는 Update 를 수행하도록 한다. (count 기본값이 1 이므로, 2번 증가 -> 3)
+             *
+             * Postgres:
+             * ```sql
+             * INSERT INTO words ("name") VALUES ('Test')
+             * ON CONFLICT ("name") DO
+             *      UPDATE SET "count"=(words."count" + 1)
+             * ```
+             */
             repeat(3) {
-                /**
-                 * Postgres:
-                 * ```sql
-                 * INSERT INTO words ("name") VALUES ('Test')
-                 * ON CONFLICT ("name") DO
-                 *      UPDATE SET "count"=(words."count" + 1)
-                 * ```
-                 */
                 Words.upsert(onUpdate = { it[Words.count] = Words.count + 1 }) {
                     it[word] = testWord
                 }
@@ -461,13 +547,18 @@ class UpsertTest: AbstractExposedTest() {
             Words.selectAll().single()[Words.count] shouldBeEqualTo 3
 
             /**
+             * `upsert` 실행 시, `update` 작업이 수행할 조건이라면 `count` 컬럼이 1000 으로 변경된다.
+             *
              * MySQL:
              * ```sql
-             * INSERT INTO words (`name`) VALUES ('Test') AS NEW ON DUPLICATE KEY UPDATE `count`=1000
+             * INSERT INTO words (`name`) VALUES ('Test')
+             *  AS NEW ON DUPLICATE KEY UPDATE `count`=1000
              * ```
              * Postgres:
              * ```sql
-             * INSERT INTO words ("name") VALUES ('Test') ON CONFLICT ("name") DO UPDATE SET "count"=1000
+             * INSERT INTO words ("name") VALUES ('Test')
+             *  ON CONFLICT ("name") DO
+             *  UPDATE SET "count"=1000
              * ```
              */
             val updatedCount = 1000
@@ -514,6 +605,7 @@ class UpsertTest: AbstractExposedTest() {
             } get tester.item
 
             /**
+             * `upsert` 작업에서 `update` 시에 `onUpdate` 를 지정하여 다른 작업을 수행할 수 있도록 한다.
              * Postgres:
              * ```sql
              * INSERT INTO tester (item, gains, losses, amount)
@@ -539,6 +631,10 @@ class UpsertTest: AbstractExposedTest() {
             insertResult[tester.losses] shouldBeEqualTo 0
 
             /**
+             * `upsert` 작업에서 `update` 시에 `onUpdate` 를 지정하여 다른 작업을 수행할 수 있도록 한다.
+             *
+             * insert 시에 amount=10, gains=200, losses=0 이고, update 시에는 gains=100 + 25, losses=100-10 이 된다.
+             *
              * Postgres:
              * ```sql
              * INSERT INTO tester (item, amount, gains, losses)
@@ -561,6 +657,9 @@ class UpsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * `upsert` 에서 update 시에 expression을 이용하여 update 한다
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `upsert with column expression`(testDB: TestDB) {
@@ -605,6 +704,15 @@ class UpsertTest: AbstractExposedTest() {
             }
             tester.selectAll().single()[tester.phrase] shouldBeEqualTo "$testWord - $defaultPhrase"
 
+            /**
+             * 멀리라인, 특수문자가 들어간 문자열로 Update 하는 예입니다.
+             * Postgres:
+             * ```sql
+             * INSERT INTO tester (word) VALUES ('Test')
+             * ON CONFLICT (word) DO
+             *      UPDATE SET phrase='This is a phrase with a new line\nand some other difficult strings ''\n\nIndentation should be preserved'
+             * ```
+             */
             val multilinePhrase =
                 """
                 This is a phrase with a new line
@@ -613,13 +721,6 @@ class UpsertTest: AbstractExposedTest() {
                 Indentation should be preserved
                 """.trimIndent()
 
-            /**
-             * ```sql
-             * INSERT INTO tester (word) VALUES ('Test')
-             * ON CONFLICT (word) DO
-             *      UPDATE SET phrase='This is a phrase with a new line\nand some other difficult strings ''\n\nIndentation should be preserved'
-             * ```
-             */
             tester.upsert(
                 onUpdate = { it[tester.phrase] = multilinePhrase }
             ) {
@@ -628,19 +729,19 @@ class UpsertTest: AbstractExposedTest() {
             tester.selectAll().single()[tester.phrase] shouldBeEqualTo multilinePhrase
 
             /**
-             * provided expression in insert
+             * `upsert` 의 insert 작업 시에 expression 을 사용
              *
              * ```sql
-             * INSERT INTO tester (word, phrase)
-             * VALUES ('Test 2', CONCAT('foo', 'bar'))
+             * INSERT INTO tester (word, phrase) VALUES ('Test 2', CONCAT('foo', 'bar'))
              * ON CONFLICT (word) DO
              *      UPDATE SET phrase=EXCLUDED.phrase
              * ```
              */
             tester.upsert {
                 it[word] = "$testWord 2"
-                it[phrase] = concat(stringLiteral("foo"), stringLiteral("bar"))
+                it[phrase] = concat(stringLiteral("foo"), stringLiteral("bar")) // 'foobar'
             }
+
             tester.selectAll()
                 .where { tester.word eq "$testWord 2" }
                 .single()[tester.phrase] shouldBeEqualTo "foobar"
@@ -699,6 +800,7 @@ class UpsertTest: AbstractExposedTest() {
 
             /**
              * id: 1 인 경우에만 Update 된다.
+             *
              * MySQL:
              * ```sql
              * INSERT INTO tester (id, `name`, `count`) VALUES (2, 'Word B', 2)
@@ -736,6 +838,9 @@ class UpsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Upsert 에서 Update 작업일 때, 특정 컬럼을 제외할 수 있다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `upsert with update excluding columns`(testDB: TestDB) {
@@ -761,7 +866,6 @@ class UpsertTest: AbstractExposedTest() {
         }
 
         withTables(testDB, tester, configure = { useNestedTransactions = true }) {
-
             // insert
             val itemA = "Item A"
             tester.upsert {
@@ -776,7 +880,7 @@ class UpsertTest: AbstractExposedTest() {
 
             transaction {
                 /**
-                 * all fields get updated by default, including columns with default values
+                 * upsert 에 지정되지 않은 컬럼은 기본값으로 업데이트 된다.
                  *
                  * Postgres:
                  * ```sql
@@ -805,6 +909,8 @@ class UpsertTest: AbstractExposedTest() {
             }
 
             /**
+             * `onUpdateExclude` 에 지정된 컬럼은 업데이트 시 제외된다.
+             *
              * Postgres:
              * ```sql
              * INSERT INTO tester (code, item, gains, losses)
@@ -866,8 +972,9 @@ class UpsertTest: AbstractExposedTest() {
                 it[age] = 50
             }
 
-            // update
             /**
+             * Update with where clause
+             *
              * ```sql
              * INSERT INTO tester ("name", address, age)
              * VALUES ('A', 'Address A', 20)
@@ -883,9 +990,12 @@ class UpsertTest: AbstractExposedTest() {
                 it[address] = "Address A"
                 it[age] = 20
             } get tester.age        // 20
+
             log.debug { "updatedAge: $updatedAge" }
 
             /**
+             * Update with where clause
+             *
              * ```sql
              * INSERT INTO tester ("name", address, age)
              * VALUES ('B', 'Address B', 20)
@@ -904,7 +1014,7 @@ class UpsertTest: AbstractExposedTest() {
             tester.selectAll().forEach {
                 log.debug { "id: ${it[tester.id]}, name: ${it[tester.name]}, address: ${it[tester.address]}, age: ${it[tester.age]}" }
             }
-            tester.selectAll().count().toInt() shouldBeEqualTo 2
+            tester.selectAll().count() shouldBeEqualTo 2L
 
             val unchangedResult = tester.selectAll().where { tester.id eq unchanged[tester.id] }.single()
             unchangedResult[tester.address] shouldBeEqualTo unchanged[tester.address]
@@ -915,18 +1025,7 @@ class UpsertTest: AbstractExposedTest() {
     }
 
     /**
-     * Postgres:
-     * ```sql
-     * INSERT INTO tester ("name", age) VALUES ('Anya', 10)
-     * INSERT INTO tester ("name", age) VALUES ('Anna', 50) ON CONFLICT (id) DO UPDATE SET "name"=EXCLUDED."name", age=EXCLUDED.age
-     * ```
-     *
-     * ```sql
-     * INSERT INTO tester ("name", age) VALUES ('Anya', 20)
-     * ON CONFLICT ("name") DO
-     *      UPDATE SET age=EXCLUDED.age
-     *       WHERE (tester."name" LIKE 'A%') AND (tester."name" LIKE '%a') AND (tester."name" <> 'Anna')
-     * ```
+     * `upsert` 시에 `where` 조건 절 사용하기
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -959,8 +1058,7 @@ class UpsertTest: AbstractExposedTest() {
              * Insert
              * Postgres:
              * ```sql
-             * INSERT INTO tester ("name", age)
-             * VALUES ('Anna', 50)
+             * INSERT INTO tester ("name", age) VALUES ('Anna', 50)
              * ON CONFLICT (id) DO
              *      UPDATE SET "name"=EXCLUDED."name",
              *                 age=EXCLUDED.age
@@ -977,11 +1075,11 @@ class UpsertTest: AbstractExposedTest() {
             val updatedAge = 20
 
             /**
-             * Update
+             * `upsert` 작업 중 `update` 시에만 조건 절을 지정할 수 있다.
+             * 
              * Postgres;
              * ```sql
-             * INSERT INTO tester ("name", age)
-             * VALUES ('Anya', 20)
+             * INSERT INTO tester ("name", age) VALUES ('Anya', 20)
              * ON CONFLICT ("name") DO
              *      UPDATE SET age=EXCLUDED.age
              *       WHERE (tester."name" LIKE 'A%') AND (tester."name" LIKE '%a') AND (tester."name" <> 'Anna')
@@ -1040,6 +1138,7 @@ class UpsertTest: AbstractExposedTest() {
             }
 
             /**
+             * `upsert` 작업 중 `insert` 시에는 subquery 결과를 사용한다.
              * MySQL:
              * ```sql
              * INSERT INTO tester_2 (`name`)
@@ -1067,6 +1166,8 @@ class UpsertTest: AbstractExposedTest() {
             tester2.selectAll().single()[tester2.name] shouldBeEqualTo "foo"
 
             /**
+             * `upsert` 작업 중 `name` 컬럼에 subquery 결과를 사용한다.
+             * 
              * MySQL:
              * ```sql
              * INSERT INTO tester_2 (id, `name`)
@@ -1090,34 +1191,34 @@ class UpsertTest: AbstractExposedTest() {
     }
 
     /**
-     * BatchUpsert
+     * `batchUpsert` when no conflict -> insert all rows
      *
      * MySQL:
      * ```sql
-     * INSERT INTO words (`name`, `count`) VALUES ('Word A', 10) AS NEW ON DUPLICATE KEY UPDATE `name`=NEW.`name`, `count`=NEW.`count`
-     * INSERT INTO words (`name`, `count`) VALUES ('Word B', 20) AS NEW ON DUPLICATE KEY UPDATE `name`=NEW.`name`, `count`=NEW.`count`
-     * INSERT INTO words (`name`, `count`) VALUES ('Word C', 30) AS NEW ON DUPLICATE KEY UPDATE `name`=NEW.`name`, `count`=NEW.`count`
-     * INSERT INTO words (`name`, `count`) VALUES ('Word D', 40) AS NEW ON DUPLICATE KEY UPDATE `name`=NEW.`name`, `count`=NEW.`count`
-     * INSERT INTO words (`name`, `count`) VALUES ('Word E', 50) AS NEW ON DUPLICATE KEY UPDATE `name`=NEW.`name`, `count`=NEW.`count`
-     * INSERT INTO words (`name`, `count`) VALUES ('Word F', 60) AS NEW ON DUPLICATE KEY UPDATE `name`=NEW.`name`, `count`=NEW.`count`
-     * INSERT INTO words (`name`, `count`) VALUES ('Word G', 70) AS NEW ON DUPLICATE KEY UPDATE `name`=NEW.`name`, `count`=NEW.`count`
-     * INSERT INTO words (`name`, `count`) VALUES ('Word H', 80) AS NEW ON DUPLICATE KEY UPDATE `name`=NEW.`name`, `count`=NEW.`count`
-     * INSERT INTO words (`name`, `count`) VALUES ('Word I', 90) AS NEW ON DUPLICATE KEY UPDATE `name`=NEW.`name`, `count`=NEW.`count`
-     * INSERT INTO words (`name`, `count`) VALUES ('Word J', 100) AS NEW ON DUPLICATE KEY UPDATE `name`=NEW.`name`, `count`=NEW.`count`
+     * INSERT INTO words (`name`, `count`) VALUES ('Word A', 10)
+     *      AS NEW ON DUPLICATE KEY
+     *      UPDATE `name`=NEW.`name`, `count`=NEW.`count`
+     * INSERT INTO words (`name`, `count`) VALUES ('Word B', 20)
+     *      AS NEW ON DUPLICATE KEY
+     *      UPDATE `name`=NEW.`name`, `count`=NEW.`count`
+     * ...
+     * INSERT INTO words (`name`, `count`) VALUES ('Word J', 100)
+     *      AS NEW ON DUPLICATE KEY
+     *      UPDATE `name`=NEW.`name`, `count`=NEW.`count`
      * ```
      *
      * Postgres:
      * ```sql
-     * INSERT INTO words ("name", "count") VALUES ('Word A', 10) ON CONFLICT ("name") DO UPDATE SET "count"=EXCLUDED."count"
-     * INSERT INTO words ("name", "count") VALUES ('Word B', 20) ON CONFLICT ("name") DO UPDATE SET "count"=EXCLUDED."count"
-     * INSERT INTO words ("name", "count") VALUES ('Word C', 30) ON CONFLICT ("name") DO UPDATE SET "count"=EXCLUDED."count"
-     * INSERT INTO words ("name", "count") VALUES ('Word D', 40) ON CONFLICT ("name") DO UPDATE SET "count"=EXCLUDED."count"
-     * INSERT INTO words ("name", "count") VALUES ('Word E', 50) ON CONFLICT ("name") DO UPDATE SET "count"=EXCLUDED."count"
-     * INSERT INTO words ("name", "count") VALUES ('Word F', 60) ON CONFLICT ("name") DO UPDATE SET "count"=EXCLUDED."count"
-     * INSERT INTO words ("name", "count") VALUES ('Word G', 70) ON CONFLICT ("name") DO UPDATE SET "count"=EXCLUDED."count"
-     * INSERT INTO words ("name", "count") VALUES ('Word H', 80) ON CONFLICT ("name") DO UPDATE SET "count"=EXCLUDED."count"
-     * INSERT INTO words ("name", "count") VALUES ('Word I', 90) ON CONFLICT ("name") DO UPDATE SET "count"=EXCLUDED."count"
-     * INSERT INTO words ("name", "count") VALUES ('Word J', 100) ON CONFLICT ("name") DO UPDATE SET "count"=EXCLUDED."count"
+     * INSERT INTO words ("name", "count") VALUES ('Word A', 10)
+     *      ON CONFLICT ("name") DO
+     *      UPDATE SET "count"=EXCLUDED."count"
+     * INSERT INTO words ("name", "count") VALUES ('Word B', 20)
+     *      ON CONFLICT ("name") DO
+     *      UPDATE SET "count"=EXCLUDED."count"
+     * ...
+     * INSERT INTO words ("name", "count") VALUES ('Word J', 100)
+     *      ON CONFLICT ("name") DO
+     *      UPDATE SET "count"=EXCLUDED."count"
      * ```
      */
     @ParameterizedTest
@@ -1128,7 +1229,7 @@ class UpsertTest: AbstractExposedTest() {
         withTables(testDB, Words) {
             val amountOfWords = 10
             val allWords: List<Pair<String, Int>> = List(amountOfWords) { i ->
-                "Word ${'A' + i}" to amountOfWords * i + amountOfWords
+                "Word ${'A' + i}" to amountOfWords * i + amountOfWords     // Pair("Word A", 10), Pair("Word B", 20), ...
             }
 
             val generatedWords = Words.batchUpsert(allWords) { (word, count) ->
@@ -1144,6 +1245,9 @@ class UpsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * `batchUpsert` with conflict -> update 된다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `batchUpsert with conflict`(testDB: TestDB) {
@@ -1169,6 +1273,20 @@ class UpsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * `batchUpdate` with Sequence
+     *
+     * ```sql
+     * INSERT INTO words ("name") VALUES ('RC1TL3Sy4B9B')
+     *      ON CONFLICT ("name") DO
+     *          UPDATE SET "name"=EXCLUDED."name"
+     *
+     * ...
+     * INSERT INTO words ("name") VALUES ('iF15dJo55zHS')
+     *      ON CONFLICT ("name") DO
+     *          UPDATE SET "name"=EXCLUDED."name"
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `batchUpdate with sequence`(testDB: TestDB) {
@@ -1176,7 +1294,7 @@ class UpsertTest: AbstractExposedTest() {
 
         withTables(testDB, Words) {
             val amountOfWords = 25
-            val allWords = List(amountOfWords) { Fakers.fixedString(32) }.asSequence()
+            val allWords = List(amountOfWords) { Base58.randomString(12) }.asSequence()
 
             Words.batchUpsert(allWords) { word ->
                 this[Words.word] = word
@@ -1186,6 +1304,9 @@ class UpsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * `batchUpdate` with empty Sequence - 아무 작업도 하지 않는다
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `batchUpdate with empty sequence`(testDB: TestDB) {
@@ -1219,14 +1340,14 @@ class UpsertTest: AbstractExposedTest() {
              * INSERT INTO words ("name") VALUES ('A')
              *   ON CONFLICT ("name") DO
              *      UPDATE SET "count"=(words."count" + 1)
-             *       WHERE words."name" IN ('A', 'E', 'I');
+             *       WHERE words."name" IN ('A', 'E', 'I');  -- update 시 'A', 'E', 'I' 만 count를 증가시킨다.
              *
-             * ...
+             * -- ~~~
              *
-             * INSERT INTO words ("name") VALUES ('A')
+             * INSERT INTO words ("name") VALUES ('U')
              *   ON CONFLICT ("name") DO
              *      UPDATE SET "count"=(words."count" + 1)
-             *       WHERE words."name" IN ('A', 'E', 'I');
+             *       WHERE words."name" IN ('A', 'E', 'I');  -- update 시 'A', 'E', 'I' 만 count를 증가시킨다.
              * ```
              */
             Words.batchUpsert(
@@ -1250,7 +1371,9 @@ class UpsertTest: AbstractExposedTest() {
         }
     }
 
-
+    /**
+     * `batchUpsert` 작업 중 `insert` 작업 수 얻기
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `Inserted Count With BatchUpsert`(testDB: TestDB) {
@@ -1276,11 +1399,10 @@ class UpsertTest: AbstractExposedTest() {
                 this[AutoIncTable.id] = id
                 this[AutoIncTable.name] = name
             }
-            statement.insertedCount shouldBeEqualTo newDataSize
+            statement.insertedCount shouldBeEqualTo newDataSize  // insert 작업 수 
 
             /**
              * all existing rows set to their current values
-
              */
             val isH2MysqlMode = testDB == H2_MYSQL // || testDB == TestDB.H2_MARIADB
             var expected = if (isH2MysqlMode) 0 else newDataSize
@@ -1289,10 +1411,10 @@ class UpsertTest: AbstractExposedTest() {
                 this[AutoIncTable.id] = id
                 this[AutoIncTable.name] = name
             }
-            statement.insertedCount shouldBeEqualTo expected
+            statement.insertedCount shouldBeEqualTo expected  // insert 작업 수
 
             /**
-             * all existing rows updated & 1 new row inserted
+             * 이미 존재하는 행은 update 되고, 1개의 새로운 행이 추가된다.
              *
              * Postgres:
              * ```sql
@@ -1311,6 +1433,7 @@ class UpsertTest: AbstractExposedTest() {
              */
             val updatedData = data.map { it.first to "new${it.second}" } + (4 to "D")
             expected = if (testDB in TestDB.ALL_MYSQL_LIKE) newDataSize * 2 + 1 else newDataSize + 1
+
             AutoIncTable.batchUpsert(updatedData, shouldReturnGeneratedValues = isNotSqlServer) { (id, name) ->
                 statement = this
                 this[AutoIncTable.id] = id
@@ -1318,7 +1441,7 @@ class UpsertTest: AbstractExposedTest() {
             }
             statement.insertedCount shouldBeEqualTo expected
 
-            AutoIncTable.selectAll().count().toInt() shouldBeEqualTo updatedData.size
+            AutoIncTable.selectAll().count() shouldBeEqualTo updatedData.size.toLong()
         }
     }
 
@@ -1343,8 +1466,9 @@ class UpsertTest: AbstractExposedTest() {
             val value = text("test_value")
         }
 
-        // At present, only Postgres returns the correct UUID directly from the result set.
-        // For other databases incorrect ID is returned from the 'upsert' command.
+        /**
+         * NOTE: 현재는 Postgres 만 올바른 UUID 를 직접 결과 집합에서 반환한다. 다른 데이터베이스에서는 'upsert' 명령에서 잘못된 ID 가 반환된다.
+         */
         withTables(testDB, tester) {
             val insertId = tester.insertAndGetId {
                 it[key] = 1
@@ -1365,7 +1489,7 @@ class UpsertTest: AbstractExposedTest() {
                 onUpdateExclude = listOf(tester.id),
             ) {
                 it[key] = 1
-                it[value] = "two"
+                it[value] = "two"                    // value 가 "two" 로 업데이트 된다.
             }.resultedValues!!.first()[tester.id]
 
             upsertId shouldBeEqualTo insertId
@@ -1375,6 +1499,9 @@ class UpsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * UUID 가 PrimaryKey 일 때, `batchUpsert` 를 사용할 수 있다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `BatchUpsert With UUID PrimaryKey`(testDB: TestDB) {
@@ -1404,11 +1531,14 @@ class UpsertTest: AbstractExposedTest() {
             }
 
             /**
+             * `batchUpdate` 시에 conflict를 판단하는 컬럼을 `tester.key`로 하고, Update 작업 시에는 `tester.id` 는 제외한다.
+             *
              * Postgres:
              * ```sql
              * INSERT INTO batch_upsert_test (test_key, test_value, id)
              * VALUES (1, 'two', '6b594a66-dc19-4f9e-a3f1-2349eead4548')
-             *     ON CONFLICT (test_key) DO UPDATE SET test_value=EXCLUDED.test_value
+             *     ON CONFLICT (test_key) DO
+             *     UPDATE SET test_value=EXCLUDED.test_value
              * ```
              */
             val upsertId = tester.batchUpsert(
@@ -1449,7 +1579,6 @@ class UpsertTest: AbstractExposedTest() {
         withTables(testDB, tester) {
             /**
              * Postgres:
-             *
              * ```sql
              * INSERT INTO my_table (my_table_id, my_table_value)
              * VALUES (1, 'Hello')
@@ -1496,6 +1625,9 @@ class UpsertTest: AbstractExposedTest() {
         val count = integer("count").default(1)
     }
 
+    /**
+     * 기본값과 Nullable 컬럼이 `upsert` 인자에 없을 때, null 으로 설정된다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `Default Values And Nullable Columns Not In Arguments`(testDB: TestDB) {
