@@ -29,12 +29,12 @@ class InsertSelectTest: AbstractExposedTest() {
     companion object: KLogging()
 
     /**
-     * H2
+     * Postgres:
      * ```sql
-     * INSERT INTO CITIES ("name")
-     * SELECT SUBSTRING(USERS."name", 1, 2)
-     *   FROM USERS
-     *  ORDER BY USERS.ID ASC
+     * INSERT INTO cities ("name")
+     * SELECT SUBSTRING(users."name", 1, 2)
+     *   FROM users
+     *  ORDER BY users.id ASC
      *  LIMIT 2
      * ```
      */
@@ -60,11 +60,13 @@ class InsertSelectTest: AbstractExposedTest() {
     }
 
     /**
-     * H2
+     * 같은 테이블에 대해 `INSERT INTO ... SELECT ... FROM ...` 구문을 사용하는 예제
+     *
+     * Postgres:
      * ```sql
-     * INSERT INTO USERDATA (USER_ID, COMMENT, "value")
-     * SELECT USERDATA.USER_ID, USERDATA.COMMENT, 42
-     *   FROM USERDATA
+     * INSERT INTO userdata (user_id, "comment", "value")
+     * SELECT userdata.user_id, userdata."comment", 42
+     *   FROM userdata
      * ```
      */
     @ParameterizedTest
@@ -88,11 +90,11 @@ class InsertSelectTest: AbstractExposedTest() {
     }
 
     /**
-     * H2
+     * Postgres:
      * ```sql
-     * INSERT INTO USERS (ID, "name", CITY_ID, FLAGS)
+     * INSERT INTO users (id, "name", city_id, flags)
      * SELECT SUBSTRING(CAST(RANDOM() AS VARCHAR(255)), 1, 10), 'Foo', 1, 0
-     *   FROM USERS
+     *   FROM users
      * ```
      */
     @ParameterizedTest
@@ -118,11 +120,11 @@ class InsertSelectTest: AbstractExposedTest() {
     }
 
     /**
-     * H2
+     * Postgres:
      * ```sql
-     * INSERT INTO USERS ("name", ID)
+     * INSERT INTO users ("name", id)
      * SELECT 'Foo', SUBSTRING(CAST(RANDOM() AS VARCHAR(255)), 1, 10)
-     *   FROM USERS
+     *   FROM users
      * ```
      */
     @ParameterizedTest
@@ -146,11 +148,13 @@ class InsertSelectTest: AbstractExposedTest() {
 
     /**
      * INSERT INTO ... SELECT ... FROM ... 구문에서 INSERT 할 컬럼을 지정하는 예제
-     * H2
+     *
+     * Postgres:
      * ```sql
-     * INSERT INTO USERS ("name", ID)
+     * INSERT INTO users ("name", id)
      * SELECT 'Foo', 'Foo'
-     *   FROM USERS LIMIT 1
+     *   FROM users
+     *  LIMIT 1
      * ```
      */
     @ParameterizedTest

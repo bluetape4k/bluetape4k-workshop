@@ -60,7 +60,8 @@ class InsertTest: AbstractExposedTest() {
     companion object: KLogging()
 
     /**
-     *
+     * `insertAndGetId` 는 `IntIdTable` 처럼 entityID를 가지는 테이블에 대해서 사용할 수 있습니다.
+     * 
      * ```sql
      * INSERT INTO TMP (FOO) VALUES ('1')
      * ```
@@ -297,6 +298,9 @@ class InsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Sequence 를 사용하여 데이터를 BATCH INSERT 합니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `batch insert with sequence`(testDB: TestDB) {
@@ -314,6 +318,9 @@ class InsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Empty Sequence 를 사용하면 아무 작업도 하지 않습니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `batch insert using empty sequence should work`(testDB: TestDB) {
@@ -330,6 +337,20 @@ class InsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Inser and get generated key
+     *
+     * Postgres:
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS cities (
+     *      city_id SERIAL PRIMARY KEY,
+     *      "name" VARCHAR(50) NOT NULL
+     * );
+     * ```
+     * ```sql
+     * INSERT INTO cities ("name") VALUES ('FooCity')
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert and get generted key 01`(testDB: TestDB) {
@@ -358,6 +379,12 @@ class InsertTest: AbstractExposedTest() {
         override val primaryKey = PrimaryKey(id)
     }
 
+    /**
+     * Postgres:
+     * ```sql
+     * INSERT INTO testlongid ("name") VALUES ('Foo')
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert and get generated key 02`(testDB: TestDB) {
@@ -385,6 +412,11 @@ class InsertTest: AbstractExposedTest() {
 
     /**
      * IntIdTable의 id 컬럼은 SERIAL 이므로 자동으로 증가되는 값이 삽입됩니다.
+     *
+     * Postgres:
+     * ```sql
+     * INSERT INTO intidtest ("name") VALUES ('Foo')
+     * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -629,7 +661,18 @@ class InsertTest: AbstractExposedTest() {
     /**
      * DAO 를 사용하여 데이터를 INSERT 합니다.
      *
-     *
+     * Postgres:
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS ordereddata (
+     *      id SERIAL PRIMARY KEY,
+     *      "name" TEXT NOT NULL,
+     *      "order" INT NOT NULL
+     * )
+     * ```
+     * ```sql
+     * INSERT INTO ordereddata ("name", "order") VALUES ('foo', 20);
+     * INSERT INTO ordereddata ("name", "order") VALUES ('bar', 10);
+     * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -645,6 +688,7 @@ class InsertTest: AbstractExposedTest() {
             }
 
             /**
+             * Postgres:
              * ```sql
              * SELECT ordereddata.id,
              *        ordereddata."name",
@@ -693,20 +737,20 @@ class InsertTest: AbstractExposedTest() {
      *
      * Insert using subquery in Postgres:
      * ```sql
-     * INSERT INTO TAB1 (ID)
-     * VALUES ((SELECT TAB2.ID
-     *            FROM TAB2
-     *           WHERE TAB2.ID = 'foo'))
+     * INSERT INTO tab1 (id)
+     * VALUES ((SELECT tab2.id
+     *            FROM tab2
+     *           WHERE tab2.id = 'foo'))
      * ```
      *
      * Update using subquery in Postgres:
      *
      * ```sql
-     * UPDATE TAB1
-     *    SET ID=(SELECT TAB2.ID
-     *              FROM TAB2
-     *             WHERE TAB2.ID = 'bar')
-     *  WHERE TAB1.ID = 'foo'
+     * UPDATE tab1
+     *    SET id=(SELECT tab2.id
+     *              FROM tab2
+     *             WHERE tab2.id = 'bar')
+     *  WHERE tab1.id = 'foo'
      * ```
      */
     @ParameterizedTest
@@ -744,17 +788,23 @@ class InsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Client 에서 ID를 생성하여 INSERT 하는 예제
+     *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS charidtable (
+     *      id VARCHAR(50) PRIMARY KEY,
+     *      foo INT NOT NULL
+     * )
+     * ```
+     * ```sql
+     * INSERT INTO charidtable (id, foo) VALUES ('XfwhfY', 42)
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `generated key 04`(testDB: TestDB) {
-        /**
-         * ```sql
-         * CREATE TABLE IF NOT EXISTS charidtable (
-         *      id VARCHAR(50) PRIMARY KEY,
-         *      foo INT NOT NULL
-         * )
-         * ```
-         */
+
         val charIdTable = object: IdTable<String>("charIdTable") {
             override val id = varchar("id", 50)
                 .clientDefault { Base58.randomString(6) }
@@ -764,11 +814,6 @@ class InsertTest: AbstractExposedTest() {
             override val primaryKey = PrimaryKey(id)
         }
         withTables(testDB, charIdTable) {
-            /**
-             * ```sql
-             * INSERT INTO charidtable (id, foo) VALUES ('XfwhfY', 42)
-             * ```
-             */
             val id = charIdTable.insertAndGetId {
                 it[foo] = 42
             }
@@ -867,6 +912,10 @@ class InsertTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Batch Insert with ON CONFLICT DO NOTHING - 예외 발생 시 해당 예외를 무시하고,
+     * 다음 작업을 수행하도록 하는 [BatchInsertStatement] 구현체입니다.
+     */
     class BatchInsertOnConflictDoNothing(table: Table): BatchInsertStatement(table) {
         override fun prepareSQL(transaction: Transaction, prepared: Boolean): String = buildString {
             val insertStatement = super.prepareSQL(transaction, prepared)
@@ -1065,10 +1114,14 @@ class InsertTest: AbstractExposedTest() {
     /**
      * Postgres 에서는 UUID 를 생성하는 함수를 사용하여 기본키로 사용할 수 있습니다.
      *
+     * Postgres:
      * ```sql
      * CREATE TABLE IF NOT EXISTS test_uuid_table (
      *      id uuid DEFAULT gen_random_uuid() PRIMARY KEY
      * )
+     * ```
+     * ```sql
+     * INSERT INTO test_uuid_table  DEFAULT VALUES
      * ```
      */
     @ParameterizedTest
