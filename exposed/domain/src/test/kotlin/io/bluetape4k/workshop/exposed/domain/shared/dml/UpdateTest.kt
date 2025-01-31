@@ -3,7 +3,6 @@ package io.bluetape4k.workshop.exposed.domain.shared.dml
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.currentTestDB
 import io.bluetape4k.workshop.exposed.expectException
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
@@ -28,10 +27,11 @@ class UpdateTest: AbstractExposedTest() {
     private val limitNotSupported = TestDB.ALL_POSTGRES_LIKE
 
     /**
+     * Postgres:
      * ```sql
-     * UPDATE USERS
+     * UPDATE users
      *    SET "name"='Alexey'
-     *  WHERE USERS.ID = 'alex'
+     *  WHERE users.id = 'alex'
      * ```
      */
     @ParameterizedTest
@@ -60,6 +60,9 @@ class UpdateTest: AbstractExposedTest() {
     }
 
     /**
+     * Update 에 LIMIT 적용하기
+     *
+     * H2_MYSQL:
      * ```sql
      * UPDATE USERS
      *    SET ID='NewName'
@@ -71,7 +74,7 @@ class UpdateTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `update with limit`(testDB: TestDB) {
         withCitiesAndUsers(testDB) { _, users, _ ->
-            if (currentTestDB in limitNotSupported) {
+            if (testDB in limitNotSupported) {
                 expectException<UnsupportedByDialectException> {
                     users.update({ users.id like "a%" }, limit = 1) {
                         it[users.id] = "NewName"
@@ -118,7 +121,8 @@ class UpdateTest: AbstractExposedTest() {
      *    SET "comment"=users."name",
      *        "value"=0
      *   FROM users
-     *  WHERE users.id = userdata.user_id AND (users.id = 'smth')
+     *  WHERE users.id = userdata.user_id
+     *    AND (users.id = 'smth')
      * ```
      */
     @ParameterizedTest
@@ -152,10 +156,13 @@ class UpdateTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * MariaDB, Oracle, SQLServer에서만 지원합니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `update with join and limit`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB !in TestDB.ALL_H2 + TestDB.ALL_MYSQL + TestDB.ALL_POSTGRES }
+        Assumptions.assumeTrue { testDB !in (TestDB.ALL_H2 + TestDB.ALL_MYSQL + TestDB.ALL_POSTGRES) }
         // val supportsUpdateWithJoinAndLimit = TestDB.ALL_MARIADB + TestDB.ORACLE + TestDB.SQLSERVER
         // Assumptions.assumeTrue(testDB !in supportsUpdateWithJoinAndLimit)
         withCitiesAndUsers(testDB) { _, users, userData ->
@@ -282,40 +289,54 @@ class UpdateTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ### Update with join subquery
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `update with join query`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB !in TestDB.ALL_H2_V1 }
 
         withCitiesAndUsers(testDB) { _, users, userData ->
-            // single join query using join()
-            val userAlias = users.selectAll().where { users.cityId eq 1 }.alias("u2")
-            val joinWithSubQuery = userData.innerJoin(userAlias, { userData.userId }, { userAlias[users.id] })
-
             /**
+             * single join query using join()
+             *
+             * Postgres:
              * ```sql
              * UPDATE userdata
              *    SET "value"=123
-             *   FROM (SELECT users.id,
-             *                users."name",
-             *                users.city_id,
-             *                users.flags
+             *   FROM (SELECT users.id, users."name", users.city_id, users.flags
              *           FROM users
              *          WHERE users.city_id = 1
              *        ) u2
-             *   WHERE userdata.user_id = u2.id
+             *  WHERE userdata.user_id = u2.id
              * ```
              */
+            val userAlias = users.selectAll().where { users.cityId eq 1 }.alias("u2")
+            val joinWithSubQuery = userData.innerJoin(userAlias, { userData.userId }, { userAlias[users.id] })
             joinWithSubQuery.update {
                 it[userData.value] = 123
             }
 
+            /**
+             * Postgres:
+             * ```sql
+             * SELECT userdata.user_id, userdata."comment", userdata."value",
+             *        u2.id, u2."name", u2.city_id, u2.flags
+             * FROM userdata
+             *      INNER JOIN (SELECT users.id, users."name", users.city_id, users.flags
+             *                    FROM users
+             *                   WHERE users.city_id = 1) u2
+             *              ON userdata.user_id = u2.id
+             * ```
+             */
             joinWithSubQuery.selectAll().all { it[userData.value] == 123 }.shouldBeTrue()
 
             // does not support either multi-table joins or update(where)
             Assumptions.assumeTrue { testDB !in TestDB.ALL_H2 }
 
             /**
+             * Postgres:
              * ```sql
              * UPDATE userdata
              *    SET "value"=0
@@ -339,16 +360,10 @@ class UpdateTest: AbstractExposedTest() {
                 it[userData.value] shouldBeEqualTo 0
             }
 
-            // multiple join queries using joinQuery()
-            val singleJoinQuery = userData.joinQuery(
-                on = { userData.userId eq it[users.id] },
-                joinPart = { users.selectAll().where { users.cityId eq 1 } }
-            )
-            val doubleJoinQuery = singleJoinQuery.joinQuery(
-                on = { userData.userId eq it[users.id] },
-                joinPart = { users.selectAll().where { users.name like "%ey" } }
-            )
+
             /**
+             * multiple join queries using `joinQuery()`
+             *
              * ```sql
              * UPDATE userdata
              *    SET "value"=99
@@ -369,6 +384,14 @@ class UpdateTest: AbstractExposedTest() {
              *    AND  (userdata.user_id = q1.id)
              * ```
              */
+            val singleJoinQuery = userData.joinQuery(
+                on = { userData.userId eq it[users.id] },
+                joinPart = { users.selectAll().where { users.cityId eq 1 } }
+            )
+            val doubleJoinQuery = singleJoinQuery.joinQuery(
+                on = { userData.userId eq it[users.id] },
+                joinPart = { users.selectAll().where { users.name like "%ey" } }
+            )
             doubleJoinQuery.update {
                 it[userData.value] = 99
             }
