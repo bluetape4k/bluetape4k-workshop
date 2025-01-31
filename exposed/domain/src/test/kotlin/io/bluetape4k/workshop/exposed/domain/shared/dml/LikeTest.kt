@@ -6,6 +6,7 @@ import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldContainSame
 import org.jetbrains.exposed.sql.LikePattern
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.batchInsert
@@ -35,6 +36,27 @@ class LikeTest: AbstractExposedTest() {
         override val primaryKey = PrimaryKey(id)
     }
 
+    /**
+     * [LikePattern]에 `escapeChar`를 지정하여, 특수문자를 이스케이프할 수 있습니다.
+     *
+     * Postgres:
+     * ```sql
+     * INSERT INTO t1 (charnum, thechar) VALUES (65, 'A');
+     * INSERT INTO t1 (charnum, thechar) VALUES (66, 'B');
+     * ...
+     * INSERT INTO t1 (charnum, thechar) VALUES (90, 'Z');
+     * INSERT INTO t1 (charnum, thechar) VALUES (37, '%');
+     * INSERT INTO t1 (charnum, thechar) VALUES (95, '_');
+     * ```
+     * ```sql
+     * SELECT COUNT(*) FROM T1 WHERE T1.THECHAR LIKE 'A' ESCAPE '+'
+     * SELECT COUNT(*) FROM T1 WHERE T1.THECHAR LIKE 'B' ESCAPE '+'
+     * ...
+     * SELECT COUNT(*) FROM T1 WHERE T1.THECHAR LIKE 'Z' ESCAPE '+'
+     * SELECT COUNT(*) FROM T1 WHERE T1.THECHAR LIKE '%' ESCAPE '+'
+     * SELECT COUNT(*) FROM T1 WHERE T1.THECHAR LIKE '_' ESCAPE '+'
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `detect special chars`(testDB: TestDB) {
@@ -46,46 +68,34 @@ class LikeTest: AbstractExposedTest() {
                     dialectSpecialChars.keys +
                     dialectSpecialChars.values.filterNotNull()
 
-            /**
-             * ```sql
-             * INSERT INTO t1 (charnum, thechar) VALUES (65, 'A');
-             * INSERT INTO t1 (charnum, thechar) VALUES (66, 'B');
-             * ...
-             * INSERT INTO t1 (charnum, thechar) VALUES (90, 'Z');
-             * INSERT INTO t1 (charnum, thechar) VALUES (37, '%');
-             * INSERT INTO t1 (charnum, thechar) VALUES (95, '_');
-             * ```
-             */
             T1.batchInsert(charRange) { ch ->
                 this[T1.id] = ch.code
                 this[T1.char] = ch.toString()
             }
 
             val specialChars = charRange.filter { ch ->
-                // SELECT COUNT(*) FROM T1 WHERE T1.THECHAR LIKE 'A' ESCAPE '+'
-                // SELECT COUNT(*) FROM T1 WHERE T1.THECHAR LIKE 'B' ESCAPE '+'
-                // ...
-                // SELECT COUNT(*) FROM T1 WHERE T1.THECHAR LIKE 'Z' ESCAPE '+'
-                // SELECT COUNT(*) FROM T1 WHERE T1.THECHAR LIKE '%' ESCAPE '+'
-                // SELECT COUNT(*) FROM T1 WHERE T1.THECHAR LIKE '_' ESCAPE '+'
                 T1.selectAll()
                     .where {
                         T1.char like LikePattern(ch.toString(), escapeChar = escapeChar)
                     }
                     .count() != 1L
             }
-            // spectialChars = ['%', '_']
+            // Postgres spectialChars = ['%', '_']
             log.debug { "Special chars: $specialChars" }
-            specialChars.toSet() shouldBeEqualTo dialectSpecialChars.keys
+            specialChars.toSet() shouldContainSame dialectSpecialChars.keys
         }
     }
 
     /**
+     * [LikePattern.ofLiteral] 을 사용해서 각 Dialect에 맞는 ESCAPE를 사용하여 특수문자가 포함된 TEXT를 검색을 수행합니다.
+     *
+     * Postgres:
      * ```sql
      * INSERT INTO t1 (charnum, thechar) VALUES (1, '%a%')
      * INSERT INTO t1 (charnum, thechar) VALUES (2, '_a')
      * INSERT INTO t1 (charnum, thechar) VALUES (3, '_b')
      * INSERT INTO t1 (charnum, thechar) VALUES (4, '\a')
+     *
      * SELECT t1.charnum, t1.thechar FROM t1 WHERE t1.thechar LIKE '\_a' ESCAPE '\'
      * SELECT t1.charnum, t1.thechar FROM t1 WHERE t1.thechar LIKE '\%a\%' ESCAPE '\'
      * SELECT t1.charnum, t1.thechar FROM t1 WHERE t1.thechar LIKE '\\a' ESCAPE '\'
