@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.exposed.domain.shared.dml
 
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
@@ -63,6 +64,10 @@ class ReturningTest: AbstractExposedTest() {
 
         var name by Items.name
         var price by Items.price
+
+        override fun equals(other: Any?): Boolean = other is Item && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Item(id=$idValue, name=$name, price=$price)"
     }
 
     /**
@@ -318,7 +323,7 @@ class ReturningTest: AbstractExposedTest() {
             } //.singleOrNull()
             assertIs<ReturningStatement>(stmt)
 
-            Items.selectAll().count().toInt() shouldBeEqualTo 0
+            Items.selectAll().count() shouldBeEqualTo 0L
 
             // 삭제될 것이 없으므로, 삭제된 레코드가 없습니다.
             Items.deleteReturning().toList().shouldBeEmpty()
@@ -346,7 +351,9 @@ class ReturningTest: AbstractExposedTest() {
              * price가 200.0인 레코드를 삭제하고, 삭제된 행을 반환합니다.
              *
              * ```sql
-             * DELETE FROM items WHERE items.price = 200.0 RETURNING items.id, items."name", items.price
+             * DELETE FROM items
+             *  WHERE items.price = 200.0
+             * RETURNING items.id, items."name", items.price
              * ```
              */
             val result1 = Items.deleteReturning(where = { Items.price eq 200.0 }).single()
@@ -392,8 +399,8 @@ class ReturningTest: AbstractExposedTest() {
              *
              * ```sql
              * UPDATE items
-             *   SET price=(items.price * 10.0)
-             * WHERE items.price <= 99.0
+             *    SET price=(items.price * 10.0)
+             *  WHERE items.price <= 99.0
              * RETURNING items.id, items."name", items.price
              * ```
              */
@@ -412,7 +419,7 @@ class ReturningTest: AbstractExposedTest() {
              *
              * ```sql
              * UPDATE items
-             *   SET "name"=LOWER(items."name")
+             *    SET "name"=LOWER(items."name")
              * RETURNING items."name"
              * ```
              */
@@ -428,7 +435,7 @@ class ReturningTest: AbstractExposedTest() {
              *
              * ```sql
              * UPDATE items
-             *   SET price=0.0
+             *    SET price=0.0
              * RETURNING new_price
              * ```
              */
