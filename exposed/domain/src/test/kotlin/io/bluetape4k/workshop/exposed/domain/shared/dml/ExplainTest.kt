@@ -253,7 +253,7 @@ class ExplainTest: AbstractExposedTest() {
         withTables(testDB, Countries) {
             val originalCode = "ABC"
 
-            // MySQL only allows ANALYZE with SELECT queries
+            // MYSQL에서는 ANALYZE 옵션을 SELECT 구문에만 사용할 수 있다.
             if (testDB !in TestDB.ALL_MYSQL) {
                 // `analyze` 옵션을 적용하면 모든 래핑된 구문도 실행된다.
                 // EXPLAIN ANALYZE INSERT INTO COUNTRIES (COUNTRY_CODE) VALUES ('ABC')
@@ -363,7 +363,7 @@ class ExplainTest: AbstractExposedTest() {
             val result = explain(options = formatOption) { query }.single()
             val jsonString = result.toString().substringAfter("=")
             log.debug { "JSON:\n$jsonString" }
-            
+
             when (testDB) {
                 in TestDB.ALL_MYSQL_LIKE -> jsonString.startsWith('{').shouldBeTrue()
                 else -> jsonString.startsWith('[').shouldBeTrue()
@@ -417,9 +417,9 @@ class ExplainTest: AbstractExposedTest() {
 
             // explain 는 마지막 구문만 실행된다.
             explain {
-                // EXPLAIN DELETE FROM COUNTRIES --> Not executed
+                // EXPLAIN DELETE FROM COUNTRIES -> 실행되지 않습니다.
                 Countries.deleteAll()
-                // EXPLAIN SELECT COUNTRIES.ID, COUNTRIES.COUNTRY_CODE FROM COUNTRIES
+                // EXPLAIN SELECT COUNTRIES.ID, COUNTRIES.COUNTRY_CODE FROM COUNTRIES -> 실행됩니다.
                 Countries.selectAll()
             }.toList().apply {
                 // 마지막 구문인 select 구문만 실행된다.
