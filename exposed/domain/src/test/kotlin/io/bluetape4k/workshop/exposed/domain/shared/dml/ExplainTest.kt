@@ -54,7 +54,25 @@ class ExplainTest: AbstractExposedTest() {
     }
 
     /**
-     * `EXPLAIN` 으로 시작하는 SQL 구문은 실행되지 않는다.
+     * `EXPLAIN` 이 적용된 SQL 구문은 실제로 실행되지 않는다.
+     *
+     * ```
+     * EXPLAIN INSERT INTO countries (country_code) VALUES ('ABC');
+     *
+     * [QUERY PLAN=Insert on countries  (cost=0.00..0.01 rows=0 width=0), QUERY PLAN=  ->  Result  (cost=0.00..0.01 rows=1 width=38)]
+     * ```
+     *
+     * ```
+     * EXPLAIN UPDATE countries SET country_code='DEF';
+     *
+     * [QUERY PLAN=Update on countries  (cost=0.00..22.30 rows=0 width=0), QUERY PLAN=  ->  Seq Scan on countries  (cost=0.00..22.30 rows=1230 width=40)]
+     * ```
+     *
+     * ```
+     * EXPLAIN DELETE FROM countries
+     *
+     * [QUERY PLAN=Delete on countries  (cost=0.00..22.30 rows=0 width=0), QUERY PLAN=  ->  Seq Scan on countries  (cost=0.00..22.30 rows=1230 width=6)]
+     * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -62,21 +80,29 @@ class ExplainTest: AbstractExposedTest() {
         withTables(testDB, Countries) {
             val originalCode = "ABC"
 
-            explain { Countries.insert { it[code] = originalCode } }.toList()  //
+            explain { Countries.insert { it[code] = originalCode } }.toList().apply {
+                log.debug { "EXPLAIN Insert: $this" }
+            }
             Countries.selectAll().empty().shouldBeTrue()
 
             Countries.insert { it[code] = originalCode }
             Countries.selectAll().count() shouldBeEqualTo 1L
 
             // EXPLAIN UPDATE COUNTRIES SET COUNTRY_CODE = 'DEF'
-            explain { Countries.update { it[code] = "DEF" } }.toList()
+            explain { Countries.update { it[code] = "DEF" } }.toList().apply {
+                log.debug { "EXPLAIN Update: $this" }
+            }
             Countries.selectAll().single()[Countries.code] shouldBeEqualTo originalCode
+            Countries.update { it[code] = "DEF" }
+            Countries.selectAll().single()[Countries.code] shouldBeEqualTo "DEF"
 
             // EXPLAIN DELETE FROM COUNTRIES
-            explain { Countries.deleteAll() }.toList()
-            Countries.selectAll().count().toInt() shouldBeEqualTo 1
+            explain { Countries.deleteAll() }.toList().apply {
+                log.debug { "EXPLAIN Delete: $this" }
+            }
+            Countries.selectAll().count() shouldBeEqualTo 1L
 
-            Countries.deleteAll()
+            Countries.deleteAll() shouldBeEqualTo 1
             Countries.selectAll().empty().shouldBeTrue()
         }
     }
@@ -84,28 +110,19 @@ class ExplainTest: AbstractExposedTest() {
     /**
      * `EXPLAIN` 으로 시작하는 SQL 구문은 실행되지 않는다.
      *
+     * Postgres:
      * ```sql
-     * EXPLAIN SELECT CITIES.CITY_ID FROM CITIES WHERE CITIES."name" LIKE 'A%';
-     *
-     * EXPLAIN SELECT USERS."name", CITIES."name" FROM USERS INNER JOIN CITIES ON CITIES.CITY_ID = USERS.CITY_ID WHERE ((USERS.ID = 'andrey') OR (USERS."name" = 'sergey')) AND (USERS.CITY_ID = CITIES.CITY_ID);
-     *
-     * EXPLAIN SELECT USERS.ID, USERS."name", USERS.CITY_ID, USERS.FLAGS FROM USERS WHERE USERS.ID = 'andrey' UNION SELECT USERS.ID, USERS."name", USERS.CITY_ID, USERS.FLAGS FROM USERS WHERE USERS.ID = 'sergey' LIMIT 1;
-     *
-     * EXPLAIN INSERT INTO CITIES ("name") VALUES ('City A');
-     *
-     * EXPLAIN INSERT INTO USERDATA (USER_ID, COMMENT, "value") SELECT USERDATA.USER_ID, USERDATA.COMMENT, 42 FROM USERDATA;
-     *
-     * EXPLAIN MERGE INTO CITIES T USING (VALUES (1, 'City A')) S(CITY_ID, "name") ON (T.CITY_ID=S.CITY_ID) WHEN MATCHED THEN UPDATE SET T."name"=S."name" WHEN NOT MATCHED THEN INSERT ("name") VALUES(S."name");
-     *
-     * EXPLAIN UPDATE CITIES SET "name"='City A';
-     *
-     * EXPLAIN MERGE INTO USERDATA USING USERS ON USERS.ID = USERDATA.USER_ID WHEN MATCHED THEN UPDATE SET USERDATA."value"=123;
-     *
-     * EXPLAIN DELETE FROM CITIES WHERE CITIES.CITY_ID = 1;
-     *
-     * EXPLAIN DELETE FROM CITIES;
+     * EXPLAIN UPDATE userdata SET "value"=123 FROM users WHERE users.id = userdata.user_id
      * ```
-     *
+     * Explain 결과:
+     * ```
+     * QUERY PLAN=Update on userdata  (cost=19.45..36.40 rows=0 width=0)
+     * QUERY PLAN=  ->  Hash Join  (cost=19.45..36.40 rows=550 width=16)
+     * QUERY PLAN=        Hash Cond: ((userdata.user_id)::text = (users.id)::text)
+     * QUERY PLAN=        ->  Seq Scan on userdata  (cost=0.00..15.50 rows=550 width=44)
+     * QUERY PLAN=        ->  Hash  (cost=14.20..14.20 rows=420 width=44)
+     * QUERY PLAN=              ->  Seq Scan on users  (cost=0.00..14.20 rows=420 width=44)
+     * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -113,10 +130,14 @@ class ExplainTest: AbstractExposedTest() {
         var explainCount = 0
         val cityName = "City A"
 
-        fun Transaction.explainAndIncrement(body: Transaction.() -> Any?) = explain(body = body).also {
-            it.toList() // as with select queries, explain is only executed when iterated over
-            explainCount++
-        }
+        fun Transaction.explainAndIncrement(body: Transaction.() -> Any?) =
+            explain(body = body).also {
+                it.toList() // as with select queries, explain is only executed when iterated over
+                    .apply {
+                        log.debug { "EXPLAIN:\n${this.joinToString("\n")}" }
+                    }
+                explainCount++
+            }
 
         withCitiesAndUsers(testDB) { cities, users, userData ->
             val testDialect = currentDialectTest
@@ -179,22 +200,51 @@ class ExplainTest: AbstractExposedTest() {
     /**
      * `EXPLAIN` 명령어를 사용할 때 `ANALYZE` 옵션을 사용할 수 있다.
      *
+     * **`ANALYZE` 옵션을 적용하면 모든 래핑된 구문도 실행된다.**
+     *
      * 단, MySQL V8만 SELECT 구문에 `ANALYZE` 옵션을 지원한다.
      *
      * ```sql
      * EXPLAIN ANALYZE INSERT INTO COUNTRIES (COUNTRY_CODE) VALUES ('ABC')
      * ```
+     * =>
+     * ```
+     * QUERY PLAN=Insert on countries  (cost=0.00..0.01 rows=0 width=0) (actual time=0.396..0.397 rows=0 loops=1)
+     * QUERY PLAN=  ->  Result  (cost=0.00..0.01 rows=1 width=38) (actual time=0.079..0.080 rows=1 loops=1)
+     * QUERY PLAN=Planning Time: 0.031 ms
+     * QUERY PLAN=Execution Time: 0.412 ms
+     * ```
      *
      * ```sql
      * EXPLAIN ANALYZE UPDATE COUNTRIES SET COUNTRY_CODE='DEF'
+     * ```
+     * =>
+     * ```
+     * QUERY PLAN=Update on countries  (cost=0.00..22.30 rows=0 width=0) (actual time=0.026..0.026 rows=0 loops=1)
+     * QUERY PLAN=  ->  Seq Scan on countries  (cost=0.00..22.30 rows=1230 width=40) (actual time=0.005..0.005 rows=1 loops=1)
+     * QUERY PLAN=Planning Time: 0.038 ms
+     * QUERY PLAN=Execution Time: 0.213 ms
      * ```
      *
      * ```sql
      * EXPLAIN ANALYZE DELETE FROM COUNTRIES
      * ```
+     * =>
+     * ```
+     * QUERY PLAN=Delete on countries  (cost=0.00..22.30 rows=0 width=0) (actual time=0.012..0.012 rows=0 loops=1)
+     * QUERY PLAN=  ->  Seq Scan on countries  (cost=0.00..22.30 rows=1230 width=6) (actual time=0.006..0.006 rows=1 loops=1)
+     * QUERY PLAN=Planning Time: 0.019 ms
+     * QUERY PLAN=Execution Time: 0.019 ms
+     * ```
      *
      * ```sql
      * EXPLAIN ANALYZE SELECT COUNTRIES.ID, COUNTRIES.COUNTRY_CODE FROM COUNTRIES
+     * ```
+     * =>
+     * ```
+     * QUERY PLAN=Seq Scan on countries  (cost=0.00..22.30 rows=1230 width=38) (actual time=0.005..0.005 rows=0 loops=1)
+     * QUERY PLAN=Planning Time: 0.021 ms
+     * QUERY PLAN=Execution Time: 0.009 ms
      * ```
      */
     @ParameterizedTest
@@ -205,47 +255,94 @@ class ExplainTest: AbstractExposedTest() {
 
             // MySQL only allows ANALYZE with SELECT queries
             if (testDB !in TestDB.ALL_MYSQL) {
-                // analyze means all wrapped statements should also be executed
+                // `analyze` 옵션을 적용하면 모든 래핑된 구문도 실행된다.
                 // EXPLAIN ANALYZE INSERT INTO COUNTRIES (COUNTRY_CODE) VALUES ('ABC')
-                explain(analyze = true) { Countries.insert { it[code] = originalCode } }.toList()
+                explain(analyze = true) { Countries.insert { it[code] = originalCode } }.toList().apply {
+                    log.debug { "EXPLAIN Insert:\n${this.joinToString("\n")}" }
+                }
                 Countries.selectAll().count().toInt() shouldBeEqualTo 1
 
                 // EXPLAIN ANALYZE UPDATE COUNTRIES SET COUNTRY_CODE='DEF'
-                explain(analyze = true) { Countries.update { it[code] = "DEF" } }.toList()
+                explain(analyze = true) { Countries.update { it[code] = "DEF" } }.toList().apply {
+                    log.debug { "EXPLAIN Update:\n${this.joinToString("\n")}" }
+                }
                 Countries.selectAll().single()[Countries.code] shouldBeEqualTo "DEF"
 
                 // EXPLAIN ANALYZE DELETE FROM COUNTRIES
-                explain(analyze = true) { Countries.deleteAll() }.toList()
+                explain(analyze = true) { Countries.deleteAll() }.toList().apply {
+                    log.debug { "EXPLAIN Delete:\n${this.joinToString("\n")}" }
+                }
                 Countries.selectAll().empty().shouldBeTrue()
             }
 
-            // In MySql prior 8 the EXPLAIN command should be used without ANALYZE modifier
+            // MySQL V8 이전 버전은 EXPLAIN 명령어에 ANALYZE 옵션을 지원하지 않는다.
             val analyze = testDB != MYSQL_V5
             // EXPLAIN ANALYZE SELECT COUNTRIES.ID, COUNTRIES.COUNTRY_CODE FROM COUNTRIES
-            explain(analyze = analyze) { Countries.selectAll() }.toList()
+            explain(analyze = analyze) { Countries.selectAll() }.toList().apply {
+                log.debug { "EXPLAIN Select:\n${this.joinToString("\n")}" }
+            }
         }
     }
 
     /**
-     * MYSQL V8
+     * MYSQL V8 에서는 `EXPLAIN` 명령어에 `FORMAT=JSON` 옵션을 사용할 수 있다.
      *
-     * ```sql
-     * EXPLAIN FORMAT=JSON SELECT countries.id FROM countries WHERE countries.country_code LIKE 'A%'
-     * ```
+     * Postgres 에서는 `EXPLAIN` 명령어에 `FORMAT JSON` 옵션을 사용할 수 있다.
      *
-     * POSTGRESQL
      * ```sql
      * EXPLAIN (FORMAT JSON) SELECT countries.id FROM countries WHERE countries.country_code LIKE 'A%'
      * ```
-     *
-     * MYSQL V8 with ANALYZE
-     * ```sql
-     * EXPLAIN ANALYZE FORMAT=TREE SELECT countries.id FROM countries WHERE countries.country_code LIKE 'A%'
+     * =>
+     * ```json
+     * [
+     *   {
+     *     "Plan": {
+     *       "Node Type": "Seq Scan",
+     *       "Parallel Aware": false,
+     *       "Async Capable": false,
+     *       "Relation Name": "countries",
+     *       "Alias": "countries",
+     *       "Startup Cost": 0.00,
+     *       "Total Cost": 25.38,
+     *       "Plan Rows": 6,
+     *       "Plan Width": 4,
+     *       "Filter": "((country_code)::text ~~ 'A%'::text)"
+     *     }
+     *   }
+     * ]
      * ```
      *
-     * POSTGRESQL with ANALYZE
-     * ```sql
+     * ANALYZE 옵션과 함께 사용할 수 있다. (구문이 실행됩니다)
+     * ```
      * EXPLAIN (ANALYZE TRUE, FORMAT JSON) SELECT countries.id FROM countries WHERE countries.country_code LIKE 'A%'
+     * ```
+     * =>
+     * ```json
+     * [
+     *   {
+     *     "Plan": {
+     *       "Node Type": "Seq Scan",
+     *       "Parallel Aware": false,
+     *       "Async Capable": false,
+     *       "Relation Name": "countries",
+     *       "Alias": "countries",
+     *       "Startup Cost": 0.00,
+     *       "Total Cost": 25.38,
+     *       "Plan Rows": 6,
+     *       "Plan Width": 4,
+     *       "Actual Startup Time": 0.006,
+     *       "Actual Total Time": 0.006,
+     *       "Actual Rows": 0,
+     *       "Actual Loops": 1,
+     *       "Filter": "((country_code)::text ~~ 'A%'::text)",
+     *       "Rows Removed by Filter": 0
+     *     },
+     *     "Planning Time": 0.095,
+     *     "Triggers": [
+     *     ],
+     *     "Execution Time": 0.020
+     *   }
+     * ]
      * ```
      */
     @ParameterizedTest
@@ -265,7 +362,8 @@ class ExplainTest: AbstractExposedTest() {
             val query = Countries.select(Countries.id).where { Countries.code like "A%" }
             val result = explain(options = formatOption) { query }.single()
             val jsonString = result.toString().substringAfter("=")
-            log.debug { "JSON: $jsonString" }
+            log.debug { "JSON:\n$jsonString" }
+            
             when (testDB) {
                 in TestDB.ALL_MYSQL_LIKE -> jsonString.startsWith('{').shouldBeTrue()
                 else -> jsonString.startsWith('[').shouldBeTrue()
@@ -280,7 +378,9 @@ class ExplainTest: AbstractExposedTest() {
             // test analyze + options
             val analyze = testDB != MYSQL_V5
             val combinedOption = if (testDB == MYSQL_V8) "FORMAT=TREE" else formatOption
-            explain(analyze, combinedOption) { query }.toList()
+            explain(analyze, combinedOption) { query }.toList().apply {
+                log.debug { "EXPLAIN ANALYZE FORMAT=TREE:\n${this.toString().substringAfter("=")}" }
+            }
         }
     }
 
@@ -291,6 +391,10 @@ class ExplainTest: AbstractExposedTest() {
      *
      * ```sql
      * EXPLAIN SELECT COUNTRIES.ID, COUNTRIES.COUNTRY_CODE FROM COUNTRIES
+     * ```
+     * =>
+     * ```
+     * QUERY PLAN=Seq Scan on countries  (cost=0.00..22.30 rows=1230 width=38)
      * ```
      */
     @ParameterizedTest
@@ -317,14 +421,17 @@ class ExplainTest: AbstractExposedTest() {
                 Countries.deleteAll()
                 // EXPLAIN SELECT COUNTRIES.ID, COUNTRIES.COUNTRY_CODE FROM COUNTRIES
                 Countries.selectAll()
-            }.toList()
+            }.toList().apply {
+                // 마지막 구문인 select 구문만 실행된다.
+                log.debug { "EXPLAIN Select:\n${this.joinToString("\n")}" }
+            }
 
             statementCount shouldBeEqualTo 1
             val executed = statementStats.keys.single()
 
             executed.startsWith("EXPLAIN ").shouldBeTrue()
-            ("SELECT " in executed).shouldBeTrue()
-            ("DELETE " in executed).shouldBeFalse()
+            ("SELECT " in executed).shouldBeTrue()   // 마지막 구문인 SELECT 구문은 실행된다.
+            ("DELETE " in executed).shouldBeFalse()  // DELETE 구문은 실행되지 않는다.
 
             debug = false
         }
