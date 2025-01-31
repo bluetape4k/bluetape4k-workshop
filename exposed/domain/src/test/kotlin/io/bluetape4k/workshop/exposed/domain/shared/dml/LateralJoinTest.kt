@@ -19,6 +19,25 @@ import org.jetbrains.exposed.sql.selectAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.FieldSource
 
+/**
+ * Lateral Join Query 예제 모음
+ *
+ * LATERAL은 SQL에서 서브쿼리가 메인 쿼리의 컬럼을 참조할 수 있도록 해주는 기능입니다. 이 기능은 주로 LATERAL JOIN에서 사용되어, 메인 쿼리의 각 행에 대해 서브쿼리를 실행하고 그 결과를 조인하는 방식으로 작동합니다.
+ *
+ * ### LATERAL의 기능
+ * 1. 서브쿼리와 메인 쿼리의 상관관계 유지:
+ *   * LATERAL을 사용하면 서브쿼리가 메인 쿼리의 현재 행에 있는 값을 참조할 수 있습니다.
+ *     이는 일반적인 서브쿼리와 달리, 메인 쿼리의 컨텍스트를 유지하면서 동작할 수 있게 합니다12.
+ *
+ * 2. 유연한 데이터 조회:
+ *   * LATERAL JOIN은 각 행마다 서브쿼리를 실행하기 때문에, 특정 조건에 맞는 데이터를 유연하게 조회할 수 있습니다.
+ *     예를 들어, 각 고객의 위시리스트에 따라 해당 고객이 원하는 가격 이하의 상품을 찾는 쿼리를 작성할 수 있습니다3.
+ * 3. 조인의 출력 제어:
+ *   * LATERAL 조인은 인라인 뷰에서 생성된 행만 포함되며, 메인 테이블의 행이 반드시 조인될 필요가 없습니다.
+ *     이는 LATERAL이 서브쿼리 내에서 메인 테이블의 데이터를 처리할 수 있도록 해주기 때문입니다2.
+ *
+ * 참고: [Lateral 기능](https://www.perplexity.ai/search/sql-joinsi-lateral-yi-gineunge-dEWB59TDTqOYIIW0bB86pQ)
+ */
 class LateralJoinTest: AbstractExposedTest() {
 
     private val lateralJoinSupportedDb = listOf(TestDB.POSTGRESQL)
@@ -26,6 +45,7 @@ class LateralJoinTest: AbstractExposedTest() {
     /**
      * ### Lateral Join Query
      *
+     * Postgres:
      * ```sql
      * SELECT parent.id,
      *        parent."value",
@@ -57,30 +77,70 @@ class LateralJoinTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ### Lateral Join Query Alias
+     *
+     * #### Cross Join Lateral Query
+     * Postgres:
+     * ```sql
+     * SELECT parent.id,
+     *        parent."value",
+     *        child1.id,
+     *        child1.parent_id,
+     *        child1."value"
+     *   FROM parent CROSS JOIN LATERAL
+     *          (SELECT child.id,
+     *                  child.parent_id,
+     *                  child."value"
+     *             FROM child
+     *            WHERE child."value" > parent."value"
+     *            LIMIT 1
+     *          ) child1
+     * ```
+     * #### Left Join Lateral Query
+     * Postgres:
+     * ```sql
+     * SELECT parent.id,
+     *        parent."value",
+     *        child1.id,
+     *        child1.parent_id,
+     *        child1."value"
+     *   FROM parent LEFT JOIN LATERAL
+     *          (SELECT child.id,
+     *                  child.parent_id,
+     *                  child."value"
+     *             FROM child
+     *            WHERE child."value" > parent."value"
+     *          ) child1 ON parent.id = child1.parent_id
+     * ```
+     *
+     * #### Left join to Alias
+     * Postgres:
+     * ```sql
+     * SELECT parent1.id,
+     *        parent1."value",
+     *        child1.id,
+     *        child1.parent_id,
+     *        child1."value"
+     *   FROM (SELECT parent.id,
+     *                parent."value"
+     *           FROM parent
+     *        ) parent1
+     *         LEFT JOIN LATERAL
+     *         (SELECT child.id,
+     *                 child.parent_id,
+     *                 child."value"
+     *            FROM child
+     *           WHERE child."value" > parent1."value"
+     *         ) child1
+     *         ON parent1.id = child1.parent_id
+     * ```
+     */
     @ParameterizedTest
     @FieldSource("lateralJoinSupportedDb")
     fun `lateral join query alias`(dialect: TestDB) {
         withTestTablesAndDefaultData(dialect) { parent, child, _ ->
 
-            /**
-             * Cross Join Lateral Query
-             *
-             * ```sql
-             * SELECT parent.id,
-             *        parent."value",
-             *        child1.id,
-             *        child1.parent_id,
-             *        child1."value"
-             *   FROM parent CROSS JOIN LATERAL
-             *          (SELECT child.id,
-             *                  child.parent_id,
-             *                  child."value"
-             *             FROM child
-             *            WHERE child."value" > parent."value"
-             *            LIMIT 1
-             *          ) child1
-             * ```
-             */
             child.selectAll()
                 .where { child.value greater parent.value }
                 .limit(1)
@@ -97,24 +157,6 @@ class LateralJoinTest: AbstractExposedTest() {
                     join.selectAll().map { it[subqueryAlias[child.value]] } shouldBeEqualTo listOf(30)
                 }
 
-            /**
-             * Left Join Lateral Query
-             *
-             * ```sql
-             * SELECT parent.id,
-             *        parent."value",
-             *        child1.id,
-             *        child1.parent_id,
-             *        child1."value"
-             *   FROM parent LEFT JOIN LATERAL
-             *          (SELECT child.id,
-             *                  child.parent_id,
-             *                  child."value"
-             *             FROM child
-             *            WHERE child."value" > parent."value"
-             *          ) child1 ON parent.id = child1.parent_id
-             * ```
-             */
             child.selectAll()
                 .where { child.value greater parent.value }
                 .alias("child1")
@@ -130,27 +172,6 @@ class LateralJoinTest: AbstractExposedTest() {
                     join.selectAll().map { it[subqueryAlias[child.value]] } shouldBeEqualTo listOf(30)
                 }
 
-            /**
-             * Left join to Alias
-             *
-             * ```sql
-             * SELECT parent1.id,
-             *        parent1."value",
-             *        child1.id,
-             *        child1.parent_id,
-             *        child1."value"
-             *   FROM (SELECT parent.id,
-             *                parent."value"
-             *           FROM parent) parent1
-             *         LEFT JOIN LATERAL
-             *         (SELECT child.id,
-             *                 child.parent_id,
-             *                 child."value"
-             *            FROM child
-             *           WHERE child."value" > parent1."value") child1
-             *         ON parent1.id = child1.parent_id
-             * ```
-             */
             val parentQuery = parent.selectAll().alias("parent1")
             child.selectAll()
                 .where { child.value greater parentQuery[parent.value] }
@@ -169,6 +190,12 @@ class LateralJoinTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Lateral Join 시 주의해야 할 점
+     *
+     * 1. Lateral 적용 시, 명시적으로 테이블 간의 JOIN 조건의 컬럼을 지정하면 예외가 발생합니다. (쿼리를 사용해야 합니다)
+     * 2. Lateral 적용 시, 암묵적인 테이블 간의 JOIN 조건의 컬럼을 지정하면 예외가 발생합니다. (쿼리를 사용해야 합니다)
+     */
     @ParameterizedTest
     @FieldSource("lateralJoinSupportedDb")
     fun `lateral direct table join`(dialect: TestDB) {
@@ -186,6 +213,7 @@ class LateralJoinTest: AbstractExposedTest() {
     }
 
     /**
+     * Postgres:
      * ```sql
      * CREATE TABLE IF NOT EXISTS parent (
      *      id SERIAL PRIMARY KEY,
@@ -198,6 +226,7 @@ class LateralJoinTest: AbstractExposedTest() {
     }
 
     /**
+     * Postgres:
      * ```sql
      * CREATE TABLE IF NOT EXISTS child (
      *      id SERIAL PRIMARY KEY,
@@ -236,5 +265,4 @@ class LateralJoinTest: AbstractExposedTest() {
             statement(parent, child, testDB)
         }
     }
-
 }

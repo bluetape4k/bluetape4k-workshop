@@ -139,7 +139,7 @@ enum class TestDB(
         const val USE_FAST_DB = false
 
         fun enabledDialects(): Set<TestDB> {
-            return if (USE_FAST_DB) ALL_H2 else (ALL - ALL_H2_V1 - MYSQL_V5 - COCKROACH)
+            return if (USE_FAST_DB) ALL_H2 else (ALL_H2 + ALL_POSTGRES) //ALL - ALL_H2_V1 - MYSQL_V5 - COCKROACH)
         }
     }
 }

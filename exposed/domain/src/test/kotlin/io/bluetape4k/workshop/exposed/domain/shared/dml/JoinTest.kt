@@ -28,6 +28,11 @@ import org.jetbrains.exposed.sql.stringLiteral
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
+/**
+ * Join Query 예제 모음
+ *
+ * 참조: [5 Infographics to Understand SQL Joins visually](https://datalemur.com/blog/sql-joins-infographics)
+ */
 class JoinTest: AbstractExposedTest() {
 
     /**
