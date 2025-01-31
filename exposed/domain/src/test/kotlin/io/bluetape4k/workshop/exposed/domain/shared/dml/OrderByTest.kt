@@ -30,6 +30,7 @@ import kotlin.test.assertContentEquals
 class OrderByTest: AbstractExposedTest() {
 
     /**
+     * Postges:
      * ```sql
      * SELECT users.id, users."name", users.city_id, users.flags
      *   FROM users
@@ -49,16 +50,17 @@ class OrderByTest: AbstractExposedTest() {
 
     private fun isNullFirst() = when (currentDialectTest) {
         is OracleDialect, is PostgreSQLDialect -> true
-        is H2Dialect                           ->
+        is H2Dialect ->
             currentDialectTest.h2Mode in listOf(
                 H2CompatibilityMode.PostgreSQL,
                 H2CompatibilityMode.Oracle
             )
 
-        else                                   -> false
+        else -> false
     }
 
     /**
+     * Postges:
      * ```sql
      * SELECT users.id, users."name", users.city_id, users.flags
      *   FROM users
@@ -89,6 +91,7 @@ class OrderByTest: AbstractExposedTest() {
     }
 
     /**
+     * Postges:
      * ```sql
      * SELECT users.id, users."name", users.city_id, users.flags
      *   FROM users
@@ -118,6 +121,7 @@ class OrderByTest: AbstractExposedTest() {
     }
 
     /**
+     * Postges:
      * ```sql
      * SELECT cities."name", COUNT(users.id)
      *   FROM cities INNER JOIN users ON cities.city_id = users.city_id
@@ -147,6 +151,7 @@ class OrderByTest: AbstractExposedTest() {
     }
 
     /**
+     * Postges:
      * ```sql
      * SELECT users.id, users."name", users.city_id, users.flags
      *   FROM users
@@ -178,6 +183,7 @@ class OrderByTest: AbstractExposedTest() {
     }
 
     /**
+     * Postges:
      * ```sql
      * SELECT users.id, users."name", users.city_id, users.flags
      *   FROM users
@@ -199,13 +205,19 @@ class OrderByTest: AbstractExposedTest() {
     }
 
     /**
-     * OrderBy Expressions
+     * OrderBy with Subquery as Expressions
      *
+     * [wrapAsExpression]을 사용하여 subquery를 expression으로 사용할 수 있다.
+     *
+     * Postges:
      * ```sql
      * SELECT cities.city_id,
      *        cities."name"
      *   FROM cities
-     *  ORDER BY (SELECT COUNT(users.id) FROM users WHERE cities.city_id = users.city_id) DESC
+     *  ORDER BY (SELECT COUNT(users.id)
+     *              FROM users
+     *             WHERE cities.city_id = users.city_id
+     *           ) DESC
      * ```
      */
     @ParameterizedTest
@@ -232,13 +244,32 @@ class OrderByTest: AbstractExposedTest() {
     }
 
     /**
-     * OrderBy NullsFirst
+     * OrderBy with
+     *  [SortOrder.ASC_NULLS_FIRST],
+     *  [SortOrder.ASC_NULLS_LAST],
+     *  [SortOrder.DESC_NULLS_FIRST],
+     *  [SortOrder.DESC_NULLS_LAST]
      *
      * ```sql
-     * SELECT users.id, users."name", users.city_id, users.flags FROM users ORDER BY users.city_id ASC NULLS FIRST, users.id ASC
-     * SELECT users.id, users."name", users.city_id, users.flags FROM users ORDER BY users.city_id ASC NULLS LAST, users.id ASC
-     * SELECT users.id, users."name", users.city_id, users.flags FROM users ORDER BY users.city_id DESC NULLS FIRST, users.id ASC
-     * SELECT users.id, users."name", users.city_id, users.flags FROM users ORDER BY users.city_id DESC NULLS LAST, users.id ASC
+     * SELECT users.id, users."name", users.city_id, users.flags
+     *   FROM users
+     *  ORDER BY users.city_id ASC NULLS FIRST,
+     *           users.id ASC;
+     *
+     * SELECT users.id, users."name", users.city_id, users.flags
+     *   FROM users
+     *  ORDER BY users.city_id ASC NULLS LAST,
+     *           users.id ASC;
+     *
+     * SELECT users.id, users."name", users.city_id, users.flags
+     *   FROM users
+     *  ORDER BY users.city_id DESC NULLS FIRST,
+     *           users.id ASC;
+     *
+     * SELECT users.id, users."name", users.city_id, users.flags
+     *   FROM users
+     *  ORDER BY users.city_id DESC NULLS LAST,
+     *           users.id ASC;
      * ```
      */
     @ParameterizedTest
@@ -274,6 +305,15 @@ class OrderByTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Postgres:
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS nullablestrings (
+     *      id SERIAL PRIMARY KEY,
+     *      "name" VARCHAR(50) NULL
+     * )
+     * ```
+     */
     object NullableStrings: Table() {
         val id: Column<Int> = integer("id").autoIncrement()
         val name: Column<String?> = varchar("name", 50).nullable()
@@ -285,10 +325,21 @@ class OrderByTest: AbstractExposedTest() {
      * Nullable String Ordering
      *
      * ```sql
-     * SELECT nullablestrings.id FROM nullablestrings ORDER BY nullablestrings."name" DESC NULLS LAST
-     * SELECT nullablestrings.id FROM nullablestrings ORDER BY nullablestrings."name" ASC NULLS LAST
-     * SELECT nullablestrings.id FROM nullablestrings ORDER BY nullablestrings."name" DESC NULLS FIRST
-     * SELECT nullablestrings.id FROM nullablestrings ORDER BY nullablestrings."name" ASC NULLS FIRST
+     * SELECT nullablestrings.id
+     *   FROM nullablestrings
+     *  ORDER BY nullablestrings."name" DESC NULLS LAST;
+     *
+     * SELECT nullablestrings.id
+     *   FROM nullablestrings
+     *  ORDER BY nullablestrings."name" ASC NULLS LAST;
+     *
+     * SELECT nullablestrings.id
+     *   FROM nullablestrings
+     *  ORDER BY nullablestrings."name" DESC NULLS FIRST;
+     *
+     * SELECT nullablestrings.id
+     *   FROM nullablestrings
+     *  ORDER BY nullablestrings."name" ASC NULLS FIRST;
      * ```
      */
     @ParameterizedTest
