@@ -267,7 +267,10 @@ class EntityTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * CREATE TABLE IF NOT EXISTS board (id SERIAL PRIMARY KEY, "name" VARCHAR(255) NOT NULL);
+     * CREATE TABLE IF NOT EXISTS board (
+     *      id SERIAL PRIMARY KEY,
+     *      "name" VARCHAR(255) NOT NULL
+     * );
      * ALTER TABLE board ADD CONSTRAINT board_name_unique UNIQUE ("name");
      * ```
      */
@@ -285,16 +288,21 @@ class EntityTest: AbstractExposedTest() {
      *      "optCategory" VARCHAR(22) NULL
      * );
      *
-     * ALTER TABLE posts ADD CONSTRAINT posts_category_unique UNIQUE (category);
+     * ALTER TABLE posts
+     *      ADD CONSTRAINT posts_category_unique UNIQUE (category);
      *
-     * ALTER TABLE posts ADD CONSTRAINT fk_posts_board__id FOREIGN KEY (board) REFERENCES board(id)
-     *      ON DELETE RESTRICT ON UPDATE RESTRICT;
-     * ALTER TABLE posts ADD CONSTRAINT fk_posts_parent__id FOREIGN KEY (parent) REFERENCES posts(id)
-     *      ON DELETE RESTRICT ON UPDATE RESTRICT;
-     * ALTER TABLE posts ADD CONSTRAINT fk_posts_category__uniqueid FOREIGN KEY (category) REFERENCES categories("uniqueId")
-     *      ON DELETE RESTRICT ON UPDATE RESTRICT;
-     * ALTER TABLE posts ADD CONSTRAINT fk_posts_optcategory__uniqueid FOREIGN KEY ("optCategory") REFERENCES categories("uniqueId")
-     *      ON DELETE RESTRICT ON UPDATE RESTRICT;
+     * ALTER TABLE posts
+     *      ADD CONSTRAINT fk_posts_board__id FOREIGN KEY (board) REFERENCES board(id)
+     *          ON DELETE RESTRICT ON UPDATE RESTRICT;
+     * ALTER TABLE posts
+     *      ADD CONSTRAINT fk_posts_parent__id FOREIGN KEY (parent) REFERENCES posts(id)
+     *          ON DELETE RESTRICT ON UPDATE RESTRICT;
+     * ALTER TABLE posts
+     *      ADD CONSTRAINT fk_posts_category__uniqueid FOREIGN KEY (category) REFERENCES categories("uniqueId")
+     *          ON DELETE RESTRICT ON UPDATE RESTRICT;
+     * ALTER TABLE posts
+     *      ADD CONSTRAINT fk_posts_optcategory__uniqueid FOREIGN KEY ("optCategory") REFERENCES categories("uniqueId")
+     *          ON DELETE RESTRICT ON UPDATE RESTRICT;
      * ```
      */
     object Posts: LongIdTable("posts") {
@@ -311,7 +319,9 @@ class EntityTest: AbstractExposedTest() {
      *      "uniqueId" VARCHAR(22) NOT NULL,
      *      title VARCHAR(50) NOT NULL
      * );
-     * ALTER TABLE categories ADD CONSTRAINT categories_uniqueid_unique UNIQUE ("uniqueId");
+     *
+     * ALTER TABLE categories
+     *      ADD CONSTRAINT categories_uniqueid_unique UNIQUE ("uniqueId");
      * ```
      */
     object Categories: IntIdTable("categories") {
