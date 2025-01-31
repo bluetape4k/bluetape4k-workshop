@@ -29,18 +29,29 @@ import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
+/**
+ * `UNION` 쿼리 예제 모음
+ */
 class UnionTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
     /**
-     * LIMIT 을 적용한 UNION 쿼리를 테스트합니다.
+     * ### LIMIT 을 적용한 UNION 쿼리를 테스트합니다.
      *
+     * Postgres:
      * ```sql
-     * SELECT USERS.ID, USERS."name", USERS.CITY_ID, USERS.FLAGS FROM USERS WHERE USERS.ID = 'andrey'
-     * UNION
-     * SELECT USERS.ID, USERS."name", USERS.CITY_ID, USERS.FLAGS FROM USERS WHERE USERS.ID = 'sergey'
-     * LIMIT 1
+     * SELECT users.id, users."name", users.city_id, users.flags
+     *   FROM users
+     *  WHERE users.id = 'andrey'
+     *
+     *  UNION
+     *
+     *  SELECT users.id, users."name", users.city_id, users.flags
+     *    FROM users
+     *   WHERE users.id = 'sergey'
+     *
+     *  LIMIT 1
      * ```
      */
     @ParameterizedTest
@@ -60,8 +71,9 @@ class UnionTest: AbstractExposedTest() {
     }
 
     /**
-     * LIMIT 과 OFFSET 을 적용한 UNION 쿼리를 테스트합니다.
+     * ### LIMIT 과 OFFSET 을 적용한 UNION 쿼리를 테스트합니다.
      *
+     * Postgres:
      * ```sql
      * SELECT users.id, users."name", users.city_id, users.flags
      *   FROM users WHERE users.id = 'andrey'
@@ -91,16 +103,19 @@ class UnionTest: AbstractExposedTest() {
     }
 
     /**
-     * UNION 쿼리의 COUNT 를 테스트합니다.
+     * ### UNION 쿼리의 COUNT 를 테스트합니다.
      *
      * ```sql
      * SELECT COUNT(*)
-     *   FROM (
-     *      SELECT users.id, users."name", users.city_id, users.flags
-     *        FROM users WHERE users.id = 'andrey'
-     *      UNION
-     *      SELECT users.id, users."name", users.city_id, users.flags
-     *        FROM users WHERE users.id = 'sergey'
+     *   FROM (SELECT users.id, users."name", users.city_id, users.flags
+     *           FROM users
+     *          WHERE users.id = 'andrey'
+     *
+     *         UNION
+     *
+     *         SELECT users.id, users."name", users.city_id, users.flags
+     *           FROM users
+     *          WHERE users.id = 'sergey'
      *   ) subquery
      * ```
      */
@@ -111,14 +126,17 @@ class UnionTest: AbstractExposedTest() {
             val andreyQuery = users.selectAll().where { users.id eq "andrey" }
             val sergeyQuery = users.selectAll().where { users.id eq "sergey" }
 
-            andreyQuery.union(sergeyQuery).count().toInt() shouldBeEqualTo 2
+            andreyQuery
+                .union(sergeyQuery)
+                .count() shouldBeEqualTo 2L
         }
     }
 
     /**
-     * ORDER BY 를 적용한 UNION 쿼리를 테스트합니다.
+     * ### ORDER BY 를 적용한 UNION 쿼리를 테스트합니다.
      *
      * withDistinct(true) 를 적용한 경우:
+     * Postgres:
      * ```sql
      * SELECT users.id id_alias FROM users WHERE users.id IN ('andrey', 'sergey')
      * UNION
@@ -127,6 +145,7 @@ class UnionTest: AbstractExposedTest() {
      * ```
      *
      * withDistinct(false) 를 적용한 경우:
+     * Postgres:
      * ```sql
      * SELECT users.id id_alias FROM users WHERE users.id IN ('andrey', 'sergey')
      * UNION ALL
@@ -143,14 +162,19 @@ class UnionTest: AbstractExposedTest() {
             val idQuery: Query = users.select(idAlias).where { users.id inList setOf("andrey", "sergey") }
             val union: SetOperation = idQuery.union(idQuery).orderBy(idAlias, SortOrder.DESC)
 
+            // UNION
             union.map { it[idAlias] } shouldBeEqualTo listOf("sergey", "andrey")
 
-            union.withDistinct(false).map { it[idAlias] } shouldBeEqualTo listOf("sergey", "sergey", "andrey", "andrey")
+            // UNION ALL
+            union.withDistinct(false)
+                .map { it[idAlias] } shouldBeEqualTo listOf("sergey", "sergey", "andrey", "andrey")
         }
     }
 
     /**
-     * UNION 쿼리의 DISTINCT 를 테스트합니다.
+     * ### UNION 쿼리의 DISTINCT 를 테스트합니다.
+     *
+     * Postgres:
      * ```sql
      * SELECT users.id, users."name", users.city_id, users.flags
      *   FROM users
@@ -177,14 +201,23 @@ class UnionTest: AbstractExposedTest() {
     }
 
     /**
-     * UNION ALL, INTERSECT 쿼리를 테스트합니다.
+     * ### UNION ALL, INTERSECT 쿼리를 테스트합니다.
      *
+     * Postgres:
      * ```sql
-     * SELECT users.id, users."name", users.city_id, users.flags FROM users
+     * SELECT users.id, users."name", users.city_id, users.flags
+     *   FROM users
+     *
      * UNION ALL
-     * SELECT users.id, users."name", users.city_id, users.flags FROM users
+     *
+     * SELECT users.id, users."name", users.city_id, users.flags
+     *   FROM users
+     *
      * INTERSECT
-     * SELECT users.id, users."name", users.city_id, users.flags FROM users WHERE users.id = 'sergey'
+     *
+     * SELECT users.id, users."name", users.city_id, users.flags
+     *   FROM users
+     *  WHERE users.id = 'sergey'
      * ```
      *
      * intersected users: [andrey, sergey, eugene, alex, smth, sergey]
@@ -194,7 +227,7 @@ class UnionTest: AbstractExposedTest() {
     fun `intersect with three queries`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
 
-        withCitiesAndUsers(testDB) { cities, users, userData ->
+        withCitiesAndUsers(testDB) { _, users, _ ->
             val usersQuery = users.selectAll()
             val sergeyQuery = users.selectAll().where { users.id eq "sergey" }
 
@@ -219,6 +252,7 @@ class UnionTest: AbstractExposedTest() {
 
             log.debug { "intersected users: $rows" }
 
+            // INTERSECT 가 먼저 적용되는 방식
             if (intersectAppliedFirst) {
                 rows shouldHaveSize 6
                 rows shouldBeEqualTo expectedUsers
@@ -230,12 +264,18 @@ class UnionTest: AbstractExposedTest() {
     }
 
     /**
-     * UNION ALL, EXCEPT 쿼리를 테스트합니다.
+     * ### 2개의 쿼리에 대한 EXCEPT 적용
      *
+     * Postgres:
      * ```sql
-     * SELECT users.id, users."name", users.city_id, users.flags FROM users
+     * SELECT users.id, users."name", users.city_id, users.flags
+     *   FROM users
+     *
      * EXCEPT
-     * SELECT users.id, users."name", users.city_id, users.flags FROM users WHERE users.id = 'sergey'
+     *
+     * SELECT users.id, users."name", users.city_id, users.flags
+     *   FROM users
+     *  WHERE users.id = 'sergey'
      * ```
      */
     @ParameterizedTest
@@ -243,7 +283,7 @@ class UnionTest: AbstractExposedTest() {
     fun `except with two query`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
 
-        withCitiesAndUsers(testDB) { cities, users, userData ->
+        withCitiesAndUsers(testDB) { _, users, _ ->
             val usersQuery = users.selectAll()
             val expectedUsers = usersQuery.map { it[users.id] } - "sergey"
             val sergeyQuery = users.selectAll().where { users.id eq "sergey" }
@@ -256,13 +296,23 @@ class UnionTest: AbstractExposedTest() {
     }
 
     /**
+     * ### UNION ALL 에 EXCEPT 를 적용하는 예
      *
+     * Postgres:
      * ```sql
-     * SELECT users.id, users."name", users.city_id, users.flags FROM users
-     * UNION ALL
-     * SELECT users.id, users."name", users.city_id, users.flags FROM users
+     * SELECT users.id, users."name", users.city_id, users.flags
+     *   FROM users
+     *
+     *  UNION ALL
+     *
+     * SELECT users.id, users."name", users.city_id, users.flags
+     *   FROM users
+     *
      * EXCEPT
-     * SELECT users.id, users."name", users.city_id, users.flags FROM users WHERE users.id = 'sergey'
+     *
+     * SELECT users.id, users."name", users.city_id, users.flags
+     *   FROM users
+     *  WHERE users.id = 'sergey'
      * ```
      */
     @ParameterizedTest
@@ -277,7 +327,7 @@ class UnionTest: AbstractExposedTest() {
 
             val result = usersQuery
                 .unionAll(usersQuery)
-                .except(sergeyQuery)
+                .except(sergeyQuery)        // `sergey` 를 제외한 모든 사용자
                 .map { it[users.id] }
 
             result shouldHaveSize 4
@@ -286,14 +336,22 @@ class UnionTest: AbstractExposedTest() {
     }
 
     /**
-     * 복수의 EXCEPT 쿼리 적용
+     * ### 다수의 EXCEPT 쿼리 적용
      *
      * ```sql
-     * SELECT users.id, users."name", users.city_id, users.flags FROM users
-     * EXCEPT
-     * SELECT users.id, users."name", users.city_id, users.flags FROM users WHERE users.id = 'sergey'
-     * EXCEPT
-     * SELECT users.id, users."name", users.city_id, users.flags FROM users WHERE users.id = 'andrey'
+     * SELECT users.id, users."name", users.city_id, users.flags
+     *   FROM users
+     *
+     *  EXCEPT
+     *
+     * SELECT users.id, users."name", users.city_id, users.flags
+     *   FROM users
+     *  WHERE users.id = 'sergey'
+     *
+     *  EXCEPT
+     *
+     * SELECT users.id, users."name", users.city_id, users.flags
+     *   FROM users WHERE users.id = 'andrey'
      * ```
      */
     @ParameterizedTest
@@ -308,8 +366,8 @@ class UnionTest: AbstractExposedTest() {
             val andreyQuery = users.selectAll().where { users.id eq "andrey" }
 
             val result = usersQuery
-                .except(sergeyQuery)
-                .except(andreyQuery)
+                .except(sergeyQuery)                   // sergey 를 제외한 모든 사용자
+                .except(andreyQuery)                   // andrey 를 제외한 모든 사용자
                 .map { it[users.id] }
 
             result shouldHaveSize 3
@@ -404,8 +462,9 @@ class UnionTest: AbstractExposedTest() {
     }
 
     /**
-     * union of limited queries
+     * ### Union of limited queries
      *
+     * Postgres:
      * ```sql
      * (
      *  SELECT users.id, users."name", users.city_id, users.flags
@@ -446,7 +505,7 @@ class UnionTest: AbstractExposedTest() {
     }
 
     /**
-     * union of limited queries
+     * ### Union of limited queries
      *
      * ```sql
      * (
@@ -492,11 +551,16 @@ class UnionTest: AbstractExposedTest() {
     }
 
     /**
+     * ### Union with distinct results
+     *
+     * Postgres:
      * ```sql
      * SELECT users.id, users."name", users.city_id, users.flags
      *   FROM users
      *  WHERE users.id = 'andrey'
+     *
      *  UNION
+     *
      * SELECT users.id, users."name", users.city_id, users.flags
      *   FROM users
      *  WHERE users.id = 'andrey'
@@ -517,11 +581,16 @@ class UnionTest: AbstractExposedTest() {
     }
 
     /**
+     * ### Union with all results
+     *
+     * Postgres:
      * ```sql
      * SELECT users.id, users."name", users.city_id, users.flags
      *   FROM users
      *  WHERE users.id = 'andrey'
+     *
      * UNION ALL
+     * 
      * SELECT users.id, users."name", users.city_id, users.flags
      *   FROM users
      *  WHERE users.id = 'andrey'
@@ -536,20 +605,28 @@ class UnionTest: AbstractExposedTest() {
             val result = andreyQuery
                 .unionAll(andreyQuery)
                 .map { it[users.id] }
+
             result shouldBeEqualTo listOf("andrey", "andrey")
         }
     }
 
     /**
+     * ### Union with all results of three queries
+     *
+     * Postgres:
      * ```sql
      * SELECT users.id, users."name", users.city_id, users.flags
      *   FROM users
      *  WHERE users.id = 'andrey'
+     *
      * UNION ALL
+     *
      * SELECT users.id, users."name", users.city_id, users.flags
      *   FROM users
      *  WHERE users.id = 'andrey'
+     *
      * UNION ALL
+     *
      * SELECT users.id, users."name", users.city_id, users.flags
      *   FROM users
      *  WHERE users.id = 'andrey'
@@ -571,11 +648,16 @@ class UnionTest: AbstractExposedTest() {
     }
 
     /**
+     * ### Union with expressions
+     *
+     * Postgres:
      * ```sql
      * SELECT users.id, 10 exp1, 'aaa' exp2
      *   FROM users
      *  WHERE users.id = 'andrey'
+     *
      * UNION ALL
+     *
      * SELECT users.id, 100, 'bbb'
      *   FROM users
      *  WHERE users.id = 'andrey'
@@ -602,6 +684,9 @@ class UnionTest: AbstractExposedTest() {
     }
 
     /**
+     * ### Union with expressions and alias
+     *
+     * Postgres:
      * ```sql
      * SELECT unionAlias.id, exp1, exp2
      *   FROM (
