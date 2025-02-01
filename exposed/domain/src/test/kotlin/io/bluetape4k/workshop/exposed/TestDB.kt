@@ -76,7 +76,7 @@ enum class TestDB(
                     "&zeroDateTimeBehavior=convertToNull" +
                     "&useLegacyDatetimeCode=false&serverTimezone=UTC" +  // TimeZone 을 UTC 로 설정
                     "&allowPublicKeyRetrieval=true" // +
-            //  "&rewriteBatchedStatements=true"
+            //  "&rewriteBatchedStatements=true"                        // Batch 처리를 위한 설정
         },
         driver = JdbcDrivers.DRIVER_CLASS_MYSQL,
         user = "exposed",
