@@ -4,6 +4,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
@@ -17,15 +18,29 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import kotlin.random.Random
 
+/**
+ * DAO 사용 시 활용하는 [org.jetbrains.exposed.dao.EntityCache] 에 대한 테스트
+ *
+ * 참고: Hibernate 의 First Level Cache 인 Session과 유사한 역할을 수행함
+ */
 class EntityCacheTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
+    /**
+     * Postgres:
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS testcache (
+     *      id SERIAL PRIMARY KEY,
+     *      "value" INT NOT NULL
+     * )
+     * ```
+     */
     object TestTable: IntIdTable("TestCache") {
         val value = integer("value")
     }
@@ -34,16 +49,20 @@ class EntityCacheTest: AbstractExposedTest() {
         companion object: IntEntityClass<TestEntity>(TestTable)
 
         var value by TestTable.value
+
+        override fun equals(other: Any?): Boolean = other is TestEntity && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "TestEntity(id=$idValue, value=$value)"
     }
 
-    @ParameterizedTest
-    @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `global entity cache limit`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB == TestDB.H2 }
-
+    /**
+     * Entity Cache의 전역 설정 값을 변경하여 캐시 크기를 제한하는 테스트
+     */
+    @Test
+    fun `global entity cache limit`() {
         val entitiesCount = 25
-        val cacheSize = 10
-        val db = TestDB.H2.connect {
+        val cacheSize = 10          // 10개의 엔티티만 캐시에 저장
+        val db = TestDB.H2_PSQL.connect {
             maxEntitiesToStoreInCachePerEntity = cacheSize
         }
 
@@ -60,7 +79,7 @@ class EntityCacheTest: AbstractExposedTest() {
                 val allEntities = TestEntity.all().toList()
                 allEntities shouldHaveSize entitiesCount
 
-                // 캐시로부터 특정 엔티티 조회하기 
+                // 엔티티 캐시로부터 특정 엔티티 조회하기
                 val allCachedEntities = entityCache.findAll(TestEntity)
                 allCachedEntities shouldHaveSize cacheSize
                 allCachedEntities shouldContainSame allEntities.drop(entitiesCount - cacheSize)
@@ -70,15 +89,16 @@ class EntityCacheTest: AbstractExposedTest() {
         }
     }
 
-    @ParameterizedTest
-    @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `global entity cache limit zero`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB == TestDB.H2 }
-
+    @Test
+    fun `global entity cache limit zero`() {
         val entitiesCount = 25
-        val db = TestDB.H2.connect()
-        val dbNoCache = TestDB.H2.connect {
-            maxEntitiesToStoreInCachePerEntity = 10
+
+        // 기본 캐시 사이즈를 사용하는 DB 연결
+        val db = TestDB.H2_PSQL.connect()
+
+        // limit 을 10개로 제한한 DB 연결
+        val dbNoCache = TestDB.H2_PSQL.connect {
+            maxEntitiesToStoreInCachePerEntity = 0
         }
 
         val entityIds = transaction(db) {
@@ -133,8 +153,6 @@ class EntityCacheTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `per transaction entity cache limit`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 }
-
         val entitiesCount = 25
         val cacheSize = 10
 
@@ -157,11 +175,12 @@ class EntityCacheTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * 트랜잭션 중간에 Entity Cache의 maxEntitiesToStore 값을 변경해도, 거기에 맞게 캐시가 제한됩니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `change entity cache maxEntitiesToStore in middle of transaction`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 }
-
         withTables(testDB, TestTable) {
             repeat(20) {
                 TestEntity.new {
@@ -185,17 +204,18 @@ class EntityCacheTest: AbstractExposedTest() {
             TestEntity.all().toList()
             entityCache.findAll(TestEntity) shouldHaveSize 18
 
-            // Disable cache
+            // 캐시를 사용하지 않는다.
             entityCache.maxEntitiesToStore = 0
             entityCache.findAll(TestEntity) shouldHaveSize 0
         }
     }
 
+    /**
+     * 명시적 commit 이후에도 EntityCache는 삭제되지 않습니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `EntityCache should not be cleaned on explicit commit`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 }
-
         withTables(testDB, TestTable) {
             val entity = TestEntity.new {
                 value = Random.nextInt()
@@ -206,6 +226,7 @@ class EntityCacheTest: AbstractExposedTest() {
             commit()
             TestEntity.testCache(entity.id) shouldBeEqualTo entity
 
+            // 명시적으로 entityCache를 삭제해야 함
             entityCache.clear()
             TestEntity.testCache(entity.id).shouldBeNull()
         }
