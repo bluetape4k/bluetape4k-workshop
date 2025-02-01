@@ -131,9 +131,22 @@ class EntityHookTest: AbstractExposedTest() {
             }
 
             val (_, events, txId) = trackChanges {
+                /**
+                 * ```sql
+                 * SELECT city.id, city."name", city.country, usertocity.city_id, usertocity.user_id
+                 *   FROM city INNER JOIN usertocity ON city.id = usertocity.city_id
+                 *  WHERE usertocity.user_id = 1;
+                 *
+                 * DELETE
+                 *   FROM usertocity
+                 *  WHERE (usertocity.user_id = 1) AND (usertocity.city_id != 1);
+                 *
+                 * INSERT INTO usertocity (user_id, city_id) VALUES (1, 1);
+                 * ```
+                 */
                 val moscow = City.find { CityTable.name eq "Moscow" }.single()
                 val john = User.all().single()
-                john.cities = SizedCollection(listOf(moscow))
+                john.cities = SizedCollection(listOf(moscow))     // association 을 이렇게 지정할 수 있습니다.
             }
 
             events shouldHaveSize 2

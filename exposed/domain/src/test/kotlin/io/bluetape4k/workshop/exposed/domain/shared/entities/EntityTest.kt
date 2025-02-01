@@ -938,6 +938,7 @@ class EntityTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `non entityId reference`(testDB: TestDB) {
         withTables(testDB, Posts, Boards, Categories) {
+
             val category1 = Category.new { title = "category1" }
 
             val post1 = Post.new {
@@ -950,17 +951,32 @@ class EntityTest: AbstractExposedTest() {
                 parent = post1
             }
 
+            /**
+             * ```sql
+             * SELECT COUNT(*) FROM POSTS
+             * ```
+             */
             Post.all().count() shouldBeEqualTo 2L
-
-            // SELECT COUNT(*) FROM POSTS WHERE POSTS."optCategory" = '2ylpPHjEQlD7I6FiOM0Gt'
+            /**
+             * ```sql
+             * SELECT COUNT(*) FROM POSTS WHERE POSTS."optCategory" = '2ylpPHjEQlD7I6FiOM0Gt'
+             * ```
+             */
             category1.posts.count() shouldBeEqualTo 2L
 
-            // SELECT COUNT(*) FROM POSTS WHERE POSTS."optCategory" = '2ylpPHjEQlD7I6FiOM0Gt'
+            /**
+             * ```sql
+             * SELECT COUNT(*) FROM POSTS WHERE POSTS."optCategory" = '2ylpPHjEQlD7I6FiOM0Gt'
+             */
             Posts.selectAll()
                 .where { Posts.optCategory eq category1.uniqueId }
                 .count() shouldBeEqualTo 2L
 
-            // SELECT COUNT(*) FROM POSTS WHERE POSTS."optCategory" = '2ylpPHjEQlD7I6FiOM0Gt'
+            /**
+             * ```sql
+             * SELECT COUNT(*) FROM POSTS WHERE POSTS."optCategory" = '2ylpPHjEQlD7I6FiOM0Gt'
+             * ```
+             */
             Post.find { Posts.optCategory eq category1.uniqueId }
                 .count() shouldBeEqualTo 2
         }
@@ -1845,7 +1861,7 @@ class EntityTest: AbstractExposedTest() {
                 category = Category.new { title = "Parent Category" }
             }
             val post = Post.new {
-                parent = parentPost 
+                parent = parentPost
                 category = Category.new { title = "Child Category" }
                 optCategory = parent!!.category
             }
