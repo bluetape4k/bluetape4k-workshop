@@ -74,6 +74,7 @@ enum class TestDB(
                     "?useSSL=false" +
                     "&characterEncoding=UTF-8" +
                     "&zeroDateTimeBehavior=convertToNull" +
+                    "&useLegacyDatetimeCode=false&serverTimezone=UTC" +  // TimeZone 을 UTC 로 설정
                     "&allowPublicKeyRetrieval=true" // +
             //  "&rewriteBatchedStatements=true"
         },
