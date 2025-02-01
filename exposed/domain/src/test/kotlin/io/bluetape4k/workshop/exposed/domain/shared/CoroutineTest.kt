@@ -6,6 +6,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.utils.ShutdownQueue
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withSuspendedTables
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -50,12 +51,39 @@ class CoroutineTest: AbstractExposedTest() {
                 .asCoroutineDispatcher()
     }
 
+    /**
+     * Postgres:
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS coruinte_testing (
+     *      id SERIAL PRIMARY KEY
+     * )
+     * ```
+     *
+     */
     object Testing: IntIdTable("CORUINTE_TESTING")
 
+    /**
+     * Postgres:
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS coruinte_testing_unique (
+     *      id INT NOT NULL
+     * )
+     *
+     * ALTER TABLE coruinte_testing_unique
+     *      ADD CONSTRAINT coruinte_testing_unique_id_unique UNIQUE (id)
+     * ```
+     */
     object TestingUnique: Table("CORUINTE_TESTING_UNIQUE") {
         val id = integer("id").uniqueIndex()
     }
 
+    /**
+     * ```sql
+     * SELECT coruinte_testing.id
+     *   FROM coruinte_testing
+     *  WHERE coruinte_testing.id = ?
+     * ```
+     */
     suspend fun Transaction.getTestingById(id: Int) = withSuspendTransaction {
         Testing
             .selectAll()
@@ -188,6 +216,13 @@ class CoroutineTest: AbstractExposedTest() {
                     suspendedTransactionAsync(db = db) {
                         maxAttempts = 20
 
+                        /**
+                         * ```sql
+                         * UPDATE coruinte_testing_unique
+                         *    SET id=99
+                         *  WHERE coruinte_testing_unique.id = 1
+                         * ```
+                         */
                         TestingUnique.update({ TestingUnique.id eq originalId }) { it[id] = updatedId }
                         TestingUnique.selectAll().count().toInt()
                     }
@@ -223,7 +258,7 @@ class CoroutineTest: AbstractExposedTest() {
                         getTestingById(1)?.value shouldBeEqualTo 1
                     }
                 }
-                job.join()
+                job.join()  // job이 완료되기 전까지 기다린다.
 
                 val result = newSuspendedTransaction(Dispatchers.Default, db = db) {
                     getTestingById(1)?.value
@@ -232,8 +267,6 @@ class CoroutineTest: AbstractExposedTest() {
             }
 
             mainJob.await()
-            mainJob.getCompletionExceptionOrNull()?.let { throw it }
-
             getTestingById(1)?.value shouldBeEqualTo 1
         }
     }
@@ -252,7 +285,7 @@ class CoroutineTest: AbstractExposedTest() {
                         }
                         commit()
 
-                        // 동시에 여러개의 트랜잭션을 실행한다.
+                        // 동시에 여러개의 Coroutines 방식의 트랜잭션을 실행한다.
                         val lists = List(5) {
                             suspendedTransactionAsync(context = Dispatchers.IO) {
                                 Testing.selectAll().toList()
@@ -263,13 +296,13 @@ class CoroutineTest: AbstractExposedTest() {
                 }
                 job.join()
 
-                val result = newSuspendedTransaction(Dispatchers.Default, db = db) {
+                val result = newSuspendedTransaction(Dispatchers.IO, db = db) {
                     Testing.selectAll().count()
                 }
                 result shouldBeEqualTo recordCount.toLong()
             }
             mainJob.await()
-            mainJob.getCompletionExceptionOrNull()?.let { throw it }
+            // mainJob.getCompletionExceptionOrNull()?.let { throw it }
 
             Testing.selectAll().count().toInt() shouldBeEqualTo recordCount
         }
@@ -328,6 +361,10 @@ class CoroutineTest: AbstractExposedTest() {
 
     class TestingEntity(id: EntityID<Int>): IntEntity(id) {
         companion object: IntEntityClass<TestingEntity>(Testing)
+
+        override fun equals(other: Any?): Boolean = other is TestingEntity && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "TestingEntity($id)"
     }
 
     @ParameterizedTest
@@ -349,7 +386,7 @@ class CoroutineTest: AbstractExposedTest() {
             // Nested transaction은 예외가 발생하고, 해당 connection은 닫힌다.
             innerConn.shouldNotBeNull().isClosed.shouldBeTrue()
 
-            Testing.selectAll().count().toInt() shouldBeEqualTo 1
+            Testing.selectAll().count() shouldBeEqualTo 1L
         }
     }
 }

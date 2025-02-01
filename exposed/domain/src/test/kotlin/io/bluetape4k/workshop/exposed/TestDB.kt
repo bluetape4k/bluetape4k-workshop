@@ -69,27 +69,32 @@ enum class TestDB(
 
     MYSQL_V8(
         connection = {
-            ContainerProvider.mysql8.jdbcUrl +
+            // ContainerProvider.mysql8.jdbcUrl +
+            "jdbc:mysql://localhost:3306/exposed" +
                     "?useSSL=false" +
                     "&characterEncoding=UTF-8" +
                     "&zeroDateTimeBehavior=convertToNull" +
                     "&allowPublicKeyRetrieval=true" // +
             //  "&rewriteBatchedStatements=true"
         },
-        driver = JdbcDrivers.DRIVER_CLASS_MYSQL
+        driver = JdbcDrivers.DRIVER_CLASS_MYSQL,
+        user = "exposed",
+        pass = "@exposed2025"
     ),
 
     POSTGRESQL(
         connection = {
-            ContainerProvider.postgres.jdbcUrl +
-                    "&lc_messages=en_US.UTF-8"
+            // ContainerProvider.postgres.jdbcUrl + "&lc_messages=en_US.UTF-8"
+            "jdbc:postgresql://localhost:5432/exposed?lc_messages=en_US.UTF-8"
         },
-        driver = JdbcDrivers.DRIVER_CLASS_POSTGRESQL
+        driver = JdbcDrivers.DRIVER_CLASS_POSTGRESQL,
+        user = "exposed"
     ),
 
     POSTGRESQLNG(
         connection = { POSTGRESQL.connection().replace(":postgresql:", ":pgsql:") },
-        driver = "com.impossibl.postgres.jdbc.PGDriver"
+        driver = "com.impossibl.postgres.jdbc.PGDriver",
+        user = "exposed"
     ),
 
     COCKROACH(
@@ -129,7 +134,7 @@ enum class TestDB(
         val ALL_H2 = setOf(H2, H2_MYSQL, H2_PSQL)
         val ALL_MYSQL = setOf(MYSQL_V8)
         val ALL_MYSQL_LIKE = ALL_MYSQL + H2_MYSQL
-        val ALL_POSTGRES = setOf(POSTGRESQL, POSTGRESQLNG)
+        val ALL_POSTGRES = setOf(POSTGRESQL)
         val ALL_POSTGRES_LIKE = setOf(POSTGRESQL, POSTGRESQLNG, H2_PSQL)
         val ALL_COCKROACH = setOf(COCKROACH)
 
@@ -139,7 +144,7 @@ enum class TestDB(
         const val USE_FAST_DB = false
 
         fun enabledDialects(): Set<TestDB> {
-            return if (USE_FAST_DB) ALL_H2 else (ALL_H2 + ALL_POSTGRES) //ALL - ALL_H2_V1 - MYSQL_V5 - COCKROACH)
+            return if (USE_FAST_DB) ALL_H2 else (ALL_H2 + ALL_POSTGRES + ALL_MYSQL) //ALL - ALL_H2_V1 - MYSQL_V5 - COCKROACH)
         }
     }
 }

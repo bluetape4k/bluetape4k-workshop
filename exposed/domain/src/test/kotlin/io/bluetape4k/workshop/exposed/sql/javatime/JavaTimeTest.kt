@@ -501,10 +501,8 @@ class JavaTimeTest: AbstractExposedTest() {
                 .single()[tester.timestampWithTimeZone.date()] shouldBeEqualTo now.toLocalDate()
 
             val expectedTime: LocalTime = when (testDB) {
-                MYSQL_V8,
-                in TestDB.ALL_POSTGRES_LIKE,
+                MYSQL_V8, in TestDB.ALL_POSTGRES_LIKE,
                     -> OffsetDateTime.parse("2023-05-04T05:04:01.123123+00:00")  // NOTE: Microseconds 까지만 지원
-
                 else -> now
             }.toLocalTime()
 

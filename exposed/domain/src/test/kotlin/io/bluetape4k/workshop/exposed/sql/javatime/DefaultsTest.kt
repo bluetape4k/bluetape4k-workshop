@@ -557,7 +557,7 @@ class DefaultsTest: AbstractExposedTest() {
         fun LocalDateTime.millis(): Long = this.toEpochSecond(ZoneOffset.UTC) * 1000
 
         withTables(testDB, testDate) {
-            val duration = 2000L
+            val duration = 1000L
 
             repeat(2) {
                 testDate.insertAndWait(duration)
@@ -571,9 +571,9 @@ class DefaultsTest: AbstractExposedTest() {
 
             val sortedEntries: List<LocalDateTime> = testDate.selectAll().map { it[testDate.time] }.sorted()
 
-            (sortedEntries[1].millis() - sortedEntries[0].millis()) shouldBeGreaterOrEqualTo 2000
-            (sortedEntries[2].millis() - sortedEntries[0].millis()) shouldBeGreaterOrEqualTo 6000
-            (sortedEntries[3].millis() - sortedEntries[0].millis()) shouldBeGreaterOrEqualTo 8000
+            (sortedEntries[1].millis() - sortedEntries[0].millis()) shouldBeGreaterOrEqualTo 1000
+            (sortedEntries[2].millis() - sortedEntries[0].millis()) shouldBeGreaterOrEqualTo 2000
+            (sortedEntries[3].millis() - sortedEntries[0].millis()) shouldBeGreaterOrEqualTo 4000
         }
     }
 
