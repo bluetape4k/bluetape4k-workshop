@@ -12,6 +12,7 @@ import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.vendors.ColumnMetadata
 import org.jetbrains.exposed.sql.vendors.H2Dialect
 import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.sql.Types
@@ -38,12 +39,9 @@ class ConnectionTest: AbstractExposedTest() {
         val age = integer("age").default(18)
     }
 
-    @ParameterizedTest
-    @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `getting column metadata`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB == TestDB.H2 }
-
-        withTables(testDB, People) {
+    @Test
+    fun `getting column metadata`() {
+        withTables(TestDB.H2, People) {
             val columnMetadata = connection.metadata {
                 columns(People)[People].shouldNotBeNull()
             }.toSet()
@@ -71,18 +69,21 @@ class ConnectionTest: AbstractExposedTest() {
     /**
      * DDL
      *
+     * Postgres:
      * ```sql
-     * CREATE TABLE IF NOT EXISTS PARENT (
-     *      ID BIGINT AUTO_INCREMENT PRIMARY KEY,
+     * CREATE TABLE IF NOT EXISTS parent (
+     *      id BIGSERIAL PRIMARY KEY,
      *      "scale" INT NOT NULL
      * );
      *
-     * ALTER TABLE PARENT ADD CONSTRAINT PARENT_SCALE_UNIQUE UNIQUE ("scale");
+     * ALTER TABLE parent ADD CONSTRAINT parent_scale_unique UNIQUE ("scale");
      *
-     * CREATE TABLE IF NOT EXISTS CHILD (
-     *      ID BIGINT AUTO_INCREMENT PRIMARY KEY,
+     * CREATE TABLE IF NOT EXISTS child (
+     *      id BIGSERIAL PRIMARY KEY,
      *      "scale" INT NOT NULL,
-     *      CONSTRAINT FK_CHILD_SCALE__SCALE FOREIGN KEY ("scale") REFERENCES PARENT("scale") ON DELETE RESTRICT ON UPDATE RESTRICT
+     *
+     *      CONSTRAINT fk_child_scale__scale FOREIGN KEY ("scale") REFERENCES parent("scale")
+     *      ON DELETE RESTRICT ON UPDATE RESTRICT
      * );
      * ```
      */
@@ -99,27 +100,22 @@ class ConnectionTest: AbstractExposedTest() {
         }
 
         withTables(testDB, parent, child) {
+            /**
+             * child 테이블과 관련된 테이블의 제약조건 정보를 가져온다.
+             *
+             * ```
+             * key: parent, constraint: []
+             * key: child, constraint: [ForeignKeyConstraint(fkName='fk_child_scale__scale')]
+             * ```
+             */
             val constraints = connection.metadata {
                 tableConstraints(listOf(child))
             }
 
-            /**
-             * ```
-             * Table: PARENT, Constraint: []
-             * Table: CHILD, Constraint: [ForeignKeyConstraint(fkName='FK_CHILD_SCALE__SCALE')]
-             * ```
-             */
-
-            /**
-             * ```
-             * Table: PARENT, Constraint: []
-             * Table: CHILD, Constraint: [ForeignKeyConstraint(fkName='FK_CHILD_SCALE__SCALE')]
-             * ```
-             */
-            constraints.forEach { (table, constraint) ->
-                log.debug { "Table: $table, Constraint: $constraint" }
+            constraints.forEach { (key, constraint) ->
+                log.debug { "key: $key, constraint: $constraint" }
             }
-            constraints.keys shouldHaveSize 2
+            constraints.keys shouldHaveSize 2   // parent, child
         }
     }
 }
