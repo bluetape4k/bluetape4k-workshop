@@ -4,6 +4,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
@@ -17,35 +18,66 @@ import org.jetbrains.exposed.sql.selectAll
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import kotlin.random.Random
 
 class EntityFieldWithTransformTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
-    object TransformationsTable: IntIdTable() {
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS TRNS (
+     *      ID INT AUTO_INCREMENT PRIMARY KEY,
+     *      "value" VARCHAR(50) NOT NULL
+     * )
+     * ```
+     */
+    object TransTable: IntIdTable("TRNS") {
         val value = varchar("value", 50)
     }
 
-    object NullableTransformationTable: IntIdTable() {
-        val value = varchar("nullable", 50).nullable()
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS NULL_TRNS (
+     *      ID INT AUTO_INCREMENT PRIMARY KEY,
+     *      "value" VARCHAR(50) NULL
+     * );
+     * ```
+     */
+    object NullableTransTable: IntIdTable("NULL_TRNS") {
+        val value = varchar("value", 50).nullable()
     }
 
-    class TransformationsEntity(id: EntityID<Int>): IntEntity(id) {
-        companion object: IntEntityClass<TransformationsEntity>(TransformationsTable)
+    /**
+     * Not Null 컬럼에 대해 transform 을 적용한다.
+     */
+    class TransEntity(id: EntityID<Int>): IntEntity(id) {
+        companion object: IntEntityClass<TransEntity>(TransTable)
 
-        var value by TransformationsTable.value.transform(
+        var value by TransTable.value.transform(
             unwrap = { "transformed-$it" },
             wrap = { it.replace("transformed-", "") }
         )
+
+        override fun equals(other: Any?): Boolean = other is TransEntity && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "TransEntity(id=$idValue, value=$value)"
     }
 
-    class NullableTransformationsEntity(id: EntityID<Int>): IntEntity(id) {
-        companion object: IntEntityClass<NullableTransformationsEntity>(NullableTransformationTable)
+    /**
+     * Nullable 컬럼에 대해 transform 을 적용한다.
+     */
+    class NullableTransEntity(id: EntityID<Int>): IntEntity(id) {
+        companion object: IntEntityClass<NullableTransEntity>(NullableTransTable)
 
-        var value by NullableTransformationTable.value.transform(
+        var value by NullableTransTable.value.transform(
             unwrap = { it?.run { "transformed-$it" } },
             wrap = { it?.replace("transformed-", "") }
         )
+
+        override fun equals(other: Any?): Boolean = other is NullableTransEntity && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "NullableTransEntity(id=$idValue, value=$value)"
     }
 
     @ParameterizedTest
@@ -53,18 +85,18 @@ class EntityFieldWithTransformTest: AbstractExposedTest() {
     fun `set and get value`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB in TestDB.ALL_H2 }
 
-        withTables(testDB, TransformationsTable) {
-            val entity = TransformationsEntity.new {
+        withTables(testDB, TransTable) {
+            val entity = TransEntity.new {
                 value = "stuff"
             }
 
             entity.value shouldBeEqualTo "stuff"
 
-            val row = TransformationsTable.selectAll()
+            val row = TransTable.selectAll()
                 .where(TRUE)
                 .first()
 
-            row[TransformationsTable.value] shouldBeEqualTo "transformed-stuff"
+            row[TransTable.value] shouldBeEqualTo "transformed-stuff"
         }
     }
 
@@ -73,18 +105,18 @@ class EntityFieldWithTransformTest: AbstractExposedTest() {
     fun `set and get nullable value while present`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB in TestDB.ALL_H2 }
 
-        withTables(testDB, NullableTransformationTable) {
-            val entity = NullableTransformationsEntity.new {
+        withTables(testDB, NullableTransTable) {
+            val entity = NullableTransEntity.new {
                 value = "stuff"
             }
 
             entity.value shouldBeEqualTo "stuff"
 
-            val row = NullableTransformationTable.selectAll()
+            val row = NullableTransTable.selectAll()
                 .where(TRUE)
                 .first()
 
-            row[NullableTransformationTable.value] shouldBeEqualTo "transformed-stuff"
+            row[NullableTransTable.value] shouldBeEqualTo "transformed-stuff"
         }
     }
 
@@ -93,18 +125,18 @@ class EntityFieldWithTransformTest: AbstractExposedTest() {
     fun `set and get nullable value while absent`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB in TestDB.ALL_H2 }
 
-        withTables(testDB, NullableTransformationTable) {
-            val entity = NullableTransformationsEntity.new {
+        withTables(testDB, NullableTransTable) {
+            val entity = NullableTransEntity.new {
                 value = null
             }
 
             entity.value.shouldBeNull()
 
-            val row = NullableTransformationTable.selectAll()
+            val row = NullableTransTable.selectAll()
                 .where(TRUE)
                 .first()
 
-            row[NullableTransformationTable.value].shouldBeNull()
+            row[NullableTransTable.value].shouldBeNull()
         }
     }
 
@@ -144,10 +176,10 @@ class EntityFieldWithTransformTest: AbstractExposedTest() {
         }
     }
 
-    class ChainedTransformantionEntity(id: EntityID<Int>): IntEntity(id) {
-        companion object: IntEntityClass<ChainedTransformantionEntity>(TransformationsTable)
+    class ChainedTrans(id: EntityID<Int>): IntEntity(id) {
+        companion object: IntEntityClass<ChainedTrans>(TransTable)
 
-        var value by TransformationsTable.value
+        var value by TransTable.value
             .transform(
                 unwrap = { "transformed-$it" },
                 wrap = { it.replace("transformed-", "") }
@@ -156,6 +188,10 @@ class EntityFieldWithTransformTest: AbstractExposedTest() {
                 unwrap = { if (it.length > 5) it.slice(0..4) else it },
                 wrap = { it }
             )
+
+        override fun equals(other: Any?): Boolean = other is ChainedTrans && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "ChainedTrans(id=$idValue, value=$value)"
     }
 
     @ParameterizedTest
@@ -163,42 +199,46 @@ class EntityFieldWithTransformTest: AbstractExposedTest() {
     fun `chained transformation`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB in TestDB.ALL_H2 }
 
-        withTables(testDB, TransformationsTable) {
-            ChainedTransformantionEntity.new {
+        withTables(testDB, TransTable) {
+            ChainedTrans.new {
                 value = "qwertyuiop"
             }
 
-            ChainedTransformantionEntity.all().first().value shouldBeEqualTo "qwert"
+            ChainedTrans.all().first().value shouldBeEqualTo "qwert"
         }
     }
 
     /**
-     * memoizedTransform 은 한 번 변환된 값을 캐싱하여 재사용한다.
+     * `memoizedTransform` 은 한 번 변환된 값을 캐싱하여 재사용한다.
      */
-    class MemoizedChainedTransformationEntity(id: EntityID<Int>): IntEntity(id) {
-        companion object: IntEntityClass<MemoizedChainedTransformationEntity>(TransformationsTable)
+    class MemoizedChainedTrans(id: EntityID<Int>): IntEntity(id) {
+        companion object: IntEntityClass<MemoizedChainedTrans>(TransTable)
 
-        var value by TransformationsTable.value
+        var value by TransTable.value
             .transform(
                 unwrap = { "transformed-$it" },                                              // 2 - INSERT
                 wrap = { it.replace("transformed-", "") }                   // 3 - SELECT
             )
             .memoizedTransform(
-                unwrap = { it + kotlin.random.Random(10).nextInt(0, 100) },  // 1 - INSERT
+                unwrap = { it + Random.nextInt(0, 100) },                         // 1 - INSERT
                 wrap = { it }                                                                // 4 - SELECT
             )
+
+        override fun equals(other: Any?): Boolean = other is MemoizedChainedTrans && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "MemoizedChainedTrans(id=$idValue, value=$value)"
     }
 
     /**
-     * memoizedTransform 은 한 번 변환된 값을 캐싱하여 재사용한다.
-     * 이 경우, MemoizedChainedTransformationEntity 는 Memoized Unwrapping 을 한 번만 출력해야 한다.
+     * `memoizedTransform` 은 한 번 변환된 값을 캐싱하여 재사용한다.
+     * 이 경우, MemoizedChainedTrans 는 Memoized Unwrapping 을 한 번만 출력해야 한다.
      *
      * ```sql
-     * INSERT INTO TRANSFORMATIONS ("value") VALUES ('transformed-value#36')
+     * INSERT INTO TRNS ("value") VALUES ('transformed-value#36')
      * ```
      *
      * ```sql
-     * SELECT TRANSFORMATIONS.ID, TRANSFORMATIONS."value" FROM TRANSFORMATIONS
+     * SELECT TRNS.ID, TRNS."value" FROM TRNS
      * ```
      */
     @ParameterizedTest
@@ -206,17 +246,19 @@ class EntityFieldWithTransformTest: AbstractExposedTest() {
     fun `memoized chained transformation`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB in TestDB.ALL_H2 }
 
-        withTables(testDB, TransformationsTable) {
-            MemoizedChainedTransformationEntity.new {
+        withTables(testDB, TransTable) {
+            MemoizedChainedTrans.new {
                 value = "value#"
             }
 
-            val entity = MemoizedChainedTransformationEntity.all().first()
+            val entity = MemoizedChainedTrans.all().first()
 
             val firstRead = entity.value
             log.debug { "entity.value: $firstRead" }
 
             firstRead.startsWith("value#").shouldBeTrue()
+
+            // cache 된 값을 재사용한다.
             entity.value shouldBeEqualTo firstRead
         }
     }

@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
@@ -15,8 +16,8 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldHaveSize
 import org.jetbrains.exposed.dao.EntityChange
+import org.jetbrains.exposed.dao.EntityChangeType
 import org.jetbrains.exposed.dao.EntityChangeType.Created
-import org.jetbrains.exposed.dao.EntityChangeType.Removed
 import org.jetbrains.exposed.dao.EntityChangeType.Updated
 import org.jetbrains.exposed.dao.EntityHook
 import org.jetbrains.exposed.dao.flushCache
@@ -30,11 +31,25 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
+/**
+ * Entity 에 대한 변경사항을 추적하는 `EntityHook` 을 테스트합니다.
+ *
+ * Hibernate의 `EntityListener` 와 유사한 기능을 제공합니다.
+ */
 class EntityHookTest: AbstractExposedTest() {
+
+    companion object: KLogging()
 
     private val allTables = arrayOf(UserTable, CityTable, UserToCityTable, CountryTable)
 
+    /**
+     * 변경사항을 추적하고, 변경사항과 함께 결과를 반환합니다.
+     *
+     * @param statement 변경사항을 추적할 람다
+     * @return 변경사항, 변경사항 목록, 트랜잭션 ID
+     */
     private fun <T> trackChanges(statement: Transaction.() -> T): Triple<T, Collection<EntityChange>, String> {
+        // 기존에 존재했던 변경사항의 수
         val alreadyChanged = TransactionManager.current().registeredChanges().size
         return transaction {
             val result = statement()
@@ -48,14 +63,20 @@ class EntityHookTest: AbstractExposedTest() {
     fun created01(testDB: TestDB) {
         withTables(testDB, *allTables) {
             val (_, events, txId) = trackChanges {
-                val ru = Country.new { name = "RU" }
-                City.new {
+                val ru: Country = Country.new {
+                    name = "RU"
+                }
+                val moscow = City.new {
                     name = "Moscow"
                     country = ru
                 }
             }
 
+            events.forEach {
+                log.debug { "event=$it" }
+            }
             events shouldHaveSize 2
+            events.all { it.changeType == EntityChangeType.Created }.shouldBeTrue()
             events.mapNotNull { it.toEntity(City)?.name } shouldBeEqualTo listOf("Moscow")
             events.mapNotNull { it.toEntity(Country)?.name } shouldBeEqualTo listOf("RU")
             events.all { it.transactionId == txId }.shouldBeTrue()
@@ -80,8 +101,11 @@ class EntityHookTest: AbstractExposedTest() {
                 moscow.delete()
             }
 
+            events.forEach {
+                log.debug { "event=$it" }
+            }
             events shouldHaveSize 1
-            events.single().changeType shouldBeEqualTo Removed
+            events.single().changeType shouldBeEqualTo EntityChangeType.Removed
             events.single().entityId shouldBeEqualTo moscowId
             events.single().transactionId shouldBeEqualTo txId
         }
@@ -92,7 +116,9 @@ class EntityHookTest: AbstractExposedTest() {
     fun `modified simple 01`(tesgDB: TestDB) {
         withTables(tesgDB, *allTables) {
             val (_, events1, _) = trackChanges {
-                val ru = Country.new { name = "RU" }
+                val ru = Country.new {
+                    name = "RU"
+                }
                 City.new {
                     name = "Moscow"
                     country = ru
@@ -100,16 +126,24 @@ class EntityHookTest: AbstractExposedTest() {
             }
 
             events1 shouldHaveSize 2
+            events1.all { it.changeType == Created }.shouldBeTrue()
 
             val (_, events2, txId2) = trackChanges {
-                val de = Country.new { name = "DE" }
+                val de = Country.new {
+                    name = "DE"
+                }
                 val x = City.all().single()
                 x.name = "Munich"
                 x.country = de
             }
 
             // One may expect change for `RU` but we do not send it due to performance reasons
+            events2.forEach {
+                log.debug { "event=$it" }
+            }
             events2 shouldHaveSize 2
+            events2.any { it.changeType == Created }.shouldBeTrue()  // create country (DE)
+            events2.any { it.changeType == Updated }.shouldBeTrue()  // update city (Moscow -> Munich, RU -> DE)
             events2.mapNotNull { it.toEntity(City)?.name } shouldBeEqualTo listOf("Munich")
             events2.mapNotNull { it.toEntity(Country)?.name } shouldBeEqualTo listOf("DE")
             events2.all { it.transactionId == txId2 }.shouldBeTrue()
@@ -149,7 +183,11 @@ class EntityHookTest: AbstractExposedTest() {
                 john.cities = SizedCollection(listOf(moscow))     // association 을 이렇게 지정할 수 있습니다.
             }
 
+            events.forEach {
+                log.debug { "event=$it" }
+            }
             events shouldHaveSize 2
+            events.all { it.changeType == EntityChangeType.Updated }.shouldBeTrue()
             events.mapNotNull { it.toEntity(City)?.name } shouldBeEqualTo listOf("Moscow")
             events.mapNotNull { it.toEntity(User)?.name } shouldBeEqualTo listOf("John")
             events.all { it.transactionId == txId }.shouldBeTrue()
@@ -171,16 +209,21 @@ class EntityHookTest: AbstractExposedTest() {
                 flushCache()
             }
 
-            val (_, event, txId) = trackChanges {
+            val (_, events, txId) = trackChanges {
                 val moscow = City.find { CityTable.name eq "Moscow" }.single()
                 val john = User.all().single()
                 john.cities = SizedCollection(listOf(moscow))
             }
 
-            event shouldHaveSize 3
-            event.mapNotNull { it.toEntity(City)?.name } shouldBeEqualTo listOf("Berlin", "Moscow")
-            event.mapNotNull { it.toEntity(User)?.name } shouldBeEqualTo listOf("John")
-            event.all { it.transactionId == txId }.shouldBeTrue()
+            events.forEach {
+                log.debug { "event=$it" }
+            }
+            events shouldHaveSize 3
+            // User[1], City[2], City[1] is Updated
+            events.all { it.changeType == EntityChangeType.Updated }.shouldBeTrue()
+            events.mapNotNull { it.toEntity(City)?.name } shouldBeEqualTo listOf("Berlin", "Moscow")
+            events.mapNotNull { it.toEntity(User)?.name } shouldBeEqualTo listOf("John")
+            events.all { it.transactionId == txId }.shouldBeTrue()
         }
     }
 
@@ -199,18 +242,25 @@ class EntityHookTest: AbstractExposedTest() {
                 flushCache()
             }
 
-            val (_, event, txId) = trackChanges {
+            val (_, events, txId) = trackChanges {
                 val john = User.all().single()
                 john.cities = emptySized()
             }
 
-            event shouldHaveSize 2
-            event.mapNotNull { it.toEntity(City)?.name } shouldBeEqualTo listOf("Moscow")
-            event.mapNotNull { it.toEntity(User)?.name } shouldBeEqualTo listOf("John")
-            event.all { it.transactionId == txId }.shouldBeTrue()
+            events.forEach {
+                log.debug { "event=$it" }
+            }
+            events shouldHaveSize 2
+            events.all { it.changeType == EntityChangeType.Updated }.shouldBeTrue() // User[1], City[1] is Updated
+            events.mapNotNull { it.toEntity(City)?.name } shouldBeEqualTo listOf("Moscow")
+            events.mapNotNull { it.toEntity(User)?.name } shouldBeEqualTo listOf("John")
+            events.all { it.transactionId == txId }.shouldBeTrue()
         }
     }
 
+    /**
+     * Entity의 `flush` 메서드를 호출하면 Event 가 발생합니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `single entity flush should trigger events`(testDB: TestDB) {
@@ -222,23 +272,31 @@ class EntityHookTest: AbstractExposedTest() {
             }
 
             events shouldHaveSize 1
+            events.forEach {
+                log.debug { "event1=$it" }
+            }
             val createEvent = events.single()
-            createEvent.changeType shouldBeEqualTo Created
+            createEvent.changeType shouldBeEqualTo EntityChangeType.Created
             createEvent.entityId shouldBeEqualTo user.id
 
-            val (_, event2, _) = trackChanges {
+            val (_, events2, _) = trackChanges {
                 user.name = "Carl"
                 user.flush()
             }
-
+            events2.forEach {
+                log.debug { "event2=$it" }
+            }
             user.name shouldBeEqualTo "Carl"
-            event2 shouldHaveSize 1
-            val updateEvent = event2.single()
+            events2 shouldHaveSize 1
+            val updateEvent = events2.single()
+            updateEvent.changeType shouldBeEqualTo EntityChangeType.Updated
             updateEvent.entityId shouldBeEqualTo user.id
-            updateEvent.changeType shouldBeEqualTo Updated
         }
     }
 
+    /**
+     * EntityHook 은 Transaction 완료나 `flush` 메서드를 호출할 때 Event가 발생합니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `calling flush notifies entity hook subscribers`(testDB: TestDB) {
