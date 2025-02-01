@@ -1003,8 +1003,6 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
 
     /**
      * 참조하는 엔티티를 미리 로딩한다. (Eager Loading)
-     *
-     *
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -1037,6 +1035,7 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
             }
 
             commit()
+            entityCache.clear()
 
             /**
              * Preload referrersOn - parent to multiple children
