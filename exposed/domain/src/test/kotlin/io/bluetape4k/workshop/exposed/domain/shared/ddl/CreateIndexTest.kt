@@ -319,9 +319,9 @@ class CreateIndexTest: AbstractExposedTest() {
         }
 
         withTables(testDB, tester) {
-//            SchemaUtils.createMissingTablesAndColumns()
-            val statemnts = MigrationUtils.statementsRequiredForDatabaseMigration()
-            exec(statemnts.joinToString(";"))
+            SchemaUtils.createMissingTablesAndColumns()
+//            val statemnts = MigrationUtils.statementsRequiredForDatabaseMigration()
+//            exec(statemnts.joinToString(";"))
             tester.exists().shouldBeTrue()
 
             val expectedIndexCount = when (currentDialectTest) {

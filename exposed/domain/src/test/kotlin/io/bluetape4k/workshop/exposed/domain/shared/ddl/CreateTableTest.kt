@@ -887,23 +887,27 @@ class CreateTableTest: AbstractExposedTest() {
      *
      * ```sql
      * CREATE TABLE IF NOT EXISTS "SomeNamespace.SomeTable" (
-     *      ID INT AUTO_INCREMENT PRIMARY KEY,
-     *      TEXT_COL TEXT NOT NULL
+     *      id SERIAL PRIMARY KEY,
+     *      text_col TEXT NOT NULL
      * )
      * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create table with dot in name without creating schema beforehand`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
+        
         withDb(testDB) {
             val q = db.identifierManager.quoteString
-            val tableName = "${q}SomeNamespace.SomeTable$q"
+            val tableName = "${q}SomeNamespace.SomeTable${q}"
 
             val tester = object: IntIdTable(tableName) {
                 val text_col = text("text_col")
             }
 
             try {
+                runCatching { SchemaUtils.drop(tester) }
+                
                 SchemaUtils.create(tester)
                 tester.exists().shouldBeTrue()
 

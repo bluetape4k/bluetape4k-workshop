@@ -19,19 +19,22 @@ fun withTables(
     statement: Transaction.(TestDB) -> Unit,
 ) {
     withDb(testDB, configure) {
-        try {
-            SchemaUtils.drop(*tables)
-        } catch (_: Throwable) {
+        runCatching {
+            SchemaUtils.drop(*tables, inBatch = true)
         }
 
-        SchemaUtils.create(*tables)
+        if (tables.isNotEmpty()) {
+            SchemaUtils.create(*tables, inBatch = true)
+        }
         try {
             statement(testDB)
             commit()  // Need commit to persist data before drop tables
         } finally {
             try {
-                SchemaUtils.drop(*tables)
-                commit()
+                if (tables.isNotEmpty()) {
+                    SchemaUtils.drop(*tables, inBatch = true)
+                    commit()
+                }
             } catch (ex: Exception) {
                 log.error(ex) { "Drop Tables 에서 예외가 발생했습니다. 삭제할 테이블: ${tables.joinToString { it.tableName }}" }
                 val database = testDB.db!!

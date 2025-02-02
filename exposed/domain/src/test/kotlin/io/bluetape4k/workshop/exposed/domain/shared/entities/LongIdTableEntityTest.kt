@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.exposed.domain.shared.entities
 
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.domain.shared.entities.LongIdTables.Cities
 import io.bluetape4k.workshop.exposed.domain.shared.entities.LongIdTables.City
 import io.bluetape4k.workshop.exposed.domain.shared.entities.LongIdTables.People
@@ -25,8 +26,48 @@ import org.junit.jupiter.params.provider.MethodSource
 
 object LongIdTables {
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS cities (
+     *      id BIGSERIAL PRIMARY KEY,
+     *      "name" VARCHAR(50) NOT NULL
+     * )
+     * ```
+     */
     object Cities: LongIdTable() {
         val name = varchar("name", 50)
+    }
+
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS people (
+     *      id BIGSERIAL PRIMARY KEY,
+     *      "name" VARCHAR(80) NOT NULL,
+     *      city_id BIGINT NOT NULL,
+     *
+     *      CONSTRAINT fk_people_city_id__id FOREIGN KEY (city_id) REFERENCES cities(id)
+     *          ON DELETE RESTRICT ON UPDATE RESTRICT
+     * )
+     * ```
+     */
+    object People: LongIdTable() {
+        val name = varchar("name", 80)
+        val cityId = reference("city_id", Cities)
+    }
+
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS towns (
+     *      id BIGSERIAL PRIMARY KEY,
+     *      city_id BIGINT NOT NULL,
+     *
+     *      CONSTRAINT fk_towns_city_id__id FOREIGN KEY (city_id) REFERENCES cities(id)
+     *          ON DELETE RESTRICT ON UPDATE RESTRICT
+     * )
+     * ```
+     */
+    object Towns: LongIdTable("towns") {
+        val cityId = long("city_id").references(Cities.id)
     }
 
     class City(id: EntityID<Long>): LongEntity(id) {
@@ -34,11 +75,10 @@ object LongIdTables {
 
         var name: String by Cities.name
         val towns: SizedIterable<Town> by Town referrersOn Towns.cityId
-    }
 
-    object People: LongIdTable() {
-        val name = varchar("name", 80)
-        val cityId = reference("city_id", Cities)
+        override fun equals(other: Any?): Boolean = other is City && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "City(id=$idValue, name=$name)"
     }
 
     class Person(id: EntityID<Long>): LongEntity(id) {
@@ -46,20 +86,27 @@ object LongIdTables {
 
         var name by People.name
         var city by City referencedOn People.cityId
+
+        override fun equals(other: Any?): Boolean = other is Person && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Person(id=$idValue, name=$name, city=${city.name})"
     }
 
-    object Towns: LongIdTable("towns") {
-        val cityId = long("city_id").references(Cities.id)
-    }
 
     class Town(id: EntityID<Long>): LongEntity(id) {
         companion object: LongEntityClass<Town>(Towns)
 
         var city by City referencedOn Towns.cityId
+
+        override fun equals(other: Any?): Boolean = other is Town && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Town(id=$idValue, city=${city.name})"
     }
 }
 
-
+/**
+ * Primary key가 Long 타입인 테이블 사용 예
+ */
 class LongIdTableEntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
@@ -139,7 +186,7 @@ class LongIdTableEntityTest: AbstractExposedTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `foreign key between  long and EntityID columns`(testDB: TestDB) {
+    fun `foreign key between long and EntityID columns`(testDB: TestDB) {
         withTables(testDB, Cities, Towns) {
             val cId = Cities.insertAndGetId {
                 it[name] = "City A"
@@ -155,37 +202,20 @@ class LongIdTableEntityTest: AbstractExposedTest() {
              * lazy loaded referencedOn
              *
              * ```sql
-             * SELECT TOWNS.ID, TOWNS.CITY_ID FROM TOWNS
-             * SELECT CITIES.ID, CITIES."name" FROM CITIES WHERE CITIES.ID = 1
-             * ```
-             */
-            /**
-             * lazy loaded referencedOn
-             *
-             * ```sql
-             * SELECT TOWNS.ID, TOWNS.CITY_ID FROM TOWNS
-             * SELECT CITIES.ID, CITIES."name" FROM CITIES WHERE CITIES.ID = 1
+             * SELECT towns.id, towns.city_id FROM towns
+             * SELECT cities.id, cities."name" FROM cities WHERE cities.id = 1
              * ```
              */
             val town1 = Town.all().first()
             town1.city.id shouldBeEqualTo cId
 
             /**
-             * eager loaded referrersOn
+             * eager loaded referrersOn (`with`)
              *
              * ```sql
-             * SELECT TOWNS.ID, TOWNS.CITY_ID FROM TOWNS
-             * SELECT CITIES.ID, CITIES."name" FROM CITIES WHERE CITIES.ID = 1
-             * SELECT CITIES.ID, CITIES."name" FROM CITIES WHERE CITIES.ID = 1
-             * ```
-             */
-            /**
-             * eager loaded referrersOn
-             *
-             * ```sql
-             * SELECT TOWNS.ID, TOWNS.CITY_ID FROM TOWNS
-             * SELECT CITIES.ID, CITIES."name" FROM CITIES WHERE CITIES.ID = 1
-             * SELECT CITIES.ID, CITIES."name" FROM CITIES WHERE CITIES.ID = 1
+             * SELECT towns.id, towns.city_id FROM towns
+             * SELECT cities.id, cities."name" FROM cities WHERE cities.id = 1
+             * SELECT cities.id, cities."name" FROM cities WHERE cities.id = 1
              * ```
              */
             val town1WithCity = Town.all().with(Town::city).first()
@@ -195,18 +225,9 @@ class LongIdTableEntityTest: AbstractExposedTest() {
              * lazy loaded referrersOn
              *
              * ```sql
-             * SELECT CITIES.ID, CITIES."name" FROM CITIES
-             * SELECT TOWNS.ID, TOWNS.CITY_ID FROM TOWNS WHERE TOWNS.CITY_ID = 1
-             * SELECT CITIES.ID, CITIES."name" FROM CITIES WHERE CITIES.ID = 1
-             * ```
-             */
-            /**
-             * lazy loaded referrersOn
-             *
-             * ```sql
-             * SELECT CITIES.ID, CITIES."name" FROM CITIES
-             * SELECT TOWNS.ID, TOWNS.CITY_ID FROM TOWNS WHERE TOWNS.CITY_ID = 1
-             * SELECT CITIES.ID, CITIES."name" FROM CITIES WHERE CITIES.ID = 1
+             * SELECT cities.id, cities."name" FROM cities
+             * SELECT towns.id, towns.city_id FROM towns WHERE towns.city_id = 1
+             * SELECT cities.id, cities."name" FROM cities WHERE cities.id = 1
              * ```
              */
             val city1 = City.all().single()
@@ -217,29 +238,19 @@ class LongIdTableEntityTest: AbstractExposedTest() {
              * eager loaded referrersOn
              *
              * ```sql
-             * SELECT CITIES.ID, CITIES."name" FROM CITIES
-             * SELECT TOWNS.ID, TOWNS.CITY_ID, CITIES.ID
-             *   FROM TOWNS INNER JOIN CITIES ON TOWNS.CITY_ID = CITIES.ID
-             *  WHERE TOWNS.CITY_ID = 1
+             * SELECT cities.id, cities."name"
+             *   FROM cities;
              *
-             * SELECT CITIES.ID, CITIES."name" FROM CITIES WHERE CITIES.ID = 1
-             * SELECT CITIES.ID, CITIES."name" FROM CITIES WHERE CITIES.ID = 1
-             * ```
-             */
-            /**
-             * eager loaded referrersOn
+             * SELECT towns.id, towns.city_id, cities.id
+             *   FROM towns INNER JOIN cities ON towns.city_id = cities.id
+             *  WHERE towns.city_id = 1;
              *
-             * ```sql
-             * SELECT CITIES.ID, CITIES."name" FROM CITIES
-             * SELECT TOWNS.ID, TOWNS.CITY_ID, CITIES.ID
-             *   FROM TOWNS INNER JOIN CITIES ON TOWNS.CITY_ID = CITIES.ID
-             *  WHERE TOWNS.CITY_ID = 1
-             *
-             * SELECT CITIES.ID, CITIES."name" FROM CITIES WHERE CITIES.ID = 1
-             * SELECT CITIES.ID, CITIES."name" FROM CITIES WHERE CITIES.ID = 1
+             * SELECT cities.id, cities."name" FROM cities WHERE cities.id = 1
              * ```
              */
             val city1WithTowns = City.all().with(City::towns).single()
+
+            // SELECT cities.id, cities."name" FROM cities WHERE cities.id = 1
             city1WithTowns.towns.first().city.id shouldBeEqualTo cId
         }
     }
