@@ -29,8 +29,8 @@ class ForeignIdEntityTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * CREATE TABLE IF NOT EXISTS PROJECTS (
-     *      ID BIGINT AUTO_INCREMENT PRIMARY KEY,
+     * CREATE TABLE IF NOT EXISTS projects (
+     *      id BIGSERIAL PRIMARY KEY,
      *      "name" VARCHAR(50) NOT NULL
      * )
      * ```
@@ -43,12 +43,12 @@ class ForeignIdEntityTest: AbstractExposedTest() {
      * one-to-one relationship
      *
      * ```sql
-     * CREATE TABLE IF NOT EXISTS PROJECT_CONFIGS (
-     *      ID BIGINT NOT NULL,
-     *      SETTING BOOLEAN NOT NULL,
+     * CREATE TABLE IF NOT EXISTS project_configs (
+     *      id BIGINT NOT NULL,
+     *      setting BOOLEAN NOT NULL,
      *
-     *      CONSTRAINT FK_PROJECT_CONFIGS_ID__ID FOREIGN KEY (ID)
-     *          REFERENCES PROJECTS(ID) ON DELETE RESTRICT ON UPDATE RESTRICT
+     *      CONSTRAINT fk_project_configs_id__id FOREIGN KEY (id) REFERENCES projects(id)
+     *          ON DELETE RESTRICT ON UPDATE RESTRICT
      * )
      * ```
      */
@@ -59,8 +59,8 @@ class ForeignIdEntityTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * CREATE TABLE IF NOT EXISTS ACTORS (
-     *      GUILD_ID VARCHAR(13) PRIMARY KEY
+     * CREATE TABLE IF NOT EXISTS actors (
+     *      guild_id VARCHAR(13) PRIMARY KEY
      * )
      * ```
      */
@@ -73,12 +73,12 @@ class ForeignIdEntityTest: AbstractExposedTest() {
      * many-to-one relationship
      *
      * ```sql
-     * CREATE TABLE IF NOT EXISTS ROLES (
-     *      ID INT AUTO_INCREMENT PRIMARY KEY,
-     *      GUILD_ID VARCHAR(13) NOT NULL,
+     * CREATE TABLE IF NOT EXISTS roles (
+     *      id SERIAL PRIMARY KEY,
+     *      guild_id VARCHAR(13) NOT NULL,
      *
-     *      CONSTRAINT FK_ROLES_GUILD_ID__GUILD_ID FOREIGN KEY (GUILD_ID) REFERENCES ACTORS(GUILD_ID)
-     *      ON DELETE RESTRICT ON UPDATE RESTRICT
+     *      CONSTRAINT fk_roles_guild_id__guild_id FOREIGN KEY (guild_id) REFERENCES actors(guild_id)
+     *          ON DELETE RESTRICT ON UPDATE RESTRICT
      * )
      * ```
      */
@@ -137,8 +137,8 @@ class ForeignIdEntityTest: AbstractExposedTest() {
             val project1 = transaction {
                 /**
                  * ```sql
-                 * INSERT INTO "SCHEMA$PROJECTS" ("name") VALUES ('Space')
-                 * INSERT INTO "SCHEMA$PROJECTCONFIGS" (ID, SETTING) VALUES (1, TRUE)
+                 * INSERT INTO projects ("name") VALUES ('Space');
+                 * INSERT INTO project_configs (id, setting) VALUES (1, TRUE);
                  * ```
                  */
                 val project1 = Project.new { name = "Space" }
@@ -151,8 +151,8 @@ class ForeignIdEntityTest: AbstractExposedTest() {
             val project2 = transaction {
                 /**
                  * ```sql
-                 * INSERT INTO "SCHEMA$PROJECTS" ("name") VALUES ('Earth')
-                 * INSERT INTO "SCHEMA$PROJECTCONFIGS" (ID, SETTING) VALUES (2, TRUE)
+                 * INSERT INTO projects ("name") VALUES ('Earth');
+                 * INSERT INTO project_configs (id, setting) VALUES (2, TRUE);
                  * ```
                  */
                 val project2 = Project.new { name = "Earth" }
@@ -170,6 +170,17 @@ class ForeignIdEntityTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * SELECT roles.id, roles.guild_id
+     *   FROM roles
+     *  WHERE roles.guild_id = '3746529'
+     * ```
+     *
+     * ```sql
+     * SELECT roles.id, roles.guild_id FROM roles
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `referenced entities with identitical column names`(testDB: TestDB) {
@@ -180,11 +191,6 @@ class ForeignIdEntityTest: AbstractExposedTest() {
 
             entityCache.clear()
 
-            /**
-             * ```sql
-             * SELECT ROLES.ID, ROLES.GUILD_ID FROM ROLES WHERE ROLES.GUILD_ID = '3746529'
-             * ```
-             */
             actorA.roles.toList() shouldContainSame listOf(roleA, roleB)
 
             Role.all().toList() shouldContainSame listOf(roleA, roleB)
