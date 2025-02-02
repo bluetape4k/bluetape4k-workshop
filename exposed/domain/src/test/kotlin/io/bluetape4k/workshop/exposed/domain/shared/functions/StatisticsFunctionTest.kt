@@ -18,12 +18,15 @@ import java.math.BigDecimal
 import java.math.MathContext
 import java.math.RoundingMode
 
+/**
+ * SQL 통계 함수 테스트
+ */
 class StatisticsFunctionTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
     /**
-     * STDDEV_POP
+     * STDDEV_POP: non-null 값만을 사용하여 모집단 표준 편차를 계산, non-null 값이 없으면 null 반환
      *
      * ```sql
      * SELECT STDDEV_POP(SAMPLE_TABLE."number") FROM SAMPLE_TABLE
@@ -39,10 +42,10 @@ class StatisticsFunctionTest: AbstractExposedTest() {
     }
 
     /**
-     * STDDEV_SAMP
+     * STDDEV_SAMP : non-null 값만을 사용하여 샘플 표준 편차를 계산
      *
      * ```sql
-     * SELECT STDDEV_SAMP(SAMPLE_TABLE."number") FROM SAMPLE_TABLE
+     * SELECT STDDEV_SAMP(sample_table."number") FROM sample_table
      * ```
      */
     @ParameterizedTest
@@ -55,10 +58,10 @@ class StatisticsFunctionTest: AbstractExposedTest() {
     }
 
     /**
-     * VAR_POP
+     * VAR_POP : non-null 값만 사용하여 Population Variance 를 계산, non-null 값이 없으면 null 반환
      *
      * ```sql
-     * SELECT VAR_POP(SAMPLE_TABLE."number") FROM SAMPLE_TABLE
+     * SELECT VAR_POP(sample_table."number") FROM sample_table
      * ```
      */
     @ParameterizedTest
@@ -71,10 +74,10 @@ class StatisticsFunctionTest: AbstractExposedTest() {
     }
 
     /**
-     * VAR_SAMP
+     * VAR_SAMP : non-null 값만 사용하여 Sample Variance 를 계산, non-null 값이 없으면 null 반환
      *
      * ```sql
-     * SELECT VAR_SAMP(SAMPLE_TABLE."number") FROM SAMPLE_TABLE
+     * SELECT VAR_SAMP(sample_table."number") FROM sample_table
      * ```
      */
     @ParameterizedTest
@@ -86,6 +89,13 @@ class StatisticsFunctionTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS sample_table (
+     *      "number" INT NULL
+     * );
+     * ```
+     */
     private object SampleTestTable: Table("sample_table") {
         val number = integer("number").nullable()
     }
