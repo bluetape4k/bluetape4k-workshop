@@ -4,12 +4,13 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeLessOrEqualTo
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
-import org.jetbrains.exposed.dao.flushCache
+import org.jetbrains.exposed.dao.entityCache
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Column
@@ -21,17 +22,49 @@ import org.jetbrains.exposed.sql.insertAndGetId
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
+/**
+ * one-to-many 관계에서 referrersOn, optionalReferrersOn 함수를 사용하여 참조되는 엔티티들을 정렬하는 방법을 설명합니다.
+ */
 class OrderedReferenceTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY)
+     * ```
+     */
     object Users: IntIdTable()
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS userratings (
+     *      id SERIAL PRIMARY KEY,
+     *      "value" INT NOT NULL,
+     *      "user" INT NOT NULL,
+     *
+     *      CONSTRAINT fk_userratings_user__id FOREIGN KEY ("user") REFERENCES users(id)
+     *          ON DELETE RESTRICT ON UPDATE RESTRICT
+     * )
+     * ```
+     */
     object UserRatings: IntIdTable() {
         val value: Column<Int> = integer("value")
         val user: Column<EntityID<Int>> = reference("user", Users)
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS usernullableratings (
+     *      id SERIAL PRIMARY KEY,
+     *      "value" INT NOT NULL,
+     *      "user" INT NULL,
+     *
+     *      CONSTRAINT fk_usernullableratings_user__id FOREIGN KEY ("user")
+     *      REFERENCES users(id) ON DELETE RESTRICT ON UPDATE RESTRICT
+     * )
+     * ```
+     */
     object UserNullableRatings: IntIdTable() {
         val value: Column<Int> = integer("value")
         val user: Column<EntityID<Int>?> = reference("user", Users).nullable()
@@ -42,6 +75,10 @@ class OrderedReferenceTest: AbstractExposedTest() {
 
         var value by UserRatings.value
         var user by UserDefaultOrder referencedOn UserRatings.user
+
+        override fun equals(other: Any?): Boolean = other is UserRatingDefaultOrder && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "UserRatingDefaultOrder(id=$idValue, value=$value)"
     }
 
     class UserNullableRatingDefaultOrder(id: EntityID<Int>): IntEntity(id) {
@@ -49,16 +86,26 @@ class OrderedReferenceTest: AbstractExposedTest() {
 
         var value by UserNullableRatings.value
         var user by UserDefaultOrder optionalReferencedOn UserNullableRatings.user
+
+        override fun equals(other: Any?): Boolean = other is UserNullableRatingDefaultOrder && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "UserNullableRatingDefaultOrder(id=$idValue, value=$value)"
     }
 
     class UserDefaultOrder(id: EntityID<Int>): IntEntity(id) {
         companion object: IntEntityClass<UserDefaultOrder>(Users)
 
         val ratings: SizedIterable<UserRatingDefaultOrder>
-                by UserRatingDefaultOrder referrersOn UserRatings.user orderBy UserRatings.value
+                by UserRatingDefaultOrder referrersOn
+                        UserRatings.user orderBy UserRatings.value
 
         val nullableRatings: SizedIterable<UserNullableRatingDefaultOrder>
-                by UserNullableRatingDefaultOrder optionalReferrersOn UserNullableRatings.user orderBy UserNullableRatings.value
+                by UserNullableRatingDefaultOrder optionalReferrersOn
+                        UserNullableRatings.user orderBy UserNullableRatings.value
+
+        override fun equals(other: Any?): Boolean = other is UserDefaultOrder && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "UserDefaultOrder(id=$idValue)"
     }
 
     private val unsortedRatingValues = listOf(0, 3, 1, 2, 4, 4, 5, 4, 5, 6, 9, 8)
@@ -81,7 +128,7 @@ class OrderedReferenceTest: AbstractExposedTest() {
                 }
             }
 
-            flushCache()
+            entityCache.clear()
 
             statement(testDB)
         }
@@ -98,9 +145,12 @@ class OrderedReferenceTest: AbstractExposedTest() {
              * Ratings are ordered by value in ascending order
              *
              * ```sql
-             * SELECT USERRATINGS.ID, USERRATINGS."value", USERRATINGS."user"
-             *   FROM USERRATINGS
-             *  WHERE USERRATINGS."user" = 1 ORDER BY USERRATINGS."value" ASC
+             * SELECT userratings.id,
+             *        userratings."value",
+             *        userratings."user"
+             *   FROM userratings
+             *  WHERE userratings."user" = 1
+             *  ORDER BY userratings."value" ASC;
              * ```
              */
             unsortedRatingValues.sorted().zip(user.ratings).forEach { (value, rating) ->
@@ -113,10 +163,12 @@ class OrderedReferenceTest: AbstractExposedTest() {
              * and then by id in descending order
              *
              * ```sql
-             * SELECT USERNULLABLERATINGS.ID, USERNULLABLERATINGS."value", USERNULLABLERATINGS."user"
-             *  FROM USERNULLABLERATINGS
-             * WHERE USERNULLABLERATINGS."user" = 1
-             * ORDER BY USERNULLABLERATINGS."value" ASC
+             * SELECT usernullableratings.id,
+             *        usernullableratings."value",
+             *        usernullableratings."user"
+             *   FROM usernullableratings
+             *  WHERE usernullableratings."user" = 1
+             *  ORDER BY usernullableratings."value" ASC;
              * ```
              */
             unsortedRatingValues.sorted().zip(user.nullableRatings).forEach { (value, rating) ->
@@ -131,6 +183,10 @@ class OrderedReferenceTest: AbstractExposedTest() {
 
         var value by UserRatings.value
         var user by UserMultiColumn referencedOn UserRatings.user
+
+        override fun equals(other: Any?): Boolean = other is UserRatingMultiColumn && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "UserRatingMultiColumn(id=$idValue, value=$value)"
     }
 
     class UserNullableRatingMultiColumn(id: EntityID<Int>): IntEntity(id) {
@@ -138,6 +194,10 @@ class OrderedReferenceTest: AbstractExposedTest() {
 
         var value by UserNullableRatings.value
         var user by UserMultiColumn optionalReferencedOn UserNullableRatings.user
+
+        override fun equals(other: Any?): Boolean = other is UserNullableRatingMultiColumn && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "UserNullableRatingMultiColumn(id=$idValue, value=$value)"
     }
 
     class UserMultiColumn(id: EntityID<Int>): IntEntity(id) {
@@ -154,6 +214,10 @@ class OrderedReferenceTest: AbstractExposedTest() {
                 UserNullableRatings.value to SortOrder.DESC,
                 UserNullableRatings.id to SortOrder.DESC
             )
+
+        override fun equals(other: Any?): Boolean = other is UserMultiColumn && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "UserMultiColumn(id=$idValue)"
     }
 
     @ParameterizedTest
@@ -162,26 +226,30 @@ class OrderedReferenceTest: AbstractExposedTest() {
         withOrderedReferenceTestTables(testDB) {
             /**
              * ```sql
-             * SELECT USERS.ID FROM USERS;
+             * SELECT users.id FROM users;
              *
-             * SELECT USERRATINGS.ID, USERRATINGS."value", USERRATINGS."user"
-             *   FROM USERRATINGS
-             *  WHERE USERRATINGS."user" = 1
-             *  ORDER BY USERRATINGS."value" DESC,
-             *           USERRATINGS.ID DESC
+             * SELECT userratings.id,
+             *        userratings."value",
+             *        userratings."user"
+             *   FROM userratings
+             *  WHERE userratings."user" = 1
+             *  ORDER BY userratings."value" DESC,
+             *           userratings.id DESC;
              * ```
              */
             val ratings = UserMultiColumn.all().first().ratings.toList()
 
             /**
              * ```sql
-             * SELECT USERS.ID FROM USERS;
+             * SELECT users.id FROM users;
              *
-             * SELECT USERNULLABLERATINGS.ID, USERNULLABLERATINGS."value", USERNULLABLERATINGS."user"
-             *   FROM USERNULLABLERATINGS
-             *  WHERE USERNULLABLERATINGS."user" = 1
-             * ORDER BY USERNULLABLERATINGS."value" DESC,
-             *          USERNULLABLERATINGS.ID DESC
+             * SELECT usernullableratings.id,
+             *        usernullableratings."value",
+             *        usernullableratings."user"
+             *   FROM usernullableratings
+             *  WHERE usernullableratings."user" = 1
+             *  ORDER BY usernullableratings."value" DESC,
+             *           usernullableratings.id DESC;
              * ```
              */
             val nullableRatings = UserMultiColumn.all().first().nullableRatings.toList()
@@ -219,6 +287,10 @@ class OrderedReferenceTest: AbstractExposedTest() {
 
         var value by UserRatings.value
         var user by UserChainedColumn referencedOn UserRatings.user
+
+        override fun equals(other: Any?): Boolean = other is UserRatingChainedColumn && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "UserRatingChainedColumn(id=$idValue, value=$value)"
     }
 
     class UserChainedColumn(id: EntityID<Int>): IntEntity(id) {
@@ -226,8 +298,12 @@ class OrderedReferenceTest: AbstractExposedTest() {
 
         val ratings: SizedIterable<UserRatingChainedColumn> by UserRatingChainedColumn
             .referrersOn(UserRatings.user)
-            .orderBy(UserRatings.value to SortOrder.DESC)
-            .orderBy(UserRatings.id to SortOrder.DESC)
+            .orderBy(UserRatings.value to SortOrder.DESC)       // value DESC
+            .orderBy(UserRatings.id to SortOrder.DESC)          // id DESC
+
+        override fun equals(other: Any?): Boolean = other is UserChainedColumn && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "UserChainedColumn(id=$idValue)"
     }
 
     @ParameterizedTest
@@ -238,11 +314,13 @@ class OrderedReferenceTest: AbstractExposedTest() {
              * ```sql
              * SELECT USERS.ID FROM USERS;
              *
-             * SELECT USERRATINGS.ID, USERRATINGS."value", USERRATINGS."user"
-             *   FROM USERRATINGS
-             *  WHERE USERRATINGS."user" = 1
-             *  ORDER BY USERRATINGS."value" DESC,
-             *           USERRATINGS.ID DESC
+             * SELECT userratings.id,
+             *        userratings."value",
+             *        userratings."user"
+             *   FROM userratings
+             *  WHERE userratings."user" = 1
+             *  ORDER BY userratings."value" DESC,
+             *           userratings.id DESC;
              * ```
              */
             val ratings = UserChainedColumn.all().first().ratings.toList()

@@ -20,11 +20,11 @@ fun withTables(
 ) {
     withDb(testDB, configure) {
         runCatching {
-            SchemaUtils.drop(*tables, inBatch = true)
+            SchemaUtils.drop(*tables)
         }
 
         if (tables.isNotEmpty()) {
-            SchemaUtils.create(*tables, inBatch = true)
+            SchemaUtils.create(*tables)
         }
         try {
             statement(testDB)
@@ -32,7 +32,7 @@ fun withTables(
         } finally {
             try {
                 if (tables.isNotEmpty()) {
-                    SchemaUtils.drop(*tables, inBatch = true)
+                    SchemaUtils.drop(*tables)
                     commit()
                 }
             } catch (ex: Exception) {
