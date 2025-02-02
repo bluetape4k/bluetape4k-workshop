@@ -7,6 +7,7 @@ import io.bluetape4k.idgenerators.uuid.TimebasedUuid.Epoch
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables.Address
 import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables.Addresses
 import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables.Cities
@@ -18,6 +19,7 @@ import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
+import org.jetbrains.exposed.dao.entityCache
 import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.with
@@ -27,9 +29,83 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.*
 
+/**
+ * Timebased UUID 를 Identifier 로 사용하는 Entity 테스트
+ */
 object TimebasedUUIDTables {
+
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS cities (
+     *      id uuid PRIMARY KEY,
+     *      "name" VARCHAR(50) NOT NULL
+     * );
+     * ```
+     */
     object Cities: TimebasedUUIDTable() {
         val name = varchar("name", 50)
+    }
+
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS people (
+     *      id uuid PRIMARY KEY,
+     *      "name" VARCHAR(80) NOT NULL,
+     *      city_id uuid NOT NULL,
+     *
+     *      CONSTRAINT fk_people_city_id__id FOREIGN KEY (city_id)
+     *      REFERENCES cities(id) ON DELETE RESTRICT ON UPDATE RESTRICT
+     * )
+     * ```
+     */
+    object People: TimebasedUUIDTable() {
+        val name = varchar("name", 80)
+        val cityId = reference("city_id", Cities)
+    }
+
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS addresses (
+     *      id uuid PRIMARY KEY,
+     *      person_id uuid NOT NULL,
+     *      city_id uuid NOT NULL,
+     *      address VARCHAR(255) NOT NULL,
+     *
+     *      CONSTRAINT fk_addresses_person_id__id FOREIGN KEY (person_id)
+     *      REFERENCES people(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+     *
+     *      CONSTRAINT fk_addresses_city_id__id FOREIGN KEY (city_id)
+     *      REFERENCES cities(id) ON DELETE RESTRICT ON UPDATE RESTRICT
+     * );
+     *
+     * ALTER TABLE addresses
+     *      ADD CONSTRAINT addresses_person_id_city_id_unique UNIQUE (person_id, city_id);
+     * ```
+     */
+    object Addresses: TimebasedUUIDTable() {
+        val personId = reference("person_id", People)
+        val cityId = reference("city_id", Cities)
+
+        val address = varchar("address", 255)
+
+        init {
+            uniqueIndex(personId, cityId)
+        }
+    }
+
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS towns (
+     *      id uuid PRIMARY KEY,
+     *      city_id uuid NOT NULL,
+     *
+     *      CONSTRAINT fk_towns_city_id__id FOREIGN KEY (city_id)
+     *      REFERENCES cities(id) ON DELETE RESTRICT ON UPDATE RESTRICT
+     * )
+     * ```
+     */
+    object Towns: TimebasedUUIDTable("towns") {
+        val cityId = uuid("city_id").references(Cities.id)
     }
 
     class City(id: EntityID<UUID>): TimebasedUUIDEntity(id) {
@@ -37,11 +113,10 @@ object TimebasedUUIDTables {
 
         var name by Cities.name
         val towns by Town referrersOn Towns.cityId
-    }
 
-    object People: TimebasedUUIDTable() {
-        val name = varchar("name", 80)
-        val cityId = reference("city_id", Cities)
+        override fun equals(other: Any?): Boolean = other is City && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "City(id=$idValue, name=$name)"
     }
 
     class Person(id: EntityID<UUID>): TimebasedUUIDEntity(id) {
@@ -49,30 +124,32 @@ object TimebasedUUIDTables {
 
         var name by People.name
         var city by City referencedOn People.cityId
-    }
 
-    object Addresses: TimebasedUUIDTable() {
-        val person = reference("person_id", People)
-        val city = reference("city_id", Cities)
-        val address = varchar("address", 255)
+        override fun equals(other: Any?): Boolean = other is Person && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Person(id=$idValue, name=$name)"
     }
 
     class Address(id: EntityID<UUID>): TimebasedUUIDEntity(id) {
         companion object: TimebasedUUIDEntityClass<Address>(Addresses)
 
-        var person by Person.referencedOn(Addresses.person)
-        var city by City.referencedOn(Addresses.city)
+        var person by Person.referencedOn(Addresses.personId)
+        var city by City.referencedOn(Addresses.cityId)
         var address by Addresses.address
-    }
 
-    object Towns: TimebasedUUIDTable("towns") {
-        val cityId = uuid("city_id").references(Cities.id)
+        override fun equals(other: Any?): Boolean = other is Address && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Address(id=$idValue, address=$address)"
     }
 
     class Town(id: EntityID<UUID>): TimebasedUUIDEntity(id) {
         companion object: TimebasedUUIDEntityClass<Town>(Towns)
 
         var city by City referencedOn Towns.cityId
+
+        override fun equals(other: Any?): Boolean = other is Town && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Town(id=$idValue)"
     }
 }
 
@@ -111,33 +188,22 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
 
             /**
              * ```sql
-             * SELECT CITIES.ID, CITIES."name" FROM CITIES
-             * ```
-             */
-            /**
-             * ```sql
-             * SELECT CITIES.ID, CITIES."name" FROM CITIES
+             * SELECT cities.id, cities."name" FROM cities
              * ```
              */
             val allCities = City.all().map { it.name }
             allCities shouldBeEqualTo listOf("Seoul", "Busan")
 
             /**
-             * ```sql
-             * SELECT PEOPLE.ID, PEOPLE."name", PEOPLE.CITY_ID FROM PEOPLE
+             * many-to-one Earger Loaing
              *
-             * SELECT CITIES.ID, CITIES."name"
-             *   FROM CITIES
-             *  WHERE CITIES.ID IN ('1efcff30-9a92-6fd6-b98d-178b68d550e5', '1efcff30-9a92-6fd8-b98d-178b68d550e5')
-             * ```
-             */
-            /**
              * ```sql
-             * SELECT PEOPLE.ID, PEOPLE."name", PEOPLE.CITY_ID FROM PEOPLE
+             * SELECT people.id, people."name", people.city_id
+             *   FROM people;
              *
-             * SELECT CITIES.ID, CITIES."name"
-             *   FROM CITIES
-             *  WHERE CITIES.ID IN ('1efcff30-9a92-6fd6-b98d-178b68d550e5', '1efcff30-9a92-6fd8-b98d-178b68d550e5')
+             * SELECT cities.id, cities."name"
+             *   FROM cities
+             *  WHERE cities.id IN ('1efe168f-dd0c-6303-8372-b5321e042980', '1efe168f-dd0c-6305-8372-b5321e042980');
              * ```
              */
             val allPeople = Person.all().with(Person::city).map { it.name to it.city.name }
@@ -169,32 +235,26 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
                 city = busan
             }
 
-            // DELETE FROM PEOPLE WHERE PEOPLE.ID = '1efcff30-9a33-6c52-b98d-178b68d550e5'
+            // DELETE FROM people WHERE people.id = '1efe168f-dc48-6de1-8372-b5321e042980'
             sam.delete()
-            // DELETE FROM CITIES WHERE CITIES.ID = '1efcff30-9a2e-6e2d-b98d-178b68d550e5'
+            // DELETE FROM cities WHERE cities.id = '1efe168f-dc48-6ddd-8372-b5321e042980'
             busan.delete()
 
-            flushCache()
+            entityCache.clear()
 
             val allCities = City.all().map { it.name }
             allCities shouldBeEqualTo listOf("Seoul")
 
             /**
+             * many-to-one Earger Loaing
+             * 
              * ```sql
-             * SELECT PEOPLE.ID, PEOPLE."name", PEOPLE.CITY_ID FROM PEOPLE
+             * SELECT people.id, people."name", people.city_id
+             *   FROM people;
              *
-             * SELECT CITIES.ID, CITIES."name"
-             *   FROM CITIES
-             *  WHERE CITIES.ID = '1efcff30-9a2e-6e2b-b98d-178b68d550e5'
-             * ```
-             */
-            /**
-             * ```sql
-             * SELECT PEOPLE.ID, PEOPLE."name", PEOPLE.CITY_ID FROM PEOPLE
-             *
-             * SELECT CITIES.ID, CITIES."name"
-             *   FROM CITIES
-             *  WHERE CITIES.ID = '1efcff30-9a2e-6e2b-b98d-178b68d550e5'
+             * SELECT cities.id, cities."name"
+             *   FROM cities
+             *  WHERE cities.id = '1efe168f-dc48-6ddb-8372-b5321e042980'
              * ```
              */
             val allPeople = Person.all().with(Person::city).map { it.name to it.city.name }
@@ -219,8 +279,12 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
                 city = city1
                 address = "Address1"
             }
+            val person2 = Person.new {
+                name = "Person2"
+                city = city1
+            }
             val address2 = Address.new {
-                person = person1
+                person = person2
                 city = city1
                 address = "Address2"
             }
@@ -235,30 +299,32 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
 
     /**
      * Lazy loading referencedOn
+     *
      * ```sql
      * SELECT towns.id, towns.city_id FROM towns
-     * SELECT Cities.id, Cities.`name` FROM Cities WHERE Cities.id = '1efcc4a5-73e6-6e8a-830f-399275c6fb04'
+     * SELECT cities.id, cities."name" FROM cities WHERE cities.id = '1efe168f-db41-62fd-8372-b5321e042980'
      * ```
      *
      * Eager loading referencedOn
+     *
      * ```sql
      * SELECT towns.id, towns.city_id FROM towns
-     * SELECT Cities.id, Cities.`name` FROM Cities WHERE Cities.id = '1efcc4a5-73e6-6e8a-830f-399275c6fb04'
-     * SELECT Cities.id, Cities.`name` FROM Cities WHERE Cities.id = '1efcc4a5-73e6-6e8a-830f-399275c6fb04'
+     * SELECT cities.id, cities."name" FROM cities WHERE cities.id = '1efe168f-db41-62fd-8372-b5321e042980'
+     * SELECT cities.id, cities."name" FROM cities WHERE cities.id = '1efe168f-db41-62fd-8372-b5321e042980'
      * ```
      *
      * Lazy loading referrersOn
      * ```sql
-     * SELECT Cities.id, Cities.`name` FROM Cities
-     * SELECT towns.id, towns.city_id FROM towns WHERE towns.city_id = '1efcc4a5-73e6-6e8a-830f-399275c6fb04'
-     * SELECT Cities.id, Cities.`name` FROM Cities WHERE Cities.id = '1efcc4a5-73e6-6e8a-830f-399275c6fb04'
+     * SELECT cities.id, cities."name" FROM cities
+     * SELECT towns.id, towns.city_id FROM towns WHERE towns.city_id = '1efe168f-db41-62fd-8372-b5321e042980'
+     * SELECT cities.id, cities."name" FROM cities WHERE cities.id = '1efe168f-db41-62fd-8372-b5321e042980'
      * ```
      *
      * Eager loading referrersOn
      * ```sql
-     * SELECT Cities.id, Cities.`name` FROM Cities
-     * SELECT towns.id, towns.city_id, Cities.id FROM towns INNER JOIN Cities ON towns.city_id = Cities.id WHERE towns.city_id = '1efcc4a5-73e6-6e8a-830f-399275c6fb04'
-     * SELECT Cities.id, Cities.`name` FROM Cities WHERE Cities.id = '1efcc4a5-73e6-6e8a-830f-399275c6fb04'
+     * SELECT cities.id, cities."name" FROM cities
+     * SELECT towns.id, towns.city_id, cities.id FROM towns INNER JOIN cities ON towns.city_id = cities.id WHERE towns.city_id = '1efe168f-db41-62fd-8372-b5321e042980'
+     * SELECT cities.id, cities."name" FROM cities WHERE cities.id = '1efe168f-db41-62fd-8372-b5321e042980'
      * ```
      */
     @ParameterizedTest
