@@ -26,11 +26,12 @@ import org.jetbrains.exposed.sql.CustomStringFunction
 import org.jetbrains.exposed.sql.DecimalColumnType
 import org.jetbrains.exposed.sql.Expression
 import org.jetbrains.exposed.sql.IntegerColumnType
+import org.jetbrains.exposed.sql.LowerCase
 import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.Random
 import org.jetbrains.exposed.sql.SqlExpressionBuilder
 import org.jetbrains.exposed.sql.Sum
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.UpperCase
 import org.jetbrains.exposed.sql.alias
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.andIfNotNull
@@ -61,8 +62,9 @@ class FunctionsTest: AbstractFunctionsTest() {
 
     /**
      * sum function
+     *
      * ```sql
-     * SELECT SUM(CITIES.CITY_ID) FROM CITIES
+     * SELECT SUM(cities.city_id) FROM cities
      * ```
      */
     @ParameterizedTest
@@ -78,12 +80,13 @@ class FunctionsTest: AbstractFunctionsTest() {
      * custom function
      *
      * ```sql
-     * SELECT USERS.ID, SUM((CITIES.CITY_ID + USERDATA."value"))
-     *   FROM USERS
-     *      INNER JOIN USERDATA ON USERS.ID = USERDATA.USER_ID
-     *      INNER JOIN CITIES ON CITIES.CITY_ID = USERS.CITY_ID
-     *  GROUP BY USERS.ID
-     *  ORDER BY USERS.ID ASC
+     * SELECT users.id,
+     *        SUM((cities.city_id + userdata."value"))
+     *   FROM users
+     *      INNER JOIN userdata ON users.id = userdata.user_id
+     *      INNER JOIN cities ON cities.city_id = users.city_id
+     *  GROUP BY users.id
+     *  ORDER BY users.id ASC
      * ```
      */
     @ParameterizedTest
@@ -111,16 +114,18 @@ class FunctionsTest: AbstractFunctionsTest() {
     }
 
     /**
+     * Cacl function with DecimalColumnType
+     *
      * ```sql
-     * SELECT USERS.ID,
-     *        SUM(((CITIES.CITY_ID * 100) + (USERDATA."value" / 10))),
-     *        (SUM(((CITIES.CITY_ID * 100) + (USERDATA."value" / 10))) / 100),
-     *        (SUM(((CITIES.CITY_ID * 100) + (USERDATA."value" / 10))) % 100)
-     *   FROM USERS
-     *          INNER JOIN USERDATA ON USERS.ID = USERDATA.USER_ID
-     *          INNER JOIN CITIES ON CITIES.CITY_ID = USERS.CITY_ID
-     *  GROUP BY USERS.ID
-     *  ORDER BY USERS.ID ASC
+     * SELECT users.id,
+     *        SUM(((cities.city_id * 100) + (userdata."value" / 10))),
+     *        (SUM(((cities.city_id * 100) + (userdata."value" / 10))) / 100),
+     *        (SUM(((cities.city_id * 100) + (userdata."value" / 10))) % 100)
+     *   FROM users
+     *          INNER JOIN userdata ON users.id = userdata.user_id
+     *          INNER JOIN cities ON cities.city_id = users.city_id
+     *  GROUP BY users.id
+     *  ORDER BY users.id ASC
      * ```
      */
     @ParameterizedTest
@@ -161,16 +166,16 @@ class FunctionsTest: AbstractFunctionsTest() {
 
     /**
      * Sum function with DecimalColumnType
+     *
      * ```sql
-     * SELECT USERS.ID,
-     *        SUM(((CITIES.CITY_ID * 100.0) + (USERDATA."value" / 10.0))),
-     *        (SUM(((CITIES.CITY_ID * 100.0) + (USERDATA."value" / 10.0))) / 100.0),
-     *        (SUM(((CITIES.CITY_ID * 100.0) + (USERDATA."value" / 10.0))) % 100.0)
-     *   FROM USERS
-     *          INNER JOIN USERDATA ON USERS.ID = USERDATA.USER_ID
-     *          INNER JOIN CITIES ON CITIES.CITY_ID = USERS.CITY_ID
-     *  GROUP BY USERS.ID
-     *  ORDER BY USERS.ID ASC
+     * SELECT users.id,
+     *        SUM(((cities.city_id * 100.0) + (userdata."value" / 10.0))),
+     *        (SUM(((cities.city_id * 100.0) + (userdata."value" / 10.0))) / 100.0),
+     *        (SUM(((cities.city_id * 100.0) + (userdata."value" / 10.0))) % 100.0)
+     *   FROM users INNER JOIN userdata ON users.id = userdata.user_id
+     *              INNER JOIN cities ON cities.city_id = users.city_id
+     *  GROUP BY users.id
+     *  ORDER BY users.id ASC
      * ```
      */
     @ParameterizedTest
@@ -207,14 +212,32 @@ class FunctionsTest: AbstractFunctionsTest() {
             rows[1][sum].asBigDecimal() shouldBeEqualTo 203.0.toBigDecimal()
             rows[1][div].asBigDecimal() shouldBeEqualTo 2.0.toBigDecimal()
             rows[1][mod].asBigDecimal() shouldBeEqualTo 3.0.toBigDecimal()
-
-
         }
     }
 
+    /**
+     * [Expression.build] with alias
+     *
+     * ```sql
+     * SELECT test_mod_on_pk.id,
+     *        (test_mod_on_pk.id % 3) shard1,
+     *        (test_mod_on_pk.id % 3) shard2,
+     *        (test_mod_on_pk.id % test_mod_on_pk.other) shard3,
+     *        (test_mod_on_pk.other % test_mod_on_pk.id) shard4
+     *   FROM test_mod_on_pk
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `rem on numeric PK should work`(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS test_mod_on_pk (
+         *      id SERIAL PRIMARY KEY,
+         *      other SMALLINT NOT NULL
+         * )
+         * ```
+         */
         val table = object: IntIdTable("test_mod_on_pk") {
             val otherColumn = short("other")
         }
@@ -226,6 +249,7 @@ class FunctionsTest: AbstractFunctionsTest() {
                 }
             }
 
+            // HINT: IdentityID 컬럼에 대해서도 이렇게 연산을 할 수 있네 ???
             val modOnPk1 = Expression.build { table.id % 3 }.alias("shard1")
             val modOnPk2 = Expression.build { table.id % intLiteral(3) }.alias("shard2")
             val modOnPk3 = Expression.build { table.id % table.otherColumn }.alias("shard3")
@@ -240,9 +264,29 @@ class FunctionsTest: AbstractFunctionsTest() {
         }
     }
 
+    /**
+     * [Expression.build] with alias for numeric PK
+     *
+     * ```sql
+     * SELECT test_mod_on_pk.id,
+     *        (test_mod_on_pk.id % 3) shard1,
+     *        (test_mod_on_pk.id % 3) shard2,
+     *        (test_mod_on_pk.id % test_mod_on_pk.other) shard3,
+     *        (test_mod_on_pk.other % test_mod_on_pk.id) shard4
+     *   FROM test_mod_on_pk
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `mod on numeric PK should work`(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS test_mod_on_pk (
+         *      id SERIAL PRIMARY KEY,
+         *      other SMALLINT NOT NULL
+         * )
+         * ```
+         */
         val table = object: IntIdTable("test_mod_on_pk") {
             val otherColumn = short("other")
         }
@@ -272,10 +316,10 @@ class FunctionsTest: AbstractFunctionsTest() {
      * bitwiseAnd function
      *
      * ```sql
-     * SELECT BITAND(USERS.FLAGS, CAST(1 AS INT)),
-     *        BITAND(USERS.FLAGS, CAST(1 AS INT)) = 1
-     *   FROM USERS
-     *  ORDER BY USERS.ID ASC
+     * SELECT (users.flags & 1),
+     *        (users.flags & 1) = 1
+     *   FROM users
+     *  ORDER BY users.id ASC
      * ```
      */
     @ParameterizedTest
@@ -310,10 +354,10 @@ class FunctionsTest: AbstractFunctionsTest() {
      * bitwiseAnd function
      *
      * ```sql
-     * SELECT BITAND(USERS.FLAGS, 1),
-     *        BITAND(USERS.FLAGS, 1) = 1
-     *   FROM USERS
-     *  ORDER BY USERS.ID ASC
+     * SELECT (users.flags & 1),
+     *        (users.flags & 1) = 1
+     *   FROM users
+     *  ORDER BY users.id ASC
      * ```
      */
     @ParameterizedTest
@@ -348,10 +392,10 @@ class FunctionsTest: AbstractFunctionsTest() {
      * bitwiseOr function
      *
      * ```sql
-     * SELECT USERS.ID,
-     *        BITOR(USERS.FLAGS, CAST(2 AS INT))
-     *   FROM USERS
-     *  ORDER BY USERS.ID ASC
+     * SELECT users.id,
+     *        (users.flags | 2)
+     *  FROM users
+     * ORDER BY users.id ASC
      * ```
      */
     @ParameterizedTest
@@ -376,10 +420,11 @@ class FunctionsTest: AbstractFunctionsTest() {
      * bitwiseOr function
      *
      * ```sql
-     * SELECT USERS.ID,
-     *        BITOR(USERS.FLAGS, 2)
-     *   FROM USERS
-     *  ORDER BY USERS.ID ASC
+     * SELECT users.id,
+     *        users.flags,
+     *        (users.flags | 2)
+     *   FROM users
+     *  ORDER BY users.id ASC
      * ```
      */
     @ParameterizedTest
@@ -404,11 +449,19 @@ class FunctionsTest: AbstractFunctionsTest() {
      * bitwiseXor function
      *
      * ```sql
-     * SELECT USERS.ID,
-     *        USERS.FLAGS,
-     *        BITXOR(USERS.FLAGS, CAST(7 AS INT))
-     *   FROM USERS
-     *  ORDER BY USERS.ID ASC
+     * --- Postgres
+     * SELECT users.id,
+     *        users.flags,
+     *        (users.flags # 7)
+     *  FROM users
+     * ORDER BY users.id ASC;
+     *
+     * --- MySQL
+     * SELECT Users.id,
+     *        Users.flags,
+     *        (Users.flags ^ 7)
+     *  FROM Users
+     * ORDER BY Users.id ASC
      * ```
      */
     @ParameterizedTest
@@ -431,11 +484,19 @@ class FunctionsTest: AbstractFunctionsTest() {
      * bitwiseXor function
      *
      * ```
-     * SELECT USERS.ID,
-     *        USERS.FLAGS,
-     *        BITXOR(USERS.FLAGS, 7)
-     *   FROM USERS
-     *  ORDER BY USERS.ID ASC
+     * -- Postgres
+     * SELECT users.id,
+     *        users.flags,
+     *        (users.flags # 7)
+     *   FROM users
+     *  ORDER BY users.id ASC;
+     *
+     *  -- MySQL
+     *  SELECT Users.id,
+     *         Users.flags,
+     *         (Users.flags ^ 7)
+     *    FROM Users
+     *   ORDER BY Users.id ASC;
      * ```
      */
     @ParameterizedTest
@@ -458,10 +519,9 @@ class FunctionsTest: AbstractFunctionsTest() {
      * hasFlag function
      *
      * ```sql
-     * SELECT USERS.ID
-     *   FROM USERS
-     *  WHERE BITAND(USERS.FLAGS, CAST(1 AS INT)) = 1
-     *  ORDER BY USERS.ID ASC
+     * SELECT users.id FROM users
+     *  WHERE (users.flags & 1) = 1
+     *  ORDER BY users.id ASC
      * ```
      */
     @ParameterizedTest
@@ -469,7 +529,9 @@ class FunctionsTest: AbstractFunctionsTest() {
     fun `flag 01`(testDB: TestDB) {
         withCitiesAndUsers(testDB) { _, users, _ ->
             val adminFlag = DMLTestData.Users.Flags.IS_ADMIN
-            val rows = users.select(users.id)
+
+            val rows = users
+                .select(users.id)
                 .where { users.flags hasFlag adminFlag }
                 .orderBy(users.id)
                 .toList()
@@ -484,10 +546,10 @@ class FunctionsTest: AbstractFunctionsTest() {
      * substring function
      *
      * ```sql
-     * SELECT USERS.ID,
-     *        SUBSTRING(USERS."name", 1, 2)
-     *   FROM USERS
-     *  ORDER BY USERS.ID ASC
+     * SELECT users.id,
+     *        SUBSTRING(users."name", 1, 2)
+     *   FROM users
+     *  ORDER BY users.id ASC
      * ```
      */
     @ParameterizedTest
@@ -495,7 +557,9 @@ class FunctionsTest: AbstractFunctionsTest() {
     fun `substring 01`(testDB: TestDB) {
         withCitiesAndUsers(testDB) { _, users, _ ->
             val substring = users.name.substring(1, 2)
-            val rows = users.select(users.id, substring)
+
+            val rows = users
+                .select(users.id, substring)
                 .orderBy(users.id)
                 .toList()
 
@@ -511,8 +575,8 @@ class FunctionsTest: AbstractFunctionsTest() {
     /**
      * CharLength function
      *
-     * ```
-     * SELECT SUM(CHAR_LENGTH(CITIES."name")) FROM CITIES
+     * ```sql
+     * SELECT SUM(CHAR_LENGTH(cities."name")) FROM cities
      * ```
      */
     @ParameterizedTest
@@ -533,10 +597,10 @@ class FunctionsTest: AbstractFunctionsTest() {
      * CharLength function
      *
      * ```sql
-     * SELECT CHAR_LENGTH(TESTER.NULL_STRING),
-     *        CHAR_LENGTH(TESTER.EMPTY_STRING),
+     * SELECT CHAR_LENGTH(tester.null_string),
+     *        CHAR_LENGTH(tester.empty_string),
      *        CHAR_LENGTH('안녕하세요세계')
-     *   FROM TESTER
+     *   FROM tester;
      * ```
      */
     @ParameterizedTest
@@ -574,13 +638,13 @@ class FunctionsTest: AbstractFunctionsTest() {
      * case function
      *
      * ```sql
-     * SELECT USERS.ID,
+     * SELECT users.id,
      *        CASE
-     *          WHEN USERS.ID = 'alex' THEN '11'
+     *          WHEN users.id = 'alex' THEN '11'
      *          ELSE '22'
      *        END
-     *   FROM USERS
-     *  ORDER BY USERS.ID ASC
+     *   FROM users
+     *  ORDER BY users.id ASC
      *  LIMIT 2
      * ```
      */
@@ -608,8 +672,8 @@ class FunctionsTest: AbstractFunctionsTest() {
      * case function
      *
      * ```sql
-     * SELECT LOWER(CITIES."name") FROM CITIES
-     * SELECT UPPER(CITIES."name") FROM CITIES
+     * SELECT LOWER(cities."name") FROM cities;
+     * SELECT UPPER(cities."name") FROM cities;
      * ```
      */
     @ParameterizedTest
@@ -617,10 +681,10 @@ class FunctionsTest: AbstractFunctionsTest() {
     fun `String functions`(testDB: TestDB) {
         withCitiesAndUsers(testDB) { cities, _, _ ->
 
-            val lcase = cities.name.lowerCase()
+            val lcase: LowerCase<String> = cities.name.lowerCase()
             cities.select(lcase).any { it[lcase] == "prague" }.shouldBeTrue()
 
-            val ucase = cities.name.upperCase()
+            val ucase: UpperCase<String> = cities.name.upperCase()
             cities.select(ucase).any { it[ucase] == "PRAGUE" }.shouldBeTrue()
         }
     }
@@ -628,8 +692,13 @@ class FunctionsTest: AbstractFunctionsTest() {
     /**
      * locate function
      *
+     *
      * ```sql
-     * SELECT LOCATE('e',CITIES."name") FROM CITIES
+     * -- Postgres:
+     * SELECT POSITION('e' IN cities."name") FROM cities
+     *
+     * -- MySQL
+     * SELECT LOCATE('e',Cities.`name`) FROM Cities
      * ```
      */
     @ParameterizedTest
@@ -649,7 +718,11 @@ class FunctionsTest: AbstractFunctionsTest() {
      * locate function
      *
      * ```sql
-     * SELECT LOCATE('Peter',CITIES."name") FROM CITIES
+     * -- Postgres:
+     * SELECT POSITION('Peter' IN cities."name") FROM cities;
+     *
+     * -- MySQL:
+     * SELECT LOCATE('Peter',Cities.`name`) FROM Cities;
      * ```
      */
     @ParameterizedTest
@@ -669,7 +742,10 @@ class FunctionsTest: AbstractFunctionsTest() {
      * locate function
      *
      * ```sql
-     * SELECT LOCATE('p',CITIES."name") FROM CITIES
+     * -- Postgres:
+     * SELECT POSITION('p' IN cities."name") FROM cities;
+     * -- MySQL:
+     * SELECT LOCATE('p',Cities.`name`) FROM Cities
      * ```
      */
     @ParameterizedTest
@@ -691,7 +767,7 @@ class FunctionsTest: AbstractFunctionsTest() {
      * Random function
      *
      * ```sql
-     * SELECT RANDOM() FROM CITIES LIMIT 1
+     * SELECT RANDOM() FROM cities LIMIT 1
      * ```
      */
     @ParameterizedTest
@@ -704,41 +780,74 @@ class FunctionsTest: AbstractFunctionsTest() {
                 cities.insert { it[name] = "city-1" }
             }
 
-            val rand = Random()
-            val resultRow = cities.select(rand).limit(1).single()
-            resultRow[rand].shouldNotBeNull()
+            val rand = org.jetbrains.exposed.sql.Random()  // BigDecimal 을 반환한다.
+
+            val resultRow = cities
+                .select(rand)
+                .limit(1)
+                .single()
+
+            resultRow[rand].shouldNotBeNull().apply {
+                log.debug { "Random=$this" }
+            }
         }
     }
 
+    /**
+     * Regexp function
+     *
+     * ```sql
+     * -- Postgres:
+     * SELECT COUNT(*) FROM users WHERE users.id ~ 'a.+';
+     * SELECT COUNT(*) FROM users WHERE users.id ~ 'an.+';
+     * SELECT COUNT(*) FROM users WHERE users.id ~ '.*';
+     * SELECT COUNT(*) FROM users WHERE users.id ~ '.*y';
+     *
+     * -- MySQL:
+     * SELECT COUNT(*) FROM Users WHERE REGEXP_LIKE(Users.id, 'a.+', 'c');
+     * SELECT COUNT(*) FROM Users WHERE REGEXP_LIKE(Users.id, 'an.+', 'c');
+     * SELECT COUNT(*) FROM Users WHERE REGEXP_LIKE(Users.id, '.*', 'c');
+     * SELECT COUNT(*) FROM Users WHERE REGEXP_LIKE(Users.id, '.*y', 'c');
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `regexp 01`(testDB: TestDB) {
         withCitiesAndUsers(testDB) { _, users, _ ->
-
-            // SELECT COUNT(*) FROM USERS WHERE REGEXP_LIKE(USERS.ID, 'a.+', 'c')
             users.selectAll().where { users.id regexp "a.+" }.count().toInt() shouldBeEqualTo 2
-            // SELECT COUNT(*) FROM USERS WHERE REGEXP_LIKE(USERS.ID, 'an.+', 'c')
             users.selectAll().where { users.id regexp "an.+" }.count().toInt() shouldBeEqualTo 1
-            // SELECT COUNT(*) FROM USERS WHERE REGEXP_LIKE(USERS.ID, '.*', 'c')
             users.selectAll().where { users.id regexp ".*" }.count() shouldBeEqualTo users.selectAll().count()
-            // SELECT COUNT(*) FROM USERS WHERE REGEXP_LIKE(USERS.ID, '.*y', 'c')
             users.selectAll().where { users.id regexp ".*y" }.count().toInt() shouldBeEqualTo 2
         }
     }
 
+    /**
+     * Regexp function
+     *
+     * ```sql
+     * -- Postgres:
+     * SELECT COUNT(*) FROM users WHERE users.id ~ 'a.+';
+     * SELECT COUNT(*) FROM users WHERE users.id ~ 'an.+';
+     * SELECT COUNT(*) FROM users WHERE users.id ~ '.*';
+     * SELECT COUNT(*) FROM users WHERE users.id ~ '.*y';
+     *
+     * -- MySQL:
+     * SELECT COUNT(*) FROM Users WHERE REGEXP_LIKE(Users.id, 'a.+', 'c');
+     * SELECT COUNT(*) FROM Users WHERE REGEXP_LIKE(Users.id, 'an.+', 'c');
+     * SELECT COUNT(*) FROM Users WHERE REGEXP_LIKE(Users.id, '.*', 'c');
+     * SELECT COUNT(*) FROM Users WHERE REGEXP_LIKE(Users.id, '.*y', 'c');
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `regexp 02`(testDB: TestDB) {
         withCitiesAndUsers(testDB) { _, users, _ ->
 
-            // SELECT COUNT(*) FROM USERS WHERE REGEXP_LIKE(USERS.ID, 'a.+', 'c')
             users.selectAll().where { users.id.regexp(stringLiteral("a.+")) }.count().toInt() shouldBeEqualTo 2
-            // SELECT COUNT(*) FROM USERS WHERE REGEXP_LIKE(USERS.ID, 'an.+', 'c')
             users.selectAll().where { users.id.regexp(stringLiteral("an.+")) }.count().toInt() shouldBeEqualTo 1
-            // SELECT COUNT(*) FROM USERS WHERE REGEXP_LIKE(USERS.ID, '.*', 'c')
-            users.selectAll().where { users.id.regexp(stringLiteral(".*")) }.count() shouldBeEqualTo users.selectAll()
-                .count()
-            // SELECT COUNT(*) FROM USERS WHERE REGEXP_LIKE(USERS.ID, '.*y', 'c')
+            users.selectAll()
+                .where { users.id.regexp(stringLiteral(".*")) }
+                .count() shouldBeEqualTo users.selectAll().count()
             users.selectAll().where { users.id.regexp(stringLiteral(".*y")) }.count().toInt() shouldBeEqualTo 2
         }
     }
@@ -747,10 +856,8 @@ class FunctionsTest: AbstractFunctionsTest() {
      * concat function
      *
      * ```sql
-     * SELECT CONCAT('Foo', 'Bar') FROM CITIES LIMIT 1
-     * ```
-     * ```sql
-     * SELECT CONCAT_WS('!', 'Foo', 'Bar') FROM CITIES LIMIT 1
+     * SELECT CONCAT('Foo', 'Bar') FROM cities LIMIT 1;
+     * SELECT CONCAT_WS('!','Foo', 'Bar') FROM cities LIMIT 1;
      * ```
      */
     @ParameterizedTest
@@ -761,9 +868,19 @@ class FunctionsTest: AbstractFunctionsTest() {
             val result = cities.select(concatField).limit(1).single()
             result[concatField] shouldBeEqualTo "FooBar"
 
-            val concatField2: Concat =
-                SqlExpressionBuilder.concat("!", listOf(stringLiteral("Foo"), stringLiteral("Bar")))
-            val result2 = cities.select(concatField2).limit(1).single()
+            val concatField2: Concat = SqlExpressionBuilder
+                .concat(
+                    "!",
+                    listOf(
+                        stringLiteral("Foo"),
+                        stringLiteral("Bar")
+                    )
+                )
+
+            val result2 = cities
+                .select(concatField2)
+                .limit(1)
+                .single()
             result2[concatField2] shouldBeEqualTo "Foo!Bar"
         }
     }
@@ -772,11 +889,13 @@ class FunctionsTest: AbstractFunctionsTest() {
      * concat function
      *
      * ```sql
-     * SELECT CONCAT(USERS.ID, ' - ', USERS."name") FROM USERS WHERE USERS.ID = 'andrey'
-     * ```
+     * SELECT CONCAT(users.id, ' - ', users."name")
+     *   FROM users
+     *  WHERE users.id = 'andrey';
      *
-     * ```
-     * SELECT CONCAT_WS('!',USERS.ID, USERS."name") FROM USERS WHERE USERS.ID = 'andrey'
+     * SELECT CONCAT_WS('!',users.id, users."name")
+     *   FROM users
+     *  WHERE users.id = 'andrey';
      * ```
      */
     @ParameterizedTest
@@ -787,9 +906,16 @@ class FunctionsTest: AbstractFunctionsTest() {
             val result = users.select(concatField).where { users.id eq "andrey" }.single()
             result[concatField] shouldBeEqualTo "andrey - Andrey"
 
-            val concatField2: Concat =
-                SqlExpressionBuilder.concat("!", listOf(users.id, users.name))
-            val result2 = users.select(concatField2).where { users.id eq "andrey" }.single()
+            val concatField2: Concat = SqlExpressionBuilder.concat(
+                "!",
+                listOf(users.id, users.name)
+            )
+
+            val result2 = users
+                .select(concatField2)
+                .where { users.id eq "andrey" }
+                .single()
+
             result2[concatField2] shouldBeEqualTo "andrey!Andrey"
         }
     }
@@ -797,15 +923,13 @@ class FunctionsTest: AbstractFunctionsTest() {
     /**
      * concat function
      * ```sql
-     * SELECT CONCAT(USERDATA.USER_ID, ' - ', USERDATA.COMMENT, ' - ', USERDATA."value")
-     *   FROM USERDATA
-     *  WHERE USERDATA.USER_ID = 'sergey'
-     * ```
+     * SELECT CONCAT(userdata.user_id, ' - ', userdata."comment", ' - ', userdata."value")
+     *   FROM userdata
+     *  WHERE userdata.user_id = 'sergey';
      *
-     * ```sql
-     * SELECT CONCAT_WS('!',USERDATA.USER_ID, USERDATA.COMMENT, USERDATA."value")
-     *   FROM USERDATA
-     *  WHERE USERDATA.USER_ID = 'sergey'
+     * SELECT CONCAT_WS('!',userdata.user_id, userdata."comment", userdata."value")
+     *   FROM userdata
+     *  WHERE userdata.user_id = 'sergey';
      * ```
      */
     @ParameterizedTest
@@ -836,13 +960,11 @@ class FunctionsTest: AbstractFunctionsTest() {
     }
 
     /**
-     * custom string functions
+     * DB specific string functions
      *
      * ```sql
-     * SELECT lower(CITIES."name") FROM CITIES
-     * ```
-     * ```sql
-     * SELECT upper(CITIES."name") FROM CITIES
+     * SELECT lower(CITIES."name") FROM CITIES;
+     * SELECT upper(CITIES."name") FROM CITIES;
      * ```
      */
     @ParameterizedTest
@@ -858,24 +980,31 @@ class FunctionsTest: AbstractFunctionsTest() {
     }
 
     /**
-     * custom string functions
+     * DB specific string functions
+     *
      * ```sql
-     * SELECT REPLACE(CITIES."name", 'gue', 'foo')
-     *   FROM CITIES
-     *  WHERE CITIES."name" = 'Prague'
+     * SELECT REPLACE(cities."name", 'gue', 'foo')
+     *   FROM cities
+     *  WHERE cities."name" = 'Prague'
      * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `custom string functions 02`(testDB: TestDB) {
         withCitiesAndUsers(testDB) { cities, _, _ ->
+            // REPLACE(cities."name", 'gue', 'foo')
             val replace = CustomStringFunction(
                 "REPLACE",
                 cities.name,
                 stringParam("gue"),
                 stringParam("foo")
             )
-            val result = cities.select(replace).where { cities.name eq "Prague" }.singleOrNull()
+
+            val result = cities
+                .select(replace)
+                .where { cities.name eq "Prague" }
+                .singleOrNull()
+
             result?.get(replace) shouldBeEqualTo "Prafoo"
         }
     }
@@ -884,7 +1013,7 @@ class FunctionsTest: AbstractFunctionsTest() {
      * custom integer function
      *
      * ```sql
-     * SELECT SQRT(CITIES.CITY_ID) FROM CITIES
+     * SELECT SQRT(cities.city_id) FROM cities
      * ```
      */
     @ParameterizedTest
@@ -895,7 +1024,12 @@ class FunctionsTest: AbstractFunctionsTest() {
             ids shouldBeEqualTo listOf(1, 2, 3)
 
             val sqrt = DMLTestData.Cities.id.function("SQRT")
-            val sqrtIds = cities.select(sqrt).map { it[sqrt] }.toList()
+
+            val sqrtIds = cities
+                .select(sqrt)
+                .map { it[sqrt] }
+                .toList()
+
             sqrtIds shouldBeEqualTo listOf(1, 1, 1)
         }
     }
@@ -904,7 +1038,7 @@ class FunctionsTest: AbstractFunctionsTest() {
      * custom integer function
      *
      * ```sql
-     * SELECT POWER(CITIES.CITY_ID, 2) FROM CITIES
+     * SELECT POWER(cities.city_id, 2) FROM cities
      * ```
      */
     @ParameterizedTest
@@ -1010,11 +1144,12 @@ class FunctionsTest: AbstractFunctionsTest() {
     }
 
     /**
-     * custom operator
+     * [CustomOperator]를 정의하여 사용하기
      *
      * ```sql
-     * SELECT USERDATA.USER_ID, USERDATA.COMMENT, USERDATA."value"
-     *   FROM USERDATA WHERE (USERDATA."value" + 15) = 35
+     * SELECT userdata.user_id, userdata."comment", userdata."value"
+     *   FROM userdata
+     *  WHERE (userdata."value" + 15) = 35;
      * ```
      */
     @ParameterizedTest
@@ -1035,6 +1170,23 @@ class FunctionsTest: AbstractFunctionsTest() {
         }
     }
 
+    /**
+     * [SqlExpressionBuilder.coalesce] 함수 사용하기
+     *
+     * coalesce: 첫번째 인자가 null 이면 두번째 인자를 반환한다.
+     *
+     * ```sql
+     * SELECT users.city_id,
+     *        COALESCE(users.city_id, 1000)
+     *   FROM users
+     * ```
+     *
+     * ```sql
+     * SELECT users.city_id,
+     *        COALESCE(users.city_id, NULL, 1000)
+     *   FROM users
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `coalesce function`(testDB: TestDB) {
@@ -1042,11 +1194,6 @@ class FunctionsTest: AbstractFunctionsTest() {
 
             val coalesceExpr1 = SqlExpressionBuilder.coalesce(users.cityId, intLiteral(1000))
 
-            /**
-             * ```sql
-             * SELECT USERS.CITY_ID, COALESCE(USERS.CITY_ID, 1000) FROM USERS
-             * ```
-             */
             users
                 .select(users.cityId, coalesceExpr1)
                 .forEach {
@@ -1061,11 +1208,6 @@ class FunctionsTest: AbstractFunctionsTest() {
 
             val coalesceExpr2 = Coalesce(users.cityId, Op.nullOp(), intLiteral(1000))
 
-            /**
-             * ```sql
-             * SELECT USERS.CITY_ID, COALESCE(USERS.CITY_ID, NULL, 1000) FROM USERS
-             * ```
-             */
             users
                 .select(users.cityId, coalesceExpr2)
                 .forEach {
@@ -1080,6 +1222,9 @@ class FunctionsTest: AbstractFunctionsTest() {
         }
     }
 
+    /**
+     * plus operator (`+`) 를 사용하여 문자열을 연결하기
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `concat using plus operator`(testDB: TestDB) {
@@ -1087,7 +1232,9 @@ class FunctionsTest: AbstractFunctionsTest() {
 
             /**
              * ```sql
-             * SELECT CONCAT(CONCAT(USERS.ID, ' - '), USERS."name") FROM USERS WHERE USERS.ID = 'andrey'
+             * SELECT CONCAT(CONCAT(users.id, ' - '), users."name")
+             *   FROM users
+             *  WHERE users.id = 'andrey'
              * ```
              */
             val concatField = SqlExpressionBuilder.run { users.id + " - " + users.name }
@@ -1096,7 +1243,9 @@ class FunctionsTest: AbstractFunctionsTest() {
 
             /**
              * ```sql
-             * SELECT CONCAT(USERS.ID, USERS."name") FROM USERS WHERE USERS.ID = 'andrey'
+             * SELECT CONCAT(users.id, users."name")
+             *   FROM users
+             *  WHERE users.id = 'andrey'
              * ```
              */
             val concatField2 = SqlExpressionBuilder.run { users.id + users.name }
@@ -1105,7 +1254,9 @@ class FunctionsTest: AbstractFunctionsTest() {
 
             /**
              * ```sql
-             * SELECT CONCAT('Hi ', CONCAT(USERS."name", '!')) FROM USERS WHERE USERS.ID = 'andrey'
+             * SELECT CONCAT('Hi ', CONCAT(users."name", '!'))
+             *   FROM users
+             *  WHERE users.id = 'andrey'
              * ```
              */
             val concatField3 = SqlExpressionBuilder.run { "Hi " plus users.name + "!" }
