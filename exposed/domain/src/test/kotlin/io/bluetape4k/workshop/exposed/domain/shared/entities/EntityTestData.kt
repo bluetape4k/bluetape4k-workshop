@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
 import io.bluetape4k.idgenerators.uuid.TimebasedUuid
+import io.bluetape4k.workshop.exposed.dao.idValue
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.IntEntity
@@ -12,6 +13,13 @@ import org.jetbrains.exposed.sql.Column
 
 object EntityTestData {
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS ytable (
+     *      uuid VARCHAR(24) PRIMARY KEY,
+     *      x BOOLEAN DEFAULT TRUE NOT NULL
+     * )
+     */
     object YTable: IdTable<String>("YTable") {
         override val id: Column<EntityID<String>> = varchar("uuid", 24).entityId()
             .clientDefault { EntityID(TimebasedUuid.nextBase62String(), YTable) }
@@ -21,6 +29,19 @@ object EntityTestData {
         override val primaryKey = PrimaryKey(id)
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS xtable (
+     *      id SERIAL PRIMARY KEY,
+     *      b1 BOOLEAN DEFAULT TRUE NOT NULL,
+     *      b2 BOOLEAN DEFAULT FALSE NOT NULL,
+     *      y1 VARCHAR(24) NULL,
+     *
+     *      CONSTRAINT fk_xtable_y1__uuid FOREIGN KEY (y1) REFERENCES ytable(uuid)
+     *          ON DELETE RESTRICT ON UPDATE RESTRICT
+     * );
+     * ```
+     */
     object XTable: IntIdTable("XTable") {
         val b1 = bool("b1").default(true)
         val b2 = bool("b2").default(false)
@@ -33,7 +54,9 @@ object EntityTestData {
         var b1 by XTable.b1
         var b2 by XTable.b2
 
-        override fun toString(): String = "XEntity(id=$id, b1=$b1, b2=$b2)"
+        override fun equals(other: Any?): Boolean = other is XEntity && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "XEntity(id=$idValue, b1=$b1, b2=$b2)"
     }
 
     enum class XType {
@@ -56,13 +79,12 @@ object EntityTestData {
             }
         }
 
-        override fun toString(): String = "AEntity(id=$id, b1=$b1)"
+        override fun equals(other: Any?): Boolean = other is AEntity && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "AEntity(id=$idValue, b1=$b1)"
     }
 
     open class BEntity(id: EntityID<Int>): AEntity(id) {
-        var b2 by XTable.b2
-        var y by YEntity optionalReferencedOn XTable.y1
-
         companion object: IntEntityClass<BEntity>(XTable) {
             fun create(init: AEntity.() -> Unit): BEntity {
                 val answer = new { init() }
@@ -70,7 +92,12 @@ object EntityTestData {
             }
         }
 
-        override fun toString(): String = "BEntity(id=$id, b1=$b1, b2=$b2)"
+        var b2 by XTable.b2
+        var y by YEntity optionalReferencedOn XTable.y1
+
+        override fun equals(other: Any?): Boolean = other is BEntity && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "BEntity(id=$idValue, b1=$b1, b2=$b2)"
     }
 
     class YEntity(id: EntityID<String>): Entity<String>(id) {
@@ -79,6 +106,8 @@ object EntityTestData {
         var x by YTable.x
         val b: BEntity? by BEntity.backReferencedOn(XTable.y1)
 
-        override fun toString(): String = "YEntity(id=$id, x=$x)"
+        override fun equals(other: Any?): Boolean = other is YEntity && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "YEntity(id=$idValue, x=$x)"
     }
 }

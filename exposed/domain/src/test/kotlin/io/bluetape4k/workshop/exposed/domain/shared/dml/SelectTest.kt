@@ -594,7 +594,7 @@ class SelectTest: AbstractExposedTest() {
             val result1 = Posts
                 .selectAll()
                 .where {
-                    Posts.board inList listOf(board1.id)   // 항목이 한개라면 `eq` 로 대체 가능
+                    Posts.boardId inList listOf(board1.id)   // 항목이 한개라면 `eq` 로 대체 가능
                 }
                 .singleOrNull()
                 ?.get(Posts.id)
