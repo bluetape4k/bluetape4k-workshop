@@ -17,6 +17,13 @@ abstract class AbstractFunctionsTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS faketable (
+     *      id SERIAL PRIMARY KEY
+     * )
+     * ```
+     */
     private object FakeTestTable: IntIdTable("fakeTable")
 
     protected fun withTable(testDB: TestDB, body: Transaction.(TestDB) -> Unit) {

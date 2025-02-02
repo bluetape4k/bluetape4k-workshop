@@ -26,10 +26,24 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import java.sql.SQLException
 
+/**
+ * SQL Math functions tests.
+ */
 class MathFunctionTest: AbstractFunctionsTest() {
 
     companion object: KLogging()
 
+    /**
+     * ABS 함수
+     *
+     * ```sql
+     * SELECT ABS(0) FROM faketable
+     * SELECT ABS(100) FROM faketable
+     * SELECT ABS(-100) FROM faketable
+     * SELECT ABS(100.0) FROM faketable
+     * SELECT ABS(-100.0) FROM faketable
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `abs function`(testDB: TestDB) {
@@ -42,6 +56,17 @@ class MathFunctionTest: AbstractFunctionsTest() {
         }
     }
 
+    /**
+     * SIGN 함수
+     *
+     * ```sql
+     * SELECT SIGN(0) FROM faketable
+     * SELECT SIGN(100) FROM faketable
+     * SELECT SIGN(-100) FROM faketable
+     * SELECT SIGN(100.0) FROM faketable
+     * SELECT SIGN(-100.0) FROM faketable
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `sign function`(testDB: TestDB) {
@@ -54,6 +79,20 @@ class MathFunctionTest: AbstractFunctionsTest() {
         }
     }
 
+    /**
+     * FLOOR 함수
+     *
+     * ```sql
+     * SELECT FLOOR(100) FROM faketable
+     * SELECT FLOOR(-100) FROM faketable
+     * SELECT FLOOR(100.0) FROM faketable
+     * SELECT FLOOR(100.3) FROM faketable
+     * SELECT FLOOR(100.7) FROM faketable
+     * SELECT FLOOR(-100.0) FROM faketable
+     * SELECT FLOOR(-100.3) FROM faketable
+     * SELECT FLOOR(-100.7) FROM faketable
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `floor function`(testDB: TestDB) {
@@ -69,6 +108,20 @@ class MathFunctionTest: AbstractFunctionsTest() {
         }
     }
 
+    /**
+     * CEIL 함수
+     *
+     * ```sql
+     * SELECT CEILING(100) FROM faketable
+     * SELECT CEILING(-100) FROM faketable
+     * SELECT CEILING(100.0) FROM faketable
+     * SELECT CEILING(100.3) FROM faketable
+     * SELECT CEILING(100.7) FROM faketable
+     * SELECT CEILING(-100.0) FROM faketable
+     * SELECT CEILING(-100.3) FROM faketable
+     * SELECT CEILING(-100.7) FROM faketable
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `ceil function`(testDB: TestDB) {
@@ -84,7 +137,20 @@ class MathFunctionTest: AbstractFunctionsTest() {
         }
     }
 
-
+    /**
+     * POWER 함수
+     *
+     * ```sql
+     * SELECT POWER(10, 2) FROM faketable
+     * SELECT POWER(10, 2.0) FROM faketable
+     * SELECT POWER(10.1, 2) FROM faketable
+     * SELECT POWER(10.1, 2) FROM faketable
+     * SELECT POWER(10.1, 2.0) FROM faketable
+     * SELECT POWER(10.1, 2.0) FROM faketable
+     * SELECT POWER(10.1, 2.5) FROM faketable
+     * SELECT POWER(10.1, 2.5) FROM faketable
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `power function`(testDB: TestDB) {
@@ -108,6 +174,17 @@ class MathFunctionTest: AbstractFunctionsTest() {
         }
     }
 
+    /**
+     * ROUND 함수
+     *
+     * ```sql
+     * SELECT ROUND(10, 0) FROM faketable
+     * SELECT ROUND(10, 2) FROM faketable
+     * SELECT ROUND(10.455, 0) FROM faketable
+     * SELECT ROUND(10.555, 0) FROM faketable
+     * SELECT ROUND(10.555, 2) FROM faketable
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `round function`(testDB: TestDB) {
@@ -122,6 +199,17 @@ class MathFunctionTest: AbstractFunctionsTest() {
         }
     }
 
+    /**
+     * SQRT 함수
+     *
+     * ```sql
+     * SELECT SQRT(100) FROM faketable
+     * SELECT SQRT(100.0) FROM faketable
+     * SELECT SQRT(125.44) FROM faketable
+     * SELECT SQRT(100) FROM faketable
+     * SELECT SQRT(125.44) FROM faketable
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `sqrt function`(testDB: TestDB) {
@@ -138,7 +226,7 @@ class MathFunctionTest: AbstractFunctionsTest() {
                 in TestDB.ALL_MYSQL ->
                     SqrtFunction(intLiteral(-100)) shouldExpressionEqualTo null
 
-                else                ->
+                else ->
                     expectException<SQLException> {
                         SqrtFunction(intLiteral(-100)) shouldExpressionEqualTo null
                     }
@@ -146,6 +234,15 @@ class MathFunctionTest: AbstractFunctionsTest() {
         }
     }
 
+    /**
+     * EXP 함수
+     *
+     * ```sql
+     * SELECT EXP(1) FROM faketable
+     * SELECT EXP(2.5) FROM faketable
+     * SELECT EXP(2.5) FROM faketable
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `exp function`(testDB: TestDB) {
@@ -156,9 +253,32 @@ class MathFunctionTest: AbstractFunctionsTest() {
         }
     }
 
+    /**
+     * MySQL 에서는 컬럼 기본 값에 다른 컬럼을 참조할 수 있다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `Column Reference In Default Expression in MySQL`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in TestDB.ALL_MYSQL - TestDB.MYSQL_V5 }
+
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS foo (
+         *      id INT AUTO_INCREMENT PRIMARY KEY,
+         *      `integer` INT NOT NULL,
+         *      `double` DOUBLE PRECISION NOT NULL,
+         *      `long` BIGINT NOT NULL,
+         *      defaultInt INT DEFAULT (ABS(foo.`integer`)) NOT NULL,
+         *      defaultInt2 INT DEFAULT ((foo.defaultInt / 100)) NOT NULL,
+         *      defaultDecimal DECIMAL(14, 12) DEFAULT (EXP(foo.defaultInt2)) NULL,
+         *      defaultLong BIGINT DEFAULT (FLOOR(foo.`double`)) NULL,
+         *      defaultDecimal2 DECIMAL(3, 0) DEFAULT (POWER(foo.`long`, 2)) NULL,
+         *      defaultDecimal3 DECIMAL(3, 0) DEFAULT (ROUND(foo.`double`, 0)) NULL,
+         *      defaultInt3 INT DEFAULT (SIGN(foo.`integer`)) NULL,
+         *      defaultDecimal4 DECIMAL(3, 0) DEFAULT (SQRT(foo.defaultDecimal2)) NULL
+         * );
+         * ```
+         */
         val foo = object: IntIdTable("foo") {
             val integer = integer("integer")
             val double = double("double")
@@ -176,8 +296,6 @@ class MathFunctionTest: AbstractFunctionsTest() {
             val defaultDecimal4 =
                 decimal("defaultDecimal4", 3, 0).nullable().defaultExpression(SqrtFunction(defaultDecimal2))
         }
-
-        Assumptions.assumeTrue { testDB in TestDB.ALL_MYSQL && testDB != TestDB.MYSQL_V5 }
 
         // MySQL and MariaDB are the only supported databases that allow referencing another column in a default expression
         // MySQL 5 does not support functions in default values.
