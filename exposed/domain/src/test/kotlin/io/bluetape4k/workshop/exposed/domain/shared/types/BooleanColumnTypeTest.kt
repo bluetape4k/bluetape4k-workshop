@@ -25,6 +25,14 @@ class BooleanColumnTypeTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS booleantable (
+     *      id SERIAL PRIMARY KEY,
+     *      "boolColumn" BOOLEAN NOT NULL
+     * )
+     * ```
+     */
     object BooleanTable: IntIdTable("booleanTable") {
         val boolColumn = bool("boolColumn")
     }
@@ -55,6 +63,25 @@ class BooleanColumnTypeTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * SELECT booleantable.id, booleantable."boolColumn"
+     *   FROM booleantable
+     *  WHERE booleantable."boolColumn" = TRUE;
+     *
+     * SELECT booleantable.id, booleantable."boolColumn"
+     *   FROM booleantable
+     *  WHERE booleantable."boolColumn" = TRUE;
+     *
+     * SELECT booleantable.id, booleantable."boolColumn"
+     *   FROM booleantable
+     *  WHERE booleantable."boolColumn" = FALSE;
+     *
+     * SELECT booleantable.id, booleantable."boolColumn"
+     *   FROM booleantable
+     *  WHERE booleantable."boolColumn" = FALSE;
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `bool in a condition`(testDB: TestDB) {
@@ -66,20 +93,24 @@ class BooleanColumnTypeTest: AbstractExposedTest() {
                 it[boolColumn] = booleanParam(false)
             }
 
-            BooleanTable.selectAll()
+            BooleanTable
+                .selectAll()
                 .where { BooleanTable.boolColumn eq true }
                 .single()[BooleanTable.id] shouldBeEqualTo idTrue
 
-            BooleanTable.selectAll()
+            BooleanTable
+                .selectAll()
                 .where { BooleanTable.boolColumn eq booleanParam(true) }
                 .single()[BooleanTable.id] shouldBeEqualTo idTrue
 
 
-            BooleanTable.selectAll()
+            BooleanTable
+                .selectAll()
                 .where { BooleanTable.boolColumn eq false }
                 .single()[BooleanTable.id] shouldBeEqualTo idFalse
 
-            BooleanTable.selectAll()
+            BooleanTable
+                .selectAll()
                 .where { BooleanTable.boolColumn eq booleanParam(false) }
                 .single()[BooleanTable.id] shouldBeEqualTo idFalse
         }
@@ -88,6 +119,15 @@ class BooleanColumnTypeTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `custom Char Boolean Column Type`(testDB: TestDB) {
+
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS tester (
+         *      "charBooleanColumn" VARCHAR(1) NOT NULL,
+         *      "charBooleanColumnWithDefault" VARCHAR(1) DEFAULT 'N' NOT NULL
+         * )
+         * ```
+         */
         val tester = object: Table("tester") {
             val charBooleanColumn = charBoolean("charBooleanColumn")
             val charBooleanColumnWithDefault = charBoolean("charBooleanColumnWithDefault")
@@ -104,21 +144,13 @@ class BooleanColumnTypeTest: AbstractExposedTest() {
             /**
              * ```sql
              * SELECT COUNT(*)
-             *   FROM TESTER
-             *  WHERE (TESTER."charBooleanColumn" = 'Y')
-             *    AND (TESTER."charBooleanColumnWithDefault" = 'N')
+             *   FROM tester
+             *  WHERE (tester."charBooleanColumn" = 'Y')
+             *    AND (tester."charBooleanColumnWithDefault" = 'N')
              * ```
              */
-
-            /**
-             * ```sql
-             * SELECT COUNT(*)
-             *   FROM TESTER
-             *  WHERE (TESTER."charBooleanColumn" = 'Y')
-             *    AND (TESTER."charBooleanColumnWithDefault" = 'N')
-             * ```
-             */
-            tester.select(tester.charBooleanColumn)
+            tester
+                .select(tester.charBooleanColumn)
                 .where { tester.charBooleanColumn eq true }
                 .andWhere { tester.charBooleanColumnWithDefault eq false }
                 .count() shouldBeEqualTo 1
