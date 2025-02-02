@@ -18,9 +18,9 @@ import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.BEnt
 import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.XTable
 import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.YEntity
 import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.YTable
-import io.bluetape4k.workshop.exposed.domain.shared.entities.VNumber
-import io.bluetape4k.workshop.exposed.domain.shared.entities.VString
 import io.bluetape4k.workshop.exposed.domain.shared.entities.ViaTestData
+import io.bluetape4k.workshop.exposed.domain.shared.entities.ViaTestData.VNumber
+import io.bluetape4k.workshop.exposed.domain.shared.entities.ViaTestData.VString
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo

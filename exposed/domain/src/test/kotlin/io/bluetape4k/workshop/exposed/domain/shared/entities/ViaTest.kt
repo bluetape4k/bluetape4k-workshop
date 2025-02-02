@@ -8,6 +8,9 @@ import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityClass
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDTable
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
+import io.bluetape4k.workshop.exposed.domain.shared.entities.ViaTestData.VNumber
+import io.bluetape4k.workshop.exposed.domain.shared.entities.ViaTestData.VString
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
@@ -42,10 +45,26 @@ import kotlin.reflect.jvm.isAccessible
 
 object ViaTestData {
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS numbers (
+     *      id uuid PRIMARY KEY,
+     *      "number" INT NOT NULL
+     * )
+     * ```
+     */
     object NumbersTable: TimebasedUUIDTable() {
         val number = integer("number")
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS strings (
+     *      id BIGINT PRIMARY KEY,
+     *      "text" VARCHAR(10) NOT NULL
+     * )
+     * ```
+     */
     object StringsTable: SnowflakeIdTable("") {
         val text = varchar("text", 10)
     }
@@ -55,6 +74,24 @@ object ViaTestData {
         val stringId: Column<EntityID<Long>>
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS "Connection" (
+     *      id uuid PRIMARY KEY,
+     *      "numId" uuid NOT NULL,
+     *      "stringId" BIGINT NOT NULL,
+     *
+     *      CONSTRAINT fk_connection_numid__id FOREIGN KEY ("numId")
+     *      REFERENCES numbers(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+     *
+     *      CONSTRAINT fk_connection_stringid__id FOREIGN KEY ("stringId")
+     *      REFERENCES strings(id) ON DELETE RESTRICT ON UPDATE RESTRICT
+     * );
+     *
+     * ALTER TABLE "Connection"
+     *      ADD CONSTRAINT connection_numid_stringid_unique UNIQUE ("numId", "stringId");
+     * ```
+     */
     object ConnectionTable: TimebasedUUIDTable(), IConnectionTable {
         override val numId = reference("numId", NumbersTable)
         override val stringId = reference("stringId", StringsTable)
@@ -64,6 +101,24 @@ object ViaTestData {
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS connectionauto (
+     *      id SERIAL PRIMARY KEY,
+     *      "numId" uuid NOT NULL,
+     *      "stringId" BIGINT NOT NULL,
+     *
+     *      CONSTRAINT fk_connectionauto_numid__id FOREIGN KEY ("numId")
+     *      REFERENCES numbers(id) ON DELETE CASCADE ON UPDATE RESTRICT,
+     *
+     *      CONSTRAINT fk_connectionauto_stringid__id FOREIGN KEY ("stringId")
+     *      REFERENCES strings(id) ON DELETE CASCADE ON UPDATE RESTRICT
+     * );
+     *
+     * ALTER TABLE connectionauto
+     *      ADD CONSTRAINT connectionauto_numid_stringid_unique UNIQUE ("numId", "stringId");
+     * ```
+     */
     object ConnectionAutoTable: IntIdTable(), IConnectionTable {
         override val numId = reference("numId", NumbersTable, onDelete = ReferenceOption.CASCADE)
         override val stringId = reference("stringId", StringsTable, onDelete = ReferenceOption.CASCADE)
@@ -74,22 +129,33 @@ object ViaTestData {
     }
 
     val allTables = arrayOf(NumbersTable, StringsTable, ConnectionTable, ConnectionAutoTable)
+
+    class VNumber(id: EntityID<UUID>): TimebasedUUIDEntity(id) {
+        companion object: TimebasedUUIDEntityClass<VNumber>(NumbersTable)
+
+        var number: Int by ViaTestData.NumbersTable.number
+        var connectedStrings: SizedIterable<VString> by VString via ViaTestData.ConnectionTable
+        var connectedAutoStrings: SizedIterable<VString> by VString via ViaTestData.ConnectionAutoTable
+
+        override fun equals(other: Any?): Boolean = other is VNumber && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "VNumber(id=$idValue, number=$number)"
+    }
+
+    class VString(id: EntityID<Long>): SnowflakeIdEntity(id) {
+        companion object: SnowflakeIdEntityClass<VString>(StringsTable)
+
+        var text: String by ViaTestData.StringsTable.text
+
+        override fun equals(other: Any?): Boolean = other is VString && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "VString(id=$idValue, text=$text)"
+    }
 }
 
-class VNumber(id: EntityID<UUID>): TimebasedUUIDEntity(id) {
-    companion object: TimebasedUUIDEntityClass<VNumber>(ViaTestData.NumbersTable)
-
-    var number: Int by ViaTestData.NumbersTable.number
-    var connectedStrings: SizedIterable<VString> by VString via ViaTestData.ConnectionTable
-    var connectedAutoStrings: SizedIterable<VString> by VString via ViaTestData.ConnectionAutoTable
-}
-
-class VString(id: EntityID<Long>): SnowflakeIdEntity(id) {
-    companion object: SnowflakeIdEntityClass<VString>(ViaTestData.StringsTable)
-
-    var text: String by ViaTestData.StringsTable.text
-}
-
+/**
+ * many-to-many 에서 relation table 을 통해 연결된 entity 들을 조회하는 테스트 (`via` 테스트)
+ */
 class ViaTest: AbstractExposedTest() {
 
     private fun VNumber.testWithBothTables(
@@ -224,36 +290,21 @@ class ViaTest: AbstractExposedTest() {
                 parents = SizedCollection(root)
             }
 
-            flushCache()
+            entityCache.clear()
 
             /**
              * ```sql
              * SELECT COUNT(*)
-             *   FROM NODES INNER JOIN NODETONODES ON NODES.ID = NODETONODES.PARENT_NODE_ID
-             *  WHERE NODETONODES.CHILD_NODE_ID = 1
-             * ```
-             */
-
-            /**
-             * ```sql
-             * SELECT COUNT(*)
-             *   FROM NODES INNER JOIN NODETONODES ON NODES.ID = NODETONODES.PARENT_NODE_ID
-             *  WHERE NODETONODES.CHILD_NODE_ID = 1
+             *   FROM nodes INNER JOIN nodetonodes ON nodes.id = nodetonodes.parent_node_id
+             *  WHERE nodetonodes.child_node_id = 1
              * ```
              */
             root.parents.count() shouldBeEqualTo 0L
             /**
              * ```sql
              * SELECT COUNT(*)
-             *   FROM NODES INNER JOIN NODETONODES ON NODES.ID = NODETONODES.CHILD_NODE_ID
-             *  WHERE NODETONODES.PARENT_NODE_ID = 1
-             * ```
-             */
-            /**
-             * ```sql
-             * SELECT COUNT(*)
-             *   FROM NODES INNER JOIN NODETONODES ON NODES.ID = NODETONODES.CHILD_NODE_ID
-             *  WHERE NODETONODES.PARENT_NODE_ID = 1
+             *   FROM nodes INNER JOIN nodetonodes ON nodes.id = nodetonodes.child_node_id
+             *  WHERE nodetonodes.parent_node_id = 1
              * ```
              */
             root.children.count() shouldBeEqualTo 1L
@@ -261,59 +312,61 @@ class ViaTest: AbstractExposedTest() {
 
             val child2 = Node.new { name = "child2" }
             /**
-             * root.children 을 update 한다.
+             * root.children 을 update 한다. (child 에 해당하는 정보를 모두 지우고, insert 한다)
              *
              * ```sql
-             * SELECT NODES.ID, NODES."name", NODETONODES.CHILD_NODE_ID, NODETONODES.PARENT_NODE_ID
-             *   FROM NODES INNER JOIN NODETONODES ON NODES.ID = NODETONODES.CHILD_NODE_ID
-             *  WHERE NODETONODES.PARENT_NODE_ID = 1
-             * ```
-             * ```sql
-             * DELETE FROM NODETONODES
-             *  WHERE (NODETONODES.PARENT_NODE_ID = 1)
-             *    AND (NODETONODES.CHILD_NODE_ID NOT IN (2, 3))
+             * SELECT nodes.id, nodes."name", nodetonodes.child_node_id, nodetonodes.parent_node_id
+             *   FROM nodes INNER JOIN nodetonodes ON nodes.id = nodetonodes.child_node_id
+             *  WHERE nodetonodes.parent_node_id = 1;
              *
-             * INSERT INTO NODETONODES (PARENT_NODE_ID, CHILD_NODE_ID) VALUES (1, 3)
-             * ```
-             */
-            /**
-             * root.children 을 update 한다.
+             * DELETE FROM nodetonodes
+             *  WHERE (nodetonodes.parent_node_id = 1)
+             *    AND (nodetonodes.child_node_id NOT IN (2, 3));
              *
-             * ```sql
-             * SELECT NODES.ID, NODES."name", NODETONODES.CHILD_NODE_ID, NODETONODES.PARENT_NODE_ID
-             *   FROM NODES INNER JOIN NODETONODES ON NODES.ID = NODETONODES.CHILD_NODE_ID
-             *  WHERE NODETONODES.PARENT_NODE_ID = 1
-             * ```
-             * ```sql
-             * DELETE FROM NODETONODES
-             *  WHERE (NODETONODES.PARENT_NODE_ID = 1)
-             *    AND (NODETONODES.CHILD_NODE_ID NOT IN (2, 3))
-             *
-             * INSERT INTO NODETONODES (PARENT_NODE_ID, CHILD_NODE_ID) VALUES (1, 3)
+             * INSERT INTO nodetonodes (parent_node_id, child_node_id) VALUES (1, 3)
              * ```
              */
             root.children = SizedCollection(child1, child2)
 
+            /**
+             * ```sql
+             * SELECT nodes.id, nodes."name", nodetonodes.parent_node_id, nodetonodes.child_node_id
+             *   FROM nodes INNER JOIN nodetonodes ON nodes.id = nodetonodes.parent_node_id
+             *  WHERE nodetonodes.child_node_id = 2
+             * ```
+             */
             child1.parents.singleOrNull() shouldBeEqualTo root
+
+            /**
+             * ```sql
+             * SELECT nodes.id, nodes."name", nodetonodes.parent_node_id, nodetonodes.child_node_id
+             *   FROM nodes INNER JOIN nodetonodes ON nodes.id = nodetonodes.parent_node_id
+             *  WHERE nodetonodes.child_node_id = 3
+             * ```
+             */
             child2.parents.singleOrNull() shouldBeEqualTo root
         }
     }
 
+    /**
+     * Insert & Refresh 테스트
+     *
+     * ```sql
+     * INSERT INTO strings (id, "text") VALUES (1335610413324173312, 'foo');
+     *
+     * SELECT strings.id, strings."text"
+     *   FROM strings
+     *  WHERE strings.id = 1335610413324173312;
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `refresh entity`(testDB: TestDB) {
         withTables(testDB, *ViaTestData.allTables) {
-            val s = VString.new { text = "foo" }
-            /**
-             * ```sql
-             * SELECT STRINGS.ID, STRINGS.TEXT FROM STRINGS WHERE STRINGS.ID = 1327632643684040704
-             * ```
-             */
-            /**
-             * ```sql
-             * SELECT STRINGS.ID, STRINGS.TEXT FROM STRINGS WHERE STRINGS.ID = 1327632643684040704
-             * ```
-             */
+            val s = VString.new {
+                text = "foo"
+            }
+
             s.refresh(true)
             s.text shouldBeEqualTo "foo"
         }
@@ -344,20 +397,17 @@ class ViaTest: AbstractExposedTest() {
             }
 
             /**
+             * Eager loading for one-to-many relation
+             * 
              * ```sql
-             * SELECT NODES.ID, NODES."name" FROM NODES
-             * SELECT NODES.ID, NODES."name", NODETONODES.PARENT_NODE_ID, NODETONODES.CHILD_NODE_ID
-             *   FROM NODES INNER JOIN NODETONODES ON NODETONODES.PARENT_NODE_ID = NODES.ID
-             *  WHERE NODETONODES.CHILD_NODE_ID IN (1, 2, 3, 4)
-             * ```
-             */
-
-            /**
-             * ```sql
-             * SELECT NODES.ID, NODES."name" FROM NODES
-             * SELECT NODES.ID, NODES."name", NODETONODES.PARENT_NODE_ID, NODETONODES.CHILD_NODE_ID
-             *   FROM NODES INNER JOIN NODETONODES ON NODETONODES.PARENT_NODE_ID = NODES.ID
-             *  WHERE NODETONODES.CHILD_NODE_ID IN (1, 2, 3, 4)
+             * SELECT nodes.id, nodes."name" FROM nodes;
+             *
+             * SELECT nodes.id,
+             *        nodes."name",
+             *        nodetonodes.parent_node_id,
+             *        nodetonodes.child_node_id
+             *   FROM nodes INNER JOIN nodetonodes ON nodetonodes.child_node_id = nodes.id
+             *  WHERE nodetonodes.parent_node_id IN (1, 2, 3, 4)
              * ```
              */
             Node.all().with(Node::children).toList()
@@ -375,20 +425,16 @@ class ViaTest: AbstractExposedTest() {
             }
 
             /**
+             * Eager loading for many-to-one relation
              * ```sql
-             * SELECT NODES.ID, NODES."name" FROM NODES
-             * SELECT NODES.ID, NODES."name", NODETONODES.PARENT_NODE_ID, NODETONODES.CHILD_NODE_ID
-             *   FROM NODES INNER JOIN NODETONODES ON NODETONODES.PARENT_NODE_ID = NODES.ID
-             *  WHERE NODETONODES.CHILD_NODE_ID IN (1, 2, 3, 4)
-             * ```
-             */
-
-            /**
-             * ```sql
-             * SELECT NODES.ID, NODES."name" FROM NODES
-             * SELECT NODES.ID, NODES."name", NODETONODES.PARENT_NODE_ID, NODETONODES.CHILD_NODE_ID
-             *   FROM NODES INNER JOIN NODETONODES ON NODETONODES.PARENT_NODE_ID = NODES.ID
-             *  WHERE NODETONODES.CHILD_NODE_ID IN (1, 2, 3, 4)
+             * SELECT nodes.id, nodes."name" FROM nodes;
+             *
+             * SELECT nodes.id,
+             *        nodes."name",
+             *        nodetonodes.parent_node_id,
+             *        nodetonodes.child_node_id
+             *   FROM nodes INNER JOIN nodetonodes ON nodetonodes.parent_node_id = nodes.id
+             *  WHERE nodetonodes.child_node_id IN (1, 2, 3, 4)
              * ```
              */
             Node.all().with(Node::parents).toList()
@@ -413,6 +459,19 @@ class ViaTest: AbstractExposedTest() {
         override fun toString(): String = "NodeOrdered($id)"
     }
 
+    /**
+     * one-to-many 에 해당하는 [SizedIterable] 을 정렬하여 조회하는 테스트
+     *
+     * ```sql
+     * SELECT nodes.id,
+     *        nodes."name",
+     *        nodetonodes.child_node_id,
+     *        nodetonodes.parent_node_id
+     *   FROM nodes INNER JOIN nodetonodes ON nodes.id = nodetonodes.child_node_id
+     *  WHERE nodetonodes.parent_node_id = 1
+     *  ORDER BY nodes."name" ASC
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `order by sized collection`(testDB: TestDB) {
@@ -431,35 +490,33 @@ class ViaTest: AbstractExposedTest() {
 
             flushCache()
 
-            /**
-             * ```sql
-             * SELECT NODES.ID, NODES."name", NODETONODES.CHILD_NODE_ID, NODETONODES.PARENT_NODE_ID
-             *   FROM NODES INNER JOIN NODETONODES ON NODES.ID = NODETONODES.CHILD_NODE_ID
-             *  WHERE NODETONODES.PARENT_NODE_ID = 1
-             *  ORDER BY NODES."name" ASC
-             * ```
-             */
-
-            /**
-             * ```sql
-             * SELECT NODES.ID, NODES."name", NODETONODES.CHILD_NODE_ID, NODETONODES.PARENT_NODE_ID
-             *   FROM NODES INNER JOIN NODETONODES ON NODES.ID = NODETONODES.CHILD_NODE_ID
-             *  WHERE NODETONODES.PARENT_NODE_ID = 1
-             *  ORDER BY NODES."name" ASC
-             * ```
-             */
             root.children.map { it.name } shouldBeEqualTo listOf("#0", "#1", "#2", "#3", "#4")
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS projects (id SERIAL PRIMARY KEY, "name" VARCHAR(50) NOT NULL)
+     * ```
+     */
     object Projects: IntIdTable("projects") {
         val name = varchar("name", 50)
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS tasks (id SERIAL PRIMARY KEY, title VARCHAR(64) NOT NULL)
+     * ```
+     */
     object Tasks: IntIdTable("tasks") {
         val title = varchar("title", 64)
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS project_tasks (project_id INT, task_id INT, approved BOOLEAN DEFAULT FALSE NOT NULL, CONSTRAINT pk_project_tasks PRIMARY KEY (project_id, task_id), CONSTRAINT fk_project_tasks_project_id__id FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE ON UPDATE RESTRICT, CONSTRAINT fk_project_tasks_task_id__id FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE ON UPDATE RESTRICT)
+     * ```
+     */
     object ProjectTasks: CompositeIdTable("project_tasks") {
         val project = reference("project_id", Projects, onDelete = ReferenceOption.CASCADE)
         val task = reference("task_id", Tasks, onDelete = ReferenceOption.CASCADE)
@@ -479,12 +536,20 @@ class ViaTest: AbstractExposedTest() {
 
         var name by Projects.name
         var tasks by Task via ProjectTasks
+
+        override fun equals(other: Any?): Boolean = other is Project && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Project(id=$idValue, name=$name)"
     }
 
     class ProjectTask(id: EntityID<CompositeID>): CompositeEntity(id) {
         companion object: CompositeEntityClass<ProjectTask>(ProjectTasks)
 
         var approved by ProjectTasks.approved
+
+        override fun equals(other: Any?): Boolean = other is ProjectTask && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "ProjectTask(id=$idValue, approved=$approved)"
     }
 
     class Task(id: EntityID<Int>): IntEntity(id) {
@@ -492,8 +557,20 @@ class ViaTest: AbstractExposedTest() {
 
         var title by Tasks.title
         var approved by ProjectTasks.approved
+
+        override fun equals(other: Any?): Boolean = other is Task && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Task(id=$idValue, title=$title, approved=$approved)"
     }
 
+    /**
+     * ```sql
+     * -- create ProjectTask
+     * INSERT INTO project_tasks (task_id, project_id, approved) VALUES (1, 1, TRUE);
+     * INSERT INTO project_tasks (task_id, project_id, approved) VALUES (2, 2, FALSE);
+     * INSERT INTO project_tasks (task_id, project_id, approved) VALUES (3, 2, FALSE);
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `additional link data using composite id inner table`(testDB: TestDB) {
@@ -538,20 +615,18 @@ class ViaTest: AbstractExposedTest() {
                 maxAttempts = 1
 
                 /**
+                 * Eager loading one-to-many relation
+                 *
                  * ```sql
-                 * SELECT PROJECTS.ID, PROJECTS."name" FROM PROJECTS
-                 * SELECT TASKS.ID, TASKS.TITLE, PROJECT_TASKS.PROJECT_ID, PROJECT_TASKS.TASK_ID, PROJECT_TASKS.APPROVED
-                 *   FROM TASKS INNER JOIN PROJECT_TASKS ON PROJECT_TASKS.TASK_ID = TASKS.ID
-                 *  WHERE PROJECT_TASKS.PROJECT_ID IN (1, 2)
-                 * ```
-                 */
-
-                /**
-                 * ```sql
-                 * SELECT PROJECTS.ID, PROJECTS."name" FROM PROJECTS
-                 * SELECT TASKS.ID, TASKS.TITLE, PROJECT_TASKS.PROJECT_ID, PROJECT_TASKS.TASK_ID, PROJECT_TASKS.APPROVED
-                 *   FROM TASKS INNER JOIN PROJECT_TASKS ON PROJECT_TASKS.TASK_ID = TASKS.ID
-                 *  WHERE PROJECT_TASKS.PROJECT_ID IN (1, 2)
+                 * SELECT projects.id, projects."name" FROM projects;
+                 *
+                 * SELECT tasks.id,
+                 *        tasks.title,
+                 *        project_tasks.project_id,
+                 *        project_tasks.task_id,
+                 *        project_tasks.approved
+                 *   FROM tasks INNER JOIN project_tasks ON project_tasks.task_id = tasks.id
+                 *  WHERE project_tasks.project_id IN (1, 2)
                  * ```
                  */
                 Project.all().with(Project::tasks).toList()
