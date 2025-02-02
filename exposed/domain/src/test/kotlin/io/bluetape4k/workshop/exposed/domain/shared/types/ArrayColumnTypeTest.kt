@@ -1,6 +1,5 @@
 package io.bluetape4k.workshop.exposed.domain.shared.types
 
-import MigrationUtils
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
@@ -53,6 +52,17 @@ class ArrayColumnTypeTest: AbstractExposedTest() {
 
     private val arrayTypeSupportedDB = TestDB.ALL_POSTGRES_LIKE + TestDB.H2
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS array_test_table (
+     *      id SERIAL PRIMARY KEY,
+     *      numbers INT[] DEFAULT ARRAY[5] NOT NULL,
+     *      strings TEXT[] DEFAULT ARRAY[]::text[] NOT NULL,
+     *      doubles DOUBLE PRECISION[] NULL,
+     *      byte_array bytea[] NULL
+     * )
+     * ```
+     */
     object ArrayTestTable: IntIdTable("array_test_table") {
         val numbers: Column<List<Int>> = array<Int>("numbers").default(listOf(5))
         val strings: Column<List<String?>> = array<String?>("strings", TextColumnType()).default(emptyList())
@@ -60,18 +70,6 @@ class ArrayColumnTypeTest: AbstractExposedTest() {
         val byteArray: Column<List<ByteArray>?> = array("byte_array", BinaryColumnType(32)).nullable()
     }
 
-    /**
-     * H2:
-     * ```sql
-     * CREATE TABLE IF NOT EXISTS ARRAY_TEST_TABLE (
-     *      ID INT AUTO_INCREMENT PRIMARY KEY,
-     *      NUMBERS INT ARRAY DEFAULT ARRAY [5] NOT NULL,
-     *      STRINGS TEXT ARRAY DEFAULT ARRAY [] NOT NULL,
-     *      DOUBLES DOUBLE PRECISION ARRAY NULL,
-     *      BYTE_ARRAY VARBINARY(32) ARRAY NULL
-     * )
-     * ```
-     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create and drop array columns`(testDB: TestDB) {
@@ -92,10 +90,10 @@ class ArrayColumnTypeTest: AbstractExposedTest() {
     fun `create missing columns with array defaults`(testDB: TestDB) {
         withArrayTestTable(testDB) {
             try {
-//                SchemaUtils.createMissingTablesAndColumns(ArrayTestTable)
-//                SchemaUtils.statementsRequiredToActualizeScheme(ArrayTestTable).shouldBeEmpty()
-                val stmts: List<String> = MigrationUtils.statementsRequiredForDatabaseMigration(ArrayTestTable)
-                stmts.shouldBeEmpty()
+                SchemaUtils.createMissingTablesAndColumns(ArrayTestTable)
+                SchemaUtils.statementsRequiredToActualizeScheme(ArrayTestTable).shouldBeEmpty()
+//                val stmts: List<String> = MigrationUtils.statementsRequiredForDatabaseMigration(ArrayTestTable)
+//                stmts.shouldBeEmpty()
             } finally {
                 SchemaUtils.drop(ArrayTestTable)
             }
@@ -150,10 +148,28 @@ class ArrayColumnTypeTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * PostgreSQL 은 array column 의 max cardinality 를 무시한다.
+     *
+     * ```sql
+     * -- Postgres
+     * INSERT INTO sized_test_table (numbers) VALUES (ARRAY[1,2,3,4,5,6]);
+     *
+     * SELECT sized_test_table.numbers
+     *   FROM sized_test_table;
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `array max size`(testDB: TestDB) {
         val maxArraySize = 5
+
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS sized_test_table (
+         *      numbers INT[5] DEFAULT ARRAY[]::int[] NOT NULL
+         * )
+         * ```
+         */
         val sizedTester = object: Table("sized_test_table") {
             val numbers: Column<List<Int>> = array("numbers", IntegerColumnType(), maxArraySize).default(emptyList())
         }
@@ -193,7 +209,7 @@ class ArrayColumnTypeTest: AbstractExposedTest() {
              * SQL array indexes are one-based
              *
              * ```sql
-             * SELECT ARRAY_TEST_TABLE.NUMBERS[2] FROM ARRAY_TEST_TABLE
+             * SELECT array_test_table.numbers[2] FROM array_test_table
              * ```
              */
             val secondNumber = ArrayTestTable.numbers[2]
@@ -202,40 +218,43 @@ class ArrayColumnTypeTest: AbstractExposedTest() {
 
             /**
              * ```sql
-             * SELECT ARRAY_TEST_TABLE.ID,
-             *        ARRAY_TEST_TABLE.NUMBERS,
-             *        ARRAY_TEST_TABLE.STRINGS,
-             *        ARRAY_TEST_TABLE.DOUBLES,
-             *        ARRAY_TEST_TABLE.BYTE_ARRAY
-             *   FROM ARRAY_TEST_TABLE
-             *  WHERE ARRAY_TEST_TABLE.STRINGS[2] = 'hello'
+             * SELECT array_test_table.id,
+             *        array_test_table.numbers,
+             *        array_test_table.strings,
+             *        array_test_table.doubles,
+             *        array_test_table.byte_array
+             *   FROM array_test_table
+             *  WHERE array_test_table.strings[2] = 'hello'
              * ```
              */
-            val result2 = ArrayTestTable.selectAll().where { ArrayTestTable.strings[2] eq "hello" }.single()
+            val result2 = ArrayTestTable
+                .selectAll()
+                .where { ArrayTestTable.strings[2] eq "hello" }
+                .single()
             result2[ArrayTestTable.strings] shouldBeEqualTo listOf("hi", "hello")
             result2[ArrayTestTable.doubles].shouldBeNull()
 
             /**
              * ```sql
-             * SELECT ARRAY_TEST_TABLE.ID,
-             *        ARRAY_TEST_TABLE.NUMBERS,
-             *        ARRAY_TEST_TABLE.STRINGS,
-             *        ARRAY_TEST_TABLE.DOUBLES,
-             *        ARRAY_TEST_TABLE.BYTE_ARRAY
-             *   FROM ARRAY_TEST_TABLE
-             *  WHERE ARRAY_TEST_TABLE.NUMBERS[1] >= ARRAY_TEST_TABLE.NUMBERS[3]
+             * SELECT array_test_table.id,
+             *        array_test_table.numbers,
+             *        array_test_table.strings,
+             *        array_test_table.doubles,
+             *        array_test_table.byte_array
+             *   FROM array_test_table
+             *  WHERE array_test_table.numbers[1] >= array_test_table.numbers[3]
              * ```
              */
-            val result3 = ArrayTestTable.selectAll()
-                .where {
-                    ArrayTestTable.numbers[1] greaterEq ArrayTestTable.numbers[3]
-                }
+            val result3 = ArrayTestTable
+                .selectAll()
+                .where { ArrayTestTable.numbers[1] greaterEq ArrayTestTable.numbers[3] }
                 .toList()
             result3.shouldBeEmpty()
 
             /**
              * ```sql
-             * SELECT ARRAY_TEST_TABLE.DOUBLES[2] FROM ARRAY_TEST_TABLE
+             * SELECT array_test_table.doubles[2]
+             *   FROM array_test_table
              * ```
              */
             val nullArray = ArrayTestTable.doubles[2]
@@ -286,6 +305,12 @@ class ArrayColumnTypeTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `array literal and array param`(testDB: TestDB) {
         withArrayTestTable(testDB) {
+            /**
+             * ```sql
+             * INSERT INTO array_test_table (numbers, strings, doubles)
+             * VALUES (ARRAY[1,2,3], ARRAY['','','','hello'], ARRAY[1.0,2.0,3.0,4.0,5.0])
+             * ```
+             */
             val numInput = listOf(1, 2, 3)
             val doublesInput = List(5) { (it + 1).toDouble() }
             val id1 = ArrayTestTable.insertAndGetId {
@@ -296,14 +321,14 @@ class ArrayColumnTypeTest: AbstractExposedTest() {
 
             /**
              * ```sql
-             * SELECT ARRAY_TEST_TABLE.ID,
-             *        ARRAY_TEST_TABLE.NUMBERS,
-             *        ARRAY_TEST_TABLE.STRINGS,
-             *        ARRAY_TEST_TABLE.DOUBLES,
-             *        ARRAY_TEST_TABLE.BYTE_ARRAY
-             *   FROM ARRAY_TEST_TABLE
-             *  WHERE (ARRAY_TEST_TABLE.NUMBERS = ARRAY [1,2,3])
-             *    AND (ARRAY_TEST_TABLE.STRINGS <> ARRAY [])
+             * SELECT array_test_table.id,
+             *        array_test_table.numbers,
+             *        array_test_table.strings,
+             *        array_test_table.doubles,
+             *        array_test_table.byte_array
+             *   FROM array_test_table
+             *  WHERE (array_test_table.numbers = ARRAY[1,2,3])
+             *    AND (array_test_table.strings <> ARRAY[])
              * ```
              */
             val result1 = ArrayTestTable.selectAll()
@@ -314,15 +339,15 @@ class ArrayColumnTypeTest: AbstractExposedTest() {
 
             /**
              * ```sql
-             * SELECT ARRAY_TEST_TABLE.ID
-             *   FROM ARRAY_TEST_TABLE
-             *  WHERE ARRAY_TEST_TABLE.DOUBLES = ARRAY [1.0,2.0,3.0,4.0,5.0]
+             * SELECT array_test_table.id
+             *   FROM array_test_table
+             *  WHERE array_test_table.doubles = ARRAY[1.0,2.0,3.0,4.0,5.0]
              * ```
              */
-            val result2 = ArrayTestTable.select(ArrayTestTable.id)
-                .where {
-                    ArrayTestTable.doubles eq arrayParam(doublesInput)
-                }
+            val result2 = ArrayTestTable
+                .select(ArrayTestTable.id)
+                .where { ArrayTestTable.doubles eq arrayParam(doublesInput) }
+
             result2.single()[ArrayTestTable.id] shouldBeEqualTo id1
 
             if (currentDialectTest is PostgreSQLDialect) {
@@ -334,10 +359,9 @@ class ArrayColumnTypeTest: AbstractExposedTest() {
                  * ```
                  */
                 val lastStrings = ArrayTestTable.strings.slice(lower = 4) // strings[4:]
-                val result3 = ArrayTestTable.select(ArrayTestTable.id)
-                    .where {
-                        lastStrings eq arrayParam(listOf("hello"))
-                    }
+                val result3 = ArrayTestTable
+                    .select(ArrayTestTable.id)
+                    .where { lastStrings eq arrayParam(listOf("hello")) }
                 result3.single()[ArrayTestTable.id] shouldBeEqualTo id1
             }
         }
@@ -352,6 +376,13 @@ class ArrayColumnTypeTest: AbstractExposedTest() {
             }
             ArrayTestTable.selectAll().single()[ArrayTestTable.doubles].shouldBeNull()
 
+            /**
+             * ```sql
+             * UPDATE array_test_table
+             *    SET doubles=ARRAY[9.0]
+             *  WHERE array_test_table.id = 1
+             * ```
+             */
             val updatedDoubles = listOf(9.0)
             ArrayTestTable.update({ ArrayTestTable.id eq id1 }) {
                 it[doubles] = updatedDoubles
@@ -367,6 +398,12 @@ class ArrayColumnTypeTest: AbstractExposedTest() {
             val numbers = listOf(1, 2, 3)
             val strings = listOf("A", "B")
 
+            /**
+             * ```sql
+             * INSERT INTO array_test_table (numbers, strings)
+             * VALUES (ARRAY[1,2,3], ARRAY['A','B'])
+             * ```
+             */
             val id1 = ArrayTestTable.insertAndGetId {
                 it[ArrayTestTable.numbers] = numbers
                 it[ArrayTestTable.strings] = strings
@@ -378,12 +415,12 @@ class ArrayColumnTypeTest: AbstractExposedTest() {
             result[ArrayTestTable.strings] shouldBeEqualTo strings
 
             /**
-             * H2:
+             * Postgres:
              * ```sql
-             * MERGE INTO ARRAY_TEST_TABLE T
-             * USING (VALUES (1, ARRAY [1,2,3], ARRAY ['A','B'])) S(ID, NUMBERS, STRINGS) ON (T.ID=S.ID)
-             *  WHEN MATCHED THEN UPDATE SET T.STRINGS=ARRAY ['C','D','E']
-             *  WHEN NOT MATCHED THEN INSERT (NUMBERS, STRINGS) VALUES(S.NUMBERS, S.STRINGS)
+             * INSERT INTO array_test_table (id, numbers, strings)
+             * VALUES (1, ARRAY[1,2,3], ARRAY['A','B'])
+             * ON CONFLICT (id) DO
+             *      UPDATE SET strings=ARRAY['C','D','E']
              * ```
              */
             val updatedString = listOf("C", "D", "E")
@@ -415,6 +452,11 @@ class ArrayColumnTypeTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `array column with DAO functions`(testDB: TestDB) {
         withArrayTestTable(testDB) {
+            /**
+             * ```sql
+             * INSERT INTO array_test_table (numbers, strings) VALUES (ARRAY[1,2,3], ARRAY[])
+             * ```
+             */
             val numInput = listOf(1, 2, 3)
             val entity1 = ArrayTestDao.new {
                 numbers = numInput
@@ -426,6 +468,11 @@ class ArrayColumnTypeTest: AbstractExposedTest() {
             entity1.numbers shouldBeEqualTo numInput
             entity1.strings.shouldBeEmpty()
 
+            /**
+             * ```sql
+             * UPDATE array_test_table SET doubles=ARRAY[9.0] WHERE id = 1
+             * ```
+             */
             val doublesInput = listOf(9.0)
             entity1.doubles = doublesInput
 
@@ -437,6 +484,11 @@ class ArrayColumnTypeTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `array column with all any ops`(testDB: TestDB) {
         withArrayTestTable(testDB) {
+            /**
+             * ```sql
+             * INSERT INTO array_test_table (numbers, doubles) VALUES (ARRAY[1,2,3], NULL)
+             * ```
+             */
             val numInput = listOf(1, 2, 3)
             val id1 = ArrayTestTable.insertAndGetId {
                 it[numbers] = numInput
@@ -445,47 +497,42 @@ class ArrayColumnTypeTest: AbstractExposedTest() {
 
             /**
              * ```sql
-             * SELECT ARRAY_TEST_TABLE.ID
-             *   FROM ARRAY_TEST_TABLE
-             *  WHERE ARRAY_TEST_TABLE.ID = ANY (ARRAY_TEST_TABLE.NUMBERS)
+             * SELECT array_test_table.id
+             *   FROM array_test_table
+             *  WHERE array_test_table.id = ANY (array_test_table.numbers)
              * ```
              */
             val result1 = ArrayTestTable.select(ArrayTestTable.id)
-                .where {
-                    ArrayTestTable.id eq anyFrom(ArrayTestTable.numbers)
-                }
+                .where { ArrayTestTable.id eq anyFrom(ArrayTestTable.numbers) }
             result1.single()[ArrayTestTable.id] shouldBeEqualTo id1
 
             /**
              * ```sql
-             * SELECT ARRAY_TEST_TABLE.ID
-             *   FROM ARRAY_TEST_TABLE
-             *  WHERE ARRAY_TEST_TABLE.ID = ANY (ARRAY_SLICE(ARRAY_TEST_TABLE.NUMBERS,2,3))
+             * SELECT array_test_table.id
+             *   FROM array_test_table
+             *  WHERE array_test_table.id = ANY (array_test_table.numbers[2:3])
              * ```
              */
             val result2 = ArrayTestTable.select(ArrayTestTable.id)
-                .where {
-                    ArrayTestTable.id eq anyFrom(ArrayTestTable.numbers.slice(2, 3))
-                }
+                .where { ArrayTestTable.id eq anyFrom(ArrayTestTable.numbers.slice(2, 3)) }
             result2.toList().shouldBeEmpty()
 
             /**
              * ```sql
-             * SELECT ARRAY_TEST_TABLE.ID
-             *   FROM ARRAY_TEST_TABLE
-             *  WHERE ARRAY_TEST_TABLE.ID <= ALL (ARRAY_TEST_TABLE.NUMBERS)
+             * SELECT array_test_table.id
+             *   FROM array_test_table
+             *  WHERE array_test_table.id <= ALL (array_test_table.numbers)
              * ```
              */
             val result3 = ArrayTestTable.select(ArrayTestTable.id)
-                .where {
-                    ArrayTestTable.id lessEq allFrom(ArrayTestTable.numbers)
-                }
+                .where { ArrayTestTable.id lessEq allFrom(ArrayTestTable.numbers) }
             result3.single()[ArrayTestTable.id] shouldBeEqualTo id1
+
             /**
              * ```sql
-             * SELECT ARRAY_TEST_TABLE.ID
-             *   FROM ARRAY_TEST_TABLE
-             *  WHERE ARRAY_TEST_TABLE.ID > ALL (ARRAY_TEST_TABLE.NUMBERS)
+             * SELECT array_test_table.id
+             *   FROM array_test_table
+             *  WHERE array_test_table.id > ALL (array_test_table.numbers)
              * ```
              */
             val result4 = ArrayTestTable.select(ArrayTestTable.id)
@@ -504,8 +551,13 @@ class ArrayColumnTypeTest: AbstractExposedTest() {
         // Recheck on our side when the issue is resolved.
         Assumptions.assumeTrue { testDB in (arrayTypeSupportedDB - TestDB.POSTGRESQLNG) }
         withArrayTestTable(testDB) {
-            val testByteArrayList = listOf(byteArrayOf(0), byteArrayOf(1, 2, 3))
 
+            /**
+             * ```sql
+             * INSERT INTO array_test_table (byte_array) VALUES (ARRAY[ ,])
+             * ```
+             */
+            val testByteArrayList = listOf(byteArrayOf(0), byteArrayOf(1, 2, 3))
             ArrayTestTable.insert {
                 it[byteArray] = testByteArrayList
             }
@@ -520,6 +572,14 @@ class ArrayColumnTypeTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `aliased array`(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS test_aliased_array (
+         *      id SERIAL PRIMARY KEY,
+         *      "value" INT[] NOT NULL
+         * )
+         * ```
+         */
         val tester = object: IntIdTable("test_aliased_array") {
             val value = array<Int>("value")
         }
@@ -527,9 +587,10 @@ class ArrayColumnTypeTest: AbstractExposedTest() {
         val inputInts = listOf(1, 2, 3)
 
         withArrayTestTable(testDB, tester) {
+
             /**
              * ```sql
-             * INSERT INTO TEST_ALIASED_ARRAY ("value") VALUES (ARRAY [1,2,3])
+             * INSERT INTO test_aliased_array ("value") VALUES (ARRAY[1,2,3])
              * ```
              */
             tester.insert {
@@ -538,7 +599,8 @@ class ArrayColumnTypeTest: AbstractExposedTest() {
 
             /**
              * ```sql
-             * SELECT TEST_ALIASED_ARRAY."value" aliased_value FROM TEST_ALIASED_ARRAY
+             * SELECT test_aliased_array."value" aliased_value
+             *   FROM test_aliased_array
              * ```
              */
             val alias = tester.value.alias("aliased_value")
