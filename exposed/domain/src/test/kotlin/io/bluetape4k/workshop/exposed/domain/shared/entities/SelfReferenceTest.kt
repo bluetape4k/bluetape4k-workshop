@@ -12,6 +12,9 @@ import org.jetbrains.exposed.sql.Table
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
+/**
+ * Self Reference 엔티티에 대한 태스트 입니다.
+ */
 class SelfReferenceTest: AbstractExposedTest() {
 
     @ParameterizedTest
