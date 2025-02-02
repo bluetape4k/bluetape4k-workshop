@@ -4,10 +4,12 @@ import io.bluetape4k.exposed.dao.id.TimebasedUUIDBase62Entity
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDBase62EntityClass
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDBase62EntityID
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDBase62Table
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.support.toUtf8String
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.sql.statements.api.toUtf8String
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
@@ -19,11 +21,13 @@ import org.junit.jupiter.params.provider.MethodSource
 
 class EntityWithBlobTest: AbstractExposedTest() {
 
+    companion object: KLogging()
+
     /**
      * ```sql
-     * CREATE TABLE IF NOT EXISTS BLOBTABLE (
-     *      ID VARCHAR(22) PRIMARY KEY,
-     *      CONTENT BLOB NULL
+     * CREATE TABLE IF NOT EXISTS blobtable (
+     *      id VARCHAR(22) PRIMARY KEY,
+     *      "content" bytea NULL
      * )
      * ```
      */
@@ -33,32 +37,42 @@ class EntityWithBlobTest: AbstractExposedTest() {
 
     class BlobEntity(id: TimebasedUUIDBase62EntityID): TimebasedUUIDBase62Entity(id) {
         companion object: TimebasedUUIDBase62EntityClass<BlobEntity>(BlobTable) {
+            /**
+             * Custom 생성자
+             */
             operator fun invoke(bytes: ByteArray): BlobEntity {
                 return new { content = ExposedBlob(bytes) }
             }
         }
 
         var content: ExposedBlob? by BlobTable.blob
+
+        override fun equals(other: Any?): Boolean = other is BlobEntity && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "BlobEntity($idValue)"
     }
 
+    /**
+     * Blob 필드를 다루는 테스트
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `handle blob field`(testDB: TestDB) {
         withTables(testDB, BlobTable) {
             /**
              * ```sql
-             * INSERT INTO BLOBTABLE (ID, CONTENT) VALUES ('wTkxePceefMUJFdP7d4X2', X'')
+             * INSERT INTO blobtable (id, "content")
+             * VALUES ('wTsyEsRRJfbF1xtDl6Dmt', E'\\x')
              * ```
              */
-//            val blobEntity = BlobEntity.new {
-//                content = ExposedBlob("foo".toUtf8Bytes())
-//            }
             val blobEntity = BlobEntity("foo".toUtf8Bytes())
             entityCache.clear()
 
             /**
              * ```sql
-             * SELECT BLOBTABLE.ID, BLOBTABLE.CONTENT FROM BLOBTABLE WHERE BLOBTABLE.ID = 'wTkxePceefMUJFdP7d4X2'
+             * SELECT blobtable.id, blobtable."content"
+             *   FROM blobtable
+             *  WHERE blobtable.id = 'wTsyEsRRJfbF1xtDl6Dmt'
              * ```
              */
             var y2 = BlobEntity.reload(blobEntity)!!
@@ -66,14 +80,19 @@ class EntityWithBlobTest: AbstractExposedTest() {
 
             /**
              * ```sql
-             * UPDATE BLOBTABLE SET CONTENT=NULL WHERE ID = 'wTkxePceefMUJFdP7d4X2'
+             * UPDATE blobtable
+             *    SET "content"=NULL
+             *  WHERE id = 'wTsyEsRRJfbF1xtDl6Dmt'
              * ```
              */
             y2.content = null
             entityCache.clear()
             /**
              * ```sql
-             * SELECT BLOBTABLE.ID, BLOBTABLE.CONTENT FROM BLOBTABLE WHERE BLOBTABLE.ID = 'wTkxePceefMUJFdP7d4X2'
+             * SELECT blobtable.id,
+             *        blobtable."content"
+             *   FROM blobtable
+             *  WHERE blobtable.id = 'wTsyEsRRJfbF1xtDl6Dmt'
              * ```
              */
             y2 = BlobEntity.reload(blobEntity)!!
@@ -81,14 +100,19 @@ class EntityWithBlobTest: AbstractExposedTest() {
 
             /**
              * ```sql
-             * UPDATE BLOBTABLE SET CONTENT=X'' WHERE ID = 'wTkxePceefMUJFdP7d4X2'
+             * UPDATE blobtable
+             *    SET "content"=E'\\x'
+             *  WHERE id = 'wTsyEsRRJfbF1xtDl6Dmt'
              * ```
              */
             y2.content = ExposedBlob("foo2".toUtf8Bytes())
             entityCache.clear()
             /**
              * ```sql
-             * SELECT BLOBTABLE.ID, BLOBTABLE.CONTENT FROM BLOBTABLE WHERE BLOBTABLE.ID = 'wTkxePceefMUJFdP7d4X2'
+             * SELECT blobtable.id,
+             *        blobtable."content"
+             *   FROM blobtable
+             *  WHERE blobtable.id = 'wTsyEsRRJfbF1xtDl6Dmt'
              * ```
              */
             y2 = BlobEntity.reload(blobEntity)!!
