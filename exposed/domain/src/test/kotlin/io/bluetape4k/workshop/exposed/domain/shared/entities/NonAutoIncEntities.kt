@@ -3,13 +3,14 @@ package io.bluetape4k.workshop.exposed.domain.shared.entities
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeTrue
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
-import org.jetbrains.exposed.dao.flushCache
+import org.jetbrains.exposed.dao.entityCache
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IdTable
 import org.jetbrains.exposed.sql.Column
@@ -18,15 +19,30 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.concurrent.atomic.AtomicInteger
 
+/**
+ * 자동 증가가 아닌 Identifier를 가진 Entity 테스트
+ */
 class NonAutoIncEntities: AbstractExposedTest() {
 
     companion object: KLogging()
 
+    /**
+     * Hibernate의 `InheritanceType.TABLE_PER_CLASS` 와 같은 구조를 만든다.
+     */
     abstract class BaseNonAutoIncTable(name: String): IdTable<Int>(name) {
         override val id: Column<EntityID<Int>> = integer("id").entityId()
         val b1: Column<Boolean> = bool("b1")
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS notautointid (
+     *      id INT NOT NULL,
+     *      b1 BOOLEAN NOT NULL,
+     *      i1 INT NOT NULL
+     * )
+     * ```
+     */
     object NotAutoIntIdTable: BaseNonAutoIncTable("") {
         val defaultedInt: Column<Int> = integer("i1")
     }
@@ -48,6 +64,15 @@ class NonAutoIncEntities: AbstractExposedTest() {
                 }
             }
         }
+
+        override fun equals(other: Any?): Boolean =
+            other is NotAutoEntity &&
+                    id == other.id &&
+                    b1 == other.b1 &&
+                    defaultedInNew == other.defaultedInNew
+
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "NotAutoEntity(id=$idValue, b1=$b1, defaultedInNew=$defaultedInNew)"
     }
 
     @ParameterizedTest
@@ -56,12 +81,7 @@ class NonAutoIncEntities: AbstractExposedTest() {
         withTables(testDB, NotAutoIntIdTable) {
             /**
              * ```sql
-             * INSERT INTO NOTAUTOINTID (ID, I1, B1) VALUES (1, 42, TRUE)
-             * ```
-             */
-            /**
-             * ```sql
-             * INSERT INTO NOTAUTOINTID (ID, I1, B1) VALUES (1, 42, TRUE)
+             * INSERT INTO notautointid (id, i1, b1) VALUES (17, 42, TRUE)
              * ```
              */
             val entity1 = NotAutoEntity.new(true)
@@ -70,12 +90,7 @@ class NonAutoIncEntities: AbstractExposedTest() {
 
             /**
              * ```sql
-             * INSERT INTO NOTAUTOINTID (ID, I1, B1) VALUES (2, 1, FALSE)
-             * ```
-             */
-            /**
-             * ```sql
-             * INSERT INTO NOTAUTOINTID (ID, I1, B1) VALUES (2, 1, FALSE)
+             * INSERT INTO notautointid (id, i1, b1) VALUES (18, 1, FALSE)
              * ```
              */
             val entity2 = NotAutoEntity.new {
@@ -91,16 +106,26 @@ class NonAutoIncEntities: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `not auto inc table`(testDB: TestDB) {
         withTables(testDB, NotAutoIntIdTable) {
+            // INSERT INTO notautointid (id, i1, b1) VALUES (7, 42, TRUE)
             val e1 = NotAutoEntity.new(true)
+            // INSERT INTO notautointid (id, i1, b1) VALUES (8, 42, FALSE)
             val e2 = NotAutoEntity.new(false)
 
-            flushCache()
+            entityCache.clear()
 
             val all = NotAutoEntity.all()
             all.map { it.id } shouldBeEqualTo listOf(e1.id, e2.id)
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS requests (
+     *      deleted BOOLEAN DEFAULT FALSE NOT NULL,
+     *      request_id VARCHAR(255) PRIMARY KEY
+     * )
+     * ```
+     */
     object RequestsTable: IdTable<String>() {
         val requestId = varchar("request_id", 255)
         val deleted = bool("deleted").default(false)
@@ -123,6 +148,10 @@ class NonAutoIncEntities: AbstractExposedTest() {
                 it[deleted] = true
             }
         }
+
+        override fun equals(other: Any?): Boolean = other is Request && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Request(id=$idValue, requestId=$requestId)"
     }
 
     @ParameterizedTest
@@ -133,32 +162,22 @@ class NonAutoIncEntities: AbstractExposedTest() {
                 requestId = "requestId"
                 deleted = false
             }
-
             /**
              * Soft delete the entity
              *
              * ```sql
-             * UPDATE REQUESTS SET DELETED=TRUE WHERE REQUESTS.REQUEST_ID = 'requestId'
-             * ```
-             */
-
-            /**
-             * Soft delete the entity
-             *
-             * ```sql
-             * UPDATE REQUESTS SET DELETED=TRUE WHERE REQUESTS.REQUEST_ID = 'requestId'
+             * UPDATE requests
+             *    SET deleted=TRUE
+             *  WHERE requests.request_id = 'requestId'
              * ```
              */
             request.delete()
 
             /**
              * ```sql
-             * SELECT REQUESTS.DELETED, REQUESTS.REQUEST_ID FROM REQUESTS WHERE REQUESTS.REQUEST_ID = 'requestId'
-             * ```
-             */
-            /**
-             * ```sql
-             * SELECT REQUESTS.DELETED, REQUESTS.REQUEST_ID FROM REQUESTS WHERE REQUESTS.REQUEST_ID = 'requestId'
+             * SELECT requests.deleted, requests.request_id
+             *   FROM requests
+             *  WHERE requests.request_id = 'requestId'
              * ```
              */
             val updated = Request["requestId"]
