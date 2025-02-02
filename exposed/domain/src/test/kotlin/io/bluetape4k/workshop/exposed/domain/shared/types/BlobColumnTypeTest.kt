@@ -32,6 +32,14 @@ class BlobColumnTypeTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS test_blob (
+     *      id SERIAL PRIMARY KEY,
+     *      "content" bytea NOT NULL
+     * )
+     * ```
+     */
     object BlobTable: IntIdTable("test_blob") {
         val content = blob("content")
     }
@@ -95,7 +103,7 @@ class BlobColumnTypeTest: AbstractExposedTest() {
             val byte3 = BlobTable.selectAll()
                 .where { BlobTable.id eq id3 }
                 .first()[BlobTable.content]
-                .inputStream.readBytes()
+                .inputStream.readBytes()   // .bytes
             byte3 shouldBeEqualTo shortBytes
         }
     }
@@ -135,9 +143,19 @@ class BlobColumnTypeTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Postgres 만 `useObjectIdentifier` 를 지원한다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `blob as object identifier`(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS blob_tester (
+         *      blob_col oid DEFAULT lo_from_bytea(0, E'\\x74657374' :: bytea) NOT NULL
+         * )
+         * ```
+         */
         val defaultBytes = "test".toUtf8Bytes()
         val defaultBlob = ExposedBlob(defaultBytes)
         val tester = object: Table("blob_tester") {
@@ -150,9 +168,11 @@ class BlobColumnTypeTest: AbstractExposedTest() {
                     SchemaUtils.create(tester)
                 }
             } else {
+                // object identifier 는 oid 타입을 사용한다.
                 tester.blobCol.descriptionDdl().split(" ")[1] shouldBeEqualTo "oid"
                 SchemaUtils.create(tester)
 
+                // INSERT INTO blob_tester  DEFAULT VALUES
                 tester.insert {}
 
                 val result1 = tester.selectAll().single()[tester.blobCol]
@@ -167,7 +187,7 @@ class BlobColumnTypeTest: AbstractExposedTest() {
                     it[tester.blobCol] = blobParam(defaultBlob, useObjectIdentifier = true)
                 }
 
-                val result2 = tester.selectAll()
+                val result2 = tester.selectAll().toList()
                 result2 shouldHaveSize 3
                 result2.all { it[tester.blobCol].bytes.contentEquals(defaultBytes) }.shouldBeTrue()
 
