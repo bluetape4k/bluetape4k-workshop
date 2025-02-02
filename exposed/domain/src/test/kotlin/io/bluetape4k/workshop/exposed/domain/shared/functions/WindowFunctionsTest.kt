@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.exposed.domain.shared.functions
 
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.domain.shared.dml.DMLTestData
@@ -53,52 +54,129 @@ class WindowFunctionsTest: AbstractExposedTest() {
     private val supportsDefaultValueInLeadLagFunctions = TestDB.ALL
     private val supportsRangeModeWithOffsetFrameBound = TestDB.ALL
 
+    /**
+     * Window functions
+     *
+     * ```sql
+     * SELECT ROW_NUMBER() OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT RANK() OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT DENSE_RANK() OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT PERCENT_RANK() OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT CUME_DIST() OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT NTILE(2) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT LAG(sales.amount, 1) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT LEAD(sales.amount, 1) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT LAG(sales.amount, 1, -1.0) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT LEAD(sales.amount, 1, -1.0) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT FIRST_VALUE(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT LAST_VALUE(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT NTH_VALUE(sales.amount, 2) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT NTILE((1 + 1)) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT LAG(sales.amount, (2 - 1)) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT LEAD(sales.amount, (2 - 1)) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT NTH_VALUE(sales.amount, (1 + 1)) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `window functions`(testDB: TestDB) {
         withSales(testDB) { _, sales ->
-            /**
-             * ```sql
-             * SELECT ROW_NUMBER() OVER(PARTITION BY SALES."year", SALES.PRODUCT ORDER BY SALES.AMOUNT ASC)
-             *   FROM SALES
-             *  ORDER BY SALES."year" ASC,
-             *           SALES."month" ASC,
-             *           SALES.PRODUCT ASC NULLS FIRST
-             * ```
-             */
             sales.assertWindowFunctionDefinition(
                 rowNumber().over().partitionBy(sales.year, sales.product).orderBy(sales.amount),
                 listOf(1, 1, 2, 1, 1, 1, 2)
             )
-
-            /**
-             * ```sql
-             * SELECT RANK() OVER(PARTITION BY SALES."year", SALES.PRODUCT ORDER BY SALES.AMOUNT ASC)
-             *   FROM SALES
-             *  ORDER BY SALES."year" ASC,
-             *           SALES."month" ASC,
-             *           SALES.PRODUCT ASC NULLS FIRST
-             * ```
-             */
             sales.assertWindowFunctionDefinition(
                 rank().over().partitionBy(sales.year, sales.product).orderBy(sales.amount),
                 listOf(1, 1, 2, 1, 1, 1, 2)
             )
-
-            /**
-             * ```sql
-             * SELECT DENSE_RANK() OVER(PARTITION BY SALES."year", SALES.PRODUCT ORDER BY SALES.AMOUNT ASC)
-             *   FROM SALES
-             *  ORDER BY SALES."year" ASC,
-             *           SALES."month" ASC,
-             *           SALES.PRODUCT ASC NULLS FIRST
-             * ```
-             */
             sales.assertWindowFunctionDefinition(
                 denseRank().over().partitionBy(sales.year, sales.product).orderBy(sales.amount),
                 listOf(1, 1, 2, 1, 1, 1, 2)
             )
-
             sales.assertWindowFunctionDefinition(
                 percentRank().over().partitionBy(sales.year, sales.product).orderBy(sales.amount),
                 listOfBigDecimal("0", "0", "1", "0", "0", "0", "1").filterNotNull()
@@ -179,12 +257,71 @@ class WindowFunctionsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Aggregate functions as window functions
+     *
+     * ```sql
+     * SELECT MIN(sales.amount) OVER(PARTITION BY sales."year", sales.product)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT MAX(sales.amount) OVER(PARTITION BY sales."year", sales.product)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT AVG(sales.amount) OVER(PARTITION BY sales."year", sales.product)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT COUNT(sales.amount) OVER(PARTITION BY sales."year", sales.product)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT STDDEV_POP(sales.amount) OVER(PARTITION BY sales."year", sales.product)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT STDDEV_SAMP(sales.amount) OVER(PARTITION BY sales."year", sales.product)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT VAR_POP(sales.amount) OVER(PARTITION BY sales."year", sales.product)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT VAR_SAMP(sales.amount) OVER(PARTITION BY sales."year", sales.product)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testAggregateFunctionsAsWindowFunctions(testDB: TestDB) {
         Assumptions.assumeTrue { testDB != TestDB.MYSQL_V5 }
 
-        withSales(testDB) { testDB, sales ->
+        withSales(testDB) { _, sales ->
             sales.assertWindowFunctionDefinition(
                 sales.amount.min().over().partitionBy(sales.year, sales.product),
                 listOfBigDecimal("550.1", "1500.25", "550.1", "1620.1", "650.7", "10.2", "1620.1")
@@ -226,6 +363,16 @@ class WindowFunctionsTest: AbstractExposedTest() {
             }
 
             if (testDB in supportsCountDistinctAsWindowFunction) {
+                /**
+                 * ```sql
+                 * -- H2, H2_MYSQL, H2_PSQL
+                 * SELECT COUNT(DISTINCT SALES.AMOUNT) OVER(PARTITION BY SALES."year", SALES.PRODUCT)
+                 *   FROM SALES
+                 *  ORDER BY SALES."year" ASC,
+                 *           SALES."month" ASC,
+                 *           SALES.PRODUCT ASC NULLS FIRST
+                 * ```
+                 */
                 sales.assertWindowFunctionDefinition(
                     sales.amount.countDistinct().over().partitionBy(sales.year, sales.product),
                     listOf(2, 1, 2, 2, 1, 1, 2)
@@ -234,6 +381,35 @@ class WindowFunctionsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Partition by clause
+     *
+     * ```sql
+     * SELECT SUM(sales.amount) OVER()
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER() FROM
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year")
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testPartitionByClause(testDB: TestDB) {
@@ -259,6 +435,35 @@ class WindowFunctionsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * `sum()` window function with `ORDER BY` clause
+     *
+     * ```sql
+     * SELECT SUM(sales.amount) OVER()
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER()
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER( ORDER BY sales."year" ASC)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER( ORDER BY sales."year" DESC, sales.product ASC NULLS FIRST)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testOrderByClause(testDB: TestDB) {
@@ -285,12 +490,215 @@ class WindowFunctionsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Window frame clause
+     *
+     * ```sql
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC ROWS UNBOUNDED PRECEDING)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC ROWS 1 PRECEDING)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC ROWS CURRENT ROW)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC ROWS BETWEEN 1 FOLLOWING AND 2 FOLLOWING)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC ROWS BETWEEN 2 PRECEDING AND 1 PRECEDING)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC ROWS BETWEEN 2 PRECEDING AND CURRENT ROW)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC ROWS BETWEEN CURRENT ROW AND 2 FOLLOWING)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC ROWS BETWEEN CURRENT ROW AND CURRENT ROW)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC ROWS BETWEEN (1 + 1) PRECEDING AND (1 + 1) FOLLOWING)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC RANGE UNBOUNDED PRECEDING)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC RANGE CURRENT ROW)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC RANGE 1 PRECEDING)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC RANGE BETWEEN 1 PRECEDING AND 1 FOLLOWING)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC RANGE BETWEEN 1 FOLLOWING AND 2 FOLLOWING)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC RANGE BETWEEN 2 PRECEDING AND 1 PRECEDING)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC RANGE BETWEEN 2 PRECEDING AND CURRENT ROW)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC RANGE BETWEEN CURRENT ROW AND 2 FOLLOWING)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC RANGE BETWEEN (1 + 1) PRECEDING AND (1 + 1) FOLLOWING)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC RANGE BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC RANGE BETWEEN CURRENT ROW AND CURRENT ROW)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC GROUPS UNBOUNDED PRECEDING)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC GROUPS 1 PRECEDING)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC GROUPS CURRENT ROW)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC GROUPS BETWEEN 1 PRECEDING AND 1 FOLLOWING)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC GROUPS BETWEEN 1 FOLLOWING AND 2 FOLLOWING)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC GROUPS BETWEEN 2 PRECEDING AND 1 PRECEDING)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC GROUPS BETWEEN 2 PRECEDING AND CURRENT ROW)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC GROUPS BETWEEN CURRENT ROW AND 2 FOLLOWING)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC GROUPS BETWEEN CURRENT ROW AND CURRENT ROW)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC GROUPS BETWEEN (1 + 1) PRECEDING AND (1 + 1) FOLLOWING)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     *
+     * SELECT SUM(sales.amount) OVER(PARTITION BY sales."year", sales.product ORDER BY sales.amount ASC GROUPS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING)
+     *   FROM sales
+     *  ORDER BY sales."year" ASC,
+     *           sales."month" ASC,
+     *           sales.product ASC NULLS FIRST;
+     * ```
+     */
     @Suppress("LongMethod")
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testWindowFrameClause(testDB: TestDB) {
         Assumptions.assumeTrue { testDB != TestDB.MYSQL_V5 }
-        withSales(testDB) { testDB, sales ->
+        withSales(testDB) { _, sales ->
             sales.assertWindowFunctionDefinition(
                 sumAmountPartitionByYearProductOrderByAmount(sales).rows(WindowFrameBound.unboundedPreceding()),
                 listOfBigDecimal("550.1", "1500.25", "1450.4", "1620.1", "650.7", "10.2", "3491")
@@ -481,6 +889,9 @@ class WindowFunctionsTest: AbstractExposedTest() {
                 product to SortOrder.ASC_NULLS_FIRST
             )
             .map { it[definition] }
+            .apply {
+                log.debug { "result=$this" }
+            }
 
         result shouldBeEqualTo expectedResult
     }
