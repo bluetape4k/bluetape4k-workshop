@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.exposed.domain.shared.entities
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.domain.shared.entities.UUIDTables.Address
 import io.bluetape4k.workshop.exposed.domain.shared.entities.UUIDTables.Addresses
 import io.bluetape4k.workshop.exposed.domain.shared.entities.UUIDTables.Cities
@@ -18,6 +19,7 @@ import org.amshove.kluent.shouldContain
 import org.amshove.kluent.shouldContainSame
 import org.jetbrains.exposed.dao.UUIDEntity
 import org.jetbrains.exposed.dao.UUIDEntityClass
+import org.jetbrains.exposed.dao.entityCache
 import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.UUIDTable
@@ -30,8 +32,77 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.util.*
 
 object UUIDTables {
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS cities (
+     *      d uuid PRIMARY KEY,
+     *      "name" VARCHAR(50) NOT NULL
+     * )
+     * ```
+     */
     object Cities: UUIDTable() {
         val name = varchar("name", 50)
+    }
+
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS people (
+     *      id uuid PRIMARY KEY,
+     *      "name" VARCHAR(80) NOT NULL,
+     *      city_id uuid NOT NULL,
+     *
+     *      CONSTRAINT fk_people_city_id__id FOREIGN KEY (city_id)
+     *      REFERENCES cities(id) ON DELETE RESTRICT ON UPDATE RESTRICT
+     * )
+     * ```
+     */
+    object People: UUIDTable() {
+        val name = varchar("name", 80)
+        val cityId = reference("city_id", Cities)
+    }
+
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS addresses (
+     *      id uuid PRIMARY KEY,
+     *      person_id uuid NOT NULL,
+     *      city_id uuid NOT NULL,
+     *      address VARCHAR(255) NOT NULL,
+     *
+     *      CONSTRAINT fk_addresses_person_id__id FOREIGN KEY (person_id)
+     *      REFERENCES people(id) ON DELETE RESTRICT ON UPDATE RESTRICT,
+     *
+     *      CONSTRAINT fk_addresses_city_id__id FOREIGN KEY (city_id)
+     *      REFERENCES cities(id) ON DELETE RESTRICT ON UPDATE RESTRICT
+     * );
+     *
+     * ALTER TABLE addresses ADD CONSTRAINT addresses_person_id_city_id_unique UNIQUE (person_id, city_id)
+     * ```
+     */
+    object Addresses: UUIDTable() {
+        val personId = reference("person_id", People)
+        val cityId = reference("city_id", Cities)
+
+        val address = varchar("address", 255)
+
+        init {
+            uniqueIndex(personId, cityId)
+        }
+    }
+
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS towns (
+     *      id uuid PRIMARY KEY,
+     *      city_id uuid NOT NULL,
+     *
+     *      CONSTRAINT fk_towns_city_id__id FOREIGN KEY (city_id)
+     *      REFERENCES cities(id) ON DELETE RESTRICT ON UPDATE RESTRICT
+     * );
+     * ```
+     */
+    object Towns: UUIDTable("towns") {
+        val cityId = uuid("city_id").references(Cities.id)
     }
 
     class City(id: EntityID<UUID>): UUIDEntity(id) {
@@ -39,11 +110,10 @@ object UUIDTables {
 
         var name by Cities.name
         val towns by Town referrersOn Towns.cityId
-    }
 
-    object People: UUIDTable() {
-        val name = varchar("name", 80)
-        val cityId = reference("city_id", Cities)
+        override fun equals(other: Any?): Boolean = other is City && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "City(id=$idValue, name=$name)"
     }
 
     class Person(id: EntityID<UUID>): UUIDEntity(id) {
@@ -51,30 +121,32 @@ object UUIDTables {
 
         var name by People.name
         var city by City referencedOn People.cityId
-    }
 
-    object Addresses: UUIDTable() {
-        val person = reference("person_id", People)
-        val city = reference("city_id", Cities)
-        val address = varchar("address", 255)
+        override fun equals(other: Any?): Boolean = other is Person && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Person(id=$idValue, name=$name)"
     }
 
     class Address(id: EntityID<UUID>): UUIDEntity(id) {
         companion object: UUIDEntityClass<Address>(Addresses)
 
-        var person by Person.referencedOn(Addresses.person)
-        var city by City.referencedOn(Addresses.city)
+        var person by Person.referencedOn(Addresses.personId)
+        var city by City.referencedOn(Addresses.cityId)
         var address by Addresses.address
-    }
 
-    object Towns: UUIDTable("towns") {
-        val cityId = uuid("city_id").references(Cities.id)
+        override fun equals(other: Any?): Boolean = other is Address && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Address(id=$idValue, address=$address)"
     }
 
     class Town(id: EntityID<UUID>): UUIDEntity(id) {
         companion object: UUIDEntityClass<Town>(Towns)
 
         var city by City referencedOn Towns.cityId
+
+        override fun equals(other: Any?): Boolean = other is Town && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Town(id=$idValue)"
     }
 }
 
@@ -83,9 +155,11 @@ class UUIDTableEntityTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create tables`(testDB: TestDB) {
-        withTables(testDB, Cities, People) {
+        withTables(testDB, Cities, People, Addresses, Towns) {
             Cities.exists().shouldBeTrue()
             People.exists().shouldBeTrue()
+            Addresses.exists().shouldBeTrue()
+            Towns.exists().shouldBeTrue()
         }
     }
 
@@ -113,12 +187,9 @@ class UUIDTableEntityTest: AbstractExposedTest() {
 
             /**
              * ```sql
-             * SELECT CITIES.ID, CITIES."name" FROM CITIES
-             * ```
-             */
-            /**
-             * ```sql
-             * SELECT CITIES.ID, CITIES."name" FROM CITIES
+             * SELECT cities.id, cities."name"
+             *   FROM cities
+             *  ORDER BY cities.id ASC
              * ```
              */
             val allCities = City.all()
@@ -127,21 +198,15 @@ class UUIDTableEntityTest: AbstractExposedTest() {
             allCities shouldContainSame listOf("Seoul", "Busan")
 
             /**
-             * ```sql
-             * SELECT PEOPLE.ID, PEOPLE."name", PEOPLE.CITY_ID FROM PEOPLE
+             * eager loading of many-to-one
              *
-             * SELECT CITIES.ID, CITIES."name"
-             *   FROM CITIES
-             *  WHERE CITIES.ID IN ('1efcff30-9a92-6fd6-b98d-178b68d550e5', '1efcff30-9a92-6fd8-b98d-178b68d550e5')
-             * ```
-             */
-            /**
              * ```sql
-             * SELECT PEOPLE.ID, PEOPLE."name", PEOPLE.CITY_ID FROM PEOPLE
+             * SELECT people.id, people."name", people.city_id
+             *   FROM people;
              *
-             * SELECT CITIES.ID, CITIES."name"
-             *   FROM CITIES
-             *  WHERE CITIES.ID IN ('1efcff30-9a92-6fd6-b98d-178b68d550e5', '1efcff30-9a92-6fd8-b98d-178b68d550e5')
+             * SELECT cities.id, cities."name"
+             *   FROM cities
+             *  WHERE cities.id IN ('15fd22e5-7480-47f5-b054-5d60b5c1b456', '45fba8f9-502f-4469-8a21-3ab119c08ee0');
              * ```
              */
             val allPeople = Person.all().with(Person::city).map { it.name to it.city.name }
@@ -173,9 +238,9 @@ class UUIDTableEntityTest: AbstractExposedTest() {
                 city = busan
             }
 
-            // DELETE FROM PEOPLE WHERE PEOPLE.ID = '1efcff30-9a33-6c52-b98d-178b68d550e5'
+            // DELETE FROM people WHERE people.id = 'a7b353ef-2fcb-4daf-9d41-ed6516d18bda'
             sam.delete()
-            // DELETE FROM CITIES WHERE CITIES.ID = '1efcff30-9a2e-6e2d-b98d-178b68d550e5'
+            // DELETE FROM cities WHERE cities.id = '038bcadb-a8a5-46b4-9e98-2385b70669e4'
             busan.delete()
 
             flushCache()
@@ -184,21 +249,14 @@ class UUIDTableEntityTest: AbstractExposedTest() {
             allCities shouldBeEqualTo listOf("Seoul")
 
             /**
+             * Eager loading of many-to-one
+             * 
              * ```sql
-             * SELECT PEOPLE.ID, PEOPLE."name", PEOPLE.CITY_ID FROM PEOPLE
+             * SELECT people.id, people."name", people.city_id FROM people;
              *
-             * SELECT CITIES.ID, CITIES."name"
-             *   FROM CITIES
-             *  WHERE CITIES.ID = '1efcff30-9a2e-6e2b-b98d-178b68d550e5'
-             * ```
-             */
-            /**
-             * ```sql
-             * SELECT PEOPLE.ID, PEOPLE."name", PEOPLE.CITY_ID FROM PEOPLE
-             *
-             * SELECT CITIES.ID, CITIES."name"
-             *   FROM CITIES
-             *  WHERE CITIES.ID = '1efcff30-9a2e-6e2b-b98d-178b68d550e5'
+             * SELECT cities.id, cities."name"
+             *   FROM cities
+             *  WHERE cities.id = '54ae8589-f7b9-4fd4-a0ef-fc74a598c99e'
              * ```
              */
             val allPeople = Person.all().with(Person::city).map { it.name to it.city.name }
@@ -209,22 +267,42 @@ class UUIDTableEntityTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Entity 속성에 바로 entity 생성을 수행할 수 있다.
+     *
+     * ```sql
+     * -- create city
+     * INSERT INTO cities (id, "name") VALUES ('ff62fa07-59cc-44c9-b407-df2f49151e11', 'City1');
+     *
+     * -- create person1, person2
+     * INSERT INTO people (id, "name", city_id) VALUES ('d8974bd1-3585-416c-a536-59db33e79f74', 'Person1', 'ff62fa07-59cc-44c9-b407-df2f49151e11');
+     *
+     * INSERT INTO people (id, "name", city_id) VALUES ('c23924b3-3215-4ad5-911f-10aec993ae02', 'Person2', 'ff62fa07-59cc-44c9-b407-df2f49151e11');
+     *
+     * -- create address1, address2
+     * INSERT INTO addresses (id, person_id, city_id, address) VALUES ('a2f74e17-47bd-4245-b0b7-99c7d0c8b480', 'd8974bd1-3585-416c-a536-59db33e79f74', 'ff62fa07-59cc-44c9-b407-df2f49151e11', 'Address1');
+     *
+     * INSERT INTO addresses (id, person_id, city_id, address) VALUES ('3bf486ba-728d-4f26-892b-38ce68359639', 'c23924b3-3215-4ad5-911f-10aec993ae02', 'ff62fa07-59cc-44c9-b407-df2f49151e11', 'Address2');
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert with inner table`(testDB: TestDB) {
         withTables(testDB, Addresses, Cities, People) {
             val city1 = City.new { name = "City1" }
-            val person1 = Person.new {
-                name = "Person1"
-                city = city1
-            }
             val address1 = Address.new {
-                person = person1
+                person = Person.new {
+                    name = "Person1"
+                    city = city1
+                }
                 city = city1
                 address = "Address1"
             }
             val address2 = Address.new {
-                person = person1
+                person = Person.new {
+                    name = "Person2"
+                    city = city1
+                }
                 city = city1
                 address = "Address2"
             }
@@ -241,28 +319,48 @@ class UUIDTableEntityTest: AbstractExposedTest() {
      * Lazy loading referencedOn
      * ```sql
      * SELECT towns.id, towns.city_id FROM towns
-     * SELECT Cities.id, Cities.`name` FROM Cities WHERE Cities.id = '1efcc4a5-73e6-6e8a-830f-399275c6fb04'
+     *
+     * SELECT cities.id, cities."name"
+     *   FROM cities WHERE cities.id = '7f14895f-9a26-4f5e-9f07-fb6b7265c619'
      * ```
      *
      * Eager loading referencedOn
      * ```sql
      * SELECT towns.id, towns.city_id FROM towns
-     * SELECT Cities.id, Cities.`name` FROM Cities WHERE Cities.id = '1efcc4a5-73e6-6e8a-830f-399275c6fb04'
-     * SELECT Cities.id, Cities.`name` FROM Cities WHERE Cities.id = '1efcc4a5-73e6-6e8a-830f-399275c6fb04'
+     *
+     * SELECT cities.id, cities."name"
+     *   FROM cities
+     *  WHERE cities.id = '7f14895f-9a26-4f5e-9f07-fb6b7265c619'
+     *
+     * SELECT cities.id, cities."name"
+     *   FROM cities
+     *  WHERE cities.id = '7f14895f-9a26-4f5e-9f07-fb6b7265c619'
      * ```
      *
      * Lazy loading referrersOn
      * ```sql
-     * SELECT Cities.id, Cities.`name` FROM Cities
-     * SELECT towns.id, towns.city_id FROM towns WHERE towns.city_id = '1efcc4a5-73e6-6e8a-830f-399275c6fb04'
-     * SELECT Cities.id, Cities.`name` FROM Cities WHERE Cities.id = '1efcc4a5-73e6-6e8a-830f-399275c6fb04'
+     * SELECT cities.id, cities."name" FROM cities
+     *
+     * SELECT towns.id, towns.city_id
+     *   FROM towns
+     *  WHERE towns.city_id = '7f14895f-9a26-4f5e-9f07-fb6b7265c619'
+     *
+     * SELECT cities.id, cities."name"
+     *   FROM cities
+     *  WHERE cities.id = '7f14895f-9a26-4f5e-9f07-fb6b7265c619'
      * ```
      *
      * Eager loading referrersOn
      * ```sql
-     * SELECT Cities.id, Cities.`name` FROM Cities
-     * SELECT towns.id, towns.city_id, Cities.id FROM towns INNER JOIN Cities ON towns.city_id = Cities.id WHERE towns.city_id = '1efcc4a5-73e6-6e8a-830f-399275c6fb04'
-     * SELECT Cities.id, Cities.`name` FROM Cities WHERE Cities.id = '1efcc4a5-73e6-6e8a-830f-399275c6fb04'
+     * SELECT cities.id, cities."name" FROM cities;
+     *
+     * SELECT towns.id, towns.city_id, cities.id
+     *   FROM towns INNER JOIN cities ON towns.city_id = cities.id
+     *  WHERE towns.city_id = '7f14895f-9a26-4f5e-9f07-fb6b7265c619';
+     *
+     * SELECT cities.id, cities."name"
+     *   FROM cities
+     *  WHERE cities.id = '7f14895f-9a26-4f5e-9f07-fb6b7265c619';
      * ```
      */
     @ParameterizedTest
@@ -279,7 +377,7 @@ class UUIDTableEntityTest: AbstractExposedTest() {
                 it[cityId] = cId.value
             }
 
-            flushCache()
+            entityCache.clear()
 
             // lazy loading referencedOn
             log.debug { "Lazy loading referencedOn" }
