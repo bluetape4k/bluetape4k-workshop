@@ -18,6 +18,14 @@ class CharColumnTypeTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS chartable (
+     *      id SERIAL PRIMARY KEY,
+     *      "charColumn" CHAR NOT NULL
+     * )
+     * ```
+     */
     object CharTable: IntIdTable("charTable") {
         val charColumn = char("charColumn")
     }
@@ -39,21 +47,24 @@ class CharColumnTypeTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `char column with collate`(testDB: TestDB) {
         Assumptions.assumeTrue(testDB in TestDB.ALL_POSTGRES + TestDB.ALL_MYSQL_LIKE)
-        val collateOption = when (testDB) {
-            in TestDB.ALL_POSTGRES -> "C"
-            else                   -> "utf8mb4_bin"
-        }
-
         /**
          * MySQL:
          * ```sql
-         * CREATE TABLE IF NOT EXISTS tester (letter CHAR(1) COLLATE utf8mb4_bin NOT NULL)
+         * CREATE TABLE IF NOT EXISTS tester (
+         *      letter CHAR(1) COLLATE utf8mb4_bin NOT NULL
+         * )
          * ```
          * Postgres:
          * ```sql
-         * CREATE TABLE IF NOT EXISTS tester (letter CHAR(1) COLLATE "C" NOT NULL)
+         * CREATE TABLE IF NOT EXISTS tester (
+         *      letter CHAR(1) COLLATE "C" NOT NULL
+         * )
          * ```
          */
+        val collateOption = when (testDB) {
+            in TestDB.ALL_POSTGRES -> "C"
+            else -> "utf8mb4_bin"
+        }
         val tester = object: Table("tester") {
             val letter = char("letter", 1, collate = collateOption)
         }
