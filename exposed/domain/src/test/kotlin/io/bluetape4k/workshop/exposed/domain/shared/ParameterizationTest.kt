@@ -25,6 +25,14 @@ import org.junit.jupiter.params.provider.MethodSource
 
 /**
  * SQL Statements 에 Parameter 를 전달하여 실행하는 방식에 대한 테스트 코드입니다.
+ *
+ * ```kotlin
+ * Transaction.exec(
+ *      "INSERT INTO tmp (foo) VALUES (?)",
+ *      listOf(VarCharColumnType() to "John \"Johny\" Johnson"),
+ *      INSERT
+ * )
+ * ```
  */
 class ParameterizationTest: AbstractExposedTest() {
 
@@ -39,9 +47,7 @@ class ParameterizationTest: AbstractExposedTest() {
         val name = varchar("foo", 50).nullable()
     }
 
-    private val supportMultipleStatements by lazy {
-        TestDB.ALL_MYSQL + TestDB.POSTGRESQL
-    }
+    private val supportMultipleStatements = TestDB.ALL_MYSQL + TestDB.POSTGRESQL
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
