@@ -36,6 +36,45 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import kotlin.test.assertNull
 
+/**
+ * Postgres:
+ * ```sql
+ * CREATE TABLE IF NOT EXISTS misc (
+ *      "by" SMALLINT NOT NULL,
+ *      byn SMALLINT NULL,
+ *      sm SMALLINT NOT NULL,
+ *      smn SMALLINT NULL,
+ *      n INT NOT NULL,
+ *      nn INT NULL,
+ *      e INT NOT NULL,
+ *      en INT NULL,
+ *      es VARCHAR(5) NOT NULL,
+ *      esn VARCHAR(5) NULL,
+ *      "c" VARCHAR(4) NOT NULL,
+ *      cn VARCHAR(4) NULL,
+ *      s VARCHAR(100) NOT NULL,
+ *      sn VARCHAR(100) NULL,
+ *      dc DECIMAL(12, 2) NOT NULL,
+ *      dcn DECIMAL(12, 2) NULL,
+ *      fcn REAL NULL,
+ *      dblcn DOUBLE PRECISION NULL,
+ *      "char" CHAR NULL,
+ *      d DATE NOT NULL,
+ *      dn DATE NULL,
+ *      t TIME NOT NULL,
+ *      tn TIME NULL,
+ *      dt TIMESTAMP NOT NULL,
+ *      dtn TIMESTAMP NULL,
+ *      ts TIMESTAMP NOT NULL,
+ *      tsn TIMESTAMP NULL,
+ *      dr BIGINT NOT NULL,
+ *      drn BIGINT NULL,
+ *
+ *      CONSTRAINT chk_Misc_signed_byte_by CHECK ("by" BETWEEN -128 AND 127),
+ *      CONSTRAINT chk_Misc_signed_byte_byn CHECK (byn BETWEEN -128 AND 127)
+ * );
+ * ```
+ */
 object Misc: MiscTable() {
     val d = date("d")
     val dn = date("dn").nullable()

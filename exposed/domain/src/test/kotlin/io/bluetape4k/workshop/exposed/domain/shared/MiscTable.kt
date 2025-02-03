@@ -7,6 +7,35 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.statements.InsertStatement
 import java.math.BigDecimal
 
+/**
+ * Postgres:
+ * ```sql
+ * CREATE TABLE IF NOT EXISTS misctable (
+ *      "by" SMALLINT NOT NULL,
+ *      byn SMALLINT NULL,
+ *      sm SMALLINT NOT NULL,
+ *      smn SMALLINT NULL,
+ *      n INT NOT NULL,
+ *      nn INT NULL,
+ *      e INT NOT NULL,
+ *      en INT NULL,
+ *      es VARCHAR(5) NOT NULL,
+ *      esn VARCHAR(5) NULL,
+ *      "c" VARCHAR(4) NOT NULL,
+ *      cn VARCHAR(4) NULL,
+ *      s VARCHAR(100) NOT NULL,
+ *      sn VARCHAR(100) NULL,
+ *      dc DECIMAL(12, 2) NOT NULL,
+ *      dcn DECIMAL(12, 2) NULL,
+ *      fcn REAL NULL,
+ *      dblcn DOUBLE PRECISION NULL,
+ *      "char" CHAR NULL,
+ *
+ *      CONSTRAINT chk_Misc_signed_byte_by CHECK ("by" BETWEEN -128 AND 127),
+ *      CONSTRAINT chk_Misc_signed_byte_byn CHECK (byn BETWEEN -128 AND 127)
+ * );
+ * ```
+ */
 open class MiscTable: Table() {
 
     val by = byte("by")
