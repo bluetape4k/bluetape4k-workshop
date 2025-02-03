@@ -29,7 +29,7 @@ import org.jetbrains.exposed.sql.QueryBuilder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.alias
-import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.andWhere
 import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.count
 import org.jetbrains.exposed.sql.decimalLiteral
@@ -40,7 +40,7 @@ import org.jetbrains.exposed.sql.joinQuery
 import org.jetbrains.exposed.sql.lastQueryAlias
 import org.jetbrains.exposed.sql.leftJoin
 import org.jetbrains.exposed.sql.max
-import org.jetbrains.exposed.sql.or
+import org.jetbrains.exposed.sql.orWhere
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.stringLiteral
 import org.jetbrains.exposed.sql.sum
@@ -53,10 +53,34 @@ class AliasesTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `count alias ClassCastException`(testDB: TestDB) {
+
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS stables (
+         *      id uuid PRIMARY KEY,
+         *      "name" VARCHAR(256) NOT NULL
+         * );
+         *
+         * ALTER TABLE stables
+         *      ADD CONSTRAINT stables_name_unique UNIQUE ("name");
+         * ```
+         */
         val stables = object: UUIDTable("Stables") {
             val name = varchar("name", 256).uniqueIndex()
         }
 
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS facilities (
+         *      id uuid PRIMARY KEY,
+         *      stable_id uuid NOT NULL,
+         *      "name" VARCHAR(256) NOT NULL,
+         *
+         *      CONSTRAINT fk_facilities_stable_id__id FOREIGN KEY (stable_id)
+         *      REFERENCES stables(id) ON DELETE RESTRICT ON UPDATE RESTRICT
+         * );
+         * ```
+         */
         val facilities = object: UUIDTable("Facilities") {
             val stableId = reference("stable_id", stables)
             val name = varchar("name", 256)
@@ -85,26 +109,15 @@ class AliasesTest: AbstractExposedTest() {
 
             /**
              * ```sql
-             * SELECT STABLES.ID,
-             *        STABLES."name",
-             *        f.fc
-             *   FROM STABLES LEFT JOIN (SELECT FACILITIES.STABLE_ID,
-             *                                  COUNT(FACILITIES."name") fc
-             *                             FROM FACILITIES
-             *                            GROUP BY FACILITIES.STABLE_ID) f ON STABLES.ID = f.STABLE_ID
-             *  GROUP BY STABLES.ID, STABLES."name", f.fc
-             * ```
-             */
-            /**
-             * ```sql
-             * SELECT STABLES.ID,
-             *        STABLES."name",
-             *        f.fc
-             *   FROM STABLES LEFT JOIN (SELECT FACILITIES.STABLE_ID,
-             *                                  COUNT(FACILITIES."name") fc
-             *                             FROM FACILITIES
-             *                            GROUP BY FACILITIES.STABLE_ID) f ON STABLES.ID = f.STABLE_ID
-             *  GROUP BY STABLES.ID, STABLES."name", f.fc
+             * SELECT stables.id, stables."name", f.fc
+             *   FROM stables
+             *      LEFT JOIN (SELECT facilities.stable_id,
+             *                        COUNT(facilities."name") fc
+             *                   FROM facilities
+             *                  GROUP BY facilities.stable_id
+             *                 ) f
+             *           ON stables.id = f.stable_id
+             *  GROUP BY stables.id, stables."name", f.fc
              * ```
              */
             val stats: Map<String, Long?> = stables.join(fAlias, LEFT, stables.id, fAlias[facilities.stableId])
@@ -124,21 +137,16 @@ class AliasesTest: AbstractExposedTest() {
     }
 
     /**
+     * Postgres:
      * ```sql
-     * SELECT USERS.ID,
-     *        USERS."name",
-     *        USERS.CITY_ID,
-     *        USERS.FLAGS,
-     *        u2.CITY_ID,
-     *        u2.m
-     *   FROM USERS INNER JOIN
-     *          (
-     *              SELECT USERS.CITY_ID,
-     *                     MAX(USERS."name") m
-     *                FROM USERS
-     *               GROUP BY USERS.CITY_ID
-     *           ) u2
-     *         ON u2.m = USERS."name"
+     * SELECT users.id, users."name", users.city_id, users.flags, u2.city_id, u2.m
+     *   FROM users
+     *      INNER JOIN (SELECT users.city_id,
+     *                         MAX(users."name") m
+     *                    FROM users
+     *                   GROUP BY users.city_id
+     *                 ) u2
+     *            ON u2.m = users."name"
      * ```
      */
     @ParameterizedTest
@@ -161,29 +169,27 @@ class AliasesTest: AbstractExposedTest() {
     }
 
     /**
-     * Count
+     * Postgres:
      * ```sql
+     * -- count
      * SELECT COUNT(*)
-     *   FROM USERS INNER JOIN (
-     *          SELECT USERS.CITY_ID,
-     *                 MAX(USERS."name") m
-     *            FROM USERS
-     *           GROUP BY USERS.CITY_ID
-     *          ) q0 ON  (q0.m = USERS."name")
-     * ```
+     *   FROM users
+     *      INNER JOIN (SELECT users.city_id,
+     *                         MAX(users."name") m
+     *                    FROM users
+     *                   GROUP BY users.city_id
+     *                  ) q0
+     *            ON  (q0.m = users."name");
      *
-     * ```sql
-     * SELECT USERS.ID,
-     *        USERS."name",
-     *        USERS.CITY_ID,
-     *        USERS.FLAGS,
-     *        q0.m
-     *   FROM USERS INNER JOIN (
-     *          SELECT USERS.CITY_ID,
-     *                 MAX(USERS."name") m
-     *            FROM USERS
-     *           GROUP BY USERS.CITY_ID
-     *        ) q0 ON  (q0.m = USERS."name")
+     * -- select
+     * SELECT users.id, users."name", users.city_id, users.flags, q0.m
+     *   FROM users
+     *      INNER JOIN (SELECT users.city_id,
+     *                         MAX(users."name") m
+     *                    FROM users
+     *                   GROUP BY users.city_id
+     *                 ) q0
+     *            ON  (q0.m = users."name");
      * ```
      */
     @ParameterizedTest
@@ -205,28 +211,50 @@ class AliasesTest: AbstractExposedTest() {
     }
 
     /**
-     * firstJoinQuery
+     * Postgres:
      * ```sql
+     * -- firstJoinQuery
      * SELECT COUNT(*)
-     *   FROM CITIES LEFT JOIN USERS ON CITIES.CITY_ID = USERS.CITY_ID
-     *               INNER JOIN (SELECT USERDATA.USER_ID,
-     *                                  USERDATA.COMMENT,
-     *                                  USERDATA."value"
-     *                             FROM USERDATA) q0 ON  (q0.USER_ID = USERS.ID)
+     *   FROM cities LEFT JOIN users ON cities.city_id = users.city_id
+     *               INNER JOIN (SELECT userdata.user_id,
+     *                                  userdata."comment",
+     *                                  userdata."value"
+     *                             FROM userdata
+     *                          ) q0
+     *                     ON  (q0.user_id = users.id);
+     *
+     * SELECT cities.city_id,
+     *        cities."name",
+     *        users.id,
+     *        users."name",
+     *        users.city_id,
+     *        users.flags,
+     *        q0.user_id,
+     *        q0."comment",
+     *        q0."value"
+     *   FROM cities LEFT JOIN users ON cities.city_id = users.city_id
+     *               INNER JOIN (SELECT userdata.user_id,
+     *                                  userdata."comment",
+     *                                  userdata."value"
+     *                             FROM userdata
+     *                          ) q0
+     *                     ON  (q0.user_id = users.id);
      * ```
      *
-     * secondJoinQuery
      * ```sql
+     * -- secondJoinQuery
      * SELECT COUNT(*)
-     *   FROM CITIES LEFT JOIN USERS ON CITIES.CITY_ID = USERS.CITY_ID
-     *               INNER JOIN (SELECT USERDATA.USER_ID,
-     *                                  USERDATA.COMMENT,
-     *                                  USERDATA."value"
-     *                             FROM USERDATA) q0 ON  (q0.USER_ID = USERS.ID)
-     *               INNER JOIN (SELECT USERDATA.USER_ID,
-     *                                  USERDATA.COMMENT,
-     *                                  USERDATA."value"
-     *                             FROM USERDATA) q1 ON  (q1.USER_ID = USERS.ID)
+     *   FROM cities LEFT JOIN users ON cities.city_id = users.city_id
+     *               INNER JOIN (SELECT userdata.user_id,
+     *                                  userdata."comment",
+     *                                  userdata."value"
+     *                             FROM userdata) q0
+     *                     ON  (q0.user_id = users.id)
+     *               INNER JOIN (SELECT userdata.user_id,
+     *                                  userdata."comment",
+     *                                  userdata."value"
+     *                             FROM userdata) q1
+     *                     ON  (q1.user_id = users.id)
      * ```
      */
     @ParameterizedTest
@@ -259,9 +287,10 @@ class AliasesTest: AbstractExposedTest() {
     }
 
     /**
+     * Postgres:
      * ```sql
-     * SELECT xAlias.ID, xAlias.B1, xAlias.B2, xAlias.Y1
-     *   FROM XTABLE xAlias
+     * SELECT xAlias.id, xAlias.b1, xAlias.b2, xAlias.y1
+     *   FROM xtable xAlias
      * ```
      */
     @ParameterizedTest
@@ -287,11 +316,17 @@ class AliasesTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * SELECT xAlias.ID, xAlias.B1, xAlias.B2, xAlias.Y1
-     *   FROM (
-     *      SELECT XTABLE.ID, XTABLE.B1, XTABLE.B2, XTABLE.Y1
-     *        FROM XTABLE
-     *   ) xAlias
+     * SELECT xAlias.id,
+     *        xAlias.b1,
+     *        xAlias.b2,
+     *        xAlias.y1
+     *   FROM (SELECT xtable.id,
+     *                xtable.b1,
+     *                xtable.b2,
+     *                xtable.y1
+     *           FROM xtable
+     *        ) xAlias
+     * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -305,7 +340,7 @@ class AliasesTest: AbstractExposedTest() {
 
             val alias = XTable.selectAll().alias("xAlias")
             val entityFromAlias = alias.selectAll()
-                .map { XEntity.wrapRow(it, alias) }  // alias 를 이용한 wrapRow 에는 alias 를 전달해야 한다.
+                .map { XEntity.wrapRow(it, alias) }             // alias 를 이용한 wrapRow 에는 alias 를 전달해야 한다.
                 .singleOrNull()
 
             entityFromAlias.shouldNotBeNull()
@@ -316,12 +351,13 @@ class AliasesTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * SELECT maxBoolean.B1,
-     *        maxBoolean.maxId
-     *  FROM (SELECT XTABLE.B1, MAX(XTABLE.ID) maxId
-     *          FROM XTABLE
-     *         GROUP BY XTABLE.B1
-     *       ) maxBoolean LEFT JOIN XTABLE ON maxBoolean.maxId = XTABLE.ID
+     * SELECT maxBoolean.b1, maxBoolean.maxId
+     *   FROM (SELECT xtable.b1,
+     *                MAX(xtable.id) maxId
+     *           FROM xtable
+     *          GROUP BY xtable.b1
+     *        ) maxBoolean
+     *   LEFT JOIN xtable ON maxBoolean.maxId = xtable.id
      * ```
      */
     @ParameterizedTest
@@ -358,9 +394,15 @@ class AliasesTest: AbstractExposedTest() {
     /**
      * ```sql
      * SELECT t1.t1max
-     *   FROM (SELECT MAX(XTABLE.ID) t1max FROM XTABLE GROUP BY XTABLE.B1) t1
-     *   INNER JOIN (SELECT MAX(XTABLE.ID) t2max FROM XTABLE GROUP BY XTABLE.B1) t2
-     *   ON  (t1.t1max = t2.t2max)
+     *   FROM (SELECT MAX(xtable.id) t1max
+     *           FROM xtable
+     *          GROUP BY xtable.b1
+     *        ) t1
+     *   INNER JOIN (SELECT MAX(xtable.id) t2max
+     *                 FROM xtable
+     *                GROUP BY xtable.b1
+     *               ) t2
+     *         ON  (t1.t1max = t2.t2max)
      * ```
      */
     @ParameterizedTest
@@ -446,6 +488,21 @@ class AliasesTest: AbstractExposedTest() {
         aliasGenerated shouldBeEqualTo generated
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS stables (
+     *      id uuid PRIMARY KEY
+     * );
+     *
+     * CREATE TABLE IF NOT EXISTS facilities (
+     *      id uuid PRIMARY KEY,
+     *      stable_id uuid NOT NULL,
+     *
+     *      CONSTRAINT fk_facilities_stable_id__id FOREIGN KEY (stable_id)
+     *      REFERENCES stables(id) ON DELETE RESTRICT ON UPDATE RESTRICT
+     * );
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `reference is same in alias`(testDB: TestDB) {
@@ -464,20 +521,19 @@ class AliasesTest: AbstractExposedTest() {
     }
 
     /**
+     * Postgres:
      * ```sql
-     * SELECT counter.ID, counter.AMOUNT
-     *   FROM TESTER counter
-     *  WHERE (counter.ID IS NULL) OR (counter.ID <> 1)
-     * ```
-     * ```sql
-     * SELECT counter.ID, counter.AMOUNT
-     *   FROM TESTER counter
-     *  WHERE (counter.ID IS NOT NULL) AND (counter.ID = 1)
-     * ```
-     * ```sql
-     * SELECT counter.ID, counter.AMOUNT
-     *   FROM TESTER counter
-     *  WHERE (counter.ID = 1) OR (counter.ID <> 123)
+     * SELECT counter.id, counter.amount
+     *   FROM tester counter
+     *  WHERE (counter.id IS NULL) OR (counter.id <> 1);
+     *
+     * SELECT counter.id, counter.amount
+     *   FROM tester counter
+     *  WHERE (counter.id IS NOT NULL) AND (counter.id = 1);
+     *
+     * SELECT counter.id, counter.amount
+     *   FROM tester counter
+     *  WHERE (counter.id = 1) OR (counter.id <> 123);
      * ```
      */
     @ParameterizedTest
@@ -492,44 +548,50 @@ class AliasesTest: AbstractExposedTest() {
 
             val counter = tester.alias("counter")
 
-            val result1 = counter.selectAll()
-                .where {
-                    counter[tester.id].isNull() or (counter[tester.id] neq t1)
-                }
+            counter
+                .selectAll()
+                .where { counter[tester.id].isNull() }
+                .orWhere { counter[tester.id] neq t1 }
                 .toList()
-            result1.shouldBeEmpty()
+                .shouldBeEmpty()
 
-            val result2 = counter.selectAll()
-                .where {
-                    counter[tester.id].isNotNull() and (counter[tester.id] eq t1)
-                }
-                .single()
+            counter
+                .selectAll()
+                .where { counter[tester.id].isNotNull() }
+                .andWhere { counter[tester.id] eq t1 }
+                .single()[counter[tester.amount]] shouldBeEqualTo 99
 
-            result2[counter[tester.amount]] shouldBeEqualTo 99
-
-            val result3 = counter.selectAll()
-                .where {
-                    (counter[tester.id] eq t1.value) or (counter[tester.id] neq 123)
-                }
-                .single()
-            result3[counter[tester.amount]] shouldBeEqualTo 99
+            counter
+                .selectAll()
+                .where { counter[tester.id] eq t1.value }
+                .orWhere { counter[tester.id] neq 123 }
+                .single()[counter[tester.amount]] shouldBeEqualTo 99
         }
     }
 
     /**
      * ```sql
-     * SELECT TESTER2.ID,
-     *        TESTER2."ref",
+     * CREATE TABLE IF NOT EXISTS tester1 (
+     *      id BIGSERIAL PRIMARY KEY,
+     *      foo VARCHAR(255) NOT NULL
+     * );
+     * CREATE TABLE IF NOT EXISTS tester2 (
+     *      id BIGSERIAL PRIMARY KEY,
+     *      "ref" BIGINT NOT NULL
+     * );
+     *
+     *
+     * SELECT tester2.id,
+     *        tester2."ref",
      *        internalQuery.idAlias,
      *        internalQuery.fooAlias
-     *   FROM TESTER2
-     *      INNER JOIN (
-     *              SELECT TESTER1.ID idAlias,
-     *                     TESTER1.FOO fooAlias
-     *                FROM TESTER1
-     *               WHERE TESTER1.FOO = 'foo'
-     *         ) internalQuery
-     *      ON TESTER2."ref" = internalQuery.idAlias
+     *   FROM tester2
+     *      INNER JOIN (SELECT tester1.id idAlias,
+     *                         tester1.foo fooAlias
+     *                    FROM tester1
+     *                   WHERE tester1.foo = 'foo'
+     *                 ) internalQuery
+     *            ON tester2."ref" = internalQuery.idAlias
      * ```
      */
     @ParameterizedTest
@@ -565,6 +627,15 @@ class AliasesTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `expression with column type alias`(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS subinvoices (
+         *      product_id BIGINT NOT NULL,
+         *      main_amount DECIMAL(4, 2) NOT NULL,
+         *      is_draft BOOLEAN NOT NULL
+         * );
+         * ```
+         */
         val subInvoices = object: Table("SubInvoices") {
             val productId = long("product_id")
             val mainAmount = decimal("main_amount", 4, 2)
@@ -599,6 +670,8 @@ class AliasesTest: AbstractExposedTest() {
                     """FROM ${subInvoices.nameInDatabaseCase()} """ +
                     """WHERE ${subInvoices.nameInDatabaseCase()}.${subInvoices.isDraft.nameInDatabaseCase()} = $booleanValue """ +
                     """GROUP BY ${subInvoices.nameInDatabaseCase()}.${subInvoices.productId.nameInDatabaseCase()}) input"""
+
+            log.debug { "expectedQuery=\n$expectedQuery" }
 
             input.select(sumTotal).prepareSQL(QueryBuilder(false)) shouldBeEqualTo expectedQuery
         }
