@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.sql.money
 
+import io.bluetape4k.workshop.exposed.dao.idValue
 import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.id.EntityID
@@ -13,6 +14,17 @@ import javax.money.MonetaryAmount
 
 internal const val AMOUNT_SCALE = 5
 
+/**
+ * Money 를 저장하는 테이블을 정의합니다.
+ *
+ * ```sql
+ * CREATE TABLE IF NOT EXISTS accounts (
+ *      id SERIAL PRIMARY KEY,
+ *      composite_money DECIMAL(8, 5) NULL,     -- currency amount
+ *      "composite_money_C" VARCHAR(3) NULL     -- currency unit
+ * );
+ * ```
+ */
 internal object Account: IntIdTable("Accounts") {
     val composite_money: CompositeMoneyColumn<BigDecimal?, CurrencyUnit?, MonetaryAmount?> =
         compositeMoney(8, AMOUNT_SCALE, "composite_money").nullable()
@@ -24,4 +36,8 @@ internal class AccountDao(id: EntityID<Int>): IntEntity(id) {
     val money: MonetaryAmount? by Account.composite_money
     val currency: CurrencyUnit? by Account.composite_money.currency
     val amount: BigDecimal? by Account.composite_money.amount
+
+    override fun equals(other: Any?): Boolean = other is AccountDao && idValue == other.idValue
+    override fun hashCode(): Int = idValue.hashCode()
+    override fun toString(): String = "AccountDao(id=$idValue, money=$money)"
 }

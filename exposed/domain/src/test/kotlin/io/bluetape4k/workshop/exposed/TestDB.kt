@@ -58,44 +58,67 @@ enum class TestDB(
 
     MYSQL_V5(
         connection = {
-            ContainerProvider.mysql5.jdbcUrl +
-                    "?useSSL=false" +
-                    "&characterEncoding=UTF-8" +
-                    "&zeroDateTimeBehavior=convertToNull"  // +
-            // "&rewriteBatchedStatements=true"
+            if (USE_TESTCONTAINERS) {
+                ContainerProvider.mysql5.jdbcUrl +
+                        "?useSSL=false" +
+                        "&characterEncoding=UTF-8" +
+                        "&useLegacyDatetimeCode=false&serverTimezone=UTC" +  // TimeZone 을 UTC 로 설정
+                        "&zeroDateTimeBehavior=convertToNull"  // +
+                // "&rewriteBatchedStatements=true"
+            } else {
+                "jdbc:mysql://localhost:3306/exposed" +
+                        "?useSSL=false" +
+                        "&characterEncoding=UTF-8" +
+                        "&useLegacyDatetimeCode=false&serverTimezone=UTC" +  // TimeZone 을 UTC 로 설정
+                        "&zeroDateTimeBehavior=convertToNull"  // +
+                // "&rewriteBatchedStatements=true"
+            }
         },
         driver = JdbcDrivers.DRIVER_CLASS_MYSQL
     ),
 
     MYSQL_V8(
         connection = {
-            // ContainerProvider.mysql8.jdbcUrl +
-            "jdbc:mysql://localhost:3306/exposed" +
-                    "?useSSL=false" +
-                    "&characterEncoding=UTF-8" +
-                    "&zeroDateTimeBehavior=convertToNull" +
-                    "&useLegacyDatetimeCode=false&serverTimezone=UTC" +  // TimeZone 을 UTC 로 설정
-                    "&allowPublicKeyRetrieval=true" // +
-            //  "&rewriteBatchedStatements=true"                        // Batch 처리를 위한 설정
+            if (USE_TESTCONTAINERS) {
+                ContainerProvider.mysql8.jdbcUrl +
+                        "?useSSL=false" +
+                        "&characterEncoding=UTF-8" +
+                        "&zeroDateTimeBehavior=convertToNull" +
+                        "&useLegacyDatetimeCode=false&serverTimezone=UTC" +  // TimeZone 을 UTC 로 설정
+                        "&allowPublicKeyRetrieval=true" // +
+                //  "&rewriteBatchedStatements=true"                        // Batch 처리를 위한 설정
+
+            } else {
+                "jdbc:mysql://localhost:3306/exposed" +
+                        "?useSSL=false" +
+                        "&characterEncoding=UTF-8" +
+                        "&zeroDateTimeBehavior=convertToNull" +
+                        "&useLegacyDatetimeCode=false&serverTimezone=UTC" +  // TimeZone 을 UTC 로 설정
+                        "&allowPublicKeyRetrieval=true" // +
+                //  "&rewriteBatchedStatements=true"                        // Batch 처리를 위한 설정
+            }
         },
         driver = JdbcDrivers.DRIVER_CLASS_MYSQL,
-        user = "exposed",
-        pass = "@exposed2025"
+        user = if (USE_TESTCONTAINERS) "test" else "exposed",
+        pass = if (USE_TESTCONTAINERS) "test" else "@exposed2025"
     ),
 
     POSTGRESQL(
         connection = {
-            // ContainerProvider.postgres.jdbcUrl + "&lc_messages=en_US.UTF-8"
-            "jdbc:postgresql://localhost:5432/exposed?lc_messages=en_US.UTF-8"
+            if (USE_TESTCONTAINERS) {
+                ContainerProvider.postgres.jdbcUrl + "&lc_messages=en_US.UTF-8"
+            } else {
+                "jdbc:postgresql://localhost:5432/exposed?lc_messages=en_US.UTF-8"
+            }
         },
         driver = JdbcDrivers.DRIVER_CLASS_POSTGRESQL,
-        user = "exposed"
+        user = if (USE_TESTCONTAINERS) "test" else "exposed"
     ),
 
     POSTGRESQLNG(
         connection = { POSTGRESQL.connection().replace(":postgresql:", ":pgsql:") },
         driver = "com.impossibl.postgres.jdbc.PGDriver",
-        user = "exposed"
+        user = if (USE_TESTCONTAINERS) "test" else "exposed"
     ),
 
     COCKROACH(
@@ -149,3 +172,5 @@ enum class TestDB(
         }
     }
 }
+
+const val USE_TESTCONTAINERS = true
