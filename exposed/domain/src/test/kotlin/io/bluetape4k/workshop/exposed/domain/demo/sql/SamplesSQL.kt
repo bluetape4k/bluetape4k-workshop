@@ -6,7 +6,7 @@ import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
 import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.andWhere
 import org.jetbrains.exposed.sql.count
 import org.jetbrains.exposed.sql.deleteWhere
 import org.jetbrains.exposed.sql.insert
@@ -75,6 +75,7 @@ class SamplesSQL: AbstractExposedTest() {
                 it[name] = "Busan"
             } get Cities.id
 
+            // INSERT INTO city ("name") VALUES (SUBSTRING(TRIM('   Daegu   '), 1, 2))
             val daegu = Cities.insert {
                 it.update(name, stringLiteral("   Daegu   ").trim().substring(1, 2))
             }[Cities.id]
@@ -126,27 +127,44 @@ class SamplesSQL: AbstractExposedTest() {
              * DELETE FROM "user" WHERE "user"."name" LIKE '%thing'
              * ```
              */
-            Users.deleteWhere { name like "%thing" }
+            val affectedCount = Users.deleteWhere { name like "%thing" }
+            affectedCount shouldBeEqualTo 1
 
             println("All cities:")
             Cities.selectAll().forEach {
                 println("${it[Cities.id]}: ${it[Cities.name]}")
             }
 
+            /**
+             * ```sql
+             * SELECT "user"."name",
+             *        city."name"
+             *   FROM "user"
+             *      INNER JOIN city ON city.id = "user".city_id
+             *  WHERE (("user".id = 'debop') OR ("user"."name" = 'Jarry'))
+             *    AND ("user".id = 'jarry')
+             *    AND ("user".city_id = city.id)
+             * ```
+             */
             println("Manual join:")
             Users.innerJoin(Cities)
                 .select(Users.name, Cities.name)
-                .where {
-                    (Users.id.eq("debop") or Users.name.eq("Jarry")) and
-                            Users.id.eq("jarry") and
-                            Users.cityId.eq(Cities.id)
-                }
+                .where { Users.id.eq("debop") or Users.name.eq("Jarry") }
+                .andWhere { Users.id eq "jarry" }
+                .andWhere { Users.cityId eq Cities.id }
                 .forEach {
                     println("${it[Users.name]} lives in ${it[Cities.name]}")
                 }
 
+            /**
+             * ```sql
+             * SELECT "user"."name", "user".city_id, city."name"
+             *   FROM "user" INNER JOIN city ON city.id = "user".city_id
+             *  WHERE (city."name" = 'Busan')
+             *     OR ("user".city_id IS NULL)
+             * ```
+             */
             println("Join with froeign key:")
-
             Users.innerJoin(Cities)
                 .select(Users.name, Users.cityId, Cities.name)
                 .where { Cities.name.eq("Busan") or Users.cityId.isNull() }
@@ -158,8 +176,14 @@ class SamplesSQL: AbstractExposedTest() {
                     }
                 }
 
+            /**
+             * ```sql
+             * SELECT city."name",
+             *        COUNT("user".id)
+             *   FROM city INNER JOIN "user" ON city.id = "user".city_id
+             *  GROUP BY city."name"
+             */
             println("Functions and group by:")
-
             val query = Cities.innerJoin(Users)
                 .select(Cities.name, Users.id.count())
                 .groupBy(Cities.name)

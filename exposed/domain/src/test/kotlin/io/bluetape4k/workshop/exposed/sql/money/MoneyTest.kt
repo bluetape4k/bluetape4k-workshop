@@ -13,7 +13,7 @@ import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.andWhere
 import org.jetbrains.exposed.sql.deleteAll
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertAndGetId
@@ -36,7 +36,9 @@ class MoneyTest: AbstractExposedTest() {
      *
      * ```sql
      * INSERT INTO accounts (composite_money, "composite_money_C") VALUES (10.00000, 'USD')
-     * SELECT accounts.composite_money, accounts."composite_money_C" FROM accounts WHERE accounts.id = 1
+     * SELECT accounts.composite_money,
+     *        accounts."composite_money_C"
+     *   FROM accounts WHERE accounts.id = 1
      * ```
      */
     @ParameterizedTest
@@ -52,10 +54,14 @@ class MoneyTest: AbstractExposedTest() {
     /**
      * Floating 값을 가지는 Money 를 사용하는 테스트를 실행합니다.
      *
-     * H2:
+     * Postgres:
      * ```sql
-     * INSERT INTO ACCOUNTS (COMPOSITE_MONEY, "composite_money_C") VALUES (0.12345, 'USD')
-     * SELECT ACCOUNTS.COMPOSITE_MONEY, ACCOUNTS."composite_money_C" FROM ACCOUNTS WHERE ACCOUNTS.ID = 1
+     * INSERT INTO accounts (composite_money, "composite_money_C")
+     * VALUES (0.12345, 'USD');
+     *
+     * SELECT accounts.composite_money,
+     *        accounts."composite_money_C"
+     *   FROM accounts WHERE accounts.id = 1;
      * ```
      */
     @ParameterizedTest
@@ -64,10 +70,23 @@ class MoneyTest: AbstractExposedTest() {
         withTables(testDB, Account) {
             assertInsertOfCompositeValueReturnsEquivalentOnSelect(Money.of(0.12345.toBigDecimal(), "USD"))
             Account.deleteAll()
-            assertInsertOfComponentValuesReturnsEquivalentOnSelect(Money.of(0.12345.toBigDecimal(), "USD"))
+            assertInsertOfComponentValuesReturnsEquivalentOnSelect(Money.of(0.54321.toBigDecimal(), "USD"))
         }
     }
 
+    /**
+     * Null 값을 가지는 Money 를 사용하는 테스트를 실행합니다.
+     *
+     * ```sql
+     * INSERT INTO accounts (composite_money, "composite_money_C")
+     * VALUES (NULL, NULL);
+     *
+     * SELECT accounts.composite_money,
+     *        accounts."composite_money_C"
+     *   FROM accounts
+     *  WHERE accounts.id = 1
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert select null`(testDB: TestDB) {
@@ -78,11 +97,15 @@ class MoneyTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * INSERT INTO ... SELECT 문을 사용할 때, 컬럼 길이보다 더 긴 문자열 값을 사용 할 때에는 예외가 발생합니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert select out of length`(testDB: TestDB) {
         val amount = 12345678901.toBigDecimal()
         val toInsert = moneyOf(amount, "CZK")
+
         withTables(testDB, Account) {
             expectException<ExposedSQLException> {
                 Account.insertAndGetId {
@@ -99,19 +122,30 @@ class MoneyTest: AbstractExposedTest() {
     }
 
     /**
+     * Money 컬럼으로 조회하기
+     *
+     * Postgres:
      * ```sql
-     * SELECT ACCOUNTS.ID, ACCOUNTS.COMPOSITE_MONEY, ACCOUNTS."composite_money_C"
-     *   FROM ACCOUNTS
-     *  WHERE (ACCOUNTS.COMPOSITE_MONEY = 10) AND (ACCOUNTS."composite_money_C" = 'USD')
+     * SELECT accounts.id,
+     *        accounts.composite_money,
+     *        accounts."composite_money_C"
+     *   FROM accounts
+     *  WHERE (accounts.composite_money = 10)
+     *    AND (accounts."composite_money_C" = 'USD')
      * ```
      * ```sql
-     * SELECT ACCOUNTS.ID, ACCOUNTS.COMPOSITE_MONEY, ACCOUNTS."composite_money_C"
-     *   FROM ACCOUNTS
-     *  WHERE ACCOUNTS."composite_money_C" = 'USD'
+     * SELECT accounts.id,
+     *        accounts.composite_money,
+     *        accounts."composite_money_C"
+     *   FROM accounts
+     *  WHERE accounts."composite_money_C" = 'USD'
      * ```
      * ```sql
-     * SELECT ACCOUNTS.ID, ACCOUNTS.COMPOSITE_MONEY, ACCOUNTS."composite_money_C"
-     *   FROM ACCOUNTS WHERE ACCOUNTS.COMPOSITE_MONEY = 1E+1
+     * SELECT accounts.id,
+     *        accounts.composite_money,
+     *        accounts."composite_money_C"
+     *   FROM accounts
+     *  WHERE accounts.composite_money = 1E+1
      * ```
      */
     @ParameterizedTest
@@ -141,9 +175,23 @@ class MoneyTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * [compositeMoney] 함수를 이용하여 직접 `Money` 컬럼을 정의하고 사용합니다.
+     *
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `using manual composite money columns`(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS tester (
+         *      amount DECIMAL(8, 5) NOT NULL,
+         *      currency VARCHAR(3) NOT NULL,
+         *      nullable_amount DECIMAL(8, 5) NULL,
+         *      nullable_currency VARCHAR(3) NULL
+         * )
+         * ```
+         */
         val tester = object: Table("tester") {
             val money = compositeMoney(
                 decimal("amount", 8, AMOUNT_SCALE),
@@ -157,6 +205,12 @@ class MoneyTest: AbstractExposedTest() {
         }
 
         withTables(testDB, tester) {
+            /**
+             * ```sql
+             * INSERT INTO tester (amount, currency, nullable_amount, nullable_currency)
+             * VALUES (99.00000, 'EUR', NULL, NULL)
+             * ```
+             */
             val amount = 99.toBigDecimal().setScale(AMOUNT_SCALE)
             val currencyUnit = currencyUnitOf("EUR")
             tester.insert {
@@ -166,26 +220,64 @@ class MoneyTest: AbstractExposedTest() {
                 it[nullableMoney.currency] = null
             }
 
+            /**
+             * ```sql
+             * SELECT tester.amount,
+             *        tester.currency,
+             *        tester.nullable_amount,
+             *        tester.nullable_currency
+             *   FROM tester
+             *  WHERE (tester.nullable_amount IS NULL)
+             *    AND (tester.nullable_currency IS NULL)
+             * ```
+             */
             val result1 = tester.selectAll()
-                .where {
-                    tester.nullableMoney.amount.isNull() and tester.nullableMoney.currency.isNull()
-                }
+                .where { tester.nullableMoney.amount.isNull() }
+                .andWhere { tester.nullableMoney.currency.isNull() }
                 .single()
             result1[tester.money.amount] shouldBeEqualTo amount
 
+            /**
+             * ```sql
+             * UPDATE tester
+             *    SET nullable_amount=99.00000,
+             *        nullable_currency='EUR'
+             * ```
+             */
             tester.update {
                 it[tester.nullableMoney.amount] = amount
                 it[tester.nullableMoney.currency] = currencyUnit
             }
 
+            /**
+             * ```sql
+             * SELECT tester.currency,
+             *        tester.nullable_currency
+             *   FROM tester
+             *  WHERE (tester.amount IS NOT NULL)
+             *    AND (tester.nullable_amount IS NOT NULL)
+             * ```
+             */
             val result2 = tester
                 .select(tester.money.currency, tester.nullableMoney.currency)
-                .where { tester.money.amount.isNotNull() and tester.nullableMoney.amount.isNotNull() }
+                .where { tester.money.amount.isNotNull() }
+                .andWhere { tester.nullableMoney.amount.isNotNull() }
                 .single()
+
             result2[tester.money.currency] shouldBeEqualTo currencyUnit
             result2[tester.nullableMoney.currency] shouldBeEqualTo currencyUnit
 
-            // manual composite columns should still accept composite values
+            /**
+             * manual composite columns should still accept composite values
+             *
+             * ```sql
+             * INSERT INTO tester (amount, currency, nullable_amount, nullable_currency)
+             * VALUES (10, 'CAD', NULL, NULL)
+             * ```
+             * ```
+             * INSERT INTO tester (amount, currency) VALUES (10, 'CAD')
+             * ```
+             */
             val compositeMoney = moneyOf(10, "CAD")
             tester.insert {
                 it[money] = compositeMoney
@@ -194,7 +286,19 @@ class MoneyTest: AbstractExposedTest() {
             tester.insert {
                 it[money] = compositeMoney
             }
-            tester.selectAll().where { tester.nullableMoney eq null }.count() shouldBeEqualTo 2L
+
+            /**
+             * Search by composite column
+             *
+             * ```sql
+             * SELECT COUNT(*) FROM tester
+             *  WHERE (tester.nullable_amount IS NULL)
+             *    AND (tester.nullable_currency IS NULL)
+             * ```
+             */
+            tester.selectAll()
+                .where { tester.nullableMoney eq null }
+                .count() shouldBeEqualTo 2L
         }
     }
 
