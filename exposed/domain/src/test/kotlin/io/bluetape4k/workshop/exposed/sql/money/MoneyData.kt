@@ -34,6 +34,7 @@ internal class AccountDao(id: EntityID<Int>): IntEntity(id) {
     companion object: EntityClass<Int, AccountDao>(Account)
 
     val money: MonetaryAmount? by Account.composite_money
+
     val currency: CurrencyUnit? by Account.composite_money.currency
     val amount: BigDecimal? by Account.composite_money.amount
 
