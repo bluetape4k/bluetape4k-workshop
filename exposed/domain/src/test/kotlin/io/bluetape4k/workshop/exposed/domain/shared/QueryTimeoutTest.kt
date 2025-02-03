@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.exposed.domain.shared
 
 import com.impossibl.postgres.jdbc.PGSQLSimpleException
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.TestDB.POSTGRESQL
@@ -17,13 +19,22 @@ import java.sql.SQLException
 import java.sql.SQLTimeoutException
 import kotlin.test.fail
 
+/**
+ * [org.jetbrains.exposed.sql.Transaction.queryTimeout] 을 설정하여 SQL 쿼리 실행 시 Timeout 을 테스트합니다.
+ *
+ * [org.jetbrains.exposed.sql.Transaction.queryTimeout] = 0 이면 Timeout 이 없음을 의미합니다.
+ *
+ * [org.jetbrains.exposed.sql.Transaction.queryTimeout] < 0 이면 예외가 발생합니다.
+ */
 class QueryTimeoutTest: AbstractExposedTest() {
+
+    companion object: KLogging()
 
     private fun generateTimeoutStatement(db: TestDB, timeout: Int): String {
         return when (db) {
-            in TestDB.ALL_MYSQL    -> "SELECT SLEEP($timeout) = 0;"
+            in TestDB.ALL_MYSQL -> "SELECT SLEEP($timeout) = 0;"
             in TestDB.ALL_POSTGRES -> "SELECT pg_sleep($timeout);"
-            else                   -> throw NotImplementedError()
+            else -> throw NotImplementedError()
         }
     }
 
@@ -41,9 +52,17 @@ class QueryTimeoutTest: AbstractExposedTest() {
         withDb(testDB) {
             this.queryTimeout = 3
             try {
-                TransactionManager.current().exec(
-                    generateTimeoutStatement(it, 5)
-                )
+                /**
+                 * ```sql
+                 * SELECT SLEEP(5) = 0;   -- MySQL
+                 * SELECT pg_sleep(5);    -- Postgre
+                 * ```
+                 */
+                val stmt = generateTimeoutStatement(it, 5).apply {
+                    log.debug { "Executing statement: $this" }
+                }
+                TransactionManager.current().exec(stmt)
+
                 fail("Should have thrown a timeout or cancelled statement exception")
             } catch (cause: ExposedSQLException) {
                 when (testDB) {
@@ -51,7 +70,7 @@ class QueryTimeoutTest: AbstractExposedTest() {
                     POSTGRESQL -> cause.cause shouldBeInstanceOf PSQLException::class
                     // PostgreSQLNG throws a regular PGSQLSimpleException with a cancelled statement message
                     POSTGRESQLNG -> cause.cause shouldBeInstanceOf PGSQLSimpleException::class
-                    else                -> cause.cause shouldBeInstanceOf SQLTimeoutException::class
+                    else -> cause.cause shouldBeInstanceOf SQLTimeoutException::class
                 }
             }
         }
@@ -64,12 +83,14 @@ class QueryTimeoutTest: AbstractExposedTest() {
 
         withDb(testDB) {
             this.queryTimeout = 3
-            TransactionManager.current().exec(
-                generateTimeoutStatement(it, 1)
-            )
+            TransactionManager.current()
+                .exec(generateTimeoutStatement(it, 1))
         }
     }
 
+    /**
+     * queryTimeout = 0 는 timeout 이 없음을 의미합니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `timeout zero with timeout statement`(testDB: TestDB) {
@@ -78,9 +99,8 @@ class QueryTimeoutTest: AbstractExposedTest() {
         withDb(testDB) {
             // 0 means no timeout
             this.queryTimeout = 0
-            TransactionManager.current().exec(
-                generateTimeoutStatement(it, 1)
-            )
+            TransactionManager.current()
+                .exec(generateTimeoutStatement(it, 1))
         }
     }
 
@@ -92,13 +112,16 @@ class QueryTimeoutTest: AbstractExposedTest() {
         withDb(testDB) {
             this.queryTimeout = -1
             try {
-                TransactionManager.current().exec(
-                    generateTimeoutStatement(it, 1)
-                )
+                TransactionManager.current()
+                    .exec(generateTimeoutStatement(it, 1))
+
                 fail("Should have thrown a timeout or cancelled statement exception")
             } catch (cause: ExposedSQLException) {
+                log.debug(cause) { "queryTimeout: -1" }
+
                 when (testDB) {
                     // PostgreSQL throws a regular PSQLException with a minus timeout value
+                    // Query timeout must be a value greater than or equals to 0.
                     POSTGRESQL -> cause.cause shouldBeInstanceOf PSQLException::class
                     // MySQL, POSTGRESQLNG throws a regular SQLException with a minus timeout value
                     in (TestDB.ALL_MYSQL + POSTGRESQLNG) -> cause.cause shouldBeInstanceOf SQLException::class
@@ -106,7 +129,7 @@ class QueryTimeoutTest: AbstractExposedTest() {
                     // in TestDB.ALL_MARIADB -> assertTrue(cause.cause is SQLSyntaxErrorException)
                     // SqlServer throws a regular SQLServerException with a minus timeout value
                     // TestDB.SQLSERVER -> assertTrue(cause.cause is SQLServerException)
-                    else                                        -> throw NotImplementedError()
+                    else -> throw NotImplementedError()
                 }
             }
         }
