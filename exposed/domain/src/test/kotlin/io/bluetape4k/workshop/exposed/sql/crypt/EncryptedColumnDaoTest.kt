@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.exposed.sql.crypt
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.crypt.Algorithms
@@ -25,6 +26,15 @@ class EncryptedColumnDaoTest: AbstractExposedTest() {
         private val encryptor = Algorithms.AES_256_PBE_GCM("passwd", "12345678")
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS test (
+     *      id SERIAL PRIMARY KEY,
+     *      "varchar" VARCHAR(100) NOT NULL,
+     *      "binary" bytea NOT NULL
+     * )
+     * ```
+     */
     object TestTable: IntIdTable() {
         val varchar = encryptedVarchar("varchar", 100, encryptor)
         val binary = encryptedBinary("binary", 100, encryptor)
@@ -35,6 +45,10 @@ class EncryptedColumnDaoTest: AbstractExposedTest() {
 
         var varchar by TestTable.varchar
         var binary by TestTable.binary
+
+        override fun equals(other: Any?): Boolean = other is ETest && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "ETest($idValue, varchar=$varchar, binary=$binary)"
     }
 
     /**
@@ -62,11 +76,13 @@ class EncryptedColumnDaoTest: AbstractExposedTest() {
             entity.varchar shouldBeEqualTo varcharValue
             entity.binary shouldBeEqualTo binaryValue
 
+            // Entity를 통해 조회
             ETest.all().first().let {
                 it.varchar shouldBeEqualTo varcharValue
                 it.binary shouldBeEqualTo binaryValue
             }
 
+            // DSL을 통해 조회
             TestTable.selectAll().first().let {
                 it[TestTable.varchar] shouldBeEqualTo varcharValue
                 it[TestTable.binary] shouldBeEqualTo binaryValue
@@ -75,7 +91,10 @@ class EncryptedColumnDaoTest: AbstractExposedTest() {
     }
 
     /**
-     * Insert a new record with encrypted values
+     * find by encrypted value
+     *
+     * Exposed Encryptor는 매번 다른 값으로 암호화하기 때문에, WHERE 절에 쓸 수는 없습니다.
+     * Jasypt 를 사용해서 매번 같은 값으로 암호화를 하도록 하면 가능합니다.
      *
      * ```sql
      * INSERT INTO TEST ("varchar", "binary")
