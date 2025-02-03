@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.exposed.domain.shared.types
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
@@ -10,6 +11,7 @@ import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldHaveSize
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
+import org.jetbrains.exposed.dao.entityCache
 import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
@@ -58,7 +60,9 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
      *      id SERIAL PRIMARY KEY,
      *      multi_array INT[][] NOT NULL
      * );
+     *
      * INSERT INTO test_table (multi_array) VALUES (ARRAY[[1,2,3],[4,5,6],[7,8,9]]);
+     *
      * SELECT test_table.id, test_table.multi_array FROM test_table;
      * ```
      */
@@ -78,6 +82,7 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
             statement[tester.multiArray].flatten() shouldBeEqualTo list.flatten()
 
             val value = tester.selectAll().first()[tester.multiArray]
+            value shouldBeEqualTo list
             value.flatten() shouldBeEqualTo list.flatten()
         }
     }
@@ -90,7 +95,9 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
      *      id SERIAL PRIMARY KEY,
      *      multi_array INT[][][] NOT NULL
      * );
+     *
      * INSERT INTO test_table (multi_array) VALUES (ARRAY[[[1,2],[3,4]],[[5,6],[7,8]]]);
+     *
      * SELECT test_table.id, test_table.multi_array FROM test_table;
      * ```
      */
@@ -114,6 +121,7 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
             statement[tester.multiArray].flatten().flatten() shouldBeEqualTo list.flatten().flatten()
 
             val value = tester.selectAll().first()[tester.multiArray]
+            value shouldBeEqualTo list
             value.flatten().flatten() shouldBeEqualTo list.flatten().flatten()
         }
     }
@@ -128,6 +136,7 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
      * );
      *
      * INSERT INTO test_table (multi_array) VALUES (ARRAY[[[[['Hallo','MultiDimensional','Array']]]]]);
+     *
      * SELECT test_table.id, test_table.multi_array FROM test_table;
      * ```
      */
@@ -150,13 +159,14 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
                     list.flatten().flatten().flatten().flatten()
 
             val value = tester.selectAll().first()[tester.multiArray]
+            value shouldBeEqualTo list
             value.flatten().flatten().flatten().flatten() shouldBeEqualTo
                     list.flatten().flatten().flatten().flatten()
         }
     }
 
     /**
-     * 2차원 배열을 저장하고 조회한다. (Postgres 만 지원)
+     * 2차원 배열을 기본값으로 저장하고 조회한다. (Postgres 만 지원)
      *
      * ```sql
      * CREATE TABLE IF NOT EXISTS test_table (
@@ -165,6 +175,7 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
      * );
      *
      * INSERT INTO test_table  DEFAULT VALUES;
+     *
      * SELECT test_table.id, test_table.multi_array FROM test_table
      * ```
      */
@@ -187,6 +198,7 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
             statement[testerDatabaseGenerated.multiArray].flatten() shouldBeEqualTo default.flatten()
 
             val value = testerDatabaseGenerated.selectAll().first()[testerDatabaseGenerated.multiArray]
+            value shouldBeEqualTo default
             value.flatten() shouldBeEqualTo default.flatten()
         }
     }
@@ -201,6 +213,7 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
      * );
      *
      * INSERT INTO test_table (multi_array) VALUES (ARRAY[[1,2,3],[4,5,6]]);
+     *
      * SELECT test_table.id, test_table.multi_array FROM test_table
      * ```
      */
@@ -220,6 +233,7 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
                 it[tester.multiArray] = list
             }
 
+            tester.selectAll().first()[tester.multiArray] shouldBeEqualTo list
             tester.selectAll().first()[tester.multiArray].flatten() shouldBeEqualTo list.flatten()
         }
     }
@@ -234,6 +248,7 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
      * );
      *
      * INSERT INTO test_table (multi_array) VALUES (NULL);
+     *
      * SELECT test_table.id, test_table.multi_array FROM test_table;
      */
     @ParameterizedTest
@@ -264,6 +279,7 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
      * );
      *
      * INSERT INTO test_table (multi_array) VALUES (ARRAY[[1,2],[3,4]]);
+     *
      * SELECT test_table.id, test_table.multi_array FROM test_table;
      * ```
      */
@@ -284,6 +300,7 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
             }
 
             val value = tester.selectAll().first()[tester.multiArray]
+            value shouldBeEqualTo list
             value.flatten() shouldBeEqualTo list.flatten()
         }
     }
@@ -298,6 +315,7 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
      * );
      *
      * INSERT INTO test_table (multi_array) VALUES (ARRAY[[1,2],[3,4]]);
+     *
      * SELECT test_table.id, test_table.multi_array FROM test_table
      * ```
      */
@@ -318,6 +336,7 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
             }
 
             val value = tester.selectAll().first()[tester.multiArray]
+            value shouldBeEqualTo list
             value.flatten() shouldBeEqualTo list.flatten()
         }
     }
@@ -331,10 +350,15 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
      *      multi_array INT[][] NOT NULL
      * )
      * INSERT INTO test_table (multi_array) VALUES (ARRAY[[1,2],[3,4]]);
-     * SELECT test_table.id, test_table.multi_array FROM test_table WHERE test_table.id = 1;
+     * SELECT test_table.id, test_table.multi_array
+     *   FROM test_table WHERE test_table.id = 1;
      *
-     * UPDATE test_table SET multi_array=ARRAY[[5,6],[7,8]] WHERE test_table.id = 1;
-     * SELECT test_table.id, test_table.multi_array FROM test_table WHERE test_table.id = 1;
+     * UPDATE test_table SET multi_array=ARRAY[[5,6],[7,8]]
+     *  WHERE test_table.id = 1;
+     *
+     * SELECT test_table.id, test_table.multi_array
+     *   FROM test_table
+     *  WHERE test_table.id = 1;
      * ```
      */
     @ParameterizedTest
@@ -354,6 +378,7 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
             }
 
             var value = tester.selectAll().where { tester.id eq insertedId }.first()[tester.multiArray]
+            value shouldBeEqualTo initialArray
             value.flatten() shouldBeEqualTo initialArray.flatten()
 
             val updatedArray = listOf(listOf(5, 6), listOf(7, 8))
@@ -364,6 +389,7 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
             }
 
             value = tester.selectAll().where { tester.id eq insertedId }.first()[tester.multiArray]
+            value shouldBeEqualTo updatedArray
             value.flatten() shouldBeEqualTo updatedArray.flatten()
         }
     }
@@ -376,16 +402,14 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
      *      id SERIAL PRIMARY KEY,
      *      multi_array INT[][] NOT NULL
      * );
+     *
      * INSERT INTO test_table (multi_array) VALUES (ARRAY[[1,2],[3,4]]);
-     * SELECT test_table.id, test_table.multi_array FROM test_table WHERE test_table.id = 1;
      *
      * INSERT INTO test_table (id, multi_array) VALUES (1, ARRAY[[5,6],[7,8]])
      *     ON CONFLICT (id) DO UPDATE SET multi_array=ARRAY[[5,6],[7,8]];
-     * SELECT test_table.id, test_table.multi_array FROM test_table WHERE test_table.id = 1
      *
      * INSERT INTO test_table (multi_array) VALUES (ARRAY[[5,6],[7,8]])
      *     ON CONFLICT (id) DO UPDATE SET multi_array=EXCLUDED.multi_array;
-     * SELECT COUNT(*) FROM test_table
      * ```
      */
     @ParameterizedTest
@@ -405,6 +429,7 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
             }
 
             var value = tester.selectAll().where { tester.id eq id }.first()[tester.multiArray]
+            value shouldBeEqualTo initialArray
             value.flatten() shouldBeEqualTo initialArray.flatten()
 
             val updatedArray = listOf(listOf(5, 6), listOf(7, 8))
@@ -416,6 +441,7 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
             }
 
             value = tester.selectAll().where { tester.id eq id }.first()[tester.multiArray]
+            value shouldBeEqualTo updatedArray
             value.flatten() shouldBeEqualTo updatedArray.flatten()
 
             // Insert
@@ -430,12 +456,22 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
      * 2차원 배열을 저장하고 조회한다. (Postgres 만 지원)
      *
      * ```sql
-     * CREATE TABLE IF NOT EXISTS test_table (id SERIAL PRIMARY KEY, multi_array INT[][] NOT NULL)
-     * INSERT INTO test_table (multi_array) VALUES (ARRAY[[1,1],[1,4]])
-     * INSERT INTO test_table (multi_array) VALUES (ARRAY[[1,1],[2,4]])
-     * INSERT INTO test_table (multi_array) VALUES (ARRAY[[1,1],[1,6]])
-     * SELECT test_table.id, test_table.multi_array FROM test_table WHERE test_table.multi_array[2][2] = 4
-     * SELECT test_table.id, test_table.multi_array FROM test_table WHERE test_table.multi_array[2][2] > 10
+     * CREATE TABLE IF NOT EXISTS test_table (
+     *      id SERIAL PRIMARY KEY,
+     *      multi_array INT[][] NOT NULL
+     * );
+     *
+     * INSERT INTO test_table (multi_array) VALUES (ARRAY[[1,1],[1,4]]);
+     * INSERT INTO test_table (multi_array) VALUES (ARRAY[[1,1],[2,4]]);
+     * INSERT INTO test_table (multi_array) VALUES (ARRAY[[1,1],[1,6]]);
+     *
+     * SELECT test_table.id, test_table.multi_array
+     *   FROM test_table
+     *  WHERE test_table.multi_array[2][2] = 4;
+     *
+     * SELECT test_table.id, test_table.multi_array
+     *   FROM test_table
+     *  WHERE test_table.multi_array[2][2] > 10;
      * ```
      */
     @ParameterizedTest
@@ -479,10 +515,16 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
      * 2차원 배열을 저장하고 조회한다. (Postgres 만 지원)
      *
      * ```sql
-     * CREATE TABLE IF NOT EXISTS test_table (id SERIAL PRIMARY KEY, multi_array INT[][] NOT NULL);
-     * INSERT INTO test_table (multi_array) VALUES (ARRAY[[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]]);
+     * CREATE TABLE IF NOT EXISTS test_table (
+     *      id SERIAL PRIMARY KEY,
+     *      multi_array INT[][] NOT NULL
+     * );
      *
-     * SELECT test_table.multi_array[1:2][2:3] FROM test_table;
+     * INSERT INTO test_table (multi_array)
+     * VALUES (ARRAY[[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]]);
+     *
+     * SELECT test_table.multi_array[1:2][2:3]
+     *   FROM test_table;
      * ```
      */
     @ParameterizedTest
@@ -506,10 +548,19 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
 
             val alias = tester.multiArray.slice(1, 2).slice(2, 3)
             val query = tester.select(alias).first()
+            query[alias] shouldBeEqualTo listOf(listOf(2, 3), listOf(6, 7))
             query[alias].flatten() shouldBeEqualTo listOf(2, 3, 6, 7)
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS multiarray (
+     *      id SERIAL PRIMARY KEY,
+     *      multi_array INT[][] NOT NULL
+     * );
+     * ```
+     */
     object MultiArrayTable: IntIdTable() {
         val multiArray: Column<List<List<Int>>> = array2<Int>("multi_array")
     }
@@ -518,13 +569,16 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
         companion object: IntEntityClass<MultiArrayEntity>(MultiArrayTable)
 
         var multiArray: List<List<Int>> by MultiArrayTable.multiArray
+
+        override fun equals(other: Any?): Boolean = other is MultiArrayEntity && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "MultiArrayEntity(id=$idValue, multiArray=$multiArray)"
     }
 
     /**
-     * 2차원 배열을 저장하고 조회한다. (Postgres 만 지원)
+     * 엔티티를 사용하여 2차원 배열을 저장하고 조회한다. (Postgres 만 지원)
      *
      * ```sql
-     * CREATE TABLE IF NOT EXISTS multiarray (id SERIAL PRIMARY KEY, multi_array INT[][] NOT NULL)
      * INSERT INTO multiarray (multi_array) VALUES (ARRAY[[1,2],[3,4]])
      * ```
      */
@@ -544,6 +598,7 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
             flushCache()
 
             val fetchedList = MultiArrayEntity.findById(entity.id)?.multiArray
+            fetchedList shouldBeEqualTo initialArray
             fetchedList!!.flatten() shouldBeEqualTo initialArray.flatten()
         }
     }
@@ -552,8 +607,8 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
      * 2차원 배열을 저장하고 Update 한다. (Postgres 만 지원)
      *
      * ```sql
-     * CREATE TABLE IF NOT EXISTS multiarray (id SERIAL PRIMARY KEY, multi_array INT[][] NOT NULL);
      * INSERT INTO multiarray (multi_array) VALUES (ARRAY[[1,2],[3,4]]);
+     *
      * UPDATE multiarray SET multi_array=ARRAY[[5,6],[7,8]] WHERE id = 1;
      * ```
      */
@@ -568,15 +623,20 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
             val entity = MultiArrayEntity.new {
                 this.multiArray = initialArray
             }
-            entity.multiArray.flatten() shouldBeEqualTo initialArray.flatten()
+            entityCache.clear()
 
-            flushCache()
+            entity.multiArray shouldBeEqualTo initialArray
+            entity.multiArray.flatten() shouldBeEqualTo initialArray.flatten()
 
             val updatedArray = listOf(listOf(5, 6), listOf(7, 8))
             entity.multiArray = updatedArray
 
+            entityCache.clear()
+
             val fetchedEntity = MultiArrayEntity.findById(entity.id)
             fetchedEntity shouldBeEqualTo entity // Same reference
+
+            fetchedEntity!!.multiArray shouldBeEqualTo updatedArray
             fetchedEntity!!.multiArray.flatten() shouldBeEqualTo updatedArray.flatten()
         }
     }
