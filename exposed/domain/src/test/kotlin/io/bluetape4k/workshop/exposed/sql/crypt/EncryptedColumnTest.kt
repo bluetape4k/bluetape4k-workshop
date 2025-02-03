@@ -61,6 +61,17 @@ class EncryptedColumnTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `encrypted column type with a string`(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS stringtable (
+         *      id SERIAL PRIMARY KEY,
+         *      "name" VARCHAR(80) NOT NULL,        -- AES_256_PBE_CBC
+         *      city VARCHAR(80) NOT NULL,          -- AES_256_PBE_GCM
+         *      address VARCHAR(100) NOT NULL,      -- BLOW_FISH
+         *      age VARCHAR(100) NOT NULL           -- TRIPLE_DES
+         * )
+         * ```
+         */
         val nameEncryptor = Algorithms.AES_256_PBE_CBC("passwd", "5c0744940b5c369b")
         val stringTable = object: IntIdTable("StringTable") {
             val name = encryptedVarchar("name", 80, nameEncryptor)
@@ -73,6 +84,17 @@ class EncryptedColumnTest: AbstractExposedTest() {
             val logCaptor = LogCaptor.forName(exposedLogger.name)
             logCaptor.setLogLevelToDebug()
 
+            /**
+             * ```sql
+             * -- Base64 encoded string
+             * INSERT INTO stringtable ("name", city, address, age)
+             * VALUES (Ny/Xkij4SFLuCTT2fWZpVh3s0LTIfyKC59JPZPSOdu8=,
+             *         R+NiRhvJ60s+AFqK6+ULu5HdQY0+/ZQDYQYM/9CgKiz2zpixFAR5ng==,
+             *         w6iiV7UMvhzfCyERcyae5w==,
+             *         czkyHR39GE5uH1JBNe01ow==
+             * )
+             * ```
+             */
             val insertedStrings = listOf("testName", "testCity", "testAddress", "testAge")
             val (insertedName, insertedCity, insertedAddress, insertedAge) = insertedStrings
             val id1 = stringTable.insertAndGetId {
@@ -90,32 +112,18 @@ class EncryptedColumnTest: AbstractExposedTest() {
             logCaptor.resetLogLevel()
             logCaptor.close()
 
-            stringTable.selectAll().count().toInt() shouldBeEqualTo 1
+            stringTable.selectAll().count() shouldBeEqualTo 1L
 
-            stringTable.selectAll()
-                .where { stringTable.id eq id1 }
-                .first()[stringTable.name] shouldBeEqualTo insertedName
+            val row = stringTable.selectAll().where { stringTable.id eq id1 }.single()
 
-            stringTable.selectAll()
-                .where { stringTable.id eq id1 }
-                .first()[stringTable.city] shouldBeEqualTo insertedCity
-
-
-            stringTable.selectAll()
-                .where { stringTable.id eq id1 }
-                .first()[stringTable.address] shouldBeEqualTo insertedAddress
-
-
-            stringTable.selectAll()
-                .where { stringTable.id eq id1 }
-                .first()[stringTable.age] shouldBeEqualTo insertedAge
+            row[stringTable.name] shouldBeEqualTo insertedName
+            row[stringTable.city] shouldBeEqualTo insertedCity
+            row[stringTable.address] shouldBeEqualTo insertedAddress
+            row[stringTable.age] shouldBeEqualTo insertedAge
 
             /**
-             * TODO: 암호화된 컬럼으로 검색은 불가능하다. --> 이거 개선해야 한다.
-             */
-
-            /**
-             * TODO: 암호화된 컬럼으로 검색은 불가능하다. --> 이거 개선해야 한다.
+             * TODO: 암호화된 컬럼으로 검색은 불가능하다. --> 매번 암호화 할 때마다 다른 결과를 가지게 한다. 물론 복호화는 잘된다.
+             * HINT: jasypt 를 활용해 암호화 시 항상 같은 결과를 내도록 해서 검색이 가능하도록 할 수 있다.
              */
             assertFailsWith<AssertionError> {
                 stringTable.selectAll()
@@ -128,6 +136,17 @@ class EncryptedColumnTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `update encrypted column type`(testDB: TestDB) {
+
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS stringtable (
+         *      id SERIAL PRIMARY KEY,
+         *      "name" VARCHAR(100) NOT NULL,       -- AES_256_PBE_GCM
+         *      city bytea NOT NULL,                -- AES_256_PBE_CBC
+         *      address VARCHAR(100) NOT NULL       -- BLOW_FISH
+         * )
+         * ```
+         */
         val stringTable = object: IntIdTable("StringTable") {
             val name = encryptedVarchar("name", 100, Algorithms.AES_256_PBE_GCM("passwd", "12345678"))
             val city = encryptedBinary("city", 100, Algorithms.AES_256_PBE_CBC("passwd", "12345678"))
@@ -138,6 +157,15 @@ class EncryptedColumnTest: AbstractExposedTest() {
             val logCaptor = LogCaptor.forName(exposedLogger.name)
             logCaptor.setLogLevelToDebug()
 
+            /**
+             * ```sql
+             * INSERT INTO stringtable ("name", city, address)
+             * VALUES (GLYN2dtSPlEklEDqu2WuXdsOtQBLSUZ+5QgW8AdrHvfVj5JBQSQT5Q==,
+             *        [B@677349fb,
+             *        NCoXob9KL2ffCyERcyae5w==
+             * )
+             * ```
+             */
             val insertedStrings = listOf("TestName", "TestCity", "TestAddress")
             val (insertedName, insertedCity, insertedAddress) = insertedStrings
             val id = stringTable.insertAndGetId {
@@ -152,6 +180,15 @@ class EncryptedColumnTest: AbstractExposedTest() {
 
             logCaptor.clearLogs()
 
+            /**
+             * ```sql
+             * UPDATE stringtable
+             *    SET "name"=V8kN75IkkYqYAejR/Xz4Vs7hakXQGRrVL7vcCzTRku8dgwfqR5Ft+tE=,
+             *        city=[B@4466cf5d,
+             *        address=NCoXob9KL2cVJbWS6U+KeQ==
+             *  WHERE stringtable.id = 1
+             * ```
+             */
             val updatedStrings = listOf("TestName2", "TestCity2", "TestAddress2")
             val (updatedName, updatedCity, updatedAddress) = updatedStrings
             stringTable.update({ stringTable.id eq id }) {
@@ -168,20 +205,15 @@ class EncryptedColumnTest: AbstractExposedTest() {
             logCaptor.resetLogLevel()
             logCaptor.close()
 
-            stringTable.selectAll().count().toInt() shouldBeEqualTo 1
+            stringTable.selectAll().count() shouldBeEqualTo 1L
 
-            stringTable.selectAll()
+            val row = stringTable.selectAll()
                 .where { stringTable.id eq id }
-                .first()[stringTable.name] shouldBeEqualTo updatedName
+                .first()
 
-            stringTable.selectAll()
-                .where { stringTable.id eq id }
-                .first()[stringTable.city]
-                .toUtf8String() shouldBeEqualTo updatedCity
-
-            stringTable.selectAll()
-                .where { stringTable.id eq id }
-                .first()[stringTable.address] shouldBeEqualTo updatedAddress
+            row[stringTable.name] shouldBeEqualTo updatedName
+            row[stringTable.city].toUtf8String() shouldBeEqualTo updatedCity
+            row[stringTable.address] shouldBeEqualTo updatedAddress
         }
     }
 }
