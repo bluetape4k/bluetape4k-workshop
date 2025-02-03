@@ -4,6 +4,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.money.moneyOf
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
@@ -24,23 +25,23 @@ class MoneyDefaultsTest: AbstractExposedTest() {
     companion object: KLogging()
 
     /**
-     * H2:
+     * Postgres:
      * ```sql
-     * CREATE TABLE IF NOT EXISTS TABLEWITHDBDEFAULT (
-     *      ID INT AUTO_INCREMENT PRIMARY KEY,
-     *      FIELD VARCHAR(100) NOT NULL,
-     *      T1 DECIMAL(10, 0) DEFAULT 1 NOT NULL,
+     * CREATE TABLE IF NOT EXISTS tablewithdbdefault (
+     *      id SERIAL PRIMARY KEY,
+     *      field VARCHAR(100) NOT NULL,
+     *      t1 DECIMAL(10, 0) DEFAULT 1 NOT NULL,
      *      "t1_C" VARCHAR(3) DEFAULT 'USD' NOT NULL,
-     *      T2 DECIMAL(10, 0) NULL,
+     *      t2 DECIMAL(10, 0) NULL,
      *      "t2_C" VARCHAR(3) NULL,
      *      "clientDefault" INT NOT NULL
      * )
      * ```
      */
     object TableWithDBDefault: IntIdTable("TableWithDBDefault") {
-        val defaultValue = moneyOf(BigDecimal.ONE, "USD")
+        internal val defaultValue = moneyOf(BigDecimal.ONE, "USD") // 컬럼이 아닙니다.
+        internal val cIndex = AtomicInteger(0)  // 컬럼이 아닙니다.
 
-        val cIndex = AtomicInteger(0)
         val field = varchar("field", 100)
         val t1 = compositeMoney(10, 0, "t1").default(defaultValue)
         val t2 = compositeMoney(10, 0, "t2").nullable()
@@ -55,23 +56,28 @@ class MoneyDefaultsTest: AbstractExposedTest() {
         var t2 by TableWithDBDefault.t2
         val clientDefault by TableWithDBDefault.clientDefault
 
-        override fun equals(other: Any?): Boolean {
-            if (this === other) return true
-            return other is DBDefault &&
+        override fun equals(other: Any?): Boolean =
+            other is DBDefault &&
                     t1 == other.t1 &&
                     t2 == other.t2 &&
                     clientDefault == other.clientDefault
-        }
 
-        override fun hashCode(): Int = id.value.hashCode()
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String =
+            "DBDefault(id=$idValue, field=$field, t1=$t1, t2=$t2, clientDefault=$clientDefault)"
     }
 
     /**
      * 기본값을 명시적으로 설정한 경우를 테스트합니다.
      *
+     * Postgres:
      * ```sql
-     * INSERT INTO TABLEWITHDBDEFAULT (FIELD, T1, "t1_C", "clientDefault") VALUES ('1', 1, 'USD', 0)
-     * INSERT INTO TABLEWITHDBDEFAULT (FIELD, T1, "t1_C", "clientDefault") VALUES ('2', 10, 'USD', 1)
+     * INSERT INTO tablewithdbdefault (field, t1, "t1_C", "clientDefault")
+     * VALUES ('1', 1, 'USD', 7);
+     *
+     * -- t1 컬럼에 10 'USD' 를 설정합니다.
+     * INSERT INTO tablewithdbdefault (field, t1, "t1_C", "clientDefault")
+     * VALUES ('2', 10, 'USD', 8);
      * ```
      */
     @ParameterizedTest
@@ -95,6 +101,19 @@ class MoneyDefaultsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * 엔티티별로 기본값 조회는 한번만 수행됩니다.
+     *
+     * ```sql
+     * -- 2번 수행해도 t1 의 기본값은 1 입니다.
+     *
+     * INSERT INTO tablewithdbdefault (field, t1, "t1_C", "clientDefault")
+     * VALUES ('1', 1, 'USD', 0);
+     *
+     * INSERT INTO tablewithdbdefault (field, t1, "t1_C", "clientDefault")
+     * VALUES ('2', 1, 'USD', 1);
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `defaults invoked only once per entity`(testDB: TestDB) {
@@ -115,13 +134,17 @@ class MoneyDefaultsTest: AbstractExposedTest() {
     }
 
     /**
-     * H2:
+     * Postgres:
      * ```sql
-     * -- insert
-     * INSERT INTO TABLEWITHDBDEFAULT (FIELD, T1, "t1_C", "clientDefault") VALUES ('1', 1, 'USD', 0)
+     * -- insert 시 nullable 컬럼은 null 로 설정됩니다.
+     * INSERT INTO tablewithdbdefault (field, t1, "t1_C", "clientDefault")
+     * VALUES ('1', 1, 'USD', 0)
      *
-     * -- update
-     * UPDATE TABLEWITHDBDEFAULT SET T2=10, "t2_C"='USD' WHERE TABLEWITHDBDEFAULT.ID = 1
+     * -- update for nullable money column
+     * UUPDATE tablewithdbdefault
+     *     SET t2=10,
+     *         "t2_C"='USD'
+     *   WHERE tablewithdbdefault.id = 1
      * ```
      */
     @ParameterizedTest
