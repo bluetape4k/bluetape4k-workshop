@@ -44,6 +44,9 @@ class DoubleColumnTypeTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * `DOUBLE PRECISION` 타입을 사용하는 컬럼을 `REAL` 타입으로 변경해도 작동한다
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert and select from real column`(testDB: TestDB) {
@@ -56,16 +59,10 @@ class DoubleColumnTypeTest: AbstractExposedTest() {
              *
              * Postgres:
              * ```sql
-             * CREATE TABLE IF NOT EXISTS double_table (id SERIAL PRIMARY KEY, amount REAL NOT NULL)
-             * ```
-             */
-
-            /**
-             * create table with double() column that uses SQL type REAL
-             *
-             * Postgres:
-             * ```sql
-             * CREATE TABLE IF NOT EXISTS double_table (id SERIAL PRIMARY KEY, amount REAL NOT NULL)
+             * CREATE TABLE IF NOT EXISTS double_table (
+             *      id SERIAL PRIMARY KEY,
+             *      amount REAL NOT NULL
+             * )
              * ```
              */
             TestTable.ddl
