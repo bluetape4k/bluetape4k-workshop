@@ -3,6 +3,15 @@ package io.bluetape4k.workshop.exposed.domain.shared
 import org.jetbrains.exposed.sql.ReferenceOption
 import org.jetbrains.exposed.sql.Table
 
+/**
+ * Postgres:
+ * ```sql
+ * CREATE TABLE IF NOT EXISTS category (
+ *      id INT PRIMARY KEY,
+ *      "name" VARCHAR(20) NOT NULL
+ * );
+ * ```
+ */
 object Category: Table("Category") {
     val id = integer("id")
     val name = varchar("name", length = 20)
@@ -12,6 +21,19 @@ object Category: Table("Category") {
 
 const val DEFAULT_CATEGORY_ID = 0
 
+/**
+ * Postgres:
+ * ```sql
+ * CREATE TABLE IF NOT EXISTS item (
+ *      id INT PRIMARY KEY,
+ *      "name" VARCHAR(20) NOT NULL,
+ *      "categoryId" INT DEFAULT 0 NOT NULL,
+ *
+ *      CONSTRAINT fk_item_categoryid__id FOREIGN KEY ("categoryId")
+ *      REFERENCES category(id) ON DELETE SET DEFAULT
+ * )
+ * ```
+ */
 object Item: Table("Item") {
     val id = integer("id")
     val name = varchar("name", length = 20)

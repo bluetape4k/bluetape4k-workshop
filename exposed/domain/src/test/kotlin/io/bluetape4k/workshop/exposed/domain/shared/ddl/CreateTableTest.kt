@@ -731,17 +731,7 @@ class CreateTableTest: AbstractExposedTest() {
         }
     }
 
-    /**
-     * ```sql
-     * CREATE TABLE IF NOT EXISTS ITEM (
-     *      ID INT PRIMARY KEY,
-     *      "name" VARCHAR(20) NOT NULL,
-     *      "categoryId" INT DEFAULT 0 NOT NULL,
-     *
-     *      CONSTRAINT FK_ITEM_CATEGORYID__ID FOREIGN KEY ("categoryId") REFERENCES CATEGORY(ID) ON DELETE SET DEFAULT
-     * )
-     * ```
-     */
+
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create Table With OnDelete Set Default`(testDB: TestDB) {
@@ -760,6 +750,11 @@ class CreateTableTest: AbstractExposedTest() {
 
             log.debug { "DDL: ${Item.ddl}" }
             Item.ddl shouldBeEqualTo expected
+        }
+
+        withTables(testDB, Category, Item) {
+            log.debug { "Item DDL:\n${Item.ddl.first()}" }
+            log.debug { "Category DDL:\n${Category.ddl.first()}" }
         }
     }
 
