@@ -49,7 +49,15 @@ class DDLTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `table exists`(testDB: TestDB) {
-        val testTable = object: Table() {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS "testTable" (
+         *      id INT PRIMARY KEY,
+         *      "name" VARCHAR(42) NOT NULL
+         * )
+         * ```
+         */
+        val testTable = object: Table("testTable") {
             val id = integer("id")
             val name = varchar("name", length = 42)
 
@@ -123,6 +131,15 @@ class DDLTest: AbstractExposedTest() {
     fun `keyword identifiers without opt out`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB in TestDB.ALL_H2 }
 
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS "data" (
+         *      "public" BOOLEAN NOT NULL,
+         *      "key" INT NOT NULL,
+         *      "constraint" VARCHAR(32) NOT NULL
+         * )
+         * ```
+         */
         val keywords = listOf("data", "public", "key", "constraint")
         val keywordTable = object: Table(keywords[0]) {
             val public = bool(keywords[1])
@@ -139,7 +156,7 @@ class DDLTest: AbstractExposedTest() {
             val (tableName, publicName, dataName, constraintName) = keywords.map {
                 when (currentDialectTest) {
                     is MysqlDialect -> "`$it`"
-                    else            -> "\"$it\""
+                    else -> "\"$it\""
                 }
             }
 
@@ -171,7 +188,16 @@ class DDLTest: AbstractExposedTest() {
         }
     }
 
-    // Placed outside test function to shorten generated name
+    /**
+     * Placed outside test function to shorten generated name
+     *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS "unnamedtable$1" (
+     *      id INT PRIMARY KEY,
+     *      "name" VARCHAR(42) NOT NULL
+     * );
+     * ```
+     */
     val unnamedTable = object: Table() {
         val id = integer("id")
         val name = varchar("name", 42)
@@ -217,11 +243,17 @@ class DDLTest: AbstractExposedTest() {
         }
     }
 
-    @ParameterizedTest
-    @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `table with different column types SQL 01`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 }
-
+    fun `table with different column types SQL 01`() {
+        /**
+         * H2:
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS DIFFERENT_COLUMN_TYPES (
+         *      ID INT AUTO_INCREMENT NOT NULL,
+         *      "name" VARCHAR(42) PRIMARY KEY,
+         *      AGE INT NULL
+         * )
+         * ```
+         */
         val testTable = object: Table("different_column_types") {
             val id = integer("id").autoIncrement()
             val name = varchar("name", 42)
@@ -230,7 +262,7 @@ class DDLTest: AbstractExposedTest() {
             override val primaryKey = PrimaryKey(name)
         }
 
-        withTables(testDB, testTable) {
+        withTables(TestDB.H2, testTable) {
             val varCharType = currentDialectTest.dataTypeProvider.varcharType(42)
 
             log.debug { "DDL: ${testTable.ddl.single()}" }
@@ -247,7 +279,18 @@ class DDLTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `table with different column types SQL 02`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB != TestDB.MYSQL_V5 }
-
+        /**
+         * Postgres:
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS with_different_column_types (
+         *      id INT,
+         *      "name" VARCHAR(42),
+         *      age INT NULL,
+         *
+         *      CONSTRAINT pk_with_different_column_types PRIMARY KEY (id, "name")
+         * )
+         * ```
+         */
         val testTable = object: Table("with_different_column_types") {
             val id = integer("id")
             val name = varchar("name", 42)
@@ -278,10 +321,28 @@ class DDLTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `auto increment on unsigned columns`(testDB: TestDB) {
         // separate tables are necessary as some db only allow a single column to be auto-incrementing
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS u_int_tester (
+         *      id BIGSERIAL PRIMARY KEY,
+         *
+         *      CONSTRAINT chk_u_int_tester_unsigned_id
+         *          CHECK (id BETWEEN 0 AND 4294967295)
+         * )
+         * ```
+         */
         val uIntTester = object: Table("u_int_tester") {
             val id = uinteger("id").autoIncrement()
             override val primaryKey = PrimaryKey(id)
         }
+
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS u_long_tester (
+         *      id BIGSERIAL PRIMARY KEY
+         * )
+         * ```
+         */
         val uLongTester = object: Table("u_long_tester") {
             val id = ulong("id").autoIncrement()
             override val primaryKey = PrimaryKey(id)
@@ -299,6 +360,16 @@ class DDLTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `table with multi PK and auto increment`(testDB: TestDB) {
+        /**
+         * Postgres:
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS footable (
+         *      bar INT,
+         *      id BIGSERIAL,
+         *      CONSTRAINT pk_FooTable PRIMARY KEY (id, bar)
+         * );
+         * ```
+         */
         val foo = object: IdTable<Long>("FooTable") {
             val bar = integer("bar")
             override val id: Column<EntityID<Long>> = long("id").entityId().autoIncrement()
@@ -321,18 +392,23 @@ class DDLTest: AbstractExposedTest() {
         }
     }
 
-    @ParameterizedTest
-    @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `primary key on text column in H2`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 }
-
+    @Test
+    fun `primary key on text column in H2`() {
+        /**
+         * H2:
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS TEXT_PK_TABLE (
+         *      COLUMN_1 TEXT PRIMARY KEY
+         * );
+         * ```
+         */
         val testTable = object: Table("text_pk_table") {
             val column1 = text("column_1")
 
             override val primaryKey = PrimaryKey(column1)
         }
 
-        withDb(testDB) {
+        withDb(TestDB.H2) {
             val h2Dialect = currentDialectTest as H2Dialect
             val isOracleMode = h2Dialect.h2Mode == Oracle
             val singleColumnDescription = testTable.columns.single().descriptionDdl(false)
@@ -353,6 +429,14 @@ class DDLTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `indices 01`(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS t1 (
+         *      id INT PRIMARY KEY,
+         *      "name" VARCHAR(255) NOT NULL
+         * );
+         * CREATE INDEX t1_name ON t1 ("name");
+         */
         val t = object: Table("t1") {
             val id = integer("id")
             val name = varchar("name", 255).index()
@@ -374,6 +458,18 @@ class DDLTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `indices 02`(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS t2 (
+         *      id INT PRIMARY KEY,
+         *      lvalue INT NOT NULL,
+         *      rvalue INT NOT NULL,
+         *      "name" VARCHAR(255) NOT NULL
+         * );
+         *
+         * CREATE INDEX t2_name ON t2 ("name");
+         * CREATE INDEX t2_lvalue_rvalue ON t2 (lvalue, rvalue);
+         */
         val t = object: Table("t2") {
             val id = integer("id")
             val lvalue = integer("lvalue")
@@ -403,11 +499,14 @@ class DDLTest: AbstractExposedTest() {
         }
     }
 
-    @ParameterizedTest
-    @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `index on text column in H2`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 }
-
+    @Test
+    fun `index on text column in H2`() {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS TEST_INDEX_TABLE (COLUMN_1 TEXT NOT NULL);
+         * CREATE INDEX TEST_INDEX_TABLE_COLUMN_1 ON TEST_INDEX_TABLE (COLUMN_1);
+         * ```
+         */
         val testTable = object: Table("test_index_table") {
             val column1 = text("column_1")
 
@@ -416,7 +515,7 @@ class DDLTest: AbstractExposedTest() {
             }
         }
 
-        withDb(testDB) {
+        withDb(TestDB.H2) {
             val h2Dialect = currentDialectTest as H2Dialect
             val isOracleMode = h2Dialect.h2Mode == Oracle
             val tableProperName = testTable.tableName.inProperCase()
@@ -444,6 +543,16 @@ class DDLTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `unique indices 01`(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS t1 (
+         *      id INT PRIMARY KEY,
+         *      "name" VARCHAR(255) NOT NULL
+         * );
+         *
+         * ALTER TABLE t1 ADD CONSTRAINT t1_name_unique UNIQUE ("name");
+         * ```
+         */
         val t = object: Table("t1") {
             val id = integer("id")
             val name = varchar("name", 255).uniqueIndex()
@@ -466,6 +575,16 @@ class DDLTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `unique indices custom name`(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS t1 (
+         *      id INT PRIMARY KEY,
+         *      "name" VARCHAR(255) NOT NULL
+         * );
+         *
+         * ALTER TABLE t1 ADD CONSTRAINT U_T1_NAME UNIQUE ("name");
+         * ```
+         */
         val t = object: Table("t1") {
             val id = integer("id")
             val name = varchar("name", 255).uniqueIndex("U_T1_NAME")
@@ -488,6 +607,14 @@ class DDLTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `multi column index`(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS t1 ("type" VARCHAR(255) NOT NULL, "name" VARCHAR(255) NOT NULL);
+         *
+         * CREATE INDEX t1_name_type ON t1 ("name", "type");
+         * ALTER TABLE t1
+         *      ADD CONSTRAINT t1_type_name_unique UNIQUE ("type", "name");
+         */
         val t = object: Table("t1") {
             val type = varchar("type", 255)
             val name = varchar("name", 255)
@@ -519,6 +646,19 @@ class DDLTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `multi column index custom name`(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS t1 (
+         *      "type" VARCHAR(255) NOT NULL,
+         *      "name" VARCHAR(255) NOT NULL
+         * );
+         *
+         * CREATE INDEX I_T1_NAME_TYPE ON t1 ("name", "type");
+         *
+         *  ALTER TABLE t1
+         *      ADD CONSTRAINT U_T1_TYPE_NAME UNIQUE ("type", "name")
+         * ```
+         */
         val t = object: Table("t1") {
             val type = varchar("type", 255)
             val name = varchar("name", 255)
@@ -552,6 +692,13 @@ class DDLTest: AbstractExposedTest() {
     fun `binary without length`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB in (TestDB.ALL_H2 - TestDB.H2_MYSQL + TestDB.ALL_POSTGRES) }
 
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS tablewithbinary (
+         *      "binaryColumn" bytea NOT NULL
+         * );
+         * ```
+         */
         val tableWithBinary = object: Table("TableWithBinary") {
             val binaryColumn = binary("binaryColumn")
         }
