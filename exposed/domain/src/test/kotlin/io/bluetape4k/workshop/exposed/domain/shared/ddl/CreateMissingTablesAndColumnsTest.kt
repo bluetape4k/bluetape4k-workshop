@@ -70,8 +70,8 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
         }
 
         withTables(testDB, testTable) {
-            // SchemaUtils.createMissingTablesAndColumns(testTable)
-            execCreateMissingTablesAndColumns(testTable)
+            SchemaUtils.createMissingTablesAndColumns(testTable)
+            // execCreateMissingTablesAndColumns(testTable)
 
             testTable.exists().shouldBeTrue()
             SchemaUtils.drop(testTable)
@@ -94,13 +94,13 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
         }
 
         withDb(testDB) {
-            // SchemaUtils.createMissingTablesAndColumns(testTable)
-            execCreateMissingTablesAndColumns(testTable)
+            SchemaUtils.createMissingTablesAndColumns(testTable)
+            // execCreateMissingTablesAndColumns(testTable)
             
             testTable.exists().shouldBeTrue()
             try {
-                // SchemaUtils.createMissingTablesAndColumns(testTable)
-                execCreateMissingTablesAndColumns(testTable)
+                SchemaUtils.createMissingTablesAndColumns(testTable)
+                // execCreateMissingTablesAndColumns(testTable)
             } finally {
                 SchemaUtils.drop(testTable)
             }
@@ -119,26 +119,26 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
         }
 
         withDb(testDB) {
-            // SchemaUtils.createMissingTablesAndColumns(t1)
-            execCreateMissingTablesAndColumns(t1)
+            SchemaUtils.createMissingTablesAndColumns(t1)
+            // execCreateMissingTablesAndColumns(t1)
 
             t1.insert { it[foo] = "ABC" }
             assertFailAndRollback("Can't insert to not-null column") {
                 t2.insert { it[foo] = null }
             }
 
-            // SchemaUtils.createMissingTablesAndColumns(t2)
-            execCreateMissingTablesAndColumns(t2)
+            SchemaUtils.createMissingTablesAndColumns(t2)
+            // execCreateMissingTablesAndColumns(t2)
             t2.insert { it[foo] = null }
             assertFailAndRollback("Can't make column non-null while has null value") {
-                // SchemaUtils.createMissingTablesAndColumns(t1)
-                execCreateMissingTablesAndColumns(t1)
+                SchemaUtils.createMissingTablesAndColumns(t1)
+                // execCreateMissingTablesAndColumns(t1)
             }
 
             t2.deleteWhere { t2.foo.isNull() }
 
-            // SchemaUtils.createMissingTablesAndColumns(t1)
-            execCreateMissingTablesAndColumns(t1)
+            SchemaUtils.createMissingTablesAndColumns(t1)
+            // execCreateMissingTablesAndColumns(t1)
             assertFailAndRollback("Can't insert to nullable column") {
                 t2.insert { it[foo] = null }
             }
@@ -204,8 +204,8 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
         withDb(testDB) {
             if (db.supportsAlterTableWithAddColumn) {
-                // SchemaUtils.createMissingTablesAndColumns(t1)
-                execCreateMissingTablesAndColumns(t1)
+                SchemaUtils.createMissingTablesAndColumns(t1)
+                // execCreateMissingTablesAndColumns(t1)
 
                 val missingStatements = SchemaUtils.addMissingColumnsStatements(t2)
 

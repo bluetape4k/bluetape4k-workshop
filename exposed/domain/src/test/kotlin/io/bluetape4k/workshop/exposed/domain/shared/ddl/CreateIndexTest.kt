@@ -58,9 +58,9 @@ class CreateIndexTest: AbstractExposedTest() {
         }
 
         withTables(testDB, testTable) {
-            // SchemaUtils.createMissingTablesAndColumns(testTable)
-            val statemnts = MigrationUtils.statementsRequiredForDatabaseMigration(testTable)
-            exec(statemnts.joinToString(";"))
+            SchemaUtils.createMissingTablesAndColumns(testTable)
+            // val statemnts = MigrationUtils.statementsRequiredForDatabaseMigration(testTable)
+            // exec(statemnts.joinToString(";"))
 
             testTable.exists().shouldBeTrue()
             SchemaUtils.drop(testTable)

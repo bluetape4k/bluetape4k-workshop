@@ -39,7 +39,9 @@ enum class TestDB(
         }
     ),
     H2_MYSQL(
-        connection = { "jdbc:h2:mem:mysql;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;" },
+        connection = {
+            "jdbc:h2:mem:mysql;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;"
+        },
         driver = JdbcDrivers.DRIVER_CLASS_H2,
         beforeConnection = {
             org.h2.engine.Mode::class.declaredMemberProperties
@@ -52,7 +54,9 @@ enum class TestDB(
         }
     ),
     H2_PSQL(
-        connection = { "jdbc:h2:mem:psql;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;" },
+        connection = {
+            "jdbc:h2:mem:psql;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;"
+        },
         driver = JdbcDrivers.DRIVER_CLASS_H2
     ),
 
