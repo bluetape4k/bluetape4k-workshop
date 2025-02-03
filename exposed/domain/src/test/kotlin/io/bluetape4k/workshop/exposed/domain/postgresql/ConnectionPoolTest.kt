@@ -10,7 +10,6 @@ import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeTrue
-import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.Database
@@ -107,7 +106,7 @@ class ConnectionPoolTest: AbstractExposedTest() {
         newSuspendedTransaction(db = hikariPG) {
             getReadOnlyMode().shouldBeTrue()
 
-            // table creation should not fail
+            // read-only 이므로 테이블 생성은 실패한다.
             expectException<ExposedSQLException> {
                 SchemaUtils.create(TestTable)
             }
@@ -121,12 +120,19 @@ class ConnectionPoolTest: AbstractExposedTest() {
         ) {
             getReadOnlyMode().shouldBeFalse()
 
-            // table can now be created and dropped
+            // read-only 가 아니므로 테이블 생성, 삭제 작업이 가능하다.
             SchemaUtils.create(TestTable)
             SchemaUtils.drop(TestTable)
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS hikari_tester (
+     *      id SERIAL PRIMARY KEY
+     * )
+     * ```
+     */
     private val TestTable = object: IntIdTable("HIKARI_TESTER") {}
 
     private fun Transaction.getReadOnlyMode(): Boolean {
@@ -134,7 +140,6 @@ class ConnectionPoolTest: AbstractExposedTest() {
             it.next()
             it.getBoolean(1)
         }
-        mode.shouldNotBeNull()
-        return mode
+        return mode!!
     }
 }
