@@ -32,6 +32,14 @@ class NumericColumnTypesTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS tester (short SMALLINT NOT NULL);
+     *
+     * INSERT INTO tester (short) VALUES (-32768);
+     * INSERT INTO tester (short) VALUES (32767);
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `short accepts only allowed range`(testDB: TestDB) {
@@ -64,6 +72,16 @@ class NumericColumnTypesTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `byte accepts only allowed range`(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS tester (
+         *      byte SMALLINT NOT NULL,
+         *
+         *      CONSTRAINT chk_tester_signed_byte_byte
+         *          CHECK (byte BETWEEN -128 AND 127)
+         * )
+         * ```
+         */
         val tester = object: Table("tester") {
             val byte = byte("byte")
         }
@@ -95,6 +113,16 @@ class NumericColumnTypesTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS tester (
+     *      integer_column INT NOT NULL
+     * );
+     *
+     * INSERT INTO tester (integer_column) VALUES (-2147483648);
+     * INSERT INTO tester (integer_column) VALUES (2147483647);
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `integer accepts only allowed range`(testDB: TestDB) {
@@ -124,6 +152,28 @@ class NumericColumnTypesTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS tester (
+     *      byte_column SMALLINT NOT NULL,
+     *      ubyte_column SMALLINT NOT NULL,
+     *      short_column SMALLINT NOT NULL,
+     *      ushort_column INT NOT NULL,
+     *      integer_column INT NOT NULL,
+     *      uinteger_column BIGINT NOT NULL,
+     *      long_column BIGINT NOT NULL,
+     *      ulong_column BIGINT NOT NULL,
+     *      float_column REAL NOT NULL,
+     *      double_column DOUBLE PRECISION NOT NULL,
+     *      decimal_column DECIMAL(6, 3) NOT NULL,
+     *
+     *      CONSTRAINT chk_tester_signed_byte_byte_column CHECK (byte_column BETWEEN -128 AND 127),
+     *      CONSTRAINT chk_tester_unsigned_byte_ubyte_column CHECK (ubyte_column BETWEEN 0 AND 255),
+     *      CONSTRAINT chk_tester_unsigned_ushort_column CHECK (ushort_column BETWEEN 0 AND 65535),
+     *      CONSTRAINT chk_tester_unsigned_uinteger_column CHECK (uinteger_column BETWEEN 0 AND 4294967295)
+     * )
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `numeric params`(testDB: TestDB) {
@@ -187,6 +237,25 @@ class NumericColumnTypesTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testCustomCheckConstraintName(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS tester (
+         *      byte_column SMALLINT NOT NULL,
+         *      ubyte_column SMALLINT NOT NULL,
+         *      short_column SMALLINT NOT NULL,
+         *      ushort_column INT NOT NULL,
+         *      integer_column INT NOT NULL,
+         *      uinteger_column BIGINT NOT NULL,
+         *
+         *      CONSTRAINT custom_byte_check CHECK (byte_column BETWEEN -128 AND 127),
+         *      CONSTRAINT custom_ubyte_check CHECK (ubyte_column BETWEEN 0 AND 255),
+         *      CONSTRAINT custom_short_check CHECK (short_column BETWEEN -32768 AND 32767),
+         *      CONSTRAINT custom_ushort_check CHECK (ushort_column BETWEEN 0 AND 65535),
+         *      CONSTRAINT custom_integer_check CHECK (integer_column BETWEEN -2147483648 AND 2147483647),
+         *      CONSTRAINT custom_uinteger_check CHECK (uinteger_column BETWEEN 0 AND 4294967295)
+         * )
+         * ```
+         */
         val tester = object: Table("tester") {
             val byte = byte("byte_column", checkConstraintName = "custom_byte_check")
             val ubyte = ubyte("ubyte_column", checkConstraintName = "custom_ubyte_check")
