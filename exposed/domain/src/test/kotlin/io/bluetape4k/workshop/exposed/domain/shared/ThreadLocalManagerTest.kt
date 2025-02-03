@@ -31,6 +31,9 @@ class ThreadLocalManagerTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
+    /**
+     * MYSQL V5 에서만 지원됩니다.
+     */
     fun `re-connection`() {
         Assumptions.assumeTrue { TestDB.MYSQL_V5 in TestDB.enabledDialects() }
 
@@ -63,16 +66,20 @@ class ThreadLocalManagerTest: AbstractExposedTest() {
 
         withTables(testDB, RollbackTable) {
             assertFails {
-                // read-only
+                // read-only 이므로 INSERT 작업은 실패합니다.
                 inTopLevelTransaction(db.transactionManager.defaultIsolationLevel, true) {
                     maxAttempts = 1
                     RollbackTable.insert { it[value] = "random-something" }
                 }
-            }.message?.let { it shouldContain "read-only" }
+            }.message
+                ?.let { it shouldContain "read-only" }
                 ?: fail("error message should not be null")
         }
     }
 
+    /**
+     * Coroutines 환경에서 [newSuspendedTransaction] 으로 readOnly 작업을 수행하기
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `suspended read-only`(testDB: TestDB) = runTest {
@@ -80,6 +87,7 @@ class ThreadLocalManagerTest: AbstractExposedTest() {
 
         val database: Database = testDB.connect()
 
+        // 읽기 전용에서 테이블 생성은 실패합니다.
         newSuspendedTransaction(db = database, readOnly = true) {
             expectException<ExposedSQLException> {
                 SchemaUtils.create(RollbackTable)
@@ -90,11 +98,15 @@ class ThreadLocalManagerTest: AbstractExposedTest() {
             SchemaUtils.create(RollbackTable)
         }
 
-
+        // 읽기 전용에서 데이터 추가는 실패합니다.
         newSuspendedTransaction(db = database, readOnly = true) {
             expectException<ExposedSQLException> {
                 RollbackTable.insert { it[value] = "random-something" }
             }
+        }
+
+        transaction(db = database) {
+            RollbackTable.insert { it[value] = "random-something" }
         }
 
         transaction(db = database) {
