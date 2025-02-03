@@ -3,6 +3,14 @@ package io.bluetape4k.workshop.exposed.domain.shared
 import io.bluetape4k.workshop.exposed.TestDB
 import org.jetbrains.exposed.dao.id.IntIdTable
 
+/**
+ * ```sql
+ * CREATE TABLE IF NOT EXISTS rollbacktable (
+ *      id SERIAL PRIMARY KEY,
+ *      "value" VARCHAR(20) NOT NULL
+ * );
+ * ```
+ */
 object RollbackTable: IntIdTable("rollbackTable") {
     val value = varchar("value", 20)
 }

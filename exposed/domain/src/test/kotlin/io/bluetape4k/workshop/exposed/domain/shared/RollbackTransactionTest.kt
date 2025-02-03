@@ -46,6 +46,7 @@ class RollbackTransactionTest: AbstractExposedTest() {
                 countByValue("after-dummy") shouldBeEqualTo 1
                 rollback()
             }
+            // 위의 transaction이 rollback 되었으므로, 모든 데이터의 추가가 취소됩니다.
             countByValue("before-dummy") shouldBeEqualTo 0
             countByValue("inner-dummy") shouldBeEqualTo 0
             countByValue("after-dummy") shouldBeEqualTo 0
@@ -60,6 +61,7 @@ class RollbackTransactionTest: AbstractExposedTest() {
                 maxAttempts = 1
                 RollbackTable.insert { it[value] = "before-dummy" }
 
+                // nested transaction이 rollback 되었으므로, `inner-dummy` 데이터의 추가가 취소됩니다.
                 transaction {
                     countByValue("before-dummy") shouldBeEqualTo 1
                     RollbackTable.insert { it[value] = "inner-dummy" }
@@ -73,6 +75,7 @@ class RollbackTransactionTest: AbstractExposedTest() {
                 countByValue("after-dummy") shouldBeEqualTo 1
                 rollback()
             }
+            // 위의 transaction이 rollback 되었으므로, 모든 데이터의 추가가 취소됩니다.
             countByValue("before-dummy") shouldBeEqualTo 0
             countByValue("inner-dummy") shouldBeEqualTo 0
             countByValue("after-dummy") shouldBeEqualTo 0
