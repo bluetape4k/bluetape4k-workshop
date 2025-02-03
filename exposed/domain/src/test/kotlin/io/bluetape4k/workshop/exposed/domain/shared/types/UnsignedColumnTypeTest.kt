@@ -27,11 +27,12 @@ class UnsignedColumnTypeTest: AbstractExposedTest() {
     companion object: KLogging()
 
     /**
-     * H2:
+     * Postgres:
      * ```sql
-     * CREATE TABLE IF NOT EXISTS UBYTE_TABLE (
-     *      UBYTE SMALLINT NOT NULL,
-     *      CONSTRAINT chk_ubyte_table_unsigned_byte_ubyte CHECK (UBYTE BETWEEN 0 AND 255)
+     * CREATE TABLE IF NOT EXISTS ubyte_table (
+     *      ubyte SMALLINT NOT NULL,
+     *      CONSTRAINT chk_ubyte_table_unsigned_byte_ubyte
+     *          CHECK (ubyte BETWEEN 0 AND 255)
      * )
      * ```
      */
@@ -39,14 +40,43 @@ class UnsignedColumnTypeTest: AbstractExposedTest() {
         val unsignedByte = ubyte("ubyte")
     }
 
+    /**
+     * Postgres:
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS ushort_table (
+     *      ushort INT NOT NULL,
+     *
+     *      CONSTRAINT chk_ushort_table_unsigned_ushort
+     *          CHECK (ushort BETWEEN 0 AND 65535)
+     * )
+     * ```
+     */
     object UShortTable: Table("ushort_table") {
         val unsignedShort = ushort("ushort")
     }
 
+    /**
+     * Postgres:
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS uint_table (
+     *      uint BIGINT NOT NULL,
+     *
+     *      CONSTRAINT chk_uint_table_unsigned_uint
+     *          CHECK (uint BETWEEN 0 AND 4294967295)
+     * )
+     * ```
+     */
     object UIntTable: Table("uint_table") {
         val unsignedInt = uinteger("uint")
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS ulong_table (
+     *      ulong BIGINT NOT NULL
+     * )
+     * ```
+     */
     object ULongTable: Table("ulong_table") {
         val unsignedLong = ulong("ulong")
     }
@@ -80,6 +110,11 @@ class UnsignedColumnTypeTest: AbstractExposedTest() {
             val number = 191.toUByte()
             number.shouldBeInRange(Byte.MAX_VALUE.toUByte(), UByte.MAX_VALUE)
 
+            /**
+             * ```sql
+             * INSERT INTO ubyte_table (ubyte) VALUES (191)
+             * ```
+             */
             UByteTable.insert { it[unsignedByte] = number }
 
             val result = UByteTable.selectAll()
@@ -203,6 +238,14 @@ class UnsignedColumnTypeTest: AbstractExposedTest() {
                 }
 
                 // modify column to now have INT type
+                /**
+                 * ```sql
+                 * ALTER TABLE ushort_table
+                 *      ALTER COLUMN ushort TYPE INT,
+                 *      ALTER COLUMN ushort SET NOT NULL,
+                 *      ALTER COLUMN ushort DROP DEFAULT
+                 * ```
+                 */
                 exec(UShortTable.unsignedShort.modifyStatement().first())
                 UShortTable.insert { it[unsignedShort] = number2 }
 
@@ -283,7 +326,16 @@ class UnsignedColumnTypeTest: AbstractExposedTest() {
                     UIntTable.selectAll().where { UIntTable.unsignedInt less 0u }.count().toInt() shouldBeEqualTo 0
                 }
 
-                // modify column to now have BIGINT type
+                /**
+                 * modify column to now have BIGINT type
+                 *
+                 * ```sql
+                 * ALTER TABLE uint_table
+                 *      ALTER COLUMN uint TYPE BIGINT,
+                 *      ALTER COLUMN uint SET NOT NULL,
+                 *      ALTER COLUMN uint DROP DEFAULT
+                 * ```
+                 */
                 exec(UIntTable.unsignedInt.modifyStatement().first())
                 UIntTable.insert { it[unsignedInt] = number2 }
 
@@ -333,6 +385,7 @@ class UnsignedColumnTypeTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testMaxUnsignedTypesInMySql(testDB: TestDB) {
         Assumptions.assumeTrue { testDB !in TestDB.ALL_POSTGRES_LIKE }
+
         withTables(testDB, UByteTable, UShortTable, UIntTable, ULongTable) {
             UByteTable.insert { it[unsignedByte] = UByte.MAX_VALUE }
             UByteTable.selectAll().single()[UByteTable.unsignedByte] shouldBeEqualTo UByte.MAX_VALUE
@@ -353,11 +406,39 @@ class UnsignedColumnTypeTest: AbstractExposedTest() {
     fun testCheckConstraintNameAcrossMultipleTables(testDB: TestDB) {
 
         val (col1, col2, col3) = listOf("num1", "num2", "num3")
+
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS tester_1 (
+         *      num1 SMALLINT NOT NULL,
+         *      num2 INT NOT NULL,
+         *      num3 BIGINT NOT NULL,
+         *
+         *      CONSTRAINT chk_tester_1_unsigned_byte_num1 CHECK (num1 BETWEEN 0 AND 255),
+         *      CONSTRAINT chk_tester_1_unsigned_num2 CHECK (num2 BETWEEN 0 AND 65535),
+         *      CONSTRAINT chk_tester_1_unsigned_num3 CHECK (num3 BETWEEN 0 AND 4294967295)
+         * )
+         * ```
+         */
         val tester1 = object: Table("tester_1") {
             val unsigned1 = ubyte(col1)
             val unsigned2 = ushort(col2)
             val unsigned3 = uinteger(col3)
         }
+
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS tester_2 (
+         *      num1 SMALLINT NOT NULL,
+         *      num2 INT NOT NULL,
+         *      num3 BIGINT NOT NULL,
+         *
+         *      CONSTRAINT chk_tester_2_unsigned_byte_num1 CHECK (num1 BETWEEN 0 AND 255),
+         *      CONSTRAINT chk_tester_2_unsigned_num2 CHECK (num2 BETWEEN 0 AND 65535),
+         *      CONSTRAINT chk_tester_2_unsigned_num3 CHECK (num3 BETWEEN 0 AND 4294967295)
+         * )
+         * ```
+         */
         val tester2 = object: Table("tester_2") {
             val unsigned1 = ubyte(col1)
             val unsigned2 = ushort(col2)
@@ -366,6 +447,7 @@ class UnsignedColumnTypeTest: AbstractExposedTest() {
 
         withTables(testDB, tester1, tester2) {
             val (byte, short, integer) = Triple(191.toUByte(), 49151.toUShort(), 3_221_225_471u)
+
             tester1.insert {
                 it[unsigned1] = byte
                 it[unsigned2] = short
