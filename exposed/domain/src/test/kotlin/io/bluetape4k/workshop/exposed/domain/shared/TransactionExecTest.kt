@@ -28,6 +28,18 @@ class TransactionExecTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
+    /**
+     * Postgres:
+     * ```sql
+     * CREATE SEQUENCE IF NOT EXISTS exec_id_seq
+     *      START WITH 1 MINVALUE 1 MAXVALUE 9223372036854775807;
+     *
+     * CREATE TABLE IF NOT EXISTS exec_table (
+     *      id INT PRIMARY KEY,
+     *      amount INT NOT NULL
+     * );
+     * ```
+     */
     object ExecTable: Table("exec_table") {
         val id = integer("id").autoIncrement("exec_id_seq")
         val amount = integer("amount")
@@ -42,7 +54,7 @@ class TransactionExecTest: AbstractExposedTest() {
             val amounts = (90..99).toList()
 
             ExecTable.batchInsert(amounts, shouldReturnGeneratedValues = false) { amount ->
-                // this[ExecTable.id] = (amount % 10 + 1)  // autoIncrement 라 지정할 필요 없지 않나? - 속도 문제일 뿐
+                this[ExecTable.id] = (amount % 10 + 1)  // autoIncrement 라 지정할 필요 없지 않나? - 속도 문제일 뿐
                 this[ExecTable.amount] = amount
             }
 
@@ -82,12 +94,9 @@ class TransactionExecTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `exec with multi statement query using MySQL`(testDB: TestDB) {
-        // Assumptions.assumeTrue { TestDB.ALL_MYSQL.containsAll(TestDB.enabledDialects()) }
-        // val testDB = TestDB.enabledDialects().first()
-
         Assumptions.assumeTrue { testDB == TestDB.MYSQL_V8 }
 
-        val extra = "" //if (testDB in TestDB.ALL_MARIADB) "?" else ""
+        val extra = ""  // if (testDB in TestDB.ALL_MARIADB) "?" else ""
         val db = Database.connect(
             testDB.connection().plus("$extra&allowMultiQueries=true"),
             testDB.driver,
