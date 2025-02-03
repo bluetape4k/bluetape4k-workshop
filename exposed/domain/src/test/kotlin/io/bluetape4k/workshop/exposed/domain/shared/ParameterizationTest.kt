@@ -23,8 +23,18 @@ import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
+/**
+ * SQL Statements 에 Parameter 를 전달하여 실행하는 방식에 대한 테스트 코드입니다.
+ */
 class ParameterizationTest: AbstractExposedTest() {
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS tmp (
+     *      foo VARCHAR(50) NULL
+     * )
+     * ```
+     */
     object TempTable: Table("tmp") {
         val name = varchar("foo", 50).nullable()
     }
@@ -38,8 +48,8 @@ class ParameterizationTest: AbstractExposedTest() {
     fun `insert with quotes and get it back`(testDB: TestDB) {
         withTables(testDB, TempTable) {
             exec(
-                "INSERT INTO ${TempTable.tableName} (foo) VALUES (?)",
-                listOf(VarCharColumnType() to "John \"Johny\" Johnson"),
+                stmt = "INSERT INTO ${TempTable.tableName} (foo) VALUES (?)",
+                args = listOf(VarCharColumnType() to "John \"Johny\" Johnson"),
                 INSERT
             )
 
@@ -66,6 +76,9 @@ class ParameterizationTest: AbstractExposedTest() {
                 val table = TempTable.tableName.inProperCase()
                 val column = TempTable.name.name.inProperCase()
 
+                /**
+                 * 복합적인 SQL 문을 파라미터를 사용하여 실행합니다.
+                 */
                 val result = exec(
                     """
                         INSERT INTO $table ($column) VALUES (?);
@@ -158,9 +171,15 @@ class ParameterizationTest: AbstractExposedTest() {
             // the logger is left in to test that it does not throw IllegalStateException with null parameter arg
             addLogger(StdOutSqlLogger)
 
+            /**
+             * ```sql
+             * INSERT INTO tmp (foo) VALUES (NULL)
+             * ```
+             */
             exec(
                 stmt = "INSERT INTO ${TempTable.tableName} (${TempTable.name.name}) VALUES (?)",
                 args = listOf(VarCharColumnType() to null),
+                explicitStatementType = StatementType.INSERT,
             )
 
             TempTable.selectAll().single()[TempTable.name].shouldBeNull()
@@ -173,7 +192,7 @@ class ParameterizationTest: AbstractExposedTest() {
     private fun urlExtra(testDB: TestDB): String {
         return when (testDB) {
             in TestDB.ALL_MYSQL -> "&allowMultiQueries=true"
-            else                -> ""
+            else -> ""
         }
     }
 }
