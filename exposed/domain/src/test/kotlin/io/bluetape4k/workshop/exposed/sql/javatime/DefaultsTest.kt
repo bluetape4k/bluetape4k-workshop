@@ -74,13 +74,29 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import java.util.concurrent.atomic.AtomicInteger
 
+/**
+ * DB의 `now()` 함수를 사용하는 Custom Function
+ */
 private val dbTimestampNow: CustomFunction<OffsetDateTime>
     get() = object: CustomFunction<OffsetDateTime>("now", JavaOffsetDateTimeColumnType()) {}
 
+/**
+ * Java Time 형식의 컬럼에 기본값 설정과 관련된 테스트
+ */
 class DefaultsTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS t_db_default (
+     *      id SERIAL PRIMARY KEY,
+     *      field VARCHAR(100) NOT NULL,
+     *      t1 TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+     *      "clientDefault" INT NOT NULL
+     * )
+     * ```
+     */
     object TableWithDBDefault: IntIdTable("t_db_default") {
         val cIndex = AtomicInteger(0)
 
@@ -120,10 +136,13 @@ class DefaultsTest: AbstractExposedTest() {
         returnedDefault shouldBeEqualTo defaultValue
     }
 
+    /**
+     * nullable 컬럼이지만 Exposed의 `clientDefault`를 사용하여 기본값을 설정할 수 있다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `can set nullable column to use client default`(testDB: TestDB) {
-        val defaultValue: Int = 123
+        val defaultValue = 123
         val table = object: IntIdTable("tester") {
             val clientDefault = integer("clientDefault").nullable().clientDefault { defaultValue }
         }
@@ -135,6 +154,14 @@ class DefaultsTest: AbstractExposedTest() {
         returnedDefault shouldBeEqualTo defaultValue
     }
 
+    /**
+     * [TableWithDBDefault] 테이블에 기본값을 설정하고, 생성된 엔티티를 조회한다.
+     *
+     * ```sql
+     * INSERT INTO t_db_default (field, "clientDefault") VALUES ('1', 8);
+     * INSERT INTO t_db_default (field, t1, "clientDefault") VALUES ('2', '2025-01-30T08:42:03.129272', 9);
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `defaults with explicit 01`(testDB: TestDB) {
@@ -156,6 +183,14 @@ class DefaultsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * 기본 값으로 저장되는지 확인한다.
+     *
+     * ```sql
+     * INSERT INTO t_db_default (field, t1, "clientDefault") VALUES ('2', '2025-01-30T08:42:03.182995', 18)
+     * INSERT INTO t_db_default (field, "clientDefault") VALUES ('1', 19)
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `defaults with explicit 02`(testDB: TestDB) {
@@ -174,10 +209,17 @@ class DefaultsTest: AbstractExposedTest() {
 
             val entities = DBDefault.all().toList()
             entities shouldBeEqualTo created
-
         }
     }
 
+    /**
+     * 기본값 설정을 위해 `clientDefault` 를 사용할 때, 기본값 초기화는 한번만 이루어져야 한다.
+     *
+     * ```sql
+     * INSERT INTO t_db_default (field, "clientDefault") VALUES ('1', 0);
+     * INSERT INTO t_db_default (field, "clientDefault") VALUES ('2', 1);
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `defaults invoked only once per entity`(testDB: TestDB) {
@@ -193,6 +235,14 @@ class DefaultsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * 엔티티의 Client Default 값은 재정의할 수 있습니다.
+     *
+     * ```sql
+     * INSERT INTO t_db_default (field, "clientDefault") VALUES ('1', 12345);
+     * INSERT INTO t_db_default (field, "clientDefault") VALUES ('2', 1);
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `defaults can be overriden`(testDB: TestDB) {
@@ -202,12 +252,15 @@ class DefaultsTest: AbstractExposedTest() {
             val db1 = DBDefault.new { field = "1" }
             val db2 = DBDefault.new { field = "2" }
             db1.clientDefault = 12345
+
             flushCache()
+
             db1.clientDefault shouldBeEqualTo 12345
             db2.clientDefault shouldBeEqualTo 1
             TableWithDBDefault.cIndex.get() shouldBeEqualTo 2
 
             flushCache()
+
             db1.clientDefault shouldBeEqualTo 12345
         }
     }
@@ -222,6 +275,9 @@ class DefaultsTest: AbstractExposedTest() {
         }
     )
 
+    /**
+     * `addBatch` 호출 시에 Database Default 를 사용하는 경우에는 값을 넣지 않아야 한다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `raw batch insert fails 01`(testDB: TestDB) {
@@ -237,6 +293,14 @@ class DefaultsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     *  `batchInsert` 호출 시에 `addBatch`를 사용하지 않으면 제대로 수행된다.
+     *
+     * ```sql
+     * INSERT INTO t_db_default (field, "clientDefault") VALUES ('1', 28);
+     * INSERT INTO t_db_default (field, t1, "clientDefault") VALUES ('2', '2025-02-04T08:42:28.637826', 29);
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `batch insert not fails 01`(testDB: TestDB) {
@@ -247,6 +311,9 @@ class DefaultsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Batch Insert 시에 Database Default 를 사용하는 경우에는 값을 넣지 않아야 한다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `batch insert fails 01`(testDB: TestDB) {
@@ -285,6 +352,27 @@ class DefaultsTest: AbstractExposedTest() {
         val tmConstValue = LocalTime.of(12, 0)
         val tLiteral = timeLiteral(tmConstValue)
 
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS t (
+         *      id SERIAL PRIMARY KEY,
+         *      s VARCHAR(100) DEFAULT 'test' NOT NULL,
+         *      sn VARCHAR(100) DEFAULT 'testNullable' NULL,
+         *      l BIGINT DEFAULT 42 NOT NULL,
+         *      "c" CHAR DEFAULT 'X' NOT NULL,
+         *      t1 TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+         *      t2 TIMESTAMP DEFAULT (NOW()) NOT NULL,
+         *      t3 TIMESTAMP DEFAULT '2010-01-01 00:00:00'::timestamp without time zone NOT NULL,
+         *      t4 DATE DEFAULT '2010-01-01'::date NOT NULL,
+         *      t5 TIMESTAMP DEFAULT '2010-01-01 00:00:42'::timestamp without time zone NOT NULL,
+         *      t6 TIMESTAMP DEFAULT '2010-01-01 00:00:42'::timestamp without time zone NOT NULL,
+         *      t7 BIGINT DEFAULT '1262304042000000000' NOT NULL,
+         *      t8 BIGINT DEFAULT '1262304042000000000' NOT NULL,
+         *      t9 TIME DEFAULT '12:00:00'::time without time zone NOT NULL,
+         *      t10 TIME DEFAULT '12:00:00'::time without time zone NOT NULL
+         * )
+         * ```
+         */
         val testTable = object: IntIdTable("t") {
             val s = varchar("s", 100).default("test")
             val sn = varchar("sn", 100).default("testNullable").nullable()
@@ -371,9 +459,35 @@ class DefaultsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * 컬럼의 기본값을 Custom Expression 으로 설정하기
+     *
+     * ```sql
+     * -- Postgres:
+     * CREATE TABLE IF NOT EXISTS tester (
+     *      id SERIAL PRIMARY KEY,
+     *      "name" TEXT NOT NULL,
+     *      "defaultDateTime" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+     *      "defaultDate" DATE DEFAULT CURRENT_DATE NOT NULL,
+     *      "defaultInt" INT DEFAULT (ABS(-100)) NOT NULL
+     * );
+     *
+     * -- MySQL V8:
+     * CREATE TABLE IF NOT EXISTS tester (
+     *      id INT AUTO_INCREMENT PRIMARY KEY,
+     *      `name` text NOT NULL,
+     *      defaultDateTime DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) NOT NULL,
+     *      defaultDate DATE DEFAULT (CURRENT_DATE()) NOT NULL,
+     *      defaultInt INT DEFAULT (ABS(-100)) NOT NULL
+     * );
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `default expressions 01`(testDB: TestDB) {
+        /**
+         * `ABS` 함수를 사용하는 Custom Expression
+         */
         fun abs(value: Int) = object: ExpressionWithColumnType<Int>() {
             override fun toQueryBuilder(queryBuilder: QueryBuilder) = queryBuilder { append("ABS($value)") }
             override val columnType: IColumnType<Int> = IntegerColumnType()
@@ -400,6 +514,20 @@ class DefaultsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * 컬럼의 기본값을 DB에서 제공하는 `CurrentDateTime`, `CurrentDate` 로 설정하기
+     *
+    ```sql
+     * CREATE TABLE IF NOT EXISTS tester (
+     *      id SERIAL PRIMARY KEY,
+     *      "name" TEXT NOT NULL,
+     *      "defaultDateTime" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+     * )
+     * ```
+     *
+     * @see [CurrentDateTime]
+     * @see [CurrentDate]
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `default expressions 02`(testDB: TestDB) {
@@ -430,6 +558,26 @@ class DefaultsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * `datetime` 컬럼을 조건절에 `between` 사용하기
+     *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS tester (
+     *      id SERIAL PRIMARY KEY,
+     *      datetime TIMESTAMP NOT NULL
+     * );
+     *
+     * INSERT INTO tester (datetime) VALUES ('2019-01-01T01:01:00');
+     * INSERT INTO tester (datetime) VALUES ('2020-01-01T01:01:00');
+     * INSERT INTO tester (datetime) VALUES ('2021-01-01T01:01:00');
+     *
+     * SELECT COUNT(*)
+     *   FROM tester
+     *  WHERE tester.datetime BETWEEN '2019-12-25T01:01:00' AND '2020-01-08T01:01:00';
+     *
+     * ```
+     *
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `between function`(testDB: TestDB) {
@@ -443,20 +591,6 @@ class DefaultsTest: AbstractExposedTest() {
             tester.insert { it[dt] = dt2020 }
             tester.insert { it[dt] = LocalDateTime.of(2021, 1, 1, 1, 1) }
 
-            /**
-             * ```sql
-             * SELECT COUNT(*)
-             *   FROM TESTER
-             *  WHERE TESTER.DATETIME BETWEEN '2019-12-25T01:01:00' AND '2020-01-08T01:01:00'
-             * ```
-             */
-            /**
-             * ```sql
-             * SELECT COUNT(*)
-             *   FROM TESTER
-             *  WHERE TESTER.DATETIME BETWEEN '2019-12-25T01:01:00' AND '2020-01-08T01:01:00'
-             * ```
-             */
             val count = tester.selectAll()
                 .where {
                     tester.dt.between(dt2020.minusWeeks(1), dt2020.plusWeeks(1))
@@ -466,6 +600,18 @@ class DefaultsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * 기본 표현식으로 `CurrentDate`, `CurrentDateTime`, `CurrentTimestamp` 사용하기
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS tester (
+     *      id SERIAL PRIMARY KEY,
+     *      "name" TEXT NOT NULL,
+     *      "defaultDate" DATE DEFAULT CURRENT_DATE NOT NULL,
+     *      "defaultDateTime" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+     *      "defaultTimestamp" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+     * )
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `Consistent Scheme With Function As Default Expression`(testDB: TestDB) {
@@ -481,6 +627,26 @@ class DefaultsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Timestamp 에 Time Zone 을 포함한 컬럼을 사용할 때 (`TIMESTAMP WITH TIME ZONE DEFAULT`)
+     *
+     * ```sql
+     * -- Postgres:
+     * CREATE TABLE IF NOT EXISTS t (
+     *      id SERIAL PRIMARY KEY,
+     *      t1 TIMESTAMP WITH TIME ZONE DEFAULT '2024-07-18 13:19:44+00'::timestamp with time zone NOT NULL,
+     *      t2 TIMESTAMP WITH TIME ZONE DEFAULT '2024-07-18 13:19:44+00'::timestamp with time zone NOT NULL,
+     *      t3 TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+     * );
+     * -- MySQL V8:
+     * CREATE TABLE IF NOT EXISTS t (
+     *      id INT AUTO_INCREMENT PRIMARY KEY,
+     *      t1 TIMESTAMP(6) DEFAULT '2024-07-18 13:19:44.000000' NOT NULL,
+     *      t2 TIMESTAMP(6) DEFAULT '2024-07-18 13:19:44.000000' NOT NULL,
+     *      t3 TIMESTAMP(6) DEFAULT CURRENT_TIMESTAMP(6) NOT NULL
+     * );
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `Timestamp with TimeZone Default`(testDB: TestDB) {
@@ -547,9 +713,20 @@ class DefaultsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * [CurrentDateTime]을 기본값으로 사용
+     *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS testdate (
+     *      id SERIAL PRIMARY KEY,
+     *      "time" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+     * )
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `Default CurrentDateTime`(testDB: TestDB) {
+
         val testDate = object: IntIdTable("TestDate") {
             val time = datetime("time").defaultExpression(CurrentDateTime)
         }
@@ -577,6 +754,15 @@ class DefaultsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * `Date` 에 대한 기본 값 설정은 `ALTER TABLE` 문을 발생시키지 않아야 한다.
+     *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS tester (
+     *      "dateWithDefault" DATE DEFAULT '2024-02-01'::date NOT NULL
+     * )
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testDateDefaultDoesNotTriggerAlterStatement(testDB: TestDB) {
@@ -593,6 +779,23 @@ class DefaultsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Timestamp 컬럼에 Default 값을 설정할 때, ALTER TABLE 문이 발생하지 않아야 한다.
+     *
+     * ```sql
+     * -- Postgres:
+     * CREATE TABLE IF NOT EXISTS tester (
+     *      "timestampWithDefault" TIMESTAMP DEFAULT '2023-05-04 05:04:00.7'::timestamp without time zone NOT NULL,
+     *      "timestampWithDefaultExpression" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+     * );
+     *
+     * -- MYSQL V8:
+     * CREATE TABLE IF NOT EXISTS tester (
+     *      timestampWithDefault DATETIME(6) DEFAULT '2023-05-04 05:04:00.700000' NOT NULL,
+     *      timestampWithDefaultExpression DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6) NOT NULL
+     * );
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testTimestampDefaultDoesNotTriggerAlterStatement(testDB: TestDB) {
@@ -614,8 +817,15 @@ class DefaultsTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testDatetimeDefaultDoesNotTriggerAlterStatement(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS tester (
+         *      "datetimeWithDefault" TIMESTAMP DEFAULT '2023-05-04 05:04:07'::timestamp without time zone NOT NULL,
+         *      "datetimeWithDefaultExpression" TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+         * );
+         * ```
+         */
         val datetime = LocalDateTime.parse("2023-05-04T05:04:07.000")
-
         val tester = object: Table("tester") {
             val datetimeWithDefault = datetime("datetimeWithDefault").default(datetime)
             val datetimeWithDefaultExpression =
@@ -629,10 +839,19 @@ class DefaultsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * `Time` 컬럼에 대한 기본값 설정은 `ALTER TABLE` 문을 발생시키지 않아야 한다.
+     *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS tester (
+     *      "timeWithDefault" TIME DEFAULT '17:42:28.669743'::time without time zone NOT NULL
+     * );
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testTimeDefaultDoesNotTriggerAlterStatement(testDB: TestDB) {
-        val time = LocalDateTime.now(ZoneId.of("Japan")).toLocalTime()
+        val time = LocalDateTime.now(ZoneId.of("Asia/Seoul")).toLocalTime()
 
         val tester = object: Table("tester") {
             val timeWithDefault = time("timeWithDefault").default(time)
@@ -645,6 +864,15 @@ class DefaultsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * `Timestamp with Time Zone` 컬럼에 대한 기본값 설정은 `ALTER TABLE` 문을 발생시키지 않아야 한다.
+     *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS tester (
+     *      "timestampWithTimeZoneWithDefault" TIMESTAMP WITH TIME ZONE DEFAULT '2024-02-08 20:48:04.7+00'::timestamp with time zone NOT NULL
+     * )
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testTimestampWithTimeZoneDefaultDoesNotTriggerAlterStatement(testDB: TestDB) {
@@ -665,6 +893,14 @@ class DefaultsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS test_table (
+     *      id SERIAL PRIMARY KEY,
+     *      "timestamp" TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
+     * );
+     * ```
+     */
     object DefaultTimestampTable: IntIdTable("test_table") {
         val timestamp: Column<OffsetDateTime> =
             timestampWithTimeZone("timestamp").defaultExpression(dbTimestampNow)
@@ -676,6 +912,15 @@ class DefaultsTest: AbstractExposedTest() {
         var timestamp: OffsetDateTime by DefaultTimestampTable.timestamp
     }
 
+    /**
+     * 엔티티 생성 시 사용한 사용자 정의 Timestamp 함수를 기본값으로 사용하는 경우에도 작동한다.
+     *
+     * ```sql
+     * INSERT INTO test_table  DEFAULT VALUES;
+     * ```
+     *
+     * @see [DefaultTimestampTable]
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testCustomDefaultTimestampFunctionWithEntity(testDB: TestDB) {
@@ -688,6 +933,15 @@ class DefaultsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * 사용자 정의 Timestamp 함수를 기본값으로 사용하는 경우에도 INSERT 문에서는 제외된다.
+     *
+     * TABLE 생성 시 ([DefaultTimestampTable]) 에 기본값이 설정되어 있기 때문에 INSERT 문에서는 값을 넣지 않아도 된다.
+     *
+     * ```sql
+     * INSERT INTO test_table  DEFAULT VALUES;
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testCustomDefaultTimestampFunctionWithInsertStatement(testDB: TestDB) {
