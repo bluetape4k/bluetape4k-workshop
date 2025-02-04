@@ -25,6 +25,14 @@ abstract class AbstractExposedJsonTest: AbstractExposedTest() {
             val user1 = User("Admin", null)
             val data1 = DataHolder(user1, 10, true, null)
 
+            /**
+             * JSON column 에 JSON 데이터를 저장합니다.
+             * ```sql
+             * -- Postgres
+             * INSERT INTO j_table (j_column)
+             * VALUES ({"user":{"name":"Admin","team":null},"logins":10,"active":true,"team":null})
+             * ```
+             */
             tester.insert { it[jsonColumn] = data1 }
 
             statement(tester, user1, data1)
@@ -60,10 +68,26 @@ abstract class AbstractExposedJsonTest: AbstractExposedTest() {
         val tester = JsonArrays
 
         withTables(testDB, tester) {
+            /**
+             * ```sql
+             * INSERT INTO j_arrays ("groups", numbers)
+             * VALUES ({"users":[{"name":"Admin","team":"Team A"}]}, [100])
+             * ```
+             */
             val singleId = tester.insertAndGetId {
                 it[tester.groups] = UserGroup(listOf(User("Admin", "Team A")))
                 it[tester.numbers] = intArrayOf(100)
             }
+
+            /**
+             * ```sql
+             * INSERT INTO j_arrays ("groups", numbers)
+             * VALUES (
+             *      {"users":[{"name":"B","team":"Team B"},{"name":"C","team":"Team C"},{"name":"D","team":"Team D"}]},
+             *      [3,4,5]
+             * )
+             * ```
+             */
             val tripleId = tester.insertAndGetId {
                 // User name = "B", "C", "D"
                 // User team = "Team B", "Team C", "Team D"
