@@ -64,11 +64,6 @@ class MysqlTest: AbstractExposedTest() {
              *
              * jdbc url: `jdbc:mysql://localhost:3306/exposed?rewriteBatchedStatements=true`
              */
-            /**
-             * jdbc url 에 rewriteBatchedStatements=true 옵션을 추가하는 방식을 프로그래밍 방식으로 표현한 것입니다.
-             *
-             * jdbc url: `jdbc:mysql://localhost:3306/exposed?rewriteBatchedStatements=true`
-             */
             val mysqlConn = this.connection.connection as ConnectionImpl
             mysqlConn.propertySet.getBooleanProperty(rewriteBatchedStatements).value = true
 
@@ -132,18 +127,6 @@ class MysqlTest: AbstractExposedTest() {
              * ```
              *
              */
-            /**
-             * 강제로 PRIMARY 인덱스를 사용하도록 hint를 추가합니다.
-             *
-             * ```sql
-             * /*Original SQL*/
-             * SELECT DISTINCT tester.id, tester.item, tester.amount
-             *   FROM tester FORCE INDEX (PRIMARY)
-             *  WHERE tester.id = ?
-             *  LIMIT 1
-             * ```
-             *
-             */
             val hint1 = "FORCE INDEX (PRIMARY)"
             val hintQuery1 = originalQuery.indexHint(hint1)
             val hintQuery1Sql = hintQuery1.prepareSQL(this)
@@ -153,20 +136,6 @@ class MysqlTest: AbstractExposedTest() {
 
             hintQuery1.toList()
 
-            /**
-             * 강제로 item 인덱스를 사용하도록 hint를 추가합니다.
-             *
-             * ```sql
-             * SELECT tester.id,
-             *        tester.item,
-             *        tester.amount
-             *   FROM tester USE INDEX (tester_item_unique)
-             *  WHERE (tester.id = ?) AND (tester.item = ?)
-             *  GROUP BY tester.id
-             * HAVING COUNT(tester.id) = ?
-             *  ORDER BY tester.amount ASC
-             * ```
-             */
             /**
              * 강제로 item 인덱스를 사용하도록 hint를 추가합니다.
              *
@@ -210,14 +179,6 @@ class MysqlTest: AbstractExposedTest() {
 
         withTables(testDB, tester) {
             tester.insert { it[seconds] = 1 }
-
-            /**
-             * SLEEP(N) 함수는 N초 동안 실행을 일시 중지하고, 중단되지 않으면 0을 반환합니다.
-             *
-             * ```sql
-             * SELECT SLEEP(tester.seconds) FROM tester
-             * ```
-             */
             /**
              * SLEEP(N) 함수는 N초 동안 실행을 일시 중지하고, 중단되지 않으면 0을 반환합니다.
              *
@@ -233,13 +194,6 @@ class MysqlTest: AbstractExposedTest() {
 
             tester.update { it[seconds] = 2 }
 
-            /**
-             * Hint places a limit of N milliseconds on how long a query should take before termination
-             *
-             * ```sql
-             * SELECT /*+ MAX_EXECUTION_TIME(1000)*/ SLEEP(tester.seconds) FROM tester
-             * ```
-             */
             /**
              * Hint places a limit of N milliseconds on how long a query should take before termination
              *
