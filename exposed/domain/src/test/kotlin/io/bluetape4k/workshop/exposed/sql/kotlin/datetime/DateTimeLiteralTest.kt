@@ -20,6 +20,9 @@ import org.jetbrains.exposed.sql.selectAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
+/**
+ * DATE, DATEIME 용 리터럴을 사용한 테스트
+ */
 class DateTimeLiteralTest: AbstractExposedTest() {
 
     private val defaultDate = LocalDate(2000, 1, 1)
@@ -32,16 +35,49 @@ class DateTimeLiteralTest: AbstractExposedTest() {
     private val defaultDatetime = LocalDateTime(2000, 1, 1, 8, 0, 0, 100000000)
     private val futureDatetime = LocalDateTime(3000, 1, 1, 8, 0, 0, 100000000)
 
+    /**
+     * ```sql
+     * -- Postgres
+     * CREATE TABLE IF NOT EXISTS tablewithdatetime (
+     *      id SERIAL PRIMARY KEY,
+     *      datetime TIMESTAMP NOT NULL
+     * )
+     * ```
+     * ```sql
+     * -- MySQL V8
+     * CREATE TABLE IF NOT EXISTS TableWithDatetime (
+     *      id INT AUTO_INCREMENT PRIMARY KEY,
+     *      datetime DATETIME(6) NOT NULL
+     * )
+     * ```
+     */
     object TableWithDatetime: IntIdTable() {
         val datetime = datetime("datetime")
     }
 
     private val defaultTimestamp = Instant.parse("2000-01-01T01:00:00.00Z")
+    private val futureTimestamp = Instant.parse("3000-01-01T01:00:00.00Z")
 
     object TableWithTimestamp: IntIdTable() {
         val timestamp = timestamp("timestamp")
     }
 
+    /**
+     * [dateLiteral] 을 사용한 날짜 등가 테스트
+     *
+     * ```sql
+     * -- Postgres
+     * SELECT tablewithdate."date"
+     *   FROM tablewithdate
+     *  WHERE tablewithdate."date" = '2000-01-01'
+     * ```
+     * ```sql
+     * -- MySQL V8
+     * SELECT TableWithDate.`date`
+     *   FROM TableWithDate
+     *  WHERE TableWithDate.`date` = '2000-01-01'
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testSelectByDateLiteralEquality(testDB: TestDB) {
@@ -59,6 +95,22 @@ class DateTimeLiteralTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * [dateLiteral] 을 사용한 날짜 비교 테스트
+     *
+     * ```sql
+     * -- Postgres
+     * SELECT tablewithdate.id, tablewithdate."date"
+     *   FROM tablewithdate
+     *  WHERE tablewithdate."date" < '3000-01-01';
+     * ```
+     * ```sql
+     * -- MySQL V8
+     * SELECT TableWithDate.id, TableWithDate.`date`
+     *   FROM TableWithDate
+     *  WHERE TableWithDate.`date` < '3000-01-01'
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testSelectByDateLiteralComparison(testDB: TestDB) {
@@ -74,6 +126,22 @@ class DateTimeLiteralTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * [dateTimeLiteral] 을 사용한 날짜시간 비교 테스트
+     *
+     * ```sql
+     * -- Postgres
+     * SELECT tablewithdatetime.datetime
+     *   FROM tablewithdatetime
+     *  WHERE tablewithdatetime.datetime = '2000-01-01T08:00:00.1';
+     * ```
+     * ```sql
+     * -- MySQL V8
+     * SELECT TableWithDatetime.datetime
+     *   FROM TableWithDatetime
+     *  WHERE TableWithDatetime.datetime = '2000-01-01 08:00:00.100000';
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testSelectByDatetimeLiteralEquality(testDB: TestDB) {
@@ -91,6 +159,22 @@ class DateTimeLiteralTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * [dateTimeLiteral] 을 사용한 날짜시간 비교 테스트
+     *
+     * ```sql
+     * -- Postgres
+     * SELECT tablewithdatetime.id, tablewithdatetime.datetime
+     *   FROM tablewithdatetime
+     *  WHERE tablewithdatetime.datetime < '3000-01-01T08:00:00.1'
+     * ```
+     * ```sql
+     * -- MySQL V8
+     * SELECT TableWithDatetime.id, TableWithDatetime.datetime
+     *   FROM TableWithDatetime
+     *  WHERE TableWithDatetime.datetime < '3000-01-01 08:00:00.100000'
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testSelectByDatetimeLiteralComparison(testDB: TestDB) {
@@ -98,7 +182,8 @@ class DateTimeLiteralTest: AbstractExposedTest() {
             TableWithDatetime.insert {
                 it[datetime] = defaultDatetime
             }
-            val query = TableWithDatetime.selectAll()
+            val query = TableWithDatetime
+                .selectAll()
                 .where {
                     TableWithDatetime.datetime less dateTimeLiteral(futureDatetime)
                 }
@@ -106,6 +191,22 @@ class DateTimeLiteralTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * [timestampLiteral] 을 사용한 타임스탬프 등가 테스트
+     *
+     * ```sql
+     * -- Postgres
+     * SELECT tablewithtimestamp."timestamp"
+     *   FROM tablewithtimestamp
+     *  WHERE tablewithtimestamp."timestamp" = '2000-01-01T01:00:00'
+     * ```
+     * ```sql
+     * -- MySQL V8
+     * SELECT TableWithTimestamp.`timestamp`
+     *   FROM TableWithTimestamp
+     *  WHERE TableWithTimestamp.`timestamp` = '2000-01-01 01:00:00.000000'
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testSelectByTimestampLiteralEquality(testDB: TestDB) {
@@ -118,6 +219,39 @@ class DateTimeLiteralTest: AbstractExposedTest() {
                 .select(TableWithTimestamp.timestamp)
                 .where {
                     TableWithTimestamp.timestamp eq timestampLiteral(defaultTimestamp)
+                }
+            query.single()[TableWithTimestamp.timestamp] shouldBeEqualTo defaultTimestamp
+        }
+    }
+
+    /**
+     * [timestampLiteral] 을 사용한 타임스탬프 비교 테스트
+     *
+     * ```sql
+     * -- Postgres
+     * SELECT tablewithtimestamp."timestamp"
+     *   FROM tablewithtimestamp
+     *  WHERE tablewithtimestamp."timestamp" < '3000-01-01T01:00:00'
+     * ```
+     * ```sql
+     * -- MySQL V8
+     * SELECT TableWithTimestamp.`timestamp`
+     *   FROM TableWithTimestamp
+     *  WHERE TableWithTimestamp.`timestamp` < '3000-01-01 01:00:00.000000'
+     * ```
+     */
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun testSelectByTimestampLiteralComparison(testDB: TestDB) {
+        withTables(testDB, TableWithTimestamp) {
+            TableWithTimestamp.insert {
+                it[timestamp] = defaultTimestamp
+            }
+
+            val query = TableWithTimestamp
+                .select(TableWithTimestamp.timestamp)
+                .where {
+                    TableWithTimestamp.timestamp less timestampLiteral(futureTimestamp)
                 }
             query.single()[TableWithTimestamp.timestamp] shouldBeEqualTo defaultTimestamp
         }
