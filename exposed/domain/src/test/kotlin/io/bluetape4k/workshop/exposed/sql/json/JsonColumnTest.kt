@@ -219,7 +219,7 @@ class JsonColumnTest: AbstractExposedJsonTest() {
                 else ->
                     JsonTable.jsonColumn.extract<Int>(".logins")
             }
-            \
+
             val tooManyLogins = logins greaterEq 1000
             val result = tester
                 .select(tester.id)
