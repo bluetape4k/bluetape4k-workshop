@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.sql.kotlin.datetime
 
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.TestDB.H2_PSQL
@@ -37,6 +38,7 @@ import org.jetbrains.exposed.sql.Cast
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Table.Dual
 import org.jetbrains.exposed.sql.castTo
 import org.jetbrains.exposed.sql.get
 import org.jetbrains.exposed.sql.insert
@@ -87,10 +89,13 @@ class KotlinTimeTest: AbstractExposedTest() {
 
     private val timestampWithTimeZoneUnsupportedDB = setOf(TestDB.MYSQL_V5) // TestDB.ALL_MARIADB + TestDB.MYSQL_V5
 
+    /**
+     * Kotlin [LocalDateTime] 컬럼을 저장하고 조회하는 테스트
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun kotlinTimeFunctions(testDB: TestDB) {
-        // MYSQL V8 에서 year(), month(), day(), hour(), minute(), second() functions 이 제대로 작동하지 않는다.
+        // NOTE: MYSQL V8 에서 year(), month(), day(), hour(), minute(), second() functions 이 제대로 작동하지 않는다.
         Assumptions.assumeTrue { testDB != TestDB.MYSQL_V8 }
 
         withTables(testDB, CitiesTime) {
@@ -116,22 +121,33 @@ class KotlinTimeTest: AbstractExposedTest() {
              */
             CitiesTime.selectAll().single()[CitiesTime.local_time] shouldDateTimeEqualTo now
 
-            val insertedYear = CitiesTime.select(CitiesTime.local_time.year())
+            val insertedYear = CitiesTime
+                .select(CitiesTime.local_time.year())
                 .where { CitiesTime.id.eq(cityID) }
                 .single()[CitiesTime.local_time.year()]
-            val insertedMonth = CitiesTime.select(CitiesTime.local_time.month())
+
+            val insertedMonth = CitiesTime
+                .select(CitiesTime.local_time.month())
                 .where { CitiesTime.id.eq(cityID) }
                 .single()[CitiesTime.local_time.month()]
-            val insertedDay = CitiesTime.select(CitiesTime.local_time.day())
+
+            val insertedDay = CitiesTime
+                .select(CitiesTime.local_time.day())
                 .where { CitiesTime.id.eq(cityID) }
                 .single()[CitiesTime.local_time.day()]
-            val insertedHour = CitiesTime.select(CitiesTime.local_time.hour())
+
+            val insertedHour = CitiesTime
+                .select(CitiesTime.local_time.hour())
                 .where { CitiesTime.id.eq(cityID) }
                 .single()[CitiesTime.local_time.hour()]
-            val insertedMinute = CitiesTime.select(CitiesTime.local_time.minute())
+
+            val insertedMinute = CitiesTime
+                .select(CitiesTime.local_time.minute())
                 .where { CitiesTime.id.eq(cityID) }
                 .single()[CitiesTime.local_time.minute()]
-            val insertedSecond = CitiesTime.select(CitiesTime.local_time.second())
+
+            val insertedSecond = CitiesTime
+                .select(CitiesTime.local_time.second())
                 .where { CitiesTime.id.eq(cityID) }
                 .single()[CitiesTime.local_time.second()]
 
@@ -144,6 +160,9 @@ class KotlinTimeTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * [LocalDateTime] 의 nanoseconds 정보도 저장하는 테스트
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testStoringLocalDateTimeWithNanos(testDB: TestDB) {
@@ -190,9 +209,30 @@ class KotlinTimeTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * [Instant] 컬럼을 `expression` 을 사용하여 조회하는 테스트
+     *
+     * ```sql
+     * -- Postgres
+     * INSERT INTO tester (ts, tsn)
+     * VALUES ('2025-02-04T13:51:14.734797', '2025-02-04T13:51:14.734797');
+     *
+     * SELECT MAX(tester.ts) FROM tester
+     * SELECT MIN(tester.ts) FROM tester
+     * SELECT MAX(tester.tsn) FROM tester
+     * SELECT MIN(tester.tsn) FROM tester
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `test selecting Instant using expressions`(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS tester (
+         *  ts TIMESTAMP NOT NULL,
+         *  tsn TIMESTAMP NULL
+         * )
+         */
         val tester = object: Table("tester") {
             val ts = timestamp("ts")
             val tsn = timestamp("tsn").nullable()
@@ -201,6 +241,7 @@ class KotlinTimeTest: AbstractExposedTest() {
         val now = Clock.System.now()
 
         withTables(testDB, tester) {
+
             tester.insert {
                 it[ts] = now
                 it[tsn] = now
@@ -224,9 +265,40 @@ class KotlinTimeTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * [LocalDate] 수형의 [date] 컬럼을 비교하는 테스트
+     *
+     * ```sql
+     * -- Postgres
+     * SELECT test_table.created, test_table.deleted
+     *   FROM test_table
+     *  WHERE test_table.created = test_table.deleted;
+     *
+     * SELECT test_table.created, test_table.deleted
+     *   FROM test_table
+     *  WHERE Extract(MONTH FROM test_table.created) = Extract(MONTH FROM test_table.deleted);
+     *
+     * SELECT test_table.created, test_table.deleted
+     *   FROM test_table
+     *  WHERE Extract(YEAR FROM test_table.created) = Extract(YEAR FROM CAST('2023-05-04' AS DATE));
+     *
+     * -- MySQL V8
+     * SELECT test_table.created, test_table.deleted
+     *   FROM test_table
+     *  WHERE YEAR(test_table.created) = YEAR('2023-05-04');
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testLocalDateComparison(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS test_table (
+         *      created DATE NOT NULL,
+         *      deleted DATE NOT NULL
+         * )
+         * ```
+         */
         val tester = object: Table("test_table") {
             val created = date("created")
             val deleted = date("deleted")
@@ -259,7 +331,8 @@ class KotlinTimeTest: AbstractExposedTest() {
             } else {
                 dateParam(mayTheFourth).year()
             }
-            val createdIn2023 = tester.selectAll()
+            val createdIn2023 = tester
+                .selectAll()
                 .where { tester.created.year() eq year2023 }
                 .toList()
 
@@ -267,9 +340,41 @@ class KotlinTimeTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * [LocalDateTime] 컬럼을 비교하는 테스트
+     *
+     * ```sql
+     * -- Postgres
+     * INSERT INTO test_table_dt (created, modified)
+     * VALUES ('2011-05-04T13:00:21.871130789', '2011-05-04T13:00:21.871130789');
+     * INSERT INTO test_table_dt (created, modified)
+     * VALUES ('2011-05-04T13:00:21.871130789', '2025-02-04T13:51:14.978643');
+     *
+     * SELECT COUNT(*)
+     *   FROM test_table_dt
+     *  WHERE test_table_dt.created = '2011-05-04T13:00:21.871130789';
+     *
+     * SELECT test_table_dt.id, test_table_dt.created, test_table_dt.modified
+     *   FROM test_table_dt
+     *  WHERE test_table_dt.modified = test_table_dt.created;
+     *
+     * SELECT test_table_dt.id, test_table_dt.created, test_table_dt.modified
+     *   FROM test_table_dt
+     *  WHERE test_table_dt.modified > test_table_dt.created;
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testLocalDateTimeComparison(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS test_table_dt (
+         *      id SERIAL PRIMARY KEY,
+         *      created TIMESTAMP NOT NULL,
+         *      modified TIMESTAMP NOT NULL
+         * )
+         * ```
+         */
         val tester = object: IntIdTable("test_table_dt") {
             val created = datetime("created")
             val modified = datetime("modified")
@@ -314,6 +419,47 @@ class KotlinTimeTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * `jsonb` 컬럼에 [LocalDateTime] 속성을 가진 Object를 저장하고 조회하는 테스트
+     *
+     * ```sql
+     * -- Postgres
+     * INSERT INTO tester (created, modified)
+     * VALUES ('2024-02-04T00:00:00', {"userId":1,"timestamp":"2025-02-04T14:09:02.148894"});
+     *
+     * INSERT INTO tester (created, modified)
+     * VALUES ('2026-02-04T00:00:00', {"userId":2,"timestamp":"2025-02-04T14:09:02.148894"});
+     *
+     * SELECT JSONB_EXTRACT_PATH_TEXT(tester.modified, 'timestamp')
+     *   FROM tester;
+     *
+     * SELECT JSONB_EXTRACT_PATH(tester.modified, 'timestamp')
+     *   FROM tester;
+     *
+     * SELECT tester.created, tester.modified
+     *   FROM tester
+     *  WHERE CAST(JSONB_EXTRACT_PATH_TEXT(tester.modified, 'timestamp') AS TIMESTAMP) < tester.created;
+     * ```
+     *
+     * ```sql
+     * -- MySQL V8
+     * INSERT INTO tester (created, modified)
+     * VALUES ('2024-02-04 00:00:00.000000', {"userId":1,"timestamp":"2025-02-04T14:09:02.194572"});
+     *
+     * INSERT INTO tester (created, modified)
+     * VALUES ('2026-02-04 00:00:00.000000', {"userId":2,"timestamp":"2025-02-04T14:09:02.194572"});
+     *
+     * SELECT JSON_UNQUOTE(JSON_EXTRACT(tester.modified, "$.timestamp"))
+     *   FROM tester;
+     *
+     * SELECT JSON_EXTRACT(tester.modified, "$.timestamp")
+     *   FROM tester;
+     *
+     * SELECT tester.created, tester.modified
+     *   FROM tester
+     *  WHERE JSON_UNQUOTE(JSON_EXTRACT(tester.modified, "$.timestamp")) < tester.created;
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testDateTimeAsJsonB(testDB: TestDB) {
@@ -335,12 +481,6 @@ class KotlinTimeTest: AbstractExposedTest() {
         withTables(testDB, tester) {
             val dateTimeNow = now()
 
-            /**
-             * ```sql
-             * INSERT INTO tester (created, modified)
-             * VALUES ('2024-01-26T00:00:00', {"userId":1,"timestamp":"2025-01-26T14:23:29.649312"})
-             * ```
-             */
             tester.insert {
                 it[created] = dateTimeNow.date.minus(1, DateTimeUnit.YEAR).atTime(0, 0, 0)
                 it[modified] = ModifierData(1, dateTimeNow)
@@ -394,13 +534,31 @@ class KotlinTimeTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * `TIMESTAMP WITH TIME ZONE` 컬럼을 [OffsetDateTime]으로 활용하는 방법
+     *
+     * ```sql
+     * -- Postgres
+     * INSERT INTO testtable (timestamptz) VALUES ('2025-02-04T16:01:31.537352+02:00');
+     * INSERT INTO testtable (timestamptz) VALUES ('2025-02-04T16:01:31.537352+02:00');
+     * INSERT INTO testtable (timestamptz) VALUES ('2025-02-04T16:01:31.537352+02:00');
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testTimestampWithTimeZone(testDB: TestDB) {
         Assumptions.assumeTrue { testDB !in timestampWithTimeZoneUnsupportedDB }
 
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS testtable (
+         *      id SERIAL PRIMARY KEY,
+         *      timestamptz TIMESTAMP WITH TIME ZONE NOT NULL
+         * );
+         * ```
+         */
         val tester = object: IntIdTable("TestTable") {
-            val timestampWithTimeZone = timestampWithTimeZone("timestamptz-column")
+            val timestampWithTimeZone = timestampWithTimeZone("timestamptz")
         }
 
         withTables(testDB, tester) {
@@ -421,7 +579,7 @@ class KotlinTimeTest: AbstractExposedTest() {
             java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(ZoneOffset.UTC))
             ZoneId.systemDefault().id shouldBeEqualTo "UTC"
 
-            val cairoNowRetrievedInUTCTimeZone = tester.selectAll()
+            val cairoNowRetrievedInUTCTimeZone: OffsetDateTime = tester.selectAll()
                 .where { tester.id eq cairoId }
                 .single()[tester.timestampWithTimeZone]
 
@@ -433,20 +591,20 @@ class KotlinTimeTest: AbstractExposedTest() {
                 .where { tester.id eq utcID }
                 .single()[tester.timestampWithTimeZone]
 
-            // Tokyo time zone
-            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Asia/Tokyo"))
-            ZoneId.systemDefault().id shouldBeEqualTo "Asia/Tokyo"
+            // Seoul time zone
+            java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Asia/Seoul"))
+            ZoneId.systemDefault().id shouldBeEqualTo "Asia/Seoul"
 
-            val cairoNowRetrievedInTokyoTimeZone = tester.selectAll()
+            val cairoNowRetrievedInSeoulTimeZone = tester.selectAll()
                 .where { tester.id eq cairoId }
                 .single()[tester.timestampWithTimeZone]
 
-            val tokyoID = tester.insertAndGetId {
+            val seoulID = tester.insertAndGetId {
                 it[timestampWithTimeZone] = cairoNow
             }
 
             val cairoNowInsertedInTokyoTimeZone = tester.selectAll()
-                .where { tester.id eq tokyoID }
+                .where { tester.id eq seoulID }
                 .single()[tester.timestampWithTimeZone]
 
             // PostgreSQL and MySQL always store the timestamp in UTC, thereby losing the original time zone.
@@ -460,14 +618,14 @@ class KotlinTimeTest: AbstractExposedTest() {
 
                 // Assert that time zone is preserved when the same record is retrieved in different time zones
                 cairoNowRetrievedInUTCTimeZone shouldDateTimeEqualTo cairoNow
-                cairoNowRetrievedInTokyoTimeZone shouldDateTimeEqualTo cairoNow
+                cairoNowRetrievedInSeoulTimeZone shouldDateTimeEqualTo cairoNow
             } else {
                 // Assert equivalence in UTC when the same value is inserted in different time zones
                 cairoNowInsertedInUTCTimeZone shouldDateTimeEqualTo cairoNowInsertedInCairoTimeZone
                 cairoNowInsertedInTokyoTimeZone shouldDateTimeEqualTo cairoNowInsertedInUTCTimeZone
 
                 // Assert equivalence in UTC when the same record is retrieved in different time zones
-                cairoNowRetrievedInTokyoTimeZone shouldDateTimeEqualTo cairoNowRetrievedInUTCTimeZone
+                cairoNowRetrievedInSeoulTimeZone shouldDateTimeEqualTo cairoNowRetrievedInUTCTimeZone
             }
 
             // Reset to original time zone as set up in DatabaseTestsBase init block
@@ -491,11 +649,35 @@ class KotlinTimeTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * `TIMESTAMP WITH TIME ZONE` 컬럼을 활용하는 확장 함수 테스트
+     *
+     * ```sql
+     * -- Postgres
+     * INSERT INTO testtable ("timestamptz-column") VALUES ('2023-05-04T05:04:01.123123123Z')
+     * SELECT CAST(testtable."timestamptz-column" AS DATE) FROM testtable WHERE testtable.id = 1
+     * SELECT TO_CHAR(testtable."timestamptz-column", 'HH24:MI:SS.US') FROM testtable WHERE testtable.id = 1
+     * SELECT Extract(YEAR FROM testtable."timestamptz-column") FROM testtable WHERE testtable.id = 1
+     * SELECT Extract(MONTH FROM testtable."timestamptz-column") FROM testtable WHERE testtable.id = 1
+     * SELECT Extract(DAY FROM testtable."timestamptz-column") FROM testtable WHERE testtable.id = 1
+     * SELECT Extract(HOUR FROM testtable."timestamptz-column") FROM testtable WHERE testtable.id = 1
+     * SELECT Extract(MINUTE FROM testtable."timestamptz-column") FROM testtable WHERE testtable.id = 1
+     * SELECT Extract(SECOND FROM testtable."timestamptz-column") FROM testtable WHERE testtable.id = 1
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testTimestampWithTimeZoneExtensionFunctions(testDB: TestDB) {
         Assumptions.assumeTrue { testDB !in (timestampWithTimeZoneUnsupportedDB + TestDB.ALL_H2_V1 + TestDB.MYSQL_V8) }
 
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS testtable (
+         *      id SERIAL PRIMARY KEY,
+         *      "timestamptz-column" TIMESTAMP WITH TIME ZONE NOT NULL
+         * )
+         * ```
+         */
         val tester = object: IntIdTable("TestTable") {
             val timestampWithTimeZone = timestampWithTimeZone("timestamptz-column")
         }
@@ -555,27 +737,46 @@ class KotlinTimeTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * [CurrentDateTime] 함수를 사용하여 현재 시간을 저장하는 테스트
+     *
+     * ```sql
+     * SELECT CURRENT_TIMESTAMP
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testCurrentDateTimeFunction(testDB: TestDB) {
         Assumptions.assumeTrue { testDB !in TestDB.ALL_H2_V1 }
 
-        val fakeTestTable = object: IntIdTable("fakeTable") {}
-
-        withTables(testDB, fakeTestTable) {
-            fun currentDbDateTime(): LocalDateTime {
-                return fakeTestTable.select(CurrentDateTime).first()[CurrentDateTime]
-            }
-
-            fakeTestTable.insert {}
-
-            currentDbDateTime()
+        withDb(testDB) {
+            val now = Dual.select(CurrentDateTime).single()[CurrentDateTime]
+            log.debug { "now=$now" }
         }
     }
 
+    /**
+     * [Duration] 컬럼 값에 무한대의 값을 저장하는 테스트 ([Long.MAX_VALUE]/2 값)
+     *
+     * ```sql
+     * -- Postgres
+     * INSERT INTO tester (duration) VALUES ('9223372036854775807');
+     *
+     * SELECT tester.duration
+     *   FROM tester
+     *  WHERE tester.duration = '9223372036854775807';
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testInfiniteDuration(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS tester (
+         *     duration BIGINT NOT NULL
+         * );
+         * ```
+         */
         val tester = object: Table("tester") {
             val duration = duration("duration")
         }
@@ -583,18 +784,47 @@ class KotlinTimeTest: AbstractExposedTest() {
             tester.insert {
                 it[duration] = Duration.INFINITE
             }
-            val row = tester.selectAll()
+
+            val row = tester
+                .selectAll()
                 .where { tester.duration eq Duration.INFINITE }
                 .single()
             row[tester.duration] shouldBeEqualTo Duration.INFINITE
         }
     }
 
+    /**
+     * 배열 기능은 Postgres 만 지원합니다.
+     *
+     * [LocalDate], [LocalDateTime] 를 배열로 가지는 컬럼을 테스트
+     *
+     * ```sql
+     * -- Postgres
+     * INSERT INTO array_tester (dates, datetimes)
+     * VALUES (
+     *      ARRAY['2020-05-04','2021-05-04','2022-05-04'],
+     *      ARRAY['2020-05-04T09:09:09','2021-05-04T09:09:09','2022-05-04T09:09:09']
+     * );
+     *
+     * SELECT array_tester.dates[3],
+     *        array_tester.datetimes[1:2]
+     *   FROM array_tester
+     *  WHERE Extract(YEAR FROM array_tester.dates[1]) = 2020
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testDateTimeAsArray(testDB: TestDB) {
         Assumptions.assumeTrue { testDB in setOf(TestDB.H2, TestDB.POSTGRESQL) }
 
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS array_tester (
+         *      dates DATE[] DEFAULT ARRAY['2025-02-04'::date] NOT NULL,
+         *      datetimes TIMESTAMP[] DEFAULT ARRAY['2025-02-04 14:09:02.101'::timestamp without time zone] NOT NULL
+         * );
+         * ```
+         */
         val defaultDates = listOf(now().date)
         val defaultDateTimes = listOf(now())
         val tester = object: Table("array_tester") {
@@ -632,9 +862,28 @@ class KotlinTimeTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * [LocalTime] 컬럼을 비교하는 테스트
+     *
+     * ```sql
+     * INSERT INTO tablewithtime ("time") VALUES ('13:00:00');
+     *
+     * SELECT tablewithtime.id, tablewithtime."time"
+     *   FROM tablewithtime
+     *  WHERE tablewithtime."time" = '13:00:00';
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testSelectByTimeLiteralEquality(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS tablewithtime (
+         *      id SERIAL PRIMARY KEY,
+         *      "time" TIME NOT NULL
+         * )
+         * ```
+         */
         val tableWithTime = object: IntIdTable("TableWithTime") {
             val time = time("time")
         }
