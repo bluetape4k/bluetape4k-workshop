@@ -1134,6 +1134,21 @@ class MiscTableTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Update nullable columns to null
+     *
+     * ```sql
+     * -- Postgres
+     * INSERT INTO misc ("by", byn, sm, smn, n, nn, d, dn, t, tn, dt, dtn, ts, tsn, dr, drn, e, en, es, esn, "c", s, sn, dc, dcn, fcn)
+     * VALUES (13, 13, -10, -10, 42, 42, '2025-02-04', '2025-02-04', '10:56:20.258842', '10:56:20.258842', '2025-02-04T10:56:20.258846', '2025-02-04T10:56:20.258846', '2025-02-04T10:56:20.258852', '2025-02-04T10:56:20.258852', '60000000000', '60000000000', 0, 0, 'ONE', 'ONE', 'test', 'test', 'test', 239.42, 239.42, 239.42)
+     * ```
+     *
+     * ```sql
+     * -- Postgres
+     * UPDATE misc
+     *    SET byn=NULL, smn=NULL, nn=NULL, dn=NULL, tn=NULL, dtn=NULL, tsn=NULL, drn=NULL, en=NULL, esn=NULL, cn=NULL, sn=NULL, dcn=NULL, fcn=NULL WHERE misc.n = 42
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `update 02`(testDB: TestDB) {
@@ -1147,6 +1162,7 @@ class MiscTableTest: AbstractExposedTest() {
             val dec = BigDecimal("239.42")
             val timestamp = Instant.now()
             val duration = Duration.ofMinutes(1)
+
             tbl.insert {
                 it[by] = 13
                 it[byn] = 13
@@ -1228,6 +1244,9 @@ class MiscTableTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Update varchar column
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `update 03`(testDB: TestDB) {
@@ -1259,6 +1278,14 @@ class MiscTableTest: AbstractExposedTest() {
                 it[dc] = dec
             }
 
+            /**
+             * ```sql
+             * UPDATE misc
+             *    SET s=SUBSTRING(misc.s, 2, 255),
+             *        sn=SUBSTRING(misc.s, 3, 255)
+             *  WHERE misc.n = 101
+             * ```
+             */
             tbl.update({ tbl.n.eq(101) }) {
                 it.update(s, tbl.s.substring(2, 255))
                 it.update(sn) { tbl.s.substring(3, 255) }
@@ -1300,6 +1327,19 @@ class MiscTableTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * -- MySQL
+     * CREATE TABLE `zerodatetimetable` (
+     *     `id` INT NOT NULL AUTO_INCREMENT,
+     *     `dt1` datetime NOT NULL,
+     *     `dt2` datetime NULL,
+     *     `ts1` timestamp NOT NULL,
+     *     `ts2` timestamp NULL,
+     *     PRIMARY KEY (`id`)
+     * ) ENGINE=InnoDB
+     * ```
+     */
     private object ZeroDateTimeTable: Table("zerodatetimetable") {
         val id = integer("id")
 
