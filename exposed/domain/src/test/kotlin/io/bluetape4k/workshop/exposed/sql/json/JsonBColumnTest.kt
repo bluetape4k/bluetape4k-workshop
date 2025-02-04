@@ -56,10 +56,26 @@ import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
+/**
+ * JSONB 컬럼 사용 예제
+ */
 class JsonBColumnTest: AbstractExposedJsonTest() {
 
     companion object: KLogging()
 
+    /**
+     * JSONB 컬럼 생성 및 조회 테스트
+     *
+     * ```sql
+     * -- Postgres:
+     * INSERT INTO j_b_table (j_b_column)
+     * VALUES ({"user":{"name":"Pro","team":"Alpha"},"logins":999,"active":true,"team":"A"});
+     *
+     * SELECT j_b_table.id, j_b_table.j_b_column
+     *   FROM j_b_table
+     *  WHERE j_b_table.id = 2;
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert and select`(testDB: TestDB) {
@@ -75,21 +91,17 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
     }
 
     /**
-     * Update JSON column
+     * Update JSONB column
      *
-     * Postgres:
      * ```sql
-     * CREATE TABLE IF NOT EXISTS j_b_table (id SERIAL PRIMARY KEY, j_b_column JSONB NOT NULL);
-     * INSERT INTO j_b_table (j_b_column) VALUES ({"user":{"name":"Admin","team":null},"logins":10,"active":true,"team":null})
-     * ```
-     * ```sql
-     * UPDATE j_b_table SET j_b_column={"user":{"name":"Admin","team":null},"logins":10,"active":false,"team":null}
-     * SELECT j_b_table.id, j_b_table.j_b_column FROM j_b_table
+     * -- Postgres:
+     * UPDATE j_b_table
+     *   SET j_b_column={"user":{"name":"Admin","team":null},"logins":10,"active":false,"team":null}
      * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `update json`(testDB: TestDB) {
+    fun `update jsonb`(testDB: TestDB) {
         withJsonBTable(testDB) { tester, _, data1 ->
             tester.selectAll().single()[JsonBTable.jsonBColumn] shouldBeEqualTo data1
 
@@ -102,6 +114,11 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
         }
     }
 
+    /**
+     * JSONB 컬럼의 배열 부분을 `Slice` 로 추출하는 테스트
+     *
+     *
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `select with slice extract`(testDB: TestDB) {
@@ -114,7 +131,13 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
 
             /**
              * ```sql
-             * SELECT JSONB_EXTRACT_PATH(j_b_table.j_b_column, 'active') FROM j_b_table
+             * -- Postgres
+             * SELECT JSONB_EXTRACT_PATH(j_b_table.j_b_column, 'active')
+             *   FROM j_b_table
+             *
+             * -- MySQL V8
+             * SELECT JSON_EXTRACT(j_b_table.j_b_column, "$.active")
+             *   FROM j_b_table
              * ```
              */
             val isActive = JsonBTable.jsonBColumn.extract<Boolean>("${pathPrefix}active", toScalar = requiresScalar)
@@ -123,7 +146,13 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
 
             /**
              * ```sql
-             * SELECT JSONB_EXTRACT_PATH(j_b_table.j_b_column, 'user') FROM j_b_table
+             * -- Postgres
+             * SELECT JSONB_EXTRACT_PATH(j_b_table.j_b_column, 'user')
+             *   FROM j_b_table
+             *
+             * -- MySQL V8
+             * SELECT JSON_EXTRACT(j_b_table.j_b_column, "$.user")
+             *   FROM j_b_table
              * ```
              */
             val storedUser = JsonBTable.jsonBColumn.extract<User>("${pathPrefix}user", toScalar = requiresScalar)
@@ -132,7 +161,13 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
 
             /**
              * ```sql
-             * SELECT JSONB_EXTRACT_PATH_TEXT(j_b_table.j_b_column, 'user', 'name') FROM j_b_table
+             * -- Postgres
+             * SELECT JSONB_EXTRACT_PATH_TEXT(j_b_table.j_b_column, 'user', 'name')
+             *   FROM j_b_table
+             *
+             * -- MySQL V8
+             * SELECT JSON_UNQUOTE(JSON_EXTRACT(j_b_table.j_b_column, "$.user.name"))
+             *   FROM j_b_table
              * ```
              */
             val path = when (currentDialectTest) {
@@ -166,9 +201,15 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
 
             /**
              * ```sql
+             * -- Postgres:
              * SELECT j_b_table.id
              *   FROM j_b_table
-             *  WHERE CAST(JSONB_EXTRACT_PATH_TEXT(j_b_table.j_b_column, 'logins') AS INT) >= 1000
+             *  WHERE CAST(JSONB_EXTRACT_PATH_TEXT(j_b_table.j_b_column, 'logins') AS INT) >= 1000;
+             *
+             * -- MySQL V8:
+             * SELECT j_b_table.id
+             *   FROM j_b_table
+             *  WHERE JSON_UNQUOTE(JSON_EXTRACT(j_b_table.j_b_column, "$.logins")) >= 1000;
              * ```
              */
             val tooManyLogins = logins greaterEq 1000
@@ -179,6 +220,9 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
         }
     }
 
+    /**
+     * Kotlinx Serialization 의 `Serializable` 어노테이션이 없는 클래스는 사용할 수 없습니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `with non serializable class`(testDB: TestDB) {
@@ -195,6 +239,9 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
         }
     }
 
+    /**
+     * DAO 엔티티를 사용하여 INSERT, UPDATE, SELECT 테스트
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `DAO Functions with Json Column`(testDB: TestDB) {
@@ -204,6 +251,13 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
         val dataEntity = JsonBEntity
 
         withTables(testDB, dataTable) {
+            /**
+             * Insert new entity
+             * ```sql
+             * INSERT INTO j_b_table (j_b_column)
+             * VALUES ({"user":{"name":"Admin","team":"Alpha"},"logins":10,"active":true,"team":null})
+             * ```
+             */
             val jsonA = DataHolder(User("Admin", "Alpha"), 10, true, null)
             val newUser = dataEntity.new {
                 jsonBColumn = jsonA
@@ -214,19 +268,10 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
             dataEntity.findById(newUser.id)?.jsonBColumn shouldBeEqualTo jsonA
 
             /**
-             * Update
+             * Update by DSL
              *
-             * Postgres:
              * ```sql
-             * UPDATE j_b_table
-             *   SET j_b_column={"user":{"name":"Lead","team":"Beta"},"logins":10,"active":true,"team":null}
-             * ```
-             */
-            /**
-             * Update
-             *
-             * Postgres:
-             * ```sql
+             * -- Postgres:
              * UPDATE j_b_table
              *   SET j_b_column={"user":{"name":"Lead","team":"Beta"},"logins":10,"active":true,"team":null}
              * ```
@@ -249,15 +294,6 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
              * VALUES ({"user":{"name":"Admin","team":"Alpha"},"logins":10,"active":true,"team":null})
              * ```
              */
-
-            /**
-             * Insert new entity
-             *
-             * ```sql
-             * INSERT INTO j_b_table (j_b_column)
-             * VALUES ({"user":{"name":"Admin","team":"Alpha"},"logins":10,"active":true,"team":null})
-             * ```
-             */
             dataEntity.new { jsonBColumn = jsonA }
             val path = when (currentDialectTest) {
                 is PostgreSQLDialect -> arrayOf("user", "team")
@@ -265,19 +301,16 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
             }
 
             /**
-             * Postgres:
              * ```sql
+             * -- Postgres:
              * SELECT j_b_table.id, j_b_table.j_b_column
              *   FROM j_b_table
-             *  WHERE JSONB_EXTRACT_PATH_TEXT(j_b_table.j_b_column, 'user', 'team') LIKE 'B%'
-             * ```
-             */
-            /**
-             * Postgres:
-             * ```sql
+             *  WHERE JSONB_EXTRACT_PATH_TEXT(j_b_table.j_b_column, 'user', 'team') LIKE 'B%';
+             *
+             * -- MySQL V8:
              * SELECT j_b_table.id, j_b_table.j_b_column
              *   FROM j_b_table
-             *  WHERE JSONB_EXTRACT_PATH_TEXT(j_b_table.j_b_column, 'user', 'team') LIKE 'B%'
+             *  WHERE JSON_UNQUOTE(JSON_EXTRACT(j_b_table.j_b_column, "$.user.team")) LIKE 'B%';
              * ```
              */
             val userTeam = JsonBTable.jsonBColumn.extract<String>(*path)
@@ -287,9 +320,37 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
         }
     }
 
+    /**
+     * JSONB 컬럼의 객체 내부의 속성을 잉용하여 검색하는 테스트
+     *
+     * ```sql
+     * -- Postgres:
+     * SELECT j_b_table.id, j_b_table.j_b_column
+     *   FROM j_b_table
+     *  WHERE j_b_table.j_b_column @> '{"active":false}';
+     *
+     * SELECT COUNT(*)
+     *   FROM j_b_table
+     *  WHERE j_b_table.j_b_column @> '{"user":{"name":"Admin","team":"Alpha"}}';
+     * ```
+     * ```sql
+     * -- MySQL V8:
+     * SELECT j_b_table.id, j_b_table.j_b_column
+     *   FROM j_b_table
+     *  WHERE JSON_CONTAINS(j_b_table.j_b_column, '{"active":false}');
+     *
+     * SELECT COUNT(*)
+     *   FROM j_b_table
+     *  WHERE JSON_CONTAINS(j_b_table.j_b_column, '{"user":{"name":"Admin","team":"Alpha"}}');
+     *
+     * SELECT j_b_table.id, j_b_table.j_b_column
+     *   FROM j_b_table
+     *  WHERE JSON_CONTAINS(j_b_table.j_b_column, '"Alpha"', '$.user.team');
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `json contains`(testDB: TestDB) {
+    fun `jsonb contains`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB !in TestDB.ALL_H2 }
 
         withJsonBTable(testDB) { tester, user1, data1 ->
@@ -316,6 +377,9 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
         }
     }
 
+    /**
+     * JSONB 컬럼에 대한 검색 조건 테스트
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `json exists`(testDB: TestDB) {
@@ -324,14 +388,22 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
         withJsonBTable(testDB) { tester, user1, data1 ->
             val maximumLogins = 1000
             val teamA = "A"
+
+            /**
+             * ```sql
+             * -- Postgres:
+             * INSERT INTO j_b_table (j_b_column)
+             * VALUES ({"user":{"name":"Admin","team":"A"},"logins":1000,"active":true,"team":null})
+             * ```
+             */
             val newId = tester.insertAndGetId {
                 it[JsonBTable.jsonBColumn] = data1.copy(user = data1.user.copy(team = teamA), logins = maximumLogins)
             }
 
             /**
-             * Postgres:
              * ```sql
-             * SELECT COUNT(*) FROM j_b_table WHERE JSONB_PATH_EXISTS(CAST(j_table.j_column as jsonb), '$')
+             * -- Postgres:
+             * SELECT COUNT(*) FROM j_b_table WHERE JSONB_PATH_EXISTS(j_b_table.j_b_column, '$')
              * ```
              */
             val optional = if (testDB in TestDB.ALL_MYSQL_LIKE) "one" else null
@@ -341,18 +413,22 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
             tester.selectAll().where { hasAnyData }.count() shouldBeEqualTo 2L
 
             /**
-             * Postgres:
              * ```sql
-             * SELECT COUNT(*) FROM j_table WHERE JSONB_PATH_EXISTS(CAST(j_table.j_column as jsonb), '$.fakeKey')
+             * -- Postgres:
+             * SELECT COUNT(*)
+             *   FROM j_b_table
+             *  WHERE JSONB_PATH_EXISTS(j_b_table.j_b_column, '$.fakeKey')
              * ```
              */
             val hasFakeKey = JsonBTable.jsonBColumn.exists(".fakeKey", optional = optional)
             tester.selectAll().where { hasFakeKey }.count() shouldBeEqualTo 0L
 
             /**
-             * Postgres:
              * ```sql
-             * SELECT COUNT(*) FROM j_table WHERE JSONB_PATH_EXISTS(CAST(j_table.j_column as jsonb), '$.logins')
+             * -- Postgres:
+             * SELECT COUNT(*)
+             *   FROM j_b_table
+             *  WHERE JSONB_PATH_EXISTS(j_b_table.j_b_column, '$.logins')
              * ```
              */
             val hasLogins = JsonBTable.jsonBColumn.exists(".logins", optional = optional)
@@ -362,11 +438,11 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
             val testDialect = currentDialectTest
             if (testDialect is PostgreSQLDialect) {
                 /**
-                 * Postgres:
                  * ```sql
-                 * SELECT j_table.id
-                 *   FROM j_table
-                 *  WHERE JSONB_PATH_EXISTS(CAST(j_table.j_column as jsonb), '$.logins ? (@ == 1000)')
+                 * -- Postgres:
+                 * SELECT j_b_table.id
+                 *   FROM j_b_table
+                 *  WHERE JSONB_PATH_EXISTS(j_b_table.j_b_column, '$.logins ? (@ == 1000)')
                  * ```
                  */
                 val filterPath = ".logins ? (@ == $maximumLogins)"
@@ -375,12 +451,11 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
                 usersWithMaxLogin.single()[tester.id] shouldBeEqualTo newId
 
                 /**
-                 * Postgres:
                  * ```sql
-                 * SELECT j_table.id
-                 *   FROM j_table
-                 *  WHERE JSONB_PATH_EXISTS(CAST(j_table.j_column as jsonb), '$.user.team ? (@ == $team)', '{"team":"A"}')
-                 *
+                 * -- Postgres:
+                 * SELECT j_b_table.id
+                 *   FROM j_b_table
+                 *  WHERE JSONB_PATH_EXISTS(j_b_table.j_b_column, '$.user.team ? (@ == $team)', '{"team":"A"}')
                  * ```
                  */
                 val jsonPath = ".user.team ? (@ == \$team)"
@@ -392,34 +467,42 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
         }
     }
 
+    /**
+     * JSONB 컬럼에 Array 데이터를 저장하고 검색하는 테스트
+     *
+     * ```sql
+     * -- Postgres:
+     * SELECT j_b_arrays.id, j_b_arrays."groups", j_b_arrays.numbers
+     *   FROM j_b_arrays
+     *  WHERE JSONB_EXTRACT_PATH_TEXT(j_b_arrays."groups", 'users', '0', 'team') = 'Team A';
+     *
+     * SELECT JSONB_EXTRACT_PATH_TEXT(j_b_arrays.numbers, '0') FROM j_b_arrays;
+     * ```
+     *
+     * ```sql
+     * -- Postgres:
+     * SELECT j_b_arrays.id, j_b_arrays.`groups`, j_b_arrays.numbers
+     *   FROM j_b_arrays
+     *  WHERE JSON_UNQUOTE(JSON_EXTRACT(j_b_arrays.`groups`, "$.users[0].team")) = 'Team A';
+     *
+     * SELECT JSON_UNQUOTE(JSON_EXTRACT(j_b_arrays.numbers, "$[0]"))
+     *   FROM j_b_arrays;
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `json extract with arrays`(testDB: TestDB) {
+    fun `jsonb extract with arrays`(testDB: TestDB) {
         withJsonBArrays(testDB) { tester, singleId, tripleId ->
             val path1 = when (currentDialectTest) {
                 is PostgreSQLDialect -> arrayOf("users", "0", "team")
                 else -> arrayOf(".users[0].team")
             }
 
-            /**
-             * Postgres:
-             * ```sql
-             * SELECT j_arrays.id, j_arrays."groups", j_arrays.numbers
-             *   FROM j_arrays
-             *  WHERE JSON_EXTRACT_PATH_TEXT(j_arrays."groups", 'users', '0', 'team') = 'Team A'
-             * ```
-             */
             val firstIsOnTeamA = JsonBArrays.groups.extract<String>(*path1) eq "Team A"
             tester.selectAll()
                 .where { firstIsOnTeamA }
                 .single()[tester.id] shouldBeEqualTo singleId
 
-            /**
-             * Postgres:
-             * ```sql
-             * SELECT JSON_EXTRACT_PATH_TEXT(j_arrays.numbers, '0') FROM j_arrays
-             * ```
-             */
             // older MySQL and MariaDB versions require non-scalar extracted value from JSON Array
             val toScala = testDB != TestDB.MYSQL_V5
             val path2 = if (currentDialectTest is PostgreSQLDialect) "0" else "[0]"
@@ -430,14 +513,19 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `json contains with array`(testDB: TestDB) {
+    fun `jsonb contains with array`(testDB: TestDB) {
         withJsonBArrays(testDB) { tester, _, tripleId ->
             /**
-             * Postgres:
              * ```sql
-             * SELECT j_arrays.id, j_arrays."groups", j_arrays.numbers
-             *   FROM j_arrays
-             *  WHERE j_arrays.numbers::jsonb @> '[3, 5]'::jsonb
+             * -- Postgres
+             * SELECT j_b_arrays.id, j_b_arrays."groups", j_b_arrays.numbers
+             *   FROM j_b_arrays
+             *  WHERE j_b_arrays.numbers @> '[3, 5]';
+             *
+             * -- MySQL V8
+             * SELECT j_b_arrays.id, j_b_arrays.`groups`, j_b_arrays.numbers
+             *   FROM j_b_arrays
+             *  WHERE JSON_CONTAINS(j_b_arrays.numbers, '[3, 5]');
              * ```
              */
             val hasSmallNumbers = JsonBArrays.numbers.contains("[3, 5]")
@@ -446,12 +534,11 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
                 .single()[tester.id] shouldBeEqualTo tripleId
 
             /**
-             * MySQL V8:
-             *
              * ```sql
-             * SELECT j_arrays.id, j_arrays.`groups`, j_arrays.numbers
-             *   FROM j_arrays
-             *  WHERE JSON_CONTAINS(j_arrays.`groups`, '"B"', '$.users[0].name')
+             * -- MySQL V8
+             * SELECT j_b_arrays.id, j_b_arrays.`groups`, j_b_arrays.numbers
+             *   FROM j_b_arrays
+             *  WHERE JSON_CONTAINS(j_b_arrays.`groups`, '"B"', '$.users[0].name');
              * ```
              */
             if (testDB in TestDB.ALL_MYSQL_LIKE) {
@@ -463,31 +550,44 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
         }
     }
 
+    /**
+     * JSONB 컬럼에 대한 검색 조건 테스트
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `json exists with array`(testDB: TestDB) {
+    fun `jsonb exists with array`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB !in TestDB.ALL_H2 }
 
         withJsonBArrays(testDB) { tester, singleId, tripleId ->
             val optional = if (testDB in TestDB.ALL_MYSQL_LIKE) "one" else null
 
             /**
-             * Postgres:
              * ```sql
-             * SELECT j_arrays.id, j_arrays."groups", j_arrays.numbers
-             *   FROM j_arrays
-             *  WHERE JSONB_PATH_EXISTS(CAST(j_arrays."groups" as jsonb), '$.users[1]')
+             * -- Postgres:
+             * SELECT j_b_arrays.id, j_b_arrays."groups", j_b_arrays.numbers
+             *   FROM j_b_arrays
+             *  WHERE JSONB_PATH_EXISTS(j_b_arrays."groups", '$.users[1]');
+             *
+             * -- MySQL V8:
+             * SELECT j_b_arrays.id, j_b_arrays.`groups`, j_b_arrays.numbers
+             *   FROM j_b_arrays
+             *  WHERE JSON_CONTAINS_PATH(j_b_arrays.`groups`, 'one', '$.users[1]');
              * ```
              */
             val hasMultipleUsers = JsonBArrays.groups.exists(".users[1]", optional = optional)
             tester.selectAll().where { hasMultipleUsers }.single()[tester.id] shouldBeEqualTo tripleId
 
             /**
-             * Postgres:
              * ```sql
-             * SELECT j_arrays.id, j_arrays."groups", j_arrays.numbers
-             *   FROM j_arrays
-             *  WHERE JSONB_PATH_EXISTS(CAST(j_arrays.numbers as jsonb), '$[2]')
+             * -- Postgres:
+             * SELECT j_b_arrays.id, j_b_arrays."groups", j_b_arrays.numbers
+             *   FROM j_b_arrays
+             *  WHERE JSONB_PATH_EXISTS(j_b_arrays.numbers, '$[2]');
+             *
+             * -- MySQL V8:
+             * SELECT j_b_arrays.id, j_b_arrays.`groups`, j_b_arrays.numbers
+             *   FROM j_b_arrays
+             *  WHERE JSON_CONTAINS_PATH(j_b_arrays.numbers, 'one', '$[2]');
              * ```
              */
             val hasAtLeast3Numbers = JsonBArrays.numbers.exists("[2]", optional = optional)
@@ -498,6 +598,16 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `json with defaults`(testDB: TestDB) {
+        /**
+         * Default value for JSON column
+         * ```sql
+         * -- Postgres:
+         * CREATE TABLE IF NOT EXISTS default_tester (
+         *      user_1 JSONB DEFAULT '{"name":"UNKNOWN","team":"UNASSIGNED"}'::jsonb NOT NULL,
+         *      user_2 JSONB NOT NULL
+         * )
+         * ```
+         */
         val defaultUser = User("UNKNOWN", "UNASSIGNED")
         val defaultTester = object: Table("default_tester") {
             val user1 = jsonb<User>("user_1", Json.Default).default(defaultUser)
@@ -510,15 +620,6 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
                     SchemaUtils.createMissingTablesAndColumns(defaultTester)
                 }
             } else {
-                /**
-                 * Postgres:
-                 * ```sql
-                 * CREATE TABLE IF NOT EXISTS default_tester (
-                 *      user_1 JSON DEFAULT '{"name":"UNKNOWN","team":"UNASSIGNED"}'::json NOT NULL,
-                 *      user_2 JSON NOT NULL
-                 * )
-                 * ```
-                 */
                 SchemaUtils.createMissingTablesAndColumns(defaultTester)
                 defaultTester.exists().shouldBeTrue()
 
@@ -526,6 +627,13 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
                 val alters = SchemaUtils.statementsRequiredToActualizeScheme(defaultTester)
                 alters.shouldBeEmpty()
 
+                /**
+                 * Client default 값이므로, Insert 시에는 값이 제공된다.
+                 * ```sql
+                 * -- Postgres:
+                 * INSERT INTO default_tester (user_2)
+                 * VALUES ({"name":"UNKNOWN","team":"UNASSIGNED"})
+                 */
                 defaultTester.insert { }
 
                 defaultTester.selectAll().single().also {
@@ -538,10 +646,23 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
         }
     }
 
+    /**
+     * [StdOutSqlLogger] 를 사용하여 JSONB 컬럼에 대한 로깅 테스트
+     */
     @OptIn(ExperimentalSerializationApi::class)
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `logger with json collections`(testDB: TestDB) {
+    fun `logger with jsonb collections`(testDB: TestDB) {
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS iterables_tester (
+         *      user_list JSONB NOT NULL,
+         *      int_list JSONB NOT NULL,
+         *      user_array JSONB NOT NULL,
+         *      int_array JSONB NOT NULL
+         * )
+         * ```
+         */
         val iterables = object: Table("iterables_tester") {
             val userList = jsonb<List<User>>("user_list", Json.Default, ListSerializer(User.serializer()))
             val intList = jsonb<List<Int>>("int_list", Json.Default)
@@ -573,9 +694,26 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
         }
     }
 
+    /**
+     * JSONB 컬럼에 대한 NULL 값 테스트
+     *
+     * ```sql
+     * -- Postgres:
+     * CREATE TABLE IF NOT EXISTS nullable_tester (
+     *      id SERIAL PRIMARY KEY,
+     *      "user" JSONB NULL
+     * );
+     *
+     * INSERT INTO nullable_tester ("user") VALUES (NULL);
+     * INSERT INTO nullable_tester ("user") VALUES ({"name":"A","team":"Team A"});
+     *
+     * SELECT nullable_tester."user" FROM nullable_tester WHERE nullable_tester.id = 1;
+     * SELECT nullable_tester."user" FROM nullable_tester WHERE nullable_tester.id = 2;
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `json with nullable column`(testDB: TestDB) {
+    fun `jsonb with nullable column`(testDB: TestDB) {
         val tester = object: IntIdTable("nullable_tester") {
             val user = jsonb<User>("user", Json.Default).nullable()
         }
@@ -598,6 +736,23 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
         }
     }
 
+    /**
+     * JSONB 컬럼에 대한 UPSERT 테스트
+     *
+     * ```sql
+     * -- Postgres:
+     * INSERT INTO j_b_table (id, j_b_column)
+     * VALUES (2, {"user":{"name":"Pro","team":"Alpha"},"logins":999,"active":false,"team":"A"})
+     * ON CONFLICT (id) DO UPDATE SET j_b_column=EXCLUDED.j_b_column;
+     * ```
+     *
+     * ```sql
+     * -- MySQL V8:
+     * INSERT INTO j_b_table (id, j_b_column)
+     * VALUES (2, {"user":{"name":"Pro","team":"Alpha"},"logins":999,"active":false,"team":"A"})
+     * AS NEW ON DUPLICATE KEY UPDATE id=NEW.id, j_b_column=NEW.j_b_column;
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `jsonb with upsert`(testDB: TestDB) {
@@ -609,20 +764,6 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
                 it[JsonBTable.jsonBColumn] = newData
             }
 
-            /**
-             * MySQL V8:
-             * ```sql
-             * INSERT INTO j_table (id, j_column)
-             * VALUES (2, {"user":{"name":"Pro","team":"Alpha"},"logins":999,"active":false,"team":"A"})
-             * AS NEW ON DUPLICATE KEY UPDATE id=NEW.id, j_column=NEW.j_column
-             * ```
-             * Postgres:
-             * ```sql
-             * INSERT INTO j_table (id, j_column)
-             * VALUES (2, {"user":{"name":"Pro","team":"Alpha"},"logins":999,"active":false,"team":"A"})
-             * ON CONFLICT (id) DO UPDATE SET j_column=EXCLUDED.j_column
-             * ```
-             */
             val newData2 = newData.copy(active = false)
             tester.upsert {
                 it[tester.id] = newId
@@ -639,6 +780,13 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
     fun `jsonb with transformer`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB !in TestDB.ALL_H2_V1 }
 
+        /**
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS tester (
+         *      numbers JSONB NOT NULL
+         * )
+         * ```
+         */
         val tester = object: Table("tester") {
             val numbers: Column<DoubleArray> = jsonb<IntArray>("numbers", Json.Default)
                 .transform(
@@ -648,11 +796,6 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
         }
 
         withTables(testDB, tester) {
-            /**
-             * ```sql
-             * INSERT INTO tester (numbers) VALUES ([1,2,3])
-             * ```
-             */
             /**
              * ```sql
              * INSERT INTO tester (numbers) VALUES ([1,2,3])
@@ -694,6 +837,22 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
     private infix fun ExpressionWithColumnType<*>.keyExists(other: String) =
         KeyExistsOp(this, stringLiteral(other))
 
+    /**
+     * 사용자 정의 연산자를 사용하여 JSONB 컬럼의 특정 키가 존재하는지 확인합니다.
+     *
+     * **단, Postgres 에서만 사용 가능합니다.**
+     *
+     * ```sql
+     * -- Postgres:
+     *
+     * SELECT j_b_table.id, j_b_table.j_b_column
+     *   FROM j_b_table
+     *  WHERE j_b_table.j_b_column ?? 'logins';
+     *
+     * SELECT j_b_table.id, j_b_table.j_b_column
+     *   FROM j_b_table
+     *  WHERE j_b_table.j_b_column ?? 'name';
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `escaped placeholder in custom operator`(testDB: TestDB) {
@@ -708,7 +867,7 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
                 .single()
             topLevelKeyResult[JsonBTable.jsonBColumn] shouldBeEqualTo data1
 
-            // `.user.name` 이 있지, `.name` 은 없다.
+            // `.user.name` 이 있지만, `.name` 은 없다.
             val nestedKeyResult = tester
                 .selectAll()
                 .where { JsonBTable.jsonBColumn keyExists "name" }
