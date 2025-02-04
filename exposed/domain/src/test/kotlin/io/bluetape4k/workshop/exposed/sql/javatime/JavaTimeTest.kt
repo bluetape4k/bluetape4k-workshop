@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.exposed.sql.javatime
 
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.KotlinLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
@@ -23,12 +24,14 @@ import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldHaveSize
+import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.Cast
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.Table.Dual
 import org.jetbrains.exposed.sql.castTo
 import org.jetbrains.exposed.sql.get
 import org.jetbrains.exposed.sql.insert
@@ -80,6 +83,9 @@ import java.time.temporal.ChronoUnit.MILLIS
 import java.time.temporal.Temporal
 import java.util.*
 
+/**
+ * Exposed에서 제공하는 Java Time 수형을 사용하는 테스트
+ */
 class JavaTimeTest: AbstractExposedTest() {
 
     companion object: KLogging()
@@ -97,10 +103,9 @@ class JavaTimeTest: AbstractExposedTest() {
 
             /**
              * Insert a city with local time
-             *
-             * H2:
              * ```sql
-             * INSERT INTO CITIESTIME ("name", LOCAL_TIME) VALUES ('Seoul', '2025-01-17T09:21:19.842087')
+             * -- Postgres
+             * INSERT INTO citiestime ("name", local_time) VALUES ('Seoul', '2025-02-04T10:40:53.969116')
              * ```
              */
             val cityID = CitiesTime.insertAndGetId {
@@ -108,6 +113,21 @@ class JavaTimeTest: AbstractExposedTest() {
                 it[local_time] = now
             }
 
+            /**
+             * Select the city with local time
+             *
+             * ```sql
+             * -- Postgres
+             * SELECT Extract(YEAR FROM citiestime.local_time),
+             *        Extract(MONTH FROM citiestime.local_time),
+             *        Extract(DAY FROM citiestime.local_time),
+             *        Extract(HOUR FROM citiestime.local_time),
+             *        Extract(MINUTE FROM citiestime.local_time),
+             *        Extract(SECOND FROM citiestime.local_time)
+             *   FROM citiestime
+             *  WHERE citiestime.id = 1
+             * ```
+             */
             val row = CitiesTime
                 .select(
                     CitiesTime.local_time.year(),
@@ -129,6 +149,26 @@ class JavaTimeTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Instant 를 DB에 저장화고 조회한다.
+     *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS ts_table (
+     *      ts TIMESTAMP NOT NULL,
+     *      tsn TIMESTAMP NULL
+     * );
+     * ```
+     * ```sql
+     * INSERT INTO ts_table (ts, tsn) VALUES ('2025-02-04T10:29:49.01299', '2025-02-04T10:29:49.01299')
+     * ```
+     *
+     * ```sql
+     *  SELECT MAX(ts_table.ts) FROM ts_table
+     *  SELECT MIN(ts_table.ts) FROM ts_table
+     *  SELECT MAX(ts_table.tsn) FROM ts_table
+     *  SELECT MIN(ts_table.tsn) FROM ts_table
+     *  ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `selecting instant using expression`(testDB: TestDB) {
@@ -145,20 +185,6 @@ class JavaTimeTest: AbstractExposedTest() {
                 it[tsn] = now
             }
 
-            /**
-             * select max timestamp
-             *
-             * ```sql
-             * SELECT MAX(TS_TABLE.TS) FROM TS_TABLE
-             * ```
-             *
-             * select min timestamp
-             *
-             * ```sql
-             * SELECT MIN(TS_TABLE.TS) FROM TS_TABLE
-             * ```
-             *
-             */
             val maxTsExpr = testTable.ts.max()
             val maxTimestamp = testTable.select(maxTsExpr).single()[maxTsExpr]
             maxTimestamp shouldBeEqualTo now
@@ -177,21 +203,34 @@ class JavaTimeTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * `LocalDateTim`을 `date` 컬럼 함수로 nanos 값까지 DB에 저장하기
+     *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS testlocaldatetime (
+     *      id SERIAL PRIMARY KEY,
+     *      "time" TIMESTAMP NOT NULL
+     * )
+     * ```
+     *
+     * Insert two `LocalDateTime` with nanos
+     * ```sql
+     * INSERT INTO testlocaldatetime ("time") VALUES ('2025-02-04T09:13:33.000111112')
+     * INSERT INTO testlocaldatetime ("time") VALUES ('2025-02-04T09:13:33.000111118')
+     * ```
+     *
+     * Load the `LocalDateTime` with nanos from the DB
+     * ```
+     * -- Postgres, MySQL
+     * dateTimesFromDB=[2025-02-04T09:24:16.000111, 2025-02-04T09:24:16.000111]
+     * -- H2
+     * dateTimesFromDB=[2025-02-04T09:24:16.000111112, 2025-02-04T09:24:16.000111118]
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `Storing LocalDateTime with nanos`(testDB: TestDB) {
-        // Assumptions.assumeTrue { testDB != TestDB.H2_PSQL }
 
-        /**
-         * Table to store LocalDateTime with nanos
-         *
-         * ```sql
-         * CREATE TABLE IF NOT EXISTS TESTLOCALDATETIME (
-         *      ID INT AUTO_INCREMENT PRIMARY KEY,
-         *      "time" DATETIME(9) NOT NULL
-         * )
-         * ```
-         */
         val testDate = object: IntIdTable("TestLocalDateTime") {
             val time: Column<LocalDateTime> = datetime("time")
         }
@@ -200,32 +239,59 @@ class JavaTimeTest: AbstractExposedTest() {
             val dateTime = LocalDateTime.now()
             val nanos = 111111
 
-            /**
-             * insert 2 separate nanosecond constants to ensure test's rounding mode matches DB precision
-             *
-             * H2:
-             * ```sql
-             * INSERT INTO TESTLOCALDATETIME ("time") VALUES ('2025-01-26T14:14:43.000111111')
-             * INSERT INTO TESTLOCALDATETIME ("time") VALUES ('2025-01-26T14:14:43.000111118')
-             * ```
-             */
-            val dateTimeWithFewNanos = dateTime.withNano(nanos)
-            val dateTimeWithManyNanos = dateTime.withNano(nanos + 7)
+            val dateTimeWithNanos1 = dateTime.withNano(nanos + 1)
+            val dateTimeWithNanos2 = dateTime.withNano(nanos + 7)
 
             testDate.insert {
-                it[time] = dateTimeWithFewNanos
+                it[time] = dateTimeWithNanos1
             }
 
             testDate.insert {
-                it[time] = dateTimeWithManyNanos
+                it[time] = dateTimeWithNanos2
             }
 
-            val dateTimesFromDB = testDate.selectAll().map { it[testDate.time] }
-            dateTimesFromDB[0] shouldTemporalEqualTo dateTimeWithFewNanos
-            dateTimesFromDB[1] shouldTemporalEqualTo dateTimeWithManyNanos
+            flushCache()
+
+            val dateTimesFromDB = testDate.selectAll().map { it[testDate.time] }.apply {
+                log.debug { "dateTimesFromDB=$this" }
+            }
+            dateTimesFromDB[0] shouldTemporalEqualTo dateTimeWithNanos1
+            dateTimesFromDB[1] shouldTemporalEqualTo dateTimeWithNanos2
         }
     }
 
+    /**
+     * [LocalDate] 저장, 로드, 비교를 수행합니다.
+     *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS test_table (
+     *      created DATE NOT NULL,
+     *      deleted DATE NOT NULL
+     * )
+     * ```
+     * Insert [LocalDate] values
+     * ```sql
+     * INSERT INTO test_table (created, deleted) VALUES ('2024-05-04', '2024-05-04');
+     * INSERT INTO test_table (created, deleted) VALUES ('2024-05-04', '2024-05-05');
+     * ```
+     * Select [LocalDate] values
+     * ```sql
+     * -- Same date
+     * SELECT test_table.created, test_table.deleted
+     *   FROM test_table
+     *  WHERE test_table.created = test_table.deleted;
+     *
+     * -- Same month
+     * SELECT test_table.created, test_table.deleted
+     *   FROM test_table
+     *  WHERE Extract(MONTH FROM test_table.created) = Extract(MONTH FROM test_table.deleted);
+     *
+     *  -- Same year
+     * SELECT test_table.created, test_table.deleted
+     *   FROM test_table
+     *  WHERE Extract(YEAR FROM test_table.created) = Extract(YEAR FROM CAST('2024-05-04' AS DATE))
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `LocalDate comparison`(testDB: TestDB) {
@@ -245,31 +311,21 @@ class JavaTimeTest: AbstractExposedTest() {
                 it[deleted] = mayTheFourth.plusDays(1L)
             }
 
-            val sameDateResult = testTable.selectAll()
-                .where { testTable.created eq testTable.deleted }.toList()
+            val sameDateResult = testTable
+                .selectAll()
+                .where { testTable.created eq testTable.deleted }
+                .toList()
             sameDateResult shouldHaveSize 1
             sameDateResult.single()[testTable.deleted] shouldBeEqualTo mayTheFourth
 
-            val sameMonthResult = testTable.selectAll()
+            // Same Month
+            val sameMonthResult = testTable
+                .selectAll()
                 .where { testTable.created.month() eq testTable.deleted.month() }
                 .toList()
             sameMonthResult shouldHaveSize 2
 
-            /**
-             * MySQL_V8:
-             * ```sql
-             * SELECT test_table.created, test_table.deleted
-             *   FROM test_table
-             *  WHERE YEAR(test_table.created) = YEAR('2024-05-04')
-             * ```
-             *
-             * Postgres:
-             * ```sql
-             * SELECT test_table.created, test_table.deleted
-             *   FROM test_table
-             *  WHERE Extract(YEAR FROM test_table.created) = Extract(YEAR FROM CAST('2024-05-04' AS DATE))
-             * ```
-             */
+            // Same Year
             val year2024 = if (currentDialect is PostgreSQLDialect) {
                 // PostgreSQL requires explicit type cast to resolve function date_part
                 dateParam(mayTheFourth).castTo(JavaLocalDateColumnType()).year()
@@ -277,13 +333,32 @@ class JavaTimeTest: AbstractExposedTest() {
                 dateParam(mayTheFourth).year()
             }
 
-            val createdIn2025 = testTable.selectAll()
+            val createdIn2025 = testTable
+                .selectAll()
                 .where { testTable.created.year() eq year2024 }
                 .toList()
             createdIn2025 shouldHaveSize 2
         }
     }
 
+    /**
+     * [LocalDateTime]을 저장하고, 비교한다.
+     *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS test_table_dt (
+     *      id SERIAL PRIMARY KEY,
+     *      created TIMESTAMP NOT NULL,
+     *      modified TIMESTAMP NOT NULL
+     * );
+     * ```
+     * ```sql
+     * INSERT INTO test_table_dt (created, modified)
+     * VALUES ('2024-05-04T13:00:21.871130789', '2024-05-04T13:00:21.871130789');
+     *
+     * INSERT INTO test_table_dt (created, modified)
+     * VALUES ('2024-05-04T13:00:21.871130789', '2025-02-04T10:40:53.92072');
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `LocalDateTime comparison`(testDB: TestDB) {
@@ -316,23 +391,70 @@ class JavaTimeTest: AbstractExposedTest() {
                 else -> dateTimeParam(mayTheFourth)
             }
 
-            val createdMayFourth = tester.selectAll()
+            /**
+             * ```sql
+             * SELECT COUNT(*) FROM test_table_dt WHERE test_table_dt.created = '2024-05-04T13:00:21.871130789'
+             * ```
+             */
+            tester
+                .selectAll()
                 .where { tester.created eq dateTime }
-                .count()
-            createdMayFourth shouldBeEqualTo 2L
+                .count() shouldBeEqualTo 2L
 
-            val modifiedAtSame = tester.selectAll()
+            /**
+             * ```sql
+             * SELECT test_table_dt.id,
+             *        test_table_dt.created,
+             *        test_table_dt.modified
+             *   FROM test_table_dt
+             *  WHERE test_table_dt.modified = test_table_dt.created
+             * ```
+             */
+            tester
+                .selectAll()
                 .where { tester.modified eq tester.created }
-                .single()
-            modifiedAtSame[tester.id] shouldBeEqualTo id1
+                .single()[tester.id] shouldBeEqualTo id1
 
-            val modifiedAtLater = tester.selectAll()
+            /**
+             * ```sql
+             * SELECT test_table_dt.id,
+             *        test_table_dt.created,
+             *        test_table_dt.modified
+             *   FROM test_table_dt
+             *  WHERE test_table_dt.modified > test_table_dt.created
+             * ```
+             */
+            tester.selectAll()
                 .where { tester.modified greater tester.created }
-                .single()
-            modifiedAtLater[tester.id] shouldBeEqualTo id2
+                .single()[tester.id] shouldBeEqualTo id2
         }
     }
 
+    /**
+     * LocalDateTime을 가진 [ModifierData] 클래스를 [jsonb] 형식으로 저장, 조회하기
+     *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS tester (
+     *      id SERIAL PRIMARY KEY,
+     *      created TIMESTAMP NOT NULL,
+     *      modified JSONB NOT NULL
+     * )
+     * ```
+     * ```sql
+     * INSERT INTO tester (created, modified)
+     * VALUES ('2024-02-04T09:44:53.239415', {"userId":1,"timestamp":"2025-02-04T09:44:53.239415"});
+     * INSERT INTO tester (created, modified)
+     * VALUES ('2026-02-04T09:44:53.239415', {"userId":2,"timestamp":"2025-02-04T09:44:53.239415"});
+     * ```
+     *
+     * ```sql
+     * SELECT JSONB_EXTRACT_PATH_TEXT(tester.modified, 'timestamp') FROM tester;
+     *
+     * SELECT tester.id, tester.created, tester.modified
+     *   FROM tester
+     *  WHERE CAST(JSONB_EXTRACT_PATH_TEXT(tester.modified, 'timestamp') AS TIMESTAMP) < tester.created;
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `DateTime as JsonB`(testDB: TestDB) {
@@ -376,6 +498,31 @@ class JavaTimeTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * [LocalDateTime]을 DB에 TIMESTAMP WITH TIME ZONE 컬럼으로 저장하고, 다른 Time Zone에서 조회한다.
+     *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS tester (
+     *      id SERIAL PRIMARY KEY,
+     *      timestampz_column TIMESTAMP WITH TIME ZONE NOT NULL
+     * );
+     * ```
+     *
+     * ```sql
+     * -- Africa/Cairo time zone
+     * INSERT INTO tester (timestampz_column) VALUES ('2025-02-04T11:44:53.135595+02:00');
+     * -- cairoNowInsertedInCairoTimeZone=2025-02-04T09:44:53.135595Z;
+     *
+     * -- UTC time zone
+     * INSERT INTO tester (timestampz_column) VALUES ('2025-02-04T11:27:49.38008+02:00');
+     * -- cairoNowRetrievedInUTCTimeZone=2025-02-04T09:44:53.135595Z;
+     * -- cairoNowInsertedInUTCTimeZone=2025-02-04T09:44:53.135595Z
+     *
+     * -- Asis/Seoul time zone
+     * INSERT INTO tester (timestampz_column) VALUES ('2025-02-04T11:27:49.38008+02:00');
+     * -- cairoNowInsertedInSeoulTimeZone=2025-02-04T09:44:53.135595Z
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `Timestamp with TimeZone`(testDB: TestDB) {
@@ -383,6 +530,7 @@ class JavaTimeTest: AbstractExposedTest() {
         val tester = object: IntIdTable("tester") {
             val timestampWithTimeZone = timestampWithTimeZone("timestampz_column")
         }
+        val systemTimeZone = TimeZone.getDefault()
 
         withTables(testDB, tester) {
             // Africa/Cairo time zone
@@ -391,36 +539,46 @@ class JavaTimeTest: AbstractExposedTest() {
 
             val cairoNow = OffsetDateTime.now(ZoneId.systemDefault())
 
+            // cairoId = 1
             val cairoId = tester.insertAndGetId {
                 it[timestampWithTimeZone] = cairoNow
             }
 
-            val cairoNowInsertedInCairoTimeZone = tester.selectAll()
+            val cairoNowInsertedInCairoTimeZone = tester
+                .selectAll()
                 .where { tester.id eq cairoId }
                 .single()[tester.timestampWithTimeZone]
+            // UTC 로 반환
+            log.debug { "cairoNowInsertedInCairoTimeZone=$cairoNowInsertedInCairoTimeZone" }
 
             // UTC time zone
             TimeZone.setDefault(TimeZone.getTimeZone(ZoneOffset.UTC))
             ZoneId.systemDefault().id shouldBeEqualTo "UTC"
 
-            val cairoNowRetrievedInUTCTimeZone = tester.selectAll()
+            val cairoNowRetrievedInUTCTimeZone = tester
+                .selectAll()
                 .where { tester.id eq cairoId }
                 .single()[tester.timestampWithTimeZone]
+            // UTC 로 반환 
+            log.debug { "cairoNowRetrievedInUTCTimeZone=$cairoNowRetrievedInUTCTimeZone" }
 
+            // utcID = 2
             val utcID = tester.insertAndGetId {
                 it[timestampWithTimeZone] = cairoNow
             }
 
-            val cairoNowInsertedInUTCTimeZone = tester.selectAll()
+            val cairoNowInsertedInUTCTimeZone = tester
+                .selectAll()
                 .where { tester.id eq utcID }
                 .single()[tester.timestampWithTimeZone]
-
+            log.debug { "cairoNowInsertedInUTCTimeZone=$cairoNowInsertedInUTCTimeZone" }
 
             // Seoul time zone
             TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"))
             ZoneId.systemDefault().id shouldBeEqualTo "Asia/Seoul"
 
-            val cairoNowRetrievedInSeoulTimeZone = tester.selectAll()
+            val cairoNowRetrievedInSeoulTimeZone = tester
+                .selectAll()
                 .where { tester.id eq cairoId }
                 .single()[tester.timestampWithTimeZone]
 
@@ -431,6 +589,7 @@ class JavaTimeTest: AbstractExposedTest() {
             val cairoNowInsertedInSeoulTimeZone = tester.selectAll()
                 .where { tester.id eq seoulID }
                 .single()[tester.timestampWithTimeZone]
+            log.debug { "cairoNowInsertedInSeoulTimeZone=$cairoNowInsertedInSeoulTimeZone" }
 
             // PostgreSQL and MySQL always store the timestamp in UTC, thereby losing the original time zone.
             // To preserve the original time zone, store the time zone information in a separate column.
@@ -454,13 +613,15 @@ class JavaTimeTest: AbstractExposedTest() {
             }
 
             // Reset to original time zone as set up in DatabaseTestsBase init block
-            TimeZone.setDefault(TimeZone.getTimeZone(ZoneOffset.UTC))
-            ZoneId.systemDefault().id shouldBeEqualTo "UTC"
+            TimeZone.setDefault(systemTimeZone)
+            ZoneId.systemDefault().id shouldBeEqualTo systemTimeZone.id
         }
     }
 
+    /**
+     * MySQL V5 만 지원합니다.
+     */
     @ParameterizedTest
-    // @FieldSource("timestampWithTimeZoneUnsupportedDB")
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `Timestamp With TimeZone Throws Exception For Unsupported Dialects`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB in timestampWithTimeZoneUnsupportedDB }
@@ -475,6 +636,19 @@ class JavaTimeTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * TIMESTAMP WITH TIME ZONE 컬럼을 사용할 때 확장함수를 사용한다.
+     *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS tester (
+     *      id SERIAL PRIMARY KEY,
+     *      timestampz_column TIMESTAMP WITH TIME ZONE NOT NULL
+     * )
+     * ```
+     * ```sql
+     * INSERT INTO tester (timestampz_column) VALUES ('2023-05-04T05:04:01.123123123Z')
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `Timestamp with TimeZone extension functions`(testDB: TestDB) {
@@ -496,6 +670,7 @@ class JavaTimeTest: AbstractExposedTest() {
                 it[timestampWithTimeZone] = now
             }
 
+            // SELECT CAST(tester.timestampz_column AS DATE) FROM tester WHERE tester.id = 1
             tester.select(tester.timestampWithTimeZone.date())
                 .where { tester.id eq nowId }
                 .single()[tester.timestampWithTimeZone.date()] shouldBeEqualTo now.toLocalDate()
@@ -509,51 +684,67 @@ class JavaTimeTest: AbstractExposedTest() {
                 else -> now
             }.toLocalTime()
 
+            // SELECT TO_CHAR(tester.timestampz_column, 'HH24:MI:SS.US') FROM tester WHERE tester.id = 1
             tester.select(tester.timestampWithTimeZone.time())
                 .where { tester.id eq nowId }
                 .single()[tester.timestampWithTimeZone.time()] shouldBeEqualTo expectedTime
 
+            // SELECT Extract(MONTH FROM tester.timestampz_column) FROM tester WHERE tester.id = 1
             tester.select(tester.timestampWithTimeZone.month())
                 .where { tester.id eq nowId }
                 .single()[tester.timestampWithTimeZone.month()] shouldBeEqualTo now.month.value
 
+            // SELECT Extract(DAY FROM tester.timestampz_column) FROM tester WHERE tester.id = 1
             tester.select(tester.timestampWithTimeZone.day())
                 .where { tester.id eq nowId }
                 .single()[tester.timestampWithTimeZone.day()] shouldBeEqualTo now.dayOfMonth
 
+            // SELECT Extract(HOUR FROM tester.timestampz_column) FROM tester WHERE tester.id = 1
             tester.select(tester.timestampWithTimeZone.hour())
                 .where { tester.id eq nowId }
                 .single()[tester.timestampWithTimeZone.hour()] shouldBeEqualTo now.hour
 
+            // SELECT Extract(MINUTE FROM tester.timestampz_column) FROM tester WHERE tester.id = 1
             tester.select(tester.timestampWithTimeZone.minute())
                 .where { tester.id eq nowId }
                 .single()[tester.timestampWithTimeZone.minute()] shouldBeEqualTo now.minute
 
+            // SELECT Extract(SECOND FROM tester.timestampz_column) FROM tester WHERE tester.id = 1
             tester.select(tester.timestampWithTimeZone.second())
                 .where { tester.id eq nowId }
                 .single()[tester.timestampWithTimeZone.second()] shouldBeEqualTo now.second
         }
     }
 
+    /**
+     * [CurrentDateTime] 함수 활용.
+     *
+     * ```sql
+     * SELECT CURRENT_TIMESTAMP
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `current DateTime function`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB !in TestDB.ALL_H2_V1 }
 
-        val fakeTestTable = object: IntIdTable("fakeTable") {}
-
-        withTables(testDB, fakeTestTable) {
-            fun currentDbDateTime(): LocalDateTime {
-                return fakeTestTable.select(CurrentDateTime).first()[CurrentDateTime]
-            }
-
-            // 레코드가 없으면 조회가 실패한다.
-            fakeTestTable.insert {}
-
-            currentDbDateTime()
+        withDb(testDB) {
+            val dateTime = Dual.select(CurrentDateTime).first()[CurrentDateTime]
+            log.debug { "CurrentDateTime=$dateTime" }
         }
     }
 
+    /**
+     * Postgres에서 [LocalDate], [LocalDateTime]의 Array 방식으로 저장하고 조회한다.
+     *
+     * ```
+     * -- Postgres
+     * CREATE TABLE IF NOT EXISTS array_tester (
+     *      dates DATE[] DEFAULT ARRAY['2025-02-04'::date] NOT NULL,
+     *      datetimes TIMESTAMP[] DEFAULT ARRAY['2025-02-04 09:44:53.184'::timestamp without time zone] NOT NULL
+     * );
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `DateTime as Array`(testDB: TestDB) {
@@ -578,13 +769,13 @@ class JavaTimeTest: AbstractExposedTest() {
             }
 
             /**
-             * H2:
              * ```sql
-             * INSERT INTO ARRAY_TESTER (DATES, "dateTimes")
+             * -- Postgres
+             * INSERT INTO array_tester (dates, datetimes)
              * VALUES (
-             *      ARRAY ['2020-05-04','2021-05-04','2022-05-04'],
-             *      ARRAY ['2020-05-04T09:09:09','2021-05-04T09:09:09','2022-05-04T09:09:09']
-             * )
+             *      ARRAY['2020-05-04','2021-05-04','2022-05-04'],
+             *      ARRAY['2020-05-04T09:09:09','2021-05-04T09:09:09','2022-05-04T09:09:09']
+             * );
              * ```
              */
             val datesInput = List(3) { LocalDate.of(2020 + it, 5, 4) }
@@ -595,17 +786,18 @@ class JavaTimeTest: AbstractExposedTest() {
             }
 
             /**
-             * H2:
              * ```sql
-             * SELECT ARRAY_TESTER.DATES[3],
-             *        ARRAY_SLICE(ARRAY_TESTER."dateTimes",1,2)
-             *   FROM ARRAY_TESTER
-             *  WHERE YEAR(ARRAY_TESTER.DATES[1]) = 2020
+             * -- Postgres
+             * SELECT array_tester.dates[3],
+             *        array_tester.datetimes[1:2]
+             *   FROM array_tester
+             *  WHERE Extract(YEAR FROM array_tester.dates[1]) = 2020
              * ```
              */
             val lastDate = tester.dates[3]
             val firstTwoDatetimes = tester.datetimes.slice(1, 2)
-            val result2 = tester.select(lastDate, firstTwoDatetimes)
+            val result2 = tester
+                .select(lastDate, firstTwoDatetimes)
                 .where { tester.dates[1].year() eq 2020 }
                 .single()
 
@@ -614,6 +806,23 @@ class JavaTimeTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * [LocalTime] 을 [time] 컬럼으로 저장하고 조회한다.
+     *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS with_time (
+     *      id SERIAL PRIMARY KEY,
+     *      "time" TIME NOT NULL
+     * );
+     * ```
+     * ```sql
+     * INSERT INTO with_time ("time") VALUES ('13:05:00');
+     *
+     * SELECT with_time.id, with_time."time"
+     *   FROM with_time
+     *  WHERE with_time."time" = '13:05:00';
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `select by time literal equality`(testDB: TestDB) {
@@ -632,28 +841,27 @@ class JavaTimeTest: AbstractExposedTest() {
                 it[time] = localTime
             }
 
-            /**
-             * H2:
-             * ```sql
-             * SELECT TABLEWITHTIME.ID, TABLEWITHTIME."time"
-             *   FROM TABLEWITHTIME
-             *  WHERE TABLEWITHTIME."time" = '13:05:00'
-             * ```
-             */
             tester.select(tester.id, tester.time)
-                .where { tester.time eq localTimeLiteral }
+                .where { tester.time eq localTimeLiteral }  // 조회 시 timeLiteral 로 비교한다.
+                .single()[tester.time] shouldBeEqualTo localTime
+
+            tester.select(tester.id, tester.time)
+                .where { tester.time eq localTime }  // 조회 시 localTime 으로 비교한다.
                 .single()[tester.time] shouldBeEqualTo localTime
         }
     }
 
     /**
-     * H2:
+     * [CurrentDate] 를 [date] 컬럼의 default expression 으로 사용한다.
+     *
      * ```sql
-     * CREATE TABLE IF NOT EXISTS TEST_TABLE (
-     *      ID INT AUTO_INCREMENT PRIMARY KEY,
+     * -- Postgres
+     * CREATE TABLE IF NOT EXISTS test_table (
+     *      id SERIAL PRIMARY KEY,
      *      "date" DATE DEFAULT CURRENT_DATE NOT NULL
      * );
-     * CREATE INDEX TEST_TABLE_DATE ON TEST_TABLE ("date")
+     *
+     * CREATE INDEX test_table_date ON test_table ("date");
      * ```
      */
     @ParameterizedTest
@@ -668,6 +876,8 @@ class JavaTimeTest: AbstractExposedTest() {
     }
 }
 
+private val log = KotlinLogging.logger {}
+
 //
 // ---------------------------------------------------------------------------------
 //
@@ -679,6 +889,12 @@ fun <T: Temporal> T?.isEqualDateTime(other: Temporal?): Boolean = try {
     false
 }
 
+/**
+ * DB 마다 지원하는 Java Time 수형이 다르기 때문에, 각 DB 에 맞는 비교 함수를 제공한다.
+ *
+ * @receiver DB 컬럼 값
+ * @param d2 비교할 값
+ */
 infix fun <T: Temporal> T?.shouldTemporalEqualTo(d2: T?) {
     val d1 = this
     when {
@@ -715,6 +931,12 @@ infix fun <T: Temporal> T?.shouldTemporalEqualTo(d2: T?) {
     }
 }
 
+/**
+ * DB 마다 지원하는 Java Time 수형이 다르기 때문에, 각 DB 에 맞는 비교 함수를 제공한다.
+ *
+ * @receiver DB 컬럼 중 nanos 값
+ * @param nano2 비교할 nanos 값
+ */
 infix fun Int.shouldFractionalPartEqualTo(nano2: Int) {
     val nano1 = this
     val dialect = currentDialectTest
@@ -731,7 +953,7 @@ infix fun Int.shouldFractionalPartEqualTo(nano2: Int) {
         is H2Dialect, is PostgreSQLDialect, is MysqlDialect ->
             when ((dialect as? MysqlDialect)?.isFractionDateTimeSupported()) {
                 null, true -> {
-                    println("nano1: ${nano1.nanoRoundToMicro()}, nano2: ${nano2.nanoRoundToMicro()}")
+                    log.debug { "fractional part nano1: ${nano1.nanoRoundToMicro()}, nano2: ${nano2.nanoRoundToMicro()}" }
                     nano1.nanoRoundToMicro() shouldBeEqualTo nano2.nanoRoundToMicro()
                 }
 
@@ -766,6 +988,15 @@ fun Int.nanoFloorToMilli(): Int = this / 1_000_000
 
 val today: LocalDate = LocalDate.now()
 
+/**
+ * ```sql
+ * CREATE TABLE IF NOT EXISTS citiestime (
+ *      id SERIAL PRIMARY KEY,
+ *      "name" VARCHAR(50) NOT NULL,
+ *      local_time TIMESTAMP NULL
+ * );
+ * ```
+ */
 object CitiesTime: IntIdTable("CitiesTime") {
     val name: Column<String> = varchar("name", 50)
     val local_time: Column<LocalDateTime?> = datetime("local_time").nullable()
@@ -778,6 +1009,9 @@ data class ModifierData(
     val timestamp: LocalDateTime,
 )
 
+/**
+ * [LocalDateTime]을 Kotlinx Serialization 으로 직렬화하기 위한 Serializer
+ */
 object DateTimeSerializer: KSerializer<LocalDateTime> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("LocalDateTime", PrimitiveKind.STRING)
     override fun serialize(encoder: Encoder, value: LocalDateTime) {
