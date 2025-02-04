@@ -24,6 +24,21 @@ object JsonTestData {
         val jsonColumn = json<DataHolder>("j_column", Json.Default)
     }
 
+    /**
+     * ```sql
+     * -- Postgres
+     * CREATE TABLE IF NOT EXISTS j_b_table (
+     *      id SERIAL PRIMARY KEY,
+     *      j_b_column JSONB NOT NULL
+     * );
+     *
+     * -- MySQL
+     * CREATE TABLE IF NOT EXISTS j_b_table (
+     *      id INT AUTO_INCREMENT PRIMARY KEY,
+     *      j_b_column JSON NOT NULL
+     * )
+     * ```
+     */
     object JsonBTable: IntIdTable("j_b_table") {
         val jsonBColumn = jsonb<DataHolder>("j_b_column", Json.Default)
     }
@@ -63,6 +78,16 @@ object JsonTestData {
         val numbers = json<IntArray>("numbers", Json.Default)
     }
 
+    /**
+     * ```sql
+     * -- Postgres
+     * CREATE TABLE IF NOT EXISTS j_b_arrays (
+     *      id SERIAL PRIMARY KEY,
+     *      "groups" JSONB NOT NULL,
+     *      numbers JSONB NOT NULL
+     * );
+     * ```
+     */
     object JsonBArrays: IntIdTable("j_b_arrays") {
         val groups = jsonb<UserGroup>("groups", Json.Default)
         val numbers = jsonb<IntArray>("numbers", Json.Default)
