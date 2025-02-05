@@ -34,13 +34,13 @@ class IdClassCarTest: AbstractExposedTest() {
      * CompositeIdTable 를 사용하여 Entity 를 정의합니다.
      *
      * ```sql
-     * CREATE TABLE IF NOT EXISTS CAR_TABLE (
-     *      CAR_BRAND VARCHAR(64),
-     *      CAR_YEAR INT,
-     *      SERIAL_NO VARCHAR(32) NULL,
+     * CREATE TABLE IF NOT EXISTS car_table (
+     *      car_brand VARCHAR(64),
+     *      car_year INT,
+     *      serial_no VARCHAR(32) NULL,
      *
-     *      CONSTRAINT pk_car_table PRIMARY KEY (CAR_BRAND, CAR_YEAR)
-     * )
+     *      CONSTRAINT pk_car_table PRIMARY KEY (car_brand, car_year)
+     * );
      * ```
      */
     object CarTable: CompositeIdTable("car_table") {
@@ -82,8 +82,6 @@ class IdClassCarTest: AbstractExposedTest() {
         override fun hashCode(): Int = idHashCode()
         override fun toString(): String =
             toStringBuilder()
-//                .add("brand", brand)
-//                .add("car year", carYear)
                 .add("serial no", serialNo)
                 .toString()
     }

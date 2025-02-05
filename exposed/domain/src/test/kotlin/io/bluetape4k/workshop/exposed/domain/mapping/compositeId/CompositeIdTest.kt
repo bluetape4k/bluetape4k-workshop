@@ -14,7 +14,6 @@ class CompositeIdTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
-
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create and drop composite id tables`(testDB: TestDB) {
@@ -30,6 +29,17 @@ class CompositeIdTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `composite id 의 컬럼이 없이 정의된 테이블을 사용하는 것은 실패합니다`(testDB: TestDB) {
+        /**
+         * Error: Table definition must include id columns. Please use Column.entityId() or IdTable.addIdColumn().
+         * ```sql
+         * CREATE TABLE IF NOT EXISTS missing_ids_table (
+         *      age INT,
+         *      "name" VARCHAR(50),
+         *
+         *      CONSTRAINT pk_missing_ids_table PRIMARY KEY (age, "name")
+         * )
+         * ```
+         */
         val missingIdsTable = object: CompositeIdTable("missing_ids_table") {
             val age = integer("age")                    // .entityId()
             val name = varchar("name", 50)     // .entityId()

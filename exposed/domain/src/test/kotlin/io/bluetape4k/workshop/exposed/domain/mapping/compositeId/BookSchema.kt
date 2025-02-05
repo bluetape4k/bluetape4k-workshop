@@ -44,15 +44,14 @@ object BookSchema {
     /**
      * [Publishers] 테이블을 참조하는 Author 테이블
      * ```sql
-     * CREATE TABLE IF NOT EXISTS AUTHORS (
-     *      ID INT AUTO_INCREMENT PRIMARY KEY,
-     *      PUBLISHER_ID INT NOT NULL,
-     *      PUBLISHER_ISBN UUID NOT NULL,
-     *      PEN_NAME VARCHAR(32) NOT NULL,
+     * CREATE TABLE IF NOT EXISTS authors (
+     *      id SERIAL PRIMARY KEY,
+     *      publisher_id INT NOT NULL,
+     *      publisher_isbn uuid NOT NULL,
+     *      pen_name VARCHAR(32) NOT NULL,
      *
-     *      CONSTRAINT FK_AUTHORS_PUBLISHER_ID_PUBLISHER_ISBN__PUB_ID_ISBN_CODE
-     *          FOREIGN KEY (PUBLISHER_ID, PUBLISHER_ISBN) REFERENCES PUBLISHERS(PUB_ID, ISBN_CODE)
-     *          ON DELETE RESTRICT ON UPDATE RESTRICT
+     *      CONSTRAINT fk_authors_publisher_id_publisher_isbn__pub_id_isbn_code FOREIGN KEY (publisher_id, publisher_isbn)
+     *      REFERENCES publishers(pub_id, isbn_code) ON DELETE RESTRICT ON UPDATE RESTRICT
      * )
      * ```
      */
@@ -71,15 +70,14 @@ object BookSchema {
      * CompositeIdTable with 1 key column - int (db-generated)
      *
      * ```sql
-     * CREATE TABLE IF NOT EXISTS BOOKS (
-     *      BOOK_ID INT AUTO_INCREMENT PRIMARY KEY,
-     *      TITLE VARCHAR(32) NOT NULL,
-     *      AUTHOR_ID INT NULL,
+     * CREATE TABLE IF NOT EXISTS books (
+     *      book_id SERIAL PRIMARY KEY,
+     *      title VARCHAR(32) NOT NULL,
+     *      author_id INT NULL,
      *
-     *      CONSTRAINT FK_BOOKS_AUTHOR_ID__ID
-     *          FOREIGN KEY (AUTHOR_ID) REFERENCES AUTHORS(ID)
-     *          ON DELETE RESTRICT ON UPDATE RESTRICT
-     * )
+     *      CONSTRAINT fk_books_author_id__id FOREIGN KEY (author_id)
+     *      REFERENCES authors(id) ON DELETE RESTRICT ON UPDATE RESTRICT
+     * );
      * ```
      */
     object Books: CompositeIdTable("books") {
@@ -94,16 +92,16 @@ object BookSchema {
      * CompositeIdTable with 2 key columns - string & long (neither db-generated)
      *
      * ```sql
-     * CREATE TABLE IF NOT EXISTS REVIEWS (
-     *      CODE VARCHAR(8),
+     * CREATE TABLE IF NOT EXISTS reviews (
+     *      code VARCHAR(8),
      *      "rank" BIGINT,
-     *      BOOK_ID INT NOT NULL,
+     *      book_id INT NOT NULL,
      *
-     *      CONSTRAINT pk_reviews PRIMARY KEY (CODE, "rank"),
-     *      CONSTRAINT FK_REVIEWS_BOOK_ID__BOOK_ID
-     *          FOREIGN KEY (BOOK_ID) REFERENCES BOOKS(BOOK_ID)
-     *          ON DELETE RESTRICT ON UPDATE RESTRICT
-     * )
+     *      CONSTRAINT pk_reviews PRIMARY KEY (code, "rank"),
+     *
+     *      CONSTRAINT fk_reviews_book_id__book_id FOREIGN KEY (book_id)
+     *      REFERENCES books(book_id) ON DELETE RESTRICT ON UPDATE RESTRICT
+     * );
      * ```
      */
     object Reviews: CompositeIdTable("reviews") {
@@ -122,20 +120,19 @@ object BookSchema {
      * CompositeIdTable with 3 key columns - string, string, & int (none db-generated)
      *
      * ```sql
-     * CREATE TABLE IF NOT EXISTS OFFICES (
-     *      ZIP_CODE VARCHAR(8),
+     * CREATE TABLE IF NOT EXISTS offices (
+     *      zip_code VARCHAR(8),
      *      "name" VARCHAR(64),
-     *      AREA_CODE INT,
-     *      STAFF BIGINT NULL,
-     *      PUBLISHER_ID INT NULL,
-     *      PUBLISHER_ISBN UUID NULL,
+     *      area_code INT,
+     *      staff BIGINT NULL,
+     *      publisher_id INT NULL,
+     *      publisher_isbn uuid NULL,
      *
-     *      CONSTRAINT pk_offices PRIMARY KEY (ZIP_CODE, "name", AREA_CODE),
-     *      CONSTRAINT FK_OFFICES_PUBLISHER_ID_PUBLISHER_ISBN__PUB_ID_ISBN_CODE
-     *          FOREIGN KEY (PUBLISHER_ID, PUBLISHER_ISBN)
-     *          REFERENCES PUBLISHERS(PUB_ID, ISBN_CODE)
-     *          ON DELETE RESTRICT ON UPDATE RESTRICT
-     * )
+     *      CONSTRAINT pk_offices PRIMARY KEY (zip_code, "name", area_code),
+     *
+     *      CONSTRAINT fk_offices_publisher_id_publisher_isbn__pub_id_isbn_code FOREIGN KEY (publisher_id, publisher_isbn)
+     *      REFERENCES publishers(pub_id, isbn_code) ON DELETE RESTRICT ON UPDATE RESTRICT
+     * );
      * ```
      */
     object Offices: CompositeIdTable("offices") {
