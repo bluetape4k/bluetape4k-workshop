@@ -13,10 +13,30 @@ import org.jetbrains.exposed.dao.id.IntIdTable
  */
 object BatchSchema {
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS batch (
+     *      id SERIAL PRIMARY KEY,
+     *      "name" VARCHAR(255) NOT NULL
+     * );
+     * ```
+     */
     object BatchTable: IntIdTable("batch") {
         val name = varchar("name", 255)
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS batch_item (
+     *      id SERIAL PRIMARY KEY,
+     *      "name" VARCHAR(255) NOT NULL,
+     *      batch_id INT NOT NULL,
+     *
+     *      CONSTRAINT fk_batch_item_batch_id__id FOREIGN KEY (batch_id)
+     *      REFERENCES batch(id) ON DELETE RESTRICT ON UPDATE RESTRICT
+     * );
+     * ```
+     */
     object BatchItemTable: IntIdTable("batch_item") {
         val name = varchar("name", 255)
 
