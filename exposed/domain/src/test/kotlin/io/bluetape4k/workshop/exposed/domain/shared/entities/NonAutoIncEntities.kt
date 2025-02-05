@@ -1,9 +1,11 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
@@ -65,14 +67,19 @@ class NonAutoIncEntities: AbstractExposedTest() {
             }
         }
 
-        override fun equals(other: Any?): Boolean =
-            other is NotAutoEntity &&
-                    idValue == other.idValue &&
-                    b1 == other.b1 &&
-                    defaultedInNew == other.defaultedInNew
+        override fun equals(other: Any?): Boolean = idEquals(other)
+//            other is NotAutoEntity &&
+//                    idValue == other.idValue &&
+//                    b1 == other.b1 &&
+//                    defaultedInNew == other.defaultedInNew
 
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "NotAutoEntity(id=$idValue, b1=$b1, defaultedInNew=$defaultedInNew)"
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("b1", b1)
+                .add("defaultedInNew", defaultedInNew)
+                .toString()
+
     }
 
     @ParameterizedTest
@@ -149,9 +156,13 @@ class NonAutoIncEntities: AbstractExposedTest() {
             }
         }
 
-        override fun equals(other: Any?): Boolean = other is Request && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Request(id=$idValue, requestId=$requestId)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("requestId", requestId)
+                .add("deleted", deleted)
+                .toString()
     }
 
     @ParameterizedTest

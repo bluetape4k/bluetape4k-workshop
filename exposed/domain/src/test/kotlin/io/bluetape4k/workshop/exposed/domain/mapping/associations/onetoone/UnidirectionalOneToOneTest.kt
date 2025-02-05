@@ -1,9 +1,12 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.associations.onetoone
 
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.idValue
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
@@ -60,9 +63,13 @@ class UnidirectionalOneToOneTest: AbstractExposedTest() {
         var brand by CarTable.brand
         val wheel by Wheel optionalBackReferencedOn WheelTable.id
 
-        override fun equals(other: Any?): Boolean = other is Car && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Car(id=$idValue, brand=$brand)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("brand", brand)
+                .add("wheel id", wheel?.idValue)
+                .toString()
     }
 
     class Wheel(id: EntityID<Long>): LongEntity(id) {
@@ -72,9 +79,14 @@ class UnidirectionalOneToOneTest: AbstractExposedTest() {
         var diameter by WheelTable.diameter
         val car by Car referencedOn WheelTable.id
 
-        override fun equals(other: Any?): Boolean = other is Wheel && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Wheel(id=$idValue, name=$name)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("name", name)
+                .add("diameter", diameter)
+                .add("car id", car.idValue)
+                .toString()
     }
 
     @ParameterizedTest

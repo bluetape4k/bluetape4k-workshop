@@ -1,12 +1,13 @@
 package io.bluetape4k.workshop.exposed.sql.javatime
 
 import MigrationUtils
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.constraintNamePart
 import io.bluetape4k.workshop.exposed.currentDialectTest
-import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.expectException
 import io.bluetape4k.workshop.exposed.inProperCase
 import io.bluetape4k.workshop.exposed.insertAndWait
@@ -117,9 +118,14 @@ class DefaultsTest: AbstractExposedTest() {
         var t1 by TableWithDBDefault.t1
         var clientDefault by TableWithDBDefault.clientDefault
 
-        override fun equals(other: Any?): Boolean = other is DBDefault && idValue == other.idValue
+        override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = id.value.hashCode()
-        override fun toString(): String = "DBDefault(id=$idValue, field=$field, t1=$t1, clientDefault=$clientDefault)"
+        override fun toString(): String =
+            toStringBuilder()
+                .add("field", field)
+                .add("t1", t1)
+                .add("clientDefault", clientDefault)
+                .toString()
     }
 
     @ParameterizedTest

@@ -1,17 +1,18 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany
 
-import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.exposed.dao.id.KsuidEntity
 import io.bluetape4k.exposed.dao.id.KsuidEntityClass
 import io.bluetape4k.exposed.dao.id.KsuidTable
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntity
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityClass
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDTable
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldContainSame
@@ -53,11 +54,10 @@ class OneToManySetTest: AbstractExposedTest() {
         var name by BiddingItemTable.name
         val bids by Bid referrersOn BidTable.itemId
 
-        override fun equals(other: Any?): Boolean = other is BiddingItem && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
         override fun toString(): String {
-            return ToStringBuilder(this)
-                .add("id", id._value)
+            return toStringBuilder()
                 .add("name", name)
                 .toString()
         }
@@ -69,11 +69,10 @@ class OneToManySetTest: AbstractExposedTest() {
         var amount by BidTable.amount
         var item by BiddingItem referencedOn BidTable.itemId
 
-        override fun equals(other: Any?): Boolean = other is Bid && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
         override fun toString(): String {
-            return ToStringBuilder(this)
-                .add("id", id._value)
+            return toStringBuilder()
                 .add("amount", amount)
                 .toString()
         }
@@ -122,7 +121,8 @@ class OneToManySetTest: AbstractExposedTest() {
         val startDate = date("start_date").nullable()
         val endDate = date("end_date").nullable()
 
-        val status = enumerationByName("status", 10, ProductStatus::class).clientDefault { ProductStatus.ACTIVE }
+        val status = enumerationByName("status", 10, ProductStatus::class)
+            .clientDefault { ProductStatus.ACTIVE }
     }
 
     object ProductImageTable: KsuidTable("product_images") {
@@ -197,11 +197,10 @@ class OneToManySetTest: AbstractExposedTest() {
             }
         }
 
-        override fun equals(other: Any?): Boolean = other is Product && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
         override fun toString(): String {
-            return ToStringBuilder(this)
-                .add("id", id._value)
+            return toStringBuilder()
                 .add("name", name)
                 .add("status", status)
                 .toString()

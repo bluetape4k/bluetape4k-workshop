@@ -1,7 +1,9 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.associations.manytoone
 
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -29,10 +31,12 @@ object ManyToOneSchema {
         var name by BreweryTable.name
         val beers: SizedIterable<Beer> by Beer referrersOn BeerTable.brewery   // one-to-many
 
-        override fun equals(other: Any?): Boolean = other is Brewery && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
         override fun toString(): String {
-            return "Brewery(id=$idValue, name=$name)"
+            return toStringBuilder()
+                .add("name", name)
+                .toString()
         }
     }
 
@@ -42,10 +46,12 @@ object ManyToOneSchema {
         var name by BeerTable.name
         var brewery: Brewery by Brewery referencedOn BeerTable.brewery       // many-to-one
 
-        override fun equals(other: Any?): Boolean = other is Beer && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
         override fun toString(): String {
-            return "Beer(id=$idValue, name=$name)"
+            return toStringBuilder()
+                .add("name", name)
+                .toString()
         }
     }
 
@@ -85,9 +91,13 @@ object ManyToOneSchema {
 
         var name by JugTable.name
 
-        override fun equals(other: Any?): Boolean = other is Jug && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Jug(id=$idValue, name=$name)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String {
+            return toStringBuilder()
+                .add("name", name)
+                .toString()
+        }
     }
 
     class JugMeter(id: EntityID<Int>): IntEntity(id) {
@@ -96,9 +106,13 @@ object ManyToOneSchema {
         var name by JugMeterTable.name
         var memberOf: Jug by Jug referencedOn JugMeterTable.jug     // many-to-one
 
-        override fun equals(other: Any?): Boolean = other is JugMeter && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "JugMeter(id=$idValue, name=$name)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String {
+            return toStringBuilder()
+                .add("name", name)
+                .toString()
+        }
     }
 
     fun withJugTables(
@@ -133,9 +147,13 @@ object ManyToOneSchema {
         var name by SalesForceTable.name
         val salesGuys: SizedIterable<SalesGuy> by SalesGuy referrersOn SalesGuyTable.salesForce // one-to-many
 
-        override fun equals(other: Any?): Boolean = other is SalesForce && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "SalesForce(id=$idValue, name=$name)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String {
+            return toStringBuilder()
+                .add("name", name)
+                .toString()
+        }
     }
 
     class SalesGuy(id: EntityID<Int>): IntEntity(id) {
@@ -144,9 +162,13 @@ object ManyToOneSchema {
         var name by SalesGuyTable.name
         var salesForce: SalesForce by SalesForce referencedOn SalesGuyTable.salesForce    // many-to-one
 
-        override fun equals(other: Any?): Boolean = other is SalesGuy && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "SalesGuy(id=$idValue, name=$name)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String {
+            return toStringBuilder()
+                .add("name", name)
+                .toString()
+        }
     }
 
     fun withSalesTables(

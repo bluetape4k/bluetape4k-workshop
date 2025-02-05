@@ -1,9 +1,10 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.inheritance
 
-import io.bluetape4k.ToStringBuilder
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.dao.IntEntity
@@ -74,12 +75,13 @@ class SingleTableInheritanceTest: AbstractExposedTest() {
 
         var dtype: BillingType by BillingTable.dtype
 
-        override fun equals(other: Any?): Boolean = other is Billing && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = ToStringBuilder(this)
-            .add("id", id)
-            .add("owner", owner)
-            .toString()
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String {
+            return toStringBuilder()
+                .add("owner", owner)
+                .toString()
+        }
     }
 
     class CreditCard(id: EntityID<Int>): Billing(id) {
@@ -100,15 +102,19 @@ class SingleTableInheritanceTest: AbstractExposedTest() {
         var startDate by BillingTable.startDate
         var endDate by BillingTable.endDate
 
-        override fun equals(other: Any?): Boolean =
-            other is CreditCard && idValue == other.idValue && cardNumber == other.cardNumber
+        override fun equals(other: Any?): Boolean = idEquals(other)
 
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = ToStringBuilder(this)
-            .add("id", id)
-            .add("owner", owner)
-            .add("cardNumber", cardNumber)
-            .toString()
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("owner", owner)
+                .add("cardNumber", cardNumber)
+                .add("companyName", companyName)
+                .add("expMonth", expMonth)
+                .add("expYear", expYear)
+                .add("startDate", startDate)
+                .add("endDate", endDate)
+                .toString()
     }
 
     class BankAccount(id: EntityID<Int>): Billing(id) {
@@ -125,15 +131,13 @@ class SingleTableInheritanceTest: AbstractExposedTest() {
         var accountNumber by BillingTable.accountNumber
         var bankName by BillingTable.bankName
 
-        override fun equals(other: Any?): Boolean =
-            other is BankAccount && idValue == other.idValue && accountNumber == other.accountNumber
-
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = ToStringBuilder(this)
-                .add("id", id)
-                .add("owner", owner)
-                .add("accountNumber", accountNumber)
-                .toString()
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String = toStringBuilder()
+            .add("owner", owner)
+            .add("accountNumber", accountNumber)
+            .add("bankName", bankName)
+            .toString()
     }
 
     @ParameterizedTest

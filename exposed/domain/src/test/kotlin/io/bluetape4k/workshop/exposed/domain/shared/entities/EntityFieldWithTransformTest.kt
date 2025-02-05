@@ -1,10 +1,12 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
@@ -59,9 +61,12 @@ class EntityFieldWithTransformTest: AbstractExposedTest() {
             wrap = { it.replace("transformed-", "") }
         )
 
-        override fun equals(other: Any?): Boolean = other is TransEntity && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "TransEntity(id=$idValue, value=$value)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("value", value)
+                .toString()
     }
 
     /**
@@ -75,9 +80,12 @@ class EntityFieldWithTransformTest: AbstractExposedTest() {
             wrap = { it?.replace("transformed-", "") }
         )
 
-        override fun equals(other: Any?): Boolean = other is NullableTransEntity && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "NullableTransEntity(id=$idValue, value=$value)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("value", value)
+                .toString()
     }
 
     @ParameterizedTest
@@ -189,9 +197,12 @@ class EntityFieldWithTransformTest: AbstractExposedTest() {
                 wrap = { it }
             )
 
-        override fun equals(other: Any?): Boolean = other is ChainedTrans && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "ChainedTrans(id=$idValue, value=$value)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("value", value)
+                .toString()
     }
 
     @ParameterizedTest
@@ -224,9 +235,12 @@ class EntityFieldWithTransformTest: AbstractExposedTest() {
                 wrap = { it }                                                                // 4 - SELECT
             )
 
-        override fun equals(other: Any?): Boolean = other is MemoizedChainedTrans && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "MemoizedChainedTrans(id=$idValue, value=$value)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("value", value)
+                .toString()
     }
 
     /**

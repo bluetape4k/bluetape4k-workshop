@@ -6,9 +6,11 @@ import io.bluetape4k.exposed.dao.id.SnowflakeIdTable
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntity
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityClass
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDTable
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.domain.shared.entities.ViaTestData.VNumber
 import io.bluetape4k.workshop.exposed.domain.shared.entities.ViaTestData.VString
 import io.bluetape4k.workshop.exposed.withTables
@@ -137,9 +139,12 @@ object ViaTestData {
         var connectedStrings: SizedIterable<VString> by VString via ViaTestData.ConnectionTable
         var connectedAutoStrings: SizedIterable<VString> by VString via ViaTestData.ConnectionAutoTable
 
-        override fun equals(other: Any?): Boolean = other is VNumber && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "VNumber(id=$idValue, number=$number)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("number", number)
+                .toString()
     }
 
     class VString(id: EntityID<Long>): SnowflakeIdEntity(id) {
@@ -147,9 +152,12 @@ object ViaTestData {
 
         var text: String by ViaTestData.StringsTable.text
 
-        override fun equals(other: Any?): Boolean = other is VString && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "VString(id=$idValue, text=$text)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("text", text)
+                .toString()
     }
 }
 
@@ -496,7 +504,11 @@ class ViaTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * CREATE TABLE IF NOT EXISTS projects (id SERIAL PRIMARY KEY, "name" VARCHAR(50) NOT NULL)
+     * -- Postgres
+     * CREATE TABLE IF NOT EXISTS projects (
+     *      id SERIAL PRIMARY KEY,
+     *      "name" VARCHAR(50) NOT NULL
+     * )
      * ```
      */
     object Projects: IntIdTable("projects") {
@@ -505,7 +517,11 @@ class ViaTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * CREATE TABLE IF NOT EXISTS tasks (id SERIAL PRIMARY KEY, title VARCHAR(64) NOT NULL)
+     * -- Postgres
+     * CREATE TABLE IF NOT EXISTS tasks (
+     *      id SERIAL PRIMARY KEY,
+     *      title VARCHAR(64) NOT NULL
+     * )
      * ```
      */
     object Tasks: IntIdTable("tasks") {
@@ -514,7 +530,20 @@ class ViaTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * CREATE TABLE IF NOT EXISTS project_tasks (project_id INT, task_id INT, approved BOOLEAN DEFAULT FALSE NOT NULL, CONSTRAINT pk_project_tasks PRIMARY KEY (project_id, task_id), CONSTRAINT fk_project_tasks_project_id__id FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE ON UPDATE RESTRICT, CONSTRAINT fk_project_tasks_task_id__id FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE ON UPDATE RESTRICT)
+     * -- Postgres
+     * CREATE TABLE IF NOT EXISTS project_tasks (
+     *      project_id INT,
+     *      task_id INT,
+     *      approved BOOLEAN DEFAULT FALSE NOT NULL,
+     *
+     *      CONSTRAINT pk_project_tasks PRIMARY KEY (project_id, task_id),
+     *
+     *      CONSTRAINT fk_project_tasks_project_id__id FOREIGN KEY (project_id)
+     *      REFERENCES projects(id) ON DELETE CASCADE ON UPDATE RESTRICT,
+     *
+     *      CONSTRAINT fk_project_tasks_task_id__id FOREIGN KEY (task_id)
+     *      REFERENCES tasks(id) ON DELETE CASCADE ON UPDATE RESTRICT
+     * )
      * ```
      */
     object ProjectTasks: CompositeIdTable("project_tasks") {
@@ -537,9 +566,12 @@ class ViaTest: AbstractExposedTest() {
         var name by Projects.name
         var tasks by Task via ProjectTasks
 
-        override fun equals(other: Any?): Boolean = other is Project && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Project(id=$idValue, name=$name)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("name", name)
+                .toString()
     }
 
     class ProjectTask(id: EntityID<CompositeID>): CompositeEntity(id) {
@@ -547,9 +579,12 @@ class ViaTest: AbstractExposedTest() {
 
         var approved by ProjectTasks.approved
 
-        override fun equals(other: Any?): Boolean = other is ProjectTask && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "ProjectTask(id=$idValue, approved=$approved)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("approved", approved)
+                .toString()
     }
 
     class Task(id: EntityID<Int>): IntEntity(id) {
@@ -558,9 +593,13 @@ class ViaTest: AbstractExposedTest() {
         var title by Tasks.title
         var approved by ProjectTasks.approved
 
-        override fun equals(other: Any?): Boolean = other is Task && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Task(id=$idValue, title=$title, approved=$approved)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("title", title)
+                .add("approved", approved)
+                .toString()
     }
 
     /**

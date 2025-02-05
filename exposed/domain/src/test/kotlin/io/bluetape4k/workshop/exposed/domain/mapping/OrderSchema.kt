@@ -1,8 +1,10 @@
 package io.bluetape4k.workshop.exposed.domain.mapping
 
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.domain.mapping.OrderSchema.Item
 import io.bluetape4k.workshop.exposed.domain.mapping.OrderSchema.ItemTable
 import io.bluetape4k.workshop.exposed.domain.mapping.OrderSchema.Order
@@ -62,7 +64,11 @@ object OrderSchema {
         val details by OrderDetail referrersOn OrderDetailTable.orderId
         var orderDate by OrderTable.orderDate
 
-        override fun toString(): String = "Order(id=$idValue, orderDate=$orderDate)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String = toStringBuilder()
+            .add("orderDate", orderDate)
+            .toString()
     }
 
     class OrderDetail(id: EntityID<Long>): LongEntity(id), Serializable {
@@ -75,10 +81,14 @@ object OrderSchema {
 
         val orderId by OrderDetailTable.orderId
 
-        override fun equals(other: Any?): Boolean = other is OrderDetail && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String =
-            "OrderDetail(id=$idValue, orderId=$orderId, lineNumber=$lineNumber, description=$description, quantity=$quantity)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String = toStringBuilder()
+            .add("orderId", orderId)
+            .add("lineNumber", lineNumber)
+            .add("description", description)
+            .add("quantity", quantity)
+            .toString()
     }
 
     class Item(id: EntityID<Long>): LongEntity(id), Serializable {
@@ -86,9 +96,11 @@ object OrderSchema {
 
         var description by ItemTable.description
 
-        override fun equals(other: Any?): Boolean = other is Item && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Item(id=$idValue, description=$description)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String = toStringBuilder()
+            .add("description", description)
+            .toString()
     }
 
     class OrderLine(id: EntityID<Long>): LongEntity(id), Serializable {
@@ -99,10 +111,14 @@ object OrderSchema {
         var lineNumber by OrderLineTable.lineNumber
         var quantity by OrderLineTable.quantity
 
-        override fun equals(other: Any?): Boolean = other is OrderLine && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String =
-            "OrderLine(id=$idValue, orderId=${order.id}, itemId=${item?.id}, lineNumber=$lineNumber, quantity=$quantity)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String = toStringBuilder()
+            .add("orderId", order.id.value)
+            .add("itemId", item?.id?.value)
+            .add("lineNumber", lineNumber)
+            .add("quantity", quantity)
+            .toString()
     }
 
     class User(id: EntityID<Long>): LongEntity(id), Serializable {
@@ -111,9 +127,12 @@ object OrderSchema {
         var userName by UserTable.userName
         var parent by User optionalReferencedOn UserTable.parentId
 
-        override fun equals(other: Any?): Boolean = other is User && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "User(id=$idValue, userName=$userName)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String = toStringBuilder()
+            .add("userName", userName)
+            .add("parentId", parent?.id?._value)
+            .toString()
     }
 
     data class OrderRecord(

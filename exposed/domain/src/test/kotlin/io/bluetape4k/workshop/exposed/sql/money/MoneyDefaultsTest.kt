@@ -1,10 +1,12 @@
 package io.bluetape4k.workshop.exposed.sql.money
 
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.money.moneyOf
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
@@ -56,15 +58,15 @@ class MoneyDefaultsTest: AbstractExposedTest() {
         var t2 by TableWithDBDefault.t2
         val clientDefault by TableWithDBDefault.clientDefault
 
-        override fun equals(other: Any?): Boolean =
-            other is DBDefault &&
-                    t1 == other.t1 &&
-                    t2 == other.t2 &&
-                    clientDefault == other.clientDefault
-
-        override fun hashCode(): Int = idValue.hashCode()
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
         override fun toString(): String =
-            "DBDefault(id=$idValue, field=$field, t1=$t1, t2=$t2, clientDefault=$clientDefault)"
+            toStringBuilder()
+                .add("field", field)
+                .add("t1", t1)
+                .add("t2", t2)
+                .add("clientDefault", clientDefault)
+                .toString()
     }
 
     /**

@@ -1,12 +1,14 @@
 package io.bluetape4k.workshop.exposed.domain.shared
 
 import io.bluetape4k.collections.intRangeOf
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.idValue
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.utils.ShutdownQueue
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withSuspendedTables
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -362,9 +364,9 @@ class CoroutineTest: AbstractExposedTest() {
     class TestingEntity(id: EntityID<Int>): IntEntity(id) {
         companion object: IntEntityClass<TestingEntity>(Testing)
 
-        override fun equals(other: Any?): Boolean = other is TestingEntity && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "TestingEntity($id)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String = "TestingEntity(id=$idValue)"
     }
 
     @ParameterizedTest

@@ -1,9 +1,11 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany
 
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldContainSame
@@ -50,9 +52,12 @@ class UnidirectionTest: AbstractExposedTest() {
         var length by Clouds.length
         val producedSnowflakes by Snowflake via CloudSnowflakes
 
-        override fun equals(other: Any?): Boolean = other is Cloud && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Cloud(id=$idValue, kind=$kind)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("kind", kind)
+                .toString()
     }
 
     class Snowflake(id: EntityID<Int>): IntEntity(id) {
@@ -61,9 +66,12 @@ class UnidirectionTest: AbstractExposedTest() {
         var name by Snowflakes.name
         var description by Snowflakes.description
 
-        override fun equals(other: Any?): Boolean = other is Snowflake && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Snowflake(id=$idValue, name=$name)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("name", name)
+                .toString()
     }
 
     private fun fakeCound() = Cloud.new {

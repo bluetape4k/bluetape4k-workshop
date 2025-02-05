@@ -1,6 +1,9 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.tree
 
-import io.bluetape4k.workshop.exposed.dao.idValue
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.idValue
+import io.bluetape4k.exposed.dao.toStringBuilder
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -56,9 +59,15 @@ class TreeNode(id: EntityID<Long>): LongEntity(id) {
         delete()
     }
 
-    override fun equals(other: Any?): Boolean = other is TreeNode && idValue == other.idValue
-    override fun hashCode(): Int = idValue.hashCode()
-    override fun toString(): String = "TreeNode(id=$idValue, title=$title), parent_id=${parent?.id?._value})"
+    override fun equals(other: Any?): Boolean = idEquals(other)
+    override fun hashCode(): Int = idHashCode()
+    override fun toString(): String =
+        toStringBuilder()
+            .add("title", title)
+            .add("description", description)
+            .add("depth", depth)
+            .add("parent id", parent?.idValue)
+            .toString()
 }
 
 internal fun Transaction.buildTreeNodes() {

@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.exposed.sql.money
 
-import io.bluetape4k.workshop.exposed.dao.idValue
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.toStringBuilder
 import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.id.EntityID
@@ -35,10 +37,13 @@ internal class AccountDao(id: EntityID<Int>): IntEntity(id) {
 
     val money: MonetaryAmount? by Account.composite_money
 
-    val currency: CurrencyUnit? by Account.composite_money.currency
     val amount: BigDecimal? by Account.composite_money.amount
+    val currency: CurrencyUnit? by Account.composite_money.currency
 
-    override fun equals(other: Any?): Boolean = other is AccountDao && idValue == other.idValue
-    override fun hashCode(): Int = idValue.hashCode()
-    override fun toString(): String = "AccountDao(id=$idValue, money=$money)"
+    override fun equals(other: Any?): Boolean = idEquals(other)
+    override fun hashCode(): Int = idHashCode()
+    override fun toString(): String =
+        toStringBuilder()
+            .add("money", money)
+            .toString()
 }

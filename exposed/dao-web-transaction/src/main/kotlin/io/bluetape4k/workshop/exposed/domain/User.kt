@@ -28,6 +28,6 @@ class UserEntity(id: EntityID<Long>): LongEntity(id) {
     )
 
     override fun equals(other: Any?): Boolean = other is UserEntity && idValue == other.idValue
-    override fun hashCode(): Int = idValue.hashCode()
+    override fun hashCode(): Int = idHashCode()
     override fun toString(): String = "UserEntity(id=$idValue, name=$name, age=$age)"
 }

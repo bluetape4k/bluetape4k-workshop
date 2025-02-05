@@ -1,13 +1,16 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
 import io.bluetape4k.exposed.dao.id.SnowflakeIdTable
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.idValue
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.exposed.sql.timebasedGenerated
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.TestDB.POSTGRESQL
-import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.AEntity
 import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.BEntity
 import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.XEntity
@@ -181,9 +184,9 @@ class EntityTest: AbstractExposedTest() {
     internal class SingleFieldEntity(id: EntityID<Int>): IntEntity(id) {
         companion object: IntEntityClass<SingleFieldEntity>(OneAutoFieldTable)
 
-        override fun equals(other: Any?): Boolean = other is SingleFieldEntity && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "SingleFieldEntity(id=$id)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String = "SingleFieldEntity(id=$idValue)"
     }
 
     /**
@@ -341,15 +344,19 @@ class EntityTest: AbstractExposedTest() {
         val title = varchar("title", 50)
     }
 
+
     class Board(id: EntityID<Int>): IntEntity(id) {
         companion object: IntEntityClass<Board>(Boards)
 
         var name by Boards.name
         val posts by Post optionalReferrersOn Posts.boardId  // one-to-many
 
-        override fun equals(other: Any?): Boolean = other is Board && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Board(id=$idValue, name=$name)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("name", name)
+                .toString()
     }
 
     class Post(id: EntityID<Long>): LongEntity(id) {
@@ -361,10 +368,10 @@ class EntityTest: AbstractExposedTest() {
         var category: Category? by Category optionalReferencedOn Posts.categoryId   // many-to-one
         var optCategory: Category? by Category optionalReferencedOn Posts.optCategoryId  // many-to-one
 
-        override fun equals(other: Any?): Boolean = other is Post && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
         override fun toString(): String =
-            "Post(id=$idValue, parent=${parent?.idValue}, boardId=${board?.idValue}, categoryId=${category?.idValue})"
+            toStringBuilder().toString()
     }
 
     class Category(id: EntityID<Int>): IntEntity(id) {
@@ -374,10 +381,16 @@ class EntityTest: AbstractExposedTest() {
         var title by Categories.title
         val posts by Post optionalReferrersOn Posts.optCategoryId  // one-to-many
 
-        override fun equals(other: Any?): Boolean = other is Category && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Category(id=$idValue, title=$title)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("uniqueId", uniqueId)
+                .add("title", title)
+                .toString()
     }
+
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -667,9 +680,13 @@ class EntityTest: AbstractExposedTest() {
         var name by Items.name
         var price by Items.price
 
-        override fun equals(other: Any?): Boolean = other is Item && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Item(id=$idValue, name=$name, price=$price)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("name", name)
+                .add("price", price)
+                .toString()
     }
 
     /**
@@ -887,9 +904,12 @@ class EntityTest: AbstractExposedTest() {
 
         var h by Humans.h
 
-        override fun equals(other: Any?): Boolean = other is Human && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Human(id=$idValue, h=$h)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("h", h)
+                .toString()
     }
 
     open class User(id: EntityID<Int>): Entity<Int>(id) {
@@ -907,9 +927,13 @@ class EntityTest: AbstractExposedTest() {
         val human: Human by Human referencedOn Users.id
         var name: String by Users.name
 
-        override fun equals(other: Any?): Boolean = other is User && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "User(id=$idValue, name=$name, human=$human)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("name", name)
+                .add("human id", human.idValue)
+                .toString()
     }
 
     /**
@@ -966,9 +990,13 @@ class EntityTest: AbstractExposedTest() {
         var parent: EntityID<Int>? by SelfReferenceTable.parentId
         val children: SizedIterable<SelfReferenceEntity> by SelfReferenceEntity optionalReferrersOn SelfReferenceTable.parentId
 
-        override fun equals(other: Any?): Boolean = other is SelfReferenceEntity && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "SelfReferenceEntity(id=$idValue, parent=$parent)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("parent id", parent?.value)
+                .toString()
+
     }
 
     /**
@@ -1284,9 +1312,12 @@ class EntityTest: AbstractExposedTest() {
 
         var name by Parents.name
 
-        override fun equals(other: Any?): Boolean = other is Parent && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Parent(id=$idValue, name=$name)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("name", name)
+                .toString()
     }
 
     open class Child(id: EntityID<Long>): LongEntity(id) {
@@ -1295,9 +1326,13 @@ class EntityTest: AbstractExposedTest() {
         var parent by Parent referencedOn Children.parentId
         var name by Children.name
 
-        override fun equals(other: Any?): Boolean = other is Child && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Child(id=$idValue, parent=$parent, name=$name)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("name", name)
+                .add("parent id", parent.idValue)
+                .toString()
     }
 
     /**
@@ -1529,15 +1564,19 @@ class EntityTest: AbstractExposedTest() {
 
         var name by Regions.name
 
-        override fun equals(other: Any?): Boolean = other is Region && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Region(id=$idValue, name=$name)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("name", name)
+                .toString()
     }
 
     @Suppress("UNCHECKED_CAST")
     abstract class ComparableLongEntity<T: LongEntity>(id: EntityID<Long>): LongEntity(id) {
-        override fun equals(other: Any?): Boolean = other is ComparableLongEntity<*> && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String = toStringBuilder().toString()
     }
 
     class Student(id: EntityID<Long>): ComparableLongEntity<Student>(id) {
@@ -1549,7 +1588,11 @@ class EntityTest: AbstractExposedTest() {
         val notes by Note.referrersOn(Notes.student, cache = true)
         val detentions by Detention optionalReferrersOn Detentions.student
 
-        override fun toString(): String = "Student(id=$idValue, name=$name, school=$school)"
+        override fun toString(): String =
+            toStringBuilder()
+                .add("name", name)
+                .add("school id", school.idValue)
+                .toString()
     }
 
     class StudentBio(id: EntityID<Long>): ComparableLongEntity<StudentBio>(id) {
@@ -1558,7 +1601,11 @@ class EntityTest: AbstractExposedTest() {
         var student by Student referencedOn StudentBios.student
         var dateOfBirth by StudentBios.dateOfBirth
 
-        override fun toString(): String = "StudentBio(id=$idValue, dateOfBirth=$dateOfBirth, student=$student)"
+        override fun toString(): String =
+            toStringBuilder()
+                .add("date of birth", dateOfBirth)
+                .add("student id", student.idValue)
+                .toString()
     }
 
     class Note(id: EntityID<Long>): ComparableLongEntity<Note>(id) {
@@ -1567,7 +1614,10 @@ class EntityTest: AbstractExposedTest() {
         var text by Notes.text
         var student by Student referencedOn Notes.student
 
-        override fun toString(): String = "Note(id=$idValue, text=$text, student=$student)"
+        override fun toString(): String = toStringBuilder()
+            .add("text", text)
+            .add("student id", student.idValue)
+            .toString()
     }
 
     class Detention(id: EntityID<Long>): ComparableLongEntity<Detention>(id) {
@@ -1576,7 +1626,10 @@ class EntityTest: AbstractExposedTest() {
         var reason by Detentions.reason
         var student by Student optionalReferencedOn Detentions.student
 
-        override fun toString(): String = "Detention(id=$idValue, reason=$reason, student=$student)"
+        override fun toString(): String = toStringBuilder()
+            .add("reason", reason)
+            .add("student id", student?.idValue)
+            .toString()
     }
 
     class Holiday(id: EntityID<Long>): ComparableLongEntity<Holiday>(id) {
@@ -1585,7 +1638,10 @@ class EntityTest: AbstractExposedTest() {
         var holidayStart by Holidays.holidayStart
         var holidayEnd by Holidays.holidayEnd
 
-        override fun toString(): String = "Holiday(id=$idValue, holidayStart=$holidayStart, holidayEnd=$holidayEnd)"
+        override fun toString(): String = toStringBuilder()
+            .add("holiday start", holidayStart)
+            .add("holiday end", holidayEnd)
+            .toString()
     }
 
     class School(id: EntityID<Int>): IntEntity(id) {
@@ -1597,10 +1653,13 @@ class EntityTest: AbstractExposedTest() {
         val students: SizedIterable<Student> by Student.referrersOn(Students.school, cache = true)
         var holidays: SizedIterable<Holiday> by Holiday via SchoolHolidays
 
-        override fun equals(other: Any?): Boolean = other is School && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String =
-            "School(id=$idValue, name=$name, region=$region, secondaryRegion=$secondaryRegion)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String = toStringBuilder()
+            .add("name", name)
+            .add("region", region.idValue)
+            .add("secondaryRegion", secondaryRegion?.idValue)
+            .toString()
     }
 
     /**
@@ -2311,9 +2370,14 @@ class EntityTest: AbstractExposedTest() {
         var number by CreditCards.number
         var spendingLimit by CreditCards.spendingLimit
 
-        override fun equals(other: Any?): Boolean = other is CreditCard && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "CreditCard(id=$idValue, number=$number, spendingLimit=$spendingLimit)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("number", number)
+                .add("spendingLimit", spendingLimit)
+                .toString()
+
     }
 
     @ParameterizedTest
@@ -2478,9 +2542,12 @@ class EntityTest: AbstractExposedTest() {
         var name by Countries.name
         val dishes by Dish referrersOn Dishes.country  // one-to-many
 
-        override fun equals(other: Any?): Boolean = other is Country && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Country(id=$idValue, name=$name)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("name", name)
+                .toString()
     }
 
 
@@ -2490,9 +2557,12 @@ class EntityTest: AbstractExposedTest() {
         var name by Dishes.name
         var country by Country referencedOn Dishes.country  // many-to-one
 
-        override fun equals(other: Any?): Boolean = other is Dish && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Dish(id=$idValue, name=$name)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("name", name)
+                .toString()
     }
 
     /**
@@ -2575,9 +2645,13 @@ class EntityTest: AbstractExposedTest() {
         var name by Customers.fullName
         val orders by Order referrersOn Orders.customer
 
-        override fun equals(other: Any?): Boolean = other is Customer && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Customer(id=$idValue, emailAddress=$emailAddress, name=$name)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("emailAddress", emailAddress)
+                .add("name", name)
+                .toString()
     }
 
     /**
@@ -2603,9 +2677,12 @@ class EntityTest: AbstractExposedTest() {
         var name by Orders.orderName
         var customer by Customer referencedOn Orders.customer
 
-        override fun equals(other: Any?): Boolean = other is Order && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Order(id=$idValue, name=$name)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("name", name)
+                .toString()
     }
 
     /**
@@ -2681,9 +2758,12 @@ class EntityTest: AbstractExposedTest() {
 
         var value by TestTable.value
 
-        override fun equals(other: Any?): Boolean = other is TestEntityA && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "TestEntityA(id=$idValue, value=$value)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("value", value)
+                .toString()
     }
 
     /**
@@ -2694,9 +2774,12 @@ class EntityTest: AbstractExposedTest() {
 
         var value by TestTable.value
 
-        override fun equals(other: Any?): Boolean = other is TestEntityB && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "TestEntityB(id=$idValue, value=$value)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("value", value)
+                .toString()
     }
 
     /**

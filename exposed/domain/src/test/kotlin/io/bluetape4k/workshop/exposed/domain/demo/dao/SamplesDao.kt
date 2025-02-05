@@ -1,9 +1,11 @@
 package io.bluetape4k.workshop.exposed.domain.demo.dao
 
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.dao.IntEntity
@@ -60,9 +62,13 @@ class SamplesDao: AbstractExposedTest() {
         var age: Int by Users.age
         var city: City? by City optionalReferencedOn Users.city
 
-        override fun equals(other: Any?): Boolean = other is User && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "User(id=$idValue, name=$name, age=$age, city=${city?.name})"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String = toStringBuilder()
+            .add("name", name)
+            .add("age", age)
+            .add("city", city)
+            .toString()
     }
 
     class City(id: EntityID<Int>): IntEntity(id) {
@@ -71,9 +77,11 @@ class SamplesDao: AbstractExposedTest() {
         var name: String by Cities.name
         val users: SizedIterable<User> by User optionalReferrersOn Users.city
 
-        override fun equals(other: Any?): Boolean = other is City && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "City(id=$idValue, name=$name)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String = toStringBuilder()
+            .add("name", name)
+            .toString()
     }
 
     @ParameterizedTest

@@ -1,6 +1,9 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.compositeId
 
-import io.bluetape4k.workshop.exposed.dao.idValue
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.idValue
+import io.bluetape4k.exposed.dao.toStringBuilder
 import org.jetbrains.exposed.dao.CompositeEntity
 import org.jetbrains.exposed.dao.CompositeEntityClass
 import org.jetbrains.exposed.dao.IntEntity
@@ -169,9 +172,12 @@ object BookSchema {
         val office: Office? by Office optionalBackReferencedOn Offices                  // one-to-one
         val allOffices: SizedIterable<Office> by Office optionalReferrersOn Offices     // one-to-many
 
-        override fun equals(other: Any?): Boolean = other is Publisher && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Publisher(id=$idValue, name=$name)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("name", name)
+                .toString()
     }
 
     class Author(id: EntityID<Int>): IntEntity(id) {
@@ -180,9 +186,13 @@ object BookSchema {
         var publisher by Publisher referencedOn Authors     // many-to-one
         var penName by Authors.penName
 
-        override fun equals(other: Any?): Boolean = other is Author && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Author(id=$idValue, penName=$penName)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("pen name", penName)
+                .add("publisher id", publisher.idValue)
+                .toString()
     }
 
     class Book(id: EntityID<CompositeID>): CompositeEntity(id) {
@@ -192,9 +202,14 @@ object BookSchema {
         var author by Author optionalReferencedOn Books.author  // many-to-one
         val review by Review backReferencedOn Reviews            // many-to-one
 
-        override fun equals(other: Any?): Boolean = other is Book && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Book(id=$idValue, title=$title)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("title", title)
+                .add("author id", author?.idValue)
+                .add("review id", review.idValue)
+                .toString()
     }
 
     class Review(id: EntityID<CompositeID>): CompositeEntity(id) {
@@ -202,9 +217,12 @@ object BookSchema {
 
         var book by Book referencedOn Reviews       // many-to-one
 
-        override fun equals(other: Any?): Boolean = other is Review && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Review(id=$idValue, book id=${book.idValue})"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("book id", book.idValue)
+                .toString()
     }
 
     class Office(id: EntityID<CompositeID>): CompositeEntity(id) {
@@ -213,9 +231,13 @@ object BookSchema {
         var staff by Offices.staff
         var publisher by Publisher optionalReferencedOn Offices     // many-to-one
 
-        override fun equals(other: Any?): Boolean = other is Office && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Office(id=$idValue, staff=$staff)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("staff", staff)
+                .add("publisher id", publisher?.idValue)
+                .toString()
     }
 
 }

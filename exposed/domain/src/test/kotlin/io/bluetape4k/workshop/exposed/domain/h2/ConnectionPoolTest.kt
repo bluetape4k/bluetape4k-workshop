@@ -2,10 +2,12 @@ package io.bluetape4k.workshop.exposed.domain.h2
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.dao.idValue
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.amshove.kluent.shouldBeEqualTo
@@ -73,8 +75,14 @@ class ConnectionPoolTest {
     class TestEntity(id: EntityID<Int>): IntEntity(id) {
         companion object: IntEntityClass<TestEntity>(TestTable)
 
-        var testValue by TestTable.testValue
+        var testValue: String by TestTable.testValue
 
-        override fun toString(): String = "TestEntity(id=$idValue, testValue=$testValue)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String {
+            return toStringBuilder()
+                .add("testValue", testValue)
+                .toString()
+        }
     }
 }

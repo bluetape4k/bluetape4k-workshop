@@ -1,6 +1,9 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.entities
 
-import io.bluetape4k.workshop.exposed.dao.idValue
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.idValue
+import io.bluetape4k.exposed.dao.toStringBuilder
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -51,9 +54,12 @@ class Post(id: EntityID<Long>): LongEntity(id) {
     val comments: SizedIterable<PostComment> by PostComment referrersOn PostCommentTable.postId
     val tags: SizedIterable<Tag> by Tag via PostTagTable // Tag.via (PostTagTable.post, PostTagTable.tag)
 
-    override fun equals(other: Any?): Boolean = other is Post && this.idValue == other.idValue
-    override fun hashCode(): Int = idValue.hashCode()
-    override fun toString(): String = "Post(id=$idValue, title=$title)"
+    override fun equals(other: Any?): Boolean = idEquals(other)
+    override fun hashCode(): Int = idHashCode()
+    override fun toString(): String =
+        toStringBuilder()
+            .add("title", title)
+            .toString()
 }
 
 class PostDetails(id: EntityID<Long>): LongEntity(id) {
@@ -63,9 +69,14 @@ class PostDetails(id: EntityID<Long>): LongEntity(id) {
     var createdOn by PostDetailsTable.createdOn
     var createdBy by PostDetailsTable.createdBy
 
-    override fun equals(other: Any?): Boolean = other is PostDetails && this.idValue == other.idValue
-    override fun hashCode(): Int = idValue.hashCode()
-    override fun toString(): String = "PostDetails(id=$idValue, createdOn=$createdOn, createdBy=$createdBy)"
+    override fun equals(other: Any?): Boolean = idEquals(other)
+    override fun hashCode(): Int = idHashCode()
+    override fun toString(): String =
+        toStringBuilder()
+            .add("post id", post.idValue)
+            .add("createdOn", createdOn)
+            .add("createdBy", createdBy)
+            .toString()
 }
 
 class PostComment(id: EntityID<Long>): LongEntity(id) {
@@ -75,9 +86,13 @@ class PostComment(id: EntityID<Long>): LongEntity(id) {
     var post by Post referencedOn PostCommentTable.postId
     var review by PostCommentTable.review
 
-    override fun equals(other: Any?): Boolean = other is PostComment && this.idValue == other.idValue
-    override fun hashCode(): Int = idValue.hashCode()
-    override fun toString(): String = "PostComment(id=$idValue, postId=${post.id}, review=$review)"
+    override fun equals(other: Any?): Boolean = idEquals(other)
+    override fun hashCode(): Int = idHashCode()
+    override fun toString(): String =
+        toStringBuilder()
+            .add("post id", post.idValue)
+            .add("review", review)
+            .toString()
 }
 
 class Tag(id: EntityID<Long>): LongEntity(id) {
@@ -86,7 +101,10 @@ class Tag(id: EntityID<Long>): LongEntity(id) {
     var name by TagTable.name
     val posts: SizedIterable<Post> by Post via PostTagTable // Post.via(PostTagTable.tag, PostTagTable.post)
 
-    override fun equals(other: Any?): Boolean = other is Tag && this.idValue == other.idValue
-    override fun hashCode(): Int = idValue.hashCode()
-    override fun toString(): String = "Tag(id=$idValue, name=$name)"
+    override fun equals(other: Any?): Boolean = idEquals(other)
+    override fun hashCode(): Int = idHashCode()
+    override fun toString(): String =
+        toStringBuilder()
+            .add("name", name)
+            .toString()
 }

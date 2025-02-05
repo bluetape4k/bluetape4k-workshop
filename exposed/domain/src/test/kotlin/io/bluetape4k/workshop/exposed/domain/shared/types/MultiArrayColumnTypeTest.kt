@@ -1,9 +1,11 @@
 package io.bluetape4k.workshop.exposed.domain.shared.types
 
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
@@ -570,9 +572,12 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
 
         var multiArray: List<List<Int>> by MultiArrayTable.multiArray
 
-        override fun equals(other: Any?): Boolean = other is MultiArrayEntity && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "MultiArrayEntity(id=$idValue, multiArray=$multiArray)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("multiArray", multiArray)
+                .toString()
     }
 
     /**

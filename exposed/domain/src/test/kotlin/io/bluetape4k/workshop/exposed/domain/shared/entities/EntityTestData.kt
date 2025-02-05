@@ -1,7 +1,9 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.idgenerators.uuid.TimebasedUuid
-import io.bluetape4k.workshop.exposed.dao.idValue
 import org.jetbrains.exposed.dao.Entity
 import org.jetbrains.exposed.dao.EntityClass
 import org.jetbrains.exposed.dao.IntEntity
@@ -54,9 +56,13 @@ object EntityTestData {
         var b1 by XTable.b1
         var b2 by XTable.b2
 
-        override fun equals(other: Any?): Boolean = other is XEntity && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "XEntity(id=$idValue, b1=$b1, b2=$b2)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("b1", b1)
+                .add("b2", b2)
+                .toString()
     }
 
     enum class XType {
@@ -79,9 +85,12 @@ object EntityTestData {
             }
         }
 
-        override fun equals(other: Any?): Boolean = other is AEntity && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "AEntity(id=$idValue, b1=$b1)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("b1", b1)
+                .toString()
     }
 
     open class BEntity(id: EntityID<Int>): AEntity(id) {
@@ -95,9 +104,14 @@ object EntityTestData {
         var b2 by XTable.b2
         var y by YEntity optionalReferencedOn XTable.y1
 
-        override fun equals(other: Any?): Boolean = other is BEntity && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "BEntity(id=$idValue, b1=$b1, b2=$b2)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("b1", b1)
+                .add("b2", b2)
+                .add("y", y)
+                .toString()
     }
 
     class YEntity(id: EntityID<String>): Entity<String>(id) {
@@ -106,8 +120,12 @@ object EntityTestData {
         var x by YTable.x
         val b: BEntity? by BEntity.backReferencedOn(XTable.y1)
 
-        override fun equals(other: Any?): Boolean = other is YEntity && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "YEntity(id=$idValue, x=$x)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("x", x)
+                .add("b", b)
+                .toString()
     }
 }

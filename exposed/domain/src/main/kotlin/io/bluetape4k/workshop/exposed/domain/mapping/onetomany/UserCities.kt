@@ -1,7 +1,8 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.onetomany
 
-import io.bluetape4k.ToStringBuilder
-import io.bluetape4k.workshop.exposed.dao.idValue
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.toStringBuilder
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -92,11 +93,10 @@ class User(id: EntityID<Int>): IntEntity(id) {
     var age by UserTable.age
     var cities: SizedIterable<City> by City via UserToCityTable      // many-to-many
 
-    override fun equals(other: Any?): Boolean = other is User && idValue == other.idValue
-    override fun hashCode(): Int = idValue.hashCode()
+    override fun equals(other: Any?): Boolean = idEquals(other)
+    override fun hashCode(): Int = idHashCode()
     override fun toString(): String {
-        return ToStringBuilder(this)
-            .add("id", id)
+        return toStringBuilder()
             .add("name", name)
             .add("age", age)
             .toString()
@@ -110,10 +110,10 @@ class City(id: EntityID<Int>): IntEntity(id) {
     var country: Country by Country referencedOn CityTable.countryId   // many-to-one
     var users: SizedIterable<User> by User via UserToCityTable       // many-to-many
 
-    override fun equals(other: Any?): Boolean = other is City && idValue == other.idValue
-    override fun hashCode(): Int = idValue.hashCode()
+    override fun equals(other: Any?): Boolean = idEquals(other)
+    override fun hashCode(): Int = idHashCode()
     override fun toString(): String {
-        return ToStringBuilder(this)
+        return toStringBuilder()
             .add("id", id)
             .add("name", name)
             .add("country", country)
@@ -127,10 +127,10 @@ class Country(id: EntityID<Int>): IntEntity(id) {
     var name by CountryTable.name
     val cities: SizedIterable<City> by City referrersOn CityTable.countryId   // one-to-many
 
-    override fun equals(other: Any?): Boolean = other is Country && idValue == other.idValue
-    override fun hashCode(): Int = idValue.hashCode()
+    override fun equals(other: Any?): Boolean = idEquals(other)
+    override fun hashCode(): Int = idHashCode()
     override fun toString(): String {
-        return ToStringBuilder(this)
+        return toStringBuilder()
             .add("id", id)
             .add("name", name)
             .toString()

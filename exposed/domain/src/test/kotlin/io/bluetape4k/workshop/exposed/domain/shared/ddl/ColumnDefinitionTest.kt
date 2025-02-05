@@ -1,10 +1,10 @@
 package io.bluetape4k.workshop.exposed.domain.shared.ddl
 
+import io.bluetape4k.exposed.sql.selectImplicitAll
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.TestDB.MYSQL_V8
 import io.bluetape4k.workshop.exposed.expectException
-import io.bluetape4k.workshop.exposed.sql.selectImplicitAll
 import io.bluetape4k.workshop.exposed.withDb
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEmpty

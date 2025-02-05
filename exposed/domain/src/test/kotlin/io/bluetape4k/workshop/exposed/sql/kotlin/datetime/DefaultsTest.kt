@@ -1,12 +1,14 @@
 package io.bluetape4k.workshop.exposed.sql.kotlin.datetime
 
 import MigrationUtils
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.constraintNamePart
 import io.bluetape4k.workshop.exposed.currentDialectTest
-import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.expectException
 import io.bluetape4k.workshop.exposed.inProperCase
 import io.bluetape4k.workshop.exposed.insertAndWait
@@ -85,7 +87,6 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.util.concurrent.atomic.AtomicInteger
-
 import kotlin.time.DurationUnit
 import kotlin.time.DurationUnit.DAYS
 import kotlin.time.toDuration
@@ -143,10 +144,15 @@ class DefaultsTest: AbstractExposedTest() {
         var t2 by TableWithDBDefault.t2
         val clientDefault by TableWithDBDefault.clientDefault
 
-        override fun equals(other: Any?): Boolean = other is DBDefault && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
         override fun toString(): String =
-            "DBDefault(id=$idValue, field=$field, t1=$t1, t2=$t2, clientDefault=$clientDefault)"
+            toStringBuilder()
+                .add("field", field)
+                .add("t1", t1)
+                .add("t2", t2)
+                .add("clientDefault", clientDefault)
+                .toString()
     }
 
     @Test
@@ -944,9 +950,12 @@ class DefaultsTest: AbstractExposedTest() {
 
         var timestamp: OffsetDateTime by DefaultTimestampTable.timestamp
 
-        override fun equals(other: Any?): Boolean = other is DefaultTimestampEntity && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "DefaultTimestampEntity(id=$idValue, timestamp=$timestamp)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("timestamp", timestamp)
+                .toString()
     }
 
     /**

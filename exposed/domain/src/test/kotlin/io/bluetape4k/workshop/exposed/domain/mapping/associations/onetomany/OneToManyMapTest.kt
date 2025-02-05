@@ -1,10 +1,13 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany
 
 import io.bluetape4k.ToStringBuilder
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.idValue
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldContainSame
@@ -188,7 +191,7 @@ class OneToManyMapTest: AbstractExposedTest() {
 
 
         override fun equals(other: Any?): Boolean = other is Car && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
+        override fun hashCode(): Int = idHashCode()
         override fun toString(): String {
             return ToStringBuilder(this)
                 .add("id", id)
@@ -202,7 +205,8 @@ class OneToManyMapTest: AbstractExposedTest() {
         val price: Int = 0,
     ): Serializable {
         constructor(row: ResultRow): this(
-            name = row[CarOptionTable.name], price = row[CarOptionTable.price]
+            name = row[CarOptionTable.name],
+            price = row[CarOptionTable.price]
         )
     }
 
@@ -212,11 +216,10 @@ class OneToManyMapTest: AbstractExposedTest() {
         var name by CarPartTable.name
         var description by CarPartTable.descriptin
 
-        override fun equals(other: Any?): Boolean = other is CarPart && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
         override fun toString(): String {
-            return ToStringBuilder(this)
-                .add("id", id)
+            return toStringBuilder()
                 .add("name", name)
                 .add("description", description)
                 .toString()

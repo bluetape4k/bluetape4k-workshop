@@ -1,11 +1,14 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.associations.manytomany
 
-import io.bluetape4k.workshop.exposed.dao.idValue
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.toStringBuilder
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.ReferenceOption.RESTRICT
+import org.jetbrains.exposed.sql.SizedIterable
 import org.jetbrains.exposed.sql.Table
 
 /**
@@ -46,9 +49,12 @@ object BankSchema {
         var number by BankAccountTable.number
         val owners by AccountOwner via OwnerAccountMapTable  // many-to-many
 
-        override fun equals(other: Any?): Boolean = other is BankAccount && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "BankAccount(id=$idValue, number=$number)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("number", number)
+                .toString()
     }
 
     /**
@@ -58,10 +64,13 @@ object BankSchema {
         companion object: IntEntityClass<AccountOwner>(AccountOwnerTable)
 
         var ssn by AccountOwnerTable.ssn
-        val accounts by BankAccount via OwnerAccountMapTable // many-to-many
+        val accounts: SizedIterable<BankAccount> by BankAccount via OwnerAccountMapTable // many-to-many
 
-        override fun equals(other: Any?): Boolean = other is AccountOwner && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "AccountOwner(id=$idValue, ssn=$ssn)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("ssn", ssn)
+                .toString()
     }
 }

@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.exposed.sql.json
 
-import io.bluetape4k.workshop.exposed.dao.idValue
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.toStringBuilder
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.dao.IntEntity
@@ -48,9 +50,12 @@ object JsonTestData {
 
         var jsonColumn: DataHolder by JsonTable.jsonColumn
 
-        override fun equals(other: Any?): Boolean = other is JsonEntity && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "JsonEntity(id=$idValue, jsonColumn=$jsonColumn)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("jsonColumn", jsonColumn)
+                .toString()
     }
 
     class JsonBEntity(id: EntityID<Int>): IntEntity(id) {
@@ -58,9 +63,12 @@ object JsonTestData {
 
         var jsonBColumn by JsonBTable.jsonBColumn
 
-        override fun equals(other: Any?): Boolean = other is JsonBEntity && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "JsonBEntity(id=$idValue, jsonBColumn=$jsonBColumn)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("jsonBColumn", jsonBColumn)
+                .toString()
     }
 
     /**

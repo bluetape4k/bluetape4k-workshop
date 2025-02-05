@@ -1,8 +1,10 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.domain.shared.entities.LongIdTables.Cities
 import io.bluetape4k.workshop.exposed.domain.shared.entities.LongIdTables.City
 import io.bluetape4k.workshop.exposed.domain.shared.entities.LongIdTables.People
@@ -76,9 +78,12 @@ object LongIdTables {
         var name: String by Cities.name
         val towns: SizedIterable<Town> by Town referrersOn Towns.cityId
 
-        override fun equals(other: Any?): Boolean = other is City && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "City(id=$idValue, name=$name)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("name", name)
+                .toString()
     }
 
     class Person(id: EntityID<Long>): LongEntity(id) {
@@ -87,9 +92,13 @@ object LongIdTables {
         var name by People.name
         var city by City referencedOn People.cityId
 
-        override fun equals(other: Any?): Boolean = other is Person && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Person(id=$idValue, name=$name, city=${city.name})"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("name", name)
+                .add("city", city.name)
+                .toString()
     }
 
 
@@ -98,9 +107,12 @@ object LongIdTables {
 
         var city by City referencedOn Towns.cityId
 
-        override fun equals(other: Any?): Boolean = other is Town && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Town(id=$idValue, city=${city.name})"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("city", city.name)
+                .toString()
     }
 }
 

@@ -3,11 +3,14 @@ package io.bluetape4k.workshop.exposed.domain.shared.entities
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntity
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityClass
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDTable
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.idValue
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.idgenerators.uuid.TimebasedUuid.Epoch
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables.Address
 import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables.Addresses
 import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables.Cities
@@ -114,9 +117,12 @@ object TimebasedUUIDTables {
         var name by Cities.name
         val towns by Town referrersOn Towns.cityId
 
-        override fun equals(other: Any?): Boolean = other is City && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "City(id=$idValue, name=$name)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("name", name)
+                .toString()
     }
 
     class Person(id: EntityID<UUID>): TimebasedUUIDEntity(id) {
@@ -125,9 +131,13 @@ object TimebasedUUIDTables {
         var name by People.name
         var city by City referencedOn People.cityId
 
-        override fun equals(other: Any?): Boolean = other is Person && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Person(id=$idValue, name=$name)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("name", name)
+                .add("city id", city.idValue)
+                .toString()
     }
 
     class Address(id: EntityID<UUID>): TimebasedUUIDEntity(id) {
@@ -137,9 +147,14 @@ object TimebasedUUIDTables {
         var city by City.referencedOn(Addresses.cityId)
         var address by Addresses.address
 
-        override fun equals(other: Any?): Boolean = other is Address && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Address(id=$idValue, address=$address)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("address", address)
+                .add("person id", person.idValue)
+                .add("city id", city.idValue)
+                .toString()
     }
 
     class Town(id: EntityID<UUID>): TimebasedUUIDEntity(id) {
@@ -147,9 +162,12 @@ object TimebasedUUIDTables {
 
         var city by City referencedOn Towns.cityId
 
-        override fun equals(other: Any?): Boolean = other is Town && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Town(id=$id)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("city id", city.idValue)
+                .toString()
     }
 }
 
@@ -247,7 +265,7 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
 
             /**
              * many-to-one Earger Loaing
-             * 
+             *
              * ```sql
              * SELECT people.id, people."name", people.city_id
              *   FROM people;

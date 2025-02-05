@@ -8,7 +8,6 @@ import io.bluetape4k.workshop.exposed.assertFailAndRollback
 import io.bluetape4k.workshop.exposed.currentDialectTest
 import io.bluetape4k.workshop.exposed.expectException
 import io.bluetape4k.workshop.exposed.inProperCase
-import io.bluetape4k.workshop.exposed.sql.execCreateMissingTablesAndColumns
 import io.bluetape4k.workshop.exposed.withDb
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEmpty
@@ -166,13 +165,13 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
         }
 
         withDb(testDB) {
-            // SchemaUtils.createMissingTablesAndColumns(t1)
-            execCreateMissingTablesAndColumns(t1)
+            SchemaUtils.createMissingTablesAndColumns(t1)
+            // execCreateMissingTablesAndColumns(t1)
 
             t1.insert { it[foo] = "ABC" }
 
-            // SchemaUtils.createMissingTablesAndColumns(t2)
-            execCreateMissingTablesAndColumns(t2)
+            SchemaUtils.createMissingTablesAndColumns(t2)
+            // execCreateMissingTablesAndColumns(t2)
 
             assertFailAndRollback("Can't insert without primaryKey value") {
                 t2.insert { it[foo] = "ABC" }

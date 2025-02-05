@@ -1,9 +1,12 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.associations.onetoone
 
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.idValue
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeNull
@@ -51,9 +54,13 @@ class CoupleTest: AbstractExposedTest() {
         var name by HusbandTable.name
         var wife by Wife optionalReferencedOn HusbandTable.wifeId
 
-        override fun equals(other: Any?): Boolean = other is Husband && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Husband(id=$idValue, name=$name)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("name", name)
+                .add("wife id", wife?.idValue)
+                .toString()
     }
 
     class Wife(id: EntityID<Int>): IntEntity(id) {
@@ -66,9 +73,13 @@ class CoupleTest: AbstractExposedTest() {
          */
         val husband by Husband optionalBackReferencedOn HusbandTable.wifeId
 
-        override fun equals(other: Any?): Boolean = other is Wife && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Wife(id=$idValue, name=$name)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("name", name)
+                .add("husband id", husband?.idValue)
+                .toString()
     }
 
     @ParameterizedTest

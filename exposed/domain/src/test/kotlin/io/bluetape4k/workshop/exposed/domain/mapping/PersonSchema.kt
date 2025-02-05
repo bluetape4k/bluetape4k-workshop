@@ -1,8 +1,10 @@
 package io.bluetape4k.workshop.exposed.domain.mapping
 
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
@@ -57,9 +59,14 @@ object PersonSchema {
         var state by AddressTable.state
         var zip by AddressTable.zip
 
-        override fun equals(other: Any?): Boolean = other is Address && other.id == id
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Address(id=$idValue, street=$street, city=$city, state=$state, zip=$zip)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String = toStringBuilder()
+            .add("street", street)
+            .add("city", city)
+            .add("state", state)
+            .add("zip", zip)
+            .toString()
     }
 
     class Person(id: EntityID<Long>): LongEntity(id), java.io.Serializable {
@@ -72,9 +79,16 @@ object PersonSchema {
         var occupation by PersonTable.occupation
         var address by Address referencedOn PersonTable.addressId
 
-        override fun equals(other: Any?): Boolean = other is Person && other.id == id
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Person(id=$idValue, firstName=$firstName, lastName=$lastName)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String = toStringBuilder()
+            .add("firstName", firstName)
+            .add("lastName", lastName)
+            .add("birthDate", birthDate)
+            .add("employeed", employeed)
+            .add("occupation", occupation)
+            .add("address", address)
+            .toString()
     }
 
     data class PersonRecord(
@@ -102,8 +116,6 @@ object PersonSchema {
         block: Transaction.(PersonTable, AddressTable) -> Unit,
     ) {
         withTables(testDB, *allPersonTables) {
-
-
             block(PersonTable, AddressTable)
         }
     }

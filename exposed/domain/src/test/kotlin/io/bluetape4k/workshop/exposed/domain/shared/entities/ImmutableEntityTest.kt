@@ -1,9 +1,11 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.domain.shared.entities.ImmutableEntityTest.Schema.ECachedOrganization
 import io.bluetape4k.workshop.exposed.domain.shared.entities.ImmutableEntityTest.Schema.EOrganization
 import io.bluetape4k.workshop.exposed.domain.shared.entities.ImmutableEntityTest.Schema.Organization
@@ -54,9 +56,13 @@ class ImmutableEntityTest: AbstractExposedTest() {
             val name: String by Schema.Organization.name
             val etag: Long by Schema.Organization.etag
 
-            override fun equals(other: Any?): Boolean = other is EOrganization && idValue == other.idValue
-            override fun hashCode(): Int = idValue.hashCode()
-            override fun toString(): String = "EOrganization(id=$idValue, name=$name, etag=$etag)"
+            override fun equals(other: Any?): Boolean = idEquals(other)
+            override fun hashCode(): Int = idHashCode()
+            override fun toString(): String =
+                toStringBuilder()
+                    .add("name", name)
+                    .add("etag", etag)
+                    .toString()
         }
 
         /**
@@ -73,9 +79,13 @@ class ImmutableEntityTest: AbstractExposedTest() {
             val name: String by Schema.Organization.name
             val etag: Long by Schema.Organization.etag
 
-            override fun equals(other: Any?): Boolean = other is ECachedOrganization && idValue == other.idValue
-            override fun hashCode(): Int = idValue.hashCode()
-            override fun toString(): String = "ECachedOrganization(id=$idValue, name=$name, etag=$etag)"
+            override fun equals(other: Any?): Boolean = idEquals(other)
+            override fun hashCode(): Int = idHashCode()
+            override fun toString(): String =
+                toStringBuilder()
+                    .add("name", name)
+                    .add("etag", etag)
+                    .toString()
         }
     }
 

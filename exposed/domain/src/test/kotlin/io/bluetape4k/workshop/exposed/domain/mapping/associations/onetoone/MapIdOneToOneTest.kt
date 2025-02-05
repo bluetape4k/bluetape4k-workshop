@@ -1,10 +1,13 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.associations.onetoone
 
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.idValue
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
@@ -43,8 +46,8 @@ class MapIdOneToOneTest: AbstractExposedTest() {
      *      AUTHOR_ID INT PRIMARY KEY,
      *      "path" VARCHAR(255) NOT NULL,
      *
-     *      CONSTRAINT FK_PICTURES_ID__ID FOREIGN KEY (ID) REFERENCES AUTHORS(ID)
-     *          ON DELETE CASCADE ON UPDATE CASCADE
+     *      CONSTRAINT FK_PICTURES_ID__ID FOREIGN KEY (ID)
+     *      REFERENCES AUTHORS(ID) ON DELETE CASCADE ON UPDATE CASCADE
      * )
      * ```
      */
@@ -61,8 +64,8 @@ class MapIdOneToOneTest: AbstractExposedTest() {
      *      AUTHOR_ID INT PRIMARY KEY,
      *      INFORMATION VARCHAR(255) NULL,
      *
-     *      CONSTRAINT FK_BIOGRAPHYS_ID__ID FOREIGN KEY (ID) REFERENCES AUTHORS(ID)
-     *          ON DELETE CASCADE ON UPDATE CASCADE
+     *      CONSTRAINT FK_BIOGRAPHYS_ID__ID FOREIGN KEY (ID)
+     *      REFERENCES AUTHORS(ID) ON DELETE CASCADE ON UPDATE CASCADE
      * )
      * ```
      */
@@ -81,9 +84,12 @@ class MapIdOneToOneTest: AbstractExposedTest() {
         val picture by Picture backReferencedOn Pictures
         val biography by MapIdOneToOneTest.Biography backReferencedOn Biographys
 
-        override fun equals(other: Any?): Boolean = other is Author && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Author(id=$idValue, name=$name)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("name", name)
+                .toString()
     }
 
     class Picture(id: EntityID<Int>): IntEntity(id) {
@@ -93,10 +99,14 @@ class MapIdOneToOneTest: AbstractExposedTest() {
         val author by Author referencedOn Pictures.id
 
         // NOTE: one-to-one 관계에서 id 값을 참조하는 경우 `id` 로 비교하면 안되고, `idValue` 로 비교해야 한다.
-        // NOTE: id 속성 중 table 이 참조하는 테이블을 가르킨다.
-        override fun equals(other: Any?): Boolean = other is Picture && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Picture(id=$idValue, path=$path)"
+        // NOTE: id 속성 중 table 이 one-to-one 의 owner 테이블을 가르킨다.
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("path", path)
+                .add("author id", author.idValue)
+                .toString()
     }
 
     class Biography(id: EntityID<Int>): IntEntity(id) {
@@ -106,10 +116,14 @@ class MapIdOneToOneTest: AbstractExposedTest() {
         val author by Author referencedOn Biographys.id
 
         // NOTE: one-to-one 관계에서 id 값을 참조하는 경우 `id` 로 비교하면 안되고, `idValue` 로 비교해야 한다.
-        // NOTE: id 속성 중 table 이 참조하는 테이블을 가르킨다.
-        override fun equals(other: Any?): Boolean = other is Biography && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Biography(id=$idValue, infomation=$infomation)"
+        // NOTE: id 속성 중 table 이 one-to-one 의 owner 테이블을 가르킨다.
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("infomation", infomation)
+                .add("author id", author.idValue)
+                .toString()
     }
 
     @ParameterizedTest
@@ -150,9 +164,17 @@ class MapIdOneToOneTest: AbstractExposedTest() {
              * eager loading
              *
              * ```sql
-             * SELECT AUTHORS.ID, AUTHORS."name" FROM AUTHORS WHERE AUTHORS.ID = 1
-             * SELECT BIOGRAPHYS.ID, BIOGRAPHYS.INFORMATION FROM BIOGRAPHYS WHERE BIOGRAPHYS.ID = 1
-             * SELECT PICTURES.ID, PICTURES."path" FROM PICTURES WHERE PICTURES.ID = 1
+             * SELECT AUTHORS.ID, AUTHORS."name"
+             *   FROM AUTHORS
+             *  WHERE AUTHORS.ID = 1;
+             *
+             * SELECT BIOGRAPHYS.ID, BIOGRAPHYS.INFORMATION
+             *   FROM BIOGRAPHYS
+             *  WHERE BIOGRAPHYS.ID = 1;
+             *
+             * SELECT PICTURES.ID, PICTURES."path"
+             *   FROM PICTURES
+             *  WHERE PICTURES.ID = 1;
              * ```
              */
             val author3 = Author.findById(author.id)!!.load(

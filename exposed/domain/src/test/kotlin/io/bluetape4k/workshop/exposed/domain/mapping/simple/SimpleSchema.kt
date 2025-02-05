@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.simple
 
-import io.bluetape4k.workshop.exposed.dao.idValue
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.toStringBuilder
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -20,9 +22,13 @@ class SimpleEntity(id: EntityID<Long>): LongEntity(id) {
     var name by SimpleTable.name
     var description by SimpleTable.description
 
-    override fun equals(other: Any?): Boolean = other is SimpleEntity && idValue == other.idValue
-    override fun hashCode(): Int = idValue.hashCode()
-    override fun toString(): String = "SimpleEntity(id=$idValue, name=$name, description=$description)"
+    override fun equals(other: Any?): Boolean = idEquals(other)
+    override fun hashCode(): Int = idHashCode()
+    override fun toString(): String =
+        toStringBuilder()
+            .add("name", name)
+            .add("description", description)
+            .toString()
 }
 
 data class SimpleEntityDto(

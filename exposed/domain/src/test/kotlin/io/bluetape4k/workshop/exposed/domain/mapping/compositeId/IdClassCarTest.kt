@@ -1,10 +1,14 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.compositeId
 
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
@@ -53,6 +57,9 @@ class IdClassCarTest: AbstractExposedTest() {
              * CompositeID를 이용한 Entity를 생성합니다.
              */
             fun new(brand: String, carYear: Int, init: IdClassCar.() -> Unit): IdClassCar {
+                brand.requireNotBlank("brand")
+                carYear.requirePositiveNumber("carYear")
+
                 val compositeId = carCompositeIdOf(brand, carYear)
                 return new(compositeId, init)
             }
@@ -71,9 +78,14 @@ class IdClassCarTest: AbstractExposedTest() {
 
         val carIdentifier get() = CarIdentifier(id.value)
 
-        override fun equals(other: Any?): Boolean = other is IdClassCar && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "IdClassCar(id=$idValue, serialNo=$serialNo)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+//                .add("brand", brand)
+//                .add("car year", carYear)
+                .add("serial no", serialNo)
+                .toString()
     }
 
     data class CarIdentifier(val compositeId: CompositeID): EntityID<CompositeID>(CarTable, compositeId) {
@@ -218,8 +230,12 @@ class IdClassCarTest: AbstractExposedTest() {
 
             /**
              * CompositeID를 이용하여 Entity를 조회합니다.
+             *
              * ```sql
-             * SELECT CAR_TABLE.CAR_BRAND, CAR_TABLE.CAR_YEAR, CAR_TABLE.SERIAL_NO FROM CAR_TABLE WHERE (CAR_TABLE.CAR_BRAND = 'Ondricka and Sons') AND (CAR_TABLE.CAR_YEAR = 1978)
+             * SELECT CAR_TABLE.CAR_BRAND, CAR_TABLE.CAR_YEAR, CAR_TABLE.SERIAL_NO
+             *   FROM CAR_TABLE
+             *  WHERE (CAR_TABLE.CAR_BRAND = 'Ondricka and Sons')
+             *    AND (CAR_TABLE.CAR_YEAR = 1978)
              * ```
              */
             CarTable.selectAll().where { CarTable.id eq entityId }.toList() shouldHaveSize 1

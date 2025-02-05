@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.entities
 
-import io.bluetape4k.workshop.exposed.dao.idValue
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.toStringBuilder
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -18,9 +20,10 @@ class AccountEntity(id: EntityID<Long>): LongEntity(id) {
     var name by AccountTable.name
     var balance by AccountTable.balance
 
-    override fun equals(other: Any?): Boolean = other is AccountEntity && this.idValue == other.idValue
-    override fun hashCode(): Int = idValue.hashCode()
-    override fun toString(): String {
-        return "AccountEntity(id=$idValue, name=$name, balance=$balance)"
-    }
+    override fun equals(other: Any?): Boolean = idEquals(other)
+    override fun hashCode(): Int = idHashCode()
+    override fun toString(): String = toStringBuilder()
+        .add("name", name)
+        .add("balance", balance)
+        .toString()
 }

@@ -1,9 +1,12 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.idValue
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldContainSame
@@ -91,9 +94,12 @@ class ForeignIdEntityTest: AbstractExposedTest() {
 
         var name by Projects.name
 
-        override fun equals(other: Any?): Boolean = other is Project && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Project(id=$idValue, name=$name)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("name", name)
+                .toString()
     }
 
     class ProjectConfig(id: EntityID<Long>): LongEntity(id) {
@@ -101,9 +107,12 @@ class ForeignIdEntityTest: AbstractExposedTest() {
 
         var setting by ProjectConfigs.setting
 
-        override fun equals(other: Any?): Boolean = other is ProjectConfig && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "ProjectConfig(id=$idValue, setting=$setting)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("setting", setting)
+                .toString()
     }
 
     class Actor(id: EntityID<String>): Entity<String>(id) {
@@ -111,9 +120,9 @@ class ForeignIdEntityTest: AbstractExposedTest() {
 
         val roles by Role referrersOn Roles.actor  // one-to-many relationship
 
-        override fun equals(other: Any?): Boolean = other is Actor && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Actor(id=$id)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String = "Actor(id=$idValue)"
     }
 
     class Role(id: EntityID<Int>): IntEntity(id) {
@@ -121,9 +130,9 @@ class ForeignIdEntityTest: AbstractExposedTest() {
 
         var actor by Actor referencedOn Roles.actor  // many-to-one relationship
 
-        override fun equals(other: Any?): Boolean = other is Role && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Role(id=$id)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String = "Role(id=$idValue)"
     }
 
     @ParameterizedTest

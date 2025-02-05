@@ -4,9 +4,11 @@ import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntity
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityClass
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityID
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDTable
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.dao.entityCache
@@ -85,9 +87,15 @@ class TablePerClassInheritanceTest: AbstractExposedTest() {
         var startDate by CreditCardTable.startDate
         var endDate by CreditCardTable.endDate
 
-        override fun equals(other: Any?): Boolean = other is CreditCard && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "CreditCard(id=$idValue, owner=$owner, cardNumber=$cardNumber)"
+        override fun equals(other: Any?): Boolean = idEquals(this)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("owner", owner)
+                .add("swift", swift)
+                .add("card number", cardNumber)
+                .add("company name", companyName)
+                .toString()
     }
 
     class BankAccount(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
@@ -99,9 +107,15 @@ class TablePerClassInheritanceTest: AbstractExposedTest() {
         var accountNumber by BankAccountTable.accountNumber
         var bankName by BankAccountTable.bankName
 
-        override fun equals(other: Any?): Boolean = other is BankAccount && idValue == other.idValue
-        override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "BankAccount(id=$idValue, owner=$owner, accountNumber=$accountNumber)"
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String =
+            toStringBuilder()
+                .add("owner", owner)
+                .add("swift", swift)
+                .add("account number", accountNumber)
+                .add("bank name", bankName)
+                .toString()
     }
 
     @ParameterizedTest
