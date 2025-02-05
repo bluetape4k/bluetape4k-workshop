@@ -20,6 +20,19 @@ object MemberSchema {
     /**
      * Group Table
      *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS "Group" (
+     *      id uuid PRIMARY KEY,
+     *      "name" VARCHAR(50) NOT NULL,
+     *      description TEXT NOT NULL,
+     *      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+     *      owner_id uuid NOT NULL,
+     *
+     *      CONSTRAINT fk_group_owner_id__id FOREIGN KEY (owner_id)
+     *      REFERENCES "User"(id) ON DELETE RESTRICT ON UPDATE RESTRICT
+     * )
+     * ```
+     *
      * @see MemberTable
      * @see UserTable
      * @see Group
@@ -36,6 +49,21 @@ object MemberSchema {
     /**
      * Member Table (UserTable, GroupTable의 Many-to-Many 관계를 나타내는 테이블)
      *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS "Member" (
+     *      id uuid PRIMARY KEY,
+     *      user_id uuid NOT NULL,
+     *      group_id uuid NOT NULL,
+     *      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+     *
+     *      CONSTRAINT fk_member_user_id__id FOREIGN KEY (user_id)
+     *      REFERENCES "User"(id) ON DELETE CASCADE ON UPDATE RESTRICT,
+     *
+     *      CONSTRAINT fk_member_group_id__id FOREIGN KEY (group_id)
+     *      REFERENCES "Group"(id) ON DELETE CASCADE ON UPDATE RESTRICT
+     * );
+     * ```
+     *
      * @see UserTable
      * @see GroupTable
      */
@@ -49,6 +77,17 @@ object MemberSchema {
 
     /**
      * User Table
+     *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS "User" (
+     *      id uuid PRIMARY KEY,
+     *      first_name VARCHAR(50) NOT NULL,
+     *      last_name VARCHAR(50) NOT NULL,
+     *      username VARCHAR(50) NOT NULL,
+     *      status INT DEFAULT 0 NOT NULL,
+     *      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+     * );
+     * ```
      *
      * @see User
      * @see GroupTable
@@ -70,11 +109,14 @@ object MemberSchema {
         var owner by User referencedOn GroupTable.owner
         val members by User.via(MemberTable.group, MemberTable.user)
 
+        val createdAt by GroupTable.createAt
+
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
         override fun toString(): String = toStringBuilder()
             .add("name", name)
             .add("description", description)
+            .add("createdAt", createdAt)
             .toString()
     }
 
@@ -89,6 +131,8 @@ object MemberSchema {
         var status by UserTable.status
         val groups by Group.via(MemberTable.user, MemberTable.group)
 
+        val createdAt by UserTable.createAt
+
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
@@ -97,6 +141,7 @@ object MemberSchema {
             .add("lastName", lastName)
             .add("username", username)
             .add("status", status)
+            .add("createdAt", createdAt)
             .toString()
     }
 
