@@ -22,24 +22,15 @@ class FamilySchemaTest: AbstractExposedTest() {
 
     private val allFamilyTables = arrayOf(FatherTable, ChildTable)
 
-    /**
-     * one-to-many with ordering
-     *
-     * ```sql
-     * SELECT CHILD.ID,
-     *        CHILD."name",
-     *        CHILD.BIRTHDAY,
-     *        CHILD.FATHER_ID
-     *   FROM CHILD
-     *  WHERE CHILD.FATHER_ID = 1
-     *  ORDER BY CHILD.BIRTHDAY ASC, CHILD.BIRTHDAY ASC
-     *  ```
-     */
+
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `one-to-many with ordering`(testDB: TestDB) {
         withTables(testDB, *allFamilyTables) {
-            val father1 = Father.new { name = ("이성계") }
+
+            val father1 = Father.new {
+                name = ("이성계")
+            }
 
             val childId2 = ChildTable.insertAndGetId {
                 it[name] = "이방원"
@@ -65,17 +56,32 @@ class FamilySchemaTest: AbstractExposedTest() {
             loaded.children.count() shouldBeEqualTo 3
 
             /**
+             * one-to-many with ordering
+             *
              * ```sql
-             * SELECT CHILD.ID,
-             *        CHILD."name",
-             *        CHILD.BIRTHDAY,
-             *        CHILD.FATHER_ID
-             *   FROM CHILD
-             *  ORDER BY CHILD.BIRTHDAY ASC
-             * ```
+             * -- Postgres
+             * SELECT child.id,
+             *        child."name",
+             *        child.birthday,
+             *        child.father_id
+             *   FROM child
+             *  ORDER BY child.birthday ASC;
+             *  ```
              */
             val expectedChildren = Child.all().orderBy(ChildTable.birthday to SortOrder.ASC).toList()
 
+            /**
+             * ```sql
+             * -- Postgres
+             * SELECT child.id,
+             *        child."name",
+             *        child.birthday,
+             *        child.father_id
+             *   FROM child
+             *  WHERE child.father_id = 1
+             *  ORDER BY child.birthday ASC,
+             * ```
+             */
             loaded.children.toList() shouldBeEqualTo expectedChildren
         }
     }

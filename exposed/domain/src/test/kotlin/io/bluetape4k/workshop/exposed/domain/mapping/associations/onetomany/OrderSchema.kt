@@ -14,10 +14,33 @@ import org.jetbrains.exposed.sql.ReferenceOption.CASCADE
  */
 object OrderSchema {
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS orders (
+     *      id SERIAL PRIMARY KEY,
+     *      "no" VARCHAR(255) NOT NULL
+     * )
+     * ```
+     */
     object OrderTable: IntIdTable("orders") {
         val no = varchar("no", 255)
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS order_items (
+     *      id SERIAL PRIMARY KEY,
+     *      "name" VARCHAR(255) NOT NULL,
+     *      price DECIMAL(10, 2) NULL,
+     *      order_id INT NOT NULL,
+     *
+     *      CONSTRAINT fk_order_items_order_id__id FOREIGN KEY (order_id)
+     *      REFERENCES orders(id) ON DELETE CASCADE ON UPDATE CASCADE
+     * );
+     *
+     * CREATE INDEX order_items_order_id ON order_items (order_id);
+     * ```
+     */
     object OrderItemTable: IntIdTable("order_items") {
         val name = varchar("name", 255)
         val price = decimal("price", 10, 2).nullable()

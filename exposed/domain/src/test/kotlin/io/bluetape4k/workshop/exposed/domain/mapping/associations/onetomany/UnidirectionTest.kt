@@ -12,7 +12,6 @@ import org.amshove.kluent.shouldContainSame
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.entityCache
-import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.exceptions.ExposedSQLException
@@ -28,16 +27,52 @@ class UnidirectionTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
+    /**
+     * ```sql
+     * -- MySQL V8
+     * CREATE TABLE IF NOT EXISTS clouds (
+     *      id INT AUTO_INCREMENT PRIMARY KEY,
+     *      kind VARCHAR(255) NOT NULL,
+     *      `length` DOUBLE PRECISION NOT NULL
+     * )
+     * ```
+     */
     object Clouds: IntIdTable("clouds") {
         val kind = varchar("kind", 255)
         val length = double("length")
     }
 
+    /**
+     * ```sql
+     * -- MySQL V8
+     * CREATE TABLE IF NOT EXISTS snowflakes (
+     *      id INT AUTO_INCREMENT PRIMARY KEY,
+     *      `name` VARCHAR(255) NOT NULL,
+     *      description text NULL
+     * )
+     * ```
+     */
     object Snowflakes: IntIdTable("snowflakes") {
         val name = varchar("name", 255)
         val description = text("description").nullable()
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS cloud_snowflakes (
+     *      cloud_id INT,
+     *      snowflake_id INT,
+     *
+     *      CONSTRAINT PK_CLOUD_SNOWFLAKES PRIMARY KEY (cloud_id, snowflake_id),
+     *
+     *      CONSTRAINT fk_cloud_snowflakes_cloud_id__id FOREIGN KEY (cloud_id)
+     *      REFERENCES clouds(id) ON DELETE CASCADE ON UPDATE CASCADE,
+     *
+     *      CONSTRAINT fk_cloud_snowflakes_snowflake_id__id FOREIGN KEY (snowflake_id)
+     *      REFERENCES snowflakes(id) ON DELETE CASCADE ON UPDATE CASCADE
+     * );
+     * ```
+     */
     object CloudSnowflakes: Table("cloud_snowflakes") {
         val cloudId = reference("cloud_id", Clouds, onDelete = CASCADE, onUpdate = CASCADE)
         val snowflakeId = reference("snowflake_id", Snowflakes, onDelete = CASCADE, onUpdate = CASCADE)
@@ -111,9 +146,10 @@ class UnidirectionTest: AbstractExposedTest() {
                     it[cloudId] = cloud.id
                     it[snowflakeId] = snowflake1.id
                 }
+                commit()
             }
 
-            flushCache()
+            // flushCache()
             entityCache.clear()
 
             val cloud2 = Cloud.findById(cloud.id)!!
@@ -136,6 +172,19 @@ class UnidirectionTest: AbstractExposedTest() {
 
             val cloud3 = Cloud.findById(cloud.id)!!
             cloud3.producedSnowflakes.count() shouldBeEqualTo 2L
+
+            /**
+             * ```sql
+             * SELECT snowflakes.id,
+             *        snowflakes.`name`,
+             *        snowflakes.description,
+             *        cloud_snowflakes.snowflake_id,
+             *        cloud_snowflakes.cloud_id
+             *   FROM snowflakes
+             *          INNER JOIN cloud_snowflakes ON snowflakes.id = cloud_snowflakes.snowflake_id
+             *  WHERE cloud_snowflakes.cloud_id = 1
+             * ```
+             */
             cloud3.producedSnowflakes.toSet() shouldContainSame setOf(
                 snowflake1,
                 snowflake2,

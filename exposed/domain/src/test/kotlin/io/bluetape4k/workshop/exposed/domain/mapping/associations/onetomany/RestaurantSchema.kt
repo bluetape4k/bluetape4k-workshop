@@ -10,10 +10,33 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 
 object ResturantSchema {
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS restaurant (
+     *      id SERIAL PRIMARY KEY,
+     *      "name" VARCHAR(255) NOT NULL
+     * );
+     * ```
+     */
     object RestaurantTable: IntIdTable("restaurant") {
         val name = varchar("name", 255)
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS menu (
+     *      id SERIAL PRIMARY KEY,
+     *      "name" VARCHAR(255) NOT NULL,
+     *      price DECIMAL(10, 2) NOT NULL,
+     *      restaurant_id INT NOT NULL,
+     *
+     *      CONSTRAINT fk_menu_restaurant_id__id FOREIGN KEY (restaurant_id)
+     *      REFERENCES restaurant(id) ON DELETE RESTRICT ON UPDATE RESTRICT
+     * );
+     *
+     * CREATE INDEX menu_restaurant_id ON menu (restaurant_id);
+     * ```
+     */
     object MenuTable: IntIdTable("menu") {
         val name = varchar("name", 255)
         val price = decimal("price", 10, 2)

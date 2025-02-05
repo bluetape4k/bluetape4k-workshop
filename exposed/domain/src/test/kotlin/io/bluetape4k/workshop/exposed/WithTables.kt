@@ -40,7 +40,7 @@ fun withTables(
                 val database = testDB.db!!
                 inTopLevelTransaction(database.transactionManager.defaultIsolationLevel, db = database) {
                     maxAttempts = 1
-                    runCatching { SchemaUtils.drop(*tables) }
+                    SchemaUtils.drop(*tables)
                 }
             }
         }

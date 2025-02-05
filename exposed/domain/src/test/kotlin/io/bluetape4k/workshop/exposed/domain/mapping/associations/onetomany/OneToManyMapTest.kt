@@ -109,10 +109,34 @@ class OneToManyMapTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS car (
+     *      id SERIAL PRIMARY KEY,
+     *      "name" VARCHAR(255) NOT NULL
+     * );
+     * ```
+     */
     object CarTable: IntIdTable("car") {
         val name = varchar("name", 255)
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS car_option (
+     *      car_id INT NOT NULL,
+     *      option_key VARCHAR(255) NOT NULL,
+     *      "name" VARCHAR(255) NOT NULL,
+     *      price INT DEFAULT 0 NOT NULL,
+     *
+     *      CONSTRAINT fk_car_option_car_id__id FOREIGN KEY (car_id)
+     *      REFERENCES car(id) ON DELETE CASCADE ON UPDATE CASCADE
+     * );
+     *
+     * ALTER TABLE car_option
+     *      ADD CONSTRAINT car_option_car_id_option_key_unique UNIQUE (car_id, option_key);
+     * ```
+     */
     object CarOptionTable: Table("car_option") {
         val carId = reference("car_id", CarTable, onDelete = CASCADE, onUpdate = CASCADE)
         val optionKey = varchar("option_key", 255)
@@ -124,11 +148,38 @@ class OneToManyMapTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS car_part (
+     *      id SERIAL PRIMARY KEY,
+     *      "name" VARCHAR(255) NOT NULL,
+     *      description TEXT NULL
+     * );
+     * ```
+     */
     object CarPartTable: IntIdTable("car_part") {
         val name = varchar("name", 255)
         val descriptin = text("description").nullable()
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS car_part_map (
+     *      car_id INT NOT NULL,
+     *      part_key VARCHAR(255) NOT NULL,
+     *      part_id INT NOT NULL,
+     *
+     *      CONSTRAINT fk_car_part_map_car_id__id FOREIGN KEY (car_id)
+     *      REFERENCES car(id) ON DELETE CASCADE ON UPDATE CASCADE,
+     *
+     *      CONSTRAINT fk_car_part_map_part_id__id FOREIGN KEY (part_id)
+     *      REFERENCES car_part(id) ON DELETE CASCADE ON UPDATE CASCADE
+     * );
+     *
+     * ALTER TABLE car_part_map
+     *      ADD CONSTRAINT car_part_map_car_id_part_key_unique UNIQUE (car_id, part_key);
+     * ```
+     */
     object CarPartMapTable: Table("car_part_map") {
         val carId = reference("car_id", CarTable, onDelete = CASCADE, onUpdate = CASCADE)
         val partKey = varchar("part_key", 255)

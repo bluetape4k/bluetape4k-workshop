@@ -21,18 +21,9 @@ class OneToManyMappingTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * INSERT INTO MENU ("name", PRICE, RESTAURANT_ID) VALUES ('Chicken', 10.0, 1)
-     * INSERT INTO MENU ("name", PRICE, RESTAURANT_ID) VALUES ('Burger', 5.0, 1)
+     * INSERT INTO menu ("name", price, restaurant_id) VALUES ('Chicken', 10.0, 1);
+     * INSERT INTO menu ("name", price, restaurant_id) VALUES ('Burger', 5.0, 1);
      * ```
-     *
-     * ```sql
-     * SELECT RESTAURANT.ID, RESTAURANT."name" FROM RESTAURANT;
-     *
-     * SELECT MENU.ID, MENU."name", MENU.PRICE, MENU.RESTAURANT_ID
-     *   FROM MENU
-     *  WHERE MENU.RESTAURANT_ID = 1;
-     * ```
-     *
      * 참고: [Eager Loaing](https://jetbrains.github.io/Exposed/dao-relationships.html#eager-loading)
      */
     @ParameterizedTest
@@ -58,7 +49,20 @@ class OneToManyMappingTest: AbstractExposedTest() {
             entityCache.clear()
 
             /**
-             * fetch earger loading `Menu` entities (`with(Restaurant::menus)`)
+             * Earger loading `Menu` entities (`with(Restaurant::menus)`)
+             *
+             * ```sql
+             * SELECT restaurant.id,
+             *        restaurant."name"
+             *   FROM restaurant;
+             *
+             * SELECT menu.id,
+             *        menu."name",
+             *        menu.price,
+             *        menu.restaurant_id
+             *   FROM menu
+             *  WHERE menu.restaurant_id = 1;
+             * ```
              */
             val restaurants = Restaurant.all().with(Restaurant::menus).toList()
             val restaurant = restaurants.first()

@@ -15,10 +15,33 @@ import org.jetbrains.exposed.sql.javatime.date
  */
 object FamilySchema {
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS father (
+     *      id SERIAL PRIMARY KEY,
+     *      "name" VARCHAR(255) NOT NULL
+     * )
+     * ```
+     */
     object FatherTable: IntIdTable("father") {
         val name = varchar("name", 255)
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS child (
+     *      id SERIAL PRIMARY KEY,
+     *      "name" VARCHAR(255) NOT NULL,
+     *      birthday DATE NOT NULL,
+     *      father_id INT NOT NULL,
+     *
+     *      CONSTRAINT fk_child_father_id__id FOREIGN KEY (father_id)
+     *      REFERENCES father(id) ON DELETE RESTRICT ON UPDATE RESTRICT
+     * );
+     *
+     * CREATE INDEX child_father_id ON child (father_id);
+     * ```
+     */
     object ChildTable: IntIdTable("child") {
         val name = varchar("name", 255)
         val birthday = date("birthday")

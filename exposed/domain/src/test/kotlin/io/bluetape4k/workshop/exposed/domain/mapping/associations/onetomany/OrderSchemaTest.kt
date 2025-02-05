@@ -40,7 +40,9 @@ class OrderSchemaTest: AbstractExposedTest() {
             /**
              * Fetch lazy loading `OrderItem` entity
              * ```sql
-             * SELECT ORDERS.ID, ORDERS."no" FROM ORDERS WHERE ORDERS.ID = 1
+             * SELECT ORDERS.ID, ORDERS."no"
+             *   FROM ORDERS
+             *  WHERE ORDERS.ID = 1
              * ```
              */
             val loaded = Order.findById(order1.id)!!
@@ -52,7 +54,10 @@ class OrderSchemaTest: AbstractExposedTest() {
             /**
              * Fetch eager loading `OrderItem` entity
              * ```sql
-             * SELECT ORDER_ITEMS.ID, ORDER_ITEMS."name", ORDER_ITEMS.PRICE, ORDER_ITEMS.ORDER_ID
+             * SELECT ORDER_ITEMS.ID,
+             *        ORDER_ITEMS."name",
+             *        ORDER_ITEMS.PRICE,
+             *        ORDER_ITEMS.ORDER_ID
              *   FROM ORDER_ITEMS
              *  WHERE ORDER_ITEMS.ORDER_ID = 1
              * ```
@@ -65,7 +70,14 @@ class OrderSchemaTest: AbstractExposedTest() {
             /**
              * join loading
              * ```sql
-             * SELECT ORDERS.ID, ORDERS."no", ORDER_ITEMS.ID, ORDER_ITEMS."name", ORDER_ITEMS.PRICE, ORDER_ITEMS.ORDER_ID FROM ORDERS INNER JOIN ORDER_ITEMS ON ORDERS.ID = ORDER_ITEMS.ORDER_ID
+             * SELECT ORDERS.ID,
+             *        ORDERS."no",
+             *        ORDER_ITEMS.ID,
+             *        ORDER_ITEMS."name",
+             *        ORDER_ITEMS.PRICE,
+             *        ORDER_ITEMS.ORDER_ID
+             *   FROM ORDERS
+             *      INNER JOIN ORDER_ITEMS ON ORDERS.ID = ORDER_ITEMS.ORDER_ID
              * ```
              */
             val query = (OrderTable innerJoin OrderItemTable).selectAll()
@@ -143,7 +155,7 @@ class OrderSchemaTest: AbstractExposedTest() {
      * Fetch lazy loading with pagination
      *
      * ```sql
-     * SELECT ORDERS.ID, ORDERS."no" FROM ORDERS LIMIT 10
+     * SELECT ORDERS.ID, ORDERS."no" FROM ORDERS LIMIT 10;
      * SELECT ORDER_ITEMS.ID, ORDER_ITEMS."name", ORDER_ITEMS.PRICE, ORDER_ITEMS.ORDER_ID FROM ORDER_ITEMS WHERE ORDER_ITEMS.ORDER_ID = 1
      * SELECT ORDER_ITEMS.ID, ORDER_ITEMS."name", ORDER_ITEMS.PRICE, ORDER_ITEMS.ORDER_ID FROM ORDER_ITEMS WHERE ORDER_ITEMS.ORDER_ID = 2
      * SELECT ORDER_ITEMS.ID, ORDER_ITEMS."name", ORDER_ITEMS.PRICE, ORDER_ITEMS.ORDER_ID FROM ORDER_ITEMS WHERE ORDER_ITEMS.ORDER_ID = 3

@@ -39,10 +39,30 @@ class OneToManySetTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS bidding_items (
+     *      id uuid PRIMARY KEY,
+     *      "name" VARCHAR(255) NOT NULL
+     * );
+     * ```
+     */
     object BiddingItemTable: TimebasedUUIDTable("bidding_items") {
         val name = varchar("name", 255)
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS bids (
+     *      id uuid PRIMARY KEY,
+     *      amount DECIMAL(10, 2) DEFAULT 0 NOT NULL,
+     *      item_id uuid NOT NULL,
+     *
+     *      CONSTRAINT fk_bids_item_id__id FOREIGN KEY (item_id)
+     *      REFERENCES bidding_items(id) ON DELETE CASCADE ON UPDATE CASCADE
+     * );
+     * ```
+     */
     object BidTable: TimebasedUUIDTable("bids") {
         val amount = decimal("amount", 10, 2).default(0.toBigDecimal())
         val itemId = reference("item_id", BiddingItemTable, onDelete = CASCADE, onUpdate = CASCADE)
@@ -113,6 +133,20 @@ class OneToManySetTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS products (
+     *      id VARCHAR(27) PRIMARY KEY,
+     *      "name" VARCHAR(255) NOT NULL,
+     *      description TEXT NULL,
+     *      initial_price DECIMAL(10, 2) NULL,
+     *      reserve_price DECIMAL(10, 2) NULL,
+     *      start_date DATE NULL,
+     *      end_date DATE NULL,
+     *      status VARCHAR(10) NOT NULL
+     * );
+     * ```
+     */
     object ProductTable: KsuidTable("products") {
         val name = varchar("name", 255)
         val description = text("description").nullable()
@@ -125,6 +159,24 @@ class OneToManySetTest: AbstractExposedTest() {
             .clientDefault { ProductStatus.ACTIVE }
     }
 
+    /**
+     * ```
+     * CREATE TABLE IF NOT EXISTS product_images (
+     *      id VARCHAR(27) PRIMARY KEY,
+     *      "name" VARCHAR(255) NOT NULL,
+     *      filename VARCHAR(255) NULL,
+     *      size_x INT NULL,
+     *      size_y INT NULL,
+     *      product_id VARCHAR(27) NULL,
+     *
+     *      CONSTRAINT fk_product_images_product_id__id FOREIGN KEY (product_id)
+     *      REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE
+     * );
+     *
+     * ALTER TABLE product_images
+     *      ADD CONSTRAINT product_image_name_product_id UNIQUE ("name", product_id);
+     * ```
+     */
     object ProductImageTable: KsuidTable("product_images") {
         val name = varchar("name", 255)
         val filename = varchar("filename", 255).nullable()
