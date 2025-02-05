@@ -27,10 +27,10 @@ class UnidirectionalOneToOneTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * CREATE TABLE IF NOT EXISTS CAR (
-     *      ID BIGINT AUTO_INCREMENT PRIMARY KEY,
-     *      BRAND VARCHAR(255) NOT NULL
-     * )
+     * CREATE TABLE IF NOT EXISTS car (
+     *      id BIGSERIAL PRIMARY KEY,
+     *      brand VARCHAR(255) NOT NULL
+     * );
      * ```
      */
     object CarTable: LongIdTable("car") {
@@ -39,14 +39,14 @@ class UnidirectionalOneToOneTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * CREATE TABLE IF NOT EXISTS WHEEL (
-     *      CAR_ID BIGINT PRIMARY KEY,
+     * CREATE TABLE IF NOT EXISTS wheel (
+     *      car_id BIGINT PRIMARY KEY,
      *      "name" VARCHAR(255) NOT NULL,
-     *      DIAMETER DOUBLE PRECISION NULL,
+     *      diameter DOUBLE PRECISION NULL,
      *
-     *      CONSTRAINT FK_WHEEL_CAR_ID__ID FOREIGN KEY (CAR_ID) REFERENCES CAR(ID)
-     *          ON DELETE CASCADE ON UPDATE CASCADE
-     * )
+     *      CONSTRAINT fk_wheel_car_id__id FOREIGN KEY (car_id)
+     *      REFERENCES car(id) ON DELETE CASCADE ON UPDATE CASCADE
+     * );
      * ```
      */
     object WheelTable: IdTable<Long>("wheel") {

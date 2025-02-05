@@ -23,13 +23,13 @@ class CavalierHorseTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * CREATE TABLE IF NOT EXISTS CAVALIER (
-     *      ID INT AUTO_INCREMENT PRIMARY KEY,
+     * CREATE TABLE IF NOT EXISTS cavalier (
+     *      id SERIAL PRIMARY KEY,
      *      "name" VARCHAR(255) NOT NULL,
-     *      HORSE_ID INT NULL,
+     *      horse_id INT NULL,
      *
-     *      CONSTRAINT FK_CAVALIER_HORSE_ID__ID FOREIGN KEY (HORSE_ID)
-     *      REFERENCES HORSE(ID) ON DELETE RESTRICT ON UPDATE RESTRICT
+     *      CONSTRAINT fk_cavalier_horse_id__id FOREIGN KEY (horse_id)
+     *      REFERENCES horse(id) ON DELETE RESTRICT ON UPDATE RESTRICT
      * )
      * ```
      */
@@ -40,8 +40,8 @@ class CavalierHorseTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * CREATE TABLE IF NOT EXISTS HORSE (
-     *      ID INT AUTO_INCREMENT PRIMARY KEY,
+     * CREATE TABLE IF NOT EXISTS horse (
+     *      id SERIAL PRIMARY KEY,
      *      "name" VARCHAR(255) NOT NULL
      * )
      * ```

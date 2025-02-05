@@ -29,8 +29,8 @@ class MapIdOneToOneTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * CREATE TABLE IF NOT EXISTS AUTHORS (
-     *      ID INT AUTO_INCREMENT PRIMARY KEY,
+     * CREATE TABLE IF NOT EXISTS authors (
+     *      id SERIAL PRIMARY KEY,
      *      "name" VARCHAR(255) NOT NULL
      * )
      * ```
@@ -42,13 +42,13 @@ class MapIdOneToOneTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * CREATE TABLE IF NOT EXISTS PICTURES (
-     *      AUTHOR_ID INT PRIMARY KEY,
+     * CREATE TABLE IF NOT EXISTS pictures (
+     *      author_id INT PRIMARY KEY,
      *      "path" VARCHAR(255) NOT NULL,
      *
-     *      CONSTRAINT FK_PICTURES_ID__ID FOREIGN KEY (ID)
-     *      REFERENCES AUTHORS(ID) ON DELETE CASCADE ON UPDATE CASCADE
-     * )
+     *      CONSTRAINT fk_pictures_author_id__id FOREIGN KEY (author_id)
+     *      REFERENCES authors(id) ON DELETE CASCADE ON UPDATE CASCADE
+     * );
      * ```
      */
     object Pictures: IdTable<Int>("pictures") {
@@ -60,13 +60,13 @@ class MapIdOneToOneTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * CREATE TABLE IF NOT EXISTS BIOGRAPHYS (
-     *      AUTHOR_ID INT PRIMARY KEY,
-     *      INFORMATION VARCHAR(255) NULL,
+     * CREATE TABLE IF NOT EXISTS biographys (
+     *      author_id INT PRIMARY KEY,
+     *      information VARCHAR(255) NULL,
      *
-     *      CONSTRAINT FK_BIOGRAPHYS_ID__ID FOREIGN KEY (ID)
-     *      REFERENCES AUTHORS(ID) ON DELETE CASCADE ON UPDATE CASCADE
-     * )
+     *      CONSTRAINT fk_biographys_author_id__id FOREIGN KEY (author_id)
+     *      REFERENCES authors(id) ON DELETE CASCADE ON UPDATE CASCADE
+     * );
      * ```
      */
     object Biographys: IdTable<Int>("biographys") {

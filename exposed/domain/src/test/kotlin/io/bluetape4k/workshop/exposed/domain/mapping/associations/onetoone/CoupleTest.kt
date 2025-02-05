@@ -24,11 +24,14 @@ class CoupleTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * CREATE TABLE IF NOT EXISTS HUSBAND (
-     *      ID INT AUTO_INCREMENT PRIMARY KEY,
+     * CREATE TABLE IF NOT EXISTS husband (
+     *      id SERIAL PRIMARY KEY,
      *      "name" VARCHAR(255) NOT NULL,
-     *      WIFE_ID INT NULL
-     * )
+     *      wife_id INT NULL,
+     *
+     *      CONSTRAINT fk_husband_wife_id__id FOREIGN KEY (wife_id)
+     *      REFERENCES wife(id) ON DELETE RESTRICT ON UPDATE RESTRICT
+     * );
      * ```
      */
     object HusbandTable: IntIdTable("husband") {
@@ -38,8 +41,8 @@ class CoupleTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * CREATE TABLE IF NOT EXISTS WIFE (
-     *      ID INT AUTO_INCREMENT PRIMARY KEY,
+     * CREATE TABLE IF NOT EXISTS wife (
+     *      id SERIAL PRIMARY KEY,
      *      "name" VARCHAR(255) NOT NULL
      * )
      * ```
@@ -95,7 +98,9 @@ class CoupleTest: AbstractExposedTest() {
             }
             entityCache.clear()
 
+            // SELECT wife.id, wife."name" FROM wife WHERE wife.id = 1
             husband.wife shouldBeEqualTo wife
+            // SELECT husband.id, husband."name", husband.wife_id FROM husband WHERE husband.wife_id = 1
             wife.husband shouldBeEqualTo husband
 
             entityCache.clear()
