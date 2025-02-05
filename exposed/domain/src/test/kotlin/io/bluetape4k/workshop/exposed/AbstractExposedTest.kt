@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.exposed
 
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.logging.info
+import io.bluetape4k.logging.debug
 import org.jetbrains.exposed.dao.EntityHook
 import org.jetbrains.exposed.sql.Key
 import org.jetbrains.exposed.sql.Schema
@@ -17,10 +17,8 @@ abstract class AbstractExposedTest {
 
         init {
             EntityHook.subscribe { change ->
-                log.info {
-                    """
-                    ${change.entityClass.table.tableName} id[${change.entityId}] was ${change.changeType}
-                """.trimIndent()
+                log.debug {
+                    "${change.entityClass.table.tableName} id[${change.entityId}] was ${change.changeType}"
                 }
             }
         }

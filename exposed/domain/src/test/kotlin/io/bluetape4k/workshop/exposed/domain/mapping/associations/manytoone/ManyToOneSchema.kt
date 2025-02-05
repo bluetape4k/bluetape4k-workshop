@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.exposed.domain.mapping.associations.manytoone
 
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.idValue
 import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withTables
@@ -16,10 +17,30 @@ import org.jetbrains.exposed.sql.Transaction
 
 object ManyToOneSchema {
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS brewery (
+     *      id SERIAL PRIMARY KEY,
+     *      "name" VARCHAR(255) NOT NULL
+     * )
+     * ```
+     */
     object BreweryTable: IntIdTable("brewery") {
         val name = varchar("name", 255)
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS beer (
+     *      id SERIAL PRIMARY KEY,
+     *      "name" VARCHAR(255) NOT NULL,
+     *      brewery_id INT NOT NULL,
+     *
+     *      CONSTRAINT fk_beer_brewery_id__id FOREIGN KEY (brewery_id)
+     *      REFERENCES brewery(id) ON DELETE CASCADE ON UPDATE CASCADE
+     * );
+     * ```
+     */
     object BeerTable: IntIdTable("beer") {
         val name = varchar("name", 255)
         val brewery = reference("brewery_id", BreweryTable, onDelete = CASCADE, onUpdate = CASCADE)  // many-to-one
@@ -51,6 +72,7 @@ object ManyToOneSchema {
         override fun toString(): String {
             return toStringBuilder()
                 .add("name", name)
+                .add("brewery id", brewery.idValue)
                 .toString()
         }
     }
@@ -77,10 +99,30 @@ object ManyToOneSchema {
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS jugs (
+     *      id SERIAL PRIMARY KEY,
+     *      "name" VARCHAR(255) NOT NULL
+     * )
+     * ```
+     */
     object JugTable: IntIdTable("jugs") {
         val name = varchar("name", 255)
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS jug_meters (
+     *      id SERIAL PRIMARY KEY,
+     *      "name" VARCHAR(255) NOT NULL,
+     *      jug_id INT NOT NULL,
+     *
+     *      CONSTRAINT fk_jug_meters_jug_id__id FOREIGN KEY (jug_id)
+     *      REFERENCES jugs(id) ON DELETE RESTRICT ON UPDATE RESTRICT
+     * );
+     * ```
+     */
     object JugMeterTable: IntIdTable("jug_meters") {
         val name = varchar("name", 255)
         val jug = reference("jug_id", JugTable)
@@ -111,6 +153,7 @@ object ManyToOneSchema {
         override fun toString(): String {
             return toStringBuilder()
                 .add("name", name)
+                .add("jug id", memberOf.idValue)
                 .toString()
         }
     }
@@ -131,11 +174,30 @@ object ManyToOneSchema {
         }
     }
 
-
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS sales_forces (
+     *      id SERIAL PRIMARY KEY,
+     *      "name" VARCHAR(255) NOT NULL
+     * )
+     * ```
+     */
     object SalesForceTable: IntIdTable("sales_forces") {
         val name = varchar("name", 255)
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS sales_guys (
+     *      id SERIAL PRIMARY KEY,
+     *      "name" VARCHAR(255) NOT NULL,
+     *      sales_force_id INT NOT NULL,
+     *
+     *      CONSTRAINT fk_sales_guys_sales_force_id__id FOREIGN KEY (sales_force_id)
+     *      REFERENCES sales_forces(id) ON DELETE CASCADE ON UPDATE CASCADE
+     * )
+     * ```
+     */
     object SalesGuyTable: IntIdTable("sales_guys") {
         val name = varchar("name", 255)
         val salesForce = reference("sales_force_id", SalesForceTable, onDelete = CASCADE, onUpdate = CASCADE)
@@ -167,6 +229,7 @@ object ManyToOneSchema {
         override fun toString(): String {
             return toStringBuilder()
                 .add("name", name)
+                .add("salesForce id", salesForce.idValue)
                 .toString()
         }
     }

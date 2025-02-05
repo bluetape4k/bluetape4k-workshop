@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.associations.manytoone
 
 import io.bluetape4k.collections.size
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.domain.mapping.associations.manytoone.ManyToOneSchema.Brewery
@@ -55,8 +56,12 @@ class ManyToOneTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * SELECT BREWERY.ID, BREWERY."name" FROM BREWERY
-     * SELECT BEER.ID, BEER."name", BEER.BREWERY_ID FROM BEER WHERE BEER.BREWERY_ID = 1
+     * SELECT BREWERY.ID, BREWERY."name"
+     *   FROM BREWERY;
+     *
+     * SELECT BEER.ID, BEER."name", BEER.BREWERY_ID
+     *   FROM BEER
+     *  WHERE BEER.BREWERY_ID = 1;
      * ```
      */
     @ParameterizedTest
@@ -74,8 +79,12 @@ class ManyToOneTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * SELECT BREWERY.ID, BREWERY."name" FROM BREWERY
-     * SELECT BEER.ID, BEER."name", BEER.BREWERY_ID FROM BEER WHERE BEER.BREWERY_ID IN (1, 2)
+     * SELECT BREWERY.ID, BREWERY."name"
+     *   FROM BREWERY;
+     *
+     * SELECT BEER.ID, BEER."name", BEER.BREWERY_ID
+     *   FROM BEER
+     *  WHERE BEER.BREWERY_ID IN (1, 2);
      * ```
      */
     @ParameterizedTest
@@ -89,6 +98,7 @@ class ManyToOneTest: AbstractExposedTest() {
             val loaded = loadedBrewerys.first()
             loaded shouldBeEqualTo berlin
             loaded.beers shouldHaveSize 3
+            log.debug { "loaded=$loaded" }
 
             loadedBrewerys.forEach {
                 it.beers.size() shouldBeGreaterThan 0
@@ -98,9 +108,15 @@ class ManyToOneTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * DELETE FROM BEER WHERE BEER.ID = 1
-     * SELECT BREWERY.ID, BREWERY."name" FROM BREWERY WHERE BREWERY.ID = 1
-     * SELECT BEER.ID, BEER."name", BEER.BREWERY_ID FROM BEER WHERE BEER.BREWERY_ID = 1
+     * DELETE FROM BEER WHERE BEER.ID = 1;
+     *
+     * SELECT BREWERY.ID, BREWERY."name"
+     *   FROM BREWERY
+     *  WHERE BREWERY.ID = 1;
+     *
+     * SELECT BEER.ID, BEER."name", BEER.BREWERY_ID
+     *   FROM BEER
+     *  WHERE BEER.BREWERY_ID = 1
      * ```
      */
     @ParameterizedTest
@@ -146,6 +162,7 @@ class ManyToOneTest: AbstractExposedTest() {
             entityCache.clear()
 
             val loaded = SalesForce.findById(salesForce.id)!!.load(SalesForce::salesGuys)
+            log.debug { "loaded=$loaded" }
             loaded shouldBeEqualTo salesForce
             loaded.salesGuys.toList() shouldBeEqualTo listOf(salesGuy1, salesGuy2, salesGuy3)
 
