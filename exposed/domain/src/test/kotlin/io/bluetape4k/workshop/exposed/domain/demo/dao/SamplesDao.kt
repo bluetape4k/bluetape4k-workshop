@@ -10,6 +10,8 @@ import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.entityCache
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.SizedIterable
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
@@ -32,9 +34,9 @@ class SamplesDao: AbstractExposedTest() {
      * ```
      */
     object Users: IntIdTable() {
-        val name = varchar("name", 50).index()
-        val age = integer("age")
-        val city = optReference("city_id", Cities)
+        val name: Column<String> = varchar("name", 50).index()
+        val age: Column<Int> = integer("age")
+        val city: Column<EntityID<Int>?> = optReference("city_id", Cities)
     }
 
     /**
@@ -47,29 +49,32 @@ class SamplesDao: AbstractExposedTest() {
      * ```
      */
     object Cities: IntIdTable() {
-        val name = varchar("name", 50)
+        val name: Column<String> = varchar("name", 50)
     }
 
     class User(id: EntityID<Int>): IntEntity(id) {
         companion object: IntEntityClass<User>(Users)
 
-        var name by Users.name
-        var age by Users.age
-        var city by City optionalReferencedOn Users.city
+        var name: String by Users.name
+        var age: Int by Users.age
+        var city: City? by City optionalReferencedOn Users.city
 
-        override fun equals(other: Any?): Boolean = other is User && id._value == other.id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
+        override fun equals(other: Any?): Boolean {
+            return other is User && id == other.id
+        }
+
+        override fun hashCode(): Int = id.hashCode()
         override fun toString(): String = "User(id=$id, name=$name, age=$age, city=${city?.name})"
     }
 
     class City(id: EntityID<Int>): IntEntity(id) {
         companion object: IntEntityClass<City>(Cities)
 
-        var name by Cities.name
-        val users by User optionalReferrersOn Users.city
+        var name: String by Cities.name
+        val users: SizedIterable<User> by User optionalReferrersOn Users.city
 
-        override fun equals(other: Any?): Boolean = other is City && id._value == other.id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
+        override fun equals(other: Any?): Boolean = other is City && id == other.id
+        override fun hashCode(): Int = id.hashCode()
         override fun toString(): String = "City(id=$id, name=$name)"
     }
 
