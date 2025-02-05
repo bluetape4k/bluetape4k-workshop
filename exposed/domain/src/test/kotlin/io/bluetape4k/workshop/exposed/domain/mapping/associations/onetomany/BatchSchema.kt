@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany
 
+import io.bluetape4k.workshop.exposed.dao.idValue
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -29,9 +30,9 @@ object BatchSchema {
         // one-to-many relationship
         val items by BatchItem.referrersOn(BatchItemTable.batch)
 
-        override fun equals(other: Any?): Boolean = other is Batch && other.id._value == id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
-        override fun toString(): String = "Batch(id=$id, name=$name)"
+        override fun equals(other: Any?): Boolean = other is Batch && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Batch(id=$idValue, name=$name)"
     }
 
     class BatchItem(id: EntityID<Int>): IntEntity(id) {
@@ -40,9 +41,8 @@ object BatchSchema {
         var name by BatchItemTable.name
         var batch by Batch referencedOn BatchItemTable.batch
 
-        override fun equals(other: Any?): Boolean = other is BatchItem && other.id._value == id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
-        override fun toString(): String =
-            "BatchItem(id=$id, name=$name, batch=${batch.id._value})"
+        override fun equals(other: Any?): Boolean = other is BatchItem && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "BatchItem(id=$idValue, name=$name, batch=${batch.id._value})"
     }
 }

@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.exposed.domain.mapping.associations.onetoone
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.dao.IntEntity
@@ -53,9 +54,9 @@ class CavalierHorseTest: AbstractExposedTest() {
         var name by Cavaliers.name
         var horse by Horse optionalReferencedOn Cavaliers.horseId
 
-        override fun equals(other: Any?): Boolean = other is Cavalier && id._value == other.id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
-        override fun toString(): String = "Cavalier(id=$id, name=$name)"
+        override fun equals(other: Any?): Boolean = other is Cavalier && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Cavalier(id=$idValue, name=$name)"
     }
 
     class Horse(id: EntityID<Int>): IntEntity(id) {
@@ -63,9 +64,9 @@ class CavalierHorseTest: AbstractExposedTest() {
 
         var name by Horses.name
 
-        override fun equals(other: Any?): Boolean = other is Horse && id._value == other.id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
-        override fun toString(): String = "Horse(id=$id, name=$name)"
+        override fun equals(other: Any?): Boolean = other is Horse && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Horse(id=$idValue, name=$name)"
     }
 
     @ParameterizedTest

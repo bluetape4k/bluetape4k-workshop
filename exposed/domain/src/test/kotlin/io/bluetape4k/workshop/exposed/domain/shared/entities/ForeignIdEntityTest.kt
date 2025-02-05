@@ -113,7 +113,7 @@ class ForeignIdEntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = other is Actor && idValue == other.idValue
         override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Actor(id=$idValue)"
+        override fun toString(): String = "Actor(id=$id)"
     }
 
     class Role(id: EntityID<Int>): IntEntity(id) {
@@ -123,7 +123,7 @@ class ForeignIdEntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = other is Role && idValue == other.idValue
         override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Role(id=$idValue)"
+        override fun toString(): String = "Role(id=$id)"
     }
 
     @ParameterizedTest

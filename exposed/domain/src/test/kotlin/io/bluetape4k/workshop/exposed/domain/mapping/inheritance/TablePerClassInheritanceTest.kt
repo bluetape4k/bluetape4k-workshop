@@ -6,6 +6,7 @@ import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityID
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDTable
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.dao.entityCache
@@ -84,10 +85,9 @@ class TablePerClassInheritanceTest: AbstractExposedTest() {
         var startDate by CreditCardTable.startDate
         var endDate by CreditCardTable.endDate
 
-        override fun equals(other: Any?): Boolean = other is CreditCard && id._value == other.id._value
-        override fun hashCode(): Int = id._value.hashCode()
-        override fun toString(): String =
-            "CreditCard(id=${id._value}, owner=$owner, cardNumber=$cardNumber)"
+        override fun equals(other: Any?): Boolean = other is CreditCard && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "CreditCard(id=$idValue, owner=$owner, cardNumber=$cardNumber)"
     }
 
     class BankAccount(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
@@ -99,10 +99,9 @@ class TablePerClassInheritanceTest: AbstractExposedTest() {
         var accountNumber by BankAccountTable.accountNumber
         var bankName by BankAccountTable.bankName
 
-        override fun equals(other: Any?): Boolean = other is BankAccount && id._value == other.id._value
-        override fun hashCode(): Int = id._value.hashCode()
-        override fun toString(): String =
-            "BankAccount(id=${id._value}, owner=$owner, accountNumber=$accountNumber)"
+        override fun equals(other: Any?): Boolean = other is BankAccount && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "BankAccount(id=$idValue, owner=$owner, accountNumber=$accountNumber)"
     }
 
     @ParameterizedTest

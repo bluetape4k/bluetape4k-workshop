@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany
 
+import io.bluetape4k.workshop.exposed.dao.idValue
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -33,10 +34,9 @@ object FamilySchema {
         // one-to-many relationship
         val children by Child.referrersOn(ChildTable.father).orderBy(ChildTable.birthday to SortOrder.ASC)
 
-        override fun equals(other: Any?): Boolean = other is Father && other.id._value == id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
-
-        override fun toString(): String = "Father(id=$id, name=$name)"
+        override fun equals(other: Any?): Boolean = other is Father && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Father(id=$idValue, name=$name)"
     }
 
     class Child(id: EntityID<Int>): IntEntity(id) {
@@ -48,10 +48,8 @@ object FamilySchema {
         // many-to-one relationship
         // var father by Father referencedOn ChildTable.father
 
-        override fun equals(other: Any?): Boolean = other is Child && other.id._value == id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
-        override fun toString(): String {
-            return "Child(id=$id, name=$name, birthday=$birthday)"
-        }
+        override fun equals(other: Any?): Boolean = other is Child && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Child(id=$idValue, name=$name, birthday=$birthday)"
     }
 }

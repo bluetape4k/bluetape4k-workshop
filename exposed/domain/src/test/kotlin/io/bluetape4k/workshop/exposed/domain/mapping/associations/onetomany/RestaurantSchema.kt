@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany
 
+import io.bluetape4k.workshop.exposed.dao.idValue
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -27,10 +28,9 @@ object ResturantSchema {
         // one-to-many relationship
         val menus by Menu referrersOn MenuTable.restaurant
 
-        override fun equals(other: Any?): Boolean = other is Restaurant && other.id._value == id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
-
-        override fun toString(): String = "Restaurant(id=$id, name=$name)"
+        override fun equals(other: Any?): Boolean = other is Restaurant && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Restaurant(id=$idValue, name=$name)"
     }
 
     class Menu(id: EntityID<Int>): IntEntity(id) {
@@ -42,11 +42,9 @@ object ResturantSchema {
         // many-to-one relationship
         var restaurant by Restaurant referencedOn MenuTable.restaurant
 
-        override fun equals(other: Any?): Boolean = other is Menu && other.id._value == id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
-        override fun toString(): String {
-            return "Menu(id=$id, name=$name, price=$price, restaurant=$restaurant)"
-        }
+        override fun equals(other: Any?): Boolean = other is Menu && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Menu(id=$idValue, name=$name, price=$price, restaurant=$restaurant)"
     }
 
 }

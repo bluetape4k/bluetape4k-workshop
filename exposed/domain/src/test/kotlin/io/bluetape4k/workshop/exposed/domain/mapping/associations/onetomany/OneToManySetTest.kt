@@ -11,6 +11,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldContainSame
@@ -52,8 +53,14 @@ class OneToManySetTest: AbstractExposedTest() {
         var name by BiddingItemTable.name
         val bids by Bid referrersOn BidTable.itemId
 
-        override fun equals(other: Any?): Boolean = other is BiddingItem && id._value == other.id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
+        override fun equals(other: Any?): Boolean = other is BiddingItem && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String {
+            return ToStringBuilder(this)
+                .add("id", id._value)
+                .add("name", name)
+                .toString()
+        }
     }
 
     class Bid(id: EntityID<UUID>): TimebasedUUIDEntity(id) {
@@ -62,8 +69,8 @@ class OneToManySetTest: AbstractExposedTest() {
         var amount by BidTable.amount
         var item by BiddingItem referencedOn BidTable.itemId
 
-        override fun equals(other: Any?): Boolean = other is Bid && id._value == other.id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
+        override fun equals(other: Any?): Boolean = other is Bid && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
         override fun toString(): String {
             return ToStringBuilder(this)
                 .add("id", id._value)
@@ -190,8 +197,8 @@ class OneToManySetTest: AbstractExposedTest() {
             }
         }
 
-        override fun equals(other: Any?): Boolean = other is Product && id._value == other.id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
+        override fun equals(other: Any?): Boolean = other is Product && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
         override fun toString(): String {
             return ToStringBuilder(this)
                 .add("id", id._value)

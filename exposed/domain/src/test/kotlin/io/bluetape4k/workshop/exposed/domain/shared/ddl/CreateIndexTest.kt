@@ -1,6 +1,5 @@
 package io.bluetape4k.workshop.exposed.domain.shared.ddl
 
-import MigrationUtils
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.currentDialectTest
@@ -91,9 +90,9 @@ class CreateIndexTest: AbstractExposedTest() {
         }
 
         withTables(testDB, testTable) {
-            // SchemaUtils.createMissingTablesAndColumns(testTable)
-            val statemnts = MigrationUtils.statementsRequiredForDatabaseMigration(testTable)
-            exec(statemnts.joinToString(";"))
+            SchemaUtils.createMissingTablesAndColumns(testTable)
+//            val statemnts = MigrationUtils.statementsRequiredForDatabaseMigration(testTable)
+//            exec(statemnts.joinToString(";"))
 
             testTable.exists().shouldBeTrue()
         }

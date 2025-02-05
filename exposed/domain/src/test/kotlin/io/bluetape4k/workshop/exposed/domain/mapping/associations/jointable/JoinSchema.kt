@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.exposed.domain.mapping.associations.jointable
 
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -52,10 +53,10 @@ object JoinSchema {
         var city by AddressTable.city
         var zipcode by AddressTable.zipcode
 
-        override fun equals(other: Any?): Boolean = other is Address && id._value == other.id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
+        override fun equals(other: Any?): Boolean = other is Address && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
         override fun toString(): String {
-            return "Address(street=$street, city=$city, zipcode=$zipcode)"
+            return "Address(id=$idValue, street=$street, city=$city, zipcode=$zipcode)"
         }
     }
 
@@ -66,11 +67,10 @@ object JoinSchema {
         var user by User referencedOn UserAddressTable.userId              // one-to-many
         var address by Address referencedOn UserAddressTable.addressId   // one-to-many
 
-        override fun equals(other: Any?): Boolean = other is UserAddress && id._value == other.id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
-        override fun toString(): String {
-            return "UserAddress(type=$type, user=${user.id._value}, address=${address.id._value})"
-        }
+        override fun equals(other: Any?): Boolean = other is UserAddress && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String =
+            "UserAddress(id=$idValue, type=$type, user=${user.id._value}, address=${address.id._value})"
     }
 
     class User(id: EntityID<Int>): IntEntity(id) {
@@ -93,11 +93,9 @@ object JoinSchema {
                 return UserAddress.wrapRows(query)
             }
 
-        override fun equals(other: Any?): Boolean = other is User && id._value == other.id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
-        override fun toString(): String {
-            return "User(id=$id, name=$name)"
-        }
+        override fun equals(other: Any?): Boolean = other is User && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "User(id=$idValue, name=$name)"
     }
 
     fun newUser(): User {

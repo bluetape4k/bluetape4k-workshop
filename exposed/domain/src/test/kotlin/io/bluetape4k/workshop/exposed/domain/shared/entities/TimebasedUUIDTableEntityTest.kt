@@ -149,7 +149,7 @@ object TimebasedUUIDTables {
 
         override fun equals(other: Any?): Boolean = other is Town && idValue == other.idValue
         override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Town(id=$idValue)"
+        override fun toString(): String = "Town(id=$id)"
     }
 }
 

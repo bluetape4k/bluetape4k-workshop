@@ -4,6 +4,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
@@ -80,35 +81,35 @@ class MapIdOneToOneTest: AbstractExposedTest() {
         val picture by Picture backReferencedOn Pictures
         val biography by MapIdOneToOneTest.Biography backReferencedOn Biographys
 
-        override fun equals(other: Any?): Boolean = other is Author && id._value == other.id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
-        override fun toString(): String = "Author(id=$id, name=$name)"
+        override fun equals(other: Any?): Boolean = other is Author && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Author(id=$idValue, name=$name)"
     }
 
     class Picture(id: EntityID<Int>): IntEntity(id) {
-        companion object: IntEntityClass<Picture>(
-            Pictures
-        )
+        companion object: IntEntityClass<Picture>(Pictures)
 
         var path by Pictures.path
         val author by Author referencedOn Pictures.id
 
-        override fun equals(other: Any?): Boolean = other is Picture && id._value == other.id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
-        override fun toString(): String = "Picture(id=$id, path=$path)"
+        // NOTE: one-to-one 관계에서 id 값을 참조하는 경우 `id` 로 비교하면 안되고, `idValue` 로 비교해야 한다.
+        // NOTE: id 속성 중 table 이 참조하는 테이블을 가르킨다.
+        override fun equals(other: Any?): Boolean = other is Picture && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Picture(id=$idValue, path=$path)"
     }
 
     class Biography(id: EntityID<Int>): IntEntity(id) {
-        companion object: IntEntityClass<Biography>(
-            Biographys
-        )
+        companion object: IntEntityClass<Biography>(Biographys)
 
         var infomation by Biographys.infomation
         val author by Author referencedOn Biographys.id
 
-        override fun equals(other: Any?): Boolean = other is Biography && id._value == other.id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
-        override fun toString(): String = "Biography(id=$id, infomation=$infomation)"
+        // NOTE: one-to-one 관계에서 id 값을 참조하는 경우 `id` 로 비교하면 안되고, `idValue` 로 비교해야 한다.
+        // NOTE: id 속성 중 table 이 참조하는 테이블을 가르킨다.
+        override fun equals(other: Any?): Boolean = other is Biography && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Biography(id=$idValue, infomation=$infomation)"
     }
 
     @ParameterizedTest
@@ -135,7 +136,7 @@ class MapIdOneToOneTest: AbstractExposedTest() {
             val author2 = Author.findById(author.id.value)!!
             author2 shouldBeEqualTo author
 
-            val biography2 = Biography.findById(author.id.value)!!
+            val biography2 = Biography.findById(biography.id.value)!!
             biography2 shouldBeEqualTo biography
             biography2.author shouldBeEqualTo author
 

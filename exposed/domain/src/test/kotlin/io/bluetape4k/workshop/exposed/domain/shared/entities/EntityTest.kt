@@ -183,7 +183,7 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = other is SingleFieldEntity && idValue == other.idValue
         override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "SingleFieldEntity(id=$idValue)"
+        override fun toString(): String = "SingleFieldEntity(id=$id)"
     }
 
     /**
@@ -669,7 +669,7 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = other is Item && idValue == other.idValue
         override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Item(id=$id, name=$name, price=$price)"
+        override fun toString(): String = "Item(id=$idValue, name=$name, price=$price)"
     }
 
     /**
@@ -889,7 +889,7 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = other is Human && idValue == other.idValue
         override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Human(id=$id, h=$h)"
+        override fun toString(): String = "Human(id=$idValue, h=$h)"
     }
 
     open class User(id: EntityID<Int>): Entity<Int>(id) {
@@ -909,7 +909,7 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = other is User && idValue == other.idValue
         override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "User(id=$id, name=$name, human=$human)"
+        override fun toString(): String = "User(id=$idValue, name=$name, human=$human)"
     }
 
     /**
@@ -1286,7 +1286,7 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = other is Parent && idValue == other.idValue
         override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Parent(id=$id, name=$name)"
+        override fun toString(): String = "Parent(id=$idValue, name=$name)"
     }
 
     open class Child(id: EntityID<Long>): LongEntity(id) {
@@ -1297,7 +1297,7 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = other is Child && idValue == other.idValue
         override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "Child(id=$id, parent=$parent, name=$name)"
+        override fun toString(): String = "Child(id=$idValue, parent=$parent, name=$name)"
     }
 
     /**

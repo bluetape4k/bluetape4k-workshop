@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany
 
+import io.bluetape4k.workshop.exposed.dao.idValue
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -29,9 +30,9 @@ object OrderSchema {
         var no by OrderTable.no
         val items by OrderItem.referrersOn(OrderItemTable.order)
 
-        override fun equals(other: Any?): Boolean = other is Order && other.id._value == id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
-        override fun toString(): String = "Order(id=$id, no=$no)"
+        override fun equals(other: Any?): Boolean = other is Order && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Order(id=$idValue, no=$no)"
     }
 
     class OrderItem(id: EntityID<Int>): IntEntity(id) {
@@ -42,9 +43,8 @@ object OrderSchema {
 
         var order by Order referencedOn OrderItemTable.order
 
-        override fun equals(other: Any?): Boolean = other is OrderItem && other.id._value == id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
-        override fun toString(): String =
-            "OrderItem(id=$id, name=$name, price=$price, order=${order.id._value})"
+        override fun equals(other: Any?): Boolean = other is OrderItem && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "OrderItem(id=$idValue, name=$name, price=$price, order=${order.id._value})"
     }
 }

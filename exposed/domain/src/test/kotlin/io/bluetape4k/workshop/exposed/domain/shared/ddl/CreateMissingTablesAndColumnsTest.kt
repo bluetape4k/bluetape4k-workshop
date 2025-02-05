@@ -243,8 +243,8 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
         }
 
         withDb(testDB) {
-            // SchemaUtils.createMissingTablesAndColumns(t1)
-            execCreateMissingTablesAndColumns(t1)
+            SchemaUtils.createMissingTablesAndColumns(t1)
+            // execCreateMissingTablesAndColumns(t1)
 
             val missingStatements = SchemaUtils.addMissingColumnsStatements(t2)
             missingStatements.shouldBeEmpty()
@@ -268,8 +268,8 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
         }
 
         withDb(testDB) {
-            // SchemaUtils.createMissingTablesAndColumns(t1)
-            execCreateMissingTablesAndColumns(t1)
+            SchemaUtils.createMissingTablesAndColumns(t1)
+            // execCreateMissingTablesAndColumns(t1)
 
             val missingStatements = SchemaUtils.addMissingColumnsStatements(t2)
             missingStatements.shouldBeEmpty()

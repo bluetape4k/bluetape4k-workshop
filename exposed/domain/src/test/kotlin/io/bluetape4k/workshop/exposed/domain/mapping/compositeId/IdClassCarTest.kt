@@ -4,6 +4,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
@@ -70,11 +71,9 @@ class IdClassCarTest: AbstractExposedTest() {
 
         val carIdentifier get() = CarIdentifier(id.value)
 
-        override fun equals(other: Any?): Boolean =
-            other is IdClassCar && id._value == other.id._value
-
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
-        override fun toString(): String = "IdClassCar(brand=$brand, carYear=$carYear, serialNo=$serialNo)"
+        override fun equals(other: Any?): Boolean = other is IdClassCar && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "IdClassCar(id=$idValue, serialNo=$serialNo)"
     }
 
     data class CarIdentifier(val compositeId: CompositeID): EntityID<CompositeID>(CarTable, compositeId) {

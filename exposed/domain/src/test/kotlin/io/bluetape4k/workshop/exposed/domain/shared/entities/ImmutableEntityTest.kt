@@ -56,7 +56,7 @@ class ImmutableEntityTest: AbstractExposedTest() {
 
             override fun equals(other: Any?): Boolean = other is EOrganization && idValue == other.idValue
             override fun hashCode(): Int = idValue.hashCode()
-            override fun toString(): String = "EOrganization(id=$id, name=$name, etag=$etag)"
+            override fun toString(): String = "EOrganization(id=$idValue, name=$name, etag=$etag)"
         }
 
         /**
@@ -75,7 +75,7 @@ class ImmutableEntityTest: AbstractExposedTest() {
 
             override fun equals(other: Any?): Boolean = other is ECachedOrganization && idValue == other.idValue
             override fun hashCode(): Int = idValue.hashCode()
-            override fun toString(): String = "ECachedOrganization(id=$id, name=$name, etag=$etag)"
+            override fun toString(): String = "ECachedOrganization(id=$idValue, name=$name, etag=$etag)"
         }
     }
 

@@ -5,6 +5,7 @@ import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.amshove.kluent.shouldBeEqualTo
@@ -74,6 +75,6 @@ class ConnectionPoolTest {
 
         var testValue by TestTable.testValue
 
-        override fun toString(): String = "TestEntity(id=$id, testValue=$testValue)"
+        override fun toString(): String = "TestEntity(id=$idValue, testValue=$testValue)"
     }
 }

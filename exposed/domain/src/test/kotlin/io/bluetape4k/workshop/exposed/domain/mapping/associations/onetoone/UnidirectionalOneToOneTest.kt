@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.exposed.domain.mapping.associations.onetoone
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
@@ -54,30 +55,26 @@ class UnidirectionalOneToOneTest: AbstractExposedTest() {
     }
 
     class Car(id: EntityID<Long>): LongEntity(id) {
-        companion object: LongEntityClass<Car>(
-            CarTable
-        )
+        companion object: LongEntityClass<Car>(CarTable)
 
         var brand by CarTable.brand
         val wheel by Wheel optionalBackReferencedOn WheelTable.id
 
-        override fun equals(other: Any?): Boolean = other is Car && id._value == other.id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
-        override fun toString(): String = "Car(id=$id, brand=$brand)"
+        override fun equals(other: Any?): Boolean = other is Car && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Car(id=$idValue, brand=$brand)"
     }
 
     class Wheel(id: EntityID<Long>): LongEntity(id) {
-        companion object: LongEntityClass<Wheel>(
-            WheelTable
-        )
+        companion object: LongEntityClass<Wheel>(WheelTable)
 
         var name by WheelTable.name
         var diameter by WheelTable.diameter
         val car by Car referencedOn WheelTable.id
 
-        override fun equals(other: Any?): Boolean = other is Wheel && id._value == other.id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
-        override fun toString(): String = "Wheel(id=$id, name=$name)"
+        override fun equals(other: Any?): Boolean = other is Wheel && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Wheel(id=$idValue, name=$name)"
     }
 
     @ParameterizedTest

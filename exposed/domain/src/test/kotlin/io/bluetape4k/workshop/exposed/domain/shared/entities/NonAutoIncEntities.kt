@@ -67,7 +67,7 @@ class NonAutoIncEntities: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean =
             other is NotAutoEntity &&
-                    id == other.id &&
+                    idValue == other.idValue &&
                     b1 == other.b1 &&
                     defaultedInNew == other.defaultedInNew
 

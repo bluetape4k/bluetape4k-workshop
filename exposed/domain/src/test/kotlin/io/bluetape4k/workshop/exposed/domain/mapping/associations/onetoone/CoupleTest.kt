@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.exposed.domain.mapping.associations.onetoone
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeNull
@@ -50,9 +51,9 @@ class CoupleTest: AbstractExposedTest() {
         var name by HusbandTable.name
         var wife by Wife optionalReferencedOn HusbandTable.wifeId
 
-        override fun equals(other: Any?): Boolean = other is Husband && id._value == other.id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
-        override fun toString(): String = "Husband(id=$id, name=$name)"
+        override fun equals(other: Any?): Boolean = other is Husband && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Husband(id=$idValue, name=$name)"
     }
 
     class Wife(id: EntityID<Int>): IntEntity(id) {
@@ -65,9 +66,9 @@ class CoupleTest: AbstractExposedTest() {
          */
         val husband by Husband optionalBackReferencedOn HusbandTable.wifeId
 
-        override fun equals(other: Any?): Boolean = other is Wife && id._value == other.id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
-        override fun toString(): String = "Wife(id=$id, name=$name)"
+        override fun equals(other: Any?): Boolean = other is Wife && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "Wife(id=$idValue, name=$name)"
     }
 
     @ParameterizedTest

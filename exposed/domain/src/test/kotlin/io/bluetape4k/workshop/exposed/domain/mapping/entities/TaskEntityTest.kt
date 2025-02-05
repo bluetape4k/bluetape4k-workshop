@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.exposed.domain.mapping.entities
 
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.dao.LongEntity
@@ -41,10 +42,10 @@ class TaskEntityTest: AbstractExposedTest() {
         var changedOn by TaskTable.changedOn
         var changedBy by TaskTable.changedBy
 
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
-        override fun equals(other: Any?): Boolean = other is Task && id._value == other.id._value
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun equals(other: Any?): Boolean = other is Task && idValue == other.idValue
         override fun toString(): String {
-            return "TaskEntity(id=$id, status=$status, changedOn=$changedOn, changedBy='$changedBy')"
+            return "TaskEntity(id=$idValue, status=$status, changedOn=$changedOn, changedBy='$changedBy')"
         }
     }
 

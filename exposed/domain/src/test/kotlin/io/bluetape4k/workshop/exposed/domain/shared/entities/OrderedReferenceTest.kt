@@ -105,7 +105,7 @@ class OrderedReferenceTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = other is UserDefaultOrder && idValue == other.idValue
         override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "UserDefaultOrder(id=$idValue)"
+        override fun toString(): String = "UserDefaultOrder(id=$id)"
     }
 
     private val unsortedRatingValues = listOf(0, 3, 1, 2, 4, 4, 5, 4, 5, 6, 9, 8)
@@ -217,7 +217,7 @@ class OrderedReferenceTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = other is UserMultiColumn && idValue == other.idValue
         override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "UserMultiColumn(id=$idValue)"
+        override fun toString(): String = "UserMultiColumn(id=$id)"
     }
 
     @ParameterizedTest
@@ -303,7 +303,7 @@ class OrderedReferenceTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = other is UserChainedColumn && idValue == other.idValue
         override fun hashCode(): Int = idValue.hashCode()
-        override fun toString(): String = "UserChainedColumn(id=$idValue)"
+        override fun toString(): String = "UserChainedColumn(id=$id)"
     }
 
     @ParameterizedTest

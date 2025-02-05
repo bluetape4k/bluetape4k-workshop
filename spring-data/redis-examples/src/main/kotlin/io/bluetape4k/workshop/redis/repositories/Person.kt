@@ -98,7 +98,7 @@ class Person: AbstractValueObject() {
 
     override fun equalProperties(other: Any): Boolean {
         return other is Person &&
-                id == other.id &&
+                idValue == other.idValue &&
                 firstname == other.firstname &&
                 lastname == other.lastname
     }

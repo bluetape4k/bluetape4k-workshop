@@ -4,6 +4,7 @@ import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldContainSame
@@ -186,10 +187,13 @@ class OneToManyMapTest: AbstractExposedTest() {
         }
 
 
-        override fun equals(other: Any?): Boolean = other is Car && id._value == other.id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: name.hashCode()
+        override fun equals(other: Any?): Boolean = other is Car && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
         override fun toString(): String {
-            return ToStringBuilder(this).add("name", name).toString()
+            return ToStringBuilder(this)
+                .add("id", id)
+                .add("name", name)
+                .toString()
         }
     }
 
@@ -208,10 +212,14 @@ class OneToManyMapTest: AbstractExposedTest() {
         var name by CarPartTable.name
         var description by CarPartTable.descriptin
 
-        override fun equals(other: Any?): Boolean = other is CarPart && id._value == other.id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: name.hashCode()
+        override fun equals(other: Any?): Boolean = other is CarPart && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
         override fun toString(): String {
-            return ToStringBuilder(this).add("name", name).add("description", description).toString()
+            return ToStringBuilder(this)
+                .add("id", id)
+                .add("name", name)
+                .add("description", description)
+                .toString()
         }
     }
 }

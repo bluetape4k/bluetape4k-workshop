@@ -4,6 +4,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.dao.idValue
 import io.bluetape4k.workshop.exposed.withDb
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
@@ -52,9 +53,9 @@ class CustomIdTest: AbstractExposedTest() {
         var name by CustomIdTable.name
         var ssn by CustomIdTable.ssn
 
-        override fun equals(other: Any?): Boolean = other is CustomIdEntity && id._value == other.id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
-        override fun toString(): String = "CustomIdEntity(id=${id._value}, name=$name, ssn=$ssn)"
+        override fun equals(other: Any?): Boolean = other is CustomIdEntity && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "CustomIdEntity(id=$idValue, name=$name, ssn=$ssn)"
     }
 
     private fun newEntity(): CustomIdEntity {

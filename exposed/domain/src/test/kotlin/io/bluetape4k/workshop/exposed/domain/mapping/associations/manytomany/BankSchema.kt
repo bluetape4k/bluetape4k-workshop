@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.associations.manytomany
 
+import io.bluetape4k.workshop.exposed.dao.idValue
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.id.EntityID
@@ -45,9 +46,9 @@ object BankSchema {
         var number by BankAccountTable.number
         val owners by AccountOwner via OwnerAccountMapTable  // many-to-many
 
-        override fun equals(other: Any?): Boolean = other is BankAccount && id._value == other.id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
-        override fun toString(): String = "BankAccount(id=${id._value}, number=$number)"
+        override fun equals(other: Any?): Boolean = other is BankAccount && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "BankAccount(id=$idValue, number=$number)"
     }
 
     /**
@@ -59,8 +60,8 @@ object BankSchema {
         var ssn by AccountOwnerTable.ssn
         val accounts by BankAccount via OwnerAccountMapTable // many-to-many
 
-        override fun equals(other: Any?): Boolean = other is AccountOwner && id._value == other.id._value
-        override fun hashCode(): Int = id._value?.hashCode() ?: System.identityHashCode(this)
-        override fun toString(): String = "AccountOwner(id=${id._value}, ssn=$ssn)"
+        override fun equals(other: Any?): Boolean = other is AccountOwner && idValue == other.idValue
+        override fun hashCode(): Int = idValue.hashCode()
+        override fun toString(): String = "AccountOwner(id=$idValue, ssn=$ssn)"
     }
 }
