@@ -84,9 +84,10 @@ class BankSchemaTest: AbstractExposedTest() {
 
             /**
              * ```sql
-             * DELETE FROM OWNER_ACCOUNT_MAP
-             *  WHERE (OWNER_ACCOUNT_MAP.OWNER_ID = 2)
-             *    AND (OWNER_ACCOUNT_MAP.ACCOUNT_ID = 3)
+             * DELETE
+             *   FROM owner_account_map
+             *  WHERE (owner_account_map.owner_id = 2)
+             *    AND (owner_account_map.account_id = 3)
              * ```
              */
             OwnerAccountMapTable.deleteWhere {
@@ -103,13 +104,14 @@ class BankSchemaTest: AbstractExposedTest() {
             loadedOwner2.accounts.count().toInt() shouldBeEqualTo owner2.accounts.size()
             loadedOwner2.accounts shouldContainSame listOf(account1, account4)
 
-            // cascade 에 REMOVE 가 빠져 있다면, many-to-many 관계만 삭제된다.
             /**
+             * cascade 에 REMOVE 가 빠져 있다면, many-to-many 관계만 삭제된다.
+             *
              * ```sql
-             * DELETE FROM OWNER_ACCOUNT_MAP WHERE OWNER_ACCOUNT_MAP.OWNER_ID = 2
+             * DELETE FROM owner_account_map WHERE owner_account_map.owner_id = 2
              * ```
              * ```sql
-             * DELETE FROM ACCOUNT_OWNER WHERE ACCOUNT_OWNER.ID = 2
+             * DELETE FROM account_owner WHERE account_owner.id = 2
              * ```
              */
             OwnerAccountMapTable.deleteWhere { ownerId eq loadedOwner2.id }
@@ -118,6 +120,15 @@ class BankSchemaTest: AbstractExposedTest() {
             entityCache.clear()
 
             val removedAccount = BankAccount.findById(account3.id)!!
+
+            /**
+             * ```sql
+             * SELECT COUNT(*)
+             *   FROM account_owner INNER JOIN owner_account_map
+             *      ON account_owner.id = owner_account_map.owner_id
+             *  WHERE owner_account_map.account_id = 3
+             * ```
+             */
             removedAccount.owners.count() shouldBeEqualTo 0L
         }
     }
@@ -167,26 +178,31 @@ class BankSchemaTest: AbstractExposedTest() {
             entityCache.clear()
 
             /**
+             * Delete mapping (accountId = 3, ownerId = 2)
+             *
              * ```sql
-             * DELETE FROM OWNER_ACCOUNT_MAP
-             *  WHERE (OWNER_ACCOUNT_MAP.ACCOUNT_ID = 3)
-             *    AND (OWNER_ACCOUNT_MAP.OWNER_ID = 2)
+             * DELETE
+             *   FROM owner_account_map
+             *  WHERE (owner_account_map.account_id = 3)
+             *    AND (owner_account_map.owner_id = 2)
              * ```
              */
             OwnerAccountMapTable.deleteWhere { (accountId eq account3.id) and (ownerId eq owner2.id) }
 
             /**
              * ```sql
-             * SELECT ACCOUNT_OWNER.ID, ACCOUNT_OWNER.SSN FROM ACCOUNT_OWNER WHERE ACCOUNT_OWNER.ID = 2;
+             * SELECT account_owner.id, account_owner.ssn
+             *   FROM account_owner
+             *  WHERE account_owner.id = 2;
              *
              * SELECT COUNT(*)
-             *   FROM BANK_ACCOUNT INNER JOIN OWNER_ACCOUNT_MAP ON BANK_ACCOUNT.ID = OWNER_ACCOUNT_MAP.ACCOUNT_ID
-             *  WHERE OWNER_ACCOUNT_MAP.OWNER_ID = 2
+             *   FROM bank_account INNER JOIN owner_account_map
+             *      ON bank_account.id = owner_account_map.account_id
+             *  WHERE owner_account_map.owner_id = 2
              * ```
              */
             val loaded = AccountOwner.findById(owner2.id)!!
             loaded.accounts.count().toInt() shouldBeEqualTo 2
-
         }
     }
 
