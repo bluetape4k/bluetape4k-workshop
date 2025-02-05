@@ -35,11 +35,13 @@ class CustomIdTest: AbstractExposedTest() {
      * Custom Type 의 Id 를 가지는 Table
      *
      * ```sql
-     * CREATE TABLE IF NOT EXISTS EMAILS (
-     *      EMAIL_ID VARCHAR(64) NOT NULL,
+     * CREATE TABLE IF NOT EXISTS emails (
+     *      email_id VARCHAR(64) NOT NULL,
      *      "name" VARCHAR(255) NOT NULL,
-     *      SSN CHAR(14) NOT NULL
-     * )
+     *      ssn CHAR(14) NOT NULL
+     * );
+     *
+     * ALTER TABLE emails ADD CONSTRAINT emails_ssn_unique UNIQUE (ssn);
      * ```
      */
     object CustomIdTable: IdTable<Email>("emails") {
@@ -55,7 +57,7 @@ class CustomIdTest: AbstractExposedTest() {
         var name by CustomIdTable.name
         var ssn by CustomIdTable.ssn
 
-        override fun equals(other: Any?): Boolean = idEquals(this)
+        override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
         override fun toString(): String =
             toStringBuilder()
@@ -89,15 +91,15 @@ class CustomIdTest: AbstractExposedTest() {
      * Custom Type 의 Id 를 가지는 Table 에 레코드를 저장합니다.
      *
      * ```sql
-     * INSERT INTO EMAILS (EMAIL_ID, "name", SSN)
-     * VALUES (gwyn.jerde@gmail.com, 'Wes Toy', 211-99-4075)
+     * INSERT INTO emails (email_id, "name", ssn)
+     * VALUES (bud.lindgren@gmail.com, 'Prince Ziemann', 706-24-2397)
      * ```
      * ```sql
-     * SELECT EMAILS.EMAIL_ID,
-     *        EMAILS."name",
-     *        EMAILS.SSN
-     *   FROM EMAILS
-     *  WHERE EMAILS.EMAIL_ID = gwyn.jerde@gmail.com
+     * SELECT emails.email_id,
+     *        emails."name",
+     *        emails.ssn
+     *   FROM emails
+     *  WHERE emails.email_id = bud.lindgren@gmail.com
      * ```
      */
     @ParameterizedTest
@@ -123,16 +125,16 @@ class CustomIdTest: AbstractExposedTest() {
      * Custom Type 의 Id 를 가지는 Entity 를 저장합니다.
      *
      * ```sql
-     * INSERT INTO EMAILS (EMAIL_ID, "name", SSN)
-     * VALUES (clarice.bednar@gmail.com, 'Mr. Ludie Mosciski', 639-15-7761)
+     * INSERT INTO emails (email_id, "name", ssn)
+     * VALUES (marvin.reichert@gmail.com, 'Damon Dicki', 010-56-3259)
      * ```
      *
      * ```sql
-     * SELECT EMAILS.EMAIL_ID,
-     *        EMAILS."name",
-     *        EMAILS.SSN
-     *   FROM EMAILS
-     *  WHERE EMAILS.EMAIL_ID = clarice.bednar@gmail.com
+     * SELECT emails.email_id,
+     *        emails."name",
+     *        emails.ssn
+     *   FROM emails
+     *  WHERE emails.email_id = marvin.reichert@gmail.com
      * ```
      */
     @ParameterizedTest
@@ -154,9 +156,11 @@ class CustomIdTest: AbstractExposedTest() {
      * Custom Type 의 Id 를 가지는 Entity 를 저장하고, Ssn 속성으로 조회합니다.
      *
      * ```sql
-     * SELECT EMAILS.EMAIL_ID, EMAILS."name", EMAILS.SSN
-     *   FROM EMAILS
-     *  WHERE EMAILS.SSN = 687-96-8924
+     * SELECT emails.email_id,
+     *        emails."name",
+     *        emails.ssn
+     *   FROM emails
+     *  WHERE emails.ssn = 059-56-9626
      * ```
      */
     @ParameterizedTest
@@ -177,17 +181,19 @@ class CustomIdTest: AbstractExposedTest() {
     /**
      * Custom Type 의 Id 를 가지는 Entity 를 저장하고, Id 로 조회합니다.
      *
+     * `inList` 나 `inSubQuery` 를 사용하여 여러 Id 로 조회할 수 있습니다.
+     *
      * ```sql
-     * SELECT EMAILS.EMAIL_ID,
-     *        EMAILS."name",
-     *        EMAILS.SSN
-     *   FROM EMAILS
-     *  WHERE EMAILS.EMAIL_ID IN (clyde.gutkowski@hotmail.com,
-     *                            amos.bosco@yahoo.com,
-     *                            charlena.gulgowski@gmail.com,
-     *                            sherika.considine@gmail.com,
-     *                            elenora.aufderhar@hotmail.com)
-     *  ORDER BY EMAILS."name" ASC
+     * SELECT emails.email_id,
+     *        emails."name",
+     *        emails.ssn
+     *   FROM emails
+     *  WHERE emails.email_id IN (joline.thiel@gmail.com,
+     *                            bruna.rath@gmail.com,
+     *                            collette.fahey@hotmail.com,
+     *                            edgardo.parisian@yahoo.com,
+     *                            emmy.gislason@yahoo.com)
+     *  ORDER BY emails."name" ASC
      * ```
      */
     @ParameterizedTest

@@ -87,7 +87,7 @@ class TablePerClassInheritanceTest: AbstractExposedTest() {
         var startDate by CreditCardTable.startDate
         var endDate by CreditCardTable.endDate
 
-        override fun equals(other: Any?): Boolean = idEquals(this)
+        override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
         override fun toString(): String =
             toStringBuilder()
