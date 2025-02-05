@@ -27,12 +27,43 @@ object JoinSchema {
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS join_address (
+     *      id SERIAL PRIMARY KEY,
+     *      street VARCHAR(255) NULL,
+     *      city VARCHAR(255) NULL,
+     *      zipcode VARCHAR(255) NULL
+     * )
+     * ```
+     */
     object AddressTable: IntIdTable("join_address") {
         val street = varchar("street", 255).nullable()
         val city = varchar("city", 255).nullable()
         val zipcode = varchar("zipcode", 255).nullable()
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS user_address (
+     *      id SERIAL PRIMARY KEY,
+     *      user_id INT NOT NULL,
+     *      address_id INT NOT NULL,
+     *      addr_type VARCHAR(255) NOT NULL,
+     *
+     *      CONSTRAINT fk_user_address_user_id__id FOREIGN KEY (user_id)
+     *      REFERENCES join_user(id) ON DELETE CASCADE ON UPDATE CASCADE,
+     *
+     *      CONSTRAINT fk_user_address_address_id__id FOREIGN KEY (address_id)
+     *      REFERENCES join_address(id) ON DELETE CASCADE ON UPDATE CASCADE
+     * );
+     *
+     * CREATE INDEX user_address_user_id ON user_address (user_id);
+     *
+     * ALTER TABLE user_address
+     *      ADD CONSTRAINT user_address_addr_type_user_id_unique UNIQUE (addr_type, user_id);
+     * ```
+     */
     object UserAddressTable: IntIdTable("user_address") {
         val userId = reference("user_id", UserTable, onDelete = CASCADE, onUpdate = CASCADE).index()
         val addressId = reference("address_id", AddressTable, onDelete = CASCADE, onUpdate = CASCADE)
@@ -44,6 +75,14 @@ object JoinSchema {
         }
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS join_user (
+     *      id SERIAL PRIMARY KEY,
+     *      "name" VARCHAR(255) NOT NULL
+     * )
+     * ```
+     */
     object UserTable: IntIdTable("join_user") {
         val name = varchar("name", 255)
     }

@@ -30,6 +30,41 @@ class JoinTableTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     *
+     * Count of `loaded.addresses` is 2.
+     * ```sql
+     * SELECT COUNT(*)
+     *   FROM join_address INNER JOIN user_address ON join_address.id = user_address.address_id
+     *  WHERE user_address.user_id = 1
+     * ```
+     *
+     * loaded.addresses
+     * ```sql
+     * SELECT join_address.id,
+     *        join_address.street,
+     *        join_address.city,
+     *        join_address.zipcode,
+     *        user_address.id,
+     *        user_address.address_id,
+     *        user_address.addr_type,
+     *        user_address.user_id
+     *   FROM join_address INNER JOIN user_address ON join_address.id = user_address.address_id
+     *  WHERE user_address.user_id = 1
+     * ```
+     *
+     * loaded.userAddresses
+     * ```sql
+     * SELECT user_address.id,
+     *        user_address.user_id,
+     *        user_address.address_id,
+     *        user_address.addr_type
+     *   FROM user_address
+     *  WHERE user_address.user_id = 1
+     *  ORDER BY user_address.addr_type ASC
+     * ```
+     *
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create user with address by join table`(testDB: TestDB) {
@@ -39,26 +74,12 @@ class JoinTableTest: AbstractExposedTest() {
 
             val loaded = User.findById(user.id)!!
 
-            /**
-             * ```sql
-             * SELECT COUNT(*)
-             *   FROM JOIN_ADDRESS INNER JOIN USER_ADDRESS ON JOIN_ADDRESS.ID = USER_ADDRESS.ADDRESS_ID
-             *  WHERE USER_ADDRESS.USER_ID = 1
-             * ```
-             */
             loaded.addresses.count() shouldBeEqualTo 2
 
             loaded.addresses.forEach { addr ->
                 log.debug { "Address: $addr" }
             }
 
-            /**
-             * ```sql
-             * SELECT USER_ADDRESS.ID, USER_ADDRESS.USER_ID, USER_ADDRESS.ADDRESS_ID, USER_ADDRESS.ADDR_TYPE
-             *   FROM USER_ADDRESS WHERE USER_ADDRESS.USER_ID = 1
-             *  ORDER BY USER_ADDRESS.ADDR_TYPE ASC
-             *  ```
-             */
             loaded.userAddresses.forEach { userAddr ->
                 log.debug { "UserAddress: $userAddr, ${userAddr.user}, ${userAddr.address}" }
             }
