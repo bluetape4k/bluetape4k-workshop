@@ -6,7 +6,7 @@ import org.jetbrains.exposed.sql.ResultRow
 fun ResultRow.toUser(): User {
     val row = this
     return User(
-        id = UserId(row[UserTable.id].value),
+        id = row[UserTable.id].value,
         name = row[UserTable.name],
         age = row[UserTable.age],
     )

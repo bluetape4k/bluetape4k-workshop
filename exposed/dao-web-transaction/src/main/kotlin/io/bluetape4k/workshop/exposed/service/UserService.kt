@@ -33,7 +33,7 @@ class UserService {
     fun findUserById(id: UserId): User? {
         log.debug { "find user by id: ${id.value}" }
 
-        return UserEntity.findById(id.value)?.toUser()
+        return UserEntity.findById(id)?.toUser()
 
 //        return UserTable.selectAll()
 //            .where { UserTable.id eq id.value }
@@ -49,7 +49,7 @@ class UserService {
             name = request.name
             age = request.age
         }
-        return UserId(newUser.id.value)
+        return newUser.id.value
 
 //        val id = UserTable.insertAndGetId {
 //            it[UserTable.name] = request.name
@@ -67,14 +67,14 @@ class UserService {
             this[UserTable.name] = request.name
             this[UserTable.age] = request.age
         }
-        return rows.map { UserId(it[UserTable.id].value) }
+        return rows.map { it[UserTable.id].value }
     }
 
     /**
      * 사용자 정보를 수정합니다.
      */
     fun update(userId: UserId, request: UserUpdateRequest): Int {
-        return UserTable.update({ UserTable.id eq userId.value }) { users ->
+        return UserTable.update({ UserTable.id eq userId }) { users ->
             request.name?.run { users[UserTable.name] = this }
             request.age?.run { users[UserTable.age] = this }
         }
@@ -84,6 +84,6 @@ class UserService {
      * 사용자 정보를 삭제합니다.
      */
     fun delete(userId: UserId): Int {
-        return UserTable.deleteWhere { UserTable.id eq userId.value }
+        return UserTable.deleteWhere { UserTable.id eq userId }
     }
 }
