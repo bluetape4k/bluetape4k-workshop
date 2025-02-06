@@ -496,7 +496,7 @@ class DefaultsTest: AbstractExposedTest() {
         }
 
         // MySql 5 is excluded because it does not support `CURRENT_DATE()` as a default value
-        Assumptions.assumeTrue { testDB != TestDB.MYSQL_V5 }
+        Assumptions.assumeTrue { testDB !in setOf(TestDB.MYSQL_V5) }
 
         withTables(testDB, tester) {
             val id = tester.insertAndGetId {
@@ -670,7 +670,7 @@ class DefaultsTest: AbstractExposedTest() {
             else -> "NULL"
         }
 
-        Assumptions.assumeTrue { testDB != TestDB.MYSQL_V5 }  // TestDB.ALL_MARIADB + TestDB.MYSQL_V5
+        Assumptions.assumeTrue { testDB !in setOf(TestDB.MYSQL_V5) }  // TestDB.ALL_MARIADB + TestDB.MYSQL_V5
         withTables(testDB, tester) {
             val timestampWithTimeZoneType = currentDialectTest.dataTypeProvider.timestampWithTimeZoneType()
 

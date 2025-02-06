@@ -654,15 +654,23 @@ class KotlinTimeTest: AbstractExposedTest() {
      *
      * ```sql
      * -- Postgres
-     * INSERT INTO testtable ("timestamptz-column") VALUES ('2023-05-04T05:04:01.123123123Z')
-     * SELECT CAST(testtable."timestamptz-column" AS DATE) FROM testtable WHERE testtable.id = 1
-     * SELECT TO_CHAR(testtable."timestamptz-column", 'HH24:MI:SS.US') FROM testtable WHERE testtable.id = 1
-     * SELECT Extract(YEAR FROM testtable."timestamptz-column") FROM testtable WHERE testtable.id = 1
-     * SELECT Extract(MONTH FROM testtable."timestamptz-column") FROM testtable WHERE testtable.id = 1
-     * SELECT Extract(DAY FROM testtable."timestamptz-column") FROM testtable WHERE testtable.id = 1
-     * SELECT Extract(HOUR FROM testtable."timestamptz-column") FROM testtable WHERE testtable.id = 1
-     * SELECT Extract(MINUTE FROM testtable."timestamptz-column") FROM testtable WHERE testtable.id = 1
-     * SELECT Extract(SECOND FROM testtable."timestamptz-column") FROM testtable WHERE testtable.id = 1
+     * INSERT INTO testtable ("timestamptz-column")
+     * VALUES ('2023-05-04T05:04:01.123123123Z');
+     *
+     * SELECT CAST(testtable."timestamptz-column" AS DATE)
+     *   FROM testtable
+     *  WHERE testtable.id = 1;
+     *
+     * SELECT TO_CHAR(testtable."timestamptz-column", 'HH24:MI:SS.US')
+     *   FROM testtable
+     *  WHERE testtable.id = 1;
+     *
+     * SELECT Extract(YEAR FROM testtable."timestamptz-column") FROM testtable WHERE testtable.id = 1;
+     * SELECT Extract(MONTH FROM testtable."timestamptz-column") FROM testtable WHERE testtable.id = 1;
+     * SELECT Extract(DAY FROM testtable."timestamptz-column") FROM testtable WHERE testtable.id = 1;
+     * SELECT Extract(HOUR FROM testtable."timestamptz-column") FROM testtable WHERE testtable.id = 1;
+     * SELECT Extract(MINUTE FROM testtable."timestamptz-column") FROM testtable WHERE testtable.id = 1;
+     * SELECT Extract(SECOND FROM testtable."timestamptz-column") FROM testtable WHERE testtable.id = 1;
      * ```
      */
     @ParameterizedTest

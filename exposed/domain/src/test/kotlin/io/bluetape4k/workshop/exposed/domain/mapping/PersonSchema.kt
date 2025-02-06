@@ -8,6 +8,7 @@ import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withTables
 import org.jetbrains.exposed.dao.LongEntity
 import org.jetbrains.exposed.dao.LongEntityClass
+import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.Table
@@ -173,6 +174,7 @@ fun AbstractExposedTest.withPersonsAndAddress(
             state = "IN"
             zip = "12345"
         }
+        flushCache()
 
         PersonSchema.Person.new {
             firstName = "Fred"
@@ -197,6 +199,7 @@ fun AbstractExposedTest.withPersonsAndAddress(
             employeed = false
             address = addr1
         }
+        flushCache()
         PersonSchema.Person.new {
             firstName = "Barney"
             lastName = "Rubble"
@@ -220,7 +223,7 @@ fun AbstractExposedTest.withPersonsAndAddress(
             employeed = false
             address = addr2
         }
-        commit()
+        flushCache()
 
         statement(persons, addresses)
     }

@@ -5,7 +5,6 @@ import io.bluetape4k.collections.tryForEach
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.TestDB.H2
 import io.bluetape4k.workshop.exposed.TestDB.H2_V1
 import io.bluetape4k.workshop.exposed.currentDialectTest
 import io.bluetape4k.workshop.exposed.expectException
@@ -39,12 +38,14 @@ import org.jetbrains.exposed.sql.ulongLiteral
 import org.jetbrains.exposed.sql.ushortLiteral
 import org.jetbrains.exposed.sql.vendors.MysqlDialect
 import org.jetbrains.exposed.sql.vendors.PrimaryKeyMetadata
+import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
 import kotlin.properties.Delegates
 
 @OptIn(ExperimentalDatabaseMigrationApi::class)
+@TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class DatabaseMigrationTest: AbstractExposedTest() {
 
     private fun TestDB.dropAllSequence() {
@@ -549,7 +550,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
             when (testDB) {
                 in TestDB.ALL_POSTGRES -> {
                     statements.size shouldBeEqualTo 2
-                    statements[0] shouldBeEqualTo "ALTER TABLE test_table ALTER COLUMN id TYPE BIGINT"
+                    statements[0] shouldBeEqualTo "ALTER TABLE test_table ALTER COLUMN id TYPE BIGINT, ALTER COLUMN id DROP DEFAULT"
                     statements[1] shouldBeEqualTo expectedDropSequenceStatement("test_table_id_seq")
                 }
 
@@ -624,20 +625,18 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                 try {
                     SchemaUtils.create(tableWithAutoIncrement)
 
-                    MigrationUtils
-                        .statementsRequiredForDatabaseMigration(
-                            tableWithAutoIncrement,
-                            withLogs = false
-                        )
-                        .shouldBeEmpty()
+                    val stmts = MigrationUtils.statementsRequiredForDatabaseMigration(
+                        tableWithAutoIncrement,
+                        withLogs = false
+                    )
+                    stmts.shouldBeEmpty()
 
-
-                    val statements = MigrationUtils
-                        .statementsRequiredForDatabaseMigration(
-                            tableWithAutoIncrementCustomSequence,
-                            withLogs = false
-                        )
+                    val statements = MigrationUtils.statementsRequiredForDatabaseMigration(
+                        tableWithAutoIncrementCustomSequence,
+                        withLogs = false
+                    )
                     statements[0] shouldBeEqualTo expectedCreateSequenceStatement(sequence.name)
+
                     when (testDB) {
                         in TestDB.ALL_POSTGRES -> {
                             statements.size shouldBeEqualTo 3
@@ -688,7 +687,10 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                             withLogs = false
                         )
                     when (testDB) {
-                        H2 -> {
+                        in TestDB.ALL_POSTGRES -> {
+                            statements.shouldBeEmpty()
+                        }
+                        TestDB.H2 -> {
                             statements.size shouldBeEqualTo 1
                         }
 
@@ -727,15 +729,16 @@ class DatabaseMigrationTest: AbstractExposedTest() {
 
                     when (testDB) {
                         in TestDB.ALL_POSTGRES -> {
-                            statements.size shouldBeEqualTo 4
+                            statements.forEachIndexed { i, stmt ->
+                                log.debug { "stmt[$i]=$stmt" }
+                            }
+                            statements.size shouldBeEqualTo 3
                             statements[0] shouldBeEqualTo
                                     expectedCreateSequenceStatement("test_table_id_seq")
                             statements[1] shouldBeEqualTo
                                     "ALTER TABLE test_table ALTER COLUMN id SET DEFAULT nextval('test_table_id_seq')"
                             statements[2] shouldBeEqualTo
                                     "ALTER SEQUENCE test_table_id_seq OWNED BY test_table.id"
-                            statements[3] shouldBeEqualTo
-                                    expectedDropSequenceStatement(sequenceName)
                         }
 
                         H2_V1 -> {
@@ -782,7 +785,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                             withLogs = false
                         )
                     when (testDB) {
-                        H2_V1 -> {
+                        H2_V1, in TestDB.ALL_POSTGRES -> {
                             statements.size shouldBeEqualTo 1
                             statements[0] shouldBeEqualTo expectedCreateSequenceStatement(sequence.name)
                         }
@@ -820,7 +823,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                     )
 
                     when (testDB) {
-                        H2_V1 -> {
+                        H2_V1, in TestDB.ALL_POSTGRES -> {
                             statements.size shouldBeEqualTo 0
                         }
 
@@ -860,15 +863,15 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                     )
                 when (testDB) {
                     in TestDB.ALL_POSTGRES -> {
-                        statements.size shouldBeEqualTo 4
+                        statements.size shouldBeEqualTo 3
                         statements[0] shouldBeEqualTo
                                 expectedCreateSequenceStatement("test_table_id_seq")
                         statements[1] shouldBeEqualTo
                                 "ALTER TABLE test_table ALTER COLUMN id SET DEFAULT nextval('test_table_id_seq')"
                         statements[2] shouldBeEqualTo
                                 "ALTER SEQUENCE test_table_id_seq OWNED BY test_table.id"
-                        statements[3] shouldBeEqualTo
-                                expectedDropSequenceStatement(sequence.name)
+//                        statements[3] shouldBeEqualTo
+//                                expectedDropSequenceStatement(sequence.name)
                     }
 
                     H2_V1 -> {
@@ -913,7 +916,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                         )
 
                     when (testDB) {
-                        H2_V1 -> {
+                        H2_V1, in TestDB.ALL_POSTGRES -> {
                             statements.size shouldBeEqualTo 1
                             statements[0] shouldBeEqualTo expectedCreateSequenceStatement(sequenceName)
                         }

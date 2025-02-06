@@ -508,7 +508,7 @@ class DefaultsTest: AbstractExposedTest() {
         }
 
         // MySql 5 is excluded because it does not support `CURRENT_DATE()` as a default value
-        Assumptions.assumeTrue { testDB != TestDB.MYSQL_V5 }
+        Assumptions.assumeTrue { testDB !in setOf(TestDB.MYSQL_V5) }
         withTables(testDB, tester) {
             val id = tester.insertAndGetId {
                 it[tester.name] = "bar"
@@ -657,7 +657,7 @@ class DefaultsTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `Timestamp with TimeZone Default`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB != TestDB.MYSQL_V5 } // TestDB.ALL_MARIADB + TestDB.MYSQL_V5
+        Assumptions.assumeTrue { testDB !in setOf(TestDB.MYSQL_V5) } // TestDB.ALL_MARIADB + TestDB.MYSQL_V5
         // UTC time zone
         java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(ZoneOffset.UTC))
         ZoneId.systemDefault().id shouldBeEqualTo "UTC"
@@ -677,7 +677,7 @@ class DefaultsTest: AbstractExposedTest() {
             else -> "NULL"
         }
 
-        withTables(testDB, testTable) { testDB ->
+        withTables(testDB, testTable) {
             val timestampWithTimeZoneType = currentDialectTest.dataTypeProvider.timestampWithTimeZoneType()
 
             val baseExpression = "CREATE TABLE " + addIfNotExistsIfSupported() +

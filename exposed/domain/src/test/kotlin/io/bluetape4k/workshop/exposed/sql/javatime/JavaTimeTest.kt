@@ -510,16 +510,19 @@ class JavaTimeTest: AbstractExposedTest() {
      *
      * ```sql
      * -- Africa/Cairo time zone
-     * INSERT INTO tester (timestampz_column) VALUES ('2025-02-04T11:44:53.135595+02:00');
+     * INSERT INTO tester (timestampz_column)
+     * VALUES ('2025-02-04T11:44:53.135595+02:00');
      * -- cairoNowInsertedInCairoTimeZone=2025-02-04T09:44:53.135595Z;
      *
      * -- UTC time zone
-     * INSERT INTO tester (timestampz_column) VALUES ('2025-02-04T11:27:49.38008+02:00');
+     * INSERT INTO tester (timestampz_column)
+     * VALUES ('2025-02-04T11:27:49.38008+02:00');
      * -- cairoNowRetrievedInUTCTimeZone=2025-02-04T09:44:53.135595Z;
      * -- cairoNowInsertedInUTCTimeZone=2025-02-04T09:44:53.135595Z
      *
      * -- Asis/Seoul time zone
-     * INSERT INTO tester (timestampz_column) VALUES ('2025-02-04T11:27:49.38008+02:00');
+     * INSERT INTO tester (timestampz_column)
+     * VALUES ('2025-02-04T11:27:49.38008+02:00');
      * -- cairoNowInsertedInSeoulTimeZone=2025-02-04T09:44:53.135595Z
      * ```
      */
