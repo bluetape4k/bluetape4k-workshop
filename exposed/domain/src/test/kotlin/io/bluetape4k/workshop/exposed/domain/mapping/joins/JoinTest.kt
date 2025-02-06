@@ -1179,7 +1179,7 @@ class JoinTest {
         @ParameterizedTest
         @MethodSource(ENABLE_DIALECTS_METHOD)
         fun `covering index`(testDB: TestDB) {
-            withPersonsAndAddress(testDB) { persons, addresses ->
+            withPersonsAndAddress(testDB) { persons, _ ->
                 // convering index 에 해당하는 subquery
                 val p2 = persons
                     .select(persons.id)
@@ -1234,6 +1234,9 @@ class JoinTest {
                     .where { persons.id less 5L }
                     .toList()
 
+                rows.forEach {
+                    log.debug { it }
+                }
                 rows shouldHaveSize 1
                 rows.single()[persons.id].value shouldBeEqualTo 4L
             }

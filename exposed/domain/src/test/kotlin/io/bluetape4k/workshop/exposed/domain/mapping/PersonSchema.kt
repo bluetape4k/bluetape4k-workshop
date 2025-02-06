@@ -220,6 +220,7 @@ fun AbstractExposedTest.withPersonsAndAddress(
             employeed = false
             address = addr2
         }
+        commit()
 
         statement(persons, addresses)
     }
