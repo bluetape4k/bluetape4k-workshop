@@ -28,14 +28,15 @@ class JoinedInheritanceTest: AbstractExposedTest() {
      * Joined Person Table
      *
      * ```sql
-     * CREATE TABLE IF NOT EXISTS JOINED_PERSON (
-     *      ID INT AUTO_INCREMENT PRIMARY KEY,
-     *      PERSON_NAME VARCHAR(128) NOT NULL,
-     *      SSN VARCHAR(128) NOT NULL
-     * )
-     * ```
-     * ```sql
-     * ALTER TABLE JOINED_PERSON ADD CONSTRAINT JOINED_PERSON_PERSON_NAME_SSN_UNIQUE UNIQUE (PERSON_NAME, SSN)
+     * -- Postgres
+     * CREATE TABLE IF NOT EXISTS joined_person (
+     *      id SERIAL PRIMARY KEY,
+     *      person_name VARCHAR(128) NOT NULL,
+     *      ssn VARCHAR(128) NOT NULL
+     * );
+     *
+     * ALTER TABLE joined_person
+     *   ADD CONSTRAINT joined_person_person_name_ssn_unique UNIQUE (person_name, ssn);
      * ```
      */
     object JoinedPersonTable: IntIdTable("joined_person") {
@@ -51,17 +52,14 @@ class JoinedInheritanceTest: AbstractExposedTest() {
      * Joined Employee Table
      *
      * ```sql
-     * CREATE TABLE IF NOT EXISTS JOINED_EMPLOYEE (
-     *      ID INT NOT NULL,
-     *      EMP_NO VARCHAR(128) NOT NULL,
-     *      MANAGER_ID INT NULL,
+     * CREATE TABLE IF NOT EXISTS joined_employee (
+     *      id INT NOT NULL,
+     *      emp_no VARCHAR(128) NOT NULL,
+     *      manager_id INT NULL,
      *
-     *      CONSTRAINT FK_JOINED_EMPLOYEE_ID__ID FOREIGN KEY (ID)
-     *          REFERENCES JOINED_PERSON(ID) ON DELETE CASCADE ON UPDATE CASCADE,
-     *
-     *      CONSTRAINT FK_JOINED_EMPLOYEE_MANAGER_ID__ID FOREIGN KEY (MANAGER_ID)
-     *          REFERENCES JOINED_PERSON(ID) ON DELETE RESTRICT ON UPDATE RESTRICT
-     * )
+     *      CONSTRAINT fk_joined_employee_id__id FOREIGN KEY (id)
+     *      REFERENCES joined_person(id) ON DELETE CASCADE ON UPDATE CASCADE
+     * );
      * ```
      */
     object JoinedEmployeeTable: IdTable<Int>("joined_employee") {
@@ -73,15 +71,17 @@ class JoinedInheritanceTest: AbstractExposedTest() {
     }
 
     /**
-     * ```sql
-     * CREATE TABLE IF NOT EXISTS JOINED_CUSTOMER (
-     *      ID INT NOT NULL,
-     *      MOBILE VARCHAR(16) NOT NULL,
-     *      CONCAT_EMPLOYEE_ID VARCHAR(128) NULL,
+     * Joined Customer Table
      *
-     *      CONSTRAINT FK_JOINED_CUSTOMER_ID__ID FOREIGN KEY (ID)
-     *          REFERENCES JOINED_PERSON(ID) ON DELETE CASCADE ON UPDATE CASCADE
-     * )
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS joined_customer (
+     *      id INT NOT NULL,
+     *      mobile VARCHAR(16) NOT NULL,
+     *      contact_employee_id INT NULL,
+     *
+     *      CONSTRAINT fk_joined_customer_id__id FOREIGN KEY (id)
+     *      REFERENCES joined_person(id) ON DELETE CASCADE ON UPDATE CASCADE
+     * );
      * ```
      */
     object JoinedCustomerTable: IdTable<Int>("joined_customer") {
@@ -119,11 +119,23 @@ class JoinedInheritanceTest: AbstractExposedTest() {
     val joinedCustomers = JoinedPersonTable.innerJoin(JoinedCustomerTable)
 
 
+    @Suppress("UnusedReceiverParameter")
     fun Transaction.newEmployee(name: String, ssn: String, empNo: String): JoinedEmployee {
+
+        /**
+         * ```sql
+         * INSERT INTO joined_person (person_name, ssn) VALUES ('Debop', '111111-111111');
+         * ```
+         */
         val personId1 = JoinedPersonTable.insertAndGetId {
             it[JoinedPersonTable.name] = name
             it[JoinedPersonTable.ssn] = ssn
         }
+        /**
+         * ```sql
+         * INSERT INTO joined_employee (id, emp_no) VALUES (1, 'EMP-001')
+         * ```
+         */
         JoinedEmployeeTable.insert {
             it[id] = personId1
             it[JoinedEmployeeTable.empNo] = empNo
@@ -131,13 +143,15 @@ class JoinedInheritanceTest: AbstractExposedTest() {
 
         /**
          * ```sql
-         * SELECT JOINED_PERSON.ID,
-         *        JOINED_PERSON.PERSON_NAME,
-         *        JOINED_PERSON.SSN,
-         *        JOINED_EMPLOYEE.ID,
-         *        JOINED_EMPLOYEE.EMP_NO
-         *   FROM JOINED_PERSON INNER JOIN JOINED_EMPLOYEE ON JOINED_PERSON.ID = JOINED_EMPLOYEE.ID
-         *  WHERE JOINED_PERSON.ID = 1
+         * SELECT joined_person.id,
+         *        joined_person.person_name,
+         *        joined_person.ssn,
+         *        joined_employee.id,
+         *        joined_employee.emp_no,
+         *        joined_employee.manager_id
+         *   FROM joined_person
+         *      INNER JOIN joined_employee ON joined_person.id = joined_employee.id
+         *  WHERE joined_person.id = 1
          * ```
          */
         return joinedEmployees
@@ -155,17 +169,43 @@ class JoinedInheritanceTest: AbstractExposedTest() {
             .single()
     }
 
+    @Suppress("UnusedReceiverParameter")
     fun Transaction.newCustomer(name: String, ssn: String, mobile: String, contactEmployeeId: Int?): JoinedCustomer {
+        /**
+         * ```sql
+         * INSERT INTO joined_person (person_name, ssn)
+         * VALUES ('Black', '333333-333333')
+         * ```
+         */
         val personId1 = JoinedPersonTable.insertAndGetId {
             it[JoinedPersonTable.name] = name
             it[JoinedPersonTable.ssn] = ssn
         }
+        /**
+         * ```sql
+         * INSERT INTO joined_customer (id, mobile, contact_employee_id)
+         * VALUES (3, '010-5555-5555', 2)
+         * ```
+         */
         JoinedCustomerTable.insert {
             it[id] = personId1
             it[JoinedCustomerTable.mobile] = mobile
             it[JoinedCustomerTable.contactEmployeeId] = contactEmployeeId
         }
 
+        /**
+         * ```sql
+         * SELECT joined_person.id,
+         *        joined_person.person_name,
+         *        joined_person.ssn,
+         *        joined_customer.id,
+         *        joined_customer.mobile,
+         *        joined_customer.contact_employee_id
+         *   FROM joined_person
+         *      INNER JOIN joined_customer ON joined_person.id = joined_customer.id
+         *  WHERE joined_person.id = 3
+         * ```
+         */
         return joinedCustomers.selectAll()
             .where { JoinedPersonTable.id eq personId1 }
             .map {
@@ -192,7 +232,7 @@ class JoinedInheritanceTest: AbstractExposedTest() {
             log.debug { "emp2=$emp2" }
 
             val customer = newCustomer("Black", "333333-333333", "010-5555-5555", emp2.id)
-
+            log.debug { "customer=$customer" }
 
             // TODO: 삭제 등 추가적인 테스트 코드를 작성하세요.
         }
