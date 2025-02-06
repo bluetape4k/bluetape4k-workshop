@@ -34,37 +34,56 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
 
+/**
+ * Exposed Entity 기본적인 사용 예제 코드
+ */
 class PersonSchemaTest: AbstractExposedTest() {
     companion object: KLogging()
 
+    /**
+     * ```sql
+     * -- Postgres:
+     * -- DSL
+     * SELECT COUNT(*) FROM persons WHERE persons.id < 3;
+     * SELECT COUNT(persons.id) FROM persons WHERE persons.id < 3;
+     * -- DAO
+     * SELECT COUNT(*) FROM persons WHERE persons.id < 3;
+     * SELECT COUNT(persons.id) FROM persons WHERE persons.id < 3;
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `count with where clause`(testDB: TestDB) {
-        withPersonsAndAddress(testDB) { persons, addresses ->
-            // SELECT COUNT(*) FROM PERSONS WHERE PERSONS.ID < 3
+        withPersonsAndAddress(testDB) { persons, _ ->
+            // DSL 사용한 방법
             persons.selectAll()
                 .where { persons.id less 3L }
                 .count() shouldBeEqualTo 2L
 
-            // SELECT COUNT(*) FROM PERSONS WHERE PERSONS.ID < 3
-            Person.find { persons.id less 3L }.count() shouldBeEqualTo 2L
-
-            // SELECT COUNT(PERSONS.ID) FROM PERSONS WHERE PERSONS.ID < 3
             persons.select(persons.id.count())
                 .where { persons.id less 3L }
                 .single()[persons.id.count()] shouldBeEqualTo 2L
 
-            // SELECT COUNT(PERSONS.ID) FROM PERSONS WHERE PERSONS.ID < 3
+            // DAO 사용한 방법
+            Person.find { persons.id less 3L }.count() shouldBeEqualTo 2L
             Person.count(persons.id less 3L) shouldBeEqualTo 2L
         }
     }
 
+    /**
+     * ```sql
+     * -- Postgres:
+     * SELECT COUNT(*) FROM persons;
+     *
+     * SELECT COUNT(*) FROM persons;
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `count all records`(testDB: TestDB) {
-        withPersonsAndAddress(testDB) { persons, addresses ->
+        withPersonsAndAddress(testDB) { persons, _ ->
 
-            // SQL 이용
+            // SQL DSL 이용
             persons.selectAll().count() shouldBeEqualTo 6L
 
             // DAO 이용 
@@ -74,27 +93,33 @@ class PersonSchemaTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * SELECT COUNT(PERSONS.LAST_NAME) FROM PERSONS
+     * SELECT COUNT(persons.last_name)
+     *   FROM persons
      * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `count lastName`(testDB: TestDB) {
         withPersonsAndAddress(testDB) { persons, _ ->
-            persons.select(persons.lastName.count())
+            persons
+                .select(persons.lastName.count())
                 .single()[persons.lastName.count()] shouldBeEqualTo 6L
         }
     }
 
     /**
      * ```sql
-     * SELECT COUNT(DISTINCT PERSONS.LAST_NAME) FROM PERSONS
+     * -- Postgres
+     * SELECT COUNT(DISTINCT persons.last_name)
+     *   FROM persons
      * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `count distinct lastName`(testDB: TestDB) {
         withPersonsAndAddress(testDB) { persons, _ ->
+
+            // COUNT(DISTINCT persons.last_name)
             val counter = persons.lastName.countDistinct()
 
             persons
@@ -115,23 +140,29 @@ class PersonSchemaTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * DELETE FROM PERSONS WHERE PERSONS.ID = 7
+     * -- Postgres
+     * DELETE FROM persons WHERE persons.id = 7
      * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `delete by id`(testDB: TestDB) {
         withPersonsAndAddress(testDB) { persons, _ ->
-            val pId = insertPerson()
+            val pId: Long = insertPerson()
 
-            // DELETE FROM PERSONS WHERE PERSONS.ID = 7
+            // DELETE FROM persons WHERE persons.id = 7
+            // 삭제된 행의 갯수 반환
             persons.deleteWhere { persons.id eq pId } shouldBeEqualTo 1
         }
     }
 
     /**
      * ```sql
-     * DELETE FROM PERSONS WHERE (PERSONS.ID > $id1) AND (PERSONS.OCCUPATION IS NULL)
+     * -- Postgre
+     * DELETE
+     *   FROM persons
+     *  WHERE (persons.id >= 7)
+     *    AND (persons.occupation IS NULL)
      * ```
      */
     @ParameterizedTest
@@ -152,8 +183,9 @@ class PersonSchemaTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * DELETE FROM PERSONS
-     *  WHERE (PERSONS.ID > $id1) OR (PERSONS.OCCUPATION IS NOT NULL)
+     * DELETE
+     *   FROM persons
+     *  WHERE (persons.id >= 7) OR (persons.occupation IS NOT NULL)
      * ```
      */
     @ParameterizedTest
@@ -164,7 +196,6 @@ class PersonSchemaTest: AbstractExposedTest() {
             val id2 = insertPerson()
             val id3 = insertPerson()
 
-            // DELETE FROM PERSONS WHERE (PERSONS.ID > $id1) OR (PERSONS.OCCUPATION IS NOT NULL)
             persons
                 .deleteWhere {
                     persons.id greaterEq id1 or persons.occupation.isNotNull()
@@ -174,9 +205,10 @@ class PersonSchemaTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * DELETE FROM PERSONS
-     *  WHERE ((PERSONS.ID >= 7) OR (PERSONS.OCCUPATION IS NOT NULL))
-     *    AND (PERSONS.EMPLOYEED = TRUE)
+     * DELETE
+     *   FROM persons
+     *  WHERE ((persons.id >= 7) OR (persons.occupation IS NOT NULL))
+     *    AND (persons.employeed = TRUE)
      * ```
      */
     @ParameterizedTest
@@ -197,9 +229,11 @@ class PersonSchemaTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * DELETE FROM PERSONS
-     *  WHERE (PERSONS.ID >= 7)
-     *     OR ((PERSONS.OCCUPATION IS NOT NULL) AND (PERSONS.EMPLOYEED = TRUE))
+     * DELETE
+     *   FROM persons
+     *  WHERE (persons.id >= 7)
+     *     OR ((persons.occupation IS NOT NULL) AND (persons.employeed = TRUE))
+     * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -209,7 +243,6 @@ class PersonSchemaTest: AbstractExposedTest() {
             val id2 = insertPerson()
             val id3 = insertPerson()
 
-
             persons
                 .deleteWhere {
                     (persons.id greaterEq id1) or ((persons.occupation.isNotNull()) and (persons.employeed eq true))
@@ -218,8 +251,11 @@ class PersonSchemaTest: AbstractExposedTest() {
     }
 
     /**
+     * PostgreSQL doesn't support LIMIT in DELETE clause
+     *
      * ```sql
-     * DELETE FROM PERSONS WHERE PERSONS.ID < 7 LIMIT 1
+     * -- MySQL V8
+     * DELETE FROM persons WHERE persons.id < 7 LIMIT 1;
      * ```
      */
     @ParameterizedTest
@@ -244,8 +280,15 @@ class PersonSchemaTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * INSERT INTO PERSONS (ID, FIRST_NAME, LAST_NAME, BIRTH_DATE, OCCUPATION, ADDRESS_ID)
-     * VALUES (100, 'John', 'Doe', '2025-01-23', 'Software Engineer', 1)
+     * SELECT persons.id,
+     *        persons.first_name,
+     *        persons.last_name,
+     *        persons.birth_date,
+     *        persons.employeed,
+     *        persons.occupation,
+     *        persons.address_id
+     *   FROM persons
+     *  WHERE persons.id = 100
      * ```
      */
     @ParameterizedTest
@@ -270,8 +313,18 @@ class PersonSchemaTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * INSERT INTO PERSONS (FIRST_NAME, LAST_NAME, BIRTH_DATE, EMPLOYEED, OCCUPATION, ADDRESS_ID)
-     * VALUES ('John', 'Doe', '2025-01-23', TRUE, 'Software Engineer', 1)
+     * INSERT INTO persons (first_name, last_name, birth_date, employeed, occupation, address_id)
+     * VALUES ('John', 'Doe', '2025-02-06', TRUE, 'Software Engineer', 1);
+     *
+     * SELECT persons.id,
+     *        persons.first_name,
+     *        persons.last_name,
+     *        persons.birth_date,
+     *        persons.employeed,
+     *        persons.occupation,
+     *        persons.address_id
+     *   FROM persons
+     *  WHERE persons.id = 7;
      * ```
      */
     @ParameterizedTest
@@ -292,6 +345,15 @@ class PersonSchemaTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * ```sql
+     * INSERT INTO persons (first_name, last_name, birth_date, employeed, occupation, address_id)
+     * VALUES ('Joe', 'Jones', '2025-02-06', TRUE, 'Developer', 1);
+     *
+     * INSERT INTO persons (first_name, last_name, birth_date, employeed, occupation, address_id)
+     * VALUES ('Sarah', 'Smith', '2025-02-06', TRUE, 'Architect', 2);
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `batchInsert 01`(testDB: TestDB) {
@@ -316,15 +378,17 @@ class PersonSchemaTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * INSERT INTO PERSONS (FIRST_NAME, LAST_NAME, BIRTH_DATE, EMPLOYEED, OCCUPATION, ADDRESS_ID)
-     * SELECT PERSONS.FIRST_NAME,
-     *        PERSONS.LAST_NAME,
-     *        PERSONS.BIRTH_DATE,
-     *        PERSONS.EMPLOYEED,
-     *        PERSONS.OCCUPATION,
-     *        PERSONS.ADDRESS_ID
-     *   FROM PERSONS
-     *  ORDER BY PERSONS.ID ASC
+     * -- PostgreSQL
+     * INSERT INTO persons (first_name, last_name, birth_date, employeed, occupation, address_id)
+     * SELECT persons.first_name,
+     *        persons.last_name,
+     *        persons.birth_date,
+     *        persons.employeed,
+     *        persons.occupation,
+     *        persons.address_id
+     *   FROM persons
+     *  WHERE TRUE
+     *  ORDER BY persons.id ASC
      * ```
      */
     @ParameterizedTest
@@ -333,21 +397,23 @@ class PersonSchemaTest: AbstractExposedTest() {
         withPersonsAndAddress(testDB) { persons, _ ->
             persons.selectAll().count() shouldBeEqualTo 6L
 
-            val inserted = persons.insert(
-                persons.select(
-                    persons.firstName,
-                    persons.lastName,
-                    persons.birthDate,
-                    persons.employeed,
-                    persons.occupation,
-                    persons.addressId
+            val inserted = persons
+                .insert(
+                    persons
+                        .select(
+                            persons.firstName,
+                            persons.lastName,
+                            persons.birthDate,
+                            persons.employeed,
+                            persons.occupation,
+                            persons.addressId
+                        )
+                        .where {
+                            val occupation: String? = null
+                            occupation?.let { persons.occupation.like("%$occupation%") } ?: Op.TRUE
+                        }
+                        .orderBy(persons.id)
                 )
-                    .where {
-                        val occupation: String? = null
-                        occupation?.let { persons.occupation.like("%$occupation%") } ?: Op.TRUE
-                    }
-                    .orderBy(persons.id)
-            )
 
             inserted shouldBeEqualTo 6
             persons.selectAll().count() shouldBeEqualTo 12L
@@ -356,16 +422,16 @@ class PersonSchemaTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * INSERT INTO PERSONS (ID, FIRST_NAME, LAST_NAME, BIRTH_DATE, EMPLOYEED, OCCUPATION, ADDRESS_ID)
-     * SELECT (PERSONS.ID + 100),
-     *        PERSONS.FIRST_NAME,
-     *        PERSONS.LAST_NAME,
-     *        PERSONS.BIRTH_DATE,
-     *        PERSONS.EMPLOYEED,
-     *        PERSONS.OCCUPATION,
-     *        PERSONS.ADDRESS_ID
-     *   FROM PERSONS
-     *  ORDER BY PERSONS.ID ASC
+     * INSERT INTO persons (id, first_name, last_name, birth_date, employeed, occupation, address_id)
+     * SELECT (persons.id + 100),
+     *        persons.first_name,
+     *        persons.last_name,
+     *        persons.birth_date,
+     *        persons.employeed,
+     *        persons.occupation,
+     *        persons.address_id
+     *   FROM persons
+     *  ORDER BY persons.id ASC;
      * ```
      */
     @ParameterizedTest

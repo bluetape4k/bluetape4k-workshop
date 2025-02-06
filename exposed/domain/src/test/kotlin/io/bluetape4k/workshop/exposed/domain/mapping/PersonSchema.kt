@@ -19,6 +19,16 @@ object PersonSchema {
 
     val allPersonTables = arrayOf(AddressTable, PersonTable)
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS addresses (
+     *      id BIGSERIAL PRIMARY KEY,
+     *      street VARCHAR(255) NOT NULL,
+     *      city VARCHAR(255) NOT NULL,
+     *      "state" VARCHAR(2) NOT NULL, zip VARCHAR(10) NULL
+     * );
+     * ```
+     */
     object AddressTable: LongIdTable("addresses") {
         val street = varchar("street", 255)
         val city = varchar("city", 255)
@@ -26,6 +36,21 @@ object PersonSchema {
         val zip = varchar("zip", 10).nullable()
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS persons (
+     *      id BIGSERIAL PRIMARY KEY,
+     *      first_name VARCHAR(50) NOT NULL,
+     *      last_name VARCHAR(50) NOT NULL,
+     *      birth_date DATE NOT NULL,
+     *      employeed BOOLEAN DEFAULT TRUE NOT NULL,
+     *      occupation VARCHAR(255) NULL,
+     *      address_id BIGINT NOT NULL,
+     *
+     *      CONSTRAINT fk_persons_address_id__id FOREIGN KEY (address_id)
+     *      REFERENCES addresses(id) ON DELETE RESTRICT ON UPDATE RESTRICT
+     * );
+     */
     object PersonTable: LongIdTable("persons") {
         val firstName = varchar("first_name", 50)
         val lastName = varchar("last_name", 50)
