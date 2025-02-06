@@ -32,6 +32,7 @@ dependencies {
     testImplementation(Libs.bluetape4k_spring_tests)
 
     // Exposed
+    implementation(Libs.bluetape4k_exposed)
     implementation(Libs.exposed_core)
     implementation(Libs.exposed_jdbc)
     implementation(Libs.exposed_kotlin_datetime)

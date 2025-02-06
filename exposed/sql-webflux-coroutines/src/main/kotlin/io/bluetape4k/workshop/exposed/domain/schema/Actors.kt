@@ -1,7 +1,14 @@
 package io.bluetape4k.workshop.exposed.domain.schema
 
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.toStringBuilder
+import org.jetbrains.exposed.dao.IntEntity
+import org.jetbrains.exposed.dao.IntEntityClass
+import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.kotlin.datetime.date
+import java.io.Serializable
 
 /**
  * 영화 배우를 저장하는 테이블
@@ -19,4 +26,20 @@ object Actors: IntIdTable("actors") {
     val firstName = varchar("first_name", 255)
     val lastName = varchar("last_name", 255)
     val dateOfBirth = date("date_of_birth").nullable()
+}
+
+class Actor(id: EntityID<Int>): IntEntity(id), Serializable {
+    companion object: IntEntityClass<Actor>(Actors)
+
+    var firstName by Actors.firstName
+    var lastName by Actors.lastName
+    var dateOfBirth by Actors.dateOfBirth
+
+    override fun equals(other: Any?): Boolean = idEquals(other)
+    override fun hashCode(): Int = idHashCode()
+    override fun toString(): String = toStringBuilder()
+        .add("firstName", firstName)
+        .add("lastName", lastName)
+        .add("dateOfBirth", dateOfBirth)
+        .toString()
 }
