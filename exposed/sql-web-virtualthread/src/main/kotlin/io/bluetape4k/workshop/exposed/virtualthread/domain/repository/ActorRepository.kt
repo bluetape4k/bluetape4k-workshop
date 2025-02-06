@@ -8,7 +8,6 @@ import io.bluetape4k.utils.ShutdownQueue
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.ActorDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.mapper.toActorDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Actors
-import kotlinx.datetime.LocalDate
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.andWhere
@@ -17,6 +16,7 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.springframework.stereotype.Repository
+import java.time.LocalDate
 import java.util.concurrent.Executors
 
 @Repository

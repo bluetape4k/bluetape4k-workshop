@@ -7,8 +7,6 @@ import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.MovieWithActorDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Actors
 import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.ActorsInMovies
 import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Movies
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.atTime
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.and
@@ -17,6 +15,7 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.springframework.stereotype.Component
+import java.time.LocalDate
 
 /**
  * 데이터베이스 초기화를 수행하고, 테스트 데이터를 삽입하는 클래스
@@ -134,8 +133,8 @@ class DatabaseInitializer(
                         .first()[Actors.id]
 
                     ActorsInMovies.insert {
-                        it[ActorsInMovies.actorId] = actorId
-                        it[ActorsInMovies.movieId] = movieId
+                        it[ActorsInMovies.actorId] = actorId.value
+                        it[ActorsInMovies.movieId] = movieId.value
                     }
                 }
             }

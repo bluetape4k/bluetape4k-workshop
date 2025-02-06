@@ -14,9 +14,6 @@ import io.bluetape4k.workshop.exposed.virtualthread.domain.mapper.toMovieDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Actors
 import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.ActorsInMovies
 import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Movies
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.atTime
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.andWhere
@@ -26,6 +23,8 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.springframework.stereotype.Repository
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.concurrent.Executors
 
 @Repository
@@ -77,7 +76,7 @@ class MovieRepository(private val db: Database) {
                 }
             } get Movies.id
 
-            movie.copy(id = movieId)
+            movie.copy(id = movieId.value)
         }
     }
 
@@ -94,9 +93,9 @@ class MovieRepository(private val db: Database) {
             Movies.innerJoin(ActorsInMovies).innerJoin(Actors).selectAll().toList().groupingBy { it[Movies.id] }
                 .fold(mutableListOf<MovieWithActorDTO>()) { acc, element ->
                     val lastMovieId = acc.lastOrNull()?.id
-                    if (lastMovieId != element[Movies.id]) {
+                    if (lastMovieId != element[Movies.id].value) {
                         val movie = MovieWithActorDTO(
-                            id = element[Movies.id],
+                            id = element[Movies.id].value,
                             name = element[Movies.name],
                             producerName = element[Movies.producerName],
                             releaseDate = element[Movies.releaseDate].toString(),
@@ -105,7 +104,7 @@ class MovieRepository(private val db: Database) {
                     } else {
                         acc.lastOrNull()?.actors?.let {
                             val actor = ActorDTO(
-                                id = element[Actors.id],
+                                id = element[Actors.id].value,
                                 firstName = element[Actors.firstName],
                                 lastName = element[Actors.lastName],
                                 dateOfBirth = element[Actors.dateOfBirth].toString()
@@ -132,9 +131,9 @@ class MovieRepository(private val db: Database) {
 
             query.groupingBy { it[Movies.id] }.fold(mutableListOf<MovieWithActorDTO>()) { acc, row ->
                 val prevId = acc.lastOrNull()?.id
-                if (prevId != row[Movies.id]) {
+                if (prevId != row[Movies.id].value) {
                     val movie = MovieWithActorDTO(
-                        id = row[Movies.id],
+                        id = row[Movies.id].value,
                         name = row[Movies.name],
                         producerName = row[Movies.producerName],
                         releaseDate = row[Movies.releaseDate].toString(),
@@ -142,7 +141,7 @@ class MovieRepository(private val db: Database) {
                     acc.add(movie)
                 } else {
                     val actor = ActorDTO(
-                        id = row[Actors.id],
+                        id = row[Actors.id].value,
                         firstName = row[Actors.firstName],
                         lastName = row[Actors.lastName],
                         dateOfBirth = row[Actors.dateOfBirth].toString()
