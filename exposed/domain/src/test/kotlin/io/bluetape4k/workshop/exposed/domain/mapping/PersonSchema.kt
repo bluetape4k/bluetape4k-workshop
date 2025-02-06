@@ -146,6 +146,8 @@ object PersonSchema {
     }
 }
 
+
+@Suppress("UnusedReceiverParameter")
 fun AbstractExposedTest.withPersonsAndAddress(
     testDB: TestDB,
     statement: Transaction.(

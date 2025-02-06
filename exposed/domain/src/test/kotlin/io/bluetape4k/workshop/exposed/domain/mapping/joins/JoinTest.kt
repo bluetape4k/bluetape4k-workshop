@@ -14,6 +14,7 @@ import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeEmpty
 import org.jetbrains.exposed.dao.with
 import org.jetbrains.exposed.exceptions.ExposedSQLException
+import org.jetbrains.exposed.sql.Join
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.alias
 import org.jetbrains.exposed.sql.and
@@ -28,6 +29,9 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import kotlin.test.assertFailsWith
 
+/**
+ * 여러가지 JOIN 구문에 대한 예제
+ */
 class JoinTest {
 
     companion object: KLogging()
@@ -35,13 +39,45 @@ class JoinTest {
     @Nested
     inner class SimpleJoinTest: AbstractExposedTest() {
 
+        /**
+         * Lazy loading by simple join
+         *
+         * ```sql
+         * SELECT om.id,
+         *        om.order_date,
+         *        od.line_number,
+         *        od.description,
+         *        od.quantity
+         *   FROM orders om
+         *      INNER JOIN order_details od ON (om.id = od.order_id)
+         *  ORDER BY om.id ASC;
+         *
+         * SELECT order_details.id,
+         *        order_details.order_id,
+         *        order_details.line_number,
+         *        order_details.description,
+         *        order_details.quantity
+         *   FROM order_details
+         *  WHERE order_details.order_id = 1;
+         *
+         * SELECT order_details.id,
+         *        order_details.order_id,
+         *        order_details.line_number,
+         *        order_details.description,
+         *        order_details.quantity
+         *   FROM order_details
+         *  WHERE order_details.order_id = 2;
+         * ```
+         */
         @ParameterizedTest
         @MethodSource(ENABLE_DIALECTS_METHOD)
         fun `single table join`(testDB: TestDB) {
             withOrdersTables(testDB) { orders, details, _, _, _ ->
                 val om = orders.alias("om")
                 val od = details.alias("od")
-                val rows = om.innerJoin(od) { om[orders.id] eq od[details.orderId] }
+
+                val rows = om
+                    .innerJoin(od) { om[orders.id] eq od[details.orderId] }
                     .select(
                         om[orders.id],
                         om[orders.orderDate],
@@ -59,6 +95,7 @@ class JoinTest {
                 val loadedOrders = orderList.distinctBy { it.id.value }
                 loadedOrders shouldHaveSize 2
                 loadedOrders.forEach { order ->
+                    // Lazy loading 이므로 fetching 한다.
                     order.details.shouldNotBeEmpty()
                 }
             }
@@ -68,20 +105,23 @@ class JoinTest {
          * Fetch eager loading by simple join
          *
          * ```sql
-         * SELECT ORDERS.ID, ORDERS.ORDER_DATE FROM ORDERS
-         * SELECT ORDER_DETAILS.ID,
-         *        ORDER_DETAILS.ORDER_ID,
-         *        ORDER_DETAILS.LINE_NUMBER,
-         *        ORDER_DETAILS.DESCRIPTION,
-         *        ORDER_DETAILS.QUANTITY
-         *   FROM ORDER_DETAILS
-         *  WHERE ORDER_DETAILS.ORDER_ID IN (1, 2)
+         * -- Postgres:
+         * SELECT orders.id, orders.order_date
+         *   FROM orders;
+         *
+         * SELECT order_details.id,
+         *        order_details.order_id,
+         *        order_details.line_number,
+         *        order_details.description,
+         *        order_details.quantity
+         *   FROM order_details
+         *  WHERE order_details.order_id IN (1, 2);
          * ```
          */
         @ParameterizedTest
         @MethodSource(ENABLE_DIALECTS_METHOD)
         fun `fetch eager loading by simple join`(testDB: TestDB) {
-            withOrdersTables(testDB) { orders, details, _, _, _ ->
+            withOrdersTables(testDB) { _, _, _, _, _ ->
                 val orderEntities = OrderSchema.Order
                     .all()
                     .with(OrderSchema.Order::details)
@@ -95,6 +135,32 @@ class JoinTest {
             }
         }
 
+        /**
+         * Compound Join Conditions
+         *
+         * ```sql
+         * -- Postgres:
+         * SELECT orders.id,
+         *        orders.order_date,
+         *        order_details.line_number,
+         *        order_details.description,
+         *        order_details.quantity
+         *   FROM orders INNER JOIN order_details
+         *      ON ((orders.id = order_details.order_id) AND (orders.id = order_details.order_id))
+         *  ORDER BY orders.id ASC
+         * ```
+         * ```sql
+         * -- MySQL V8
+         * SELECT orders.id,
+         *        orders.order_date,
+         *        order_details.line_number,
+         *        order_details.description,
+         *        order_details.quantity
+         *   FROM orders INNER JOIN order_details
+         *      ON ((orders.id = order_details.order_id) AND (orders.id = order_details.order_id))
+         *  ORDER BY orders.id ASC
+         * ```
+         */
         @ParameterizedTest
         @MethodSource(ENABLE_DIALECTS_METHOD)
         fun `compound join 01`(testDB: TestDB) {
@@ -113,28 +179,35 @@ class JoinTest {
                     .orderBy(orders.id)
                     .toList()
 
+                rows.forEach { row ->
+                    log.debug { "orderId=${row[orders.id]}, orderData=${row[orders.orderDate]}, lineNumber=${row[details.lineNumber]}" }
+                }
                 rows shouldHaveSize 3
             }
         }
 
         /**
+         * 3개의 테이블을 Inner Join 한다.
+         *
          * ```sql
-         * SELECT ORDERS.ID,
-         *        ORDERS.ORDER_DATE,
-         *        ORDER_LINES.LINE_NUMBER,
-         *        ORDER_LINES.ITEM_ID,
-         *        ORDER_LINES.QUANTITY,
-         *        ITEMS.DESCRIPTION
-         *   FROM ORDERS
-         *          INNER JOIN ORDER_LINES ON (ORDER_LINES.ORDER_ID = ORDERS.ID)
-         *          INNER JOIN ITEMS ON (ITEMS.ID = ORDER_LINES.ITEM_ID)
-         *  WHERE ORDERS.ID = 2
+         * -- Postgres:
+         * SELECT orders.id,
+         *        orders.order_date,
+         *        order_lines.line_number,
+         *        order_lines.item_id,
+         *        order_lines.quantity,
+         *        items.description
+         *   FROM orders
+         *      INNER JOIN order_lines ON (order_lines.order_id = orders.id)
+         *      INNER JOIN items ON (items.id = order_lines.item_id)
+         *  WHERE orders.id = 2;
          *  ```
          */
         @ParameterizedTest
         @MethodSource(ENABLE_DIALECTS_METHOD)
         fun `multiple table join`(testDB: TestDB) {
             withOrdersTables(testDB) { orders, _, items, orderLines, _ ->
+
                 val join = orders
                     .innerJoin(orderLines) { orderLines.orderId eq orders.id }
                     .innerJoin(items) { items.id eq orderLines.itemId }
@@ -151,7 +224,7 @@ class JoinTest {
                     .toList()
 
                 rows.forEach { row ->
-                    log.debug { row }
+                    log.debug { "orderId=${row[orders.id]}, lineNumber=${row[orderLines.lineNumber]}, item des=${row[items.description]}" }
                 }
                 rows shouldHaveSize 2
 
@@ -187,7 +260,33 @@ class JoinTest {
         )
 
         /**
+         * Full Join 을 지원하지 않는 경우, LEFT JOIN 과 RIGHT JOIN 을 UNION 한다
+         *
+         * ```sql
+         * -- Postgres
+         * SELECT om.id order_id,
+         *        ol.quantity,
+         *        im.id item_id,
+         *        im.description
+         *   FROM orders om
+         *      INNER JOIN order_lines ol ON (om.id = ol.order_id)
+         *       LEFT JOIN items im ON (ol.item_id = im.id)
+         *
+         *  UNION
+         *
+         * SELECT om.id order_id,
+         *        ol.quantity,
+         *        im.id item_id,
+         *        im.description
+         *   FROM orders om
+         *      INNER JOIN order_lines ol ON (om.id = ol.order_id)
+         *      RIGHT JOIN items im ON (ol.item_id = im.id)
+         *
+         *  ORDER BY order_id ASC NULLS FIRST,
+         *           item_id ASC NULLS FIRST
+         * ```
          *  ```sql
+         *  -- MySQL V8
          *  SELECT om.ID order_id,
          *         ol.QUANTITY,
          *         im.ID item_id,
@@ -228,16 +327,17 @@ class JoinTest {
                     itemIdAlias,
                     im[items.description]
                 )
-                val join1 = om
+
+                val leftJoin = om
                     .innerJoin(ol) { om[orders.id] eq ol[orderLines.orderId] }
                     .leftJoin(im) { ol[orderLines.itemId] eq im[items.id] }
 
-                val join2 = om
+                val rightJoin = om
                     .innerJoin(ol) { om[orders.id] eq ol[orderLines.orderId] }
                     .rightJoin(im) { ol[orderLines.itemId] eq im[items.id] }
 
 
-                val records = join1.select(slice).union(join2.select(slice))
+                val records = leftJoin.select(slice).union(rightJoin.select(slice))
                     .orderBy(orderIdAlias, SortOrder.ASC_NULLS_FIRST)
                     .orderBy(itemIdAlias, SortOrder.ASC_NULLS_FIRST)
                     .map {
@@ -259,7 +359,48 @@ class JoinTest {
         }
 
         /**
+         * Full Join 을 지원하지 않는 경우, LEFT JOIN 과 RIGHT JOIN 을 UNION 한다
+         *
          * ```sql
+         * -- Postgres
+         * SELECT om.id order_id,
+         *        ol.quantity,
+         *        im.id item_id,
+         *        im.description
+         *   FROM (SELECT orders.id, orders.order_date FROM orders) om
+         *      INNER JOIN (SELECT order_lines.id,
+         *                         order_lines.order_id,
+         *                         order_lines.item_id,
+         *                         order_lines.line_number,
+         *                         order_lines.quantity
+         *                    FROM order_lines) ol ON  (om.id = ol.order_id)
+         *       LEFT JOIN (SELECT items.id,
+         *                         items.description
+         *                    FROM items) im ON  (ol.item_id = im.id)
+         *
+         *  UNION
+         *
+         * SELECT om.id order_id,
+         *        ol.quantity,
+         *        im.id item_id,
+         *        im.description
+         *   FROM (SELECT orders.id, orders.order_date FROM orders) om
+         *      INNER JOIN (SELECT order_lines.id,
+         *                         order_lines.order_id,
+         *                         order_lines.item_id,
+         *                         order_lines.line_number,
+         *                         order_lines.quantity
+         *                    FROM order_lines) ol ON  (om.id = ol.order_id)
+         *      RIGHT JOIN (SELECT items.id,
+         *                         items.description
+         *                    FROM items) im ON  (ol.item_id = im.id)
+         *
+         *   ORDER BY order_id ASC NULLS FIRST,
+         *            item_id ASC NULLS FIRST
+         * ```
+         *
+         * ```sql
+         * -- MySQL V8
          * SELECT om.ID order_id,
          *        ol.QUANTITY,
          *        im.ID item_id,
@@ -316,15 +457,17 @@ class JoinTest {
                     im[items.description]
                 )
 
-                val join1 = om
+                val leftJoin = om
                     .innerJoin(ol) { om[orders.id] eq ol[orderLines.orderId] }
                     .leftJoin(im) { ol[orderLines.itemId] eq im[items.id] }
 
-                val join2 = om
+                val rightJoin = om
                     .innerJoin(ol) { om[orders.id] eq ol[orderLines.orderId] }
                     .rightJoin(im) { ol[orderLines.itemId] eq im[items.id] }
 
-                val records = join1.select(slice).union(join2.select(slice))
+                val records = leftJoin
+                    .select(slice)
+                    .union(rightJoin.select(slice))
                     .orderBy(orderIdAlias, SortOrder.ASC_NULLS_FIRST)
                     .orderBy(itemIdAlias, SortOrder.ASC_NULLS_FIRST)
                     .map {
@@ -346,7 +489,34 @@ class JoinTest {
         }
 
         /**
+         * Full Join 을 지원하지 않는 경우, LEFT JOIN 과 RIGHT JOIN 을 UNION 한다
+         *
          * ```sql
+         * -- Postgres
+         * SELECT orders.id order_id,
+         *        order_lines.quantity,
+         *        items.id item_id,
+         *        items.description
+         *   FROM orders
+         *      INNER JOIN order_lines ON (orders.id = order_lines.order_id)
+         *      LEFT JOIN items ON (order_lines.item_id = items.id)
+         *
+         *  UNION
+         *
+         * SELECT orders.id order_id,
+         *        order_lines.quantity,
+         *        items.id item_id,
+         *        items.description
+         *   FROM orders
+         *      INNER JOIN order_lines ON (orders.id = order_lines.order_id)
+         *      RIGHT JOIN items ON (order_lines.item_id = items.id)
+         *
+         *  ORDER BY order_id ASC NULLS FIRST,
+         *           item_id ASC NULLS FIRST
+         * ```
+         *
+         * ```sql
+         * -- MySQL V8
          * SELECT ORDERS.ID order_id,
          *        ORDER_LINES.QUANTITY,
          *        ITEMS.ID item_id,
@@ -374,11 +544,11 @@ class JoinTest {
         fun `full join without aliases`(testDB: TestDB) {
             withOrdersTables(testDB) { orders, _, items, orderLines, _ ->
 
-                val join1 = orders
+                val leftJoin = orders
                     .innerJoin(orderLines) { orders.id eq orderLines.orderId }
                     .leftJoin(items) { orderLines.itemId eq items.id }
 
-                val join2 = orders
+                val rightJoin = orders
                     .innerJoin(orderLines) { orders.id eq orderLines.orderId }
                     .rightJoin(items) { orderLines.itemId eq items.id }
 
@@ -394,9 +564,9 @@ class JoinTest {
                     items.description
                 )
 
-                val records = join1
+                val records = leftJoin
                     .select(slice)
-                    .union(join2.select(slice))
+                    .union(rightJoin.select(slice))
                     .orderBy(orderIdAlias, SortOrder.ASC_NULLS_FIRST)
                     .orderBy(itemIdAlias, SortOrder.ASC_NULLS_FIRST)
                     .map {
@@ -430,16 +600,32 @@ class JoinTest {
         )
 
         /**
+         * Join with aliases
+         *
          * ```sql
-         * SELECT om.ID,
-         *        ol.QUANTITY,
-         *        im.ID,
-         *        im.DESCRIPTION
-         *   FROM ORDERS om
-         *      INNER JOIN ORDER_LINES ol ON (om.ID = ol.ORDER_ID)
-         *      LEFT JOIN ITEMS im ON (ol.ITEM_ID = im.ID)
-         *  ORDER BY om.ID ASC NULLS FIRST,
-         *           im.ID ASC NULLS FIRST
+         * -- Postgres
+         * SELECT om.id,
+         *        ol.quantity,
+         *        im.id,
+         *        im.description
+         *   FROM orders om
+         *      INNER JOIN order_lines ol ON (om.id = ol.order_id)
+         *      LEFT JOIN items im ON (ol.item_id = im.id)
+         *  ORDER BY om.id ASC NULLS FIRST,
+         *           im.id ASC NULLS FIRST
+         * ```
+         *
+         * ```sql
+         * -- MySQL V8
+         * SELECT om.id,
+         *        ol.quantity,
+         *        im.id,
+         *        im.description
+         *   FROM orders om
+         *      INNER JOIN order_lines ol ON (om.id = ol.order_id)
+         *      LEFT JOIN items im ON (ol.item_id = im.id)
+         *  ORDER BY om.id ASC,
+         *           im.id ASC
          * ```
          */
         @ParameterizedTest
@@ -458,11 +644,12 @@ class JoinTest {
                     im[items.description]
                 )
 
-                val join = om
+                val leftJoin: Join = om
                     .innerJoin(ol) { om[orders.id] eq ol[orderLines.orderId] }
                     .leftJoin(im) { ol[orderLines.itemId] eq im[items.id] }
 
-                val records = join.select(slice)
+                val records = leftJoin
+                    .select(slice)
                     .orderBy(om[orders.id], SortOrder.ASC_NULLS_FIRST)
                     .orderBy(im[items.id], SortOrder.ASC_NULLS_FIRST)
                     .map {
@@ -484,19 +671,42 @@ class JoinTest {
         }
 
         /**
+         * Left Join with subqueries
+         *
          * ```sql
-         * SELECT om.ID,
-         *        ol.QUANTITY,
-         *        im.ID,
-         *        im.DESCRIPTION
-         *   FROM (SELECT ORDERS.ID, ORDERS.ORDER_DATE FROM ORDERS) om
-         *     INNER JOIN (SELECT ORDER_LINES.ORDER_ID,
-         *                        ORDER_LINES.ITEM_ID,
-         *                        ORDER_LINES.QUANTITY
-         *                   FROM ORDER_LINES) ol ON (om.ID = ol.ORDER_ID)
-         *     LEFT JOIN (SELECT ITEMS.ID, ITEMS.DESCRIPTION FROM ITEMS) im ON (ol.ITEM_ID = im.ID)
-         * ORDER BY om.ID ASC NULLS FIRST,
-         *          im.ID ASC NULLS FIRST
+         * -- Postgres
+         * SELECT om.id,
+         *        ol.quantity,
+         *        im.id,
+         *        im.description
+         *   FROM (SELECT orders.id, orders.order_date FROM orders) om
+         *      INNER JOIN (SELECT order_lines.order_id,
+         *                         order_lines.item_id,
+         *                         order_lines.quantity
+         *                    FROM order_lines) ol ON  (om.id = ol.order_id)
+         *      LEFT JOIN (SELECT items.id,
+         *                        items.description
+         *                   FROM items) im ON (ol.item_id = im.id)
+         *  ORDER BY om.id ASC NULLS FIRST,
+         *           im.id ASC NULLS FIRST
+         * ```
+         *
+         * ```sql
+         * -- MySQL V8
+         * SELECT om.id,
+         *        ol.quantity,
+         *        im.id,
+         *        im.description
+         *   FROM (SELECT orders.id, orders.order_date FROM orders) om
+         *      INNER JOIN (SELECT order_lines.order_id,
+         *                         order_lines.item_id,
+         *                         order_lines.quantity
+         *                    FROM order_lines) ol ON (om.id = ol.order_id)
+         *       LEFT JOIN (SELECT items.id,
+         *                         items.description
+         *                    FROM items) im ON  (ol.item_id = im.id)
+         *   ORDER BY om.id ASC,
+         *            im.id ASC
          * ```
          */
         @ParameterizedTest
@@ -515,11 +725,12 @@ class JoinTest {
                     im[items.description]
                 )
 
-                val join = om
+                val leftJoin: Join = om
                     .innerJoin(ol) { om[orders.id] eq ol[orderLines.orderId] }
                     .leftJoin(im) { ol[orderLines.itemId] eq im[items.id] }
 
-                val records = join.select(slice)
+                val records = leftJoin
+                    .select(slice)
                     .orderBy(om[orders.id], SortOrder.ASC_NULLS_FIRST)
                     .orderBy(im[items.id], SortOrder.ASC_NULLS_FIRST)
                     .map {
@@ -541,16 +752,31 @@ class JoinTest {
         }
 
         /**
+         * Left Join
+         *
          * ```sql
-         * SELECT ORDERS.ID,
-         *        ORDER_LINES.QUANTITY,
-         *        ITEMS.ID,
-         *        ITEMS.DESCRIPTION
-         *   FROM ORDERS
-         *      INNER JOIN ORDER_LINES ON (ORDERS.ID = ORDER_LINES.ORDER_ID)
-         *      LEFT JOIN ITEMS ON (ORDER_LINES.ITEM_ID = ITEMS.ID)
-         * ORDER BY ORDERS.ID ASC NULLS FIRST,
-         *          ITEMS.ID ASC NULLS FIRST
+         * -- Postgres
+         * SELECT orders.id,
+         *        order_lines.quantity,
+         *        items.id,
+         *        items.description
+         *   FROM orders
+         *      INNER JOIN order_lines ON (orders.id = order_lines.order_id)
+         *      LEFT JOIN items ON (order_lines.item_id = items.id)
+         *  ORDER BY orders.id ASC NULLS FIRST,
+         *           items.id ASC NULLS FIRST
+         * ```
+         * ```sql
+         * -- MySQL V8
+         * SELECT orders.id,
+         *        order_lines.quantity,
+         *        items.id,
+         *        items.description
+         *   FROM orders
+         *      INNER JOIN order_lines ON (orders.id = order_lines.order_id)
+         *      LEFT JOIN items ON (order_lines.item_id = items.id)
+         *  ORDER BY orders.id ASC,
+         *           items.id ASC
          * ```
          */
         @ParameterizedTest
@@ -565,11 +791,12 @@ class JoinTest {
                     items.description
                 )
 
-                val join = orders
+                val leftJoin: Join = orders
                     .innerJoin(orderLines) { orders.id eq orderLines.orderId }
                     .leftJoin(items) { orderLines.itemId eq items.id }
 
-                val records = join.select(slice)
+                val records = leftJoin
+                    .select(slice)
                     .orderBy(orders.id, SortOrder.ASC_NULLS_FIRST)
                     .orderBy(items.id, SortOrder.ASC_NULLS_FIRST)
                     .map {
@@ -603,21 +830,36 @@ class JoinTest {
         )
 
         /**
+         * Right join with alias
+         *
          * ```sql
-         * SELECT om.ID,
-         *        ol.QUANTITY,
-         *        im.ID,
-         *        im.DESCRIPTION
-         *   FROM ORDERS om
-         *      INNER JOIN ORDER_LINES ol ON (om.ID = ol.ORDER_ID)
-         *      RIGHT JOIN ITEMS im ON (ol.ITEM_ID = im.ID)
-         *  ORDER BY om.ID ASC NULLS FIRST,
-         *           im.ID ASC NULLS FIRST
+         * -- Postgres:
+         * SELECT om.id,
+         *        ol.quantity,
+         *        im.id,
+         *        im.description
+         *   FROM orders om
+         *      INNER JOIN order_lines ol ON (om.id = ol.order_id)
+         *      RIGHT JOIN items im ON (ol.item_id = im.id)
+         *  ORDER BY om.id ASC NULLS FIRST,
+         *           im.id ASC NULLS FIRST
+         * ```
+         * ```sql
+         * -- MySQL V8:
+         * SELECT om.id,
+         *        ol.quantity,
+         *        im.id,
+         *        im.description
+         *   FROM orders om
+         *      INNER JOIN order_lines ol ON (om.id = ol.order_id)
+         *      RIGHT JOIN items im ON (ol.item_id = im.id)
+         *  ORDER BY om.id ASC,
+         *           im.id ASC
          * ```
          */
         @ParameterizedTest
         @MethodSource(ENABLE_DIALECTS_METHOD)
-        fun `left join with aliases`(testDB: TestDB) {
+        fun `right join with aliases`(testDB: TestDB) {
             withOrdersTables(testDB) { orders, _, items, orderLines, _ ->
 
                 val om = orders.alias("om")
@@ -631,11 +873,12 @@ class JoinTest {
                     im[items.description]
                 )
 
-                val join = om
+                val rightJoin = om
                     .innerJoin(ol) { om[orders.id] eq ol[orderLines.orderId] }
                     .rightJoin(im) { ol[orderLines.itemId] eq im[items.id] }
 
-                val records = join.select(slice)
+                val records = rightJoin
+                    .select(slice)
                     .orderBy(om[orders.id], SortOrder.ASC_NULLS_FIRST)
                     .orderBy(im[items.id], SortOrder.ASC_NULLS_FIRST)
                     .map {
@@ -657,24 +900,46 @@ class JoinTest {
         }
 
         /**
+         * Right join with subqueries
+         *
          * ```sql
-         * SELECT om.ID,
-         *        ol.QUANTITY,
-         *        im.ID,
-         *        im.DESCRIPTION
-         *   FROM (SELECT ORDERS.ID, ORDERS.ORDER_DATE FROM ORDERS) om
-         *     INNER JOIN (SELECT ORDER_LINES.ORDER_ID,
-         *                        ORDER_LINES.ITEM_ID,
-         *                        ORDER_LINES.QUANTITY
-         *                   FROM ORDER_LINES) ol ON (om.ID = ol.ORDER_ID)
-         *     RIGHT JOIN (SELECT ITEMS.ID, ITEMS.DESCRIPTION FROM ITEMS) im ON (ol.ITEM_ID = im.ID)
-         * ORDER BY om.ID ASC NULLS FIRST,
-         *          im.ID ASC NULLS FIRST
+         * -- Postgres
+         * SELECT om.id,
+         *        ol.quantity,
+         *        im.id,
+         *        im.description
+         *   FROM (SELECT orders.id, orders.order_date FROM orders) om
+         *      INNER JOIN (SELECT order_lines.order_id,
+         *                         order_lines.item_id,
+         *                         order_lines.quantity
+         *                    FROM order_lines) ol ON (om.id = ol.order_id)
+         *      RIGHT JOIN (SELECT items.id,
+         *                         items.description
+         *                    FROM items) im ON  (ol.item_id = im.id)
+         *  ORDER BY om.id ASC NULLS FIRST,
+         *           im.id ASC NULLS FIRST
+         * ```
+         * ```sql
+         * -- MySQL V8
+         * SELECT om.id,
+         *        ol.quantity,
+         *        im.id,
+         *        im.description
+         *   FROM (SELECT orders.id, orders.order_date FROM orders) om
+         *      INNER JOIN (SELECT order_lines.order_id,
+         *                         order_lines.item_id,
+         *                         order_lines.quantity
+         *                    FROM order_lines) ol ON (om.id = ol.order_id)
+         *      RIGHT JOIN (SELECT items.id,
+         *                         items.description
+         *                    FROM items) im ON (ol.item_id = im.id)
+         *  ORDER BY om.id ASC,
+         *           im.id ASC
          * ```
          */
         @ParameterizedTest
         @MethodSource(ENABLE_DIALECTS_METHOD)
-        fun `left join with subqueries`(testDB: TestDB) {
+        fun `right join with subqueries`(testDB: TestDB) {
             withOrdersTables(testDB) { orders, _, items, orderLines, _ ->
 
                 val om = orders.select(orders.id, orders.orderDate).alias("om")
@@ -688,11 +953,12 @@ class JoinTest {
                     im[items.description]
                 )
 
-                val join = om
+                val rightJoin = om
                     .innerJoin(ol) { om[orders.id] eq ol[orderLines.orderId] }
                     .rightJoin(im) { ol[orderLines.itemId] eq im[items.id] }
 
-                val records = join.select(slice)
+                val records = rightJoin
+                    .select(slice)
                     .orderBy(om[orders.id], SortOrder.ASC_NULLS_FIRST)
                     .orderBy(im[items.id], SortOrder.ASC_NULLS_FIRST)
                     .map {
@@ -714,21 +980,35 @@ class JoinTest {
         }
 
         /**
+         * Right Join example
+         *
          * ```sql
-         * SELECT ORDERS.ID,
-         *        ORDER_LINES.QUANTITY,
-         *        ITEMS.ID,
-         *        ITEMS.DESCRIPTION
-         *   FROM ORDERS
-         *      INNER JOIN ORDER_LINES ON (ORDERS.ID = ORDER_LINES.ORDER_ID)
-         *      RIGHT JOIN ITEMS ON (ORDER_LINES.ITEM_ID = ITEMS.ID)
-         * ORDER BY ORDERS.ID ASC NULLS FIRST,
-         *          ITEMS.ID ASC NULLS FIRST
+         * -- Postgres
+         * SELECT orders.id,
+         *        order_lines.quantity,
+         *        items.id,
+         *        items.description
+         *   FROM orders
+         *      INNER JOIN order_lines ON (orders.id = order_lines.order_id)
+         *      RIGHT JOIN items ON (order_lines.item_id = items.id)
+         *  ORDER BY orders.id ASC NULLS FIRST,
+         *           items.id ASC NULLS FIRST;
+         * ```
+         * ```sql
+         * SELECT orders.id,
+         *        order_lines.quantity,
+         *        items.id,
+         *        items.description
+         *   FROM orders
+         *      INNER JOIN order_lines ON (orders.id = order_lines.order_id)
+         *      RIGHT JOIN items ON (order_lines.item_id = items.id)
+         *  ORDER BY orders.id ASC,
+         *           items.id ASC
          * ```
          */
         @ParameterizedTest
         @MethodSource(ENABLE_DIALECTS_METHOD)
-        fun `left join without aliases`(testDB: TestDB) {
+        fun `right join without aliases`(testDB: TestDB) {
             withOrdersTables(testDB) { orders, _, items, orderLines, _ ->
 
                 val slice = listOf(
@@ -738,11 +1018,12 @@ class JoinTest {
                     items.description
                 )
 
-                val join = orders
+                val rightJoin = orders
                     .innerJoin(orderLines) { orders.id eq orderLines.orderId }
                     .rightJoin(items) { orderLines.itemId eq items.id }
 
-                val records = join.select(slice)
+                val records = rightJoin
+                    .select(slice)
                     .orderBy(orders.id, SortOrder.ASC_NULLS_FIRST)
                     .orderBy(items.id, SortOrder.ASC_NULLS_FIRST)
                     .map {
@@ -774,10 +1055,26 @@ class JoinTest {
         }
 
         /**
+         * Inner join for self referenced table
+         * 자식 엔티티 (id=4)의 부모 엔티티를 조회한다.
+         *
          * ```sql
-         * SELECT u1.ID, u1.USER_NAME, u1.PARENT_ID
-         *   FROM USERS u1 INNER JOIN USERS u2 ON (u1.ID = u2.PARENT_ID)
-         *  WHERE u2.ID = 4
+         * -- Postgres
+         * SELECT u1.id,
+         *        u1.user_name,
+         *        u1.parent_id
+         *   FROM users u1
+         *      INNER JOIN users u2 ON (u1.id = u2.parent_id)
+         *  WHERE u2.id = 4
+         * ```
+         * ```sql
+         * -- MYSQL V8
+         * SELECT u1.id,
+         *        u1.user_name,
+         *        u1.parent_id
+         *   FROM users u1
+         *      INNER JOIN users u2 ON (u1.id = u2.parent_id)
+         *   WHERE u2.id = 4
          * ```
          */
         @ParameterizedTest
@@ -809,10 +1106,26 @@ class JoinTest {
         }
 
         /**
+         * Inner join for self referenced table with alias
+         * 자식 엔티티 (id=4)의 부모 엔티티를 조회한다.
+         *
          * ```sql
-         * SELECT USERS.ID, USERS.USER_NAME, USERS.PARENT_ID
-         *   FROM USERS INNER JOIN USERS u2 ON (USERS.ID = u2.PARENT_ID)
-         *  WHERE u2.ID = 4
+         * -- Postgres
+         * SELECT users.id,
+         *        users.user_name,
+         *        users.parent_id
+         *   FROM users
+         *      INNER JOIN users u2 ON (users.id = u2.parent_id)
+         *  WHERE u2.id = 4
+         * ```
+         * ```sql
+         * -- MySQL V8
+         * SELECT users.id,
+         *        users.user_name,
+         *        users.parent_id
+         *   FROM users
+         *      INNER JOIN users u2 ON (users.id = u2.parent_id)
+         *  WHERE u2.id = 4
          * ```
          */
         @ParameterizedTest
@@ -847,73 +1160,82 @@ class JoinTest {
 
         /**
          * ```sql
-         * SELECT PERSONS.ID,
-         *        PERSONS.FIRST_NAME,
-         *        PERSONS.LAST_NAME,
-         *        PERSONS.BIRTH_DATE,
-         *        PERSONS.EMPLOYEED,
-         *        PERSONS.OCCUPATION,
-         *        PERSONS.ADDRESS_ID,
-         *        p2.ID
-         *   FROM PERSONS
-         *      INNER JOIN (SELECT PERSONS.ID
-         *                    FROM PERSONS
-         *                   WHERE PERSONS.ADDRESS_ID = 2
-         *                  ) p2 ON  (PERSONS.ID = p2.ID)
-         *  WHERE PERSONS.ID < 5
+         * SELECT persons.id,
+         *        persons.first_name,
+         *        persons.last_name,
+         *        persons.birth_date,
+         *        persons.employeed,
+         *        persons.occupation,
+         *        persons.address_id,
+         *        p2.id
+         *   FROM persons
+         *      INNER JOIN (SELECT persons.id
+         *                    FROM persons
+         *                   WHERE persons.address_id = 2
+         *      ) p2 ON  (persons.id = p2.id)
+         *  WHERE persons.id < 5
          * ```
          */
         @ParameterizedTest
         @MethodSource(ENABLE_DIALECTS_METHOD)
         fun `covering index`(testDB: TestDB) {
             withPersonsAndAddress(testDB) { persons, addresses ->
-                val p2 = persons.select(persons.id).where { persons.addressId eq 2L }.alias("p2")
+                // convering index 에 해당하는 subquery
+                val p2 = persons
+                    .select(persons.id)
+                    .where { persons.addressId eq 2L }
+                    .alias("p2")
 
-                val rows = persons.innerJoin(p2) { persons.id eq p2[persons.id] }
+                val rows = persons
+                    .innerJoin(p2) { persons.id eq p2[persons.id] }
                     .selectAll()
                     .where { persons.id less 5L }
                     .toList()
 
                 rows shouldHaveSize 1
-                rows.first()[persons.id].value shouldBeEqualTo 4L
+                rows.single()[persons.id].value shouldBeEqualTo 4L
             }
         }
 
         /**
+         * Subquery 와 Inner Join 하기 (Covering Index)
+         *
          * ```sql
-         * SELECT PERSONS.ID,
-         *        PERSONS.FIRST_NAME,
-         *        PERSONS.LAST_NAME,
-         *        PERSONS.BIRTH_DATE,
-         *        PERSONS.EMPLOYEED,
-         *        PERSONS.OCCUPATION,
-         *        PERSONS.ADDRESS_ID,
-         *        p2.ID
-         *   FROM PERSONS
-         *      INNER JOIN (SELECT PERSONS.ID
-         *                    FROM PERSONS
-         *                   WHERE PERSONS.ADDRESS_ID = 2
-         *                   ORDER BY PERSONS.ID
-         *                  ) p2 ON  (PERSONS.ID = p2.ID)
-         *  WHERE PERSONS.ID < 5
+         * SELECT persons.id,
+         *        persons.first_name,
+         *        persons.last_name,
+         *        persons.birth_date,
+         *        persons.employeed,
+         *        persons.occupation,
+         *        persons.address_id,
+         *        p2.id
+         *   FROM persons
+         *      INNER JOIN (SELECT persons.id
+         *                    FROM persons
+         *                   WHERE persons.address_id = 2
+         *                   ORDER BY persons.id ASC
+         *      ) p2 ON (persons.id = p2.id)
+         *   WHERE persons.id < 5
          * ```
          */
         @ParameterizedTest
         @MethodSource(ENABLE_DIALECTS_METHOD)
         fun `subquery in join`(testDB: TestDB) {
-            withPersonsAndAddress(testDB) { persons, addresses ->
+            withPersonsAndAddress(testDB) { persons, _ ->
+                // Subquery 용 alias
                 val p2 = persons.select(persons.id)
                     .where { persons.addressId eq 2L }
                     .orderBy(persons.id)
                     .alias("p2")
 
-                val rows = persons.innerJoin(p2) { persons.id eq p2[persons.id] }
+                val rows = persons
+                    .innerJoin(p2) { persons.id eq p2[persons.id] }
                     .selectAll()
                     .where { persons.id less 5L }
                     .toList()
 
                 rows shouldHaveSize 1
-                rows.first()[persons.id].value shouldBeEqualTo 4L
+                rows.single()[persons.id].value shouldBeEqualTo 4L
             }
         }
     }
@@ -921,6 +1243,9 @@ class JoinTest {
     @Nested
     inner class MiscJoinTest: AbstractExposedTest() {
 
+        /**
+         * Join 시 조건을 주지 않으면 에러가 발생한다
+         */
         @ParameterizedTest
         @MethodSource(ENABLE_DIALECTS_METHOD)
         fun `join with no condition`(testDB: TestDB) {
@@ -929,7 +1254,8 @@ class JoinTest {
                 val u3 = users.alias("u3")
 
                 // u3 는 조인 조건이 없다
-                val query = users.innerJoin(u2) { users.id eq u3[users.id] }
+                val query = users
+                    .innerJoin(u2) { users.id eq u3[users.id] }
                     .selectAll()
                     .where { u2[users.id] eq 4L }
 
@@ -946,13 +1272,28 @@ class JoinTest {
         }
 
         /**
+         * `eqSubQuery` 를 사용하여 Where 조건을 지정한다
+         *
          * ```sql
-         * SELECT ol1.ORDER_ID, ol1.LINE_NUMBER
-         *   FROM ORDER_LINES ol1
-         *  WHERE ol1.LINE_NUMBER = (SELECT MAX(ol2.LINE_NUMBER)
-         *                             FROM ORDER_LINES ol2
-         *                            WHERE ol2.ORDER_ID = ol1.ORDER_ID)
-         *  ORDER BY ol1.ID ASC
+         * -- Postgres
+         * SELECT ol1.order_id,
+         *        ol1.line_number
+         *   FROM order_lines ol1
+         *  WHERE ol1.line_number = (SELECT MAX(ol2.line_number)
+         *                             FROM order_lines ol2
+         *                            WHERE ol2.order_id = ol1.order_id)
+         *  ORDER BY ol1.id ASC
+         * ```
+         *
+         * ```sql
+         * -- MySQL V8
+         * SELECT ol1.order_id,
+         *        ol1.line_number
+         *   FROM order_lines ol1
+         *  WHERE ol1.line_number = (SELECT MAX(ol2.line_number)
+         *                             FROM order_lines ol2
+         *                            WHERE ol2.order_id = ol1.order_id)
+         *  ORDER BY ol1.id ASC
          * ```
          */
         @ParameterizedTest
@@ -971,6 +1312,11 @@ class JoinTest {
                     .orderBy(ol1[orderLines.id])
                     .toList()
 
+                // orderId=1, line number=2
+                // orderId=2, line number=3
+                rows.forEach { row ->
+                    log.debug { "orderId=${row[ol1[orderLines.orderId]]}, line number=${row[ol1[orderLines.lineNumber]]}" }
+                }
                 rows shouldHaveSize 2
             }
         }
