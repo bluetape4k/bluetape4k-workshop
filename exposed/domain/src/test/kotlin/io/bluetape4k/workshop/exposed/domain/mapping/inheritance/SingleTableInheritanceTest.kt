@@ -220,11 +220,11 @@ class SingleTableInheritanceTest: AbstractExposedTest() {
              */
             val card = CreditCard.new {
                 owner = "debop"
-                swift = "NACFKRSE"
+                swift = "AXBCRGHCX"
                 cardNumber = "1234-5678-9012-3456"
                 companyName = "VISA"
                 expMonth = 12
-                expYear = 2023
+                expYear = 2032
             }
 
             entityCache.clear()
@@ -243,7 +243,7 @@ class SingleTableInheritanceTest: AbstractExposedTest() {
              *    AND (billing.dtype = 'BANK_ACCOUNT')
              * ```
              */
-            val account2 = BankAccount.findById(account.id)!!
+            val account2 = BankAccount.findById(account.id)!!   // 재정의 되었습니다.
             account2 shouldBeEqualTo account
 
             /**
@@ -263,7 +263,7 @@ class SingleTableInheritanceTest: AbstractExposedTest() {
              *    AND billing.dtype = 'CREDIT_CARD'
              * ```
              */
-            val card2 = CreditCard.findById(card.id)!!
+            val card2 = CreditCard.findById(card.id)!!     // 재정의 되었습니다.
 
             card2 shouldBeEqualTo card
 
