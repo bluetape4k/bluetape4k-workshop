@@ -11,6 +11,20 @@ import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SizedIterable
 import java.io.Serializable
 
+/**
+ * ```sql
+ * -- Postgres
+ * CREATE TABLE IF NOT EXISTS simple_entity (
+ *      id BIGSERIAL PRIMARY KEY,
+ *      "name" VARCHAR(255) NOT NULL,
+ *      description TEXT NULL
+ * );
+ *
+ * ALTER TABLE simple_entity
+ *      ADD CONSTRAINT simple_entity_name_unique UNIQUE ("name");
+ * ```
+ *
+ */
 object SimpleTable: LongIdTable("simple_entity") {
     val name = varchar("name", 255).uniqueIndex()
     val description = text("description").nullable()

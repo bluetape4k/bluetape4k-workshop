@@ -39,6 +39,9 @@ class SimpleEntityTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Unique index violation
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `violance unique index`(testDB: TestDB) {
@@ -55,24 +58,32 @@ class SimpleEntityTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Batch Insert 작업을 수행합니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `batch insert records`(testDB: TestDB) {
         withTables(testDB, SimpleTable) {
             val entityCount = 100
 
-            val names = List(100) { faker.name().name() }.distinct()
+            val names = List(entityCount) { faker.name().name() }.distinct()
             SimpleTable.batchInsert(names) { name ->
                 this[SimpleTable.name] = name
+                this[SimpleTable.description] = faker.lorem().paragraph()
             }
 
             /**
              * ```sql
-             * SELECT COUNT(*) FROM SIMPLE_ENTITY
+             * SELECT COUNT(*) FROM simple_entity;
+             * SELECT COUNT(*) FROM simple_entity;
              * ```
              */
-            SimpleTable.selectAll().count().toInt() shouldBeEqualTo names.size
-            SimpleEntity.all().count().toInt() shouldBeEqualTo names.size
+            // SQL DSL 로 조회
+            SimpleTable.selectAll().count() shouldBeEqualTo names.size.toLong()
+
+            // DAO 로 조회
+            SimpleEntity.all().count() shouldBeEqualTo names.size.toLong()
         }
     }
 }
