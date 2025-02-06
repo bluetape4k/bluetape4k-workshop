@@ -31,16 +31,17 @@ class SubqueryTest: AbstractExposedTest() {
     companion object: KLogging()
 
     /**
+     * `notEqSubQuery` 를 이용한 예제
      * ```sql
-     * SELECT PERSONS.ID,
-     *        PERSONS.FIRST_NAME,
-     *        PERSONS.LAST_NAME,
-     *        PERSONS.BIRTH_DATE,
-     *        PERSONS.EMPLOYEED,
-     *        PERSONS.OCCUPATION,
-     *        PERSONS.ADDRESS_ID
-     *   FROM PERSONS
-     *  WHERE PERSONS.ID != (SELECT MAX(PERSONS.ID) FROM PERSONS)
+     * SELECT persons.id,
+     *        persons.first_name,
+     *        persons.last_name,
+     *        persons.birth_date,
+     *        persons.employeed,
+     *        persons.occupation,
+     *        persons.address_id
+     *   FROM persons
+     *  WHERE persons.id != (SELECT MAX(persons.id) FROM persons);
      * ```
      */
     @ParameterizedTest
@@ -66,15 +67,28 @@ class SubqueryTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * SELECT PERSONS.ID,
-     *        PERSONS.FIRST_NAME,
-     *        PERSONS.LAST_NAME,
-     *        PERSONS.BIRTH_DATE,
-     *        PERSONS.EMPLOYEED,
-     *        PERSONS.OCCUPATION,
-     *        PERSONS.ADDRESS_ID
-     *   FROM PERSONS
-     *  WHERE PERSONS.ID = (SELECT MAX(PERSONS.ID) FROM PERSONS)
+     * -- Postgres:
+     * SELECT persons.id,
+     *        persons.first_name,
+     *        persons.last_name,
+     *        persons.birth_date,
+     *        persons.employeed,
+     *        persons.occupation,
+     *        persons.address_id
+     *   FROM persons
+     *  WHERE persons.id = (SELECT MAX(persons.id) FROM persons)
+     * ```
+     * ```sql
+     * -- MySQL V8:
+     * SELECT persons.id,
+     *        persons.first_name,
+     *        persons.last_name,
+     *        persons.birth_date,
+     *        persons.employeed,
+     *        persons.occupation,
+     *        persons.address_id
+     *   FROM persons
+     *  WHERE persons.id = (SELECT MAX(persons.id) FROM persons)
      * ```
      */
     @ParameterizedTest
@@ -101,19 +115,18 @@ class SubqueryTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * SELECT PERSONS.ID,
-     *        PERSONS.FIRST_NAME,
-     *        PERSONS.LAST_NAME,
-     *        PERSONS.BIRTH_DATE,
-     *        PERSONS.EMPLOYEED,
-     *        PERSONS.OCCUPATION,
-     *        PERSONS.ADDRESS_ID
-     *   FROM PERSONS
-     *  WHERE PERSONS.ID IN (
-     *          SELECT PERSONS.ID
-     *            FROM PERSONS
-     *           WHERE PERSONS.LAST_NAME = 'Rubble'
-     *        )
+     * -- Postgres
+     * SELECT persons.id,
+     *        persons.first_name,
+     *        persons.last_name,
+     *        persons.birth_date,
+     *        persons.employeed,
+     *        persons.occupation,
+     *        persons.address_id
+     *   FROM persons
+     *  WHERE persons.id IN (SELECT persons.id
+     *                         FROM persons
+     *                        WHERE persons.last_name = 'Rubble')
      * ```
      */
     @ParameterizedTest
@@ -123,8 +136,7 @@ class SubqueryTest: AbstractExposedTest() {
             val query = persons
                 .selectAll()
                 .where {
-                    persons.id inSubQuery
-                            persons.select(persons.id).where { persons.lastName eq "Rubble" }
+                    persons.id inSubQuery persons.select(persons.id).where { persons.lastName eq "Rubble" }
                 }
 
             val rows = query.toList()
@@ -142,17 +154,17 @@ class SubqueryTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * SELECT PERSONS.ID,
-     *        PERSONS.FIRST_NAME,
-     *        PERSONS.LAST_NAME,
-     *        PERSONS.BIRTH_DATE,
-     *        PERSONS.EMPLOYEED,
-     *        PERSONS.OCCUPATION,
-     *        PERSONS.ADDRESS_ID
-     *   FROM PERSONS
-     *  WHERE PERSONS.ID NOT IN (SELECT DISTINCT ON (PERSONS.ID) PERSONS.ID
-     *                             FROM PERSONS
-     *                            WHERE PERSONS.LAST_NAME = 'Rubble')
+     * SELECT persons.id,
+     *        persons.first_name,
+     *        persons.last_name,
+     *        persons.birth_date,
+     *        persons.employeed,
+     *        persons.occupation,
+     *        persons.address_id
+     *   FROM persons
+     *  WHERE persons.id NOT IN (SELECT DISTINCT ON (persons.id) persons.id
+     *                             FROM persons
+     *                            WHERE persons.last_name = 'Rubble')
      * ```
      */
     @ParameterizedTest
@@ -184,6 +196,7 @@ class SubqueryTest: AbstractExposedTest() {
 
 
     /**
+     * Update Set in H2 (다른 DB에서는 지원하지 않는다)
      * ```sql
      * UPDATE PERSONS
      *    SET ADDRESS_ID=(SELECT (MAX(PERSONS.ADDRESS_ID) - 1) FROM PERSONS)
@@ -206,14 +219,17 @@ class SubqueryTest: AbstractExposedTest() {
     }
 
     /**
+     * MySQL 에서
      * ```sql
-     * SELECT (PERSONS.ADDRESS_ID - 1) addressId
-     *   FROM PERSONS
-     *  GROUP BY PERSONS.ADDRESS_ID
-     *  ORDER BY PERSONS.ADDRESS_ID DESC
-     * ```
-     * ```sql
-     * UPDATE PERSONS SET ADDRESS_ID=1 WHERE PERSONS.ID = 5
+     * -- MySQL V8:
+     * SELECT (persons.address_id - 1) addressId
+     *   FROM persons
+     *  GROUP BY persons.address_id
+     *  ORDER BY persons.address_id DESC;
+     *
+     * UPDATE persons
+     *    SET address_id=1
+     *  WHERE persons.id = 5;
      * ```
      */
     @ParameterizedTest
@@ -229,7 +245,6 @@ class SubqueryTest: AbstractExposedTest() {
 
             val maxAddressId = query.firstOrNull()?.getOrNull(calcAddressId).asLong()
             log.debug { "maxAddressId=$maxAddressId" }
-
 
             val affectedRows = persons.update({ persons.id eq 5L }) {
                 it[persons.addressId] = maxAddressId
