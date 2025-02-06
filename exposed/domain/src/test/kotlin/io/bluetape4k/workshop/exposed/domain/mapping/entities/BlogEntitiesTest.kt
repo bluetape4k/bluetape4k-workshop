@@ -38,21 +38,23 @@ class BlogEntitiesTest: AbstractExposedTest() {
 
     /**
      * ```sql
-     * INSERT INTO POSTS (TITLE) VALUES ('Post 1');
-     * INSERT INTO POST_DETAILS (ID, CREATED_ON, CREATED_BY) VALUES (1, '2025-01-24', 'admin')
+     * INSERT INTO posts (title) VALUES ('Post 1');
+     *
+     * INSERT INTO post_details (id, created_on, created_by)
+     * VALUES (1, '2025-02-06', 'admin');
      * ```
      *
      * ```sql
-     * SELECT POSTS.ID,
-     *        POSTS.TITLE
-     *   FROM POSTS
-     *  WHERE POSTS.ID = 1;
+     * SELECT posts.id, posts.title
+     *   FROM posts
+     *  WHERE posts.id = 1;
      *
-     * SELECT POST_DETAILS.ID,
-     *        POST_DETAILS.CREATED_ON,
-     *        POST_DETAILS.CREATED_BY
-     *   FROM POST_DETAILS
-     *  WHERE POST_DETAILS.ID = 1;
+     * -- lazy loading for PostDetails of Post
+     * SELECT post_details.id,
+     *        post_details.created_on,
+     *        post_details.created_by
+     *   FROM post_details
+     *  WHERE post_details.id = 1
      * ```
      */
     @ParameterizedTest
@@ -63,6 +65,7 @@ class BlogEntitiesTest: AbstractExposedTest() {
             val post = Post.new { title = "Post 1" }
             log.debug { "Post=$post" }
 
+            // one-to-one 관계에서 ownership 을 가진 Post의 id 값을 지정합니다.
             val postDetails = PostDetails.new(post.id.value) {
                 createdOn = LocalDate.now()
                 createdBy = "admin"
