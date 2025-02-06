@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.exposed.spring.transaction
 
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
@@ -55,11 +57,21 @@ class SpringTransactionEntityTest(
         val order = orderService.findOrderByProduct("Product2")
         order.shouldNotBeNull()
         orderService.transaction {
+            log.debug { "order's customer=${order.customer}" }
             order.customer.name shouldBeEqualTo "Bob"
         }
     }
 
-
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS CUSTOMER (
+     *      ID uuid PRIMARY KEY,
+     *      "name" VARCHAR(255) NOT NULL
+     * );
+     *
+     * ALTER TABLE CUSTOMER ADD CONSTRAINT CUSTOMER_NAME_UNIQUE UNIQUE ("name");
+     * ```
+     */
     object CustomerTable: UUIDTable(name = "customer") {
         val name = varchar(name = "name", length = 255).uniqueIndex()
     }
@@ -68,8 +80,26 @@ class SpringTransactionEntityTest(
         companion object: UUIDEntityClass<CustomerEntity>(CustomerTable)
 
         var name by CustomerTable.name
+
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = id.hashCode()
+        override fun toString(): String = toStringBuilder()
+            .add("name", name)
+            .toString()
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS ORDERS (
+     *      ID uuid PRIMARY KEY,
+     *      CUSTOMER_ID uuid NOT NULL,
+     *      PRODUCT VARCHAR(255) NOT NULL,
+     *
+     *      CONSTRAINT FK_ORDERS_CUSTOMER_ID__ID FOREIGN KEY (CUSTOMER_ID)
+     *      REFERENCES CUSTOMER(ID) ON DELETE RESTRICT ON UPDATE RESTRICT
+     * );
+     * ```
+     */
     object OrderTable: UUIDTable(name = "orders") {
         val customer = reference("customer_id", CustomerTable)
         val product = varchar(name = "product", length = 255)
@@ -80,6 +110,13 @@ class SpringTransactionEntityTest(
 
         var customer: CustomerEntity by CustomerEntity referencedOn OrderTable.customer  // many-to-one
         var product: String by OrderTable.product
+
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = id.hashCode()
+        override fun toString(): String = toStringBuilder()
+            .add("customer", customer)
+            .add("product", product)
+            .toString()
     }
 
     /**

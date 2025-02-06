@@ -24,6 +24,15 @@ open class SpringCoroutineTest: SpringTransactionTestBase() {
         private const val REPEAT_SIZE = 5
     }
 
+    /**
+     * `IdTable<Int>` 와 같다.
+     *
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS COROUTINE_TESTING (
+     *      ID SERIAL PRIMARY KEY
+     * );
+     * ```
+     */
     object Testing: Table("COROUTINE_TESTING") {
         val id = integer("id").autoIncrement()
         override val primaryKey = PrimaryKey(id)

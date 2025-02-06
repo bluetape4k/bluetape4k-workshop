@@ -1,5 +1,8 @@
 package io.bluetape4k.workshop.exposed.spring.transaction
 
+import io.bluetape4k.exposed.dao.idEquals
+import io.bluetape4k.exposed.dao.idHashCode
+import io.bluetape4k.exposed.dao.toStringBuilder
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -21,6 +24,16 @@ import org.springframework.transaction.annotation.Transactional
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 open class EntityUpdateTest: SpringTransactionTestBase() {
 
+    /**
+     * ```sql
+     * -- H2
+     * CREATE TABLE IF NOT EXISTS T1 (
+     *      ID SERIAL PRIMARY KEY,
+     *      C1 VARCHAR(11) NOT NULL,
+     *      C2 VARCHAR(11) NULL
+     * )
+     * ```
+     */
     object T1: IntIdTable() {
         val c1 = varchar("c1", Int.MIN_VALUE.toString().length)
         val c2 = varchar("c2", Int.MIN_VALUE.toString().length).nullable()
@@ -30,6 +43,10 @@ open class EntityUpdateTest: SpringTransactionTestBase() {
         companion object: IntEntityClass<DAO>(T1)
 
         var c1 by T1.c1
+
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String = toStringBuilder().add("c1", c1).toString()
     }
 
     @BeforeAll
@@ -57,6 +74,14 @@ open class EntityUpdateTest: SpringTransactionTestBase() {
         DAO.findById(1)?.c1 shouldBeEqualTo "new"
     }
 
+    /**
+     * ```sql
+     * UPDATE T1
+     *    SET C1='updated',
+     *        C2='new'
+     *  WHERE T1.ID = 1
+     * ```
+     */
     @Test
     @Transactional
     @Commit

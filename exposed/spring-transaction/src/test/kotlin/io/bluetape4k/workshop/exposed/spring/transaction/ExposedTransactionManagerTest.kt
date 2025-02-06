@@ -34,6 +34,13 @@ open class ExposedTransactionManagerTest: SpringTransactionTestBase() {
         private const val REPEAT_SIZE = 3
     }
 
+    /**
+     * ```sql
+     * CREATE TABLE IF NOT EXISTS T1 (
+     *      C1 VARCHAR(11) NOT NULL
+     * )
+     * ```
+     */
     object T1: Table() {
         val c1 = varchar("c1", Int.MIN_VALUE.toString().length)
     }
