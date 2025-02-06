@@ -61,8 +61,9 @@ object PersonSchema {
     }
 
     /**
-     * INSERT SELECT 등 SQL 만을 위해서 사용하기 위한 테이블 정의. `PersonTable` 은 엔티티인 `Person` 을 위한 테이블이다.
-     * 하지만 같은 테이블을 바라보고 있다.
+     * INSERT SELECT 등 SQL 만을 위해서 사용하기 위한 테이블 정의.
+     *
+     * `PersonTable`은 `Person` 엔티티를 위한 테이블이다. 하지만 같은 테이블을 바라보고 있다.
      */
     object PersonTableDML: Table("persons") {
         val id = long("id")   // autoIncrement() 를 지정하면 insert select 같은 id 에 값을 지정하는 것이 불가능하다.

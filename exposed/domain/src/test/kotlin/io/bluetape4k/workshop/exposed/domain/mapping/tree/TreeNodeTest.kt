@@ -107,10 +107,12 @@ class TreeNodeTest: AbstractExposedTest() {
 
     /**
      * SubQuery 를 이용하여 Covering Index 를 사용하여 조회하기
+     *
      * ```sql
      * SELECT tree_nodes.id,
      *        tree_nodes.title,
      *        tree_nodes.description,
+     *        tree_nodes."depth",
      *        tree_nodes.parent_id
      *   FROM tree_nodes
      *  WHERE tree_nodes.id IN (SELECT sub.parent_id
@@ -146,13 +148,13 @@ class TreeNodeTest: AbstractExposedTest() {
      * SELECT tree_nodes.id,
      *        tree_nodes.title,
      *        tree_nodes.description,
+     *        tree_nodes."depth",
      *        tree_nodes.parent_id
      *   FROM tree_nodes
-     *      INNER JOIN (
-     *          SELECT tree_nodes.id
-     *            FROM tree_nodes
-     *           WHERE tree_nodes.title LIKE 'child%'
-     *      ) sub ON  (tree_nodes.parent_id = sub.id)
+     *      INNER JOIN (SELECT tree_nodes.id
+     *                    FROM tree_nodes
+     *                   WHERE tree_nodes.title LIKE 'child%') sub
+     *              ON (tree_nodes.parent_id = sub.id);
      * ```
      */
     @ParameterizedTest
