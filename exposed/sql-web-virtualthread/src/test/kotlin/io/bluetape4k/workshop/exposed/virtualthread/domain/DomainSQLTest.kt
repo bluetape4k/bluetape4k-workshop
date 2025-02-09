@@ -7,6 +7,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.utils.Runtimex
 import io.bluetape4k.workshop.exposed.virtualthread.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.virtualthread.domain.mapper.toActorDTO
+import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Actor
 import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Actors
 import org.amshove.kluent.shouldNotBeEmpty
 import org.jetbrains.exposed.sql.Database
@@ -70,7 +71,8 @@ class DomainSQLTest(
                 .roundsPerThread(4)
                 .add {
                     transaction(db) {
-                        val actors = Actors.selectAll().map { it.toActorDTO() }
+                        val actors = Actor.all().toList()
+                        // val actors = Actors.selectAll().map { it.toActorDTO() }
                         actors.shouldNotBeEmpty()
                     }
                 }

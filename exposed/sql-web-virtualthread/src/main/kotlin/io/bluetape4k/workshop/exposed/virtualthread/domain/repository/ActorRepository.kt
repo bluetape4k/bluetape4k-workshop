@@ -7,12 +7,12 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.utils.ShutdownQueue
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.ActorDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.mapper.toActorDTO
+import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Actor
 import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Actors
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.andWhere
 import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.springframework.stereotype.Repository
@@ -32,11 +32,14 @@ class ActorRepository(private val db: Database) {
     fun findById(id: Int): VirtualFuture<ActorDTO?> = virtualFuture(virtualExecutor) {
         log.debug { "Find Actor by id. id: $id" }
 
+//        transaction(db) {
+//            Actors.selectAll()
+//                .where(Actors.id eq id)
+//                .firstOrNull()
+//                ?.toActorDTO()
+//        }
         transaction(db) {
-            Actors.selectAll()
-                .where(Actors.id eq id)
-                .firstOrNull()
-                ?.toActorDTO()
+            Actor.findById(id)?.toActorDTO()
         }
     }
 
@@ -65,20 +68,32 @@ class ActorRepository(private val db: Database) {
     fun create(actor: ActorDTO): VirtualFuture<ActorDTO> = virtualFuture(virtualExecutor) {
         log.debug { "Create Actor. actor: $actor" }
 
-        transaction(db) {
-            val actorId = Actors.insert {
-                it[Actors.firstName] = actor.firstName
-                it[Actors.lastName] = actor.lastName
-                actor.dateOfBirth?.let { dateOfBirth ->
-                    it[Actors.dateOfBirth] = LocalDate.parse(dateOfBirth)
-                }
-            } get Actors.id
+        // Using Exposed SQL DSL
+//        transaction(db) {
+//            val actorId = Actors.insert {
+//                it[Actors.firstName] = actor.firstName
+//                it[Actors.lastName] = actor.lastName
+//                actor.dateOfBirth?.let { dateOfBirth ->
+//                    it[Actors.dateOfBirth] = LocalDate.parse(dateOfBirth)
+//                }
+//            } get Actors.id
+//
+//            // 이렇게 새로 읽는 것이 정식이지만, 단순히 actor.copy(id=actorId)로 반환해도 무방합니다.
+//            Actors.selectAll()
+//                .where { Actors.id eq actorId }
+//                .first()
+//                .toActorDTO()
+//        }
 
-            // 이렇게 새로 읽는 것이 정식이지만, 단순히 actor.copy(id=actorId)로 반환해도 무방합니다.
-            Actors.selectAll()
-                .where { Actors.id eq actorId }
-                .first()
-                .toActorDTO()
+        // Using Exposed DAO
+        transaction(db) {
+            val actor = Actor.new {
+                firstName = actor.firstName
+                lastName = actor.lastName
+                actor.dateOfBirth?.let { dateOfBirth = LocalDate.parse(it) }
+            }
+
+            actor.toActorDTO()
         }
     }
 

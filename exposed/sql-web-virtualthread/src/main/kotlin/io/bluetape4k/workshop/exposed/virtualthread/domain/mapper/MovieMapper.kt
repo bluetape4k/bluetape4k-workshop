@@ -20,3 +20,11 @@ fun ResultRow.toMovieWithActorsDTO(actors: List<ActorDTO>): MovieWithActorDTO = 
     releaseDate = this[Movies.releaseDate].toString(),
     actors = actors.toMutableList()
 )
+
+fun MovieDTO.toMovieWithActorsDTO(actors: List<ActorDTO>): MovieWithActorDTO = MovieWithActorDTO(
+    id = this.id,
+    name = this.name,
+    producerName = this.producerName,
+    releaseDate = this.releaseDate,
+    actors = actors.toMutableList()
+)

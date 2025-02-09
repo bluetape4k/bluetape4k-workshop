@@ -23,38 +23,14 @@ class PostRepository(
 ) {
     companion object: KLogging()
 
-    suspend fun count(): Long {
-        return operations.coCountAll<Post>()
-    }
-
-    fun findAll(): Flow<Post> {
-        return operations.coSelectAll()
-    }
-
-    suspend fun findOneById(id: Long): Post {
-        return operations.coFindOneById(id)
-    }
-
-    suspend fun findOneByIdOrNull(id: Long): Post? {
-        return operations.coFindOneByIdOrNull(id)
-    }
-
-    suspend fun findFirstById(id: Long): Post {
-        return operations.coFindFirstById(id)
-    }
-
-    suspend fun findFirstByIdOrNull(id: Long): Post? {
-        return operations.coFindFirstByIdOrNull(id)
-    }
-
-    suspend fun deleteAll(): Long {
-        return operations.coDeleteAll<Post>()
-    }
-
-    suspend fun save(post: Post): Post {
-        return operations.coInsert(post)
-    }
-
+    suspend fun count(): Long = operations.coCountAll<Post>()
+    fun findAll(): Flow<Post> = operations.coSelectAll()
+    suspend fun findOneById(id: Long): Post = operations.coFindOneById(id)
+    suspend fun findOneByIdOrNull(id: Long): Post? = operations.coFindOneByIdOrNull(id)
+    suspend fun findFirstById(id: Long): Post = operations.coFindFirstById(id)
+    suspend fun findFirstByIdOrNull(id: Long): Post? = operations.coFindFirstByIdOrNull(id)
+    suspend fun deleteAll(): Long = operations.coDeleteAll<Post>()
+    suspend fun save(post: Post): Post = operations.coInsert(post)
     suspend fun init() {
         save(Post(title = "My first post title", content = "Content of my first post"))
         save(Post(title = "My second post title", content = "Content of my second post"))

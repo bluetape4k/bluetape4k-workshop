@@ -81,7 +81,6 @@ class MovieRepository {
         return newSuspendedTransaction {
             MovieInnerJoinActors
                 .selectAll()
-                //.toList()
                 .groupingBy { it[Movies.id] }
                 .fold(mutableListOf<MovieWithActorDTO>()) { acc, element ->
                     val lastMovieId = acc.lastOrNull()?.id

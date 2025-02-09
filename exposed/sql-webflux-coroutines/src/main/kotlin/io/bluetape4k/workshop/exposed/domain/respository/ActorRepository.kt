@@ -4,6 +4,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.domain.dto.ActorDTO
 import io.bluetape4k.workshop.exposed.domain.mapper.toActorDTO
+import io.bluetape4k.workshop.exposed.domain.schema.Actor
 import io.bluetape4k.workshop.exposed.domain.schema.Actors
 import kotlinx.datetime.LocalDate
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -21,14 +22,12 @@ class ActorRepository {
 
     companion object: KLogging()
 
+    @Transactional(readOnly = true)
     suspend fun findById(id: Int): ActorDTO? {
         log.debug { "Find Actor by id. id: $id" }
 
         return newSuspendedTransaction {
-            Actors.selectAll()
-                .where { Actors.id eq id }
-                .firstOrNull()
-                ?.toActorDTO()
+            Actor.findById(id)?.toActorDTO()
         }
     }
 
@@ -69,6 +68,21 @@ class ActorRepository {
                 .where { Actors.id eq actorId }
                 .first()
                 .toActorDTO()
+        }
+    }
+
+    @Transactional
+    suspend fun createByDAO(actor: ActorDTO): ActorDTO {
+        log.debug { "Create Actor. actor: $actor" }
+
+        return newSuspendedTransaction {
+            val newActor = Actor.new {
+                firstName = actor.firstName
+                lastName = actor.lastName
+                dateOfBirth = actor.dateOfBirth?.let { LocalDate.parse(it) }
+            }
+
+            newActor.toActorDTO()
         }
     }
 
