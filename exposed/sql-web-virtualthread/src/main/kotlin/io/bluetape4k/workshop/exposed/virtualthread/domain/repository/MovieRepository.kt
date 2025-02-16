@@ -177,7 +177,8 @@ class MovieRepository(private val db: Database) {
                 Movies
                     .innerJoin(ActorsInMovies)
                     .innerJoin(Actors)
-                    .select(Movies.name, Actors.firstName, Actors.lastName).map {
+                    .select(Movies.name, Actors.firstName, Actors.lastName)
+                    .map {
                         MovieWithProducingActorDTO(
                             movieName = it[Movies.name],
                             producerActorName = "${it[Actors.firstName]} ${it[Actors.lastName]}"
