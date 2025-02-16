@@ -7,6 +7,7 @@ import org.junit.jupiter.api.RepeatedTest
 import org.mapstruct.InheritInverseConfiguration
 import org.mapstruct.Mapper
 import org.mapstruct.Mapping
+import java.io.Serializable
 import java.time.LocalDate
 
 class PersonConverterTest: AbstractMapstructTest() {
@@ -63,18 +64,18 @@ class PersonConverterTest: AbstractMapstructTest() {
 
 
 data class Person(
-    var firstName: String?,
-    var lastName: String?,
-    var phoneNumber: String?,
-    var birthDate: LocalDate?,
-)
+    var firstName: String? = null,
+    var lastName: String? = null,
+    var phoneNumber: String? = null,
+    var birthDate: LocalDate? = null,
+): Serializable
 
 data class PersonDto(
-    var firstName: String?,
-    var lastName: String?,
-    var phone: String?,
-    var birthDate: LocalDate?,
-)
+    var firstName: String? = null,
+    var lastName: String? = null,
+    var phone: String? = null,
+    var birthDate: LocalDate? = null,
+): Serializable
 
 @Mapper
 interface PersonConverter {
