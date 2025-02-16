@@ -165,7 +165,7 @@ class ProtobufConverterTest {
     @Test
     fun `convert protobuf to json and parse specific type`() {
         val json = course.toJson()
-        log.debug { "json=$json" }
+        log.debug { "json=\n$json" }
         json.shouldNotBeEmpty()
 
         val course2 = messageFromJsonOrNull<Course>(json)
