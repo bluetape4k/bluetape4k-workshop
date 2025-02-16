@@ -18,6 +18,8 @@ import kotlin.time.toJavaDuration
 
 /**
  * Webflux 에서 사용하는 Netty 관련 설정을 제공합니다.
+ *
+ * 고성능을 원할 경우 Netty 설정을 튜닝하는 걸 추천합니다.
  */
 @Configuration
 class NettyConfig {

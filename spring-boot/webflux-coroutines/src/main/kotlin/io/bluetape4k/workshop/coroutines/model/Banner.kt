@@ -8,4 +8,9 @@ import java.io.Serializable
 data class Banner(
     val title: String,
     val message: String,
-): Serializable
+): Serializable {
+
+    companion object {
+        val TEST_BANNER = Banner("제목", "동해물과 백두산이 마르고 닳도록".repeat(10))
+    }
+}

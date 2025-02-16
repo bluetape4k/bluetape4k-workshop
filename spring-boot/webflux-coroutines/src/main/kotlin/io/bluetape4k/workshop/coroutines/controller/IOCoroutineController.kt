@@ -43,7 +43,7 @@ class IOCoroutineController(
         builder.baseUrl("http://localhost:$port").build()
     }
 
-    private val banner = Banner("제목", "동해물과 백두산이 마르고 닳도록")
+    private val banner = Banner.TEST_BANNER
 
     private fun currentCoroutineName(): String? = coroutineContext[CoroutineName]?.name
 

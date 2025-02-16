@@ -15,7 +15,7 @@ abstract class AbstractCoroutineApplicationTest {
 
     companion object: KLogging() {
         const val REPEAT_SIZE = 3
-        val banner = Banner("제목", "동해물과 백두산이 마르고 닳도록")
+        val expectedBanner = Banner.TEST_BANNER
     }
 
     @Autowired

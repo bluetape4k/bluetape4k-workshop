@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.coroutines.handler
 
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.coroutines.AbstractCoroutineApplicationTest
 import io.bluetape4k.workshop.coroutines.model.Banner
@@ -22,39 +23,39 @@ class CoroutineHandlerTest: AbstractCoroutineApplicationTest() {
     }
 
     @RepeatedTest(REPEAT_SIZE)
-    fun suspend() = runTest {
+    fun suspend() = runSuspendIO {
         clientGet("/suspend")
             .exchange()
             .expectStatus().is2xxSuccessful
-            .expectBody<Banner>().isEqualTo(banner)
+            .expectBody<Banner>().isEqualTo(expectedBanner)
     }
 
     @RepeatedTest(REPEAT_SIZE)
-    fun deferred() = runTest {
+    fun deferred() = runSuspendIO {
         clientGet("/deferred")
             .exchange()
             .expectStatus().is2xxSuccessful
-            .expectBody<Banner>().isEqualTo(banner)
+            .expectBody<Banner>().isEqualTo(expectedBanner)
     }
 
     @RepeatedTest(REPEAT_SIZE)
-    fun `sequential-flow`() = runTest {
+    fun `sequential-flow`() = runSuspendIO {
         clientGet("/sequential-flow")
             .exchange()
             .expectStatus().is2xxSuccessful
-            .expectBodyList<Banner>().contains(banner, banner, banner, banner)
+            .expectBodyList<Banner>().contains(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
     }
 
     @RepeatedTest(REPEAT_SIZE)
-    fun `concurrent-flow`() = runTest {
+    fun `concurrent-flow`() = runSuspendIO {
         clientGet("/concurrent-flow")
             .exchange()
             .expectStatus().is2xxSuccessful
-            .expectBodyList<Banner>().contains(banner, banner, banner, banner)
+            .expectBodyList<Banner>().contains(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
     }
 
     @Test
-    fun error() = runTest {
+    fun error() = runSuspendIO {
         clientGet("/error")
             .exchange()
             .expectStatus().is5xxServerError

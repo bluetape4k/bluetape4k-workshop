@@ -38,7 +38,7 @@ class CoroutineHandler(
     private val port: String = uninitialized()
 
     // 응답용 객체
-    private val banner = Banner("제목", "동해물과 백두산이 마르고 닳도록")
+    private val banner = Banner.TEST_BANNER
 
     // API Server에서 다른 API 서버를 호출하는 것을 흉내내기 위해서 사용합니다.
     private val client by lazy { builder.baseUrl("http://localhost:$port").build() }

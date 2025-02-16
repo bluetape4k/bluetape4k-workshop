@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.coroutines.controller
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.coroutines.AbstractCoroutineApplicationTest
@@ -9,7 +10,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.body
@@ -23,56 +23,56 @@ class IOCoroutineControllerTest: AbstractCoroutineApplicationTest() {
     }
 
     @Test
-    fun index() = runTest {
+    fun index() = runSuspendIO {
         clientGet("$BASE_PATH/")
             .exchange()
             .expectStatus().is2xxSuccessful
             .expectBody<Banner>()
     }
 
-    @Test
-    fun suspending() = runTest {
+    @RepeatedTest(REPEAT_SIZE)
+    fun suspending() = runSuspendIO {
         clientGet("$BASE_PATH/suspend")
             .exchange()
             .expectStatus().is2xxSuccessful
-            .expectBody<Banner>().isEqualTo(banner)
-    }
-
-    @Test
-    fun deferred() = runTest {
-        clientGet("$BASE_PATH/deferred")
-            .exchange()
-            .expectStatus().is2xxSuccessful
-            .expectBody<Banner>().isEqualTo(banner)
+            .expectBody<Banner>().isEqualTo(expectedBanner)
     }
 
     @RepeatedTest(REPEAT_SIZE)
-    fun `sequential flow`() = runTest {
+    fun deferred() = runSuspendIO {
+        clientGet("$BASE_PATH/deferred")
+            .exchange()
+            .expectStatus().is2xxSuccessful
+            .expectBody<Banner>().isEqualTo(expectedBanner)
+    }
+
+    @RepeatedTest(REPEAT_SIZE)
+    fun `sequential flow`() = runSuspendIO {
         clientGet("$BASE_PATH/sequential-flow")
             .exchange()
             .expectStatus().is2xxSuccessful
             .expectBodyList<Banner>()
-            .contains(banner, banner, banner, banner)
+            .contains(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
     }
 
     @RepeatedTest(REPEAT_SIZE)
-    fun `concurrent flow`() = runTest {
+    fun `concurrent flow`() = runSuspendIO {
         clientGet("$BASE_PATH/concurrent-flow")
             .exchange()
             .expectStatus().is2xxSuccessful
             .expectBodyList<Banner>()
-            .contains(banner, banner, banner, banner)
+            .contains(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
     }
 
     @RepeatedTest(REPEAT_SIZE)
-    fun error() = runTest {
+    fun error() = runSuspendIO {
         clientGet("$BASE_PATH/error")
             .exchange()
             .expectStatus().is5xxServerError
     }
 
     @RepeatedTest(REPEAT_SIZE)
-    fun `request as flow`() = runTest {
+    fun `request as flow`() = runSuspendIO {
         val request = (1..5).asFlow()
             .onEach {
                 delay(10)
