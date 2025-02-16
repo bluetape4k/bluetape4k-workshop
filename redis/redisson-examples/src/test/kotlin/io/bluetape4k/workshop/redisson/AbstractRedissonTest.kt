@@ -40,7 +40,7 @@ abstract class AbstractRedissonTest {
 
         @JvmStatic
         fun randomName(prefix: String = "kotlin"): String =
-            "$prefix:${Base58.randomString(6)}:${Base58.randomString(4)}"
+            "$prefix:${Base58.randomString(6)}:${Base58.randomString(6)}"
     }
 
     protected val redisson: Redisson get() = redissonClient

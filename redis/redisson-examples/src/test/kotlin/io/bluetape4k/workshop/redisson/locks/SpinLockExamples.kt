@@ -34,10 +34,10 @@ class SpinLockExamples: AbstractRedissonTest() {
         val lock = redisson.getSpinLock(lockName)
 
         // 방법 1: 기본적인 lock 메서드를 사용하여 잠금을 획득합니다.
-        lock.lock()
+        // lock.lock()
 
         // 방법 2: 자동 락 해제 시간 (10초) 저정하여 잠금 획득
-        lock.lock(10, TimeUnit.SECONDS)
+        // lock.lock(10, TimeUnit.SECONDS)
 
         // 방법 3: 락 획득 대기 시간을 100초 주고, 락을 획득하고, 자동 락 해제 시간을 10초를 지정하는 방식
         val locked = lock.tryLock(100, 10, TimeUnit.SECONDS)
