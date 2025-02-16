@@ -8,8 +8,10 @@ import io.bluetape4k.workshop.r2dbc.domain.toModel
 import io.bluetape4k.workshop.r2dbc.repository.UserRepository
 import kotlinx.coroutines.flow.Flow
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
+@Transactional(readOnly = true)
 class UserService(private val repository: UserRepository) {
 
     companion object: KLogging()
@@ -20,11 +22,13 @@ class UserService(private val repository: UserRepository) {
 
     fun findByEmail(email: String): Flow<User> = repository.findByEmail(email)
 
+    @Transactional
     suspend fun addUser(user: UserDTO): User? {
         log.debug { "Save new user. ${user.toModel()}" }
         return repository.save(user.toModel())
     }
 
+    @Transactional
     suspend fun updateUser(id: Int, user: UserDTO): User? {
         return when {
             repository.existsById(id) -> repository.save(user.toModel(withId = id))
@@ -32,6 +36,7 @@ class UserService(private val repository: UserRepository) {
         }
     }
 
+    @Transactional
     suspend fun deleteUser(id: Int): Boolean {
         if (repository.existsById(id)) {
             repository.deleteById(id)

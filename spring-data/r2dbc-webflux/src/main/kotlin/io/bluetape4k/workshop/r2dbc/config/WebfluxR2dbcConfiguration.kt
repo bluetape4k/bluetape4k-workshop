@@ -11,9 +11,11 @@ import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories
 import org.springframework.http.MediaType
 import org.springframework.r2dbc.connection.init.CompositeDatabasePopulator
 import org.springframework.r2dbc.connection.init.ConnectionFactoryInitializer
+import org.springframework.transaction.annotation.EnableTransactionManagement
 import org.springframework.web.reactive.function.server.coRouter
 
 @Configuration
+@EnableTransactionManagement
 @EnableR2dbcRepositories
 class WebfluxR2dbcConfiguration {
 

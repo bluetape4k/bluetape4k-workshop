@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.virtualthread.part2
 
+import io.bluetape4k.concurrent.virtualthread.virtualFuture
 import io.bluetape4k.logging.KLogging
 import kotlinx.atomicfu.locks.withLock
 import org.junit.jupiter.api.Nested
@@ -33,20 +34,24 @@ class Rule6UseSynchronizedBlocksAndMethodsCarefully {
 
         @Test
         fun `추천 - 리소스를 독점적으로 사용할 때 ReentrantLock을 이용`() {
-            lock.lock()
-            try {
-                // critical section
-                exclusiveResource()
-            } finally {
-                lock.unlock()
-            }
+            virtualFuture {
+                lock.lock()
+                try {
+                    // critical section
+                    exclusiveResource()
+                } finally {
+                    lock.unlock()
+                }
+            }.await()
         }
 
         @Test
         fun `추천 - 리소스를 독점적으로 사용할 때 ReentrantLock을 이용하세요 - Kotlin withLock 함수`() {
-            lock.withLock {
-                exclusiveResource()
-            }
+            virtualFuture {
+                lock.withLock {
+                    exclusiveResource()
+                }
+            }.await()
         }
     }
 
