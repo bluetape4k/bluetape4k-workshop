@@ -45,7 +45,7 @@ class UserController(
     @PostMapping
     fun create(@RequestBody createRequest: UserCreateRequest): UserCreateResponse {
         val userId = userService.create(createRequest)
-        return UserCreateResponse(id = userId.value)
+        return UserCreateResponse(id = userId)
     }
 
     /**

@@ -51,7 +51,7 @@ class UserControllerTest(
             .awaitSingle()
 
         log.debug { "Create user. userId=${response.id}" }
-        response.id shouldBeGreaterThan 0
+        response.id.value shouldBeGreaterThan 0
     }
 
     @Test
@@ -69,7 +69,7 @@ class UserControllerTest(
                     .awaitSingle()
 
                 log.debug { "Create user. userId=${response.id}" }
-                response.id shouldBeGreaterThan 0L
+                response.id.value shouldBeGreaterThan 0L
             }
         }
         jobs.joinAll()
@@ -86,13 +86,13 @@ class UserControllerTest(
             .awaitSingle()
             .id
 
-        userId shouldBeGreaterThan 0L
+        userId.value shouldBeGreaterThan 0L
 
         val updateRequest = newUserUpdateRequest()
         log.debug { "Update user. userId=$userId, request=$updateRequest" }
 
         val response = client
-            .httpPut("/api/v1/users/$userId", updateRequest)
+            .httpPut("/api/v1/users/${userId.value}", updateRequest)
             .returnResult<Int>()
             .responseBody
             .awaitSingle()
@@ -111,12 +111,12 @@ class UserControllerTest(
             .awaitSingle()
             .id
 
-        userId shouldBeGreaterThan 0L
+        userId.value shouldBeGreaterThan 0L
 
         log.debug { "Delete user. userId=$userId" }
 
         val response = client
-            .httpDelete("/api/v1/users/$userId")
+            .httpDelete("/api/v1/users/${userId.value}")
             .returnResult<Int>()
             .responseBody
             .awaitSingle()
@@ -135,16 +135,16 @@ class UserControllerTest(
             .awaitSingle()
             .id
 
-        userId shouldBeGreaterThan 0
+        userId.value shouldBeGreaterThan 0
 
         log.debug { "Find user by id. userId=$userId" }
 
-        val response = client.httpGet("/api/v1/users/$userId")
+        val response = client.httpGet("/api/v1/users/${userId.value}")
             .returnResult<UserDTO>()
             .responseBody
             .awaitSingle()
 
-        response.id shouldBeEqualTo userId
+        response.id shouldBeEqualTo userId.value
         response.name shouldBeEqualTo createRequest.name
         response.age shouldBeEqualTo createRequest.age
     }
