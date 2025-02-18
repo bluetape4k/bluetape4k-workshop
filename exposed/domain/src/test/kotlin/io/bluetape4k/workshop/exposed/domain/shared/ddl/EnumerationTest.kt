@@ -124,6 +124,9 @@ class EnumerationTest: AbstractExposedTest() {
             } finally {
                 runCatching {
                     SchemaUtils.drop(EnumTable)
+                    if (currentDialect is PostgreSQLDialect) {
+                        exec("DROP TYPE IF EXISTS FooEnum")
+                    }
                 }
             }
         }
@@ -163,6 +166,9 @@ class EnumerationTest: AbstractExposedTest() {
             } finally {
                 runCatching {
                     SchemaUtils.drop(EnumTable)
+                    if (currentDialect is PostgreSQLDialect) {
+                        exec("DROP TYPE IF EXISTS FooEnum")
+                    }
                 }
             }
         }
@@ -227,6 +233,10 @@ class EnumerationTest: AbstractExposedTest() {
                     SchemaUtils.drop(referenceTable)
                     exec(EnumTable.indices.first().dropStatement().single())
                     SchemaUtils.drop(EnumTable)
+
+                    if (currentDialect is PostgreSQLDialect) {
+                        exec("DROP TYPE IF EXISTS FooEnum")
+                    }
                 }
             }
         }

@@ -7,7 +7,7 @@ import org.jetbrains.exposed.sql.DatabaseConfig
 import java.sql.Connection
 import kotlin.reflect.full.declaredMemberProperties
 
-const val USE_TESTCONTAINERS = false
+const val USE_TESTCONTAINERS = true
 const val USE_FAST_DB = false
 
 enum class TestDB(

@@ -19,7 +19,7 @@ import org.jetbrains.exposed.sql.Op.TRUE
 import org.jetbrains.exposed.sql.Schema
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.neq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.times
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.and
@@ -42,7 +42,8 @@ class CreateIndexTest: AbstractExposedTest() {
      * CREATE TABLE IF NOT EXISTS TEST_TABLE (
      *      ID INT PRIMARY KEY,
      *      "name" VARCHAR(42) NOT NULL
-     * )
+     * );
+     * CREATE INDEX test_table_by_name ON test_table ("name");
      * ```
      */
     @ParameterizedTest
@@ -56,7 +57,7 @@ class CreateIndexTest: AbstractExposedTest() {
             val byName = index("test_table_by_name", false, name)
         }
 
-        withTables(testDB, testTable) {
+        withDb(testDB) {
             SchemaUtils.createMissingTablesAndColumns(testTable)
             // val statemnts = MigrationUtils.statementsRequiredForDatabaseMigration(testTable)
             // exec(statemnts.joinToString(";"))
@@ -73,7 +74,7 @@ class CreateIndexTest: AbstractExposedTest() {
      *      id INT PRIMARY KEY,
      *      "name" VARCHAR(42) NOT NULL
      * );
-     * CREATE INDEX test_table_by_name ON test_table ("name");
+     * CREATE INDEX test_table_by_name ON test_table USING HASH ("name");
      * ```
      */
     @ParameterizedTest
@@ -86,7 +87,7 @@ class CreateIndexTest: AbstractExposedTest() {
             val name = varchar("name", 42)
 
             override val primaryKey = PrimaryKey(id)
-            val byName = index("test_table_by_name", false, name)
+            val byName = index("test_table_by_name", false, name, indexType = "HASH")
         }
 
         withTables(testDB, testTable) {
@@ -144,8 +145,10 @@ class CreateIndexTest: AbstractExposedTest() {
     }
 
     /**
-     * Postgres:
+     * 컬럼이 특정 조건일 때에만 인덱싱 되는 partial index 정의
+     * 
      * ```sql
+     * -- Postgres
      * CREATE TABLE IF NOT EXISTS partialindextabletest (
      *      id SERIAL PRIMARY KEY,
      *      "name" VARCHAR(50) NOT NULL,
@@ -341,7 +344,7 @@ class CreateIndexTest: AbstractExposedTest() {
      *      price INT NOT NULL,
      *      item VARCHAR(32) NULL
      * );
-     * CREATE INDEX tester_plus_index ON tester ((tester.amount + tester.price));
+     * CREATE INDEX tester_plus_index ON tester ((tester.amount * tester.price));
      * CREATE INDEX tester_lower ON tester (LOWER(tester.item));
      * CREATE UNIQUE INDEX tester_price_coalesce_unique ON tester (price, COALESCE(tester.item, '*'));
      * ```
@@ -358,7 +361,7 @@ class CreateIndexTest: AbstractExposedTest() {
             val item = varchar("item", 32).nullable()
 
             init {
-                index(customIndexName = "tester_plus_index", isUnique = false, functions = listOf(amount.plus(price)))
+                index(customIndexName = "tester_plus_index", isUnique = false, functions = listOf(amount.times(price)))
                 index(isUnique = false, functions = listOf(item.lowerCase()))
                 uniqueIndex(columns = arrayOf(price), functions = listOf(Coalesce(item, stringLiteral("*"))))
             }

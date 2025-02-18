@@ -180,7 +180,9 @@ class ColumnDefinitionTest: AbstractExposedTest() {
 
         val tester = object: Table("tester") {
             val amount = integer("amount")
-            val active = bool("active").nullable().withDefinition("INVISIBLE")
+            val active = bool("active")
+                .nullable()
+                .withDefinition("INVISIBLE")
         }
 
         withTables(testDB, tester) {

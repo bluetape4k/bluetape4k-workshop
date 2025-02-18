@@ -509,7 +509,9 @@ class CreateTableTest: AbstractExposedTest() {
      * CREATE TABLE IF NOT EXISTS CHILD2 (
      *      ID BIGINT AUTO_INCREMENT PRIMARY KEY,
      *      PARENT_ID UUID NOT NULL,
-     *      CONSTRAINT MYFOREIGNKEY2 FOREIGN KEY (PARENT_ID) REFERENCES PARENT2("uniqueId"))
+     *
+     *      CONSTRAINT MYFOREIGNKEY2 FOREIGN KEY (PARENT_ID)
+     *          REFERENCES PARENT2("uniqueId"))
      * ```
      */
     @ParameterizedTest
@@ -592,7 +594,9 @@ class CreateTableTest: AbstractExposedTest() {
      * CREATE TABLE IF NOT EXISTS CHILD4 (
      *      ID BIGINT AUTO_INCREMENT PRIMARY KEY,
      *      PARENT_ID UUID NULL,
-     *      CONSTRAINT MYFOREIGNKEY4 FOREIGN KEY (PARENT_ID) REFERENCES PARENT4("uniqueId")
+     *
+     *      CONSTRAINT MYFOREIGNKEY4 FOREIGN KEY (PARENT_ID)
+     *          REFERENCES PARENT4("uniqueId")
      * )
      * ```
      */
@@ -635,7 +639,9 @@ class CreateTableTest: AbstractExposedTest() {
      * CREATE TABLE IF NOT EXISTS CHILD1 (
      *      ID_A INT NOT NULL,
      *      ID_B INT NOT NULL,
-     *      CONSTRAINT MYFOREIGNKEY1 FOREIGN KEY (ID_A, ID_B) REFERENCES PARENT1(ID_A, ID_B) ON DELETE CASCADE ON UPDATE CASCADE
+     *
+     *      CONSTRAINT MYFOREIGNKEY1 FOREIGN KEY (ID_A, ID_B)
+     *          REFERENCES PARENT1(ID_A, ID_B) ON DELETE CASCADE ON UPDATE CASCADE
      * )
      * ```
      */

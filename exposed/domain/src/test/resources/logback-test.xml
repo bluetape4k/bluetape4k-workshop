@@ -16,7 +16,7 @@
 
     <logger name="Exposed" level="DEBUG"/>
 
-    <root level="WARN">
+    <root level="INFO">
         <appender-ref ref="Console"/>
     </root>
 

@@ -148,8 +148,6 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testCreateMissingTablesAndColumnsChangeAutoincrement(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB !in TestDB.ALL_POSTGRES }
-
         val t1 = object: Table("foo") {
             val id = integer("idcol").autoIncrement()
             val foo = varchar("foo", 50)
