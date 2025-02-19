@@ -7,7 +7,7 @@ object Plugins {
     object Versions {
         const val dokka = "1.9.20"      // https://mvnrepository.com/artifact/org.jetbrains.dokka/dokka-gradle-plugin
         const val detekt = "1.23.7"     // https://mvnrepository.com/artifact/io.gitlab.arturbosch.detekt/detekt-gradle-plugin
-        const val dependency_management = "1.1.6"  // https://mvnrepository.com/artifact/io.spring.gradle/dependency-management-plugin
+        const val dependency_management = "1.1.7"  // https://mvnrepository.com/artifact/io.spring.gradle/dependency-management-plugin
         const val jooq = "9.0"       // https://mvnrepository.com/artifact/nu.studer.jooq/jooq-gradle-plugin
         const val protobuf = "0.9.4"    // https://mvnrepository.com/artifact/com.google.protobuf/protobuf-gradle-plugin
         const val avro = "1.9.1"  // https://mvnrepository.com/artifact/com.github.davidmc24.gradle.plugin.avro/com.github.davidmc24.gradle.plugin.avro.gradle.plugin
@@ -76,7 +76,7 @@ object Versions {
     const val spring_integration = "6.4.0"  // https://mvnrepository.com/artifact/org.springframework.integration/spring-integration-core
     const val reactor_bom = "2024.0.1"      // https://mvnrepository.com/artifact/io.projectreactor/reactor-bom
     const val spring_statemachine = "4.0.0" // https://mvnrepository.com/artifact/org.springframework.statemachine/spring-statemachine-core
-    const val spring_modulith = "1.3.1"     // https://mvnrepository.com/artifact/org.springframework.modulith/spring-modulith-bom
+    const val spring_modulith = "1.3.2"     // https://mvnrepository.com/artifact/org.springframework.modulith/spring-modulith-bom
 
     const val chaos_monkey = "3.1.0"        // https://mvnrepository.com/artifact/de.codecentric/chaos-monkey-spring-boot
     const val blockhound = "1.0.10.RELEASE"  // https://mvnrepository.com/artifact/io.projectreactor.tools/blockhound
@@ -102,8 +102,8 @@ object Versions {
     const val problem = "0.29.1"              // https://mvnrepository.com/artifact/org.zalando/problem-spring-web
 
     const val bucket4j = "8.10.1"       // https://mvnrepository.com/artifact/com.bucket4j/bucket4j-core
-    const val resilience4j = "2.2.0"   // https://mvnrepository.com/artifact/io.github.resilience4j/resilience4j-bom
-    const val netty = "4.1.115.Final"  // https://mvnrepository.com/artifact/io.netty/netty-all
+    const val resilience4j = "2.3.0"   // https://mvnrepository.com/artifact/io.github.resilience4j/resilience4j-bom
+    const val netty = "4.1.118.Final"  // https://mvnrepository.com/artifact/io.netty/netty-all
 
     const val aws = "1.12.772"    // https://mvnrepository.com/artifact/com.amazonaws
     const val aws2 = "2.29.29"   // https://mvnrepository.com/artifact/software.amazon.awssdk/aws-sdk-java
