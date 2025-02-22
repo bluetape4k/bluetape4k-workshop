@@ -190,6 +190,7 @@ enum class TestDB(
         val ALL_H2_V1 = setOf(H2_V1)
         val ALL_H2 = setOf(H2, H2_MYSQL, H2_PSQL, H2_MARIADB)
         val ALL_MARIADB = setOf(MARIADB)
+        val ALL_MARIADB_LIKE = setOf(MARIADB, H2_MARIADB)
         val ALL_MYSQL = setOf(MYSQL_V5, MYSQL_V8)
         val ALL_MYSQL_MARIADB = ALL_MYSQL + ALL_MARIADB
         val ALL_MYSQL_LIKE = ALL_MYSQL_MARIADB + H2_MYSQL + H2_MARIADB

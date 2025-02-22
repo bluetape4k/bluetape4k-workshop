@@ -1404,7 +1404,7 @@ class UpsertTest: AbstractExposedTest() {
             /**
              * all existing rows set to their current values
              */
-            val isH2MysqlMode = testDB == H2_MYSQL // || testDB == TestDB.H2_MARIADB
+            val isH2MysqlMode = testDB == H2_MYSQL || testDB == TestDB.H2_MARIADB
             var expected = if (isH2MysqlMode) 0 else newDataSize
             AutoIncTable.batchUpsert(data, shouldReturnGeneratedValues = isNotSqlServer) { (id, name) ->
                 statement = this

@@ -107,7 +107,7 @@ class InsertTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert ignore and get id 01`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB in (TestDB.ALL_MYSQL_LIKE - TestDB.MYSQL_V5) + TestDB.ALL_POSTGRES_LIKE }
+        Assumptions.assumeTrue { testDB in (TestDB.ALL_MYSQL_LIKE - TestDB.MYSQL_V5 - TestDB.ALL_MARIADB_LIKE) + TestDB.ALL_POSTGRES_LIKE }
 
         val idTable = object: IntIdTable("tmp") {
             val name = varchar("foo", 10).uniqueIndex()
@@ -221,7 +221,7 @@ class InsertTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insertIgnore with predefined id`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB in (TestDB.ALL_MYSQL_LIKE - TestDB.MYSQL_V5) + TestDB.ALL_POSTGRES_LIKE }
+        Assumptions.assumeTrue { testDB in (TestDB.ALL_MYSQL_LIKE - TestDB.MYSQL_V5 - TestDB.ALL_MARIADB_LIKE) + TestDB.ALL_POSTGRES_LIKE }
 
         val idTable = object: IntIdTable("tmp") {
             val name = varchar("foo", 10).uniqueIndex()
@@ -828,7 +828,8 @@ class InsertTest: AbstractExposedTest() {
         }
     }
 
-    private fun rollbackSupportDbs() = TestDB.ALL_H2 + TestDB.MYSQL_V8 + TestDB.POSTGRESQL
+    private fun rollbackSupportDbs() =
+        TestDB.ALL_H2 + TestDB.MYSQL_V8 + TestDB.MARIADB + TestDB.POSTGRESQL
 
     /**
      * 일반적인 트랜잭션에서 Constraint 예외가 발생하면, 해당 트랜잭션은 Rollback 되어야 합니다.
@@ -846,7 +847,7 @@ class InsertTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `rollback on constraint exception with normal transactions`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 + TestDB.MYSQL_V8 + TestDB.POSTGRESQL }
+        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 + TestDB.MYSQL_V8 + TestDB.MARIADB + TestDB.POSTGRESQL }
 
         val testTable = object: IntIdTable("TestRollback") {
             val foo = integer("foo").check { it greater 0 }
@@ -888,7 +889,7 @@ class InsertTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `rollback on constraint exception with suspend transactions`(testDB: TestDB) = runTest {
-        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 + TestDB.MYSQL_V8 + TestDB.POSTGRESQL }
+        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 + TestDB.MYSQL_V8 + TestDB.MARIADB + TestDB.POSTGRESQL }
 
         val testTable = object: IntIdTable("TestRollback") {
             val foo = integer("foo").check { it greater 0 }
