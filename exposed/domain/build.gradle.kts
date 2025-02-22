@@ -27,6 +27,7 @@ dependencies {
     testImplementation(Libs.bluetape4k_junit5)
 
     compileOnly(Libs.h2_v2)
+    compileOnly(Libs.mariadb_java_client)
     compileOnly(Libs.mysql_connector_j)
     compileOnly(Libs.postgresql_driver)
     compileOnly(Libs.pgjdbc_ng)
@@ -34,6 +35,7 @@ dependencies {
     testImplementation(Libs.bluetape4k_testcontainers)
     testImplementation(Libs.testcontainers)
     testImplementation(Libs.testcontainers_junit_jupiter)
+    testImplementation(Libs.testcontainers_mariadb)
     testImplementation(Libs.testcontainers_mysql)
     testImplementation(Libs.testcontainers_postgresql)
     testImplementation(Libs.testcontainers_cockroachdb)

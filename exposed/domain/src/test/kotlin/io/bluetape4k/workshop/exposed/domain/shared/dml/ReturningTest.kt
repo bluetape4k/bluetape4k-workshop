@@ -44,7 +44,7 @@ import kotlin.test.assertIs
 class ReturningTest: AbstractExposedTest() {
 
     private val updateReturningSupportedDb = TestDB.ALL_POSTGRES
-    private val returningSupportedDb = updateReturningSupportedDb
+    private val returningSupportedDb = updateReturningSupportedDb + TestDB.MARIADB
 
     /**
      * Postgres:
@@ -229,29 +229,31 @@ class ReturningTest: AbstractExposedTest() {
             result2[Items.name] shouldBeEqualTo "A"
             result2[Items.price] shouldBeEqualTo 990.0
 
-            /**
-             * `onUpdateExclude` 를 사용하여, update 시에 price 컬럼을 제외하고 업데이트
-             *
-             * ```sql
-             * INSERT INTO items (id, "name", price) VALUES (1, 'B', 200.0)
-             * ON CONFLICT (id) DO
-             *      UPDATE SET "name"=EXCLUDED."name"
-             *       WHERE items.price > 500.0
-             * RETURNING items."name"
-             * ```
-             *
-             */
-            val result3 = Items.upsertReturning(
-                returning = listOf(Items.name),
-                onUpdateExclude = listOf(Items.price),
-                where = { Items.price greater 500.0 }
-            ) {
-                it[id] = 1
-                it[name] = "B"
-                it[price] = 200.0
-            }.single()
+            if (testDB != TestDB.MARIADB) {
+                /**
+                 * `onUpdateExclude` 를 사용하여, update 시에 price 컬럼을 제외하고 업데이트
+                 *
+                 * ```sql
+                 * INSERT INTO items (id, "name", price) VALUES (1, 'B', 200.0)
+                 * ON CONFLICT (id) DO
+                 *      UPDATE SET "name"=EXCLUDED."name"
+                 *       WHERE items.price > 500.0
+                 * RETURNING items."name"
+                 * ```
+                 *
+                 */
+                val result3 = Items.upsertReturning(
+                    returning = listOf(Items.name),
+                    onUpdateExclude = listOf(Items.price),
+                    where = { Items.price greater 500.0 }
+                ) {
+                    it[id] = 1
+                    it[name] = "B"
+                    it[price] = 200.0
+                }.single()
 
-            result3[Items.name] shouldBeEqualTo "B"
+                result3[Items.name] shouldBeEqualTo "B"
+            }
 
             Items.selectAll().count().toInt() shouldBeEqualTo 1
         }

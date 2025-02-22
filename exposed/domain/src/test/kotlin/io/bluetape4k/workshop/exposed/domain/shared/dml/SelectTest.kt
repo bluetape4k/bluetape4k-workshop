@@ -23,6 +23,7 @@ import org.amshove.kluent.shouldNotBeEqualTo
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Op
 import org.jetbrains.exposed.sql.Query
+import org.jetbrains.exposed.sql.SizedIterable
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.VarCharColumnType
 import org.jetbrains.exposed.sql.allFrom
@@ -166,7 +167,7 @@ class SelectTest: AbstractExposedTest() {
     }
 
     /**
-     * [SizableIterable] 을 사용한 SELECT 문
+     * [SizedIterable] 을 사용한 SELECT 문
      *
      * ```sql
      * SELECT cities.city_id, cities."name" FROM cities
@@ -1300,7 +1301,7 @@ class SelectTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `select distinct`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL_LIKE }
 
         val tbl = DMLTestData.Cities
         withTables(testDB, tbl) {
@@ -1604,11 +1605,12 @@ class SelectTest: AbstractExposedTest() {
                 .map { it[alphabet.letter] }
             limitOffsetResult shouldBeEqualTo allLetters.drop(start.toInt()).take(amount)
 
-            if (testDB !in TestDB.ALL_MYSQL) {
+            if (testDB !in TestDB.ALL_MYSQL_LIKE) {
                 val offsetResult = alphabet
                     .selectAll()
                     .offset(start)
                     .map { it[alphabet.letter] }
+
                 offsetResult shouldBeEqualTo allLetters.drop(start.toInt())
             }
         }
