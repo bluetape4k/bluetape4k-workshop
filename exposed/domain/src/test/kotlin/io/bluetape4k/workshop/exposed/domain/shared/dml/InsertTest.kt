@@ -63,7 +63,7 @@ class InsertTest: AbstractExposedTest() {
 
     /**
      * `insertAndGetId` 는 `IntIdTable` 처럼 entityID를 가지는 테이블에 대해서 사용할 수 있습니다.
-     * 
+     *
      * ```sql
      * INSERT INTO TMP (FOO) VALUES ('1')
      * ```
@@ -1021,7 +1021,13 @@ class InsertTest: AbstractExposedTest() {
                         ${generatedTable.amount.descriptionDdl()},
                     """.trimIndent()
 
-                SchemaUtils.create(generatedTable)
+                when (testDB) {
+                    // MariaDB does not support GENERATED ALWAYS AS with any null constraint definition
+                    in TestDB.ALL_MARIADB -> {
+                        exec("${createStatement.trimIndent()} $computedName $computedType GENERATED ALWAYS AS ($computation) STORED)")
+                    }
+                    else -> SchemaUtils.create(generatedTable)
+                }
 
                 assertFailAndRollback("Generated columns are auto-drived and read-only") {
                     generatedTable.insert {

@@ -18,6 +18,7 @@ import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.statements.StatementType
 import org.jetbrains.exposed.sql.statements.StatementType.SELECT
+import org.jetbrains.exposed.sql.transactions.TransactionManager
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
@@ -94,9 +95,9 @@ class TransactionExecTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `exec with multi statement query using MySQL`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB == TestDB.MYSQL_V8 }
+        Assumptions.assumeTrue { testDB in TestDB.ALL_MYSQL_MARIADB }
 
-        val extra = ""  // if (testDB in TestDB.ALL_MARIADB) "?" else ""
+        val extra = if (testDB in TestDB.ALL_MARIADB) "?" else ""
         val db = Database.connect(
             testDB.connection().plus("$extra&allowMultiQueries=true"),
             testDB.driver,
@@ -112,6 +113,8 @@ class TransactionExecTest: AbstractExposedTest() {
                 SchemaUtils.drop(ExecTable)
             }
         }
+
+        TransactionManager.closeAndUnregister(db)
     }
 
     private fun Transaction.testInsertAndSelectInSingleExec(testDB: TestDB) {
@@ -126,6 +129,7 @@ class TransactionExecTest: AbstractExposedTest() {
         val columnAlias = "last_inserted_id"
         val selectLastIdStatement = when (testDB) {
             TestDB.POSTGRESQL -> "SELECT lastval() AS $columnAlias;"
+            TestDB.MARIADB -> "SELECT LASTVAL(${ExecTable.id.autoIncColumnType?.autoincSeq}) AS $columnAlias"
             else              -> "SELECT LAST_INSERT_ID() AS $columnAlias;"
         }
 

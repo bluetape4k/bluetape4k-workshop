@@ -1250,7 +1250,7 @@ class MiscTableTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `update 03`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL /* TestDB.ALL_MARIADB */ }
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL_MARIADB }
         val tbl = Misc
         val date = today
         val time = LocalTime.now()

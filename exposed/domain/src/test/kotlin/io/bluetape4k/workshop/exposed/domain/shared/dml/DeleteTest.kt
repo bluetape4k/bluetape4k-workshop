@@ -301,7 +301,7 @@ class DeleteTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `delete with join and limit`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB !in (TestDB.ALL_H2 + TestDB.ALL_MYSQL + TestDB.ALL_POSTGRES) }
+        Assumptions.assumeTrue { testDB !in (TestDB.ALL_H2 + TestDB.ALL_MYSQL_MARIADB + TestDB.ALL_POSTGRES) }
 
         withCitiesAndUsers(testDB) { _, users, userData ->
             val join = users innerJoin userData

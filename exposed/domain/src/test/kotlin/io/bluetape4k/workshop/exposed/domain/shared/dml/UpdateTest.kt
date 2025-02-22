@@ -162,7 +162,7 @@ class UpdateTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `update with join and limit`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB !in (TestDB.ALL_H2 + TestDB.ALL_MYSQL + TestDB.ALL_POSTGRES) }
+        Assumptions.assumeTrue { testDB !in (TestDB.ALL_H2 + TestDB.ALL_MYSQL_MARIADB + TestDB.ALL_POSTGRES) }
         // val supportsUpdateWithJoinAndLimit = TestDB.ALL_MARIADB + TestDB.ORACLE + TestDB.SQLSERVER
         // Assumptions.assumeTrue(testDB !in supportsUpdateWithJoinAndLimit)
         withCitiesAndUsers(testDB) { _, users, userData ->

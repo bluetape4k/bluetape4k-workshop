@@ -73,7 +73,7 @@ class SequenceTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert with sequence`(testDB: TestDB) {
         withTables(testDB, Developer) {
-            if (currentDialectTest.supportsCreateSequence) {
+            if (currentDialectTest.supportsSequenceAsGeneratedKeys) {
                 try {
                     SchemaUtils.createSequence(myseq)
 

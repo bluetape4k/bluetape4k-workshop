@@ -34,7 +34,7 @@ abstract class MergeBaseTest: AbstractExposedTest() {
 
     protected fun allDbExcept(includeSettings: Collection<TestDB>) = TestDB.ALL - includeSettings.toSet()
 
-    protected val defaultExcludeSettings = TestDB.ALL_MYSQL + TestDB.ALL_H2_V1
+    protected val defaultExcludeSettings = TestDB.ALL_MYSQL_MARIADB + TestDB.ALL_H2_V1
 
     protected fun withMergeTestTables(
         testDB: TestDB,

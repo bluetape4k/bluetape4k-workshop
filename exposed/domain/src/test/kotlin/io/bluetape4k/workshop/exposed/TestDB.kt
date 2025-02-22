@@ -56,6 +56,12 @@ enum class TestDB(
                 }
         }
     ),
+    H2_MARIADB(
+        connection = {
+            "jdbc:h2:mem:mariadb;MODE=MariaDB;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;"
+        },
+        driver = JdbcDrivers.DRIVER_CLASS_H2,
+    ),
     H2_PSQL(
         connection = {
             "jdbc:h2:mem:psql;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;"
@@ -66,20 +72,16 @@ enum class TestDB(
 
     MARIADB(
         connection = {
+            val options = "?useSSL=false" +
+                    "&characterEncoding=UTF-8" +
+                    "&useLegacyDatetimeCode=false&serverTimezone=UTC" +  // TimeZone 을 UTC 로 설정
+                    "&zeroDateTimeBehavior=convertToNull"  // +
+            // "&rewriteBatchedStatements=true"
+
             if (USE_TESTCONTAINERS) {
-                ContainerProvider.mariadb.jdbcUrl +
-                        "?useSSL=false" +
-                        "&characterEncoding=UTF-8" +
-                        "&useLegacyDatetimeCode=false&serverTimezone=UTC" +  // TimeZone 을 UTC 로 설정
-                        "&zeroDateTimeBehavior=convertToNull"  // +
-                // "&rewriteBatchedStatements=true"
+                ContainerProvider.mariadb.jdbcUrl + options
             } else {
-                "jdbc:mysql://localhost:3306/exposed" +
-                        "?useSSL=false" +
-                        "&characterEncoding=UTF-8" +
-                        "&useLegacyDatetimeCode=false&serverTimezone=UTC" +  // TimeZone 을 UTC 로 설정
-                        "&zeroDateTimeBehavior=convertToNull"  // +
-                // "&rewriteBatchedStatements=true"
+                "jdbc:mariadb://localhost:3306/exposed$options"
             }
         },
         driver = JdbcDrivers.DRIVER_CLASS_MARIADB
@@ -87,20 +89,16 @@ enum class TestDB(
 
     MYSQL_V5(
         connection = {
+            val options = "?useSSL=false" +
+                    "&characterEncoding=UTF-8" +
+                    "&useLegacyDatetimeCode=false" +
+                    "&serverTimezone=UTC" +  // TimeZone 을 UTC 로 설정
+                    "&zeroDateTimeBehavior=convertToNull"  // +
+            // "&rewriteBatchedStatements=true"
             if (USE_TESTCONTAINERS) {
-                ContainerProvider.mysql5.jdbcUrl +
-                        "?useSSL=false" +
-                        "&characterEncoding=UTF-8" +
-                        "&useLegacyDatetimeCode=false&serverTimezone=UTC" +  // TimeZone 을 UTC 로 설정
-                        "&zeroDateTimeBehavior=convertToNull"  // +
-                // "&rewriteBatchedStatements=true"
+                ContainerProvider.mysql5.jdbcUrl + options
             } else {
-                "jdbc:mysql://localhost:3306/exposed" +
-                        "?useSSL=false" +
-                        "&characterEncoding=UTF-8" +
-                        "&useLegacyDatetimeCode=false&serverTimezone=UTC" +  // TimeZone 을 UTC 로 설정
-                        "&zeroDateTimeBehavior=convertToNull"  // +
-                // "&rewriteBatchedStatements=true"
+                "jdbc:mysql://localhost:3306/exposed$options"
             }
         },
         driver = JdbcDrivers.DRIVER_CLASS_MYSQL
@@ -108,23 +106,18 @@ enum class TestDB(
 
     MYSQL_V8(
         connection = {
-            if (USE_TESTCONTAINERS) {
-                ContainerProvider.mysql8.jdbcUrl +
-                        "?useSSL=false" +
-                        "&characterEncoding=UTF-8" +
-                        "&zeroDateTimeBehavior=convertToNull" +
-                        "&useLegacyDatetimeCode=false&serverTimezone=UTC" +  // TimeZone 을 UTC 로 설정
-                        "&allowPublicKeyRetrieval=true" // +
-                //  "&rewriteBatchedStatements=true"                        // Batch 처리를 위한 설정
+            val options = "?useSSL=false" +
+                    "&characterEncoding=UTF-8" +
+                    "&zeroDateTimeBehavior=convertToNull" +
+                    "&useLegacyDatetimeCode=false" +
+                    "&serverTimezone=UTC" +  // TimeZone 을 UTC 로 설정
+                    "&allowPublicKeyRetrieval=true" // +
+            //  "&rewriteBatchedStatements=true"                        // Batch 처리를 위한 설정
 
+            if (USE_TESTCONTAINERS) {
+                ContainerProvider.mysql8.jdbcUrl + options
             } else {
-                "jdbc:mysql://localhost:3306/exposed" +
-                        "?useSSL=false" +
-                        "&characterEncoding=UTF-8" +
-                        "&zeroDateTimeBehavior=convertToNull" +
-                        "&useLegacyDatetimeCode=false&serverTimezone=UTC" +  // TimeZone 을 UTC 로 설정
-                        "&allowPublicKeyRetrieval=true" // +
-                //  "&rewriteBatchedStatements=true"                        // Batch 처리를 위한 설정
+                "jdbc:mysql://localhost:3306/exposed$options"
             }
         },
         driver = JdbcDrivers.DRIVER_CLASS_MYSQL,
@@ -134,10 +127,11 @@ enum class TestDB(
 
     POSTGRESQL(
         connection = {
+            val options = "?lc_messages=en_US.UTF-8"
             if (USE_TESTCONTAINERS) {
-                ContainerProvider.postgres.jdbcUrl + "&lc_messages=en_US.UTF-8"
+                ContainerProvider.postgres.jdbcUrl + options
             } else {
-                "jdbc:postgresql://localhost:5432/exposed?lc_messages=en_US.UTF-8"
+                "jdbc:postgresql://localhost:5432/exposed$options"
             }
         },
         driver = JdbcDrivers.DRIVER_CLASS_POSTGRESQL,
@@ -194,10 +188,11 @@ enum class TestDB(
 
     companion object: KLogging() {
         val ALL_H2_V1 = setOf(H2_V1)
-        val ALL_H2 = setOf(H2, H2_MYSQL, H2_PSQL)
+        val ALL_H2 = setOf(H2, H2_MYSQL, H2_PSQL, H2_MARIADB)
         val ALL_MARIADB = setOf(MARIADB)
         val ALL_MYSQL = setOf(MYSQL_V5, MYSQL_V8)
-        val ALL_MYSQL_LIKE = ALL_MYSQL + H2_MYSQL + ALL_MARIADB
+        val ALL_MYSQL_MARIADB = ALL_MYSQL + ALL_MARIADB
+        val ALL_MYSQL_LIKE = ALL_MYSQL_MARIADB + H2_MYSQL + H2_MARIADB
         val ALL_POSTGRES = setOf(POSTGRESQL, POSTGRESQLNG)
         val ALL_POSTGRES_LIKE = setOf(POSTGRESQL, POSTGRESQLNG, H2_PSQL)
         val ALL_COCKROACH = setOf(COCKROACH)
@@ -207,7 +202,7 @@ enum class TestDB(
         // NOTE: 이 값을 바꿔서 MySQL, PostgreSQL 등을 testcontainers 를 이용하여 테스트할 수 있습니다.
 
         fun enabledDialects(): Set<TestDB> {
-            return if (USE_FAST_DB) ALL_H2 else (ALL_H2 + ALL_POSTGRES + ALL_MYSQL + ALL_MARIADB) //ALL - ALL_H2_V1 - MYSQL_V5 - COCKROACH)
+            return if (USE_FAST_DB) ALL_H2 else (ALL_H2 + ALL_POSTGRES + ALL_MYSQL_MARIADB) //ALL - ALL_H2_V1 - MYSQL_V5 - COCKROACH)
         }
     }
 }

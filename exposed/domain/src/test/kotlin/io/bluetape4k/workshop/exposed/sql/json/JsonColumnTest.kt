@@ -1,6 +1,5 @@
 package io.bluetape4k.workshop.exposed.sql.json
 
-import MigrationUtils
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.TestDB.MYSQL_V5
 import io.bluetape4k.workshop.exposed.currentDialectTest
@@ -25,6 +24,7 @@ import org.jetbrains.exposed.dao.entityCache
 import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.IntegerColumnType
 import org.jetbrains.exposed.sql.Op
@@ -714,7 +714,7 @@ class JsonColumnTest: AbstractExposedJsonTest() {
 
         withDb(testDB) {
             if (testDB == MYSQL_V5) {
-                expectException<IllegalArgumentException> {
+                expectException<UnsupportedByDialectException> {
                     SchemaUtils.createMissingTablesAndColumns(defaultTester)
                 }
             } else {
@@ -722,7 +722,7 @@ class JsonColumnTest: AbstractExposedJsonTest() {
                 defaultTester.exists().shouldBeTrue()
 
                 // ensure defaults match returned metadata defaults
-                val alters = MigrationUtils.statementsRequiredForDatabaseMigration(defaultTester)
+                val alters = SchemaUtils.statementsRequiredToActualizeScheme(defaultTester)
                 alters.shouldBeEmpty()
 
                 defaultTester.insert { }
@@ -921,7 +921,7 @@ class JsonColumnTest: AbstractExposedJsonTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `json as default`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB == TestDB.MYSQL_V5 }
+        Assumptions.assumeTrue { testDB != TestDB.MYSQL_V5 }
 
         val defaultUser = User("name", "team")
         val tester = object: IntIdTable("testJsonAsDefault") {

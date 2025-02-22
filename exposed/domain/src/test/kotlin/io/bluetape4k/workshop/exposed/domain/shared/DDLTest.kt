@@ -8,7 +8,6 @@ import io.bluetape4k.support.toUtf8String
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.TestDB.H2
-import io.bluetape4k.workshop.exposed.TestDB.MYSQL_V8
 import io.bluetape4k.workshop.exposed.assertFailAndRollback
 import io.bluetape4k.workshop.exposed.currentDialectTest
 import io.bluetape4k.workshop.exposed.expectException
@@ -143,7 +142,8 @@ class DDLTest: AbstractExposedTest() {
             user = "root",
             password = "",
             databaseConfig = DatabaseConfig {
-                @OptIn(ExperimentalKeywordApi::class) preserveKeywordCasing = false
+                @OptIn(ExperimentalKeywordApi::class)
+                preserveKeywordCasing = false
             })
     }
 
@@ -230,8 +230,8 @@ class DDLTest: AbstractExposedTest() {
         withTables(testDB, unnamedTable) {
             val q = db.identifierManager.quoteString
 
-            // MySQL V8 테이블 명에는 back-quote(`) 를 사용하지 않네요.
-            val tableName = if (currentDialectTest.needsQuotesWhenSymbolsInNames && testDB != MYSQL_V8) {
+            // MySQL 테이블 명에는 back-quote(`) 를 사용하지 않네요.
+            val tableName = if (currentDialectTest.needsQuotesWhenSymbolsInNames && testDB !in TestDB.ALL_MYSQL) {
                 "$q${"unnamedTable$1".inProperCase()}$q"
             } else {
                 "unnamedTable$1".inProperCase()
@@ -242,10 +242,12 @@ class DDLTest: AbstractExposedTest() {
             val varCharType = currentDialectTest.dataTypeProvider.varcharType(42)
 
             val expectedDDL =
-                "CREATE TABLE " + addIfNotExistsIfSupported() + "$tableName " + "(${"id".inProperCase()} $integerType PRIMARY KEY," + " $q${"name".inProperCase()}$q $varCharType NOT NULL)"
+                "CREATE TABLE " + addIfNotExistsIfSupported() + "$tableName " +
+                        "(${"id".inProperCase()} $integerType PRIMARY KEY," + " $q${"name".inProperCase()}$q $varCharType NOT NULL)"
 
             val unnamedTableDDL = unnamedTable.ddl.single()
-            log.debug { "DDL: $unnamedTableDDL" }
+            log.debug { "Expected DDL: $expectedDDL" }
+            log.debug { "Actual DDL:   $unnamedTableDDL" }
 
             unnamedTableDDL shouldBeEqualTo expectedDDL
         }
@@ -973,20 +975,19 @@ class DDLTest: AbstractExposedTest() {
         val testTable = object: Table("different_text_column_types") {
             val id = integer("id").autoIncrement()
             val txt = text("txt")
-            val txtMed = mediumText("txtMed")
-            val txtLong = largeText("txtLong")
+            val txtMed = mediumText("txt_med")
+            val txtLong = largeText("txt_large")
 
             override val primaryKey = PrimaryKey(id)
         }
 
         withTables(testDB, testTable) {
-            val q = db.identifierManager.quoteString
             testTable.ddl.single() shouldBeEqualTo
                     "CREATE TABLE " + addIfNotExistsIfSupported() + "${"different_text_column_types".inProperCase()} " +
                     "(${testTable.id.nameInDatabaseCase()} ${currentDialectTest.dataTypeProvider.integerAutoincType()} PRIMARY KEY, " +
                     "${testTable.txt.nameInDatabaseCase()} ${currentDialectTest.dataTypeProvider.textType()} NOT NULL, " +
-                    "$q${testTable.txtMed.name}$q ${currentDialectTest.dataTypeProvider.mediumTextType()} NOT NULL, " +
-                    "$q${testTable.txtLong.name}$q ${currentDialectTest.dataTypeProvider.largeTextType()} NOT NULL)"
+                    "${testTable.txtMed.nameInDatabaseCase()} ${currentDialectTest.dataTypeProvider.mediumTextType()} NOT NULL, " +
+                    "${testTable.txtLong.nameInDatabaseCase()} ${currentDialectTest.dataTypeProvider.largeTextType()} NOT NULL)"
 
             assertTrue {
                 testDB != TestDB.MYSQL_V5 || (
@@ -1286,7 +1287,7 @@ class DDLTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create table with foreign key to another schema`(testDB: TestDB) {
         // 보안때문에 `exposed` 계정으로는 다른 스키마에 접근할 수 없습니다.
-        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL_MARIADB }
 
         val one = prepareSchemaForTest("one")
         val two = prepareSchemaForTest("two")
@@ -1572,7 +1573,7 @@ class DDLTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create table with composite primary key and schema`(testDB: TestDB) {
         // 권한 설정 때문에 MySQL의 Schema 생성에 실패한다.
-        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL_MARIADB }
 
         val one = prepareSchemaForTest("test")
 

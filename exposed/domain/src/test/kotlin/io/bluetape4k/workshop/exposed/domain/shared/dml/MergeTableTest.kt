@@ -395,7 +395,7 @@ class MergeTableTest: MergeBaseTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `auto generated on condition`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL_MARIADB }
 
         val source = object: IdTable<Int>("source") {
             override val id = integer("id").entityId()

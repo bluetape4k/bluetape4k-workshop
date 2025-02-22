@@ -121,7 +121,7 @@ class CountTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `count alias with table schema`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL_MARIADB }
 
         val custom = prepareSchemaForTest("custom")
         val tester = object: Table("custom.tester") {
@@ -178,7 +178,7 @@ class CountTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `count with offset and limit`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL_MARIADB }
 
         val tester = object: Table("tester") {
             val value = integer("value")

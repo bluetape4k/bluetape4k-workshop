@@ -1040,8 +1040,6 @@ class EntityTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `self references`(testDB: TestDB) {
         withTables(testDB, SelfReferenceTable) {
-            repeat(5) { SelfReferenceEntity.new { } }
-
             val ref1 = SelfReferenceEntity.new { }
             ref1.parent = ref1.id
 

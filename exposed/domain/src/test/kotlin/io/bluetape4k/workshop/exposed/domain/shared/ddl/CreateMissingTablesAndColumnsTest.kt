@@ -768,7 +768,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testCreateTableWithSchemaPrefix(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
+        Assumptions.assumeTrue { testDB !in (TestDB.ALL_MYSQL + TestDB.ALL_MARIADB) }
 
         val schemaName = "my_schema"
         // index and foreign key both use table name to auto-generate their own names & to compare metadata

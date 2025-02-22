@@ -50,8 +50,8 @@ class WindowFunctionsTest: AbstractExposedTest() {
     private val supportsStatisticsAggregateFunctions = TestDB.ALL
     private val supportsNthValueFunction = TestDB.ALL
     private val supportsExpressionsInWindowFunctionArguments = TestDB.ALL - TestDB.ALL_MYSQL
-    private val supportsExpressionsInWindowFrameClause = TestDB.ALL - TestDB.ALL_MYSQL
-    private val supportsDefaultValueInLeadLagFunctions = TestDB.ALL
+    private val supportsExpressionsInWindowFrameClause = TestDB.ALL - TestDB.ALL_MYSQL_MARIADB
+    private val supportsDefaultValueInLeadLagFunctions = TestDB.ALL - TestDB.MARIADB
     private val supportsRangeModeWithOffsetFrameBound = TestDB.ALL
 
     /**
@@ -164,6 +164,8 @@ class WindowFunctionsTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `window functions`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB != TestDB.MYSQL_V5 }
+        
         withSales(testDB) { _, sales ->
             sales.assertWindowFunctionDefinition(
                 rowNumber().over().partitionBy(sales.year, sales.product).orderBy(sales.amount),
@@ -698,6 +700,7 @@ class WindowFunctionsTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun testWindowFrameClause(testDB: TestDB) {
         Assumptions.assumeTrue { testDB != TestDB.MYSQL_V5 }
+
         withSales(testDB) { _, sales ->
             sales.assertWindowFunctionDefinition(
                 sumAmountPartitionByYearProductOrderByAmount(sales).rows(WindowFrameBound.unboundedPreceding()),

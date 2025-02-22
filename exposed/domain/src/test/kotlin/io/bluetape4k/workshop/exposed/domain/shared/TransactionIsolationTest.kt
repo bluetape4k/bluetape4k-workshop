@@ -23,7 +23,7 @@ class TransactionIsolationTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
-    private val transactionIsolationSupportDB = setOf(TestDB.MYSQL_V5, TestDB.POSTGRESQL)
+    private val transactionIsolationSupportDB = TestDB.ALL_MARIADB + TestDB.MYSQL_V5 + TestDB.POSTGRESQL
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -130,7 +130,7 @@ class TransactionIsolationTest: AbstractExposedTest() {
     private fun Transaction.assertTransactionIsolationLevel(testDB: TestDB, expected: Int) {
         val (sql, repeatable, committed) = when (testDB) {
             TestDB.POSTGRESQL   -> Triple("SHOW TRANSACTION ISOLATION LEVEL", "repeatable read", "read committed")
-            in TestDB.ALL_MYSQL -> Triple("SELECT @@tx_isolation", "REPEATABLE-READ", "READ-COMMITTED")
+            in TestDB.ALL_MYSQL_MARIADB -> Triple("SELECT @@tx_isolation", "REPEATABLE-READ", "READ-COMMITTED")
             else                -> throw UnsupportedOperationException("Unsupported testDB: $testDB")
         }
 

@@ -4,6 +4,7 @@ import MigrationUtils
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.constraintNamePart
@@ -406,6 +407,7 @@ class DefaultsTest: AbstractExposedTest() {
         withTables(testDB, testTable) {
             val dtType = currentDialectTest.dataTypeProvider.dateTimeType()
             val dType = currentDialectTest.dataTypeProvider.dateType()
+            val timestampType = currentDialectTest.dataTypeProvider.timestampType()
             val longType = currentDialectTest.dataTypeProvider.longType()
             val timeType = currentDialectTest.dataTypeProvider.timeType()
             val varcharType = currentDialectTest.dataTypeProvider.varcharType(100)
@@ -423,8 +425,8 @@ class DefaultsTest: AbstractExposedTest() {
                     "${"t2".inProperCase()} $dtType${testTable.t2.constraintNamePart()} ${nowExpression.itOrNull()}, " +
                     "${"t3".inProperCase()} $dtType${testTable.t3.constraintNamePart()} ${dtLiteral.itOrNull()}, " +
                     "${"t4".inProperCase()} $dType${testTable.t4.constraintNamePart()} ${dLiteral.itOrNull()}, " +
-                    "${"t5".inProperCase()} $dtType${testTable.t5.constraintNamePart()} ${tsLiteral.itOrNull()}, " +
-                    "${"t6".inProperCase()} $dtType${testTable.t6.constraintNamePart()} ${tsLiteral.itOrNull()}, " +
+                    "${"t5".inProperCase()} $timestampType${testTable.t5.constraintNamePart()} ${tsLiteral.itOrNull()}, " +
+                    "${"t6".inProperCase()} $timestampType${testTable.t6.constraintNamePart()} ${tsLiteral.itOrNull()}, " +
                     "${"t7".inProperCase()} $longType${testTable.t7.constraintNamePart()} ${durLiteral.itOrNull()}, " +
                     "${"t8".inProperCase()} $longType${testTable.t8.constraintNamePart()} ${durLiteral.itOrNull()}, " +
                     "${"t9".inProperCase()} $timeType${testTable.t9.constraintNamePart()} ${tLiteral.itOrNull()}, " +
@@ -446,7 +448,9 @@ class DefaultsTest: AbstractExposedTest() {
                     arrayListOf(baseExpression)
                 }
 
-            testTable.ddl shouldBeEqualTo expected
+            log.debug { "Expected: $expected" }
+            log.debug { "Actual: ${testTable.ddl}" }
+            testTable.ddl shouldBeEqualTo expected.toList()
 
             val id1 = testTable.insertAndGetId { }
 
@@ -657,7 +661,7 @@ class DefaultsTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `Timestamp with TimeZone Default`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB !in setOf(TestDB.MYSQL_V5) } // TestDB.ALL_MARIADB + TestDB.MYSQL_V5
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_MARIADB + TestDB.MYSQL_V5 }  
         // UTC time zone
         java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone(ZoneOffset.UTC))
         ZoneId.systemDefault().id shouldBeEqualTo "UTC"
@@ -892,7 +896,7 @@ class DefaultsTest: AbstractExposedTest() {
 
         // SQLite does not support ALTER TABLE on a column that has a default value
         // MariaDB does not support TIMESTAMP WITH TIME ZONE column type
-        val unsupportedDatabases = setOf(TestDB.MYSQL_V5) // TestDB.ALL_MARIADB + listOf(TestDB.SQLITE, TestDB.MYSQL_V5)
+        val unsupportedDatabases = TestDB.ALL_MARIADB + listOf(TestDB.MYSQL_V5)
         Assumptions.assumeTrue { testDB !in unsupportedDatabases }
         withTables(testDB, tester) {
             val statements = SchemaUtils.addMissingColumnsStatements(tester)

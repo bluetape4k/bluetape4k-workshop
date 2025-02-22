@@ -6,6 +6,7 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.TestDB.H2_V1
+import io.bluetape4k.workshop.exposed.TestDB.MARIADB
 import io.bluetape4k.workshop.exposed.currentDialectTest
 import io.bluetape4k.workshop.exposed.expectException
 import io.bluetape4k.workshop.exposed.inProperCase
@@ -623,6 +624,15 @@ class DatabaseMigrationTest: AbstractExposedTest() {
         withDb(testDB) {
             if (currentDialectTest.supportsCreateSequence) {
                 try {
+                    // MariaDB does not allow to create auto column without defining it as a key
+                    val tableWithAutoIncrement = if (testDB == TestDB.MARIADB) {
+                        object: IdTable<Long>("test_table") {
+                            override val id: Column<EntityID<Long>> = long("id").autoIncrement().entityId()
+                            override val primaryKey = PrimaryKey(id)
+                        }
+                    } else {
+                        tableWithAutoIncrement
+                    }
                     SchemaUtils.create(tableWithAutoIncrement)
 
                     val stmts = MigrationUtils.statementsRequiredForDatabaseMigration(
@@ -639,13 +649,12 @@ class DatabaseMigrationTest: AbstractExposedTest() {
 
                     when (testDB) {
                         in TestDB.ALL_POSTGRES -> {
-                            statements.size shouldBeEqualTo 3
+                            statements shouldHaveSize 3
                             statements[1] shouldBeEqualTo
                                     "ALTER TABLE test_table ALTER COLUMN id TYPE BIGINT, ALTER COLUMN id DROP DEFAULT"
                             statements[2] shouldBeEqualTo
                                     expectedDropSequenceStatement("test_table_id_seq")
                         }
-
                         else -> {
                             statements.size shouldBeEqualTo 2
                             val alterColumnWord = if (currentDialectTest is MysqlDialect) "MODIFY" else "ALTER"
@@ -721,18 +730,17 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                         .statementsRequiredForDatabaseMigration(tableWithAutoIncrementSequenceName)
                         .shouldBeEmpty()
 
-                    val statements = MigrationUtils
-                        .statementsRequiredForDatabaseMigration(
-                            tableWithAutoIncrement,
-                            withLogs = false
-                        )
+                    val statements = MigrationUtils.statementsRequiredForDatabaseMigration(
+                        tableWithAutoIncrement,
+                        withLogs = false
+                    )
 
                     when (testDB) {
                         in TestDB.ALL_POSTGRES -> {
                             statements.forEachIndexed { i, stmt ->
                                 log.debug { "stmt[$i]=$stmt" }
                             }
-                            statements.size shouldBeEqualTo 3
+                            statements shouldHaveSize 3
                             statements[0] shouldBeEqualTo
                                     expectedCreateSequenceStatement("test_table_id_seq")
                             statements[1] shouldBeEqualTo
@@ -742,11 +750,15 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                         }
 
                         H2_V1 -> {
-                            statements.size shouldBeEqualTo 1
+                            statements shouldHaveSize 1
                             statements[0] shouldBeEqualTo
                                     "ALTER TABLE TEST_TABLE ALTER COLUMN ID BIGINT AUTO_INCREMENT NOT NULL"
                         }
-
+                        TestDB.MARIADB -> {
+                            statements shouldHaveSize 2
+                            statements[0] shouldBeEqualTo "ALTER TABLE test_table MODIFY COLUMN id BIGINT AUTO_INCREMENT NOT NULL"
+                            statements[1] shouldBeEqualTo expectedDropSequenceStatement(sequenceName)
+                        }
                         else -> {
                             statements.size shouldBeEqualTo 2
                             statements[0] shouldStartWithIgnoringCase
@@ -879,7 +891,11 @@ class DatabaseMigrationTest: AbstractExposedTest() {
                         statements[0] shouldBeEqualTo
                                 "ALTER TABLE TEST_TABLE ALTER COLUMN ID BIGINT AUTO_INCREMENT NOT NULL"
                     }
-
+                    MARIADB -> {
+                        statements shouldHaveSize 2
+                        statements[0] shouldBeEqualTo "ALTER TABLE test_table MODIFY COLUMN id BIGINT AUTO_INCREMENT NOT NULL"
+                        statements[1] shouldBeEqualTo expectedDropSequenceStatement(sequence.name)
+                    }
                     else -> {
                         statements.size shouldBeEqualTo 2
                         statements[0] shouldStartWithIgnoringCase
@@ -986,8 +1002,10 @@ class DatabaseMigrationTest: AbstractExposedTest() {
      * CREATE TABLE IF NOT EXISTS TEST_TABLE (ID BIGINT NOT NULL)
      * ```
      */
-    private val tableWithoutAutoIncrement = object: IdTable<Long>("test_table") {
-        override val id: Column<EntityID<Long>> = long("id").entityId()
+    private val tableWithoutAutoIncrement by lazy {
+        object: IdTable<Long>("test_table") {
+            override val id: Column<EntityID<Long>> = long("id").entityId()
+        }
     }
 
     /**
@@ -995,15 +1013,21 @@ class DatabaseMigrationTest: AbstractExposedTest() {
      * CREATE TABLE IF NOT EXISTS TEST_TABLE (ID BIGINT NOT NULL)
      * ```
      */
-    private val tableWithAutoIncrement = object: IdTable<Long>("test_table") {
-        override val id: Column<EntityID<Long>> = long("id").autoIncrement().entityId()
+    private val tableWithAutoIncrement by lazy {
+        object: IdTable<Long>("test_table") {
+            override val id: Column<EntityID<Long>> = long("id").autoIncrement().entityId()
+        }
     }
 
-    private val tableWithAutoIncrementCustomSequence = object: IdTable<Long>("test_table") {
-        override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequence).entityId()
+    private val tableWithAutoIncrementCustomSequence by lazy {
+        object: IdTable<Long>("test_table") {
+            override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequence).entityId()
+        }
     }
 
-    private val tableWithAutoIncrementSequenceName = object: IdTable<Long>("test_table") {
-        override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequenceName).entityId()
+    private val tableWithAutoIncrementSequenceName by lazy {
+        object: IdTable<Long>("test_table") {
+            override val id: Column<EntityID<Long>> = long("id").autoIncrement(sequenceName).entityId()
+        }
     }
 }

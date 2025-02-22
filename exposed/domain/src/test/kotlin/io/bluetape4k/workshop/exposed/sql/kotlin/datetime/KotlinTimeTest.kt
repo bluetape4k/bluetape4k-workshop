@@ -87,7 +87,7 @@ import kotlin.time.Duration
 
 class KotlinTimeTest: AbstractExposedTest() {
 
-    private val timestampWithTimeZoneUnsupportedDB = setOf(TestDB.MYSQL_V5) // TestDB.ALL_MARIADB + TestDB.MYSQL_V5
+    private val timestampWithTimeZoneUnsupportedDB = TestDB.ALL_MARIADB + TestDB.MYSQL_V5
 
     /**
      * Kotlin [LocalDateTime] 컬럼을 저장하고 조회하는 테스트
@@ -609,7 +609,7 @@ class KotlinTimeTest: AbstractExposedTest() {
 
             // PostgreSQL and MySQL always store the timestamp in UTC, thereby losing the original time zone.
             // To preserve the original time zone, store the time zone information in a separate column.
-            val isOriginalTimeZonePreserved = testDB !in (TestDB.ALL_MYSQL + TestDB.ALL_POSTGRES)
+            val isOriginalTimeZonePreserved = testDB !in (TestDB.ALL_MYSQL_MARIADB + TestDB.ALL_POSTGRES)
             if (isOriginalTimeZonePreserved) {
                 // Assert that time zone is preserved when the same value is inserted in different time zones
                 cairoNowInsertedInCairoTimeZone shouldDateTimeEqualTo cairoNow

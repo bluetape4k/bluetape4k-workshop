@@ -16,6 +16,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.postgresql.util.PSQLException
 import java.sql.SQLException
+import java.sql.SQLSyntaxErrorException
 import java.sql.SQLTimeoutException
 import kotlin.test.fail
 
@@ -32,7 +33,7 @@ class QueryTimeoutTest: AbstractExposedTest() {
 
     private fun generateTimeoutStatement(db: TestDB, timeout: Int): String {
         return when (db) {
-            in TestDB.ALL_MYSQL -> "SELECT SLEEP($timeout) = 0;"
+            in TestDB.ALL_MYSQL_MARIADB -> "SELECT SLEEP($timeout) = 0;"
             in TestDB.ALL_POSTGRES -> "SELECT pg_sleep($timeout);"
             else -> throw NotImplementedError()
         }
@@ -42,7 +43,7 @@ class QueryTimeoutTest: AbstractExposedTest() {
     // Looks like it tries to load class from the V8 version of driver.
     // Probably it happens because of driver mapping configuration in org.jetbrains.exposed.sql.Database::driverMapping
     // that expects that all the versions of the Driver have the same package.
-    private val timeoutTestDBList = TestDB.ALL_POSTGRES + TestDB.MYSQL_V8
+    private val timeoutTestDBList = TestDB.ALL_POSTGRES + TestDB.ALL_MARIADB + TestDB.MYSQL_V8
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -126,7 +127,7 @@ class QueryTimeoutTest: AbstractExposedTest() {
                     // MySQL, POSTGRESQLNG throws a regular SQLException with a minus timeout value
                     in (TestDB.ALL_MYSQL + POSTGRESQLNG) -> cause.cause shouldBeInstanceOf SQLException::class
                     // MariaDB throws a regular SQLSyntaxErrorException with a minus timeout value
-                    // in TestDB.ALL_MARIADB -> assertTrue(cause.cause is SQLSyntaxErrorException)
+                    in TestDB.ALL_MARIADB -> cause.cause shouldBeInstanceOf SQLSyntaxErrorException::class
                     // SqlServer throws a regular SQLServerException with a minus timeout value
                     // TestDB.SQLSERVER -> assertTrue(cause.cause is SQLServerException)
                     else -> throw NotImplementedError()

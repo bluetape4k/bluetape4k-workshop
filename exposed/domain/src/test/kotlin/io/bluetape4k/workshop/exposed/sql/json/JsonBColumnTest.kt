@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.exposed.sql.json
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.TestDB.MYSQL_V5
 import io.bluetape4k.workshop.exposed.currentDialectTest
 import io.bluetape4k.workshop.exposed.expectException
 import io.bluetape4k.workshop.exposed.sql.json.JsonTestData.JsonBArrays
@@ -24,6 +23,7 @@ import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.dao.entityCache
 import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.ComparisonOp
 import org.jetbrains.exposed.sql.Expression
@@ -62,6 +62,8 @@ import org.junit.jupiter.params.provider.MethodSource
 class JsonBColumnTest: AbstractExposedJsonTest() {
 
     companion object: KLogging()
+
+    private val binaryJsonNotSupportedDB = emptyList<TestDB>()
 
     /**
      * JSONB 컬럼 생성 및 조회 테스트
@@ -597,7 +599,8 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `json with defaults`(testDB: TestDB) {
+    fun `jsonb with defaults`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB != TestDB.MYSQL_V5 }
         /**
          * Default value for JSON column
          * ```sql
@@ -615,8 +618,8 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
         }
 
         withDb(testDB) {
-            if (testDB == MYSQL_V5) {
-                expectException<IllegalArgumentException> {
+            if (testDB in binaryJsonNotSupportedDB) {
+                expectException<UnsupportedByDialectException> {
                     SchemaUtils.createMissingTablesAndColumns(defaultTester)
                 }
             } else {
@@ -813,7 +816,7 @@ class JsonBColumnTest: AbstractExposedJsonTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `jsonb as default`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB == TestDB.MYSQL_V5 }
+        Assumptions.assumeTrue { testDB != TestDB.MYSQL_V5 }
 
         val defaultUser = User("name", "team")
         val tester = object: IntIdTable("testJsonAsDefault") {

@@ -90,7 +90,7 @@ class JavaTimeTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
-    private val timestampWithTimeZoneUnsupportedDB = setOf(TestDB.MYSQL_V5) // + TestDB.ALL_MARIADB
+    private val timestampWithTimeZoneUnsupportedDB = TestDB.ALL_MARIADB + TestDB.MYSQL_V5
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)

@@ -91,7 +91,7 @@ class TrigonometricalFunctionTest: AbstractFunctionsTest() {
     fun `PiFunction test`(testDB: TestDB) {
         withTable(testDB) {
             when (testDB) {
-                in TestDB.ALL_MYSQL ->
+                in TestDB.ALL_MYSQL_MARIADB ->
                     PiFunction shouldExpressionEqualTo "3.141593".toBigDecimal()
 
                 else                ->

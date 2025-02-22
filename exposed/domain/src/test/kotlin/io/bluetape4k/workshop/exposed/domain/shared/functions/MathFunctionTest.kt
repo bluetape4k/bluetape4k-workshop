@@ -223,7 +223,7 @@ class MathFunctionTest: AbstractFunctionsTest() {
             SqrtFunction(decimalLiteral(BigDecimal("125.44"))) shouldExpressionEqualTo "11.2".toBigDecimal()
 
             when (testDB) {
-                in TestDB.ALL_MYSQL ->
+                in TestDB.ALL_MYSQL_MARIADB ->
                     SqrtFunction(intLiteral(-100)) shouldExpressionEqualTo null
 
                 else ->

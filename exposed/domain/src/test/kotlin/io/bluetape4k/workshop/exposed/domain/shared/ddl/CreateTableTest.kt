@@ -741,7 +741,7 @@ class CreateTableTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create Table With OnDelete Set Default`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
+        Assumptions.assumeTrue { testDB !in (TestDB.ALL_MYSQL + TestDB.ALL_MARIADB) }
 
         withDb(testDB) {
             val expected = listOf(
@@ -770,7 +770,7 @@ class CreateTableTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create table with same name in different schemas`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
+        Assumptions.assumeTrue { testDB !in (TestDB.ALL_MYSQL + TestDB.ALL_MARIADB) }
 
         val one = prepareSchemaForTest("one")
         withDb(testDB) {
@@ -849,7 +849,8 @@ class CreateTableTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `list Tables in all schemas`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
+        Assumptions.assumeTrue { testDB !in (TestDB.ALL_MYSQL + TestDB.ALL_MARIADB) }
+
         withDb(testDB) {
             if (currentDialectTest.supportsCreateSchema) {
                 val one = prepareSchemaForTest("one")
@@ -897,7 +898,7 @@ class CreateTableTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `create table with dot in name without creating schema beforehand`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
-        
+
         withDb(testDB) {
             val q = db.identifierManager.quoteString
             val tableName = "${q}SomeNamespace.SomeTable${q}"
@@ -908,7 +909,7 @@ class CreateTableTest: AbstractExposedTest() {
 
             try {
                 runCatching { SchemaUtils.drop(tester) }
-                
+
                 SchemaUtils.create(tester)
                 tester.exists().shouldBeTrue()
 
