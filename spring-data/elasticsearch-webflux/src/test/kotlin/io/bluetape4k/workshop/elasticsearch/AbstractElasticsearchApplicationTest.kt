@@ -4,7 +4,6 @@ import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.trace
 import io.bluetape4k.support.uninitialized
-import io.bluetape4k.support.unsafeLazy
 import io.bluetape4k.workshop.elasticsearch.domain.model.Book
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
@@ -23,7 +22,7 @@ abstract class AbstractElasticsearchApplicationTest {
     protected val operations: ElasticsearchTemplate = uninitialized()
 
     // NOTE: ES index refresh는 동기방식으로 해야 검색이 제대로 됩니다.
-    protected val indexOpsForBook by unsafeLazy { operations.indexOps(Book::class.java) }
+    protected val indexOpsForBook by lazy { operations.indexOps(Book::class.java) }
 
     @BeforeEach
     fun beforeEach() {
