@@ -157,24 +157,34 @@ class UpdateTest: AbstractExposedTest() {
     }
 
     /**
-     * MariaDB, Oracle, SQLServer에서만 지원합니다.
+     * 테이블들을 Join 한 Update 문에 LIMIT 적용하기
+     * 단, MariaDB, Oracle, SQLServer에서만 지원합니다.
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `update with join and limit`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB !in (TestDB.ALL_H2 + TestDB.ALL_MYSQL_MARIADB + TestDB.ALL_POSTGRES) }
         // val supportsUpdateWithJoinAndLimit = TestDB.ALL_MARIADB + TestDB.ORACLE + TestDB.SQLSERVER
         // Assumptions.assumeTrue(testDB !in supportsUpdateWithJoinAndLimit)
+        Assumptions.assumeTrue { testDB in TestDB.ALL_MARIADB }
+        
         withCitiesAndUsers(testDB) { _, users, userData ->
             val join = users.innerJoin(userData)
 
             val maxToUpdate = 2
-            join.selectAll().count().toInt() shouldBeEqualTo maxToUpdate
+            join.selectAll().count() shouldBeEqualTo 4L
 
             val updatedValue = 123
             val valueQuery = join.selectAll().where { userData.value eq updatedValue }
-            valueQuery.count().toInt() shouldBeEqualTo 0
+            valueQuery.count() shouldBeEqualTo 0L
 
+            /**
+             * ```sql
+             * -- MariaDB
+             * UPDATE Users INNER JOIN UserData ON Users.id = UserData.user_id
+             *    SET UserData.`value`=123
+             *  LIMIT 2
+             * ```
+             */
             join.update(limit = maxToUpdate) {
                 it[userData.value] = updatedValue
             }
