@@ -715,6 +715,7 @@ class SelectTest: AbstractExposedTest() {
      * ### `notInTable` example
      *
      * ```sql
+     * -- Postgres
      * SELECT COUNT(*)
      *   FROM sales
      *  WHERE sales.amount NOT IN (TABLE SomeAmounts)

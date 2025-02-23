@@ -5,19 +5,19 @@ import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
 import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.idgenerators.uuid.TimebasedUuid.Epoch
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.assertFailAndRollback
-import io.bluetape4k.workshop.exposed.currentTestDB
 import io.bluetape4k.workshop.exposed.domain.shared.dml.DMLTestData.Cities
 import io.bluetape4k.workshop.exposed.expectException
 import io.bluetape4k.workshop.exposed.inProperCase
 import io.bluetape4k.workshop.exposed.withDb
+import io.bluetape4k.workshop.exposed.withSuspendedDb
 import io.bluetape4k.workshop.exposed.withTables
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.fail
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
@@ -48,9 +48,10 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.statements.BatchInsertStatement
 import org.jetbrains.exposed.sql.stringLiteral
 import org.jetbrains.exposed.sql.substring
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.trim
 import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.sql.wrapAsExpression
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
@@ -306,7 +307,7 @@ class InsertTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `batch insert with sequence`(testDB: TestDB) {
-        val cities = Cities
+        val cities = DMLTestData.Cities
         withTables(testDB, cities) {
             val batchSize = 25
             val names = generateSequence { Epoch.nextIdAsString() }.take(batchSize)
@@ -340,7 +341,7 @@ class InsertTest: AbstractExposedTest() {
     }
 
     /**
-     * Inser and get generated key
+     * Insert and get generated key
      *
      * Postgres:
      * ```sql
@@ -829,7 +830,7 @@ class InsertTest: AbstractExposedTest() {
     }
 
     private fun rollbackSupportDbs() =
-        TestDB.ALL_H2 + TestDB.MYSQL_V8 + TestDB.MARIADB + TestDB.POSTGRESQL
+        TestDB.ALL_H2 + TestDB.ALL_MYSQL_MARIADB + TestDB.ALL_POSTGRES - TestDB.MYSQL_V5
 
     /**
      * 일반적인 트랜잭션에서 Constraint 예외가 발생하면, 해당 트랜잭션은 Rollback 되어야 합니다.
@@ -847,7 +848,7 @@ class InsertTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `rollback on constraint exception with normal transactions`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 + TestDB.MYSQL_V8 + TestDB.MARIADB + TestDB.POSTGRESQL }
+        Assumptions.assumeTrue { testDB in rollbackSupportDbs() }
 
         val testTable = object: IntIdTable("TestRollback") {
             val foo = integer("foo").check { it greater 0 }
@@ -888,54 +889,55 @@ class InsertTest: AbstractExposedTest() {
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `rollback on constraint exception with suspend transactions`(testDB: TestDB) = runTest {
-        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 + TestDB.MYSQL_V8 + TestDB.MARIADB + TestDB.POSTGRESQL }
+    fun `rollback on constraint exception with suspend transactions`(testDB: TestDB) = runSuspendIO {
+        Assumptions.assumeTrue { testDB in rollbackSupportDbs() }
 
         val testTable = object: IntIdTable("TestRollback") {
             val foo = integer("foo").check { it greater 0 }
         }
         try {
             try {
-                withDb(testDB) {
-                    SchemaUtils.create(testTable)
-                }
                 runBlocking {
-                    newSuspendedTransaction(db = testDB.db) {
+                    withSuspendedDb(testDB) {
+                        SchemaUtils.create(testTable)
                         testTable.insert { it[foo] = 1 }
-                        testTable.insert { it[foo] = 0 }// foo > 0 조건을 만족하지 않음 (예외 발생)
+                        testTable.insert { it[foo] = 0 } // foo > 0 조건을 만족하지 않음 (예외 발생)
                     }
+                    fail("예외가 발생해서 Rollback 이 수행되어야 합니다.")
                 }
-                fail("예외가 발생해서 Rollback 이 수행되어야 합니다.")
             } catch (e: Throwable) {
-                // 예외 발생 시 Rollback 이 수행되어야 합니다.
+                // log.warn(e) { "Fail to insert" }
             }
-            withDb(testDB) {
+
+            withSuspendedDb(testDB) {
                 testTable.selectAll().empty().shouldBeTrue()
             }
         } finally {
-            withDb(testDB) {
+            withSuspendedDb(testDB) {
                 SchemaUtils.drop(testTable)
             }
         }
     }
 
+
     /**
      * Batch Insert with ON CONFLICT DO NOTHING - 예외 발생 시 해당 예외를 무시하고,
      * 다음 작업을 수행하도록 하는 [BatchInsertStatement] 구현체입니다.
      */
-    class BatchInsertOnConflictDoNothing(table: Table): BatchInsertStatement(table) {
+    class BatchInsertOnConflictIgnore(table: Table): BatchInsertStatement(table) {
         override fun prepareSQL(transaction: Transaction, prepared: Boolean): String = buildString {
             val insertStatement = super.prepareSQL(transaction, prepared)
-            when (val db = currentTestDB) {
-                in TestDB.ALL_MYSQL_LIKE -> {
+
+            when (val dialect = transaction.db.dialect) {
+                is MysqlDialect -> {
                     append("INSERT IGNORE ")
                     append(insertStatement.substringAfter("INSERT "))
                 }
 
                 else -> {
                     append(insertStatement)
-                    val identifier = if (db == TestDB.H2_PSQL) "" else "(id) "
-                    append(" ON CONFLICT ${identifier}DO NOTHING")
+                    val identifier = if (dialect is PostgreSQLDialect) "(id)" else ""
+                    append(" ON CONFLICT $identifier DO NOTHING")
                 }
             }
         }
@@ -957,7 +959,7 @@ class InsertTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `batch insert number of inserted rows`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB in (TestDB.ALL_MYSQL_LIKE - TestDB.MYSQL_V5) + TestDB.ALL_POSTGRES_LIKE }
+        Assumptions.assumeTrue { testDB in TestDB.ALL_MYSQL_MARIADB + TestDB.ALL_POSTGRES_LIKE }
 
         val tab = object: Table("tab") {
             val id = varchar("id", 10).uniqueIndex()
@@ -965,7 +967,7 @@ class InsertTest: AbstractExposedTest() {
         withTables(testDB, tab) {
             tab.insert { it[id] = "foo" }
 
-            val numInserted = BatchInsertOnConflictDoNothing(tab).run {
+            val numInserted = BatchInsertOnConflictIgnore(tab).run {
                 addBatch()
                 this[tab.id] = "foo"        // 중복되므로 insert 되지 않음
 
