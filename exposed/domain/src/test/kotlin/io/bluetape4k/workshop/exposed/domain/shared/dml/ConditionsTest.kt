@@ -33,13 +33,15 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
 /**
- * 조건문 (WHERE Clause) 테스트
+ * 조건을 표현하는 다양한 [Op] 에 대한 예제 모음
  */
 class ConditionsTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
     /**
+     * [Op.TRUE], [Op.FALSE] 를 사용하여 TRUE, FALSE 조건을 표현한다.
+     *
      * ```sql
      * SELECT COUNT(*) FROM CITIES WHERE FALSE
      * SELECT COUNT(*) FROM CITIES WHERE TRUE
@@ -56,6 +58,12 @@ class ConditionsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * `isNotDistinctFrom`, `isDistinctFrom` 을 이용하여 null 값도 비교할 수 있도록 한다.
+     *
+     * * `isNotDistinctFrom` 은 `null == null` 을 `true` 로 처리한다.
+     * * `isDistinctFrom` 은 `null != null` 을 `false` 로 처리한다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `null safe equality Ops`(testDB: TestDB) {
@@ -87,33 +95,68 @@ class ConditionsTest: AbstractExposedTest() {
                 .where { table.number1 eq table.number2 }
                 .map { it[table.id] } shouldBeEqualTo listOf(sameNumberId)
 
-            // null == null returns true
+            /**
+             * null == null returns true
+             *
+             * ```sql
+             * SELECT foo.id, foo.number1, foo.number2
+             *   FROM foo
+             *  WHERE foo.number1 IS NOT DISTINCT FROM foo.number2
+             * ```
+             */
             table.selectAll()
                 .where { table.number1 isNotDistinctFrom table.number2 }
                 .map { it[table.id] } shouldBeEqualTo listOf(sameNumberId, bothNullId)
 
-            // number != null return null
+            // null != null return null
             table.selectAll()
                 .where { table.number1 neq table.number2 }
                 .map { it[table.id] } shouldBeEqualTo listOf(differentNumberId)
 
-            // number != null return true
+            /**
+             * null != null return false
+             *
+             * ```sql
+             * SELECT foo.id, foo.number1, foo.number2
+             *   FROM foo
+             *  WHERE foo.number1 IS DISTINCT FROM foo.number2
+             * ```
+             */
             table.selectAll()
                 .where { table.number1 isDistinctFrom table.number2 }
                 .map { it[table.id] } shouldBeEqualTo listOf(differentNumberId, oneNullId)
 
-            // (number1 is not null) != (number2 is null) returns true when both are null or neither is null
+            /**
+             * (number1 is not null) != (number2 is null) returns true when both are null or neither is null
+             *
+             * ```sql
+             * SELECT foo.id, foo.number1, foo.number2
+             *   FROM foo
+             *  WHERE (foo.number1 IS NOT NULL) IS DISTINCT FROM (foo.number2 IS NULL)
+             * ```
+             */
             table.selectAll()
                 .where { table.number1.isNotNull() isDistinctFrom table.number2.isNull() }
                 .map { it[table.id] } shouldBeEqualTo listOf(sameNumberId, differentNumberId, bothNullId)
 
-            // (number1 is not null) == (number2 is null) returns true when only 1 is null
+            /**
+             * (number1 is not null) == (number2 is null) returns true when only 1 is null
+             *
+             * ```sql
+             * SELECT foo.id, foo.number1, foo.number2
+             *   FROM foo
+             *  WHERE (foo.number1 IS NOT NULL) IS NOT DISTINCT FROM (foo.number2 IS NULL)
+             * ```
+             */
             table.selectAll()
                 .where { table.number1.isNotNull() isNotDistinctFrom table.number2.isNull() }
                 .map { it[table.id] } shouldBeEqualTo listOf(oneNullId)
         }
     }
 
+    /**
+     * `EntityID` 수형을 비교 연산에 사용하는 예제
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `comparison operations with EntityID columns`(testDB: TestDB) {
@@ -280,7 +323,11 @@ class ConditionsTest: AbstractExposedTest() {
         withCitiesAndUsers(testDB) { _, users, _ ->
             val allUserCount = users.selectAll().count()
 
-            // UPDATE USERS SET CITY_ID=NULL
+            /**
+             * ```sql
+             * UPDATE USERS SET CITY_ID=NULL
+             * ```
+             */
             users.update {
                 it[users.cityId] = Op.nullOp()
             }
@@ -289,7 +336,11 @@ class ConditionsTest: AbstractExposedTest() {
             val nullUsersOp = users.selectAll().where { users.cityId eq Op.nullOp() }.count()
             nullUsersOp shouldBeEqualTo allUserCount
 
-            // UPDATE USERS SET CITY_ID=NULL
+            /**
+             * ```sql
+             * UPDATE USERS SET CITY_ID=NULL
+             * ```
+             */
             users.update {
                 it[users.cityId] = null
             }
@@ -456,6 +507,9 @@ class ConditionsTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * 비교 연산을 수행한 게산된 컬럼을 alias 로 지정하여 반환한다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `select aliased comparison result`(testDB: TestDB) {
@@ -520,7 +574,7 @@ class ConditionsTest: AbstractExposedTest() {
     }
 
     /**
-     * `null`, `empty` 조건문 테스트
+     * `isNull`, `isNotNull`, `isNullOrEmpty` 함수를 사용하여 NULL 또는 빈 문자열을 비교한다.
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
