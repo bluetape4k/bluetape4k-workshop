@@ -9,6 +9,8 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.batchInsert
+import org.jetbrains.exposed.sql.count
+import org.jetbrains.exposed.sql.countDistinct
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.max
 import org.jetbrains.exposed.sql.selectAll
@@ -24,25 +26,27 @@ class CountTest: AbstractExposedTest() {
      * `withDistinct` is used to add `DISTINCT` to the query.
      *
      * ```sql
+     * -- Postgres
+     * -- distinct with selectAll
      * SELECT COUNT(*)
-     *   FROM (
-     *      SELECT DISTINCT CITIES.CITY_ID Cities_city_id,
-     *             CITIES."name" Cities_name,
-     *             USERS.ID Users_id,
-     *             USERS."name" Users_name,
-     *             USERS.CITY_ID Users_city_id,
-     *             USERS.FLAGS Users_flags
-     *        FROM CITIES INNER JOIN USERS ON CITIES.CITY_ID = USERS.CITY_ID
-     *   ) subquery
+     *   FROM (SELECT DISTINCT cities.city_id Cities_city_id,
+     *                         cities."name" Cities_name,
+     *                         users.id Users_id,
+     *                         users."name" Users_name,
+     *                         users.city_id Users_city_id,
+     *                         users.flags Users_flags
+     *                    FROM cities INNER JOIN users ON cities.city_id = users.city_id
+     *        ) subquery
      * ```
-     *
      * ```sql
+     * -- Postgres
+     * -- distinct with cities.city_id, users.id
      * SELECT COUNT(*)
-     *   FROM (
-     *      SELECT DISTINCT CITIES.CITY_ID Cities_city_id,
-     *                      USERS.ID Users_id
-     *        FROM CITIES INNER JOIN USERS ON CITIES.CITY_ID = USERS.CITY_ID
-     *   ) subquery
+     *   FROM (SELECT DISTINCT cities.city_id Cities_city_id,
+     *                         users.id Users_id
+     *           FROM cities INNER JOIN users ON cities.city_id = users.city_id
+     *        ) subquery
+     * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -51,12 +55,37 @@ class CountTest: AbstractExposedTest() {
             cities.innerJoin(users)
                 .selectAll()
                 .withDistinct()
-                .count().toInt() shouldBeEqualTo 3
+                .count() shouldBeEqualTo 3L
 
             cities.innerJoin(users)
                 .select(cities.id, users.id)
                 .withDistinct()
-                .count().toInt() shouldBeEqualTo 3
+                .count() shouldBeEqualTo 3L
+        }
+    }
+
+
+    /**
+     * 특정 컬럼에 count 함수 적용하기
+     *
+     * ```sql
+     * -- Postgres
+     * SELECT COUNT(DISTINCT cities.city_id) FROM cities;
+     * SELECT COUNT(users.id) FROM users
+     * ```
+     */
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `특정 컬럼의 count, countDistinct 함수 적용하기`(testDB: TestDB) {
+        withCitiesAndUsers(testDB) { cities, users, _ ->
+
+            // SELECT COUNT(DISTINCT cities.city_id) FROM cities;
+            val cityCount = cities.id.countDistinct()
+            cities.select(cityCount).single()[cityCount] shouldBeEqualTo 3L
+
+            // SELECT COUNT(users.id) FROM users
+            val userIdCount = users.id.count()
+            users.select(userIdCount).single()[userIdCount] shouldBeEqualTo 5L
         }
     }
 
@@ -100,7 +129,7 @@ class CountTest: AbstractExposedTest() {
             OrgMembership.new { org = org1 }
 
             /**
-             * ```
+             * ```sql
              * SELECT COUNT(*) FROM ORGMEMBERSHIPS
              * ```
              */
