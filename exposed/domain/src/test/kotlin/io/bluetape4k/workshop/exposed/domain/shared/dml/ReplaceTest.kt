@@ -23,11 +23,11 @@ import org.junit.jupiter.params.provider.MethodSource
 /**
  * `REPLACE INTO` 문은 `INSERT INTO` 문과 유사하지만, 기존 데이터가 있으면 삭제하고 새로운 데이터를 추가한다.
  *
- * **`REPLACE INTO` 문은 MySQL 에서만 지원한다.**
+ * **`REPLACE INTO` 문은 MySQL, MariaDB 에서만 지원한다.**
  */
 class ReplaceTest: AbstractExposedTest() {
 
-    private val replaceSupported = TestDB.ALL_MYSQL_LIKE
+    private val replaceSupported = TestDB.ALL_MYSQL_LIKE + TestDB.ALL_MARIADB_LIKE
 
     /**
      * ```sql
