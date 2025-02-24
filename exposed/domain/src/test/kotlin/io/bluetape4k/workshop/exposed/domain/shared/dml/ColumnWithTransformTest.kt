@@ -28,7 +28,6 @@ import org.jetbrains.exposed.sql.insertAndGetId
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.statements.InsertStatement
 import org.jetbrains.exposed.sql.update
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -582,7 +581,6 @@ class ColumnWithTransformTest: AbstractExposedTest() {
         }
     }
 
-    @Disabled("0.58.0 에서는 아직 지원되지 않습니다")
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `wrapRow with aliases`(testDB: TestDB) {
