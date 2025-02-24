@@ -330,7 +330,7 @@ class DeleteTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `delete ignore with join`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB in TestDB.ALL_MYSQL }
+        Assumptions.assumeTrue { testDB in TestDB.ALL_MYSQL_MARIADB }
 
         withCitiesAndUsers(testDB) { _, users, userData ->
             val join = users innerJoin userData
