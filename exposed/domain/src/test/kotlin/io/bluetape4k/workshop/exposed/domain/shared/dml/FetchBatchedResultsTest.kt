@@ -211,7 +211,8 @@ class FetchBatchedResultsTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `when there are no items, fetchBatchedResults should return an empty list`(testDB: TestDB) {
         val cities = DMLTestData.Cities
-        withTables(testDB, cities) {
+        val users = DMLTestData.Users
+        withTables(testDB, cities, users) {
             val batches = cities.selectAll()
                 .fetchBatchedResults(batchSize = 100)
                 .toList()
@@ -237,7 +238,8 @@ class FetchBatchedResultsTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `when there are no items of the given condition, should return an empty iterable`(testDB: TestDB) {
         val cities = DMLTestData.Cities
-        withTables(testDB, cities) {
+        val users = DMLTestData.Users
+        withTables(testDB, cities, users) {
             val names = List(25) { UUID.randomUUID().toString() }
             cities.batchInsert(names) { name -> this[cities.name] = name }
 
