@@ -80,6 +80,7 @@ class GroupByTest: AbstractExposedTest() {
         }
     }
 
+
     /**
      * Postgres:
      * ```sql
