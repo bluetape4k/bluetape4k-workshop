@@ -17,8 +17,6 @@ import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldHaveSize
 import org.jetbrains.exposed.dao.EntityChange
 import org.jetbrains.exposed.dao.EntityChangeType
-import org.jetbrains.exposed.dao.EntityChangeType.Created
-import org.jetbrains.exposed.dao.EntityChangeType.Updated
 import org.jetbrains.exposed.dao.EntityHook
 import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.registeredChanges
@@ -37,6 +35,7 @@ import org.junit.jupiter.params.provider.MethodSource
  * Hibernate의 `EntityListener` 와 유사한 기능을 제공합니다.
  */
 class EntityHookTest: AbstractExposedTest() {
+
 
     companion object: KLogging()
 
@@ -58,6 +57,9 @@ class EntityHookTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Entity 생성 시에 발생한 이벤트 ([EntityChangeType.Created])를 추적합니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun created01(testDB: TestDB) {
@@ -83,6 +85,9 @@ class EntityHookTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Entity 삭제 시에 발생한 이벤트 ([EntityChangeType.Removed])를 추적합니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun delete01(testDB: TestDB) {
@@ -111,6 +116,9 @@ class EntityHookTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Entity 수정 시에 발생한 이벤트 ([EntityChangeType.Updated])를 추적합니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `modified simple 01`(tesgDB: TestDB) {
@@ -126,7 +134,7 @@ class EntityHookTest: AbstractExposedTest() {
             }
 
             events1 shouldHaveSize 2
-            events1.all { it.changeType == Created }.shouldBeTrue()
+            events1.all { it.changeType == EntityChangeType.Created }.shouldBeTrue()
 
             val (_, events2, txId2) = trackChanges {
                 val de = Country.new {
@@ -142,14 +150,20 @@ class EntityHookTest: AbstractExposedTest() {
                 log.debug { "event=$it" }
             }
             events2 shouldHaveSize 2
-            events2.any { it.changeType == Created }.shouldBeTrue()  // create country (DE)
-            events2.any { it.changeType == Updated }.shouldBeTrue()  // update city (Moscow -> Munich, RU -> DE)
+            // create country (DE)
+            events2.any { it.changeType == EntityChangeType.Created }.shouldBeTrue()
+            // update city (Moscow -> Munich, RU -> DE)
+            events2.any { it.changeType == EntityChangeType.Updated }.shouldBeTrue()
+
             events2.mapNotNull { it.toEntity(City)?.name } shouldBeEqualTo listOf("Munich")
             events2.mapNotNull { it.toEntity(Country)?.name } shouldBeEqualTo listOf("DE")
             events2.all { it.transactionId == txId2 }.shouldBeTrue()
         }
     }
 
+    /**
+     * Entity 수정 시에 발생한 이벤트 ([EntityChangeType.Updated])를 추적합니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `modified inner table 01`(testDB: TestDB) {
@@ -194,6 +208,9 @@ class EntityHookTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Entity 수정 시에 발생한 이벤트 ([EntityChangeType.Updated])를 추적합니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `modified inner table 02`(testDB: TestDB) {
@@ -227,6 +244,9 @@ class EntityHookTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * Entity 수정 시에 발생한 이벤트 ([EntityChangeType.Updated])를 추적합니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `modified inner table 03`(testDB: TestDB) {
