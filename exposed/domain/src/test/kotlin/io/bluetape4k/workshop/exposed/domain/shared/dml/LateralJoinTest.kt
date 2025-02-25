@@ -65,7 +65,7 @@ class LateralJoinTest: AbstractExposedTest() {
     @ParameterizedTest
     @FieldSource("lateralJoinSupportedDb")
     fun `lateral join query`(testDB: TestDB) {
-        withTestTablesAndDefaultData(testDB) { parent, child, _ ->
+        withTestTablesAndDefaultData(testDB) { parent, child ->
 
             val query = parent.joinQuery(joinType = JoinType.CROSS, lateral = true) {
                 child.selectAll().where { child.value greater parent.value }.limit(1)
@@ -139,7 +139,7 @@ class LateralJoinTest: AbstractExposedTest() {
     @ParameterizedTest
     @FieldSource("lateralJoinSupportedDb")
     fun `lateral join query alias`(dialect: TestDB) {
-        withTestTablesAndDefaultData(dialect) { parent, child, _ ->
+        withTestTablesAndDefaultData(dialect) { parent, child ->
 
             child.selectAll()
                 .where { child.value greater parent.value }
@@ -199,7 +199,7 @@ class LateralJoinTest: AbstractExposedTest() {
     @ParameterizedTest
     @FieldSource("lateralJoinSupportedDb")
     fun `lateral direct table join`(dialect: TestDB) {
-        withTestTables(dialect) { parent, child, _ ->
+        withTestTables(dialect) { parent, child ->
             // Lateral 적용 시, 명시적으로 테이블 간의 JOIN 조건의 컬럼을 지정하면 예외가 발생합니다. (쿼리를 사용해야 합니다)
             expectException<IllegalArgumentException> {
                 parent.join(child, LEFT, onColumn = parent.id, otherColumn = child.parent, lateral = true)
@@ -244,17 +244,17 @@ class LateralJoinTest: AbstractExposedTest() {
         val value = integer("value")
     }
 
-    private fun withTestTables(dialect: TestDB, statement: Transaction.(Parent, Child, TestDB) -> Unit) {
-        withTables(dialect, Parent, Child) { testDB ->
-            statement(Parent, Child, testDB)
+    private fun withTestTables(testDB: TestDB, statement: Transaction.(Parent, Child) -> Unit) {
+        withTables(testDB, Parent, Child) {
+            statement(Parent, Child)
         }
     }
 
     private fun withTestTablesAndDefaultData(
         testDB: TestDB,
-        statement: Transaction.(Parent, Child, TestDB) -> Unit,
+        statement: Transaction.(Parent, Child) -> Unit,
     ) {
-        withTestTables(testDB) { parent, child, testDB ->
+        withTestTables(testDB) { parent, child ->
             val id = parent.insertAndGetId { it[value] = 20 }
 
             child.batchInsert(listOf(10, 30)) { value ->
@@ -262,7 +262,7 @@ class LateralJoinTest: AbstractExposedTest() {
                 this[child.value] = value
             }
 
-            statement(parent, child, testDB)
+            statement(parent, child)
         }
     }
 }

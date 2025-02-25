@@ -244,6 +244,7 @@ class UnionTest: AbstractExposedTest() {
                 is H2Dialect -> (currentDialect as H2Dialect).isSecondVersion
                 else         -> false
             }
+            log.debug { "intersectAppliedFirst: $intersectAppliedFirst" }
 
             val rows = usersQuery
                 .unionAll(usersQuery)
