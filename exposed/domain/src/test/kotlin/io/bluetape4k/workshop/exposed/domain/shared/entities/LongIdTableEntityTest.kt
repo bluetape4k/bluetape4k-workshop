@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.exposed.domain.shared.entities
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
 import io.bluetape4k.exposed.dao.toStringBuilder
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.domain.shared.entities.LongIdTables.Cities
@@ -120,6 +121,8 @@ object LongIdTables {
  * Primary key가 Long 타입인 테이블 사용 예
  */
 class LongIdTableEntityTest: AbstractExposedTest() {
+
+    companion object: KLogging()
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)

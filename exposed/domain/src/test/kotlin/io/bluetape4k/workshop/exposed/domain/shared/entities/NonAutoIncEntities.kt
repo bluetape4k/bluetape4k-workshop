@@ -60,6 +60,7 @@ class NonAutoIncEntities: AbstractExposedTest() {
             fun new(b: Boolean) = new(lastId.incrementAndGet()) { b1 = b }
 
             override fun new(id: Int?, init: NotAutoEntity.() -> Unit): NotAutoEntity {
+                // Client의 `lastId`를 사용하여 id를 생성합니다. (멀티 JVM, HA 구성 시 문제가 될 수 있습니다)
                 return super.new(id ?: lastId.incrementAndGet()) {
                     defaultedInNew = defaultInt
                     init()
@@ -68,38 +69,28 @@ class NonAutoIncEntities: AbstractExposedTest() {
         }
 
         override fun equals(other: Any?): Boolean = idEquals(other)
-//            other is NotAutoEntity &&
-//                    idValue == other.idValue &&
-//                    b1 == other.b1 &&
-//                    defaultedInNew == other.defaultedInNew
-
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("b1", b1)
-                .add("defaultedInNew", defaultedInNew)
-                .toString()
+        override fun toString(): String = toStringBuilder()
+            .add("b1", b1)
+            .add("defaultedInNew", defaultedInNew)
+            .toString()
 
     }
 
+    /**
+     * 재정의한 `new` 메소드를 이용하여 엔티티를 생성합니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `defaults with override new`(testDB: TestDB) {
         withTables(testDB, NotAutoIntIdTable) {
-            /**
-             * ```sql
-             * INSERT INTO notautointid (id, i1, b1) VALUES (17, 42, TRUE)
-             * ```
-             */
+
+            // INSERT INTO notautointid (id, i1, b1) VALUES (27, 42, TRUE);
             val entity1 = NotAutoEntity.new(true)
             entity1.b1.shouldBeTrue()
             entity1.defaultedInNew shouldBeEqualTo NotAutoEntity.defaultInt
 
-            /**
-             * ```sql
-             * INSERT INTO notautointid (id, i1, b1) VALUES (18, 1, FALSE)
-             * ```
-             */
+            // INSERT INTO notautointid (id, i1, b1) VALUES (28, 1, FALSE);
             val entity2 = NotAutoEntity.new {
                 b1 = false
                 defaultedInNew = 1
@@ -109,12 +100,17 @@ class NonAutoIncEntities: AbstractExposedTest() {
         }
     }
 
+    /**
+     * 자동 증가 Identifier 가 아닌, 클라이언트에서 지정한 Identifier를 사용하여 엔티티를 생성합니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `not auto inc table`(testDB: TestDB) {
         withTables(testDB, NotAutoIntIdTable) {
+
             // INSERT INTO notautointid (id, i1, b1) VALUES (7, 42, TRUE)
             val e1 = NotAutoEntity.new(true)
+
             // INSERT INTO notautointid (id, i1, b1) VALUES (8, 42, FALSE)
             val e2 = NotAutoEntity.new(false)
 
@@ -127,6 +123,7 @@ class NonAutoIncEntities: AbstractExposedTest() {
 
     /**
      * ```sql
+     * -- Postgres
      * CREATE TABLE IF NOT EXISTS requests (
      *      deleted BOOLEAN DEFAULT FALSE NOT NULL,
      *      request_id VARCHAR(255) PRIMARY KEY
@@ -148,7 +145,7 @@ class NonAutoIncEntities: AbstractExposedTest() {
         var deleted by RequestsTable.deleted
 
         /**
-         * Soft delete the entity
+         * Soft delete using `deleted` column
          */
         override fun delete() {
             RequestsTable.update({ RequestsTable.id eq id }) {
@@ -158,13 +155,15 @@ class NonAutoIncEntities: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("requestId", requestId)
-                .add("deleted", deleted)
-                .toString()
+        override fun toString(): String = toStringBuilder()
+            .add("requestId", requestId)
+            .add("deleted", deleted)
+            .toString()
     }
 
+    /**
+     * 엔티티 조회 시 `id`를 이용하여 엔티티를 조회합니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `access entity id from override entity method`(testDB: TestDB) {
@@ -191,7 +190,7 @@ class NonAutoIncEntities: AbstractExposedTest() {
              *  WHERE requests.request_id = 'requestId'
              * ```
              */
-            val updated = Request["requestId"]
+            val updated: Request = Request["requestId"]
             updated.deleted.shouldBeTrue()
         }
     }
