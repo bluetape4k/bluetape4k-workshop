@@ -24,6 +24,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import kotlin.math.absoluteValue
 import kotlin.random.Random
 
 /**
@@ -36,8 +37,8 @@ class EntityCacheTest: AbstractExposedTest() {
     companion object: KLogging()
 
     /**
-     * Postgres:
      * ```sql
+     * -- Postgres
      * CREATE TABLE IF NOT EXISTS testcache (
      *      id SERIAL PRIMARY KEY,
      *      "value" INT NOT NULL
@@ -51,15 +52,14 @@ class EntityCacheTest: AbstractExposedTest() {
     class TestEntity(id: EntityID<Int>): IntEntity(id) {
         companion object: IntEntityClass<TestEntity>(TestTable)
 
-        var value by TestTable.value
+        var value: Int by TestTable.value
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("id", idValue)
-                .add("value", value)
-                .toString()
+        override fun toString(): String = toStringBuilder()
+            .add("id", idValue)
+            .add("value", value)
+            .toString()
     }
 
     /**
@@ -79,14 +79,14 @@ class EntityCacheTest: AbstractExposedTest() {
 
                 repeat(entitiesCount) {
                     TestEntity.new {
-                        value = Random.nextInt()
+                        value = Random.nextInt().absoluteValue
                     }
                 }
 
                 val allEntities = TestEntity.all().toList()
                 allEntities shouldHaveSize entitiesCount
 
-                // 엔티티 캐시로부터 특정 엔티티 조회하기
+                // 엔티티 캐시로부터 특정 엔티티 수형을 조회하기
                 val allCachedEntities = entityCache.findAll(TestEntity)
                 allCachedEntities shouldHaveSize cacheSize
                 allCachedEntities shouldContainSame allEntities.drop(entitiesCount - cacheSize)
@@ -96,6 +96,9 @@ class EntityCacheTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * 전역 `EntityCace` 의 `maxEntitiesToStoreInCachePerEntity` 값을 0 으로 설정하면, 캐시를 사용하지 않습니다.
+     */
     @Test
     fun `global entity cache limit zero`() {
         val entitiesCount = 25
@@ -103,17 +106,20 @@ class EntityCacheTest: AbstractExposedTest() {
         // 기본 캐시 사이즈를 사용하는 DB 연결
         val db = TestDB.H2_PSQL.connect()
 
-        // limit 을 10개로 제한한 DB 연결
+        // limit 을 0 개로 제한한 DB 연결
         val dbNoCache = TestDB.H2_PSQL.connect {
             maxEntitiesToStoreInCachePerEntity = 0
         }
 
+        /**
+         * 기본 캐시 사이즈를 사용하는 DB 연결로 테스트
+         */
         val entityIds = transaction(db) {
             SchemaUtils.create(TestTable)
 
             repeat(entitiesCount) {
                 TestEntity.new {
-                    value = Random.nextInt()
+                    value = Random.nextInt().absoluteValue
                 }
             }
             val entityIds = TestTable.selectAll().map { it[TestTable.id] }
@@ -139,6 +145,9 @@ class EntityCacheTest: AbstractExposedTest() {
 
         entityIds shouldHaveSize entitiesCount
 
+        /**
+         * 캐시를 사용하지 않는 DB 연결로 테스트
+         */
         transaction(dbNoCache) {
             entityCache.clear()
             debug = true
@@ -157,6 +166,9 @@ class EntityCacheTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * 트랜잭션별 Entity Cache의 maxEntitiesToStore 값을 변경하여 캐시 크기를 제한하는 테스트
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `per transaction entity cache limit`(testDB: TestDB) {
@@ -169,7 +181,7 @@ class EntityCacheTest: AbstractExposedTest() {
 
             repeat(entitiesCount) {
                 TestEntity.new {
-                    value = Random.nextInt()
+                    value = Random.nextInt().absoluteValue
                 }
             }
 
@@ -191,7 +203,7 @@ class EntityCacheTest: AbstractExposedTest() {
         withTables(testDB, TestTable) {
             repeat(20) {
                 TestEntity.new {
-                    value = Random.nextInt()
+                    value = Random.nextInt().absoluteValue
                 }
             }
             entityCache.clear()
@@ -225,7 +237,7 @@ class EntityCacheTest: AbstractExposedTest() {
     fun `EntityCache should not be cleaned on explicit commit`(testDB: TestDB) {
         withTables(testDB, TestTable) {
             val entity = TestEntity.new {
-                value = Random.nextInt()
+                value = Random.nextInt().absoluteValue
             }
             TestEntity.testCache(entity.id) shouldBeEqualTo entity
 
