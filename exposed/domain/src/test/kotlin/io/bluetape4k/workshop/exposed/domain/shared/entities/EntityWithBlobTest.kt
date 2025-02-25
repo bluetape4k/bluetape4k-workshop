@@ -1,13 +1,10 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
-import io.bluetape4k.exposed.dao.id.TimebasedUUIDBase62Entity
-import io.bluetape4k.exposed.dao.id.TimebasedUUIDBase62EntityClass
-import io.bluetape4k.exposed.dao.id.TimebasedUUIDBase62EntityID
-import io.bluetape4k.exposed.dao.id.TimebasedUUIDBase62Table
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
 import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.exposed.sql.statements.api.toUtf8String
+import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.support.toUtf8String
@@ -16,29 +13,37 @@ import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
+import org.jetbrains.exposed.dao.LongEntity
+import org.jetbrains.exposed.dao.LongEntityClass
 import org.jetbrains.exposed.dao.entityCache
+import org.jetbrains.exposed.dao.id.EntityID
+import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.statements.api.ExposedBlob
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
+/**
+ * [ExposedBlob] 필드를 가지는 엔티티를 다루는 예제입니다.
+ */
 class EntityWithBlobTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
     /**
      * ```sql
+     * -- Postgres
      * CREATE TABLE IF NOT EXISTS blobtable (
-     *      id VARCHAR(22) PRIMARY KEY,
+     *      id BIGSERIAL PRIMARY KEY,
      *      "content" bytea NULL
      * )
      * ```
      */
-    object BlobTable: TimebasedUUIDBase62Table("BlobTable") {
+    object BlobTable: LongIdTable("BlobTable") {
         val blob = blob("content").nullable()
     }
 
-    class BlobEntity(id: TimebasedUUIDBase62EntityID): TimebasedUUIDBase62Entity(id) {
-        companion object: TimebasedUUIDBase62EntityClass<BlobEntity>(BlobTable) {
+    class BlobEntity(id: EntityID<Long>): LongEntity(id) {
+        companion object: LongEntityClass<BlobEntity>(BlobTable) {
             /**
              * Custom 생성자
              */
@@ -51,10 +56,9 @@ class EntityWithBlobTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("content", content?.bytes?.toUtf8String())
-                .toString()
+        override fun toString(): String = toStringBuilder()
+            .add("content", content?.bytes?.toUtf8String())
+            .toString()
     }
 
     /**
@@ -64,64 +68,36 @@ class EntityWithBlobTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `handle blob field`(testDB: TestDB) {
         withTables(testDB, BlobTable) {
-            /**
-             * ```sql
-             * INSERT INTO blobtable (id, "content")
-             * VALUES ('wTsyEsRRJfbF1xtDl6Dmt', E'\\x')
-             * ```
-             */
-            val blobEntity = BlobEntity("foo".toUtf8Bytes())
+
+            val text1 = Fakers.randomString(1024, 4096)
+            val bytes1 = text1.toUtf8Bytes()
+
+            // INSERT INTO blobtable ("content") VALUES (E'\\x')
+            val blobEntity = BlobEntity(bytes1)
             entityCache.clear()
 
-            /**
-             * ```sql
-             * SELECT blobtable.id, blobtable."content"
-             *   FROM blobtable
-             *  WHERE blobtable.id = 'wTsyEsRRJfbF1xtDl6Dmt'
-             * ```
-             */
+            // SELECT blobtable.id, blobtable."content" FROM blobtable WHERE blobtable.id = 1
             var y2 = BlobEntity.reload(blobEntity)!!
-            y2.content!!.bytes.toUtf8String() shouldBeEqualTo "foo"
+            y2.content!!.bytes.toUtf8String() shouldBeEqualTo text1
 
-            /**
-             * ```sql
-             * UPDATE blobtable
-             *    SET "content"=NULL
-             *  WHERE id = 'wTsyEsRRJfbF1xtDl6Dmt'
-             * ```
-             */
+            // UPDATE blobtable SET "content"=NULL WHERE id = 1
             y2.content = null
             entityCache.clear()
-            /**
-             * ```sql
-             * SELECT blobtable.id,
-             *        blobtable."content"
-             *   FROM blobtable
-             *  WHERE blobtable.id = 'wTsyEsRRJfbF1xtDl6Dmt'
-             * ```
-             */
+
+            // SELECT blobtable.id, blobtable."content" FROM blobtable WHERE blobtable.id = 1
             y2 = BlobEntity.reload(blobEntity)!!
             y2.content.shouldBeNull()
 
-            /**
-             * ```sql
-             * UPDATE blobtable
-             *    SET "content"=E'\\x'
-             *  WHERE id = 'wTsyEsRRJfbF1xtDl6Dmt'
-             * ```
-             */
-            y2.content = ExposedBlob("foo2".toUtf8Bytes())
+            val text2 = Fakers.randomString(1024, 4096)
+            val bytes2 = text2.toUtf8Bytes()
+
+            // UPDATE blobtable SET "content"=E'\\x' WHERE id = 1
+            y2.content = ExposedBlob(bytes2)
             entityCache.clear()
-            /**
-             * ```sql
-             * SELECT blobtable.id,
-             *        blobtable."content"
-             *   FROM blobtable
-             *  WHERE blobtable.id = 'wTsyEsRRJfbF1xtDl6Dmt'
-             * ```
-             */
+
+            // SELECT blobtable.id, blobtable."content" FROM blobtable WHERE blobtable.id = 1
             y2 = BlobEntity.reload(blobEntity)!!
-            y2.content!!.toUtf8String() shouldBeEqualTo "foo2"
+            y2.content!!.toUtf8String() shouldBeEqualTo text2
         }
     }
 }
