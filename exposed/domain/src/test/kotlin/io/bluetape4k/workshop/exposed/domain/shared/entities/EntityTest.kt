@@ -1,6 +1,5 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
-import io.bluetape4k.exposed.dao.id.SnowflakeIdTable
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
 import io.bluetape4k.exposed.dao.idValue
@@ -10,7 +9,6 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.TestDB.POSTGRESQL
 import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.AEntity
 import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.BEntity
 import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.XEntity
@@ -79,48 +77,143 @@ class EntityTest: AbstractExposedTest() {
     companion object: KLogging()
 
     /**
-     * 기본값을 이용하여 Entity를 생성합니다.
+     * `Entity` 의 `new` 함수를 이용하여 엔티티를 생성하고 DB에 저장한다. (기본값으로 추가)
      *
      * ```sql
+     * -- Postgres
      * INSERT INTO xtable (b1, b2) VALUES (TRUE, FALSE)
      * ```
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `defaults 01`(testDB: TestDB) {
+    fun `default 01`(testDB: TestDB) {
         withTables(testDB, YTable, XTable) {
-            // INSERT INTO XTABLE (B1, B2) VALUES (TRUE, FALSE)
             val x = XEntity.new { }
             x.b1.shouldBeTrue()
             x.b2.shouldBeFalse()
         }
     }
 
+    /**
+     * 각 Entity에서 정의한 `create` 함수를 이용하여 엔티티를 생성하고 DB에 저장한다. (기본값으로 추가)
+     *
+     * ```sql
+     * -- 명령어마다 `flushCache`를 호출하는 경우 아래와 같이 실행됩니다.
+     * -- Postgres
+     * INSERT INTO xtable (b1, b2) VALUES (FALSE, FALSE);   -- a
+     * INSERT INTO xtable (b1, b2) VALUES (FALSE, FALSE);   -- b
+     * INSERT INTO ytable (uuid, x) VALUES ('2zBtgbqHtEr7Gjvyb1l8F', FALSE); -- y
+     * UPDATE xtable SET y1='2zBtq2qmbKJnChl9wfs66' WHERE id = 2;  -- b
+     * ```
+     *
+     * ```sql
+     * -- Postgres
+     * -- EntityCache에 저장된 Entity를 Tx 완료 시에 flush 하는 경우
+     * INSERT INTO ytable (uuid, x) VALUES ('2zBtxGtUpMehGF12HYJE3', FALSE);    -- y
+     * INSERT INTO xtable (b1, b2) VALUES (FALSE, FALSE);                             -- a
+     * INSERT INTO xtable (b1, b2, y1) VALUES (FALSE, FALSE, '2zBtxGtUpMehGF12HYJE3'); -- b
+     * ```
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `defaults 02`(testDB: TestDB) {
         withTables(testDB, YTable, XTable) {
-            // INSERT INTO XTABLE (B1, B2, Y1) VALUES (FALSE, FALSE, NULL)
-            val a = AEntity.create(false, A)
-            // INSERT INTO XTABLE (B1, B2, Y1) VALUES (FALSE, FALSE, '2ylqB2ttjrAtFxMhKKNxd')
-            val b = AEntity.create(false, B) as BEntity
-            // INSERT INTO YTABLE (UUID, X) VALUES ('2ylqB2ttjrAtFxMhKKNxd', FALSE)
+            // INSERT INTO xtable (b1, b2) VALUES (FALSE, FALSE)
+            val a: AEntity = AEntity.create(false, A)
+            // INSERT INTO xtable (b1, b2) VALUES (FALSE, FALSE)
+            val b: BEntity = AEntity.create(false, B) as BEntity
+            // INSERT INTO ytable (uuid, x) VALUES ('2zBtgbqHtEr7Gjvyb1l8F', FALSE)
             val y = YEntity.new { x = false }
 
             a.b1.shouldBeFalse()
             b.b1.shouldBeFalse()
             b.b2.shouldBeFalse()
 
+            // UPDATE xtable SET y1='2zBtq2qmbKJnChl9wfs66' WHERE id = 2
             b.y = y
 
-            // SELECT xtable.id, xtable.b1, xtable.b2, xtable.y1 FROM xtable WHERE xtable.y1 = '2yyUmsCl04kze6hatBKj5'
+            /**
+             * ```sql
+             * SELECT xtable.id, xtable.b1, xtable.b2, xtable.y1
+             *   FROM xtable
+             *  WHERE xtable.y1 = '2zBtgbqHtEr7Gjvyb1l8F'
+             * ```
+             */
             b.y!!.x.shouldBeFalse()
             y.b.shouldNotBeNull()
         }
     }
 
+
     /**
-     * [Humans] 의 Text 컬럼이 `eagerLoading = true` 이므로, 조회 시 Text 컬럼도 조회됩니다.
+     * ```sql
+     * -- Postgres
+     * CREATE TABLE IF NOT EXISTS human (
+     *      id SERIAL PRIMARY KEY,
+     *      h TEXT NOT NULL
+     * )
+     * ```
+     */
+    object Humans: IntIdTable("human") {
+        val h = text("h", eagerLoading = true)
+    }
+
+    /**
+     * ```sql
+     * -- Postgres
+     * CREATE TABLE IF NOT EXISTS "user" (
+     *      id INT NOT NULL,
+     *      "name" TEXT NOT NULL,
+     *
+     *      CONSTRAINT fk_user_id__id FOREIGN KEY (id) REFERENCES human(id)
+     *          ON DELETE RESTRICT ON UPDATE RESTRICT
+     * )
+     * ```
+     */
+    object Users: IdTable<Int>("user") {
+        override val id = reference("id", Humans)   // Humans.id 를 id 로 사용한다.
+        val name = text("name", eagerLoading = false)
+
+        override val primaryKey = PrimaryKey(id)
+    }
+
+    open class Human(id: EntityID<Int>): IntEntity(id) {
+        companion object: IntEntityClass<Human>(Humans)
+
+        var h by Humans.h
+
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String = toStringBuilder()
+            .add("h", h)
+            .toString()
+    }
+
+    open class User(id: EntityID<Int>): Entity<Int>(id) {
+        companion object: EntityClass<Int, User>(Users) {
+            operator fun invoke(name: String): User {
+                val h = Human.new {
+                    h = name.take(2)
+                }
+                return User.new(h.id.value) {
+                    this.name = name
+                }
+            }
+        }
+
+        val human: Human by Human referencedOn Users.id
+        var name: String by Users.name
+
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String = toStringBuilder()
+            .add("name", name)
+            .add("human id", human.idValue)
+            .toString()
+    }
+
+    /**
+     * [Humans] 의 Text 컬럼이 Tx 외부에서 조회되어도 정상적으로 동작하는지 확인합니다.
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -131,6 +224,7 @@ class EntityTest: AbstractExposedTest() {
             // INSERT INTO HUMAN (H) VALUES ('foo')
             val y1 = Human.new { h = "foo" }
 
+            // EntityCache를 비워줍니다.
             entityCache.clear()
 
             /**
@@ -142,6 +236,7 @@ class EntityTest: AbstractExposedTest() {
 
             objectsToVerify.add(y1 to testDB)
         }
+
         objectsToVerify.forEach { (human, testDB) ->
             log.debug { "Verifying $human in $testDB" }
             human.h shouldBeEqualTo "foo"
@@ -172,8 +267,40 @@ class EntityTest: AbstractExposedTest() {
         }
     }
 
+
+    /**
+     * one-to-one 관계 엔티티를 생성하기.
+     *
+     * [User] 엔티티의 생성자에서 [Human]도 엔티티를 생성합니다.
+     *
+     * ```sql
+     * INSERT INTO human (h) VALUES ('te');
+     * INSERT INTO "user" (id, "name") VALUES (1, 'testUser');
+     *
+     * INSERT INTO human (h) VALUES ('te');
+     * INSERT INTO "user" (id, "name") VALUES (2, 'testUser');
+     *
+     * INSERT INTO human (h) VALUES ('te');
+     * INSERT INTO "user" (id, "name") VALUES (3, 'testUser');
+     * ```
+     */
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `one-to-one reference`(testDB: TestDB) {
+        withTables(testDB, Humans, Users) {
+            repeat(3) {
+                // 사용자 정의 생성자에 의해 User와 Hunam을 같이 생성한다.
+                val user = User("testUser")
+                user.human.h shouldBeEqualTo "te"
+                user.name shouldBeEqualTo "testUser"
+                user.id.value shouldBeEqualTo user.human.id.value
+            }
+        }
+    }
+
     /**
      * ```sql
+     * -- Postgres
      * CREATE TABLE IF NOT EXISTS single (
      *      id SERIAL PRIMARY KEY
      * )
@@ -190,10 +317,11 @@ class EntityTest: AbstractExposedTest() {
     }
 
     /**
-     * Primary Key 하나만 있는 엔티티에 대한 작업
+     * Primary Key 하나만 있는 엔티티에 대한 작업 (Id 는 자동 증가)
      *
      * ```sql
-     * INSERT INTO single  DEFAULT VALUES
+     * -- Postgres
+     * INSERT INTO single DEFAULT VALUES
      * ```
      */
     @ParameterizedTest
@@ -206,16 +334,17 @@ class EntityTest: AbstractExposedTest() {
         }
     }
 
+
     /**
-     * one-to-one 관계의 엔티티 사용 예
+     * 엔티티 관계가 one-to-one (`backReferencedOn`) 인 경우에 사용 예
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `back reference 01`(testDB: TestDB) {
+    fun `backReferencedOn 01`(testDB: TestDB) {
         withTables(testDB, YTable, XTable) {
             /**
              * ```sql
-             * INSERT INTO YTABLE (UUID) VALUES ('2ylqB3I4kotn2yLdTR2uo')
+             * INSERT INTO ytable (uuid) VALUES ('2zBzCB7diy3MsWBAJathz')
              * ```
              */
             val y = YEntity.new { }
@@ -223,7 +352,7 @@ class EntityTest: AbstractExposedTest() {
 
             /**
              * ```sql
-             * INSERT INTO XTABLE (B1, B2, Y1) VALUES (TRUE, FALSE, '2ylqB3I4kotn2yLdTR2uo')
+             * INSERT INTO xtable (b1, b2, y1) VALUES (TRUE, FALSE, '2zBzCB7diy3MsWBAJathz')
              * ```
              */
             val b = BEntity.new { }
@@ -231,9 +360,9 @@ class EntityTest: AbstractExposedTest() {
 
             /**
              * ```sql
-             * SELECT XTABLE.ID, XTABLE.B1, XTABLE.B2, XTABLE.Y1
-             *   FROM XTABLE
-             *  WHERE XTABLE.Y1 = '2ylqB3I4kotn2yLdTR2uo'
+             * SELECT xtable.id, xtable.b1, xtable.b2, xtable.y1
+             *   FROM xtable
+             *  WHERE xtable.y1 = '2zBzCB7diy3MsWBAJathz'
              * ```
              */
             y.b shouldBeEqualTo b
@@ -241,7 +370,7 @@ class EntityTest: AbstractExposedTest() {
     }
 
     /**
-     * one-to-one 관계의 엔티티 사용 예
+     * 엔티티 관계가 one-to-one (`backReferencedOn`) 인 경우에 사용 예
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -344,7 +473,6 @@ class EntityTest: AbstractExposedTest() {
         val title = varchar("title", 50)
     }
 
-
     class Board(id: EntityID<Int>): IntEntity(id) {
         companion object: IntEntityClass<Board>(Boards)
 
@@ -353,10 +481,9 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("name", name)
-                .toString()
+        override fun toString(): String = toStringBuilder()
+            .add("name", name)
+            .toString()
     }
 
     class Post(id: EntityID<Long>): LongEntity(id) {
@@ -370,8 +497,7 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder().toString()
+        override fun toString(): String = toStringBuilder().toString()
     }
 
     class Category(id: EntityID<Int>): IntEntity(id) {
@@ -384,14 +510,19 @@ class EntityTest: AbstractExposedTest() {
         override fun equals(other: Any?): Boolean = idEquals(other)
 
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("uniqueId", uniqueId)
-                .add("title", title)
-                .toString()
+        override fun toString(): String = toStringBuilder()
+            .add("uniqueId", uniqueId)
+            .add("title", title)
+            .toString()
     }
 
-
+    /**
+     * Self reference table 인 [Posts] 에 대해 참조에 따른 정렬을 확인합니다.
+     *
+     * - [Posts] -> [Boards]
+     * - [Posts] -> [Categories]
+     * - [Posts] -> [Posts]
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `self reference table`(testDB: TestDB) {
@@ -410,8 +541,14 @@ class EntityTest: AbstractExposedTest() {
                     Posts
                 )
         SchemaUtils
-            .sortTablesByReferences(listOf(Posts)) shouldBeEqualTo listOf(Boards, Categories, Posts)
+            .sortTablesByReferences(listOf(Posts)) shouldBeEqualTo
+                listOf(
+                    Boards,
+                    Categories,
+                    Posts
+                )
     }
+
 
     /**
      * flush 없이도 자식 엔티티를 추가할 수 있습니다.
@@ -456,6 +593,9 @@ class EntityTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * 엔티티 추가는 flush 가 없어도 가능합니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert non child without flush`(testDB: TestDB) {
@@ -494,6 +634,9 @@ class EntityTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     * 부모 엔티티를 생성하고 Flush 한 후 자식 엔티티를 추가할 수 있습니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert child with flush`(testDB: TestDB) {
@@ -524,20 +667,22 @@ class EntityTest: AbstractExposedTest() {
     }
 
     /**
-     * Insert child with child
+     * self reference table [Post] 의 `parent` 와 `children` 을 이용하여 자식 엔티티를 추가할 수 있습니다.
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert child with child`(testDB: TestDB) {
         withTables(testDB, Boards, Posts, Categories) {
+            // parent
             val parent = Post.new {
                 this.category = Category.new { title = "title1" }
             }
+            // child1
             val child1 = Post.new {
                 this.parent = parent
                 this.category = Category.new { title = "title2" }
             }
-            // insert grand child
+            // child of chile1
             Post.new {
                 this.parent = child1
             }
@@ -555,6 +700,9 @@ class EntityTest: AbstractExposedTest() {
         }
     }
 
+    /**
+     *  `optionalReferencedOn` 인 `many-to-one` 관계에서 `null` 값을 설정할 수 있습니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `optional referrers with different keys`(testDB: TestDB) {
@@ -580,6 +728,7 @@ class EntityTest: AbstractExposedTest() {
              */
             board.posts.single() shouldBeEqualTo post1
 
+            // 새로운 Post 추가 (optional refererrers 인 category, optCategory 는 null 로 설정된다.)
             Post.new { this.board = board }
 
             /**
@@ -608,8 +757,9 @@ class EntityTest: AbstractExposedTest() {
         }
     }
 
+
     /**
-     * DSL 방식으로 행을 삭제했을 때에도, cache 에서도 삭제됩니다.
+     * DSL 방식으로 행을 삭제했을 때에도, [entityCache] 에서도 삭제됩니다.
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -626,12 +776,14 @@ class EntityTest: AbstractExposedTest() {
 
             // DSL 방식으로 Delete 해도 Cache예서 제거된다.
             Boards.deleteWhere { id eq board2.id }
+            // Cache 에서 제거됨
             Board.testCache(board2.id).shouldBeNull()
         }
     }
 
+
     /**
-     * DSL 방식으로 행을 업데이트했을 때에도, cache 에서도 삭제됩니다.
+     * DSL 방식으로 행을 업데이트했을 때에도, [entityCache] 에서도 삭제됩니다.
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -649,14 +801,16 @@ class EntityTest: AbstractExposedTest() {
             Boards.update({ Boards.id eq board2.id }) {
                 it[name] = "relevant2"
             }
+            // Cache 에서 제거됨
             Board.testCache(board2.id).shouldBeNull()
 
-            // 다시 읽어들인다.
+            // 다시 읽어들인다. (Cache 에서 제거되었으므로, DB에서 읽어들인다.)
             board2.refresh(flush = false)
             Board.testCache(board2.id).shouldNotBeNull()
             board2.name shouldBeEqualTo "relevant2"
         }
     }
+
 
     /**
      * ```sql
@@ -682,15 +836,14 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("name", name)
-                .add("price", price)
-                .toString()
+        override fun toString(): String = toStringBuilder()
+            .add("name", name)
+            .add("price", price)
+            .toString()
     }
 
     /**
-     * DSL 방식으로 `upsert` 시에 Cache가 갱신됩니다.
+     * DSL 방식으로 `upsert` 시에도 [entityCache] 에서 삭제됩니다.
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -737,7 +890,7 @@ class EntityTest: AbstractExposedTest() {
             Item.testCache(itemA.id).shouldNotBeNull()
 
             /**
-             * `batchUpsert` 시에도 캐시는 개싱된다.
+             * `batchUpsert` 시에도 캐시에서 삭제됩니다.
              *
              * ```sql
              * INSERT INTO items ("name", price) VALUES ('Item A', 100.0) ON CONFLICT ("name") DO UPDATE SET price=EXCLUDED.price
@@ -767,6 +920,10 @@ class EntityTest: AbstractExposedTest() {
         }
     }
 
+
+    /**
+     * DAO 방식으로 `findByIdAndUpdate` 를 수행하는 예
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `Dao findByIdAndUpdate`(testDB: TestDB) {
@@ -786,20 +943,19 @@ class EntityTest: AbstractExposedTest() {
              * ```sql
              * SELECT items.id, items."name", items.price
              *   FROM items
-             *  WHERE items.id = 1 FOR UPDATE
+             *  WHERE items.id = 1
+             *    FOR UPDATE
              * ```
              */
             val updatedItem = Item.findByIdAndUpdate(item.id.value) {
                 it.price = newPrice
             }
 
-            updatedItem shouldBeEqualTo item
-
-            updatedItem.shouldNotBeNull()
+            updatedItem!! shouldBeEqualTo item   // 같은 Id 를 가지고 있다. (캐시도 같이 업데이트 된다.)
             updatedItem.price shouldBeEqualTo newPrice
             Item.testCache(item.id).shouldNotBeNull()
 
-            item.price shouldBeEqualTo newPrice
+            item.price shouldBeEqualTo newPrice   // 기존 엔티티도 갱신된다.
 
             /**
              * NOTE: refresh(flush=false)이면 Cache 값이 다시 채워진다.
@@ -809,15 +965,19 @@ class EntityTest: AbstractExposedTest() {
              *  WHERE items.id = 1
              * ```
              */
-            item.refresh(flush = false)
+            item.refresh(flush = false)               // flush=false 이므로 update 되지 않고, 기존 값을 읽어온다.
             item.price shouldBeEqualTo oldPrice
             Item.testCache(item.id).shouldNotBeNull()
 
             updatedItem shouldBeEqualTo item
             Item.testCache(updatedItem.id).shouldNotBeNull()
+            updatedItem.price shouldBeEqualTo oldPrice
         }
     }
 
+    /**
+     * DAO 방식으로 `findSingleByAndUpdate` 를 수행하는 예
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `Dao findSingleByAndUpdate`(testDB: TestDB) {
@@ -862,7 +1022,7 @@ class EntityTest: AbstractExposedTest() {
              *  WHERE ITEMS.ID = 1
              * ```
              */
-            item.refresh(flush = false)
+            item.refresh(flush = false)               // flush=false 이므로 update 되지 않고, 기존 값을 읽어온다.
             item.price shouldBeEqualTo oldPrice
             Item.testCache(item.id).shouldNotBeNull()
 
@@ -872,103 +1032,10 @@ class EntityTest: AbstractExposedTest() {
     }
 
     /**
-     * ```sql
-     * CREATE TABLE IF NOT EXISTS human (
-     *      id SERIAL PRIMARY KEY,
-     *      h TEXT NOT NULL
-     * )
-     * ```
-     */
-    object Humans: IntIdTable("human") {
-        val h = text("h", eagerLoading = true)
-    }
-
-    /**
-     * ```sql
-     * CREATE TABLE IF NOT EXISTS "user" (
-     *      id INT NOT NULL,
-     *      "name" TEXT NOT NULL,
-     *
-     *      CONSTRAINT fk_user_id__id FOREIGN KEY (id) REFERENCES human(id)
-     *          ON DELETE RESTRICT ON UPDATE RESTRICT
-     * )
-     * ```
-     */
-    object Users: IdTable<Int>("user") {
-        override val id = reference("id", Humans)   // Humans.id 를 id 로 사용한다.
-        val name = text("name")
-    }
-
-    open class Human(id: EntityID<Int>): IntEntity(id) {
-        companion object: IntEntityClass<Human>(Humans)
-
-        var h by Humans.h
-
-        override fun equals(other: Any?): Boolean = idEquals(other)
-        override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("h", h)
-                .toString()
-    }
-
-    open class User(id: EntityID<Int>): Entity<Int>(id) {
-        companion object: EntityClass<Int, User>(Users) {
-            operator fun invoke(name: String): User {
-                val h = Human.new {
-                    h = name.take(2)
-                }
-                return User.new(h.id.value) {
-                    this.name = name
-                }
-            }
-        }
-
-        val human: Human by Human referencedOn Users.id
-        var name: String by Users.name
-
-        override fun equals(other: Any?): Boolean = idEquals(other)
-        override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("name", name)
-                .add("human id", human.idValue)
-                .toString()
-    }
-
-    /**
-     * one-to-one 관계 엔티티를 생성하기.
-     *
-     * [User] 엔티티의 생성자에서 [Human]도 엔티티를 생성합니다.
-     *
-     * ```sql
-     * INSERT INTO human (h) VALUES ('te');
-     * INSERT INTO "user" (id, "name") VALUES (1, 'testUser');
-     *
-     * INSERT INTO human (h) VALUES ('te');
-     * INSERT INTO "user" (id, "name") VALUES (2, 'testUser');
-     *
-     * INSERT INTO human (h) VALUES ('te');
-     * INSERT INTO "user" (id, "name") VALUES (3, 'testUser');
-     * ```
-     */
-    @ParameterizedTest
-    @MethodSource(ENABLE_DIALECTS_METHOD)
-    fun `one-to-one reference`(testDB: TestDB) {
-        withTables(testDB, Humans, Users) {
-            repeat(3) {
-                val user = User("testUser")  // User와 Hunam을 같이 생성한다.
-                user.human.h shouldBeEqualTo "te"
-                user.name shouldBeEqualTo "testUser"
-                user.id.value shouldBeEqualTo user.human.id.value
-            }
-        }
-    }
-
-    /**
      * Self reference table
      *
      * ```sql
+     * -- Postgres
      * CREATE TABLE IF NOT EXISTS selfreference (
      *      id SERIAL PRIMARY KEY,
      *      parent_id INT NULL
@@ -988,15 +1055,15 @@ class EntityTest: AbstractExposedTest() {
         companion object: IntEntityClass<SelfReferenceEntity>(SelfReferenceTable)
 
         var parent: EntityID<Int>? by SelfReferenceTable.parentId
-        val children: SizedIterable<SelfReferenceEntity> by SelfReferenceEntity optionalReferrersOn SelfReferenceTable.parentId
+
+        val children: SizedIterable<SelfReferenceEntity>
+                by SelfReferenceEntity optionalReferrersOn SelfReferenceTable.parentId
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("parent id", parent?.value)
-                .toString()
-
+        override fun toString(): String = toStringBuilder()
+            .add("parent id", parent?.value)
+            .toString()
     }
 
     /**
@@ -1019,21 +1086,25 @@ class EntityTest: AbstractExposedTest() {
              * SELECT COUNT(*) FROM selfreference WHERE selfreference.parent_id = 4
              * ```
              */
-            parent.children.count() shouldBeEqualTo 2
-            child1.children.count() shouldBeEqualTo 1
-            child2.children.count() shouldBeEqualTo 0
-            grandChild.children.count() shouldBeEqualTo 0
+            parent.children.count() shouldBeEqualTo 2L
+            child1.children.count() shouldBeEqualTo 1L
+            child2.children.count() shouldBeEqualTo 0L
+            grandChild.children.count() shouldBeEqualTo 0L
         }
     }
 
+
     /**
-     * Self reference entity
+     * Self reference entity 중에 parent id를 자신의 id로 설정하는 예
      *
      * ```sql
-     * SELECT selfreference.id,
-     *        selfreference.parent_id
+     * -- Postgres
+     * INSERT INTO selfreference  DEFAULT VALUES;
+     * UPDATE selfreference SET parent_id=1 WHERE id = 1;
+     *
+     * SELECT selfreference.id, selfreference.parent_id
      *   FROM selfreference
-     *  WHERE selfreference.id = 6
+     *  WHERE selfreference.id = 1
      * ```
      */
     @ParameterizedTest
@@ -1047,10 +1118,13 @@ class EntityTest: AbstractExposedTest() {
                 .where { SelfReferenceTable.id eq ref1.id }
                 .single()
 
-            refRow[SelfReferenceTable.parentId]!!.value shouldBeEqualTo ref1.id._value
+            refRow[SelfReferenceTable.parentId]!!.value shouldBeEqualTo ref1.id.value
         }
     }
 
+    /**
+     * entityId 참조가 없이 null 로 설정되는 경우 (`optionalReferencedOn`)
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `non entityId reference`(testDB: TestDB) {
@@ -1069,131 +1143,52 @@ class EntityTest: AbstractExposedTest() {
                 parent = post1
             }
 
-            /**
-             * ```sql
-             * SELECT COUNT(*) FROM POSTS
-             * ```
-             */
+            // SELECT COUNT(*) FROM POSTS
             Post.all().count() shouldBeEqualTo 2L
-            /**
-             * ```sql
-             * SELECT COUNT(*) FROM POSTS
-             *  WHERE POSTS."optCategory" = '2ylpPHjEQlD7I6FiOM0Gt'
-             * ```
-             */
+
+            // SELECT COUNT(*) FROM POSTS WHERE POSTS."optCategory" = '2ylpPHjEQlD7I6FiOM0Gt'
             category1.posts.count() shouldBeEqualTo 2L
 
-            /**
-             * ```sql
-             * SELECT COUNT(*) FROM POSTS
-             *  WHERE POSTS."optCategory" = '2ylpPHjEQlD7I6FiOM0Gt'
-             */
+            // SELECT COUNT(*) FROM POSTS WHERE POSTS."optCategory" = '2ylpPHjEQlD7I6FiOM0Gt'
             Posts.selectAll()
                 .where { Posts.optCategoryId eq category1.uniqueId }
                 .count() shouldBeEqualTo 2L
 
-            /**
-             * ```sql
-             * SELECT COUNT(*) FROM POSTS
-             *  WHERE POSTS."optCategory" = '2ylpPHjEQlD7I6FiOM0Gt'
-             * ```
-             */
+            // SELECT COUNT(*) FROM POSTS WHERE POSTS."optCategory" = '2ylpPHjEQlD7I6FiOM0Gt'
             Post.find { Posts.optCategoryId eq category1.uniqueId }
-                .count() shouldBeEqualTo 2
+                .count() shouldBeEqualTo 2L
         }
     }
 
+    /**
+     * [SizedIterable] 로 조회 시 LIMIT 를 사용한 경우에도, 캐시된 값이 변하지 않습니다.
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `call limit on relation doesnt mutate the cached value`(testDB: TestDB) {
         withTables(testDB, Posts, Boards, Categories) {
-            /**
-             * ```sql
-             * INSERT INTO categories (title, "uniqueId") VALUES ('title', '2yyUmpg6lTvWZhXuKomLe')
-             * ```
-             */
-            val category1 = Category.new { title = "category1" }
 
-            /**
-             * ```sql
-             * INSERT INTO posts ("optCategory_uniqueId", "category_uniqueId")
-             * VALUES ('2yyUmpfoSgPuW7iTuwrmC', '2yyUmpg6lTvWZhXuKomLe')
-             * ```
-             */
+            val category1 = Category.new { title = "category1" }
             Post.new {
                 optCategory = category1
                 category = Category.new { title = "title" }
             }
-
-            /**
-             * ```sql
-             * INSERT INTO posts ("optCategory_uniqueId", "category_uniqueId")
-             * VALUES ('2yyUmpfoSgPuW7iTuwrmC', NULL)
-             * ```
-             */
             Post.new {
                 optCategory = category1
             }
 
             commit()
 
-            /**
-             * ```sql
-             * SELECT COUNT(*) FROM posts WHERE posts."optCategory_uniqueId" = '2yyUmpfoSgPuW7iTuwrmC'
-             * ```
-             */
-            category1.posts.count() shouldBeEqualTo 2L
-
-            /**
-             * ```sql
-             * SELECT posts.id,
-             *        posts.board_id,
-             *        posts.parent_id,
-             *        posts."category_uniqueId",
-             *        posts."optCategory_uniqueId"
-             *   FROM posts
-             *  WHERE posts."optCategory_uniqueId" = '2yyUmpfoSgPuW7iTuwrmC'
-             * ```
-             */
-            category1.posts.toList() shouldHaveSize 2
-
-            /**
-             * ```sql
-             * SELECT posts.id,
-             *        posts.board_id,
-             *        posts.parent_id,
-             *        posts."category_uniqueId",
-             *        posts."optCategory_uniqueId"
-             *   FROM posts
-             *  WHERE posts."optCategory_uniqueId" = '2yyUmpfoSgPuW7iTuwrmC'
-             *  LIMIT 1
-             * ```
-             */
             category1.posts.limit(1).toList() shouldHaveSize 1
-
-            /**
-             * ```sql
-             * SELECT COUNT(*)
-             *   FROM (
-             *      SELECT posts.id posts_id,
-             *             posts.board_id posts_board_id,
-             *             posts.parent_id posts_parent_id,
-             *             posts."category_uniqueId" posts_category_uniqueId,
-             *             posts."optCategory_uniqueId" posts_optCategory_uniqueId
-             *        FROM posts
-             *       WHERE posts."optCategory_uniqueId" = '2yyUmpfoSgPuW7iTuwrmC'
-             *       LIMIT 1
-             *   ) subquery
-             * ```
-             */
             category1.posts.limit(1).count() shouldBeEqualTo 1L
             category1.posts.count() shouldBeEqualTo 2L
             category1.posts.toList() shouldHaveSize 2
         }
     }
 
+
     /**
-     * Order By on Entities
+     * 엔티티 조회 시 `orderBy`로 정렬하는 예
      *
      * ```sql
      * SELECT categories.id, categories."uniqueId", categories.title
@@ -1210,7 +1205,9 @@ class EntityTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `order by on entities`(testDB: TestDB) {
         withTables(testDB, Categories) {
+            // 모든 엔티티를 삭제한다.
             Categories.deleteAll()
+            commit()
 
             val category1 = Category.new { title = "Test1" }
             val category3 = Category.new { title = "Test3" }
@@ -1218,10 +1215,12 @@ class EntityTest: AbstractExposedTest() {
 
             Category.all().toList() shouldBeEqualTo listOf(category1, category3, category2)
 
+            // 올림차순 정렬
             Category.all()
                 .orderBy(Categories.title to ASC)
                 .toList() shouldBeEqualTo listOf(category1, category2, category3)
 
+            // 내림차순 정렬
             Category.all()
                 .orderBy(Categories.title to DESC)
                 .toList() shouldBeEqualTo listOf(category3, category2, category1)
@@ -1249,29 +1248,7 @@ class EntityTest: AbstractExposedTest() {
 
             flushCache()
 
-            /**
-             * ```sql
-             * SELECT posts.id,
-             *        posts.board_id,
-             *        posts.parent_id,
-             *        posts."category_uniqueId",
-             *        posts."optCategory_uniqueId"
-             *   FROM posts
-             *  WHERE posts.id = 1
-             * ```
-             */
             Post.reload(post1)
-            /**
-             * ```sql
-             * SELECT posts.id,
-             *        posts.board_id,
-             *        posts.parent_id,
-             *        posts."category_uniqueId",
-             *        posts."optCategory_uniqueId"
-             *   FROM posts
-             *  WHERE posts.id = 2
-             * ```
-             */
             Post.reload(post2)
 
             post1.category shouldBeEqualTo category2
@@ -1279,12 +1256,16 @@ class EntityTest: AbstractExposedTest() {
         }
     }
 
+
     /**
      * ```sql
-     * CREATE TABLE IF NOT EXISTS parents (id BIGINT PRIMARY KEY, "name" VARCHAR(50) NOT NULL)
+     * CREATE TABLE IF NOT EXISTS parents (
+     *      id BIGINT PRIMARY KEY,
+     *      "name" VARCHAR(50) NOT NULL
+     * )
      * ```
      */
-    object Parents: SnowflakeIdTable("parents") {
+    object Parents: LongIdTable("parents") {
         val name = varchar("name", 50)
     }
 
@@ -1312,10 +1293,9 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("name", name)
-                .toString()
+        override fun toString(): String = toStringBuilder()
+            .add("name", name)
+            .toString()
     }
 
     open class Child(id: EntityID<Long>): LongEntity(id) {
@@ -1326,15 +1306,14 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("name", name)
-                .add("parent id", parent.idValue)
-                .toString()
+        override fun toString(): String = toStringBuilder()
+            .add("name", name)
+            .add("parent id", parent.idValue)
+            .toString()
     }
 
     /**
-     * Id 값을 지정하여 엔티티를 생성합니다.
+     * Id 값을 사용자 지정하여 엔티티를 생성합니다.
      *
      * ```sql
      * INSERT INTO parents (id, "name") VALUES (10, 'parent');
@@ -1361,7 +1340,7 @@ class EntityTest: AbstractExposedTest() {
     }
 
     /**
-     * 생성된 새로운 엔티티를 `flush` 하면 `true`를 반환합니다.
+     * 생성된 새로운 엔티티를 `flush` 하면 실행 결과를 `true` / `false` 로 반환합니다.
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -1388,7 +1367,7 @@ class EntityTest: AbstractExposedTest() {
 
     /**
      * 트랜잭션마다 새로운 `EntityCache`를 생성합니다.
-     * 그러므로 트랜잭션 간에 엔티티를 공유할 수 없습니다.
+     * **트랜잭션 간에 엔티티를 공유할 수 없습니다.**
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -1421,8 +1400,10 @@ class EntityTest: AbstractExposedTest() {
         }
     }
 
+
     /**
      * ```sql
+     * -- Postgres
      * CREATE TABLE IF NOT EXISTS regions (
      *      id SERIAL PRIMARY KEY,
      *      "name" VARCHAR(255) NOT NULL
@@ -1435,6 +1416,7 @@ class EntityTest: AbstractExposedTest() {
 
     /**
      * ```sql
+     * -- Postgres
      * CREATE TABLE IF NOT EXISTS students (
      *      id BIGSERIAL PRIMARY KEY,
      *      "name" VARCHAR(255) NOT NULL,
@@ -1452,6 +1434,7 @@ class EntityTest: AbstractExposedTest() {
 
     /**
      * ```sql
+     * -- Postgres
      * CREATE TABLE IF NOT EXISTS student_bios (
      *      id BIGSERIAL PRIMARY KEY,
      *      date_of_birth VARCHAR(25) NOT NULL,
@@ -1469,6 +1452,7 @@ class EntityTest: AbstractExposedTest() {
 
     /**
      * ```sql
+     * -- Postgres
      * CREATE TABLE IF NOT EXISTS notes (
      *      id BIGSERIAL PRIMARY KEY,
      *      "text" VARCHAR(255) NOT NULL,
@@ -1486,6 +1470,7 @@ class EntityTest: AbstractExposedTest() {
 
     /**
      * ```sql
+     * -- Postgres
      * CREATE TABLE IF NOT EXISTS detentions (
      *      id BIGSERIAL PRIMARY KEY,
      *      reason VARCHAR(255) NOT NULL,
@@ -1503,6 +1488,7 @@ class EntityTest: AbstractExposedTest() {
 
     /**
      * ```sql
+     * -- Postgres
      * CREATE TABLE IF NOT EXISTS holidays (
      *      id BIGSERIAL PRIMARY KEY,
      *      holiday_start BIGINT NOT NULL,
@@ -1516,7 +1502,10 @@ class EntityTest: AbstractExposedTest() {
     }
 
     /**
+     * [Schools] 와 [Holidays] 의 매핑 (many-to-many) 테이블
+     *
      * ```sql
+     * -- Postgres
      * CREATE TABLE IF NOT EXISTS school_holidays (
      *      school_id INT,
      *      holiday_id BIGINT,
@@ -1538,6 +1527,7 @@ class EntityTest: AbstractExposedTest() {
 
     /**
      * ```sql
+     * -- Postgres
      * CREATE TABLE IF NOT EXISTS schools (
      *      id SERIAL PRIMARY KEY,
      *      "name" VARCHAR(255) NOT NULL,
@@ -1570,7 +1560,6 @@ class EntityTest: AbstractExposedTest() {
                 .toString()
     }
 
-    @Suppress("UNCHECKED_CAST")
     abstract class ComparableLongEntity<T: LongEntity>(id: EntityID<Long>): LongEntity(id) {
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
@@ -1586,11 +1575,10 @@ class EntityTest: AbstractExposedTest() {
         val notes by Note.referrersOn(Notes.student, cache = true)
         val detentions by Detention optionalReferrersOn Detentions.student
 
-        override fun toString(): String =
-            toStringBuilder()
-                .add("name", name)
-                .add("school id", school.idValue)
-                .toString()
+        override fun toString(): String = toStringBuilder()
+            .add("name", name)
+            .add("school id", school.idValue)
+            .toString()
     }
 
     class StudentBio(id: EntityID<Long>): ComparableLongEntity<StudentBio>(id) {
@@ -1599,11 +1587,10 @@ class EntityTest: AbstractExposedTest() {
         var student by Student referencedOn StudentBios.student
         var dateOfBirth by StudentBios.dateOfBirth
 
-        override fun toString(): String =
-            toStringBuilder()
-                .add("date of birth", dateOfBirth)
-                .add("student id", student.idValue)
-                .toString()
+        override fun toString(): String = toStringBuilder()
+            .add("date of birth", dateOfBirth)
+            .add("student id", student.idValue)
+            .toString()
     }
 
     class Note(id: EntityID<Long>): ComparableLongEntity<Note>(id) {
@@ -1661,7 +1648,7 @@ class EntityTest: AbstractExposedTest() {
     }
 
     /**
-     * Preload references = Fetch Eager Loading
+     * 참조 (many-to-one) 하는 엔티티를 `with` 를 이용하여 미리 로딩하는 예 (Eager Loading)
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -1677,15 +1664,11 @@ class EntityTest: AbstractExposedTest() {
 
             inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
                 /**
-                 * Eager loading many-to-one reference
+                 * `with` 를 이용하여 eager loading 을 수행한다.
                  *
                  * ```sql
-                 * SELECT SCHOOLS.ID, SCHOOLS."name", SCHOOLS.REGION_ID, SCHOOLS.SECONDARY_REGION_ID
-                 *   FROM SCHOOLS;
-                 *
-                 * SELECT REGIONS.ID, REGIONS."name"
-                 *   FROM REGIONS
-                 *  WHERE REGIONS.ID IN (1, 2);
+                 * SELECT SCHOOLS.ID, SCHOOLS."name", SCHOOLS.REGION_ID, SCHOOLS.SECONDARY_REGION_ID FROM SCHOOLS;
+                 * SELECT REGIONS.ID, REGIONS."name" FROM REGIONS WHERE REGIONS.ID IN (1, 2);
                  * ```
                  */
                 School.all().with(School::region)
@@ -1701,7 +1684,7 @@ class EntityTest: AbstractExposedTest() {
     }
 
     /**
-     * Eager loading many-to-one reference
+     * 참조 (many-to-one) 하는 엔티티를 `with` 를 이용하여 미리 로딩하는 예 (Eager Loading)
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -1724,8 +1707,9 @@ class EntityTest: AbstractExposedTest() {
                 debug = true
 
                 /**
-                 * Postgres:
+                 * `with` 를 이용하여 eager loading 을 수행한다.
                  * ```sql
+                 * -- Postgres
                  * SELECT schools.id, schools."name", schools.region_id, schools.secondary_region_id FROM schools;
                  * SELECT regions.id, regions."name" FROM regions WHERE regions.id = 1;
                  * ```
@@ -1765,6 +1749,7 @@ class EntityTest: AbstractExposedTest() {
                 debug = true
 
                 /**
+                 * Eager loading 시 LIMIT 적용하기
                  * Postgres:
                  * ```sql
                  * SELECT schools.id, schools."name", schools.region_id, schools.secondary_region_id FROM schools;
@@ -1788,12 +1773,19 @@ class EntityTest: AbstractExposedTest() {
         }
     }
 
+
     /**
-     * Eager loading many-to-one reference
+     * 엔티티의 many-to-one 참조를 `load` 함수를 이용하여 eager loading 합니다.
      *
      * ```sql
-     * SELECT schools.id, schools."name", schools.region_id, schools.secondary_region_id FROM schools WHERE schools.id = 1
-     * SELECT regions.id, regions."name" FROM regions WHERE regions.id = 2
+     * -- Postgres
+     * SELECT schools.id, schools."name", schools.region_id, schools.secondary_region_id
+     *   FROM schools
+     *  WHERE schools.id = 1;
+     *
+     * SELECT regions.id, regions."name"
+     *   FROM regions
+     *  WHERE regions.id = 2;
      * ```
      */
     @ParameterizedTest
@@ -1813,20 +1805,20 @@ class EntityTest: AbstractExposedTest() {
                 maxAttempts = 1
 
                 val school2 = School
-                    .find {
-                        Schools.id eq school1.id
-                    }
+                    .find { Schools.id eq school1.id }
                     .first()
                     .load(School::secondaryRegion)  // eager loading for many-to-one reference
 
                 Region.testCache(school2.readValues[Schools.region]).shouldBeNull()
-                // load 를 통해 secondaryRegion을 로드한다.
+                // load 를 통해 secondaryRegion을 eager loading 한다.
                 Region.testCache(school2.readValues[Schools.secondaryRegion]!!) shouldBeEqualTo region2
             }
         }
     }
 
     /**
+     * One-to-many reference ([SizedIterable]) 에 대해 Eagar Loading 수행
+     *
      * `with(School::students)` 를 통해 `School` 엔티티의 `students`를 eager loading 한다.
      *
      * ```sql
@@ -1837,7 +1829,7 @@ class EntityTest: AbstractExposedTest() {
      * -- load students of school
      * SELECT students.id, students."name", students.school_id
      *   FROM students
-     *  WHERE students.school_id IN (1, 2, 3)
+     *  WHERE students.school_id IN (1, 2, 3);
      * ```
      */
     @ParameterizedTest
@@ -1861,15 +1853,15 @@ class EntityTest: AbstractExposedTest() {
 
                 val cache = TransactionManager.current().entityCache
 
+                // School 엔티티 조회 시 Student 도 eager loading 한다.
                 School.all().with(School::students).toList()
 
                 cache.getReferrers<Student>(school1.id, Students.school)
                     ?.toList().orEmpty() shouldBeEqualTo listOf(student1)
 
                 cache.getReferrers<Student>(school2.id, Students.school)
-                    ?.toList().orEmpty() shouldBeEqualTo listOf(
-                    student2
-                )
+                    ?.toList().orEmpty() shouldBeEqualTo listOf(student2)
+
                 cache.getReferrers<Student>(school3.id, Students.school)
                     ?.toList().orEmpty() shouldBeEqualTo listOf(student3, student4)
             }
@@ -1878,6 +1870,8 @@ class EntityTest: AbstractExposedTest() {
 
     /**
      * One-to-many reference ([SizedIterable]) 에 대해 Eagar Loading 수행
+     *
+     * 엔티티의 [SizedIterable] 참조를 `load` 함수를 이용하여 eager loading 합니다.
      *
      * ```sql
      * SELECT schools.id,
@@ -1914,14 +1908,14 @@ class EntityTest: AbstractExposedTest() {
 
                 School.find { Schools.id eq school1.id }.first().load(School::students)
 
-                cache.getReferrers<Student>(school1.id, Students.school)?.toList().orEmpty() shouldBeEqualTo
-                        listOf(student1, student2, student3)
+                cache.getReferrers<Student>(school1.id, Students.school)
+                    ?.toList().orEmpty() shouldBeEqualTo listOf(student1, student2, student3)
             }
         }
     }
 
     /**
-     * 2번의 Accosiation을 지정하여 eager loading을 수행
+     * 2단계의 relations 에 대해 eager loading을 수행
      *
      * ```sql
      * -- load schools
@@ -1964,33 +1958,38 @@ class EntityTest: AbstractExposedTest() {
                 maxAttempts = 1
                 val cache = TransactionManager.current().entityCache
 
+                // 2단계로 relations 관계인 경우에도 eager loading을 수행한다.
                 School.all().with(School::students, Student::detentions)
 
-                cache.getReferrers<Student>(school1.id, Students.school)?.toList().orEmpty() shouldBeEqualTo
-                        listOf(student1, student2)
+                cache.getReferrers<Student>(school1.id, Students.school)
+                    ?.toList().orEmpty() shouldBeEqualTo listOf(student1, student2)
 
-                cache.getReferrers<Detention>(student1.id, Detentions.student)?.toList().orEmpty() shouldBeEqualTo
-                        listOf(detention1, detention2)
+                cache.getReferrers<Detention>(student1.id, Detentions.student)
+                    ?.toList().orEmpty() shouldBeEqualTo listOf(detention1, detention2)
 
-                cache.getReferrers<Detention>(student2.id, Detentions.student)?.toList().orEmpty().shouldBeEmpty()
+                cache.getReferrers<Detention>(student2.id, Detentions.student)
+                    ?.toList().orEmpty().shouldBeEmpty()
             }
         }
     }
 
     /**
-     * Eager loading one-to-many reference
+     * Eager loading many-to-many reference (`with` 함수를 이용)
      *
      * ```sql
+     * -- Postgres
      * SELECT schools.id, schools."name", schools.region_id, schools.secondary_region_id
      *   FROM schools;
      *
+     * -- load holidays of school (many-to-many)
      * SELECT holidays.id,
      *        holidays.holiday_start,
      *        holidays.holiday_end,
      *        school_holidays.school_id,
      *        school_holidays.holiday_id
-     *   FROM holidays INNER JOIN school_holidays ON school_holidays.holiday_id = holidays.id
-     *  WHERE school_holidays.school_id IN (1, 2, 3)
+     *   FROM holidays
+     *          INNER JOIN school_holidays ON school_holidays.holiday_id = holidays.id
+     *  WHERE school_holidays.school_id IN (1, 2, 3);
      * ```
      */
     @ParameterizedTest
@@ -2020,24 +2019,26 @@ class EntityTest: AbstractExposedTest() {
                 maxAttempts = 1
                 val cache = TransactionManager.current().entityCache
 
+                // School 엔티티 조회 시 Holiday 도 eager loading 한다.
                 School.all().with(School::holidays)
 
-                cache.getReferrers<Holiday>(school1.id, SchoolHolidays.school)?.toList().orEmpty() shouldBeEqualTo
-                        listOf(holiday1, holiday2)
+                cache.getReferrers<Holiday>(school1.id, SchoolHolidays.school)
+                    ?.toList().orEmpty() shouldBeEqualTo listOf(holiday1, holiday2)
 
-                cache.getReferrers<Holiday>(school2.id, SchoolHolidays.school)?.toList().orEmpty() shouldBeEqualTo
-                        listOf(holiday3)
+                cache.getReferrers<Holiday>(school2.id, SchoolHolidays.school)
+                    ?.toList().orEmpty() shouldBeEqualTo listOf(holiday3)
 
-                cache.getReferrers<Holiday>(school3.id, SchoolHolidays.school)?.toList().orEmpty().shouldBeEmpty()
+                cache.getReferrers<Holiday>(school3.id, SchoolHolidays.school)
+                    ?.toList().orEmpty().shouldBeEmpty()
             }
-
         }
     }
 
     /**
-     * many-to-many reference 에 대한 eager loading
+     * many-to-many reference 에 대한 eager loading (`load` 함수를 이용)
      *
      * ```sql
+     * -- Postgres
      * -- load school
      * SELECT schools.id, schools."name", schools.region_id, schools.secondary_region_id
      *   FROM schools
@@ -2139,9 +2140,10 @@ class EntityTest: AbstractExposedTest() {
     }
 
     /**
-     * Eager loading for one-to-one back referenced
+     * Eager loading for one-to-one back referenced by `with` function
      *
      * ```sql
+     * -- Postgres
      * SELECT students.id, students."name", students.school_id
      *   FROM students;
      *
@@ -2179,9 +2181,10 @@ class EntityTest: AbstractExposedTest() {
     }
 
     /**
-     * Eager loading for back reference
+     * Eager loading for back reference by `load` function
      *
      * ```sql
+     * -- Postgres
      * SELECT students.id, students."name", students.school_id
      *   FROM students;
      *
@@ -2224,6 +2227,7 @@ class EntityTest: AbstractExposedTest() {
      * `student1.bio` 를 캐시에 없으므로 DB에서 읽어온다
      *
      * ```sql
+     * -- Postgres
      * SELECT student_bios.id,
      *        student_bios.date_of_birth,
      *        student_bios.student_id
@@ -2254,19 +2258,12 @@ class EntityTest: AbstractExposedTest() {
      *
      * ```sql
      * -- parentPost
-     * INSERT INTO board ("name")
-     * VALUES ('Parent Board');
-     *
-     * INSERT INTO categories (title, "uniqueId")
-     * VALUES ('Parent Category', '2yyu0z4CdpfeOMoZ3u4AK');
-     *
-     * INSERT INTO posts (board_id, "category_uniqueId")
-     * VALUES (1, '2yyu0z4CdpfeOMoZ3u4AK');
+     * INSERT INTO board ("name") VALUES ('Parent Board');
+     * INSERT INTO categories (title, "uniqueId") VALUES ('Parent Category', '2yyu0z4CdpfeOMoZ3u4AK');
+     * INSERT INTO posts (board_id, "category_uniqueId") VALUES (1, '2yyu0z4CdpfeOMoZ3u4AK');
      *
      * -- post
-     * INSERT INTO categories (title, "uniqueId")
-     * VALUES ('Child Category', '2yyu0z4OWH47S1fx3U3Bk');
-     *
+     * INSERT INTO categories (title, "uniqueId") VALUES ('Child Category', '2yyu0z4OWH47S1fx3U3Bk');
      * INSERT INTO posts (parent_id, "category_uniqueId", "optCategory_uniqueId")
      * VALUES (1, '2yyu0z4OWH47S1fx3U3Bk', '2yyu0z4CdpfeOMoZ3u4AK');
      */
@@ -2274,6 +2271,7 @@ class EntityTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `nested entity initialization`(testDB: TestDB) {
         withTables(testDB, Posts, Categories, Boards) {
+            // 엔티티 생성 함수 내부에 엔티티 생성
             val parentPost = Post.new {
                 board = Board.new { name = "Parent Board" }
                 category = Category.new { title = "Parent Category" }
@@ -2292,7 +2290,7 @@ class EntityTest: AbstractExposedTest() {
     }
 
     /**
-     * 명시적으로 엔티티를 생성하는 방식
+     * 명시적으로 엔티티의 생성자를 사용하여 생성하기
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -2319,6 +2317,7 @@ class EntityTest: AbstractExposedTest() {
 
     /**
      * ```sql
+     * -- Postgres
      * CREATE TABLE IF NOT EXISTS requests (
      *      "requestId" VARCHAR(255) PRIMARY KEY
      * )
@@ -2334,17 +2333,28 @@ class EntityTest: AbstractExposedTest() {
         companion object: EntityClass<String, Request>(RequestsTable)
 
         var requestId by RequestsTable.requestId
+
+        override fun equals(other: Any?): Boolean = idEquals(other)
+        override fun hashCode(): Int = idHashCode()
+        override fun toString(): String = toStringBuilder()
+            .add("requestId", requestId)
+            .toString()
     }
 
+    /**
+     * 엔티티의 ID 가 String 수형인 경우의 생성 및 조회 예제
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `select from string id table with primary key by column`(testDB: TestDB) {
         withTables(testDB, RequestsTable) {
+            // INSERT INTO requests ("requestId") VALUES ('123')
             Request.new {
                 requestId = "123"
             }
 
             Request.all().count() shouldBeEqualTo 1L
+            Request.findById("123")?.requestId shouldBeEqualTo "123"
         }
     }
 
@@ -2370,20 +2380,22 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("number", number)
-                .add("spendingLimit", spendingLimit)
-                .toString()
+        override fun toString(): String = toStringBuilder()
+            .add("number", number)
+            .add("spendingLimit", spendingLimit)
+            .toString()
 
     }
 
+    /**
+     * 컬럼이 데이터베이스에서 생성되는 값으로 설정되는 경우
+     */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `database generated value`(testDB: TestDB) {
         withTables(testDB, CreditCards) {
             when (testDB) {
-                POSTGRESQL -> {
+                TestDB.POSTGRESQL -> {
                     // The value can also be set using a SQL trigger
                     exec(
                         """
@@ -2452,7 +2464,7 @@ class EntityTest: AbstractExposedTest() {
     }
 
     /**
-     * EntityID 를 Parameter 로 사용하기
+     * EntityID 를 Parameter 로 사용하기 ([idParam] 함수 사용)
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
@@ -2504,6 +2516,7 @@ class EntityTest: AbstractExposedTest() {
 
     /**
      * ```sql
+     * -- Postgres
      * CREATE TABLE IF NOT EXISTS countries (
      *      id VARCHAR(3) NOT NULL,
      *      "name" TEXT NOT NULL
@@ -2519,13 +2532,14 @@ class EntityTest: AbstractExposedTest() {
 
     /**
      * ```sql
+     * -- Postgres
      * CREATE TABLE IF NOT EXISTS dishes (
      *      id SERIAL PRIMARY KEY,
      *      "name" TEXT NOT NULL,
      *      country_id VARCHAR(3) NOT NULL,
      *
-     *      CONSTRAINT fk_dishes_country_id__id FOREIGN KEY (country_id) REFERENCES countries(id)
-     *              ON DELETE RESTRICT ON UPDATE RESTRICT
+     *      CONSTRAINT fk_dishes_country_id__id FOREIGN KEY (country_id)
+     *          REFERENCES countries(id) ON DELETE RESTRICT ON UPDATE RESTRICT
      * );
      * ```
      */
@@ -2542,12 +2556,10 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("name", name)
-                .toString()
+        override fun toString(): String = toStringBuilder()
+            .add("name", name)
+            .toString()
     }
-
 
     class Dish(id: EntityID<Int>): IntEntity(id) {
         companion object: IntEntityClass<Dish>(Dishes)
@@ -2557,18 +2569,18 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("name", name)
-                .toString()
+        override fun toString(): String = toStringBuilder()
+            .add("name", name)
+            .toString()
     }
 
     /**
-     * one-to-many 관계에서 eager loading을 테스트한다.
+     * one-to-many 관계에서 `with` 함수를 이용하여 eager loading을 수행합니다.
      */
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `eager loading with string parent id`(testDB: TestDB) {
+        // Tx 영역 밖에서도 로드된 엔티티를 유지할 수 있도록 합니다.
         withTables(testDB, Countries, Dishes, configure = { keepLoadedReferencesOutOfTransaction = true }) {
             val koreaId = Countries.insertAndGetId {
                 it[id] = "KOR"
@@ -2596,14 +2608,13 @@ class EntityTest: AbstractExposedTest() {
              * Eager loading with parent id
              *
              * ```sql
-             * SELECT countries.id, countries."name" FROM countries
-             * ```
-             * ```sql
+             * -- Postgres
+             * SELECT countries.id, countries."name" FROM countries;
              * SELECT dishes.id,
              *        dishes."name",
              *        dishes.country_id
              *   FROM dishes
-             *  WHERE dishes.country_id = 'KOR'
+             *  WHERE dishes.country_id = 'KOR';
              * ```
              */
             Country.all().with(Country::dishes)  // fetch eager loading
@@ -2621,6 +2632,7 @@ class EntityTest: AbstractExposedTest() {
 
     /**
      * ```sql
+     * -- Postgres
      * CREATE TABLE IF NOT EXISTS customers (
      *      id SERIAL PRIMARY KEY,
      *      "emailAddress" VARCHAR(30) NOT NULL,
@@ -2639,28 +2651,28 @@ class EntityTest: AbstractExposedTest() {
     class Customer(id: EntityID<Int>): IntEntity(id) {
         companion object: IntEntityClass<Customer>(Customers)
 
-        var emailAddress by Customers.emailAddress
-        var name by Customers.fullName
-        val orders by Order referrersOn Orders.customer
+        var emailAddress: String by Customers.emailAddress
+        var name: String by Customers.fullName
+        val orders: SizedIterable<Order> by Order referrersOn Orders.customer   // one-to-many
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("emailAddress", emailAddress)
-                .add("name", name)
-                .toString()
+        override fun toString(): String = toStringBuilder()
+            .add("emailAddress", emailAddress)
+            .add("name", name)
+            .toString()
     }
 
     /**
      * ```sql
+     * -- Postgres
      * CREATE TABLE IF NOT EXISTS orders (
      *      id SERIAL PRIMARY KEY,
      *      "orderName" TEXT NOT NULL,
      *      customer_id INT NOT NULL,
      *
-     *      CONSTRAINT fk_orders_customer_id__id FOREIGN KEY (customer_id) REFERENCES customers(id)
-     *          ON DELETE RESTRICT ON UPDATE RESTRICT
+     *      CONSTRAINT fk_orders_customer_id__id FOREIGN KEY (customer_id)
+     *          REFERENCES customers(id) ON DELETE RESTRICT ON UPDATE RESTRICT
      * );
      * ```
      */
@@ -2672,15 +2684,14 @@ class EntityTest: AbstractExposedTest() {
     class Order(id: EntityID<Int>): IntEntity(id) {
         companion object: IntEntityClass<Order>(Orders)
 
-        var name by Orders.orderName
-        var customer by Customer referencedOn Orders.customer
+        var name: String by Orders.orderName
+        var customer: Customer by Customer referencedOn Orders.customer
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("name", name)
-                .toString()
+        override fun toString(): String = toStringBuilder()
+            .add("name", name)
+            .toString()
     }
 
     /**
@@ -2738,6 +2749,7 @@ class EntityTest: AbstractExposedTest() {
 
     /**
      * ```sql
+     * -- Postgres
      * CREATE TABLE IF NOT EXISTS testtable (
      *      id SERIAL PRIMARY KEY,
      *      "value" INT NOT NULL
@@ -2754,14 +2766,13 @@ class EntityTest: AbstractExposedTest() {
     class TestEntityA(id: EntityID<Int>): IntEntity(id) {
         companion object: IntEntityClass<TestEntityA>(TestTable)
 
-        var value by TestTable.value
+        var value: Int by TestTable.value
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("value", value)
-                .toString()
+        override fun toString(): String = toStringBuilder()
+            .add("value", value)
+            .toString()
     }
 
     /**
@@ -2770,18 +2781,17 @@ class EntityTest: AbstractExposedTest() {
     class TestEntityB(id: EntityID<Int>): IntEntity(id) {
         companion object: IntEntityClass<TestEntityB>(TestTable)
 
-        var value by TestTable.value
+        var value: Int by TestTable.value
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("value", value)
-                .toString()
+        override fun toString(): String = toStringBuilder()
+            .add("value", value)
+            .toString()
     }
 
     /**
-     * 두 개의 엔티티가 동일한 테이블에 매핑되는 경우,
+     * 두 개의 엔티티 ([TestEntityA], [TestEntityB]) 가 동일한 테이블에 매핑되는 경우,
      * 서로 작동은 할 수 있으나, entityCache 에서 캐시되는 엔티티의 타입이 변경되어 문제가 발생할 수 있다.
      */
     @ParameterizedTest
