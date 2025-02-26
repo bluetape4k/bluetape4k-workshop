@@ -259,7 +259,7 @@ class MathFunctionTest: AbstractFunctionsTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `Column Reference In Default Expression in MySQL`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB in TestDB.ALL_MYSQL - TestDB.MYSQL_V5 }
+        Assumptions.assumeTrue { testDB in TestDB.ALL_MYSQL_MARIADB - TestDB.MYSQL_V5 }
 
         /**
          * ```sql

@@ -18,6 +18,9 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 
+/**
+ * SQL 삼각함수 사용 예
+ */
 class TrigonometricalFunctionTest: AbstractFunctionsTest() {
 
     @ParameterizedTest
