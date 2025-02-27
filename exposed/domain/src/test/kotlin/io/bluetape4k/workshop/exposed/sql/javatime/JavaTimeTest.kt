@@ -751,7 +751,7 @@ class JavaTimeTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `DateTime as Array`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB in setOf(TestDB.POSTGRESQL, TestDB.H2) }
+        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 + TestDB.POSTGRESQL }
 
         val defaultDates = listOf(today)
         val defaultDateTimes = listOf(LocalDateTime.now())
