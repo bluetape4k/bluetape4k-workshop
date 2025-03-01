@@ -12,13 +12,13 @@ import org.amshove.kluent.shouldContainSame
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.entityCache
+import org.jetbrains.exposed.dao.flushCache
 import org.jetbrains.exposed.dao.id.EntityID
 import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.ReferenceOption.CASCADE
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.insert
-import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import kotlin.test.assertFailsWith
@@ -37,7 +37,7 @@ class UnidirectionTest: AbstractExposedTest() {
      * )
      * ```
      */
-    object Clouds: IntIdTable("clouds") {
+    object CloudTable: IntIdTable("clouds") {
         val kind = varchar("kind", 255)
         val length = double("length")
     }
@@ -52,7 +52,7 @@ class UnidirectionTest: AbstractExposedTest() {
      * )
      * ```
      */
-    object Snowflakes: IntIdTable("snowflakes") {
+    object SnowflakeTable: IntIdTable("snowflakes") {
         val name = varchar("name", 255)
         val description = text("description").nullable()
     }
@@ -73,19 +73,19 @@ class UnidirectionTest: AbstractExposedTest() {
      * );
      * ```
      */
-    object CloudSnowflakes: Table("cloud_snowflakes") {
-        val cloudId = reference("cloud_id", Clouds, onDelete = CASCADE, onUpdate = CASCADE)
-        val snowflakeId = reference("snowflake_id", Snowflakes, onDelete = CASCADE, onUpdate = CASCADE)
+    object CloudSnowflakeTable: Table("cloud_snowflakes") {
+        val cloudId = reference("cloud_id", CloudTable, onDelete = CASCADE, onUpdate = CASCADE)
+        val snowflakeId = reference("snowflake_id", SnowflakeTable, onDelete = CASCADE, onUpdate = CASCADE)
 
         override val primaryKey = PrimaryKey(cloudId, snowflakeId, name = "PK_CLOUD_SNOWFLAKES")
     }
 
     class Cloud(id: EntityID<Int>): IntEntity(id) {
-        companion object: IntEntityClass<Cloud>(Clouds)
+        companion object: IntEntityClass<Cloud>(CloudTable)
 
-        var kind by Clouds.kind
-        var length by Clouds.length
-        val producedSnowflakes by Snowflake via CloudSnowflakes
+        var kind by CloudTable.kind
+        var length by CloudTable.length
+        val producedSnowflakes by Snowflake via CloudSnowflakeTable
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
@@ -96,10 +96,10 @@ class UnidirectionTest: AbstractExposedTest() {
     }
 
     class Snowflake(id: EntityID<Int>): IntEntity(id) {
-        companion object: IntEntityClass<Snowflake>(Snowflakes)
+        companion object: IntEntityClass<Snowflake>(SnowflakeTable)
 
-        var name by Snowflakes.name
-        var description by Snowflakes.description
+        var name by SnowflakeTable.name
+        var description by SnowflakeTable.description
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
@@ -122,34 +122,21 @@ class UnidirectionTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `one-to-many unidirectional association`(testDB: TestDB) {
-
-        // FIXME: Postgres 에서 duplicate key value violates unique constraint "pk_cloud_snowflakes" 예외가 발생한다.
-        Assumptions.assumeTrue { testDB !in TestDB.ALL_POSTGRES }
-
-        withTables(testDB, Clouds, Snowflakes, CloudSnowflakes) {
+        withTables(testDB, CloudTable, SnowflakeTable, CloudSnowflakeTable) {
             val snowflake1 = fakeSnowflake()
             val snowflake2 = fakeSnowflake()
             val cloud = fakeCound()
 
-            CloudSnowflakes.insert {
+            CloudSnowflakeTable.insert {
                 it[cloudId] = cloud.id
                 it[snowflakeId] = snowflake1.id
             }
-            CloudSnowflakes.insert {
+            CloudSnowflakeTable.insert {
                 it[cloudId] = cloud.id
                 it[snowflakeId] = snowflake2.id
             }
 
-            // Duplicated entry
-            assertFailsWith<ExposedSQLException> {
-                CloudSnowflakes.insert {
-                    it[cloudId] = cloud.id
-                    it[snowflakeId] = snowflake1.id
-                }
-                commit()
-            }
-
-            // flushCache()
+            flushCache()
             entityCache.clear()
 
             val cloud2 = Cloud.findById(cloud.id)!!
@@ -161,7 +148,7 @@ class UnidirectionTest: AbstractExposedTest() {
             snowflakeToRemove.delete()
 
             val snowflake3 = fakeSnowflake()
-            CloudSnowflakes.insert {
+            CloudSnowflakeTable.insert {
                 it[cloudId] = cloud.id
                 it[snowflakeId] = snowflake3.id
             }
@@ -171,17 +158,26 @@ class UnidirectionTest: AbstractExposedTest() {
             Snowflake.count() shouldBeEqualTo 2L
 
             val cloud3 = Cloud.findById(cloud.id)!!
+
+            /**
+             * ```sql
+             * -- Postgres
+             * SELECT COUNT(*)
+             *   FROM snowflakes INNER JOIN cloud_snowflakes ON snowflakes.id = cloud_snowflakes.snowflake_id
+             *  WHERE cloud_snowflakes.cloud_id = 1
+             * ```
+             */
             cloud3.producedSnowflakes.count() shouldBeEqualTo 2L
 
             /**
              * ```sql
+             * -- Postgres
              * SELECT snowflakes.id,
-             *        snowflakes.`name`,
+             *        snowflakes."name",
              *        snowflakes.description,
              *        cloud_snowflakes.snowflake_id,
              *        cloud_snowflakes.cloud_id
-             *   FROM snowflakes
-             *          INNER JOIN cloud_snowflakes ON snowflakes.id = cloud_snowflakes.snowflake_id
+             *   FROM snowflakes INNER JOIN cloud_snowflakes ON snowflakes.id = cloud_snowflakes.snowflake_id
              *  WHERE cloud_snowflakes.cloud_id = 1
              * ```
              */
@@ -190,6 +186,35 @@ class UnidirectionTest: AbstractExposedTest() {
                 snowflake2,
                 snowflake3
             ) - snowflakeToRemove
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun `violation of duplicated primary key`(testDB: TestDB) {
+        withTables(testDB, CloudTable, SnowflakeTable, CloudSnowflakeTable) {
+            val snowflake1 = fakeSnowflake()
+            val snowflake2 = fakeSnowflake()
+            val cloud = fakeCound()
+
+            flushCache()
+
+            CloudSnowflakeTable.insert {
+                it[cloudId] = cloud.id
+                it[snowflakeId] = snowflake1.id
+            }
+            CloudSnowflakeTable.insert {
+                it[cloudId] = cloud.id
+                it[snowflakeId] = snowflake2.id
+            }
+
+            // Duplicated entry
+            assertFailsWith<ExposedSQLException> {
+                CloudSnowflakeTable.insert {
+                    it[cloudId] = cloud.id
+                    it[snowflakeId] = snowflake1.id
+                }
+            }
         }
     }
 }
