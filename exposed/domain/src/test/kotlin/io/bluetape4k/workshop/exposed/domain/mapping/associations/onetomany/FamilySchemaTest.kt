@@ -12,6 +12,7 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.dao.entityCache
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.insertAndGetId
+import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate
@@ -26,6 +27,8 @@ class FamilySchemaTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `one-to-many with ordering`(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB != TestDB.MYSQL_V5 }  // collate 문제 (한글)
+        
         withTables(testDB, *allFamilyTables) {
 
             val father1 = Father.new {

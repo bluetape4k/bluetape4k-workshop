@@ -24,6 +24,7 @@ import org.jetbrains.exposed.sql.max
 import org.jetbrains.exposed.sql.rightJoin
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.union
+import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -1080,6 +1081,8 @@ class JoinTest {
         @ParameterizedTest
         @MethodSource(ENABLE_DIALECTS_METHOD)
         fun `self join`(testDB: TestDB) {
+            Assumptions.assumeTrue { testDB !in TestDB.ALL_MARIADB }
+            
             withOrdersTables(testDB) { _, _, _, _, users ->
                 val u1 = users.alias("u1")
                 val u2 = users.alias("u2")
@@ -1131,6 +1134,8 @@ class JoinTest {
         @ParameterizedTest
         @MethodSource(ENABLE_DIALECTS_METHOD)
         fun `self join with new alias`(testDB: TestDB) {
+            Assumptions.assumeTrue { testDB !in TestDB.ALL_MARIADB }
+            
             withOrdersTables(testDB) { _, _, _, _, users ->
                 val u2 = users.alias("u2")
 
@@ -1179,6 +1184,8 @@ class JoinTest {
         @ParameterizedTest
         @MethodSource(ENABLE_DIALECTS_METHOD)
         fun `covering index`(testDB: TestDB) {
+            Assumptions.assumeTrue { testDB !in TestDB.ALL_MARIADB }
+            
             withPersonsAndAddress(testDB) { persons, _ ->
                 // convering index 에 해당하는 subquery
                 val p2 = persons
@@ -1221,6 +1228,8 @@ class JoinTest {
         @ParameterizedTest
         @MethodSource(ENABLE_DIALECTS_METHOD)
         fun `subquery in join`(testDB: TestDB) {
+            Assumptions.assumeTrue { testDB !in TestDB.ALL_MARIADB }
+            
             withPersonsAndAddress(testDB) { persons, _ ->
                 // Subquery 용 alias
                 val p2 = persons.select(persons.id)

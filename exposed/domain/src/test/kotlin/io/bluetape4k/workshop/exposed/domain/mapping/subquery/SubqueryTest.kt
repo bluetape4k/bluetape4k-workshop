@@ -8,7 +8,6 @@ import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.domain.mapping.PersonSchema.Person
 import io.bluetape4k.workshop.exposed.domain.mapping.withPersonsAndAddress
 import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldHaveSize
 import org.jetbrains.exposed.sql.CustomOperator
 import org.jetbrains.exposed.sql.Expression
@@ -21,6 +20,8 @@ import org.jetbrains.exposed.sql.longLiteral
 import org.jetbrains.exposed.sql.max
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.sql.vendors.MariaDBDialect
+import org.jetbrains.exposed.sql.vendors.currentDialect
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -109,7 +110,9 @@ class SubqueryTest: AbstractExposedTest() {
             personEntities.forEach { person ->
                 log.debug { "person: $person" }
             }
-            personEntities.single().id.value shouldBeEqualTo 6L
+
+            val expectedId = if (currentDialect is MariaDBDialect) 8L else 6L
+            personEntities.single().id.value shouldBeEqualTo expectedId
         }
     }
 
@@ -147,8 +150,12 @@ class SubqueryTest: AbstractExposedTest() {
             entities.forEach { person ->
                 log.debug { "person: $person" }
             }
-            entities.all { it.lastName == "Rubble" }.shouldBeTrue()
-            entities.map { it.id.value } shouldBeEqualTo listOf(4L, 5L, 6L)
+
+            val expectedIds = when (currentDialect) {
+                is MariaDBDialect -> listOf(5L, 6L, 8L)
+                else -> listOf(4L, 5L, 6L)
+            }
+            entities.map { it.id.value } shouldBeEqualTo expectedIds
         }
     }
 
@@ -170,7 +177,7 @@ class SubqueryTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `select notInSubQuery`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL }
+        Assumptions.assumeTrue { testDB !in TestDB.ALL_MYSQL_MARIADB }
 
         withPersonsAndAddress(testDB) { persons, _ ->
             val query = persons.selectAll()

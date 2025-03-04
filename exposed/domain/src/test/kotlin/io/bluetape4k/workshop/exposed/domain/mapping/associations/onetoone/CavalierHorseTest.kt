@@ -82,10 +82,10 @@ class CavalierHorseTest: AbstractExposedTest() {
     fun `unidirectional one-to-one, cavalier has ownership`(testDB: TestDB) {
         withTables(testDB, Cavaliers, Horses) {
             val horse = Horse.new {
-                name = "적토마"
+                name = "White Horse"
             }
             val cavalier = Cavalier.new {
-                name = "관우"
+                name = "Clint Eastwood"
                 this.horse = horse
             }
 

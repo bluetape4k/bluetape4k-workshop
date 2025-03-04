@@ -279,7 +279,8 @@ class OneToManySetTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `one-to-many with embeddable component by @ElementCollection`(testDB: TestDB) {
-        Assumptions.assumeTrue { testDB != TestDB.H2 }   // H2 는 INSERT IGNORE 를 지원하지 않는다.
+        // H2, H2_MARIADB 는 INSERT IGNORE 를 지원하지 않는다.
+        Assumptions.assumeTrue { testDB !in setOf(TestDB.H2, TestDB.H2_MARIADB) }
 
         withTables(testDB, ProductTable, ProductImageTable) {
             val product1 = Product.new { name = "Car" }
