@@ -7,5 +7,6 @@ data class DepartmentDTO(
     val id: Long? = null,
     val organizationId: Long,
     val name: String,
-    val employees: MutableList<EmployeeDTO> = mutableListOf(),
-): Serializable 
+): Serializable {
+    val employees: MutableList<EmployeeDTO> = mutableListOf()
+}

@@ -38,11 +38,11 @@ class DepartmentManagement(
     }
 
     override fun getDepartmentsByOrganizationId(organizationId: Long): List<DepartmentDTO> {
-        return repository.findByOrganizationId(organizationId)
+        return repository.findDTOByOrganizationId(organizationId)
     }
 
     override fun getDepartmentsByOrganizationIdWithEmployees(organizationId: Long): List<DepartmentDTO> {
-        return repository.findByOrganizationId(organizationId)
+        return repository.findDTOByOrganizationId(organizationId)
             .map { dept ->
                 val employees = employeeInternalAPI.getEmployeesByDepartmentId(dept.id!!)
                 dept.employees.addAll(employees)
@@ -52,14 +52,16 @@ class DepartmentManagement(
 
     @ApplicationModuleListener
     fun onNewOrganizationEvent(event: OrganizationAddEvent) {
-        log.info { "New organization added: orgId=${event.id}, source=${event.source}" }
+        log.info { "조직[${event.id}]에 2개의 부서를 생성합니다..." }
         add(DepartmentDTO(organizationId = event.id, name = "HR"))
         add(DepartmentDTO(organizationId = event.id, name = "Management"))
+        log.info { "조직[${event.id}]에 2개의 부서를 생성했습니다." }
     }
 
     @ApplicationModuleListener
     fun onRemoveOrganizationEvent(event: OrganizationRemoveEvent) {
-        log.info { "Organization removed: orgId=${event.id}, source=${event.source}" }
+        log.info { "조직[${event.id}]에 속한 모두 부서를 삭제합니다..." }
         repository.deleteByOrganizationId(event.id)
+        log.info { "조직[${event.id}]에 속한 모두 부서를 삭제했습니다." }
     }
 }

@@ -31,7 +31,9 @@ interface DepartmentRepository: JpaRepository<Department, Long> {
         WHERE d.organizationId = :organizationId
         """
     )
-    fun findByOrganizationId(organizationId: Long): List<DepartmentDTO>
+    fun findDTOByOrganizationId(organizationId: Long): List<DepartmentDTO>
+
+    fun findByOrganizationId(organizationId: Long): List<Department>
 
     fun deleteByOrganizationId(organizationId: Long)
 }

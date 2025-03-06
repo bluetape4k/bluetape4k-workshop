@@ -90,6 +90,9 @@ dependencies {
         exclude(module = "mockito-core")
     }
 
+    // WebTestClient 를 사용하기 위해
+    // testImplementation(Libs.springBootStarter("webflux"))
+
     // OpenAPI Documentation
     implementation(Libs.springdoc_openapi_starter_webmvc_api)
 

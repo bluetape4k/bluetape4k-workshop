@@ -8,6 +8,8 @@ data class OrganizationDTO(
     val id: Long? = null,
     val name: String,
     val address: String,
-    val departments: MutableList<DepartmentDTO> = mutableListOf(),
-    val employees: MutableList<EmployeeDTO> = mutableListOf(),
-): Serializable
+): Serializable {
+
+    val departments: MutableList<DepartmentDTO> = mutableListOf()
+    val employees: MutableList<EmployeeDTO> = mutableListOf()
+}
