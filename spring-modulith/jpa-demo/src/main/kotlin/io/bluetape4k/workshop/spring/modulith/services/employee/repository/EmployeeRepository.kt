@@ -6,8 +6,8 @@ import org.springframework.data.repository.CrudRepository
 
 interface EmployeeRepository: CrudRepository<Employee, Long> {
 
-    fun findByDepartmentId(departmentId: Long): MutableList<EmployeeDTO>
-    fun findByOrganizationId(organizationId: Long): MutableList<EmployeeDTO>
+    fun findByDepartmentId(departmentId: Long): List<EmployeeDTO>
+    fun findByOrganizationId(organizationId: Long): List<EmployeeDTO>
 
     fun deleteByOrganizationId(organizationId: Long)
 }

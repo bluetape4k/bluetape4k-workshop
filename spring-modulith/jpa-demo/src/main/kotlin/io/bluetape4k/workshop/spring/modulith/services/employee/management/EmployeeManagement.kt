@@ -24,11 +24,11 @@ class EmployeeManagement(
         return mapper.toDTO(repository.save(emp))
     }
 
-    override fun getEmployeesByDepartmentId(departmentId: Long): MutableList<EmployeeDTO> {
+    override fun getEmployeesByDepartmentId(departmentId: Long): List<EmployeeDTO> {
         return repository.findByDepartmentId(departmentId)
     }
 
-    override fun getEmployeesByOrganizationId(organizationId: Long): MutableList<EmployeeDTO> {
+    override fun getEmployeesByOrganizationId(organizationId: Long): List<EmployeeDTO> {
         return repository.findByOrganizationId(organizationId)
     }
 
