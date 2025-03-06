@@ -2,6 +2,12 @@
 
 원본: [sample-spring-modulith](https://github.com/piomin/sample-spring-modulith )
 
+## 참고 자료
+
+- [Spring Modulith 공식 문서](https://docs.spring.io/spring-modulith/reference/index.html)
+- [Understanding Spring Modulith: A Detailed Guide](https://getlearntech.com/spring-modulith/)
+- [Spring Modulith at VLog](https://velog.io/@gehwan96/Spring-Modulith)
+
 [![CircleCI](https://circleci.com/gh/piomin/sample-spring-modulith.svg?style=svg)](https://circleci.com/gh/piomin/sample-spring-modulith)
 
 [![SonarCloud](https://sonarcloud.io/images/project_badges/sonarcloud-black.svg)](https://sonarcloud.io/dashboard?id=piomin_sample-spring-modulith)
