@@ -8,6 +8,11 @@
 - [Understanding Spring Modulith: A Detailed Guide](https://getlearntech.com/spring-modulith/)
 - [Spring Modulith at VLog](https://velog.io/@gehwan96/Spring-Modulith)
 
+## TODO
+
+- [ ] `spring-modulith-events-jdbc`, `spring-modulith-events-jpa` 를 대신해 `spring-modulith-events-exposed`
+  제작하기 ([Spring Modulith 를 Exposed 기반으로 사용하기 위한 모듈 제작 #25](https://github.com/bluetape4k/bluetape4k-projects/issues/25))
+
 [![CircleCI](https://circleci.com/gh/piomin/sample-spring-modulith.svg?style=svg)](https://circleci.com/gh/piomin/sample-spring-modulith)
 
 [![SonarCloud](https://sonarcloud.io/images/project_badges/sonarcloud-black.svg)](https://sonarcloud.io/dashboard?id=piomin_sample-spring-modulith)

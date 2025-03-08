@@ -545,6 +545,12 @@ object Libs {
     val spring_integration_xmpp = springIntegration("xmpp")
     val spring_integration_zookeeper = springIntegration("zookeeper")
 
+    fun springStatemachine(module: String) =
+        "org.springframework.statemachine:spring-statemachine-$module:${Versions.spring_statemachine}"
+
+    val spring_statemachine_bom = springStatemachine("bom")
+    val spring_statemachine_core = springStatemachine("core")
+
     // Spring Modulith
     fun springModulith(module: String) = "org.springframework.modulith:spring-modulith-$module:${Versions.spring_modulith}"
     fun springModulithEvents(module: String) = springModulith("events-$module")
@@ -581,12 +587,6 @@ object Libs {
     val spring_modulith_starter_neo4j = springModulithStarter("neo4j")
     val spring_modulith_starter_test = springModulithStarter("test")
 
-
-    fun springStatemachine(module: String) =
-        "org.springframework.statemachine:spring-statemachine-$module:${Versions.spring_statemachine}"
-
-    val spring_statemachine_bom = springStatemachine("bom")
-    val spring_statemachine_core = springStatemachine("core")
 
     // Chaos Monkey (https://github.com/codecentric/chaos-monkey-spring-boot)
     const val chaos_monkey_spring_boot = "de.codecentric:chaos-monkey-spring-boot:${Versions.chaos_monkey}"
