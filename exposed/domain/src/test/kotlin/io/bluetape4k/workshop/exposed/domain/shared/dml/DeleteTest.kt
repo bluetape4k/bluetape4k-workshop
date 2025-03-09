@@ -34,7 +34,7 @@ class DeleteTest: AbstractExposedTest() {
 
     companion object: KLogging()
 
-    private val limitNotSupported = TestDB.ALL_POSTGRES_LIKE
+    private val limitNotSupported = TestDB.ALL_POSTGRES
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)

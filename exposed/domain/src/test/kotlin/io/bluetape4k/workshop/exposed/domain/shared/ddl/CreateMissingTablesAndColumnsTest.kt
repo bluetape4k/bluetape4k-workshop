@@ -95,7 +95,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
         withDb(testDB) {
             SchemaUtils.createMissingTablesAndColumns(testTable)
             // execCreateMissingTablesAndColumns(testTable)
-            
+
             testTable.exists().shouldBeTrue()
             try {
                 SchemaUtils.createMissingTablesAndColumns(testTable)
@@ -930,7 +930,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
             }
 
             val alterStatements = SchemaUtils.statementsRequiredToActualizeScheme(newTable)
-            alterStatements.size shouldBeEqualTo 4
+            alterStatements.size shouldBeEqualTo if (testDB in TestDB.ALL_POSTGRES_LIKE) 3 else 4
             alterStatements.forEach { exec(it) }
 
             newTable.insert {
