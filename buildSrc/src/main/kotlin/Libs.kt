@@ -61,7 +61,7 @@ object Plugins {
 object Versions {
 
     // Java 21, Kotlin 2.0 이상에서 사용하세요
-    const val bluetape4k = "0.0.3-SNAPSHOT"              // Bluetape4k Github Package 로 배포됩니다.
+    const val bluetape4k = "0.0.5-SNAPSHOT"              // Bluetape4k Github Package 로 배포됩니다.
 
     const val kotlin = "2.1.10"                 // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
     const val kotlinx_coroutines = "1.10.1"      // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
@@ -270,6 +270,9 @@ object Libs {
     // Data
     val bluetape4k_cassandra = bluetape4k("cassandra")
     val bluetape4k_exposed = bluetape4k("exposed")
+    val bluetape4k_exposed_jackson = bluetape4k("exposed-jackson")
+    val bluetape4k_exposed_jasypt = bluetape4k("exposed-jasypt")
+    val bluetape4k_exposed_tests = bluetape4k("exposed-tests")
     val bluetape4k_hibernate = bluetape4k("hibernate")
     val bluetape4k_hibernate_reactive = bluetape4k("hibernate-reactive")
     val bluetape4k_jdbc = bluetape4k("jdbc")

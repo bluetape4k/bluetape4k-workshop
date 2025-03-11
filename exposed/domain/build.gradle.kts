@@ -12,6 +12,10 @@ dependencies {
     implementation(project(":shared"))
 
     implementation(Libs.bluetape4k_exposed)
+    implementation(Libs.bluetape4k_exposed_jackson)
+    implementation(Libs.bluetape4k_exposed_jasypt)
+    testImplementation(Libs.bluetape4k_exposed_tests)
+
     implementation(Libs.exposed_core)
     implementation(Libs.exposed_crypt)
     implementation(Libs.exposed_dao)
