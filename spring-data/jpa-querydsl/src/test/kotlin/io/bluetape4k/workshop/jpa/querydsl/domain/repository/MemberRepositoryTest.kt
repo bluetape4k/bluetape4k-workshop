@@ -9,7 +9,7 @@ import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 
-class JpaRepositoryTest(
+class MemberRepositoryTest(
     @Autowired private val memberRepo: MemberRepository,
 ): AbstractDomainTest() {
 
