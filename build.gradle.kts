@@ -4,7 +4,6 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
     base
-    `maven-publish`
     // jacoco
     kotlin("jvm") version Versions.kotlin
 
@@ -41,7 +40,6 @@ fun getEnvOrProjectProperty(propertyKey: String, envKey: String): String {
 // val bluetape4kGprUser: String = getEnvOrProjectProperty("bluetape4k.gpr.user", "GITHUB_USERNAME")
 val bluetape4kGprKey: String = getEnvOrProjectProperty("bluetape4k.gpr.key", "GITHUB_TOKEN")
 
-
 allprojects {
     repositories {
         mavenCentral()
@@ -49,6 +47,7 @@ allprojects {
         maven {
             name = "bluetape4k"
             url = uri("https://maven.pkg.github.com/bluetape4k/bluetape4k-projects")
+
             credentials {
                 username = "debop"
                 password = bluetape4kGprKey
@@ -58,10 +57,6 @@ allprojects {
 }
 
 subprojects {
-    if (name == "bluetape4k-bom") {
-        return@subprojects
-    }
-
     apply {
         plugin<JavaLibraryPlugin>()
 
