@@ -37,7 +37,6 @@ fun getEnvOrProjectProperty(propertyKey: String, envKey: String): String {
     return project.findProperty(propertyKey) as? String ?: System.getenv(envKey)
 }
 
-// val bluetape4kGprUser: String = getEnvOrProjectProperty("bluetape4k.gpr.user", "GITHUB_USERNAME")
 val bluetape4kGprKey: String = getEnvOrProjectProperty("bluetape4k.gpr.key", "GITHUB_TOKEN")
 
 allprojects {
