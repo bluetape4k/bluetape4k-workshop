@@ -21,9 +21,17 @@ class VirtualThreadControllerTest(
     }
 
     @Test
-    fun `run multiple tasks with virtual thread`() {
+    fun `run multiple tasks with StructuredTaskScope`() {
         client.get()
             .uri("/virtual-thread/multi")
+            .exchange()
+            .expectStatus().is2xxSuccessful
+    }
+
+    @Test
+    fun `run multiple tasks with virtualFutureAll`() {
+        client.get()
+            .uri("/virtual-thread/virtualFutureAll")
             .exchange()
             .expectStatus().is2xxSuccessful
     }

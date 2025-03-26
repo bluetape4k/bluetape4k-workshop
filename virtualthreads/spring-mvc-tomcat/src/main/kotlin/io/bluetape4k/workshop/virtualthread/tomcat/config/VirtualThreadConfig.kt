@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.virtualthread.undertow.config
+package io.bluetape4k.workshop.virtualthread.tomcat.config
 
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

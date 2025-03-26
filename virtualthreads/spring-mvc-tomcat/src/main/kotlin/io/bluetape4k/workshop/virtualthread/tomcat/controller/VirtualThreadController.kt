@@ -1,24 +1,24 @@
 package io.bluetape4k.workshop.virtualthread.tomcat.controller
 
+import io.bluetape4k.concurrent.virtualthread.virtualFutureAll
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import org.springframework.scheduling.annotation.Async
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import java.util.concurrent.Executors
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.StructuredTaskScope
 
 @RestController
 @RequestMapping("/virtual-thread")
-class VirtualThreadController {
+class VirtualThreadController(private val executor: ExecutorService) {
 
     companion object: KLogging() {
         private const val SLEEP_TIME = 300L
     }
 
-    private val factory = Thread.ofVirtual().name("vt-ctrl-", 1).factory()
-    private val executor = Executors.newThreadPerTaskExecutor(factory)
+    private val factory = Thread.ofVirtual().name("vt-multi-", 0).factory()
 
     @GetMapping("", "/")
     fun index(): String {
@@ -32,7 +32,7 @@ class VirtualThreadController {
         val taskSize = 1000
 
         // ShutdownOnFailure - 하나라도 실패하면 즉시 종료 (진행 중인 다른 Task 들은 중단된다)
-        StructuredTaskScope.ShutdownOnFailure().use { scope ->
+        StructuredTaskScope.ShutdownOnFailure("multi", factory).use { scope ->
             repeat(taskSize) {
                 scope.fork {
                     Thread.sleep(1000)
@@ -42,6 +42,20 @@ class VirtualThreadController {
             scope.join().throwIfFailed()
         }
 
+        return "Run multiple[$taskSize] tasks. (${Thread.currentThread()})"
+    }
+
+    @GetMapping("/virtualFutureAll")
+    fun multipleTasksWithVirtualFuture(): String {
+        val taskSize = 1000
+
+        val tasks = List(taskSize) {
+            {
+                Thread.sleep(1000)
+                log.debug { "Task $it is done. (${Thread.currentThread()})" }
+            }
+        }
+        virtualFutureAll(tasks, executor).await()
 
         return "Run multiple[$taskSize] tasks. (${Thread.currentThread()})"
     }

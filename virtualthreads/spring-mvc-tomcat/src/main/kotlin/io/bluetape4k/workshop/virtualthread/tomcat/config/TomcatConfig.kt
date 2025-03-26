@@ -20,14 +20,13 @@ class TomcatConfig {
      * Tomcat ProtocolHandler의 executor 를 Virtual Thread 를 사용하는 Executor를 사용하도록 설정
      */
     @Bean
-    fun protocolHandlerVirtualThreadExecutorCustomizer(): TomcatProtocolHandlerCustomizer<*> {
+    fun protocolHandlerVirtualThreadExecutorCustomizer(): TomcatProtocolHandlerCustomizer<ProtocolHandler> {
         log.info { "Tomcat ProtocolHandler with VirtualThread created." }
 
         return TomcatProtocolHandlerCustomizer<ProtocolHandler> { protocolHandler ->
             protocolHandler.executor = Executors.newVirtualThreadPerTaskExecutor()
 
-            // protocolHandler.executor = Executors.newVirtualThreadPerTaskExecutor()
-            // 이렇게 해도 thread name은 안 바뀝니다. (tomcat-handler-1처럼 tomcat 이 할당합니다)
+            // 이렇게 해도 thread name은 안 바뀝니다. (Tomcat 의 carrier thread name 이 출력됩니다)
             // val factory = Thread.ofVirtual().name("vt-executor-", 0).factory()
             // protocolHandler.executor = Executors.newThreadPerTaskExecutor(factory)
         }
