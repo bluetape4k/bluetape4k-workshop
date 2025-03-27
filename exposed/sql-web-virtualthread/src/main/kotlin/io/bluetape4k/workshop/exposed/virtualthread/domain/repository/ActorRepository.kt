@@ -87,13 +87,11 @@ class ActorRepository(private val db: Database) {
 
         // Using Exposed DAO
         transaction(db) {
-            val actor = Actor.new {
+            Actor.new {
                 firstName = actor.firstName
                 lastName = actor.lastName
                 actor.dateOfBirth?.let { dateOfBirth = LocalDate.parse(it) }
-            }
-
-            actor.toActorDTO()
+            }.toActorDTO()
         }
     }
 

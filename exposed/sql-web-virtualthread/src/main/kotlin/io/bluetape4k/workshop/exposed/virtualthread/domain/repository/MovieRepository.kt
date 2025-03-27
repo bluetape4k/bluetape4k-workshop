@@ -90,7 +90,8 @@ class MovieRepository(private val db: Database) {
         log.debug { "Get all movies with actors." }
 
         transaction(db) {
-            Movies.innerJoin(ActorsInMovies).innerJoin(Actors).selectAll().toList().groupingBy { it[Movies.id] }
+            Movies.innerJoin(ActorsInMovies).innerJoin(Actors).selectAll().toList()
+                .groupingBy { it[Movies.id] }
                 .fold(mutableListOf<MovieWithActorDTO>()) { acc, element ->
                     val lastMovieId = acc.lastOrNull()?.id
                     if (lastMovieId != element[Movies.id].value) {
@@ -129,7 +130,8 @@ class MovieRepository(private val db: Database) {
 
             log.debug { "query: ${query.prepareSQL(this, true)}" }
 
-            query.groupingBy { it[Movies.id] }.fold(mutableListOf<MovieWithActorDTO>()) { acc, row ->
+            query.groupingBy { it[Movies.id] }
+                .fold(mutableListOf<MovieWithActorDTO>()) { acc, row ->
                 val prevId = acc.lastOrNull()?.id
                 if (prevId != row[Movies.id].value) {
                     val movie = MovieWithActorDTO(
