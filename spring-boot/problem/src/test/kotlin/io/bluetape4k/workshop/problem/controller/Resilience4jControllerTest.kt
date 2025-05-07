@@ -1,11 +1,11 @@
 package io.bluetape4k.workshop.problem.controller
 
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.support.toUtf8String
 import io.bluetape4k.workshop.problem.AbstractProblemTest
-import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -30,7 +30,7 @@ class Resilience4jControllerTest(
      *
      */
     @Test
-    fun `when circuit breaker is opened returns CallNotPermittedException`() {
+    fun `when circuit breaker is opened returns CallNotPermittedException`() = runSuspendIO {
         client.httpGet("/resilience4j/circuit-breaker-open", HttpStatus.SERVICE_UNAVAILABLE)
             .expectBody()
             .jsonPath("$.detail")
@@ -54,7 +54,7 @@ class Resilience4jControllerTest(
      * ```
      */
     @Test
-    fun `when retry exceeed max attempts`() = runTest {
+    fun `when retry exceeed max attempts`() = runSuspendIO {
         client.httpGet("/resilience4j/retry", HttpStatus.INTERNAL_SERVER_ERROR)
             .expectBody()
             .jsonPath("$.detail")

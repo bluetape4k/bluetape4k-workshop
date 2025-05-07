@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.problem.controller
 
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.spring.tests.httpDelete
@@ -8,6 +9,9 @@ import io.bluetape4k.spring.tests.httpPut
 import io.bluetape4k.support.toUtf8String
 import io.bluetape4k.workshop.problem.AbstractProblemTest
 import io.bluetape4k.workshop.problem.controller.TaskController.Task
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.reactive.asFlow
+import kotlinx.coroutines.reactive.awaitSingle
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeEmpty
 import org.amshove.kluent.shouldNotBeNull
@@ -15,8 +19,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
-import org.springframework.test.web.reactive.server.expectBody
-import org.springframework.test.web.reactive.server.expectBodyList
+import org.springframework.test.web.reactive.server.returnResult
 
 class TaskControllerTest(
     @Autowired private val client: WebTestClient,
@@ -30,11 +33,12 @@ class TaskControllerTest(
     }
 
     @Test
-    fun `get all tasks`() {
-        val tasks = client.httpGet("/tasks")
-            .expectBodyList<Task>()
-            .returnResult()
-            .responseBody.shouldNotBeNull()
+    fun `get all tasks`() = runSuspendIO {
+        val tasks = client
+            .httpGet("/tasks")
+            .returnResult<Task>().responseBody
+            .asFlow()
+            .toList()
 
         tasks.shouldNotBeEmpty()
         tasks.forEach {
@@ -43,11 +47,11 @@ class TaskControllerTest(
     }
 
     @Test
-    fun `get task by valid id`() {
-        val task = client.httpGet("/tasks/1")
-            .expectBody<Task>()
-            .returnResult()
-            .responseBody.shouldNotBeNull()
+    fun `get task by valid id`() = runSuspendIO {
+        val task = client
+            .httpGet("/tasks/1")
+            .returnResult<Task>().responseBody
+            .awaitSingle()
 
         task.id shouldBeEqualTo 1L
     }
@@ -75,7 +79,7 @@ class TaskControllerTest(
      * ```
      */
     @Test
-    fun `get task with invalid format id`() {
+    fun `get task with invalid format id`() = runSuspendIO {
         client.httpGet("/tasks/abc", HttpStatus.BAD_REQUEST)
             .expectBody()
             .jsonPath("$.title").isEqualTo("Bad Request")
@@ -98,7 +102,7 @@ class TaskControllerTest(
      * ```
      */
     @Test
-    fun `get task non-existing id`() {
+    fun `get task non-existing id`() = runSuspendIO {
         client.httpGet("/tasks/9999", HttpStatus.NOT_FOUND)
             .expectBody()
             .jsonPath("$.title").isEqualTo("찾는 Task 없음")
@@ -125,7 +129,7 @@ class TaskControllerTest(
      * ```
      */
     @Test
-    fun `when call api which throw UnsupportedOperationException`() {
+    fun `when call api which throw UnsupportedOperationException`() = runSuspendIO {
         client.httpPut("/tasks/1", httpStatus = HttpStatus.NOT_IMPLEMENTED)
             .expectBody()
             .jsonPath("$.detail").isEqualTo("구현 중")
@@ -147,7 +151,7 @@ class TaskControllerTest(
      * ```
      */
     @Test
-    fun `when call api which throw AccessDeniedException`() {
+    fun `when call api which throw AccessDeniedException`() = runSuspendIO {
         client.httpDelete("/tasks/1", HttpStatus.INTERNAL_SERVER_ERROR)
             .expectBody()
             .jsonPath("$.detail").isEqualTo("You can't delete this task [1]")

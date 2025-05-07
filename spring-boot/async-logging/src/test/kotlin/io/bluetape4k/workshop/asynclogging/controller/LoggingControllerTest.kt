@@ -5,7 +5,8 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.asynclogging.AbstractAsyncLoggerTest
-import kotlinx.coroutines.reactive.awaitFirstOrNull
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
@@ -52,7 +53,9 @@ class LoggingControllerTest(
     private suspend fun callLoggerApi(path: String) = runSuspendIO {
         val response = client.httpGet("/$path")
             .returnResult<String>().responseBody
-            .awaitFirstOrNull()
+            .asFlow()
+            .toList()
+            .joinToString("")
 
         log.info { "response: $response" }
     }

@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.virtualthread.controller
 
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.spring.tests.httpDelete
@@ -7,14 +8,17 @@ import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.spring.tests.httpPost
 import io.bluetape4k.workshop.exposed.virtualthread.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.ActorDTO
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.reactive.asFlow
+import kotlinx.coroutines.reactive.awaitSingle
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.WebTestClient
-import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
+import org.springframework.test.web.reactive.server.returnResult
 
 class ActorControllerTest(
     @Autowired private val client: WebTestClient,
@@ -24,17 +28,17 @@ class ActorControllerTest(
         private fun newActor(): ActorDTO = ActorDTO(
             faker.name().firstName(),
             faker.name().lastName(),
-            faker.date().birthdayLocalDate().toString()
+            faker.timeAndDate().birthday().toString()
         )
     }
 
-
     @Test
-    fun `get actor by id`() {
+    fun `get actor by id`() = runSuspendIO {
         val id = 1
 
         val actor = client.httpGet("/actors/$id")
-            .expectBody<ActorDTO>().returnResult().responseBody
+            .returnResult<ActorDTO>().responseBody
+            .awaitSingle()
 
         log.debug { "actor=$actor" }
 
@@ -43,13 +47,14 @@ class ActorControllerTest(
     }
 
     @Test
-    fun `find actors by name`() {
+    fun `find actors by name`() = runSuspendIO {
         val lastName = "Depp"
 
         val actors = client
             .httpGet("/actors?lastName=$lastName")
-            .expectBodyList<ActorDTO>()
-            .returnResult().responseBody
+            .returnResult<ActorDTO>().responseBody
+            .asFlow()
+            .toList()
 
         log.debug { "actors=$actors" }
 
@@ -68,30 +73,30 @@ class ActorControllerTest(
     }
 
     @Test
-    fun `create actor`() {
+    fun `create actor`() = runSuspendIO {
         val actor = newActor()
 
         val newActor = client
             .httpPost("/actors", actor)
-            .expectBody<ActorDTO>()
-            .returnResult().responseBody!!
+            .returnResult<ActorDTO>().responseBody
+            .awaitSingle()
 
         newActor shouldBeEqualTo actor.copy(id = newActor.id)
     }
 
     @Test
-    fun `delete actor`() {
+    fun `delete actor`() = runSuspendIO {
         val actor = newActor()
 
         val newActor = client
             .httpPost("/actors", actor)
-            .expectBody<ActorDTO>()
-            .returnResult().responseBody!!
+            .returnResult<ActorDTO>().responseBody
+            .awaitSingle()
 
         val deletedCount = client
             .httpDelete("/actors/${newActor.id}")
-            .expectBody<Int>()
-            .returnResult().responseBody!!
+            .returnResult<Int>().responseBody
+            .awaitSingle()
 
         deletedCount shouldBeEqualTo 1
     }

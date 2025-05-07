@@ -55,7 +55,8 @@ class UserControllerTest(
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().is2xxSuccessful
-                .returnResult<User>().responseBody.awaitSingle()
+                .returnResult<User>().responseBody
+                .awaitSingle()
 
             log.debug { "Find by id[1] = $user" }
             user.shouldNotBeNull()
@@ -68,7 +69,8 @@ class UserControllerTest(
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isNotFound
-                .returnResult<String>().responseBody.awaitSingle()
+                .returnResult<String>().responseBody
+                .awaitSingle()
 
             log.debug { message }
             message.shouldNotBeNull() shouldContain "Not Found"
@@ -81,7 +83,8 @@ class UserControllerTest(
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isBadRequest
-                .returnResult<String>().responseBody.awaitSingle()
+                .returnResult<String>().responseBody
+                .awaitSingle()
 
             log.debug { "message=$message" }
             message.shouldNotBeNull() shouldContain "Bad Request"
@@ -98,7 +101,9 @@ class UserControllerTest(
                 .uri("/api/users/search?email=$searchEmail")
                 .exchange()
                 .expectStatus().is2xxSuccessful
-                .returnResult<User>().responseBody.asFlow().toList()
+                .returnResult<User>().responseBody
+                .asFlow()
+                .toList()
 
             searchedUsers shouldHaveSize 1
             searchedUsers.all { it.email == searchEmail }.shouldBeTrue()
@@ -135,7 +140,8 @@ class UserControllerTest(
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().is2xxSuccessful
-                .returnResult<User>().responseBody.awaitSingle()
+                .returnResult<User>().responseBody
+                .awaitSingle()
 
             savedUser.id.shouldNotBeNull()
             savedUser.toDto() shouldBeEqualTo newUser
@@ -169,7 +175,8 @@ class UserControllerTest(
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().is2xxSuccessful
-                .returnResult<User>().responseBody.awaitSingle()
+                .returnResult<User>().responseBody
+                .awaitSingle()
 
             updatedUser.id.shouldNotBeNull()
             updatedUser.toDto() shouldBeEqualTo userToUpdate
@@ -224,7 +231,9 @@ class UserControllerTest(
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk
-                .returnResult<Boolean>().responseBody.awaitSingle().shouldBeTrue()
+                .returnResult<Boolean>().responseBody
+                .awaitSingle()
+                .shouldBeTrue()
         }
 
         @Test

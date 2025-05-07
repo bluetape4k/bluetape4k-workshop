@@ -70,6 +70,11 @@ dependencies {
         exclude(module = "mockito-core")
     }
 
+    testImplementation(Libs.bluetape4k_coroutines)
+    testImplementation(Libs.kotlinx_coroutines_reactor)
+    testImplementation(Libs.kotlinx_coroutines_test)
+    testImplementation(Libs.reactor_kotlin_extensions)
+
     // Monitoring
     implementation(Libs.micrometer_core)
     implementation(Libs.micrometer_registry_prometheus)

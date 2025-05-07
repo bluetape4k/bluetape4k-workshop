@@ -36,6 +36,11 @@ dependencies {
         exclude(module = "mockito-core")
     }
 
+    testImplementation(Libs.bluetape4k_coroutines)
+    testImplementation(Libs.kotlinx_coroutines_reactor)
+    testImplementation(Libs.kotlinx_coroutines_test)
+    testImplementation(Libs.reactor_kotlin_extensions)
+
     // SpringDoc - OpenAPI 3.0
     implementation(Libs.springdoc_openapi_starter_webmvc_ui)
 

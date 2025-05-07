@@ -1,31 +1,36 @@
 package io.bluetape4k.workshop.exposed.virtualthread.controller
 
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.exposed.virtualthread.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.MovieDTO
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.reactive.asFlow
+import kotlinx.coroutines.reactive.awaitSingle
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.WebTestClient
-import org.springframework.test.web.reactive.server.expectBody
-import org.springframework.test.web.reactive.server.expectBodyList
+import org.springframework.test.web.reactive.server.returnResult
 
-class MovieControllerTest(@Autowired private val client: WebTestClient): AbstractExposedTest() {
+class MovieControllerTest(
+    @Autowired private val client: WebTestClient,
+): AbstractExposedTest() {
 
     companion object: KLogging()
 
     @Test
-    fun `get movie by id`() {
+    fun `get movie by id`() = runSuspendIO {
         val id = 1
 
         val movie = client
             .httpGet("/movies/$id")
-            .expectBody<MovieDTO>()
-            .returnResult().responseBody
+            .returnResult<MovieDTO>().responseBody
+            .awaitSingle()
 
         log.debug { "movie[$id]=$movie" }
 
@@ -34,13 +39,13 @@ class MovieControllerTest(@Autowired private val client: WebTestClient): Abstrac
     }
 
     @Test
-    fun `search movies by producer name`() {
+    fun `search movies by producer name`() = runSuspendIO {
         val producerName = "Johnny"
 
         val movies = client
             .httpGet("/movies?producerName=$producerName")
-            .expectBodyList<MovieDTO>()
-            .returnResult().responseBody!!
+            .returnResult<MovieDTO>().responseBody
+            .asFlow().toList()
 
         movies shouldHaveSize 2
     }

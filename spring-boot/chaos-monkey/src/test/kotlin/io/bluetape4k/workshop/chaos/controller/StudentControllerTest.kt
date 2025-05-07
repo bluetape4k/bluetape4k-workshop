@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.chaos.controller
 
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.spring.tests.httpGet
@@ -11,7 +12,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
-import org.springframework.test.web.reactive.server.expectBodyList
+import org.springframework.test.web.reactive.server.returnResult
 
 class StudentControllerTest(
     @Autowired private val client: WebTestClient,
@@ -20,10 +21,11 @@ class StudentControllerTest(
     companion object: KLogging()
 
     @Test
-    fun `find all students`() {
+    fun `find all students`() = runSuspendIO {
         val students = client.httpGet("/students")
-            .expectBodyList<Student>()
-            .returnResult().responseBody!!
+            .returnResult<Student>().responseBody
+            .asFlow()
+            .toList()
 
         log.debug { "all students" }
         students.forEach {
