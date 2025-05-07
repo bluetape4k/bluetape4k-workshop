@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.virtualthread.tomcat.controller
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.virtualthread.tomcat.AbstractVirtualThreadMvcTest
 import io.bluetape4k.workshop.virtualthread.tomcat.domain.dto.TeamDTO
 import kotlinx.coroutines.flow.toList
@@ -23,7 +24,7 @@ class TeamRepositoryTest(
 
     @Test
     fun `get all teams`() = runTest {
-        val teams = client.get("/team")
+        val teams = client.httpGet("/team")
             .returnResult<TeamDTO>()
             .responseBody.asFlow().toList()
 
@@ -35,7 +36,7 @@ class TeamRepositoryTest(
 
     @Test
     fun `get team by id`() = runTest {
-        val team = client.get("/team/1")
+        val team = client.httpGet("/team/1")
             .returnResult<TeamDTO>().responseBody
             .awaitSingle()
 
@@ -44,7 +45,7 @@ class TeamRepositoryTest(
 
     @Test
     fun `get team by name`() = runTest {
-        val team = client.get("/team/name/teamA")
+        val team = client.httpGet("/team/name/teamA")
             .returnResult<TeamDTO>().responseBody
             .awaitSingle()
         

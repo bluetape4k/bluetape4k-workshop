@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.virtualthread.tomcat.controller
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.spring.tests.httpGet
+import io.bluetape4k.spring.tests.httpPost
 import io.bluetape4k.workshop.virtualthread.tomcat.AbstractVirtualThreadMvcTest
 import io.bluetape4k.workshop.virtualthread.tomcat.domain.dto.MemberDTO
 import io.bluetape4k.workshop.virtualthread.tomcat.domain.dto.MemberSearchCondition
@@ -28,8 +29,7 @@ class MemberRepositoryTest(
     @Test
     fun `get all members`() = runTest {
         val members = client.httpGet("/member")
-            .returnResult<MemberDTO>()
-            .responseBody
+            .returnResult<MemberDTO>().responseBody
             .asFlow()
             .toList()
 
@@ -41,9 +41,8 @@ class MemberRepositoryTest(
 
     @Test
     fun `get member by id`() = runTest {
-        val member = client.get("/member/1")
-            .returnResult<MemberDTO>()
-            .responseBody
+        val member = client.httpGet("/member/1")
+            .returnResult<MemberDTO>().responseBody
             .awaitSingle()
 
         member.id shouldBeEqualTo 1L
@@ -53,9 +52,8 @@ class MemberRepositoryTest(
     fun `search member`() = runTest {
         val condition = MemberSearchCondition(teamName = "teamA", ageGoe = 60)
 
-        val members = client.post("/member/search", condition)
-            .returnResult<MemberWithTeamDTO>()
-            .responseBody
+        val members = client.httpPost("/member/search", condition)
+            .returnResult<MemberWithTeamDTO>().responseBody
             .asFlow()
             .toList()
 
