@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.redisson.locks
 
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
-import io.bluetape4k.junit5.coroutines.MultijobTester
+import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
@@ -187,9 +187,9 @@ class MultiLockExamples: AbstractRedissonTest() {
         mlock.tryLockAsync(1, 60, TimeUnit.SECONDS, mlockId).coAwait().shouldBeTrue()
         assertIsLocked(lock1, lock2, lock3)
 
-        MultijobTester()
+        SuspendedJobTester()
             .numThreads(16)
-            .roundsPerJob(2)
+            .roundsPerJob(16 * 2)
             .add {
                 val mlock2 = RedissonMultiLock(lock1, lock2, lock4)
                 val mlockId2 = redisson.getLockId("mlock2-" + Base58.randomString(6))

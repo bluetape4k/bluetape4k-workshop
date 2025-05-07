@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.exposed.virtualthread.domain
 
 import io.bluetape4k.concurrent.virtualthread.virtualFuture
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
-import io.bluetape4k.junit5.concurrency.VirtualthreadTester
+import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.utils.Runtimex
 import io.bluetape4k.workshop.exposed.virtualthread.AbstractExposedTest
@@ -66,9 +66,8 @@ class DomainSQLTest(
 
         @Test
         fun `get all actors in multiple virtual threads`() {
-            VirtualthreadTester()
-                .numThreads(Runtimex.availableProcessors * 2)
-                .roundsPerThread(4)
+            StructuredTaskScopeTester()
+                .roundsPerTask(Runtimex.availableProcessors * 2 * 4)
                 .add {
                     transaction(db) {
                         val actors = Actor.all().toList()

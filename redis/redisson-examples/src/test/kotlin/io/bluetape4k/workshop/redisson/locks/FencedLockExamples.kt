@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.redisson.locks
 
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
-import io.bluetape4k.junit5.concurrency.VirtualthreadTester
-import io.bluetape4k.junit5.coroutines.MultijobTester
+import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
+import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
@@ -118,9 +118,8 @@ class FencedLockExamples: AbstractRedissonTest() {
         val lock = redisson.getFencedLock(randomName())
         val lockCounter = atomic(0)
 
-        VirtualthreadTester()
-            .numThreads(8)
-            .roundsPerThread(2)
+        StructuredTaskScopeTester()
+            .roundsPerTask(16)
             .add {
                 // 락 획득 시도 및 토큰 반환
                 val token = lock.tryLockAndGetTokenAsync(5, 10, TimeUnit.SECONDS).get() ?: 0
@@ -139,7 +138,7 @@ class FencedLockExamples: AbstractRedissonTest() {
             }
             .run()
 
-        lockCounter.value shouldBeEqualTo 8 * 2
+        lockCounter.value shouldBeEqualTo 16
     }
 
     @RepeatedTest(LockExamples.REPEAT_SIZE)
@@ -147,9 +146,9 @@ class FencedLockExamples: AbstractRedissonTest() {
         val lock = redisson.getFencedLock(randomName())
         val lockCounter = atomic(0)
 
-        MultijobTester()
+        SuspendedJobTester()
             .numThreads(8)
-            .roundsPerJob(2)
+            .roundsPerJob(16)
             .add {
                 val mlockId = redisson.getLockId("ferncedLock")
                 val locked = lock.tryLockAsync(5, 10, TimeUnit.SECONDS, mlockId).coAwait()
@@ -170,6 +169,6 @@ class FencedLockExamples: AbstractRedissonTest() {
             }
             .run()
 
-        lockCounter.value shouldBeEqualTo 8 * 2
+        lockCounter.value shouldBeEqualTo 16
     }
 }

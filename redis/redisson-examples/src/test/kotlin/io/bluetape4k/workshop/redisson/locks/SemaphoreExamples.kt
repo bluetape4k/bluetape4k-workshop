@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.redisson.locks
 
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
-import io.bluetape4k.junit5.concurrency.VirtualthreadTester
-import io.bluetape4k.junit5.coroutines.MultijobTester
+import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
+import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.redis.redisson.coroutines.coAwait
@@ -38,9 +38,9 @@ class SemaphoreExamples: AbstractRedissonTest() {
         val redisson2 = newRedisson()
         val redisson3 = newRedisson()
 
-        MultijobTester()
+        SuspendedJobTester()
             .numThreads(4)
-            .roundsPerJob(4)
+            .roundsPerJob(16)
             .add {
                 // 해당 Job은 semaphore 2개 반납
                 val s2 = redisson2.getSemaphore(semaphoreName)
@@ -139,9 +139,8 @@ class SemaphoreExamples: AbstractRedissonTest() {
         val redisson2 = newRedisson()
         val redisson3 = newRedisson()
 
-        VirtualthreadTester()
-            .numThreads(4)
-            .roundsPerThread(4)
+        StructuredTaskScopeTester()
+            .roundsPerTask(16)
             .add {
                 val s2 = redisson2.getSemaphore(semaphoreName)
                 // 2개 반납 (4개 남음)

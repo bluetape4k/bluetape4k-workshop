@@ -2,8 +2,8 @@ package io.bluetape4k.workshop.kotlin.designPatterns.singleton
 
 
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
-import io.bluetape4k.junit5.concurrency.VirtualthreadTester
-import io.bluetape4k.junit5.coroutines.MultijobTester
+import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
+import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.utils.Runtimex
@@ -58,9 +58,8 @@ abstract class AbstractSingletonTest<T>(private val singletonInstanceMethod: () 
     fun `Virtual 스레드 환경에서 싱글턴 객체를 생성한다`() {
         val instances = CopyOnWriteArrayList<T>()
 
-        VirtualthreadTester()
-            .numThreads(Runtimex.availableProcessors * 2)
-            .roundsPerThread(2)
+        StructuredTaskScopeTester()
+            .roundsPerTask(Runtimex.availableProcessors * 4)
             .add {
                 instances.add(singletonInstanceMethod())
             }
@@ -74,9 +73,9 @@ abstract class AbstractSingletonTest<T>(private val singletonInstanceMethod: () 
     fun `멀티 Job 에서 여러번 호출해도 동일한 객체를 반환한다`() = runTest {
         val instances = CopyOnWriteArrayList<T>()
 
-        MultijobTester()
+        SuspendedJobTester()
             .numThreads(Runtimex.availableProcessors * 2)
-            .roundsPerJob(2)
+            .roundsPerJob(Runtimex.availableProcessors * 2 * 2)
             .add {
                 instances.add(singletonInstanceMethod())
             }

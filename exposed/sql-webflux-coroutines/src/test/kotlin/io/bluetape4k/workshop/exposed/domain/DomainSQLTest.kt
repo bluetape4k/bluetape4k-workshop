@@ -1,8 +1,9 @@
 package io.bluetape4k.workshop.exposed.domain
 
-import io.bluetape4k.concurrent.virtualthread.virtualFuture
-import io.bluetape4k.junit5.concurrency.VirtualthreadTester
-import io.bluetape4k.junit5.coroutines.MultijobTester
+import io.bluetape4k.exposed.sql.transactions.newVirtualThreadTransaction
+import io.bluetape4k.exposed.sql.transactions.virtualThreadTransactionAsync
+import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
+import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.utils.Runtimex
@@ -12,7 +13,6 @@ import io.bluetape4k.workshop.exposed.domain.schema.Actors
 import org.amshove.kluent.shouldNotBeEmpty
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
@@ -36,9 +36,9 @@ class DomainSQLTest: AbstractExposedSqlTest() {
 
         @Test
         fun `get all actors in multiple coroutines`() = runSuspendIO {
-            MultijobTester()
+            SuspendedJobTester()
                 .numThreads(Runtimex.availableProcessors * 2)
-                .roundsPerJob(4)
+                .roundsPerJob(Runtimex.availableProcessors * 8)
                 .add {
                     newSuspendedTransaction {
                         // addLogger(StdOutSqlLogger)
@@ -55,24 +55,21 @@ class DomainSQLTest: AbstractExposedSqlTest() {
 
         @RepeatedTest(REPEAT_SIZE)
         fun `get all actors in virtual threads`() {
-            virtualFuture {
-                transaction {
-                    val actors = Actors.selectAll().map { it.toActorDTO() }
-                    actors.shouldNotBeEmpty()
-                }
-            }.get()
+            newVirtualThreadTransaction {
+                val actors = Actors.selectAll().map { it.toActorDTO() }
+                actors.shouldNotBeEmpty()
+            }
         }
 
         @Test
         fun `get all actors in multiple virtual threads`() {
-            VirtualthreadTester()
-                .numThreads(Runtimex.availableProcessors * 2)
-                .roundsPerThread(4)
+            StructuredTaskScopeTester()
+                .roundsPerTask(Runtimex.availableProcessors * 2 * 4)
                 .add {
-                    transaction {
-                        val actors = Actors.selectAll().map { it.toActorDTO() }
-                        actors.shouldNotBeEmpty()
-                    }
+                    val actors = virtualThreadTransactionAsync {
+                        Actors.selectAll().map { it.toActorDTO() }
+                    }.await()
+                    actors.shouldNotBeEmpty()
                 }
                 .run()
         }

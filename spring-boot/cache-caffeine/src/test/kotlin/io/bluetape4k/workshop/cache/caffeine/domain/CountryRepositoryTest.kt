@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.cache.caffeine.domain
 
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
-import io.bluetape4k.junit5.concurrency.VirtualthreadTester
+import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
@@ -95,9 +95,8 @@ class CountryRepositoryTest(
         val codeMap = ConcurrentHashMap<String, Country>()
 
         measureTimeMillis {
-            VirtualthreadTester()
-                .numThreads(8 * Runtimex.availableProcessors)
-                .roundsPerThread(8)
+            StructuredTaskScopeTester()
+                .roundsPerTask(8 * 8 * Runtimex.availableProcessors)
                 .add {
                     val country = retreiveCountry()
                     codeMap[country.code] = country

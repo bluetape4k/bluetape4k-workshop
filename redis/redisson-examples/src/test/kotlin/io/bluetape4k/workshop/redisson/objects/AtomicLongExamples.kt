@@ -1,7 +1,8 @@
 package io.bluetape4k.workshop.redisson.objects
 
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
-import io.bluetape4k.junit5.coroutines.MultijobTester
+import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
+import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.redis.redisson.coroutines.coAwait
@@ -17,7 +18,7 @@ import org.junit.jupiter.api.RepeatedTest
 class AtomicLongExamples: AbstractRedissonTest() {
 
     companion object: KLogging() {
-        private const val REPEAT_SIZE = 3
+        private const val REPEAT_SIZE = 5
         private const val TEST_COUNT = 1_000
     }
 
@@ -64,9 +65,9 @@ class AtomicLongExamples: AbstractRedissonTest() {
         val counter = redisson.getAtomicLong(randomName())
 
         // Multi Job 환경에서 AtomicLong이 안정적으로 동작하는지 확인합니다.
-        MultijobTester()
+        SuspendedJobTester()
             .numThreads(8)
-            .roundsPerJob(32)
+            .roundsPerJob(8 * 32)
             .add {
                 counter.incrementAndGetAsync().coAwait()
                 delay(10)
@@ -85,6 +86,23 @@ class AtomicLongExamples: AbstractRedissonTest() {
         MultithreadingTester()
             .numThreads(32)
             .roundsPerThread(8)
+            .add {
+                counter.incrementAndGet()
+                Thread.sleep(10)
+            }
+            .run()
+
+        counter.get() shouldBeEqualTo 32 * 8L
+        counter.delete().shouldBeTrue()
+    }
+
+    @RepeatedTest(REPEAT_SIZE)
+    fun `AtomicLong in Virtual Threads`() {
+        val counter = redisson.getAtomicLong(randomName())
+
+        // Multi threading 환경에서 AtomicLong이 안정적으로 동작하는지 확인합니다.
+        StructuredTaskScopeTester()
+            .roundsPerTask(32 * 8)
             .add {
                 counter.incrementAndGet()
                 Thread.sleep(10)

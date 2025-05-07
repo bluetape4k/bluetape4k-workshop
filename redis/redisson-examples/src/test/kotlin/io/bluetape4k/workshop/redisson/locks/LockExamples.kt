@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.redisson.locks
 
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
-import io.bluetape4k.junit5.concurrency.VirtualthreadTester
-import io.bluetape4k.junit5.coroutines.MultijobTester
+import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
+import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
@@ -146,9 +146,8 @@ class LockExamples: AbstractRedissonTest() {
         val lockCounter = atomic(0)
 
         // NOTE: Redisson Lock 은 Thread Id 기반으로 수행됩니다. Coroutine 의 경우 Thread를 공유하므로 Lock 사용에 문제가 발생할 수 있습니다.
-        VirtualthreadTester()
-            .numThreads(8)
-            .roundsPerThread(2)
+        StructuredTaskScopeTester()
+            .roundsPerTask(16)
             .add {
                 val locked = lock.tryLock(5, 10, TimeUnit.SECONDS)
                 if (locked) {
@@ -165,7 +164,7 @@ class LockExamples: AbstractRedissonTest() {
             }
             .run()
 
-        lockCounter.value shouldBeEqualTo 8 * 2
+        lockCounter.value shouldBeEqualTo 16
     }
 
     @RepeatedTest(REPEAT_SIZE)
@@ -173,9 +172,9 @@ class LockExamples: AbstractRedissonTest() {
         val lock = redisson.getLock(randomName())
         val lockCounter = atomic(0)
 
-        MultijobTester()
+        SuspendedJobTester()
             .numThreads(8)
-            .roundsPerJob(2)
+            .roundsPerJob(16)
             .add {
                 // Coroutine 환경에서는 Thread Id 기반이 아닌 Lock Id 기반으로 수행됩니다.
                 val lockId = redisson.getLockId(lock.name)
@@ -194,6 +193,6 @@ class LockExamples: AbstractRedissonTest() {
             }
             .run()
 
-        lockCounter.value shouldBeEqualTo 8 * 2
+        lockCounter.value shouldBeEqualTo 16
     }
 }

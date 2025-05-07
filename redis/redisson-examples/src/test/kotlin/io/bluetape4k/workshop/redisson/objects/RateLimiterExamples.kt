@@ -1,7 +1,8 @@
 package io.bluetape4k.workshop.redisson.objects
 
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
-import io.bluetape4k.junit5.coroutines.MultijobTester
+import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
+import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.redis.redisson.coroutines.coAwait
@@ -120,6 +121,57 @@ class RateLimiterExamples: AbstractRedissonTest() {
     }
 
     @RepeatedTest(REPEAT_SIZE)
+    fun `RedissonClient 인스턴스 별로 rate limit 를 따로 허용한다 in virtual threads`() {
+        val limiterName = randomName()
+
+        val limiter1 = redisson.getRateLimiter(limiterName)
+        // 100초 동안 각 client 별로 3개의 request 만 허용
+        limiter1.trySetRate(RateType.PER_CLIENT, 3, Duration.ofSeconds(100))
+        // Redisson이 Initialize 할 시간이 필요함
+        limiter1.acquire()
+        limiter1.acquire()
+        limiter1.acquire()
+        Thread.sleep(10)
+        limiter1.availablePermits() shouldBeEqualTo 0L
+        limiter1.tryAcquire(1).shouldBeFalse()
+
+        StructuredTaskScopeTester()
+            .roundsPerTask(4 * 4)
+            .add {
+                val redisson1 = newRedisson()
+                try {
+                    // RRateLimiter Exception----RateLimiter is not initialized (해결 완료)
+                    // https://github.com/redisson/redisson/issues/2451
+                    val limiter2 = redisson1.getRateLimiter(limiterName)
+                    limiter2.trySetRate(
+                        RateType.PER_CLIENT,
+                        3,
+                        Duration.ofSeconds(100)
+                    ).shouldBeFalse()               // 이미 limiter1 에서 initialize 했으므로, false 를 반환한다
+                    Thread.sleep(1)
+
+                    // limiter2는 3개 모두 소진
+                    repeat(3) {
+                        limiter2.tryAcquire(1).shouldBeTrue()
+                    }
+                    Thread.sleep(1)
+                    // limiter2는 모두 소진됨
+                    limiter2.availablePermits() shouldBeEqualTo 0L
+                    limiter2.tryAcquire(1).shouldBeFalse()
+                } finally {
+                    redisson1.shutdown()
+                }
+                Thread.sleep(1)
+            }
+
+
+        limiter1.availablePermits() shouldBeEqualTo 0L
+        limiter1.tryAcquire(1).shouldBeFalse()
+
+        limiter1.delete().shouldBeTrue()
+    }
+
+    @RepeatedTest(REPEAT_SIZE)
     fun `RedissonClient 인스턴스 별로 rate limit 를 따로 허용한다 in multi job`() = runSuspendIO {
         val limiterName = randomName()
 
@@ -135,9 +187,9 @@ class RateLimiterExamples: AbstractRedissonTest() {
         limiter1.tryAcquireAsync(1).coAwait().shouldBeFalse()
 
         // Multi Job 환경에서 limiter1 의 rate limit 을 확인한다
-        MultijobTester()
+        SuspendedJobTester()
             .numThreads(4)
-            .roundsPerJob(4)
+            .roundsPerJob(4 * 4)
             .add {
                 val redisson1 = newRedisson()
                 try {

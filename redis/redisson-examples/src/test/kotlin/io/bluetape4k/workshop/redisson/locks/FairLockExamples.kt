@@ -1,7 +1,8 @@
 package io.bluetape4k.workshop.redisson.locks
 
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
-import io.bluetape4k.junit5.coroutines.MultijobTester
+import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
+import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.redis.redisson.coroutines.coAwait
@@ -33,9 +34,9 @@ class FairLockExamples: AbstractRedissonTest() {
         val lock = redisson.getFairLock(randomName())
         val lockCounter = atomic(0)
 
-        MultijobTester()
+        SuspendedJobTester()
             .numThreads(16)
-            .roundsPerJob(2)
+            .roundsPerJob(16 * 2)
             .add {
                 // NOTE: Coroutine에서 Lock 소유자를 구분하기 위해 lockId 를 발급받습니다.
                 val lockId = redisson.getLockId(lock.name)
@@ -63,6 +64,27 @@ class FairLockExamples: AbstractRedissonTest() {
         MultithreadingTester()
             .numThreads(16)
             .roundsPerThread(2)
+            .add {
+                // 락 획득에 5초를 대기하고, 10초 후에 lock을 자동 해제합니다.
+                val locked = lock.tryLock(5, 10, TimeUnit.SECONDS)
+                if (locked) {
+                    lockCounter.incrementAndGet()
+                    Thread.sleep(10)
+                    lock.unlock()
+                }
+            }
+            .run()
+
+        lockCounter.value shouldBeEqualTo 16 * 2
+    }
+
+    @Test
+    fun `Virtual Threads 환경에서 Fair 락 획득하기`() {
+        val lock = redisson.getFairLock(randomName())
+        val lockCounter = atomic(0)
+
+        StructuredTaskScopeTester()
+            .roundsPerTask(16 * 2)
             .add {
                 // 락 획득에 5초를 대기하고, 10초 후에 lock을 자동 해제합니다.
                 val locked = lock.tryLock(5, 10, TimeUnit.SECONDS)
