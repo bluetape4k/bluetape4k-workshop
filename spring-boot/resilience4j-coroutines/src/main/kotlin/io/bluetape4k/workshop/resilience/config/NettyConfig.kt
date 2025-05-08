@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.coroutines.config
+package io.bluetape4k.workshop.resilience.config
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.utils.Runtimex
