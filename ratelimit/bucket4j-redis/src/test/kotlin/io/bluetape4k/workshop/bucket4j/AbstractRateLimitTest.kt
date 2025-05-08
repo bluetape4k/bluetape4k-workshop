@@ -27,6 +27,6 @@ abstract class AbstractRateLimitTest {
     protected fun blockedWebRequestDueToRateLimit(url: String) {
         client.httpGet(url, HttpStatus.TOO_MANY_REQUESTS)
             .expectBody()
-            .jsonPath("error", "Too many requests!")
+            .jsonPath("message").isEqualTo("Too many requests!")
     }
 }
