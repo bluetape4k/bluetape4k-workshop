@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.redisson.locks
 
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
+import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
@@ -174,7 +175,45 @@ class MultiLockExamples: AbstractRedissonTest() {
     }
 
     @Test
-    fun `tryLock with RedissionMultiLock in Multi Job`() = runSuspendIO {
+    fun `tryLock with RedissionMultiLock in virtual threads`() {
+        val lock1 = redisson.getLock(randomName())
+        val lock2 = redisson.getLock(randomName())
+        val lock3 = redisson.getLock(randomName())
+        val lock4 = redisson.getLock(randomName())
+
+        val mlock = RedissonMultiLock(lock1, lock2, lock3)
+
+        log.debug { "Main Thread에서 MultiRock에 대해서 lock을 잡습니다." }
+        mlock.tryLock(1, 60, TimeUnit.SECONDS).shouldBeTrue()
+        assertIsLocked(lock1, lock2, lock3)
+
+        StructuredTaskScopeTester()
+            .roundsPerTask(16 * 2)
+            .add {
+                val mlock2 = RedissonMultiLock(lock1, lock2, lock4)
+
+                // 이미 Lock이 잡혀있다
+                assertIsLocked(lock1, lock2, lock3)
+
+                log.debug { "다른 Thread 에서 새로운 MultiRock에 대해서 lock을 잡으려고 하면 실패한다." }
+                mlock2.tryLock(1, 60, TimeUnit.SECONDS).shouldBeFalse()
+
+                // 이미 Lock이 잡혀있다
+                assertIsLocked(lock1, lock2, lock3)
+
+                // mlock2에 속한 lock4 는 lock 이 걸리지 않았다
+                lock4.isLocked.shouldBeFalse()
+            }
+
+        // 같은 Thread 에서 기존 lock이 걸려 있는데, 또 lock을 걸면 TTL이 갱신된다
+        mlock.tryLock(1, 60, TimeUnit.SECONDS).shouldBeTrue()
+
+        Thread.sleep(10)
+        mlock.unlock()
+    }
+
+    @Test
+    fun `tryLock with RedissionMultiLock in Coroutines`() = runSuspendIO {
         val lock1 = redisson.getLock(randomName())
         val lock2 = redisson.getLock(randomName())
         val lock3 = redisson.getLock(randomName())

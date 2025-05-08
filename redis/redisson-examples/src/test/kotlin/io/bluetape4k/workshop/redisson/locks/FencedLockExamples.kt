@@ -142,7 +142,7 @@ class FencedLockExamples: AbstractRedissonTest() {
     }
 
     @RepeatedTest(LockExamples.REPEAT_SIZE)
-    fun `Multi Job 환경에서 FencedLock 획득 및 해제`() = runSuspendIO {
+    fun `코루틴 환경에서 FencedLock 획득 및 해제`() = runSuspendIO {
         val lock = redisson.getFencedLock(randomName())
         val lockCounter = atomic(0)
 

@@ -61,7 +61,7 @@ class AtomicLongExamples: AbstractRedissonTest() {
     }
 
     @RepeatedTest(REPEAT_SIZE)
-    fun `AtomicLong in Multi job`() = runSuspendIO {
+    fun `AtomicLong in 코루틴`() = runSuspendIO {
         val counter = redisson.getAtomicLong(randomName())
 
         // Multi Job 환경에서 AtomicLong이 안정적으로 동작하는지 확인합니다.

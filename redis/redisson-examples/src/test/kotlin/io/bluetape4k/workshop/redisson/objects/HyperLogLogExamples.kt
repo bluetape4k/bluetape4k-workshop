@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.redisson.objects
 
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
+import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
@@ -72,5 +73,24 @@ class HyperLogLogExamples: AbstractRedissonTest() {
             .run()
 
         hyperLog.count() shouldBeEqualTo 10
+        hyperLog.delete()
+    }
+
+    @Test
+    fun `Virtual Thread 환경에서 HyperLogLog 사용하기`() {
+        val hyperLog = redisson.getHyperLogLog<Int>(randomName())
+
+        // 0 until 10 숫자만 HyperLogLog에 많이 추가하면, 중복되는 것은 제외하고 10개만 남는다
+        StructuredTaskScopeTester()
+            .roundsPerTask(8 * 4)
+            .add {
+                log.debug { "Add 100 random numbers ... " }
+                val numbers = List(100) { Random.nextInt(0, 10) }
+                hyperLog.addAll(numbers)
+            }
+            .run()
+
+        hyperLog.count() shouldBeEqualTo 10
+        hyperLog.delete()
     }
 }

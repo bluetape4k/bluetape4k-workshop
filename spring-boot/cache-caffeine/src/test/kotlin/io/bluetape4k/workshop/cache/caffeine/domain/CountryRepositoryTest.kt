@@ -2,6 +2,8 @@ package io.bluetape4k.workshop.cache.caffeine.domain
 
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
+import io.bluetape4k.junit5.coroutines.SuspendedJobTester
+import io.bluetape4k.junit5.coroutines.runSuspendDefault
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
@@ -97,6 +99,24 @@ class CountryRepositoryTest(
         measureTimeMillis {
             StructuredTaskScopeTester()
                 .roundsPerTask(8 * 8 * Runtimex.availableProcessors)
+                .add {
+                    val country = retreiveCountry()
+                    codeMap[country.code] = country
+                }
+                .run()
+        } shouldBeLessThan 8 * Runtimex.availableProcessors * 8 * EXPECTED_MILLIS
+
+        codeMap.size shouldBeLessOrEqualTo CountryRepository.SAMPLE_COUNTRY_CODES.size
+    }
+
+    @Test
+    fun `get random countries in 코루틴`() = runSuspendDefault {
+        val codeMap = ConcurrentHashMap<String, Country>()
+
+        measureTimeMillis {
+            SuspendedJobTester()
+                .numThreads(8 * Runtimex.availableProcessors)
+                .roundsPerJob(8)
                 .add {
                     val country = retreiveCountry()
                     codeMap[country.code] = country

@@ -30,7 +30,7 @@ class FairLockExamples: AbstractRedissonTest() {
     companion object: KLogging()
 
     @Test
-    fun `멀티 Job 환경에서 Fair 락 획득하기`() = runSuspendIO {
+    fun `코루틴 환경에서 Fair 락 획득하기`() = runSuspendIO {
         val lock = redisson.getFairLock(randomName())
         val lockCounter = atomic(0)
 
@@ -67,6 +67,7 @@ class FairLockExamples: AbstractRedissonTest() {
             .add {
                 // 락 획득에 5초를 대기하고, 10초 후에 lock을 자동 해제합니다.
                 val locked = lock.tryLock(5, 10, TimeUnit.SECONDS)
+
                 if (locked) {
                     lockCounter.incrementAndGet()
                     Thread.sleep(10)
@@ -88,6 +89,7 @@ class FairLockExamples: AbstractRedissonTest() {
             .add {
                 // 락 획득에 5초를 대기하고, 10초 후에 lock을 자동 해제합니다.
                 val locked = lock.tryLock(5, 10, TimeUnit.SECONDS)
+
                 if (locked) {
                     lockCounter.incrementAndGet()
                     Thread.sleep(10)

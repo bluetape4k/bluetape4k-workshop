@@ -25,7 +25,7 @@ class SemaphoreExamples: AbstractRedissonTest() {
     companion object: KLogging()
 
     @Test
-    fun `멀티 Coroutine Job 환경에서 세마포어 사용하기`() = runSuspendIO {
+    fun `코루틴 환경에서 세마포어 사용하기`() = runSuspendIO {
         val semaphoreName = randomName()
         val semaphore = redisson.getSemaphore(semaphoreName)
 

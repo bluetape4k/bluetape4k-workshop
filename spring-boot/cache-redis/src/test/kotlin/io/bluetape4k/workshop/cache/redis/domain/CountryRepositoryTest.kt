@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.cache.redis.domain
 
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
+import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
@@ -71,13 +72,30 @@ class CountryRepositoryTest(
     }
 
     @Test
-    fun `get random countries`() {
+    fun `get random countries in multi threading`() {
         val codeMap = ConcurrentHashMap<String, Country>()
 
         measureTimeMillis {
             MultithreadingTester()
                 .numThreads(8)
                 .roundsPerThread(8)
+                .add {
+                    val country = retreiveCountry()
+                    codeMap[country.code] = country
+                }
+                .run()
+        } shouldBeLessThan 8 * 8 * EXPECTED_MILLIS
+
+        codeMap.size shouldBeLessOrEqualTo CountryRepository.SAMPLE_COUNTRY_CODES.size
+    }
+
+    @Test
+    fun `get random countries in virtual threads`() {
+        val codeMap = ConcurrentHashMap<String, Country>()
+
+        measureTimeMillis {
+            StructuredTaskScopeTester()
+                .roundsPerTask(8 * 8)
                 .add {
                     val country = retreiveCountry()
                     codeMap[country.code] = country
