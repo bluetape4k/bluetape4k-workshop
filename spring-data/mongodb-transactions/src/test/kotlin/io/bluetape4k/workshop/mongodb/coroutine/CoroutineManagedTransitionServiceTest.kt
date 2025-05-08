@@ -21,9 +21,9 @@ import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
-import org.springframework.context.annotation.Configuration
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory
 import org.springframework.data.mongodb.ReactiveMongoTransactionManager
 import org.springframework.data.mongodb.config.AbstractReactiveMongoConfiguration
@@ -40,8 +40,8 @@ class CoroutineManagedTransitionServiceTest: AbstractMongodbTest() {
         private const val DATABASE_NAME = "spring-data-mongodb-transactions-coroutines-demo"
     }
 
-    @Configuration
-    @ComponentScan
+    @TestConfiguration
+    @ComponentScan(basePackageClasses = [CoroutineManagedTransitionService::class])
     @EnableReactiveMongoRepositories
     @EnableTransactionManagement
     class TestConfig: AbstractReactiveMongoConfiguration() {

@@ -5,6 +5,7 @@ import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Projections
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.logging.warn
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.mongodbdb.AbstractMongodbTest
 import io.bluetape4k.workshop.mongodbdb.Process
@@ -13,21 +14,24 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
-import org.springframework.context.annotation.Configuration
 import org.springframework.data.mongodb.MongoDatabaseFactory
 import org.springframework.data.mongodb.MongoTransactionManager
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories
 import org.springframework.test.context.ContextConfiguration
+import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.annotation.EnableTransactionManagement
 
 /**
  * MongoDB 에 Transaction을 사용하려면 MongoDB Replica 가 적용되던가 Mongos 에 Access 해야 합니다.
  */
+@ExtendWith(SpringExtension::class)
 @ContextConfiguration(classes = [TransitionServiceTest.TestConfig::class])
 class TransitionServiceTest: AbstractMongodbTest() {
 
@@ -35,8 +39,8 @@ class TransitionServiceTest: AbstractMongodbTest() {
         private const val DATABASE_NAME = "spring-data-mongodb-transactions-demo"
     }
 
-    @Configuration
-    @ComponentScan
+    @TestConfiguration
+    @ComponentScan(basePackageClasses = [TransitionService::class])
     @EnableMongoRepositories
     @EnableTransactionManagement
     class TestConfig: AbstractMongoClientConfiguration() {
@@ -81,6 +85,7 @@ class TransitionServiceTest: AbstractMongodbTest() {
                 transitionService.run(process.id)
                 stateInDb(process) shouldBeEqualTo State.DONE
             } catch (e: IllegalStateException) {
+                log.warn(e) { "작업 중 예외가 발생했습니다. process=$process" }
                 stateInDb(process) shouldBeEqualTo State.CREATED
             }
         }

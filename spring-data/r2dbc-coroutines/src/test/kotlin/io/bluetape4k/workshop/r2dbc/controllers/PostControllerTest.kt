@@ -29,7 +29,8 @@ class PostControllerTest(
 
     @Test
     fun `find all posts`() = runSuspendIO {
-        val posts = client.httpGet("/posts")
+        val posts = client
+            .httpGet("/posts")
             .returnResult<Post>().responseBody
             .asFlow()
             .toList()
@@ -42,7 +43,8 @@ class PostControllerTest(
 
     @Test
     fun `find one post by id`() = runSuspendIO {
-        val post = client.httpGet("/posts/1")
+        val post = client
+            .httpGet("/posts/1")
             .returnResult<Post>().responseBody
             .awaitSingle()
 
