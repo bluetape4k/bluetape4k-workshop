@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import io.bluetape4k.junit5.coroutines.runSuspendVT
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.spring.tests.httpGet
+import io.bluetape4k.spring.tests.httpPost
 import io.bluetape4k.workshop.coroutines.AbstractCoroutineApplicationTest
 import io.bluetape4k.workshop.coroutines.model.Banner
 import kotlinx.coroutines.delay
@@ -12,7 +14,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
-import org.springframework.test.web.reactive.server.body
+import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 
@@ -24,51 +26,39 @@ class VTCoroutineControllerTest: AbstractCoroutineApplicationTest() {
 
     @Test
     fun index() = runSuspendVT {
-        clientGet("$BASE_PATH/")
-            .exchange()
-            .expectStatus().is2xxSuccessful
-            .expectBody<Banner>()
+        client.httpGet("$BASE_PATH/")
+            .expectBody<Banner>().isEqualTo(expectedBanner)
     }
 
     @RepeatedTest(REPEAT_SIZE)
     fun suspending() = runSuspendVT {
-        clientGet("$BASE_PATH/suspend")
-            .exchange()
-            .expectStatus().is2xxSuccessful
+        client.httpGet("$BASE_PATH/suspend")
             .expectBody<Banner>().isEqualTo(expectedBanner)
     }
 
     @RepeatedTest(REPEAT_SIZE)
     fun deferred() = runSuspendVT {
-        clientGet("$BASE_PATH/deferred")
-            .exchange()
-            .expectStatus().is2xxSuccessful
+        client.httpGet("$BASE_PATH/deferred")
             .expectBody<Banner>().isEqualTo(expectedBanner)
     }
 
     @RepeatedTest(REPEAT_SIZE)
     fun `sequential flow`() = runSuspendVT {
-        clientGet("$BASE_PATH/sequential-flow")
-            .exchange()
-            .expectStatus().is2xxSuccessful
+        client.httpGet("$BASE_PATH/sequential-flow")
             .expectBodyList<Banner>()
             .contains(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
     }
 
     @RepeatedTest(REPEAT_SIZE)
     fun `concurrent flow`() = runSuspendVT {
-        clientGet("$BASE_PATH/concurrent-flow")
-            .exchange()
-            .expectStatus().is2xxSuccessful
+        client.httpGet("$BASE_PATH/concurrent-flow")
             .expectBodyList<Banner>()
             .contains(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
     }
 
     @RepeatedTest(REPEAT_SIZE)
     fun error() = runSuspendVT {
-        clientGet("$BASE_PATH/error")
-            .exchange()
-            .expectStatus().is5xxServerError
+        client.httpGet("$BASE_PATH/error", HttpStatus.INTERNAL_SERVER_ERROR)
     }
 
     @RepeatedTest(REPEAT_SIZE)
@@ -82,10 +72,7 @@ class VTCoroutineControllerTest: AbstractCoroutineApplicationTest() {
                 JsonNodeFactory.instance.numberNode(it)
             }
 
-        clientPost("$BASE_PATH/request-as-flow")
-            .body(request)
-            .exchange()
-            .expectStatus().is2xxSuccessful
+        client.httpPost("$BASE_PATH/request-as-flow", request)
             .expectBody<String>().isEqualTo("12345")
     }
 }
