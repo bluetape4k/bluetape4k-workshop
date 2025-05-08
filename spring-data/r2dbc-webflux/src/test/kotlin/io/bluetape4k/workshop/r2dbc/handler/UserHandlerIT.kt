@@ -2,6 +2,10 @@ package io.bluetape4k.workshop.r2dbc.handler
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.spring.tests.httpDelete
+import io.bluetape4k.spring.tests.httpGet
+import io.bluetape4k.spring.tests.httpPost
+import io.bluetape4k.spring.tests.httpPut
 import io.bluetape4k.workshop.r2dbc.AbstractWebfluxR2dbcApplicationTest
 import io.bluetape4k.workshop.r2dbc.domain.User
 import io.bluetape4k.workshop.r2dbc.domain.UserDTO
@@ -19,7 +23,7 @@ import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.http.MediaType
+import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 
@@ -39,12 +43,10 @@ class UserHandlerIT(
     inner class Find {
         @Test
         fun `find all users`() = runTest {
-            val users = client.get()
-                .uri("/users")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().is2xxSuccessful
-                .returnResult<UserDTO>().responseBody.asFlow().toList()
+            val users = client
+                .httpGet("/users")
+                .returnResult<UserDTO>().responseBody
+                .asFlow().toList()
 
             users.shouldNotBeEmpty()
             users.forEach { user ->
@@ -54,12 +56,10 @@ class UserHandlerIT(
 
         @Test
         fun `find by id - exsting user`() = runTest {
-            val user = client.get()
-                .uri("/users/1")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().is2xxSuccessful
-                .returnResult<User>().responseBody.awaitSingle()
+            val user = client
+                .httpGet("/users/1")
+                .returnResult<User>().responseBody
+                .awaitSingle()
 
             user.shouldNotBeNull()
             log.debug { "Find by Id[1] =$user" }
@@ -67,20 +67,12 @@ class UserHandlerIT(
 
         @Test
         fun `find by id - non-exsting user`() = runTest {
-            client.get()
-                .uri("/users/9999")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isNotFound
+            client.httpGet("/users/9999", HttpStatus.NOT_FOUND)
         }
 
         @Test
         fun `find by id - invalid user id`() = runTest {
-            client.get()
-                .uri("/users/user_id")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isBadRequest
+            client.httpGet("/users/user_id", HttpStatus.BAD_REQUEST)
                 .expectBody()
                 .jsonPath("$.message").isEqualTo("`id` must be numeric")
         }
@@ -92,12 +84,10 @@ class UserHandlerIT(
         fun `search by email`() = runTest {
             val searchEmail = "user2@users.com"
 
-            val searchedUsers = client.get()
-                .uri("/users/search?email=$searchEmail")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().is2xxSuccessful
-                .returnResult<User>().responseBody.asFlow().toList()
+            val searchedUsers = client
+                .httpGet("/users/search?email=$searchEmail")
+                .returnResult<User>().responseBody
+                .asFlow().toList()
 
             searchedUsers shouldHaveSize 1
             searchedUsers.all { it.email == searchEmail }.shouldBeTrue()
@@ -106,22 +96,16 @@ class UserHandlerIT(
         @Test
         fun `search by empty email returns BadReqeust`() = runTest {
             val searchEmail = ""
-            client.get()
-                .uri("/users/search?email=$searchEmail")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isBadRequest
+            client
+                .httpGet("/users/search?email=$searchEmail", HttpStatus.BAD_REQUEST)
                 .expectBody()
                 .jsonPath("$.message").isEqualTo("Not provide email to search")
         }
 
         @Test
         fun `search without params return BadRequest`() = runTest {
-            client.get()
-                .uri("/users/search")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isBadRequest
+            client
+                .httpGet("/users/search", HttpStatus.BAD_REQUEST)
                 .expectBody()
                 .jsonPath("$.message").isEqualTo("Search must have query parameter")
         }
@@ -133,12 +117,8 @@ class UserHandlerIT(
         fun `add new user`() = runTest {
             val newUser = createUserDTO()
 
-            val savedUser = client.post()
-                .uri("/users")
-                .bodyValue(newUser)
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isCreated
+            val savedUser = client
+                .httpPost("/users", newUser, HttpStatus.CREATED)
                 .returnResult<User>().responseBody.awaitSingle()
 
             savedUser.id.shouldNotBeNull()
@@ -149,12 +129,8 @@ class UserHandlerIT(
         fun `add new user with bad format`() = runTest {
             val newUser = "bad format"
 
-            client.post()
-                .uri("/users")
-                .bodyValue(newUser)
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isBadRequest
+            client
+                .httpPost("/users", newUser, HttpStatus.BAD_REQUEST)
                 .expectBody()
                 .jsonPath("$.message").isEqualTo("Invalid body")
         }
@@ -169,13 +145,10 @@ class UserHandlerIT(
 
             val userToUpdate = createUserDTO()
 
-            val updatedUser = client.put()
-                .uri("/users/${savedUser.id}")
-                .bodyValue(userToUpdate)
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().is2xxSuccessful
-                .returnResult<User>().responseBody.awaitSingle()
+            val updatedUser = client
+                .httpPut("/users/${savedUser.id}", userToUpdate)
+                .returnResult<User>().responseBody
+                .awaitSingle()
 
             updatedUser.toDto() shouldBeEqualTo userToUpdate
         }
@@ -184,12 +157,8 @@ class UserHandlerIT(
         fun `update with non-numeric id`() = runTest {
             val userToUpdate = createUserDTO()
 
-            client.put()
-                .uri("/users/abc")
-                .bodyValue(userToUpdate)
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isBadRequest
+            client
+                .httpPut("/users/abc", userToUpdate, HttpStatus.BAD_REQUEST)
                 .expectBody()
                 .jsonPath("$.message").isEqualTo("`id` must be numeric")
         }
@@ -198,12 +167,7 @@ class UserHandlerIT(
         fun `update with invalid userDTO`() = runTest {
             val userToUpdate = "bad format"
 
-            client.put()
-                .uri("/users/1")
-                .bodyValue(userToUpdate)
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isBadRequest
+            client.httpPut("/users/1", userToUpdate, HttpStatus.BAD_REQUEST)
                 .expectBody()
                 .jsonPath("$.message").isEqualTo("Invalid body")
         }
@@ -213,12 +177,7 @@ class UserHandlerIT(
         fun `update non-existing user`() = runTest {
             val userToUpdate = createUserDTO()
 
-            client.put()
-                .uri("/users/9999")
-                .bodyValue(userToUpdate)
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isNotFound
+            client.httpPut("/users/9999", userToUpdate, HttpStatus.NOT_FOUND)
                 .expectBody()
                 .jsonPath("$.message").isEqualTo("User[9999] not found")
         }
@@ -231,31 +190,19 @@ class UserHandlerIT(
             val newUser = createUserDTO()
             val savedUser = service.addUser(newUser)!!
 
-            client.delete()
-                .uri("/users/${savedUser.id}")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isNoContent
+            client.httpDelete("/users/${savedUser.id}", HttpStatus.NO_CONTENT)
         }
 
         @Test
         fun `delete non-existing user`() = runTest {
-            client.delete()
-                .uri("/users/9999")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isNotFound
+            client.httpDelete("/users/9999", HttpStatus.NOT_FOUND)
                 .expectBody()
                 .jsonPath("$.message").isEqualTo("User[9999] not found")
         }
 
         @Test
         fun `delete user with non-numeric id`() = runTest {
-            client.delete()
-                .uri("/users/abc")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isBadRequest
+            client.httpDelete("/users/abc", HttpStatus.BAD_REQUEST)
                 .expectBody()
                 .jsonPath("$.message").isEqualTo("`id` must be numeric")
         }

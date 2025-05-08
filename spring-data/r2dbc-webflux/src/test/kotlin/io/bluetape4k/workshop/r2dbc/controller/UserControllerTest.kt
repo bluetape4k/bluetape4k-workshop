@@ -2,6 +2,10 @@ package io.bluetape4k.workshop.r2dbc.controller
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.spring.tests.httpDelete
+import io.bluetape4k.spring.tests.httpGet
+import io.bluetape4k.spring.tests.httpPost
+import io.bluetape4k.spring.tests.httpPut
 import io.bluetape4k.workshop.r2dbc.AbstractWebfluxR2dbcApplicationTest
 import io.bluetape4k.workshop.r2dbc.domain.User
 import io.bluetape4k.workshop.r2dbc.domain.toDto
@@ -20,7 +24,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 
@@ -35,11 +38,7 @@ class UserControllerTest(
     inner class Find {
         @Test
         fun `find all users as Flow`() = runTest {
-            val users = client.get()
-                .uri("/api/users")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isOk
+            val users = client.httpGet("/api/users")
                 .returnResult<User>().responseBody
                 .asFlow()
                 .toList()
@@ -50,11 +49,7 @@ class UserControllerTest(
 
         @Test
         fun `find by id - existing user`() = runTest {
-            val user = client.get()
-                .uri("/api/users/1")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().is2xxSuccessful
+            val user = client.httpGet("/api/users/1")
                 .returnResult<User>().responseBody
                 .awaitSingle()
 
@@ -64,11 +59,8 @@ class UserControllerTest(
 
         @Test
         fun `find by id - non-existing user`() = runTest {
-            val message = client.get()
-                .uri("/api/users/9999")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isNotFound
+            val message = client
+                .httpGet("/api/users/9999", HttpStatus.NOT_FOUND)
                 .returnResult<String>().responseBody
                 .awaitSingle()
 
@@ -78,11 +70,8 @@ class UserControllerTest(
 
         @Test
         fun `find by id - non-numeric id`() = runTest {
-            val message = client.get()
-                .uri("/api/users/abc")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isBadRequest
+            val message = client
+                .httpGet("/api/users/abc", HttpStatus.BAD_REQUEST)
                 .returnResult<String>().responseBody
                 .awaitSingle()
 
@@ -97,10 +86,8 @@ class UserControllerTest(
         fun `search by valid email returns Users`() = runTest {
             val searchEmail = "user2@users.com"
 
-            val searchedUsers = client.get()
-                .uri("/api/users/search?email=$searchEmail")
-                .exchange()
-                .expectStatus().is2xxSuccessful
+            val searchedUsers = client
+                .httpGet("/api/users/search?email=$searchEmail")
                 .returnResult<User>().responseBody
                 .asFlow()
                 .toList()
@@ -113,18 +100,12 @@ class UserControllerTest(
         fun `search by empty email returns Users`() = runTest {
             val searchEmail = ""
 
-            client.get()
-                .uri("/api/users/search?email=$searchEmail")
-                .exchange()
-                .expectStatus().isBadRequest
+            client.httpGet("/api/users/search?email=$searchEmail", HttpStatus.BAD_REQUEST)
         }
 
         @Test
         fun `search without email returns Users`() = runTest {
-            client.get()
-                .uri("/api/users/search")
-                .exchange()
-                .expectStatus().isBadRequest
+            client.httpGet("/api/users/search", HttpStatus.BAD_REQUEST)
         }
     }
 
@@ -134,12 +115,8 @@ class UserControllerTest(
         fun `add new user`() = runTest {
             val newUser = createUserDTO()
 
-            val savedUser = client.post()
-                .uri("/api/users")
-                .bodyValue(newUser)
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().is2xxSuccessful
+            val savedUser = client
+                .httpPost("/api/users", newUser)
                 .returnResult<User>().responseBody
                 .awaitSingle()
 
@@ -151,12 +128,7 @@ class UserControllerTest(
         fun `add new user with invalid format`() = runTest {
             val newUser = "new user"
 
-            client.post()
-                .uri("/api/users")
-                .bodyValue(newUser)
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isEqualTo(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+            client.httpPost("/api/users", newUser, HttpStatus.UNSUPPORTED_MEDIA_TYPE)
         }
     }
 
@@ -169,12 +141,8 @@ class UserControllerTest(
 
             val userToUpdate = createUserDTO()
 
-            val updatedUser = client.put()
-                .uri("/api/users/${savedUser.id}")
-                .bodyValue(userToUpdate)
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().is2xxSuccessful
+            val updatedUser = client
+                .httpPut("/api/users/${savedUser.id}", userToUpdate)
                 .returnResult<User>().responseBody
                 .awaitSingle()
 
@@ -185,37 +153,19 @@ class UserControllerTest(
         @Test
         fun `update non-existing user`() = runTest {
             val userToUpdate = createUserDTO()
-
-            client.put()
-                .uri("/api/users/9999")
-                .bodyValue(userToUpdate)
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isNotFound
+            client.httpPut("/api/users/9999", userToUpdate, HttpStatus.NOT_FOUND)
         }
 
         @Test
         fun `update user with invalid format`() = runTest {
             val userToUpdate = "new user"
-
-            client.put()
-                .uri("/api/users/2")
-                .bodyValue(userToUpdate)
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isEqualTo(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
+            client.httpPut("/api/users/2", userToUpdate, HttpStatus.UNSUPPORTED_MEDIA_TYPE)
         }
 
         @Test
         fun `update user with invalid id`() = runTest {
             val userToUpdate = "new user"
-
-            client.put()
-                .uri("/api/users/abc")
-                .bodyValue(userToUpdate)
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isBadRequest
+            client.httpPut("/api/users/abc", userToUpdate, HttpStatus.BAD_REQUEST)
         }
     }
 
@@ -226,11 +176,8 @@ class UserControllerTest(
             val newUser = createUserDTO()
             val savedUser = service.addUser(newUser)!!
 
-            client.delete()
-                .uri("/api/users/${savedUser.id}")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isOk
+            client
+                .httpDelete("/api/users/${savedUser.id}")
                 .returnResult<Boolean>().responseBody
                 .awaitSingle()
                 .shouldBeTrue()
@@ -238,20 +185,12 @@ class UserControllerTest(
 
         @Test
         fun `delete non-existing user`() = runTest {
-            client.delete()
-                .uri("/api/users/9999")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isNotFound
+            client.httpDelete("/api/users/9999", HttpStatus.NOT_FOUND)
         }
 
         @Test
         fun `delete by non-numeric id`() = runTest {
-            client.delete()
-                .uri("/api/users/abc")
-                .accept(MediaType.APPLICATION_JSON)
-                .exchange()
-                .expectStatus().isBadRequest
+            client.httpDelete("/api/users/abc", HttpStatus.BAD_REQUEST)
         }
     }
 }

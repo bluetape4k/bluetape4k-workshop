@@ -24,12 +24,13 @@ dependencies {
         exclude(module = "mockito-core")
     }
 
-    // WebClient
+    // Spring Webflux
     testImplementation(Libs.springBootStarter("webflux"))
 
     // Coroutines & Reactor
     testImplementation(Libs.bluetape4k_coroutines)
     testImplementation(Libs.kotlinx_coroutines_reactor)
     testImplementation(Libs.kotlinx_coroutines_test)
+    testImplementation(Libs.reactor_kotlin_extensions)
     testImplementation(Libs.reactor_test)
 }

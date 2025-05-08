@@ -129,8 +129,8 @@ class UserServiceTest(
         saved.shouldNotBeNull()
         saved.id.shouldNotBeNull()
 
-        service.deleteUser(saved.id!!).shouldBeTrue()
-        service.findById(saved.id!!).shouldBeNull()
+        service.deleteUser(saved.id).shouldBeTrue()
+        service.findById(saved.id).shouldBeNull()
     }
 
     @Test

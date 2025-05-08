@@ -137,7 +137,6 @@ class CborApplicationTest {
         assertCourse1(course1)
     }
 
-
     private fun assertCourse1(course: Course) {
         course.id shouldBeEqualTo 1
         course.name shouldBeEqualTo "Kotlin Programming"
