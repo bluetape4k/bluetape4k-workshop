@@ -95,7 +95,8 @@ class QuerydslExamples: AbstractQuerydslTest() {
         log.debug { "Member count=$count" }
         count.toInt() shouldBeEqualTo MEMBER_COUNT + 1
 
-        val results = queryFactory.select(qmember.name, qmember.age)
+        val results = queryFactory
+            .select(qmember.name, qmember.age)
             .distinct()
             .from(qmember)
             .orderBy(qmember.name.asc())
@@ -832,5 +833,4 @@ class QuerydslExamples: AbstractQuerydslTest() {
         }
         results.all { it.startsWith("MEMBER-") }.shouldBeTrue()
     }
-
 }

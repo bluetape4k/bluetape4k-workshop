@@ -5,6 +5,8 @@ import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.mongodb.AbstractMongodbTest
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 import kotlinx.coroutines.runBlocking
 import org.amshove.kluent.shouldBeEqualTo
@@ -40,16 +42,20 @@ class CoroutineRepositoryTest @Autowired constructor(
 
     @Test
     fun `find persons as flow`() = runSuspendIO {
-        repeat(10) {
-            repository.save(newPerson())
-        }
+        List(10) {
+            launch {
+                repository.save(newPerson())
+            }
+        }.joinAll()
 
         val person1 = repository.save(Person("Sunghyouk", "Bae"))
         val person2 = repository.save(Person("Jehyoung", "Bae"))
 
-        repeat(10) {
-            repository.save(newPerson())
-        }
+        List(10) {
+            launch {
+                repository.save(newPerson())
+            }
+        }.joinAll()
 
         val persons = repository.findByLastname("Bae").log("Bae").toList()
         persons shouldHaveSize 2
@@ -60,6 +66,6 @@ class CoroutineRepositoryTest @Autowired constructor(
             .toList()
 
         sunghyouk shouldHaveSize 1
-        sunghyouk shouldBeEqualTo listOf(person1)
+        sunghyouk.single() shouldBeEqualTo person1
     }
 }

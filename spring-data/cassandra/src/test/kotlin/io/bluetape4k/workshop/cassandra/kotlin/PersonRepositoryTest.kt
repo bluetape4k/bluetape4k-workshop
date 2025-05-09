@@ -77,7 +77,8 @@ class PersonRepositoryTest(
         repository.saveAll(users).collect()
     }
 
-    private fun newPerson(): Person {
-        return Person(faker.name().firstName(), faker.name().lastName())
-    }
+    private fun newPerson(): Person = Person(
+        firstname = faker.name().firstName(),
+        lastname = faker.name().lastName()
+    )
 }

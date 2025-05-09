@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.cassandra.auditing
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.workshop.cassandra.AbstractCassandraCoroutineTest
 import org.amshove.kluent.shouldBeAfter
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeInRange
@@ -15,7 +16,7 @@ import java.time.Instant
 @SpringBootTest(classes = [AuditingTestConfiguration::class])
 class AuditingTest(
     @Autowired private val repository: AuditedPersonRepository,
-): io.bluetape4k.workshop.cassandra.AbstractCassandraCoroutineTest("auditing") {
+): AbstractCassandraCoroutineTest("auditing") {
 
     companion object: KLogging() {
         const val ACTOR = AuditingTestConfiguration.ACTOR
@@ -34,9 +35,7 @@ class AuditingTest(
         saved.createdBy shouldBeEqualTo ACTOR
         saved.lastModifiedBy shouldBeEqualTo ACTOR
 
-        val range = Instant.now().let {
-            it.minusSeconds(60)..it.plusSeconds(60)
-        }
+        val range = rangeOf()
         saved.createdAt.shouldNotBeNull() shouldBeInRange range
         saved.lastModifiedAt.shouldNotBeNull() shouldBeInRange range
     }
@@ -51,11 +50,13 @@ class AuditingTest(
         modified.createdBy shouldBeEqualTo ACTOR
         modified.lastModifiedBy shouldBeEqualTo ACTOR
 
-        val range = Instant.now().let {
-            it.minusSeconds(60)..it.plusSeconds(60)
-        }
+        val range = rangeOf()
         modified.createdAt.shouldNotBeNull() shouldBeInRange range
         modified.lastModifiedAt.shouldNotBeNull() shouldBeInRange range
         modified.lastModifiedAt.shouldNotBeNull() shouldBeAfter modified.createdAt!!
+    }
+
+    private fun rangeOf(moment: Instant = Instant.now()): ClosedRange<Instant> {
+        return moment.minusSeconds(60)..moment.plusSeconds(60)
     }
 }

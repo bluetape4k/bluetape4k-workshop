@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitLast
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
 import org.junit.jupiter.api.Test
@@ -47,7 +46,7 @@ class ReactiveMongoTemplateTest(
     }
 
     @Test
-    fun `find by query`() = runTest {
+    fun `find by query`() = runSuspendIO {
         val query = Query.query(Criteria.where(Person::lastname.name).`is`("White"))
         val persons = operations.find<Person>(query).asFlow().log("persons").toList()
 

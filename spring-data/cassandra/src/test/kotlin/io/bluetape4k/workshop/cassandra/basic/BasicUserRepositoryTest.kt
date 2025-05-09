@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.cassandra.basic
 
 import com.datastax.oss.driver.api.querybuilder.SchemaBuilder
 import io.bluetape4k.cassandra.cql.executeSuspending
+import io.bluetape4k.idgenerators.snowflake.Snowflakers
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
@@ -10,13 +11,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.runBlocking
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldContain
 import org.amshove.kluent.shouldNotBeEmpty
-import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -32,16 +31,16 @@ class BasicUserRepositoryTest(
 
     private fun newBasicUser(): BasicUser {
         return BasicUser(
-            faker.random().nextLong(10000, 100000),
-            faker.internet().username(),
-            faker.name().firstName(),
-            faker.name().lastName()
+            id = Snowflakers.Default.nextId(),
+            username = faker.internet().username(),
+            firstname = faker.name().firstName(),
+            lastname = faker.name().lastName()
         )
     }
 
     @BeforeEach
     fun beforeEach() {
-        runBlocking {
+        runSuspendIO {
             repository.deleteAll()
         }
     }
@@ -92,10 +91,10 @@ class BasicUserRepositoryTest(
     /**
      * Cassandra release version이 3.4 이상에서 지원하는 기능입니다.
      */
+    @Disabled("SASI Index 는 Cassandra Server 환경설정에서 enable 해야 합니다.")
     @Test
     fun `find by derived query method with SASI`() = runSuspendIO {
         // NOTE: SASI indexes are disabled. Enable in cassandra.yaml to use.
-        Assumptions.assumeTrue { false }
         session.executeSuspending(
             "CREATE CUSTOM INDEX ON basic_users (lname) USING 'org.apache.cassandra.index.sasi.SASIIndex';"
         )

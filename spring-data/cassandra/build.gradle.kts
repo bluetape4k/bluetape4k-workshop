@@ -23,6 +23,7 @@ dependencies {
     implementation(Libs.bluetape4k_spring_cassandra)
     implementation(Libs.bluetape4k_jackson)
 
+    testImplementation(Libs.bluetape4k_idgenerators)
     testImplementation(Libs.bluetape4k_testcontainers)
     testImplementation(Libs.testcontainers_cassandra)
 

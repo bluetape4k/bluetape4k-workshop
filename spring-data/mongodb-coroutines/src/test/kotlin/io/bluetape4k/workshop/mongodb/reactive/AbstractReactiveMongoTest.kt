@@ -46,16 +46,15 @@ abstract class AbstractReactiveMongoTest(
             val documents = collection.awaitSingle()
             documents.countDocuments().awaitSingle() shouldBeEqualTo 0
 
-            val insertAll = operations.insertAll(
-                listOf(
-                    Person("Walter", "White", 50),
-                    Person("Skyler", "White", 45),
-                    Person("Saul", "Goodman", 42),
-                    Person("Jesse", "Pinkman", 27)
-                )
-            ).asFlow().toList()
+            val persons = listOf(
+                Person("Walter", "White", 50),
+                Person("Skyler", "White", 45),
+                Person("Saul", "Goodman", 42),
+                Person("Jesse", "Pinkman", 27)
+            )
 
-            insertAll shouldHaveSize 4
+            val insertedPersons = operations.insertAll(persons).asFlow().toList()
+            insertedPersons shouldHaveSize 4
         }
     }
 }

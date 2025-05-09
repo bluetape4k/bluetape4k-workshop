@@ -8,7 +8,6 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldContain
-import org.amshove.kluent.shouldContainSame
 import org.amshove.kluent.shouldNotBeNull
 import org.bson.Document
 import org.junit.jupiter.api.BeforeEach
@@ -52,7 +51,7 @@ class MongoTemplateExamples(
             .all()
 
         persons.size shouldBeEqualTo 1
-        persons shouldContainSame listOf(person)
+        persons.single() shouldBeEqualTo person
     }
 
     @Test
@@ -87,7 +86,7 @@ class MongoTemplateExamples(
         val persons = operations.find<Person>(query)
 
         persons.size shouldBeEqualTo 1
-        persons shouldBeEqualTo listOf(person)
+        persons.single() shouldBeEqualTo person
     }
 
     @Test

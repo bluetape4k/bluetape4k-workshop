@@ -42,10 +42,11 @@ class AuditingTestConfiguration: AbstractReactiveCassandraTestConfiguration() {
         conversions: CassandraCustomConversions,
         session: CqlSession,
     ): MappingCassandraConverter {
-        return MappingCassandraConverter(mapping).apply {
-            codecRegistry = session.context.codecRegistry
-            customConversions = conversions
-            userTypeResolver = SimpleUserTypeResolver(session)
-        }
+        return MappingCassandraConverter(mapping)
+            .apply {
+                codecRegistry = session.context.codecRegistry
+                customConversions = conversions
+                userTypeResolver = SimpleUserTypeResolver(session)
+            }
     }
 }

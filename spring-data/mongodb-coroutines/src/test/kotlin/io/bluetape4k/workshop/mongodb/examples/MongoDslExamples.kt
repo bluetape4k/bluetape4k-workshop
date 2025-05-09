@@ -37,11 +37,11 @@ class MongoDslExamples(
         val persons = operations.find<Person>(Query(Person::firstname isEqualTo person2.firstname!!))
 
         persons shouldHaveSize 1
-        persons shouldBeEqualTo listOf(person2)
+        persons.single() shouldBeEqualTo person2
 
         val persons2 = operations.find<Person>(Query(Person::firstname isEqualTo person1.firstname!!))
         persons2 shouldHaveSize 1
-        persons2 shouldBeEqualTo listOf(person1)
+        persons2.single() shouldBeEqualTo person1
     }
 
     @Test
@@ -56,7 +56,6 @@ class MongoDslExamples(
         val persons = operations.find<Person>(Query(criteria))
 
         persons shouldHaveSize 1
-        persons.first() shouldBeEqualTo person2
-        persons.first() shouldNotBeEqualTo person1
+        persons.single() shouldBeEqualTo person2 shouldNotBeEqualTo person1
     }
 }
