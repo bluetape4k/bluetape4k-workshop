@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.mutiny
 
 import io.bluetape4k.codec.encodeBase62
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.trace
 import io.bluetape4k.mutiny.asUni
@@ -39,7 +39,7 @@ import kotlin.random.Random
 
 class CompositionTransformationExamples {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `01 Uni transform`() {
