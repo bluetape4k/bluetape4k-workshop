@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.redisson.collections
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.redis.redisson.coroutines.coAwait
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test
  */
 class QueueExamples: AbstractRedissonTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `queue usage`() = runTest {

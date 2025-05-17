@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.redisson.collections
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.redis.redisson.RedissonCodecs
 import io.bluetape4k.redis.redisson.coroutines.coAwait
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test
  */
 class PriorityDequeExamples: AbstractRedissonTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     /**
      * [key]로 정렬하는 데이터를 표현합니다.

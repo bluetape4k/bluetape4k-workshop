@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.redisson.locks
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import org.junit.jupiter.api.Test
@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit
  */
 class PermitExpirableSemaphoreExamples: AbstractRedissonTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `basic usage for PermitExpirableSemaphore`() {

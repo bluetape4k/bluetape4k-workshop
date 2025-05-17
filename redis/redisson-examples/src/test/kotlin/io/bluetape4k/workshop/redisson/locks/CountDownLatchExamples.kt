@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.redisson.locks
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.redis.redisson.coroutines.coAwait
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
@@ -22,7 +22,7 @@ import kotlin.random.Random
  */
 class CountDownLatchExamples: AbstractRedissonTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `분산 CountDownLatch 사용`() = runTest {

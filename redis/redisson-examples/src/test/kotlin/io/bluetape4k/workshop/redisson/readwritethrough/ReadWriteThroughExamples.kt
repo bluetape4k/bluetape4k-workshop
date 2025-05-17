@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.redisson.readwritethrough
 
 import io.bluetape4k.jdbc.sql.withConnect
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import io.bluetape4k.redis.redisson.coroutines.coAwait
 import io.bluetape4k.support.uninitialized
@@ -46,7 +46,7 @@ import kotlin.time.toJavaDuration
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class ReadWriteThroughExamples: AbstractRedissonTest() {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private const val ACTOR_SIZE = 30
     }
 

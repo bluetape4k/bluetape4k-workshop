@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.redisson.objects
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.redis.redisson.coroutines.coAwait
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test
  */
 class ReliableTopicExamples: AbstractRedissonTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `자동 재구독이 되는 Topic`() = runTest {

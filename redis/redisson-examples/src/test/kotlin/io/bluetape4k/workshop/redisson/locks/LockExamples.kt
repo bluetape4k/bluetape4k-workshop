@@ -4,7 +4,7 @@ import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.redis.redisson.coroutines.coAwait
 import io.bluetape4k.redis.redisson.coroutines.getLockId
@@ -31,7 +31,7 @@ import kotlin.random.Random
  */
 class LockExamples: AbstractRedissonTest() {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         const val REPEAT_SIZE = 5
     }
 

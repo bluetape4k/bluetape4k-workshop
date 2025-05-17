@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.redisson.objects
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.random.RandomizedTest
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.redis.redisson.RedissonCodecs
 import io.bluetape4k.redis.redisson.coroutines.coAwait
@@ -37,7 +37,7 @@ import java.io.Serializable
 @RandomizedTest
 class BloomFilterExamples: AbstractRedissonTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     data class Message(
         val id: Long,

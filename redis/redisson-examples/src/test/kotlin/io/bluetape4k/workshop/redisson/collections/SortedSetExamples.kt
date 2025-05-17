@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.redisson.collections
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.redis.redisson.coroutines.coAwait
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.test.runTest
@@ -16,7 +16,7 @@ import org.redisson.api.RSortedSet
  */
 class SortedSetExamples: AbstractRedissonTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     private fun getSortedSet(name: String): RSortedSet<Int> {
         return redisson.getSortedSet<Int>(name).apply {

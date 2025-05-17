@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.redisson.readwritethrough
 
 import io.bluetape4k.jdbc.sql.extract
 import io.bluetape4k.jdbc.sql.runQuery
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.uninitialized
 import org.amshove.kluent.shouldNotBeEmpty
@@ -20,7 +20,7 @@ import javax.sql.DataSource
 @Transactional
 class JdbcConfigTest {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private const val SELECT_ACTORS = "SELECT * FROM Actors"
     }
 

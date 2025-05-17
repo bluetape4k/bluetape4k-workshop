@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.redisson.collections
 
 import io.bluetape4k.junit5.coroutines.runSuspendTest
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.redis.redisson.coroutines.coAwait
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import org.amshove.kluent.shouldBeEqualTo
@@ -16,7 +16,7 @@ import org.redisson.api.RRingBuffer
  */
 class RingBufferExamples: AbstractRedissonTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `use Ring Buffer`() = runSuspendTest {

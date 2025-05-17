@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.redisson.collections
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.redis.redisson.coroutines.coAwait
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.test.runTest
@@ -20,7 +20,7 @@ import org.redisson.api.RScoredSortedSet
  */
 class ScoredSortedSetExamples: AbstractRedissonTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     private suspend fun getSampleScoredSortedSet(name: String): RScoredSortedSet<String> {
         // 예제 데이터를 추가하기 위해 RBatch를 사용한다

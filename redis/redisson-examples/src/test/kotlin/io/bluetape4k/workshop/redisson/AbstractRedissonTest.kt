@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.redisson
 
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.junit5.faker.Fakers
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.error
 import io.bluetape4k.redis.redisson.redissonClientOf
 import io.bluetape4k.testcontainers.storage.RedisServer
@@ -16,7 +16,7 @@ import org.redisson.api.RedissonClient
 
 abstract class AbstractRedissonTest {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         @JvmStatic
         val redis: RedisServer by lazy { RedisServer.Launcher.redis }
 

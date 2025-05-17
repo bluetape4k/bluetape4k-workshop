@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.redisson.objects
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import org.amshove.kluent.shouldHaveSize
 import org.junit.jupiter.api.Test
@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test
  */
 class IdGeneratorExamples: AbstractRedissonTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `generate identifier`() {
