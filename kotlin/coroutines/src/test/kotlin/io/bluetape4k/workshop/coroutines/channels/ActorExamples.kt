@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.coroutines.channels
 
 import io.bluetape4k.coroutines.support.log
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test
 
 class ActorExamples {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     sealed class CounterMsg
     object IntCounter: CounterMsg()

@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.jsonview.controller
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.jsonview.AbstractJsonViewApplicationTest
 import io.bluetape4k.workshop.jsonview.dto.ArticleDTO
@@ -21,7 +21,7 @@ class ArticleControllerTest(
     @Autowired private val client: WebTestClient,
 ): AbstractJsonViewApplicationTest() {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private const val BASE_PATH = "/articles"
     }
 

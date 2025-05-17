@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.jsonview.controller
 
 import com.fasterxml.jackson.annotation.JsonView
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.jsonview.dto.ArticleDTO
 import io.bluetape4k.workshop.jsonview.dto.Views
 import kotlinx.coroutines.flow.Flow
@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/articles")
 class ArticleController {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     private val articles = mapOf(
         1L to ArticleDTO(

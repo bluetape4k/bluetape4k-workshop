@@ -4,7 +4,7 @@ package io.bluetape4k.workshop.kotlin.designPatterns.singleton
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.utils.Runtimex
 import kotlinx.coroutines.test.runTest
@@ -23,7 +23,7 @@ import kotlin.test.assertTrue
 @Execution(ExecutionMode.CONCURRENT)
 abstract class AbstractSingletonTest<T>(private val singletonInstanceMethod: () -> T) {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `여러번 호출해도 동일한 Thread 안에서 동일한 객체를 반환한다`() {

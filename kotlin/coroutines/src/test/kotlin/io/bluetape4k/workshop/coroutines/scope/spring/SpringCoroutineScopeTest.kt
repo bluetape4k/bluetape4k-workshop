@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.coroutines.scope.spring
 
 import io.bluetape4k.junit5.output.OutputCapture
 import io.bluetape4k.junit5.output.OutputCapturer
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.support.uninitialized
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -24,6 +25,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 )
 @ExtendWith(SpringExtension::class)
 class SpringCoroutineScopeTest {
+
+    companion object: KLoggingChannel()
 
     @Configuration
     class TestConfig {

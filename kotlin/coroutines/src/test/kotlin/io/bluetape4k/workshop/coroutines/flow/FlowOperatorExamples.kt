@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.coroutines.flow
 
 import io.bluetape4k.coroutines.flow.extensions.log
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.coroutines.isEven
 import kotlinx.coroutines.delay
@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test
 
 class FlowOperatorExamples {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `map elements`() = runTest {
