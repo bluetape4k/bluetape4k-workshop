@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.messaging.kafka
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.testcontainers.mq.KafkaServer
 import org.springframework.boot.WebApplicationType
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -11,7 +11,7 @@ import org.springframework.kafka.annotation.EnableKafka
 @EnableKafka
 class KafkaApplication {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         val kafka = KafkaServer.Launcher.kafka
     }
 }

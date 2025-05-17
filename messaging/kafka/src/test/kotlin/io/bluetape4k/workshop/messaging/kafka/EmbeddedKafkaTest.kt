@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.messaging.kafka
 
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.messaging.kafka.EmbeddedKafkaTest.Companion.TEST_TOPIC_NAME
@@ -32,7 +33,7 @@ import org.springframework.test.context.ActiveProfiles
 @Import(EmbeddedKafkaTest.TestListener::class)
 class EmbeddedKafkaTest {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         internal const val TEST_TOPIC_NAME = "test-topic.1"
 
         init {
@@ -52,7 +53,6 @@ class EmbeddedKafkaTest {
 
         TestListener.result shouldBeEqualTo message
     }
-
 
     @TestComponent
     class TestListener {

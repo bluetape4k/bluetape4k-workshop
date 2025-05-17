@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.kafka.pong
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.testcontainers.mq.KafkaServer
 import org.springframework.boot.WebApplicationType
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -13,7 +13,7 @@ import org.springframework.boot.runApplication
 )
 class PongApplication {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private val kafka = KafkaServer.Launcher.kafka
         const val TOPIC_PINGPONG = "pingpong"
     }

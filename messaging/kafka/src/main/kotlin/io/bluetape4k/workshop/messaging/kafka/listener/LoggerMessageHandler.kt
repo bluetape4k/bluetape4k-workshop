@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.messaging.kafka.listener
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.messaging.kafka.KafkaTopics
 import io.bluetape4k.workshop.messaging.kafka.model.GreetingResult
@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentLinkedDeque
 @Component
 class LoggerMessageHandler: KafkaMessageHandler<GreetingResult, Unit> {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     val receivedMessages = ConcurrentLinkedDeque<GreetingResult>()
 

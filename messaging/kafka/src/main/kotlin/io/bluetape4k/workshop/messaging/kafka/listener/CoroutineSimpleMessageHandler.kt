@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.messaging.kafka.listener
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.messaging.kafka.KafkaTopics
 import kotlinx.coroutines.delay
@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono
 // @Component
 class CoroutineSimpleMessageHandler {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @KafkaListener(groupId = "coroutine-simple", topics = [KafkaTopics.TOPIC_SIMPLE])
     suspend fun handleWithCoroutines(message: String) {

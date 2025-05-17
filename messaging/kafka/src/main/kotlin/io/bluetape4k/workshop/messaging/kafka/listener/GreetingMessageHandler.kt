@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.messaging.kafka.listener
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.messaging.kafka.KafkaTopics
 import io.bluetape4k.workshop.messaging.kafka.model.GreetingRequest
@@ -19,7 +19,7 @@ import java.time.LocalDateTime
 @Component
 class GreetingMessageHandler: KafkaMessageHandler<GreetingRequest, GreetingResult> {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @KafkaListener(topics = [KafkaTopics.TOPIC_GREETING])
     @SendTo(KafkaTopics.TOPIC_LOGGER)

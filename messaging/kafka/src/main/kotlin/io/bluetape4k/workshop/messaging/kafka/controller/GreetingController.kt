@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.messaging.kafka.controller
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.messaging.kafka.KafkaTopics
@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/greeting")
 class GreetingController: CoroutineScope by CoroutineScope(Dispatchers.IO + SupervisorJob()) {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Autowired
     private val kafkaTemplate: KafkaTemplate<String, Any?> = uninitialized()

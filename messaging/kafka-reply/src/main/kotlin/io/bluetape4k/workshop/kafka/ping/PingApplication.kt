@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.kafka.ping
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.testcontainers.mq.KafkaServer
 import org.springframework.boot.WebApplicationType
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -15,7 +15,7 @@ import org.springframework.kafka.requestreply.ReplyingKafkaTemplate
 @SpringBootApplication
 class PingApplication {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private val kafka = KafkaServer.Launcher.kafka
     }
 

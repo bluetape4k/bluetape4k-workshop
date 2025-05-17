@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.kafka
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldContain
@@ -18,7 +18,7 @@ import org.springframework.web.reactive.function.client.awaitExchange
  */
 class PingPongApplicationTest {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     val client = WebClient.builder().baseUrl("http://localhost:8080").build()
 

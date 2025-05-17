@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.messaging.kafka.controller
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.spring.tests.httpPost
 import io.bluetape4k.support.uninitialized
@@ -26,7 +26,7 @@ class GreetingControllerTest(
     @Autowired private val client: WebTestClient,
 ) {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Autowired
     private val loggerMessageHandler: LoggerMessageHandler = uninitialized()
@@ -47,7 +47,8 @@ class GreetingControllerTest(
 
         // Logger Topic 으로 전송된 메시지를 수신하는 것을 확인하기 위한 코드
         await.atMost(Duration.ofSeconds(10))
-            .pollInterval(Duration.ofSeconds(1))
+            .pollDelay(Duration.ofSeconds(1))
+            .pollInterval(Duration.ofSeconds(3))
             .until { loggerMessageHandler.receivedMessages.peek() != null }
     }
 }

@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.messaging.kafka.listener
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.messaging.kafka.KafkaTopics
 import org.springframework.kafka.annotation.KafkaListener
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component
 @Component
 class SimpleMessageHandler: KafkaMessageHandler<String, Unit> {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @KafkaListener(groupId = "simple", topics = [KafkaTopics.TOPIC_SIMPLE])
     override fun handle(message: String) {

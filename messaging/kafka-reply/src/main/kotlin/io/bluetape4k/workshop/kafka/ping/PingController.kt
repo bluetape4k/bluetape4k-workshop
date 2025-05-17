@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.kafka.ping
 
 import io.bluetape4k.concurrent.onFailure
 import io.bluetape4k.concurrent.onSuccess
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.error
 import io.bluetape4k.logging.info
 import io.bluetape4k.support.uninitialized
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 class PingController {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private const val TOPIC_PINGPONG = "pingpong"
     }
 
