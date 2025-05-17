@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.exposed.controller
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.exposed.AbstractExposedSqlTest
@@ -18,7 +18,7 @@ class MovieControllerTest(
     @Autowired private val client: WebTestClient,
 ): AbstractExposedSqlTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `get movie by id`() {

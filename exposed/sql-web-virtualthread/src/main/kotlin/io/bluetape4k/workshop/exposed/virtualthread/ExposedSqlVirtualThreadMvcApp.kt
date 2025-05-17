@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.exposed.virtualthread
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.exposed.virtualthread.domain.DatabaseInitializer
 import org.springframework.beans.factory.annotation.Autowired
@@ -13,7 +13,7 @@ import org.springframework.boot.runApplication
 @SpringBootApplication
 class ExposedSqlVirtualThreadMvcApp: ApplicationRunner {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Autowired
     private val databaseInitializer: DatabaseInitializer = uninitialized()

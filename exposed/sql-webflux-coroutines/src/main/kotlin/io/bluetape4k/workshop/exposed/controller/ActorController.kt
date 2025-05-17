@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.exposed.controller
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.exposed.domain.dto.ActorDTO
 import io.bluetape4k.workshop.exposed.domain.respository.ActorRepository
 import kotlinx.coroutines.CoroutineScope
@@ -22,7 +22,7 @@ class ActorController(
     private val actorRepo: ActorRepository,
 ): CoroutineScope by CoroutineScope(Dispatchers.IO + SupervisorJob()) {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @GetMapping("/actors/{id}")
     suspend fun getActorById(@PathVariable("id") actorId: Int): ActorDTO? {

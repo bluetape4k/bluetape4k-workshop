@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.exposed
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.testcontainers.database.MySQL8Server
 import org.jetbrains.exposed.spring.autoconfigure.ExposedAutoConfiguration
 import org.springframework.boot.WebApplicationType
@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Profile
 @ImportAutoConfiguration(ExposedAutoConfiguration::class)
 class ExposedApplication {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     /**
      * profile: mysql 일 경우 Testcontainers 를 이용하여 MySQL8Server 를 실행합니다.

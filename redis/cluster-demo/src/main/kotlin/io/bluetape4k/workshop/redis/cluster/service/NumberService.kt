@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.redis.cluster.service
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.toByteArray
 import io.bluetape4k.support.toInt
@@ -13,7 +13,7 @@ class NumberService(
     @Autowired private val operations: StringRedisTemplate,
 ) {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private val CURRENT_CHARSET = Charsets.UTF_8
     }
 

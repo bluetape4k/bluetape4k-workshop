@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.exposed.virtualthread.controller
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.exposed.virtualthread.AbstractExposedTest
@@ -23,7 +23,7 @@ class MovieActorControllerTest(
     @Autowired private val client: WebTestClient,
 ): AbstractExposedTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `get movie with actors`() = runSuspendIO {

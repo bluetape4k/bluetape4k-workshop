@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.exposed.virtualthread.controller
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.ActorDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.repository.ActorRepository
 import jakarta.servlet.http.HttpServletRequest
@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.RestController
  */
 @RestController
 class ActorController(private val actorRepo: ActorRepository) {
-    
-    companion object: KLogging()
+
+    companion object: KLoggingChannel()
 
     @GetMapping("/actors/{id}")
     fun getActorById(@PathVariable("id") actorId: Int): ActorDTO? {

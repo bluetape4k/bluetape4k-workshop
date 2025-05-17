@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.exposed.virtualthread.controller
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.MovieActorCountDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.MovieWithActorDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.MovieWithProducingActorDTO
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/movie-actors")
 class MovieActorsController(private val movieRepo: MovieRepository) {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @GetMapping("/{movieId}")
     fun getMovieWithActors(@PathVariable movieId: Int): MovieWithActorDTO? {

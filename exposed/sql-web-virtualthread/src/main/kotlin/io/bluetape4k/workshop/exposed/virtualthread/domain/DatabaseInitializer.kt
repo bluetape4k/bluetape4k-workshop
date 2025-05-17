@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.exposed.virtualthread.domain
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.ActorDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.MovieWithActorDTO
@@ -25,7 +25,7 @@ class DatabaseInitializer(
     private val database: Database,
 ) {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     /**
      * 데이터베이스 스키마를 생성 또는 Update하고, 테스트 데이터를 추가합니다.

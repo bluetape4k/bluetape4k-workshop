@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.redis.cluster.basic
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.redis.cluster.AbstractRedisClusterTest
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldContainAll
@@ -15,7 +15,7 @@ class BasicUsageTest(
     @Autowired private val operations: RedisOperations<String, String>,
 ): AbstractRedisClusterTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @BeforeAll
     fun beforeAll() {

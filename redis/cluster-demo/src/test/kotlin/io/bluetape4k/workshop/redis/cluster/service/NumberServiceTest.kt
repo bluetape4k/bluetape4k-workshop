@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.redis.cluster.service
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.redis.cluster.AbstractRedisClusterTest
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
@@ -15,7 +15,7 @@ class NumberServiceTest(
     @Autowired private val connectionFactory: RedisConnectionFactory,
 ): AbstractRedisClusterTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @BeforeEach
     fun beforeEach() {

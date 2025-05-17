@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.exposed.filter
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.trace
 import org.springframework.stereotype.Component
 import org.springframework.web.server.ServerWebExchange
@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono
 @Component
 class RedirectWebFilter: WebFilter {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         const val ROOT_PATH = "/"
         const val SWAGGER_PATH = "/swagger-ui.html"
     }

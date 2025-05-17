@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.exposed.controller
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.domain.dto.MovieDTO
 import io.bluetape4k.workshop.exposed.domain.respository.MovieRepository
@@ -26,7 +26,7 @@ class MovieController(
     private val movieRepo: MovieRepository,
 ): CoroutineScope by CoroutineScope(Dispatchers.IO + SupervisorJob()) {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @GetMapping("/{id}")
     suspend fun getMovieById(@PathVariable("id") movieId: Int): MovieDTO? {

@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.exposed.virtualthread.domain.repository
 
 import io.bluetape4k.concurrent.virtualthread.VirtualFuture
 import io.bluetape4k.concurrent.virtualthread.virtualFuture
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.utils.ShutdownQueue
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.ActorDTO
@@ -22,7 +22,7 @@ import java.util.concurrent.Executors
 @Repository
 class ActorRepository(private val db: Database) {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private val virtualExecutor = Executors.newVirtualThreadPerTaskExecutor()
             .apply {
                 ShutdownQueue.register(this)

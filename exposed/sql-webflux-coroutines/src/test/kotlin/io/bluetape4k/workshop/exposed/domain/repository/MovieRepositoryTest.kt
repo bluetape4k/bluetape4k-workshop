@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.exposed.domain.repository
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedSqlTest
 import io.bluetape4k.workshop.exposed.domain.dto.MovieDTO
@@ -17,7 +17,7 @@ class MovieRepositoryTest(
     @Autowired private val movieRepo: MovieRepository,
 ): AbstractExposedSqlTest() {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private fun newMovie(): MovieDTO = MovieDTO(
             name = faker.book().title(),
             producerName = faker.name().fullName(),
