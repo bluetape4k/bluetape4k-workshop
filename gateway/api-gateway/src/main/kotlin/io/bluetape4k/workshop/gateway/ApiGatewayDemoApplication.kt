@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.gateway
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import org.springframework.boot.WebApplicationType
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -11,7 +11,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient
 @SpringBootApplication
 class ApiGatewayDemoApplication {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         init {
             log.info { "Starting GatewayApplication ..." }
         }

@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.gateway.orders.controller
 
 import io.bluetape4k.idgenerators.uuid.TimebasedUuid
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.gateway.orders.model.Product
 import jakarta.annotation.PreDestroy
 import kotlinx.coroutines.CoroutineScope
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController
 @CrossOrigin
 class ProductController: CoroutineScope by CoroutineScope(Dispatchers.IO + SupervisorJob()) {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     private val uuidGenerator = TimebasedUuid.Reordered
 

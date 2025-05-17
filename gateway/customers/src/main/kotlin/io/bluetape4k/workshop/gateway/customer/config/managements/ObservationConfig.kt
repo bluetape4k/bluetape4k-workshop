@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.gateway.customer.config.managements
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.micrometer.core.instrument.config.MeterFilter
 import io.micrometer.observation.ObservationRegistry
 import io.micrometer.observation.aop.ObservedAspect
@@ -22,7 +22,7 @@ import org.springframework.context.annotation.Configuration
 @ConditionalOnClass(ObservedAspect::class)
 class ObservationConfig {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private val ignorePaths = listOf(
             "/actuator",
             "/swagger",

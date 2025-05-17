@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.gateway.controller
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.gateway.AbstractGatewayTest
 import kotlinx.coroutines.reactive.awaitSingle
@@ -16,7 +16,7 @@ class IndexControllerTest(
     @Autowired private val client: WebTestClient,
 ): AbstractGatewayTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `context loading`() {

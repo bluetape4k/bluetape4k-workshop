@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.gateway.customer.controller
 
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.gateway.customer.model.Customer
 import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.GetMapping
@@ -10,6 +11,8 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/api/v1/customers")
 @CrossOrigin
 class CustomerContoller {
+
+    companion object: KLoggingChannel()
 
     @GetMapping
     suspend fun getAll(): List<Customer> {
