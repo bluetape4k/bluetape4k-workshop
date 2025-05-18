@@ -1,10 +1,13 @@
 package io.bluetape4k.workshop.r2dbc.basics
 
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 
 @Component
 class TransactionalService(private val repository: CustomerRepository) {
+
+    companion object: KLoggingChannel()
 
     /**
      * Suspend 함수도 `@Transactional` 이 적용됩니다.

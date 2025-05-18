@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.redis.stream.sync
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.redis.stream.RedisStreamConfiguration
 import io.bluetape4k.workshop.redis.stream.SensorData
@@ -26,7 +26,7 @@ class SyncStreamApiTest @Autowired constructor(
     private val template: StringRedisTemplate,
     private val messageListenerContainer: StreamMessageListenerContainer<String, MapRecord<String, String, String>>,
 ) {
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     private val streamOps: StreamOperations<String, String, String> = template.opsForStream()
 

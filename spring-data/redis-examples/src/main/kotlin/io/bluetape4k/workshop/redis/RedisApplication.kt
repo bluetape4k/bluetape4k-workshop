@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.redis
 
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.redis.spring.serializer.RedisBinarySerializers
 import io.bluetape4k.redis.spring.serializer.redisSerializationContext
@@ -28,7 +29,7 @@ fun main(vararg args: String) {
 @SpringBootApplication
 class RedisApplication {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         @JvmStatic
         val redis = RedisServer.Launcher.redis
     }

@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.redis.commands
 
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.redis.AbstractRedisTest
 import org.amshove.kluent.shouldBeInRange
@@ -21,7 +21,7 @@ class GeoOperationsTest(
     @Autowired private val operations: RedisOperations<String, String>,
 ): AbstractRedisTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     private val geoOperations: GeoOperations<String, String>
         get() = operations.opsForGeo()

@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.redis.stream.sync
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import kotlinx.atomicfu.atomic
 import org.springframework.data.redis.connection.stream.MapRecord
 import org.springframework.data.redis.stream.StreamListener
@@ -11,7 +11,7 @@ import java.util.concurrent.LinkedBlockingDeque
  */
 class CapturingStreamListener: StreamListener<String, MapRecord<String, String, String>> {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     private val counter = atomic(0)
     private val dequeue = LinkedBlockingDeque<MapRecord<String, String, String>>()

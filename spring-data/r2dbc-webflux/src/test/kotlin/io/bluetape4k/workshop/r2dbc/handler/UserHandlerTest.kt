@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.r2dbc.handler
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.r2dbc.AbstractWebfluxR2dbcApplicationTest
 import io.bluetape4k.workshop.r2dbc.domain.UserDTO
 import io.bluetape4k.workshop.r2dbc.domain.toModel
@@ -23,7 +23,7 @@ import reactor.kotlin.core.publisher.toMono
 
 class UserHandlerTest: AbstractWebfluxR2dbcApplicationTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     private val service = mockk<UserService>(relaxUnitFun = true)
     private val request = mockk<ServerRequest>(relaxUnitFun = true)

@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.r2dbc.basic
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.r2dbc.basics.Customer
 import io.bluetape4k.workshop.r2dbc.basics.CustomerRepository
 import kotlinx.coroutines.flow.collect
@@ -22,7 +22,7 @@ class CustomerRepositoryIntegrationTest(
     @Autowired private val customerRepo: CustomerRepository,
     @Autowired private val database: DatabaseClient,
 ) {
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @BeforeEach
     fun beforeEach() {

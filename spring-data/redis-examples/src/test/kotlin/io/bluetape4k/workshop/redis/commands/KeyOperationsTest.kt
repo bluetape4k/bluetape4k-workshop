@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.redis.commands
 import io.bluetape4k.coroutines.support.asFlow
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.faker.Fakers
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.redis.AbstractRedisTest
 import kotlinx.coroutines.flow.buffer
@@ -23,7 +23,7 @@ class KeyOperationsTest(
     @Autowired private val connectionFactory: RedisConnectionFactory,
 ): AbstractRedisTest() {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private val PREFIX: String = KeyOperationsTest::class.simpleName!!
         private val KEY_PATTERN = "$PREFIX*"
         private const val KEY_SIZE = 5000

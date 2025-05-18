@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.r2dbc.service
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.r2dbc.AbstractWebfluxR2dbcApplicationTest
 import io.bluetape4k.workshop.r2dbc.domain.toDto
@@ -31,7 +31,7 @@ class UserServiceTest(
     @Autowired private val repository: UserRepository,
 ): AbstractWebfluxR2dbcApplicationTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     @Order(1)

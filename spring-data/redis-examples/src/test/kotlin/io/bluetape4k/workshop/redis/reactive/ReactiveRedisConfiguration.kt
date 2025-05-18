@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.redis.reactive
 
 import io.bluetape4k.junit5.faker.Fakers
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.testcontainers.storage.RedisServer
 import io.bluetape4k.workshop.redis.reactive.model.Person
@@ -24,7 +24,7 @@ import org.springframework.data.redis.serializer.RedisSerializer
 @SpringBootApplication
 class ReactiveRedisConfiguration {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         @JvmStatic
         val redis = RedisServer.Launcher.redis
 

@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.r2dbc.basic
 
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.r2dbc.basics.CustomerRepository
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.context.annotation.ComponentScan
@@ -11,4 +12,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 @ComponentScan(basePackageClasses = [CustomerRepository::class])
 @EnableR2dbcRepositories(basePackageClasses = [CustomerRepository::class])
 class InfrastructureConfiguration {
+
+    companion object: KLoggingChannel() 
 }

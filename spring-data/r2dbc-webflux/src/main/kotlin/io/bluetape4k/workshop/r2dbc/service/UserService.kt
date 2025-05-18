@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.r2dbc.service
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.r2dbc.domain.User
 import io.bluetape4k.workshop.r2dbc.domain.UserDTO
@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional(readOnly = true)
 class UserService(private val repository: UserRepository) {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     fun findAll(): Flow<User> = repository.findAll()
 
@@ -32,7 +32,7 @@ class UserService(private val repository: UserRepository) {
     suspend fun updateUser(id: Int, user: UserDTO): User? {
         return when {
             repository.existsById(id) -> repository.save(user.toModel(withId = id))
-            else                      -> null
+            else -> null
         }
     }
 

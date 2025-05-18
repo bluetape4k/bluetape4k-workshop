@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.r2dbc.controller
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.spring.tests.httpDelete
 import io.bluetape4k.spring.tests.httpGet
@@ -32,7 +32,7 @@ class UserControllerTest(
     @Autowired private val service: UserService,
 ): AbstractWebfluxR2dbcApplicationTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Nested
     inner class Find {

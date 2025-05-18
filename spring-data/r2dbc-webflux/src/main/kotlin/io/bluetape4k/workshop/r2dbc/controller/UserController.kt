@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.r2dbc.controller
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.r2dbc.domain.User
 import io.bluetape4k.workshop.r2dbc.domain.UserDTO
 import io.bluetape4k.workshop.r2dbc.service.UserService
@@ -26,7 +26,7 @@ class UserController(
     private val service: UserService,
 ): CoroutineScope by CoroutineScope(Dispatchers.IO + SupervisorJob()) {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @GetMapping("/users")
     fun findAll(): Flow<User> {

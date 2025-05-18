@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.redis.stream
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.workshop.redis.stream.SensorData.Companion.KEY
 import org.springframework.data.redis.connection.stream.RecordId
 import org.springframework.data.redis.connection.stream.StreamRecords
 import org.springframework.data.redis.connection.stream.StringRecord
@@ -14,7 +15,7 @@ import org.springframework.data.redis.connection.stream.StringRecord
  */
 class SensorData {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         internal const val KEY = "my-stream"
 
         // NOTE: 참고: RecordId 는 `epoch milliseconds-sequence id` 형식으로 구성됩니다. [RecordId] 참고 

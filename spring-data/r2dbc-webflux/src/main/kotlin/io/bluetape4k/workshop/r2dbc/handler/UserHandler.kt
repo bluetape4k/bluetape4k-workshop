@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.r2dbc.handler
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.error
 import io.bluetape4k.support.asIntOrNull
 import io.bluetape4k.workshop.r2dbc.domain.ErrorMessage
@@ -20,7 +20,7 @@ import org.springframework.web.reactive.function.server.json
 @Component
 class UserHandler(private val service: UserService) {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     suspend fun findAll(request: ServerRequest): ServerResponse {
         val users = service.findAll()

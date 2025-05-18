@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.r2dbc.queryexample
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.spring.data.buildExampleMatcher
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.toList
@@ -27,7 +27,7 @@ class PersonRepositoryIntegrationTest @Autowired constructor(
     private val repository: PersonRepository,
     private val client: DatabaseClient,
 ) {
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     private lateinit var skyler: Person
     private lateinit var walter: Person

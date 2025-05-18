@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.redis.reactive.operations
 
 import io.bluetape4k.io.getBytes
 import io.bluetape4k.junit5.coroutines.runSuspendTest
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.support.toUtf8ByteBuffer
 import io.bluetape4k.support.toUtf8String
 import io.bluetape4k.workshop.redis.reactive.AbstractReactiveRedisTest
@@ -25,7 +25,7 @@ class JacksonJsonTest @Autowired constructor(
     private val genericOperations: ReactiveRedisOperations<String, Any?>,
 ): AbstractReactiveRedisTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @BeforeEach
     fun beforeEach() {

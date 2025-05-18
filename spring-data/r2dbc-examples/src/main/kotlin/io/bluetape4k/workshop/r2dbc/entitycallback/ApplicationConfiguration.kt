@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.r2dbc.entitycallback
 
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.r2dbc.connection.init.connectionFactoryInitializer
 import io.bluetape4k.support.asLong
 import io.bluetape4k.support.toUtf8Bytes
@@ -17,6 +18,8 @@ import reactor.core.publisher.Mono
 @SpringBootApplication
 @EnableR2dbcRepositories(basePackageClasses = [CustomerRepository::class])
 class ApplicationConfiguration {
+
+    companion object: KLoggingChannel() 
 
     /**
      * Auto increment identifier 를 callback 으로 받아서 저장한 [Customer]의 Id 값에 적용합니다.

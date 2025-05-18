@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.redis.movie
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.spring.data.buildExampleMatcher
 import io.bluetape4k.workshop.redis.AbstractRedisTest
@@ -29,7 +29,7 @@ class MovieRepositoryTest @Autowired constructor(
     private val movieActorRefRepo: MovieActorReferenceRepository,
 ): AbstractRedisTest() {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private val starwars = Movie("Star Wars", "SF", 1977)
         private val terminator = Movie("Terminator", "SF", 1984)
         private val avengers = Movie("Avengers", "Comics", 2018)

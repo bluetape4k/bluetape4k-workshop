@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.r2dbc.config
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.r2dbc.connection.init.resourceDatabasePopulatorOf
 import io.bluetape4k.workshop.r2dbc.handler.UserHandler
 import io.r2dbc.spi.ConnectionFactory
@@ -19,7 +19,7 @@ import org.springframework.web.reactive.function.server.coRouter
 @EnableR2dbcRepositories
 class WebfluxR2dbcConfiguration {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Bean
     fun userRoute(userHandler: UserHandler) = coRouter {

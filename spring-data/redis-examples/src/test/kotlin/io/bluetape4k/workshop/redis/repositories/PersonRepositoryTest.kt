@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.redis.repositories
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.spring.data.buildExampleMatcher
 import io.bluetape4k.support.toUtf8Bytes
@@ -31,7 +31,7 @@ class PersonRepositoryTest @Autowired constructor(
     private val repository: PersonRepository,
 ): AbstractRedisTest() {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private val CHARSET = Charsets.UTF_8
     }
 

@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.redis.reactive.operations
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.faker.Fakers
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.redis.reactive.AbstractReactiveRedisTest
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.reactive.awaitSingle
@@ -23,7 +23,7 @@ class ValueOperationsTest(
     @Autowired private val operations: ReactiveRedisOperations<String, String>,
 ): AbstractReactiveRedisTest() {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private const val CACHED_VALUE = "Hello, World!"
     }
 

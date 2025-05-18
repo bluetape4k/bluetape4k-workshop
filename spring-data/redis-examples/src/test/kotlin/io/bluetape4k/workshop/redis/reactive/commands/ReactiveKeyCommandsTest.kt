@@ -4,7 +4,7 @@ import io.bluetape4k.io.getString
 import io.bluetape4k.io.toByteBuffer
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.faker.Fakers
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.toUtf8ByteBuffer
 import io.bluetape4k.support.toUtf8Bytes
@@ -38,7 +38,7 @@ class ReactiveKeyCommandsTest(
     @Autowired private val connectionFactory: ReactiveRedisConnectionFactory,
 ): AbstractReactiveRedisTest() {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private val PREFIX = ReactiveKeyCommandsTest::class.simpleName!!
         private val KEY_PATTERN = "$PREFIX*"
         private const val KEY_SIZE = 50

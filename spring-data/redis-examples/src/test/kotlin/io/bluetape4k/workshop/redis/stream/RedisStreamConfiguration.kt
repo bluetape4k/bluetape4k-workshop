@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.redis.stream
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.testcontainers.storage.RedisServer
 import org.springframework.beans.factory.annotation.Autowired
@@ -18,7 +18,7 @@ import org.springframework.data.redis.stream.StreamReceiver
 @SpringBootApplication
 class RedisStreamConfiguration {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         @JvmStatic
         val redis = RedisServer.Launcher.redis
     }

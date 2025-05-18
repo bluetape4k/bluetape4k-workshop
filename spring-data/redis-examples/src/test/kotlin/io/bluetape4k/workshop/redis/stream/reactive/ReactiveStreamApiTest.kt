@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.redis.stream.reactive
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.redis.stream.RedisStreamConfiguration
 import io.bluetape4k.workshop.redis.stream.SensorData
@@ -37,7 +37,7 @@ class ReactiveStreamApiTest(
     @Autowired private val template: ReactiveStringRedisTemplate,
     @Autowired private val streamReceiver: StreamReceiver<String, MapRecord<String, String, String>>,
 ) {
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     private val streamOps: ReactiveStreamOperations<String, String, String> = template.opsForStream()
 
