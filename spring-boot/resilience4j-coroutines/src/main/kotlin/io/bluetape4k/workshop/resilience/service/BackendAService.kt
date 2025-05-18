@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.resilience.service
 import io.bluetape4k.concurrent.completableFutureOf
 import io.bluetape4k.concurrent.failedCompletableFutureOf
 import io.bluetape4k.concurrent.futureOf
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.resilience.exception.BusinessException
 import io.github.resilience4j.bulkhead.BulkheadFullException
@@ -26,7 +26,7 @@ import java.util.concurrent.TimeoutException
 @Component("backendAService")
 class BackendAService: Service {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         const val BACKEND_A = "backendA"
     }
 

@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.protobuf
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.protobuf.School.Course
 import io.bluetape4k.workshop.protobuf.convert.toJson
@@ -32,7 +32,7 @@ import java.io.InputStream
 )
 class ProtobufApplicationIT {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     private val restTemplate: RestTemplate by lazy {
         RestTemplate(listOf(ProtobufHttpMessageConverter()))

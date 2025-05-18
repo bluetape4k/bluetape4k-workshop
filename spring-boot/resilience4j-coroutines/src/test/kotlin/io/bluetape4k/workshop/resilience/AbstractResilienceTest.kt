@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.resilience
 
 import io.bluetape4k.exceptions.NotSupportedException
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.uninitialized
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
@@ -16,7 +16,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 @AutoConfigureObservability
 abstract class AbstractResilienceTest {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         const val BACKEND_A = "backendA"
         const val BACKEND_B = "backendB"
         const val BACKEND_C = "backendC"

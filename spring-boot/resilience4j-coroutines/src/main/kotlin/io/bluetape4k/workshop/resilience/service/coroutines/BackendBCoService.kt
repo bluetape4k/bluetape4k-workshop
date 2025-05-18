@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.resilience.service.coroutines
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.resilience.exception.BusinessException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -15,7 +15,7 @@ import kotlin.time.Duration.Companion.seconds
 @Service("backendBCoService")
 class BackendBCoService: CoService {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private const val BACKEND_B = "backendB"
     }
 

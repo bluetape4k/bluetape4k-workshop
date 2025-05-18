@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.cbor
 
 import io.bluetape4k.jackson.binary.JacksonBinary
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.cbor.course.Course
 import io.bluetape4k.workshop.cbor.course.PhoneType
@@ -34,7 +34,7 @@ import org.springframework.web.reactive.function.client.bodyToMono
 )
 class CborApplicationTest {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     private val restTemplate: RestTemplate by lazy {
         RestTemplate(listOf(MappingJackson2CborHttpMessageConverter()))

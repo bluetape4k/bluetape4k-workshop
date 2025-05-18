@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.resilience.retry.coroutines
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.resilience.retry.AbstractRetryTest
 import org.junit.jupiter.api.Disabled
@@ -10,7 +10,7 @@ import org.springframework.http.HttpStatus
 
 class CoroutineRetryTest: AbstractRetryTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Nested
     inner class BackendA {

@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.resilience.circuitbreaker
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.spring.tests.httpGet
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import kotlinx.coroutines.reactive.awaitSingle
@@ -13,7 +13,7 @@ import org.springframework.test.web.reactive.server.returnResult
 
 class CircuitBreakerTest: AbstractCircuitBreakerTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Nested
     inner class BackendA {

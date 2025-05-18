@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.resilience.retry
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.spring.tests.httpGet
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus
 
 class ReactiveRetryTest: AbstractRetryTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Nested
     inner class MonoMethod {

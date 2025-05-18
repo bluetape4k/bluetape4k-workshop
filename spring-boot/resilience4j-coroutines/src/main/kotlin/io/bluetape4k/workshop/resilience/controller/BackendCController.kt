@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.resilience.controller
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.resilience.controller.BackendCController.Companion.BACKEND_C
 import io.bluetape4k.workshop.resilience.service.Service
 import org.springframework.beans.factory.annotation.Qualifier
@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/$BACKEND_C")
 class BackendCController(@Qualifier("backendCService") private val serviceC: Service) {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         internal const val BACKEND_C = "backendC"
     }
 

@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.resilience.circuitbreaker
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.spring.tests.httpGet
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import org.junit.jupiter.api.Nested
@@ -9,7 +9,7 @@ import org.springframework.http.HttpStatus
 
 class ReactiveCircuitBreakerTest: AbstractCircuitBreakerTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Nested
     inner class MonoMethodTest {

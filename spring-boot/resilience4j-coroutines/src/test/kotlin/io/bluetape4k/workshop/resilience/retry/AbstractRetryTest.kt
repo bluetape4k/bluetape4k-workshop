@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.resilience.retry
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.support.uninitialized
@@ -12,7 +12,7 @@ import org.springframework.test.web.reactive.server.returnResult
 
 abstract class AbstractRetryTest: AbstractResilienceTest() {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         const val FAILED_WITH_RETRY = "failed_with_retry"
         const val SUCCESSFUL_WITHOUT_RETRY = "successful_without_retry"
     }

@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.resilience.config
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.resilience.events.CircuitBreakerRegistryEventConsumer
 import io.bluetape4k.workshop.resilience.events.RetryRegistryEventConsumer
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class Resilience4jConfig {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Bean
     @ConditionalOnMissingBean

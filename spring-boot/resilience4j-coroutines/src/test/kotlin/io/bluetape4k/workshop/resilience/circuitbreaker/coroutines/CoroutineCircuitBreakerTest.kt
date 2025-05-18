@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.resilience.circuitbreaker.coroutines
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.resilience.circuitbreaker.AbstractCircuitBreakerTest
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
@@ -11,7 +11,7 @@ import org.springframework.http.HttpStatus
 
 class CoroutineCircuitBreakerTest: AbstractCircuitBreakerTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Nested
     inner class SuspendMethod {

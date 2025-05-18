@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.protobuf.convert
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.protobuf.School.Course
 import io.bluetape4k.workshop.protobuf.School.Student
@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test
 
 class ProtobufConverterTest {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     private val course = course {
         id = 2

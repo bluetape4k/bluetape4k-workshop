@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.resilience.controller.coroutines
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.resilience4j.CoDecorators
 import io.bluetape4k.workshop.resilience.service.coroutines.CoService
 import io.github.resilience4j.bulkhead.BulkheadRegistry
@@ -31,7 +31,7 @@ class BackendBCoController(
     rateLimiterRegistry: RateLimiterRegistry,
     timeLimiterRegistry: TimeLimiterRegistry,
 ) {
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private const val BACKEND_B = "backendB"
     }
 

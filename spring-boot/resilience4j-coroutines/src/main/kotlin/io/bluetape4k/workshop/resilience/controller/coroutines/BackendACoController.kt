@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.resilience.controller.coroutines
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.resilience.service.coroutines.CoService
 import kotlinx.coroutines.flow.Flow
 import org.springframework.beans.factory.annotation.Qualifier
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController
 class BackendACoController(
     @Qualifier("backendACoService") private val serviceA: CoService,
 ) {
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private const val BACKEND_A = "backendA"
     }
 

@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.cbor
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.cbor.course.CourseRepository
 import org.amshove.kluent.shouldNotBeNull
@@ -14,7 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest
 )
 class CborConfigTest {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Autowired
     private val courseRepository: CourseRepository = uninitialized()

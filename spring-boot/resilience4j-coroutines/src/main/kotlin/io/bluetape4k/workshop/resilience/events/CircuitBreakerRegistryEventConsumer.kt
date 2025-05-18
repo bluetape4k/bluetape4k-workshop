@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.resilience.events
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.github.resilience4j.core.registry.EntryAddedEvent
@@ -10,7 +10,7 @@ import io.github.resilience4j.core.registry.RegistryEventConsumer
 
 open class CircuitBreakerRegistryEventConsumer: RegistryEventConsumer<CircuitBreaker> {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     override fun onEntryAddedEvent(entryAddedEvent: EntryAddedEvent<CircuitBreaker>) {
         entryAddedEvent.addedEntry.eventPublisher.onEvent { event ->
