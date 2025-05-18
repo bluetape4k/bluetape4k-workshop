@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.vertx.sqlclient
 
 import io.bluetape4k.junit5.faker.Fakers
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.testcontainers.database.MySQL8Server
 import io.vertx.core.Vertx
@@ -20,7 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 @ExtendWith(VertxExtension::class)
 abstract class AbstractSqlClientTest {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
 
         val faker = Fakers.faker
 
