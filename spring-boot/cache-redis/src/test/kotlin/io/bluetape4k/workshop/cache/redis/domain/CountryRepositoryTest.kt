@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.cache.redis.domain
 
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.cache.redis.AbstractRedisCacheTest
@@ -21,7 +21,7 @@ class CountryRepositoryTest(
     @Autowired private val countryRepo: CountryRepository,
 ): AbstractRedisCacheTest() {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         internal const val KR = "KR"
         internal const val US = "US"
         internal const val EXPECTED_MILLIS = 400L

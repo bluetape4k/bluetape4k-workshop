@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.application.event.custom
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -15,7 +15,7 @@ class CustomEventController(
     private val customEventPublisher: CustomEventPublisher,
 ): CoroutineScope by CoroutineScope(CoroutineName("custom-event") + Dispatchers.IO) {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @GetMapping("/event")
     suspend fun event(@RequestParam(name = "message") message: String): String {

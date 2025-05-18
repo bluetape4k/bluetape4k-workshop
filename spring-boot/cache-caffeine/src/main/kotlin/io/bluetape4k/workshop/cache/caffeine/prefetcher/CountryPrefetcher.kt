@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.cache.caffeine.prefetcher
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.cache.caffeine.domain.CountryRepository
 import org.springframework.scheduling.annotation.Scheduled
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component
 @Component
 class CountryPrefetcher(private val repository: CountryRepository) {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Scheduled(fixedDelay = 10)
     fun retreiveCountry() {

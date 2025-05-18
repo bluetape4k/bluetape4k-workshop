@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.application.event.custom.listeners
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.application.event.custom.CustomEvent
 import kotlinx.coroutines.Dispatchers
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component
 @Component
 class AnnotatedCoroutineCustomEventListener {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     /**
      * Coroutine 환경에서 EmitValue Listener 작업을 수행할 수 있습니다.

@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.asynclogging
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 
@@ -8,5 +8,5 @@ import org.springframework.test.context.ActiveProfiles
 @ActiveProfiles("test")
 abstract class AbstractAsyncLoggerTest {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 }

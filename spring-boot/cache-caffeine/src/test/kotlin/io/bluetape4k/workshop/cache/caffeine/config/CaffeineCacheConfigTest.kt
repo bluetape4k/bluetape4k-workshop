@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.cache.caffeine.config
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.cache.caffeine.AbstractCaffeineCacheApplicationTest
 import org.amshove.kluent.shouldNotBeNull
@@ -10,7 +10,7 @@ import org.springframework.cache.CacheManager
 
 class CaffeineCacheConfigTest: AbstractCaffeineCacheApplicationTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Autowired
     private val cacheManager: CacheManager = uninitialized()

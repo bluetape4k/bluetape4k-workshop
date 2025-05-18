@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.cache.caffeine.config
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.scheduling.TaskScheduler
@@ -15,7 +15,7 @@ import java.util.concurrent.Executors
 @EnableScheduling
 class SchedulingConfig {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     /**
      * Virtual Thread를 사용하는 Scheduled Thread Pool을 사용하도록 합니다.
@@ -23,7 +23,10 @@ class SchedulingConfig {
     @Bean
     fun taskScheduler(): TaskScheduler {
         return ConcurrentTaskScheduler(
-            Executors.newScheduledThreadPool(1, Thread.ofVirtual().name("virtual-task-", 0).factory())
+            Executors.newScheduledThreadPool(
+                1,
+                Thread.ofVirtual().name("virtual-task-", 0).factory()
+            )
         )
     }
 }

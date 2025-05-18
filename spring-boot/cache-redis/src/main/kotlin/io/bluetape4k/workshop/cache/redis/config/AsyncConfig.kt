@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.cache.redis.config
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import org.slf4j.MDC
 import org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration
@@ -22,7 +22,7 @@ import java.util.concurrent.Executors
 @EnableAsync
 class AsyncConfig {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Bean(TaskExecutionAutoConfiguration.APPLICATION_TASK_EXECUTOR_BEAN_NAME)
     @Primary

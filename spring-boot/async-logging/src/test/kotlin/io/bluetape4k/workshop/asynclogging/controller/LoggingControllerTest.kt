@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.asynclogging.controller
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.asynclogging.AbstractAsyncLoggerTest
@@ -18,7 +18,7 @@ class LoggingControllerTest(
     @Autowired private val client: WebTestClient,
 ): AbstractAsyncLoggerTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `context loading`() {

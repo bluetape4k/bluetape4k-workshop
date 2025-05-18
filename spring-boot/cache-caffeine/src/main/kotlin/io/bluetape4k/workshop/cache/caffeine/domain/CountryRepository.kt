@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.cache.caffeine.domain
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import org.springframework.cache.annotation.CacheConfig
 import org.springframework.cache.annotation.CacheEvict
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component
 @CacheConfig(cacheNames = ["cache:contries"])
 class CountryRepository {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         @JvmStatic
         val SAMPLE_COUNTRY_CODES: List<String> =
             listOf(

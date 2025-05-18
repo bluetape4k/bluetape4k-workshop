@@ -17,6 +17,7 @@ class AspectEventListener {
     }
 
     private fun doHandleEvent(event: AspectEvent) {
+        Thread.sleep(10L) // Simulate some processing
         log.debug { "Handle aspect event by listener. $event" }
     }
 }

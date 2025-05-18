@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.application.event.custom
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.output.OutputCapture
 import io.bluetape4k.junit5.output.OutputCapturer
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.spring.tests.httpGet
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.reactive.awaitSingle
@@ -20,7 +20,7 @@ import org.springframework.test.web.reactive.server.returnResult
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class CustomEventPublisherTest(@Autowired private val client: WebTestClient) {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `context loading`() {

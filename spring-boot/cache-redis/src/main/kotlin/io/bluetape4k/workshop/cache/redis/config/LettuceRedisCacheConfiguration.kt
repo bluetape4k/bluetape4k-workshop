@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.cache.redis.config
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.redis.spring.serializer.RedisBinarySerializers
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -22,7 +22,7 @@ import java.time.Duration
 @EnableCaching
 class LettuceRedisCacheConfiguration {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Value("\${spring.data.redis.host}")
     lateinit var redisHost: String
