@@ -1,0 +1,13 @@
+spring:
+    data:
+        redis:
+            repositories:
+                enabled: true
+            host: ${testcontainers.redis.host}
+            port: ${testcontainers.redis.port}
+
+            lettuce:
+                pool:
+                    enabled: true
+                    max-active: 16
+                    max-idle: 8

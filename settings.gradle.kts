@@ -6,7 +6,7 @@ pluginManagement {
     }
     plugins {
         // https://plugins.gradle.org/plugin/org.gradle.toolchains.foojay-resolver-convention
-        id("org.gradle.toolchains.foojay-resolver-convention") version ("0.8.0")
+        id("org.gradle.toolchains.foojay-resolver-convention") version ("0.9.0")
     }
 }
 
@@ -16,31 +16,33 @@ rootProject.name = "$PROJECT_NAME-workshop"
 
 include("shared")
 
-includeModules("aws", false, false)
-includeModules("aws-kotlin", false, true)
+includeModules("aws", false, true)
 includeModules("ddd", false, true)
-includeModules("docker", false, false)
+includeModules("docker", false, true)
 includeModules("examples", false, false)
-includeModules("exposed", false, false)
+includeModules("exposed", false, true)
 includeModules("gateway", false, false)
-includeModules("gatling", false, false)
+includeModules("gatling", false, true)
 includeModules("graalvm", false, false)
-
-includeModules("haifa", false, true)
-
+includeModules("jmolecules", false, true)
 includeModules("json", false, false)
 includeModules("kotlin", false, true)
-includeModules("memory", false, false)
-includeModules("mq", false, false)
+includeModules("mapping", false, true)
+includeModules("messaging", false, true)
 includeModules("observability", false, false)
+includeModules("quarkus", false, true)
 includeModules("ratelimit", false, false)
+includeModules("reactive", false, true)
+includeModules("redis", false, true)
 
-includeModules("spring-boot", false, false)
-includeModules("spring-cloud", false, false)
-includeModules("spring-data", false, false)
-includeModules("spring-security", false, false)
-includeModules("vertx", false, false)
-includeModules("virtual-thread", false, false)
+includeModules("spring-boot", false, true)
+includeModules("spring-cloud", false, true)
+includeModules("spring-data", false, true)
+includeModules("spring-modulith", false, true)
+includeModules("spring-security/mvc", false, true)
+includeModules("spring-security/webflux", false, true)
+includeModules("vertx", false, true)
+includeModules("virtualthreads", false, true)
 
 fun includeModules(baseDir: String, withProjectName: Boolean = true, withBaseDir: Boolean = true) {
     files("$rootDir/$baseDir").files

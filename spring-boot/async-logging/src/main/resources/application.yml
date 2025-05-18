@@ -1,0 +1,21 @@
+spring:
+    application:
+        name: async-logging-demo
+    profiles:
+        default: "dev"
+
+    jackson:
+        serialization:
+            indent-output: true
+    lifecycle:
+        timeout-per-shutdown-phase: 10s     # Graceful Shutdown 시간
+
+server:
+    shutdown: graceful  # WebServer Graceful shutdown (https://www.baeldung.com/spring-boot-web-server-shutdown)
+
+# Build Info
+info:
+    name: ${spring.application.name}
+    description: Async Logging Demo
+    environment: ${spring.profiles.active}
+    version: 0.1.0

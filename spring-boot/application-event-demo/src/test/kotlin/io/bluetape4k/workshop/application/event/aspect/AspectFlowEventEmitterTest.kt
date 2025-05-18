@@ -4,7 +4,7 @@ import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.junit5.output.OutputCapture
 import io.bluetape4k.junit5.output.OutputCapturer
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.application.event.EventApplication
 import kotlinx.coroutines.delay
 import org.amshove.kluent.shouldContain
@@ -17,7 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest
 class AspectFlowEventEmitterTest(
     @Autowired private val myEventService: MyEventService,
 ) {
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         val faker = Fakers.faker
     }
 

@@ -1,0 +1,56 @@
+spring:
+    application:
+        name: micrometer-observation-demo
+    jackson:
+        serialization:
+            indent-output: true
+    codec:
+        max-in-memory-size: 10MB
+
+info:
+    name: ${spring.application.name}
+    description: Micrometer Observation을 이용한 모니터링 데모
+    environment: ${spring.profiles.active}
+    version: 0.0.1
+
+management:
+    endpoints:
+        web:
+            exposure:
+                include: "*"
+    endpoint:
+        health:
+            show-details: always
+
+    health:
+        circuitbreakers:
+            enabled: true
+        ratelimiters:
+            enabled: true
+
+    metrics:
+        tags:
+            application: ${spring.application.name}
+        distribution:
+            percentiles:
+                http.server.requests: 0.5, 0.95, 0.99
+            percentiles-histogram:
+                http.server.requests: true
+            slo:
+                http.server.requests: 200ms, 400ms, 600ms
+
+    prometheus:
+        metrics:
+            export:
+                enabled: true
+                step: 30s
+
+    # NOTE: Datadog 에 export 하려면 DD_API_KEY, DD_APPLICATION_KEY 를 설정해야 합니다.
+    datadog:
+        metrics:
+            export:
+                api-key: ${DD_API_KEY}
+                application-key: ${DD_APPLICATION_KEY}
+                step: 30s
+                enabled: true
+                batch-size: 100

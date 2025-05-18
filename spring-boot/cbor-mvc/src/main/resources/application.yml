@@ -1,0 +1,9 @@
+spring:
+    application:
+        name: ProtobufJsonMvcApplication
+    info:
+        build:
+            encoding: UTF-8
+
+    profiles:
+        active: cbor

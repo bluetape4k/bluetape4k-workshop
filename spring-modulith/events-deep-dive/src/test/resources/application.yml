@@ -1,0 +1,9 @@
+spring:
+    data:
+        jpa:
+            repositories:
+                bootstrap-mode: default
+
+logging:
+    level:
+        org.springframework.aop.interceptor: TRACE

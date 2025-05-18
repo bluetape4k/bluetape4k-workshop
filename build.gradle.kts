@@ -4,7 +4,6 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
     base
-    `maven-publish`
     // jacoco
     kotlin("jvm") version Versions.kotlin
 
@@ -21,51 +20,46 @@ plugins {
 
     id(Plugins.dependency_management) version Plugins.Versions.dependency_management
     id(Plugins.spring_boot) version Plugins.Versions.spring_boot apply false
+    id(Plugins.quarkus) version Plugins.Versions.quarkus apply false
 
     id(Plugins.dokka) version Plugins.Versions.dokka
     id(Plugins.testLogger) version Plugins.Versions.testLogger
     id(Plugins.shadow) version Plugins.Versions.shadow apply false
+
+    // for JMolecules
+    id("net.bytebuddy.byte-buddy-gradle-plugin") version "1.15.10" apply false
 }
 
-// NOTE: Nexus 에 등록된 것 때문에 사용한다
-// NOTE: .zshrc 에 정의하던가, ~/.gradle/gradle.properties 에 정의해주셔야 합니다.
-//fun getEnvOrProjectProperty(propertyKey: String, envKey: String): String {
-//    return project.findProperty(propertyKey) as? String ?: System.getenv(envKey)
-//}
-//
-//val gprUser: String = getEnvOrProjectProperty("gpr.user", "GITHUB_USERNAME")
-//val gprKey: String = getEnvOrProjectProperty("gpr.key", "GITHUB_TOKEN")
-//val gprPublishKey: String = getEnvOrProjectProperty("gpr.publish.key", "GITHUB_PUBLISH_TOKEN")
+// NOTE: Github 에 등록된 Package 를 다운받기 위해서 사용합니다.
+// NOTE: ~/.gradle/gradle.properties gpr.user,gpr.key 를 정의하던가
+// NOTE: ~/.zshrc 에 GITHUB_USERNAME, GITHUB_TOKEN 을 정의합니다.
+fun getEnvOrProjectProperty(propertyKey: String, envKey: String): String {
+    return project.findProperty(propertyKey) as? String ?: System.getenv(envKey)
+}
 
-
-val projectGroup: String by project
-val baseVersion: String by project
-val snapshotVersion: String by project
+val bluetape4kGprKey: String = getEnvOrProjectProperty("bluetape4k.gpr.key", "BLUETAPE4K_GITHUB_TOKEN")
 
 allprojects {
-    group = projectGroup
-    version = baseVersion + snapshotVersion
-
     repositories {
         mavenCentral()
-        mavenLocal()
         google()
-//        maven {
-//            name = "bluetape4k"
-//            url = uri("https://maven.pkg.github.com/bluetape4k/bluetape4k-projects")
-//            credentials {
-//                username = gprUser
-//                password = gprKey
-//            }
-//        }
+        maven {
+            name = "bluetape4k"
+            url = uri("https://maven.pkg.github.com/bluetape4k/bluetape4k-projects")
+
+            credentials {
+                username = "debop"
+                password = bluetape4kGprKey
+            }
+        }
+    }
+
+    configurations.all {
+        resolutionStrategy.cacheChangingModulesFor(1, TimeUnit.DAYS)
     }
 }
 
 subprojects {
-    if (name == "bluetape4k-bom") {
-        return@subprojects
-    }
-
     apply {
         plugin<JavaLibraryPlugin>()
 
@@ -92,8 +86,8 @@ subprojects {
             languageVersion.set(JavaLanguageVersion.of(21))
         }
         compilerOptions {
-            languageVersion.set(KotlinVersion.KOTLIN_2_0)
-            apiVersion.set(KotlinVersion.KOTLIN_2_0)
+            languageVersion.set(KotlinVersion.KOTLIN_2_1)
+            apiVersion.set(KotlinVersion.KOTLIN_2_1)
             freeCompilerArgs = listOf(
                 "-Xjsr305=strict",
                 "-Xjvm-default=all",
@@ -264,6 +258,7 @@ subprojects {
             mavenBom(Libs.spring_integration_bom)
             mavenBom(Libs.spring_cloud_dependencies)
             mavenBom(Libs.spring_boot_dependencies)
+            mavenBom(Libs.spring_modulith_bom)
 
             mavenBom(Libs.feign_bom)
             mavenBom(Libs.micrometer_bom)
@@ -371,8 +366,7 @@ subprojects {
             dependency(Libs.guava)
 
             dependency(Libs.kryo)
-            dependency(Libs.marshalling)
-            dependency(Libs.marshalling_river)
+            dependency(Libs.fury_kotlin)
 
             // Jackson (이상하게 mavenBom 에 적용이 안되어서 강제로 추가하였다)
             dependency(Libs.jackson_bom)
@@ -512,6 +506,11 @@ subprojects {
         val testCompileOnly by configurations
         val testRuntimeOnly by configurations
 
+        compileOnly(platform(Libs.bluetape4k_bom))
+        compileOnly(platform(Libs.spring_boot_dependencies))
+        compileOnly(platform(Libs.jackson_bom))
+        compileOnly(platform(Libs.kotlinx_coroutines_bom))
+
         api(Libs.kotlin_stdlib)
         api(Libs.kotlin_stdlib_jdk8)
         api(Libs.kotlin_reflect)
@@ -524,11 +523,12 @@ subprojects {
         // 개발 시에는 logback 이 검증하기에 더 좋고, Production에서 비동기 로깅은 log4j2 가 성능이 좋다고 합니다.
         api(Libs.slf4j_api)
         api(Libs.bluetape4k_logging)
-        testImplementation(Libs.logback)
+        implementation(Libs.logback)
         testImplementation(Libs.jcl_over_slf4j)
         testImplementation(Libs.jul_to_slf4j)
         testImplementation(Libs.log4j_over_slf4j)
 
+        // JUnit 5
         testImplementation(Libs.bluetape4k_junit5)
         testImplementation(Libs.junit_jupiter)
         testRuntimeOnly(Libs.junit_platform_engine)
@@ -541,8 +541,6 @@ subprojects {
         // Property baesd test
         testImplementation(Libs.datafaker)
         testImplementation(Libs.random_beans)
-
-
     }
 
     tasks.withType<Jar> {

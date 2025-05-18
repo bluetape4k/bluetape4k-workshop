@@ -1,0 +1,66 @@
+spring:
+    application:
+        name: messaging-kafka
+    jackson:
+        serialization:
+            indent-output: true
+
+    kafka:
+        bootstrap-servers: ${testcontainers.kafka.bootstrapServers}
+
+        producer:
+            acks: 1
+            retries: 3
+            compression-type: lz4
+            key-serializer: org.apache.kafka.common.serialization.StringSerializer
+            value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+            properties:
+                spring.json.trusted.packages: '*'
+
+        consumer:
+            group-id: ${spring.application.name}
+            auto-offset-reset: earliest
+            enable-auto-commit: false
+            heartbeat-interval: 1s
+            auto-commit-interval: 1s
+            max-poll-records: 50
+            fetch-max-wait: 5s
+            key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+            value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+            properties:
+                spring.json.trusted.packages: '*'
+
+        listener:
+            async-acks: true
+            ack-mode: TIME
+            ack-time: 1s
+
+info:
+    name: ${spring.application.name}
+    description: messaing via kafka
+    environment: ${spring.profiles.active}
+    version: 0.0.1
+
+
+management:
+    endpoints:
+        web:
+            exposure:
+                include: "*"
+    endpoint:
+        health:
+            show-details: always
+
+    health:
+        circuitbreakers:
+            enabled: true
+        ratelimiters:
+            enabled: true
+
+    metrics:
+        tags:
+            application: ${spring.application.name}
+        distribution:
+            percentiles-histogram:
+                http.server.requests: true
+                resilience4j.circuitbreaker.calls: true

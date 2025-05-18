@@ -1,0 +1,103 @@
+server:
+    port: 8080
+
+logging:
+    level:
+        io.bluetape4k.workshop.bucket4j: debug
+        com.giffing.bucket4j: debug
+
+management:
+    server:
+        port: 9090
+    endpoints:
+        web:
+            exposure:
+                include: "*"
+
+spring:
+    cloud:
+        compatibility-verifier:
+            enabled: false
+        gateway:
+            default-filters:
+                - AddResponseHeader=X-BLUETAPE4K-API, BLUETAPE4K.IO
+
+            routes:
+                # =====================================
+                # to run server (참고: https://docs.aws.amazon.com/ko_kr/apigateway/latest/developerguide/apigateway-how-to-call-websocket-api-wscat.html)
+                # $ wscat --listen 9000
+                # to run client
+                # $ wscat --connect ws://localhost:8080/echo
+                -   id: websocket-example
+                    uri: ws://localhost:9000
+                    order: 9000
+                    predicates:
+                        - Path=/echo
+                # =====================================
+                -   id: customers
+                    uri: http://localhost:8081
+                    predicates:
+                        - Path=/customer-service/**
+                    filters:
+                        - RewritePath=/customer-service/(?<segment>.*), /$\{segment}
+                        # - AuthFilter
+
+                -   id: orders
+                    uri: http://localhost:8082
+                    predicates:
+                        - Path=/order-service/**
+                    filters:
+                        - RewritePath=/order-service/(?<segment>.*), /$\{segment}
+                        # - AuthFilter
+
+                -   id: openapi
+                    uri: http://localhost:${server.port}
+                    predicates:
+                        - Path=/v3/api-docs/**
+                    filters:
+                        - RewritePath=/v3/api-docs/(?<segment>.*), /$\{segment}/v3/api-docs
+
+    data:
+        redis:
+            host: ${testcontainers.redis.host}
+            port: ${testcontainers.redis.port}
+            url: ${testcontainers.redis.url}
+            lettuce:
+                pool:
+                    enabled: true
+
+    jmx:
+        enabled: false
+
+springdoc:
+    api-docs:
+        enabled: true
+    swagger-ui:
+        enabled: true
+        path: /swagger-ui.html
+        config-url: /v3/api-docs/swagger-config
+        urls:
+            -   name: API Gateway Service
+                url: /v3/api-docs
+            -   name: Customer Service
+                url: /customer-service/v3/api-docs
+            -   name: Order Service
+                url: /order-service/v3/api-docs
+
+bucket4j:
+    enabled: true
+    filters:
+        -   cache-name: buckets
+            filter-method: webflux
+            url: .*
+            http-content-type: application/json;charset=UTF-8
+            http-response-body: '{ "error": "too many requests" }'
+            http-response-headers:
+                X-RATE-LIMIT: 0
+            filter-order: 1
+            rate-limits:
+                -   bandwidths:
+                        -   capacity: 50
+                            time: 10
+                            unit: seconds
+    cache-to-use: redis-lettuce

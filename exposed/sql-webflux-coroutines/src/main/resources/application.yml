@@ -1,0 +1,53 @@
+server:
+    port: 8080
+    compression:
+        enabled: true
+
+    shutdown: graceful  # WebServer Graceful shutdown (https://www.baeldung.com/spring-boot-web-server-shutdown)
+
+spring:
+    application:
+        name: Exposed SQL Demo with Webflux
+
+
+    profiles:
+        default: "h2"   # mysql, h2 를 선택할 수 있습니다.
+
+    threads:
+        virtual:
+            enabled: true   # Virtual Thread 사용 여부
+
+    jackson:
+        serialization:
+            indent-output: true
+    lifecycle:
+        timeout-per-shutdown-phase: 10s     # Graceful Shutdown 시간
+
+    datasource:
+        url: jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;
+        driver-class-name: org.h2.Driver
+        username: sa
+        password:
+        hikari:
+            maximum-pool-size: 100
+            minimum-idle: 10
+            idle-timeout: 30000
+            max-lifetime: 60000
+            connection-timeout: 30000
+
+management:
+    endpoints:
+        web:
+            exposure:
+                include: "*"
+    endpoint:
+        health:
+            show-details: always
+
+    metrics:
+        tags:
+            application: ${spring.application.name}
+        distribution:
+            percentiles-histogram:
+                http.server.requests: true
+                resilience4j.circuitbreaker.calls: true

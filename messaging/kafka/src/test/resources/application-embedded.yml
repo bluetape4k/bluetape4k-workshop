@@ -1,0 +1,9 @@
+spring:
+    kafka:
+        bootstrap-servers: ${spring.embedded.kafka.brokers.property}
+        consumer:
+            group-id: embedded-kafka
+            auto-offset-reset: earliest
+
+        producer:
+            acks: all
