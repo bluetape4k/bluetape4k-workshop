@@ -7,7 +7,7 @@ import com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto
 import com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom
 import io.bluetape4k.cassandra.querybuilder.literal
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.spring.cassandra.coExecute
 import io.bluetape4k.spring.cassandra.coInsert
 import io.bluetape4k.spring.cassandra.coSelect
@@ -33,7 +33,7 @@ class CoroutineCassandraOperationsTest(
     @Autowired private val cqlSession: CqlSession,
 ): AbstractCassandraCoroutineTest("basic-user-ops") {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private const val USER_TABLE = "basic_users"
     }
 
@@ -68,7 +68,7 @@ class CoroutineCassandraOperationsTest(
 
     @Test
     fun `insert and update`() = runSuspendIO {
-        val user = BasicUser(42L, faker.internet().username(), faker.name().firstName(), faker.name().lastName())
+        val user = newBasicUser(42L)
         operations.coInsert(user)
 
         val updated = user.copy(firstname = faker.name().firstName())
@@ -81,12 +81,7 @@ class CoroutineCassandraOperationsTest(
     @Test
     fun `insert in coroutines`() = runSuspendIO {
         val users = List(100) {
-            BasicUser(
-                it.toLong(),
-                "uname-$it",
-                "firstname-$it",
-                "lastname-$it"
-            )
+            newBasicUser(it.toLong())
         }
 
         val tasks = users.map {
@@ -99,7 +94,7 @@ class CoroutineCassandraOperationsTest(
 
     @Test
     fun `select async projections`() = runSuspendIO {
-        val user = BasicUser(42L, faker.internet().username(), faker.name().firstName(), faker.name().lastName())
+        val user = newBasicUser(42L)
         operations.coInsert(user)
 
         val id = operations.coSelectOneOrNull<Long>(selectFrom(USER_TABLE).column("user_id").build())!!
@@ -116,5 +111,14 @@ class CoroutineCassandraOperationsTest(
         map["uname"] shouldBeEqualTo user.username
         map["fname"] shouldBeEqualTo user.firstname
         map["lname"] shouldBeEqualTo user.lastname
+    }
+
+    private fun newBasicUser(id: Long): BasicUser {
+        return BasicUser(
+            id = id,
+            username = faker.internet().username(),
+            firstname = faker.name().firstName(),
+            lastname = faker.name().lastName()
+        )
     }
 }

@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.cassandra.streamnullable
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.cassandra.AbstractCassandraTest
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
@@ -15,7 +15,7 @@ class StreamNullableTest(
     @Autowired private val repository: PersonRepository,
 ): AbstractCassandraTest() {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private fun newPerson(id: String = "1"): Person =
             Person(id, faker.name().firstName(), faker.name().lastName())
     }

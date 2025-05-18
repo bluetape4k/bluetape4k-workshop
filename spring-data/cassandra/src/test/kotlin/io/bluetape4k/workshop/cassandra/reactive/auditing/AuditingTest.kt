@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.cassandra.reactive.auditing
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.cassandra.AbstractCassandraCoroutineTest
@@ -24,7 +24,7 @@ class AuditingTest(
     @Autowired private val customRepo: CustomAuditingRepository,
 ): AbstractCassandraCoroutineTest("auditing") {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @BeforeEach
     fun setup() = runSuspendIO {

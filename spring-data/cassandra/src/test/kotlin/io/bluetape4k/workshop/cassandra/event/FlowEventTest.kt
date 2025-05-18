@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.cassandra.event
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.cassandra.AbstractCassandraCoroutineTest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.toList
@@ -25,7 +25,7 @@ class FlowEventTest(
     @Autowired private val reactiveOperations: ReactiveCassandraOperations,
 ): AbstractCassandraCoroutineTest("event") {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @BeforeEach
     fun beforeEach() {

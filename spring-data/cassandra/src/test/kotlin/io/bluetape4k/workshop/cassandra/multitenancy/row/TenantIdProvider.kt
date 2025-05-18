@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.cassandra.multitenancy.row
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 
-object TenantIdProvider: KLogging() {
+object TenantIdProvider: KLoggingChannel() {
 
     val tenantId: ThreadLocal<String> = ThreadLocal.withInitial { "" }
 

@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.cassandra.event
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import org.springframework.data.cassandra.core.mapping.event.AbstractCassandraEventListener
 import org.springframework.data.cassandra.core.mapping.event.AfterConvertEvent
@@ -12,7 +12,7 @@ import org.springframework.data.cassandra.core.mapping.event.BeforeSaveEvent
 
 class LoggingEventListener: AbstractCassandraEventListener<Any>() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     override fun onBeforeSave(event: BeforeSaveEvent<Any>) {
         log.info { "onBeforeSave: ${event.source}, ${event.statement}" }

@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.cassandra.reactive.multitenant
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.cassandra.AbstractCassandraCoroutineTest
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
@@ -19,7 +19,7 @@ class RowLevelMultitenantTest(
     @Autowired private val repository: EmployeeRepository,
 ): AbstractCassandraCoroutineTest("row_level_multitenancy") {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     val employees = listOf(
         Employee("breaking-bad", "Walter"),

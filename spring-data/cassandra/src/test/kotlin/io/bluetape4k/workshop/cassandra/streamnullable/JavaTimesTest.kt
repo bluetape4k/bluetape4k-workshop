@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.cassandra.streamnullable
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.cassandra.AbstractCassandraTest
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeNull
@@ -16,7 +16,7 @@ class JavaTimesTest(
     @Autowired private val repository: OrderRepository,
 ): AbstractCassandraTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @BeforeEach
     fun beforeEach() {

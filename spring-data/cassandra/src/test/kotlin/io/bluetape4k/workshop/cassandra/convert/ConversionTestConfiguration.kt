@@ -4,7 +4,7 @@ import com.datastax.oss.driver.api.core.cql.Row
 import io.bluetape4k.jackson.Jackson
 import io.bluetape4k.jackson.readValueOrNull
 import io.bluetape4k.jackson.writeAsString
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.cassandra.AbstractReactiveCassandraTestConfiguration
 import org.springframework.boot.autoconfigure.domain.EntityScan
 import org.springframework.context.annotation.Bean
@@ -15,7 +15,7 @@ import java.util.*
 @EntityScan(basePackageClasses = [Addressbook::class])
 class ConversionTestConfiguration: AbstractReactiveCassandraTestConfiguration() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Bean
     override fun customConversions(): CassandraCustomConversions {

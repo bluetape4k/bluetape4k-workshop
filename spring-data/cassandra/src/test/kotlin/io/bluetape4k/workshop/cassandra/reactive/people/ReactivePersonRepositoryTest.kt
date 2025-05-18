@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.cassandra.reactive.people
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.cassandra.AbstractCassandraTest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -14,7 +14,7 @@ class ReactivePersonRepositoryTest(
     @Autowired private val repository: ReactivePersonRepository,
 ): AbstractCassandraTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @BeforeEach
     fun setup() {

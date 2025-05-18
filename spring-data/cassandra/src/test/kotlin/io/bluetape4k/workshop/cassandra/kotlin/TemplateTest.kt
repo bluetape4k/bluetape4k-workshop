@@ -4,7 +4,7 @@ import com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto
 import io.bluetape4k.cassandra.querybuilder.literal
 import io.bluetape4k.cassandra.quote
 import io.bluetape4k.cassandra.toCqlIdentifier
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.cassandra.AbstractCassandraTest
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
@@ -28,7 +28,7 @@ class TemplateTest(
     @Autowired private val operations: CassandraOperations,
 ): AbstractCassandraTest() {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private const val PERSON_TABLE = "kotlin_people"
     }
 

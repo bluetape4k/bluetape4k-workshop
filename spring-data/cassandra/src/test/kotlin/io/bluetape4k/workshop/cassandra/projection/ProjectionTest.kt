@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.cassandra.projection
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.cassandra.AbstractCassandraCoroutineTest
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeInstanceOf
@@ -16,7 +16,7 @@ class ProjectionTest(
     @Autowired private val repository: CustomerRepository,
 ): AbstractCassandraCoroutineTest("projection") {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     private lateinit var dave: Customer
     private lateinit var carter: Customer

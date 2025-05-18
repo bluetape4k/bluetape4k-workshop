@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.cassandra.kotlin
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.cassandra.AbstractReactiveCassandraTestConfiguration
 import org.springframework.boot.autoconfigure.domain.EntityScan
 import org.springframework.data.cassandra.repository.config.EnableReactiveCassandraRepositories
@@ -13,6 +13,6 @@ import org.springframework.data.cassandra.repository.config.EnableReactiveCassan
 @EnableReactiveCassandraRepositories(basePackageClasses = [PersonRepository::class])
 class PersonTestConfiguration: AbstractReactiveCassandraTestConfiguration() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
 }

@@ -5,7 +5,7 @@ import com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom
 import io.bluetape4k.cassandra.data.getList
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.coroutines.runSuspendTest
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.spring.cassandra.selectOne
 import io.bluetape4k.workshop.cassandra.AbstractCassandraCoroutineTest
 import kotlinx.coroutines.reactor.awaitSingle
@@ -26,7 +26,7 @@ class ConversionTest(
     @Autowired private val operations: ReactiveCassandraOperations,
 ): AbstractCassandraCoroutineTest("conversion") {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     private fun newContact(): Contact =
         Contact(faker.name().firstName(), faker.name().lastName())
@@ -34,7 +34,7 @@ class ConversionTest(
     private fun newAddressbook(): Addressbook =
         Addressbook(
             id = "private",
-            me = Contact(faker.name().firstName(), faker.name().lastName()),
+            me = newContact(),
             friends = mutableListOf(newContact(), newContact())
         )
 

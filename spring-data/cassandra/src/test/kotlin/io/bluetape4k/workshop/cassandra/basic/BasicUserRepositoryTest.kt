@@ -4,7 +4,7 @@ import com.datastax.oss.driver.api.querybuilder.SchemaBuilder
 import io.bluetape4k.cassandra.cql.executeSuspending
 import io.bluetape4k.idgenerators.snowflake.Snowflakers
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.cassandra.AbstractCassandraCoroutineTest
 import kotlinx.coroutines.delay
@@ -27,7 +27,7 @@ class BasicUserRepositoryTest(
     @Autowired private val repository: BasicUserRepository,
 ): AbstractCassandraCoroutineTest("basic-user") {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     private fun newBasicUser(): BasicUser {
         return BasicUser(

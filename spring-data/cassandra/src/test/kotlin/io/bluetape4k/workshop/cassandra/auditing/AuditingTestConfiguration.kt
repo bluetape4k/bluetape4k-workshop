@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.cassandra.auditing
 
 import com.datastax.oss.driver.api.core.CqlSession
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.cassandra.AbstractReactiveCassandraTestConfiguration
 import org.springframework.boot.autoconfigure.domain.EntityScan
 import org.springframework.context.annotation.Bean
@@ -21,7 +21,7 @@ import java.util.*
 @EnableReactiveCassandraAuditing
 class AuditingTestConfiguration: AbstractReactiveCassandraTestConfiguration() {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         const val ACTOR = "Some user"
     }
 

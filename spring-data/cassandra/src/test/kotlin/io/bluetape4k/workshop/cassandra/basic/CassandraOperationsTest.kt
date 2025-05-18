@@ -6,7 +6,7 @@ import com.datastax.oss.driver.api.querybuilder.QueryBuilder.insertInto
 import com.datastax.oss.driver.api.querybuilder.QueryBuilder.selectFrom
 import io.bluetape4k.cassandra.querybuilder.literal
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import io.bluetape4k.spring.cassandra.coInsert
 import io.bluetape4k.workshop.cassandra.AbstractCassandraTest
@@ -27,7 +27,7 @@ class CassandraOperationsTest(
     @Autowired private val operations: CassandraOperations,
 ): AbstractCassandraTest() {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private const val USER_TABLE = "basic_users"
     }
 
@@ -63,8 +63,7 @@ class CassandraOperationsTest(
 
     @Test
     fun `insert and update`() {
-        val user = BasicUser(42L, faker.internet().username(), faker.name().firstName(), faker.name().lastName())
-
+        val user = newBasicUser(42L)
         operations.insert(user)
 
         val updated = user.copy(firstname = faker.name().firstName())
@@ -77,10 +76,9 @@ class CassandraOperationsTest(
 
     @Test
     fun `insert asynchronously`() = runSuspendIO {
-        val user = BasicUser(42L, faker.internet().username(), faker.name().firstName(), faker.name().lastName())
+        val user = newBasicUser(42L)
 
         val asyncTemplate = AsyncCassandraTemplate(session)
-
         asyncTemplate.coInsert(user)
 
         val loaded = operations.selectOneById<BasicUser>(user.id)
@@ -89,7 +87,7 @@ class CassandraOperationsTest(
 
     @Test
     fun `select projections`() {
-        val user = BasicUser(42L, faker.internet().username(), faker.name().firstName(), faker.name().lastName())
+        val user = newBasicUser(42L)
         operations.insert(user)
 
         val id = operations.selectOne<Long>(selectFrom(USER_TABLE).column("user_id").asCql())
@@ -103,5 +101,14 @@ class CassandraOperationsTest(
         map.shouldNotBeNull()
         map["user_id"] shouldBeEqualTo user.id
         map["fname"] shouldBeEqualTo user.firstname
+    }
+
+    private fun newBasicUser(id: Long): BasicUser {
+        return BasicUser(
+            id = id,
+            username = faker.internet().username(),
+            firstname = faker.name().firstName(),
+            lastname = faker.name().lastName()
+        )
     }
 }

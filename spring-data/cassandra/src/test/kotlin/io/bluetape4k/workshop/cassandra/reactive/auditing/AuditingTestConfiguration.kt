@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.cassandra.reactive.auditing
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.cassandra.AbstractReactiveCassandraTestConfiguration
 import org.springframework.boot.autoconfigure.domain.EntityScan
 import org.springframework.context.annotation.Bean
@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono
 @EnableReactiveCassandraAuditing
 class AuditingTestConfiguration: AbstractReactiveCassandraTestConfiguration() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Bean
     fun reactiveAuditorAware(): ReactiveAuditorAware<String> =

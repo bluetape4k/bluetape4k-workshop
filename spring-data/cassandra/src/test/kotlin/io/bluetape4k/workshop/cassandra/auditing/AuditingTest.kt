@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.cassandra.auditing
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.cassandra.AbstractCassandraCoroutineTest
 import org.amshove.kluent.shouldBeAfter
 import org.amshove.kluent.shouldBeEqualTo
@@ -18,7 +18,7 @@ class AuditingTest(
     @Autowired private val repository: AuditedPersonRepository,
 ): AbstractCassandraCoroutineTest("auditing") {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         const val ACTOR = AuditingTestConfiguration.ACTOR
     }
 

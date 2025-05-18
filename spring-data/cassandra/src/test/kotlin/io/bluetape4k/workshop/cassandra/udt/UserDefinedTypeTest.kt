@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.cassandra.udt
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.cassandra.AbstractCassandraTest
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeNull
@@ -15,7 +15,7 @@ import org.springframework.data.cassandra.core.selectOne
 @SpringBootTest(classes = [UserDefinedTypeTestConfiguration::class])
 class UserDefinedTypeTest: AbstractCassandraTest() {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private const val PERSON_TABLE_NAME = "udt_type_person"
         private const val UDT_ADDRESS_NAME = "udt_address"
     }
