@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.virtualthread.tomcat.domain
 
 import io.bluetape4k.junit5.faker.Fakers
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.virtualthread.tomcat.AbstractVirtualThreadMvcTest
 import jakarta.persistence.EntityManager
 import jakarta.persistence.EntityManagerFactory
@@ -9,7 +9,7 @@ import jakarta.persistence.PersistenceContext
 
 abstract class AbstractDomainTest: AbstractVirtualThreadMvcTest() {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         @JvmStatic
         val faker = Fakers.faker
     }

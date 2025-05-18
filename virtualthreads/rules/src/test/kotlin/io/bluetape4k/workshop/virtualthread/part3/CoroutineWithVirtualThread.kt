@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.virtualthread.part3
 
 import io.bluetape4k.concurrent.virtualthread.VT
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -14,7 +14,7 @@ import org.junit.jupiter.api.RepeatedTest
  */
 class CoroutineWithVirtualThread {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private const val REPEAT_SIZE = 3
     }
 

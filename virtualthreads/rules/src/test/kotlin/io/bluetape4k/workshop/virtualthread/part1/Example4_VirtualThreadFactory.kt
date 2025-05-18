@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.virtualthread.part1
 
 import io.bluetape4k.concurrent.virtualthread.VT
 import io.bluetape4k.junit5.coroutines.runSuspendTest
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.virtualThreads.AbstractVirtualThreadTest
 import kotlinx.coroutines.Dispatchers
@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test
 
 class Example4_VirtualThreadFactory: AbstractVirtualThreadTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `Virtual Thread Factory를 사용하여 Virtual Thread 생성하기`() {

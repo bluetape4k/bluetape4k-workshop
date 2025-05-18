@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.virtualthread.undertow.controller
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import io.swagger.v3.oas.annotations.Operation
 import org.springframework.web.bind.annotation.GetMapping
@@ -16,7 +16,7 @@ class HttpbinController(
     clientBuilder: WebClient.Builder,
 ) {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     private val client = clientBuilder
         .baseUrl("https://nghttp2.org/httpbin")

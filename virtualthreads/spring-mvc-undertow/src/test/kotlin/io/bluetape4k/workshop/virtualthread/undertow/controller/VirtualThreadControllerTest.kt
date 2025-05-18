@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.virtualthread.undertow.controller
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.virtualthread.undertow.AbstractUndertowVirtualThreadMvcTest
@@ -16,7 +16,7 @@ class VirtualThreadControllerTest(
     @Autowired private val client: WebTestClient,
 ): AbstractUndertowVirtualThreadMvcTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `get response with virtual thread`() = runSuspendIO {

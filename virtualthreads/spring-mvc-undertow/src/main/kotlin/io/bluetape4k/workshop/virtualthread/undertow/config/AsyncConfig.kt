@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.virtualthread.undertow.config
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import kotlinx.coroutines.Runnable
 import org.slf4j.MDC
@@ -22,7 +22,7 @@ import java.util.concurrent.Executors
 @EnableAsync
 class AsyncConfig {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Bean(TaskExecutionAutoConfiguration.APPLICATION_TASK_EXECUTOR_BEAN_NAME)
     fun asyncTaskExecutor(): AsyncTaskExecutor {

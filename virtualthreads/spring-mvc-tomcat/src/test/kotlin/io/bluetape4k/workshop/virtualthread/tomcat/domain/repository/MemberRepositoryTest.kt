@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.virtualthread.tomcat.domain.repository
 
 import io.bluetape4k.concurrent.virtualthread.awaitAll
 import io.bluetape4k.concurrent.virtualthread.virtualFuture
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.virtualthread.tomcat.domain.AbstractDomainTest
 import io.bluetape4k.workshop.virtualthread.tomcat.domain.dto.MemberSearchCondition
@@ -19,7 +19,7 @@ class MemberRepositoryTest(
     @Autowired private val memberRepo: MemberRepository,
 ): AbstractDomainTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `context loading`() {

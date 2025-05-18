@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.virtualthread.tomcat.controller
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.virtualthread.tomcat.AbstractVirtualThreadMvcTest
@@ -20,7 +20,7 @@ class TeamRepositoryTest(
     @Autowired private val client: WebTestClient,
 ): AbstractVirtualThreadMvcTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `get all teams`() = runTest {

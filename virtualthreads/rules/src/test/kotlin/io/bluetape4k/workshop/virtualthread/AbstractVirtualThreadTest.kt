@@ -1,13 +1,13 @@
 package io.bluetape4k.workshop.virtualThreads
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import kotlinx.coroutines.delay
 import java.util.concurrent.TimeUnit
 
 abstract class AbstractVirtualThreadTest {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
 
         protected fun sleep(millis: Int) {
             TimeUnit.MILLISECONDS.sleep(millis.toLong())

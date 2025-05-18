@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.virtualthread.part3
 
 import io.bluetape4k.concurrent.virtualthread.structuredTaskScopeAll
 import io.bluetape4k.concurrent.virtualthread.structuredTaskScopeFirst
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 import java.util.concurrent.ExecutionException
@@ -10,7 +10,7 @@ import java.util.concurrent.StructuredTaskScope
 
 class StructuredConcurrencyExamples {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     data class Pasta(val name: String = "Spaghetti")
     data class Sauce(val name: String = "Tomato")

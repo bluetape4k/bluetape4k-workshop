@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.virtualthread.part1
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
@@ -9,7 +9,7 @@ import java.util.concurrent.Executors
 
 class Example5_VirtualThreadPerTaskExecutor {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `Virtual threads per Task Executor`() {

@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.virtualthread.part2
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import org.amshove.kluent.internal.assertFailsWith
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
@@ -15,7 +15,7 @@ import java.util.concurrent.StructuredTaskScope
  */
 class Rule5UseThreadLocalVariablesCarefully {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Nested
     inner class DoNot {

@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.virtualthread.part2
 
 import io.bluetape4k.concurrent.virtualthread.virtualFuture
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import kotlinx.atomicfu.locks.withLock
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -12,7 +12,7 @@ import java.util.concurrent.locks.ReentrantLock
  */
 class Rule6UseSynchronizedBlocksAndMethodsCarefully {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Nested
     inner class DoNot {

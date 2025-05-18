@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.virtualthread.part1
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test
 
 class Example1_PlatformAndVirtualThread {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private const val THREAD_SIZE = 100_000
     }
 

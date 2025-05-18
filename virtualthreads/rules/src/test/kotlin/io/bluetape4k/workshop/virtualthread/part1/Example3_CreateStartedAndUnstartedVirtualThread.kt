@@ -1,12 +1,12 @@
 package io.bluetape4k.workshop.virtualthread.part1
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 
 class Example3_CreateStartedAndUnstartedVirtualThread {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `자동 시작하는 Virtual Thread 생성하기`() {

@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.virtualthread.undertow.controller
 
 import io.bluetape4k.concurrent.virtualthread.virtualFuture
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -13,7 +13,7 @@ import kotlin.random.Random
 @RequestMapping("/virtual-thread")
 class VirtualThreadController(private val taskExecutor: ExecutorService) {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private const val SLEEP_TIME = 300L
     }
 

@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.virtualthread.part1
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.error
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test
 
 class Example2_PlatformAndVirtualThreadBuilder {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `Platform Thread Builder 사용`() {
