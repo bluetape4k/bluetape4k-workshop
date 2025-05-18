@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.coroutines.controller
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import io.bluetape4k.junit5.coroutines.runSuspendVT
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.spring.tests.httpPost
@@ -20,7 +20,7 @@ import org.springframework.test.web.reactive.server.expectBodyList
 
 class VTCoroutineControllerTest: AbstractCoroutineApplicationTest() {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private const val BASE_PATH = "/controller/vt"
     }
 

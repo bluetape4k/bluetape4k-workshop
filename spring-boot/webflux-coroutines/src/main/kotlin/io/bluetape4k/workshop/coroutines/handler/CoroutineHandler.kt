@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.coroutines.handler
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
 import io.bluetape4k.support.uninitialized
@@ -30,7 +30,7 @@ class CoroutineHandler(
     private val builder: WebClient.Builder,
 ): CoroutineScope by CoroutineScope(Dispatchers.IO + CoroutineName("handler")) {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private const val DEFAULT_DELAY = 500L
     }
 

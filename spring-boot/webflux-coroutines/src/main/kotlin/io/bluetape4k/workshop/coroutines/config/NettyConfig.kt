@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.coroutines.config
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.utils.Runtimex
 import io.netty.channel.ChannelOption
 import io.netty.handler.timeout.ReadTimeoutHandler
@@ -23,7 +23,7 @@ import java.time.Duration
 @Configuration
 class NettyConfig {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Bean
     fun nettyReactiveWebServerFactory(): NettyReactiveWebServerFactory {

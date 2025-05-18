@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.coroutines.controller
 
 import com.fasterxml.jackson.databind.JsonNode
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
 import io.bluetape4k.spring.webflux.controller.AbstractCoroutineDefaultController
@@ -32,7 +32,7 @@ class DefaultCoroutineController(
     private val builder: WebClient.Builder,
 ): AbstractCoroutineDefaultController() {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private const val DEFAULT_DELAY = 500L
     }
 

@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.coroutines
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.coroutines.handler.CoroutineHandler
 import org.springframework.boot.WebApplicationType
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -11,7 +11,7 @@ import org.springframework.web.reactive.function.server.coRouter
 @SpringBootApplication
 class CoroutinesDemoApplication {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Bean
     fun routes(coroutineHandler: CoroutineHandler) = coRouter {

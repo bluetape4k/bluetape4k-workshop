@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.coroutines.handler
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.coroutines.AbstractCoroutineApplicationTest
 import io.bluetape4k.workshop.coroutines.model.Banner
@@ -18,7 +18,7 @@ import org.springframework.test.web.reactive.server.returnResult
 
 class CoroutineHandlerTest: AbstractCoroutineApplicationTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun index() = runSuspendIO {
