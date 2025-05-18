@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.spring.modulith.services
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.faker.Fakers
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.spring.modulith.services.department.DepartmentDTO
 import io.bluetape4k.workshop.spring.modulith.services.employee.EmployeeDTO
 import kotlinx.coroutines.reactive.awaitSingle
@@ -21,7 +21,7 @@ import org.springframework.test.web.reactive.server.returnResult
 class AppRestControllerTest(
     @Autowired private val webClient: WebTestClient,
 ) {
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         val faker = Fakers.faker
     }
 

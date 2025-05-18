@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.spring.modulith.services.department
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.spring.modulith.services.OrganizationAddEvent
 import io.bluetape4k.workshop.spring.modulith.services.OrganizationRemoveEvent
 import io.bluetape4k.workshop.spring.modulith.services.department.mapper.DepartmentMapper
@@ -22,7 +22,7 @@ class DepartmentModuleTest(
     @Autowired private val mapper: DepartmentMapper,
 ) {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         const val TEST_ID = 100L
     }
 

@@ -1,10 +1,13 @@
 package io.bluetape4k.workshop.spring.modulith.services
 
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import org.junit.jupiter.api.Test
 import org.springframework.modulith.core.ApplicationModules
 import org.springframework.modulith.docs.Documenter
 
 class SpringModulithTest {
+
+    companion object: KLoggingChannel()
 
     val modules = ApplicationModules.of(SpringModulith::class.java)
 

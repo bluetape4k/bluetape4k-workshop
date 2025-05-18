@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.spring.modulith.services.employee
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.spring.modulith.services.OrganizationRemoveEvent
 import io.bluetape4k.workshop.spring.modulith.services.employee.repository.EmployeeRepository
 import org.amshove.kluent.shouldBeEqualTo
@@ -18,7 +18,7 @@ class EmployeeModuleTest(
     @Autowired private val repository: EmployeeRepository,
 ) {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     @Order(1)
