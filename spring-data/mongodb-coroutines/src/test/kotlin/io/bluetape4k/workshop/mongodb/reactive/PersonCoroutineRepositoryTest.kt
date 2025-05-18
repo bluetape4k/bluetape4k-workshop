@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.mongodb.reactive
 import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.coroutines.flow.extensions.subject.PublishSubject
 import io.bluetape4k.coroutines.support.log
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.mongodb.domain.Person
 import io.bluetape4k.workshop.mongodb.domain.PersonCoroutineRepository
 import kotlinx.coroutines.Dispatchers
@@ -30,7 +30,7 @@ class PersonCoroutineRepositoryTest @Autowired constructor(
     private val operations: ReactiveMongoOperations,
 ): AbstractReactiveMongoTest(operations) {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `insert and count`() = runTest {

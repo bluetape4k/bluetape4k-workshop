@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.mongodb.reactive
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.mongodb.AbstractMongodbTest
 import io.bluetape4k.workshop.mongodb.domain.Person
 import kotlinx.coroutines.Dispatchers
@@ -24,7 +24,7 @@ abstract class AbstractReactiveMongoTest(
     @Autowired private val operations: ReactiveMongoOperations,
 ): AbstractMongodbTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @BeforeEach
     fun beforeEach() {

@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.mongodb.domain
 
 import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.mongodb.AbstractMongodbTest
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
@@ -27,7 +27,7 @@ class FlowAndCoroutineTest(
     @Autowired private val operations: ReactiveMongoOperations,
 ): AbstractMongodbTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @BeforeEach
     fun beforeEach() = runTest {

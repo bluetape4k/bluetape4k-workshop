@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.mongodb.config
 
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import org.springframework.beans.factory.config.BeanPostProcessor
 import org.springframework.context.annotation.Bean
@@ -11,7 +12,7 @@ import java.util.concurrent.TimeUnit
 @Configuration(proxyBeanMethods = false)
 class RepositoryMetricsConfiguration {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Bean
     fun repoMetricsPostProcessor(): RepoMetricsPostProcessor {

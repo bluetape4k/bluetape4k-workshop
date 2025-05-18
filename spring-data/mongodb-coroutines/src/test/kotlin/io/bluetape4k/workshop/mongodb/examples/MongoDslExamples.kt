@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.mongodb.examples
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.mongodb.AbstractMongodbTest
 import io.bluetape4k.workshop.mongodb.domain.Person
 import org.amshove.kluent.shouldBeEqualTo
@@ -22,7 +22,7 @@ class MongoDslExamples(
     @Autowired private val operations: MongoOperations,
 ): AbstractMongodbTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @BeforeEach
     fun beforeEach() {

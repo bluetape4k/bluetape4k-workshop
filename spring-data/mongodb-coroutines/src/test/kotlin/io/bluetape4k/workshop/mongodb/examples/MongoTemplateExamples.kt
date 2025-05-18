@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.mongodb.examples
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.mongodb.AbstractMongodbTest
 import io.bluetape4k.workshop.mongodb.domain.Person
@@ -21,7 +21,7 @@ import org.springframework.data.mongodb.core.find
 import org.springframework.data.mongodb.core.findOne
 import org.springframework.data.mongodb.core.insert
 import org.springframework.data.mongodb.core.query
-import org.springframework.data.mongodb.core.query.Criteria
+import org.springframework.data.mongodb.core.query.Criteria.where
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.isEqualTo
 
@@ -29,7 +29,7 @@ class MongoTemplateExamples(
     @Autowired private val operations: MongoOperations,
 ): AbstractMongodbTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @BeforeEach
     fun beforeEach() {
@@ -47,7 +47,9 @@ class MongoTemplateExamples(
         val person = operations.insert<Person>().inCollection("person").one(newPerson())
 
         val persons = operations.query<Person>()
-            .matching(Query.query(Criteria.where(Person::firstname.name).isEqualTo(person.firstname)))
+            .matching(
+                Query.query(where(Person::firstname.name).isEqualTo(person.firstname))
+            )
             .all()
 
         persons.size shouldBeEqualTo 1
@@ -60,7 +62,9 @@ class MongoTemplateExamples(
 
         val people = operations.query<Person>()
             .asType<FirstnameOnly>()
-            .matching(Query.query(Criteria.where(Person::firstname.name).isEqualTo(person.firstname)))
+            .matching(
+                Query.query(where(Person::firstname.name).isEqualTo(person.firstname))
+            )
             .oneValue()
 
         people.shouldNotBeNull()
@@ -72,7 +76,9 @@ class MongoTemplateExamples(
         val person = operations.insert<Person>().inCollection("person").one(newPerson())
 
         val count = operations.query<Person>()
-            .matching(Query.query(Criteria.where(Person::firstname.name).isEqualTo(person.firstname)))
+            .matching(
+                Query.query(where(Person::firstname.name).isEqualTo(person.firstname))
+            )
             .count()
 
         count shouldBeEqualTo 1
@@ -82,7 +88,7 @@ class MongoTemplateExamples(
     fun `should insert and find person`() {
         val person = operations.insert(newPerson())
 
-        val query = Query.query(Criteria.where(Person::firstname.name).isEqualTo(person.firstname))
+        val query = Query.query(where(Person::firstname.name).isEqualTo(person.firstname))
         val persons = operations.find<Person>(query)
 
         persons.size shouldBeEqualTo 1
@@ -91,20 +97,25 @@ class MongoTemplateExamples(
 
     @Test
     fun `should apply defaulting for absent properties`() {
-        val document = operations.insert<Document>().inCollection("person").one(Document("lastname", "White"))
+        val document = operations.insert<Document>()
+            .inCollection("person")
+            .one(Document("lastname", "White"))
 
         val persons = operations.query<Person>()
-            .matching(Query.query(Criteria.where(Person::lastname.name).isEqualTo(document["lastname"])))
+            .matching(
+                Query.query(where(Person::lastname.name).isEqualTo(document["lastname"]))
+            )
             .firstValue()!!
 
         log.debug { "Load person=$persons" }
         persons.firstname shouldBeEqualTo "Walter" // Default 값을 사용합니다.
         persons.lastname shouldBeEqualTo document["lastname"]
 
-        val walter = operations.findOne<Document>(
-            Query.query(Criteria.where(Person::lastname.name).isEqualTo(document["lastname"])),
-            "person"
-        )
+        val walter = operations
+            .findOne<Document>(
+                Query.query(where(Person::lastname.name).isEqualTo(document["lastname"])),
+                "person"
+            )
 
         log.debug { "Load walter=$walter" }
         walter.shouldNotBeNull()
