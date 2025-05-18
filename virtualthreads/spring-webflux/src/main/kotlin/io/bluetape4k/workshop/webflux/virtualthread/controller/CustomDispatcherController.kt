@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.webflux.virtualthread.controller
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.webflux.virtualthread.controller.CustomDispatcherController.Companion.CUSTOM_PATH
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -15,7 +15,7 @@ class CustomDispatcherController(
     override val webClientBuilder: WebClient.Builder,
 ): AbstractDispatcherController(webClientBuilder) {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         internal const val CUSTOM_PATH = "custom"
     }
 

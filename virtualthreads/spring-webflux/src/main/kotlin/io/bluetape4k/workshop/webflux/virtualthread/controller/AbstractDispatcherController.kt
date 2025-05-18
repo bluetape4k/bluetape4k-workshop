@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.webflux.virtualthread.controller
 
 import com.fasterxml.jackson.databind.JsonNode
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.webflux.virtualthread.model.Banner
@@ -30,10 +30,10 @@ abstract class AbstractDispatcherController(
     protected val webClientBuilder: WebClient.Builder,
 ) {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         protected val faker = Faker()
 
-        protected const val DEFAULT_DELAY = 1000L
+        protected const val DEFAULT_DELAY = 100L
         protected const val FLOW_SIZE = 4
     }
 

@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.webflux.virtualthread.config
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.task.AsyncTaskExecutor
@@ -12,7 +12,7 @@ import java.util.concurrent.Executors
 @EnableAsync
 class AsyncConfig {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     private val virtualThreadFactory = Thread.ofVirtual()
         .inheritInheritableThreadLocals(true)

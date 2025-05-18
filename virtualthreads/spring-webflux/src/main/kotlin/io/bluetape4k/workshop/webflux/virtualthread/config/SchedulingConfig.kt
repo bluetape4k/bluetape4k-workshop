@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.webflux.virtualthread.config
 
+import io.bluetape4k.logging.KLogging
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.scheduling.TaskScheduler
@@ -11,6 +12,8 @@ import java.util.concurrent.Executors
 @EnableScheduling
 class SchedulingConfig {
 
+    companion object: KLogging()
+
     private val virtualThreadFactory = Thread.ofVirtual()
         .inheritInheritableThreadLocals(true)
         .name("vt-executor-", 0)
@@ -21,8 +24,10 @@ class SchedulingConfig {
      */
     @Bean
     fun taskScheduler(): TaskScheduler {
-        return ConcurrentTaskScheduler(
-            Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors() * 4, virtualThreadFactory)
+        val executor = Executors.newScheduledThreadPool(
+            Runtime.getRuntime().availableProcessors() * 4,
+            virtualThreadFactory
         )
+        return ConcurrentTaskScheduler(executor)
     }
 }

@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.webflux.virtualthread.controller
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import kotlinx.coroutines.ExecutorCoroutineDispatcher
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -22,7 +22,7 @@ class HttpbinController(
     private val webClientBuilder: WebClient.Builder,
 ) {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     private val webClient: WebClient by lazy {
         webClientBuilder.baseUrl("https://nghttp2.org/httpbin").build()
