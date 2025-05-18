@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.gateway.filter
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.gateway.RateLimitHeaders
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver
@@ -11,7 +11,7 @@ import reactor.core.publisher.Mono
 @Component
 class UserKeyResolver: KeyResolver {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     override fun resolve(exchange: ServerWebExchange): Mono<String> {
         val userKey = exchange.request.headers.getFirst(RateLimitHeaders.X_BLUETAPE4K_UID)

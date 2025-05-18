@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.gateway.routes
 
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.gateway.filter.UserKeyResolver
 import org.springframework.beans.factory.annotation.Autowired
@@ -14,6 +15,8 @@ import java.net.URI
 
 @Configuration(proxyBeanMethods = false)
 class DemoRoutes {
+
+    companion object: KLoggingChannel()
 
     val testUri = "https://nghttp2.org/"
 

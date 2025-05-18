@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.idgenerators.uuid.TimebasedUuid
 import io.bluetape4k.jackson.Jackson
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.error
 import io.bluetape4k.workshop.webflux.model.Event
 import io.bluetape4k.workshop.webflux.model.Quote
@@ -32,7 +32,7 @@ import kotlin.random.Random
 @Service
 class QuoteGenerator {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private val mapper by lazy { Jackson.defaultJsonMapper }
         private val MATH_CONTEXT = MathContext(2)
     }

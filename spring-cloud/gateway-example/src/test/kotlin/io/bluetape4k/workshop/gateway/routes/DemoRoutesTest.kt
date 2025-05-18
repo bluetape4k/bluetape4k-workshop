@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.gateway.routes
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.gateway.GatewayApplicationTest
@@ -18,7 +18,7 @@ class DemoRoutesTest(
     @Autowired private val client: WebTestClient,
 ): GatewayApplicationTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `context loading`() {

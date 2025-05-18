@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.webflux.handler
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.webflux.service.QuoteGenerator
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.socket.WebSocketHandler
@@ -13,7 +13,7 @@ class ReactiveWebSocketHandler(
     private val quoteGenerator: QuoteGenerator,
 ): WebSocketHandler {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     /**
      * Invoked when a new WebSocket connection is established, and allows

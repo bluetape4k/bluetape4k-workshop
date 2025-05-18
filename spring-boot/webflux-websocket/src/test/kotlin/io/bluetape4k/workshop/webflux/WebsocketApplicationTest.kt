@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.webflux
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.webflux.model.Event
@@ -23,7 +23,7 @@ import java.math.BigDecimal
 class WebsocketApplicationTest(
     @Autowired private val client: WebTestClient,
 ) {
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `context loading`() {

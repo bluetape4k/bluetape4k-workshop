@@ -1,11 +1,14 @@
 package io.bluetape4k.workshop.gateway.config
 
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration(proxyBeanMethods = false)
 class RateLimitConfig {
+
+    companion object: KLoggingChannel()
 
     /**
      * Spring Cloud Gateway 에서 제공하는 RateLimit 인데, 문제는 단순한 RateLimit 이라는 점이다.

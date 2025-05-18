@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.webflux.config
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.webflux.handler.ReactiveWebSocketHandler
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -11,7 +11,7 @@ import org.springframework.web.reactive.socket.server.support.WebSocketHandlerAd
 @Configuration
 class ReactiveWebSocketConfiguration {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Bean
     fun webSocketHandlerAdapter(): WebSocketHandlerAdapter {

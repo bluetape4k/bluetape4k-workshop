@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.webflux.config
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.webflux.service.QuoteGenerator
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -23,7 +23,7 @@ class SampleWebfluxRouter(
     @Value("classpath:/static/index.html")
     private val indexHtml: Resource,
 ) {
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Bean
     fun getIndex(): RouterFunction<ServerResponse> = coRouter {
