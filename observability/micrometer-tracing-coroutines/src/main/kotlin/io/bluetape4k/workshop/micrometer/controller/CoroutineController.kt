@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.micrometer.controller
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.spring.webflux.controller.AbstractCoroutineIOController
 import io.bluetape4k.workshop.micrometer.model.Todo
@@ -20,7 +20,7 @@ class CoroutineController(
     private val coroutineService: CoroutineService,
 ): AbstractCoroutineIOController() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @GetMapping("/name")
     suspend fun getName(): String {

@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.micrometer.service
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.micrometer.model.Todo
 import io.micrometer.observation.annotation.Observed
@@ -14,7 +14,8 @@ import java.time.Duration
 @Service
 @Observed
 class ReactorService(webClientBuilder: WebClient.Builder) {
-    companion object: KLogging() {
+
+    companion object: KLoggingChannel() {
         val faker = Faker()
     }
 

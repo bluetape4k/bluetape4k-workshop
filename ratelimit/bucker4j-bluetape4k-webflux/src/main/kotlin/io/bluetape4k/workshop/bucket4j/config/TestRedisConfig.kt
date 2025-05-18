@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.bucket4j.config
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import io.bluetape4k.support.sysProperty
 import io.bluetape4k.testcontainers.storage.RedisServer
@@ -15,7 +15,7 @@ import org.springframework.core.annotation.Order
 @Order(0)
 class TestRedisConfig {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         val redis = RedisServer(useDefaultPort = true).apply {
             start()
             ShutdownQueue.register(this)

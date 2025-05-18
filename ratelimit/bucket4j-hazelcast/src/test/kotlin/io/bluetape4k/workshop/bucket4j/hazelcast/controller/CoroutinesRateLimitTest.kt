@@ -1,12 +1,12 @@
 package io.bluetape4k.workshop.bucket4j.hazelcast.controller
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.bucket4j.hazelcast.AbstractRateLimitTest
 import org.junit.jupiter.api.Test
 
 class CoroutinesRateLimitTest: AbstractRateLimitTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `call hello with rate limit`() {

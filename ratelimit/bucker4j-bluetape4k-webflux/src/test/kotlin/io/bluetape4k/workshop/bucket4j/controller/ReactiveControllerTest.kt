@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.bucket4j.controller
 
 import io.bluetape4k.codec.Base58
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.bucket4j.AbstractRateLimiterApplicationTest
 import io.bluetape4k.workshop.bucket4j.utils.HeaderUtils
 import kotlinx.coroutines.reactive.awaitSingle
@@ -18,7 +18,7 @@ class ReactiveControllerTest(
     @Autowired private val client: WebTestClient,
 ): AbstractRateLimiterApplicationTest() {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private const val PATH_V1 = "/api/v1/reactive/hello"      // RateLimit이 걸려 있음
         private const val PATH_V2 = "/api/v2/reactive/hello"      // RateLimit이 걸려 있지 않음
         private const val LIMIT_COUNT = 5   // RateLimit요 WebFilter가 2개라서 

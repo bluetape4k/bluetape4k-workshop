@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.bucket4j
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.support.uninitialized
 import org.springframework.beans.factory.annotation.Autowired
@@ -13,7 +13,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 @ActiveProfiles("webflux")
 abstract class AbstractRateLimitTest {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Autowired
     protected val client: WebTestClient = uninitialized()

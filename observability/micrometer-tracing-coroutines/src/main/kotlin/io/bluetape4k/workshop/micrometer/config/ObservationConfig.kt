@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.micrometer.config
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.micrometer.observation.ObservationRegistry
 import io.micrometer.observation.aop.ObservedAspect
 import org.aspectj.lang.ProceedingJoinPoint
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController
 @ConditionalOnClass(ObservedAspect::class)
 class ObservationConfig {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Bean
     @ConditionalOnBean(ObservationRegistry::class)

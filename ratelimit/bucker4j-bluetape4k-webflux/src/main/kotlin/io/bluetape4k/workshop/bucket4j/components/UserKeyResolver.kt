@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.bucket4j.components
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.bucket4j.utils.HeaderUtils
 import org.springframework.stereotype.Component
 import org.springframework.web.server.ServerWebExchange
@@ -8,7 +8,7 @@ import org.springframework.web.server.ServerWebExchange
 @Component
 class UserKeyResolver: KeyResolver<String> {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     /**
      * [ServerWebExchange]의 Header [HeaderUtils.X_BLUETAPE4K_UID] 값을 추출하거나,

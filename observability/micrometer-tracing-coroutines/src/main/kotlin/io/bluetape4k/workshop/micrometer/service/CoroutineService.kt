@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.micrometer.service
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.micrometer.observation.coroutines.withObservationContext
 import io.bluetape4k.workshop.micrometer.model.Todo
@@ -18,7 +18,7 @@ class CoroutineService(
     private val observationRegistry: ObservationRegistry,
 ) {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private val faker = Faker()
     }
 

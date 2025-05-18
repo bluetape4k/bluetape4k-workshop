@@ -1,12 +1,12 @@
 package io.bluetape4k.workshop.bucket4j.controller
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.bucket4j.AbstractRateLimitTest
 import org.junit.jupiter.api.Test
 
 class ReactiveRateLimitTest: AbstractRateLimitTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `call reactive hello with rate limit`() {

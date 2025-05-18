@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.bucket4j.filter
 
 import io.bluetape4k.bucket4j.ratelimit.distributed.DistributedRateLimiter
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.trace
 import io.bluetape4k.logging.warn
 import io.bluetape4k.workshop.bucket4j.components.RateLimitTargetProvider
@@ -23,7 +23,7 @@ class UserRateLimitWebFilter(
     private val targetProvider: RateLimitTargetProvider,
 ): WebFilter {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     override fun filter(exchange: ServerWebExchange, chain: WebFilterChain): Mono<Void> {
         return doFilter(exchange, chain)

@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.micrometer.controller
 
+import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.micrometer.TracingApplication
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Controller
@@ -8,6 +9,8 @@ import org.springframework.web.reactive.result.view.RedirectView
 
 @Controller
 class IndexController {
+
+    companion object: KLogging()
 
     @GetMapping
     fun index(): ResponseEntity<String> {

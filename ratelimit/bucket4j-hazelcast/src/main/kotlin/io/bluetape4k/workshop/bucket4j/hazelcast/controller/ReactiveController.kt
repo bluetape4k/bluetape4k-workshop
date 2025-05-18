@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.bucket4j.hazelcast.controller
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import kotlinx.atomicfu.atomic
 import org.springframework.web.bind.annotation.GetMapping
@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono
 @RequestMapping("/reactive")
 class ReactiveController {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     private val helloCounter = atomic(0)
     private val worldCounter = atomic(0)

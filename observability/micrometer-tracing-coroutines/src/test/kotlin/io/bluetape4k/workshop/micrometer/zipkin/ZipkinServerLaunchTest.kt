@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.micrometer.zipkin
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.testcontainers.infra.ZipkinServer
 import io.bluetape4k.utils.Systemx
@@ -16,7 +16,7 @@ import kotlin.time.Duration.Companion.seconds
 
 class ZipkinServerLaunchTest {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     private val webClient = WebClient.create()
 

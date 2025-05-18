@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.micrometer.service
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.micrometer.AbstractTracingTest
 import kotlinx.coroutines.test.runTest
@@ -14,7 +14,7 @@ class CoroutineServiceTest(
     @Autowired private val service: CoroutineService,
 ): AbstractTracingTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `context loading`() {

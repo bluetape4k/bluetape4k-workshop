@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.bucket4j.controller
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
 import reactor.core.publisher.Mono
@@ -9,7 +9,7 @@ import java.time.Instant
 @RestController
 class ReactiveController {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     /**
      * `/api/v1/reactive/~~~` 는 Rate limit를 적용한다

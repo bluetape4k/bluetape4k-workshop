@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.micrometer.controller
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.micrometer.model.Todo
 import io.bluetape4k.workshop.micrometer.service.ReactorService
@@ -16,7 +16,7 @@ import java.time.Duration
 class ReactorController(
     private val reactorService: ReactorService,
 ) {
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @GetMapping("/name")
     fun getName(): Mono<String> {
