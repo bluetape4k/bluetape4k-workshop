@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.spring.security.webflux.jwt.controller
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.Authentication
@@ -14,7 +14,7 @@ import java.time.Instant
 @RestController
 class TokenController(@Autowired private val encoder: JwtEncoder) {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @PostMapping("/token")
     suspend fun token(authentication: Authentication): String {

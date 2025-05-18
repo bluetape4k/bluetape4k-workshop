@@ -4,7 +4,7 @@ import com.nimbusds.jose.jwk.JWKSet
 import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet
 import com.nimbusds.jose.proc.SecurityContext
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -31,7 +31,7 @@ import java.security.interfaces.RSAPublicKey
 @EnableWebFluxSecurity
 class JwtConfig {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Value("\${jwt.public.key}")
     private lateinit var publicKey: RSAPublicKey

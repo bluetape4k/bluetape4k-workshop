@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.spring.security.webflux
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.spring.tests.httpGet
 import kotlinx.coroutines.flow.toList
@@ -18,7 +18,7 @@ import org.springframework.test.web.reactive.server.returnResult
 @SpringBootTest
 class KotlinWebfluxApplicationTest {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     lateinit var client: WebTestClient
 

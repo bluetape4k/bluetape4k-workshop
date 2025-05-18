@@ -1,23 +1,23 @@
 package io.bluetape4k.workshop.spring.security.webflux.jwt.controller
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
+import io.bluetape4k.workshop.spring.security.webflux.jwt.AbstractJwtApplicationTest
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
-class HelloControllerTest(@Autowired private val client: WebTestClient) {
+class HelloControllerTest(
+    @Autowired private val client: WebTestClient,
+): AbstractJwtApplicationTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `context loading`() {
@@ -44,7 +44,9 @@ class HelloControllerTest(@Autowired private val client: WebTestClient) {
         // 발급받은 토큰으로 서버에 접근해야 한다
         val result = client.get()
             .uri("/")
-            .header("Authorization", "Bearer $token")
+            .headers {
+                it.setBearerAuth(token)
+            }
             .exchange()
             .expectStatus().isOk
             .returnResult<String>().responseBody
@@ -70,7 +72,9 @@ class HelloControllerTest(@Autowired private val client: WebTestClient) {
         // 발급받은 토큰으로 서버에 접근해야 한다
         val result = client.get()
             .uri("/")
-            .header("Authorization", "Bearer $token")
+            .headers {
+                it.setBearerAuth(token)
+            }
             .exchange()
             .expectStatus().isOk
             .returnResult<String>().responseBody
