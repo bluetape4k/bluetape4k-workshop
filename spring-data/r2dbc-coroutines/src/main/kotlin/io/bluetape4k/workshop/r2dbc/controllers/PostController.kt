@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.r2dbc.controllers
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.r2dbc.domain.Comment
 import io.bluetape4k.workshop.r2dbc.domain.CommentRepository
 import io.bluetape4k.workshop.r2dbc.domain.Post
@@ -20,7 +20,7 @@ class PostController(
     private val postRepository: PostRepository,
     private val commentRepository: CommentRepository,
 ) {
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @GetMapping
     fun findAll(): Flow<Post> = postRepository.findAll()

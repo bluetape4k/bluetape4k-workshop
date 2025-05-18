@@ -1,11 +1,11 @@
 package io.bluetape4k.workshop.r2dbc.exception
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.r2dbc.spi.R2dbcException
 
 open class PostNotFoundException: R2dbcException {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private fun getMessage(postId: Long): String = "Post[$postId] is not found."
     }
 

@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.mongodbdb.imperative
+package io.bluetape4k.workshop.mongodb.imperative
 
 import com.mongodb.client.MongoClient
 import com.mongodb.client.model.Filters
@@ -7,11 +7,12 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
 import io.bluetape4k.support.uninitialized
-import io.bluetape4k.workshop.mongodbdb.AbstractMongodbTest
-import io.bluetape4k.workshop.mongodbdb.Process
-import io.bluetape4k.workshop.mongodbdb.State
+import io.bluetape4k.workshop.mongodb.AbstractMongodbTest
+import io.bluetape4k.workshop.mongodb.Process
+import io.bluetape4k.workshop.mongodb.State
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeNull
+import org.bson.Document
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -91,7 +92,7 @@ class TransitionServiceTest: AbstractMongodbTest() {
         }
 
         client.getDatabase(DATABASE_NAME).getCollection("processes")
-            .find(org.bson.Document())
+            .find(Document())
             .forEach {
                 log.debug { "process=$it" }
             }

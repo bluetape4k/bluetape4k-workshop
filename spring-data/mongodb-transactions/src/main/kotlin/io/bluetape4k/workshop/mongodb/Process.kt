@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.mongodbdb
+package io.bluetape4k.workshop.mongodb
 
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document

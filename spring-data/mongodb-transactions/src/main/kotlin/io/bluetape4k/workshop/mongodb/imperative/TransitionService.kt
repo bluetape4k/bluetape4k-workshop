@@ -1,8 +1,8 @@
-package io.bluetape4k.workshop.mongodbdb.imperative
+package io.bluetape4k.workshop.mongodb.imperative
 
-import io.bluetape4k.logging.KLogging
-import io.bluetape4k.workshop.mongodbdb.Process
-import io.bluetape4k.workshop.mongodbdb.State
+import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.workshop.mongodb.Process
+import io.bluetape4k.workshop.mongodb.State
 import kotlinx.atomicfu.atomic
 import org.springframework.data.mongodb.core.MongoOperations
 import org.springframework.data.mongodb.core.query.Criteria
@@ -18,7 +18,7 @@ class TransitionService(
     private val repository: ProcessRepository,
     private val operations: MongoOperations,
 ) {
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     private val counter = atomic(0)
 

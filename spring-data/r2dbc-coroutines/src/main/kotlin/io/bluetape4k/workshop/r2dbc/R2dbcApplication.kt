@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.r2dbc
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.r2dbc.connection.init.connectionFactoryInitializer
 import io.bluetape4k.r2dbc.connection.init.resourceDatabasePopulatorOf
 import io.r2dbc.spi.ConnectionFactories
@@ -17,7 +17,7 @@ import org.springframework.r2dbc.connection.init.ConnectionFactoryInitializer
 @SpringBootApplication
 class R2dbcApplication: AbstractR2dbcConfiguration() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     override fun connectionFactory(): ConnectionFactory {
         // TODO: 환경설정 때문에 h2 로 테스트 했습니다.

@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.r2dbc.controllers
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.spring.tests.httpPost
@@ -25,7 +25,7 @@ class PostControllerTest(
     @Autowired private val client: WebTestClient,
 ): AbstractR2dbcApplicationTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `find all posts`() = runSuspendIO {

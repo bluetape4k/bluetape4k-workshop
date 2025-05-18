@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.mongodbdb
+package io.bluetape4k.workshop.mongodb
 
 enum class State {
     UNKNOWN,

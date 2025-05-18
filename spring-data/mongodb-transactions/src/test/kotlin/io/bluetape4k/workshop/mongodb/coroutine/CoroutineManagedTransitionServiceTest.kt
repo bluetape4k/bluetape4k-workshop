@@ -1,15 +1,15 @@
-package io.bluetape4k.workshop.mongodbdb.coroutine
+package io.bluetape4k.workshop.mongodb.coroutine
 
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Projections
 import com.mongodb.reactivestreams.client.MongoClient
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
 import io.bluetape4k.support.uninitialized
-import io.bluetape4k.workshop.mongodbdb.AbstractMongodbTest
-import io.bluetape4k.workshop.mongodbdb.Process
-import io.bluetape4k.workshop.mongodbdb.State
+import io.bluetape4k.workshop.mongodb.AbstractMongodbTest
+import io.bluetape4k.workshop.mongodb.Process
+import io.bluetape4k.workshop.mongodb.State
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.reactive.asFlow
@@ -18,6 +18,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeNull
+import org.bson.Document
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -36,7 +37,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 @ContextConfiguration(classes = [CoroutineManagedTransitionServiceTest.TestConfig::class])
 class CoroutineManagedTransitionServiceTest: AbstractMongodbTest() {
 
-    companion object: KLogging() {
+    companion object: KLoggingChannel() {
         private const val DATABASE_NAME = "spring-data-mongodb-transactions-coroutines-demo"
     }
 
@@ -96,7 +97,7 @@ class CoroutineManagedTransitionServiceTest: AbstractMongodbTest() {
         }
 
         client.getDatabase(DATABASE_NAME).getCollection("processes")
-            .find(org.bson.Document())
+            .find(Document())
             .asFlow()
             .onEach {
                 log.debug { "process=$it" }

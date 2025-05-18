@@ -1,13 +1,14 @@
-package io.bluetape4k.workshop.mongodbdb.reactive
+package io.bluetape4k.workshop.mongodb.reactive
 
 import com.mongodb.reactivestreams.client.MongoClient
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.uninitialized
-import io.bluetape4k.workshop.mongodbdb.AbstractMongodbTest
-import io.bluetape4k.workshop.mongodbdb.State
+import io.bluetape4k.workshop.mongodb.AbstractMongodbTest
+import io.bluetape4k.workshop.mongodb.State
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeNull
+import org.bson.Document
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -82,7 +83,7 @@ class ReactiveManagedTransitionServiceTest: AbstractMongodbTest() {
         val documents = client
             .getDatabase(DATABASE_NAME)
             .getCollection("processes")
-            .find(org.bson.Document())
+            .find(Document())
 
         Flux.from(documents)
             .buffer(10)

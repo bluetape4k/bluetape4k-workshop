@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.r2dbc.domain
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.r2dbc.AbstractR2dbcApplicationTest
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
@@ -16,7 +16,7 @@ class CommentRepositoryTest(
     @Autowired private val commentRepository: CommentRepository,
 ): AbstractR2dbcApplicationTest() {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @Test
     fun `find comments by post id`() = runTest {
