@@ -2,6 +2,7 @@ plugins {
     kotlin("plugin.spring")
     kotlin("plugin.noarg")
     id(Plugins.spring_boot)
+    id(Plugins.graalvm_native)
 }
 
 springBoot {
