@@ -1,3 +1,5 @@
 spring:
     application:
         name: sample-webflux-websockets
+    aot:
+        enabled: true  # AOT (Ahead Of Time) 컴파일 활성화

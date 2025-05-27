@@ -1,5 +1,12 @@
 plugins {
     kotlin("plugin.spring")
+    id(Plugins.spring_boot)
+    id(Plugins.graalvm_native)
+}
+
+springBoot {
+    mainClass.set("io.bluetape4k.workshop.redis.RedisApplicationKt")
+    buildInfo()
 }
 
 configurations {

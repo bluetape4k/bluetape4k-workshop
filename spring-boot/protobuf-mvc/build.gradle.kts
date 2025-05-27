@@ -6,6 +6,7 @@ plugins {
     id(Plugins.protobuf) version Plugins.Versions.protobuf
     kotlin("plugin.spring")
     id(Plugins.spring_boot)
+    id(Plugins.graalvm_native)
 }
 
 idea {
