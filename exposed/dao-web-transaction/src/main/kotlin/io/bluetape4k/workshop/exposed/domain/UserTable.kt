@@ -3,15 +3,15 @@ package io.bluetape4k.workshop.exposed.domain
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
 import io.bluetape4k.exposed.dao.toStringBuilder
-import org.jetbrains.exposed.dao.Entity
-import org.jetbrains.exposed.dao.EntityClass
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.ColumnTransformer
-import org.jetbrains.exposed.sql.ColumnWithTransform
-import org.jetbrains.exposed.sql.LongColumnType
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.ColumnTransformer
+import org.jetbrains.exposed.v1.core.ColumnWithTransform
+import org.jetbrains.exposed.v1.core.LongColumnType
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.dao.Entity
+import org.jetbrains.exposed.v1.dao.EntityClass
 
 
 fun Table.userId(name: String): Column<UserId> =

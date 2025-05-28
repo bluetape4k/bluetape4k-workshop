@@ -11,13 +11,13 @@ import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.SortOrder.DESC
-import org.jetbrains.exposed.sql.alias
-import org.jetbrains.exposed.sql.batchInsert
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.alias
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.jdbc.batchInsert
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.*
@@ -142,7 +142,7 @@ class FetchBatchedResultsTest: AbstractExposedTest() {
             }
 
             val batches = cities.selectAll().where { cities.id less 51 }
-                .fetchBatchedResults(batchSize = BATCH_SIZE, sortOrder = DESC)
+                .fetchBatchedResults(batchSize = BATCH_SIZE, sortOrder = SortOrder.DESC)
                 .toList()
                 .map { it.toCityNameList() }
 

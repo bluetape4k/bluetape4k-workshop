@@ -13,32 +13,33 @@ import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeEqualTo
 import org.amshove.kluent.shouldNotBeNull
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.dao.id.UUIDTable
-import org.jetbrains.exposed.exceptions.UnsupportedByDialectException
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.concat
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.like
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.minus
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.neq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.times
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.batchUpsert
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.insertAndGetId
-import org.jetbrains.exposed.sql.intLiteral
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.statements.BatchUpsertStatement
-import org.jetbrains.exposed.sql.statements.InsertStatement
-import org.jetbrains.exposed.sql.statements.UpdateStatement
-import org.jetbrains.exposed.sql.statements.UpsertBuilder
-import org.jetbrains.exposed.sql.stringLiteral
-import org.jetbrains.exposed.sql.stringParam
-import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.upsert
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.concat
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.less
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.minus
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.neq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.plus
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.times
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.intLiteral
+import org.jetbrains.exposed.v1.core.statements.BatchUpsertStatement
+import org.jetbrains.exposed.v1.core.statements.InsertStatement
+import org.jetbrains.exposed.v1.core.statements.UpdateStatement
+import org.jetbrains.exposed.v1.core.statements.UpsertBuilder
+import org.jetbrains.exposed.v1.core.stringLiteral
+import org.jetbrains.exposed.v1.core.stringParam
+import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
+import org.jetbrains.exposed.v1.jdbc.batchUpsert
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.upsert
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -1076,7 +1077,7 @@ class UpsertTest: AbstractExposedTest() {
 
             /**
              * `upsert` 작업 중 `update` 시에만 조건 절을 지정할 수 있다.
-             * 
+             *
              * Postgres;
              * ```sql
              * INSERT INTO tester ("name", age) VALUES ('Anya', 20)
@@ -1167,7 +1168,7 @@ class UpsertTest: AbstractExposedTest() {
 
             /**
              * `upsert` 작업 중 `name` 컬럼에 subquery 결과를 사용한다.
-             * 
+             *
              * MySQL:
              * ```sql
              * INSERT INTO tester_2 (id, `name`)

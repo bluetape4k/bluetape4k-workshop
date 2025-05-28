@@ -4,6 +4,7 @@ plugins {
     kotlin("plugin.noarg")
     kotlin("kapt")
     id(Plugins.spring_boot)
+    id(Plugins.graalvm_native)
     id(Plugins.gatling) version Plugins.Versions.gatling
 }
 

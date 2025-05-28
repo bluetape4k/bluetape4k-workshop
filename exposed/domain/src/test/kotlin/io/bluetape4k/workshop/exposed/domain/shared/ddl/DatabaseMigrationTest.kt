@@ -1,12 +1,12 @@
 package io.bluetape4k.workshop.exposed.domain.shared.ddl
 
-import MigrationUtils
 import io.bluetape4k.collections.tryForEach
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.TestDB.H2_V1
 import io.bluetape4k.workshop.exposed.TestDB.MARIADB
+import io.bluetape4k.workshop.exposed.currentDialectMetadataTest
 import io.bluetape4k.workshop.exposed.currentDialectTest
 import io.bluetape4k.workshop.exposed.expectException
 import io.bluetape4k.workshop.exposed.inProperCase
@@ -19,26 +19,27 @@ import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldStartWithIgnoringCase
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.ExperimentalDatabaseMigrationApi
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.byteLiteral
-import org.jetbrains.exposed.sql.decimalLiteral
-import org.jetbrains.exposed.sql.doubleLiteral
-import org.jetbrains.exposed.sql.exists
-import org.jetbrains.exposed.sql.floatLiteral
-import org.jetbrains.exposed.sql.intLiteral
-import org.jetbrains.exposed.sql.longLiteral
-import org.jetbrains.exposed.sql.shortLiteral
-import org.jetbrains.exposed.sql.ubyteLiteral
-import org.jetbrains.exposed.sql.uintLiteral
-import org.jetbrains.exposed.sql.ulongLiteral
-import org.jetbrains.exposed.sql.ushortLiteral
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.sql.vendors.PrimaryKeyMetadata
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.ExperimentalDatabaseMigrationApi
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.byteLiteral
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.core.decimalLiteral
+import org.jetbrains.exposed.v1.core.doubleLiteral
+import org.jetbrains.exposed.v1.core.floatLiteral
+import org.jetbrains.exposed.v1.core.intLiteral
+import org.jetbrains.exposed.v1.core.longLiteral
+import org.jetbrains.exposed.v1.core.shortLiteral
+import org.jetbrains.exposed.v1.core.ubyteLiteral
+import org.jetbrains.exposed.v1.core.uintLiteral
+import org.jetbrains.exposed.v1.core.ulongLiteral
+import org.jetbrains.exposed.v1.core.ushortLiteral
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.exists
+import org.jetbrains.exposed.v1.migration.MigrationUtils
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -52,8 +53,8 @@ class DatabaseMigrationTest: AbstractExposedTest() {
     private fun TestDB.dropAllSequence() {
         withDb(this) {
             if (currentDialectTest.supportsCreateSequence) {
-                val allSequences = currentDialectTest.sequences()
-                    .map { name -> org.jetbrains.exposed.sql.Sequence(name) }
+                val allSequences = currentDialectMetadataTest.sequences()
+                    .map { name -> org.jetbrains.exposed.v1.core.Sequence(name) }
                     .toSet()
 
                 allSequences.forEach { sequence ->
@@ -282,7 +283,8 @@ class DatabaseMigrationTest: AbstractExposedTest() {
         }
 
         withTables(testDB, noPKTable) {
-            val primaryKey: PrimaryKeyMetadata? = currentDialectTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
+            val primaryKey: PrimaryKeyMetadata? =
+                currentDialectMetadataTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
             primaryKey.shouldBeNull()
 
             val expected =
@@ -988,7 +990,7 @@ class DatabaseMigrationTest: AbstractExposedTest() {
     private fun expectedDropSequenceStatement(sequenceName: String) =
         "DROP SEQUENCE${" IF EXISTS".takeIf { currentDialectTest.supportsIfNotExists } ?: ""} $sequenceName"
 
-    private val sequence = org.jetbrains.exposed.sql.Sequence(
+    private val sequence = org.jetbrains.exposed.v1.core.Sequence(
         name = "my_sequence",
         startWith = 1,
         minValue = 1,

@@ -9,22 +9,23 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldContainSame
 import org.amshove.kluent.shouldHaveSize
-import org.jetbrains.exposed.sql.Query
-import org.jetbrains.exposed.sql.SetOperation
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.alias
-import org.jetbrains.exposed.sql.except
-import org.jetbrains.exposed.sql.intLiteral
-import org.jetbrains.exposed.sql.intersect
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.stringLiteral
-import org.jetbrains.exposed.sql.union
-import org.jetbrains.exposed.sql.unionAll
-import org.jetbrains.exposed.sql.vendors.H2Dialect
-import org.jetbrains.exposed.sql.vendors.MariaDBDialect
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.alias
+import org.jetbrains.exposed.v1.core.intLiteral
+import org.jetbrains.exposed.v1.core.stringLiteral
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.core.vendors.MariaDBDialect
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
+import org.jetbrains.exposed.v1.jdbc.Query
+import org.jetbrains.exposed.v1.jdbc.SetOperation
+import org.jetbrains.exposed.v1.jdbc.except
+import org.jetbrains.exposed.v1.jdbc.intersect
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.union
+import org.jetbrains.exposed.v1.jdbc.unionAll
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -239,10 +240,10 @@ class UnionTest: AbstractExposedTest() {
                 is PostgreSQLDialect,
                 is SQLServerDialect,
                 is MariaDBDialect,
-                             -> true
+                    -> true
 
                 is H2Dialect -> (currentDialect as H2Dialect).isSecondVersion
-                else         -> false
+                else -> false
             }
             log.debug { "intersectAppliedFirst: $intersectAppliedFirst" }
 
@@ -591,7 +592,7 @@ class UnionTest: AbstractExposedTest() {
      *  WHERE users.id = 'andrey'
      *
      * UNION ALL
-     * 
+     *
      * SELECT users.id, users."name", users.city_id, users.flags
      *   FROM users
      *  WHERE users.id = 'andrey'

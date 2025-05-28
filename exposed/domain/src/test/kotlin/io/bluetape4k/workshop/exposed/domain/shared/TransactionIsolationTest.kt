@@ -8,12 +8,12 @@ import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withDb
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeNull
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.DatabaseConfig
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.DatabaseConfig
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -127,17 +127,17 @@ class TransactionIsolationTest: AbstractExposedTest() {
         }
     }
 
-    private fun Transaction.assertTransactionIsolationLevel(testDB: TestDB, expected: Int) {
+    private fun JdbcTransaction.assertTransactionIsolationLevel(testDB: TestDB, expected: Int) {
         val (sql, repeatable, committed) = when (testDB) {
-            TestDB.POSTGRESQL   -> Triple("SHOW TRANSACTION ISOLATION LEVEL", "repeatable read", "read committed")
+            TestDB.POSTGRESQL -> Triple("SHOW TRANSACTION ISOLATION LEVEL", "repeatable read", "read committed")
             in TestDB.ALL_MYSQL_MARIADB -> Triple("SELECT @@tx_isolation", "REPEATABLE-READ", "READ-COMMITTED")
-            else                -> throw UnsupportedOperationException("Unsupported testDB: $testDB")
+            else -> throw UnsupportedOperationException("Unsupported testDB: $testDB")
         }
 
         val expectedLevel = when (expected) {
-            Connection.TRANSACTION_READ_COMMITTED  -> committed
+            Connection.TRANSACTION_READ_COMMITTED -> committed
             Connection.TRANSACTION_REPEATABLE_READ -> repeatable
-            else                                   -> throw UnsupportedOperationException("Unsupported transaction isolation level: $expected")
+            else -> throw UnsupportedOperationException("Unsupported transaction isolation level: $expected")
         }
 
         val actual = exec("$sql;") { resultSet ->

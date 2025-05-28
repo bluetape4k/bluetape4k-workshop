@@ -12,18 +12,19 @@ import io.bluetape4k.workshop.exposed.domain.mapping.withPersonsAndAddress
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeEmpty
-import org.jetbrains.exposed.dao.with
-import org.jetbrains.exposed.exceptions.ExposedSQLException
-import org.jetbrains.exposed.sql.Join
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.alias
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.innerJoin
-import org.jetbrains.exposed.sql.leftJoin
-import org.jetbrains.exposed.sql.max
-import org.jetbrains.exposed.sql.rightJoin
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.union
+import org.jetbrains.exposed.v1.core.Join
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.alias
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.innerJoin
+import org.jetbrains.exposed.v1.core.leftJoin
+import org.jetbrains.exposed.v1.core.max
+import org.jetbrains.exposed.v1.core.rightJoin
+import org.jetbrains.exposed.v1.dao.with
+import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.union
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.params.ParameterizedTest
@@ -339,8 +340,8 @@ class JoinTest {
 
 
                 val records = leftJoin.select(slice).union(rightJoin.select(slice))
-                    .orderBy(orderIdAlias, SortOrder.ASC_NULLS_FIRST)
-                    .orderBy(itemIdAlias, SortOrder.ASC_NULLS_FIRST)
+                    .orderBy(orderIdAlias to SortOrder.ASC_NULLS_FIRST)
+                    .orderBy(itemIdAlias to SortOrder.ASC_NULLS_FIRST)
                     .map {
                         OrderRecord(
                             itemId = it[itemIdAlias]?.value,
@@ -1082,7 +1083,7 @@ class JoinTest {
         @MethodSource(ENABLE_DIALECTS_METHOD)
         fun `self join`(testDB: TestDB) {
             Assumptions.assumeTrue { testDB !in TestDB.ALL_MARIADB }
-            
+
             withOrdersTables(testDB) { _, _, _, _, users ->
                 val u1 = users.alias("u1")
                 val u2 = users.alias("u2")
@@ -1135,7 +1136,7 @@ class JoinTest {
         @MethodSource(ENABLE_DIALECTS_METHOD)
         fun `self join with new alias`(testDB: TestDB) {
             Assumptions.assumeTrue { testDB !in TestDB.ALL_MARIADB }
-            
+
             withOrdersTables(testDB) { _, _, _, _, users ->
                 val u2 = users.alias("u2")
 
@@ -1185,7 +1186,7 @@ class JoinTest {
         @MethodSource(ENABLE_DIALECTS_METHOD)
         fun `covering index`(testDB: TestDB) {
             Assumptions.assumeTrue { testDB !in TestDB.ALL_MARIADB }
-            
+
             withPersonsAndAddress(testDB) { persons, _ ->
                 // convering index 에 해당하는 subquery
                 val p2 = persons
@@ -1229,7 +1230,7 @@ class JoinTest {
         @MethodSource(ENABLE_DIALECTS_METHOD)
         fun `subquery in join`(testDB: TestDB) {
             Assumptions.assumeTrue { testDB !in TestDB.ALL_MARIADB }
-            
+
             withPersonsAndAddress(testDB) { persons, _ ->
                 // Subquery 용 alias
                 val p2 = persons.select(persons.id)

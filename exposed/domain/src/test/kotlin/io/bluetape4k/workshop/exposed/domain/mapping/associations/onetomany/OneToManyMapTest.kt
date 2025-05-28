@@ -11,19 +11,20 @@ import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldContainSame
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
-import org.jetbrains.exposed.dao.entityCache
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.ReferenceOption.CASCADE
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.dao.IntEntity
+import org.jetbrains.exposed.v1.dao.IntEntityClass
+import org.jetbrains.exposed.v1.dao.entityCache
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.io.Serializable
@@ -138,7 +139,8 @@ class OneToManyMapTest: AbstractExposedTest() {
      * ```
      */
     object CarOptionTable: Table("car_option") {
-        val carId = reference("car_id", CarTable, onDelete = CASCADE, onUpdate = CASCADE)
+        val carId =
+            reference("car_id", CarTable, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE)
         val optionKey = varchar("option_key", 255)
         val name = varchar("name", 255)
         val price = integer("price").default(0)
@@ -181,10 +183,12 @@ class OneToManyMapTest: AbstractExposedTest() {
      * ```
      */
     object CarPartMapTable: Table("car_part_map") {
-        val carId = reference("car_id", CarTable, onDelete = CASCADE, onUpdate = CASCADE)
+        val carId =
+            reference("car_id", CarTable, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE)
         val partKey = varchar("part_key", 255)
 
-        val partId = reference("part_id", CarPartTable, onDelete = CASCADE, onUpdate = CASCADE)
+        val partId =
+            reference("part_id", CarPartTable, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE)
 
         init {
             uniqueIndex(carId, partKey)

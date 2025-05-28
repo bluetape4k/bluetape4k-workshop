@@ -5,13 +5,14 @@ import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
 import java.math.BigDecimal
 import java.math.RoundingMode
 
-typealias SqlFunction<T> = org.jetbrains.exposed.sql.Function<T>
+typealias SqlFunction<T> = org.jetbrains.exposed.v1.core.Function<T>
 
 abstract class AbstractFunctionsTest: AbstractExposedTest() {
 
@@ -26,7 +27,7 @@ abstract class AbstractFunctionsTest: AbstractExposedTest() {
      */
     private object FakeTestTable: IntIdTable("fakeTable")
 
-    protected fun withTable(testDB: TestDB, body: Transaction.(TestDB) -> Unit) {
+    protected fun withTable(testDB: TestDB, body: JdbcTransaction.(TestDB) -> Unit) {
         withTables(testDB, FakeTestTable) {
             FakeTestTable.insert { }
             body(it)

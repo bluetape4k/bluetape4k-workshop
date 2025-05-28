@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.exposed.domain.shared.ddl
 
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.currentDialectMetadataTest
 import io.bluetape4k.workshop.exposed.currentDialectTest
 import io.bluetape4k.workshop.exposed.withDb
 import io.bluetape4k.workshop.exposed.withSchemas
@@ -12,24 +13,23 @@ import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldContain
 import org.amshove.kluent.shouldStartWith
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.Coalesce
-import org.jetbrains.exposed.sql.Index
-import org.jetbrains.exposed.sql.Op.TRUE
-import org.jetbrains.exposed.sql.Schema
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.neq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.times
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.exists
-import org.jetbrains.exposed.sql.lowerCase
-import org.jetbrains.exposed.sql.stringLiteral
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.sql.vendors.SQLServerDialect
-import org.jetbrains.exposed.sql.vendors.SQLiteDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.v1.core.Coalesce
+import org.jetbrains.exposed.v1.core.Index
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.Schema
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.neq
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.times
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.lowerCase
+import org.jetbrains.exposed.v1.core.stringLiteral
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.exists
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -146,7 +146,7 @@ class CreateIndexTest: AbstractExposedTest() {
 
     /**
      * 컬럼이 특정 조건일 때에만 인덱싱 되는 partial index 정의
-     * 
+     *
      * ```sql
      * -- Postgres
      * CREATE TABLE IF NOT EXISTS partialindextabletest (
@@ -271,7 +271,7 @@ class CreateIndexTest: AbstractExposedTest() {
                 true,
                 "team_only_index",
                 null,
-                TRUE
+                Op.TRUE
             ).dropStatement().first()
 
             val dropStatements = indices.map { it.dropStatement().first() }
@@ -330,7 +330,7 @@ class CreateIndexTest: AbstractExposedTest() {
                 is PostgreSQLDialect, is SQLServerDialect, is SQLiteDialect -> 1
                 else -> 0
             }
-            val actualIndexCount = currentDialectTest.existingIndices(tester)[tester].orEmpty().size
+            val actualIndexCount = currentDialectMetadataTest.existingIndices(tester)[tester].orEmpty().size
             actualIndexCount shouldBeEqualTo expectedIndexCount
         }
     }
@@ -371,7 +371,7 @@ class CreateIndexTest: AbstractExposedTest() {
             SchemaUtils.createMissingTablesAndColumns()
 //            val statemnts = MigrationUtils.statementsRequiredForDatabaseMigration()
 //            exec(statemnts.joinToString(";"))
-            
+
             tester.exists().shouldBeTrue()
 
             var indices = getIndices(tester)
@@ -385,8 +385,8 @@ class CreateIndexTest: AbstractExposedTest() {
         }
     }
 
-    private fun Transaction.getIndices(table: Table): List<Index> {
-        db.dialect.resetCaches()
-        return currentDialect.existingIndices(table)[table].orEmpty()
+    private fun JdbcTransaction.getIndices(table: Table): List<Index> {
+        db.dialectMetadata.resetCaches()
+        return currentDialectMetadataTest.existingIndices(table)[table].orEmpty()
     }
 }

@@ -7,10 +7,10 @@ import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
 import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.workshop.exposed.domain.mapping.associations.manytomany.MemberSchema.UserStatus.UNKNOWN
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.kotlin.datetime.CurrentDateTime
-import org.jetbrains.exposed.sql.kotlin.datetime.datetime
+import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.javatime.CurrentDateTime
+import org.jetbrains.exposed.v1.javatime.datetime
 import java.util.*
 
 object MemberSchema {
@@ -151,5 +151,4 @@ object MemberSchema {
         INACTIVE,
         BANNED;
     }
-
 }

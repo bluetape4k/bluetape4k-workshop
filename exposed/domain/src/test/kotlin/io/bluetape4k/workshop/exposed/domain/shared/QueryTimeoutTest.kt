@@ -9,8 +9,8 @@ import io.bluetape4k.workshop.exposed.TestDB.POSTGRESQL
 import io.bluetape4k.workshop.exposed.TestDB.POSTGRESQLNG
 import io.bluetape4k.workshop.exposed.withDb
 import org.amshove.kluent.shouldBeInstanceOf
-import org.jetbrains.exposed.exceptions.ExposedSQLException
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -21,11 +21,11 @@ import java.sql.SQLTimeoutException
 import kotlin.test.fail
 
 /**
- * [org.jetbrains.exposed.sql.Transaction.queryTimeout] 을 설정하여 SQL 쿼리 실행 시 Timeout 을 테스트합니다.
+ * [org.jetbrains.exposed.v1.core.Transaction.queryTimeout] 을 설정하여 SQL 쿼리 실행 시 Timeout 을 테스트합니다.
  *
- * [org.jetbrains.exposed.sql.Transaction.queryTimeout] = 0 이면 Timeout 이 없음을 의미합니다.
+ * [org.jetbrains.exposed.v1.core.Transaction.queryTimeout] = 0 이면 Timeout 이 없음을 의미합니다.
  *
- * [org.jetbrains.exposed.sql.Transaction.queryTimeout] < 0 이면 예외가 발생합니다.
+ * [org.jetbrains.exposed.v1.core.Transaction.queryTimeout] < 0 이면 예외가 발생합니다.
  */
 class QueryTimeoutTest: AbstractExposedTest() {
 

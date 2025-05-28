@@ -8,22 +8,23 @@ import io.bluetape4k.workshop.exposed.currentDialectTest
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldEndWithIgnoringCase
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.byteParam
-import org.jetbrains.exposed.sql.decimalParam
-import org.jetbrains.exposed.sql.doubleParam
-import org.jetbrains.exposed.sql.floatParam
-import org.jetbrains.exposed.sql.functions.math.RoundFunction
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.intParam
-import org.jetbrains.exposed.sql.longParam
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.shortParam
-import org.jetbrains.exposed.sql.ubyteParam
-import org.jetbrains.exposed.sql.uintParam
-import org.jetbrains.exposed.sql.ulongParam
-import org.jetbrains.exposed.sql.ushortParam
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.byteParam
+import org.jetbrains.exposed.v1.core.decimalParam
+import org.jetbrains.exposed.v1.core.doubleParam
+import org.jetbrains.exposed.v1.core.floatParam
+import org.jetbrains.exposed.v1.core.functions.math.RoundFunction
+import org.jetbrains.exposed.v1.core.intParam
+import org.jetbrains.exposed.v1.core.longParam
+import org.jetbrains.exposed.v1.core.shortParam
+import org.jetbrains.exposed.v1.core.ubyteParam
+import org.jetbrains.exposed.v1.core.uintParam
+import org.jetbrains.exposed.v1.core.ulongParam
+import org.jetbrains.exposed.v1.core.ushortParam
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
@@ -91,7 +92,7 @@ class NumericColumnTypesTest: AbstractExposedTest() {
                 in TestDB.ALL_POSTGRES_LIKE ->
                     "CHECK ($columnName BETWEEN ${Byte.MIN_VALUE} AND ${Byte.MAX_VALUE}))"
 
-                else                        -> "($columnName ${tester.byte.columnType} NOT NULL)"
+                else -> "($columnName ${tester.byte.columnType} NOT NULL)"
             }
 
             tester.ddl.single().shouldEndWithIgnoringCase(ddlEnding)

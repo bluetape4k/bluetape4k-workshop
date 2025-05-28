@@ -9,10 +9,10 @@ import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.Batc
 import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.BatchSchema.BatchTable
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
-import org.jetbrains.exposed.dao.entityCache
-import org.jetbrains.exposed.dao.load
-import org.jetbrains.exposed.dao.with
-import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.v1.dao.entityCache
+import org.jetbrains.exposed.v1.dao.load
+import org.jetbrains.exposed.v1.dao.with
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
@@ -70,7 +70,8 @@ class BatchSchemaTest: AbstractExposedTest() {
         }
     }
 
-    private fun Transaction.createSamples(): Batch {
+    @Suppress("UnusedReceiverParameter")
+    private fun JdbcTransaction.createSamples(): Batch {
         val batch1 = Batch.new { name = "B-123" }
         BatchItem.new { name = "Item 1"; batch = batch1 }
         BatchItem.new { name = "Item 2"; batch = batch1 }

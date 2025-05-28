@@ -7,11 +7,11 @@ import io.bluetape4k.workshop.exposed.spring.boot.tables.TestTable
 import io.bluetape4k.workshop.exposed.spring.boot.tables.ignore.IgnoreTable
 import org.amshove.kluent.internal.assertFailsWith
 import org.amshove.kluent.shouldBeEqualTo
-import org.jetbrains.exposed.exceptions.ExposedSQLException
-import org.jetbrains.exposed.spring.DatabaseInitializer
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.spring.boot.DatabaseInitializer
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -19,7 +19,7 @@ import org.springframework.context.ApplicationContext
 
 @SpringBootTest(
     classes = [Application::class],
-    properties = ["spring.autoconfigure.exclude=org.jetbrains.exposed.spring.autoconfigure.ExposedAutoConfiguration"]
+    properties = ["spring.autoconfigure.exclude=org.jetbrains.exposed.v1.spring.boot.autoconfigure.ExposedAutoConfiguration"]
 )
 class DatabaseInitializerTest {
 

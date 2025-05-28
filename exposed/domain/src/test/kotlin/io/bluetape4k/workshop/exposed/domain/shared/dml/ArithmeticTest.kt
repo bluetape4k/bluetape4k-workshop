@@ -3,12 +3,13 @@ package io.bluetape4k.workshop.exposed.domain.shared.dml
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import org.amshove.kluent.shouldBeEqualTo
-import org.jetbrains.exposed.sql.DivideOp.Companion.withScale
-import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.div
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.minus
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.times
-import org.jetbrains.exposed.sql.decimalLiteral
+import org.jetbrains.exposed.v1.core.DivideOp.Companion.withScale
+import org.jetbrains.exposed.v1.core.Expression
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.div
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.minus
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.times
+import org.jetbrains.exposed.v1.core.decimalLiteral
+import org.jetbrains.exposed.v1.jdbc.select
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 

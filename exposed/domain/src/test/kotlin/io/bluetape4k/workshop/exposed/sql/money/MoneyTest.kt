@@ -9,18 +9,19 @@ import io.bluetape4k.workshop.exposed.expectException
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.javamoney.moneta.Money
-import org.jetbrains.exposed.exceptions.ExposedSQLException
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.andWhere
-import org.jetbrains.exposed.sql.deleteAll
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.insertAndGetId
-import org.jetbrains.exposed.sql.money.compositeMoney
-import org.jetbrains.exposed.sql.money.currency
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.andWhere
+import org.jetbrains.exposed.v1.jdbc.deleteAll
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
+import org.jetbrains.exposed.v1.money.compositeMoney
+import org.jetbrains.exposed.v1.money.currency
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
@@ -303,7 +304,7 @@ class MoneyTest: AbstractExposedTest() {
     }
 
     @Suppress("UnusedReceiverParameter")
-    private fun Transaction.assertInsertOfCompositeValueReturnsEquivalentOnSelect(toInsert: Money?) {
+    private fun JdbcTransaction.assertInsertOfCompositeValueReturnsEquivalentOnSelect(toInsert: Money?) {
         val accountId = Account.insertAndGetId {
             it[composite_money] = toInsert
         }
@@ -315,7 +316,7 @@ class MoneyTest: AbstractExposedTest() {
     }
 
     @Suppress("UnusedReceiverParameter")
-    private fun Transaction.assertInsertOfComponentValuesReturnsEquivalentOnSelect(toInsert: Money?) {
+    private fun JdbcTransaction.assertInsertOfComponentValuesReturnsEquivalentOnSelect(toInsert: Money?) {
         val amount: BigDecimal? = toInsert?.numberStripped?.setScale(AMOUNT_SCALE)
         val currencyUnit: CurrencyUnit? = toInsert?.currency
         val accountId = Account.insertAndGetId {

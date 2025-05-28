@@ -1,17 +1,22 @@
 package io.bluetape4k.workshop.exposed
 
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.vendors.DatabaseDialect
-import org.jetbrains.exposed.sql.vendors.SQLServerDialect
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.vendors.DatabaseDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.vendors.DatabaseDialectMetadata
 import java.util.*
 
 fun String.inProperCase(): String =
     TransactionManager.currentOrNull()?.db?.identifierManager?.inProperCase(this) ?: this
 
 val currentDialectTest: DatabaseDialect get() = TransactionManager.current().db.dialect
+
+val currentDialectMetadataTest: DatabaseDialectMetadata
+    get() = TransactionManager.current().db.dialectMetadata
+
 
 val currentDialectIfAvailableTest: DatabaseDialect?
     get() =

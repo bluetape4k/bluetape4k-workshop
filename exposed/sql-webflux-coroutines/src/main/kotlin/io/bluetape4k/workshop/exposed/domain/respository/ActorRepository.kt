@@ -7,15 +7,16 @@ import io.bluetape4k.workshop.exposed.domain.mapper.toActorDTO
 import io.bluetape4k.workshop.exposed.domain.schema.Actor
 import io.bluetape4k.workshop.exposed.domain.schema.Actors
 import kotlinx.datetime.LocalDate
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.andWhere
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insertAndGetId
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.jdbc.andWhere
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 
+@Suppress("DEPRECATION")
 @Repository
 @Transactional(readOnly = true)
 class ActorRepository {

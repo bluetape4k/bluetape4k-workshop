@@ -15,35 +15,34 @@ import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldContainSame
 import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeNull
-import org.jetbrains.exposed.dao.entityCache
-import org.jetbrains.exposed.dao.flushCache
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.dao.id.LongIdTable
-import org.jetbrains.exposed.dao.id.UUIDTable
-import org.jetbrains.exposed.sql.Expression
-import org.jetbrains.exposed.sql.Join
-import org.jetbrains.exposed.sql.JoinType
-import org.jetbrains.exposed.sql.JoinType.INNER
-import org.jetbrains.exposed.sql.JoinType.LEFT
-import org.jetbrains.exposed.sql.QueryBuilder
-import org.jetbrains.exposed.sql.SqlExpressionBuilder
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.alias
-import org.jetbrains.exposed.sql.andWhere
-import org.jetbrains.exposed.sql.batchInsert
-import org.jetbrains.exposed.sql.count
-import org.jetbrains.exposed.sql.decimalLiteral
-import org.jetbrains.exposed.sql.innerJoin
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.insertAndGetId
-import org.jetbrains.exposed.sql.joinQuery
-import org.jetbrains.exposed.sql.lastQueryAlias
-import org.jetbrains.exposed.sql.leftJoin
-import org.jetbrains.exposed.sql.max
-import org.jetbrains.exposed.sql.orWhere
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.stringLiteral
-import org.jetbrains.exposed.sql.sum
+import org.jetbrains.exposed.v1.core.Expression
+import org.jetbrains.exposed.v1.core.Join
+import org.jetbrains.exposed.v1.core.JoinType
+import org.jetbrains.exposed.v1.core.QueryBuilder
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.alias
+import org.jetbrains.exposed.v1.core.count
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.decimalLiteral
+import org.jetbrains.exposed.v1.core.innerJoin
+import org.jetbrains.exposed.v1.core.joinQuery
+import org.jetbrains.exposed.v1.core.lastQueryAlias
+import org.jetbrains.exposed.v1.core.leftJoin
+import org.jetbrains.exposed.v1.core.max
+import org.jetbrains.exposed.v1.core.stringLiteral
+import org.jetbrains.exposed.v1.core.sum
+import org.jetbrains.exposed.v1.dao.entityCache
+import org.jetbrains.exposed.v1.dao.flushCache
+import org.jetbrains.exposed.v1.jdbc.andWhere
+import org.jetbrains.exposed.v1.jdbc.batchInsert
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.orWhere
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
@@ -120,7 +119,7 @@ class AliasesTest: AbstractExposedTest() {
              *  GROUP BY stables.id, stables."name", f.fc
              * ```
              */
-            val stats: Map<String, Long?> = stables.join(fAlias, LEFT, stables.id, fAlias[facilities.stableId])
+            val stats: Map<String, Long?> = stables.join(fAlias, JoinType.LEFT, stables.id, fAlias[facilities.stableId])
                 .select(sliceColumns)
                 .groupBy(*sliceColumns.toTypedArray())
                 .associate {
@@ -421,7 +420,7 @@ class AliasesTest: AbstractExposedTest() {
             val t2Alias = XTable.select(table2Count).groupBy(XTable.b1).alias("t2")
 
             val query = t1Alias
-                .join(t2Alias, INNER) {
+                .join(t2Alias, JoinType.INNER) {
                     t1Alias[table1Count] eq t2Alias[table2Count]
                 }
                 .select(t1Alias[table1Count])
@@ -617,7 +616,7 @@ class AliasesTest: AbstractExposedTest() {
                 .alias("internalQuery")
 
             val query = tester2
-                .innerJoin(internalQuery, { ref }, { internalQuery[idAlias] })
+                .innerJoin(internalQuery, { tester2.ref }, { internalQuery[idAlias] })
                 .selectAll()
 
             query.first()[internalQuery[fooAlias]] shouldBeEqualTo "foo"

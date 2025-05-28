@@ -9,16 +9,16 @@ import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldContainSame
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
-import org.jetbrains.exposed.dao.entityCache
-import org.jetbrains.exposed.dao.flushCache
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.exceptions.ExposedSQLException
-import org.jetbrains.exposed.sql.ReferenceOption.CASCADE
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.dao.IntEntity
+import org.jetbrains.exposed.v1.dao.IntEntityClass
+import org.jetbrains.exposed.v1.dao.entityCache
+import org.jetbrains.exposed.v1.dao.flushCache
+import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import kotlin.test.assertFailsWith
@@ -74,8 +74,18 @@ class UnidirectionTest: AbstractExposedTest() {
      * ```
      */
     object CloudSnowflakeTable: Table("cloud_snowflakes") {
-        val cloudId = reference("cloud_id", CloudTable, onDelete = CASCADE, onUpdate = CASCADE)
-        val snowflakeId = reference("snowflake_id", SnowflakeTable, onDelete = CASCADE, onUpdate = CASCADE)
+        val cloudId = reference(
+            "cloud_id",
+            CloudTable,
+            onDelete = ReferenceOption.CASCADE,
+            onUpdate = ReferenceOption.CASCADE
+        )
+        val snowflakeId = reference(
+            "snowflake_id",
+            SnowflakeTable,
+            onDelete = ReferenceOption.CASCADE,
+            onUpdate = ReferenceOption.CASCADE
+        )
 
         override val primaryKey = PrimaryKey(cloudId, snowflakeId, name = "PK_CLOUD_SNOWFLAKES")
     }

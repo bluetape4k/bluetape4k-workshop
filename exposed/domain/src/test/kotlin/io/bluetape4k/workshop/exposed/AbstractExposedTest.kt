@@ -3,10 +3,10 @@ package io.bluetape4k.workshop.exposed
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import org.jetbrains.exposed.dao.EntityHook
-import org.jetbrains.exposed.sql.Key
-import org.jetbrains.exposed.sql.Schema
-import org.jetbrains.exposed.sql.statements.StatementInterceptor
+import org.jetbrains.exposed.v1.core.Key
+import org.jetbrains.exposed.v1.core.Schema
+import org.jetbrains.exposed.v1.core.statements.StatementInterceptor
+import org.jetbrains.exposed.v1.dao.EntityHook
 import java.util.*
 
 abstract class AbstractExposedTest {

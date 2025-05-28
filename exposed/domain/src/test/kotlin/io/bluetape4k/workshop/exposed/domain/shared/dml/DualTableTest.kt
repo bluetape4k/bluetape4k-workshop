@@ -6,10 +6,11 @@ import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withDb
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeLessOrEqualTo
-import org.jetbrains.exposed.sql.Table.Dual
-import org.jetbrains.exposed.sql.intLiteral
-import org.jetbrains.exposed.sql.javatime.CurrentDate
-import org.jetbrains.exposed.sql.javatime.CurrentDateTime
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.intLiteral
+import org.jetbrains.exposed.v1.javatime.CurrentDate
+import org.jetbrains.exposed.v1.javatime.CurrentDateTime
+import org.jetbrains.exposed.v1.jdbc.select
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -35,7 +36,7 @@ class DualTableTest: AbstractExposedTest() {
     fun testDualTable(testDB: TestDB) {
         withDb(testDB) {
             val resultColumn = intLiteral(1)
-            val result: Int = Dual.select(resultColumn).single()[resultColumn]
+            val result: Int = Table.Dual.select(resultColumn).single()[resultColumn]
             result shouldBeEqualTo 1
         }
     }
@@ -51,7 +52,7 @@ class DualTableTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `dual table with CurrentDate`(testDB: TestDB) {
         withDb(testDB) {
-            val today: LocalDate = Dual.select(CurrentDate).single()[CurrentDate]
+            val today: LocalDate = Table.Dual.select(CurrentDate).single()[CurrentDate]
             today shouldBeEqualTo LocalDate.now()
         }
     }
@@ -67,9 +68,9 @@ class DualTableTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `dual table with CurrentDateTime`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB in TestDB.ALL_H2 }
-        
+
         withDb(testDB) {
-            val now: LocalDateTime = Dual.select(CurrentDateTime).single()[CurrentDateTime]
+            val now: LocalDateTime = Table.Dual.select(CurrentDateTime).single()[CurrentDateTime]
             now shouldBeLessOrEqualTo LocalDateTime.now()
         }
     }

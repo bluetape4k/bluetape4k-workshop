@@ -12,12 +12,12 @@ import org.amshove.kluent.shouldBeInRange
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldContainSame
 import org.amshove.kluent.shouldHaveSize
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.sql.vendors.SQLServerDialect
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -101,9 +101,9 @@ class UnsignedColumnTypeTest: AbstractExposedTest() {
     fun testUByteWithCheckConstraint(testDB: TestDB) {
         withTables(testDB, UByteTable) {
             val ddlEnding = when (currentDialectTest) {
-                is MysqlDialect     -> "(ubyte TINYINT UNSIGNED NOT NULL)"
+                is MysqlDialect -> "(ubyte TINYINT UNSIGNED NOT NULL)"
                 is SQLServerDialect -> "(ubyte TINYINT NOT NULL)"
-                else                -> "CHECK (ubyte BETWEEN 0 and ${UByte.MAX_VALUE}))"
+                else -> "CHECK (ubyte BETWEEN 0 and ${UByte.MAX_VALUE}))"
             }
             UByteTable.ddl.single().endsWith(ddlEnding, ignoreCase = true).shouldBeTrue()
 

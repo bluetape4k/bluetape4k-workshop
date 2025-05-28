@@ -9,7 +9,8 @@ spring:
     output:
         ansi:
             enabled: always
-
+    aot:
+        enabled: true  # AOT (Ahead Of Time) 컴파일 활성화
 info:
     name: ${spring.application.name}
     description: micrometer-tracing-coroutines-demo

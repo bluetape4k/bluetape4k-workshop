@@ -8,9 +8,9 @@ import io.bluetape4k.workshop.exposed.withDb
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
-import org.jetbrains.exposed.dao.entityCache
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.exists
+import org.jetbrains.exposed.v1.dao.entityCache
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.exists
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.time.LocalDate

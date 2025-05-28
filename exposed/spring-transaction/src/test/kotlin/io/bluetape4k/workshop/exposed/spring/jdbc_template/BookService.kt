@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.exposed.spring.jdbc_template
 
 import io.bluetape4k.idgenerators.uuid.TimebasedUuid
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Component

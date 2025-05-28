@@ -1,10 +1,11 @@
 plugins {
     kotlin("plugin.spring")
     id(Plugins.spring_boot)
+    id(Plugins.graalvm_native)
 }
 
 springBoot {
-    mainClass.set("io.bluetape4k.workshop.redis.cache.RedisCacheApplicationKt")
+    mainClass.set("io.bluetape4k.workshop.cache.redis.RedisCacheApplicationKt")
 }
 
 configurations {

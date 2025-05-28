@@ -10,3 +10,7 @@ jwt:
         key: classpath:private-key.pem
     public:
         key: classpath:public-key.pem
+
+spring:
+    aot:
+        enabled: true

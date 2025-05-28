@@ -10,9 +10,9 @@ import io.bluetape4k.workshop.exposed.virtualthread.domain.mapper.toActorDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Actor
 import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Actors
 import org.amshove.kluent.shouldNotBeEmpty
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test

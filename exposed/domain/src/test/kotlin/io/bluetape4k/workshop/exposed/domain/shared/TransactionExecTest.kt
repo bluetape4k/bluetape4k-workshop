@@ -9,17 +9,16 @@ import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldNotBeNull
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.autoIncColumnType
-import org.jetbrains.exposed.sql.batchInsert
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.statements.StatementType
-import org.jetbrains.exposed.sql.statements.StatementType.SELECT
-import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.autoIncColumnType
+import org.jetbrains.exposed.v1.core.statements.StatementType
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.batchInsert
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -61,7 +60,7 @@ class TransactionExecTest: AbstractExposedTest() {
 
             val results: MutableList<Int> = exec(
                 """SELECT * FROM ${ExecTable.tableName.inProperCase()};""",
-                explicitStatementType = SELECT
+                explicitStatementType = StatementType.SELECT
             ) { resultSet: ResultSet ->
                 val allAmounts = mutableListOf<Int>()
                 while (resultSet.next()) {
@@ -117,7 +116,7 @@ class TransactionExecTest: AbstractExposedTest() {
         TransactionManager.closeAndUnregister(db)
     }
 
-    private fun Transaction.testInsertAndSelectInSingleExec(testDB: TestDB) {
+    private fun JdbcTransaction.testInsertAndSelectInSingleExec(testDB: TestDB) {
         ExecTable.insert {
             it[amount] = 99
         }
@@ -130,7 +129,7 @@ class TransactionExecTest: AbstractExposedTest() {
         val selectLastIdStatement = when (testDB) {
             TestDB.POSTGRESQL -> "SELECT lastval() AS $columnAlias;"
             TestDB.MARIADB -> "SELECT LASTVAL(${ExecTable.id.autoIncColumnType?.autoincSeq}) AS $columnAlias"
-            else              -> "SELECT LAST_INSERT_ID() AS $columnAlias;"
+            else -> "SELECT LAST_INSERT_ID() AS $columnAlias;"
         }
 
         val insertAndSelectStatements =

@@ -5,12 +5,13 @@ import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withTables
 import kotlinx.datetime.LocalDateTime
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.kotlin.datetime.datetime
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.Transaction
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.datetime.datetime
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.jupiter.api.Assumptions
 
 val TEST_DEFAULT_DATE_TIME = LocalDateTime(
@@ -38,7 +39,7 @@ abstract class MergeBaseTest: AbstractExposedTest() {
 
     protected fun withMergeTestTables(
         testDB: TestDB,
-        statement: Transaction.(dest: Dest, source: Source) -> Unit,
+        statement: JdbcTransaction.(dest: Dest, source: Source) -> Unit,
     ) {
         Assumptions.assumeTrue(testDB !in defaultExcludeSettings)
         withTables(testDB, Source, Dest) {

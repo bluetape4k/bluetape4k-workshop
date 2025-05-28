@@ -1,6 +1,9 @@
 spring:
     application:
         name: Customers
+    aot:
+        enabled: true  # AOT (Ahead Of Time) 컴파일 활성화
+
 server:
     port: 8081
 

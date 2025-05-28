@@ -5,13 +5,14 @@ import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.batchInsert
-import org.jetbrains.exposed.sql.stdDevPop
-import org.jetbrains.exposed.sql.stdDevSamp
-import org.jetbrains.exposed.sql.varPop
-import org.jetbrains.exposed.sql.varSamp
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.stdDevPop
+import org.jetbrains.exposed.v1.core.stdDevSamp
+import org.jetbrains.exposed.v1.core.varPop
+import org.jetbrains.exposed.v1.core.varSamp
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.batchInsert
+import org.jetbrains.exposed.v1.jdbc.select
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
@@ -103,7 +104,7 @@ class StatisticsFunctionTest: AbstractExposedTest() {
     private val data: List<Int?> = listOf(4, null, 5, null, 6)
     private val scale = 4
 
-    private fun withSampleTable(testDB: TestDB, body: Transaction.(TestDB) -> Unit) {
+    private fun withSampleTable(testDB: TestDB, body: JdbcTransaction.(TestDB) -> Unit) {
         // SQLite does not have any built-in statistics-specific aggregate functions
         withTables(testDB, SampleTestTable) {
             SampleTestTable.batchInsert(data) { num ->
@@ -113,7 +114,7 @@ class StatisticsFunctionTest: AbstractExposedTest() {
         }
     }
 
-    private infix fun org.jetbrains.exposed.sql.Function<BigDecimal?>.shouldExpressionEqualTo(expected: BigDecimal) {
+    private infix fun org.jetbrains.exposed.v1.core.Function<BigDecimal?>.shouldExpressionEqualTo(expected: BigDecimal) {
         val result = SampleTestTable.select(this).first()[this]
         result?.setScale(expected.scale(), RoundingMode.HALF_EVEN) shouldBeEqualTo expected
     }

@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.exposed.domain.shared
 
 import io.bluetape4k.workshop.exposed.TestDB
-import org.jetbrains.exposed.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 
 /**
  * ```sql

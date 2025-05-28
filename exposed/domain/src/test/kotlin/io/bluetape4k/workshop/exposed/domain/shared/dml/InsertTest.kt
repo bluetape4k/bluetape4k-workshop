@@ -25,34 +25,36 @@ import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeNull
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.CustomFunction
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.SortOrder.ASC
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.UUIDColumnType
-import org.jetbrains.exposed.sql.batchInsert
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.insertAndGetId
-import org.jetbrains.exposed.sql.insertIgnore
-import org.jetbrains.exposed.sql.insertIgnoreAndGetId
-import org.jetbrains.exposed.sql.kotlin.datetime.CurrentTimestamp
-import org.jetbrains.exposed.sql.kotlin.datetime.timestamp
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.statements.BatchInsertStatement
-import org.jetbrains.exposed.sql.stringLiteral
-import org.jetbrains.exposed.sql.substring
-import org.jetbrains.exposed.sql.trim
-import org.jetbrains.exposed.sql.update
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.sql.wrapAsExpression
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.CustomFunction
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.Transaction
+import org.jetbrains.exposed.v1.core.UUIDColumnType
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
+import org.jetbrains.exposed.v1.core.stringLiteral
+import org.jetbrains.exposed.v1.core.substring
+import org.jetbrains.exposed.v1.core.trim
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.v1.core.wrapAsExpression
+import org.jetbrains.exposed.v1.dao.IntEntity
+import org.jetbrains.exposed.v1.dao.IntEntityClass
+import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
+import org.jetbrains.exposed.v1.javatime.timestamp
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.batchInsert
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.insertIgnore
+import org.jetbrains.exposed.v1.jdbc.insertIgnoreAndGetId
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.statements.BatchInsertBlockingExecutable
+import org.jetbrains.exposed.v1.jdbc.update
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -705,7 +707,7 @@ class InsertTest: AbstractExposedTest() {
              * ```
              */
             val orders: List<OrderedData> = OrderedData.all()
-                .orderBy(OrderedDataTable.order to ASC)
+                .orderBy(OrderedDataTable.order to SortOrder.ASC)
                 .toList()
 
             orders shouldBeEqualTo listOf(bar, foo)
@@ -924,7 +926,7 @@ class InsertTest: AbstractExposedTest() {
      * Batch Insert with ON CONFLICT DO NOTHING - 예외 발생 시 해당 예외를 무시하고,
      * 다음 작업을 수행하도록 하는 [BatchInsertStatement] 구현체입니다.
      */
-    class BatchInsertOnConflictIgnore(table: Table): BatchInsertStatement(table) {
+    class BatchInsertOnConflictDoNothing(table: Table): BatchInsertStatement(table) {
         override fun prepareSQL(transaction: Transaction, prepared: Boolean): String = buildString {
             val insertStatement = super.prepareSQL(transaction, prepared)
 
@@ -967,12 +969,15 @@ class InsertTest: AbstractExposedTest() {
         withTables(testDB, tab) {
             tab.insert { it[id] = "foo" }
 
-            val numInserted = BatchInsertOnConflictIgnore(tab).run {
-                addBatch()
-                this[tab.id] = "foo"        // 중복되므로 insert 되지 않음
+            val executable = BatchInsertBlockingExecutable(
+                BatchInsertOnConflictDoNothing(tab)
+            )
+            val numInserted = executable.run {
+                statement.addBatch()
+                statement[tab.id] = "foo"        // 중복되므로 insert 되지 않음
 
-                addBatch()
-                this[tab.id] = "bar"
+                statement.addBatch()
+                statement[tab.id] = "bar"
 
                 execute(this@withTables)
             }

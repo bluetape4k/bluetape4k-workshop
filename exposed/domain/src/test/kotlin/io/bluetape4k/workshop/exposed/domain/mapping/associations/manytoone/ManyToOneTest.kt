@@ -15,14 +15,14 @@ import io.bluetape4k.workshop.exposed.domain.mapping.associations.manytoone.Many
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeGreaterThan
 import org.amshove.kluent.shouldHaveSize
-import org.jetbrains.exposed.dao.entityCache
-import org.jetbrains.exposed.dao.flushCache
-import org.jetbrains.exposed.dao.load
-import org.jetbrains.exposed.dao.with
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.deleteAll
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.dao.entityCache
+import org.jetbrains.exposed.v1.dao.flushCache
+import org.jetbrains.exposed.v1.dao.load
+import org.jetbrains.exposed.v1.dao.with
+import org.jetbrains.exposed.v1.jdbc.deleteAll
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 

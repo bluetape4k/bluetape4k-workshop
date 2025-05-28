@@ -63,7 +63,6 @@ class GreetingServiceTracingIntegrationTest {
             log.debug { "span: $it" }
         }
 
-        tracer.spans.any { it.name == "greeting-service#say-hello" }.shouldBeTrue()
+        tracer.spans.any { it.name == "greeting-service" }.shouldBeTrue()
     }
-
 }

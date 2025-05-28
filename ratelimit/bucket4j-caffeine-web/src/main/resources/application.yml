@@ -11,6 +11,8 @@ management:
                 include: "*"
 
 spring:
+    aot:
+        enabled: true  # AOT (Ahead Of Time) 컴파일 활성화
     cache:
         jcache:
             provider: com.github.benmanes.caffeine.jcache.spi.CaffeineCachingProvider
