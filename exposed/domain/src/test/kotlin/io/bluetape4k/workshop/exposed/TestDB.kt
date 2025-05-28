@@ -2,8 +2,8 @@ package io.bluetape4k.workshop.exposed
 
 import io.bluetape4k.jdbc.JdbcDrivers
 import io.bluetape4k.logging.KLogging
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.DatabaseConfig
+import org.jetbrains.exposed.v1.core.DatabaseConfig
+import org.jetbrains.exposed.v1.jdbc.Database
 import java.sql.Connection
 import kotlin.reflect.full.declaredMemberProperties
 

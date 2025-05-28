@@ -1,10 +1,10 @@
 package io.bluetape4k.workshop.exposed.domain.shared.ddl
 
-import MigrationUtils
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
+import io.bluetape4k.workshop.exposed.currentDialectMetadataTest
 import io.bluetape4k.workshop.exposed.currentDialectTest
 import io.bluetape4k.workshop.exposed.inProperCase
 import io.bluetape4k.workshop.exposed.withDb
@@ -15,21 +15,24 @@ import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldNotBeEmpty
 import org.amshove.kluent.shouldNotBeNull
-import org.jetbrains.exposed.dao.UUIDEntity
-import org.jetbrains.exposed.dao.UUIDEntityClass
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.dao.id.LongIdTable
-import org.jetbrains.exposed.dao.id.UUIDTable
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.autoIncColumnType
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.insertAndGetId
-import org.jetbrains.exposed.sql.nextIntVal
-import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.autoIncColumnType
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.nextIntVal
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
+import org.jetbrains.exposed.v1.dao.UUIDEntity
+import org.jetbrains.exposed.v1.dao.UUIDEntityClass
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.exists
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.migration.MigrationUtils
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -217,7 +220,7 @@ class SequenceTest: AbstractExposedTest() {
             try {
                 SchemaUtils.create(tableWithExplicitSequenceName)
 
-                val sequences = currentDialectTest.sequences()
+                val sequences = currentDialectMetadataTest.sequences()
                 sequences.shouldNotBeEmpty()
                 sequences.any { it == myseq.name.inProperCase() }.shouldBeTrue()
             } finally {
@@ -239,7 +242,7 @@ class SequenceTest: AbstractExposedTest() {
             try {
                 SchemaUtils.create(tableWithExplicitSequenceName)
 
-                val sequences = currentDialectTest.sequences()
+                val sequences = currentDialectMetadataTest.sequences()
 
                 sequences.shouldNotBeEmpty()
                 sequences.any { it == sequenceName.inProperCase() }.shouldBeTrue()
@@ -263,7 +266,7 @@ class SequenceTest: AbstractExposedTest() {
             try {
                 SchemaUtils.create(tableWithoutExplicitSequenceName)
 
-                val sequences = currentDialectTest.sequences()
+                val sequences = currentDialectMetadataTest.sequences()
                 sequences.shouldNotBeEmpty()
 
                 val expected = tableWithoutExplicitSequenceName.id.autoIncColumnType!!.autoincSeq!!
@@ -409,7 +412,7 @@ class SequenceTest: AbstractExposedTest() {
      * CREATE SEQUENCE IF NOT EXISTS my_sequence START WITH 4 INCREMENT BY 2 MINVALUE 1 MAXVALUE 100 CYCLE CACHE 20
      * ```
      */
-    private val myseq = org.jetbrains.exposed.sql.Sequence(
+    private val myseq = org.jetbrains.exposed.v1.core.Sequence(
         name = "my_sequence", startWith = 4, incrementBy = 2, minValue = 1, maxValue = 100, cycle = true, cache = 20
     )
 }

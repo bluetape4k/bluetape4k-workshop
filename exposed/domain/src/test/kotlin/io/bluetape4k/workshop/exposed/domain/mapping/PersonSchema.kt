@@ -6,14 +6,14 @@ import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withTables
-import org.jetbrains.exposed.dao.LongEntity
-import org.jetbrains.exposed.dao.LongEntityClass
-import org.jetbrains.exposed.dao.flushCache
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.LongIdTable
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.javatime.date
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.dao.LongEntity
+import org.jetbrains.exposed.v1.dao.LongEntityClass
+import org.jetbrains.exposed.v1.dao.flushCache
+import org.jetbrains.exposed.v1.javatime.date
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
 import java.time.LocalDate
 
 object PersonSchema {
@@ -140,7 +140,7 @@ object PersonSchema {
 
     fun withPersons(
         testDB: TestDB,
-        block: Transaction.(PersonTable, AddressTable) -> Unit,
+        block: JdbcTransaction.(PersonTable, AddressTable) -> Unit,
     ) {
         withTables(testDB, *allPersonTables) {
             block(PersonTable, AddressTable)
@@ -152,7 +152,7 @@ object PersonSchema {
 @Suppress("UnusedReceiverParameter")
 fun AbstractExposedTest.withPersonsAndAddress(
     testDB: TestDB,
-    statement: Transaction.(
+    statement: JdbcTransaction.(
         persons: PersonSchema.PersonTable,
         addresses: PersonSchema.AddressTable,
     ) -> Unit,

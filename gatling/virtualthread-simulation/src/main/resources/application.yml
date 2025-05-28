@@ -1,4 +1,6 @@
 spring:
+    aot:
+        enabled: true  # AOT (Ahead Of Time) 컴파일 활성화
     application:
         name: kotlin-gatling-app
 
@@ -18,8 +20,11 @@ spring:
 server:
     tomcat:
         threads:
-            max: 16
+            max: 800
             min-spare: 2
+        resource:
+            cache-ttl: 3600  # 1 hour
+            allow-caching: true
 
     shutdown: graceful  # WebServer Graceful shutdown (https://www.baeldung.com/spring-boot-web-server-shutdown)
 

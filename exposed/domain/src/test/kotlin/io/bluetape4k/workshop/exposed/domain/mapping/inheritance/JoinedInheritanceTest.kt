@@ -4,15 +4,15 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withTables
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.ReferenceOption.CASCADE
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.insertAndGetId
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.io.Serializable
@@ -64,7 +64,12 @@ class JoinedInheritanceTest: AbstractExposedTest() {
      */
     object JoinedEmployeeTable: IdTable<Int>("joined_employee") {
         override val id: Column<EntityID<Int>> =
-            reference("id", JoinedPersonTable.id, onDelete = CASCADE, onUpdate = CASCADE)
+            reference(
+                "id",
+                JoinedPersonTable.id,
+                onDelete = ReferenceOption.CASCADE,
+                onUpdate = ReferenceOption.CASCADE
+            )
 
         val empNo = varchar("emp_no", 128)
         val managerId = integer("manager_id").nullable()
@@ -86,7 +91,12 @@ class JoinedInheritanceTest: AbstractExposedTest() {
      */
     object JoinedCustomerTable: IdTable<Int>("joined_customer") {
         override val id: Column<EntityID<Int>> =
-            reference("id", JoinedPersonTable.id, onDelete = CASCADE, onUpdate = CASCADE)
+            reference(
+                "id",
+                JoinedPersonTable.id,
+                onDelete = ReferenceOption.CASCADE,
+                onUpdate = ReferenceOption.CASCADE
+            )
 
         val mobile = varchar("mobile", 16)
         val contactEmployeeId = integer("contact_employee_id").nullable()
@@ -120,7 +130,7 @@ class JoinedInheritanceTest: AbstractExposedTest() {
 
 
     @Suppress("UnusedReceiverParameter")
-    fun Transaction.newEmployee(name: String, ssn: String, empNo: String): JoinedEmployee {
+    fun JdbcTransaction.newEmployee(name: String, ssn: String, empNo: String): JoinedEmployee {
 
         /**
          * ```sql
@@ -170,7 +180,12 @@ class JoinedInheritanceTest: AbstractExposedTest() {
     }
 
     @Suppress("UnusedReceiverParameter")
-    fun Transaction.newCustomer(name: String, ssn: String, mobile: String, contactEmployeeId: Int?): JoinedCustomer {
+    fun JdbcTransaction.newCustomer(
+        name: String,
+        ssn: String,
+        mobile: String,
+        contactEmployeeId: Int?,
+    ): JoinedCustomer {
         /**
          * ```sql
          * INSERT INTO joined_person (person_name, ssn)

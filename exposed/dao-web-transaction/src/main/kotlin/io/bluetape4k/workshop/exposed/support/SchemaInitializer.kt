@@ -4,7 +4,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.exposed.domain.UserEntity
 import io.bluetape4k.workshop.exposed.domain.UserTable
-import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.stereotype.Component

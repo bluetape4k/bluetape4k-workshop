@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.shared.ddl
 
-import io.bluetape4k.exposed.sql.selectImplicitAll
+import io.bluetape4k.exposed.core.selectImplicitAll
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.TestDB.MYSQL_V8
@@ -11,12 +11,13 @@ import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldNotBeNull
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.statements.StatementType.OTHER
-import org.jetbrains.exposed.sql.stringLiteral
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.statements.StatementType
+import org.jetbrains.exposed.v1.core.stringLiteral
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.statements.jdbc.JdbcResult
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.params.ParameterizedTest
@@ -51,7 +52,7 @@ class ColumnDefinitionTest: AbstractExposedTest() {
             SchemaUtils.statementsRequiredToActualizeScheme(tester).shouldBeEmpty()
             // MigrationUtils.statementsRequiredForDatabaseMigration(tester).shouldBeEmpty()
 
-            tester.insert { it[amount] = 9 }
+            tester.insert { it[tester.amount] = 9 }
             tester.selectAll().single()[tester.amount] shouldBeEqualTo 9
 
             val tableName = tester.nameInDatabaseCase()
@@ -98,7 +99,7 @@ class ColumnDefinitionTest: AbstractExposedTest() {
             // create a new user with limited permissions
             exec("CREATE USER MaskingTestUser WITHOUT LOGIN;")
             exec("GRANT SELECT ON ${tester.nameInDatabaseCase()} TO MaskingTestUser;")
-            exec("EXECUTE AS USER = 'MaskingTestUser';", explicitStatementType = OTHER)
+            exec("EXECUTE AS USER = 'MaskingTestUser';", explicitStatementType = StatementType.OTHER)
 
             // Email function obfuscates data of all length to form 'aXXX@XXXX.com', where 'a' is original first letter
             val maskedEmail = "${testEmail.first()}XXX@XXXX.com"
@@ -212,9 +213,10 @@ class ColumnDefinitionTest: AbstractExposedTest() {
                 .execute(this)       // HINT: 이렇게 Statement.execute(transaction) 을 수행하면 java.sql.ResultSet 를 반환합니다.
                 .use { rs ->
                     rs.shouldNotBeNull()
-                    rs.next()
-                    rs.getInt(tester.amount.name) shouldBeEqualTo 999
-                    rs.getBoolean(tester.active.name).shouldBeFalse()
+                    val result = (rs as JdbcResult).result
+                    result.next()
+                    result.getInt(tester.amount.name) shouldBeEqualTo 999
+                    result.getBoolean(tester.active.name).shouldBeFalse()
                 }
 
             /**
@@ -230,11 +232,13 @@ class ColumnDefinitionTest: AbstractExposedTest() {
                 .where { tester.amount greater 100 }
                 .execute(this)     // HINT: 이렇게 Statement.execute(transaction) 을 수행하면 java.sql.ResultSet 를 반환합니다.
                 .use { rs ->
-                    rs!!.next()
-                    rs.getInt(tester.amount.name) shouldBeEqualTo 999
+                    rs.shouldNotBeNull()
+                    val result = (rs as JdbcResult).result
+                    result.next()
+                    result.getInt(tester.amount.name) shouldBeEqualTo 999
 
                     expectException<SQLException> {
-                        rs.getBoolean(tester.active.name)
+                        result.getBoolean(tester.active.name)
                     }
                 }
         }

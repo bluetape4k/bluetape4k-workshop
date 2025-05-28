@@ -7,12 +7,13 @@ import io.bluetape4k.workshop.exposed.expectException
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.SortOrder.ASC
-import org.jetbrains.exposed.sql.batchInsert
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.jdbc.batchInsert
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -76,7 +77,7 @@ class DistinctOnTest: AbstractExposedTest() {
              */
             val distinctValue1 = tester.selectAll()
                 .withDistinctOn(tester.v1)
-                .orderBy(tester.v1 to ASC, tester.v2 to ASC)
+                .orderBy(tester.v1 to SortOrder.ASC, tester.v2 to SortOrder.ASC)
                 .map { it[tester.v1] to it[tester.v2] }
 
             distinctValue1 shouldBeEqualTo listOf(1 to 1, 2 to 1, 4 to 4)
@@ -97,7 +98,7 @@ class DistinctOnTest: AbstractExposedTest() {
              */
             val distinctValue2 = tester.selectAll()
                 .withDistinctOn(tester.v2)
-                .orderBy(tester.v2 to ASC, tester.v1 to ASC)
+                .orderBy(tester.v2 to SortOrder.ASC, tester.v1 to SortOrder.ASC)
                 .map { it[tester.v1] to it[tester.v2] }
 
             distinctValue2 shouldBeEqualTo listOf(1 to 1, 1 to 2, 4 to 4)
@@ -116,7 +117,7 @@ class DistinctOnTest: AbstractExposedTest() {
              */
             val distinctBoth = tester.selectAll()
                 .withDistinctOn(tester.v1, tester.v2)
-                .orderBy(tester.v1 to ASC, tester.v2 to ASC)
+                .orderBy(tester.v1 to SortOrder.ASC, tester.v2 to SortOrder.ASC)
                 .map { it[tester.v1] to it[tester.v2] }
 
             distinctBoth shouldBeEqualTo listOf(1 to 1, 1 to 2, 2 to 1, 2 to 2, 4 to 4)
@@ -134,8 +135,8 @@ class DistinctOnTest: AbstractExposedTest() {
              * ```
              */
             val distinctSequential = tester.selectAll()
-                .withDistinctOn(tester.v1 to ASC)
-                .withDistinctOn(tester.v2 to ASC)
+                .withDistinctOn(tester.v1 to SortOrder.ASC)
+                .withDistinctOn(tester.v2 to SortOrder.ASC)
                 .map { it[tester.v1] to it[tester.v2] }
 
             distinctSequential shouldBeEqualTo distinctBoth

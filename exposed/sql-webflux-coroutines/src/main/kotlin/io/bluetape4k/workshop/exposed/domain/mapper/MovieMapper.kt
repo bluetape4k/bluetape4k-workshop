@@ -5,7 +5,7 @@ import io.bluetape4k.workshop.exposed.domain.dto.MovieDTO
 import io.bluetape4k.workshop.exposed.domain.dto.MovieWithActorDTO
 import io.bluetape4k.workshop.exposed.domain.schema.Movie
 import io.bluetape4k.workshop.exposed.domain.schema.Movies
-import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.v1.core.ResultRow
 
 fun ResultRow.toMovieDTO(): MovieDTO = MovieDTO(
     id = this[Movies.id].value,

@@ -6,14 +6,14 @@ import io.bluetape4k.idgenerators.uuid.TimebasedUuid
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withTables
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.ResultRow
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.dao.IntEntity
+import org.jetbrains.exposed.v1.dao.IntEntityClass
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.insert
 import java.math.BigDecimal
 
 object DMLTestData {
@@ -119,7 +119,7 @@ internal fun Iterable<ResultRow>.toCityNameList(): List<String> =
 
 fun AbstractExposedTest.withCitiesAndUsers(
     testDB: TestDB,
-    statement: Transaction.(
+    statement: JdbcTransaction.(
         cities: DMLTestData.Cities,
         users: DMLTestData.Users,
         userData: DMLTestData.UserData,
@@ -207,7 +207,7 @@ fun AbstractExposedTest.withCitiesAndUsers(
 
 fun AbstractExposedTest.withSales(
     dialect: TestDB,
-    statement: Transaction.(testDB: TestDB, sales: DMLTestData.Sales) -> Unit,
+    statement: JdbcTransaction.(testDB: TestDB, sales: DMLTestData.Sales) -> Unit,
 ) {
     val sales = DMLTestData.Sales
 
@@ -236,7 +236,7 @@ private fun insertSale(year: Int, month: Int, product: String?, amount: String) 
 
 fun AbstractExposedTest.withSomeAmounts(
     dialect: TestDB,
-    statement: Transaction.(testDB: TestDB, someAmounts: DMLTestData.SomeAmounts) -> Unit,
+    statement: JdbcTransaction.(testDB: TestDB, someAmounts: DMLTestData.SomeAmounts) -> Unit,
 ) {
     val someAmounts = DMLTestData.SomeAmounts
 
@@ -256,7 +256,7 @@ fun AbstractExposedTest.withSomeAmounts(
 
 fun AbstractExposedTest.withSalesAndSomeAmounts(
     dialect: TestDB,
-    statement: Transaction.(
+    statement: JdbcTransaction.(
         testDB: TestDB,
         sales: DMLTestData.Sales,
         someAmounts: DMLTestData.SomeAmounts,

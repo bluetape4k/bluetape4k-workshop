@@ -10,8 +10,8 @@ import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.Rest
 import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.ResturantSchema.RestaurantTable
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
-import org.jetbrains.exposed.dao.entityCache
-import org.jetbrains.exposed.dao.with
+import org.jetbrains.exposed.v1.dao.entityCache
+import org.jetbrains.exposed.v1.dao.with
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 

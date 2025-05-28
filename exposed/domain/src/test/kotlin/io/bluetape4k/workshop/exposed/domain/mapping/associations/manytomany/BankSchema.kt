@@ -3,13 +3,13 @@ package io.bluetape4k.workshop.exposed.domain.mapping.associations.manytomany
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
 import io.bluetape4k.exposed.dao.toStringBuilder
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.ReferenceOption.RESTRICT
-import org.jetbrains.exposed.sql.SizedIterable
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.dao.IntEntity
+import org.jetbrains.exposed.v1.dao.IntEntityClass
+import org.jetbrains.exposed.v1.jdbc.SizedIterable
 
 /**
  * 은행 계좌 - 계좌 소유자에 대한 Many-to-Many 관계를 나타내는 스키마
@@ -69,8 +69,8 @@ object BankSchema {
      * ```
      */
     object OwnerAccountMapTable: Table("owner_account_map") {
-        val ownerId = reference("owner_id", AccountOwnerTable, onDelete = RESTRICT)
-        val accountId = reference("account_id", BankAccountTable, onDelete = RESTRICT)
+        val ownerId = reference("owner_id", AccountOwnerTable, onDelete = ReferenceOption.RESTRICT)
+        val accountId = reference("account_id", BankAccountTable, onDelete = ReferenceOption.RESTRICT)
     }
 
     /**

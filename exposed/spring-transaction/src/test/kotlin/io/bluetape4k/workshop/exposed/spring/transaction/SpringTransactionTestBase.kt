@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.exposed.spring.transaction
 
 import io.bluetape4k.support.uninitialized
-import org.jetbrains.exposed.spring.SpringTransactionManager
+import org.jetbrains.exposed.v1.spring.transaction.SpringTransactionManager
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext

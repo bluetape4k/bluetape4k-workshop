@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.exposed.spring.jdbc_template
 
-import org.jetbrains.exposed.spring.SpringTransactionManager
+import org.jetbrains.exposed.v1.spring.transaction.SpringTransactionManager
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

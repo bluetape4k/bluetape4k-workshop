@@ -2,8 +2,8 @@ package io.bluetape4k.workshop.exposed.spring.jdbc_template
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.uninitialized
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.MethodOrderer

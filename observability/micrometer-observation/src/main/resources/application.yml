@@ -6,6 +6,8 @@ spring:
             indent-output: true
     codec:
         max-in-memory-size: 10MB
+    aot:
+        enabled: true  # AOT (Ahead Of Time) 컴파일 활성화
 
 info:
     name: ${spring.application.name}

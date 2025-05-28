@@ -1,10 +1,10 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.customId
 
-import org.jetbrains.exposed.sql.CharColumnType
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.ColumnTransformer
-import org.jetbrains.exposed.sql.ColumnWithTransform
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.v1.core.CharColumnType
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.ColumnTransformer
+import org.jetbrains.exposed.v1.core.ColumnWithTransform
+import org.jetbrains.exposed.v1.core.Table
 import java.io.Serializable
 
 

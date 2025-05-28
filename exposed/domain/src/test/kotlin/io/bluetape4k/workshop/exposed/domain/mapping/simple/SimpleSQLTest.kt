@@ -6,11 +6,12 @@ import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldHaveSize
-import org.jetbrains.exposed.dao.entityCache
-import org.jetbrains.exposed.sql.Query
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.batchInsert
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.v1.dao.entityCache
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.Query
+import org.jetbrains.exposed.v1.jdbc.batchInsert
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
@@ -23,7 +24,7 @@ class SimpleSQLTest: AbstractExposedTest() {
         private const val ENTITY_COUNT = 10
     }
 
-    private fun Transaction.persistSimpleEntities() {
+    private fun JdbcTransaction.persistSimpleEntities() {
         val names = List(ENTITY_COUNT) { faker.name().name() }
 
         SimpleTable.batchInsert(names) { name ->

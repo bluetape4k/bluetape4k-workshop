@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.exposed.domain.mapper
 import io.bluetape4k.workshop.exposed.domain.dto.ActorDTO
 import io.bluetape4k.workshop.exposed.domain.schema.Actor
 import io.bluetape4k.workshop.exposed.domain.schema.Actors
-import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.v1.core.ResultRow
 
 fun ResultRow.toActorDTO() = ActorDTO(
     id = this[Actors.id].value,

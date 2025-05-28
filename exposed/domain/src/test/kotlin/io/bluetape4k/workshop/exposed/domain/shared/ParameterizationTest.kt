@@ -6,19 +6,18 @@ import io.bluetape4k.workshop.exposed.inProperCase
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
-import org.jetbrains.exposed.sql.BooleanColumnType
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.IntegerColumnType
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.StdOutSqlLogger
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.VarCharColumnType
-import org.jetbrains.exposed.sql.addLogger
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.statements.StatementType
-import org.jetbrains.exposed.sql.statements.StatementType.INSERT
-import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.BooleanColumnType
+import org.jetbrains.exposed.v1.core.IntegerColumnType
+import org.jetbrains.exposed.v1.core.StdOutSqlLogger
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.VarCharColumnType
+import org.jetbrains.exposed.v1.core.statements.StatementType
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.addLogger
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -56,7 +55,7 @@ class ParameterizationTest: AbstractExposedTest() {
             exec(
                 stmt = "INSERT INTO ${TempTable.tableName} (foo) VALUES (?)",
                 args = listOf(VarCharColumnType() to "John \"Johny\" Johnson"),
-                INSERT
+                StatementType.INSERT
             )
 
             TempTable.selectAll().single()[TempTable.name] shouldBeEqualTo "John \"Johny\" Johnson"

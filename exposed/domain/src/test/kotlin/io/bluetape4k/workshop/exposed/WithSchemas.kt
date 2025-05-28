@@ -1,15 +1,16 @@
 package io.bluetape4k.workshop.exposed
 
-import org.jetbrains.exposed.sql.DatabaseConfig
-import org.jetbrains.exposed.sql.Schema
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.Transaction
+import org.jetbrains.exposed.v1.core.DatabaseConfig
+import org.jetbrains.exposed.v1.core.Schema
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+
 
 fun withSchemas(
     dialect: TestDB,
     vararg schemas: Schema,
     configure: (DatabaseConfig.Builder.() -> Unit)? = null,
-    statement: Transaction.() -> Unit,
+    statement: JdbcTransaction.() -> Unit,
 ) {
     withDb(dialect, configure) {
         if (currentDialectTest.supportsCreateSchema) {

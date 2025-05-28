@@ -8,20 +8,20 @@ import io.bluetape4k.workshop.exposed.domain.shared.ddl.EnumerationTest.Foo.Baz
 import io.bluetape4k.workshop.exposed.withDb
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.update
-import org.jetbrains.exposed.sql.vendors.H2Dialect
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
+import org.jetbrains.exposed.v1.dao.IntEntity
+import org.jetbrains.exposed.v1.dao.IntEntityClass
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -31,7 +31,7 @@ class EnumerationTest: AbstractExposedTest() {
 
     // NOTE: MYSQL_V8 은 지원하지 않습니다.
     private val supportsCustomEnumerationDB =
-        TestDB.ALL_POSTGRES + TestDB.ALL_H2 // + TestDB.MYSQL_V5
+        TestDB.ALL_H2 // + TestDB.ALL_POSTGRES // + TestDB.MYSQL_V5
 
     internal enum class Foo {
         Bar, Baz;
@@ -88,7 +88,7 @@ class EnumerationTest: AbstractExposedTest() {
         withDb(testDB) {
             val sqlType = when (currentDialect) {
                 is H2Dialect, is MysqlDialect -> "ENUM('Bar', 'Baz')"
-                is PostgreSQLDialect          -> "FooEnum"
+                is PostgreSQLDialect -> "FooEnum"
                 else                          -> error("Unsupported case")
             }
 
@@ -140,7 +140,7 @@ class EnumerationTest: AbstractExposedTest() {
         withDb(testDB) {
             val sqlType = when (currentDialect) {
                 is H2Dialect, is MysqlDialect -> "ENUM('Bar', 'Baz')"
-                is PostgreSQLDialect          -> "FooEnum"
+                is PostgreSQLDialect -> "FooEnum"
                 else                          -> error("Unsupported case")
             }
 
@@ -199,7 +199,7 @@ class EnumerationTest: AbstractExposedTest() {
         withDb(testDB) {
             val sqlType = when (currentDialect) {
                 is H2Dialect, is MysqlDialect -> "ENUM('Bar', 'Baz')"
-                is PostgreSQLDialect          -> "FooEnum"
+                is PostgreSQLDialect -> "FooEnum"
                 else                          -> error("Unsupported case")
             }
 

@@ -1,7 +1,8 @@
 package io.bluetape4k.workshop.exposed.domain.schema
 
-import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.Table
+
 
 /**
  * 영화([Movies])에 출연한 영화 배우([Actors])에 대한 정보를 저장하는 테이블 (Many-to-Many 관계를 표현합니다)

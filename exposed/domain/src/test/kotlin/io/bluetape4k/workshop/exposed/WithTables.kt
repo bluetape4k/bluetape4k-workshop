@@ -2,12 +2,12 @@ package io.bluetape4k.workshop.exposed
 
 import io.bluetape4k.logging.KotlinLogging
 import io.bluetape4k.logging.error
-import org.jetbrains.exposed.sql.DatabaseConfig
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.Transaction
-import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
-import org.jetbrains.exposed.sql.transactions.transactionManager
+import org.jetbrains.exposed.v1.core.DatabaseConfig
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import kotlin.coroutines.CoroutineContext
 
 private val log = KotlinLogging.logger {}
@@ -16,7 +16,7 @@ fun withTables(
     testDB: TestDB,
     vararg tables: Table,
     configure: (DatabaseConfig.Builder.() -> Unit)? = null,
-    statement: Transaction.(TestDB) -> Unit,
+    statement: JdbcTransaction.(TestDB) -> Unit,
 ) {
     withDb(testDB, configure) {
         runCatching {
@@ -52,7 +52,7 @@ suspend fun withSuspendedTables(
     vararg tables: Table,
     context: CoroutineContext? = null,
     configure: (DatabaseConfig.Builder.() -> Unit)? = null,
-    statement: suspend Transaction.(TestDB) -> Unit,
+    statement: suspend JdbcTransaction.(TestDB) -> Unit,
 ) {
     withSuspendedDb(testDB, context, configure) {
         try {

@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.exposed.domain.shared
 
-import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.Table
 
 /**
  * Postgres:

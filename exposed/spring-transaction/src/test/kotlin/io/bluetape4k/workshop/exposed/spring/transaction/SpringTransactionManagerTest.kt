@@ -5,9 +5,9 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeGreaterThan
 import org.amshove.kluent.shouldBeTrue
-import org.jetbrains.exposed.spring.SpringTransactionManager
-import org.jetbrains.exposed.sql.DatabaseConfig
-import org.jetbrains.exposed.sql.transactions.TransactionManager
+import org.jetbrains.exposed.v1.core.DatabaseConfig
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.spring.transaction.SpringTransactionManager
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -301,8 +301,7 @@ class SpringTransactionManagerTest {
         tm.executeAssert {
             it.isNewTransaction.shouldBeTrue()
             tm.executeAssert(
-                initializeConnection = false,
-                propagationBehavior = TransactionDefinition.PROPAGATION_NOT_SUPPORTED
+                initializeConnection = false, propagationBehavior = TransactionDefinition.PROPAGATION_NOT_SUPPORTED
             ) {
                 assertFailsWith<IllegalStateException> {
                     TransactionManager.current().connection

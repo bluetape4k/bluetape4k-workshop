@@ -11,15 +11,15 @@ import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
-import org.jetbrains.exposed.dao.entityCache
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.dao.load
-import org.jetbrains.exposed.sql.ReferenceOption.CASCADE
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.dao.IntEntity
+import org.jetbrains.exposed.v1.dao.IntEntityClass
+import org.jetbrains.exposed.v1.dao.entityCache
+import org.jetbrains.exposed.v1.dao.load
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
@@ -52,7 +52,12 @@ class MapIdOneToOneTest: AbstractExposedTest() {
      * ```
      */
     object Pictures: IdTable<Int>("pictures") {
-        override val id = reference("author_id", Authors, onDelete = CASCADE, onUpdate = CASCADE)
+        override val id = reference(
+            "author_id",
+            Authors,
+            onDelete = ReferenceOption.CASCADE,
+            onUpdate = ReferenceOption.CASCADE
+        )
         val path = varchar("path", 255)
 
         override val primaryKey = PrimaryKey(Pictures.id)
@@ -71,7 +76,12 @@ class MapIdOneToOneTest: AbstractExposedTest() {
      */
     object Biographys: IdTable<Int>("biographys") {
         // @MapsId 와 같다. (Authors.id 를 Id로 사용한다)
-        override val id = reference("author_id", Authors, onDelete = CASCADE, onUpdate = CASCADE)
+        override val id = reference(
+            "author_id",
+            Authors,
+            onDelete = ReferenceOption.CASCADE,
+            onUpdate = ReferenceOption.CASCADE
+        )
         val infomation = varchar("information", 255).nullable()
 
         override val primaryKey = PrimaryKey(Biographys.id)

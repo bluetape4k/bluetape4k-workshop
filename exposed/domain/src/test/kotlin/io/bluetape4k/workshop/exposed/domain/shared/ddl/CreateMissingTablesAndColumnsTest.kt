@@ -5,6 +5,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.assertFailAndRollback
+import io.bluetape4k.workshop.exposed.currentDialectMetadataTest
 import io.bluetape4k.workshop.exposed.currentDialectTest
 import io.bluetape4k.workshop.exposed.expectException
 import io.bluetape4k.workshop.exposed.inProperCase
@@ -16,32 +17,33 @@ import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldNotBeEmpty
 import org.amshove.kluent.shouldNotBeNull
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.IdTable
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.dao.id.LongIdTable
-import org.jetbrains.exposed.sql.Column
-import org.jetbrains.exposed.sql.ReferenceOption
-import org.jetbrains.exposed.sql.Schema
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.doubleLiteral
-import org.jetbrains.exposed.sql.exists
-import org.jetbrains.exposed.sql.floatLiteral
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.insertAndGetId
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.sql.vendors.OracleDialect
-import org.jetbrains.exposed.sql.vendors.PrimaryKeyMetadata
+import org.jetbrains.exposed.v1.core.Column
+import org.jetbrains.exposed.v1.core.ReferenceOption
+import org.jetbrains.exposed.v1.core.Schema
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.isNull
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.IdTable
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.core.doubleLiteral
+import org.jetbrains.exposed.v1.core.floatLiteral
+import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
+import org.jetbrains.exposed.v1.core.vendors.OracleDialect
+import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.exists
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
 import kotlin.properties.Delegates
 
+@Suppress("DEPRECATION")
 class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
     companion object: KLogging()
@@ -310,11 +312,11 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
 
         withTables(testDB, initialTable) {
             t.id.ddl.single() shouldBeEqualTo "ALTER TABLE ${tableName.inProperCase()} ADD ${"id".inProperCase()} ${t.id.columnType.sqlType()} PRIMARY KEY"
-            currentDialectTest.tableColumns(t)[t]!!.size shouldBeEqualTo 1
+            currentDialectMetadataTest.tableColumns(t)[t]!!.size shouldBeEqualTo 1
 
             SchemaUtils.createMissingTablesAndColumns(t)
             // execCreateMissingTablesAndColumns(t)
-            currentDialectTest.tableColumns(t)[t]!!.size shouldBeEqualTo 2
+            currentDialectMetadataTest.tableColumns(t)[t]!!.size shouldBeEqualTo 2
         }
     }
 
@@ -335,7 +337,8 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
         withDb(testDB) {
             SchemaUtils.createMissingTablesAndColumns(noPKTable)
             // execCreateMissingTablesAndColumns(noPKTable)
-            var primaryKey: PrimaryKeyMetadata? = currentDialectTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
+            var primaryKey: PrimaryKeyMetadata? =
+                currentDialectMetadataTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
             primaryKey.shouldBeNull()
 
             val expected =
@@ -346,7 +349,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
             SchemaUtils.createMissingTablesAndColumns(singlePKTable)
             // execCreateMissingTablesAndColumns(singlePKTable)
 
-            primaryKey = currentDialectTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
+            primaryKey = currentDialectMetadataTest.existingPrimaryKeys(singlePKTable)[singlePKTable]
             primaryKey.shouldNotBeNull()
             primaryKey.columnNames.single() shouldBeEqualTo "bar".inProperCase()
 

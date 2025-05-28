@@ -5,21 +5,27 @@ import io.bluetape4k.logging.info
 import io.bluetape4k.support.requireNotNull
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import io.bluetape4k.workshop.exposed.currentDialectTest
+import io.bluetape4k.workshop.exposed.currentDialectMetadataTest
 import io.bluetape4k.workshop.exposed.inProperCase
 import io.bluetape4k.workshop.exposed.withDb
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
-import org.jetbrains.exposed.dao.id.IntIdTable
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.replace
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.TransactionManager
-import org.jetbrains.exposed.sql.transactions.transactionManager
-import org.jetbrains.exposed.sql.vendors.H2Dialect
-import org.jetbrains.exposed.sql.vendors.currentDialect
+import org.jetbrains.exposed.v1.core.InternalApi
+import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.avg
+import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
+import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
+import org.jetbrains.exposed.v1.core.vendors.H2Dialect
+import org.jetbrains.exposed.v1.core.vendors.currentDialect
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.batchInsert
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.replace
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -87,7 +93,8 @@ class H2Test: AbstractExposedTest() {
             val db = testDB.db.requireNotNull("testDB.db")
 
             try {
-                TransactionManager.registerManager(db, WrappedTransactionManager(db.transactionManager))
+                @OptIn(InternalApi::class)
+                CoreTransactionManager.registerDatabaseManager(db, WrappedTransactionManager(db.transactionManager))
                 Executors.newSingleThreadExecutor().apply {
                     submit {
                         TransactionManager.closeAndUnregister(db)
@@ -103,7 +110,7 @@ class H2Test: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `add auto primary key`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB == TestDB.H2 || testDB == TestDB.H2_MYSQL }
-        
+
         val tableName = "Foo"
         val initialTable = object: Table(tableName) {
             val bar = text("bar")
@@ -119,16 +126,36 @@ class H2Test: AbstractExposedTest() {
                 t.id.ddl[1] shouldBeEqualTo
                         "ALTER TABLE ${tableName.inProperCase()} ADD CONSTRAINT pk_$tableName PRIMARY KEY (${"id".inProperCase()})"
 
-                currentDialectTest.tableColumns(t)[t]!!.size shouldBeEqualTo 1
+
+                currentDialectMetadataTest.tableColumns(t)[t]!!.size shouldBeEqualTo 1
                 SchemaUtils.createMissingTablesAndColumns(t)
-                currentDialectTest.tableColumns(t)[t]!!.size shouldBeEqualTo 2
+                currentDialectMetadataTest.tableColumns(t)[t]!!.size shouldBeEqualTo 2
             } finally {
                 SchemaUtils.drop(t)
             }
         }
     }
 
-    class WrappedTransactionManager(val tm: TransactionManager): TransactionManager by tm
+    @ParameterizedTest
+    @MethodSource(ENABLE_DIALECTS_METHOD)
+    fun testH2V1WithBigDecimalFunctionThatReturnsShort(testDB: TestDB) {
+        Assumptions.assumeTrue { testDB in TestDB.ALL_H2 }
+        val testTable = object: Table("test_table") {
+            val number = short("number")
+        }
+
+        withTables(testDB, testTable) {
+            testTable.batchInsert(listOf<Short>(2, 4, 6, 8, 10)) { n ->
+                this[testTable.number] = n
+            }
+
+            val average = testTable.number.avg()
+            val result = testTable.select(average).single()[average]
+            result shouldBeEqualTo "6.00".toBigDecimal()
+        }
+    }
+
+    class WrappedTransactionManager(val tm: TransactionManagerApi): TransactionManagerApi by tm
 
     object Testing: Table("H2_TESTING") {
         val id = integer("id").autoIncrement()

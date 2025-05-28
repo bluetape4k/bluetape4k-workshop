@@ -1,6 +1,5 @@
 package io.bluetape4k.workshop.exposed.domain
 
-import MigrationUtils
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.exposed.domain.dto.ActorDTO
@@ -12,9 +11,10 @@ import io.bluetape4k.workshop.exposed.domain.schema.ActorsInMovies
 import io.bluetape4k.workshop.exposed.domain.schema.Movies
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.atTime
-import org.jetbrains.exposed.sql.batchInsert
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.batchInsert
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.migration.MigrationUtils
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.stereotype.Component

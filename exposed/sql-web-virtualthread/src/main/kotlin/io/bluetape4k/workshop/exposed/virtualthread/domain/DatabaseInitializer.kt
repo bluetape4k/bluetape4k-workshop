@@ -7,13 +7,14 @@ import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.MovieWithActorDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Actors
 import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.ActorsInMovies
 import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Movies
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.batchInsert
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.batchInsert
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.springframework.stereotype.Component
 import java.time.LocalDate
 
@@ -35,6 +36,7 @@ class DatabaseInitializer(
         insertTestData(database)
     }
 
+    @Suppress("DEPRECATION")
     private fun createSchema(database: Database) {
         log.info { "Creating schema and test data ..." }
 

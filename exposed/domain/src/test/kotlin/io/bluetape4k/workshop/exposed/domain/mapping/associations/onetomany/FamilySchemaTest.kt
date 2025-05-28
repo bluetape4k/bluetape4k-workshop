@@ -9,9 +9,9 @@ import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.Fami
 import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.FamilySchema.FatherTable
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
-import org.jetbrains.exposed.dao.entityCache
-import org.jetbrains.exposed.sql.SortOrder
-import org.jetbrains.exposed.sql.insertAndGetId
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.dao.entityCache
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -28,7 +28,7 @@ class FamilySchemaTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `one-to-many with ordering`(testDB: TestDB) {
         Assumptions.assumeTrue { testDB != TestDB.MYSQL_V5 }  // collate 문제 (한글)
-        
+
         withTables(testDB, *allFamilyTables) {
 
             val father1 = Father.new {

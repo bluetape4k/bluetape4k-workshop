@@ -9,12 +9,12 @@ import io.bluetape4k.workshop.exposed.domain.UserTable
 import io.bluetape4k.workshop.exposed.domain.toUser
 import io.bluetape4k.workshop.exposed.dto.UserCreateRequest
 import io.bluetape4k.workshop.exposed.dto.UserUpdateRequest
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.batchInsert
-import org.jetbrains.exposed.sql.deleteWhere
-import org.jetbrains.exposed.sql.insertAndGetId
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.update
+import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.jdbc.batchInsert
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.update
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
