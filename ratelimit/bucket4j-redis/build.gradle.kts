@@ -5,7 +5,7 @@ plugins {
 }
 
 springBoot {
-    mainClass.set("io.bluetape4k.workshop.bucket4j.redis.Bucket4jRedisApplicationKt")
+    mainClass.set("io.bluetape4k.workshop.bucket4j.Bucket4jRedisApplicationKt")
 }
 
 @Suppress("UnstableApiUsage")
@@ -20,7 +20,8 @@ dependencies {
 
     // Bucket4j
     implementation(Libs.bucket4j_core)
-    implementation(Libs.bucket4j_redis)
+    implementation(Libs.bucket4j_lettuce)
+    implementation(Libs.bucket4j_redisson)
     implementation(Libs.bucket4j_spring_boot_starter)
 
     // Redis

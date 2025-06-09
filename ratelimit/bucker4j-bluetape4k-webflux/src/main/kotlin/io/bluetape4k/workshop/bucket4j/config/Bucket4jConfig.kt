@@ -4,20 +4,20 @@ import io.bluetape4k.bucket4j.bucketConfiguration
 import io.bluetape4k.bucket4j.distributed.AsyncBucketProxyProvider
 import io.bluetape4k.bucket4j.distributed.BucketProxyProvider
 import io.bluetape4k.bucket4j.distributed.redis.lettuceBasedProxyManagerOf
-import io.bluetape4k.bucket4j.ratelimit.distributed.DistributedCoRateLimiter
 import io.bluetape4k.bucket4j.ratelimit.distributed.DistributedRateLimiter
+import io.bluetape4k.bucket4j.ratelimit.distributed.DistributedSuspendRateLimiter
 import io.bluetape4k.concurrent.virtualthread.VirtualThreadExecutor
 import io.github.bucket4j.BucketConfiguration
 import io.github.bucket4j.distributed.ExpirationAfterWriteStrategy
 import io.github.bucket4j.distributed.proxy.ClientSideConfig
 import io.github.bucket4j.distributed.proxy.ExecutionStrategy
 import io.github.bucket4j.distributed.proxy.ProxyManager
+import io.github.bucket4j.redis.lettuce.cas.LettuceBasedProxyManager
 import io.lettuce.core.RedisClient
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
-import kotlin.time.toJavaDuration
+import java.time.Duration
+
 
 @Configuration
 class Bucket4jConfig {
@@ -30,10 +30,10 @@ class Bucket4jConfig {
     @Bean
     fun bucketConfiguration(): BucketConfiguration = bucketConfiguration {
         addLimit {
-            it.capacity(10).refillIntervally(10, 10.seconds.toJavaDuration())
+            it.capacity(10).refillIntervally(10, Duration.ofSeconds(10))
         }
         addLimit {
-            it.capacity(100).refillGreedy(10, 1.minutes.toJavaDuration())
+            it.capacity(100).refillGreedy(10, Duration.ofMinutes(1))
         }
     }
 
@@ -44,20 +44,14 @@ class Bucket4jConfig {
      * @return
      */
     @Bean
-    fun proxyManager(lettuceClient: RedisClient): ProxyManager<ByteArray> {
+    fun proxyManager(lettuceClient: RedisClient): LettuceBasedProxyManager<ByteArray> {
         return lettuceBasedProxyManagerOf(lettuceClient) {
-//            withExpirationStrategy(
-//                ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(90.seconds.toJavaDuration())
-//            )
-            withClientSideConfig(
-                ClientSideConfig.getDefault()
-                    .withExpirationAfterWriteStrategy(
-                        ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(
-                            90.seconds.toJavaDuration()
-                        )
-                    )
-                    .withExecutionStrategy(ExecutionStrategy.background(VirtualThreadExecutor))
-            )
+            ClientSideConfig.getDefault()
+                .withExpirationAfterWriteStrategy(
+                    ExpirationAfterWriteStrategy
+                        .basedOnTimeForRefillingBucketUpToMax(Duration.ofSeconds(90))
+                )
+                .withExecutionStrategy(ExecutionStrategy.background(VirtualThreadExecutor))
         }
     }
 
@@ -107,5 +101,5 @@ class Bucket4jConfig {
      */
     @Bean
     fun distributedCoRateLimiter(asyncBucketProxyProvider: AsyncBucketProxyProvider) =
-        DistributedCoRateLimiter(asyncBucketProxyProvider)
+        DistributedSuspendRateLimiter(asyncBucketProxyProvider)
 }

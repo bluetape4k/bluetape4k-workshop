@@ -5,7 +5,7 @@ plugins {
 }
 
 springBoot {
-    mainClass.set("io.bluetape4k.workshop.gatway.order.OrderApplicationKt")
+    mainClass.set("io.bluetape4k.workshop.gateway.orders.OrderApplicationKt")
 
     buildInfo {
         properties {

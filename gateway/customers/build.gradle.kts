@@ -5,7 +5,7 @@ plugins {
 }
 
 springBoot {
-    mainClass.set("io.bluetape4k.workshop.gatway.customer.CustomerApplicationKt")
+    mainClass.set("io.bluetape4k.workshop.gateway.customer.CustomerApplicationKt")
 
     buildInfo {
         properties {

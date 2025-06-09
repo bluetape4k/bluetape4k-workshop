@@ -5,9 +5,8 @@ plugins {
     id(Plugins.gatling) version Plugins.Versions.gatling
 }
 
-
 springBoot {
-    mainClass.set("io.bluetape4k.workshop.webflux.virtualthread.WebFluxVirtualThreadAppKt")
+    mainClass.set("io.bluetape4k.workshop.webflux.virtualthread.WebfluxVirtualThreadAppKt")
 }
 
 @Suppress("UnstableApiUsage")
