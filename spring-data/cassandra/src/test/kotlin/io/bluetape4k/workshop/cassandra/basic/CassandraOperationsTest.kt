@@ -8,7 +8,7 @@ import io.bluetape4k.cassandra.querybuilder.literal
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
-import io.bluetape4k.spring.cassandra.coInsert
+import io.bluetape4k.spring.cassandra.suspendInsert
 import io.bluetape4k.workshop.cassandra.AbstractCassandraTest
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeNull
@@ -79,7 +79,7 @@ class CassandraOperationsTest(
         val user = newBasicUser(42L)
 
         val asyncTemplate = AsyncCassandraTemplate(session)
-        asyncTemplate.coInsert(user)
+        asyncTemplate.suspendInsert(user)
 
         val loaded = operations.selectOneById<BasicUser>(user.id)
         loaded shouldBeEqualTo user

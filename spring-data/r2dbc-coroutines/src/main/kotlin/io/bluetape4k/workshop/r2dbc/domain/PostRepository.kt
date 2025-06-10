@@ -1,14 +1,14 @@
 package io.bluetape4k.workshop.r2dbc.domain
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.spring.r2dbc.coroutines.coCountAll
-import io.bluetape4k.spring.r2dbc.coroutines.coDeleteAll
-import io.bluetape4k.spring.r2dbc.coroutines.coFindFirstById
-import io.bluetape4k.spring.r2dbc.coroutines.coFindFirstByIdOrNull
-import io.bluetape4k.spring.r2dbc.coroutines.coFindOneById
-import io.bluetape4k.spring.r2dbc.coroutines.coFindOneByIdOrNull
-import io.bluetape4k.spring.r2dbc.coroutines.coInsert
-import io.bluetape4k.spring.r2dbc.coroutines.coSelectAll
+import io.bluetape4k.spring.r2dbc.coroutines.suspendCountAll
+import io.bluetape4k.spring.r2dbc.coroutines.suspendDeleteAll
+import io.bluetape4k.spring.r2dbc.coroutines.suspendFindFirstById
+import io.bluetape4k.spring.r2dbc.coroutines.suspendFindFirstByIdOrNull
+import io.bluetape4k.spring.r2dbc.coroutines.suspendFindOneById
+import io.bluetape4k.spring.r2dbc.coroutines.suspendFindOneByIdOrNull
+import io.bluetape4k.spring.r2dbc.coroutines.suspendInsert
+import io.bluetape4k.spring.r2dbc.coroutines.suspendSelectAll
 import kotlinx.coroutines.flow.Flow
 import org.springframework.data.r2dbc.convert.MappingR2dbcConverter
 import org.springframework.data.r2dbc.core.R2dbcEntityOperations
@@ -23,14 +23,14 @@ class PostRepository(
 ) {
     companion object: KLoggingChannel()
 
-    suspend fun count(): Long = operations.coCountAll<Post>()
-    fun findAll(): Flow<Post> = operations.coSelectAll()
-    suspend fun findOneById(id: Long): Post = operations.coFindOneById(id)
-    suspend fun findOneByIdOrNull(id: Long): Post? = operations.coFindOneByIdOrNull(id)
-    suspend fun findFirstById(id: Long): Post = operations.coFindFirstById(id)
-    suspend fun findFirstByIdOrNull(id: Long): Post? = operations.coFindFirstByIdOrNull(id)
-    suspend fun deleteAll(): Long = operations.coDeleteAll<Post>()
-    suspend fun save(post: Post): Post = operations.coInsert(post)
+    suspend fun count(): Long = operations.suspendCountAll<Post>()
+    fun findAll(): Flow<Post> = operations.suspendSelectAll()
+    suspend fun findOneById(id: Long): Post = operations.suspendFindOneById(id)
+    suspend fun findOneByIdOrNull(id: Long): Post? = operations.suspendFindOneByIdOrNull(id)
+    suspend fun findFirstById(id: Long): Post = operations.suspendFindFirstById(id)
+    suspend fun findFirstByIdOrNull(id: Long): Post? = operations.suspendFindFirstByIdOrNull(id)
+    suspend fun deleteAll(): Long = operations.suspendDeleteAll<Post>()
+    suspend fun save(post: Post): Post = operations.suspendInsert(post)
     suspend fun init() {
         save(Post(title = "My first post title", content = "Content of my first post"))
         save(Post(title = "My second post title", content = "Content of my second post"))
