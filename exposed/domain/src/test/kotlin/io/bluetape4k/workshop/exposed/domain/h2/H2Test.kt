@@ -32,6 +32,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit.SECONDS
 
+@Suppress("DEPRECATION")
 class H2Test: AbstractExposedTest() {
 
     companion object: KLogging()

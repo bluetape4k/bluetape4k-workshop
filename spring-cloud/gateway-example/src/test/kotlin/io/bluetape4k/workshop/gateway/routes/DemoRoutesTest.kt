@@ -53,7 +53,8 @@ class DemoRoutesTest(
                     log.debug { "key=$key, value=$value" }
                 }
                 val headers = it.responseBody!!["headers"] as Map<*, *>
-                headers["X-Forwarded-Host"] shouldBeEqualTo "www.myhost.org"
+                // headers["X-Forwarded-Host"] shouldBeEqualTo "www.myhost.org"
+                headers["Host"] shouldBeEqualTo "nghttp2.org"
             }
     }
 

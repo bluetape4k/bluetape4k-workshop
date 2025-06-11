@@ -1,11 +1,11 @@
 package io.bluetape4k.workshop.redisson.locks
 
+import io.bluetape4k.coroutines.support.suspendAwait
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.redis.redisson.coroutines.coAwait
 import io.bluetape4k.redis.redisson.coroutines.getLockId
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.atomicfu.atomic
@@ -42,13 +42,13 @@ class FairLockExamples: AbstractRedissonTest() {
                 val lockId = redisson.getLockId(lock.name)
 
                 // 락 획득에 5초를 대기하고, 10초 후에 lock을 자동 해제합니다.
-                val locked = lock.tryLockAsync(5, 10, TimeUnit.SECONDS, lockId).coAwait()
+                val locked = lock.tryLockAsync(5, 10, TimeUnit.SECONDS, lockId).suspendAwait()
 
                 if (locked) {
                     lockCounter.incrementAndGet()
                     delay(10)
                     // Coroutine 환경에서는 unlock 시에도 lock 소유자를 지정해줘야 합니다.
-                    lock.unlockAsync(lockId).coAwait()
+                    lock.unlockAsync(lockId).suspendAwait()
                 }
             }
             .run()

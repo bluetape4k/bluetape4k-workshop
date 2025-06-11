@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.redisson.objects
 
+import io.bluetape4k.coroutines.support.suspendAwait
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.redis.redisson.coroutines.coAwait
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.atomicfu.atomic
 import org.amshove.kluent.shouldBeEqualTo
@@ -35,26 +35,26 @@ class TopicExamples: AbstractRedissonTest() {
         val listenerId1 = topic.addListenerAsync(String::class.java) { channel, msg ->
             println("Listener1: channel[$channel] received: $msg")
             receivedCounter.incrementAndGet()
-        }.coAwait()
+        }.suspendAwait()
 
         // topic 예 listener를 등록합니다.
         val listenerId2 = topic.addListenerAsync(String::class.java) { channel, msg ->
             println("Listener2: channel[$channel] received: $msg")
             receivedCounter.incrementAndGet()
-        }.coAwait()
+        }.suspendAwait()
 
         log.debug { "Listener listener1 Id=$listenerId1, listener2 Id=$listenerId2" }
         topic.countListeners() shouldBeEqualTo 2    // Listener 는 2개 등록 
         topic.countSubscribers() shouldBeEqualTo 1  // 단순 RedissonTopic 은 Subscriber 가 1개
 
         // topic 에 메시지 전송
-        topic.publishAsync("message-1").coAwait()
-        topic.publishAsync("message-2").coAwait()
+        topic.publishAsync("message-1").suspendAwait()
+        topic.publishAsync("message-2").suspendAwait()
 
         // topic 에 listener가 2개, 메시지 2개 전송
         await until { receivedCounter.value >= 2 * 2 }
 
-        topic.removeAllListenersAsync().coAwait()
+        topic.removeAllListenersAsync().suspendAwait()
     }
 
     /**
@@ -77,13 +77,13 @@ class TopicExamples: AbstractRedissonTest() {
         val listenerId1 = topic1.addListenerAsync(String::class.java) { channel, msg ->
             println("Listener1: channel[$channel] received: $msg")
             receivedCounter.incrementAndGet()
-        }.coAwait()
+        }.suspendAwait()
 
         // topic 예 listener를 등록합니다.
         val listenerId2 = topic2.addListenerAsync(String::class.java) { channel, msg ->
             println("Listener2: channel[$channel] received: $msg")
             receivedCounter.incrementAndGet()
-        }.coAwait()
+        }.suspendAwait()
 
         log.debug { "Listener listener1 Id=$listenerId1, listener2 Id=$listenerId2" }
         topic1.countListeners() shouldBeEqualTo 1    // topic1에 Listener 는 1개 등록
@@ -92,14 +92,14 @@ class TopicExamples: AbstractRedissonTest() {
         topic2.countSubscribers() shouldBeEqualTo 2  // 2개의 topic 이므로
 
         // topic 에 메시지 전송
-        topic1.publishAsync("message-1").coAwait()
-        topic2.publishAsync("message-2").coAwait()
+        topic1.publishAsync("message-1").suspendAwait()
+        topic2.publishAsync("message-2").suspendAwait()
 
         // topic 에 listener가 2개, 메시지 2개 전송
         await until { receivedCounter.value >= 2 * 2 }
 
-        topic1.removeAllListenersAsync().coAwait()
-        topic2.removeAllListenersAsync().coAwait()
+        topic1.removeAllListenersAsync().suspendAwait()
+        topic2.removeAllListenersAsync().suspendAwait()
 
         redisson1.shutdown()
         redisson2.shutdown()

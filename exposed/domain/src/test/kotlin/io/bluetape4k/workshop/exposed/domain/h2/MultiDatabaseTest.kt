@@ -33,6 +33,7 @@ import org.junit.jupiter.api.TestInstance
 import java.sql.Connection
 import java.util.concurrent.Executors
 
+@Suppress("DEPRECATION")
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class MultiDatabaseTest {
 

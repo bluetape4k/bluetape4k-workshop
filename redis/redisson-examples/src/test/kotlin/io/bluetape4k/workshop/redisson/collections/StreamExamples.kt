@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.redisson.collections
 
-import io.bluetape4k.coroutines.support.coAwait
+import io.bluetape4k.coroutines.support.suspendAwait
 import io.bluetape4k.idgenerators.uuid.TimebasedUuid
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
@@ -99,8 +99,8 @@ class StreamExamples: AbstractRedissonTest() {
         stream.createGroup(StreamCreateGroupArgs.name(groupName).makeStream())
 
         // 메시지를 전송한다
-        val messageId1 = stream.addAsync(StreamAddArgs.entry("1", 1)).coAwait()
-        val messageId2 = stream.addAsync(StreamAddArgs.entry("2", 2)).coAwait()
+        val messageId1 = stream.addAsync(StreamAddArgs.entry("1", 1)).suspendAwait()
+        val messageId2 = stream.addAsync(StreamAddArgs.entry("2", 2)).suspendAwait()
         log.debug { "메시지 전송, messageId1=$messageId1" }
         log.debug { "메시지 전송, messageId2=$messageId2" }
 
@@ -109,7 +109,7 @@ class StreamExamples: AbstractRedissonTest() {
             groupName,
             consumerName1,
             StreamReadGroupArgs.neverDelivered()
-        ).coAwait()
+        ).suspendAwait()
 
         map1.keys.forEach { messageId ->
             log.debug { "메시지 수신, messageId=$messageId" }
@@ -119,7 +119,7 @@ class StreamExamples: AbstractRedissonTest() {
         map1.keys shouldBeEqualTo setOf(messageId1, messageId2)
 
         // 2개의 메시지를 읽었다고 ack 보냄 (전송완료)
-        stream.ackAsync(groupName, *map1.keys.toTypedArray()).coAwait()
+        stream.ackAsync(groupName, *map1.keys.toTypedArray()).suspendAwait()
 
         // 메시지를 기다린다.
         val consumerJob = scope.launch {
@@ -128,7 +128,7 @@ class StreamExamples: AbstractRedissonTest() {
                 groupName,
                 consumerName2,
                 StreamReadGroupArgs.neverDelivered().timeout(10.seconds.toJavaDuration())
-            ).coAwait()
+            ).suspendAwait()
 
             // 1개의 메시지를 받았다
             map2.keys shouldHaveSize 1
@@ -136,15 +136,15 @@ class StreamExamples: AbstractRedissonTest() {
             log.debug { "메시지 수신, messageId=$msgId" }
             map2[msgId]!! shouldBeEqualTo mapOf<String, Int>("3" to 3, "4" to 4)
 
-            stream.ackAllAsync(groupName, map2.keys).coAwait() shouldBeEqualTo 1L
+            stream.ackAllAsync(groupName, map2.keys).suspendAwait() shouldBeEqualTo 1L
         }
 
         // 새로운 메시지 1개를 전송한다
-        val messageId3 = stream.addAsync(streamAddArgsOf("3" to 3, "4" to 4)).coAwait()
+        val messageId3 = stream.addAsync(streamAddArgsOf("3" to 3, "4" to 4)).suspendAwait()
         log.debug { "메시지 전송, messageId3=$messageId3" }
         delay(10)
         consumerJob.join()
 
-        stream.deleteAsync().coAwait()
+        stream.deleteAsync().suspendAwait()
     }
 }

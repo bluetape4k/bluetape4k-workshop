@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/coroutines/backendA")
-class BackendACoController(
+class SuspendBackendAController(
     @Qualifier("backendACoService") private val serviceA: CoService,
 ) {
     companion object: KLoggingChannel() {

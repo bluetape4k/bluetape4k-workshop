@@ -24,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.sql.Connection
 
+@Suppress("DEPRECATION")
 class ConnectionPoolTest: AbstractExposedTest() {
 
     companion object: KLogging()

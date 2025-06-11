@@ -1,11 +1,11 @@
 package io.bluetape4k.workshop.redisson.objects
 
+import io.bluetape4k.coroutines.support.suspendAwait
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.random.RandomizedTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.redis.redisson.RedissonCodecs
-import io.bluetape4k.redis.redisson.coroutines.coAwait
 import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import org.amshove.kluent.shouldBeFalse
@@ -77,6 +77,6 @@ class BloomFilterExamples: AbstractRedissonTest() {
         val notExistMessage = Message(42, randomString())
         bloomFilter.contains(notExistMessage).shouldBeFalse()
 
-        bloomFilter.deleteAsync().coAwait().shouldBeTrue()
+        bloomFilter.deleteAsync().suspendAwait().shouldBeTrue()
     }
 }

@@ -94,6 +94,7 @@ suspend fun withSuspendedDb(
         }
         val database = testDB.db!!
 
+        @Suppress("DEPRECATION")
         newSuspendedTransaction(
             context = context,
             db = database,

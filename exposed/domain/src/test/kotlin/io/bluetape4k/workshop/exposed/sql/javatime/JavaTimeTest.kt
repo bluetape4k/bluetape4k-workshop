@@ -70,6 +70,7 @@ import java.util.*
 /**
  * Exposed에서 제공하는 Java Time 수형을 사용하는 테스트
  */
+@Suppress("DEPRECATION")
 class JavaTimeTest: AbstractExposedTest() {
 
     companion object: KLogging()

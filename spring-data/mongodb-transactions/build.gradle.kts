@@ -2,7 +2,6 @@ plugins {
     kotlin("plugin.spring")
 }
 
-
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }

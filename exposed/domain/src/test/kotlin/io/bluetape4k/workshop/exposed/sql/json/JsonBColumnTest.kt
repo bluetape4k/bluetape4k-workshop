@@ -60,6 +60,7 @@ import org.junit.jupiter.params.provider.MethodSource
 /**
  * JSONB 컬럼 사용 예제
  */
+@Suppress("DEPRECATION")
 class JsonBColumnTest: AbstractExposedJsonTest() {
 
     companion object: KLogging()

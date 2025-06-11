@@ -4,6 +4,10 @@ plugins {
     id(Plugins.graalvm_native)
 }
 
+springBoot {
+    mainClass.set("io.bluetape4k.workshop.redis.cluster.RedisClusterApplicationKt")
+}
+
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }

@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.redisson.collections
 
+import io.bluetape4k.coroutines.support.suspendAwait
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.redis.redisson.coroutines.coAwait
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldBeEqualTo
@@ -40,7 +40,7 @@ class ScoredSortedSetExamples: AbstractRedissonTest() {
         }
 
         // RBatch를 실행한다
-        batch.executeAsync().coAwait()
+        batch.executeAsync().suspendAwait()
 
         return redisson.getScoredSortedSet(name)
     }
@@ -50,18 +50,18 @@ class ScoredSortedSetExamples: AbstractRedissonTest() {
         val zset = getSampleScoredSortedSet(randomName())
 
         // ScoredSortedSet의 크기는 6이다
-        zset.sizeAsync().coAwait() shouldBeEqualTo 6
+        zset.sizeAsync().suspendAwait() shouldBeEqualTo 6
         // ScoredSortedSet의 요소는 "A", "B", "C", "X", "Y", "Z" 이다
         zset.toSortedSet() shouldBeEqualTo setOf("A", "B", "C", "X", "Y", "Z")
 
         // ScoredSortedSet에 "B" 요소가 포함되어 있는지 확인한다
-        zset.containsAsync("B").coAwait().shouldBeTrue()
+        zset.containsAsync("B").suspendAwait().shouldBeTrue()
 
         // ScoredSortedSet에 "B", "C", "X" 요소가 모두 포함되어 있는지 확인한다
-        zset.containsAllAsync(setOf("B", "C", "X")).coAwait().shouldBeTrue()
+        zset.containsAllAsync(setOf("B", "C", "X")).suspendAwait().shouldBeTrue()
 
         // ScoredSortedSet을 삭제한다
-        zset.deleteAsync().coAwait()
+        zset.deleteAsync().suspendAwait()
     }
 
     @Test
@@ -69,11 +69,11 @@ class ScoredSortedSetExamples: AbstractRedissonTest() {
         val zset = getSampleScoredSortedSet(randomName())
 
         // "B" 요소의 Score를 15.0 증가시킨다 (20.0 -> 35.0)
-        zset.addScoreAsync("B", 15.0).coAwait() shouldBeEqualTo 35.0
+        zset.addScoreAsync("B", 15.0).suspendAwait() shouldBeEqualTo 35.0
 
         // "X"의 score를 100.0 증가시키고, 올림차순 Rank를 얻는다 (Rank는 0부터 시작, X의 Rank는 3 -> 5로 변경)
-        zset.addScoreAndGetRankAsync("X", 100.0).coAwait() shouldBeEqualTo 5
+        zset.addScoreAndGetRankAsync("X", 100.0).suspendAwait() shouldBeEqualTo 5
 
-        zset.deleteAsync().coAwait()
+        zset.deleteAsync().suspendAwait()
     }
 }

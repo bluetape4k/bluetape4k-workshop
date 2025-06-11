@@ -61,6 +61,7 @@ import kotlin.test.assertIs
 
 // SQLite excluded from most tests as it only allows auto-increment on single column PKs.
 // SQL Server is sometimes excluded because it doesn't allow inserting explicit values for identity columns.
+@Suppress("DEPRECATION")
 class CompositeIdTableEntityTest: AbstractExposedTest() {
 
     companion object: KLogging()

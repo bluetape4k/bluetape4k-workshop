@@ -24,6 +24,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.sql.SQLException
 
+@Suppress("DEPRECATION")
 class ColumnDefinitionTest: AbstractExposedTest() {
 
     val columnCommentSupportedDB = TestDB.ALL_H2 + TestDB.MYSQL_V8

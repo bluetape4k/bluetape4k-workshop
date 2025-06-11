@@ -1,12 +1,12 @@
 package io.bluetape4k.workshop.redisson.locks
 
+import io.bluetape4k.coroutines.support.suspendAwait
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.redis.redisson.coroutines.coAwait
 import io.bluetape4k.redis.redisson.coroutines.getLockId
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.atomicfu.atomic
@@ -151,9 +151,9 @@ class FencedLockExamples: AbstractRedissonTest() {
             .roundsPerJob(16)
             .add {
                 val mlockId = redisson.getLockId("ferncedLock")
-                val locked = lock.tryLockAsync(5, 10, TimeUnit.SECONDS, mlockId).coAwait()
+                val locked = lock.tryLockAsync(5, 10, TimeUnit.SECONDS, mlockId).suspendAwait()
                 if (locked) {
-                    val token = lock.tokenAsync.coAwait()
+                    val token = lock.tokenAsync.suspendAwait()
                     if (token > 0) {
                         log.debug { "Lock 획득. locked=$token" }
                         lockCounter.incrementAndGet()
@@ -161,7 +161,7 @@ class FencedLockExamples: AbstractRedissonTest() {
                         delay(Random.nextLong(50))
 
                         // lock 해제
-                        lock.unlockAsync(mlockId).coAwait()
+                        lock.unlockAsync(mlockId).suspendAwait()
                         log.debug { "Lock 해제." }
                         delay(1)
                     }

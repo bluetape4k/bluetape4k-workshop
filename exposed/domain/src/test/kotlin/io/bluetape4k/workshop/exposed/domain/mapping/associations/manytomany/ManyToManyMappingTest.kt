@@ -23,6 +23,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTrans
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
+@Suppress("DEPRECATION")
 class ManyToManyMappingTest: AbstractExposedTest() {
 
     companion object: KLogging()

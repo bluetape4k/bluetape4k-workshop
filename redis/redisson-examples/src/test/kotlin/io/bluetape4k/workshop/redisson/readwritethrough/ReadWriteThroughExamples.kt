@@ -1,10 +1,10 @@
 package io.bluetape4k.workshop.redisson.readwritethrough
 
+import io.bluetape4k.coroutines.support.suspendAwait
 import io.bluetape4k.jdbc.sql.withConnect
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
-import io.bluetape4k.redis.redisson.coroutines.coAwait
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import io.bluetape4k.workshop.redisson.readwritethrough.ReadWriteThrough.SELECT_ACTOR_COUNT
@@ -201,7 +201,7 @@ class ReadWriteThroughExamples: AbstractRedissonTest() {
             launch {
                 val id = 300_000 + it
                 val actor = newActor(id)
-                map.fastPutAsync(id, actor).coAwait().shouldBeTrue()
+                map.fastPutAsync(id, actor).suspendAwait().shouldBeTrue()
             }
         }
         insertJobs.joinAll()
@@ -212,12 +212,12 @@ class ReadWriteThroughExamples: AbstractRedissonTest() {
         val checkJob = List(ACTOR_SIZE) {
             launch {
                 val id = 300_000 + it
-                map.getAsync(id).coAwait().shouldNotBeNull()
+                map.getAsync(id).suspendAwait().shouldNotBeNull()
             }
         }
         checkJob.joinAll()
 
-        map.deleteAsync().coAwait()
+        map.deleteAsync().suspendAwait()
     }
 
     @Test
@@ -241,7 +241,7 @@ class ReadWriteThroughExamples: AbstractRedissonTest() {
             launch {
                 val id = 400_000 + it
                 val actor = newActor(id)
-                map.fastPutAsync(id, actor).coAwait().shouldBeTrue()
+                map.fastPutAsync(id, actor).suspendAwait().shouldBeTrue()
             }
         }
         insertJobs.joinAll()
@@ -255,11 +255,11 @@ class ReadWriteThroughExamples: AbstractRedissonTest() {
         val checkJob = List(ACTOR_SIZE) {
             launch {
                 val id = 400_000 + it
-                map.getAsync(id).coAwait().shouldNotBeNull()
+                map.getAsync(id).suspendAwait().shouldNotBeNull()
             }
         }
         checkJob.joinAll()
 
-        map.deleteAsync().coAwait()
+        map.deleteAsync().suspendAwait()
     }
 }

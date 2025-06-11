@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.resilience.controller.coroutines
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.resilience4j.CoDecorators
+import io.bluetape4k.resilience4j.SuspendDecorators
 import io.bluetape4k.workshop.resilience.service.coroutines.CoService
 import io.github.resilience4j.bulkhead.BulkheadRegistry
 import io.github.resilience4j.bulkhead.ThreadPoolBulkheadRegistry
@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/coroutines/backendB")
-class BackendBCoController(
+class SuspendBackendBController(
     @Qualifier("backendBCoService") private val serviceB: CoService,
     circuitBreakerRegistry: CircuitBreakerRegistry,
     threadPoolBulkheadRegistry: ThreadPoolBulkheadRegistry,
@@ -67,7 +67,7 @@ class BackendBCoController(
     fun flowTimeout(): Flow<String> = executeFlowWithFallback(serviceB::flowTimeout, ::fallback)
 
     private suspend fun <T> execute(block: suspend () -> T): T {
-        return CoDecorators.ofSupplier(block)
+        return SuspendDecorators.ofSupplier(block)
             .withCircuitBreaker(circuitBreaker)
             .withBulkhead(bulkhead)
             .withRetry(retry)
@@ -75,7 +75,7 @@ class BackendBCoController(
     }
 
     private suspend fun <T> executeWithFallback(block: suspend () -> T, fallback: (Throwable?) -> T): T {
-        return CoDecorators.ofSupplier(block)
+        return SuspendDecorators.ofSupplier(block)
             .withCircuitBreaker(circuitBreaker)
             .withBulkhead(bulkhead)
             .withRetry(retry)

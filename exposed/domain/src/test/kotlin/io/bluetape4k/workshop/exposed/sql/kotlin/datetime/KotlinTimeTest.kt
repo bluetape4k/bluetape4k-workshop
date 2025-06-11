@@ -85,6 +85,7 @@ import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit.MILLIS
 import kotlin.time.Duration
 
+@Suppress("DEPRECATION")
 class KotlinTimeTest: AbstractExposedTest() {
 
     private val timestampWithTimeZoneUnsupportedDB = TestDB.ALL_MARIADB + TestDB.MYSQL_V5
