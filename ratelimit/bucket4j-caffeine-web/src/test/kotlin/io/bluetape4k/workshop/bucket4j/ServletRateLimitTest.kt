@@ -47,16 +47,6 @@ class ServletRateLimitTest(@Autowired private val client: WebTestClient) {
     }
 
     private fun blockedWebRequestDueToRateLimit(url: String) {
-//        val response = client.get()
-//            .uri(url)
-//            .exchange()
-//            .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
-//            .expectBody<String>()
-//            .returnResult().responseBody!!
-//
-//        log.debug { "Response body: $response" }
-//        response shouldContain "Too many requests!"
-
         client.get()
             .uri(url)
             .exchange()
