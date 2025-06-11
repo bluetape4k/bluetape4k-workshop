@@ -16,7 +16,7 @@ springBoot {
     }
 }
 
-@Suppress("UnstableApiUsage")
+
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
@@ -38,18 +38,17 @@ dependencies {
     implementation(Libs.redisson)
     implementation(Libs.bluetape4k_testcontainers)
 
-    api(Libs.javax_cache_api)
-    api(Libs.jakarta_servlet_api)
-
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))
     annotationProcessor(Libs.springBoot("autoconfigure-processor"))
     annotationProcessor(Libs.springBoot("configuration-processor"))
     runtimeOnly(Libs.springBoot("devtools"))
 
-    implementation(Libs.springBootStarter("webflux"))
     implementation(Libs.springBootStarter("aop"))
     implementation(Libs.springBootStarter("actuator"))
+    implementation(Libs.springBootStarter("cache"))
+    implementation(Libs.springBootStarter("validation"))
+    implementation(Libs.springBootStarter("webflux"))
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

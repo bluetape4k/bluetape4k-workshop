@@ -100,6 +100,6 @@ class Bucket4jConfig {
      * @param asyncBucketProxyProvider [io.github.bucket4j.distributed.AsyncBucketProxy] 를 제공하는 Provider
      */
     @Bean
-    fun distributedCoRateLimiter(asyncBucketProxyProvider: AsyncBucketProxyProvider) =
+    fun distributedSuspendRateLimiter(asyncBucketProxyProvider: AsyncBucketProxyProvider) =
         DistributedSuspendRateLimiter(asyncBucketProxyProvider)
 }

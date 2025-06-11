@@ -9,7 +9,7 @@ springBoot {
     mainClass.set("io.bluetape4k.workshop.webflux.virtualthread.WebfluxVirtualThreadAppKt")
 }
 
-@Suppress("UnstableApiUsage")
+
 configurations {
     compileOnly.get().extendsFrom(annotationProcessor.get())
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())

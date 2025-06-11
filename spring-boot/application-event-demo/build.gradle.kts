@@ -9,7 +9,7 @@ springBoot {
     mainClass.set("io.bluetape4k.workshop.application.event.EventApplicationKt")
 }
 
-@Suppress("UnstableApiUsage")
+
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }

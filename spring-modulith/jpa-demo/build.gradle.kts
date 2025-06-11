@@ -28,7 +28,7 @@ kapt {
     }
 }
 
-@Suppress("UnstableApiUsage") configurations {
+configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
 

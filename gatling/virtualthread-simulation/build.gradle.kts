@@ -9,7 +9,7 @@ springBoot {
     mainClass.set("io.bluetape4k.workshop.gatling.KotlinGatlingApplicationKt")
 }
 
-@Suppress("UnstableApiUsage")
+
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }

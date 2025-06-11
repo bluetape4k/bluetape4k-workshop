@@ -8,7 +8,7 @@ springBoot {
     mainClass.set("io.bluetape4k.workshop.messaging.kafka.KafkaApplicationKt")
 }
 
-@Suppress("UnstableApiUsage")
+
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }

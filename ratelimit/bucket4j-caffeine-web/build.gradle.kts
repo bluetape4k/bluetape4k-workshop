@@ -8,7 +8,7 @@ springBoot {
     mainClass.set("io.bluetape4k.workshop.bucket4j.CaffeineApplicationKt")
 }
 
-@Suppress("UnstableApiUsage")
+
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }

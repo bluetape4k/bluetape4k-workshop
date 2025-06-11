@@ -8,7 +8,6 @@ springBoot {
     mainClass.set("io.bluetape4k.workshop.coroutines.CoroutineApplicationKt")
 }
 
-@Suppress("UnstableApiUsage")
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }

@@ -8,7 +8,7 @@ springBoot {
     mainClass.set("io.bluetape4k.workshop.aws.s3.SpringCloudAwsS3SampleKt")
 }
 
-@Suppress("UnstableApiUsage")
+
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }

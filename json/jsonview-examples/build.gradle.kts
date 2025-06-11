@@ -8,7 +8,7 @@ springBoot {
     mainClass.set("io.bluetape4k.workshop.jsonview.JsonViewApplicationKt")
 }
 
-@Suppress("UnstableApiUsage")
+
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }

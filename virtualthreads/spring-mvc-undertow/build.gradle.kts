@@ -10,7 +10,7 @@ springBoot {
     mainClass.set("io.bluetape4k.workshop.virtualthread.undertow.UndertowVirtualThreadMvcAppKt")
 }
 
-@Suppress("UnstableApiUsage")
+
 configurations {
     compileOnly.get().extendsFrom(annotationProcessor.get())
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
