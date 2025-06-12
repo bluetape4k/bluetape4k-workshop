@@ -45,6 +45,7 @@ allprojects {
     repositories {
         mavenCentral()
         google()
+        mavenLocal()
         maven {
             name = "bluetape4k"
             url = uri("https://maven.pkg.github.com/bluetape4k/bluetape4k-projects")
@@ -57,7 +58,7 @@ allprojects {
     }
 
     configurations.all {
-        resolutionStrategy.cacheChangingModulesFor(1, TimeUnit.DAYS)
+        resolutionStrategy.cacheChangingModulesFor(0, TimeUnit.DAYS)
     }
 }
 
@@ -163,73 +164,6 @@ subprojects {
             }
         }
 
-//        jacoco {
-//            toolVersion = Plugins.Versions.jacoco
-//        }
-//
-//        jacocoTestReport {
-//            reports {
-//                html.required.set(true)
-//                xml.required.set(true)
-//            }
-//        }
-//
-//        jacocoTestCoverageVerification {
-//            dependsOn(jacocoTestReport)
-//
-//            violationRules {
-//                rule {
-//                    // 룰 검증 수행 여부
-//                    enabled = true
-//
-//                    // 룰을 검증할 단위를 클래스 단위로 한다
-//                    element = "CLASS"         // BUNDLE|PACKAGE|CLASS|SOURCEFILE|METHOD
-//
-//                    // 브랜치 커버리지를 최소한 10% 를 만족시켜야 한다
-//                    limit {
-//                        counter =
-//                            "INSTRUCTION"       // INSTRUCTION, LINE, BRANCH, COMPLEXITY, METHOD and CLASS. Defaults to INSTRUCTION.
-//                        value =
-//                            "COVEREDRATIO"   // TOTALCOUNT, MISSEDCOUNT, COVEREDCOUNT, MISSEDRATIO and COVEREDRATIO. Defaults to COVEREDRATIO
-//                        minimum = 0.10.toBigDecimal()
-//                    }
-//                }
-//            }
-//        }
-//
-//        jacocoTestCoverageVerification {
-//            dependsOn(jacocoTestReport)
-//
-//            violationRules {
-//                rule {
-//                    // 룰 검증 수행 여부
-//                    enabled = true
-//
-//                    // 룰을 검증할 단위를 클래스 단위로 한다
-//                    element = "CLASS"         // BUNDLE|PACKAGE|CLASS|SOURCEFILE|METHOD
-//
-//                    // 브랜치 커버리지를 최소한 10% 를 만족시켜야 한다
-//                    limit {
-//                        counter =
-//                            "INSTRUCTION"       // INSTRUCTION, LINE, BRANCH, COMPLEXITY, METHOD and CLASS. Defaults to INSTRUCTION.
-//                        value =
-//                            "COVEREDRATIO"   // TOTALCOUNT, MISSEDCOUNT, COVEREDCOUNT, MISSEDRATIO and COVEREDRATIO. Defaults to COVEREDRATIO
-//                        minimum = 0.10.toBigDecimal()
-//                    }
-//                }
-//            }
-//        }
-
-        jar {
-            manifest.attributes["Specification-Title"] = project.name
-            manifest.attributes["Specification-Version"] = project.version
-            manifest.attributes["Implementation-Title"] = project.name
-            manifest.attributes["Implementation-Version"] = project.version
-            manifest.attributes["Automatic-Module-Name"] = project.name.replace('-', '.')
-            manifest.attributes["Created-By"] =
-                "${System.getProperty("java.version")} (${System.getProperty("java.specification.vendor")})"
-        }
-
         // https://kotlin.github.io/dokka/1.6.0/user_guide/gradle/usage/
         withType<org.jetbrains.dokka.gradle.DokkaTask>().configureEach {
             val javadocDir = layout.buildDirectory.asFile.get().resolve("javadoc")
@@ -242,10 +176,10 @@ subprojects {
             }
         }
 
-        dokkaHtml.configure {
-            val dokkaDir = layout.buildDirectory.asFile.get().resolve("dokka")
-            outputDirectory.set(dokkaDir)
-            // outputDirectory.set(layout.buildDirectory.asFile.get().resolve("dokka"))
+        dokka {
+            dokkaPublications.html {
+                outputDirectory.set(project.file("docs/api"))
+            }
         }
 
         clean {
@@ -551,15 +485,4 @@ subprojects {
         testImplementation(Libs.datafaker)
         testImplementation(Libs.random_beans)
     }
-
-    tasks.withType<Jar> {
-        manifest.attributes["Specification-Title"] = project.name
-        manifest.attributes["Specification-Version"] = project.version
-        manifest.attributes["Implementation-Title"] = project.name
-        manifest.attributes["Implementation-Version"] = project.version
-        manifest.attributes["Automatic-Module-Name"] = project.name.replace('-', '.')
-        manifest.attributes["Created-By"] =
-            "${System.getProperty("java.version")} (${System.getProperty("java.specification.vendor")})"
-    }
-
 }
