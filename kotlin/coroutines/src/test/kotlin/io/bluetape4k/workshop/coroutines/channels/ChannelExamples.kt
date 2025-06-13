@@ -21,6 +21,7 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.util.*
+import java.util.concurrent.CopyOnWriteArrayList
 
 class ChannelExamples {
 
@@ -114,7 +115,7 @@ class ChannelExamples {
             }
         }
 
-        val received = mutableListOf<Int>()
+        val received = CopyOnWriteArrayList<Int>()
         for (element in channel) {
             received.add(element)
             log.debug { "[#2] Receive $element" }
@@ -162,7 +163,7 @@ class ChannelExamples {
         }
         // send한 요소가 모두 버퍼링 된다
         delay(1000)
-        val received = mutableListOf<Int>()
+        val received = CopyOnWriteArrayList<Int>()
         for (element in channel) {
             received.add(element)
             log.debug { "[#2] Receive $element" }
@@ -181,7 +182,7 @@ class ChannelExamples {
         }
         // send한 요소가 모두 버퍼링 된다
         delay(1000)
-        val received = mutableListOf<Int>()
+        val received = CopyOnWriteArrayList<Int>()
         for (element in channel) {
             received.add(element)
             log.debug { "[#2] Receive $element" }
@@ -201,7 +202,7 @@ class ChannelExamples {
 
         // Channel.CONFLATED는 send한 요소 중 가장 최신 것만 남기고 버려버립니다.
         delay(400)
-        val received = mutableListOf<Int>()
+        val received = CopyOnWriteArrayList<Int>()
         for (element in channel) {
             received.add(element)
             log.debug { "[#2] Receive $element" }
@@ -231,7 +232,7 @@ class ChannelExamples {
         }
         // send한 요소가 모두 버퍼링 된다
         delay(1000)
-        val received = mutableListOf<Int>()
+        val received = CopyOnWriteArrayList<Int>()
         for (element in channel) {
             received.add(element)
             log.debug { "[#2] Receive $element" }

@@ -79,6 +79,7 @@ abstract class AbstractSingletonTest<T>(private val singletonInstanceMethod: () 
             .add {
                 instances.add(singletonInstanceMethod())
             }
+            .run()
 
         val expectedInstance = singletonInstanceMethod()
         instances.all { it === expectedInstance }.shouldBeTrue()

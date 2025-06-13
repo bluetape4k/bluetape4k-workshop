@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.virtualthread.tomcat.controller
 
 import io.bluetape4k.concurrent.virtualthread.virtualFuture
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.virtualthread.tomcat.domain.dto.MemberDTO
 import io.bluetape4k.workshop.virtualthread.tomcat.domain.dto.MemberSearchCondition
@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/member")
 class MemberController(private val memberRepo: MemberRepository) {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @GetMapping("", "/")
     fun getAllMembers(): List<MemberDTO> {

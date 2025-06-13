@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.virtualthread.tomcat.controller
 
 import io.bluetape4k.concurrent.virtualthread.virtualFuture
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.virtualthread.tomcat.domain.dto.TeamDTO
 import io.bluetape4k.workshop.virtualthread.tomcat.domain.dto.toTeamDTO
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/team")
 class TeamController(private val teamRepo: TeamRepository) {
 
-    companion object: KLogging()
+    companion object: KLoggingChannel()
 
     @GetMapping("", "/")
     fun getAllTeams(): List<TeamDTO> {

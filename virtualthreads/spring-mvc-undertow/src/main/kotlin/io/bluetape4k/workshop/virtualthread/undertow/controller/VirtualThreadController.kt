@@ -29,7 +29,7 @@ class VirtualThreadController(private val taskExecutor: ExecutorService) {
 
     @GetMapping("/multi")
     fun multipleTasks(): String {
-        val taskSize = 1000
+        val taskSize = 100
 
         val tasks = List(taskSize) {
             virtualFuture(executor = taskExecutor) {

@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.reactive.function.client.ExchangeStrategies
 import org.springframework.web.reactive.function.client.WebClient
 
 @RestController
@@ -47,7 +48,17 @@ abstract class AbstractDispatcherController(
     protected val client: WebClient by lazy { getClient("http://localhost:$port/$path") }
 
     protected fun getClient(baseUrl: String): WebClient {
-        return webClientBuilder.baseUrl(baseUrl).build()
+        return webClientBuilder
+            .baseUrl(baseUrl)
+            .defaultHeader("Accept", "application/json")
+            .exchangeStrategies(
+                ExchangeStrategies.builder()
+                    .codecs { configurer ->
+                        configurer.defaultCodecs().maxInMemorySize(16 * 1024 * 1024) // 16MB
+                    }
+                    .build()
+            )
+            .build()
     }
 
     protected fun randomBanner(): Banner =

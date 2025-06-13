@@ -92,7 +92,7 @@ class DispatcherExamples {
     fun `custom dispatcher 사용 예`() = runTest {
         newFixedThreadPoolContext(4, "custom").use { dispatcher ->
             // 동시 작업을 2개로 제한합니다.
-            val parallel = dispatcher.limitedParallelism(2)
+            val parallel = dispatcher.limitedParallelism(8)
             List(REPEAT_SIZE) {
                 launch(parallel) {
                     delay(Random.nextLong(100, 200))
