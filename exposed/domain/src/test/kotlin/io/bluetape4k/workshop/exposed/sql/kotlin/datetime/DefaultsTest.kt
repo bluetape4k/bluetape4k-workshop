@@ -100,6 +100,7 @@ private val dbTimestampNow: CustomFunction<OffsetDateTime>
 /**
  * kotlinx-datetime 수형을 exposed 에서 사용할 때 기본값 설정과 관련된 예제
  */
+@Suppress("DEPRECATION")
 class DefaultsTest: AbstractExposedTest() {
 
     companion object: KLogging()

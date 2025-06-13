@@ -98,6 +98,7 @@ class InsertSelectTest: AbstractExposedTest() {
      *   FROM users
      * ```
      */
+    @Suppress("UNCHECKED_CAST")
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert select example 03`(testDB: TestDB) {

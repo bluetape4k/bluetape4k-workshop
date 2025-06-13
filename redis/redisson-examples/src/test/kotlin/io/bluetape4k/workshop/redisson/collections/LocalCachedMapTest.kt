@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.redisson.collections
 
 import io.bluetape4k.coroutines.support.suspendAwait
-import io.bluetape4k.junit5.awaitility.coUntil
+import io.bluetape4k.junit5.awaitility.suspendUntil
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
@@ -81,7 +81,7 @@ class LocalCachedMapTest: AbstractRedissonTest() {
 
         log.debug { "front cache1: put key=$keyToAdd" }
         frontCache1.fastPutAsync(keyToAdd, 42).suspendAwait()
-        await coUntil { backCache.containsKeyAsync(keyToAdd).suspendAwait() }
+        await suspendUntil { backCache.containsKeyAsync(keyToAdd).suspendAwait() }
 
         log.debug { "front cache2: get key=$keyToAdd" }
         frontCache2.getAsync(keyToAdd).suspendAwait() shouldBeEqualTo 42
@@ -93,13 +93,13 @@ class LocalCachedMapTest: AbstractRedissonTest() {
 
         log.debug { "front cache1: put $keyToRemove" }
         frontCache1.fastPutAsync(keyToRemove, 42).suspendAwait()
-        await coUntil { backCache.containsKeyAsync(keyToRemove).suspendAwait() }
+        await suspendUntil { backCache.containsKeyAsync(keyToRemove).suspendAwait() }
 
         frontCache2.getAsync(keyToRemove).suspendAwait() shouldBeEqualTo 42
 
         log.debug { "front cache1: remove $keyToRemove" }
         frontCache1.fastRemoveAsync(keyToRemove).suspendAwait()
-        await coUntil { !backCache.containsKeyAsync(keyToRemove).suspendAwait() }
+        await suspendUntil { !backCache.containsKeyAsync(keyToRemove).suspendAwait() }
 
         frontCache2.getAsync(keyToRemove).suspendAwait().shouldBeNull()
     }
@@ -115,7 +115,7 @@ class LocalCachedMapTest: AbstractRedissonTest() {
         // bachCache에 cache 등록
         backCache.fastPutAsync(key, 42).suspendAwait().shouldBeTrue()
         // frontCache2에서도 추가될 때까지 대기 (pub/sub로 전파될 때까지)
-        await atMost 1.seconds.toJavaDuration() coUntil { frontCache2.containsKeyAsync(key).suspendAwait() }
+        await atMost 1.seconds.toJavaDuration() suspendUntil { frontCache2.containsKeyAsync(key).suspendAwait() }
 
         // frontCache에 등록 반영
         frontCache1.containsKeyAsync(key).suspendAwait().shouldBeTrue()
@@ -124,7 +124,7 @@ class LocalCachedMapTest: AbstractRedissonTest() {
         // backCache에서 cache 삭제
         backCache.fastRemoveAsync(key).suspendAwait() shouldBeEqualTo 1L
         // frontCache1에서도 삭제될 때까지 대기 (pub/sub로 전파될 때까지)
-        await atMost 1.seconds.toJavaDuration() coUntil { !frontCache1.containsKeyAsync(key).suspendAwait() }
+        await atMost 1.seconds.toJavaDuration() suspendUntil { !frontCache1.containsKeyAsync(key).suspendAwait() }
 
         // frontCache에 삭제 반영
         frontCache1.containsKeyAsync(key).suspendAwait().shouldBeFalse()

@@ -46,6 +46,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
 import kotlin.properties.Delegates
 
+@Suppress("DEPRECATION")
 @OptIn(ExperimentalDatabaseMigrationApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class DatabaseMigrationTest: AbstractExposedTest() {
