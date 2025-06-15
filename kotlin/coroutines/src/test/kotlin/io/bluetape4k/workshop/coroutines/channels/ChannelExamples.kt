@@ -29,7 +29,7 @@ class ChannelExamples {
 
     @Test
     fun `basic channel example`() = runTest {
-        val received = mutableListOf<Int>()
+        val received = CopyOnWriteArrayList<Int>()
         coroutineScope {
             val channel = Channel<Int>()
 
@@ -54,7 +54,7 @@ class ChannelExamples {
 
     @Test
     fun `foreach 구문으로 수신하기`() = runTest {
-        val received = mutableListOf<Int>()
+        val received = CopyOnWriteArrayList<Int>()
         coroutineScope {
             val channel = Channel<Int>()
 
@@ -80,7 +80,7 @@ class ChannelExamples {
 
     @Test
     fun `consumeEach 구문으로 수신하기`() = runTest {
-        val received = mutableListOf<Int>()
+        val received = CopyOnWriteArrayList<Int>()
         coroutineScope {
             val channel = Channel<Int>()
 
