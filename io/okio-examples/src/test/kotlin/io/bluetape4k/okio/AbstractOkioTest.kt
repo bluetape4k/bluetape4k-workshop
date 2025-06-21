@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.okio.examples
+package io.bluetape4k.okio
 
 import io.bluetape4k.logging.KLogging
 import net.datafaker.Faker
@@ -7,6 +7,9 @@ import java.util.*
 abstract class AbstractOkioTest {
 
     companion object: KLogging() {
+
+        const val SEGMENT_SIZE = DEFAULT_BUFFER_SIZE
+
         @JvmStatic
         val faker = Faker(Locale.getDefault())
 
