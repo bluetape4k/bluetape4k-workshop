@@ -3,10 +3,10 @@ package io.bluetape4k.okio.channels
 import io.bluetape4k.junit5.tempfolder.TempFolder
 import io.bluetape4k.junit5.tempfolder.TempFolderTest
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.okio.AbstractOkioTest
 import okio.Buffer
 import okio.Timeout
 import okio.buffer
-import okio.samples.OkioSampleBase
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.junit.jupiter.api.BeforeAll
@@ -18,7 +18,7 @@ import java.nio.file.StandardOpenOption
 import java.util.*
 
 @TempFolderTest
-class OkioChannelsTest: OkioSampleBase() {
+class OkioChannelsTest: AbstractOkioTest() {
 
     companion object: KLogging() {
         private const val QUOTE: String = ("John, the kind of control you're attempting simply is... it's not "

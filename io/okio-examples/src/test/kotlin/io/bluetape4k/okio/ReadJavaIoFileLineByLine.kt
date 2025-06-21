@@ -1,14 +1,13 @@
-package okio.samples
+package io.bluetape4k.okio
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.okio.readUtf8Lines
 import okio.buffer
 import okio.source
 import org.junit.jupiter.api.Test
 import java.io.File
 
-class ReadJavaIoFileLineByLine: OkioSampleBase() {
+class ReadJavaIoFileLineByLine: AbstractOkioTest() {
 
     companion object: KLogging()
 
