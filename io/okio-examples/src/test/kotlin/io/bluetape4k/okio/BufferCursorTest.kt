@@ -34,14 +34,16 @@ class BufferCursorTest: AbstractOkioTest() {
         buffer.readAndWriteUnsafe().use { cursor ->
             cursor.resizeBuffer(1_000_000L)
             val x = 'x'.code.toByte()
-            do {
-                Arrays.fill(cursor.data!!, cursor.start, cursor.end, x)
-            } while (cursor.next() != -1)
+
+            val data = cursor.data!!
+            while (cursor.next() != -1) {
+                Arrays.fill(data, cursor.start, cursor.end, x)
+            }
 
             cursor.seek(3)
-            cursor.data!![cursor.start] = 'o'.code.toByte()
+            data[cursor.start] = 'o'.code.toByte()
             cursor.seek(1)
-            cursor.data!![cursor.start] = 'o'.code.toByte()
+            data[cursor.start] = 'o'.code.toByte()
             cursor.resizeBuffer(4)
         }
         log.debug { "buffer=$buffer" }
@@ -54,11 +56,12 @@ class BufferCursorTest: AbstractOkioTest() {
         buffer.readAndWriteUnsafe().use { cursor ->
             cursor.resizeBuffer(1_000_000)
             val x = 'x'.code.toByte()
-            val data = cursor.data!!
-            do {
-                data.fill(x, cursor.start, cursor.end)
-            } while (cursor.next() != -1)
 
+            val data = cursor.data!!
+            while (cursor.next() != -1) {
+                data.fill(x, cursor.start, cursor.end)
+            }
+            
             cursor.seek(3)
             data[cursor.start] = 'o'.code.toByte()
             cursor.seek(1)
