@@ -35,15 +35,15 @@ class BufferCursorTest: AbstractOkioTest() {
             cursor.resizeBuffer(1_000_000L)
             val x = 'x'.code.toByte()
 
-            val data = cursor.data!!
-            while (cursor.next() != -1) {
-                Arrays.fill(data, cursor.start, cursor.end, x)
-            }
+            // NOTE: Buffer 간의 Read/Write는 while 문을 사용해야 하고, Arrays.fill() 같은 것은 do while 문을 사용해야 한다.
+            do {
+                Arrays.fill(cursor.data!!, cursor.start, cursor.end, x)
+            } while (cursor.next() != -1)
 
             cursor.seek(3)
-            data[cursor.start] = 'o'.code.toByte()
+            cursor.data!![cursor.start] = 'o'.code.toByte()
             cursor.seek(1)
-            data[cursor.start] = 'o'.code.toByte()
+            cursor.data!![cursor.start] = 'o'.code.toByte()
             cursor.resizeBuffer(4)
         }
         log.debug { "buffer=$buffer" }
@@ -57,15 +57,15 @@ class BufferCursorTest: AbstractOkioTest() {
             cursor.resizeBuffer(1_000_000)
             val x = 'x'.code.toByte()
 
-            val data = cursor.data!!
-            while (cursor.next() != -1) {
-                data.fill(x, cursor.start, cursor.end)
-            }
-            
+            // NOTE: Buffer 간의 Read/Write는 while 문을 사용해야 하고, Arrays.fill() 같은 것은 do while 문을 사용해야 한다.
+            do {
+                cursor.data!!.fill(x, cursor.start, cursor.end)
+            } while (cursor.next() != -1)
+
             cursor.seek(3)
-            data[cursor.start] = 'o'.code.toByte()
+            cursor.data!![cursor.start] = 'o'.code.toByte()
             cursor.seek(1)
-            data[cursor.start] = 'o'.code.toByte()
+            cursor.data!![cursor.start] = 'o'.code.toByte()
             cursor.resizeBuffer(4)
         }
         log.debug { "buffer=$buffer" }
@@ -75,13 +75,14 @@ class BufferCursorTest: AbstractOkioTest() {
     @ParameterizedTest
     @MethodSource("buffers")
     fun `access segment by segment`(buffer: Buffer) {
+        val actual = Buffer()
         buffer.readUnsafe().use { cursor ->
-            val actual = Buffer()
+            // NOTE: Buffer 간의 Read/Write는 while 문을 사용해야 하고, Arrays.fill() 같은 것은 do while 문을 사용해야 한다.
             while (cursor.next() != -1) {
                 actual.write(cursor.data!!, cursor.start, cursor.end - cursor.start)
             }
-            actual shouldBeEqualTo buffer
         }
+        actual shouldBeEqualTo buffer
     }
 
     @ParameterizedTest
