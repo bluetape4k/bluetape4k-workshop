@@ -45,7 +45,6 @@ allprojects {
     repositories {
         mavenCentral()
         google()
-        mavenLocal()
         maven {
             name = "bluetape4k"
             url = uri("https://maven.pkg.github.com/bluetape4k/bluetape4k-projects")
