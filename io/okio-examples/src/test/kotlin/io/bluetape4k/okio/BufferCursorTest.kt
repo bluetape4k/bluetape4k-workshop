@@ -28,6 +28,7 @@ class BufferCursorTest: AbstractOkioTest() {
     fun factories() = _factories
     fun buffers() = _buffers
 
+    // TODO: LZ4, ZSTD 에서 실제 압축한 길이만큼만 resizeBuffer() 를 이용해서 사용할 수 있다.
     @Test
     fun `api example`() {
         val buffer = Buffer()
@@ -50,6 +51,7 @@ class BufferCursorTest: AbstractOkioTest() {
         buffer shouldBeEqualTo bufferOf("xoxo")
     }
 
+    // TODO: LZ4, ZSTD 에서 실제 압축한 길이만큼만 resizeBuffer() 를 이용해서 사용할 수 있다.
     @Test
     fun `api example by kotlin function`() {
         val buffer = Buffer()
@@ -80,7 +82,7 @@ class BufferCursorTest: AbstractOkioTest() {
             // NOTE: Buffer 간의 Read/Write는 while 문을 사용해야 하고, Arrays.fill() 같은 것은 do while 문을 사용해야 한다.
             while (cursor.next() != -1) {
                 actual.write(cursor.data!!, cursor.start, cursor.end - cursor.start)
-            }
+            }  
         }
         actual shouldBeEqualTo buffer
     }
