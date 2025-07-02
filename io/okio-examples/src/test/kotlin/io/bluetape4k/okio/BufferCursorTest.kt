@@ -21,8 +21,8 @@ class BufferCursorTest: AbstractOkioTest() {
     companion object: KLogging() {
         private const val REPEAT_SIZE = 5
 
-        private val _factories = BufferFactory.entries.toList()
-        private val _buffers = _factories.asSequence().map { it.newBuffer() }
+        private val _factories = BufferFactory.factories.toList()
+        private val _buffers = _factories.map { it.newBuffer() }
     }
 
     fun factories() = _factories
@@ -82,7 +82,7 @@ class BufferCursorTest: AbstractOkioTest() {
             // NOTE: Buffer 간의 Read/Write는 while 문을 사용해야 하고, Arrays.fill() 같은 것은 do while 문을 사용해야 한다.
             while (cursor.next() != -1) {
                 actual.write(cursor.data!!, cursor.start, cursor.end - cursor.start)
-            }  
+            }
         }
         actual shouldBeEqualTo buffer
     }

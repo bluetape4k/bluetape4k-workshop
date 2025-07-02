@@ -14,8 +14,8 @@ class BufferCursorKotlinTest: AbstractOkioTest() {
     companion object: KLogging() {
         private const val REPEAT_SIZE = 5
 
-        private val _factories = BufferFactory.entries.toList()
-        private val _buffers = _factories.asSequence().map { it.newBuffer() }
+        private val _factories = BufferFactory.factories
+        private val _buffers = _factories.map { it.newBuffer() }
     }
 
     fun factories() = _factories
