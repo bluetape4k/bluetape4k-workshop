@@ -3,6 +3,7 @@ package io.bluetape4k.okio
 import io.bluetape4k.io.okio.bufferOf
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.asByte
 import okio.Buffer
 import okio.ByteString
 import org.amshove.kluent.shouldBeEqualTo
@@ -34,7 +35,7 @@ class BufferCursorTest: AbstractOkioTest() {
         val buffer = Buffer()
         buffer.readAndWriteUnsafe().use { cursor ->
             cursor.resizeBuffer(1_000_000L)
-            val x = 'x'.code.toByte()
+            val x = 'x'.asByte()
 
             // NOTE: Buffer 간의 Read/Write는 while 문을 사용해야 하고, Arrays.fill() 같은 것은 do while 문을 사용해야 한다.
             do {
@@ -42,9 +43,9 @@ class BufferCursorTest: AbstractOkioTest() {
             } while (cursor.next() != -1)
 
             cursor.seek(3)
-            cursor.data!![cursor.start] = 'o'.code.toByte()
+            cursor.data!![cursor.start] = 'o'.asByte()
             cursor.seek(1)
-            cursor.data!![cursor.start] = 'o'.code.toByte()
+            cursor.data!![cursor.start] = 'o'.asByte()
             cursor.resizeBuffer(4)
         }
         log.debug { "buffer=$buffer" }
@@ -57,7 +58,7 @@ class BufferCursorTest: AbstractOkioTest() {
         val buffer = Buffer()
         buffer.readAndWriteUnsafe().use { cursor ->
             cursor.resizeBuffer(1_000_000)
-            val x = 'x'.code.toByte()
+            val x = 'x'.asByte()
 
             // NOTE: Buffer 간의 Read/Write는 while 문을 사용해야 하고, Arrays.fill() 같은 것은 do while 문을 사용해야 한다.
             do {
@@ -65,9 +66,9 @@ class BufferCursorTest: AbstractOkioTest() {
             } while (cursor.next() != -1)
 
             cursor.seek(3)
-            cursor.data!![cursor.start] = 'o'.code.toByte()
+            cursor.data!![cursor.start] = 'o'.asByte()
             cursor.seek(1)
-            cursor.data!![cursor.start] = 'o'.code.toByte()
+            cursor.data!![cursor.start] = 'o'.asByte()
             cursor.resizeBuffer(4)
         }
         log.debug { "buffer=$buffer" }
@@ -222,13 +223,13 @@ class BufferCursorTest: AbstractOkioTest() {
             cursor.resizeBuffer(originalSize + 3L) shouldBeEqualTo originalSize
 
             cursor.seek(originalSize)
-            cursor.data!![cursor.start] = 'a'.code.toByte()
+            cursor.data!![cursor.start] = 'a'.asByte()
 
             cursor.seek(originalSize + 1)
-            cursor.data!![cursor.start] = 'b'.code.toByte()
+            cursor.data!![cursor.start] = 'b'.asByte()
 
             cursor.seek(originalSize + 2)
-            cursor.data!![cursor.start] = 'c'.code.toByte()
+            cursor.data!![cursor.start] = 'c'.asByte()
         }
         buffer shouldBeEqualTo expected
     }
@@ -244,7 +245,7 @@ class BufferCursorTest: AbstractOkioTest() {
             cursor.resizeBuffer(originalSize + 1_000_000L)
             cursor.seek(originalSize)
             do {
-                Arrays.fill(cursor.data, cursor.start, cursor.end, 'x'.code.toByte())
+                Arrays.fill(cursor.data, cursor.start, cursor.end, 'x'.asByte())
             } while (cursor.next() != -1)
         }
         buffer shouldBeEqualTo expected
@@ -373,7 +374,7 @@ class BufferCursorTest: AbstractOkioTest() {
             cursor.start shouldNotBeEqualTo -1
             cursor.end shouldBeEqualTo (cursor.start + 1)
 
-            cursor.data!![cursor.start] = 'a'.code.toByte()
+            cursor.data!![cursor.start] = 'a'.asByte()
         }
         buffer shouldBeEqualTo expected
     }
