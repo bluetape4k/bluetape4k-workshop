@@ -9,6 +9,7 @@ dependencies {
 
     // bluetape4k
     implementation(Libs.bluetape4k_io)
+    implementation(Libs.bluetape4k_crypto)
     implementation(Libs.bluetape4k_coroutines)
     testImplementation(Libs.bluetape4k_junit5)
 
