@@ -16,4 +16,14 @@ dependencies {
     // Coroutines
     implementation(Libs.kotlinx_coroutines_core)
     testImplementation(Libs.kotlinx_coroutines_test)
+
+    // Serialization Libraries
+    compileOnly(Libs.kryo5)
+    compileOnly(Libs.fury_kotlin)
+
+    // Compression libraries
+    compileOnly(Libs.commons_compress)
+    compileOnly(Libs.lz4_java)
+    compileOnly(Libs.snappy_java)
+    compileOnly(Libs.zstd_jni)
 }
