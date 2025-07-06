@@ -33,7 +33,6 @@ class CipherSource(
         log.debug { "Read data from source with cipher. bytes to read=$bytesToRead" }
 
         // 요청한 바이트 수(또는 가능한 모든 바이트) 반환
-
         var streamEnd = false
         while (sourceBuffer.size < bytesToRead && !streamEnd) {
             val bytesRead = super.read(sourceBuffer, bytesToRead - sourceBuffer.size)
@@ -65,9 +64,19 @@ class CipherSource(
         return if (bytesToReturn > 0) bytesToReturn else -1L
     }
 
+    fun readAll(sink: Buffer): Long {
+        var totalBytesRead = 0L
+        while (true) {
+            val bytesRead = read(sink, DEFAULT_BUFFER_SIZE.toLong())
+            if (bytesRead == -1L) break
+            totalBytesRead += bytesRead
+        }
+        return totalBytesRead
+    }
+
     override fun close() {
         super.close()
-        sourceBuffer.clear()
-        decipheredBuffer.clear()
+        sourceBuffer.close()
+        decipheredBuffer.close()
     }
 }

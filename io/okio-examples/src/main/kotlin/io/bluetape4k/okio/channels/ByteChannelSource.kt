@@ -42,6 +42,16 @@ class ByteChannelSource(
         }
     }
 
+    fun readAll(sink: Buffer): Long {
+        var totalBytesRead = 0L
+        while (true) {
+            val bytesRead = read(sink, DEFAULT_BUFFER_SIZE.toLong())
+            if (bytesRead == -1L) break
+            totalBytesRead += bytesRead
+        }
+        return totalBytesRead
+    }
+
     override fun timeout(): Timeout = timeout
 
     override fun close() {

@@ -40,6 +40,14 @@ class InputStreamSource(
         }
     }
 
+    fun readAll(sink: Buffer): Long {
+        var readByteCount = Long.MAX_VALUE
+        while (readByteCount > 0) {
+            readByteCount = read(sink, 1024L)
+        }
+        return sink.size
+    }
+
     override fun timeout(): Timeout = timeout
 
     override fun close() {
