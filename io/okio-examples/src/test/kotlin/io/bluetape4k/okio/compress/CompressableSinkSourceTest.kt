@@ -4,7 +4,6 @@ import io.bluetape4k.io.compressor.Compressor
 import io.bluetape4k.io.compressor.Compressors
 import io.bluetape4k.io.okio.bufferOf
 import io.bluetape4k.io.okio.byteStringOf
-import io.bluetape4k.io.okio.compress.CompressableSink
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.okio.AbstractOkioTest
 import okio.Buffer
@@ -73,11 +72,11 @@ class CompressableSinkSourceTest: AbstractOkioTest() {
         val data = bufferOf(original)
 
         val sink = Buffer()
-        CompressableSink(sink, compressor).use { compressableSink ->
-            // Write data to compressable sink
-            compressableSink.write(data, data.size)
-            compressableSink.flush()
-        }
+        val compressSink = sink.asCompressSink(compressor)
+
+        // Write data to compressable sink
+        compressSink.write(data, data.size)
+        compressSink.flush()
 
         val source = Buffer()
         val decompressableSource = sink.asDecompressSource(compressor)

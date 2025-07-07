@@ -3,7 +3,7 @@ package io.bluetape4k.okio.compress
 import io.bluetape4k.io.compressor.Compressor
 import io.bluetape4k.io.okio.bufferOf
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.logging.trace
+import io.bluetape4k.logging.debug
 
 /**
  * 데이터를 압축 해제하여 [okio.Source]로 읽는 [okio.ForwardingSource] 구현체.
@@ -26,14 +26,13 @@ class DecompressSource(
 
         // 압축 복원은 한 번에 모든 데이터를 복원해야 함
         val bytesRead = super.read(sourceBuffer, Long.MAX_VALUE)
-        log.trace { "byteCount=$byteCount, sourceBuffer.size=${sourceBuffer.size}" }
 
         if (bytesRead < 0) {
             return -1 // End of stream
         }
 
         val decompressed = compressor.decompress(sourceBuffer.readByteArray())
-        log.trace { "decompressed bytes: ${decompressed.size}" }
+        log.debug { "Decompress: compressed=$bytesRead bytes, decompressed=${decompressed.size} bytes" }
         sink.write(bufferOf(decompressed), decompressed.size.toLong())
         return decompressed.size.toLong()
     }

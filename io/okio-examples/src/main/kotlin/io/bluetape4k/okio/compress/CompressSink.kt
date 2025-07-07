@@ -3,7 +3,7 @@ package io.bluetape4k.okio.compress
 import io.bluetape4k.io.compressor.Compressor
 import io.bluetape4k.io.okio.bufferOf
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.logging.trace
+import io.bluetape4k.logging.debug
 import okio.Buffer
 import okio.ForwardingSink
 import okio.Sink
@@ -26,10 +26,10 @@ class CompressSink(
         // 압축은 `source`의 모든 데이터를 압축해야 함
         val bytesToRead = source.size
         val plainBytes = source.readByteArray(bytesToRead)
-        log.trace { "Compressing: ${plainBytes.size} bytes" }
 
         // 압축
         val compressed = comressor.compress(plainBytes)
+        log.debug { "Compressing: source=${plainBytes.size} bytes, compressed=${compressed.size} bytes" }
         super.write(bufferOf(compressed), compressed.size.toLong())
     }
 }
