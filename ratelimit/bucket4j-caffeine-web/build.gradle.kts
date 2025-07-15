@@ -23,8 +23,6 @@ dependencies {
     api(Libs.bucket4j_caffeine)
     api(Libs.bucket4j_spring_boot_starter)
 
-    api(Libs.javax_cache_api)
-
     // Caffeine - 로컬 캐시는 AsyncCacheResolver를 구현한 것이 아니므로 Webflux 에서는 사용하지 못한다.
     api(Libs.caffeine)
     api(Libs.caffeine_jcache)

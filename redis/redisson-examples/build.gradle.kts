@@ -44,7 +44,6 @@ dependencies {
 
     // Cache
     implementation(Libs.bluetape4k_cache)
-    implementation(Libs.javax_cache_api)
     implementation(Libs.caffeine)
     implementation(Libs.caffeine_jcache)
 
