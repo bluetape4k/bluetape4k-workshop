@@ -39,7 +39,9 @@ class ByteChannelSink(
         }
     }
 
-    override fun flush() {}
+    override fun flush() {
+        // Nothing to do
+    }
 
     override fun timeout(): Timeout = timeout
 

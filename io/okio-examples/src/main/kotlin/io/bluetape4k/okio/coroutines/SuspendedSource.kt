@@ -26,5 +26,5 @@ interface SuspendedSource {
     /**
      * 이 [SuspendedSource]의 [Timeout]을 반환합니다.
      */
-    suspend fun timeout(): Timeout = Timeout.NONE
+    fun timeout(): Timeout = Timeout.NONE
 }

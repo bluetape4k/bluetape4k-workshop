@@ -25,5 +25,5 @@ interface SuspendedSink {
     /**
      * 이 [SuspendedSink]의 [Timeout]을 반환합니다.
      */
-    suspend fun timeout(): Timeout = Timeout.NONE
+    fun timeout(): Timeout = Timeout.NONE
 }
