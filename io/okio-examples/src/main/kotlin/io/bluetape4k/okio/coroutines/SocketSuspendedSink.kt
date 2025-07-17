@@ -9,23 +9,25 @@ import java.net.Socket
 import java.nio.ByteBuffer
 import java.nio.channels.SelectionKey
 
+fun Socket.asSuspendedSink(): SuspendedSink = SocketSuspendedSink(this)
+
 class SocketSuspendedSink(socket: Socket): SuspendedSink {
 
     companion object: KLoggingChannel()
 
     private val channel = socket.channel
-    private val cursor = Buffer.UnsafeCursor()
+    // private val cursor = Buffer.UnsafeCursor()
 
     override suspend fun write(source: Buffer, byteCount: Long) {
         byteCount.requireZeroOrPositiveNumber("byteCount")
 
         channel.await(SelectionKey.OP_WRITE)
-        source.readUnsafe(cursor).use { cur ->
+        source.readUnsafe().use { cursor ->
             var remaining = byteCount
             while (remaining > 0) {
-                cur.seek(0)
-                val length = minOf(cur.end - cur.start, remaining.toInt())
-                val written = channel.write(ByteBuffer.wrap(cur.data, cur.start, length))
+                cursor.seek(0)
+                val length = minOf(cursor.end - cursor.start, remaining.toInt())
+                val written = channel.write(ByteBuffer.wrap(cursor.data, cursor.start, length))
 
                 if (written <= 0) {
                     channel.await(SelectionKey.OP_WRITE)
@@ -45,6 +47,5 @@ class SocketSuspendedSink(socket: Socket): SuspendedSink {
         log.debug { "Closing socket channel" }
 
         channel.close()
-        cursor.close()
     }
 }
