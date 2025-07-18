@@ -6,7 +6,10 @@ import io.bluetape4k.support.requireZeroOrPositiveNumber
 import okio.Buffer
 import java.nio.channels.AsynchronousFileChannel
 
-class FileChannelSuspendedSource(
+fun AsynchronousFileChannel.asSuspendedSource(): SuspendedSource =
+    SuspendedFileChannelSource(this)
+
+class SuspendedFileChannelSource(
     private val channel: AsynchronousFileChannel,
 ): SuspendedSource {
 

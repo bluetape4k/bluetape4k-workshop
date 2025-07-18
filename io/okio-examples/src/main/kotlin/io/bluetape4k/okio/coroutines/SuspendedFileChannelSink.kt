@@ -6,7 +6,10 @@ import io.bluetape4k.support.requireZeroOrPositiveNumber
 import okio.Buffer
 import java.nio.channels.AsynchronousFileChannel
 
-class FileChannelSuspendedSink(
+fun AsynchronousFileChannel.asSuspendedSink(): SuspendedSink =
+    SuspendedFileChannelSink(this)
+
+class SuspendedFileChannelSink(
     private val channel: AsynchronousFileChannel,
 ): SuspendedSink {
 

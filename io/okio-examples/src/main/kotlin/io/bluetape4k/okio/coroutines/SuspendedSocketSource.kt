@@ -10,9 +10,9 @@ import java.net.Socket
 import java.nio.ByteBuffer
 import java.nio.channels.SelectionKey
 
-fun Socket.asSuspendedSource(): SuspendedSource = SocketSuspendedSource(this)
+fun Socket.asSuspendedSource(): SuspendedSource = SuspendedSocketSource(this)
 
-class SocketSuspendedSource(socket: Socket): SuspendedSource {
+class SuspendedSocketSource(socket: Socket): SuspendedSource {
 
     companion object: KLoggingChannel()
 

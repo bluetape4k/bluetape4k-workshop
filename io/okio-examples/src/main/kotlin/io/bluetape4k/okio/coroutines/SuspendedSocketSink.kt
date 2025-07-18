@@ -9,9 +9,9 @@ import java.net.Socket
 import java.nio.ByteBuffer
 import java.nio.channels.SelectionKey
 
-fun Socket.asSuspendedSink(): SuspendedSink = SocketSuspendedSink(this)
+fun Socket.asSuspendedSink(): SuspendedSink = SuspendedSocketSink(this)
 
-class SocketSuspendedSink(socket: Socket): SuspendedSink {
+class SuspendedSocketSink(socket: Socket): SuspendedSink {
 
     companion object: KLoggingChannel()
 
