@@ -1,9 +1,10 @@
 package io.bluetape4k.okio.coroutines
 
+import io.bluetape4k.coroutines.support.suspendAwait
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.support.requireZeroOrPositiveNumber
 import okio.Buffer
+import java.nio.ByteBuffer
 import java.nio.channels.AsynchronousFileChannel
 
 fun AsynchronousFileChannel.asSuspendedSource(): SuspendedSource =
@@ -15,17 +16,34 @@ class SuspendedFileChannelSource(
 
     companion object: KLoggingChannel()
 
+    private var position = 0L
 
     override suspend fun read(sink: Buffer, byteCount: Long): Long {
-        byteCount.requireZeroOrPositiveNumber("byteCount")
+        if (!channel.isOpen) error("Channel is closed")
+        if (position == channel.size()) return -1L
+        timeout().throwIfReached()
 
-        TODO("SuspendedSocketSource 를 참고해서 구현해야 합니다.")
+        var remaining = byteCount
+        while (remaining > 0) {
+            val length = minOf(remaining, DEFAULT_BUFFER_SIZE.toLong())
+            val buffer = ByteBuffer.allocate(length.toInt())
+            val bytesRead = channel.read(buffer, position).suspendAwait()
+
+            if (bytesRead <= 0) break // EOF or no data read
+
+            buffer.flip()
+            sink.write(buffer)
+            log.debug { "Read $bytesRead bytes from channel at position $position" }
+
+            position += bytesRead
+            remaining -= bytesRead
+        }
+        return byteCount - remaining
     }
 
     override suspend fun close() {
         if (!channel.isOpen) return
-
-        log.debug { "Closing file channel" }
+        log.debug { "Closing AsynchronousFileChannel[$channel]" }
         channel.close()
     }
 }
