@@ -70,7 +70,7 @@ object Versions {
 
     const val kotlin = "2.2.0"                 // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
     const val kotlinx_coroutines = "1.10.2"      // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
-    const val kotlinx_serialization = "1.8.1"   // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-json-jvm
+    const val kotlinx_serialization = "1.9.0"   // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-json-jvm
 
     const val kotlinx_atomicfu = "0.29.0"       // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/atomicfu
 
@@ -79,8 +79,8 @@ object Versions {
     const val spring_boot = Plugins.Versions.spring_boot
     const val spring_cloud = "2025.0.0"     // https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-dependencies
     const val spring_integration = "6.5.0"  // https://mvnrepository.com/artifact/org.springframework.integration/spring-integration-core
-    const val reactor_bom = "2024.0.7"      // https://mvnrepository.com/artifact/io.projectreactor/reactor-bom
-    const val spring_statemachine = "4.0.0" // https://mvnrepository.com/artifact/org.springframework.statemachine/spring-statemachine-core
+    const val reactor_bom = "2024.0.8"      // https://mvnrepository.com/artifact/io.projectreactor/reactor-bom
+    const val spring_statemachine = "4.0.1" // https://mvnrepository.com/artifact/org.springframework.statemachine/spring-statemachine-core
     const val spring_modulith = "1.4.1"     // https://mvnrepository.com/artifact/org.springframework.modulith/spring-modulith-bom
 
     const val chaos_monkey = "3.2.2"        // https://mvnrepository.com/artifact/de.codecentric/chaos-monkey-spring-boot
@@ -109,13 +109,13 @@ object Versions {
 
     const val bucket4j = "8.14.0"       // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17-core
     const val resilience4j = "2.3.0"   // https://mvnrepository.com/artifact/io.github.resilience4j/resilience4j-bom
-    const val netty = "4.2.2.Final"  // https://mvnrepository.com/artifact/io.netty/netty-all
+    const val netty = "4.2.3.Final"  // https://mvnrepository.com/artifact/io.netty/netty-all
 
     const val aws = "1.12.785"          // https://mvnrepository.com/artifact/com.amazonaws
-    const val aws2 = "2.31.78"          // https://mvnrepository.com/artifact/software.amazon.awssdk/aws-sdk-java
-    const val aws2_crt = "0.38.6"       // https://mvnrepository.com/artifact/software.amazon.awssdk.crt/aws-crt
-    const val aws_kotlin = "1.4.120"     // https://mvnrepository.com/artifact/aws.sdk.kotlin/aws-http-jvm
-    const val aws_smithy_kotlin = "1.4.22" // https://mvnrepository.com/artifact/aws.smithy.kotlin/http-client-engine-crt-jvm
+    const val aws2 = "2.32.7"          // https://mvnrepository.com/artifact/software.amazon.awssdk/aws-sdk-java
+    const val aws2_crt = "0.38.7"       // https://mvnrepository.com/artifact/software.amazon.awssdk.crt/aws-crt
+    const val aws_kotlin = "1.5.2"     // https://mvnrepository.com/artifact/aws.sdk.kotlin/aws-http-jvm
+    const val aws_smithy_kotlin = "1.5.1" // https://mvnrepository.com/artifact/aws.smithy.kotlin/http-client-engine-crt-jvm
 
     const val aws_spring_cloud = "3.4.0"  // https://mvnrepository.com/artifact/io.awspring.cloud/spring-cloud-aws-starter
 
@@ -133,7 +133,7 @@ object Versions {
     const val okio = "3.15.0"        // https://mvnrepository.com/artifact/com.squareup.okio/okio
     const val asynchttpclient = "2.12.4"  // https://mvnrepository.com/artifact/org.asynchttpclient/async-http-client
 
-    const val jackson = "2.19.1" // https://mvnrepository.com/artifact/com.fasterxml.jackson/jackson-bom
+    const val jackson = "2.19.2" // https://mvnrepository.com/artifact/com.fasterxml.jackson/jackson-bom
     const val fastjson2 = "2.0.57" // https://mvnrepository.com/artifact/com.alibaba.fastjson2/fastjson2
     const val jjwt = "0.11.5"    // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api
 
@@ -162,19 +162,19 @@ object Versions {
 
     const val slf4j = "2.0.17"       // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
     const val logback = "1.5.18"     // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
-    const val log4j = "2.24.3"       // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core
+    const val log4j = "2.25.1"       // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core
 
     const val metrics = "4.2.32"        // https://mvnrepository.com/artifact/io.dropwizard.metrics/metrics-core
     const val prometheus = "0.16.0"     // https://mvnrepository.com/artifact/io.prometheus/simpleclient
 
-    const val micrometer = "1.14.6"         // https://mvnrepository.com/artifact/io.micrometer/micrometer-core
-    const val micrometerTracing = "1.4.5"   // https://mvnrepository.com/artifact/io.micrometer/micrometer-tracing
+    const val micrometer = "1.15.2"         // https://mvnrepository.com/artifact/io.micrometer/micrometer-core
+    const val micrometerTracing = "1.5.2"   // https://mvnrepository.com/artifact/io.micrometer/micrometer-tracing
     const val micrometerContextPropagation = "1.1.3" // https://mvnrepository.com/artifact/io.micrometer/context-propagation
 
-    const val opentelemetry = "1.49.0" // https://mvnrepository.com/artifact/io.opentelemetry/opentelemetry-bom
+    const val opentelemetry = "1.52.0" // https://mvnrepository.com/artifact/io.opentelemetry/opentelemetry-bom
     const val opentelemetryAlpha = "$opentelemetry-alpha" // https://mvnrepository.com/artifact/io.opentelemetry/opentelemetry-bom-alpha
 
-    const val opentelemetryJavaAgent = "2.15.0" // https://mvnrepository.com/artifact/io.opentelemetry.javaagent/opentelemetry-javaagent
+    const val opentelemetryJavaAgent = "2.18.1" // https://mvnrepository.com/artifact/io.opentelemetry.javaagent/opentelemetry-javaagent
     const val opentelemetryInstrumentationAlpha = "$opentelemetryJavaAgent-alpha" // https://mvnrepository.com/artifact/io.opentelemetry.instrumentation/opentelemetry-instrumentation-bom-alpha
 
     const val caffeine = "3.2.0"        // https://mvnrepository.com/artifact/com.github.ben-manes.caffeine/caffeine
@@ -188,28 +188,28 @@ object Versions {
     const val elasticsearch = "8.17.3"       // https://mvnrepository.com/artifact/org.elasticsearch.client/elasticsearch-rest-client
 
     const val kafka = "3.8.1"           // https://mvnrepository.com/artifact/org.apache.kafka/kafka
-    const val spring_kafka = "3.3.3"    // https://mvnrepository.com/artifact/org.springframework.kafka/spring-kafka
+    const val spring_kafka = "3.3.8"    // https://mvnrepository.com/artifact/org.springframework.kafka/spring-kafka
 
     const val pods4k = "0.7.0"              // https://mvnrepository.com/artifact/com.danrusu.pods4k/bom
-    const val eclipse_collections = "11.1.0"  // https://mvnrepository.com/artifact/org.eclipse.collections/eclipse-collections
+    const val eclipse_collections = "13.0.0"  // https://mvnrepository.com/artifact/org.eclipse.collections/eclipse-collections
     const val jctools = "4.0.5"             // https://mvnrepository.com/artifact/org.jctools/jctools-core
 
     const val ow2_asm = "9.8"               // https://mvnrepository.com/artifact/org.ow2.asm/asm
 
-    const val junit_jupiter = "5.13.2"      // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
-    const val junit_platform = "1.13.2"     // https://mvnrepository.com/artifact/org.junit.platform/junit-platform-launcher
+    const val junit_jupiter = "5.13.4"      // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
+    const val junit_platform = "1.13.4"     // https://mvnrepository.com/artifact/org.junit.platform/junit-platform-launcher
     const val assertj_core = "3.27.3"       // https://mvnrepository.com/artifact/org.assertj/assertj-core
     const val kluent = "1.73"               // https://mvnrepository.com/artifact/org.amshove.kluent/kluent
-    const val mockk = "1.14.2"             // https://mvnrepository.com/artifact/io.mockk/mockk
+    const val mockk = "1.14.5"              // https://mvnrepository.com/artifact/io.mockk/mockk
     const val springmockk = "4.0.2"         // https://mvnrepository.com/artifact/com.ninja-squad/springmockk
     const val awaitility = "4.3.0"          // https://mvnrepository.com/artifact/org.awaitility/awaitility
     const val jmh = "1.37"                  // https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-core
-    const val testcontainers = "1.21.1"     // https://mvnrepository.com/artifact/org.testcontainers/testcontainers
+    const val testcontainers = "1.21.3"     // https://mvnrepository.com/artifact/org.testcontainers/testcontainers
     const val jna = "5.17.0"                // https://mvnrepository.com/artifact/net.java.dev.jna/jna
     const val archunit = "1.4.0"           // https://mvnrepository.com/artifact/com.tngtech.archunit/archunit-junit5
     const val rest_assured = "5.5.5"        // https://mvnrepository.com/artifact/io.rest-assured/rest-assured
 
-    const val datafaker = "2.4.3"          // https://mvnrepository.com/artifact/net.datafaker/datafaker
+    const val datafaker = "2.4.4"          // https://mvnrepository.com/artifact/net.datafaker/datafaker
     const val snakeyaml = "2.4"            // https://mvnrepository.com/artifact/org.yaml/snakeyaml
     const val random_beans = "3.9.0"
 
@@ -217,7 +217,7 @@ object Versions {
 
     const val sentry_logback = "8.16.0"  // https://mvnrepository.com/artifact/io.sentry/sentry-logback
 
-    const val scrimage = "4.3.2"  // https://mvnrepository.com/artifact/com.sksamuel.scrimage/scrimage-core
+    const val scrimage = "4.3.3"  // https://mvnrepository.com/artifact/com.sksamuel.scrimage/scrimage-core
 
     // Gatling
     const val gatling = "3.14.3" // https://mvnrepository.com/artifact/io.gatling/gatling-core
@@ -1019,7 +1019,7 @@ object Libs {
     val jjwt_extensions = jjwt("extensions")
 
     // Compression
-    const val snappy_java = "org.xerial.snappy:snappy-java:1.1.10.7"  // https://mvnrepository.com/artifact/org.xerial.snappy/snappy-java
+    const val snappy_java = "org.xerial.snappy:snappy-java:1.1.10.8"  // https://mvnrepository.com/artifact/org.xerial.snappy/snappy-java
     const val lz4_java = "org.lz4:lz4-java:1.8.0"                     // https://mvnrepository.com/artifact/org.lz4/lz4-java
 
     // https://github.com/hyperxpro/Brotli4j
@@ -1031,7 +1031,7 @@ object Libs {
         )
     }:1.18.0"                                                   // https://mvnrepository.com/artifact/com.aayushatharva.brotli4j/native-macos
     const val brotli_dec = "org.brotli:dec:0.1.2"               // https://mvnrepository.com/artifact/org.brotli/dec
-    const val zstd_jni = "com.github.luben:zstd-jni:1.5.7-3"    // https://mvnrepository.com/artifact/com.github.luben/zstd-jni
+    const val zstd_jni = "com.github.luben:zstd-jni:1.5.7-4"    // https://mvnrepository.com/artifact/com.github.luben/zstd-jni
     const val xz = "org.tukaani:xz:1.10"                        // https://mvnrepository.com/artifact/org.tukaani/xz
 
     // Cryptography
