@@ -1,27 +1,36 @@
 package io.bluetape4k.okio.coroutines
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.junit5.tempfolder.TempFolder
+import io.bluetape4k.junit5.tempfolder.TempFolderTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.okio.AbstractOkioTest
+import io.bluetape4k.support.toUtf8String
 import okio.Buffer
 import org.amshove.kluent.shouldBeEqualTo
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.RepeatedTest
-import org.junit.jupiter.api.Test
 import java.nio.ByteBuffer
 import java.nio.channels.AsynchronousFileChannel
-import java.nio.file.Files
 import java.nio.file.StandardOpenOption
-import kotlin.io.path.createTempFile
 
+@TempFolderTest
 class SuspendedFileChannelSinkTest: AbstractOkioTest() {
 
     companion object: KLoggingChannel() {
         private const val REPEAT_SIZE = 5
     }
 
+    private lateinit var tempFolder: TempFolder
+
+    @BeforeAll
+    fun beforeAll(tempFolder: TempFolder) {
+        this.tempFolder = tempFolder
+    }
+
     @RepeatedTest(REPEAT_SIZE)
     fun `write and read back data`() = runSuspendIO {
-        val tempFile = createTempFile()
+        val tempFile = tempFolder.createFile().toPath()
         val channel = AsynchronousFileChannel.open(
             tempFile,
             StandardOpenOption.WRITE,
@@ -45,18 +54,17 @@ class SuspendedFileChannelSinkTest: AbstractOkioTest() {
         val readBuffer = ByteBuffer.allocate(readChannel.size().toInt())
         readChannel.read(readBuffer, 0).get()
         readBuffer.flip()
+
         val result = ByteArray(readBuffer.remaining())
-//        result.toString(Charsets.UTF_8) shouldBeEqualTo message
         readBuffer.get(result)
-        String(result).trim { it <= ' ' } shouldBeEqualTo message
+        result.toUtf8String() shouldBeEqualTo message
 
         readChannel.close()
-        Files.deleteIfExists(tempFile)
     }
 
-    @Test
+    @RepeatedTest(REPEAT_SIZE)
     fun `write after close throws`() = runSuspendIO {
-        val tempFile = createTempFile()
+        val tempFile = tempFolder.createFile().toPath()
         val channel = AsynchronousFileChannel.open(
             tempFile,
             StandardOpenOption.WRITE,
@@ -70,7 +78,5 @@ class SuspendedFileChannelSinkTest: AbstractOkioTest() {
         kotlin.test.assertFailsWith<IllegalStateException> {
             sink.write(buffer, buffer.size)
         }
-
-        Files.deleteIfExists(tempFile)
     }
 }
