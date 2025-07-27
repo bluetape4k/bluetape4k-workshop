@@ -1,5 +1,6 @@
 package io.bluetape4k.okio.coroutines
 
+import io.bluetape4k.io.okio.bufferOf
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.okio.AbstractOkioTest
@@ -7,7 +8,6 @@ import net.datafaker.Faker
 import okio.Buffer
 import okio.IOException
 import org.amshove.kluent.shouldBeEqualTo
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFailsWith
 
@@ -22,7 +22,7 @@ class SuspendedPipeTest: AbstractOkioTest() {
         val message = Faker().lorem().paragraph(10)
         val messageLength = message.length.toLong()
         val pipe = SuspendedPipe(messageLength * 2L)
-        val writeBuffer = Buffer().writeUtf8(message)
+        val writeBuffer = bufferOf(message)
         pipe.sink.write(writeBuffer, writeBuffer.size)
         pipe.sink.close()
 
@@ -38,7 +38,7 @@ class SuspendedPipeTest: AbstractOkioTest() {
     fun `cancel pipe fails operations`() = runSuspendIO {
         val pipe = SuspendedPipe(1024)
         pipe.cancel()
-        val writeBuffer = Buffer().writeUtf8("fail")
+        val writeBuffer = bufferOf("fail")
 
         assertFailsWith<IOException> {
             pipe.sink.write(writeBuffer, writeBuffer.size)
@@ -52,7 +52,7 @@ class SuspendedPipeTest: AbstractOkioTest() {
     @Test
     fun `fold transfers buffer and closes source`() = runSuspendIO {
         val pipe = SuspendedPipe(1024)
-        val writeBuffer = Buffer().writeUtf8("folded")
+        val writeBuffer = bufferOf("folded")
         pipe.sink.write(writeBuffer, writeBuffer.size)
 
         val foldedSink = object: SuspendedSink {
@@ -66,7 +66,8 @@ class SuspendedPipeTest: AbstractOkioTest() {
             override fun timeout() = pipe.sink.timeout()
         }
         pipe.fold(foldedSink)
-        assertEquals("folded", foldedSink.result.readUtf8())
+        foldedSink.result.readUtf8() shouldBeEqualTo "folded"
+
         assertFailsWith<IllegalStateException> {
             pipe.source.read(Buffer(), 10)
         }
