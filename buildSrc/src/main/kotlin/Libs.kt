@@ -78,10 +78,10 @@ object Versions {
 
     const val spring_boot = Plugins.Versions.spring_boot
     const val spring_cloud = "2025.0.0"     // https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-dependencies
-    const val spring_integration = "6.5.0"  // https://mvnrepository.com/artifact/org.springframework.integration/spring-integration-core
+    const val spring_integration = "6.5.1"  // https://mvnrepository.com/artifact/org.springframework.integration/spring-integration-core
     const val reactor_bom = "2024.0.8"      // https://mvnrepository.com/artifact/io.projectreactor/reactor-bom
     const val spring_statemachine = "4.0.1" // https://mvnrepository.com/artifact/org.springframework.statemachine/spring-statemachine-core
-    const val spring_modulith = "1.4.1"     // https://mvnrepository.com/artifact/org.springframework.modulith/spring-modulith-bom
+    const val spring_modulith = "1.4.2"     // https://mvnrepository.com/artifact/org.springframework.modulith/spring-modulith-bom
 
     const val chaos_monkey = "3.2.2"        // https://mvnrepository.com/artifact/de.codecentric/chaos-monkey-spring-boot
     const val blockhound = "1.0.13.RELEASE"  // https://mvnrepository.com/artifact/io.projectreactor.tools/blockhound
@@ -97,8 +97,8 @@ object Versions {
     }
 
     const val resteasy = "6.2.12.Final"       // https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-bom
-    const val mutiny = "2.9.2"              // https://mvnrepository.com/artifact/io.smallrye.reactive/mutiny
-    const val camel_quarkus = "3.24.0"       // https://mvnrepository.com/artifact/org.apache.camel.quarkus/camel-quarkus-bom
+    const val mutiny = "2.9.4"                // https://mvnrepository.com/artifact/io.smallrye.reactive/mutiny
+    const val camel_quarkus = "3.24.0"        // https://mvnrepository.com/artifact/org.apache.camel.quarkus/camel-quarkus-bom
 
     const val vertx = "4.5.16"               // https://mvnrepository.com/artifact/io.vertx/vertx-core
 
@@ -112,9 +112,9 @@ object Versions {
     const val netty = "4.2.3.Final"  // https://mvnrepository.com/artifact/io.netty/netty-all
 
     const val aws = "1.12.785"          // https://mvnrepository.com/artifact/com.amazonaws
-    const val aws2 = "2.32.7"          // https://mvnrepository.com/artifact/software.amazon.awssdk/aws-sdk-java
+    const val aws2 = "2.32.9"          // https://mvnrepository.com/artifact/software.amazon.awssdk/aws-sdk-java
     const val aws2_crt = "0.38.7"       // https://mvnrepository.com/artifact/software.amazon.awssdk.crt/aws-crt
-    const val aws_kotlin = "1.5.2"     // https://mvnrepository.com/artifact/aws.sdk.kotlin/aws-http-jvm
+    const val aws_kotlin = "1.5.4"     // https://mvnrepository.com/artifact/aws.sdk.kotlin/aws-http-jvm
     const val aws_smithy_kotlin = "1.5.1" // https://mvnrepository.com/artifact/aws.smithy.kotlin/http-client-engine-crt-jvm
 
     const val aws_spring_cloud = "3.4.0"  // https://mvnrepository.com/artifact/io.awspring.cloud/spring-cloud-aws-starter
@@ -148,14 +148,14 @@ object Versions {
     // NOTE: 이 경우 기존 javax 를 사용하는 버전과 충돌이 생길 수 있으니 조심하세요
     // https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-core
 
-    const val hibernate = "6.6.17.Final"           // https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-core
+    const val hibernate = "6.6.23.Final"           // https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-core
     const val hibernate_reactive = "2.4.8.Final"  // https://mvnrepository.com/artifact/org.hibernate.reactive/hibernate-reactive-core
     const val hibernate_validator = "8.0.2.Final" // https://mvnrepository.com/artifact/org.hibernate.validator/hibernate-validator
     const val querydsl = "5.1.0"                  // https://mvnrepository.com/artifact/com.querydsl/querydsl-jpa
 
     const val exposed = "1.0.0-beta-2"       // https://mvnrepository.com/artifact/org.jetbrains.exposed/exposed-core
     const val r2dbc = "1.0.0.RELEASE"        // https://mvnrepository.com/artifact/io.r2dbc/r2dbc-spi
-    const val agroal = "2.5"          // https://mvnrepository.com/artifact/io.agroal/agroal-api
+    const val agroal = "2.7.1"          // https://mvnrepository.com/artifact/io.agroal/agroal-api
 
     const val blaze_persistence = "3.22.3" // https://mvnrepository.com/artifact/io.quarkus.platform/quarkus-blaze-persistence-bom
     const val javers = "7.8.0"             // https://mvnrepository.com/artifact/org.javers/javers-core
