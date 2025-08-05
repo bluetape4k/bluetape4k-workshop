@@ -40,7 +40,6 @@ import org.jetbrains.exposed.v1.dao.flushCache
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.jdbc.Query
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
-import org.jetbrains.exposed.v1.jdbc.addLogger
 import org.jetbrains.exposed.v1.jdbc.exists
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
@@ -906,7 +905,7 @@ class JsonColumnTest: AbstractExposedJsonTest() {
 
         withTables(testDB, tester) {
 
-        /**
+            /**
              * ```sql
              * INSERT INTO tester (numbers) VALUES ([1,2,3])
              * ```

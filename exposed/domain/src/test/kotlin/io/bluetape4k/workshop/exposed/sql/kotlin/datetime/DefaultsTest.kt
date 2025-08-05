@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTime::class)
+
 package io.bluetape4k.workshop.exposed.sql.kotlin.datetime
 
 import io.bluetape4k.exposed.dao.idEquals
@@ -12,9 +14,7 @@ import io.bluetape4k.workshop.exposed.expectException
 import io.bluetape4k.workshop.exposed.inProperCase
 import io.bluetape4k.workshop.exposed.insertAndWait
 import io.bluetape4k.workshop.exposed.withTables
-import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
@@ -88,8 +88,11 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Clock
 import kotlin.time.DurationUnit
 import kotlin.time.DurationUnit.DAYS
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 import kotlin.time.toDuration
 
 fun now() = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())

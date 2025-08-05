@@ -18,8 +18,8 @@ import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.intParam
 import org.jetbrains.exposed.v1.core.or
-import org.jetbrains.exposed.v1.core.statements.IStatementBuilder
 import org.jetbrains.exposed.v1.core.statements.Statement
+import org.jetbrains.exposed.v1.core.statements.StatementBuilder
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
@@ -129,7 +129,7 @@ class ExplainTest: AbstractExposedTest() {
         val cityName = "City A"
 
         @Suppress("UnusedReceiverParameter")
-        fun JdbcTransaction.explainAndIncrement(body: IStatementBuilder.() -> Statement<*>) =
+        fun JdbcTransaction.explainAndIncrement(body: StatementBuilder.() -> Statement<*>) =
             explain(body = body).also {
                 it.toList() // as with select queries, explain is only executed when iterated over
                     .apply {
