@@ -31,18 +31,10 @@ class ActorRepository(private val db: Database) {
 
     fun findById(id: Int): VirtualFuture<ActorDTO?> = virtualFuture(virtualExecutor) {
         log.debug { "Find Actor by id. id: $id" }
-
-//        transaction(db) {
-//            Actors.selectAll()
-//                .where(Actors.id eq id)
-//                .firstOrNull()
-//                ?.toActorDTO()
-//        }
         transaction(db) {
             Actor.findById(id)?.toActorDTO()
         }
     }
-
 
     fun searchActor(params: Map<String, String?>): VirtualFuture<List<ActorDTO>> = virtualFuture(virtualExecutor) {
         log.debug { "Search Actor by params. params: $params" }
