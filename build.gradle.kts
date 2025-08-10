@@ -57,7 +57,7 @@ allprojects {
     }
 
     configurations.all {
-        resolutionStrategy.cacheChangingModulesFor(5, TimeUnit.DAYS)
+        // resolutionStrategy.cacheChangingModulesFor(5, TimeUnit.DAYS)
     }
 }
 

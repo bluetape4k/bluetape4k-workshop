@@ -82,7 +82,6 @@ class SuspendInteropKtTest: AbstractOkioTest() {
 
     @Test
     fun `BufferedSuspendedSink suspendWrite는 Source에서 byteCount만큼 읽는다`() = runSuspendIO {
-        val buffer = Buffer()
         val sink = RealBufferedSuspendedSink(FakeSuspendedSink())
 
         val source = mockk<Source>()
@@ -110,6 +109,8 @@ class SuspendInteropKtTest: AbstractOkioTest() {
         override fun timeout() = Timeout.NONE
     }
 
+    // 테스트용 FakeSuspendedSource
+    // 실제로는 BufferedSource를 사용하지만, 여기서는 간단한 예시로 FakeSuspendedSource를 사용합니다.
     private class FakeSuspendedSource(private val data: Buffer): SuspendedSource {
         var closed = false
         override suspend fun read(sink: Buffer, byteCount: Long): Long {
