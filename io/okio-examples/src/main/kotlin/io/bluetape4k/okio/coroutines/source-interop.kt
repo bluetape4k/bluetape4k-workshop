@@ -6,12 +6,12 @@ import kotlinx.coroutines.Dispatchers
 import okio.Source
 import kotlin.coroutines.CoroutineContext
 
-fun Source.toSuspend(context: CoroutineContext = Dispatchers.IO): SuspendedSource = when (this) {
+fun okio.Source.asSuspended(context: CoroutineContext = Dispatchers.IO): SuspendedSource = when (this) {
     is ForwardBlockingSource -> this.delegate
     else -> ForwardSuspendedSource(this)
 }
 
-fun SuspendedSource.toBlocking(context: CoroutineContext = Dispatchers.IO): Source = when (this) {
+fun SuspendedSource.asBlocking(context: CoroutineContext = Dispatchers.IO): Source = when (this) {
     is ForwardSuspendedSource -> this.delegate
     else -> ForwardBlockingSource(this, context)
 }

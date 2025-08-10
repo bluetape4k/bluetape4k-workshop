@@ -6,12 +6,12 @@ import kotlinx.coroutines.Dispatchers
 import okio.Sink
 import kotlin.coroutines.CoroutineContext
 
-fun Sink.toSuspended(context: CoroutineContext = Dispatchers.IO): SuspendedSink = when (this) {
+fun Sink.asSuspended(context: CoroutineContext = Dispatchers.IO): SuspendedSink = when (this) {
     is ForwardBlockingSink -> this.delegate
     else -> ForwardSuspendedSink(this)
 }
 
-fun SuspendedSink.toBlocking(context: CoroutineContext = Dispatchers.IO): Sink = when (this) {
+fun SuspendedSink.asBlocking(context: CoroutineContext = Dispatchers.IO): Sink = when (this) {
     is ForwardSuspendedSink -> this.delegate
     else -> ForwardBlockingSink(this, context)
 }
