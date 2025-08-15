@@ -7,6 +7,8 @@ import okio.ByteString
 import okio.Timeout
 import java.util.concurrent.atomic.AtomicBoolean
 
+fun SuspendedSink.buffered(): BufferedSuspendedSink = RealBufferedSuspendedSink(this)
+
 internal class RealBufferedSuspendedSink(private val sink: SuspendedSink): BufferedSuspendedSink {
 
     companion object: KLoggingChannel()

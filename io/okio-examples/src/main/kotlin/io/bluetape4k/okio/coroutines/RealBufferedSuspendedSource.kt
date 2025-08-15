@@ -12,6 +12,9 @@ import okio.Options
 import okio.Timeout
 import java.util.concurrent.atomic.AtomicBoolean
 
+fun SuspendedSource.buffered(): BufferedSuspendedSource = RealBufferedSuspendedSource(this)
+
+
 class RealBufferedSuspendedSource(
     private val source: SuspendedSource,
 ): BufferedSuspendedSource {

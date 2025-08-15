@@ -28,5 +28,3 @@ interface SuspendedSource {
      */
     fun timeout(): Timeout = Timeout.NONE
 }
-
-fun SuspendedSource.buffered(): BufferedSuspendedSource = RealBufferedSuspendedSource(this)

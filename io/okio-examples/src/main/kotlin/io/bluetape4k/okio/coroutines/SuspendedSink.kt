@@ -27,5 +27,3 @@ interface SuspendedSink {
      */
     fun timeout(): Timeout = Timeout.NONE
 }
-
-fun SuspendedSink.buffered(): BufferedSuspendedSink = RealBufferedSuspendedSink(this)
