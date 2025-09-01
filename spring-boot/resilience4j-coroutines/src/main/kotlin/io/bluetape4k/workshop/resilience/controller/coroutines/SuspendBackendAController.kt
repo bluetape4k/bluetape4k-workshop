@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/coroutines/backendA")
 class SuspendBackendAController(
-    @Qualifier("backendACoService") private val serviceA: CoService,
+    @param:Qualifier("backendACoService") private val serviceA: CoService,
 ) {
     companion object: KLoggingChannel() {
         private const val BACKEND_A = "backendA"

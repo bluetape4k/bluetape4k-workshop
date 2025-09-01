@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/coroutines/backendB")
 class SuspendBackendBController(
-    @Qualifier("backendBCoService") private val serviceB: CoService,
+    @param:Qualifier("backendBCoService") private val serviceB: CoService,
     circuitBreakerRegistry: CircuitBreakerRegistry,
     threadPoolBulkheadRegistry: ThreadPoolBulkheadRegistry,
     bulkheadRegistry: BulkheadRegistry,

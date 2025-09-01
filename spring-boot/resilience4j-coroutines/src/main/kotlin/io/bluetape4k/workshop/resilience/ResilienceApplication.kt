@@ -7,7 +7,6 @@ import org.springframework.boot.runApplication
 
 @SpringBootApplication
 class ResilienceApplication {
-
     companion object: KLoggingChannel()
 }
 
