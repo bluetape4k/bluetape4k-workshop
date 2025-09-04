@@ -27,27 +27,42 @@ import org.jetbrains.exposed.v1.core.Expression
 import org.jetbrains.exposed.v1.core.IntegerColumnType
 import org.jetbrains.exposed.v1.core.LowerCase
 import org.jetbrains.exposed.v1.core.Op
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder
 import org.jetbrains.exposed.v1.core.Sum
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.UpperCase
 import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.andIfNotNull
+import org.jetbrains.exposed.v1.core.bitwiseAnd
+import org.jetbrains.exposed.v1.core.bitwiseOr
+import org.jetbrains.exposed.v1.core.bitwiseXor
+import org.jetbrains.exposed.v1.core.case
 import org.jetbrains.exposed.v1.core.charLength
+import org.jetbrains.exposed.v1.core.coalesce
+import org.jetbrains.exposed.v1.core.concat
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.div
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.exists
 import org.jetbrains.exposed.v1.core.function
+import org.jetbrains.exposed.v1.core.hasFlag
 import org.jetbrains.exposed.v1.core.intLiteral
 import org.jetbrains.exposed.v1.core.intParam
+import org.jetbrains.exposed.v1.core.intToDecimal
+import org.jetbrains.exposed.v1.core.isNotNull
 import org.jetbrains.exposed.v1.core.locate
 import org.jetbrains.exposed.v1.core.lowerCase
+import org.jetbrains.exposed.v1.core.mod
 import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.core.orIfNotNull
+import org.jetbrains.exposed.v1.core.plus
+import org.jetbrains.exposed.v1.core.regexp
+import org.jetbrains.exposed.v1.core.rem
 import org.jetbrains.exposed.v1.core.stringLiteral
 import org.jetbrains.exposed.v1.core.stringParam
 import org.jetbrains.exposed.v1.core.substring
 import org.jetbrains.exposed.v1.core.sum
+import org.jetbrains.exposed.v1.core.times
 import org.jetbrains.exposed.v1.core.upperCase
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
@@ -94,9 +109,7 @@ class FunctionsTest: AbstractFunctionsTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `calc function 02`(testDB: TestDB) {
         withCitiesAndUsers(testDB) { cities, users, userData ->
-            val sum = Expression.build {
-                Sum(cities.id + userData.value, IntegerColumnType())
-            }
+            val sum = Sum(cities.id + userData.value, IntegerColumnType())
 
             val rows = (users innerJoin userData innerJoin cities)
                 .select(users.id, sum)
@@ -133,17 +146,14 @@ class FunctionsTest: AbstractFunctionsTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `calc function 03`(testDB: TestDB) {
         withCitiesAndUsers(testDB) { cities, users, userData ->
-            val sum = Expression.build {
-                Sum(cities.id * 100 + userData.value / 10, IntegerColumnType())
-            }
-            val sum2 = Expression.build {
-                Sum(
-                    cities.id.intToDecimal() * 100.0.toBigDecimal() + userData.value.intToDecimal() / 10.0.toBigDecimal(),
-                    DecimalColumnType(10, 2)
-                )
-            }
-            val div = Expression.build { sum / 100 }
-            val mod = Expression.build { sum mod 100 }
+            val sum = Sum(cities.id * 100 + userData.value / 10, IntegerColumnType())
+            val sum2 = Sum(
+                cities.id.intToDecimal() * 100.0.toBigDecimal() + userData.value.intToDecimal() / 10.0.toBigDecimal(),
+                DecimalColumnType(10, 2)
+            )
+
+            val div = sum / 100
+            val mod = sum mod 100
 
             val rows = (users innerJoin userData innerJoin cities)
                 .select(users.id, sum, div, mod)
@@ -183,14 +193,12 @@ class FunctionsTest: AbstractFunctionsTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `calc function 02 - Decimal`(testDB: TestDB) {
         withCitiesAndUsers(testDB) { cities, users, userData ->
-            val sum = Expression.build {
-                Sum(
-                    cities.id.intToDecimal() * 100.0.toBigDecimal() + userData.value.intToDecimal() / 10.0.toBigDecimal(),
-                    DecimalColumnType(15, 0)
-                )
-            }
-            val div = Expression.build { sum / 100.0.toBigDecimal() }
-            val mod = Expression.build { sum mod 100.0.toBigDecimal() }
+            val sum = Sum(
+                cities.id.intToDecimal() * 100.0.toBigDecimal() + userData.value.intToDecimal() / 10.0.toBigDecimal(),
+                DecimalColumnType(15, 0)
+            )
+            val div = sum / 100.0.toBigDecimal()
+            val mod = sum mod 100.0.toBigDecimal()
 
             val rows = (users innerJoin userData innerJoin cities)
                 .select(users.id, sum, div, mod)
@@ -251,10 +259,10 @@ class FunctionsTest: AbstractFunctionsTest() {
             }
 
             // HINT: IdentityID 컬럼에 대해서도 이렇게 연산을 할 수 있네 ???
-            val modOnPk1 = Expression.build { table.id % 3 }.alias("shard1")
-            val modOnPk2 = Expression.build { table.id % intLiteral(3) }.alias("shard2")
-            val modOnPk3 = Expression.build { table.id % table.otherColumn }.alias("shard3")
-            val modOnPk4 = Expression.build { table.otherColumn % table.id }.alias("shard4")
+            val modOnPk1 = (table.id % 3).alias("shard1")
+            val modOnPk2 = (table.id % intLiteral(3)).alias("shard2")
+            val modOnPk3 = (table.id % table.otherColumn).alias("shard3")
+            val modOnPk4 = (table.otherColumn % table.id).alias("shard4")
 
             val rows = table.select(table.id, modOnPk1, modOnPk2, modOnPk3, modOnPk4).last()
 
@@ -299,10 +307,10 @@ class FunctionsTest: AbstractFunctionsTest() {
                 }
             }
 
-            val modOnPk1 = Expression.build { table.id mod 3 }.alias("shard1")
-            val modOnPk2 = Expression.build { table.id mod intLiteral(3) }.alias("shard2")
-            val modOnPk3 = Expression.build { table.id mod table.otherColumn }.alias("shard3")
-            val modOnPk4 = Expression.build { table.otherColumn mod table.id }.alias("shard4")
+            val modOnPk1 = (table.id mod 3).alias("shard1")
+            val modOnPk2 = (table.id mod intLiteral(3)).alias("shard2")
+            val modOnPk3 = (table.id mod table.otherColumn).alias("shard3")
+            val modOnPk4 = (table.otherColumn mod table.id).alias("shard4")
 
             val rows = table.select(table.id, modOnPk1, modOnPk2, modOnPk3, modOnPk4).last()
 
@@ -329,8 +337,8 @@ class FunctionsTest: AbstractFunctionsTest() {
         withCitiesAndUsers(testDB) { _, users, _ ->
 
             val adminFlag = DMLTestData.Users.Flags.IS_ADMIN
-            val adminAndFlgsExpr = Expression.build { users.flags bitwiseAnd adminFlag }
-            val adminEq = Expression.build { adminAndFlgsExpr eq adminFlag }
+            val adminAndFlgsExpr = users.flags bitwiseAnd adminFlag
+            val adminEq = adminAndFlgsExpr eq adminFlag
             val toSlice = listOfNotNull(adminAndFlgsExpr, adminEq)
 
             val rows = users.select(toSlice).orderBy(users.id).toList()
@@ -367,8 +375,8 @@ class FunctionsTest: AbstractFunctionsTest() {
         withCitiesAndUsers(testDB) { _, users, _ ->
 
             val adminFlag = DMLTestData.Users.Flags.IS_ADMIN
-            val adminAndFlgsExpr = Expression.build { users.flags bitwiseAnd intLiteral(adminFlag) }
-            val adminEq = Expression.build { adminAndFlgsExpr eq adminFlag }
+            val adminAndFlgsExpr = users.flags bitwiseAnd intLiteral(adminFlag)
+            val adminEq = adminAndFlgsExpr eq adminFlag
             val toSlice = listOfNotNull(adminAndFlgsExpr, adminEq)
 
             val rows = users.select(toSlice).orderBy(users.id).toList()
@@ -404,9 +412,12 @@ class FunctionsTest: AbstractFunctionsTest() {
     fun `bitwiseOr 01`(testDB: TestDB) {
         withCitiesAndUsers(testDB) { _, users, _ ->
             val extra = 0b10
-            val flagsWithExtra = Expression.build { users.flags bitwiseOr extra }
+            val flagsWithExtra = users.flags bitwiseOr extra
 
-            val rows = users.select(users.id, flagsWithExtra).orderBy(users.id).toList()
+            val rows = users
+                .select(users.id, flagsWithExtra)
+                .orderBy(users.id)
+                .toList()
 
             rows shouldHaveSize 5
             rows[0][flagsWithExtra] shouldBeEqualTo 0b0010
@@ -433,9 +444,12 @@ class FunctionsTest: AbstractFunctionsTest() {
     fun `bitwiseOr 02`(testDB: TestDB) {
         withCitiesAndUsers(testDB) { _, users, _ ->
             val extra = 0b10
-            val flagsWithExtra = Expression.build { users.flags bitwiseOr intLiteral(extra) }
+            val flagsWithExtra = users.flags bitwiseOr intLiteral(extra)
 
-            val rows = users.select(users.id, users.flags, flagsWithExtra).orderBy(users.id).toList()
+            val rows = users
+                .select(users.id, users.flags, flagsWithExtra)
+                .orderBy(users.id)
+                .toList()
 
             rows shouldHaveSize 5
             rows[0][flagsWithExtra] shouldBeEqualTo 0b0010
@@ -469,8 +483,11 @@ class FunctionsTest: AbstractFunctionsTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `bitwiseXor 01`(testDB: TestDB) {
         withCitiesAndUsers(testDB) { _, users, _ ->
-            val flagsWithExtra = Expression.build { users.flags bitwiseXor 0b111 }
-            val rows = users.select(users.id, users.flags, flagsWithExtra).orderBy(users.id).toList()
+            val flagsWithExtra = users.flags bitwiseXor 0b111
+            val rows = users
+                .select(users.id, users.flags, flagsWithExtra)
+                .orderBy(users.id)
+                .toList()
 
             rows shouldHaveSize 5
             rows[0][flagsWithExtra] shouldBeEqualTo 0b0111
@@ -504,8 +521,11 @@ class FunctionsTest: AbstractFunctionsTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `bitwiseXor 02`(testDB: TestDB) {
         withCitiesAndUsers(testDB) { _, users, _ ->
-            val flagsWithExtra = Expression.build { users.flags bitwiseXor intLiteral(0b111) }
-            val rows = users.select(users.id, users.flags, flagsWithExtra).orderBy(users.id).toList()
+            val flagsWithExtra = users.flags bitwiseXor intLiteral(0b111)
+            val rows = users
+                .select(users.id, users.flags, flagsWithExtra)
+                .orderBy(users.id)
+                .toList()
 
             rows shouldHaveSize 5
             rows[0][flagsWithExtra] shouldBeEqualTo 0b0111
@@ -653,13 +673,16 @@ class FunctionsTest: AbstractFunctionsTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `select case 01`(testDB: TestDB) {
         withCitiesAndUsers(testDB) { _, users, _ ->
-            val field = Expression.build {
+            val field =
                 case()
                     .When(users.id eq "alex", stringLiteral("11"))
                     .Else(stringLiteral("22"))
-            }
 
-            val rows = users.select(users.id, field).orderBy(users.id).limit(2).toList()
+            val rows = users
+                .select(users.id, field)
+                .orderBy(users.id)
+                .limit(2)
+                .toList()
 
             rows shouldHaveSize 2
             rows[0][field] shouldBeEqualTo "11"
@@ -865,18 +888,17 @@ class FunctionsTest: AbstractFunctionsTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `concat 01`(testDB: TestDB) {
         withCitiesAndUsers(testDB) { cities, _, _ ->
-            val concatField: Concat = SqlExpressionBuilder.concat(stringLiteral("Foo"), stringLiteral("Bar"))
+            val concatField: Concat = concat(stringLiteral("Foo"), stringLiteral("Bar"))
             val result = cities.select(concatField).limit(1).single()
             result[concatField] shouldBeEqualTo "FooBar"
 
-            val concatField2: Concat = SqlExpressionBuilder
-                .concat(
-                    "!",
-                    listOf(
-                        stringLiteral("Foo"),
-                        stringLiteral("Bar")
-                    )
+            val concatField2: Concat = concat(
+                "!",
+                listOf(
+                    stringLiteral("Foo"),
+                    stringLiteral("Bar")
                 )
+            )
 
             val result2 = cities
                 .select(concatField2)
@@ -903,11 +925,11 @@ class FunctionsTest: AbstractFunctionsTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `concat 02`(testDB: TestDB) {
         withCitiesAndUsers(testDB) { _, users, _ ->
-            val concatField: Concat = SqlExpressionBuilder.concat(users.id, stringLiteral(" - "), users.name)
+            val concatField: Concat = concat(users.id, stringLiteral(" - "), users.name)
             val result = users.select(concatField).where { users.id eq "andrey" }.single()
             result[concatField] shouldBeEqualTo "andrey - Andrey"
 
-            val concatField2: Concat = SqlExpressionBuilder.concat(
+            val concatField2: Concat = concat(
                 "!",
                 listOf(users.id, users.name)
             )
@@ -937,7 +959,7 @@ class FunctionsTest: AbstractFunctionsTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `concat with numbers`(testDB: TestDB) {
         withCitiesAndUsers(testDB) { _, _, data ->
-            val concatField = SqlExpressionBuilder.concat(
+            val concatField = concat(
                 data.userId,
                 stringLiteral(" - "),
                 data.comment,
@@ -947,7 +969,7 @@ class FunctionsTest: AbstractFunctionsTest() {
             val result = data.select(concatField).where { data.userId eq "sergey" }.single()
             result[concatField] shouldBeEqualTo "sergey - Comment for Sergey - 30"
 
-            val concatField2 = SqlExpressionBuilder.concat(
+            val concatField2 = concat(
                 "!",
                 listOf(
                     data.userId,
@@ -1056,8 +1078,8 @@ class FunctionsTest: AbstractFunctionsTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `And operator doesn't mutate`(testDB: TestDB) {
         withDb(testDB) {
-            val initialOp = Op.build { Cities.name eq "foo" }
-            val secondOp = Op.build { Cities.name.isNotNull() }
+            val initialOp = Cities.name eq "foo"
+            val secondOp = Cities.name.isNotNull()
             (initialOp and secondOp).toString() shouldBeEqualTo "($initialOp) AND ($secondOp)"
 
             val thirdOp = exists(Cities.selectAll())
@@ -1072,8 +1094,8 @@ class FunctionsTest: AbstractFunctionsTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `Or operator doesn't mutate`(testDB: TestDB) {
         withDb(testDB) {
-            val initialOp = Op.build { Cities.name eq "foo" }
-            val secondOp = Op.build { Cities.name.isNotNull() }
+            val initialOp = Cities.name eq "foo"
+            val secondOp = Cities.name.isNotNull()
             (initialOp or secondOp).toString() shouldBeEqualTo "($initialOp) OR ($secondOp)"
 
             val thirdOp = exists(Cities.selectAll())
@@ -1088,7 +1110,7 @@ class FunctionsTest: AbstractFunctionsTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `And Or combinations`(testDB: TestDB) {
         withDb(testDB) {
-            val initialOp = Op.build { Cities.name eq "foo" }
+            val initialOp = Cities.name eq "foo"
             val secondOp = exists(Cities.selectAll())
 
             (initialOp or initialOp and initialOp).toString() shouldBeEqualTo
@@ -1193,7 +1215,7 @@ class FunctionsTest: AbstractFunctionsTest() {
     fun `coalesce function`(testDB: TestDB) {
         withCitiesAndUsers(testDB) { _, users, _ ->
 
-            val coalesceExpr1 = SqlExpressionBuilder.coalesce(users.cityId, intLiteral(1000))
+            val coalesceExpr1 = coalesce(users.cityId, intLiteral(1000))
 
             users
                 .select(users.cityId, coalesceExpr1)
@@ -1238,7 +1260,7 @@ class FunctionsTest: AbstractFunctionsTest() {
              *  WHERE users.id = 'andrey'
              * ```
              */
-            val concatField = SqlExpressionBuilder.run { users.id + " - " + users.name }
+            val concatField = users.id + " - " + users.name
             val result = users.select(concatField).where { users.id eq "andrey" }.single()
             result[concatField] shouldBeEqualTo "andrey - Andrey"
 
@@ -1249,7 +1271,7 @@ class FunctionsTest: AbstractFunctionsTest() {
              *  WHERE users.id = 'andrey'
              * ```
              */
-            val concatField2 = SqlExpressionBuilder.run { users.id + users.name }
+            val concatField2 = users.id + users.name
             val result2 = users.select(concatField2).where { users.id eq "andrey" }.single()
             result2[concatField2] shouldBeEqualTo "andreyAndrey"
 
@@ -1260,7 +1282,7 @@ class FunctionsTest: AbstractFunctionsTest() {
              *  WHERE users.id = 'andrey'
              * ```
              */
-            val concatField3 = SqlExpressionBuilder.run { "Hi " plus users.name + "!" }
+            val concatField3 = "Hi " plus users.name + "!"
             val result3 = users.select(concatField3).where { users.id eq "andrey" }.single()
             result3[concatField3] shouldBeEqualTo "Hi Andrey!"
         }

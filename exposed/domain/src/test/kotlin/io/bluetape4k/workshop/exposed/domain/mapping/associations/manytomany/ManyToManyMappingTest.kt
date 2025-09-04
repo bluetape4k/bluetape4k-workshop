@@ -16,6 +16,7 @@ import io.bluetape4k.workshop.exposed.domain.mapping.associations.manytomany.Mem
 import io.bluetape4k.workshop.exposed.withSuspendedTables
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Query
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll

@@ -38,7 +38,7 @@ dependencies {
     implementation(Libs.exposed_jdbc)
     implementation(Libs.exposed_dao)
     implementation(Libs.exposed_java_time)
-    implementation(Libs.exposed_migration)
+    implementation(Libs.exposed_migration_jdbc)
     // implementation(Libs.exposed_spring_boot_starter) // 직접 DatabaseConfig 에서 Database를 설정해서, 중복됨
 
     // Database Drivers

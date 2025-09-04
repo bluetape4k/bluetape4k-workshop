@@ -23,7 +23,7 @@ dependencies {
     implementation(Libs.exposed_jdbc)
     implementation(Libs.exposed_json)
     implementation(Libs.exposed_kotlin_datetime)
-    implementation(Libs.exposed_migration)
+    implementation(Libs.exposed_migration_jdbc)
     implementation(Libs.exposed_money)
     implementation(Libs.exposed_spring_boot_starter)
 

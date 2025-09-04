@@ -7,6 +7,8 @@ import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.like
+import org.jetbrains.exposed.v1.core.notLike
 import org.jetbrains.exposed.v1.core.stringLiteral
 import org.jetbrains.exposed.v1.core.upperCase
 import org.jetbrains.exposed.v1.jdbc.insert

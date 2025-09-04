@@ -14,6 +14,7 @@ import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.avg
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
@@ -64,7 +65,7 @@ class H2Test: AbstractExposedTest() {
                 it[id] = 1
                 it[string] = "one"
             }
-            val row = Testing.selectAll().where { Testing.id.eq(1) }.single()
+            val row = Testing.selectAll().where { Testing.id eq 1 }.single()
             row[Testing.string] shouldBeEqualTo "one"
         }
     }
@@ -79,7 +80,7 @@ class H2Test: AbstractExposedTest() {
                 it[id] = 1
                 it[string] = "one"
             }
-            val row = Testing.selectAll().where { Testing.id.eq(1) }.single()
+            val row = Testing.selectAll().where { Testing.id eq 1 }.single()
             row[Testing.string] shouldBeEqualTo "one"
         }
     }

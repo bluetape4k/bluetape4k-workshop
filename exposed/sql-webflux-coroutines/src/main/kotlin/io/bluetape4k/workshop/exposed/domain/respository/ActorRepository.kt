@@ -7,7 +7,7 @@ import io.bluetape4k.workshop.exposed.domain.mapper.toActorDTO
 import io.bluetape4k.workshop.exposed.domain.schema.Actor
 import io.bluetape4k.workshop.exposed.domain.schema.Actors
 import kotlinx.datetime.LocalDate
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.andWhere
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId

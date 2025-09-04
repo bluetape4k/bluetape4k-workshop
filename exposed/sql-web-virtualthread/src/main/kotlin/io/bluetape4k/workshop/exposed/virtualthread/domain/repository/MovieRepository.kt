@@ -14,8 +14,8 @@ import io.bluetape4k.workshop.exposed.virtualthread.domain.mapper.toMovieDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Actors
 import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.ActorsInMovies
 import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Movies
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.count
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.andWhere
 import org.jetbrains.exposed.v1.jdbc.deleteWhere

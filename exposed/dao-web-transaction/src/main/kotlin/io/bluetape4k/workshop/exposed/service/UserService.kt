@@ -9,7 +9,7 @@ import io.bluetape4k.workshop.exposed.domain.UserTable
 import io.bluetape4k.workshop.exposed.domain.toUser
 import io.bluetape4k.workshop.exposed.dto.UserCreateRequest
 import io.bluetape4k.workshop.exposed.dto.UserUpdateRequest
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId

@@ -3,15 +3,16 @@ package io.bluetape4k.workshop.exposed.domain.shared.dml
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import org.amshove.kluent.shouldBeEqualTo
+import org.jetbrains.exposed.v1.core.DivideOp
 import org.jetbrains.exposed.v1.core.DivideOp.Companion.withScale
-import org.jetbrains.exposed.v1.core.Expression
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.div
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.minus
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.times
 import org.jetbrains.exposed.v1.core.decimalLiteral
+import org.jetbrains.exposed.v1.core.div
+import org.jetbrains.exposed.v1.core.minus
+import org.jetbrains.exposed.v1.core.times
 import org.jetbrains.exposed.v1.jdbc.select
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import java.math.BigDecimal
 
 /**
  * Calculate column values using arithmetic operators.
@@ -64,7 +65,7 @@ class ArithmeticTest: AbstractExposedTest() {
             val three = decimalLiteral(3.toBigDecimal())
 
             // SELECT (10 / 3) FROM CITIES LIMIT 1
-            val divTenToThreeWithoutScale = Expression.build { ten / three }
+            val divTenToThreeWithoutScale: DivideOp<BigDecimal, BigDecimal> = ten / three
             val resultWithoutScale = cities
                 .select(divTenToThreeWithoutScale)
                 .limit(1)

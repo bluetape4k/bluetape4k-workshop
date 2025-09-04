@@ -15,6 +15,7 @@ import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldHaveSize
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.dao.EntityChange
 import org.jetbrains.exposed.v1.dao.EntityChangeType
 import org.jetbrains.exposed.v1.dao.EntityHook
