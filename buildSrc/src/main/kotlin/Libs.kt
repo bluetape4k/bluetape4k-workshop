@@ -79,7 +79,7 @@ object Versions {
     const val spring_boot = Plugins.Versions.spring_boot
     const val spring_cloud = "2025.0.0"     // https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-dependencies
     const val spring_integration = "6.5.1"  // https://mvnrepository.com/artifact/org.springframework.integration/spring-integration-core
-    const val reactor_bom = "2024.0.9"      // https://mvnrepository.com/artifact/io.projectreactor/reactor-bom
+    const val reactor_bom = "2024.0.10"      // https://mvnrepository.com/artifact/io.projectreactor/reactor-bom
     const val spring_statemachine = "4.0.1" // https://mvnrepository.com/artifact/org.springframework.statemachine/spring-statemachine-core
     const val spring_modulith = "1.4.2"     // https://mvnrepository.com/artifact/org.springframework.modulith/spring-modulith-bom
 
@@ -1373,7 +1373,7 @@ object Libs {
     val agroal_spring_boot_starter = agroal("spring-boot-starter")
 
     const val mysql_connector_j = "com.mysql:mysql-connector-j:9.4.0"  // https://mvnrepository.com/artifact/com.mysql/mysql-connector-j
-    const val mariadb_java_client = "org.mariadb.jdbc:mariadb-java-client:3.5.5"  // https://mvnrepository.com/artifact/org.mariadb.jdbc/mariadb-java-client
+    const val mariadb_java_client = "org.mariadb.jdbc:mariadb-java-client:3.5.6"  // https://mvnrepository.com/artifact/org.mariadb.jdbc/mariadb-java-client
     const val postgresql_driver = "org.postgresql:postgresql:42.7.7"  // https://mvnrepository.com/artifact/org.postgresql/postgresql
     const val pgjdbc_ng = "com.impossibl.pgjdbc-ng:pgjdbc-ng:0.8.9"  // https://mvnrepository.com/artifact/com.impossibl.pgjdbc-ng/pgjdbc-ng
     const val oracle_ojdbc8 = "com.oracle.ojdbc:ojdbc8:19.3.0.0"
