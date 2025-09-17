@@ -9,6 +9,12 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 fun SuspendedSink.buffered(): BufferedSuspendedSink = RealBufferedSuspendedSink(this)
 
+/**
+ * [BufferedSuspendedSink]의 실제 구현체로, 내부 버퍼를 사용하여 비동기적으로 데이터를 기록한다.
+ *
+ * @property sink 데이터를 기록할 실제 [SuspendedSink] 인스턴스
+ * @constructor [sink]를 받아 [RealBufferedSuspendedSink] 인스턴스를 생성한다.
+ */
 internal class RealBufferedSuspendedSink(private val sink: SuspendedSink): BufferedSuspendedSink {
 
     companion object: KLoggingChannel()

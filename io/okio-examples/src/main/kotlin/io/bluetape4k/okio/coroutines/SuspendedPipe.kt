@@ -7,6 +7,12 @@ import java.util.concurrent.locks.Condition
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
+/**
+ * 취소가 가능한 코루틴 방식의 파이프를 구현한다.
+ *
+ * 이 파이프는 내부 버퍼를 사용하여 데이터를 비동기적으로 읽고 쓸 수 있으며,
+ * 취소 시 모든 입출력 작업이 즉시 중단된다.
+ */
 class SuspendedPipe(internal val maxBufferSize: Long) {
 
     internal val buffer = Buffer()

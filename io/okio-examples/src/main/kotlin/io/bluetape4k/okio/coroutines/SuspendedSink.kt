@@ -3,6 +3,9 @@ package io.bluetape4k.okio.coroutines
 import okio.Buffer
 import okio.Timeout
 
+/**
+ * 코루틴 방식의 [okio.Sink]
+ */
 interface SuspendedSink {
     /**
      * [source]로부터 `byteCount` 바이트를 제거하고 이를 현재 Sink에 추가합니다.
