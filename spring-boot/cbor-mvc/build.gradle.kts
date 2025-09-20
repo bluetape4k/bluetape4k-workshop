@@ -19,6 +19,7 @@ dependencies {
     testImplementation(Libs.bluetape4k_spring_tests)
 
     implementation(Libs.springBootStarter("web"))
+    implementation(Libs.springBootStarter("actuator"))
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
