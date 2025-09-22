@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 
 class MemberRepositoryTest(
-    @Autowired private val memberRepository: MemberRepository,
+    @param:Autowired private val memberRepository: MemberRepository,
 ): AbstractR2dbcApplicationTest() {
 
     companion object: KLoggingChannel()

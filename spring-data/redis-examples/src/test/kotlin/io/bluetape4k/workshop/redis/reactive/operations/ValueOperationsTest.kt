@@ -20,7 +20,7 @@ import java.time.Duration
 import kotlin.system.measureTimeMillis
 
 class ValueOperationsTest(
-    @Autowired private val operations: ReactiveRedisOperations<String, String>,
+    @param:Autowired private val operations: ReactiveRedisOperations<String, String>,
 ): AbstractReactiveRedisTest() {
 
     companion object: KLoggingChannel() {

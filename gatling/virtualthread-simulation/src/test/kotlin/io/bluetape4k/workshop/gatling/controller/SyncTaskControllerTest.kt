@@ -13,7 +13,7 @@ import org.springframework.test.web.reactive.server.returnResult
 import kotlin.test.Test
 
 class SyncTaskControllerTest(
-    @Autowired private val client: WebTestClient,
+    @param:Autowired private val client: WebTestClient,
 ): AbstractGatlingTest() {
 
     companion object: KLogging()

@@ -20,7 +20,7 @@ import org.springframework.data.redis.core.ScanOptions
 import org.springframework.data.redis.serializer.StringRedisSerializer
 
 class KeyOperationsTest(
-    @Autowired private val connectionFactory: RedisConnectionFactory,
+    @param:Autowired private val connectionFactory: RedisConnectionFactory,
 ): AbstractRedisTest() {
 
     companion object: KLoggingChannel() {

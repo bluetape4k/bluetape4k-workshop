@@ -16,7 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.repository.findByIdOrNull
 
 class MemberRepositoryTest(
-    @Autowired private val memberRepo: MemberRepository,
+    @param:Autowired private val memberRepo: MemberRepository,
 ): AbstractDomainTest() {
 
     companion object: KLoggingChannel()

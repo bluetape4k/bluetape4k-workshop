@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 
 class SyncServiceTest(
-    @Autowired private val service: SyncService,
+    @param:Autowired private val service: SyncService,
 ): AbstractTracingTest() {
 
     companion object: KLogging()

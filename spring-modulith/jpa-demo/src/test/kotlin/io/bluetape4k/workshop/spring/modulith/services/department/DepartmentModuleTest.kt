@@ -18,8 +18,8 @@ import org.springframework.modulith.test.Scenario
 @ApplicationModuleTest(ApplicationModuleTest.BootstrapMode.DIRECT_DEPENDENCIES)
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class DepartmentModuleTest(
-    @Autowired private val repository: DepartmentRepository,
-    @Autowired private val mapper: DepartmentMapper,
+    @param:Autowired private val repository: DepartmentRepository,
+    @param:Autowired private val mapper: DepartmentMapper,
 ) {
 
     companion object: KLoggingChannel() {

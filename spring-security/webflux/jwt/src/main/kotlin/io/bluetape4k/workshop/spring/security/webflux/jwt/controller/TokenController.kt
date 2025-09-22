@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController
 import java.time.Instant
 
 @RestController
-class TokenController(@Autowired private val encoder: JwtEncoder) {
+class TokenController(@param:Autowired private val encoder: JwtEncoder) {
 
     companion object: KLoggingChannel()
 

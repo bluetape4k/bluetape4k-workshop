@@ -17,7 +17,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 
 class TeamRepositoryTest(
-    @Autowired private val client: WebTestClient,
+    @param:Autowired private val client: WebTestClient,
 ): AbstractVirtualThreadMvcTest() {
 
     companion object: KLoggingChannel()

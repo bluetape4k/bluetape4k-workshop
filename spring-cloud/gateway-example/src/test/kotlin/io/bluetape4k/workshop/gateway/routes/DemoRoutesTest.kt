@@ -15,7 +15,7 @@ import org.springframework.test.web.reactive.server.expectBody
 
 
 class DemoRoutesTest(
-    @Autowired private val client: WebTestClient,
+    @param:Autowired private val client: WebTestClient,
 ): GatewayApplicationTest() {
 
     companion object: KLoggingChannel()

@@ -15,7 +15,7 @@ import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 
 class MovieControllerTest(
-    @Autowired private val client: WebTestClient,
+    @param:Autowired private val client: WebTestClient,
 ): AbstractExposedSqlTest() {
 
     companion object: KLoggingChannel()

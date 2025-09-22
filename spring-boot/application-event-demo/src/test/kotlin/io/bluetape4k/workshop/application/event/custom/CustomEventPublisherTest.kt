@@ -18,7 +18,7 @@ import org.springframework.test.web.reactive.server.returnResult
 
 @OutputCapture
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class CustomEventPublisherTest(@Autowired private val client: WebTestClient) {
+class CustomEventPublisherTest(@param:Autowired private val client: WebTestClient) {
 
     companion object: KLoggingChannel()
 

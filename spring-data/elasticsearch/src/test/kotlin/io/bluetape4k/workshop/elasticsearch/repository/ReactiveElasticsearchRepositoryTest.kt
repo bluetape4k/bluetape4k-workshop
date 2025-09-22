@@ -16,7 +16,7 @@ import org.springframework.data.elasticsearch.core.geo.GeoPoint
 
 @SpringBootTest
 class ReactiveElasticsearchRepositoryTest(
-    @Autowired private val repository: ReactiveConferenceRepository,
+    @param:Autowired private val repository: ReactiveConferenceRepository,
 ): AbstractElasticsearchTest() {
 
     companion object: KLogging()

@@ -17,7 +17,7 @@ import org.springframework.test.context.TestConstructor.AutowireMode
 @SpringBootTest
 @TestConstructor(autowireMode = AutowireMode.ALL)
 class ApplicationIntegrationTests(
-    @Autowired val context: ConfigurableApplicationContext,
+    @param:Autowired val context: ConfigurableApplicationContext,
 ) {
 
     @PersistenceContext

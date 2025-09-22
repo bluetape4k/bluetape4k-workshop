@@ -18,7 +18,7 @@ import kotlin.system.measureTimeMillis
 
 @Profile("app")
 class CountryRepositoryTest(
-    @Autowired private val countryRepo: CountryRepository,
+    @param:Autowired private val countryRepo: CountryRepository,
 ): AbstractRedisCacheTest() {
 
     companion object: KLoggingChannel() {

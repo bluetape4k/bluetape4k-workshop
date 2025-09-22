@@ -17,7 +17,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class KotlinApplicationTest(@Autowired private val mockMvc: MockMvc) {
+class KotlinApplicationTest(@param:Autowired private val mockMvc: MockMvc) {
 
     companion object: KLogging()
 

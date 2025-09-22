@@ -22,7 +22,7 @@ import org.springframework.data.elasticsearch.core.query.Query
 import org.springframework.data.elasticsearch.core.search
 
 class ReactiveElasticsearchOperationsTest(
-    @Autowired val reactiveOps: ReactiveElasticsearchOperations,
+    @param:Autowired val reactiveOps: ReactiveElasticsearchOperations,
 ): AbstractElasticsearchApplicationTest() {
 
     companion object: KLogging()

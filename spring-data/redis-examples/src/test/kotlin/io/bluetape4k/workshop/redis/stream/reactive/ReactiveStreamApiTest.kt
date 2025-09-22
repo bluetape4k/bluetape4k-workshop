@@ -34,8 +34,8 @@ import java.util.concurrent.LinkedBlockingDeque
 
 @SpringBootTest(classes = [RedisStreamConfiguration::class])
 class ReactiveStreamApiTest(
-    @Autowired private val template: ReactiveStringRedisTemplate,
-    @Autowired private val streamReceiver: StreamReceiver<String, MapRecord<String, String, String>>,
+    @param:Autowired private val template: ReactiveStringRedisTemplate,
+    @param:Autowired private val streamReceiver: StreamReceiver<String, MapRecord<String, String, String>>,
 ) {
     companion object: KLoggingChannel()
 

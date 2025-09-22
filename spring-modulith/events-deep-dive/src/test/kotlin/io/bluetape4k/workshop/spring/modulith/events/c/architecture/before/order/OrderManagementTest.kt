@@ -16,8 +16,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
     MockkBean(OrderRepository::class, relaxed = true),
 )
 class OrderManagementTest(
-    @Autowired private val inventory: Inventory,
-    @Autowired private val orderRepository: OrderRepository,
+    @param:Autowired private val inventory: Inventory,
+    @param:Autowired private val orderRepository: OrderRepository,
 ) {
     val orders = OrderManagement(orderRepository, inventory)
 

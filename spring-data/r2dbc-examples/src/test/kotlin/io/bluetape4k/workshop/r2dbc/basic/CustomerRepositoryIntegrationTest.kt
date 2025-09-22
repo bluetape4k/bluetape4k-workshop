@@ -19,8 +19,8 @@ import org.springframework.r2dbc.core.DatabaseClient
 
 @SpringBootTest(classes = [InfrastructureConfiguration::class])
 class CustomerRepositoryIntegrationTest(
-    @Autowired private val customerRepo: CustomerRepository,
-    @Autowired private val database: DatabaseClient,
+    @param:Autowired private val customerRepo: CustomerRepository,
+    @param:Autowired private val database: DatabaseClient,
 ) {
     companion object: KLoggingChannel()
 

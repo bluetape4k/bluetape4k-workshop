@@ -28,8 +28,8 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 
 class UserHandlerIT(
-    @Autowired private val client: WebTestClient,
-    @Autowired private val service: UserService,
+    @param:Autowired private val client: WebTestClient,
+    @param:Autowired private val service: UserService,
 ): AbstractWebfluxR2dbcApplicationTest() {
 
     companion object: KLoggingChannel()

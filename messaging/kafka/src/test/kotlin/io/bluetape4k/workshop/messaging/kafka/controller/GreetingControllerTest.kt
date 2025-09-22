@@ -23,7 +23,7 @@ import java.time.Duration
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
 class GreetingControllerTest(
-    @Autowired private val client: WebTestClient,
+    @param:Autowired private val client: WebTestClient,
 ) {
 
     companion object: KLoggingChannel()

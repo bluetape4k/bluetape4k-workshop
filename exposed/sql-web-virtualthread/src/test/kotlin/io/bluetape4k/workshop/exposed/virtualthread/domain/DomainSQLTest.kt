@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 
 class DomainSQLTest(
-    @Autowired private val db: Database,
+    @param:Autowired private val db: Database,
 ): AbstractExposedTest() {
 
     companion object: KLoggingChannel() {

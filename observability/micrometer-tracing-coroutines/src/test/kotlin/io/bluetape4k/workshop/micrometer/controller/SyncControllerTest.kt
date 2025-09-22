@@ -15,7 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 
-class SyncControllerTest(@Autowired private val client: WebTestClient): AbstractTracingTest() {
+class SyncControllerTest(@param:Autowired private val client: WebTestClient): AbstractTracingTest() {
 
     companion object: KLogging()
 

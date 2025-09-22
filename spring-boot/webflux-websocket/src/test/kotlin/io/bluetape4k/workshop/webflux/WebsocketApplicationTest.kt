@@ -21,7 +21,7 @@ import java.math.BigDecimal
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class WebsocketApplicationTest(
-    @Autowired private val client: WebTestClient,
+    @param:Autowired private val client: WebTestClient,
 ) {
     companion object: KLoggingChannel()
 

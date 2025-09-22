@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional
 import java.util.*
 
 class SpringTransactionEntityTest(
-    @Autowired private val orderService: OrderService,
+    @param:Autowired private val orderService: OrderService,
 ): SpringTransactionTestBase() {
 
     companion object: KLogging()

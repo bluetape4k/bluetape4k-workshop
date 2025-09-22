@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class UserServiceTest(
-    @Autowired private val userService: UserService,
+    @param:Autowired private val userService: UserService,
 ): AbstractExposedApplicationTest() {
 
     companion object: KLogging() {

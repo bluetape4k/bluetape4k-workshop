@@ -35,7 +35,7 @@ import java.nio.ByteBuffer
 import java.time.Duration
 
 class ReactiveKeyCommandsTest(
-    @Autowired private val connectionFactory: ReactiveRedisConnectionFactory,
+    @param:Autowired private val connectionFactory: ReactiveRedisConnectionFactory,
 ): AbstractReactiveRedisTest() {
 
     companion object: KLoggingChannel() {

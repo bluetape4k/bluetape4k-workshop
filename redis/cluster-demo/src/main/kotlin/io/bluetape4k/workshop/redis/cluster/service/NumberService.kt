@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class NumberService(
-    @Autowired private val operations: StringRedisTemplate,
+    @param:Autowired private val operations: StringRedisTemplate,
 ) {
 
     companion object: KLoggingChannel() {

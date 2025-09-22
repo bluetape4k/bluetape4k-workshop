@@ -14,7 +14,7 @@ import org.springframework.test.web.reactive.server.returnResult
 import org.testcontainers.utility.Base58
 
 class CoroutineControllerTest(
-    @Autowired private val client: WebTestClient,
+    @param:Autowired private val client: WebTestClient,
 ): AbstractRateLimiterApplicationTest() {
 
     companion object: KLoggingChannel() {

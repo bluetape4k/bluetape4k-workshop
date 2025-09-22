@@ -24,7 +24,7 @@ import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.isEqualTo
 
 class FlowAndCoroutineTest(
-    @Autowired private val operations: ReactiveMongoOperations,
+    @param:Autowired private val operations: ReactiveMongoOperations,
 ): AbstractMongodbTest() {
 
     companion object: KLoggingChannel()

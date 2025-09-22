@@ -12,7 +12,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 
 class Resilience4jControllerTest(
-    @Autowired private val client: WebTestClient,
+    @param:Autowired private val client: WebTestClient,
 ): AbstractProblemTest() {
 
     companion object: KLogging()

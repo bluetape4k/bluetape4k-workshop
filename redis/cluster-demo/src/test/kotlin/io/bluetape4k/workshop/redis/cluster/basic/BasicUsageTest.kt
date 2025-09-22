@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.redis.core.RedisOperations
 
 class BasicUsageTest(
-    @Autowired private val operations: RedisOperations<String, String>,
+    @param:Autowired private val operations: RedisOperations<String, String>,
 ): AbstractRedisClusterTest() {
 
     companion object: KLoggingChannel()

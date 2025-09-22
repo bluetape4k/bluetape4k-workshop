@@ -15,7 +15,7 @@ import org.springframework.modulith.test.Scenario
 @ApplicationModuleTest(ApplicationModuleTest.BootstrapMode.DIRECT_DEPENDENCIES)
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class EmployeeModuleTest(
-    @Autowired private val repository: EmployeeRepository,
+    @param:Autowired private val repository: EmployeeRepository,
 ) {
 
     companion object: KLoggingChannel()

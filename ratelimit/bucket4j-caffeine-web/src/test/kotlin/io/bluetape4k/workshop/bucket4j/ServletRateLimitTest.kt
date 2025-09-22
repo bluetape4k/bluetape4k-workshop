@@ -10,7 +10,7 @@ import org.springframework.test.web.reactive.server.WebTestClient
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("servlet")
-class ServletRateLimitTest(@Autowired private val client: WebTestClient) {
+class ServletRateLimitTest(@param:Autowired private val client: WebTestClient) {
 
     companion object: KLogging()
 

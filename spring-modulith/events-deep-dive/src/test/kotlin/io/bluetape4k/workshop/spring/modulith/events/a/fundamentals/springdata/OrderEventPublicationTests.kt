@@ -11,7 +11,7 @@ import org.springframework.test.context.event.RecordApplicationEvents
 @IntegrationTest
 @RecordApplicationEvents
 class OrderEventPublicationTests(
-    @Autowired private val orders: OrderManagement,
+    @param:Autowired private val orders: OrderManagement,
 ) {
 
     companion object: KLogging()

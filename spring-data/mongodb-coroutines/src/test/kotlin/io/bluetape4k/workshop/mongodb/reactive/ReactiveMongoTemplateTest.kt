@@ -19,7 +19,7 @@ import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 
 class ReactiveMongoTemplateTest(
-    @Autowired private val operations: ReactiveMongoTemplate,
+    @param:Autowired private val operations: ReactiveMongoTemplate,
 ): AbstractReactiveMongoTest(operations) {
 
     companion object: KLoggingChannel()

@@ -26,7 +26,7 @@ import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.isEqualTo
 
 class MongoTemplateExamples(
-    @Autowired private val operations: MongoOperations,
+    @param:Autowired private val operations: MongoOperations,
 ): AbstractMongodbTest() {
 
     companion object: KLoggingChannel()

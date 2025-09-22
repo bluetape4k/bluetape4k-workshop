@@ -31,7 +31,7 @@ import org.springframework.transaction.annotation.Transactional
 @Transactional
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class UserControllerTest(
-    @Autowired private val client: WebTestClient,
+    @param:Autowired private val client: WebTestClient,
 ): AbstractExposedApplicationTest() {
 
     companion object: KLogging() {

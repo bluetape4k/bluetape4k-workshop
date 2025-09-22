@@ -27,8 +27,8 @@ import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 
 class BookControllerTest(
-    @Autowired private val client: WebTestClient,
-    @Autowired private val bookService: BookService,
+    @param:Autowired private val client: WebTestClient,
+    @param:Autowired private val bookService: BookService,
 ): AbstractElasticsearchApplicationTest() {
 
     companion object: KLogging() {

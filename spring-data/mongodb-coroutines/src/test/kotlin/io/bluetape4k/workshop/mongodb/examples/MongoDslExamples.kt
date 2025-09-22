@@ -19,7 +19,7 @@ import org.springframework.data.mongodb.core.query.isEqualTo
 import org.springframework.data.mongodb.core.query.regex
 
 class MongoDslExamples(
-    @Autowired private val operations: MongoOperations,
+    @param:Autowired private val operations: MongoOperations,
 ): AbstractMongodbTest() {
 
     companion object: KLoggingChannel()

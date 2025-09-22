@@ -18,7 +18,7 @@ import org.springframework.data.redis.core.GeoOperations
 import org.springframework.data.redis.core.RedisOperations
 
 class GeoOperationsTest(
-    @Autowired private val operations: RedisOperations<String, String>,
+    @param:Autowired private val operations: RedisOperations<String, String>,
 ): AbstractRedisTest() {
 
     companion object: KLoggingChannel()

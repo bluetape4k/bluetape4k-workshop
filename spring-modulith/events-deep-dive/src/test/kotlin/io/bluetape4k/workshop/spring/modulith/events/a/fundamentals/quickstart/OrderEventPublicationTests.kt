@@ -15,7 +15,7 @@ import org.springframework.test.context.event.RecordApplicationEvents
 @IntegrationTest
 @RecordApplicationEvents   // 어플리케이션 이벤트를 기록하기 위한 어노테이션
 class OrderEventPublicationTests(
-    @Autowired private val orders: OrderManagement,
+    @param:Autowired private val orders: OrderManagement,
 ) {
 
     companion object: KLogging()
