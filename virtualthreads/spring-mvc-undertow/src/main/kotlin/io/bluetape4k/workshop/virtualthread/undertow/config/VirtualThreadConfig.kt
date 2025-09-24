@@ -12,7 +12,5 @@ class VirtualThreadConfig {
     fun taskExecutor(): ExecutorService {
         val factory = Thread.ofVirtual().name("vt-executor-", 0).factory()
         return Executors.newThreadPerTaskExecutor(factory)
-
-        // return Executors.newVirtualThreadPerTaskExecutor(factory)
     }
 }

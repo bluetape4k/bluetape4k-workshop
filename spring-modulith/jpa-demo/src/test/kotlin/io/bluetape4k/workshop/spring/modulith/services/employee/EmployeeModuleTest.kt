@@ -23,8 +23,11 @@ class EmployeeModuleTest(
     @Test
     @Order(1)
     fun `should remove employees on event`(scenario: Scenario) {
-        scenario.publish(OrganizationRemoveEvent(1L))
-            .andWaitForStateChange { repository.count() }
+        scenario
+            .publish(OrganizationRemoveEvent(1L))
+            .andWaitForStateChange {
+                repository.count()
+            }
             .andVerify { result ->
                 result.toInt() shouldBeEqualTo 0
             }
