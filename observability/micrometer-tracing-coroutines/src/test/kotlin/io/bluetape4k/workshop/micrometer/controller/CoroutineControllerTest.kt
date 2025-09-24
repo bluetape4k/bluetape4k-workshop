@@ -30,7 +30,11 @@ class CoroutineControllerTest(
             .returnResult<String>().responseBody
             .asFlow()
             .toList()
+            .joinToString("")
             .shouldNotBeEmpty()
+            .apply {
+                log.debug { "body=$this" }
+            }
     }
 
     @Test
