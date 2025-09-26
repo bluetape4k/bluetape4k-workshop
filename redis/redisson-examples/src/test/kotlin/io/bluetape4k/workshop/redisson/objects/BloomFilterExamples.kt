@@ -54,7 +54,7 @@ class BloomFilterExamples: AbstractRedissonTest() {
     fun `use redisson bloomfilter`() = runSuspendIO {
         val bloomFilter = redisson.getBloomFilter<Message>(
             randomName(),
-            RedissonCodecs.LZ4Kryo5
+            RedissonCodecs.LZ4Fory
         )
         bloomFilter.tryInit(100_000L, 0.01).shouldBeTrue()
 

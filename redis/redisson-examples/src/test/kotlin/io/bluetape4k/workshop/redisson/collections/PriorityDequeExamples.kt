@@ -35,7 +35,7 @@ class PriorityDequeExamples: AbstractRedissonTest() {
     @Test
     fun `우선순위 큐 사용 예`() = runSuspendIO {
         val queueName = randomName()
-        val queue = redisson.getPriorityDeque<Item>(queueName, RedissonCodecs.LZ4Kryo5)
+        val queue = redisson.getPriorityDeque<Item>(queueName, RedissonCodecs.LZ4Fory)
 
         // Item의 key를 기준으로 정렬 (a, b, c)
         queue.add(Item("b", 1))
