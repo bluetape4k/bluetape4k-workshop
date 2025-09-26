@@ -53,9 +53,9 @@ class LettuceRedisCacheConfiguration {
     fun redisTemplate(connectionFactory: RedisConnectionFactory): RedisTemplate<Any, Any> {
         return RedisTemplate<Any, Any>().apply {
             setConnectionFactory(connectionFactory)
-            setDefaultSerializer(RedisBinarySerializers.LZ4Fury)
+            setDefaultSerializer(RedisBinarySerializers.LZ4Kryo)
             keySerializer = StringRedisSerializer.UTF_8
-            valueSerializer = RedisBinarySerializers.LZ4Fury
+            valueSerializer = RedisBinarySerializers.LZ4Kryo
         }
     }
 }

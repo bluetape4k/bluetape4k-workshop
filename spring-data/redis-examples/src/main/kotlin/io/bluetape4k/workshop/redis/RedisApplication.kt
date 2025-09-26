@@ -55,8 +55,8 @@ class RedisApplication {
         val context = redisSerializationContext<ByteArray, Any>(RedisSerializer.byteArray()) {
             key(RedisSerializer.byteArray())
             hashKey(RedisSerializer.byteArray())
-            value(RedisBinarySerializers.LZ4Fury)
-            hashValue(RedisBinarySerializers.LZ4Fury)
+            value(RedisBinarySerializers.LZ4Kryo)
+            hashValue(RedisBinarySerializers.LZ4Kryo)
             string(RedisSerializer.string())
         }
         return ReactiveRedisTemplate(factory, context)

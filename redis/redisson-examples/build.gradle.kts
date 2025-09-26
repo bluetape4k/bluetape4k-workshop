@@ -22,6 +22,7 @@ dependencies {
     // Codecs
     implementation(Libs.kryo)
     implementation(Libs.fury_kotlin)
+    implementation(Libs.fory_kotlin)
 
     // Jackson
     implementation(Libs.bluetape4k_jackson)

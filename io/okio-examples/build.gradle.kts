@@ -20,6 +20,7 @@ dependencies {
     // Serialization Libraries
     compileOnly(Libs.kryo5)
     compileOnly(Libs.fury_kotlin)
+    compileOnly(Libs.fory_kotlin)
 
     // Compression libraries
     compileOnly(Libs.commons_compress)
