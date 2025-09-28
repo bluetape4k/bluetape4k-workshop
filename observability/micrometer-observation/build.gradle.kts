@@ -19,6 +19,7 @@ dependencies {
     implementation(platform(Libs.micrometer_tracing_bom))
 
     // Observability
+    implementation(Libs.bluetape4k_micrometer)
     implementation(Libs.micrometer_observation)
     testImplementation(Libs.micrometer_observation_test)
 
