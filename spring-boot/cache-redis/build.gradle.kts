@@ -43,6 +43,12 @@ dependencies {
     implementation(Libs.lettuce_core)
     implementation(Libs.commons_pool2)
 
+    // Netty
+    implementation(platform(Libs.netty_bom))
+    implementation(Libs.netty_all)
+    implementation(Libs.netty_transport_native_epoll)
+    implementation(Libs.netty_transport_native_kqueue)
+
     implementation(Libs.springBootStarter("cache"))
     implementation(Libs.springBootStarter("data-redis"))
 

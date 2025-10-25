@@ -52,6 +52,12 @@ dependencies {
     implementation(Libs.commons_pool2)
     implementation(Libs.springBootStarter("data-redis"))
 
+    // Netty
+    implementation(platform(Libs.netty_bom))
+    implementation(Libs.netty_all)
+    implementation(Libs.netty_transport_native_epoll)
+    implementation(Libs.netty_transport_native_kqueue)
+
     testImplementation(Libs.bluetape4k_spring_tests)
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
