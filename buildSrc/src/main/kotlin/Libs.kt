@@ -5,7 +5,7 @@ import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 object Plugins {
 
     object Versions {
-        const val dokka = "2.0.0"      // https://mvnrepository.com/artifact/org.jetbrains.dokka/dokka-gradle-plugin
+        const val dokka = "2.1.0"      // https://mvnrepository.com/artifact/org.jetbrains.dokka/dokka-gradle-plugin
         const val detekt = "1.23.8"     // https://mvnrepository.com/artifact/io.gitlab.arturbosch.detekt/detekt-gradle-plugin
         const val dependency_management = "1.1.7"  // https://mvnrepository.com/artifact/io.spring.gradle/dependency-management-plugin
         const val jooq = "9.0"       // https://mvnrepository.com/artifact/nu.studer.jooq/jooq-gradle-plugin
@@ -15,11 +15,11 @@ object Plugins {
         const val jacoco = "0.8.11"
         const val jarTest = "1.0.1"
         const val testLogger = "4.0.0"
-        const val shadow = "8.3.6"      // https://plugins.gradle.org/plugin/com.gradleup.shadow
+        const val shadow = "9.2.2"      // https://plugins.gradle.org/plugin/com.gradleup.shadow
         const val kotlinx_benchmark = "0.4.14" // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-benchmark-plugin
 
         const val spring_boot = "3.5.6"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
-        const val quarkus = "3.28.4"      // https://mvnrepository.com/artifact/io.quarkus/quarkus-bom
+        const val quarkus = "3.29.0"      // https://mvnrepository.com/artifact/io.quarkus/quarkus-bom
 
         const val docker_compose = "0.17.18"  // https://plugins.gradle.org/plugin/com.avast.gradle.docker-compose
 
@@ -68,7 +68,7 @@ object Versions {
     // Java 21, Kotlin 2.0 이상에서 사용하세요
     const val bluetape4k = "0.1.3"    // Bluetape4k Github Package 로 배포됩니다.
 
-    const val kotlin = "2.2.20"                 // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
+    const val kotlin = "2.2.21"                 // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
     const val kotlinx_coroutines = "1.10.2"     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
     const val kotlinx_serialization = "1.9.0"   // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-json-jvm
 
@@ -134,7 +134,7 @@ object Versions {
     const val asynchttpclient = "2.12.4"  // https://mvnrepository.com/artifact/org.asynchttpclient/async-http-client
 
     const val jackson = "2.20.0" // https://mvnrepository.com/artifact/com.fasterxml.jackson/jackson-bom
-    const val fastjson2 = "2.0.59" // https://mvnrepository.com/artifact/com.alibaba.fastjson2/fastjson2
+    const val fastjson2 = "2.0.60" // https://mvnrepository.com/artifact/com.alibaba.fastjson2/fastjson2
     const val jjwt = "0.11.5"    // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api
 
     const val mapstruct = "1.6.3" // https://mvnrepository.com/artifact/org.mapstruct/mapstruct
@@ -148,7 +148,7 @@ object Versions {
     // NOTE: 이 경우 기존 javax 를 사용하는 버전과 충돌이 생길 수 있으니 조심하세요
     // https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-core
 
-    const val hibernate = "6.6.29.Final"          // https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-core
+    const val hibernate = "6.6.33.Final"          // https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-core
     const val hibernate_reactive = "2.4.8.Final"  // https://mvnrepository.com/artifact/org.hibernate.reactive/hibernate-reactive-core
     const val hibernate_validator = "8.0.3.Final" // https://mvnrepository.com/artifact/org.hibernate.validator/hibernate-validator
     const val querydsl = "5.1.0"                  // https://mvnrepository.com/artifact/com.querydsl/querydsl-jpa
@@ -198,8 +198,8 @@ object Versions {
 
     const val ow2_asm = "9.8"               // https://mvnrepository.com/artifact/org.ow2.asm/asm
 
-    const val junit_jupiter = "5.13.4"      // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
-    const val junit_platform = "1.13.4"     // https://mvnrepository.com/artifact/org.junit.platform/junit-platform-launcher
+    const val junit_jupiter = "5.14.0"      // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
+    const val junit_platform = "1.14.0"     // https://mvnrepository.com/artifact/org.junit.platform/junit-platform-launcher
     const val assertj_core = "3.27.6"       // https://mvnrepository.com/artifact/org.assertj/assertj-core
     const val kluent = "1.73"               // https://mvnrepository.com/artifact/org.amshove.kluent/kluent
     const val mockk = "1.14.6"              // https://mvnrepository.com/artifact/io.mockk/mockk
@@ -207,7 +207,7 @@ object Versions {
     const val awaitility = "4.3.0"          // https://mvnrepository.com/artifact/org.awaitility/awaitility
     const val jmh = "1.37"                  // https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-core
     const val testcontainers = "1.21.3"     // https://mvnrepository.com/artifact/org.testcontainers/testcontainers
-    const val jna = "5.17.0"                // https://mvnrepository.com/artifact/net.java.dev.jna/jna
+    const val jna = "5.18.1"                // https://mvnrepository.com/artifact/net.java.dev.jna/jna
     const val archunit = "1.4.1"           // https://mvnrepository.com/artifact/com.tngtech.archunit/archunit-junit5
     const val rest_assured = "5.5.6"        // https://mvnrepository.com/artifact/io.rest-assured/rest-assured
 
@@ -222,7 +222,7 @@ object Versions {
     const val scrimage = "4.3.5"  // https://mvnrepository.com/artifact/com.sksamuel.scrimage/scrimage-core
 
     // Gatling
-    const val gatling = "3.14.6" // https://mvnrepository.com/artifact/io.gatling/gatling-core
+    const val gatling = "3.14.7" // https://mvnrepository.com/artifact/io.gatling/gatling-core
 }
 
 object Libs {
@@ -1294,8 +1294,8 @@ object Libs {
     const val hibernate_reactive_core = "org.hibernate.reactive:hibernate-reactive-core:${Versions.hibernate_reactive}"
     const val javassist = "org.javassist:javassist:3.30.2-GA"  // https://mvnrepository.com/artifact/org.javassist/javassist
 
-    const val antlr4_runtime = "org.antlr:antlr4-runtime:4.13.0"    // https://mvnrepository.com/artifact/org.antlr/antlr4-runtime
-    const val antlr4_tool = "org.antlr:antlr4:4.13.0"  // https://mvnrepository.com/artifact/org.antlr/antlr4
+    const val antlr4_runtime = "org.antlr:antlr4-runtime:4.13.2"    // https://mvnrepository.com/artifact/org.antlr/antlr4-runtime
+    const val antlr4_tool = "org.antlr:antlr4:4.13.2"  // https://mvnrepository.com/artifact/org.antlr/antlr4
 
     // Validators
     const val hibernate_validator = "org.hibernate.validator:hibernate-validator:${Versions.hibernate_validator}"
@@ -1332,7 +1332,7 @@ object Libs {
     const val r2dbc_mysql = "io.asyncer:r2dbc-mysql:1.4.1"  // https://mvnrepository.com/artifact/io.asyncer/r2dbc-mysql
     const val r2dbc_mariadb = "org.mariadb:r2dbc-mariadb:1.3.0" // https://github.com/mariadb-corporation/mariadb-connector-r2dbc
     // https://github.com/pgjdbc/r2dbc-postgresql
-    const val r2dbc_postgresql = "org.postgresql:r2dbc-postgresql:1.0.7.RELEASE" // https://mvnrepository.com/artifact/org.postgresql/r2dbc-postgresql
+    const val r2dbc_postgresql = "org.postgresql:r2dbc-postgresql:1.1.0.RELEASE" // https://mvnrepository.com/artifact/org.postgresql/r2dbc-postgresql
 
     // QueryDSL
     fun querydsl(module: String) = "com.querydsl:querydsl-$module:${Versions.querydsl}"
@@ -1587,7 +1587,7 @@ object Libs {
     const val wiremock_jre8 = "com.github.tomakehurst:wiremock-jre8:2.33.2"
 
     // OpenSearch Testcontainers
-    const val testcontainers_opensearch = "org.opensearch:opensearch-testcontainers:2.1.4"  // https://mvnrepository.com/artifact/org.opensearch/opensearch-testcontainers
+    const val testcontainers_opensearch = "org.opensearch:opensearch-testcontainers:3.0.2"  // https://mvnrepository.com/artifact/org.opensearch/opensearch-testcontainers
 
     // rest-assured
     fun restAssured(module: String) = "io.rest-assured:$module:${Versions.rest_assured}"
