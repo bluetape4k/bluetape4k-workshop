@@ -24,7 +24,7 @@ class DeflaterSinkTest: AbstractOkioTest() {
 
     @RepeatedTest(REPEAT_SIZE)
     fun `deflate with close`() {
-        val original = Fakers.randomString(8192)
+        val original = Fakers.randomString(8192, 8192)
         val data = bufferOf(original)
 
         val sink = Buffer()
@@ -38,7 +38,7 @@ class DeflaterSinkTest: AbstractOkioTest() {
 
     @RepeatedTest(REPEAT_SIZE)
     fun `deflate with sync flush`() {
-        val original = Fakers.randomString(8192)
+        val original = Fakers.randomString(8192, 8192)
         val data = bufferOf(original)
 
         val sink = Buffer()
@@ -95,7 +95,7 @@ class DeflaterSinkTest: AbstractOkioTest() {
 
     @RepeatedTest(REPEAT_SIZE)
     fun `deflate into non empty sink`() {
-        val original = Fakers.randomString(8192)
+        val original = Fakers.randomString(8192, 8192)
 
         repeat(SEGMENT_SIZE) {
             val data = bufferOf(original)

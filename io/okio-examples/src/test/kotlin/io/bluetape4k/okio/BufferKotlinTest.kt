@@ -58,7 +58,7 @@ class BufferKotlinTest: AbstractOkioTest() {
 
     @Test
     fun `copy to output stream with byte count`() {
-        val expectedText = Fakers.randomString(256)
+        val expectedText = Fakers.randomString(256, 256)
 
         val source = bufferOf(expectedText)
 
@@ -71,7 +71,7 @@ class BufferKotlinTest: AbstractOkioTest() {
 
     @Test
     fun `copy to output stream with offset and byte count`() {
-        val expectedText = Fakers.randomString(256)
+        val expectedText = Fakers.randomString(256, 256)
 
         val source = bufferOf(expectedText)
 

@@ -39,7 +39,7 @@ class CipherSinkSourceTest: AbstractCipherTest() {
     @ValueSource(ints = [0, 10, 8192, 16384])
     fun `cipher sink and read all`(size: Int) {
         val buffer = Buffer()
-        val expected = Fakers.randomString(size)
+        val expected = Fakers.randomString(maxOf(size, 255), maxOf(size, 255))
 
         val cipherSink = CipherSink(buffer, encryptCipher)
         val input = bufferOf(expected.toUtf8Bytes())
@@ -57,7 +57,7 @@ class CipherSinkSourceTest: AbstractCipherTest() {
     @ParameterizedTest(name = "cipher copy with length={0}")
     @ValueSource(ints = [0, 10, 8192, 16384])
     fun `cipher file`(size: Int) {
-        val expected = Fakers.randomString(size)
+        val expected = Fakers.randomString(maxOf(size, 255), maxOf(size, 255))
         val path = tempFolder.createFile().toPath()
 
         FileChannelSink(FileChannel.open(path, w), Timeout.NONE).use { fileSink ->

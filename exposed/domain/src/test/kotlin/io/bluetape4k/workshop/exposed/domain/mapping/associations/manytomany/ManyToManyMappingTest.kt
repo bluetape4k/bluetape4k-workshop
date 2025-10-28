@@ -73,7 +73,7 @@ class ManyToManyMappingTest: AbstractExposedTest() {
 
             // rollback()을 호출하면 transaction은 롤백된다.
             User.new {
-                username = faker.internet().username()
+                username = faker.credentials().username()
                 firstName = faker.name().firstName()
                 lastName = faker.name().lastName()
                 status = ACTIVE
@@ -81,7 +81,7 @@ class ManyToManyMappingTest: AbstractExposedTest() {
 
             newSuspendedTransaction {
                 User.new {
-                    username = faker.internet().username()
+                    username = faker.credentials().username()
                     firstName = faker.name().firstName()
                     lastName = faker.name().lastName()
                     status = INACTIVE

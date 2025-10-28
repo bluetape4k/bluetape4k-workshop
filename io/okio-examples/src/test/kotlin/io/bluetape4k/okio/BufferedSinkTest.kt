@@ -422,7 +422,7 @@ class BufferedSinkTest: AbstractOkioTest() {
         val data = Buffer()
         val sink = getSink(factory, data)
 
-        val expected = Fakers.randomString(512)
+        val expected = Fakers.randomString(512, 512)
         val nioByteBuffer = ByteBuffer.allocate(expected.length)
         nioByteBuffer.put(expected.toUtf8Bytes())
         nioByteBuffer.flip() // Prepare the buffer for reading
@@ -442,7 +442,7 @@ class BufferedSinkTest: AbstractOkioTest() {
         val data = Buffer()
         val sink = getSink(factory, data)
 
-        val expected = Fakers.randomString(SEGMENT_SIZE * 3)
+        val expected = Fakers.randomString(SEGMENT_SIZE * 3, SEGMENT_SIZE * 3)
         val nioByteBuffer = ByteBuffer.allocateDirect(expected.length)
         nioByteBuffer.put(expected.toUtf8Bytes())
         nioByteBuffer.flip() // Prepare the buffer for reading

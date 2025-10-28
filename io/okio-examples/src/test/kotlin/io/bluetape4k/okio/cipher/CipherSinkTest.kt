@@ -27,7 +27,7 @@ class CipherSinkTest: AbstractCipherTest() {
 
     @RepeatedTest(REPEAT_SIZE)
     fun `encrypt random string`() {
-        val plainText = Fakers.randomString(1024)
+        val plainText = Fakers.randomString(1024, 1024)
         val source = bufferOf(plainText)
 
         val output = Buffer()
@@ -40,7 +40,7 @@ class CipherSinkTest: AbstractCipherTest() {
 
     @RepeatedTest(REPEAT_SIZE)
     fun `encrypt random string with large data`() {
-        val plainText = Fakers.randomString(SEGMENT_SIZE * 2)
+        val plainText = Fakers.randomString(SEGMENT_SIZE * 2, SEGMENT_SIZE * 2)
         val source = bufferOf(plainText)
 
         val output = Buffer()
