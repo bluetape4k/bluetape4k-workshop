@@ -183,7 +183,7 @@ object Versions {
     const val cache2k = "2.6.1.Final"   // https://mvnrepository.com/artifact/org.cache2k/cache2k-core
 
     const val ignite = "2.17.0"             // https://mvnrepository.com/artifact/org.apache.ignite/ignite-core
-    const val hazelcast = "5.6.0"           // https://mvnrepository.com/artifact/com.hazelcast/hazelcast
+    const val hazelcast = "5.5.0"           // https://mvnrepository.com/artifact/com.hazelcast/hazelcast
 
     const val cassandra = "4.19.1"          // https://mvnrepository.com/artifact/org.apache.cassandra/java-driver-core
     const val elasticsearch = "9.1.6"       // https://mvnrepository.com/artifact/org.elasticsearch.client/elasticsearch-rest-client
@@ -713,7 +713,7 @@ object Libs {
     val bucket4j_caffeine = bucket4j("caffeine")
     val bucket4j_core = bucket4j("core")
     val bucket4j_jcache = bucket4j("jcache")
-    val bucket4j_jdk8_hazelcast = bucket4j("hazelcast")
+    val bucket4j_hazelcast = bucket4j("hazelcast")
     val bucket4j_hazelcast_all = bucket4j("hazelcast-all")
     val bucket4j_ignite = bucket4j("ignite")
     val bucket4j_infinispan_all = bucket4j("infinispan-all")

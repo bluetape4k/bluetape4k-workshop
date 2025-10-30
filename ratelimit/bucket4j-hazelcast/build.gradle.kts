@@ -20,7 +20,7 @@ dependencies {
 
     // Bucket4j
     implementation(Libs.bucket4j_core)
-    implementation(Libs.bucket4j_jdk8_hazelcast)
+    implementation(Libs.bucket4j_hazelcast)
     implementation(Libs.bucket4j_spring_boot_starter)
 
     // Hazelcast
