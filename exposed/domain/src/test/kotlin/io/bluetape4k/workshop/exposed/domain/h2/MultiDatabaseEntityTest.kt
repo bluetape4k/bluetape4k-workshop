@@ -17,7 +17,6 @@ import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
@@ -57,8 +56,8 @@ class MultiDatabaseEntityTest {
     fun beforeEach() {
         Assumptions.assumeTrue { TestDB.H2 in TestDB.enabledDialects() }
 
-        if (TransactionManager.isInitialized()) {
-            currentDB = TransactionManager.currentOrNull()?.db
+        TransactionManager.currentOrNull()?.let {
+            currentDB = it.db
         }
         transaction(db1) {
             SchemaUtils.create(XTable, YTable)
@@ -71,7 +70,6 @@ class MultiDatabaseEntityTest {
     @AfterEach
     fun afterEach() {
         if (TestDB.H2 in TestDB.enabledDialects()) {
-            TransactionManager.resetCurrent(currentDB?.transactionManager)
             transaction(db1) {
                 SchemaUtils.drop(XTable, YTable)
             }
@@ -203,7 +201,7 @@ class MultiDatabaseEntityTest {
             }
         }
 
-        inTopLevelTransaction(Connection.TRANSACTION_READ_COMMITTED, db = db1) {
+        inTopLevelTransaction(db = db1, transactionIsolation = Connection.TRANSACTION_READ_COMMITTED) {
             maxAttempts = 1
             BEntity.testCache(db1b1.id).shouldBeNull()
 

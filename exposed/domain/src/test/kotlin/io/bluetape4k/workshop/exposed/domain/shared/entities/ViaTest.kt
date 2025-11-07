@@ -650,7 +650,7 @@ class ViaTest: AbstractExposedTest() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
 
                 /**

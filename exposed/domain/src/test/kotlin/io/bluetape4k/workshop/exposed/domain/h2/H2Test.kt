@@ -15,7 +15,6 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.avg
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
 import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
@@ -96,7 +95,7 @@ class H2Test: AbstractExposedTest() {
 
             try {
                 @OptIn(InternalApi::class)
-                CoreTransactionManager.registerDatabaseManager(db, WrappedTransactionManager(db.transactionManager))
+                TransactionManager.registerManager(db, WrappedTransactionManager(db.transactionManager))
                 Executors.newSingleThreadExecutor().apply {
                     submit {
                         TransactionManager.closeAndUnregister(db)

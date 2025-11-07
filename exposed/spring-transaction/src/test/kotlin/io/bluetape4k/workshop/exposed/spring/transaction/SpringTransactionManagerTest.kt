@@ -66,7 +66,9 @@ class SpringTransactionManagerTest {
 
         tm2.executeAssert(false) {
             tm1.executeAssert(false)
-            TransactionManager.managerFor(TransactionManager.currentOrNull()?.db) shouldBeEqualTo TransactionManager.manager
+
+            TransactionManager.current().transactionManager shouldBeEqualTo
+                    TransactionManager.currentOrNull()?.db?.let { TransactionManager.managerFor(it) }
         }
     }
 
@@ -111,7 +113,9 @@ class SpringTransactionManagerTest {
 
         tm1.executeAssert {
             tm2.executeAssert()
-            TransactionManager.managerFor(TransactionManager.currentOrNull()?.db) shouldBeEqualTo TransactionManager.manager
+
+            TransactionManager.current().transactionManager shouldBeEqualTo
+                    TransactionManager.currentOrNull()?.db?.let { TransactionManager.managerFor(it) }
         }
 
         con2.commitCallCount shouldBeEqualTo 1
@@ -130,7 +134,9 @@ class SpringTransactionManagerTest {
                 tm2.executeAssert {
                     throw ex
                 }
-                TransactionManager.managerFor(TransactionManager.currentOrNull()?.db) shouldBeEqualTo TransactionManager.manager
+
+                TransactionManager.current().transactionManager shouldBeEqualTo
+                        TransactionManager.currentOrNull()?.db?.let { TransactionManager.managerFor(it) }
             }
         } catch (e: Exception) {
             e shouldBeEqualTo ex
@@ -392,7 +398,9 @@ class SpringTransactionManagerTest {
         tt.propagationBehavior = propagationBehavior
         timeout?.let { tt.timeout = it }
         tt.executeWithoutResult {
-            TransactionManager.managerFor(TransactionManager.currentOrNull()?.db) shouldBeEqualTo TransactionManager.manager
+            TransactionManager.currentOrNull()?.db?.let { db ->
+                TransactionManager.current().transactionManager shouldBeEqualTo TransactionManager.managerFor(db)
+            }
 
             if (initializeConnection) {
                 TransactionManager.current().connection

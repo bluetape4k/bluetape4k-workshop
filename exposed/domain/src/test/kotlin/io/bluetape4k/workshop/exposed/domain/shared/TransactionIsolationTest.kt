@@ -29,7 +29,7 @@ class TransactionIsolationTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `what transaction isolation was applied`(testDB: TestDB) {
         withDb(testDB) {
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 this.connection.transactionIsolation shouldBeEqualTo Connection.TRANSACTION_SERIALIZABLE
             }

@@ -13,7 +13,6 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -31,7 +30,7 @@ class RollbackTransactionTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `rollback without save points`(testDB: TestDB) {
         withTables(testDB, RollbackTable) {
-            inTopLevelTransaction(db.transactionManager.defaultIsolationLevel) {
+            inTopLevelTransaction(db) {
                 maxAttempts = 1
                 RollbackTable.insert { it[value] = "before-dummy" }
 
@@ -58,7 +57,7 @@ class RollbackTransactionTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `rollback with save points`(testDB: TestDB) {
         withTables(testDB, RollbackTable, configure = { useNestedTransactions = true }) {
-            inTopLevelTransaction(db.transactionManager.defaultIsolationLevel) {
+            inTopLevelTransaction(db) {
                 maxAttempts = 1
                 RollbackTable.insert { it[value] = "before-dummy" }
 

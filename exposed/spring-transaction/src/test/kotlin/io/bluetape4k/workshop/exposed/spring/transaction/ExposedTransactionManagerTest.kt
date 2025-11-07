@@ -100,7 +100,7 @@ open class ExposedTransactionManagerTest: SpringTransactionTestBase() {
             T1.selectAll().single()[T1.c1] shouldBeEqualTo rnd
 
             // Spring의 `TransactionManager`
-            transactionManager.execute {
+            this@ExposedTransactionManagerTest.transactionManager.execute {
                 T1.insertRandom()
                 T1.selectAll().count() shouldBeEqualTo 2L
             }

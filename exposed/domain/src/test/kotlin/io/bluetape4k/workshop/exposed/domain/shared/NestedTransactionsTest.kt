@@ -20,7 +20,6 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -89,7 +88,7 @@ class NestedTransactionsTest: AbstractExposedTest() {
             TransactionManager.currentOrNull().shouldNotBeNull()
 
             try {
-                inTopLevelTransaction(this.transactionIsolation) {
+                inTopLevelTransaction(transactionIsolation = this.transactionIsolation) {
                     maxAttempts = 1
                     throw IllegalStateException("Should be rethrow")
                 }
@@ -119,7 +118,7 @@ class NestedTransactionsTest: AbstractExposedTest() {
             cities.selectAll().count().toInt() shouldBeEqualTo 1
 
             try {
-                inTopLevelTransaction(db.transactionManager.defaultIsolationLevel, db = db) {
+                inTopLevelTransaction(db) {
                     val innerTxId = this.id
                     innerTxId shouldNotBeEqualTo outerTxId
 
@@ -178,7 +177,7 @@ class NestedTransactionsTest: AbstractExposedTest() {
             cities.selectAll().count().toInt() shouldBeEqualTo 1
 
             try {
-                inTopLevelTransaction(db.transactionManager.defaultIsolationLevel, db = db) {
+                inTopLevelTransaction(db) {
                     val innerTxId = this.id
                     innerTxId shouldNotBeEqualTo outerTxId
 
