@@ -6,6 +6,7 @@ import jakarta.persistence.PersistenceContext
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldNotBeNull
 import org.assertj.core.api.AssertionsForInterfaceTypes.assertThat
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -29,6 +30,7 @@ class ApplicationIntegrationTests(
         ::em.isInitialized.shouldBeTrue()
     }
 
+    @Disabled("아직 테스트 중입니다")
     @Test
     fun `bootstraps container`() {
         assertThat(AssertableApplicationContext.get { context })

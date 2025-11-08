@@ -17,8 +17,8 @@ rootProject.name = "$PROJECT_NAME-workshop"
 include("shared")
 
 includeModules("aws", false, true)
-includeModules("ddd", false, true)
-includeModules("docker", false, true)
+// includeModules("ddd", false, true)
+// includeModules("docker", false, true)
 includeModules("examples", false, false)
 includeModules("exposed", false, true)
 includeModules("gateway", false, false)

@@ -6,7 +6,7 @@ services:
         environment:
             - discovery.type=single-node
     postgres:
-        image: postgres:14
+        image: postgres:18-alpine
         environment:
             POSTGRES_USER: debop
             POSTGRES_PASSWORD: debop
