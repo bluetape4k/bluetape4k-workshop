@@ -9,16 +9,15 @@ import io.micrometer.tracing.test.simple.SimpleTracer
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
 import org.springframework.boot.test.autoconfigure.actuate.observability.AutoConfigureObservability
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan
-import org.springframework.test.context.junit.jupiter.SpringExtension
 
-@ExtendWith(SpringExtension::class)
+@SpringBootTest
 @ComponentScan(basePackageClasses = [GreetingService::class])
 @EnableAutoConfiguration
 @AutoConfigureObservability
@@ -63,6 +62,6 @@ class GreetingServiceTracingIntegrationTest {
             log.debug { "span: $it" }
         }
 
-        tracer.spans.any { it.name == "greeting-service" }.shouldBeTrue()
+        tracer.spans.any { it.name == "greetingService" }.shouldBeTrue()
     }
 }
