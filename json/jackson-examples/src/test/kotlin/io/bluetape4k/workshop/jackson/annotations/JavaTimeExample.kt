@@ -80,7 +80,7 @@ class JavaTimeExample: AbstractJacksonTest() {
      * Java Time 모듈을 사용한 ObjectMapper
      */
     private val mapper = defaultMapper.copy()
-        .setSerializationInclusion(JsonInclude.Include.NON_NULL)  // null 값인 속성은 제외
+        .setDefaultPropertyInclusion(JsonInclude.Include.NON_NULL)  // null 값인 속성은 제외
         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)  // 날짜/시간을 timestamp 가 아닌 문자열로 변환
         .disable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)  // 날짜/시간을 변환할 때, context time zone 을 사용하지 않음
         .findAndRegisterModules()  // Java Time 모듈을 찾아서 등록

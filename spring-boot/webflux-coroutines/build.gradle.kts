@@ -16,19 +16,18 @@ dependencies {
     implementation(Libs.bluetape4k_io)
     testImplementation(Libs.bluetape4k_junit5)
 
-    implementation(Libs.bluetape4k_spring_webflux)
-    testImplementation(Libs.bluetape4k_spring_tests)
-
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))
     annotationProcessor(Libs.springBoot("autoconfigure-processor"))
     annotationProcessor(Libs.springBoot("configuration-processor"))
     runtimeOnly(Libs.springBoot("devtools"))
 
+    implementation(Libs.springBootStarter("aop"))
     implementation(Libs.springBootStarter("mustache"))
     implementation(Libs.springBootStarter("actuator"))
     implementation(Libs.springBootStarter("validation"))
     implementation(Libs.springBootStarter("webflux"))
+    implementation(Libs.bluetape4k_spring_webflux)
 
     testImplementation(Libs.bluetape4k_spring_tests)
     testImplementation(Libs.springBootStarter("test")) {

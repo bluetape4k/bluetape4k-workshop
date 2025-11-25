@@ -116,7 +116,7 @@ class CoroutineCassandraOperationsTest(
     private fun newBasicUser(id: Long): BasicUser {
         return BasicUser(
             id = id,
-            username = faker.internet().username(),
+            username = faker.credentials().username(),
             firstname = faker.name().firstName(),
             lastname = faker.name().lastName()
         )

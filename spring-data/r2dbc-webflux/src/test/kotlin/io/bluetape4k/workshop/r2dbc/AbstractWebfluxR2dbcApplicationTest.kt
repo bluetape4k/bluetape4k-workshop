@@ -17,7 +17,7 @@ abstract class AbstractWebfluxR2dbcApplicationTest {
     protected fun createUser(id: Int? = null): User =
         User(
             name = faker.name().fullName(),
-            login = faker.internet().username(),
+            login = faker.credentials().username(),
             email = faker.internet().emailAddress(),
             avatar = faker.avatar().image(),
             id = id
@@ -26,7 +26,7 @@ abstract class AbstractWebfluxR2dbcApplicationTest {
     protected fun createUserDTO(): UserDTO =
         UserDTO(
             name = faker.name().fullName(),
-            login = faker.internet().username(),
+            login = faker.credentials().username(),
             email = faker.internet().emailAddress(),
             avatar = faker.avatar().image()
         )

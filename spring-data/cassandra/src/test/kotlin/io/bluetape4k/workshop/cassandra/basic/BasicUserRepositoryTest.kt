@@ -32,7 +32,7 @@ class BasicUserRepositoryTest(
     private fun newBasicUser(): BasicUser {
         return BasicUser(
             id = Snowflakers.Default.nextId(),
-            username = faker.internet().username(),
+            username = faker.credentials().username(),
             firstname = faker.name().firstName(),
             lastname = faker.name().lastName()
         )

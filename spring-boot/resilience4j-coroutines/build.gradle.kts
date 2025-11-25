@@ -32,6 +32,7 @@ dependencies {
 
     implementation(Libs.springBootStarter("aop"))
     implementation(Libs.springBootStarter("actuator"))
+    implementation(Libs.springBootStarter("validation"))
     implementation(Libs.springBootStarter("webflux"))
     implementation(Libs.bluetape4k_spring_webflux)
     

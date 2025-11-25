@@ -36,7 +36,7 @@ class OnewayExample: AbstractJacksonTest() {
     @RepeatedTest(REPEAT_SIZE)
     fun `Oneway conversion object to json`() {
         val name = faker.name().fullName()
-        val password = faker.internet().password()
+        val password = faker.credentials().password()
         val user = User(name, password, 100)
 
         val json = defaultMapper.writeAsString(user)!!
@@ -52,7 +52,7 @@ class OnewayExample: AbstractJacksonTest() {
     @RepeatedTest(REPEAT_SIZE)
     fun `Oneway conversion json to object`() {
         val name = faker.name().fullName()
-        val password = faker.internet().password()
+        val password = faker.credentials().password()
         val json = """{"name":"$name", "password":"$password", "identifier":100}"""
 
         val user = defaultMapper.readValue<User>(json)
