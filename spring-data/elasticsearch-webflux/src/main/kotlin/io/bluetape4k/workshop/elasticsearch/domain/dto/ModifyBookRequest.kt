@@ -8,17 +8,17 @@ import java.io.Serializable
 
 
 data class ModifyBookRequest(
-    @NotBlank
+    @field:NotBlank
     val title: String,
 
-    @Positive
-    @PublicationYear
+    @field:Positive
+    @field:PublicationYear
     val publicationYear: Int,
 
-    @NotBlank
+    @field:NotBlank
     val authorName: String,
 
-    @NotBlank
+    @field:NotBlank
     val isbn: String,
 ): Serializable
 

@@ -14,6 +14,7 @@ configurations {
 
 dependencies {
     implementation(Libs.bluetape4k_io)
+    implementation(Libs.bluetape4k_jackson)
     testImplementation(Libs.bluetape4k_junit5)
 
     // Spring Boot
@@ -46,4 +47,13 @@ dependencies {
     implementation(Libs.reactor_netty)
     implementation(Libs.reactor_kotlin_extensions)
     testImplementation(Libs.reactor_test)
+
+    // Observability
+    implementation(Libs.micrometer_core)
+    implementation(Libs.micrometer_registry_prometheus)
+    implementation(Libs.micrometer_observation)
+    testImplementation(Libs.micrometer_observation_test)
+
+    // SpringDoc - OpenAPI 3.0
+    implementation(Libs.springdoc_openapi_starter_webflux_ui)
 }

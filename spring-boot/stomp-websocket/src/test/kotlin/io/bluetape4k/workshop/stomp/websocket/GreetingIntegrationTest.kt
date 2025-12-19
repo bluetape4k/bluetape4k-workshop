@@ -33,7 +33,7 @@ import java.lang.reflect.Type
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class GreetingIntegrationTest(
-    @LocalServerPort private val port: Int,
+    @param:LocalServerPort private val port: Int,
 ) {
     companion object: KLogging()
 
