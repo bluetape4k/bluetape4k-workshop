@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.exposed
 
 import io.bluetape4k.logging.KLogging
 import org.jetbrains.exposed.v1.spring.boot.autoconfigure.ExposedAutoConfiguration
-import org.springframework.boot.WebApplicationType
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
@@ -17,7 +16,5 @@ class ExposedApplication {
 }
 
 fun main(args: Array<String>) {
-    runApplication<ExposedApplication>(*args) {
-        webApplicationType = WebApplicationType.SERVLET
-    }
+    runApplication<ExposedApplication>(*args)
 }

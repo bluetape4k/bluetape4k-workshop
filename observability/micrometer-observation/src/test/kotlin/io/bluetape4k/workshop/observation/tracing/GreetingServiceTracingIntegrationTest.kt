@@ -11,7 +11,6 @@ import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration
-import org.springframework.boot.test.autoconfigure.actuate.observability.AutoConfigureObservability
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
@@ -20,7 +19,6 @@ import org.springframework.context.annotation.ComponentScan
 @SpringBootTest
 @ComponentScan(basePackageClasses = [GreetingService::class])
 @EnableAutoConfiguration
-@AutoConfigureObservability
 class GreetingServiceTracingIntegrationTest {
 
     @TestConfiguration

@@ -18,7 +18,7 @@ object Plugins {
         const val shadow = "9.2.2"      // https://plugins.gradle.org/plugin/com.gradleup.shadow
         const val kotlinx_benchmark = "0.4.14" // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-benchmark-plugin
 
-        const val spring_boot = "4.0.0"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
+        const val spring_boot = "4.0.1"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
         const val quarkus = "3.29.0"      // https://mvnrepository.com/artifact/io.quarkus/quarkus-bom
 
         const val docker_compose = "0.17.19"  // https://plugins.gradle.org/plugin/com.avast.gradle.docker-compose
@@ -68,7 +68,7 @@ object Versions {
     // Java 21, Kotlin 2.0 이상에서 사용하세요
     const val bluetape4k = "0.1.4-SNAPSHOT"    // Bluetape4k Github Package 로 배포됩니다.
 
-    const val kotlin = "2.2.21"                 // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
+    const val kotlin = "2.3.0"                 // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
     const val kotlinx_coroutines = "1.10.2"     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
     const val kotlinx_serialization = "1.9.0"   // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-json-jvm
 
@@ -79,7 +79,7 @@ object Versions {
     const val spring_boot = Plugins.Versions.spring_boot
     const val spring_cloud = "2025.1.0"     // https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-dependencies
     const val spring_integration = "7.0.0"  // https://mvnrepository.com/artifact/org.springframework.integration/spring-integration-core
-    const val reactor_bom = "2025.0.0"      // https://mvnrepository.com/artifact/io.projectreactor/reactor-bom
+    const val reactor_bom = "2025.0.1"      // https://mvnrepository.com/artifact/io.projectreactor/reactor-bom
     const val spring_statemachine = "4.0.1" // https://mvnrepository.com/artifact/org.springframework.statemachine/spring-statemachine-core
     const val spring_modulith = "2.0.0"     // https://mvnrepository.com/artifact/org.springframework.modulith/spring-modulith-bom
 
@@ -1056,12 +1056,13 @@ object Libs {
     const val reactor_bom = "io.projectreactor:reactor-bom:${Versions.reactor_bom}"
     const val reactor_core = "io.projectreactor:reactor-core"
     const val reactor_core_micrometer = "io.projectreactor:reactor-core-micrometer"
-    const val reactor_kafka = "io.projectreactor.kafka:reactor-kafka"
     const val reactor_netty = "io.projectreactor.netty:reactor-netty"
     const val reactor_netty_http_brave = "io.projectreactor.netty:reactor-netty-http-brave"
     const val reactor_test = "io.projectreactor:reactor-test"
     const val reactor_tools = "io.projectreactor:reactor-tools"
     const val reactor_kotlin_extensions = "io.projectreactor.kotlin:reactor-kotlin-extensions"
+
+    const val reactor_kafka = "io.projectreactor.kafka:reactor-kafka:1.3.25"
 
     const val reactor_addons_reactor_adapter = "io.projectreactor.addons:reactor-adapter"
     const val reactor_addons_reactor_extra = "io.projectreactor.addons:reactor-extra"

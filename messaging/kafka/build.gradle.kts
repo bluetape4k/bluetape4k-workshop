@@ -30,7 +30,7 @@ dependencies {
 
     implementation(Libs.springBootStarter("webflux"))
     implementation(Libs.springBootStarter("actuator"))
-    implementation(Libs.springBootStarter("aop"))
+    implementation(Libs.springBootStarter("aspectj"))
 
     runtimeOnly(Libs.springBoot("devtools"))
     annotationProcessor(Libs.springBoot("configuration-processor"))

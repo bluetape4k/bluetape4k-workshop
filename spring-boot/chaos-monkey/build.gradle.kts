@@ -30,7 +30,7 @@ dependencies {
     implementation(Libs.springBootStarter("web"))
     implementation(Libs.springBootStarter("jdbc"))
     implementation(Libs.springBootStarter("actuator"))
-    implementation(Libs.springBootStarter("aop"))
+    implementation(Libs.springBootStarter("aspectj"))
 
     testImplementation(Libs.springBootStarter("webflux"))
 

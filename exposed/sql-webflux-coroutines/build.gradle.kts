@@ -58,7 +58,7 @@ dependencies {
     runtimeOnly(Libs.springBoot("devtools"))
 
     implementation(Libs.springBootStarter("webflux"))
-    implementation(Libs.springBootStarter("aop"))
+    implementation(Libs.springBootStarter("aspectj"))
     implementation(Libs.springBootStarter("actuator"))
     implementation(Libs.springBootStarter("validation"))
 

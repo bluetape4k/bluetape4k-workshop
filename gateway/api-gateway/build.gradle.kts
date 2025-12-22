@@ -52,10 +52,10 @@ dependencies {
     implementation(Libs.resilience4j_spring_boot3)
 
     // Spring Cloud
-    implementation(Libs.springCloudStarter("gateway"))
+    implementation(Libs.springCloudStarter("gateway-server-webflux"))
     testImplementation(Libs.springCloudStarter("loadbalancer"))
     testImplementation(Libs.springCloud("test-support"))
-    testImplementation(Libs.springCloud("gateway-server") + "::tests")
+    testImplementation(Libs.springCloud("gateway-server-webflux") + "::tests")
 
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))
@@ -65,7 +65,7 @@ dependencies {
 
 
     implementation(Libs.springBootStarter("webflux"))
-    implementation(Libs.springBootStarter("aop"))
+    implementation(Libs.springBootStarter("aspectj"))
     implementation(Libs.springBootStarter("cache"))
     implementation(Libs.springBootStarter("validation"))
     implementation(Libs.springBootStarter("actuator"))

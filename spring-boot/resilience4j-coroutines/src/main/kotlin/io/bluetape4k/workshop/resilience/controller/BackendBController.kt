@@ -104,7 +104,7 @@ class BackendBController(
         return ""
     }
 
-    private fun <T> execute(supplier: () -> T): T {
+    private fun <T: Any> execute(supplier: () -> T): T {
         return Decorators.ofSupplier(supplier)
             .withCircuitBreaker(circuitBreaker)
             .withBulkhead(bulkhead)
@@ -112,7 +112,7 @@ class BackendBController(
             .get()
     }
 
-    private fun <T> executeMono(publisher: () -> Mono<T>): Mono<T> {
+    private fun <T: Any> executeMono(publisher: () -> Mono<T>): Mono<T> {
         return publisher()
             .transform(BulkheadOperator.of(bulkhead))
             .transform(CircuitBreakerOperator.of(circuitBreaker))
@@ -120,7 +120,7 @@ class BackendBController(
     }
 
 
-    private fun <T> executeMonoWithFallback(
+    private fun <T: Any> executeMonoWithFallback(
         publisher: () -> Mono<T>,
         exceptionHandler: (Throwable) -> Mono<T>,
     ): Mono<T> {
@@ -133,14 +133,14 @@ class BackendBController(
             .onErrorResume(BulkheadFullException::class.java, exceptionHandler)
     }
 
-    private fun <T> executeFlux(publisher: () -> Flux<T>): Flux<T> {
+    private fun <T: Any> executeFlux(publisher: () -> Flux<T>): Flux<T> {
         return publisher()
             .transform(BulkheadOperator.of(bulkhead))
             .transform(CircuitBreakerOperator.of(circuitBreaker))
             .transform(RetryOperator.of(retry))
     }
 
-    private fun <T> executeFluxWithFallback(
+    private fun <T: Any> executeFluxWithFallback(
         publisher: () -> Flux<T>,
         exceptionHandler: (Throwable) -> Flux<T>,
     ): Flux<T> {
@@ -153,7 +153,7 @@ class BackendBController(
             .onErrorResume(BulkheadFullException::class.java, exceptionHandler)
     }
 
-    private fun <T> executeFuture(supplier: () -> T): CompletableFuture<T> {
+    private fun <T: Any> executeFuture(supplier: () -> T): CompletableFuture<T> {
         return Decorators.ofSupplier(supplier)
             .withThreadPoolBulkhead(threadPoolBulkhead)
             .withTimeLimiter(timeLimiter, scheduledExecutorService)
@@ -163,7 +163,7 @@ class BackendBController(
             .toCompletableFuture()
     }
 
-    private fun <T> executeFutureWithFallback(
+    private fun <T: Any> executeFutureWithFallback(
         supplier: () -> T,
         exceptionHandler: (Throwable) -> T,
     ): CompletableFuture<T> {

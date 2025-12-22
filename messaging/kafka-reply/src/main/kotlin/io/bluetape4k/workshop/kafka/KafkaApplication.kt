@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.kafka
 
 import io.bluetape4k.workshop.kafka.ping.PingApplication
 import io.bluetape4k.workshop.kafka.pong.PongApplication
-import org.springframework.boot.WebApplicationType
 import org.springframework.boot.runApplication
 
 class KafkaApplication
@@ -12,7 +11,5 @@ class KafkaApplication
  */
 fun main(vararg args: String) {
     runApplication<PingApplication>(*args)
-    runApplication<PongApplication>(*args) {
-        webApplicationType = WebApplicationType.NONE
-    }
+    runApplication<PongApplication>(*args)
 }

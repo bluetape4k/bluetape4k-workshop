@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.coroutines
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.coroutines.handler.CoroutineHandler
-import org.springframework.boot.WebApplicationType
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
@@ -25,7 +24,5 @@ class CoroutinesDemoApplication {
 }
 
 fun main(vararg args: String) {
-    runApplication<CoroutinesDemoApplication>(*args) {
-        webApplicationType = WebApplicationType.REACTIVE
-    }
+    runApplication<CoroutinesDemoApplication>(*args)
 }

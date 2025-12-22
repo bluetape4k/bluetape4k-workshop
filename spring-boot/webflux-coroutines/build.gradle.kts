@@ -8,9 +8,9 @@ springBoot {
     mainClass.set("io.bluetape4k.workshop.coroutines.CoroutineApplicationKt")
 }
 
-configurations {
-    testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
-}
+//configurations {
+//    testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
+//}
 
 dependencies {
     implementation(Libs.bluetape4k_io)
@@ -23,7 +23,7 @@ dependencies {
     annotationProcessor(Libs.springBoot("configuration-processor"))
     runtimeOnly(Libs.springBoot("devtools"))
 
-    implementation(Libs.springBootStarter("aop"))
+    implementation(Libs.springBootStarter("aspectj"))
     implementation(Libs.springBootStarter("mustache"))
     implementation(Libs.springBootStarter("actuator"))
     implementation(Libs.springBootStarter("validation"))

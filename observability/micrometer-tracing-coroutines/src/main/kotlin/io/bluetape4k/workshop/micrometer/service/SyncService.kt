@@ -41,7 +41,7 @@ class SyncService(
                 log.debug { "Get fake name in sync service." }
                 Thread.sleep(100)
                 faker.name().fullName()
-            } as String
+            }
 
         // Nested span 으로 사용하기 위해서는 @Observed 대신 `withObservation` 함수를 사용하여 관찰을 합니다.
 //        return withObservation("sync-get-name-at-function", observationRegistry) {
@@ -65,7 +65,7 @@ class SyncService(
     private fun getTodoById(id: Int): Todo? {
         return Observation
             .createNotStarted("get-todo-by-webclient", observationRegistry)
-            .observe<Todo> {
+            .observe<Todo?> {
                 log.debug { "Get todo by id[$id] in sync service." }
                 Thread.sleep(100)
 

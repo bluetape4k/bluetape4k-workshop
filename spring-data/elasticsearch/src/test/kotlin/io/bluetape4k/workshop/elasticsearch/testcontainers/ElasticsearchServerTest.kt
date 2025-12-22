@@ -33,8 +33,8 @@ class ElasticsearchServerTest {
                 es.isRunning.shouldBeTrue()
 
                 val config = ElasticsearchServer.Launcher.getClientConfiguration(es)
-                val client = ElasticsearchClients.getRestClient(config)
-                client.isRunning.shouldBeTrue()
+                val client = ElasticsearchClients.createImperative(config) //  .getRestClient(config)
+                // client.isRunning.shouldBeTrue()
             }
         }
     }

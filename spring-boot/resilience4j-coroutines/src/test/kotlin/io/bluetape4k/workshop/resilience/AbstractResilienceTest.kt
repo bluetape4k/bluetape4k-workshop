@@ -8,12 +8,11 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.actuate.observability.AutoConfigureObservability
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.web.reactive.server.WebTestClient
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@AutoConfigureObservability
+
 abstract class AbstractResilienceTest {
 
     companion object: KLoggingChannel() {
@@ -51,10 +50,10 @@ abstract class AbstractResilienceTest {
     protected fun transitionCircuitBreakerState(name: String, state: CircuitBreaker.State) {
         circuitBreakerRegistry.circuitBreaker(name).apply {
             when (state) {
-                CircuitBreaker.State.OPEN      -> this.transitionToOpenState()
-                CircuitBreaker.State.CLOSED    -> this.transitionToClosedState()
+                CircuitBreaker.State.OPEN -> this.transitionToOpenState()
+                CircuitBreaker.State.CLOSED -> this.transitionToClosedState()
                 CircuitBreaker.State.HALF_OPEN -> this.transitionToHalfOpenState()
-                else                           -> throw NotSupportedException("Not supported state: $state")
+                else -> throw NotSupportedException("Not supported state: $state")
             }
         }
     }

@@ -43,7 +43,7 @@ dependencies {
     implementation(Libs.resilience4j_spring_boot3)
 
     // Spring Cloud
-    implementation(Libs.springCloudStarter("gateway"))
+    implementation(Libs.springCloudStarter("gateway-server-webflux"))
     implementation(Libs.springCloudStarter("circuitbreaker-reactor-resilience4j"))
 
     // Spring Data Redis
@@ -63,7 +63,7 @@ dependencies {
 
 
     implementation(Libs.springBootStarter("webflux"))
-    implementation(Libs.springBootStarter("aop"))
+    implementation(Libs.springBootStarter("aspectj"))
     implementation(Libs.springBootStarter("cache"))
     implementation(Libs.springBootStarter("validation"))
     implementation(Libs.springBootStarter("actuator"))

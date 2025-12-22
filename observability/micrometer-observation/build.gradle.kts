@@ -39,7 +39,7 @@ dependencies {
     runtimeOnly(Libs.springBoot("devtools"))
 
     implementation(Libs.springBootStarter("web"))
-    implementation(Libs.springBootStarter("aop"))
+    implementation(Libs.springBootStarter("aspectj"))
     implementation(Libs.springBootStarter("actuator"))
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")

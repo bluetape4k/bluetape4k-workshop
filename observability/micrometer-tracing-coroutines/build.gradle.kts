@@ -50,7 +50,7 @@ dependencies {
     annotationProcessor(Libs.springBoot("configuration-processor"))
     runtimeOnly(Libs.springBoot("devtools"))
 
-    implementation(Libs.springBootStarter("aop"))
+    implementation(Libs.springBootStarter("aspectj"))
     implementation(Libs.springBootStarter("actuator"))
     implementation(Libs.springBootStarter("webflux"))
     implementation(Libs.bluetape4k_spring_webflux)

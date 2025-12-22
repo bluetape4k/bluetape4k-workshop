@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.kafka.ping
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.testcontainers.mq.KafkaServer
-import org.springframework.boot.WebApplicationType
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
@@ -51,7 +50,6 @@ class PingApplication {
 
 fun main(vararg args: String) {
     runApplication<PingApplication>(*args) {
-        webApplicationType = WebApplicationType.REACTIVE
         setDefaultProperties(
             mapOf(
                 "spring.jmx.enabled" to false,

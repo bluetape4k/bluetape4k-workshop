@@ -48,7 +48,7 @@ class DefaultCoroutineController(
     private fun currentCoroutineName(): String? = coroutineContext[CoroutineName]?.name
 
 
-    @GetMapping("/", "/index")
+    @GetMapping("", "/", "/index")
     suspend fun index(model: Model): Banner {
         delay(DEFAULT_DELAY)
         return banner
