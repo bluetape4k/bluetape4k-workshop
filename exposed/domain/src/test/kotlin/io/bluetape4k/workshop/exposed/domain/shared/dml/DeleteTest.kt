@@ -17,7 +17,6 @@ import org.jetbrains.exposed.v1.core.innerJoin
 import org.jetbrains.exposed.v1.core.joinQuery
 import org.jetbrains.exposed.v1.core.lastQueryAlias
 import org.jetbrains.exposed.v1.core.like
-import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
@@ -120,14 +119,16 @@ class DeleteTest: AbstractExposedTest() {
                     userData.deleteWhere(limit = 1) { userData.value eq 20 }
                 }
             } else {
-                userData.deleteWhere(limit = 1) { userData.value eq 20 }
-                userData.select(userData.userId, userData.value)
+                userData.selectAll()
                     .where { userData.value eq 20 }
-                    .let {
-                        it.count().toInt() shouldBeEqualTo 1
-                        val expected = if (currentDialectTest is H2Dialect) "smth" else "eugene"
-                        it.single()[userData.userId] shouldBeEqualTo expected
-                    }
+                    .count() shouldBeEqualTo 2L
+
+                // 최대 1개만 삭제한다.
+                userData.deleteWhere(limit = 1) { userData.value eq 20 }
+
+                userData.selectAll()
+                    .where { userData.value eq 20 }
+                    .count() shouldBeEqualTo 1L
             }
         }
     }

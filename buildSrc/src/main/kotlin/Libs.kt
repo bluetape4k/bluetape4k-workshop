@@ -24,9 +24,9 @@ object Plugins {
         const val docker_compose = "0.17.19"  // https://plugins.gradle.org/plugin/com.avast.gradle.docker-compose
 
         // 참고: https://docs.gatling.io/reference/integrations/build-tools/gradle-plugin/
-        const val gatling = "3.14.7"  // https://plugins.gradle.org/plugin/io.gatling.gradle
+        const val gatling = "3.14.9"  // https://plugins.gradle.org/plugin/io.gatling.gradle
 
-        const val graalvm_native = "0.11.2" // https://mvnrepository.com/artifact/org.graalvm.buildtools.native/org.graalvm.buildtools.native.gradle.plugin
+        const val graalvm_native = "0.11.3" // https://mvnrepository.com/artifact/org.graalvm.buildtools.native/org.graalvm.buildtools.native.gradle.plugin
     }
 
     const val detekt = "io.gitlab.arturbosch.detekt"
@@ -154,7 +154,7 @@ object Versions {
     const val hibernate_validator = "8.0.3.Final" // https://mvnrepository.com/artifact/org.hibernate.validator/hibernate-validator
     const val querydsl = "5.1.0"                  // https://mvnrepository.com/artifact/com.querydsl/querydsl-jpa
 
-    const val exposed = "1.0.0-rc-3"       // https://mvnrepository.com/artifact/org.jetbrains.exposed/exposed-core
+    const val exposed = "1.0.0-rc-4"       // https://mvnrepository.com/artifact/org.jetbrains.exposed/exposed-core
     const val r2dbc = "1.0.0.RELEASE"        // https://mvnrepository.com/artifact/io.r2dbc/r2dbc-spi
     const val agroal = "2.8"          // https://mvnrepository.com/artifact/io.agroal/agroal-api
 
@@ -199,8 +199,8 @@ object Versions {
 
     const val ow2_asm = "9.8"               // https://mvnrepository.com/artifact/org.ow2.asm/asm
 
-    const val junit_jupiter = "5.14.0"      // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
-    const val junit_platform = "1.14.0"     // https://mvnrepository.com/artifact/org.junit.platform/junit-platform-launcher
+    const val junit_jupiter = "6.0.1"      // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
+    const val junit_platform = "6.0.1"     // https://mvnrepository.com/artifact/org.junit.platform/junit-platform-launcher
     const val assertj_core = "3.27.6"       // https://mvnrepository.com/artifact/org.assertj/assertj-core
     const val kluent = "1.73"               // https://mvnrepository.com/artifact/org.amshove.kluent/kluent
     const val mockk = "1.14.6"              // https://mvnrepository.com/artifact/io.mockk/mockk
@@ -212,7 +212,7 @@ object Versions {
     const val archunit = "1.4.1"           // https://mvnrepository.com/artifact/com.tngtech.archunit/archunit-junit5
     const val rest_assured = "5.5.6"        // https://mvnrepository.com/artifact/io.rest-assured/rest-assured
 
-    const val datafaker = "2.5.2"          // https://mvnrepository.com/artifact/net.datafaker/datafaker
+    const val datafaker = "2.5.3"          // https://mvnrepository.com/artifact/net.datafaker/datafaker
     const val snakeyaml = "2.5"            // https://mvnrepository.com/artifact/org.yaml/snakeyaml
     const val random_beans = "3.9.0"
 
@@ -223,7 +223,7 @@ object Versions {
     const val scrimage = "4.3.5"  // https://mvnrepository.com/artifact/com.sksamuel.scrimage/scrimage-core
 
     // Gatling
-    const val gatling = "3.14.7" // https://mvnrepository.com/artifact/io.gatling/gatling-core
+    const val gatling = "3.14.9" // https://mvnrepository.com/artifact/io.gatling/gatling-core
 }
 
 object Libs {
@@ -1324,16 +1324,17 @@ object Libs {
 
 
     // R2DBC (버전은 spring-data 버전을 사용한다)
-    fun r2dbc(module: String): String = "io.r2dbc:r2dbc-$module"
-    val r2dbc_h2 = r2dbc("h2")
-    val r2dbc_pool = r2dbc("pool")
+    fun r2dbc(module: String, version: String = Versions.r2dbc): String = "io.r2dbc:r2dbc-$module:$version"
     val r2dbc_spi = r2dbc("spi")
+    val r2dbc_h2 = r2dbc("h2", "1.1.0.RELEASE")
+    val r2dbc_pool = r2dbc("pool", "1.0.2.RELEASE")
+    val r2dbc_proxy = r2dbc("spi", "1.1.6.RELEASE")
 
     // 참고 : https://github.com/asyncer-io/r2dbc-mysql
     const val r2dbc_mysql = "io.asyncer:r2dbc-mysql:1.4.1"  // https://mvnrepository.com/artifact/io.asyncer/r2dbc-mysql
     const val r2dbc_mariadb = "org.mariadb:r2dbc-mariadb:1.3.0" // https://github.com/mariadb-corporation/mariadb-connector-r2dbc
     // https://github.com/pgjdbc/r2dbc-postgresql
-    const val r2dbc_postgresql = "org.postgresql:r2dbc-postgresql:1.1.0.RELEASE" // https://mvnrepository.com/artifact/org.postgresql/r2dbc-postgresql
+    const val r2dbc_postgresql = "org.postgresql:r2dbc-postgresql:1.1.1.RELEASE" // https://mvnrepository.com/artifact/org.postgresql/r2dbc-postgresql
 
     // QueryDSL
     fun querydsl(module: String) = "com.querydsl:querydsl-$module:${Versions.querydsl}"
@@ -1391,18 +1392,18 @@ object Libs {
     val agroal_hikari = agroal("hikari")
     val agroal_spring_boot_starter = agroal("spring-boot-starter")
 
-    const val mysql_connector_j = "com.mysql:mysql-connector-j:9.4.0"  // https://mvnrepository.com/artifact/com.mysql/mysql-connector-j
+    const val mysql_connector_j = "com.mysql:mysql-connector-j:9.5.0"  // https://mvnrepository.com/artifact/com.mysql/mysql-connector-j
     const val mariadb_java_client = "org.mariadb.jdbc:mariadb-java-client:3.5.6"  // https://mvnrepository.com/artifact/org.mariadb.jdbc/mariadb-java-client
     const val postgresql_driver = "org.postgresql:postgresql:42.7.8"  // https://mvnrepository.com/artifact/org.postgresql/postgresql
     const val pgjdbc_ng = "com.impossibl.pgjdbc-ng:pgjdbc-ng:0.8.9"  // https://mvnrepository.com/artifact/com.impossibl.pgjdbc-ng/pgjdbc-ng
     const val oracle_ojdbc8 = "com.oracle.ojdbc:ojdbc8:19.3.0.0"
-    const val clickhouse_jdbc = "com.clickhouse:clickhouse-jdbc:0.9.1" // https://mvnrepository.com/artifact/com.clickhouse/clickhouse-jdbc
+    const val clickhouse_jdbc = "com.clickhouse:clickhouse-jdbc:0.9.4" // https://mvnrepository.com/artifact/com.clickhouse/clickhouse-jdbc
 
     // NOTE: Apache Ignite 에서는 꼭 1.4.197 를 써야 합니다.
     const val h2 = "com.h2database:h2:1.4.197"
 
     // MyBatis 테스트 시에 h2 v2 를 사용한다
-    const val h2_v2 = "com.h2database:h2:2.3.232"    // https://mvnrepository.com/artifact/com.h2database/h2
+    const val h2_v2 = "com.h2database:h2:2.4.240"    // https://mvnrepository.com/artifact/com.h2database/h2
     const val hsqldb = "org.hsqldb:hsqldb:2.7.4"     // https://mvnrepository.com/artifact/org.hsqldb/hsqldb
     const val flyway_core = "org.flywaydb:flyway-core:11.15.0"  // https://mvnrepository.com/artifact/org.flywaydb/flyway-core
 
