@@ -3,7 +3,6 @@ package io.bluetape4k.workshop.webflux
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.webflux.model.Event
 import io.bluetape4k.workshop.webflux.model.Quote
 import kotlinx.coroutines.flow.collect
@@ -14,6 +13,7 @@ import org.amshove.kluent.shouldBeTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.ApplicationContext
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
@@ -21,9 +21,13 @@ import java.math.BigDecimal
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class WebsocketApplicationTest(
-    @param:Autowired private val client: WebTestClient,
+    @param:Autowired val context: ApplicationContext,
 ) {
     companion object: KLoggingChannel()
+
+    private val client by lazy {
+        WebTestClient.bindToApplicationContext(context).build()
+    }
 
     @Test
     fun `context loading`() {
@@ -32,7 +36,11 @@ class WebsocketApplicationTest(
 
     @Test
     fun `get quotes`() = runSuspendIO {
-        client.httpGet("/quotes")
+        client
+            .get()
+            .uri("/quotes")
+            .exchange()
+            .expectStatus().isOk
             .expectHeader().contentType(MediaType.APPLICATION_NDJSON)
             .returnResult<Event>().responseBody
             .asFlow()
@@ -45,7 +53,11 @@ class WebsocketApplicationTest(
 
     @Test
     fun `fetch quotes by flow`() = runSuspendIO {
-        client.httpGet("/quotes/100")
+        client
+            .get()
+            .uri("/quotes/100")
+            .exchange()
+            .expectStatus().isOk
             .expectHeader().contentType(MediaType.APPLICATION_NDJSON)
             .returnResult<Quote>().responseBody
             .asFlow()
