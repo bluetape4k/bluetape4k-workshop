@@ -1,6 +1,5 @@
 package io.bluetape4k.workshop.cbor
 
-import io.bluetape4k.jackson.binary.JacksonBinary
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
@@ -15,9 +14,9 @@ import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.MediaType
-import org.springframework.http.codec.cbor.Jackson2CborDecoder
-import org.springframework.http.codec.cbor.Jackson2CborEncoder
-import org.springframework.http.converter.cbor.MappingJackson2CborHttpMessageConverter
+import org.springframework.http.codec.cbor.JacksonCborDecoder
+import org.springframework.http.codec.cbor.JacksonCborEncoder
+import org.springframework.http.converter.cbor.JacksonCborHttpMessageConverter
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 import org.springframework.web.client.RestClient
@@ -37,7 +36,7 @@ class CborApplicationTest {
     companion object: KLoggingChannel()
 
     private val restTemplate: RestTemplate by lazy {
-        RestTemplate(listOf(MappingJackson2CborHttpMessageConverter()))
+        RestTemplate(listOf(JacksonCborHttpMessageConverter()))
     }
 
     @LocalServerPort
@@ -47,7 +46,9 @@ class CborApplicationTest {
 
     private val restClient by lazy {
         RestClient.builder()
-            .messageConverters { it.add(MappingJackson2CborHttpMessageConverter()) }
+            .configureMessageConverters {
+                it.addCustomConverter(JacksonCborHttpMessageConverter())
+            }
             .baseUrl(baseUrl)
             .build()
     }
@@ -55,8 +56,8 @@ class CborApplicationTest {
     private val client: WebClient by lazy {
         val strategies = ExchangeStrategies.builder()
             .codecs { cfg ->
-                cfg.defaultCodecs().jackson2JsonDecoder(Jackson2CborDecoder(JacksonBinary.CBOR.defaultMapper))
-                cfg.defaultCodecs().jackson2JsonEncoder(Jackson2CborEncoder(JacksonBinary.CBOR.defaultMapper))
+                cfg.defaultCodecs().jacksonJsonDecoder(JacksonCborDecoder())
+                cfg.defaultCodecs().jacksonJsonEncoder(JacksonCborEncoder())
             }
             .build()
 
@@ -69,8 +70,8 @@ class CborApplicationTest {
     private val testClient: WebTestClient by lazy {
         val strategies = ExchangeStrategies.builder()
             .codecs { cfg ->
-                cfg.defaultCodecs().jackson2JsonDecoder(Jackson2CborDecoder())
-                cfg.defaultCodecs().jackson2JsonEncoder(Jackson2CborEncoder())
+                cfg.defaultCodecs().jacksonJsonDecoder(JacksonCborDecoder())
+                cfg.defaultCodecs().jacksonJsonEncoder(JacksonCborEncoder())
             }
             .build()
 

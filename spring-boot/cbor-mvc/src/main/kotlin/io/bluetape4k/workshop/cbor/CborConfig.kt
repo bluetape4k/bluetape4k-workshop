@@ -8,8 +8,8 @@ import io.bluetape4k.workshop.cbor.course.Student
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
-import org.springframework.http.converter.HttpMessageConverter
-import org.springframework.http.converter.cbor.MappingJackson2CborHttpMessageConverter
+import org.springframework.http.converter.HttpMessageConverters
+import org.springframework.http.converter.cbor.JacksonCborHttpMessageConverter
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
 @Configuration
@@ -17,12 +17,12 @@ class CborConfig: WebMvcConfigurer {
 
     @Bean
     @Profile("cbor")
-    fun cborHttpMessageConverter(): MappingJackson2CborHttpMessageConverter {
-        return MappingJackson2CborHttpMessageConverter()
+    fun cborHttpMessageConverter(): JacksonCborHttpMessageConverter {
+        return JacksonCborHttpMessageConverter()
     }
 
-    override fun configureMessageConverters(converters: MutableList<HttpMessageConverter<*>>) {
-        converters.add(cborHttpMessageConverter())
+    override fun configureMessageConverters(builder: HttpMessageConverters.ServerBuilder) {
+        builder.addCustomConverter(cborHttpMessageConverter())
     }
 
     @Bean
