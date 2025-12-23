@@ -13,9 +13,7 @@ configurations {
 }
 
 dependencies {
-    implementation(Libs.bluetape4k_spring_core)
-    implementation(Libs.bluetape4k_jackson)
-    implementation(Libs.bluetape4k_netty)
+    implementation(Libs.bluetape4k_core)
     testImplementation(Libs.bluetape4k_junit5)
 
     // Chaos Monkey (https://github.com/codecentric/chaos-monkey-spring-boot)
@@ -33,8 +31,6 @@ dependencies {
     implementation(Libs.springBootStarter("aspectj"))
 
     testImplementation(Libs.springBootStarter("webflux"))
-
-    testImplementation(Libs.bluetape4k_spring_tests)
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
