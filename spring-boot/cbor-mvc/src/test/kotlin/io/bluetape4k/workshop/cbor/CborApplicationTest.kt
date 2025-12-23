@@ -107,7 +107,6 @@ class CborApplicationTest {
         assertCourse1(course1)
     }
 
-    @Disabled("WebClient 에서는 아직 CBOR 지원을 하지 않습니다.")
     @Test
     fun `using webClient`() = runSuspendIO {
         val course1 = client.get()

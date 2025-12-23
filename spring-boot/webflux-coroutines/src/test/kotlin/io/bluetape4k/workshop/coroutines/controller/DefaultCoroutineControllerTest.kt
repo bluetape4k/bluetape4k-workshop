@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.body
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
@@ -29,7 +28,7 @@ class DefaultCoroutineControllerTest: AbstractCoroutineApplicationTest() {
             .get()
             .uri(BASE_PATH)
             .exchange()
-            .expectStatus().isEqualTo(HttpStatus.OK)
+            .expectStatus().isOk
             .expectBody<Banner>().isEqualTo(expectedBanner)
     }
 
@@ -39,7 +38,7 @@ class DefaultCoroutineControllerTest: AbstractCoroutineApplicationTest() {
             .get()
             .uri("$BASE_PATH/suspend")
             .exchange()
-            .expectStatus().isEqualTo(HttpStatus.OK)
+            .expectStatus().isOk
             .expectBody<Banner>().isEqualTo(expectedBanner)
     }
 
@@ -49,7 +48,7 @@ class DefaultCoroutineControllerTest: AbstractCoroutineApplicationTest() {
             .get()
             .uri("$BASE_PATH/deferred")
             .exchange()
-            .expectStatus().isEqualTo(HttpStatus.OK)
+            .expectStatus().isOk
             .expectBody<Banner>().isEqualTo(expectedBanner)
     }
 
@@ -59,7 +58,7 @@ class DefaultCoroutineControllerTest: AbstractCoroutineApplicationTest() {
             .get()
             .uri("$BASE_PATH/sequential-flow")
             .exchange()
-            .expectStatus().isEqualTo(HttpStatus.OK)
+            .expectStatus().isOk
             .expectBodyList<Banner>()
             .contains(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
     }
@@ -70,7 +69,7 @@ class DefaultCoroutineControllerTest: AbstractCoroutineApplicationTest() {
             .get()
             .uri("$BASE_PATH/concurrent-flow")
             .exchange()
-            .expectStatus().isEqualTo(HttpStatus.OK)
+            .expectStatus().isOk
             .expectBodyList<Banner>()
             .contains(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
     }
@@ -80,7 +79,7 @@ class DefaultCoroutineControllerTest: AbstractCoroutineApplicationTest() {
         client.get()
             .uri("$BASE_PATH/error")
             .exchange()
-            .expectStatus().isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
+            .expectStatus().is5xxServerError
     }
 
     @RepeatedTest(REPEAT_SIZE)
@@ -98,7 +97,7 @@ class DefaultCoroutineControllerTest: AbstractCoroutineApplicationTest() {
             .uri("$BASE_PATH/request-as-flow")
             .body(request)
             .exchange()
-            .expectStatus().isEqualTo(HttpStatus.OK)
+            .expectStatus().isOk
             .expectBody<String>().isEqualTo("12345")
 
     }

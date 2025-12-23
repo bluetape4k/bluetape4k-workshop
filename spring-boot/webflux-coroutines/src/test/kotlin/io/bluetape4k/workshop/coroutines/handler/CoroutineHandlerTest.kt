@@ -12,7 +12,6 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeEmpty
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
 
 class CoroutineHandlerTest: AbstractCoroutineApplicationTest() {
@@ -25,7 +24,7 @@ class CoroutineHandlerTest: AbstractCoroutineApplicationTest() {
             .get()
             .uri("/")
             .exchange()
-            .expectStatus().isEqualTo(HttpStatus.OK)
+            .expectStatus().isOk
             .returnResult<String>().responseBody
             .awaitLast()
             .shouldNotBeEmpty()
@@ -37,7 +36,7 @@ class CoroutineHandlerTest: AbstractCoroutineApplicationTest() {
             .get()
             .uri("/suspend")
             .exchange()
-            .expectStatus().isEqualTo(HttpStatus.OK)
+            .expectStatus().isOk
             .returnResult<Banner>().responseBody
             .awaitSingle() shouldBeEqualTo expectedBanner
     }
@@ -47,7 +46,7 @@ class CoroutineHandlerTest: AbstractCoroutineApplicationTest() {
         client.get()
             .uri("/deferred")
             .exchange()
-            .expectStatus().isEqualTo(HttpStatus.OK)
+            .expectStatus().isOk
             .returnResult<Banner>().responseBody
             .awaitSingle() shouldBeEqualTo expectedBanner
     }
@@ -58,7 +57,7 @@ class CoroutineHandlerTest: AbstractCoroutineApplicationTest() {
             .get()
             .uri("/sequential-flow")
             .exchange()
-            .expectStatus().isEqualTo(HttpStatus.OK)
+            .expectStatus().isOk
             .returnResult<Banner>().responseBody
             .asFlow()
             .toList() shouldBeEqualTo listOf(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
@@ -70,7 +69,7 @@ class CoroutineHandlerTest: AbstractCoroutineApplicationTest() {
             .get()
             .uri("/concurrent-flow")
             .exchange()
-            .expectStatus().isEqualTo(HttpStatus.OK)
+            .expectStatus().isOk
             .returnResult<Banner>().responseBody
             .asFlow()
             .toList() shouldBeEqualTo listOf(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
@@ -82,6 +81,6 @@ class CoroutineHandlerTest: AbstractCoroutineApplicationTest() {
             .get()
             .uri("/error")
             .exchange()
-            .expectStatus().isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
+            .expectStatus().is5xxServerError
     }
 }
