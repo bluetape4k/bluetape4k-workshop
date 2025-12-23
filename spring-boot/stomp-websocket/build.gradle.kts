@@ -14,12 +14,13 @@ configurations {
 }
 
 dependencies {
-    implementation(Libs.bluetape4k_spring_core)
-    implementation(Libs.bluetape4k_jackson)
-    implementation(Libs.bluetape4k_netty)
+    implementation(Libs.bluetape4k_core)
     testImplementation(Libs.bluetape4k_junit5)
 
     api(Libs.jakarta_annotation_api)
+
+    // Jackson 3
+    implementation(Libs.jackson3_module_kotlin)
 
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))
@@ -28,7 +29,6 @@ dependencies {
     runtimeOnly(Libs.springBoot("devtools"))
 
     implementation(Libs.springBootStarter("websocket"))
-    testImplementation(Libs.bluetape4k_spring_tests)
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
