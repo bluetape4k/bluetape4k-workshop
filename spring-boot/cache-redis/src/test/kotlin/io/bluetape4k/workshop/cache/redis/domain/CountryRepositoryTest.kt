@@ -29,6 +29,7 @@ class CountryRepositoryTest(
 
     @BeforeEach
     fun beforeEach() {
+        countryRepo.evictCache(US)
         countryRepo.evictCache(KR)
     }
 
@@ -39,14 +40,17 @@ class CountryRepositoryTest(
         val kr = measureTimeMillis {
             countryRepo.findByCode(KR)
         }
-        kr shouldBeGreaterThan EXPECTED_MILLIS
+
+        Thread.sleep(10)
 
         val kr2 = measureTimeMillis {
             countryRepo.findByCode(KR)
         }
-        kr2 shouldBeLessThan EXPECTED_MILLIS
 
         log.debug { "kr=$kr msec, kr2=$kr2 msec" }
+
+        kr shouldBeGreaterThan EXPECTED_MILLIS
+        kr2 shouldBeLessThan EXPECTED_MILLIS
     }
 
     @Test
@@ -56,18 +60,21 @@ class CountryRepositoryTest(
         val us = measureTimeMillis {
             countryRepo.findByCode(US)
         }
-        us shouldBeGreaterThan EXPECTED_MILLIS
+
+        Thread.sleep(10)
 
         val usCached = measureTimeMillis {
             countryRepo.findByCode(US)
         }
-        usCached shouldBeLessThan EXPECTED_MILLIS
 
         countryRepo.evictCache(US)
 
         val usEvicted = measureTimeMillis {
             countryRepo.findByCode(US)
         }
+
+        us shouldBeGreaterThan EXPECTED_MILLIS
+        usCached shouldBeLessThan EXPECTED_MILLIS
         usEvicted shouldBeGreaterThan EXPECTED_MILLIS
     }
 

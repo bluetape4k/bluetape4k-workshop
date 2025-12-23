@@ -14,7 +14,6 @@ configurations {
 
 dependencies {
     implementation(Libs.bluetape4k_redis)
-    implementation(Libs.bluetape4k_spring_core)
     testImplementation(Libs.bluetape4k_junit5)
     implementation(Libs.bluetape4k_testcontainers)
 
@@ -51,8 +50,6 @@ dependencies {
 
     implementation(Libs.springBootStarter("cache"))
     implementation(Libs.springBootStarter("data-redis"))
-
-    testImplementation(Libs.bluetape4k_spring_tests)
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

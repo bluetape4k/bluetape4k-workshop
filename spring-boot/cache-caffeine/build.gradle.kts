@@ -21,8 +21,6 @@ dependencies {
     implementation(Libs.caffeine_jcache)
     implementation(Libs.springBootStarter("cache"))
 
-    implementation(Libs.bluetape4k_spring_core)
-    implementation(Libs.bluetape4k_jackson)
     testImplementation(Libs.bluetape4k_junit5)
 
     // Spring Boot
