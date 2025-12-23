@@ -30,11 +30,6 @@ dependencies {
     // 샘플 데이터 제공을 위해
     implementation(Libs.datafaker)
 
-    // Bluetape4k
-    implementation(Libs.bluetape4k_jackson)
-    implementation(Libs.bluetape4k_spring_core)
-    testImplementation(Libs.bluetape4k_spring_tests)
-
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))
     annotationProcessor(Libs.springBoot("autoconfigure-processor"))
