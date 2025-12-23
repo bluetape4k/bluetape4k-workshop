@@ -1,6 +1,5 @@
 package io.bluetape4k.workshop.coroutines.controller
 
-import com.fasterxml.jackson.databind.JsonNode
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
@@ -25,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
+import tools.jackson.databind.JsonNode
 
 @RestController
 @RequestMapping("/controller/vt")
@@ -48,7 +48,7 @@ class VTCoroutineController(
     private fun currentCoroutineName(): String? = coroutineContext[CoroutineName]?.name
 
 
-    @GetMapping("/", "/index")
+    @GetMapping("", "/", "/index")
     suspend fun index(model: Model): Banner {
         delay(DEFAULT_DELAY)
         return banner

@@ -220,7 +220,6 @@ subprojects {
             mavenBom(Libs.fabric8_kubernetes_client_bom)
             mavenBom(Libs.resilience4j_bom)
             mavenBom(Libs.netty_bom)
-            mavenBom(Libs.jackson_bom)
 
             mavenBom(Libs.kotlinx_coroutines_bom)
             mavenBom(Libs.kotlin_bom)
@@ -296,20 +295,7 @@ subprojects {
             dependency(Libs.kryo)
             dependency(Libs.fury_kotlin)
             dependency(Libs.fory_kotlin)
-
-            // Jackson (이상하게 mavenBom 에 적용이 안되어서 강제로 추가하였다)
-            dependency(Libs.jackson_bom)
-            dependency(Libs.jackson_core)
-            dependency(Libs.jackson_databind)
-            dependency(Libs.jackson_datatype_jdk8)
-            dependency(Libs.jackson_datatype_jsr310)
-            dependency(Libs.jackson_datatype_jsr353)
-            dependency(Libs.jackson_module_kotlin)
-            dependency(Libs.jackson_module_paranamer)
-            dependency(Libs.jackson_module_parameter_names)
-            dependency(Libs.jackson_module_blackbird)
-            dependency(Libs.jackson_module_jsonSchema)
-
+            
             // Retrofit
             dependency(Libs.retrofit2)
             dependency(Libs.retrofit2_adapter_java8)

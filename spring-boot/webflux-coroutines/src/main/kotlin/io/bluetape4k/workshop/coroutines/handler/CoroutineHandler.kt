@@ -23,7 +23,6 @@ import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.bodyAndAwait
 import org.springframework.web.reactive.function.server.bodyValueAndAwait
-import org.springframework.web.reactive.function.server.renderAndAwait
 
 @Component
 class CoroutineHandler(
@@ -49,7 +48,9 @@ class CoroutineHandler(
         delay(DEFAULT_DELAY)
 
         return ServerResponse.ok()
-            .renderAndAwait("index", mapOf("banner" to banner))
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValueAndAwait(banner)
+        //.renderAndAwait("index", mapOf("banner" to banner))
     }
 
     suspend fun suspending(request: ServerRequest): ServerResponse {

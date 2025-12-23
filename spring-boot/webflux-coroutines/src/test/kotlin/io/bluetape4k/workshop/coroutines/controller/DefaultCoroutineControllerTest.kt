@@ -1,10 +1,8 @@
 package io.bluetape4k.workshop.coroutines.controller
 
-import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import io.bluetape4k.junit5.coroutines.runSuspendDefault
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.spring.tests.httpPost
 import io.bluetape4k.workshop.coroutines.AbstractCoroutineApplicationTest
 import io.bluetape4k.workshop.coroutines.model.Banner
 import kotlinx.coroutines.delay
@@ -17,6 +15,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.body
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
+import tools.jackson.databind.node.JsonNodeFactory
 
 class DefaultCoroutineControllerTest: AbstractCoroutineApplicationTest() {
 
@@ -94,9 +93,6 @@ class DefaultCoroutineControllerTest: AbstractCoroutineApplicationTest() {
             .map {
                 JsonNodeFactory.instance.numberNode(it)
             }
-
-        client.httpPost("$BASE_PATH/request-as-flow", request)
-            .expectBody<String>().isEqualTo("12345")
 
         client.post()
             .uri("$BASE_PATH/request-as-flow")
