@@ -1,7 +1,6 @@
 package io.bluetape4k.workshop.resilience.circuitbreaker
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.spring.tests.httpGet
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -91,15 +90,27 @@ class ReactiveCircuitBreakerTest: AbstractCircuitBreakerTest() {
         }
 
         private fun procedureMonoFailure(serviceName: String) {
-            webClient.httpGet("/$serviceName/monoFailure", HttpStatus.INTERNAL_SERVER_ERROR)
+            webClient
+                .get()
+                .uri("/$serviceName/monoFailure")
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
         }
 
         private fun procedureMonoSuccess(serviceName: String) {
-            webClient.httpGet("/$serviceName/monoSuccess")
+            webClient
+                .get()
+                .uri("/$serviceName/monoSuccess")
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.OK)
         }
 
         private fun procedureMonoTimeout(serviceName: String) {
-            webClient.httpGet("/$serviceName/monoTimeout")  // fallback 이 작동하므로, 항상 성공한다
+            webClient
+                .get()
+                .uri("/$serviceName/monoTimeout")
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.OK) // fallback 이 작동하므로, 항상 성공한다
         }
     }
 
@@ -182,15 +193,27 @@ class ReactiveCircuitBreakerTest: AbstractCircuitBreakerTest() {
         }
 
         private fun procedureFluxFailure(serviceName: String) {
-            webClient.httpGet("/$serviceName/fluxFailure", HttpStatus.INTERNAL_SERVER_ERROR)
+            webClient
+                .get()
+                .uri("/$serviceName/fluxFailure")
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
         }
 
         private fun procedureFluxSuccess(serviceName: String) {
-            webClient.httpGet("/$serviceName/fluxSuccess")
+            webClient
+                .get()
+                .uri("/$serviceName/fluxSuccess")
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.OK)
         }
 
         private fun procedureFluxTimeout(serviceName: String) {
-            webClient.httpGet("/$serviceName/fluxTimeout")  // fallback 이 작동하므로, 항상 성공한다
+            webClient
+                .get()
+                .uri("/$serviceName/fluxTimeout")
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.OK) // fallback 이 작동하므로, 항상 성공한다
         }
     }
 }

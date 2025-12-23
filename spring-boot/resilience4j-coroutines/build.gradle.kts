@@ -14,7 +14,6 @@ configurations {
 }
 
 dependencies {
-    implementation(Libs.bluetape4k_jackson)
     testImplementation(Libs.bluetape4k_junit5)
 
     // Bucket4j
@@ -34,9 +33,6 @@ dependencies {
     implementation(Libs.springBootStarter("actuator"))
     implementation(Libs.springBootStarter("validation"))
     implementation(Libs.springBootStarter("webflux"))
-    implementation(Libs.bluetape4k_spring_webflux)
-    
-    testImplementation(Libs.bluetape4k_spring_tests)
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

@@ -9,6 +9,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.ApplicationContext
 import org.springframework.test.web.reactive.server.WebTestClient
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -25,7 +26,17 @@ abstract class AbstractResilienceTest {
     protected val circuitBreakerRegistry: CircuitBreakerRegistry = uninitialized()
 
     @Autowired
-    protected val webClient: WebTestClient = uninitialized()
+    protected val context: ApplicationContext = uninitialized()
+
+    protected val webClient by lazy {
+        WebTestClient
+            .bindToApplicationContext(context)
+            .configureClient()
+            .build()
+            .mutate()
+            .codecs { it.defaultCodecs().maxInMemorySize(2 * 1024 * 1024) } // Increase limit to 2MB
+            .build()
+    }
 
 
     @BeforeEach

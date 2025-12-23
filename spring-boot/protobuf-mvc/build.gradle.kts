@@ -48,10 +48,6 @@ dependencies {
     implementation(Libs.protobuf_java_util)
     implementation(Libs.protobuf_kotlin)
 
-
-    implementation(Libs.bluetape4k_spring_core)
-    testImplementation(Libs.bluetape4k_spring_tests)
-
     implementation(Libs.springBootStarter("web"))
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
