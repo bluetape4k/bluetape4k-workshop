@@ -6,14 +6,11 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.asCoroutineDispatcher
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.reactive.function.client.WebClient
 import java.util.concurrent.Executors
 
 @RestController
 @RequestMapping("/$VIRTUAL_THREAD_PATH")
-class VirtualThreadDispatcherController(
-    override val webClientBuilder: WebClient.Builder,
-): AbstractDispatcherController(webClientBuilder) {
+class VirtualThreadDispatcherController: AbstractDispatcherController() {
 
     companion object: KLoggingChannel() {
         internal const val VIRTUAL_THREAD_PATH = "virtual-thread"

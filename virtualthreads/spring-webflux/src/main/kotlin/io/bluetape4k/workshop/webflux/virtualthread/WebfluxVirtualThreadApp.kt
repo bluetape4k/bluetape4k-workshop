@@ -1,7 +1,6 @@
 package io.bluetape4k.workshop.webflux.virtualthread
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import org.springframework.boot.WebApplicationType
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
@@ -13,7 +12,5 @@ class WebFluxVirtualThreadApp {
 }
 
 fun main(vararg args: String) {
-    runApplication<WebFluxVirtualThreadApp>(*args) {
-        webApplicationType = WebApplicationType.REACTIVE
-    }
+    runApplication<WebFluxVirtualThreadApp>(*args)
 }

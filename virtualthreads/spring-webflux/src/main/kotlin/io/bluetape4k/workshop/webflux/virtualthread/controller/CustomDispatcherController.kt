@@ -7,13 +7,10 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.newFixedThreadPoolContext
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.reactive.function.client.WebClient
 
 @RestController
 @RequestMapping("/$CUSTOM_PATH")
-class CustomDispatcherController(
-    override val webClientBuilder: WebClient.Builder,
-): AbstractDispatcherController(webClientBuilder) {
+class CustomDispatcherController: AbstractDispatcherController() {
 
     companion object: KLoggingChannel() {
         internal const val CUSTOM_PATH = "custom"

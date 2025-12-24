@@ -19,8 +19,6 @@ dependencies {
 
     // bluetape4k
     implementation(Libs.bluetape4k_io)
-    implementation(Libs.bluetape4k_spring_webflux)
-    testImplementation(Libs.bluetape4k_spring_tests)
 
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))
