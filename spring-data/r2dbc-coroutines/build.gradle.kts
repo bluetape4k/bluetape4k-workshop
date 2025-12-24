@@ -13,6 +13,8 @@ configurations {
 }
 
 dependencies {
+    implementation(platform(Libs.spring_boot_dependencies))
+    
     implementation(Libs.bluetape4k_io)
     testImplementation(Libs.bluetape4k_junit5)
 
