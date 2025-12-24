@@ -14,13 +14,14 @@ import org.springframework.web.reactive.function.client.bodyToMono
 
 @Service
 class CoroutineService(
-    private val webClientBuilder: WebClient.Builder,
     private val observationRegistry: ObservationRegistry,
 ) {
 
     companion object: KLoggingChannel() {
         private val faker = Faker()
     }
+
+    private val webClientBuilder = WebClient.builder()
 
     private val client = webClientBuilder.baseUrl("https://jsonplaceholder.typicode.com").build()
 

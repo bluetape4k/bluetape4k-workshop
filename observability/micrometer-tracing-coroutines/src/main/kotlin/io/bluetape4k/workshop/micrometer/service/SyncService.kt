@@ -21,13 +21,13 @@ import org.springframework.web.reactive.function.client.bodyToMono
  */
 @Service
 class SyncService(
-    private val webClientBuilder: WebClient.Builder,
     private val observationRegistry: ObservationRegistry,
 ) {
     companion object: KLogging() {
         val faker = Faker()
     }
 
+    private val webClientBuilder = WebClient.builder()
     private val client = webClientBuilder.baseUrl("https://jsonplaceholder.typicode.com").build()
 
     @Observed(contextualName = "sync-get-name-at-service")

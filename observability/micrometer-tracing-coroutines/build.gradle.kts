@@ -18,8 +18,6 @@ dependencies {
     implementation(platform(Libs.micrometer_tracing_bom))
     
     implementation(Libs.bluetape4k_micrometer)
-    implementation(Libs.bluetape4k_spring_core)
-    implementation(Libs.bluetape4k_jackson)
     implementation(Libs.bluetape4k_testcontainers)
     testImplementation(Libs.bluetape4k_junit5)
 
