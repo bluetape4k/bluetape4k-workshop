@@ -41,7 +41,6 @@ dependencies {
     implementation(Libs.kotlinx_coroutines_reactor)
     testImplementation(Libs.kotlinx_coroutines_test)
 
-    implementation(Libs.bluetape4k_jackson)
     implementation(Libs.bluetape4k_idgenerators)
     testImplementation(Libs.bluetape4k_junit5)
 

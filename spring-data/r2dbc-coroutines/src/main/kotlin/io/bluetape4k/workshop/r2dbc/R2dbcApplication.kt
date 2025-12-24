@@ -1,8 +1,6 @@
 package io.bluetape4k.workshop.r2dbc
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.r2dbc.connection.init.connectionFactoryInitializer
-import io.bluetape4k.r2dbc.connection.init.resourceDatabasePopulatorOf
 import io.r2dbc.spi.ConnectionFactories
 import io.r2dbc.spi.ConnectionFactory
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -12,6 +10,7 @@ import org.springframework.core.io.ClassPathResource
 import org.springframework.data.r2dbc.config.AbstractR2dbcConfiguration
 import org.springframework.r2dbc.connection.init.CompositeDatabasePopulator
 import org.springframework.r2dbc.connection.init.ConnectionFactoryInitializer
+import org.springframework.r2dbc.connection.init.ResourceDatabasePopulator
 
 @SpringBootApplication
 class R2dbcApplication: AbstractR2dbcConfiguration() {
@@ -27,9 +26,10 @@ class R2dbcApplication: AbstractR2dbcConfiguration() {
 
     @Bean
     fun initializer(connectionFactory: ConnectionFactory): ConnectionFactoryInitializer {
-        return connectionFactoryInitializer(connectionFactory) {
+        return ConnectionFactoryInitializer().apply {
+            setConnectionFactory(connectionFactory)
             val populator = CompositeDatabasePopulator().apply {
-                addPopulators(resourceDatabasePopulatorOf(ClassPathResource("data/schema.sql")))
+                addPopulators(ResourceDatabasePopulator(ClassPathResource("data/schema.sql")))
             }
             setDatabasePopulator(populator)
         }
@@ -37,5 +37,5 @@ class R2dbcApplication: AbstractR2dbcConfiguration() {
 }
 
 fun main(vararg args: String) {
-    runApplication<R2dbcApplication>(*args) 
+    runApplication<R2dbcApplication>(*args)
 }

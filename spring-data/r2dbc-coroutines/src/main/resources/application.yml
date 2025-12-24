@@ -8,3 +8,7 @@ spring:
 #        url: r2dbc:postgresql://localhost:5432/test?loggerLevel=OFF
 #        username: ${testcontainers.postgresql.username}
 #        password: ${testcontainers.postgresql.password}
+    sql:
+        init:
+            schema-locations: classpath:data/schema.sql
+            mode: always
