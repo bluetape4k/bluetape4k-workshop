@@ -3,10 +3,6 @@ package io.bluetape4k.workshop.exposed.controller
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.spring.tests.httpDelete
-import io.bluetape4k.spring.tests.httpGet
-import io.bluetape4k.spring.tests.httpPost
-import io.bluetape4k.spring.tests.httpPut
 import io.bluetape4k.workshop.exposed.AbstractExposedApplicationTest
 import io.bluetape4k.workshop.exposed.dto.UserCreateResponse
 import io.bluetape4k.workshop.exposed.dto.UserDTO
@@ -23,16 +19,12 @@ import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 import org.springframework.transaction.annotation.Transactional
 
 @Transactional
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
-class UserControllerTest(
-    @param:Autowired private val client: WebTestClient,
-): AbstractExposedApplicationTest() {
+class UserControllerTest: AbstractExposedApplicationTest() {
 
     companion object: KLogging() {
         private const val newUserSize = 100
@@ -44,8 +36,12 @@ class UserControllerTest(
         val createRequest = newUserCreateRequest()
         log.debug { "Create user. request=$createRequest" }
 
-        val response = client
-            .httpPost("/api/v1/users", createRequest)
+        val response = webTestClient
+            .post()
+            .uri("/api/v1/users")
+            .bodyValue(createRequest)
+            .exchange()
+            .expectStatus().is2xxSuccessful
             .returnResult<UserCreateResponse>()
             .responseBody
             .awaitSingle()
@@ -62,8 +58,12 @@ class UserControllerTest(
                 val createRequest = newUserCreateRequest()
                 log.debug { "Create user. request=$createRequest" }
 
-                val response = client
-                    .httpPost("/api/v1/users", createRequest)
+                val response = webTestClient
+                    .post()
+                    .uri("/api/v1/users")
+                    .bodyValue(createRequest)
+                    .exchange()
+                    .expectStatus().is2xxSuccessful
                     .returnResult<UserCreateResponse>()
                     .responseBody
                     .awaitSingle()
@@ -79,8 +79,12 @@ class UserControllerTest(
     @Order(2)
     fun `update user`() = runSuspendIO {
         val createRequest = newUserCreateRequest()
-        val userId = client
-            .httpPost("/api/v1/users", createRequest)
+        val userId = webTestClient
+            .post()
+            .uri("/api/v1/users")
+            .bodyValue(createRequest)
+            .exchange()
+            .expectStatus().is2xxSuccessful
             .returnResult<UserCreateResponse>()
             .responseBody
             .awaitSingle()
@@ -91,8 +95,12 @@ class UserControllerTest(
         val updateRequest = newUserUpdateRequest()
         log.debug { "Update user. userId=$userId, request=$updateRequest" }
 
-        val response = client
-            .httpPut("/api/v1/users/${userId.value}", updateRequest)
+        val response = webTestClient
+            .put()
+            .uri("/api/v1/users/${userId.value}")
+            .bodyValue(updateRequest)
+            .exchange()
+            .expectStatus().is2xxSuccessful
             .returnResult<Int>()
             .responseBody
             .awaitSingle()
@@ -104,8 +112,12 @@ class UserControllerTest(
     @Order(3)
     fun `delete user`() = runSuspendIO {
         val createRequest = newUserCreateRequest()
-        val userId = client
-            .httpPost("/api/v1/users", createRequest)
+        val userId = webTestClient
+            .post()
+            .uri("/api/v1/users")
+            .bodyValue(createRequest)
+            .exchange()
+            .expectStatus().is2xxSuccessful
             .returnResult<UserCreateResponse>()
             .responseBody
             .awaitSingle()
@@ -115,8 +127,11 @@ class UserControllerTest(
 
         log.debug { "Delete user. userId=$userId" }
 
-        val response = client
-            .httpDelete("/api/v1/users/${userId.value}")
+        val response = this@UserControllerTest.webTestClient
+            .delete()
+            .uri("/api/v1/users/${userId.value}")
+            .exchange()
+            .expectStatus().is2xxSuccessful
             .returnResult<Int>()
             .responseBody
             .awaitSingle()
@@ -128,8 +143,12 @@ class UserControllerTest(
     @Order(4)
     fun `find user by id`() = runSuspendIO {
         val createRequest = newUserCreateRequest()
-        val userId = client
-            .httpPost("/api/v1/users", createRequest)
+        val userId = webTestClient
+            .post()
+            .uri("/api/v1/users")
+            .bodyValue(createRequest)
+            .exchange()
+            .expectStatus().is2xxSuccessful
             .returnResult<UserCreateResponse>()
             .responseBody
             .awaitSingle()
@@ -139,7 +158,11 @@ class UserControllerTest(
 
         log.debug { "Find user by id. userId=$userId" }
 
-        val response = client.httpGet("/api/v1/users/${userId.value}")
+        val response = webTestClient
+            .get()
+            .uri("/api/v1/users/${userId.value}")
+            .exchange()
+            .expectStatus().is2xxSuccessful
             .returnResult<UserDTO>()
             .responseBody
             .awaitSingle()
@@ -154,15 +177,22 @@ class UserControllerTest(
     fun `find all users`() = runSuspendIO {
         repeat(10) {
             val createRequest = newUserCreateRequest()
-            client
-                .httpPost("/api/v1/users", createRequest)
+            webTestClient
+                .post()
+                .uri("/api/v1/users")
+                .bodyValue(createRequest)
+                .exchange()
+                .expectStatus().is2xxSuccessful
                 .returnResult<UserCreateResponse>()
                 .responseBody
                 .awaitSingle()
         }
 
-        val response = client
-            .httpGet("/api/v1/users")
+        val response = webTestClient
+            .get()
+            .uri("/api/v1/users")
+            .exchange()
+            .expectStatus().is2xxSuccessful
             .returnResult<UserDTO>()
             .responseBody
             .asFlow()

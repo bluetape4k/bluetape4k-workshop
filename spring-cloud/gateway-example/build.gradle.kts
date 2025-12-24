@@ -23,14 +23,11 @@ configurations {
 }
 
 dependencies {
+    implementation(platform(Libs.spring_boot_dependencies))
     implementation(platform(Libs.spring_cloud_dependencies))
     implementation(platform(Libs.micrometer_bom))
 
-    implementation(Libs.bluetape4k_spring_webflux)
-    testImplementation(Libs.bluetape4k_spring_tests)
-
-    implementation(Libs.bluetape4k_jackson)
-    implementation(Libs.bluetape4k_netty)
+    implementation(Libs.bluetape4k_core)
     testImplementation(Libs.bluetape4k_junit5)
     implementation(Libs.bluetape4k_testcontainers)
 

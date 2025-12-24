@@ -25,13 +25,13 @@ configurations {
 
 dependencies {
 
+    implementation(platform(Libs.spring_boot_dependencies))
+
     implementation(project(":shared"))
 
     // bluetape4k
     implementation(Libs.bluetape4k_io)
     implementation(Libs.bluetape4k_jdbc)
-    implementation(Libs.bluetape4k_spring_core)
-    testImplementation(Libs.bluetape4k_spring_tests)
 
     // Exposed
     implementation(Libs.bluetape4k_exposed)
@@ -48,11 +48,12 @@ dependencies {
     implementation(Libs.h2_v2)
 
     // Spring Boot
-    implementation(Libs.springBoot("autoconfigure"))
+    // implementation(Libs.springBoot("autoconfigure"))
     annotationProcessor(Libs.springBoot("autoconfigure-processor"))
     annotationProcessor(Libs.springBoot("configuration-processor"))
     runtimeOnly(Libs.springBoot("devtools"))
 
+    implementation(Libs.springBootStarter("jdbc"))
     implementation(Libs.springBootStarter("web"))
     implementation(Libs.springBootStarter("aspectj"))
     implementation(Libs.springBootStarter("actuator"))

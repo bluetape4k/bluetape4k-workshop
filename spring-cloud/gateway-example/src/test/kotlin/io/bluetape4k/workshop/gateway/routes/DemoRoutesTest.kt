@@ -2,21 +2,16 @@ package io.bluetape4k.workshop.gateway.routes
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.gateway.GatewayApplicationTest
 import io.bluetape4k.workshop.gateway.RateLimitHeaders
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
-import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 
 
-class DemoRoutesTest(
-    @param:Autowired private val client: WebTestClient,
-): GatewayApplicationTest() {
+class DemoRoutesTest: GatewayApplicationTest() {
 
     companion object: KLoggingChannel()
 
@@ -27,14 +22,21 @@ class DemoRoutesTest(
 
     @Test
     fun `call root path`() {
-        client.httpGet("/")
+        client
+            .get()
+            .uri("/")
+            .exchange()
+            .expectStatus().is2xxSuccessful
             .expectBody()
             .jsonPath("$.name").isEqualTo("Gateway Application")
     }
 
     @Test
     fun `단순 Path Route 기능 - nghttp2를 사용`() {
-        client.httpGet("/get")
+        client.get()
+            .uri("/get")
+            .exchange()
+            .expectStatus().is2xxSuccessful
             .expectBody<Map<*, *>>()
             .consumeWith {
                 it.responseBody!!["url"].toString() shouldBeEqualTo "https://nghttp2.org/httpbin/get"
