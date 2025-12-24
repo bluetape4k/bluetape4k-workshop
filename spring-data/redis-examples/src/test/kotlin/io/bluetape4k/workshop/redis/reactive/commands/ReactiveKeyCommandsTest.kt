@@ -101,7 +101,7 @@ class ReactiveKeyCommandsTest(
         val popAndLength = connection.listCommands().rPush(key, value)
             .flatMap { popResult }
             .doOnNext {
-                log.debug { "pop value: ${it.value.toUtf8String()}" }
+                log.debug { "pop value: ${it.value?.toUtf8String()}" }
             }
             .flatMap { llen }
             .doOnNext {
@@ -121,7 +121,7 @@ class ReactiveKeyCommandsTest(
             rPush(key, value).awaitSingle()
 
             val popResult = brPop(listOf(key), Duration.ofSeconds(1)).awaitSingle()
-            log.debug { "pop value: ${popResult.value.toUtf8String()}" }
+            log.debug { "pop value: ${popResult.value?.toUtf8String()}" }
 
             val length = lLen(key).awaitSingle()
             log.debug { "Total items in list left: $length" }

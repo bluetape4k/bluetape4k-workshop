@@ -15,8 +15,6 @@ configurations {
 
 dependencies {
     implementation(Libs.bluetape4k_redis)
-    implementation(Libs.bluetape4k_spring_core)
-    implementation(Libs.bluetape4k_jackson)
     implementation(Libs.bluetape4k_idgenerators)
     testImplementation(Libs.bluetape4k_junit5)
     implementation(Libs.bluetape4k_testcontainers)
@@ -51,6 +49,10 @@ dependencies {
     implementation(Libs.lettuce_core)
     implementation(Libs.commons_pool2)
     implementation(Libs.springBootStarter("data-redis"))
+
+    implementation(Libs.jackson3_core)
+    implementation(Libs.jackson3_databind)
+    implementation(Libs.jackson3_module_kotlin)
 
     // Netty
     implementation(platform(Libs.netty_bom))
