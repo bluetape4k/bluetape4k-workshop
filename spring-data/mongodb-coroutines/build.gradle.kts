@@ -8,7 +8,6 @@ springBoot {
     mainClass.set("io.bluetape4k.workshop.mongodb.MongodbApplicationKt")
 }
 
-
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
@@ -52,7 +51,8 @@ dependencies {
     testImplementation(Libs.reactor_test)
     testImplementation(Libs.turbine)
 
-    implementation(Libs.bluetape4k_jackson)
     implementation(Libs.bluetape4k_idgenerators)
     implementation(Libs.bluetape4k_netty)
+
+    implementation(Libs.jackson3_module_kotlin)
 }

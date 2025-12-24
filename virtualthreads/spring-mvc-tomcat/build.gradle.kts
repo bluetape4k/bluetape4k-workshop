@@ -43,11 +43,11 @@ configurations {
 
 dependencies {
     // Kapt 사용 시 필수적으로 추가해야 함
-    api(Libs.jakarta_annotation_api)
+    // api(Libs.jakarta_annotation_api)
 
     // JPA/Hibernate
     implementation(Libs.bluetape4k_hibernate)
-    implementation(Libs.bluetape4k_spring_jpa)
+//    implementation(Libs.bluetape4k_spring_jpa)
     implementation(Libs.hibernate_core)
     implementation(Libs.hibernate_jcache)
     implementation(Libs.hibernate_validator)

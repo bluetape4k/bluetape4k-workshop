@@ -2,8 +2,6 @@ package io.bluetape4k.workshop.virtualthread.tomcat.controller
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.spring.tests.httpGet
-import io.bluetape4k.spring.tests.httpPost
 import io.bluetape4k.workshop.virtualthread.tomcat.AbstractVirtualThreadMvcTest
 import io.bluetape4k.workshop.virtualthread.tomcat.domain.dto.MemberDTO
 import io.bluetape4k.workshop.virtualthread.tomcat.domain.dto.MemberSearchCondition
@@ -16,19 +14,19 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeEmpty
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 
-class MemberRepositoryTest(
-    @param:Autowired private val client: WebTestClient,
-): AbstractVirtualThreadMvcTest() {
+class MemberControllerTest: AbstractVirtualThreadMvcTest() {
 
     companion object: KLoggingChannel()
 
     @Test
     fun `get all members`() = runTest {
-        val members = client.httpGet("/member")
+        val members = webTestClient
+            .get()
+            .uri("/member")
+            .exchange()
+            .expectStatus().is2xxSuccessful
             .returnResult<MemberDTO>().responseBody
             .asFlow()
             .toList()
@@ -41,7 +39,11 @@ class MemberRepositoryTest(
 
     @Test
     fun `get member by id`() = runTest {
-        val member = client.httpGet("/member/1")
+        val member = webTestClient
+            .get()
+            .uri("/member/1")
+            .exchange()
+            .expectStatus().is2xxSuccessful
             .returnResult<MemberDTO>().responseBody
             .awaitSingle()
 
@@ -52,7 +54,12 @@ class MemberRepositoryTest(
     fun `search member`() = runTest {
         val condition = MemberSearchCondition(teamName = "teamA", ageGoe = 60)
 
-        val members = client.httpPost("/member/search", condition)
+        val members = webTestClient
+            .post()
+            .uri("/member/search")
+            .bodyValue(condition)
+            .exchange()
+            .expectStatus().is2xxSuccessful
             .returnResult<MemberWithTeamDTO>().responseBody
             .asFlow()
             .toList()

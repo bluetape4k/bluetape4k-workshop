@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.virtualthread.tomcat.controller
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.virtualthread.tomcat.AbstractVirtualThreadMvcTest
 import io.bluetape4k.workshop.virtualthread.tomcat.domain.dto.TeamDTO
 import kotlinx.coroutines.flow.toList
@@ -12,19 +11,19 @@ import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeEmpty
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 
-class TeamRepositoryTest(
-    @param:Autowired private val client: WebTestClient,
-): AbstractVirtualThreadMvcTest() {
+class TeamControllerTest: AbstractVirtualThreadMvcTest() {
 
     companion object: KLoggingChannel()
 
     @Test
     fun `get all teams`() = runTest {
-        val teams = client.httpGet("/team")
+        val teams = webTestClient
+            .get()
+            .uri("/team")
+            .exchange()
+            .expectStatus().is2xxSuccessful
             .returnResult<TeamDTO>()
             .responseBody.asFlow().toList()
 
@@ -36,7 +35,11 @@ class TeamRepositoryTest(
 
     @Test
     fun `get team by id`() = runTest {
-        val team = client.httpGet("/team/1")
+        val team = webTestClient
+            .get()
+            .uri("/team/1")
+            .exchange()
+            .expectStatus().is2xxSuccessful
             .returnResult<TeamDTO>().responseBody
             .awaitSingle()
 
@@ -45,10 +48,14 @@ class TeamRepositoryTest(
 
     @Test
     fun `get team by name`() = runTest {
-        val team = client.httpGet("/team/name/teamA")
+        val team = webTestClient
+            .get()
+            .uri("/team/name/teamA")
+            .exchange()
+            .expectStatus().is2xxSuccessful
             .returnResult<TeamDTO>().responseBody
             .awaitSingle()
-        
+
         team.name shouldBeEqualTo "teamA"
     }
 }

@@ -12,10 +12,10 @@ import reactor.core.scheduler.Schedulers
 
 @RestController
 @RequestMapping("/httpbin")
-class HttpbinController(
-    clientBuilder: WebClient.Builder,
-) {
+class HttpbinController {
     companion object: KLoggingChannel()
+
+    private val clientBuilder = WebClient.builder()
 
     private val client = clientBuilder
         .baseUrl("https://nghttp2.org/httpbin")
