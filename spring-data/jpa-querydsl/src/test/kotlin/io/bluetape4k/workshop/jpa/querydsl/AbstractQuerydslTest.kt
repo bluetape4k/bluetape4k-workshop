@@ -6,7 +6,6 @@ import jakarta.persistence.EntityManager
 import jakarta.persistence.EntityManagerFactory
 import net.datafaker.Faker
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
 
@@ -70,7 +69,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
         "spring.jpa.properties.hibernate.order_updates=true"
     ],
     showSql = false,
-    excludeAutoConfiguration = [FlywayAutoConfiguration::class]
 )
 abstract class AbstractQuerydslTest {
 
