@@ -3,11 +3,12 @@ package io.bluetape4k.workshop.coroutines.controller
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
-import io.bluetape4k.spring.webflux.controller.AbstractCoroutineDefaultController
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.coroutines.model.Banner
 import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -28,9 +29,8 @@ import tools.jackson.databind.JsonNode
 
 @RestController
 @RequestMapping("/controller/default")
-class DefaultCoroutineController(
-    private val builder: WebClient.Builder,
-): AbstractCoroutineDefaultController() {
+class DefaultCoroutineController(private val builder: WebClient.Builder):
+    CoroutineScope by CoroutineScope(Dispatchers.Default + CoroutineName("default")) {
 
     companion object: KLoggingChannel() {
         private const val DEFAULT_DELAY = 500L

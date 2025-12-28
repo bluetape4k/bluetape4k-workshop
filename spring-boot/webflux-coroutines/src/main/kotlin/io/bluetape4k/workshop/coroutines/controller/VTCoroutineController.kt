@@ -1,13 +1,15 @@
 package io.bluetape4k.workshop.coroutines.controller
 
+import io.bluetape4k.concurrent.virtualthread.VT
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
-import io.bluetape4k.spring.webflux.controller.AbstractCoroutineVTController
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.coroutines.model.Banner
 import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -30,7 +32,7 @@ import tools.jackson.databind.JsonNode
 @RequestMapping("/controller/vt")
 class VTCoroutineController(
     private val builder: WebClient.Builder,
-): AbstractCoroutineVTController() {
+): CoroutineScope by CoroutineScope(Dispatchers.VT + CoroutineName("vt")) {
 
     companion object: KLoggingChannel() {
         private const val DEFAULT_DELAY = 500L

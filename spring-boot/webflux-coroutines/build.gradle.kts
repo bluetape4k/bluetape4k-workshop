@@ -27,7 +27,8 @@ dependencies {
     implementation(Libs.springBootStarter("actuator"))
     implementation(Libs.springBootStarter("validation"))
     implementation(Libs.springBootStarter("webflux"))
-    implementation(Libs.bluetape4k_spring_webflux)
+    testImplementation(Libs.springBootStarter("webflux-test"))
+
 
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")

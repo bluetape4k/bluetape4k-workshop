@@ -19,7 +19,9 @@ dependencies {
     implementation(Libs.springBootStarter("validation"))
 
     implementation(Libs.springBootStarter("data-mongodb"))
+    testImplementation(Libs.springBootStarter("data-mongodb-test"))
     implementation(Libs.springBootStarter("data-mongodb-reactive"))
+    testImplementation(Libs.springBootStarter("data-mongodb-reactive-test"))
 
     runtimeOnly(Libs.springBoot("devtools"))
     annotationProcessor(Libs.springBoot("configuration-processor"))
