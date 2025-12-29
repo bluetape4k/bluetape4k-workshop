@@ -16,6 +16,7 @@ dependencies {
     implementation(Libs.bluetape4k_core)
     testImplementation(Libs.bluetape4k_junit5)
 
+    // FIXME: chaos monkey 3.2.2 는 아직 Spring Boot 4 를 지원하지 않습니다.
     // Chaos Monkey (https://github.com/codecentric/chaos-monkey-spring-boot)
     implementation(Libs.chaos_monkey_spring_boot)
 

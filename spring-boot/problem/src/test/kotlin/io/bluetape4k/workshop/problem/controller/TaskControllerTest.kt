@@ -3,9 +3,6 @@ package io.bluetape4k.workshop.problem.controller
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.spring.tests.httpDelete
-import io.bluetape4k.spring.tests.httpGet
-import io.bluetape4k.spring.tests.httpPut
 import io.bluetape4k.support.toUtf8String
 import io.bluetape4k.workshop.problem.AbstractProblemTest
 import io.bluetape4k.workshop.problem.controller.TaskController.Task
@@ -16,14 +13,10 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeEmpty
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
-import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 
-class TaskControllerTest(
-    @param:Autowired private val client: WebTestClient,
-): AbstractProblemTest() {
+class TaskControllerTest: AbstractProblemTest() {
 
     companion object: KLogging()
 
@@ -35,7 +28,10 @@ class TaskControllerTest(
     @Test
     fun `get all tasks`() = runSuspendIO {
         val tasks = client
-            .httpGet("/tasks")
+            .get()
+            .uri("/tasks")
+            .exchange()
+            .expectStatus().is2xxSuccessful
             .returnResult<Task>().responseBody
             .asFlow()
             .toList()
@@ -49,7 +45,10 @@ class TaskControllerTest(
     @Test
     fun `get task by valid id`() = runSuspendIO {
         val task = client
-            .httpGet("/tasks/1")
+            .get()
+            .uri("/tasks/1")
+            .exchange()
+            .expectStatus().is2xxSuccessful
             .returnResult<Task>().responseBody
             .awaitSingle()
 
@@ -80,7 +79,11 @@ class TaskControllerTest(
      */
     @Test
     fun `get task with invalid format id`() = runSuspendIO {
-        client.httpGet("/tasks/abc", HttpStatus.BAD_REQUEST)
+        client
+            .get()
+            .uri("/tasks/abc")
+            .exchange()
+            .expectStatus().isBadRequest
             .expectBody()
             .jsonPath("$.title").isEqualTo("Bad Request")
             .consumeWith { result ->
@@ -103,7 +106,11 @@ class TaskControllerTest(
      */
     @Test
     fun `get task non-existing id`() = runSuspendIO {
-        client.httpGet("/tasks/9999", HttpStatus.NOT_FOUND)
+        client
+            .get()
+            .uri("/tasks/9999")
+            .exchange()
+            .expectStatus().isNotFound
             .expectBody()
             .jsonPath("$.title").isEqualTo("찾는 Task 없음")
             .consumeWith { result ->
@@ -130,7 +137,11 @@ class TaskControllerTest(
      */
     @Test
     fun `when call api which throw UnsupportedOperationException`() = runSuspendIO {
-        client.httpPut("/tasks/1", httpStatus = HttpStatus.NOT_IMPLEMENTED)
+        client
+            .put()
+            .uri("/tasks/1")
+            .exchange()
+            .expectStatus().isEqualTo(HttpStatus.NOT_IMPLEMENTED)
             .expectBody()
             .jsonPath("$.detail").isEqualTo("구현 중")
             .consumeWith { result ->
@@ -152,14 +163,11 @@ class TaskControllerTest(
      */
     @Test
     fun `when call api which throw AccessDeniedException`() = runSuspendIO {
-        client.httpDelete("/tasks/1", HttpStatus.INTERNAL_SERVER_ERROR)
-            .expectBody()
-            .jsonPath("$.detail").isEqualTo("You can't delete this task [1]")
-            .consumeWith { result ->
-                val body = result.responseBody!!
-                log.debug { body.toUtf8String() }
-            }
-        client.httpDelete("/tasks/1", HttpStatus.INTERNAL_SERVER_ERROR)
+        client
+            .delete()
+            .uri("/tasks/1")
+            .exchange()
+            .expectStatus().isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
             .expectBody()
             .jsonPath("$.detail").isEqualTo("You can't delete this task [1]")
             .consumeWith { result ->

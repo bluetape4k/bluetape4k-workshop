@@ -54,6 +54,7 @@ dependencies {
 
 
     implementation(Libs.springBootStarter("data-jpa"))
+    testImplementation(Libs.springBootStarter("data-jpa-test"))
     implementation(Libs.springBootStarter("validation"))
     testImplementation(Libs.springBoot("autoconfigure"))
     testImplementation(Libs.springBootStarter("test")) {
