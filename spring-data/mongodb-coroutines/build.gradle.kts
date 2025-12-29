@@ -20,11 +20,11 @@ dependencies {
 
     implementation(Libs.springBootStarter("data-mongodb"))
     implementation(Libs.springBootStarter("data-mongodb-reactive"))
+    testImplementation(Libs.springBootStarter("data-mongodb-test"))
 
     runtimeOnly(Libs.springBoot("devtools"))
     annotationProcessor(Libs.springBoot("configuration-processor"))
 
-    testImplementation(Libs.bluetape4k_spring_tests)
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
@@ -32,8 +32,9 @@ dependencies {
     }
 
     // Mongo Driver
-    implementation(Libs.mongodb_driver_sync)
-    implementation(Libs.mongodb_driver_reactivestreams)
+    implementation(Libs.mongodb_driver_kotlin_sync)
+    implementation(Libs.mongodb_driver_kotlin_coroutine)
+    implementation(Libs.mongodb_driver_kotlin_extensions)
 
     // MongoDB Testcontainers
     implementation(Libs.bluetape4k_testcontainers)

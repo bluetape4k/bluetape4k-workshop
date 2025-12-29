@@ -142,7 +142,7 @@ object Versions {
     const val reflectasm = "1.11.9"     // https://mvnrepository.com/artifact/com.esotericsoftware/reflectasm
 
     const val mongo_driver = "5.5.2"   // https://mvnrepository.com/artifact/org.mongodb/mongodb-driver-sync
-    const val lettuce = "6.8.1.RELEASE" // https://mvnrepository.com/artifact/io.lettuce/lettuce-core
+    const val lettuce = "6.8.2.RELEASE" // https://mvnrepository.com/artifact/io.lettuce/lettuce-core
     const val redisson = "3.52.0"       // https://mvnrepository.com/artifact/org.redisson/redisson
 
     // NOTE: Hibernate 는 jakarta 버전인 경우 orm, validator 등이 group 에 포함됩니다.
@@ -1225,13 +1225,18 @@ object Libs {
 
     const val reflectasm = "com.esotericsoftware:reflectasm:${Versions.reflectasm}"
 
-    // mongodb 4.x
+    // mongodb 5.x
     fun mongo(module: String, version: String = Versions.mongo_driver) = "org.mongodb:$module:$version"
     val mongo_bson = mongo("bson")
+    val mongo_bson_kotlin = mongo("bson-kotlin")
+    val mongo_bson_kotlinx = mongo("bson-kotlinx")
     val mongodb_driver_core = mongo("mongodb-driver-core")
     val mongodb_driver_sync = mongo("mongodb-driver-sync")
     val mongodb_driver_reactivestreams = mongo("mongodb-driver-reactivestreams")
     val mongodb_driver_legacy = mongo("mongodb-driver-legacy")
+    val mongodb_driver_kotlin_coroutine = mongo("mongodb-driver-kotlin-coroutine")
+    val mongodb_driver_kotlin_extensions = mongo("mongodb-driver-kotlin-extensions")
+    val mongodb_driver_kotlin_sync = mongo("mongodb-driver-kotlin-sync")
 
     // Redis
     const val lettuce_core = "io.lettuce:lettuce-core:${Versions.lettuce}"
@@ -1249,6 +1254,10 @@ object Libs {
     val redisson_spring_data_30 = redisson("redisson-spring-data-30")
     val redisson_spring_data_31 = redisson("redisson-spring-data-31")
     val redisson_spring_data_32 = redisson("redisson-spring-data-32")
+    val redisson_spring_data_33 = redisson("redisson-spring-data-33")
+    val redisson_spring_data_34 = redisson("redisson-spring-data-34")
+    val redisson_spring_data_35 = redisson("redisson-spring-data-35")
+    val redisson_spring_data_40 = redisson("redisson-spring-data-40")
 
     // Cassandra
     fun cassandra(module: String, version: String = Versions.cassandra): String =
