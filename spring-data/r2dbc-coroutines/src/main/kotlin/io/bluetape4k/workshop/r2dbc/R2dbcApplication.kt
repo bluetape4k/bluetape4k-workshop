@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.r2dbc
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.info
 import io.r2dbc.spi.ConnectionFactories
 import io.r2dbc.spi.ConnectionFactory
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -26,12 +27,14 @@ class R2dbcApplication: AbstractR2dbcConfiguration() {
 
     @Bean
     fun initializer(connectionFactory: ConnectionFactory): ConnectionFactoryInitializer {
+        log.info { "Initialize Database ..." }
         return ConnectionFactoryInitializer().apply {
             setConnectionFactory(connectionFactory)
             val populator = CompositeDatabasePopulator().apply {
                 addPopulators(ResourceDatabasePopulator(ClassPathResource("data/schema.sql")))
             }
             setDatabasePopulator(populator)
+            afterPropertiesSet()
         }
     }
 }
