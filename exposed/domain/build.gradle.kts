@@ -12,7 +12,7 @@ dependencies {
     implementation(project(":shared"))
 
     implementation(Libs.bluetape4k_exposed)
-    implementation(Libs.bluetape4k_exposed_jackson)
+    implementation(Libs.bluetape4k_exposed_jackson3)
     implementation(Libs.bluetape4k_exposed_jasypt)
     testImplementation(Libs.bluetape4k_exposed_tests)
 
