@@ -14,15 +14,16 @@ configurations {
 }
 
 dependencies {
-    api(Libs.bluetape4k_spring_core)
     testImplementation(Libs.bluetape4k_spring_tests)
-    testImplementation(Libs.bluetape4k_jackson)
+    testImplementation(Libs.bluetape4k_jackson3)
     testImplementation(Libs.bluetape4k_junit5)
 
     // Spring Security
     implementation(Libs.springBootStarter("security"))
     implementation(Libs.springBootStarter("thymeleaf"))
+
     implementation(Libs.springBootStarter("webflux"))
+    testImplementation(Libs.springBootStarter("webflux-test"))
 
     // https://mvnrepository.com/artifact/org.thymeleaf.extras/thymeleaf-extras-springsecurity6
     implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")

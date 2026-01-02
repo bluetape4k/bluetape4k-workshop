@@ -20,8 +20,10 @@ dependencies {
 
     // Spring Security
     implementation(Libs.springBootStarter("security"))
-    implementation(Libs.springBootStarter("web"))
     implementation(Libs.springBootStarter("thymeleaf"))
+
+    implementation(Libs.springBootStarter("web"))
+    testImplementation(Libs.springBootStarter("webmvc-test"))
 
     // https://mvnrepository.com/artifact/org.thymeleaf.extras/thymeleaf-extras-springsecurity6
     implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6:3.1.2.RELEASE")

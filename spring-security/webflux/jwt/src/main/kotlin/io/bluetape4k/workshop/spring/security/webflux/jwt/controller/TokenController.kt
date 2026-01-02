@@ -21,7 +21,7 @@ class TokenController(@param:Autowired private val encoder: JwtEncoder) {
         val now = Instant.now()
         val expiry = 10 * 60 * 60L  // 10 hours
 
-        val scope = authentication.authorities.joinToString(" ") { it.authority }
+        val scope = authentication.authorities.joinToString(" ") { it.authority ?: "" }
         log.debug { "user=${authentication.name} scope=$scope" }
 
         val claims = JwtClaimsSet.builder()

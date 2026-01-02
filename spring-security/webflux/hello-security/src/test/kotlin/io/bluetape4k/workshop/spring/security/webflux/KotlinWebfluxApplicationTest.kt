@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.spring.security.webflux
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.spring.tests.httpGet
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.test.runTest
@@ -32,7 +31,11 @@ class KotlinWebfluxApplicationTest {
 
     @Test
     fun `index page is not protected`() = runTest {
-        val response = client.httpGet("/")
+        val response = client
+            .get()
+            .uri("/")
+            .exchange()
+            .expectStatus().isOk
             .returnResult<String>()
             .responseBody
             .asFlow()
@@ -55,7 +58,11 @@ class KotlinWebfluxApplicationTest {
     @Test
     @WithMockUser
     fun `protected page can be accessed when authenticated`() = runTest {
-        val response = client.httpGet("/user/index")
+        val response = client
+            .get()
+            .uri("/user/index")
+            .exchange()
+            .expectStatus().isOk
             .returnResult<String>()
             .responseBody
             .asFlow()
@@ -65,5 +72,4 @@ class KotlinWebfluxApplicationTest {
         log.debug { "Response: $response" }
         response shouldContain "This is a secured page"
     }
-
 }

@@ -52,6 +52,7 @@ dependencies {
     implementation(Libs.hibernate_jcache)
     implementation(Libs.hibernate_validator)
     implementation(Libs.springBootStarter("data-jpa"))
+    testImplementation(Libs.springBootStarter("data-jpa-test"))
 
     api(Libs.jakarta_persistence_api)
     api(Libs.hibernate_core)
@@ -87,11 +88,12 @@ dependencies {
     annotationProcessor(Libs.springBoot("configuration-processor"))
     runtimeOnly(Libs.springBoot("devtools"))
 
-    implementation(Libs.springBootStarter("web"))
-    implementation(Libs.springBootStarter("aspectj"))
     implementation(Libs.springBootStarter("actuator"))
+    implementation(Libs.springBootStarter("aspectj"))
     implementation(Libs.springBootStarter("cache"))
     implementation(Libs.springBootStarter("validation"))
+    implementation(Libs.springBootStarter("web"))
+    testImplementation(Libs.springBootStarter("webmvc-test"))
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
@@ -99,6 +101,7 @@ dependencies {
     }
     // WebClient 사용을 위해
     implementation(Libs.springBootStarter("webflux"))
+    testImplementation(Libs.springBootStarter("webflux-test"))
 
     // Coroutines
     implementation(Libs.bluetape4k_coroutines)

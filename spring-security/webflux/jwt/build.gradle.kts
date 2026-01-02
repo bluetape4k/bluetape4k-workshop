@@ -14,9 +14,8 @@ configurations {
 }
 
 dependencies {
-    api(Libs.bluetape4k_spring_core)
-    testImplementation(Libs.bluetape4k_spring_tests)
-    testImplementation(Libs.bluetape4k_jackson)
+    // testImplementation(Libs.bluetape4k_spring_tests)
+    testImplementation(Libs.bluetape4k_jackson3)
     testImplementation(Libs.bluetape4k_junit5)
 
     // Spring Security
@@ -25,6 +24,7 @@ dependencies {
     testImplementation(Libs.springSecurity("test"))
 
     implementation(Libs.springBootStarter("webflux"))
+    testImplementation(Libs.springBootStarter("webflux-test"))
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
