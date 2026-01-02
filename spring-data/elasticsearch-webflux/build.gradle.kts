@@ -40,10 +40,12 @@ dependencies {
 
     implementation(Libs.springBootStarter("actuator"))
     implementation(Libs.springBootStarter("aspectj"))
-    implementation(Libs.springBootStarter("webflux"))
     implementation(Libs.springBootStarter("validation"))
+    implementation(Libs.springBootStarter("webflux"))
+    testImplementation(Libs.springBootStarter("webflux-test"))
 
     implementation(Libs.springBootStarter("data-elasticsearch"))
+    testImplementation(Libs.springBootStarter("data-elasticsearch-test"))
     implementation(Libs.elasticsearch_rest_client)
 
     testImplementation(Libs.bluetape4k_spring_tests)
@@ -59,10 +61,12 @@ dependencies {
 
     // Swagger
     implementation(Libs.springdoc_openapi_starter_webflux_ui)
-    implementation(Libs.jackson_module_kotlin)
-    implementation(Libs.jackson_module_blackbird)
 
-    implementation(Libs.bluetape4k_jackson)
+    // Jackson
+    implementation(Libs.bluetape4k_jackson3)
+    implementation(Libs.jackson3_module_kotlin)
+    implementation(Libs.jackson3_module_blackbird)
+
     testImplementation(Libs.bluetape4k_junit5)
 
     // Coroutines

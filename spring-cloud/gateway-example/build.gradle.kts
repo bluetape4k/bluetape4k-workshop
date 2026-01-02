@@ -27,7 +27,7 @@ dependencies {
     implementation(platform(Libs.spring_cloud_dependencies))
     implementation(platform(Libs.micrometer_bom))
 
-    implementation(Libs.bluetape4k_core)
+    implementation(Libs.bluetape4k_jackson3)
     testImplementation(Libs.bluetape4k_junit5)
     implementation(Libs.bluetape4k_testcontainers)
 
@@ -37,7 +37,7 @@ dependencies {
     api(Libs.jakarta_servlet_api)
 
     implementation(Libs.bluetape4k_resilience4j)
-    implementation(Libs.resilience4j_spring_boot3)
+    implementation(Libs.resilience4j_spring_boot3) // TODO: resilience4j-spring-boot4 가 개발 중입니다.
 
     // Spring Cloud
     implementation(Libs.springCloudStarter("gateway-server-webflux"))
@@ -46,6 +46,7 @@ dependencies {
     // Spring Data Redis
     implementation(Libs.bluetape4k_redis)
     implementation(Libs.springBootStarter("data-redis"))
+    testImplementation(Libs.springBootStarter("data-redis-test"))
     implementation(Libs.lettuce_core)
     implementation(Libs.commons_pool2)
 
@@ -59,11 +60,13 @@ dependencies {
     runtimeOnly(Libs.springBoot("devtools"))
 
 
-    implementation(Libs.springBootStarter("webflux"))
     implementation(Libs.springBootStarter("aspectj"))
+    implementation(Libs.springBootStarter("actuator"))
     implementation(Libs.springBootStarter("cache"))
     implementation(Libs.springBootStarter("validation"))
-    implementation(Libs.springBootStarter("actuator"))
+    implementation(Libs.springBootStarter("webflux"))
+    testImplementation(Libs.springBootStarter("cache-test"))
+    testImplementation(Libs.springBootStarter("webflux-test"))
 
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
