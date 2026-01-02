@@ -29,6 +29,7 @@ dependencies {
     runtimeOnly(Libs.springBoot("devtools"))
 
     implementation(Libs.springBootStarter("websocket"))
+    testImplementation(Libs.springBootStarter("websocket-test"))
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

@@ -50,7 +50,9 @@ dependencies {
     implementation(Libs.netty_transport_native_kqueue)
 
     implementation(Libs.springBootStarter("cache"))
+    testImplementation(Libs.springBootStarter("cache-test"))
     implementation(Libs.springBootStarter("data-redis"))
+    testImplementation(Libs.springBootStarter("data-redis-test"))
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

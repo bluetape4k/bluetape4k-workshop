@@ -49,6 +49,7 @@ dependencies {
     implementation(Libs.protobuf_kotlin)
 
     implementation(Libs.springBootStarter("web"))
+    testImplementation(Libs.springBootStarter("webmvc-test"))
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

@@ -12,10 +12,12 @@ springBoot {
 dependencies {
 
     // Jackson CBOR
+    implementation(Libs.bluetape4k_jackson3_binary)
     implementation(Libs.jackson3_dataformat_cbor)    // smile 도 가능
 
-    implementation(Libs.springBootStarter("web"))
     implementation(Libs.springBootStarter("actuator"))
+    implementation(Libs.springBootStarter("web"))
+    testImplementation(Libs.springBootStarter("webmvc-test"))
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

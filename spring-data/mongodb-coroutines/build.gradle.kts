@@ -15,8 +15,9 @@ configurations {
 dependencies {
     implementation(Libs.springBootStarter("actuator"))
     implementation(Libs.springBootStarter("aspectj"))
-    implementation(Libs.springBootStarter("webflux"))
     implementation(Libs.springBootStarter("validation"))
+    implementation(Libs.springBootStarter("webflux"))
+    testImplementation(Libs.springBootStarter("webflux-test"))
 
     implementation(Libs.springBootStarter("data-mongodb"))
     implementation(Libs.springBootStarter("data-mongodb-reactive"))

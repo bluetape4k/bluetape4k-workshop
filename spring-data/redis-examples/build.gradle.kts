@@ -49,7 +49,9 @@ dependencies {
     implementation(Libs.lettuce_core)
     implementation(Libs.commons_pool2)
     implementation(Libs.springBootStarter("data-redis"))
+    testImplementation(Libs.springBootStarter("data-redis-test"))
 
+    implementation(Libs.bluetape4k_jackson3)
     implementation(Libs.jackson3_core)
     implementation(Libs.jackson3_databind)
     implementation(Libs.jackson3_module_kotlin)
