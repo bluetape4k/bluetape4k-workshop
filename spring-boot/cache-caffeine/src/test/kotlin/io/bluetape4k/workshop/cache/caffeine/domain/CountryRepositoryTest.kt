@@ -59,6 +59,7 @@ class CountryRepositoryTest(
         val us = measureTimeMillis {
             countryRepo.findByCode(US)
         }
+        Thread.sleep(10)
         us shouldBeGreaterThan EXPECTED_MILLIS
 
         val usCached = measureTimeMillis {
@@ -67,6 +68,7 @@ class CountryRepositoryTest(
         usCached shouldBeLessThan EXPECTED_MILLIS
 
         countryRepo.evictCache(US)
+        Thread.sleep(10)
 
         val usEvicted = measureTimeMillis {
             countryRepo.findByCode(US)

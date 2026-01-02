@@ -276,6 +276,9 @@ object Libs {
     val bluetape4k_jackson = bluetape4k("jackson")
     val bluetape4k_jackson_binary = bluetape4k("jackson-binary")
     val bluetape4k_jackson_text = bluetape4k("jackson-text")
+    val bluetape4k_jackson3 = bluetape4k("jackson3")
+    val bluetape4k_jackson3_binary = bluetape4k("jackson3-binary")
+    val bluetape4k_jackson3_text = bluetape4k("jackson3-text")
     val bluetape4k_netty = bluetape4k("netty")
     val bluetape4k_retrofit2 = bluetape4k("retrofit2")
 

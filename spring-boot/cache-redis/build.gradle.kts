@@ -14,6 +14,7 @@ configurations {
 
 dependencies {
     implementation(Libs.bluetape4k_redis)
+    implementation(Libs.bluetape4k_jackson3)
     testImplementation(Libs.bluetape4k_junit5)
     implementation(Libs.bluetape4k_testcontainers)
 

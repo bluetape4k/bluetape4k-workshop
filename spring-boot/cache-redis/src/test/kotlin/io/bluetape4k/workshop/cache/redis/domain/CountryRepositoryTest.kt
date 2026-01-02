@@ -69,6 +69,8 @@ class CountryRepositoryTest(
 
         countryRepo.evictCache(US)
 
+        Thread.sleep(10)
+
         val usEvicted = measureTimeMillis {
             countryRepo.findByCode(US)
         }
