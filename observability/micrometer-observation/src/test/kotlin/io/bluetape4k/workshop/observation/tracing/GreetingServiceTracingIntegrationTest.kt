@@ -55,6 +55,7 @@ class GreetingServiceTracingIntegrationTest {
     @Test
     fun `tracing for greeting`() {
         service.sayHello()
+        Thread.sleep(10)
 
         tracer.spans.forEach {
             log.debug { "span: $it" }

@@ -38,17 +38,17 @@ dependencies {
     annotationProcessor(Libs.springBoot("configuration-processor"))
     runtimeOnly(Libs.springBoot("devtools"))
 
-    implementation(Libs.springBootStarter("web"))
-    implementation(Libs.springBootStarter("aspectj"))
     implementation(Libs.springBootStarter("actuator"))
+    implementation(Libs.springBootStarter("aspectj"))
+    implementation(Libs.springBootStarter("web"))
+    // testImplementation(Libs.springBootStarter("webmvc-test"))
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")
     }
 
-    implementation(Libs.bluetape4k_spring_core)
-    implementation(Libs.bluetape4k_jackson)
+    implementation(Libs.bluetape4k_jackson3)
     testImplementation(Libs.bluetape4k_junit5)
 
 }
