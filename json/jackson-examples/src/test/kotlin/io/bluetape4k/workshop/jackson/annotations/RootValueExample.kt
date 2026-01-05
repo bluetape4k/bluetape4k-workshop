@@ -1,16 +1,17 @@
 package io.bluetape4k.workshop.jackson.annotations
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.module.kotlin.readValue
-import io.bluetape4k.jackson.writeAsString
+
+import io.bluetape4k.jackson3.writeAsString
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.jackson.AbstractJacksonTest
 import io.bluetape4k.workshop.jackson.readAs
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.RepeatedTest
+import tools.jackson.databind.DeserializationFeature
+import tools.jackson.databind.SerializationFeature
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.readValue
 
 class RootValueExample: AbstractJacksonTest() {
 
@@ -24,14 +25,19 @@ class RootValueExample: AbstractJacksonTest() {
     /**
      * 클래스 명이 루트로 감싸진 JSON을 생성한다.
      */
-    private val mapper: ObjectMapper get() = defaultMapper.copy()
+    private val mapper: JsonMapper get() = defaultMapper
 
     @RepeatedTest(REPEAT_SIZE)
     fun `Root conversion object to json`() {
         val name = faker.name().fullName()
         val user = User(1, name)
 
-        val json = mapper.enable(SerializationFeature.WRAP_ROOT_VALUE).writeAsString(user)!!
+        val json = mapper.rebuild().apply {
+            enable(SerializationFeature.WRAP_ROOT_VALUE)
+        }
+            .build()
+            .writeAsString(user)!!
+
         log.debug { "Json=$json" }
 
         val doc = json.toDocument()
@@ -43,7 +49,13 @@ class RootValueExample: AbstractJacksonTest() {
         val name = faker.name().fullName()
         val json = """{"User":{"id":1, "name":"$name"}}"""
 
-        val user = mapper.enable(DeserializationFeature.UNWRAP_ROOT_VALUE).readValue<User>(json)
+        val user = mapper.rebuild()
+            .apply {
+                enable(DeserializationFeature.UNWRAP_ROOT_VALUE)
+            }
+            .build()
+            .readValue<User>(json)
+
         log.debug { "User=$user" }
 
         user.id shouldBeEqualTo 1

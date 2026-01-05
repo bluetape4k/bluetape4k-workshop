@@ -1,29 +1,31 @@
 package io.bluetape4k.workshop.jackson.annotations
 
 import com.fasterxml.jackson.annotation.JsonView
-import com.fasterxml.jackson.databind.ObjectWriter
-import com.fasterxml.jackson.databind.SerializationFeature
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.jackson.AbstractJacksonTest
 import org.amshove.kluent.shouldContain
 import org.amshove.kluent.shouldNotContain
 import org.junit.jupiter.api.Test
+import tools.jackson.databind.ObjectWriter
+import tools.jackson.databind.SerializationFeature
 import java.io.Serializable
 
 class JsonViewExample: AbstractJacksonTest() {
 
     companion object: KLogging()
 
-    private val publicViewWriter: ObjectWriter = defaultMapper.copy().let {
-        it.enable(SerializationFeature.INDENT_OUTPUT)
-        it.writerWithView(ViewScope.Public::class.java)
-    }
+    private val publicViewWriter = defaultMapper.rebuild()
+        .apply {
+            configure(SerializationFeature.INDENT_OUTPUT, true)
+        }.build()
+        .writerWithView(ViewScope.Public::class.java)
 
-    private val internalViewWriter: ObjectWriter = defaultMapper.copy().let {
-        it.enable(SerializationFeature.INDENT_OUTPUT)
-        it.writerWithView(ViewScope.Internal::class.java)
+    private val internalViewWriter: ObjectWriter = defaultMapper.rebuild().apply {
+        configure(SerializationFeature.INDENT_OUTPUT, true)
     }
+        .build()
+        .writerWithView(ViewScope.Internal::class.java)
 
     private val user = User(1, "John Doe", "john.doe@example.com")
 

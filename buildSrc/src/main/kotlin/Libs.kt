@@ -1056,8 +1056,8 @@ object Libs {
     val fastjson2_extension_spring6 = fastjson2("fastjson2-extension-spring6")
 
     // Json assertions
-    const val jsonpath = "com.jayway.jsonpath:json-path:2.9.0"  // https://mvnrepository.com/artifact/com.jayway.jsonpath/json-path
-    const val jsonassert = "org.skyscreamer:jsonassert:1.5.3"   // https://mvnrepository.com/artifact/org.skyscreamer/jsonassert
+    const val jsonpath = "com.jayway.jsonpath:json-path:2.10.0"  // https://mvnrepository.com/artifact/com.jayway.jsonpath/json-path
+    const val jsonassert = "org.skyscreamer:jsonassert:2.0-rc1"   // https://mvnrepository.com/artifact/org.skyscreamer/jsonassert
 
     // GSON
     const val gson = "com.google.code.gson:gson:2.13.1"    // https://mvnrepository.com/artifact/com.google.code.gson/gson
