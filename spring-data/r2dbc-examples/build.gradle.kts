@@ -9,7 +9,9 @@ configurations {
 dependencies {
     implementation(platform(Libs.spring_boot_dependencies))
 
+    implementation(Libs.bluetape4k_core)
     implementation(Libs.bluetape4k_r2dbc)
+    implementation(Libs.bluetape4k_spring_r2dbc)
     testImplementation(Libs.bluetape4k_junit5)
 
     // Coroutines

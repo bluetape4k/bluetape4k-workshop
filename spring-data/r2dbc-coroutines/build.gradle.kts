@@ -25,7 +25,6 @@ dependencies {
     // Coroutines
     implementation(Libs.bluetape4k_coroutines)
     implementation(Libs.kotlinx_coroutines_core)
-    implementation(Libs.kotlinx_coroutines_reactive)
     implementation(Libs.kotlinx_coroutines_reactor)
     testImplementation(Libs.kotlinx_coroutines_test)
 
@@ -35,6 +34,7 @@ dependencies {
     testImplementation(Libs.reactor_test)
 
     // R2DBC
+    implementation(Libs.bluetape4k_r2dbc)
     implementation(Libs.bluetape4k_spring_r2dbc)
     implementation(Libs.springBootStarter("data-r2dbc"))
     testImplementation(Libs.springBootStarter("data-r2dbc-test"))

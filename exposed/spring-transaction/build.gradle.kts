@@ -26,6 +26,7 @@ dependencies {
     implementation(Libs.h2_v2)
 
     // Bluetape4k
+    implementation(Libs.bluetape4k_idgenerators)
     implementation(Libs.bluetape4k_io)
     implementation(Libs.bluetape4k_jdbc)
     implementation(Libs.bluetape4k_spring_core)
