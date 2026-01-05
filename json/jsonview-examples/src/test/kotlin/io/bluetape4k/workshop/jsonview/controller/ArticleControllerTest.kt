@@ -13,27 +13,26 @@ import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 
-class ArticleControllerTest(
-    @param:Autowired private val client: WebTestClient,
-): AbstractJsonViewApplicationTest() {
+class ArticleControllerTest: AbstractJsonViewApplicationTest() {
 
     companion object: KLoggingChannel() {
         private const val BASE_PATH = "/articles"
     }
 
     fun WebTestClient.httpGet(url: String) =
-        this.get().uri(url)
-            .exchange()
-            .expectStatus().isOk
+        this.get()
+            .uri(url)
+            .exchangeSuccessfully()
 
     @Test
     fun `get all articles`() = runSuspendIO {
         val articles = client
-            .httpGet(BASE_PATH)
+            .get()
+            .uri(BASE_PATH)
+            .exchangeSuccessfully()
             .returnResult<ArticleDTO>().responseBody
             .asFlow()
             .toList()
@@ -50,7 +49,9 @@ class ArticleControllerTest(
     @Test
     fun `get article details by id`() = runSuspendIO {
         val article = client
-            .httpGet("$BASE_PATH/1")
+            .get()
+            .uri("$BASE_PATH/1")
+            .exchangeSuccessfully()
             .returnResult<ArticleDTO>().responseBody
             .awaitSingle()
 
@@ -63,7 +64,9 @@ class ArticleControllerTest(
     @Test
     fun `get article for analytics`() = runSuspendIO {
         val article = client
-            .httpGet("$BASE_PATH/1/analytics")
+            .get()
+            .uri("$BASE_PATH/1/analytics")
+            .exchangeSuccessfully()
             .returnResult<ArticleDTO>().responseBody
             .awaitSingle()
 
@@ -80,7 +83,9 @@ class ArticleControllerTest(
     @Test
     fun `get articles for internal`() = runSuspendIO {
         val article = client
-            .httpGet("$BASE_PATH/1/internal")
+            .get()
+            .uri("$BASE_PATH/1/internal")
+            .exchangeSuccessfully()
             .returnResult<ArticleDTO>().responseBody
             .awaitSingle()
 
