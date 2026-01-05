@@ -21,6 +21,8 @@ import kotlinx.coroutines.withContext
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.JRE
 import org.redisson.RedissonMultiLock
 import org.redisson.api.RLock
 import java.util.concurrent.TimeUnit
@@ -176,6 +178,7 @@ class MultiLockExamples: AbstractRedissonTest() {
         mlock.unlock()
     }
 
+    @EnabledOnJre(JRE.JAVA_21)
     @Test
     fun `tryLock with RedissionMultiLock in virtual threads`() {
         val lock1 = redisson.getLock(randomName())

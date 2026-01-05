@@ -12,6 +12,8 @@ import kotlinx.coroutines.yield
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.JRE
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
@@ -124,7 +126,7 @@ class SemaphoreExamples: AbstractRedissonTest() {
         semaphore.delete()
     }
 
-
+    @EnabledOnJre(JRE.JAVA_21)
     @Test
     fun `Virtual thread 환경에서 세마포어 사용하기`() {
         val semaphoreName = randomName()

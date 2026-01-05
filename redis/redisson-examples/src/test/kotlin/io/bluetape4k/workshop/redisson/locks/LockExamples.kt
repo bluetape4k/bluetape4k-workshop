@@ -20,6 +20,8 @@ import org.amshove.kluent.shouldBeGreaterThan
 import org.amshove.kluent.shouldBeTrue
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.JRE
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 
@@ -140,6 +142,7 @@ class LockExamples: AbstractRedissonTest() {
     }
 
 
+    @EnabledOnJre(JRE.JAVA_21)
     @RepeatedTest(REPEAT_SIZE)
     fun `Virtual Thread 환경에서 락 획득 및 해제`() {
         val lock = redisson.getLock(randomName())

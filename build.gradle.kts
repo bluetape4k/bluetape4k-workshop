@@ -1,5 +1,6 @@
 import io.gitlab.arturbosch.detekt.Detekt
 import io.gitlab.arturbosch.detekt.report.ReportMergeTask
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
@@ -79,15 +80,16 @@ subprojects {
 
     java {
         toolchain {
-            languageVersion.set(JavaLanguageVersion.of(21))
+            languageVersion.set(JavaLanguageVersion.of(25))
         }
     }
 
     kotlin {
         jvmToolchain {
-            languageVersion.set(JavaLanguageVersion.of(21))
+            languageVersion.set(JavaLanguageVersion.of(25))
         }
         compilerOptions {
+            jvmTarget.set(JvmTarget.JVM_25)
             languageVersion.set(KotlinVersion.KOTLIN_2_3)
             apiVersion.set(KotlinVersion.KOTLIN_2_3)
             freeCompilerArgs = listOf(
@@ -97,7 +99,7 @@ subprojects {
                 "-Xstring-concat=indy",         // since Kotlin 1.4.20 for JVM 9+
                 // "-Xenable-builder-inference",   // since Kotlin 1.6
                 "-Xcontext-parameters",           // since Kotlin 1.6
-                "-Xannotation-default-target=param-property"
+                "-Xannotation-default-target=param-property",
             )
             val experimentalAnnotations = listOf(
                 "kotlin.RequiresOptIn",

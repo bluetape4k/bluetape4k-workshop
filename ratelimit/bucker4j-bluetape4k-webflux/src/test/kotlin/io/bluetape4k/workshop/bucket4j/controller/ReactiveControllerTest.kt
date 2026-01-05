@@ -9,14 +9,10 @@ import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldContain
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
-import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 
-class ReactiveControllerTest(
-    @param:Autowired private val client: WebTestClient,
-): AbstractRateLimiterApplicationTest() {
+class ReactiveControllerTest: AbstractRateLimiterApplicationTest() {
 
     companion object: KLoggingChannel() {
         private const val PATH_V1 = "/api/v1/reactive/hello"      // RateLimit이 걸려 있음

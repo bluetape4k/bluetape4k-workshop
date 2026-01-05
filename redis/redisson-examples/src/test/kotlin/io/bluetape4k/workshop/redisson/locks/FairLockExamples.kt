@@ -12,6 +12,8 @@ import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.delay
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.JRE
 import java.util.concurrent.TimeUnit
 
 /**
@@ -79,6 +81,7 @@ class FairLockExamples: AbstractRedissonTest() {
         lockCounter.value shouldBeEqualTo 16 * 2
     }
 
+    @EnabledOnJre(JRE.JAVA_21)
     @Test
     fun `Virtual Threads 환경에서 Fair 락 획득하기`() {
         val lock = redisson.getFairLock(randomName())

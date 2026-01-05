@@ -9,6 +9,8 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.JRE
 import kotlin.random.Random
 
 /**
@@ -76,6 +78,7 @@ class HyperLogLogExamples: AbstractRedissonTest() {
         hyperLog.delete()
     }
 
+    @EnabledOnJre(JRE.JAVA_21)
     @Test
     fun `Virtual Thread 환경에서 HyperLogLog 사용하기`() {
         val hyperLog = redisson.getHyperLogLog<Int>(randomName())

@@ -5,6 +5,8 @@ import io.bluetape4k.concurrent.virtualthread.structuredTaskScopeFirst
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.JRE
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.StructuredTaskScope
 
@@ -64,6 +66,7 @@ class StructuredConcurrencyExamples {
         cookPasta()
     }
 
+    @EnabledOnJre(JRE.JAVA_21)
     @Test
     fun `structured task scope on success`() {
         // Subtask 들 중 하나라도 성공하면, 나머지 Subtask 들은 취소하고, 결과를 반환합니다.

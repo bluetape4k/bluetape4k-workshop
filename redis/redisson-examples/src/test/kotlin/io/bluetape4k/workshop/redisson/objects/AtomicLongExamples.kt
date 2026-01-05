@@ -14,6 +14,8 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeTrue
 import org.junit.jupiter.api.RepeatedTest
+import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.JRE
 
 class AtomicLongExamples: AbstractRedissonTest() {
 
@@ -96,6 +98,7 @@ class AtomicLongExamples: AbstractRedissonTest() {
         counter.delete().shouldBeTrue()
     }
 
+    @EnabledOnJre(JRE.JAVA_21)
     @RepeatedTest(REPEAT_SIZE)
     fun `AtomicLong in Virtual Threads`() {
         val counter = redisson.getAtomicLong(randomName())
