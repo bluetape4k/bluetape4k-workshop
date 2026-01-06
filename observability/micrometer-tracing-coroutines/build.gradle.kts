@@ -18,6 +18,7 @@ dependencies {
     implementation(platform(Libs.micrometer_tracing_bom))
     
     implementation(Libs.bluetape4k_micrometer)
+    implementation(Libs.bluetape4k_jackson3)
     implementation(Libs.bluetape4k_testcontainers)
     testImplementation(Libs.bluetape4k_junit5)
 
@@ -50,10 +51,10 @@ dependencies {
 
     implementation(Libs.springBootStarter("actuator"))
     implementation(Libs.springBootStarter("aspectj"))
+    implementation(Libs.springBootStarter("opentelemetry"))
+    testImplementation(Libs.springBootStarter("opentelemetry-test"))
     implementation(Libs.springBootStarter("webflux"))
     testImplementation(Libs.springBootStarter("webflux-test"))
-
-    testImplementation(Libs.bluetape4k_spring_tests)
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
