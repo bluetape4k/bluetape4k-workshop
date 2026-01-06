@@ -9,7 +9,6 @@ import okio.Deflater
 import okio.DeflaterSink
 import okio.IOException
 import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeInstanceOf
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import java.util.zip.InflaterInputStream
@@ -147,9 +146,9 @@ class DeflaterSinkTest: AbstractOkioTest() {
         val data = bufferOf(Fakers.randomString())
         val defaterSink = DeflaterSink(data, deflater)
 
-        assertFailsWith<IOException> {
+        assertFailsWith<IllegalStateException> {
             defaterSink.write(data, data.size)
-        }.cause shouldBeInstanceOf NullPointerException::class
+        }
     }
 
     /**

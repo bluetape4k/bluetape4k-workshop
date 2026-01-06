@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.observation.service
 
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.debug
+import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.observation.support.observeOrNull
 import io.micrometer.observation.Observation
 import io.micrometer.observation.ObservationRegistry
@@ -17,6 +19,7 @@ class GreetingService(private val observationRegistry: ObservationRegistry) {
     }
 
     private val greetingObservation: Observation by lazy {
+        log.info { "Create Observation. $GREETING_SERVICE_NAME" }
         Observation.createNotStarted(GREETING_SERVICE_NAME, observationRegistry)
     }
 
@@ -33,6 +36,7 @@ class GreetingService(private val observationRegistry: ObservationRegistry) {
     }
 
     private fun sayHelloInternal(): String {
+        log.debug { "call sayHelloInternal" }
         return "Hello, World!"
     }
 }

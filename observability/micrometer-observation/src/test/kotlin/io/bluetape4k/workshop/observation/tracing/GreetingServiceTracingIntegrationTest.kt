@@ -3,10 +3,12 @@ package io.bluetape4k.workshop.observation.tracing
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.uninitialized
+import io.bluetape4k.workshop.observation.AbstractObservationTest
 import io.bluetape4k.workshop.observation.service.GreetingService
 import io.micrometer.observation.tck.TestObservationRegistry
 import io.micrometer.tracing.test.simple.SimpleTracer
 import org.amshove.kluent.shouldBeTrue
+import org.amshove.kluent.shouldNotBeEmpty
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -19,7 +21,7 @@ import org.springframework.context.annotation.ComponentScan
 @SpringBootTest
 @ComponentScan(basePackageClasses = [GreetingService::class])
 @EnableAutoConfiguration
-class GreetingServiceTracingIntegrationTest {
+class GreetingServiceTracingIntegrationTest: AbstractObservationTest() {
 
     @TestConfiguration
     class ObservationTestConfiguration {
@@ -55,12 +57,13 @@ class GreetingServiceTracingIntegrationTest {
     @Test
     fun `tracing for greeting`() {
         service.sayHello()
-        Thread.sleep(10)
+
+        tracer.spans.shouldNotBeEmpty()
 
         tracer.spans.forEach {
-            log.debug { "span: $it" }
+            log.debug { "span name: ${it.name}" }
         }
 
-        tracer.spans.any { it.name == "greetingService" }.shouldBeTrue()
+        tracer.spans.any { it.name == GreetingService.GREETING_SERVICE_NAME }.shouldBeTrue()
     }
 }
