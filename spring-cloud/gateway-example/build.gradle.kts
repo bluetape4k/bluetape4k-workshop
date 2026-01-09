@@ -23,7 +23,7 @@ configurations {
 }
 
 dependencies {
-    implementation(platform(Libs.spring_boot_dependencies))
+    implementation(platform(Libs.spring_boot4_dependencies))
     implementation(platform(Libs.spring_cloud_dependencies))
     implementation(platform(Libs.micrometer_bom))
 

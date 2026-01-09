@@ -3,9 +3,6 @@ package io.bluetape4k.workshop.exposed.virtualthread.controller
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.spring.tests.httpDelete
-import io.bluetape4k.spring.tests.httpGet
-import io.bluetape4k.spring.tests.httpPost
 import io.bluetape4k.workshop.exposed.virtualthread.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.ActorDTO
 import kotlinx.coroutines.flow.toList
@@ -15,14 +12,10 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.test.web.reactive.server.returnResult
 
-class ActorControllerTest(
-    @param:Autowired private val client: WebTestClient,
-): AbstractExposedTest() {
+class ActorControllerTest: AbstractExposedTest() {
 
     companion object: KLoggingChannel() {
         private fun newActor(): ActorDTO = ActorDTO(
@@ -36,7 +29,10 @@ class ActorControllerTest(
     fun `get actor by id`() = runSuspendIO {
         val id = 1
 
-        val actor = client.httpGet("/actors/$id")
+        val actor = client
+            .get()
+            .uri("/actors/$id")
+            .exchangeSuccessfully()
             .returnResult<ActorDTO>().responseBody
             .awaitSingle()
 
@@ -51,7 +47,9 @@ class ActorControllerTest(
         val lastName = "Depp"
 
         val actors = client
-            .httpGet("/actors?lastName=$lastName")
+            .get()
+            .uri("/actors?lastName=$lastName")
+            .exchangeSuccessfully()
             .returnResult<ActorDTO>().responseBody
             .asFlow()
             .toList()
@@ -63,7 +61,9 @@ class ActorControllerTest(
 
         val firstName = "Angelina"
         val angelinas = client
-            .httpGet("/actors?firstName=$firstName")
+            .get()
+            .uri("/actors?firstName=$firstName")
+            .exchangeSuccessfully()
             .expectBodyList<ActorDTO>()
             .returnResult().responseBody
 
@@ -77,7 +77,10 @@ class ActorControllerTest(
         val actor = newActor()
 
         val newActor = client
-            .httpPost("/actors", actor)
+            .post()
+            .uri("/actors")
+            .bodyValue(actor)
+            .exchangeSuccessfully()
             .returnResult<ActorDTO>().responseBody
             .awaitSingle()
 
@@ -89,12 +92,17 @@ class ActorControllerTest(
         val actor = newActor()
 
         val newActor = client
-            .httpPost("/actors", actor)
+            .post()
+            .uri("/actors")
+            .bodyValue(actor)
+            .exchangeSuccessfully()
             .returnResult<ActorDTO>().responseBody
             .awaitSingle()
 
         val deletedCount = client
-            .httpDelete("/actors/${newActor.id}")
+            .delete()
+            .uri("/actors/${newActor.id}")
+            .exchangeSuccessfully()
             .returnResult<Int>().responseBody
             .awaitSingle()
 

@@ -58,17 +58,19 @@ dependencies {
     annotationProcessor(Libs.springBoot("configuration-processor"))
     runtimeOnly(Libs.springBoot("devtools"))
 
-    implementation(Libs.springBootStarter("web"))
     implementation(Libs.springBootStarter("aspectj"))
     implementation(Libs.springBootStarter("actuator"))
     implementation(Libs.springBootStarter("validation"))
+    implementation(Libs.springBootStarter("webmvc"))
+    testImplementation(Libs.springBootStarter("webmvc-test"))
 
-    testImplementation(Libs.bluetape4k_spring_tests)
+    testImplementation(Libs.springBootStarter("webflux"))
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")
     }
+
 
     testImplementation(Libs.bluetape4k_coroutines)
     testImplementation(Libs.kotlinx_coroutines_reactor)

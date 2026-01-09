@@ -7,7 +7,7 @@ configurations {
 }
 
 dependencies {
-    implementation(platform(Libs.spring_boot_dependencies))
+    implementation(platform(Libs.spring_boot4_dependencies))
 
     implementation(Libs.bluetape4k_core)
     implementation(Libs.bluetape4k_r2dbc)

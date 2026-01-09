@@ -16,6 +16,8 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.JRE
 import org.springframework.beans.factory.annotation.Autowired
 
 class DomainSQLTest(
@@ -64,6 +66,7 @@ class DomainSQLTest(
             }.await()
         }
 
+        @EnabledOnJre(JRE.JAVA_21)
         @Test
         fun `get all actors in multiple virtual threads`() {
             StructuredTaskScopeTester()

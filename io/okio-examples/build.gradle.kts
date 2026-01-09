@@ -13,13 +13,14 @@ dependencies {
     implementation(Libs.bluetape4k_coroutines)
     testImplementation(Libs.bluetape4k_junit5)
 
+    implementation(Libs.commons_io)
+
     // Coroutines
     implementation(Libs.kotlinx_coroutines_core)
     testImplementation(Libs.kotlinx_coroutines_test)
 
     // Serialization Libraries
     compileOnly(Libs.kryo5)
-    compileOnly(Libs.fury_kotlin)
     compileOnly(Libs.fory_kotlin)
 
     // Compression libraries

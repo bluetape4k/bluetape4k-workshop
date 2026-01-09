@@ -2,21 +2,16 @@ package io.bluetape4k.workshop.exposed.controller
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.exposed.AbstractExposedSqlTest
 import io.bluetape4k.workshop.exposed.domain.dto.MovieDTO
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 
-class MovieControllerTest(
-    @param:Autowired private val client: WebTestClient,
-): AbstractExposedSqlTest() {
+class MovieControllerTest: AbstractExposedSqlTest() {
 
     companion object: KLoggingChannel()
 
@@ -24,7 +19,10 @@ class MovieControllerTest(
     fun `get movie by id`() {
         val id = 1
 
-        val movie = client.httpGet("/movies/$id")
+        val movie = client
+            .get()
+            .uri("/movies/$id")
+            .exchangeSuccessfully()
             .expectBody<MovieDTO>().returnResult().responseBody
 
         log.debug { "movie[$id]=$movie" }
@@ -37,7 +35,10 @@ class MovieControllerTest(
     fun `search movies by producer name`() {
         val producerName = "Johnny"
 
-        val movies = client.httpGet("/movies?producerName=$producerName")
+        val movies = client
+            .get()
+            .uri("/movies?producerName=$producerName")
+            .exchangeSuccessfully()
             .expectBodyList<MovieDTO>().returnResult().responseBody!!
 
         movies shouldHaveSize 2

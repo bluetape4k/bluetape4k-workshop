@@ -25,7 +25,7 @@ configurations {
 
 dependencies {
 
-    implementation(platform(Libs.spring_boot_dependencies))
+    implementation(platform(Libs.spring_boot4_dependencies))
 
     implementation(project(":shared"))
 

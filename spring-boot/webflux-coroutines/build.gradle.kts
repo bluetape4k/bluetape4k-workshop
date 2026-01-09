@@ -30,7 +30,6 @@ dependencies {
     implementation(Libs.springBootStarter("webflux"))
     testImplementation(Libs.springBootStarter("webflux-test"))
 
-
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

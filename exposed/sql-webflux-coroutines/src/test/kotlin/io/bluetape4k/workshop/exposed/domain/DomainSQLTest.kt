@@ -16,6 +16,8 @@ import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTrans
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.JRE
 
 @Suppress("DEPRECATION")
 class DomainSQLTest: AbstractExposedSqlTest() {
@@ -62,6 +64,7 @@ class DomainSQLTest: AbstractExposedSqlTest() {
             }
         }
 
+        @EnabledOnJre(JRE.JAVA_21)
         @Test
         fun `get all actors in multiple virtual threads`() {
             StructuredTaskScopeTester()

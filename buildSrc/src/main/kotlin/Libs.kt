@@ -18,8 +18,9 @@ object Plugins {
         const val shadow = "9.2.2"      // https://plugins.gradle.org/plugin/com.gradleup.shadow
         const val kotlinx_benchmark = "0.4.15" // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-benchmark-plugin
 
-        const val spring_boot = "4.0.1"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
-        const val quarkus = "3.30.5"      // https://mvnrepository.com/artifact/io.quarkus/quarkus-bom
+        const val spring_boot3 = "3.5.9"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
+        const val spring_boot4 = "4.0.1"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
+        const val quarkus = "3.30.6"      // https://mvnrepository.com/artifact/io.quarkus/quarkus-bom
 
         const val docker_compose = "0.17.20"  // https://plugins.gradle.org/plugin/com.avast.gradle.docker-compose
 
@@ -66,7 +67,7 @@ object Plugins {
 object Versions {
 
     // Java 21, Kotlin 2.0 이상에서 사용하세요
-    const val bluetape4k = "0.1.4-SNAPSHOT"    // Bluetape4k Github Package 로 배포됩니다.
+    const val bluetape4k = "0.1.4"    // Bluetape4k Github Package 로 배포됩니다.
 
     const val kotlin = "2.3.0"                 // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
     const val kotlinx_coroutines = "1.10.2"     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
@@ -76,7 +77,8 @@ object Versions {
 
     const val kotlinx_benchmark = Plugins.Versions.kotlinx_benchmark
 
-    const val spring_boot = Plugins.Versions.spring_boot
+    const val spring_boot3 = Plugins.Versions.spring_boot3
+    const val spring_boot4 = Plugins.Versions.spring_boot4
     const val spring_cloud = "2025.1.0"     // https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-dependencies
     const val spring_integration = "7.0.1"  // https://mvnrepository.com/artifact/org.springframework.integration/spring-integration-core
     const val reactor_bom = "2025.0.1"      // https://mvnrepository.com/artifact/io.projectreactor/reactor-bom
@@ -98,7 +100,7 @@ object Versions {
 
     const val resteasy = "6.2.14.Final"       // https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-bom
     const val mutiny = "2.9.4"                // https://mvnrepository.com/artifact/io.smallrye.reactive/mutiny
-    const val camel_quarkus = "3.27.0"        // https://mvnrepository.com/artifact/org.apache.camel.quarkus/camel-quarkus-bom
+    const val camel_quarkus = "3.30.0"        // https://mvnrepository.com/artifact/org.apache.camel.quarkus/camel-quarkus-bom
 
     const val vertx = "4.5.23"               // https://mvnrepository.com/artifact/io.vertx/vertx-core
 
@@ -199,15 +201,15 @@ object Versions {
 
     const val ow2_asm = "9.8"               // https://mvnrepository.com/artifact/org.ow2.asm/asm
 
-    const val junit_jupiter = "6.0.1"      // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
-    const val junit_platform = "6.0.1"     // https://mvnrepository.com/artifact/org.junit.platform/junit-platform-launcher
+    const val junit_jupiter = "6.0.2"      // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
+    const val junit_platform = "6.0.2"     // https://mvnrepository.com/artifact/org.junit.platform/junit-platform-launcher
     const val assertj_core = "3.27.6"       // https://mvnrepository.com/artifact/org.assertj/assertj-core
     const val kluent = "1.73"               // https://mvnrepository.com/artifact/org.amshove.kluent/kluent
     const val mockk = "1.14.6"              // https://mvnrepository.com/artifact/io.mockk/mockk
     const val springmockk = "4.0.2"         // https://mvnrepository.com/artifact/com.ninja-squad/springmockk
     const val awaitility = "4.3.0"          // https://mvnrepository.com/artifact/org.awaitility/awaitility
     const val jmh = "1.37"                  // https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-core
-    const val testcontainers = "1.21.3"     // https://mvnrepository.com/artifact/org.testcontainers/testcontainers
+    const val testcontainers = "1.21.4"     // https://mvnrepository.com/artifact/org.testcontainers/testcontainers
     const val jna = "5.18.1"                // https://mvnrepository.com/artifact/net.java.dev.jna/jna
     const val archunit = "1.4.1"           // https://mvnrepository.com/artifact/com.tngtech.archunit/archunit-junit5
     const val rest_assured = "5.5.6"        // https://mvnrepository.com/artifact/io.rest-assured/rest-assured
@@ -497,11 +499,13 @@ object Libs {
 
     const val kryo = "com.esotericsoftware:kryo:5.6.2" // https://mvnrepository.com/artifact/com.esotericsoftware/kryo
     const val kryo5 = "com.esotericsoftware:kryo:5.6.2" // https://mvnrepository.com/artifact/com.esotericsoftware/kryo
-    const val fury_kotlin = "org.apache.fury:fury-kotlin:0.10.3" // https://mvnrepository.com/artifact/org.apache.fury
-    const val fory_kotlin = "org.apache.fory:fory-kotlin:0.12.3" // https://mvnrepository.com/artifact/org.apache.fory/fory-kotlin
+    const val fory_kotlin = "org.apache.fory:fory-kotlin:0.14.1" // https://mvnrepository.com/artifact/org.apache.fory/fory-kotlin
 
     // Spring Boot
-    const val spring_boot_dependencies = "org.springframework.boot:spring-boot-dependencies:${Versions.spring_boot}"
+    const val spring_boot3_dependencies = "org.springframework.boot:spring-boot-dependencies:${Versions.spring_boot3}"
+
+    // Spring Boot
+    const val spring_boot4_dependencies = "org.springframework.boot:spring-boot-dependencies:${Versions.spring_boot4}"
 
     fun spring(module: String) = "org.springframework:spring-$module"
     fun springBoot(module: String) = "org.springframework.boot:spring-boot-$module"
@@ -593,7 +597,6 @@ object Libs {
 
     // Chaos Monkey (https://github.com/codecentric/chaos-monkey-spring-boot)
     const val chaos_monkey_spring_boot = "de.codecentric:chaos-monkey-spring-boot:${Versions.chaos_monkey}"
-
 
     // Quarkus
     fun quarkus(extension: String) = "io.quarkus:quarkus-$extension:${Versions.quarkus}"

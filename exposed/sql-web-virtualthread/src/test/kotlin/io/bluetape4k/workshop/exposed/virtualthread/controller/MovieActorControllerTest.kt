@@ -3,7 +3,6 @@ package io.bluetape4k.workshop.exposed.virtualthread.controller
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.exposed.virtualthread.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.MovieActorCountDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.MovieWithActorDTO
@@ -15,13 +14,9 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeEmpty
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 
-class MovieActorControllerTest(
-    @param:Autowired private val client: WebTestClient,
-): AbstractExposedTest() {
+class MovieActorControllerTest: AbstractExposedTest() {
 
     companion object: KLoggingChannel()
 
@@ -30,7 +25,9 @@ class MovieActorControllerTest(
         val movieId = 1
 
         val movieWithActors = client
-            .httpGet("/movie-actors/$movieId")
+            .get()
+            .uri("/movie-actors/$movieId")
+            .exchangeSuccessfully()
             .returnResult<MovieWithActorDTO>().responseBody
             .awaitSingle()
 
@@ -44,7 +41,9 @@ class MovieActorControllerTest(
     fun `get movie and actor count group by movie name`() = runSuspendIO {
 
         val movieActorCounts = client
-            .httpGet("/movie-actors/count")
+            .get()
+            .uri("/movie-actors/count")
+            .exchangeSuccessfully()
             .returnResult<MovieActorCountDTO>().responseBody
             .asFlow()
             .toList()
@@ -59,7 +58,9 @@ class MovieActorControllerTest(
     @Test
     fun `get movie and acting producer`() = runSuspendIO {
         val movieWithProducers = client
-            .httpGet("/movie-actors/acting-producers")
+            .get()
+            .uri("/movie-actors/acting-producers")
+            .exchangeSuccessfully()
             .returnResult<MovieWithProducingActorDTO>().responseBody
             .asFlow()
             .toList()

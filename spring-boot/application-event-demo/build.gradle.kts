@@ -15,7 +15,7 @@ configurations {
 }
 
 dependencies {
-    implementation(platform(Libs.spring_boot_dependencies))
+    implementation(platform(Libs.spring_boot4_dependencies))
 
     // Bluetape4k
     implementation(Libs.bluetape4k_io)

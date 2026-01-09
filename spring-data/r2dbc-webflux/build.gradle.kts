@@ -13,7 +13,7 @@ configurations {
 }
 
 dependencies {
-    implementation(platform(Libs.spring_boot_dependencies))
+    implementation(platform(Libs.spring_boot4_dependencies))
     testImplementation(Libs.bluetape4k_junit5)
 
     // Coroutines

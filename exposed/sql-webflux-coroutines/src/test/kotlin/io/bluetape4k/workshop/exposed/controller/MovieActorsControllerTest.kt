@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.exposed.controller
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.exposed.AbstractExposedSqlTest
 import io.bluetape4k.workshop.exposed.domain.dto.MovieActorCountDTO
 import io.bluetape4k.workshop.exposed.domain.dto.MovieWithActorDTO
@@ -11,14 +10,10 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeEmpty
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 
-class MovieActorsControllerTest(
-    @param:Autowired private val client: WebTestClient,
-): AbstractExposedSqlTest() {
+class MovieActorsControllerTest: AbstractExposedSqlTest() {
 
     companion object: KLoggingChannel()
 
@@ -26,7 +21,10 @@ class MovieActorsControllerTest(
     fun `get movie with actors`() {
         val movieId = 1
 
-        val movieWithActors = client.httpGet("/movie-actors/$movieId")
+        val movieWithActors = client
+            .get()
+            .uri("/movie-actors/$movieId")
+            .exchangeSuccessfully()
             .expectBody<MovieWithActorDTO>().returnResult().responseBody
 
         log.debug { "movieWithActors[$movieId]=$movieWithActors" }
@@ -38,7 +36,10 @@ class MovieActorsControllerTest(
     @Test
     fun `get movie and actor count group by movie name`() {
 
-        val movieActorCounts = client.httpGet("/movie-actors/count")
+        val movieActorCounts = client
+            .get()
+            .uri("/movie-actors/count")
+            .exchangeSuccessfully()
             .expectBodyList<MovieActorCountDTO>().returnResult().responseBody!!
 
         movieActorCounts.shouldNotBeEmpty()
@@ -50,7 +51,10 @@ class MovieActorsControllerTest(
 
     @Test
     fun `get movie and acting producer`() {
-        val movieWithProducers = client.httpGet("/movie-actors/acting-producers")
+        val movieWithProducers = client
+            .get()
+            .uri("/movie-actors/acting-producers")
+            .exchangeSuccessfully()
             .expectBodyList<MovieWithProducingActorDTO>().returnResult().responseBody!!
 
         movieWithProducers.forEach {

@@ -20,7 +20,7 @@ plugins {
     id(Plugins.detekt) version Plugins.Versions.detekt
 
     id(Plugins.dependency_management) version Plugins.Versions.dependency_management
-    id(Plugins.spring_boot) version Plugins.Versions.spring_boot apply false
+    id(Plugins.spring_boot) version Plugins.Versions.spring_boot4 apply false
     id(Plugins.quarkus) version Plugins.Versions.quarkus apply false
 
     id(Plugins.dokka) version Plugins.Versions.dokka
@@ -201,7 +201,7 @@ subprojects {
             mavenBom(Libs.bluetape4k_bom)
             mavenBom(Libs.spring_integration_bom)
             mavenBom(Libs.spring_cloud_dependencies)
-            mavenBom(Libs.spring_boot_dependencies)
+            mavenBom(Libs.spring_boot4_dependencies)
             mavenBom(Libs.spring_modulith_bom)
 
             mavenBom(Libs.feign_bom)
@@ -295,7 +295,6 @@ subprojects {
             dependency(Libs.guava)
 
             dependency(Libs.kryo)
-            dependency(Libs.fury_kotlin)
             dependency(Libs.fory_kotlin)
             
             // Retrofit
@@ -430,7 +429,7 @@ subprojects {
         val testRuntimeOnly by configurations
 
         compileOnly(platform(Libs.bluetape4k_bom))
-        compileOnly(platform(Libs.spring_boot_dependencies))
+        compileOnly(platform(Libs.spring_boot4_dependencies))
         compileOnly(platform(Libs.jackson_bom))
         compileOnly(platform(Libs.kotlinx_coroutines_bom))
 

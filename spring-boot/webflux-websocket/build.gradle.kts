@@ -11,7 +11,7 @@ springBoot {
 dependencyManagement {
     imports {
         mavenBom(Libs.spring_cloud_dependencies)
-        mavenBom(Libs.spring_boot_dependencies)
+        mavenBom(Libs.spring_boot4_dependencies)
     }
 }
 
