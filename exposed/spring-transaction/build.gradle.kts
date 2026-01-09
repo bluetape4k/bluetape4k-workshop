@@ -16,8 +16,11 @@ dependencies {
     implementation(Libs.bluetape4k_exposed)
     implementation(Libs.exposed_core)
     implementation(Libs.exposed_dao)
+    implementation(Libs.exposed_jdbc)
     implementation(Libs.exposed_kotlin_datetime)
-    implementation(Libs.exposed_spring_boot_starter)
+
+    // NOTE: exposed-spring-boot-starter 는 Spring Boot 3을 사용하여 여기서는 사용하지 못한다.
+    // implementation(Libs.exposed_spring_boot_starter)
 
     // Database Drivers
     implementation(Libs.hikaricp)
@@ -29,8 +32,6 @@ dependencies {
     implementation(Libs.bluetape4k_idgenerators)
     implementation(Libs.bluetape4k_io)
     implementation(Libs.bluetape4k_jdbc)
-    implementation(Libs.bluetape4k_spring_core)
-    testImplementation(Libs.bluetape4k_spring_tests)
 
     // Spring Boot
     implementation(Libs.springBootStarter("jdbc"))

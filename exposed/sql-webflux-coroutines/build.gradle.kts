@@ -34,11 +34,10 @@ dependencies {
     // Exposed
     implementation(Libs.bluetape4k_exposed)
     implementation(Libs.exposed_core)
+    implementation(Libs.exposed_dao)
     implementation(Libs.exposed_jdbc)
     implementation(Libs.exposed_kotlin_datetime)
     implementation(Libs.exposed_migration_jdbc)
-    implementation(Libs.exposed_spring_boot_starter)
-    implementation(Libs.exposed_spring_transaction)
 
     // Database Drivers
     implementation(Libs.hikaricp)
@@ -60,6 +59,7 @@ dependencies {
     implementation(Libs.springBootStarter("aspectj"))
     implementation(Libs.springBootStarter("actuator"))
     implementation(Libs.springBootStarter("validation"))
+    implementation(Libs.springBootStarter("jdbc"))
     implementation(Libs.springBootStarter("webflux"))
     testImplementation(Libs.springBootStarter("webflux-test"))
     testImplementation(Libs.springBootStarter("test")) {
