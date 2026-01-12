@@ -16,7 +16,7 @@ import okio.Timeout
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 
-class SuspendInteropKtTest: AbstractOkioTest() {
+class SuspendInteropTest: AbstractOkioTest() {
 
     @Test
     fun `Buffer suspendReadAll은 모든 바이트를 SuspendedSink에 쓴다`() = runSuspendIO {
