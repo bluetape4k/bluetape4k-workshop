@@ -6,6 +6,8 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.JRE
 import org.junit.jupiter.api.fail
 import java.util.concurrent.StructuredTaskScope
 
@@ -47,6 +49,7 @@ class Rule5UseThreadLocalVariablesCarefully {
 
         private val scopedValue = ScopedValue.newInstance<String>()
 
+        @EnabledOnJre(JRE.JAVA_21)
         @Test
         fun `추천 - ScopedValue 사용하기`() {
             ScopedValue.runWhere(scopedValue, "zero") {

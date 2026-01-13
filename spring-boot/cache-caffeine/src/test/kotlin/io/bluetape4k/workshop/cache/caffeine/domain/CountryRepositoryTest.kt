@@ -14,6 +14,8 @@ import org.amshove.kluent.shouldBeLessOrEqualTo
 import org.amshove.kluent.shouldBeLessThan
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.JRE
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Profile
 import java.util.concurrent.ConcurrentHashMap
@@ -94,6 +96,7 @@ class CountryRepositoryTest(
         codeMap.size shouldBeLessOrEqualTo CountryRepository.SAMPLE_COUNTRY_CODES.size
     }
 
+    @EnabledOnJre(JRE.JAVA_21)
     @Test
     fun `get random countries in virtual threads`() {
         val codeMap = ConcurrentHashMap<String, Country>()
