@@ -20,9 +20,12 @@ abstract class AbstractJacksonTest {
     }
 
     protected val defaultMapper: JsonMapper by lazy {
-        Jackson.defaultJsonMapper.apply {
-            serializationConfig().with(SerializationFeature.INDENT_OUTPUT)
-        }
+        Jackson.defaultJsonMapper
+            .rebuild()
+            .apply {
+                configure(SerializationFeature.INDENT_OUTPUT, true)
+            }
+            .build()
     }
 
     private val jsonPathConfiguratrion: Configuration = Configuration.defaultConfiguration()

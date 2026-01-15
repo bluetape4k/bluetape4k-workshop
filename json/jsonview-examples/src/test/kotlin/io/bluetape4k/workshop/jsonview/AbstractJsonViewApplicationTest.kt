@@ -23,4 +23,10 @@ abstract class AbstractJsonViewApplicationTest {
     protected val client: WebTestClient by lazy {
         WebTestClient.bindToApplicationContext(context).build()
     }
+
+    protected fun WebTestClient.httpGet(url: String): WebTestClient.ResponseSpec =
+        this.get()
+            .uri(url)
+            .exchangeSuccessfully()
+
 }

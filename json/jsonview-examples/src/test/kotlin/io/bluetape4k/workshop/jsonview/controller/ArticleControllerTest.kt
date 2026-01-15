@@ -13,7 +13,6 @@ import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
-import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 
 class ArticleControllerTest: AbstractJsonViewApplicationTest() {
@@ -22,17 +21,11 @@ class ArticleControllerTest: AbstractJsonViewApplicationTest() {
         private const val BASE_PATH = "/articles"
     }
 
-    fun WebTestClient.httpGet(url: String) =
-        this.get()
-            .uri(url)
-            .exchangeSuccessfully()
 
     @Test
     fun `get all articles`() = runSuspendIO {
         val articles = client
-            .get()
-            .uri(BASE_PATH)
-            .exchangeSuccessfully()
+            .httpGet(BASE_PATH)
             .returnResult<ArticleDTO>().responseBody
             .asFlow()
             .toList()
@@ -49,9 +42,7 @@ class ArticleControllerTest: AbstractJsonViewApplicationTest() {
     @Test
     fun `get article details by id`() = runSuspendIO {
         val article = client
-            .get()
-            .uri("$BASE_PATH/1")
-            .exchangeSuccessfully()
+            .httpGet("$BASE_PATH/1")
             .returnResult<ArticleDTO>().responseBody
             .awaitSingle()
 
@@ -64,9 +55,7 @@ class ArticleControllerTest: AbstractJsonViewApplicationTest() {
     @Test
     fun `get article for analytics`() = runSuspendIO {
         val article = client
-            .get()
-            .uri("$BASE_PATH/1/analytics")
-            .exchangeSuccessfully()
+            .httpGet("$BASE_PATH/1/analytics")
             .returnResult<ArticleDTO>().responseBody
             .awaitSingle()
 
@@ -83,9 +72,7 @@ class ArticleControllerTest: AbstractJsonViewApplicationTest() {
     @Test
     fun `get articles for internal`() = runSuspendIO {
         val article = client
-            .get()
-            .uri("$BASE_PATH/1/internal")
-            .exchangeSuccessfully()
+            .httpGet("$BASE_PATH/1/internal")
             .returnResult<ArticleDTO>().responseBody
             .awaitSingle()
 

@@ -18,12 +18,14 @@ class JsonViewExample: AbstractJacksonTest() {
     private val publicViewWriter = defaultMapper.rebuild()
         .apply {
             configure(SerializationFeature.INDENT_OUTPUT, true)
-        }.build()
+        }
+        .build()
         .writerWithView(ViewScope.Public::class.java)
 
-    private val internalViewWriter: ObjectWriter = defaultMapper.rebuild().apply {
-        configure(SerializationFeature.INDENT_OUTPUT, true)
-    }
+    private val internalViewWriter: ObjectWriter = defaultMapper.rebuild()
+        .apply {
+            configure(SerializationFeature.INDENT_OUTPUT, true)
+        }
         .build()
         .writerWithView(ViewScope.Internal::class.java)
 
