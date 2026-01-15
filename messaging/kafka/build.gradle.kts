@@ -15,8 +15,8 @@ configurations {
 
 dependencies {
     // Kafka
-    implementation(Libs.bluetape4k_kafka)
-    // implementation(Libs.kafka_clients)
+    // implementation(Libs.bluetape4k_kafka)
+    implementation(Libs.kafka_clients)
     implementation(Libs.spring_kafka)
     testImplementation(Libs.spring_kafka_test)
 
@@ -24,16 +24,15 @@ dependencies {
     implementation(Libs.bluetape4k_testcontainers)
     implementation(Libs.testcontainers_kafka)
 
-    implementation(Libs.bluetape4k_spring_core)
-    implementation(Libs.bluetape4k_jackson)
+    implementation(Libs.bluetape4k_jackson3)
     testImplementation(Libs.bluetape4k_junit5)
-
-    implementation(Libs.springBootStarter("webflux"))
-    implementation(Libs.springBootStarter("actuator"))
-    implementation(Libs.springBootStarter("aspectj"))
 
     runtimeOnly(Libs.springBoot("devtools"))
     annotationProcessor(Libs.springBoot("configuration-processor"))
+
+    implementation(Libs.springBootStarter("actuator"))
+    implementation(Libs.springBootStarter("aspectj"))
+    implementation(Libs.springBootStarter("webflux"))
 
     testImplementation(Libs.bluetape4k_spring_tests)
     testImplementation(Libs.springBootStarter("test")) {

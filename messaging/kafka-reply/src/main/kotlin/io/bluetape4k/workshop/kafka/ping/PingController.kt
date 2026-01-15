@@ -35,7 +35,7 @@ class PingController {
             .onFailure { e -> log.error(e) { "callback exception." } }
 
         // 전송 결과
-        val sendResult = replyFuture.sendFuture.await()
+        val sendResult = replyFuture.sendFuture?.await()
         log.info { "Sent ok: $sendResult" }
 
         // 응답 결과

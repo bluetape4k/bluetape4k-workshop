@@ -190,8 +190,8 @@ object Versions {
     const val cassandra = "4.19.1"          // https://mvnrepository.com/artifact/org.apache.cassandra/java-driver-core
     const val elasticsearch = "9.1.6"       // https://mvnrepository.com/artifact/org.elasticsearch.client/elasticsearch-rest-client
 
-    const val kafka = "3.8.1"           // https://mvnrepository.com/artifact/org.apache.kafka/kafka
-    const val spring_kafka = "3.3.10"    // https://mvnrepository.com/artifact/org.springframework.kafka/spring-kafka
+    const val kafka = "4.1.1"           // https://mvnrepository.com/artifact/org.apache.kafka/kafka
+    const val spring_kafka = "4.0.1"    // https://mvnrepository.com/artifact/org.springframework.kafka/spring-kafka
 
     const val timefold_solver = "1.27.0" // https://mvnrepository.com/artifact/ai.timefold.solver/timefold-solver-core
 

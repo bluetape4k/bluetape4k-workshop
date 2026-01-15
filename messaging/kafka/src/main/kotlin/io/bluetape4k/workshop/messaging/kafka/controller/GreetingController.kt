@@ -29,7 +29,7 @@ class GreetingController: CoroutineScope by CoroutineScope(Dispatchers.IO + Supe
     companion object: KLoggingChannel()
 
     @Autowired
-    private val kafkaTemplate: KafkaTemplate<String, Any?> = uninitialized()
+    private val kafkaTemplate: KafkaTemplate<String, Any> = uninitialized()
 
     @Autowired
     private val loggerMessageHandler: LoggerMessageHandler = uninitialized()
