@@ -28,7 +28,7 @@ class CoroutineController(
     }
 
     @GetMapping("/todos/{id}")
-    suspend fun getTodo(@PathVariable(name = "id", required = true) id: Int): Todo? {
+    suspend fun getTodo(@PathVariable(required = true) id: Int): Todo? {
         log.debug { "Get todo[$id] in coroutines" }
         delay(100)
         return coroutineService.getTodo(id).apply {

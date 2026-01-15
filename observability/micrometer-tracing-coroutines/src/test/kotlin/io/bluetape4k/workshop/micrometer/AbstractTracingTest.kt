@@ -15,7 +15,7 @@ abstract class AbstractTracingTest {
     @Autowired
     protected val context: ApplicationContext = uninitialized()
 
-    protected val webTestClient by lazy {
+    protected val webTestClient: WebTestClient by lazy {
         WebTestClient.bindToApplicationContext(context).build()
     }
 

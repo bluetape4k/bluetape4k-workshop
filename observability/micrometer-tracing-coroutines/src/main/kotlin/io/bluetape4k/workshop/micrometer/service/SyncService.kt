@@ -103,7 +103,6 @@ class SyncService(
         withObservation("post-processing", observationRegistry) {
             log.debug { "Post processing ..." }
             Thread.sleep(100)
-
         }
     }
 }
