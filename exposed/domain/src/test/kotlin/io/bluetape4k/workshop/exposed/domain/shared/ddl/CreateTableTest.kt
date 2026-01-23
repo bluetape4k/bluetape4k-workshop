@@ -22,6 +22,7 @@ import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.OracleDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
@@ -518,7 +519,7 @@ class CreateTableTest: AbstractExposedTest() {
     fun `create Table With Explicit ForeignKey Name2`(testDB: TestDB) {
         val fkName = "MyForeignKey2"
         val parent = object: LongIdTable("parent2") {
-            val uniqueId = uuid("uniqueId").clientDefault { UUID.randomUUID() }.uniqueIndex()
+            val uniqueId = javaUUID("uniqueId").clientDefault { UUID.randomUUID() }.uniqueIndex()
         }
         val child = object: LongIdTable("child2") {
             val parentId = reference(
@@ -605,7 +606,7 @@ class CreateTableTest: AbstractExposedTest() {
         val fkName = "MyForeignKey4"
         val parent = object: LongIdTable() {
             override val tableName get() = "parent4"
-            val uniqueId = uuid("uniqueId").clientDefault { UUID.randomUUID() }.uniqueIndex()
+            val uniqueId = javaUUID("uniqueId").clientDefault { UUID.randomUUID() }.uniqueIndex()
         }
         val child = object: LongIdTable("child4") {
             val parentId = optReference(

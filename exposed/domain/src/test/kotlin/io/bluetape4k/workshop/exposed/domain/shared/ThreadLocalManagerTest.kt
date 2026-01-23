@@ -16,7 +16,7 @@ import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
+import org.jetbrains.exposed.v1.jdbc.transactions.JdbcTransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -38,12 +38,12 @@ class ThreadLocalManagerTest: AbstractExposedTest() {
     fun `re-connection`() {
         Assumptions.assumeTrue { TestDB.MYSQL_V5 in TestDB.enabledDialects() }
 
-        var secondThreadTm: TransactionManager? = null
+        var secondThreadTm: JdbcTransactionManager? = null
         val db1: Database = TestDB.MYSQL_V5.connect()
         lateinit var db2: Database
 
         transaction {
-            val firstThreadTm = db1.transactionManager
+            val firstThreadTm: JdbcTransactionManager = db1.transactionManager
             SchemaUtils.create(DMLTestData.Cities)
 
             thread {

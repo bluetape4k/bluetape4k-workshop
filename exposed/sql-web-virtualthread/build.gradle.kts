@@ -52,6 +52,10 @@ dependencies {
     implementation(Libs.testcontainers_mysql)
     implementation(Libs.mysql_connector_j)
 
+    // Jackson for Kotlin
+    implementation(Libs.jackson3_module_kotlin)
+    implementation(Libs.jackson3_module_blackbird)
+
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))
     annotationProcessor(Libs.springBoot("autoconfigure-processor"))

@@ -23,6 +23,7 @@ import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.dao.entityCache
 import org.jetbrains.exposed.v1.dao.flushCache
 import org.jetbrains.exposed.v1.dao.with
@@ -108,7 +109,7 @@ object TimebasedUUIDTables {
      * ```
      */
     object Towns: TimebasedUUIDTable("towns") {
-        val cityId = uuid("city_id").references(Cities.id)
+        val cityId = javaUUID("city_id").references(Cities.id)
     }
 
     class City(id: EntityID<UUID>): TimebasedUUIDEntity(id) {

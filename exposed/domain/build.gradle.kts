@@ -25,7 +25,7 @@ dependencies {
     implementation(Libs.exposed_kotlin_datetime)
     implementation(Libs.exposed_migration_jdbc)
     implementation(Libs.exposed_money)
-    implementation(Libs.exposed_spring_boot_starter)
+    implementation(Libs.exposed_spring_boot4_starter)
 
     implementation(Libs.bluetape4k_jdbc)
     testImplementation(Libs.bluetape4k_junit5)
@@ -53,11 +53,16 @@ dependencies {
     implementation(Libs.kotlinx_coroutines_core)
     testImplementation(Libs.kotlinx_coroutines_test)
 
-    testImplementation("io.github.hakky54:logcaptor:2.10.0")
+    testImplementation(Libs.logcaptor)
 
-    // Kotlin Serialization Json
+    // Kotlin Serialization JSON
     implementation(platform(Libs.kotlinx_serialization_bom))
     implementation(Libs.kotlinx_serialization_json)
+
+    // Jackson 3 for Kotlin
+    implementation(Libs.bluetape4k_jackson3)
+    implementation(Libs.jackson3_module_kotlin)
+    implementation(Libs.jackson3_module_blackbird)
 
     // Java Money
     implementation(Libs.bluetape4k_money)

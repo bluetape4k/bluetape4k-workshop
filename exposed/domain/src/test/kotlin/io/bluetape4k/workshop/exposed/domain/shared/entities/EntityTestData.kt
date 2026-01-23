@@ -24,7 +24,7 @@ object EntityTestData {
      */
     object YTable: IdTable<String>("YTable") {
         override val id: Column<EntityID<String>> = varchar("uuid", 24).entityId()
-            .clientDefault { EntityID(TimebasedUuid.nextBase62String(), YTable) }
+            .clientDefault { EntityID(TimebasedUuid.Reordered.nextIdAsString(), YTable) }
 
         val x = bool("x").default(true)
 

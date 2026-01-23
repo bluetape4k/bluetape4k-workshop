@@ -5,7 +5,7 @@ import com.zaxxer.hikari.HikariDataSource
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.workshop.exposed.spring.transaction.SpringTransactionEntityTest.OrderService
 import org.jetbrains.exposed.v1.core.DatabaseConfig
-import org.jetbrains.exposed.v1.spring.transaction.SpringTransactionManager
+import org.jetbrains.exposed.v1.spring7.transaction.SpringTransactionManager
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.PlatformTransactionManager

@@ -18,10 +18,11 @@ import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.concat
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.intLiteral
+import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.less
 import org.jetbrains.exposed.v1.core.like
 import org.jetbrains.exposed.v1.core.minus
@@ -436,7 +437,7 @@ class UpsertTest: AbstractExposedTest() {
          * ```
          */
         val tester = object: Table("tester") {
-            val id = uuid("id").autoGenerate()
+            val id = javaUUID("id").autoGenerate()
             val title = text("title")
 
             override val primaryKey = PrimaryKey(id)
@@ -863,7 +864,7 @@ class UpsertTest: AbstractExposedTest() {
          */
         val tester = object: Table("tester") {
             val item = varchar("item", 64).uniqueIndex()
-            val code = uuid("code").clientDefault { UUID.randomUUID() }
+            val code = javaUUID("code").clientDefault { UUID.randomUUID() }
             val gains = integer("gains")
             val losses = integer("losses")
         }

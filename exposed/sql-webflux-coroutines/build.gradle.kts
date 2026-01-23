@@ -38,6 +38,7 @@ dependencies {
     implementation(Libs.exposed_jdbc)
     implementation(Libs.exposed_kotlin_datetime)
     implementation(Libs.exposed_migration_jdbc)
+    // implementation(Libs.exposed_spring_boot_starter) // 직접 DatabaseConfig 에서 Database를 설정해서, 중복됨
 
     // Database Drivers
     implementation(Libs.hikaricp)
@@ -49,6 +50,10 @@ dependencies {
     implementation(Libs.bluetape4k_testcontainers)
     implementation(Libs.testcontainers_mysql)
     implementation(Libs.mysql_connector_j)
+
+    // Jackson for Kotlin
+    implementation(Libs.jackson3_module_kotlin)
+    implementation(Libs.jackson3_module_blackbird)
 
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))

@@ -6,8 +6,8 @@ import io.bluetape4k.workshop.exposed.spring.boot.Application
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.v1.core.DatabaseConfig
-import org.jetbrains.exposed.v1.spring.boot.DatabaseInitializer
-import org.jetbrains.exposed.v1.spring.transaction.SpringTransactionManager
+import org.jetbrains.exposed.v1.spring.boot4.DatabaseInitializer
+import org.jetbrains.exposed.v1.spring7.transaction.SpringTransactionManager
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.NoSuchBeanDefinitionException
 import org.springframework.beans.factory.annotation.Autowired

@@ -645,7 +645,7 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
             fetchedEntity shouldBeEqualTo entity // Same reference
 
             fetchedEntity!!.multiArray shouldBeEqualTo updatedArray
-            fetchedEntity!!.multiArray.flatten() shouldBeEqualTo updatedArray.flatten()
+            fetchedEntity.multiArray.flatten() shouldBeEqualTo updatedArray.flatten()
         }
     }
 }
