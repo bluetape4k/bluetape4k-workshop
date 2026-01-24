@@ -73,8 +73,6 @@ object Versions {
     const val kotlinx_coroutines = "1.10.2"     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
     const val kotlinx_serialization = "1.9.0"   // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-json-jvm
 
-    const val kotlinx_atomicfu = "0.29.0"       // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/atomicfu
-
     const val kotlinx_benchmark = Plugins.Versions.kotlinx_benchmark
 
     const val spring_boot3 = Plugins.Versions.spring_boot3
@@ -414,9 +412,6 @@ object Libs {
     val kotlinx_serialization_properties_jvm = kotlinxSerialization("properties-jvm")
     val kotlinx_serialization_protobuf = kotlinxSerialization("protobuf")
     val kotlinx_serialization_protobuf_jvm = kotlinxSerialization("protobuf-jvm")
-
-    const val kotlinx_atomicfu = "org.jetbrains.kotlinx:atomicfu:${Versions.kotlinx_atomicfu}"
-    const val kotlinx_atomicfu_jvm = "org.jetbrains.kotlinx:atomicfu-jvm:${Versions.kotlinx_atomicfu}"
 
     // https://github.com/Kotlin/kotlinx-benchmark
     fun kotlinxBenchmark(module: String, version: String = Versions.kotlinx_benchmark) =

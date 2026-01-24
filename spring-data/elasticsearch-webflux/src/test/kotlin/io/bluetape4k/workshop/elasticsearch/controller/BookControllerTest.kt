@@ -23,11 +23,9 @@ import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
-import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 
 class BookControllerTest(
-    @param:Autowired private val client: WebTestClient,
     @param:Autowired private val bookService: BookService,
 ): AbstractElasticsearchApplicationTest() {
 

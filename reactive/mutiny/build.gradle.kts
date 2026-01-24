@@ -5,8 +5,6 @@ configurations {
 dependencies {
     implementation(Libs.bluetape4k_mutiny)
 
-    implementation(Libs.kotlinx_atomicfu)
-
     // Smallrye Mutiny
     implementation(Libs.mutiny)
     implementation(Libs.mutiny_kotlin)
