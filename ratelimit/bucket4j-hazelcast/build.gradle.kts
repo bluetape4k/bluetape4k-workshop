@@ -23,8 +23,8 @@ dependencies {
     implementation(Libs.bucket4j_spring_boot_starter)
 
     // Hazelcast
-//    implementation(Libs.hazelcast)
-//    implementation(Libs.hazelcast_spring)
+    implementation(Libs.hazelcast)
+    implementation(Libs.bluetape4k_testcontainers)
 
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))
@@ -34,9 +34,7 @@ dependencies {
 
     implementation(Libs.springBootStarter("actuator"))
     implementation(Libs.springBootStarter("cache"))
-    testImplementation(Libs.springBootStarter("cache-test"))
     implementation(Libs.springBootStarter("hazelcast"))
-    testImplementation(Libs.springBootStarter("hazelcast-test"))
     implementation(Libs.springBootStarter("validation"))
     implementation(Libs.springBootStarter("webflux"))
     testImplementation(Libs.springBootStarter("webflux-test"))

@@ -85,9 +85,7 @@ subprojects {
     }
 
     kotlin {
-        jvmToolchain {
-            languageVersion.set(JavaLanguageVersion.of(25))
-        }
+        jvmToolchain(25)
         compilerOptions {
             jvmTarget.set(JvmTarget.JVM_25)
             languageVersion.set(KotlinVersion.KOTLIN_2_3)
