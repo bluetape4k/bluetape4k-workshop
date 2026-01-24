@@ -97,7 +97,7 @@ class DemoRoutesTest: GatewayApplicationTest() {
     }
 
     @Test
-    fun `rate limit per healingpaper uid`() {
+    fun `rate limit per user id`() {
         // NOTE: 이 방식보다 Bucket4j 방식이 더 좋다.
         // 1. 여러가지 Rate Limit 을 적용이 가능하다
         // 2. Path 별로 따로 Rate Limit 을 적용할 수 있다.
