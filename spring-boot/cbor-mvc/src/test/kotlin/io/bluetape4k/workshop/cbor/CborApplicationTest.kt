@@ -5,6 +5,7 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.cbor.course.Course
 import io.bluetape4k.workshop.cbor.course.PhoneType
+import io.bluetape4k.workshop.shared.httpGet
 import kotlinx.coroutines.reactive.awaitSingle
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
@@ -35,19 +36,23 @@ class CborApplicationTest {
 
     companion object: KLoggingChannel()
 
+    private val cborHttpMessageConverter = JacksonCborHttpMessageConverter()
+    private val jacksonCborEncoder = JacksonCborEncoder()
+    private val jacksonCborDecoder = JacksonCborDecoder()
+
     private val restTemplate: RestTemplate by lazy {
-        RestTemplate(listOf(JacksonCborHttpMessageConverter()))
+        RestTemplate(listOf(cborHttpMessageConverter))
     }
 
     @LocalServerPort
-    private var port: Int = 8080
+    private val port: Int = 0
 
     private val baseUrl by lazy { "http://localhost:$port" }
 
-    private val restClient by lazy {
+    private val restClient: RestClient by lazy {
         RestClient.builder()
             .configureMessageConverters {
-                it.addCustomConverter(JacksonCborHttpMessageConverter())
+                it.addCustomConverter(cborHttpMessageConverter)
             }
             .baseUrl(baseUrl)
             .build()
@@ -56,8 +61,8 @@ class CborApplicationTest {
     private val client: WebClient by lazy {
         val strategies = ExchangeStrategies.builder()
             .codecs { cfg ->
-                cfg.defaultCodecs().jacksonJsonDecoder(JacksonCborDecoder())
-                cfg.defaultCodecs().jacksonJsonEncoder(JacksonCborEncoder())
+                cfg.defaultCodecs().jacksonJsonDecoder(jacksonCborDecoder)
+                cfg.defaultCodecs().jacksonJsonEncoder(jacksonCborEncoder)
             }
             .build()
 
@@ -70,8 +75,8 @@ class CborApplicationTest {
     private val testClient: WebTestClient by lazy {
         val strategies = ExchangeStrategies.builder()
             .codecs { cfg ->
-                cfg.defaultCodecs().jacksonJsonDecoder(JacksonCborDecoder())
-                cfg.defaultCodecs().jacksonJsonEncoder(JacksonCborEncoder())
+                cfg.defaultCodecs().jacksonJsonDecoder(jacksonCborDecoder)
+                cfg.defaultCodecs().jacksonJsonEncoder(jacksonCborEncoder)
             }
             .build()
 
@@ -97,9 +102,8 @@ class CborApplicationTest {
 
     @Test
     fun `using restClient`() {
-        val course1 = restClient.get()
-            .uri("/courses/1")
-            .retrieve()
+        val course1 = restClient
+            .httpGet("/courses/1", accept = MediaType.APPLICATION_CBOR)
             .body<Course>()
 
         course1.shouldNotBeNull()
@@ -119,16 +123,22 @@ class CborApplicationTest {
         course1.shouldNotBeNull()
         log.debug { "course1: $course1" }
         assertCourse1(course1)
+
+        val course2 = client
+            .httpGet("/courses/1", accept = MediaType.APPLICATION_CBOR)
+            .bodyToMono<Course>()
+            .awaitSingle()
+
+        course2.shouldNotBeNull()
+        log.debug { "course2: $course2" }
+        assertCourse1(course2)
     }
 
     @Disabled("WebTestClient 에서는 아직 CBOR 지원을 하지 않습니다.")
     @Test
     fun `using webTestClient`() = runSuspendIO {
-        val course1 = testClient.get()
-            .uri("/courses/1")
-            .accept(MediaType.APPLICATION_CBOR)
-            .exchange()
-            .expectStatus().isOk
+        val course1 = testClient
+            .httpGet("/courses/1", accept = MediaType.APPLICATION_CBOR)
             .returnResult<Course>().responseBody
             .awaitSingle()
 

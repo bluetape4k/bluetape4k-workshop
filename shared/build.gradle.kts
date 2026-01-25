@@ -5,6 +5,9 @@ configurations {
 dependencies {
     api(Libs.bluetape4k_io)
 
+    // Web
+    compileOnly(Libs.springBootStarter("webmvc"))
+
     // Webflux
     compileOnly(Libs.springBootStarter("webflux"))
 

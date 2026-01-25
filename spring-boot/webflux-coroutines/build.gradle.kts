@@ -13,6 +13,8 @@ springBoot {
 //}
 
 dependencies {
+    implementation(project(":shared"))
+
     implementation(Libs.bluetape4k_io)
     implementation(Libs.bluetape4k_jackson3)
     testImplementation(Libs.bluetape4k_junit5)

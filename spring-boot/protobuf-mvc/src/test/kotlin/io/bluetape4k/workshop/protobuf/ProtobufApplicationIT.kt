@@ -5,6 +5,7 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.protobuf.School.Course
 import io.bluetape4k.workshop.protobuf.convert.toJson
+import io.bluetape4k.workshop.shared.httpGet
 import kotlinx.coroutines.reactive.awaitSingle
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
@@ -86,10 +87,8 @@ class ProtobufApplicationIT {
 
     @Test
     fun `using WebClient`() = runSuspendIO {
-        val course1 = client.get()
-            .uri("/courses/1")
-            .accept(MediaType.APPLICATION_PROTOBUF)
-            .retrieve()
+        val course1 = client
+            .httpGet("/courses/1")
             .awaitBody<Course>()
 
         log.debug { "course1=$course1" }
@@ -98,11 +97,8 @@ class ProtobufApplicationIT {
 
     @Test
     fun `using WebTestClient`() = runSuspendIO {
-        val bytes = testClient.get()
-            .uri("/courses/1")
-            .accept(MediaType.APPLICATION_PROTOBUF)
-            .exchange()
-            .expectStatus().isOk
+        val bytes = testClient
+            .httpGet("/courses/1")
             .returnResult<ByteArray>().responseBody
             .awaitSingle()
 

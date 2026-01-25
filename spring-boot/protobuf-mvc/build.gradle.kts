@@ -42,13 +42,15 @@ springBoot {
 
 dependencies {
 
+    implementation(project(":shared"))
+
     // Protobuf
     implementation(Libs.bluetape4k_grpc)
     implementation(Libs.protobuf_java)
     implementation(Libs.protobuf_java_util)
     implementation(Libs.protobuf_kotlin)
 
-    implementation(Libs.springBootStarter("web"))
+    implementation(Libs.springBootStarter("webmvc"))
     testImplementation(Libs.springBootStarter("webmvc-test"))
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
