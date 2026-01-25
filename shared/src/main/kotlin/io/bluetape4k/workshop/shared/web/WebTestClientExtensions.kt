@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.shared
+package io.bluetape4k.workshop.shared.web
 
 import kotlinx.coroutines.flow.Flow
 import org.reactivestreams.Publisher

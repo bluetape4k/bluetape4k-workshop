@@ -5,8 +5,8 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.coroutines.AbstractCoroutineApplicationTest
 import io.bluetape4k.workshop.coroutines.model.Banner
-import io.bluetape4k.workshop.shared.httpGet
-import io.bluetape4k.workshop.shared.httpPost
+import io.bluetape4k.workshop.shared.web.httpGet
+import io.bluetape4k.workshop.shared.web.httpPost
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map

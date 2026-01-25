@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.shared
+package io.bluetape4k.workshop.shared.web
 
 import kotlinx.coroutines.flow.Flow
 import org.reactivestreams.Publisher
@@ -147,7 +147,7 @@ inline fun <reified T: Any> WebClient.httpPatch(
         .accept(accept)
         .retrieve()
 
-fun WebClient.httpDepete(
+fun WebClient.httpDelete(
     uri: String,
     accept: MediaType = MediaType.ALL,
 ): WebClient.ResponseSpec =

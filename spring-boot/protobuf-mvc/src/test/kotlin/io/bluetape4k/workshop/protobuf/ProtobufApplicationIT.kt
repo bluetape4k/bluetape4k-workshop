@@ -5,7 +5,7 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.protobuf.School.Course
 import io.bluetape4k.workshop.protobuf.convert.toJson
-import io.bluetape4k.workshop.shared.httpGet
+import io.bluetape4k.workshop.shared.web.httpGet
 import kotlinx.coroutines.reactive.awaitSingle
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
