@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.id.KsuidEntity
 import io.bluetape4k.exposed.dao.id.KsuidEntityClass
 import io.bluetape4k.exposed.dao.id.KsuidTable
@@ -8,7 +9,6 @@ import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityClass
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDTable
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
-import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
@@ -81,11 +81,9 @@ class OneToManySetTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String {
-            return toStringBuilder()
-                .add("name", name)
-                .toString()
-        }
+        override fun toString(): String = entityToStringBuilder()
+            .add("name", name)
+            .toString()
     }
 
     class Bid(id: EntityID<UUID>): TimebasedUUIDEntity(id) {
@@ -96,11 +94,9 @@ class OneToManySetTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String {
-            return toStringBuilder()
-                .add("amount", amount)
-                .toString()
-        }
+        override fun toString(): String = entityToStringBuilder()
+            .add("amount", amount)
+            .toString()
     }
 
     @ParameterizedTest
@@ -261,12 +257,10 @@ class OneToManySetTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String {
-            return toStringBuilder()
-                .add("name", name)
-                .add("status", status)
-                .toString()
-        }
+        override fun toString(): String = entityToStringBuilder()
+            .add("name", name)
+            .add("status", status)
+            .toString()
     }
 
     /**

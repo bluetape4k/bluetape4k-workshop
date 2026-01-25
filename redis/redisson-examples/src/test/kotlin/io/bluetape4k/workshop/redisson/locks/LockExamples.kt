@@ -9,7 +9,6 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.redis.redisson.coroutines.getLockId
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
-import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
@@ -23,6 +22,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledOnJre
 import org.junit.jupiter.api.condition.JRE
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
 
 /**
@@ -118,7 +118,7 @@ class LockExamples: AbstractRedissonTest() {
     @RepeatedTest(REPEAT_SIZE)
     fun `멀티 스레드 환경에서 락 획득 및 해제`() {
         val lock = redisson.getLock(randomName())
-        val lockCounter = atomic(0)
+        val lockCounter = AtomicInteger(0)
 
         // NOTE: Redisson Lock 은 Thread Id 기반으로 수행됩니다. Coroutine 의 경우 Thread를 공유하므로 Lock 사용에 문제가 발생할 수 있습니다.
         MultithreadingTester()
@@ -138,7 +138,7 @@ class LockExamples: AbstractRedissonTest() {
             }
             .run()
 
-        lockCounter.value shouldBeEqualTo 8 * 2
+        lockCounter.get() shouldBeEqualTo 8 * 2
     }
 
 
@@ -146,7 +146,7 @@ class LockExamples: AbstractRedissonTest() {
     @RepeatedTest(REPEAT_SIZE)
     fun `Virtual Thread 환경에서 락 획득 및 해제`() {
         val lock = redisson.getLock(randomName())
-        val lockCounter = atomic(0)
+        val lockCounter = AtomicInteger(0)
 
         // NOTE: Redisson Lock 은 Thread Id 기반으로 수행됩니다. Coroutine 의 경우 Thread를 공유하므로 Lock 사용에 문제가 발생할 수 있습니다.
         StructuredTaskScopeTester()
@@ -167,13 +167,13 @@ class LockExamples: AbstractRedissonTest() {
             }
             .run()
 
-        lockCounter.value shouldBeEqualTo 16
+        lockCounter.get() shouldBeEqualTo 16
     }
 
     @RepeatedTest(REPEAT_SIZE)
     fun `Multi Job 환경에서 락 획득 및 해제`() = runTest {
         val lock = redisson.getLock(randomName())
-        val lockCounter = atomic(0)
+        val lockCounter = AtomicInteger(0)
 
         SuspendedJobTester()
             .numThreads(8)
@@ -196,6 +196,6 @@ class LockExamples: AbstractRedissonTest() {
             }
             .run()
 
-        lockCounter.value shouldBeEqualTo 16
+        lockCounter.get() shouldBeEqualTo 16
     }
 }

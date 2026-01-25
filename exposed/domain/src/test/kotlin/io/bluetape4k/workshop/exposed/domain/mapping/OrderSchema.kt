@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.exposed.domain.mapping
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
-import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.domain.mapping.OrderSchema.Item
@@ -66,7 +66,7 @@ object OrderSchema {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("orderDate", orderDate)
             .toString()
     }
@@ -83,7 +83,7 @@ object OrderSchema {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("orderId", orderId)
             .add("lineNumber", lineNumber)
             .add("description", description)
@@ -98,7 +98,7 @@ object OrderSchema {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("description", description)
             .toString()
     }
@@ -113,7 +113,7 @@ object OrderSchema {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("orderId", order.id.value)
             .add("itemId", item?.id?.value)
             .add("lineNumber", lineNumber)
@@ -129,7 +129,7 @@ object OrderSchema {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("userName", userName)
             .add("parentId", parent?.id?._value)
             .toString()

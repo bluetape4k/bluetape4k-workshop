@@ -1,12 +1,12 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntity
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityClass
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDTable
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
 import io.bluetape4k.exposed.dao.idValue
-import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.idgenerators.uuid.TimebasedUuid.Epoch
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
@@ -120,8 +120,7 @@ object TimebasedUUIDTables {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
                 .add("name", name)
                 .toString()
     }
@@ -134,8 +133,7 @@ object TimebasedUUIDTables {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
                 .add("name", name)
                 .add("city id", city.idValue)
                 .toString()
@@ -150,8 +148,7 @@ object TimebasedUUIDTables {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
                 .add("address", address)
                 .add("person id", person.idValue)
                 .add("city id", city.idValue)
@@ -165,8 +162,7 @@ object TimebasedUUIDTables {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
                 .add("city id", city.idValue)
                 .toString()
     }

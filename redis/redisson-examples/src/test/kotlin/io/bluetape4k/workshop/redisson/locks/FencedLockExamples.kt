@@ -9,7 +9,6 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.redis.redisson.coroutines.getLockId
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
-import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.delay
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeGreaterThan
@@ -18,6 +17,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledOnJre
 import org.junit.jupiter.api.condition.JRE
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
 
 /**
@@ -91,7 +91,7 @@ class FencedLockExamples: AbstractRedissonTest() {
     @RepeatedTest(REPEAT_SIZE)
     fun `멀티 스레드 환경에서 FencedLock 획득 및 해제`() {
         val lock = redisson.getFencedLock(randomName())
-        val lockCounter = atomic(0)
+        val lockCounter = AtomicInteger(0)
 
         MultithreadingTester()
             .numThreads(8)
@@ -112,14 +112,14 @@ class FencedLockExamples: AbstractRedissonTest() {
             }
             .run()
 
-        lockCounter.value shouldBeEqualTo 8 * 2
+        lockCounter.get() shouldBeEqualTo 8 * 2
     }
 
     @EnabledOnJre(JRE.JAVA_21)
     @RepeatedTest(REPEAT_SIZE)
     fun `Virtual Thread 환경에서 FencedLock 획득 및 해제`() {
         val lock = redisson.getFencedLock(randomName())
-        val lockCounter = atomic(0)
+        val lockCounter = AtomicInteger(0)
 
         StructuredTaskScopeTester()
             .roundsPerTask(16)
@@ -141,13 +141,13 @@ class FencedLockExamples: AbstractRedissonTest() {
             }
             .run()
 
-        lockCounter.value shouldBeEqualTo 16
+        lockCounter.get() shouldBeEqualTo 16
     }
 
     @RepeatedTest(LockExamples.REPEAT_SIZE)
     fun `코루틴 환경에서 FencedLock 획득 및 해제`() = runSuspendIO {
         val lock = redisson.getFencedLock(randomName())
-        val lockCounter = atomic(0)
+        val lockCounter = AtomicInteger(0)
 
         SuspendedJobTester()
             .numThreads(8)
@@ -172,6 +172,6 @@ class FencedLockExamples: AbstractRedissonTest() {
             }
             .run()
 
-        lockCounter.value shouldBeEqualTo 16
+        lockCounter.get() shouldBeEqualTo 16
     }
 }

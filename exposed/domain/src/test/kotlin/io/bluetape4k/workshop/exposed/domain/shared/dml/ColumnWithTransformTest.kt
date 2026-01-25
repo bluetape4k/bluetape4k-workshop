@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.exposed.domain.shared.dml
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
-import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.idgenerators.uuid.TimebasedUuid
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
@@ -298,11 +298,10 @@ class ColumnWithTransformTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("simple", simple)
-                .add("chained", chained)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("simple", simple)
+            .add("chained", chained)
+            .toString()
     }
 
     @ParameterizedTest

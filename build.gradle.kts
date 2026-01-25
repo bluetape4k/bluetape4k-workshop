@@ -431,15 +431,16 @@ subprojects {
         compileOnly(platform(Libs.jackson_bom))
         compileOnly(platform(Libs.kotlinx_coroutines_bom))
 
-        api(Libs.kotlin_stdlib)
+        implementation(Libs.kotlin_stdlib)
+        implementation(Libs.kotlin_reflect)
         testImplementation(Libs.kotlin_test)
         testImplementation(Libs.kotlin_test_junit5)
 
         compileOnly(Libs.kotlinx_coroutines_core)
 
         // 개발 시에는 logback 이 검증하기에 더 좋고, Production에서 비동기 로깅은 log4j2 가 성능이 좋다고 합니다.
-        api(Libs.slf4j_api)
-        api(Libs.bluetape4k_logging)
+        implementation(Libs.slf4j_api)
+        implementation(Libs.bluetape4k_logging)
         implementation(Libs.logback)
         testImplementation(Libs.jcl_over_slf4j)
         testImplementation(Libs.jul_to_slf4j)

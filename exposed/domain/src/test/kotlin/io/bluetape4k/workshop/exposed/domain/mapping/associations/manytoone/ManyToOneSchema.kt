@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.associations.manytoone
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
 import io.bluetape4k.exposed.dao.idValue
-import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withTables
 import org.jetbrains.exposed.v1.core.ReferenceOption
@@ -59,11 +59,9 @@ object ManyToOneSchema {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String {
-            return toStringBuilder()
-                .add("name", name)
-                .toString()
-        }
+        override fun toString(): String = entityToStringBuilder()
+            .add("name", name)
+            .toString()
     }
 
     class Beer(id: EntityID<Int>): IntEntity(id) {
@@ -74,12 +72,10 @@ object ManyToOneSchema {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String {
-            return toStringBuilder()
-                .add("name", name)
-                .add("brewery id", brewery.idValue)
-                .toString()
-        }
+        override fun toString(): String = entityToStringBuilder()
+            .add("name", name)
+            .add("brewery id", brewery.idValue)
+            .toString()
     }
 
     fun withBeerTables(
@@ -140,11 +136,9 @@ object ManyToOneSchema {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String {
-            return toStringBuilder()
-                .add("name", name)
-                .toString()
-        }
+        override fun toString(): String = entityToStringBuilder()
+            .add("name", name)
+            .toString()
     }
 
     class JugMeter(id: EntityID<Int>): IntEntity(id) {
@@ -155,12 +149,10 @@ object ManyToOneSchema {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String {
-            return toStringBuilder()
-                .add("name", name)
-                .add("jug id", memberOf.idValue)
-                .toString()
-        }
+        override fun toString(): String = entityToStringBuilder()
+            .add("name", name)
+            .add("jug id", memberOf.idValue)
+            .toString()
     }
 
     fun withJugTables(
@@ -221,11 +213,9 @@ object ManyToOneSchema {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String {
-            return toStringBuilder()
-                .add("name", name)
-                .toString()
-        }
+        override fun toString(): String = entityToStringBuilder()
+            .add("name", name)
+            .toString()
     }
 
     class SalesGuy(id: EntityID<Int>): IntEntity(id) {
@@ -236,12 +226,10 @@ object ManyToOneSchema {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String {
-            return toStringBuilder()
-                .add("name", name)
-                .add("salesForce id", salesForce.idValue)
-                .toString()
-        }
+        override fun toString(): String = entityToStringBuilder()
+            .add("name", name)
+            .add("salesForce id", salesForce.idValue)
+            .toString()
     }
 
     fun withSalesTables(
@@ -249,7 +237,7 @@ object ManyToOneSchema {
         statement: JdbcTransaction.(salesForces: SalesForceTable, salesGuys: SalesGuyTable) -> Unit,
     ) {
         withTables(testDB, SalesForceTable, SalesGuyTable) {
-            statement(SalesForceTable, SalesGuyTable)
+            statement(SalesForceTable, ManyToOneSchema.SalesGuyTable)
         }
     }
 

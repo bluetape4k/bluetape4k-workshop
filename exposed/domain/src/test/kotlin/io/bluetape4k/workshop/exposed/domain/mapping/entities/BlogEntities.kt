@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.entities
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
 import io.bluetape4k.exposed.dao.idValue
-import io.bluetape4k.exposed.dao.toStringBuilder
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -116,10 +116,9 @@ class Post(id: EntityID<Long>): LongEntity(id) {
 
     override fun equals(other: Any?): Boolean = idEquals(other)
     override fun hashCode(): Int = idHashCode()
-    override fun toString(): String =
-        toStringBuilder()
-            .add("title", title)
-            .toString()
+    override fun toString(): String = entityToStringBuilder()
+        .add("title", title)
+        .toString()
 }
 
 class PostDetails(id: EntityID<Long>): LongEntity(id) {
@@ -131,12 +130,11 @@ class PostDetails(id: EntityID<Long>): LongEntity(id) {
 
     override fun equals(other: Any?): Boolean = idEquals(other)
     override fun hashCode(): Int = idHashCode()
-    override fun toString(): String =
-        toStringBuilder()
-            .add("post id", post.idValue)
-            .add("createdOn", createdOn)
-            .add("createdBy", createdBy)
-            .toString()
+    override fun toString(): String = entityToStringBuilder()
+        .add("post id", post.idValue)
+        .add("createdOn", createdOn)
+        .add("createdBy", createdBy)
+        .toString()
 }
 
 class PostComment(id: EntityID<Long>): LongEntity(id) {
@@ -148,11 +146,10 @@ class PostComment(id: EntityID<Long>): LongEntity(id) {
 
     override fun equals(other: Any?): Boolean = idEquals(other)
     override fun hashCode(): Int = idHashCode()
-    override fun toString(): String =
-        toStringBuilder()
-            .add("post id", post.idValue)
-            .add("review", review)
-            .toString()
+    override fun toString(): String = entityToStringBuilder()
+        .add("post id", post.idValue)
+        .add("review", review)
+        .toString()
 }
 
 class Tag(id: EntityID<Long>): LongEntity(id) {
@@ -163,8 +160,7 @@ class Tag(id: EntityID<Long>): LongEntity(id) {
 
     override fun equals(other: Any?): Boolean = idEquals(other)
     override fun hashCode(): Int = idHashCode()
-    override fun toString(): String =
-        toStringBuilder()
-            .add("name", name)
-            .toString()
+    override fun toString(): String = entityToStringBuilder()
+        .add("name", name)
+        .toString()
 }

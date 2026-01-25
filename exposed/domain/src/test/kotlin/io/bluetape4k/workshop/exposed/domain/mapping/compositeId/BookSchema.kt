@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.compositeId
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
 import io.bluetape4k.exposed.dao.idValue
-import io.bluetape4k.exposed.dao.toStringBuilder
 import org.jetbrains.exposed.v1.core.dao.id.CompositeID
 import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -172,10 +172,9 @@ object BookSchema {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("name", name)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("name", name)
+            .toString()
     }
 
     class Author(id: EntityID<Int>): IntEntity(id) {
@@ -186,11 +185,10 @@ object BookSchema {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("pen name", penName)
-                .add("publisher id", publisher.idValue)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("pen name", penName)
+            .add("publisher id", publisher.idValue)
+            .toString()
     }
 
     class Book(id: EntityID<CompositeID>): CompositeEntity(id) {
@@ -202,12 +200,11 @@ object BookSchema {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("title", title)
-                .add("author id", author?.idValue)
-                .add("review id", review.idValue)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("title", title)
+            .add("author id", author?.idValue)
+            .add("review id", review.idValue)
+            .toString()
     }
 
     class Review(id: EntityID<CompositeID>): CompositeEntity(id) {
@@ -217,10 +214,9 @@ object BookSchema {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("book id", book.idValue)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("book id", book.idValue)
+            .toString()
     }
 
     class Office(id: EntityID<CompositeID>): CompositeEntity(id) {
@@ -231,11 +227,10 @@ object BookSchema {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("staff", staff)
-                .add("publisher id", publisher?.idValue)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("staff", staff)
+            .add("publisher id", publisher?.idValue)
+            .toString()
     }
 
 }

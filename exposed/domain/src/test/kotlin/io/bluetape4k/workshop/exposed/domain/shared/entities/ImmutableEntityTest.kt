@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
-import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
@@ -63,7 +63,7 @@ class ImmutableEntityTest: AbstractExposedTest() {
 
             override fun equals(other: Any?): Boolean = idEquals(other)
             override fun hashCode(): Int = idHashCode()
-            override fun toString(): String = toStringBuilder()
+            override fun toString(): String = entityToStringBuilder()
                 .add("name", name)
                 .add("etag", etag)
                 .toString()
@@ -87,7 +87,7 @@ class ImmutableEntityTest: AbstractExposedTest() {
 
             override fun equals(other: Any?): Boolean = idEquals(other)
             override fun hashCode(): Int = idHashCode()
-            override fun toString(): String = toStringBuilder()
+            override fun toString(): String = entityToStringBuilder()
                 .add("name", name)
                 .add("etag", etag)
                 .toString()

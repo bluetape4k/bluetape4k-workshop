@@ -54,7 +54,7 @@ class ReactiveKeyCommandsTest(
     private suspend fun generateRandomKeys(size: Int) {
         val keys = flow {
             for (i in 1..size) {
-                emit(serializer.serialize("$PREFIX-$i")!!.toByteBuffer())
+                emit(serializer.serialize("$PREFIX-$i").toByteBuffer())
             }
         }.map {
             SetCommand.set(it).value(Fakers.fixedString(128).toUtf8Bytes().toByteBuffer())
@@ -76,7 +76,7 @@ class ReactiveKeyCommandsTest(
         generateRandomKeys(KEY_SIZE)
 
         val keyCoount = connection.keyCommands()
-            .keys(serializer.serialize(KEY_PATTERN)!!.toByteBuffer())
+            .keys(serializer.serialize(KEY_PATTERN).toByteBuffer())
             .asFlow()
             .buffer()
             .flatMapConcat { it.asFlow() }
@@ -88,8 +88,8 @@ class ReactiveKeyCommandsTest(
 
     @Test
     fun `store to list and pop`() = runSuspendIO {
-        val key = serializer.serialize("list")!!.toByteBuffer()
-        val value = listOf(serializer.serialize("item")!!.toByteBuffer())
+        val key = serializer.serialize("list").toByteBuffer()
+        val value = listOf(serializer.serialize("item").toByteBuffer())
 
         val popResult = connection.listCommands()
             .brPop(listOf(key), Duration.ofSeconds(1))

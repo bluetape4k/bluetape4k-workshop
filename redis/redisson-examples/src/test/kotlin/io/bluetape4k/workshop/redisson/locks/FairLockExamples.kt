@@ -8,13 +8,13 @@ import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.redis.redisson.coroutines.getLockId
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
-import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.delay
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledOnJre
 import org.junit.jupiter.api.condition.JRE
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  *
@@ -34,7 +34,7 @@ class FairLockExamples: AbstractRedissonTest() {
     @Test
     fun `코루틴 환경에서 Fair 락 획득하기`() = runSuspendIO {
         val lock = redisson.getFairLock(randomName())
-        val lockCounter = atomic(0)
+        val lockCounter = AtomicInteger(0)
 
         SuspendedJobTester()
             .numThreads(16)
@@ -55,13 +55,13 @@ class FairLockExamples: AbstractRedissonTest() {
             }
             .run()
 
-        lockCounter.value shouldBeEqualTo 16 * 2
+        lockCounter.get() shouldBeEqualTo 16 * 2
     }
 
     @Test
     fun `멀티 스레딩 환경에서 Fair 락 획득하기`() {
         val lock = redisson.getFairLock(randomName())
-        val lockCounter = atomic(0)
+        val lockCounter = AtomicInteger(0)
 
         MultithreadingTester()
             .numThreads(16)
@@ -78,14 +78,14 @@ class FairLockExamples: AbstractRedissonTest() {
             }
             .run()
 
-        lockCounter.value shouldBeEqualTo 16 * 2
+        lockCounter.get() shouldBeEqualTo 16 * 2
     }
 
     @EnabledOnJre(JRE.JAVA_21)
     @Test
     fun `Virtual Threads 환경에서 Fair 락 획득하기`() {
         val lock = redisson.getFairLock(randomName())
-        val lockCounter = atomic(0)
+        val lockCounter = AtomicInteger(0)
 
         StructuredTaskScopeTester()
             .roundsPerTask(16 * 2)
@@ -101,6 +101,6 @@ class FairLockExamples: AbstractRedissonTest() {
             }
             .run()
 
-        lockCounter.value shouldBeEqualTo 16 * 2
+        lockCounter.get() shouldBeEqualTo 16 * 2
     }
 }

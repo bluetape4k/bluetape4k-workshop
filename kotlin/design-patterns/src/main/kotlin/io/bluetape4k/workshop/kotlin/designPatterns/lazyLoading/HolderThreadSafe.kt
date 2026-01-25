@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.kotlin.designPatterns.lazyLoading
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
-import kotlinx.atomicfu.locks.ReentrantLock
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 /**

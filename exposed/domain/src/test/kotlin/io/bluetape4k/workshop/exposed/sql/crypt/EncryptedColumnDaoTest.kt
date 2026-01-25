@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.exposed.sql.crypt
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
-import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
@@ -51,11 +51,10 @@ class EncryptedColumnDaoTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("varchar", varchar)
-                .add("binary", binary.contentToString())
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("varchar", varchar)
+            .add("binary", binary.contentToString())
+            .toString()
     }
 
     /**

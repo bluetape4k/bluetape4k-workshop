@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.mutiny
 
 import io.bluetape4k.codec.encodeBase62
+import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.trace
@@ -13,14 +14,14 @@ import io.smallrye.mutiny.Uni
 import io.smallrye.mutiny.coroutines.asFlow
 import io.smallrye.mutiny.coroutines.awaitSuspending
 import io.smallrye.mutiny.tuples.Tuple2
-import kotlinx.atomicfu.atomic
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.yield
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeIn
 import org.amshove.kluent.shouldContain
@@ -34,6 +35,8 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 import java.util.stream.Collectors
 import kotlin.random.Random
 
@@ -272,7 +275,7 @@ class CompositionTransformationExamples {
     }
 
     class Generator(start: Long) {
-        private val counter = atomic(start)
+        private val counter = AtomicLong(start)
 
         fun next(): Uni<Long> = Uni.createFrom().completionStage(
             CompletableFuture.supplyAsync(
@@ -284,7 +287,7 @@ class CompositionTransformationExamples {
 
     @Test
     fun `13 Multi Broadcast`() {
-        val counter = atomic(0)
+        val counter = AtomicInteger(0)
         val executor = Executors.newCachedThreadPool()
 
         val multi = Multi.createBy()
@@ -313,7 +316,7 @@ class CompositionTransformationExamples {
 
     @Test
     fun `13-1 Multi Broadcast in coroutines`() = runTest {
-        val counter = atomic(0)
+        val counter = AtomicInteger(0)
 
         val multi: Multi<Int> = Multi.createBy()
             .repeating().supplier(counter::getAndIncrement)
@@ -321,28 +324,32 @@ class CompositionTransformationExamples {
             .broadcast()
             .toAllSubscribers()
 
+        val scope = CoroutineScope(Dispatchers.Default)
+
         val jobs = listOf(
-            launch(Dispatchers.Default) {
+            scope.launch {
                 multi.onItem().transform { n -> "🚀 $n" }
                     .asFlow()
-                    .onEach { n -> log.debug { n } }
+                    .log("#1")
                     .collect()
             },
-            launch(Dispatchers.Default) {
+            scope.launch {
                 multi.onItem().transform { n -> "🧪 $n" }
                     .asFlow()
-                    .onEach { n -> log.debug { n } }
+                    .log("#2")
                     .collect()
             },
-            launch(Dispatchers.Default) {
+            scope.launch {
                 multi.onItem().transform { n -> "💡 $n" }
                     .asFlow()
-                    .onEach { n -> log.debug { n } }
+                    .log("#3")
                     .collect()
             }
         )
+        yield()
+        
         jobs.joinAll()
-        counter.value shouldBeEqualTo 10
+        counter.get() shouldBeEqualTo 10
     }
 
     @Test

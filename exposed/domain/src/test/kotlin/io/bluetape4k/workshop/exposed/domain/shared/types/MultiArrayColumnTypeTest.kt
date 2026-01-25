@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.exposed.domain.shared.types
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
-import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
@@ -577,10 +577,9 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("multiArray", multiArray)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("multiArray", multiArray)
+            .toString()
     }
 
     /**

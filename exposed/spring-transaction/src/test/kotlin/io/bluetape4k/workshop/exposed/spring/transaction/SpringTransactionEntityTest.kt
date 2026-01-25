@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.exposed.spring.transaction
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
-import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
@@ -84,7 +84,7 @@ class SpringTransactionEntityTest(
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = id.hashCode()
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("name", name)
             .toString()
     }
@@ -114,7 +114,7 @@ class SpringTransactionEntityTest(
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = id.hashCode()
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("customer", customer)
             .add("product", product)
             .toString()

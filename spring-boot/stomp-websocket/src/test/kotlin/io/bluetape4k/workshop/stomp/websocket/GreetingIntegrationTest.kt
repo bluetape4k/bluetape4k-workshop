@@ -6,8 +6,6 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.stomp.websocket.model.Greeting
 import io.bluetape4k.workshop.stomp.websocket.model.HelloMessage
-import kotlinx.atomicfu.AtomicRef
-import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.future.await
 import org.amshove.kluent.shouldBeEqualTo
 import org.awaitility.kotlin.await
@@ -32,6 +30,7 @@ import org.springframework.web.socket.sockjs.client.WebSocketTransport
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.jsonMapper
 import java.lang.reflect.Type
+import java.util.concurrent.atomic.AtomicReference
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class GreetingIntegrationTest(
@@ -57,8 +56,8 @@ class GreetingIntegrationTest(
 
     @Test
     fun `get greeting`() {
-        val received = atomic<Greeting?>(null)
-        val failure = atomic<Throwable?>(null)
+        val received = AtomicReference<Greeting>(null)
+        val failure = AtomicReference<Throwable>(null)
         val handler: StompSessionHandler = getStopmSessionHandler(received, failure)
 
         val session = stompClient.connectAsync(wsUrl, headers, handler, port).get()
@@ -67,22 +66,22 @@ class GreetingIntegrationTest(
         try {
             session.send("/app/hello", HelloMessage("Spring"))
         } catch (e: Throwable) {
-            failure.value = e
+            failure.set(e)
         }
 
-        await until { received.value != null || failure.value != null }
+        await until { received.get() != null || failure.get() != null }
 
-        if (failure.value == null) {
-            received.value!!.content shouldBeEqualTo "Hello, Spring!"
+        if (failure.get() == null) {
+            received.get()!!.content shouldBeEqualTo "Hello, Spring!"
         } else {
-            fail(failure.value)
+            fail(failure.get())
         }
     }
 
     @Test
     fun `get greeting with coroutines`() = runSuspendIO {
-        val received = atomic<Greeting?>(null)
-        val failure = atomic<Throwable?>(null)
+        val received = AtomicReference<Greeting>(null)
+        val failure = AtomicReference<Throwable>(null)
         val handler: StompSessionHandler = getStopmSessionHandler(received, failure)
 
         val session = stompClient.connectAsync(wsUrl, headers, handler, port).await()
@@ -91,21 +90,21 @@ class GreetingIntegrationTest(
         try {
             session.send("/app/hello", HelloMessage("Spring"))
         } catch (e: Throwable) {
-            failure.value = e
+            failure.set(e)
         }
 
-        await suspendUntil { received.value != null || failure.value != null }
+        await suspendUntil { received.get() != null || failure.get() != null }
 
-        if (failure.value == null) {
-            received.value!!.content shouldBeEqualTo "Hello, Spring!"
+        if (failure.get() == null) {
+            received.get()!!.content shouldBeEqualTo "Hello, Spring!"
         } else {
-            fail(failure.value)
+            fail(failure.get())
         }
     }
 
     private fun getStopmSessionHandler(
-        received: AtomicRef<Greeting?>,
-        failure: AtomicRef<Throwable?>,
+        received: AtomicReference<Greeting>,
+        failure: AtomicReference<Throwable>,
     ): StompSessionHandler = object: TestSessionHandler(failure) {
         override fun afterConnected(session: StompSession, connectedHeaders: StompHeaders) {
             log.debug { "Stomp session connected. subscribe /topic/greetings" }
@@ -118,10 +117,10 @@ class GreetingIntegrationTest(
                         log.debug { "Payload: $payload" }
                         try {
                             val greeting = payload as Greeting
-                            received.value = greeting
+                            received.set(greeting)
                             log.debug { "Receive: $greeting" }
                         } catch (e: Throwable) {
-                            failure.value = e
+                            failure.set(e)
                         } finally {
                             session.disconnect()
                         }

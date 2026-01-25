@@ -6,7 +6,6 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.redis.redisson.RedissonCodecs
 import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
-import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -24,6 +23,7 @@ import org.redisson.api.DeletedObjectListener
 import org.redisson.api.RBucket
 import org.redisson.api.listener.SetObjectListener
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
@@ -178,8 +178,8 @@ class BucketExamples: AbstractRedissonTest() {
 
         val bucket = redisson.getBucket<String>(randomName())
 
-        val added = atomic(0)
-        val deleted = atomic(0)
+        val added = AtomicInteger(0)
+        val deleted = AtomicInteger(0)
 
         val listenerId1 = bucket.addListener(SetObjectListener { name ->
             log.debug { "Bucket[$name]'s object is set" }
@@ -193,16 +193,16 @@ class BucketExamples: AbstractRedissonTest() {
 
         bucket.setAsync("123").suspendAwait()
         delay(10)
-        await until { added.value > 0 }
+        await until { added.get() > 0 }
 
-        added.value shouldBeGreaterThan 0
-        deleted.value shouldBeEqualTo 0
+        added.get() shouldBeGreaterThan 0
+        deleted.get() shouldBeEqualTo 0
 
         bucket.andDeleteAsync.suspendAwait() shouldBeEqualTo "123"
         delay(10)
-        await until { deleted.value > 0 }
+        await until { deleted.get() > 0 }
 
-        deleted.value shouldBeGreaterThan 0
+        deleted.get() shouldBeGreaterThan 0
 
         bucket.removeListenerAsync(listenerId1).suspendAwait()
         bucket.removeListenerAsync(listenerId2).suspendAwait()

@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.exposed.sql.money
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
-import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.money.moneyOf
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
@@ -59,13 +59,12 @@ class MoneyDefaultsTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("field", field)
-                .add("t1", t1)
-                .add("t2", t2)
-                .add("clientDefault", clientDefault)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("field", field)
+            .add("t1", t1)
+            .add("t2", t2)
+            .add("clientDefault", clientDefault)
+            .toString()
     }
 
     /**

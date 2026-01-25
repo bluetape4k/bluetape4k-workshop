@@ -89,7 +89,7 @@ class QuoteGenerator {
     }
 
     private fun createEvent(interval: Long): Event {
-        val traceId = TimebasedUuid.nextBase62String()
+        val traceId = TimebasedUuid.Reordered.nextIdAsString()
         return Event(traceId, generateQuotes(interval))
     }
 

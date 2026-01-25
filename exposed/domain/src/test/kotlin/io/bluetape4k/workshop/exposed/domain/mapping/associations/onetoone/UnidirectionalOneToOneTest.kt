@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.associations.onetoone
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
 import io.bluetape4k.exposed.dao.idValue
-import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
@@ -70,11 +70,10 @@ class UnidirectionalOneToOneTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("brand", brand)
-                .add("wheel id", wheel?.idValue)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("brand", brand)
+            .add("wheel id", wheel?.idValue)
+            .toString()
     }
 
     class Wheel(id: EntityID<Long>): LongEntity(id) {
@@ -86,12 +85,11 @@ class UnidirectionalOneToOneTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("name", name)
-                .add("diameter", diameter)
-                .add("car id", car.idValue)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("name", name)
+            .add("diameter", diameter)
+            .add("car id", car.idValue)
+            .toString()
     }
 
     @ParameterizedTest

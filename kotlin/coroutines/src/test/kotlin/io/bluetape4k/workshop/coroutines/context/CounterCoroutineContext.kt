@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.coroutines.context
 
 import io.bluetape4k.logging.KotlinLogging
 import io.bluetape4k.logging.debug
-import kotlinx.atomicfu.atomic
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.coroutineContext
@@ -18,9 +18,9 @@ class CounterCoroutineContext(private val name: String): AbstractCoroutineContex
         private val log = KotlinLogging.logger { }
     }
 
-    private val nextNumber = atomic(0L)
+    private val nextNumber = AtomicLong(0L)
 
-    val number: Long get() = nextNumber.value
+    val number: Long get() = nextNumber.get()
 
     fun printNextCount() {
         log.debug { this }
