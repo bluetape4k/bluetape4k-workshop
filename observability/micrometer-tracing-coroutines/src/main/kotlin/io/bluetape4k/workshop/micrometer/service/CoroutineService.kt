@@ -6,11 +6,10 @@ import io.bluetape4k.micrometer.observation.coroutines.withObservationContext
 import io.bluetape4k.workshop.micrometer.model.Todo
 import io.micrometer.observation.ObservationRegistry
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.reactor.awaitSingleOrNull
 import net.datafaker.Faker
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.bodyToMono
+import org.springframework.web.reactive.function.client.awaitBodyOrNull
 
 @Service
 class CoroutineService(
@@ -63,8 +62,7 @@ class CoroutineService(
             client.get()
                 .uri("/todos/${id}")
                 .retrieve()
-                .bodyToMono<Todo>()
-                .awaitSingleOrNull()
+                .awaitBodyOrNull<Todo>()
         }
     }
 

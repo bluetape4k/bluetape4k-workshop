@@ -1,17 +1,22 @@
 package io.bluetape4k.workshop.exposed.controller
 
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedSqlTest
 import io.bluetape4k.workshop.exposed.domain.dto.MovieActorCountDTO
 import io.bluetape4k.workshop.exposed.domain.dto.MovieWithActorDTO
 import io.bluetape4k.workshop.exposed.domain.dto.MovieWithProducingActorDTO
+import io.bluetape4k.workshop.shared.web.httpGet
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.reactive.asFlow
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeEmpty
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
+import org.springframework.test.web.reactive.server.returnResult
 
 class MovieActorsControllerTest: AbstractExposedSqlTest() {
 
@@ -22,10 +27,11 @@ class MovieActorsControllerTest: AbstractExposedSqlTest() {
         val movieId = 1
 
         val movieWithActors = client
-            .get()
-            .uri("/movie-actors/$movieId")
-            .exchangeSuccessfully()
-            .expectBody<MovieWithActorDTO>().returnResult().responseBody
+            .httpGet("/movie-actors/$movieId")
+            .expectStatus().is2xxSuccessful
+            .expectBody<MovieWithActorDTO>()
+            .returnResult()
+            .responseBody
 
         log.debug { "movieWithActors[$movieId]=$movieWithActors" }
 
@@ -34,13 +40,15 @@ class MovieActorsControllerTest: AbstractExposedSqlTest() {
     }
 
     @Test
-    fun `get movie and actor count group by movie name`() {
+    fun `get movie and actor count group by movie name`() = runSuspendIO {
 
         val movieActorCounts = client
-            .get()
-            .uri("/movie-actors/count")
-            .exchangeSuccessfully()
-            .expectBodyList<MovieActorCountDTO>().returnResult().responseBody!!
+            .httpGet("/movie-actors/count")
+            .expectStatus().is2xxSuccessful
+            .returnResult<MovieActorCountDTO>()
+            .responseBody!!
+            .asFlow()
+            .toList()
 
         movieActorCounts.shouldNotBeEmpty()
 
@@ -52,10 +60,10 @@ class MovieActorsControllerTest: AbstractExposedSqlTest() {
     @Test
     fun `get movie and acting producer`() {
         val movieWithProducers = client
-            .get()
-            .uri("/movie-actors/acting-producers")
-            .exchangeSuccessfully()
-            .expectBodyList<MovieWithProducingActorDTO>().returnResult().responseBody!!
+            .httpGet("/movie-actors/acting-producers")
+            .expectStatus().is2xxSuccessful
+            .expectBodyList<MovieWithProducingActorDTO>()
+            .returnResult().responseBody!!
 
         movieWithProducers.forEach {
             log.debug { "movieWithProducer=$it" }

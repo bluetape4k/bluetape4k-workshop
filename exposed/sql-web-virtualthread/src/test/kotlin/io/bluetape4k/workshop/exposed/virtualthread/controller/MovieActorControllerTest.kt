@@ -7,13 +7,13 @@ import io.bluetape4k.workshop.exposed.virtualthread.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.MovieActorCountDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.MovieWithActorDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.MovieWithProducingActorDTO
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.asFlow
+import io.bluetape4k.workshop.shared.web.httpGet
 import kotlinx.coroutines.reactive.awaitSingle
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeEmpty
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
+import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.test.web.reactive.server.returnResult
 
 class MovieActorControllerTest: AbstractExposedTest() {
@@ -25,9 +25,8 @@ class MovieActorControllerTest: AbstractExposedTest() {
         val movieId = 1
 
         val movieWithActors = client
-            .get()
-            .uri("/movie-actors/$movieId")
-            .exchangeSuccessfully()
+            .httpGet("/movie-actors/$movieId")
+            .expectStatus().is2xxSuccessful
             .returnResult<MovieWithActorDTO>().responseBody
             .awaitSingle()
 
@@ -41,12 +40,10 @@ class MovieActorControllerTest: AbstractExposedTest() {
     fun `get movie and actor count group by movie name`() = runSuspendIO {
 
         val movieActorCounts = client
-            .get()
-            .uri("/movie-actors/count")
-            .exchangeSuccessfully()
-            .returnResult<MovieActorCountDTO>().responseBody
-            .asFlow()
-            .toList()
+            .httpGet("/movie-actors/count")
+            .expectStatus().is2xxSuccessful
+            .expectBodyList<MovieActorCountDTO>()
+            .returnResult().responseBody.shouldNotBeNull()
 
         movieActorCounts.shouldNotBeEmpty()
 
@@ -58,12 +55,10 @@ class MovieActorControllerTest: AbstractExposedTest() {
     @Test
     fun `get movie and acting producer`() = runSuspendIO {
         val movieWithProducers = client
-            .get()
-            .uri("/movie-actors/acting-producers")
-            .exchangeSuccessfully()
-            .returnResult<MovieWithProducingActorDTO>().responseBody
-            .asFlow()
-            .toList()
+            .httpGet("/movie-actors/acting-producers")
+            .expectStatus().is2xxSuccessful
+            .expectBodyList<MovieWithProducingActorDTO>()
+            .returnResult().responseBody.shouldNotBeNull()
 
         movieWithProducers.forEach {
             log.debug { "movieWithProducer=$it" }

@@ -5,13 +5,13 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.virtualthread.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.MovieDTO
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.asFlow
+import io.bluetape4k.workshop.shared.web.httpGet
 import kotlinx.coroutines.reactive.awaitSingle
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
+import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.test.web.reactive.server.returnResult
 
 class MovieControllerTest: AbstractExposedTest() {
@@ -23,9 +23,8 @@ class MovieControllerTest: AbstractExposedTest() {
         val id = 1
 
         val movie = client
-            .get()
-            .uri("/movies/$id")
-            .exchangeSuccessfully()
+            .httpGet("/movies/$id")
+            .expectStatus().is2xxSuccessful
             .returnResult<MovieDTO>().responseBody
             .awaitSingle()
 
@@ -40,12 +39,11 @@ class MovieControllerTest: AbstractExposedTest() {
         val producerName = "Johnny"
 
         val movies = client
-            .get()
-            .uri("/movies?producerName=$producerName")
-            .exchangeSuccessfully()
-            .returnResult<MovieDTO>().responseBody
-            .asFlow().toList()
+            .httpGet("/movies?producerName=$producerName")
+            .expectStatus().is2xxSuccessful
+            .expectBodyList<MovieDTO>()
+            .returnResult().responseBody
 
-        movies shouldHaveSize 2
+        movies.shouldNotBeNull() shouldHaveSize 2
     }
 }

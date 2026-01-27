@@ -4,6 +4,7 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.gateway.GatewayApplicationTest
 import io.bluetape4k.workshop.gateway.RateLimitHeaders
+import io.bluetape4k.workshop.shared.web.httpGet
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
@@ -23,9 +24,7 @@ class DemoRoutesTest: GatewayApplicationTest() {
     @Test
     fun `call root path`() {
         client
-            .get()
-            .uri("/")
-            .exchange()
+            .httpGet("/")
             .expectStatus().is2xxSuccessful
             .expectBody()
             .jsonPath("$.name").isEqualTo("Gateway Application")
@@ -33,9 +32,8 @@ class DemoRoutesTest: GatewayApplicationTest() {
 
     @Test
     fun `단순 Path Route 기능 - nghttp2를 사용`() {
-        client.get()
-            .uri("/get")
-            .exchange()
+        client
+            .httpGet("/get")
             .expectStatus().is2xxSuccessful
             .expectBody<Map<*, *>>()
             .consumeWith {
@@ -49,7 +47,7 @@ class DemoRoutesTest: GatewayApplicationTest() {
             .uri("/headers")
             .header("Host", "www.myhost.org")
             .exchange()
-            .expectStatus().isOk
+            .expectStatus().is2xxSuccessful
             .expectBody<Map<*, *>>().consumeWith {
                 it.responseBody!!.forEach { (key, value) ->
                     log.debug { "key=$key, value=$value" }
@@ -68,7 +66,7 @@ class DemoRoutesTest: GatewayApplicationTest() {
             .uri("/foo/get")
             .header("Host", "www.rewrite.org")
             .exchange()
-            .expectStatus().isOk
+            .expectStatus().is2xxSuccessful
             .expectBody<Map<*, *>>().consumeWith {
                 it.responseBody!!["url"].toString() shouldBeEqualTo "https://nghttp2.org/httpbin/get"
             }
@@ -90,7 +88,7 @@ class DemoRoutesTest: GatewayApplicationTest() {
             .uri("/delay/3")
             .header("Host", "www.circuitbreakerfallback.org")
             .exchange()
-            .expectStatus().isOk
+            .expectStatus().is2xxSuccessful
             .expectBody<String>().consumeWith {
                 it.responseBody!! shouldBeEqualTo "Fallback for circuit breaker"
             }

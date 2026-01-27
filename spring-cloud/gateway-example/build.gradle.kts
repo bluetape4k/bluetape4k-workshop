@@ -27,6 +27,8 @@ dependencies {
     implementation(platform(Libs.spring_cloud_dependencies))
     implementation(platform(Libs.micrometer_bom))
 
+    implementation(project(":shared"))
+
     implementation(Libs.bluetape4k_jackson3)
     testImplementation(Libs.bluetape4k_junit5)
     implementation(Libs.bluetape4k_testcontainers)

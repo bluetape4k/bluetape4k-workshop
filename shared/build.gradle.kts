@@ -3,7 +3,7 @@ configurations {
 }
 
 dependencies {
-    api(Libs.bluetape4k_io)
+    implementation(Libs.bluetape4k_io)
 
     // Web
     compileOnly(Libs.springBootStarter("webmvc"))

@@ -4,41 +4,36 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.micrometer.AbstractTracingTest
 import io.bluetape4k.workshop.micrometer.model.Todo
-import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.workshop.shared.web.httpGet
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeEmpty
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
-import org.springframework.test.web.reactive.server.returnResult
+import org.springframework.test.web.reactive.server.expectBody
 
 class SyncControllerTest: AbstractTracingTest() {
 
     companion object: KLogging()
 
     @Test
-    fun `get name in sync`() = runTest {
+    fun `get name in sync`() {
         webTestClient
-            .get()
-            .uri("/sync/name")
-            .exchange()
+            .httpGet("/sync/name")
             .expectStatus().is2xxSuccessful
-            .returnResult<String>().responseBody
-            .awaitSingle()
+            .expectBody<String>()
+            .returnResult().responseBody
             .shouldNotBeNull()
             .shouldNotBeEmpty()
     }
 
     @Test
-    fun `get todo in sync`() = runTest {
+    fun `get todo in sync`() {
         val id = 42
         val todo = webTestClient
-            .get()
-            .uri("/sync/todos/$id")
-            .exchange()
+            .httpGet("/sync/todos/$id")
             .expectStatus().is2xxSuccessful
-            .returnResult<Todo>().responseBody
-            .awaitSingle()
+            .expectBody<Todo>()
+            .returnResult().responseBody
 
         log.debug { "todo: $todo" }
         todo.shouldNotBeNull()

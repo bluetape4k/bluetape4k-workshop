@@ -4,6 +4,7 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedSqlTest
 import io.bluetape4k.workshop.exposed.domain.dto.MovieDTO
+import io.bluetape4k.workshop.shared.web.httpGet
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeNull
@@ -20,9 +21,8 @@ class MovieControllerTest: AbstractExposedSqlTest() {
         val id = 1
 
         val movie = client
-            .get()
-            .uri("/movies/$id")
-            .exchangeSuccessfully()
+            .httpGet("/movies/$id")
+            .expectStatus().is2xxSuccessful
             .expectBody<MovieDTO>().returnResult().responseBody
 
         log.debug { "movie[$id]=$movie" }
@@ -36,9 +36,8 @@ class MovieControllerTest: AbstractExposedSqlTest() {
         val producerName = "Johnny"
 
         val movies = client
-            .get()
-            .uri("/movies?producerName=$producerName")
-            .exchangeSuccessfully()
+            .httpGet("/movies?producerName=$producerName")
+            .expectStatus().is2xxSuccessful
             .expectBodyList<MovieDTO>().returnResult().responseBody!!
 
         movies shouldHaveSize 2

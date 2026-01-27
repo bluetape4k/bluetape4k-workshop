@@ -5,8 +5,9 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.virtualthread.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.ActorDTO
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.asFlow
+import io.bluetape4k.workshop.shared.web.httpDelete
+import io.bluetape4k.workshop.shared.web.httpGet
+import io.bluetape4k.workshop.shared.web.httpPost
 import kotlinx.coroutines.reactive.awaitSingle
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
@@ -30,9 +31,8 @@ class ActorControllerTest: AbstractExposedTest() {
         val id = 1
 
         val actor = client
-            .get()
-            .uri("/actors/$id")
-            .exchangeSuccessfully()
+            .httpGet("/actors/$id")
+            .expectStatus().is2xxSuccessful
             .returnResult<ActorDTO>().responseBody
             .awaitSingle()
 
@@ -47,12 +47,10 @@ class ActorControllerTest: AbstractExposedTest() {
         val lastName = "Depp"
 
         val actors = client
-            .get()
-            .uri("/actors?lastName=$lastName")
-            .exchangeSuccessfully()
-            .returnResult<ActorDTO>().responseBody
-            .asFlow()
-            .toList()
+            .httpGet("/actors?lastName=$lastName")
+            .expectStatus().is2xxSuccessful
+            .expectBodyList<ActorDTO>()
+            .returnResult().responseBody
 
         log.debug { "actors=$actors" }
 
@@ -61,9 +59,8 @@ class ActorControllerTest: AbstractExposedTest() {
 
         val firstName = "Angelina"
         val angelinas = client
-            .get()
-            .uri("/actors?firstName=$firstName")
-            .exchangeSuccessfully()
+            .httpGet("/actors?firstName=$firstName")
+            .expectStatus().is2xxSuccessful
             .expectBodyList<ActorDTO>()
             .returnResult().responseBody
 
@@ -77,10 +74,8 @@ class ActorControllerTest: AbstractExposedTest() {
         val actor = newActor()
 
         val newActor = client
-            .post()
-            .uri("/actors")
-            .bodyValue(actor)
-            .exchangeSuccessfully()
+            .httpPost("/actors", actor)
+            .expectStatus().is2xxSuccessful
             .returnResult<ActorDTO>().responseBody
             .awaitSingle()
 
@@ -92,17 +87,14 @@ class ActorControllerTest: AbstractExposedTest() {
         val actor = newActor()
 
         val newActor = client
-            .post()
-            .uri("/actors")
-            .bodyValue(actor)
-            .exchangeSuccessfully()
+            .httpPost("/actors", actor)
+            .expectStatus().is2xxSuccessful
             .returnResult<ActorDTO>().responseBody
             .awaitSingle()
 
         val deletedCount = client
-            .delete()
-            .uri("/actors/${newActor.id}")
-            .exchangeSuccessfully()
+            .httpDelete("/actors/${newActor.id}")
+            .expectStatus().is2xxSuccessful
             .returnResult<Int>().responseBody
             .awaitSingle()
 

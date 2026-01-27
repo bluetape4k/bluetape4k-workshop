@@ -46,7 +46,7 @@ byteBuddy {
 //tasks.named("test") { dependsOn(tasks.withType<ByteBuddyTask>()) }
 
 dependencies {
-    implementation(platform("org.jmolecules:jmolecules-bom:2023.2.1"))  // https://mvnrepository.com/artifact/org.jmolecules/jmolecules-bom
+    implementation(platform("org.jmolecules:jmolecules-bom:2025.0.2"))  // https://mvnrepository.com/artifact/org.jmolecules/jmolecules-bom
     implementation("org.jmolecules:jmolecules-ddd")
     implementation("org.jmolecules:kmolecules-ddd")
     implementation("org.jmolecules:jmolecules-events")
@@ -68,8 +68,6 @@ dependencies {
     implementation(Libs.bluetape4k_io)
     implementation(Libs.bluetape4k_jackson)
     implementation(Libs.bluetape4k_idgenerators)
-    implementation(Libs.bluetape4k_spring_core)
-    testImplementation(Libs.bluetape4k_spring_tests)
 
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))
