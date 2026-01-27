@@ -93,7 +93,7 @@ subprojects {
                 "-jvm-default=enable",
                 "-Xinline-classes",
                 "-Xstring-concat=indy",         // since Kotlin 1.4.20 for JVM 9+
-                // "-Xenable-builder-inference",   // since Kotlin 1.6
+                "-Xenable-builder-inference",   // since Kotlin 1.6
                 "-Xcontext-parameters",           // since Kotlin 1.6
                 "-Xannotation-default-target=param-property",
             )
@@ -229,9 +229,6 @@ subprojects {
             dependency(Libs.kotlinx_coroutines_bom)
             dependency(Libs.kotlinx_coroutines_core)
             dependency(Libs.kotlinx_coroutines_core_jvm)
-            dependency(Libs.kotlinx_coroutines_jdk8)
-            dependency(Libs.kotlinx_coroutines_jdk9)
-            dependency(Libs.kotlinx_coroutines_jdk8)
             dependency(Libs.kotlinx_coroutines_reactive)
             dependency(Libs.kotlinx_coroutines_reactor)
             dependency(Libs.kotlinx_coroutines_rx2)

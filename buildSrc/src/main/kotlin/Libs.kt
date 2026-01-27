@@ -133,7 +133,7 @@ object Versions {
     const val okio = "3.16.4"        // https://mvnrepository.com/artifact/com.squareup.okio/okio
     const val asynchttpclient = "2.12.4"  // https://mvnrepository.com/artifact/org.asynchttpclient/async-http-client
 
-    const val jackson = "2.21.0" // https://mvnrepository.com/artifact/com.fasterxml.jackson/jackson-bom
+    const val jackson = "2.20.2" // https://mvnrepository.com/artifact/com.fasterxml.jackson/jackson-bom
     const val jackson3 = "3.0.4" // https://mvnrepository.com/artifact/tools.jackson/jackson-bom
     const val fastjson2 = "2.0.60" // https://mvnrepository.com/artifact/com.alibaba.fastjson2/fastjson2
     const val jjwt = "0.11.5"    // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api
@@ -356,8 +356,6 @@ object Libs {
     val kotlin_bom = kotlin("bom")
     val kotlin_stdlib = kotlin("stdlib")
     val kotlin_stdlib_common = kotlin("stdlib-common")
-    val kotlin_stdlib_jdk7 = kotlin("stdlib-jdk7")
-    val kotlin_stdlib_jdk8 = kotlin("stdlib-jdk8")
     val kotlin_reflect = kotlin("reflect")
     val kotlin_test = kotlin("test")
     val kotlin_test_common = kotlin("test-common")
@@ -386,9 +384,6 @@ object Libs {
     val kotlinx_coroutines_core_common = kotlinxCoroutines("core-common")
     val kotlinx_coroutines_core_jvm = kotlinxCoroutines("core-jvm")
     val kotlinx_coroutines_debug = kotlinxCoroutines("debug")
-    val kotlinx_coroutines_jdk7 = kotlinxCoroutines("jdk7")
-    val kotlinx_coroutines_jdk8 = kotlinxCoroutines("jdk8")
-    val kotlinx_coroutines_jdk9 = kotlinxCoroutines("jdk9")
     val kotlinx_coroutines_reactive = kotlinxCoroutines("reactive")
     val kotlinx_coroutines_reactor = kotlinxCoroutines("reactor")
     val kotlinx_coroutines_rx2 = kotlinxCoroutines("rx2")
