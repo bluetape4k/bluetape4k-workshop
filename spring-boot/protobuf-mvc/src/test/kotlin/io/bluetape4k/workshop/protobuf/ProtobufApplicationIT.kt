@@ -99,6 +99,7 @@ class ProtobufApplicationIT {
     fun `using WebTestClient`() = runSuspendIO {
         val bytes = testClient
             .httpGet("/courses/1")
+            .expectStatus().is2xxSuccessful
             .returnResult<ByteArray>().responseBody
             .awaitSingle()
 
@@ -129,10 +130,8 @@ class ProtobufApplicationIT {
 
     @Test
     fun `convert protobuf to json`() = runSuspendIO {
-        val course1 = client.get()
-            .uri("/courses/1")
-            .accept(MediaType.APPLICATION_PROTOBUF)
-            .retrieve()
+        val course1 = client
+            .httpGet("/courses/1", MediaType.APPLICATION_PROTOBUF)
             .awaitBody<Course>()
 
         // JSON Format Text

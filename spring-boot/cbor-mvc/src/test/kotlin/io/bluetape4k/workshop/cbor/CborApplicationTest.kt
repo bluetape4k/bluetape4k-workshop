@@ -26,7 +26,7 @@ import org.springframework.web.client.body
 import org.springframework.web.client.getForEntity
 import org.springframework.web.reactive.function.client.ExchangeStrategies
 import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.bodyToMono
+import org.springframework.web.reactive.function.client.awaitBody
 
 @SpringBootTest(
     classes = [CborApplication::class],
@@ -117,8 +117,7 @@ class CborApplicationTest {
             .uri("/courses/1")
             .accept(MediaType.APPLICATION_CBOR)
             .retrieve()
-            .bodyToMono<Course>()
-            .awaitSingle()
+            .awaitBody<Course>()
 
         course1.shouldNotBeNull()
         log.debug { "course1: $course1" }
@@ -126,8 +125,7 @@ class CborApplicationTest {
 
         val course2 = client
             .httpGet("/courses/1", accept = MediaType.APPLICATION_CBOR)
-            .bodyToMono<Course>()
-            .awaitSingle()
+            .awaitBody<Course>()
 
         course2.shouldNotBeNull()
         log.debug { "course2: $course2" }
@@ -139,6 +137,7 @@ class CborApplicationTest {
     fun `using webTestClient`() = runSuspendIO {
         val course1 = testClient
             .httpGet("/courses/1", accept = MediaType.APPLICATION_CBOR)
+            .expectStatus().is2xxSuccessful
             .returnResult<Course>().responseBody
             .awaitSingle()
 
