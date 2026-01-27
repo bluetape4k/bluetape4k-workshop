@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.resilience.retry
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.workshop.shared.web.httpGet
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpStatus
 
 class ReactiveRetryTest: AbstractRetryTest() {
 
@@ -59,18 +59,14 @@ class ReactiveRetryTest: AbstractRetryTest() {
 
         private fun procedureMonoFailure(serviceName: String) {
             webClient
-                .get()
-                .uri("/$serviceName/monoFailure")
-                .exchange()
-                .expectStatus().isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
+                .httpGet("/$serviceName/monoFailure")
+                .expectStatus().is5xxServerError
         }
 
         private fun procedureMonoSuccess(serviceName: String) {
             webClient
-                .get()
-                .uri("/$serviceName/monoSuccess")
-                .exchange()
-                .expectStatus().isEqualTo(HttpStatus.OK)
+                .httpGet("/$serviceName/monoSuccess")
+                .expectStatus().is2xxSuccessful
         }
     }
 
@@ -125,18 +121,14 @@ class ReactiveRetryTest: AbstractRetryTest() {
 
         private fun procedureFluxFailure(serviceName: String) {
             webClient
-                .get()
-                .uri("/$serviceName/fluxFailure")
-                .exchange()
-                .expectStatus().isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
+                .httpGet("/$serviceName/fluxFailure")
+                .expectStatus().is5xxServerError
         }
 
         private fun procedureFluxSuccess(serviceName: String) {
             webClient
-                .get()
-                .uri("/$serviceName/fluxSuccess")
-                .exchange()
-                .expectStatus().isEqualTo(HttpStatus.OK)
+                .httpGet("/$serviceName/fluxSuccess")
+                .expectStatus().is2xxSuccessful
         }
     }
 

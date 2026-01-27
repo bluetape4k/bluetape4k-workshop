@@ -2,11 +2,11 @@ package io.bluetape4k.workshop.resilience.circuitbreaker.coroutines
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.resilience.circuitbreaker.AbstractCircuitBreakerTest
+import io.bluetape4k.workshop.shared.web.httpGet
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpStatus
 
 class CoroutineCircuitBreakerTest: AbstractCircuitBreakerTest() {
 
@@ -92,26 +92,20 @@ class CoroutineCircuitBreakerTest: AbstractCircuitBreakerTest() {
 
         private fun procedureSuspendFailure(serviceName: String) {
             webClient
-                .get()
-                .uri("/coroutines/$serviceName/suspendFailure")
-                .exchange()
-                .expectStatus().isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
+                .httpGet("/coroutines/$serviceName/suspendFailure")
+                .expectStatus().is5xxServerError
         }
 
         private fun procedureSuspendSuccess(serviceName: String) {
             webClient
-                .get()
-                .uri("/coroutines/$serviceName/suspendSuccess")
-                .exchange()
-                .expectStatus().isEqualTo(HttpStatus.OK)
+                .httpGet("/coroutines/$serviceName/suspendSuccess")
+                .expectStatus().is2xxSuccessful
         }
 
         private fun procedureSuspendTimeout(serviceName: String) {
             webClient
-                .get()
-                .uri("/coroutines/$serviceName/suspendTimeout")
-                .exchange()
-                .expectStatus().isEqualTo(HttpStatus.OK) // fallback 이 작동하므로, 항상 성공한다
+                .httpGet("/coroutines/$serviceName/suspendTimeout")
+                .expectStatus().is2xxSuccessful // fallback 이 작동하므로, 항상 성공한다
         }
     }
 
@@ -195,26 +189,20 @@ class CoroutineCircuitBreakerTest: AbstractCircuitBreakerTest() {
 
         private fun procedureFlowFailure(serviceName: String) {
             webClient
-                .get()
-                .uri("/coroutines/$serviceName/flowFailure")
-                .exchange()
-                .expectStatus().isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
+                .httpGet("/coroutines/$serviceName/flowFailure")
+                .expectStatus().is5xxServerError
         }
 
         private fun procedureFlowSuccess(serviceName: String) {
             webClient
-                .get()
-                .uri("/coroutines/$serviceName/flowSuccess")
-                .exchange()
-                .expectStatus().isEqualTo(HttpStatus.OK)
+                .httpGet("/coroutines/$serviceName/flowSuccess")
+                .expectStatus().is2xxSuccessful
         }
 
         private fun procedureFlowTimeout(serviceName: String) {
             webClient
-                .get()
-                .uri("/coroutines/$serviceName/flowTimeout")
-                .exchange()
-                .expectStatus().isEqualTo(HttpStatus.OK) // fallback 이 작동하므로, 항상 성공한다
+                .httpGet("/coroutines/$serviceName/flowTimeout")
+                .expectStatus().is2xxSuccessful // fallback 이 작동하므로, 항상 성공한다
         }
     }
 }

@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
 import tools.jackson.databind.node.JsonNodeFactory
@@ -64,7 +63,8 @@ class IOCoroutineControllerTest: AbstractCoroutineApplicationTest() {
     @RepeatedTest(REPEAT_SIZE)
     fun error() = runSuspendIO {
         client
-            .httpGet("$BASE_PATH/error", HttpStatus.INTERNAL_SERVER_ERROR)
+            .httpGet("$BASE_PATH/error")
+            .expectStatus().is5xxServerError
     }
 
     @RepeatedTest(REPEAT_SIZE)

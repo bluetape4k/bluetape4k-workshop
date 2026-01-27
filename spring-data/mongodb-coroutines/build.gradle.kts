@@ -57,4 +57,5 @@ dependencies {
     implementation(Libs.bluetape4k_netty)
 
     implementation(Libs.jackson3_module_kotlin)
+    implementation(Libs.jackson3_module_blackbird)
 }

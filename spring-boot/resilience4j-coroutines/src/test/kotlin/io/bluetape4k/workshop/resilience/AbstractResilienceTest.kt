@@ -28,7 +28,7 @@ abstract class AbstractResilienceTest {
     @Autowired
     protected val context: ApplicationContext = uninitialized()
 
-    protected val webClient by lazy {
+    protected val webClient: WebTestClient by lazy {
         WebTestClient
             .bindToApplicationContext(context)
             .configureClient()

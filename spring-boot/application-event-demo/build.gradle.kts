@@ -26,10 +26,10 @@ dependencies {
     annotationProcessor(Libs.springBoot("configuration-processor"))
     runtimeOnly(Libs.springBoot("devtools"))
 
-    implementation(Libs.springBootStarter("aspectj"))
-    implementation(Libs.springBootStarter("webflux"))
     implementation(Libs.springBootStarter("actuator"))
+    implementation(Libs.springBootStarter("aspectj"))
     implementation(Libs.springBootStarter("validation"))
+    implementation(Libs.springBootStarter("webflux"))
 
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")

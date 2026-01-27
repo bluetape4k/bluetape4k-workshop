@@ -5,9 +5,9 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.support.toUtf8String
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.resilience.AbstractResilienceTest
+import io.bluetape4k.workshop.shared.web.httpGet
 import io.github.resilience4j.retry.RetryRegistry
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
 
 abstract class AbstractRetryTest: AbstractResilienceTest() {
@@ -33,9 +33,8 @@ abstract class AbstractRetryTest: AbstractResilienceTest() {
     }
 
     protected fun checkMetrics(kind: String, serviceName: String, count: Float) {
-        webClient.get()
-            .uri("/actuator/prometheus")
-            .exchange()
+        webClient
+            .httpGet("/actuator/prometheus")
             .expectBody()
             .consumeWith {
                 val body = it.responseBody?.toUtf8String()
@@ -45,10 +44,7 @@ abstract class AbstractRetryTest: AbstractResilienceTest() {
             }
 
         val body = webClient
-            .get()
-            .uri("/actuator/prometheus")
-            .exchange()
-            .expectStatus().isEqualTo(HttpStatus.OK)
+            .httpGet("/actuator/prometheus")
             .returnResult<String>().responseBody
             .toStream()
             .toList()

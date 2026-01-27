@@ -22,4 +22,10 @@ dependencies {
     compileOnly(Libs.kotlinx_coroutines_core)
     compileOnly(Libs.kotlinx_coroutines_reactor)
     testImplementation(Libs.kotlinx_coroutines_test)
+
+    // Netty
+    testImplementation(Libs.bluetape4k_netty)
+
+    testImplementation(Libs.bluetape4k_testcontainers)
+    testImplementation(Libs.testcontainers)
 }
