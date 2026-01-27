@@ -8,15 +8,12 @@ import io.bluetape4k.workshop.exposed.domain.dto.MovieActorCountDTO
 import io.bluetape4k.workshop.exposed.domain.dto.MovieWithActorDTO
 import io.bluetape4k.workshop.exposed.domain.dto.MovieWithProducingActorDTO
 import io.bluetape4k.workshop.shared.web.httpGet
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.asFlow
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeEmpty
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.expectBodyList
-import org.springframework.test.web.reactive.server.returnResult
 
 class MovieActorsControllerTest: AbstractExposedSqlTest() {
 
@@ -45,10 +42,9 @@ class MovieActorsControllerTest: AbstractExposedSqlTest() {
         val movieActorCounts = client
             .httpGet("/movie-actors/count")
             .expectStatus().is2xxSuccessful
-            .returnResult<MovieActorCountDTO>()
+            .expectBodyList<MovieActorCountDTO>()
+            .returnResult()
             .responseBody!!
-            .asFlow()
-            .toList()
 
         movieActorCounts.shouldNotBeEmpty()
 

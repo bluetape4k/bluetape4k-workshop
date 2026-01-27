@@ -34,26 +34,26 @@ class VirtualThreadController(private val executor: ExecutorService) {
 
         // Java 21
         // ShutdownOnFailure - 하나라도 실패하면 즉시 종료 (진행 중인 다른 Task 들은 중단된다)
-//        StructuredTaskScope.ShutdownOnFailure("multi", factory).use { scope ->
-//            repeat(taskSize) {
-//                scope.fork {
-//                    Thread.sleep(Random.nextLong(500, 1000))
-//                    log.debug { "Task $it is done. (${Thread.currentThread()})" }
-//                }
-//            }
-//            scope.join().throwIfFailed()
-//        }
-
-        // Java 25
-        StructuredTaskScope.open<Unit>().use { scope ->
+        StructuredTaskScope.ShutdownOnFailure("multi", factory).use { scope ->
             repeat(taskSize) {
-                scope.fork<Unit>(Runnable {
+                scope.fork {
                     Thread.sleep(Random.nextLong(500, 1000))
                     log.debug { "Task $it is done. (${Thread.currentThread()})" }
-                })
+                }
             }
-            scope.join()
+            scope.join().throwIfFailed()
         }
+
+        // Java 25
+//        StructuredTaskScope.open<Unit>().use { scope ->
+//            repeat(taskSize) {
+//                scope.fork<Unit>(Runnable {
+//                    Thread.sleep(Random.nextLong(500, 1000))
+//                    log.debug { "Task $it is done. (${Thread.currentThread()})" }
+//                })
+//            }
+//            scope.join()
+//        }
 
         return "Run multiple[$taskSize] tasks. (${Thread.currentThread()})"
     }

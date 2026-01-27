@@ -11,7 +11,7 @@ springBoot {
 
 dependencies {
 
-    implementation(project(":shared"))
+    testImplementation(project(":shared"))
 
     // Jackson CBOR
     implementation(Libs.bluetape4k_jackson3_binary)

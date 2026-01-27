@@ -42,7 +42,7 @@ springBoot {
 
 dependencies {
 
-    implementation(project(":shared"))
+    testImplementation(project(":shared"))
 
     // Protobuf
     implementation(Libs.bluetape4k_grpc)

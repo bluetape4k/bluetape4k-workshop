@@ -14,7 +14,7 @@ configurations {
 }
 
 dependencies {
-    implementation(project(":shared"))
+    testImplementation(project(":shared"))
     
     implementation(Libs.bluetape4k_core)
     testImplementation(Libs.bluetape4k_junit5)

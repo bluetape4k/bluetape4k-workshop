@@ -27,7 +27,7 @@ dependencies {
 
     implementation(platform(Libs.spring_boot4_dependencies))
 
-    implementation(project(":shared"))
+    testImplementation(project(":shared"))
 
     // bluetape4k
     implementation(Libs.bluetape4k_io)

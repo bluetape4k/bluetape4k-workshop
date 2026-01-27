@@ -24,7 +24,7 @@ configurations {
 
 dependencies {
 
-    implementation(project(":shared"))
+    testImplementation(project(":shared"))
 
     // bluetape4k
     implementation(Libs.bluetape4k_jdbc)

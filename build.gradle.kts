@@ -1,6 +1,5 @@
 import io.gitlab.arturbosch.detekt.Detekt
 import io.gitlab.arturbosch.detekt.report.ReportMergeTask
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
@@ -80,14 +79,13 @@ subprojects {
 
     java {
         toolchain {
-            languageVersion.set(JavaLanguageVersion.of(25))
+            languageVersion.set(JavaLanguageVersion.of(21))
         }
     }
 
     kotlin {
-        jvmToolchain(25)
+        jvmToolchain(21)
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_25)
             languageVersion.set(KotlinVersion.KOTLIN_2_3)
             apiVersion.set(KotlinVersion.KOTLIN_2_3)
             freeCompilerArgs = listOf(

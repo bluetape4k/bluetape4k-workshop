@@ -9,7 +9,7 @@ configurations {
 dependencies {
     implementation(platform(Libs.exposed_bom))
 
-    implementation(project(":shared"))
+    testImplementation(project(":shared"))
 
     implementation(Libs.bluetape4k_exposed)
     implementation(Libs.bluetape4k_exposed_jackson3)
