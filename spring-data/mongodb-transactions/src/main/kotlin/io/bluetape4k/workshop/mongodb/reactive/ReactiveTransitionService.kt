@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.mongodb.reactive
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.mongodb.Process
 import io.bluetape4k.workshop.mongodb.State
+import kotlinx.atomicfu.atomic
 import org.springframework.data.mongodb.core.ReactiveMongoOperations
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
@@ -11,7 +12,6 @@ import org.springframework.data.mongodb.core.query.isEqualTo
 import org.springframework.data.mongodb.core.update
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Mono
-import java.util.concurrent.atomic.AtomicInteger
 
 @Service
 class ReactiveTransitionService(
@@ -20,7 +20,7 @@ class ReactiveTransitionService(
 ) {
     companion object: KLoggingChannel()
 
-    private val counter = AtomicInteger(0)
+    private val counter = atomic(0)
 
     fun newProcess(): Mono<Process> =
         repository.save(Process(counter.incrementAndGet(), State.CREATED, 0))

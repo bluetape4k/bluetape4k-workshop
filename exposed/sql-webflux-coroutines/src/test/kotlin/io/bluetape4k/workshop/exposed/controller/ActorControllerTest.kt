@@ -8,13 +8,12 @@ import io.bluetape4k.workshop.exposed.domain.dto.ActorDTO
 import io.bluetape4k.workshop.shared.web.httpDelete
 import io.bluetape4k.workshop.shared.web.httpGet
 import io.bluetape4k.workshop.shared.web.httpPost
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
+import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.test.web.reactive.server.returnResult
 
 class ActorControllerTest: AbstractExposedSqlTest() {
@@ -50,9 +49,9 @@ class ActorControllerTest: AbstractExposedSqlTest() {
         val actors = client
             .httpGet("/actors?lastName=$lastName")
             .expectStatus().is2xxSuccessful
-            .returnResult<ActorDTO>().responseBody
-            .asFlow()
-            .toList()
+            .expectBodyList<ActorDTO>()
+            .returnResult().responseBody
+            .shouldNotBeNull()
 
         log.debug { "actors=$actors" }
 
@@ -63,9 +62,9 @@ class ActorControllerTest: AbstractExposedSqlTest() {
         val angelinas = client
             .httpGet("/actors?firstName=$firstName")
             .expectStatus().is2xxSuccessful
-            .returnResult<ActorDTO>().responseBody
-            .asFlow()
-            .toList()
+            .expectBodyList<ActorDTO>()
+            .returnResult().responseBody
+            .shouldNotBeNull()
 
         log.debug { "angelinas=$angelinas" }
         angelinas.shouldNotBeNull()

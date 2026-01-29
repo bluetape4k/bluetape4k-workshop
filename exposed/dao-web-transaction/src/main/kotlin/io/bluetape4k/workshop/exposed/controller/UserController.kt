@@ -32,9 +32,7 @@ class UserController(
 
     // Read User
     @GetMapping("/{id}")
-    fun findUserById(
-        @PathVariable id: Long,
-    ): UserDTO? {
+    fun findUserById(@PathVariable id: Long): UserDTO? {
         return userService.findUserById(UserId(id))?.toUserDTO()
         // ?: throw NotFoundException("User not found. userId=$id")
     }

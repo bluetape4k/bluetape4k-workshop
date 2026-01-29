@@ -4,6 +4,7 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.okio.coroutines.internal.await
 import io.bluetape4k.support.requireZeroOrPositiveNumber
+import kotlinx.coroutines.coroutineScope
 import okio.Buffer
 import java.net.Socket
 import java.nio.ByteBuffer
@@ -42,10 +43,10 @@ class SuspendedSocketSink(socket: Socket): SuspendedSink {
         // Nothing to do
     }
 
-    override suspend fun close() {
-        if (!channel.isOpen) return
-        log.debug { "Closing socket channel" }
-
-        channel.close()
+    override suspend fun close() = coroutineScope {
+        if (channel.isOpen) {
+            log.debug { "Closing socket channel" }
+            channel.close()
+        }
     }
 }

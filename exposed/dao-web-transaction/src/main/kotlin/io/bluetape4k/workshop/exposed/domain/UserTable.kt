@@ -47,12 +47,6 @@ class UserEntity(id: EntityID<UserId>): Entity<UserId>(id) {
     var name by UserTable.name
     var age by UserTable.age
 
-    fun toUser(): User = User(
-        id = id.value,
-        name = name,
-        age = age,
-    )
-
     override fun equals(other: Any?): Boolean = idEquals(other)
     override fun hashCode(): Int = idHashCode()
     override fun toString(): String = entityToStringBuilder()

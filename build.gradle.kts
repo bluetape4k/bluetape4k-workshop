@@ -13,7 +13,7 @@ plugins {
     kotlin("plugin.noarg") version Versions.kotlin apply false
     kotlin("plugin.jpa") version Versions.kotlin apply false
     kotlin("plugin.serialization") version Versions.kotlin apply false
-    kotlin("plugin.atomicfu") version Versions.kotlin
+    id("org.jetbrains.kotlinx.atomicfu") version Versions.kotlinx_atomicfu
     kotlin("kapt") version Versions.kotlin apply false
 
     id(Plugins.detekt) version Plugins.Versions.detekt
@@ -68,8 +68,10 @@ subprojects {
         // Kotlin 1.9.20 부터는 pluginId 를 지정해줘야 합니다.
         plugin("org.jetbrains.kotlin.jvm")
 
+        // Atomicfu
+        plugin("org.jetbrains.kotlinx.atomicfu")
+
         // plugin("jacoco")
-        plugin("maven-publish")
 
         plugin(Plugins.dependency_management)
 
@@ -93,7 +95,6 @@ subprojects {
                 "-jvm-default=enable",
                 "-Xinline-classes",
                 "-Xstring-concat=indy",         // since Kotlin 1.4.20 for JVM 9+
-                "-Xenable-builder-inference",   // since Kotlin 1.6
                 "-Xcontext-parameters",           // since Kotlin 1.6
                 "-Xannotation-default-target=param-property",
             )
@@ -109,6 +110,11 @@ subprojects {
             )
             freeCompilerArgs.addAll(experimentalAnnotations.map { "-opt-in=$it" })
         }
+    }
+
+    atomicfu {
+        transformJvm = true
+        jvmVariant = "VH"     //  FU, VH, BOTH
     }
 
     tasks {
@@ -431,7 +437,8 @@ subprojects {
         testImplementation(Libs.kotlin_test)
         testImplementation(Libs.kotlin_test_junit5)
 
-        compileOnly(Libs.kotlinx_coroutines_core)
+        implementation(Libs.kotlinx_coroutines_core)
+        implementation(Libs.kotlinx_atomicfu)
 
         // 개발 시에는 logback 이 검증하기에 더 좋고, Production에서 비동기 로깅은 log4j2 가 성능이 좋다고 합니다.
         implementation(Libs.slf4j_api)
@@ -445,7 +452,6 @@ subprojects {
         testImplementation(Libs.bluetape4k_junit5)
         testImplementation(Libs.junit_jupiter)
         testRuntimeOnly(Libs.junit_platform_engine)
-        testImplementation(Libs.junit_jupiter_migrationsupport)
 
         testImplementation(Libs.kluent)
         testImplementation(Libs.mockk)

@@ -23,7 +23,8 @@ class MovieControllerTest: AbstractExposedSqlTest() {
         val movie = client
             .httpGet("/movies/$id")
             .expectStatus().is2xxSuccessful
-            .expectBody<MovieDTO>().returnResult().responseBody
+            .expectBody<MovieDTO>()
+            .returnResult().responseBody
 
         log.debug { "movie[$id]=$movie" }
 
@@ -38,7 +39,8 @@ class MovieControllerTest: AbstractExposedSqlTest() {
         val movies = client
             .httpGet("/movies?producerName=$producerName")
             .expectStatus().is2xxSuccessful
-            .expectBodyList<MovieDTO>().returnResult().responseBody!!
+            .expectBodyList<MovieDTO>()
+            .returnResult().responseBody!!
 
         movies shouldHaveSize 2
     }

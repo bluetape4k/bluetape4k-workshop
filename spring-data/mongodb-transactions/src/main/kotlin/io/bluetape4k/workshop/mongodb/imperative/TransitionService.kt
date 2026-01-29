@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.mongodb.imperative
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.mongodb.Process
 import io.bluetape4k.workshop.mongodb.State
+import kotlinx.atomicfu.atomic
 import org.springframework.data.mongodb.core.MongoOperations
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
@@ -11,7 +12,6 @@ import org.springframework.data.mongodb.core.query.isEqualTo
 import org.springframework.data.mongodb.core.update
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.util.concurrent.atomic.AtomicInteger
 
 @Service
 class TransitionService(
@@ -20,7 +20,7 @@ class TransitionService(
 ) {
     companion object: KLoggingChannel()
 
-    private val counter = AtomicInteger(0)
+    private val counter = atomic(0)
 
     fun newProcess(): Process =
         repository.save(Process(counter.incrementAndGet(), State.CREATED, 0))

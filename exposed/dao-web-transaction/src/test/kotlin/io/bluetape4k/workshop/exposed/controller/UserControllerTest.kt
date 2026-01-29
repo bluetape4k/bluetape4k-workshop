@@ -61,8 +61,7 @@ class UserControllerTest: AbstractExposedApplicationTest() {
                 val response = webTestClient
                     .httpPost("/api/v1/users", createRequest)
                     .expectStatus().is2xxSuccessful
-                    .returnResult<UserCreateResponse>()
-                    .responseBody
+                    .returnResult<UserCreateResponse>().responseBody
                     .awaitSingle()
 
                 log.debug { "Create user. userId=${response.id}" }
@@ -79,8 +78,7 @@ class UserControllerTest: AbstractExposedApplicationTest() {
         val userId = webTestClient
             .httpPost("/api/v1/users", createRequest)
             .expectStatus().is2xxSuccessful
-            .returnResult<UserCreateResponse>()
-            .responseBody
+            .returnResult<UserCreateResponse>().responseBody
             .awaitSingle()
             .id
 
@@ -92,8 +90,7 @@ class UserControllerTest: AbstractExposedApplicationTest() {
         val response = webTestClient
             .httpPut("/api/v1/users/${userId.value}", updateRequest)
             .expectStatus().is2xxSuccessful
-            .returnResult<Int>()
-            .responseBody
+            .returnResult<Int>().responseBody
             .awaitSingle()
 
         response shouldBeEqualTo 1
@@ -106,8 +103,7 @@ class UserControllerTest: AbstractExposedApplicationTest() {
         val userId = webTestClient
             .httpPost("/api/v1/users", createRequest)
             .expectStatus().is2xxSuccessful
-            .returnResult<UserCreateResponse>()
-            .responseBody
+            .returnResult<UserCreateResponse>().responseBody
             .awaitSingle()
             .id
 
@@ -118,8 +114,7 @@ class UserControllerTest: AbstractExposedApplicationTest() {
         val response = this@UserControllerTest.webTestClient
             .httpDelete("/api/v1/users/${userId.value}")
             .expectStatus().is2xxSuccessful
-            .returnResult<Int>()
-            .responseBody
+            .returnResult<Int>().responseBody
             .awaitSingle()
 
         response shouldBeEqualTo 1
@@ -132,8 +127,7 @@ class UserControllerTest: AbstractExposedApplicationTest() {
         val userId = webTestClient
             .httpPost("/api/v1/users", createRequest)
             .expectStatus().is2xxSuccessful
-            .returnResult<UserCreateResponse>()
-            .responseBody
+            .returnResult<UserCreateResponse>().responseBody
             .awaitSingle()
             .id
 
@@ -144,8 +138,7 @@ class UserControllerTest: AbstractExposedApplicationTest() {
         val response = webTestClient
             .httpGet("/api/v1/users/${userId.value}")
             .expectStatus().is2xxSuccessful
-            .returnResult<UserDTO>()
-            .responseBody
+            .returnResult<UserDTO>().responseBody
             .awaitSingle()
 
         response.id shouldBeEqualTo userId.value
@@ -170,8 +163,7 @@ class UserControllerTest: AbstractExposedApplicationTest() {
             .httpGet("/api/v1/users")
             .expectStatus().is2xxSuccessful
             .expectBodyList<UserDTO>()
-            .returnResult()
-            .responseBody
+            .returnResult().responseBody
 
         response.shouldNotBeNull().shouldNotBeEmpty()
     }

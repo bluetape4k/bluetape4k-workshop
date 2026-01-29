@@ -4,6 +4,7 @@ import io.bluetape4k.coroutines.support.suspendAwait
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.okio.SEGMENT_SIZE
+import kotlinx.coroutines.coroutineScope
 import okio.Buffer
 import java.nio.ByteBuffer
 import java.nio.channels.AsynchronousSocketChannel
@@ -36,7 +37,7 @@ class SuspendedSocketChannelSource(
         return read.toLong()
     }
 
-    override suspend fun close() {
+    override suspend fun close() = coroutineScope {
         if (channel.isOpen) {
             log.debug { "Closing socket channel" }
             channel.close()

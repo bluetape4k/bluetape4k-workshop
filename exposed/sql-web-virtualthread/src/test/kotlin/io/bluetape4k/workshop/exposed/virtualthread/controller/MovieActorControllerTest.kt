@@ -43,7 +43,8 @@ class MovieActorControllerTest: AbstractExposedTest() {
             .httpGet("/movie-actors/count")
             .expectStatus().is2xxSuccessful
             .expectBodyList<MovieActorCountDTO>()
-            .returnResult().responseBody.shouldNotBeNull()
+            .returnResult().responseBody
+            .shouldNotBeNull()
 
         movieActorCounts.shouldNotBeEmpty()
 
@@ -58,7 +59,8 @@ class MovieActorControllerTest: AbstractExposedTest() {
             .httpGet("/movie-actors/acting-producers")
             .expectStatus().is2xxSuccessful
             .expectBodyList<MovieWithProducingActorDTO>()
-            .returnResult().responseBody.shouldNotBeNull()
+            .returnResult().responseBody
+            .shouldNotBeNull()
 
         movieWithProducers.forEach {
             log.debug { "movieWithProducer=$it" }

@@ -4,6 +4,7 @@ import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.redis.reactive.AbstractReactiveRedisTest
+import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 import kotlinx.coroutines.runBlocking
@@ -16,7 +17,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.redis.core.ReactiveRedisOperations
 import java.time.Duration
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.system.measureTimeMillis
 
 class ValueOperationsTest(
@@ -27,7 +27,8 @@ class ValueOperationsTest(
         private const val CACHED_VALUE = "Hello, World!"
     }
 
-    private val valueCreationCounter = AtomicInteger(0)
+    private val valueCreationCounter = atomic(0)
+    private var valueCreationCount by valueCreationCounter
 
     @BeforeEach
     fun beforeEach() {
@@ -37,7 +38,7 @@ class ValueOperationsTest(
                 connection.serverCommands().flushAll()
             }.awaitSingle() shouldBeEqualTo "OK"
         }
-        valueCreationCounter.set(0)
+        valueCreationCount = 0
     }
 
     @Test
@@ -64,7 +65,7 @@ class ValueOperationsTest(
         }
         // cacheValue() 실행이 3초가 걸리므로
         elapsed shouldBeLessOrEqualTo 5_000L
-        valueCreationCounter.get() shouldBeEqualTo 1
+        valueCreationCount shouldBeEqualTo 1
     }
 
     private suspend fun cacheValue(): String {
