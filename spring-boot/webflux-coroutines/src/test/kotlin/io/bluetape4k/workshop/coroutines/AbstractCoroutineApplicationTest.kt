@@ -21,10 +21,10 @@ abstract class AbstractCoroutineApplicationTest {
     @Autowired
     protected val context: ApplicationContext = uninitialized()
 
-    protected val client by lazy {
+    protected val client: WebTestClient by lazy {
         WebTestClient
             .bindToApplicationContext(context)
-            // .configureClient()
+            .configureClient()
             .build()
     }
 }
