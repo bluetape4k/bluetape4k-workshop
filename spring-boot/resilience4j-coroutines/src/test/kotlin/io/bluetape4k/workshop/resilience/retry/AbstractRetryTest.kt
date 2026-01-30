@@ -7,8 +7,9 @@ import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.resilience.AbstractResilienceTest
 import io.bluetape4k.workshop.shared.web.httpGet
 import io.github.resilience4j.retry.RetryRegistry
+import org.amshove.kluent.shouldNotBeNull
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.test.web.reactive.server.returnResult
+import org.springframework.test.web.reactive.server.expectBody
 
 abstract class AbstractRetryTest: AbstractResilienceTest() {
 
@@ -35,6 +36,7 @@ abstract class AbstractRetryTest: AbstractResilienceTest() {
     protected fun checkMetrics(kind: String, serviceName: String, count: Float) {
         webClient
             .httpGet("/actuator/prometheus")
+            .expectStatus().is2xxSuccessful
             .expectBody()
             .consumeWith {
                 val body = it.responseBody?.toUtf8String()
@@ -45,13 +47,14 @@ abstract class AbstractRetryTest: AbstractResilienceTest() {
 
         val body = webClient
             .httpGet("/actuator/prometheus")
-            .returnResult<String>().responseBody
-            .toStream()
-            .toList()
+            .expectStatus().is2xxSuccessful
+            .expectBody<String>()
+            .returnResult().responseBody
+            .shouldNotBeNull()
 
         val metricName = getMetricName(kind, serviceName)
         log.debug { "metric=$metricName$count" }
-        log.debug { "body=${body.joinToString("\n")}" }
+        log.debug { "body=$body" }
         // FIXME: Spring Boot 4 에 맞는 prometheus 용 resilience4j 측정값이 출력되지 않는다
         // body shouldContain metricName + count
     }

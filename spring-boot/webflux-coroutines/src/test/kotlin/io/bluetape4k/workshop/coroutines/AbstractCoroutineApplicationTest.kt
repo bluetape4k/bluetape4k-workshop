@@ -24,7 +24,7 @@ abstract class AbstractCoroutineApplicationTest {
     protected val client by lazy {
         WebTestClient
             .bindToApplicationContext(context)
-            .configureClient()
+            // .configureClient()
             .build()
     }
 }

@@ -27,6 +27,7 @@ class VTCoroutineControllerTest: AbstractCoroutineApplicationTest() {
     fun index() = runSuspendVT {
         client
             .httpGet(BASE_PATH)
+            .expectStatus().is2xxSuccessful
             .expectBody<Banner>().isEqualTo(expectedBanner)
     }
 
@@ -34,6 +35,7 @@ class VTCoroutineControllerTest: AbstractCoroutineApplicationTest() {
     fun suspending() = runSuspendVT {
         client
             .httpGet("${BASE_PATH}/suspend")
+            .expectStatus().is2xxSuccessful
             .expectBody<Banner>().isEqualTo(expectedBanner)
     }
 
@@ -41,6 +43,7 @@ class VTCoroutineControllerTest: AbstractCoroutineApplicationTest() {
     fun deferred() = runSuspendVT {
         client
             .httpGet("${BASE_PATH}/deferred")
+            .expectStatus().is2xxSuccessful
             .expectBody<Banner>().isEqualTo(expectedBanner)
     }
 
@@ -48,6 +51,7 @@ class VTCoroutineControllerTest: AbstractCoroutineApplicationTest() {
     fun `sequential flow`() = runSuspendVT {
         client
             .httpGet("${BASE_PATH}/sequential-flow")
+            .expectStatus().is2xxSuccessful
             .expectBodyList<Banner>()
             .contains(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
     }
@@ -80,6 +84,7 @@ class VTCoroutineControllerTest: AbstractCoroutineApplicationTest() {
 
         client
             .httpPost("${BASE_PATH}/request-as-flow", request)
+            .expectStatus().is2xxSuccessful
             .expectBody<String>().isEqualTo("12345")
     }
 }

@@ -67,7 +67,6 @@ class ActorControllerTest: AbstractExposedSqlTest() {
             .shouldNotBeNull()
 
         log.debug { "angelinas=$angelinas" }
-        angelinas.shouldNotBeNull()
         angelinas shouldHaveSize 2
     }
 

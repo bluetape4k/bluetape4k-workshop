@@ -27,12 +27,10 @@ class MovieActorsControllerTest: AbstractExposedSqlTest() {
             .httpGet("/movie-actors/$movieId")
             .expectStatus().is2xxSuccessful
             .expectBody<MovieWithActorDTO>()
-            .returnResult()
-            .responseBody
+            .returnResult().responseBody
+            .shouldNotBeNull()
 
         log.debug { "movieWithActors[$movieId]=$movieWithActors" }
-
-        movieWithActors.shouldNotBeNull()
         movieWithActors.id shouldBeEqualTo movieId
     }
 
@@ -43,11 +41,10 @@ class MovieActorsControllerTest: AbstractExposedSqlTest() {
             .httpGet("/movie-actors/count")
             .expectStatus().is2xxSuccessful
             .expectBodyList<MovieActorCountDTO>()
-            .returnResult()
-            .responseBody!!
+            .returnResult().responseBody
+            .shouldNotBeNull()
 
         movieActorCounts.shouldNotBeEmpty()
-
         movieActorCounts.forEach {
             log.debug { "movieActorCount=$it" }
         }
@@ -59,7 +56,8 @@ class MovieActorsControllerTest: AbstractExposedSqlTest() {
             .httpGet("/movie-actors/acting-producers")
             .expectStatus().is2xxSuccessful
             .expectBodyList<MovieWithProducingActorDTO>()
-            .returnResult().responseBody!!
+            .returnResult().responseBody
+            .shouldNotBeNull()
 
         movieWithProducers.forEach {
             log.debug { "movieWithProducer=$it" }

@@ -14,6 +14,9 @@ configurations {
 }
 
 dependencies {
+
+    testImplementation(project(":shared"))
+
     // Jackson
     implementation(Libs.bluetape4k_jackson3)
     implementation(Libs.jackson3_databind)

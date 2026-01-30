@@ -5,7 +5,6 @@ import io.bluetape4k.workshop.shared.web.httpGet
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpStatus
 
 class ReactiveCircuitBreakerTest: AbstractCircuitBreakerTest() {
 
@@ -92,23 +91,20 @@ class ReactiveCircuitBreakerTest: AbstractCircuitBreakerTest() {
 
         private fun procedureMonoFailure(serviceName: String) {
             webClient
-                .httpGet("/$serviceName/monoFailure", HttpStatus.INTERNAL_SERVER_ERROR)
+                .httpGet("/$serviceName/monoFailure")
+                .expectStatus().is5xxServerError
         }
 
         private fun procedureMonoSuccess(serviceName: String) {
             webClient
-                .get()
-                .uri("/$serviceName/monoSuccess")
-                .exchange()
-                .expectStatus().isEqualTo(HttpStatus.OK)
+                .httpGet("/$serviceName/monoSuccess")
+                .expectStatus().is2xxSuccessful
         }
 
         private fun procedureMonoTimeout(serviceName: String) {
             webClient
-                .get()
-                .uri("/$serviceName/monoTimeout")
-                .exchange()
-                .expectStatus().isEqualTo(HttpStatus.OK) // fallback 이 작동하므로, 항상 성공한다
+                .httpGet("/$serviceName/monoTimeout")
+                .expectStatus().is2xxSuccessful
         }
     }
 

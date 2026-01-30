@@ -25,10 +25,9 @@ class MovieControllerTest: AbstractExposedSqlTest() {
             .expectStatus().is2xxSuccessful
             .expectBody<MovieDTO>()
             .returnResult().responseBody
+            .shouldNotBeNull()
 
         log.debug { "movie[$id]=$movie" }
-
-        movie.shouldNotBeNull()
         movie.id shouldBeEqualTo id
     }
 
@@ -40,7 +39,8 @@ class MovieControllerTest: AbstractExposedSqlTest() {
             .httpGet("/movies?producerName=$producerName")
             .expectStatus().is2xxSuccessful
             .expectBodyList<MovieDTO>()
-            .returnResult().responseBody!!
+            .returnResult().responseBody
+            .shouldNotBeNull()
 
         movies shouldHaveSize 2
     }

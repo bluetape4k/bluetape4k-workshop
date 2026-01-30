@@ -12,8 +12,6 @@ import io.bluetape4k.workshop.elasticsearch.domain.dto.toBook
 import io.bluetape4k.workshop.elasticsearch.domain.dto.toModifyBookRequest
 import io.bluetape4k.workshop.elasticsearch.domain.model.Book
 import io.bluetape4k.workshop.elasticsearch.domain.service.BookService
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldBeEqualTo
@@ -22,7 +20,7 @@ import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.http.HttpStatus
+import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.test.web.reactive.server.returnResult
 
 class BookControllerTest(
@@ -45,8 +43,10 @@ class BookControllerTest(
 
         val loaded = client
             .httpGet(BOOK_PATH)
-            .returnResult<Book>().responseBody
-            .asFlow().toList()
+            .expectStatus().is2xxSuccessful
+            .expectBodyList<Book>()
+            .returnResult().responseBody
+            .shouldNotBeNull()
 
         loaded.forEach {
             log.trace { "loaded book=$it" }
@@ -63,7 +63,6 @@ class BookControllerTest(
             .returnResult<Book>().responseBody
             .awaitSingle()
 
-        foundBook.shouldNotBeNull()
         foundBook.isbn shouldBeEqualTo saved.last().isbn
     }
 
@@ -71,7 +70,8 @@ class BookControllerTest(
     fun `find book with not exists isbn`() = runTest {
         insertRandomBooks(3)
 
-        client.httpGet("$BOOK_PATH/not-exists", HttpStatus.NOT_FOUND)
+        client.httpGet("$BOOK_PATH/not-exists")
+            .expectStatus().isNotFound
     }
 
     @Test
@@ -81,9 +81,11 @@ class BookControllerTest(
         val title = last.title
         val author = last.authorName
 
-        val foundBooks = client.httpGet("$BOOK_PATH?title=$title&author=$author")
-            .returnResult<Book>().responseBody
-            .asFlow().toList()
+        val foundBooks = client
+            .httpGet("$BOOK_PATH?title=$title&author=$author")
+            .expectBodyList<Book>()
+            .returnResult().responseBody
+            .shouldNotBeNull()
 
         foundBooks.forEach {
             log.trace { "found book=$it" }
@@ -96,7 +98,8 @@ class BookControllerTest(
         val book = createBook()
 
         val createdBook = client
-            .httpPost(BOOK_PATH, book.toModifyBookRequest(), HttpStatus.CREATED)
+            .httpPost(BOOK_PATH, book.toModifyBookRequest())
+            .expectStatus().isCreated
             .returnResult<Book>().responseBody
             .awaitSingle()
 
@@ -113,6 +116,7 @@ class BookControllerTest(
 
         val updatedBook = client
             .httpPut("$BOOK_PATH/${last.id}", updateRequest)
+            .expectStatus().is2xxSuccessful
             .returnResult<Book>().responseBody
             .awaitSingle()
 
@@ -126,7 +130,9 @@ class BookControllerTest(
 
         val updateRequest = last.toModifyBookRequest().copy(title = "updated title")
 
-        client.httpPut("$BOOK_PATH/not-exisis", updateRequest, HttpStatus.NOT_FOUND)
+        client
+            .httpPut("$BOOK_PATH/not-exisis", updateRequest)
+            .expectStatus().isNotFound
     }
 
     @Test
@@ -134,17 +140,23 @@ class BookControllerTest(
         val saved = insertRandomBooks(3)
         val last = saved.last()
 
-        client.httpDelete("$BOOK_PATH/${last.id}")
+        client
+            .httpDelete("$BOOK_PATH/${last.id}")
+            .expectStatus().is2xxSuccessful
     }
 
     @Test
     fun `delete book by invalid id`() = runSuspendIO {
         insertRandomBooks(3)
-        client.httpDelete("$BOOK_PATH/not-exists", HttpStatus.NOT_FOUND)
+        client
+            .httpDelete("$BOOK_PATH/not-exists")
+            .expectStatus().isNotFound
     }
 
     private suspend fun insertRandomBooks(size: Int = 10): List<Book> {
-        return bookService.createAll(List(size) { createBook() }).toList()
+        return bookService
+            .createAll(List(size) { createBook() })
+            .toList()
             .apply {
                 // NOTE: indexOps refresh 해줘야 검색이 됩니다.
                 refreshBookIndex()

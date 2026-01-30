@@ -25,11 +25,11 @@ class CoroutineControllerTest: AbstractTracingTest() {
             .expectStatus().is2xxSuccessful
             .expectBody<String>()
             .returnResult().responseBody
-            .shouldNotBeNull()
-            .shouldNotBeEmpty()
             .apply {
                 log.debug { "body=$this" }
             }
+            .shouldNotBeNull()
+            .shouldNotBeEmpty()
     }
 
     @Test
@@ -43,7 +43,6 @@ class CoroutineControllerTest: AbstractTracingTest() {
             .awaitSingle()
 
         log.debug { "todo: $todo" }
-        todo.shouldNotBeNull()
         todo.id shouldBeEqualTo id
     }
 }

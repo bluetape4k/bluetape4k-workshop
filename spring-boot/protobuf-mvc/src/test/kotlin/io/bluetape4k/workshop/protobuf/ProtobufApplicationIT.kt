@@ -102,6 +102,7 @@ class ProtobufApplicationIT {
             .expectStatus().is2xxSuccessful
             .returnResult<ByteArray>().responseBody
             .awaitSingle()
+            .shouldNotBeNull()
 
         val course1 = Course.parseFrom(bytes)
 

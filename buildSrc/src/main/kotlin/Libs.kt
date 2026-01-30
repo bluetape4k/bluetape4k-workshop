@@ -708,6 +708,7 @@ object Libs {
     val resilience4j_spring = resilience4j("spring")
     val resilience4j_spring_boot2 = resilience4j("spring-boot2")
     val resilience4j_spring_boot3 = resilience4j("spring-boot3")
+    val resilience4j_spring_boot4 = resilience4j("spring-boot4")
     val resilience4j_spring_cloud2 = resilience4j("spring-cloud2")
     val resilience4j_timelimiter = resilience4j("timelimiter")
     val resilience4j_vertx = resilience4j("vertx")

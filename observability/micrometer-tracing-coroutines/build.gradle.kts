@@ -17,6 +17,8 @@ dependencies {
     implementation(platform(Libs.micrometer_bom))
     implementation(platform(Libs.micrometer_tracing_bom))
 
+    testImplementation(project(":shared"))
+
     implementation(Libs.bluetape4k_micrometer)
     implementation(Libs.bluetape4k_jackson3)
     implementation(Libs.bluetape4k_testcontainers)
@@ -42,8 +44,6 @@ dependencies {
     // implementation("io.zipkin.reporter2:zipkin-reporter-brave:3.3.0")  // https://mvnrepository.com/artifact/io.zipkin.reporter2/zipkin-reporter-brave
 
     implementation(Libs.micrometer_context_propagation)  // thread local <-> reactor 등 상이한 환경에서 context 전파를 위해 사용
-
-    testImplementation(project(":shared"))
 
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))

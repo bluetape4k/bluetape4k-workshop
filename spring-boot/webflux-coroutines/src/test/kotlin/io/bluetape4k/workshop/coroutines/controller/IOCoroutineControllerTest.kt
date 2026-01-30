@@ -27,6 +27,7 @@ class IOCoroutineControllerTest: AbstractCoroutineApplicationTest() {
     fun index() = runSuspendIO {
         client
             .httpGet(BASE_PATH)
+            .expectStatus().is2xxSuccessful
             .expectBody<Banner>().isEqualTo(expectedBanner)
     }
 
@@ -34,6 +35,7 @@ class IOCoroutineControllerTest: AbstractCoroutineApplicationTest() {
     fun suspending() = runSuspendIO {
         client
             .httpGet("$BASE_PATH/suspend")
+            .expectStatus().is2xxSuccessful
             .expectBody<Banner>().isEqualTo(expectedBanner)
     }
 
@@ -41,6 +43,7 @@ class IOCoroutineControllerTest: AbstractCoroutineApplicationTest() {
     fun deferred() = runSuspendIO {
         client
             .httpGet("$BASE_PATH/deferred")
+            .expectStatus().is2xxSuccessful
             .expectBody<Banner>().isEqualTo(expectedBanner)
     }
 
@@ -48,6 +51,7 @@ class IOCoroutineControllerTest: AbstractCoroutineApplicationTest() {
     fun `sequential flow`() = runSuspendIO {
         client
             .httpGet("$BASE_PATH/sequential-flow")
+            .expectStatus().is2xxSuccessful
             .expectBodyList<Banner>()
             .contains(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
     }
@@ -56,6 +60,7 @@ class IOCoroutineControllerTest: AbstractCoroutineApplicationTest() {
     fun `concurrent flow`() = runSuspendIO {
         client
             .httpGet("$BASE_PATH/concurrent-flow")
+            .expectStatus().is2xxSuccessful
             .expectBodyList<Banner>()
             .contains(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
     }
@@ -80,6 +85,7 @@ class IOCoroutineControllerTest: AbstractCoroutineApplicationTest() {
 
         client
             .httpPost("$BASE_PATH/request-as-flow", request)
+            .expectStatus().is2xxSuccessful
             .expectBody<String>().isEqualTo("12345")
     }
 }

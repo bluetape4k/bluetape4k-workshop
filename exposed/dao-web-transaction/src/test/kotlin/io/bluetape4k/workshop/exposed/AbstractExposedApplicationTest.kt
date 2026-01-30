@@ -34,7 +34,10 @@ class AbstractExposedApplicationTest {
     private val port: Int = 0
 
     protected val webTestClient: WebTestClient by lazy {
-        WebTestClient.bindToServer().baseUrl("http://localhost:$port").build()
+        WebTestClient
+            .bindToServer()
+            .baseUrl("http://localhost:$port")
+            .build()
     }
 
 }

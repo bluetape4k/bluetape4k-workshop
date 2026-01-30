@@ -105,8 +105,8 @@ class CborApplicationTest {
         val course1 = restClient
             .httpGet("/courses/1", accept = MediaType.APPLICATION_CBOR)
             .body<Course>()
+            .shouldNotBeNull()
 
-        course1.shouldNotBeNull()
         log.debug { "course1: $course1" }
         assertCourse1(course1)
     }
@@ -127,7 +127,6 @@ class CborApplicationTest {
             .httpGet("/courses/1", accept = MediaType.APPLICATION_CBOR)
             .awaitBody<Course>()
 
-        course2.shouldNotBeNull()
         log.debug { "course2: $course2" }
         assertCourse1(course2)
     }
@@ -140,8 +139,8 @@ class CborApplicationTest {
             .expectStatus().is2xxSuccessful
             .returnResult<Course>().responseBody
             .awaitSingle()
+            .shouldNotBeNull()
 
-        course1.shouldNotBeNull()
         log.debug { "course1: $course1" }
         assertCourse1(course1)
     }

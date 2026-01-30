@@ -4,11 +4,11 @@ import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.shared.web.httpGet
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
-import kotlinx.coroutines.reactive.awaitSingle
+import org.amshove.kluent.shouldNotBeNull
 import org.amshove.kluent.shouldStartWith
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.springframework.test.web.reactive.server.returnResult
+import org.springframework.test.web.reactive.server.expectBody
 
 class CircuitBreakerTest: AbstractCircuitBreakerTest() {
 
@@ -47,8 +47,10 @@ class CircuitBreakerTest: AbstractCircuitBreakerTest() {
         fun `Backend A - 예외 발생 시 Fallback 이 작동합니다`() = runSuspendIO {
             val response = webClient
                 .httpGet("/$BACKEND_A/fallback")
-                .returnResult<String>().responseBody
-                .awaitSingle()
+                .expectStatus().is2xxSuccessful
+                .expectBody<String>()
+                .returnResult().responseBody
+                .shouldNotBeNull()
 
             response shouldStartWith "Recovered HttpServerErrorException:"
         }
@@ -101,8 +103,10 @@ class CircuitBreakerTest: AbstractCircuitBreakerTest() {
         fun `Backend B - 예외 발생 시 Fallback 이 작동합니다`() = runSuspendIO {
             val response = webClient
                 .httpGet("/$BACKEND_B/fallback")
-                .returnResult<String>().responseBody
-                .awaitSingle()
+                .expectStatus().is2xxSuccessful
+                .expectBody<String>()
+                .returnResult().responseBody
+                .shouldNotBeNull()
 
             response shouldStartWith "Recovered"
         }
