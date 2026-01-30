@@ -31,6 +31,9 @@ configurations {
 }
 
 dependencies {
+
+    testImplementation(project(":shared"))
+
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))
     annotationProcessor(Libs.springBoot("autoconfigure-processor"))
@@ -47,7 +50,6 @@ dependencies {
     testImplementation(Libs.springBootStarter("data-elasticsearch-test"))
     implementation(Libs.elasticsearch_rest_client)
 
-    testImplementation(Libs.bluetape4k_spring_tests)
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
