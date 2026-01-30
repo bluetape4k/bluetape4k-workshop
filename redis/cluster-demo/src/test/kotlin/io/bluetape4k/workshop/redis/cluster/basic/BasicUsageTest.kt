@@ -118,6 +118,7 @@ class BasicUsageTest(
             multiGet(listOf(key1, key2, key3))!! shouldContainSame listOf(value1, value2, value3)
         }
 
+        // NOTE: lettuce-core 7.x 에서는 작동하지 않습니다.
         operations.keys("*")!! shouldContainAll listOf(key1, key2, key3)
     }
 }

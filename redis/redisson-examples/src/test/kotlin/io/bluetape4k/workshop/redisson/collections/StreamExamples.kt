@@ -5,7 +5,6 @@ import io.bluetape4k.idgenerators.uuid.TimebasedUuid
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.redis.redisson.ackAllAsync
 import io.bluetape4k.redis.redisson.streamAddArgsOf
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.delay
@@ -14,9 +13,9 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
 import org.junit.jupiter.api.Test
 import org.redisson.api.RStream
-import org.redisson.api.StreamMessageId
 import org.redisson.api.stream.StreamAddArgs
 import org.redisson.api.stream.StreamCreateGroupArgs
+import org.redisson.api.stream.StreamMessageId
 import org.redisson.api.stream.StreamReadGroupArgs
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.seconds
@@ -124,7 +123,7 @@ class StreamExamples: AbstractRedissonTest() {
         // 메시지를 기다린다.
         val consumerJob = scope.launch {
             // 1개의 메시지를 받는다
-            val map2 = stream.readGroupAsync(
+            val map2: Map<StreamMessageId, Map<String, Int>?> = stream.readGroupAsync(
                 groupName,
                 consumerName2,
                 StreamReadGroupArgs.neverDelivered().timeout(10.seconds.toJavaDuration())
@@ -134,9 +133,9 @@ class StreamExamples: AbstractRedissonTest() {
             map2.keys shouldHaveSize 1
             val msgId = map2.keys.first()
             log.debug { "메시지 수신, messageId=$msgId" }
-            map2[msgId]!! shouldBeEqualTo mapOf<String, Int>("3" to 3, "4" to 4)
+            map2[msgId]!! shouldBeEqualTo mapOf("3" to 3, "4" to 4)
 
-            stream.ackAllAsync(groupName, map2.keys).suspendAwait() shouldBeEqualTo 1L
+            stream.ackAsync(groupName, *map2.keys.toTypedArray()).suspendAwait() shouldBeEqualTo 1L
         }
 
         // 새로운 메시지 1개를 전송한다

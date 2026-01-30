@@ -8,10 +8,10 @@ import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.junit.jupiter.api.Test
-import org.redisson.api.GeoEntry
-import org.redisson.api.GeoPosition
-import org.redisson.api.GeoUnit
+import org.redisson.api.geo.GeoEntry
+import org.redisson.api.geo.GeoPosition
 import org.redisson.api.geo.GeoSearchArgs
+import org.redisson.api.geo.GeoUnit
 
 
 /**

@@ -8,6 +8,8 @@ configurations {
 
 dependencies {
 
+    testImplementation(project(":shared"))
+
     // Redis
     implementation(Libs.bluetape4k_redis)
     testImplementation(Libs.bluetape4k_testcontainers)
@@ -19,10 +21,6 @@ dependencies {
     // Lettuce
     implementation(Libs.lettuce_core)
 
-    // Codecs
-    implementation(Libs.kryo)
-    implementation(Libs.fory_kotlin)
-
     // Jackson
     implementation(Libs.bluetape4k_jackson3)
     implementation(Libs.jackson3_dataformat_protobuf)
@@ -31,6 +29,10 @@ dependencies {
 
     // Grpc
     implementation(Libs.bluetape4k_grpc)
+
+    // Codecs
+    implementation(Libs.fory_kotlin)
+    implementation(Libs.kryo)
 
     // Compressor
     implementation(Libs.lz4_java)
