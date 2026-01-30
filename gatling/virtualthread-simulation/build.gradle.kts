@@ -16,6 +16,8 @@ configurations {
 
 dependencies {
 
+    testImplementation(project(":shared"))
+
     implementation(Libs.bluetape4k_io)
     implementation(Libs.bluetape4k_jackson3)
 
@@ -56,5 +58,4 @@ dependencies {
 
     // Gatling Scenario에서 bluetape4k-io 를 사용하려고 추가
     gatling(Libs.bluetape4k_io)
-
 }

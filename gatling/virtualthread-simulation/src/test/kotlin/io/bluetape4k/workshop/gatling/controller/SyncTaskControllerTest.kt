@@ -29,6 +29,6 @@ class SyncTaskControllerTest: AbstractGatlingTest() {
             .returnResult<Long>().responseBody
             .awaitSingle()
 
-        log.info { "Response: $response" }
+        log.info { "delay time: $response msec" }
     }
 }

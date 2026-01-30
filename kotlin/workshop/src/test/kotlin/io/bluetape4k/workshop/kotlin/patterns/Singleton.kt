@@ -27,6 +27,7 @@ class Singleton {
     data object NoMoviesListDataObject
 
     // Kotlin의 delegate pattern 을 사용하면 더 간결하게 구현할 수 있다. (여기서는 class delegate)
+    @Suppress("JavaDefaultMethodsNotOverriddenByDelegation")
     object NoMoviesList: List<String> by emptyList() {
         private val empty = emptyList<String>()
 

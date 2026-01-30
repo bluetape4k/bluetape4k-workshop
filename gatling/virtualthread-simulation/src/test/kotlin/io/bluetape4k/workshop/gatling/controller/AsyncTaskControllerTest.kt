@@ -26,9 +26,9 @@ class AsyncTaskControllerTest: AbstractGatlingTest() {
             .get()
             .uri("/async/$seconds")
             .exchangeSuccessfully()
-            .returnResult<String>().responseBody
+            .returnResult<Long>().responseBody
             .awaitSingle()
 
-        log.info { "Response: $response" }
+        log.info { "delay time: $response msec" }
     }
 }

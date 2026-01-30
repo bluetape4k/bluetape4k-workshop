@@ -22,5 +22,4 @@ class AsyncTaskController(
             asyncTaskService.delay(seconds)
         }
     }
-
 }
