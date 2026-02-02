@@ -6,7 +6,8 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath(platform("org.jmolecules:jmolecules-bom:2023.2.1"))
+        // https://mvnrepository.com/artifact/org.jmolecules/jmolecules-bom
+        classpath(platform("org.jmolecules:jmolecules-bom:2025.0.2"))
         classpath("org.jmolecules.integrations:jmolecules-bytebuddy")
     }
 }
