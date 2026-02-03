@@ -1,18 +1,19 @@
 package io.bluetape4k.workshop.coroutines.handler
 
+import io.bluetape4k.coroutines.flow.extensions.toFastList
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.coroutines.AbstractCoroutineApplicationTest
 import io.bluetape4k.workshop.coroutines.model.Banner
 import io.bluetape4k.workshop.shared.web.httpGet
-import kotlinx.coroutines.reactive.awaitLast
+import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeEmpty
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
-import org.springframework.test.web.reactive.server.expectBodyList
+import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.returnResult
 
 class CoroutineHandlerTest: AbstractCoroutineApplicationTest() {
@@ -24,8 +25,9 @@ class CoroutineHandlerTest: AbstractCoroutineApplicationTest() {
         client
             .httpGet("/")
             .expectStatus().is2xxSuccessful
-            .returnResult<String>().responseBody
-            .awaitLast()
+            .expectBody<String>()
+            .returnResult().responseBody
+            .shouldNotBeNull()
             .shouldNotBeEmpty()
     }
 
@@ -52,9 +54,10 @@ class CoroutineHandlerTest: AbstractCoroutineApplicationTest() {
         client
             .httpGet("/sequential-flow")
             .expectStatus().is2xxSuccessful
-            .expectBodyList<Banner>()
-            .returnResult().responseBody
-            .shouldNotBeNull() shouldBeEqualTo listOf(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
+            .returnResult<Banner>().responseBody
+            .shouldNotBeNull()
+            .asFlow()
+            .toFastList() shouldBeEqualTo listOf(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
     }
 
     @RepeatedTest(REPEAT_SIZE)
@@ -62,9 +65,10 @@ class CoroutineHandlerTest: AbstractCoroutineApplicationTest() {
         client
             .httpGet("/concurrent-flow")
             .expectStatus().is2xxSuccessful
-            .expectBodyList<Banner>()
-            .returnResult().responseBody
-            .shouldNotBeNull() shouldBeEqualTo listOf(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
+            .returnResult<Banner>().responseBody
+            .shouldNotBeNull()
+            .asFlow()
+            .toFastList() shouldBeEqualTo listOf(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
     }
 
     @Test

@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.coroutines.controller
 
+import io.bluetape4k.coroutines.flow.extensions.toFastList
 import io.bluetape4k.junit5.coroutines.runSuspendVT
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
@@ -11,10 +12,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.reactive.asFlow
+import kotlinx.coroutines.reactive.awaitSingle
+import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.expectBody
-import org.springframework.test.web.reactive.server.expectBodyList
+import org.springframework.test.web.reactive.server.returnResult
 import tools.jackson.databind.node.JsonNodeFactory
 
 class VTCoroutineControllerTest: AbstractCoroutineApplicationTest() {
@@ -28,15 +33,16 @@ class VTCoroutineControllerTest: AbstractCoroutineApplicationTest() {
         client
             .httpGet(BASE_PATH)
             .expectStatus().is2xxSuccessful
-            .expectBody<Banner>().isEqualTo(expectedBanner)
+            .returnResult<Banner>().responseBody
+            .awaitSingle() shouldBeEqualTo expectedBanner
     }
 
     @RepeatedTest(REPEAT_SIZE)
     fun suspending() = runSuspendVT {
         client
             .httpGet("${BASE_PATH}/suspend")
-            .expectStatus().is2xxSuccessful
-            .expectBody<Banner>().isEqualTo(expectedBanner)
+            .returnResult<Banner>().responseBody
+            .awaitSingle() shouldBeEqualTo expectedBanner
     }
 
     @RepeatedTest(REPEAT_SIZE)
@@ -44,7 +50,8 @@ class VTCoroutineControllerTest: AbstractCoroutineApplicationTest() {
         client
             .httpGet("${BASE_PATH}/deferred")
             .expectStatus().is2xxSuccessful
-            .expectBody<Banner>().isEqualTo(expectedBanner)
+            .returnResult<Banner>().responseBody
+            .awaitSingle() shouldBeEqualTo expectedBanner
     }
 
     @RepeatedTest(REPEAT_SIZE)
@@ -52,16 +59,20 @@ class VTCoroutineControllerTest: AbstractCoroutineApplicationTest() {
         client
             .httpGet("${BASE_PATH}/sequential-flow")
             .expectStatus().is2xxSuccessful
-            .expectBodyList<Banner>()
-            .contains(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
+            .returnResult<Banner>().responseBody
+            .shouldNotBeNull()
+            .asFlow()
+            .toFastList() shouldBeEqualTo listOf(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
     }
 
     @RepeatedTest(REPEAT_SIZE)
     fun `concurrent flow`() = runSuspendVT {
         client
             .httpGet("${BASE_PATH}/concurrent-flow")
-            .expectBodyList<Banner>()
-            .contains(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
+            .returnResult<Banner>().responseBody
+            .shouldNotBeNull()
+            .asFlow()
+            .toFastList() shouldBeEqualTo listOf(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
     }
 
     @RepeatedTest(REPEAT_SIZE)
@@ -85,6 +96,8 @@ class VTCoroutineControllerTest: AbstractCoroutineApplicationTest() {
         client
             .httpPost("${BASE_PATH}/request-as-flow", request)
             .expectStatus().is2xxSuccessful
-            .expectBody<String>().isEqualTo("12345")
+            .expectBody<String>()
+            .returnResult().responseBody
+            .shouldNotBeNull() shouldBeEqualTo "12345"
     }
 }

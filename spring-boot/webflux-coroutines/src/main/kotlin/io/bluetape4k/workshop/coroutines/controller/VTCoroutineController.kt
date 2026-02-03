@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.coroutines.controller
 
 import io.bluetape4k.concurrent.virtualthread.VT
+import io.bluetape4k.coroutines.flow.async
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
@@ -14,7 +15,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.flatMapMerge
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flow
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.MediaType
@@ -35,7 +36,7 @@ class VTCoroutineController(
 ): CoroutineScope by CoroutineScope(Dispatchers.VT + CoroutineName("vt")) {
 
     companion object: KLoggingChannel() {
-        private const val DEFAULT_DELAY = 500L
+        private const val DEFAULT_DELAY = 100L
     }
 
     @Value("\${server.port:8080}")
@@ -92,12 +93,10 @@ class VTCoroutineController(
         log.info { "Get banners in concurrent mode." }
 
         return (0..3).asFlow()
-            .flatMapMerge {
+            .async {
                 val coroutineName = currentCoroutineName()
                 log.debug { "coroutineName=[$coroutineName]" }
-                flow {
-                    emit(retrieveBanner())
-                }
+                retrieveBanner()
             }
     }
 
@@ -109,11 +108,11 @@ class VTCoroutineController(
 
     @PostMapping("/request-as-flow")
     fun requestAsStream(@RequestBody requests: Flow<JsonNode>): Flow<String> {
-        return flow {
+        return channelFlow {
             requests.collect { node ->
                 val coroutineName = currentCoroutineName()
                 log.debug { "jsonNode=${node.toPrettyString()}, coroutineName=[$coroutineName]" }
-                emit(node.toPrettyString())
+                send(node.toPrettyString())
             }
         }
     }
@@ -125,6 +124,6 @@ class VTCoroutineController(
             .uri("/suspend")
             .accept(MediaType.APPLICATION_JSON)
             .retrieve()
-            .awaitBody()
+            .awaitBody<Banner>()
     }
 }

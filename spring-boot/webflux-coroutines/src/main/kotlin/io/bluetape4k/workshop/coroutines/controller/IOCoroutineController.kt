@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.coroutines.controller
 
+import io.bluetape4k.coroutines.flow.async
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
@@ -13,7 +14,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.flatMapMerge
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flow
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.MediaType
@@ -33,7 +34,7 @@ class IOCoroutineController(private val builder: WebClient.Builder):
     CoroutineScope by CoroutineScope(Dispatchers.IO + CoroutineName("io")) {
 
     companion object: KLoggingChannel() {
-        private const val DEFAULT_DELAY = 500L
+        private const val DEFAULT_DELAY = 100L
     }
 
     @Value("\${server.port:8080}")
@@ -90,12 +91,10 @@ class IOCoroutineController(private val builder: WebClient.Builder):
         log.info { "Get banners in concurrent mode." }
 
         return (0..3).asFlow()
-            .flatMapMerge {
+            .async {
                 val coroutineName = currentCoroutineName()
                 log.debug { "coroutineName=[$coroutineName]" }
-                flow {
-                    emit(retrieveBanner())
-                }
+                retrieveBanner()
             }
     }
 
@@ -107,11 +106,11 @@ class IOCoroutineController(private val builder: WebClient.Builder):
 
     @PostMapping("/request-as-flow")
     fun requestAsStream(@RequestBody requests: Flow<JsonNode>): Flow<String> {
-        return flow {
+        return channelFlow {
             requests.collect { node ->
                 val coroutineName = currentCoroutineName()
                 log.debug { "jsonNode=${node.toPrettyString()}, coroutineName=[$coroutineName]" }
-                emit(node.toPrettyString())
+                send(node.toPrettyString())
             }
         }
     }

@@ -15,9 +15,12 @@ fun MessageOrBuilder.toJson(): String = JsonFormat.printer().print(this)
  * JSON 문자열을 Protobuf 객체로 변환합니다.
  */
 fun messageFromJson(json: String): Message {
-    val builder = Struct.newBuilder()
-    JsonFormat.parser().ignoringUnknownFields().merge(json, builder)
-    return builder.build()
+    return Struct.newBuilder()
+        .also { builder ->
+            JsonFormat.parser().ignoringUnknownFields().merge(json, builder)
+        }
+        .build()
+
 }
 
 inline fun <reified T: Message> messageFromJsonOrNull(json: String): T? {
