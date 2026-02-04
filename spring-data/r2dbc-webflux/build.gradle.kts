@@ -35,6 +35,12 @@ dependencies {
     implementation(Libs.r2dbc_h2)
     implementation(Libs.r2dbc_pool)
 
+    // Spring Boot
+    implementation(Libs.springBoot("autoconfigure"))
+    annotationProcessor(Libs.springBoot("autoconfigure-processor"))
+    annotationProcessor(Libs.springBoot("configuration-processor"))
+    runtimeOnly(Libs.springBoot("devtools"))
+
     // Webflux
     implementation(Libs.springBootStarter("webflux"))
     testImplementation(Libs.springBootStarter("webflux-test"))

@@ -14,6 +14,8 @@ abstract class AbstractGatlingTest {
     private val port: Int = 0
 
     protected val client: WebTestClient by lazy {
-        WebTestClient.bindToServer().baseUrl("http://localhost:$port").build()
+        WebTestClient.bindToServer()
+            .baseUrl("http://localhost:$port")
+            .build()
     }
 }
