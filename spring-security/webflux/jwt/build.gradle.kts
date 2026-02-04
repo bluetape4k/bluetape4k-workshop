@@ -14,7 +14,8 @@ configurations {
 }
 
 dependencies {
-    // testImplementation(Libs.bluetape4k_spring_tests)
+    testImplementation(project(":shared"))
+
     testImplementation(Libs.bluetape4k_jackson3)
     testImplementation(Libs.bluetape4k_junit5)
 
@@ -33,13 +34,13 @@ dependencies {
     // testImplementation(Libs.okhttp3_mockwebserver)
 
     // Coroutines
-    api(Libs.kotlinx_coroutines_reactor)
-    api(Libs.kotlinx_coroutines_core)
-    api(Libs.kotlinx_coroutines_reactor)
+    implementation(Libs.bluetape4k_coroutines)
+    implementation(Libs.kotlinx_coroutines_core)
+    implementation(Libs.kotlinx_coroutines_reactor)
     testImplementation(Libs.kotlinx_coroutines_test)
 
     // Reactor
-    compileOnly(Libs.reactor_core)
-    compileOnly(Libs.reactor_kotlin_extensions)
-    compileOnly(Libs.reactor_test)
+    implementation(Libs.reactor_core)
+    implementation(Libs.reactor_kotlin_extensions)
+    testImplementation(Libs.reactor_test)
 }

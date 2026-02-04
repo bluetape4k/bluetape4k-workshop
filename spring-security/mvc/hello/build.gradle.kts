@@ -27,7 +27,7 @@ dependencies {
     testImplementation(Libs.springBootStarter("webmvc-test"))
 
     // https://mvnrepository.com/artifact/org.thymeleaf.extras/thymeleaf-extras-springsecurity6
-    implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6:3.1.3.RELEASE")
+    implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
 
     testImplementation(Libs.springSecurity("test"))
     testImplementation(Libs.springBootStarter("test")) {
