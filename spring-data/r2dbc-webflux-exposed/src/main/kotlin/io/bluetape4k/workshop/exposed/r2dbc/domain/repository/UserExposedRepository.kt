@@ -49,7 +49,7 @@ class UserExposedRepository: ExposedR2dbcRepository<UserRecord, Int> {
         }
     }
 
-    suspend fun findByEmail(email: String): Flow<UserRecord> {
+    fun findByEmail(email: String): Flow<UserRecord> {
         return table.selectAll()
             .where { table.email eq email }
             .map { it.toEntity() }

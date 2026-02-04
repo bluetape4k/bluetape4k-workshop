@@ -28,11 +28,11 @@ class UserService(private val repository: UserExposedRepository) {
     suspend fun addUser(user: UserRecord): UserRecord? = suspendTransaction {
         log.debug { "Save new user. $user" }
         val newId = repository.save(user)
-        user.copy(id = newId.value)
+        user.withId(newId.value)
     }
 
     suspend fun updateUser(id: Int, user: UserRecord): UserRecord? = suspendTransaction {
-        val count = repository.update(user)
+        val count = repository.update(user.withId(id))
         if (count > 0) user else null
     }
 

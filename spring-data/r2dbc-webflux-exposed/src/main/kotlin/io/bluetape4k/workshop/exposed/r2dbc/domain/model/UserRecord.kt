@@ -8,4 +8,8 @@ data class UserRecord(
     val email: String,
     val avatar: String? = null,
     override val id: Int = -1,
-): HasIdentifier<Int> 
+): HasIdentifier<Int> {
+
+    fun withId(newId: Int) = copy(id = newId)
+
+}

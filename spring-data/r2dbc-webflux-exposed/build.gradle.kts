@@ -33,7 +33,7 @@ dependencies {
     implementation(Libs.springBoot("autoconfigure"))
     annotationProcessor(Libs.springBoot("autoconfigure-processor"))
     annotationProcessor(Libs.springBoot("configuration-processor"))
-    // runtimeOnly(Libs.springBoot("devtools"))
+    runtimeOnly(Libs.springBoot("devtools"))
 
     // Webflux
     implementation(Libs.springBootStarter("webflux"))

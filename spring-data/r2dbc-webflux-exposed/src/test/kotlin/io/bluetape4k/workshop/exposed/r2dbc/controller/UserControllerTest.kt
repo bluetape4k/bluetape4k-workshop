@@ -125,7 +125,7 @@ class UserControllerTest(
     inner class Add {
         @Test
         fun `add new user`() = runTest {
-            val newUser = createUserDTO()
+            val newUser = createUserRecord()
 
             val savedUser = webTestClient
                 .httpPost("/api/users", newUser)
@@ -151,10 +151,10 @@ class UserControllerTest(
     inner class Update {
         @Test
         fun `update existing user`() = runTest {
-            val newUser = createUserDTO()
+            val newUser = createUserRecord()
             val savedUser = service.addUser(newUser)!!
 
-            val userToUpdate = createUserDTO().copy(id = savedUser.id)
+            val userToUpdate = createUserRecord().withId(savedUser.id)
 
             val updatedUser = webTestClient
                 .httpPut("/api/users/${savedUser.id}", userToUpdate)
@@ -168,7 +168,8 @@ class UserControllerTest(
 
         @Test
         fun `update non-existing user`() = runTest {
-            val userToUpdate = createUserDTO()
+            val userToUpdate = createUserRecord()
+
             webTestClient
                 .httpPut("/api/users/9999", userToUpdate)
                 .expectStatus().isNotFound
@@ -195,7 +196,7 @@ class UserControllerTest(
     inner class Delete {
         @Test
         fun `delete existing user`() = runTest {
-            val newUser = createUserDTO()
+            val newUser = createUserRecord()
             val savedUser = service.addUser(newUser)!!
 
             webTestClient

@@ -33,7 +33,7 @@ abstract class AbstractWebfluxR2dbcExposedApplicationTest {
             id = id ?: -1
         )
 
-    protected fun createUserDTO(): UserRecord =
+    protected fun createUserRecord(): UserRecord =
         UserRecord(
             name = faker.name().fullName(),
             login = faker.credentials().username(),

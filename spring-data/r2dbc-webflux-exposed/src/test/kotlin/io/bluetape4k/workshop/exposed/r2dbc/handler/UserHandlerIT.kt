@@ -119,7 +119,7 @@ class UserHandlerIT(
     inner class Add {
         @Test
         fun `add new user`() = runTest {
-            val newUser = createUserDTO()
+            val newUser = createUserRecord()
 
             val savedUser = webTestClient
                 .httpPost("/users", newUser)
@@ -128,7 +128,7 @@ class UserHandlerIT(
                 .awaitSingle()
 
             savedUser.id.shouldNotBeNull()
-            savedUser shouldBeEqualTo newUser.copy(id = savedUser.id)
+            savedUser shouldBeEqualTo newUser.withId(savedUser.id)
         }
 
         @Test
@@ -147,10 +147,10 @@ class UserHandlerIT(
     inner class Update {
         @Test
         fun `update existing user`() = runTest {
-            val newUser = createUserDTO()
+            val newUser = createUserRecord()
             val savedUser = service.addUser(newUser)!!
 
-            val userToUpdate = createUserDTO().copy(id = savedUser.id)
+            val userToUpdate = createUserRecord().withId(savedUser.id)
 
             val updatedUser = webTestClient
                 .httpPut("/users/${savedUser.id}", userToUpdate)
@@ -163,7 +163,7 @@ class UserHandlerIT(
 
         @Test
         fun `update with non-numeric id`() = runTest {
-            val userToUpdate = createUserDTO()
+            val userToUpdate = createUserRecord()
 
             webTestClient
                 .httpPut("/users/abc", userToUpdate)
@@ -186,7 +186,7 @@ class UserHandlerIT(
 
         @Test
         fun `update non-existing user`() = runTest {
-            val userToUpdate = createUserDTO()
+            val userToUpdate = createUserRecord()
 
             webTestClient
                 .httpPut("/users/9999", userToUpdate)
@@ -200,7 +200,7 @@ class UserHandlerIT(
     inner class Delete {
         @Test
         fun `delete existing user`() = runTest {
-            val newUser = createUserDTO()
+            val newUser = createUserRecord()
             val savedUser = service.addUser(newUser)!!
 
             webTestClient

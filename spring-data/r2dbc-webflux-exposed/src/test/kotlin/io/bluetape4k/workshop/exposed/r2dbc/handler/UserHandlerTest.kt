@@ -79,7 +79,7 @@ class UserHandlerTest: AbstractWebfluxR2dbcExposedApplicationTest() {
 
     @Test
     fun `add new user returns OK`() = runTest {
-        coEvery { request.bodyToMono<UserRecord>() } returns createUserDTO().toMono()
+        coEvery { request.bodyToMono<UserRecord>() } returns createUserRecord().toMono()
         coEvery { service.addUser(any()) } answers {
             firstArg<UserRecord>().copy(id = 999)
         }
@@ -99,7 +99,7 @@ class UserHandlerTest: AbstractWebfluxR2dbcExposedApplicationTest() {
     @Test
     fun `when error in saveUser returns InternalServerError`() = runTest {
         coEvery { service.addUser(any()) } returns null
-        coEvery { request.bodyToMono<UserRecord>() } returns createUserDTO().toMono()
+        coEvery { request.bodyToMono<UserRecord>() } returns createUserRecord().toMono()
 
         val response = handler.addUser(request)
         response.statusCode() shouldBeEqualTo HttpStatus.INTERNAL_SERVER_ERROR
@@ -108,7 +108,7 @@ class UserHandlerTest: AbstractWebfluxR2dbcExposedApplicationTest() {
     @Test
     fun `when update existing user returns OK`() = runTest {
         coEvery { request.pathVariable("id") } returns "2"
-        coEvery { request.bodyToMono<UserRecord>() } returns createUserDTO().toMono()
+        coEvery { request.bodyToMono<UserRecord>() } returns createUserRecord().toMono()
         coEvery { service.updateUser(2, any()) } answers {
             secondArg<UserRecord>().copy(id = 2)
         }
@@ -137,7 +137,7 @@ class UserHandlerTest: AbstractWebfluxR2dbcExposedApplicationTest() {
     @Test
     fun `when update non-existing user returns BadRequest`() = runTest {
         coEvery { request.pathVariable("id") } returns "2"
-        coEvery { request.bodyToMono<UserRecord>() } returns createUserDTO().toMono()
+        coEvery { request.bodyToMono<UserRecord>() } returns createUserRecord().toMono()
         coEvery { service.updateUser(2, any()) } returns null
 
         val response = handler.updateUser(request)

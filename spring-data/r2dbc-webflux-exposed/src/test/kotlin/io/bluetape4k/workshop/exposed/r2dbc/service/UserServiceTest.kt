@@ -40,7 +40,7 @@ class UserServiceTest(
     @Test
     @Order(2)
     fun `find all users`() = runTest {
-        val users = service.findAll().toList()
+        val users = service.findAll()
         users.forEach {
             log.debug { it }
         }
@@ -50,7 +50,7 @@ class UserServiceTest(
     @Test
     @Order(3)
     fun `find user by id`() = runTest {
-        val expected = service.findAll().toList().random()
+        val expected = service.findAll().random()
 
         val actual = service.findByIdOrNull(expected.id)
         log.debug { actual }
@@ -67,7 +67,7 @@ class UserServiceTest(
     @Test
     @Order(5)
     fun `find user by email`() = runTest {
-        val expected = service.findAll().toList().random()
+        val expected = service.findAll().random()
 
         val actual = service.findByEmail(expected.email).single()
         log.debug { actual }
@@ -84,18 +84,18 @@ class UserServiceTest(
     @Test
     @Order(7)
     fun `add new user`() = runTest {
-        val newUser = createUserDTO()
+        val newUser = createUserRecord()
         val savedUser = service.addUser(newUser)
 
         savedUser.shouldNotBeNull()
         savedUser.id.shouldNotBeNull()
-        savedUser shouldBeEqualTo newUser.copy(id = savedUser.id)
+        savedUser shouldBeEqualTo newUser.withId(savedUser.id)
     }
 
     @Test
     @Order(8)
     fun `update existing user`() = runTest {
-        val user = service.findAll().toList().random()
+        val user = service.findAll().random()
 
         val updated = service.updateUser(user.id, user.copy(avatar = "updated-avatar.jpg"))
         log.debug { "Updated=$updated" }
@@ -111,7 +111,7 @@ class UserServiceTest(
     @Test
     @Order(9)
     fun `update non existing user`() = runTest {
-        val nonExists = createUserDTO()
+        val nonExists = createUserRecord()
         val actual = service.updateUser(-1, nonExists)
         actual.shouldBeNull()
     }
@@ -119,7 +119,7 @@ class UserServiceTest(
     @Test
     @Order(10)
     fun `delete existing user`() = runTest {
-        val user = createUserDTO()
+        val user = createUserRecord()
         val saved = service.addUser(user)
 
         saved.shouldNotBeNull()
