@@ -33,7 +33,9 @@ dependencies {
     implementation(Libs.springBoot("autoconfigure"))
     annotationProcessor(Libs.springBoot("autoconfigure-processor"))
     annotationProcessor(Libs.springBoot("configuration-processor"))
-    runtimeOnly(Libs.springBoot("devtools"))
+
+    // FIXME: devtools 가 r2dbc auto configuration 을 왜 원하는지 모르겠다.
+    // runtimeOnly(Libs.springBoot("devtools"))
 
     // Webflux
     implementation(Libs.springBootStarter("webflux"))
