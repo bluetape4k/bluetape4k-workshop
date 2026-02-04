@@ -14,8 +14,9 @@ configurations {
 }
 
 dependencies {
-    api(Libs.bluetape4k_spring_core)
-    testImplementation(Libs.bluetape4k_jackson)
+    testImplementation(project(":shared"))
+
+    testImplementation(Libs.bluetape4k_jackson3)
     testImplementation(Libs.bluetape4k_junit5)
 
     // Spring Security
@@ -26,7 +27,7 @@ dependencies {
     testImplementation(Libs.springBootStarter("webmvc-test"))
 
     // https://mvnrepository.com/artifact/org.thymeleaf.extras/thymeleaf-extras-springsecurity6
-    implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6:3.1.2.RELEASE")
+    implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6:3.1.3.RELEASE")
 
     testImplementation(Libs.springSecurity("test"))
     testImplementation(Libs.springBootStarter("test")) {

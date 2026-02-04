@@ -1,23 +1,18 @@
-package io.bluetape4k.workshop.spring.security.mvc
+package io.bluetape4k.workshop.spring.security.mvc.controller
 
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.workshop.spring.security.mvc.AbstractSecurityApplicationTest
 import org.amshove.kluent.shouldEndWith
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.mock.web.MockHttpSession
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin
 import org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated
 import org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated
-import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
-@SpringBootTest
-@AutoConfigureMockMvc
-class KotlinApplicationTest(@param:Autowired private val mockMvc: MockMvc) {
+class MainControllerTest: AbstractSecurityApplicationTest() {
 
     companion object: KLogging()
 
@@ -30,7 +25,10 @@ class KotlinApplicationTest(@param:Autowired private val mockMvc: MockMvc) {
 
     @Test
     fun `protected page redirects to login`() {
-        val mvcResult = mockMvc.perform(get("/user/index"))
+        val mvcResult = mockMvc
+            .perform(
+                get("/user/index")
+            )
             .andExpect(status().is3xxRedirection())
             .andReturn()
 
@@ -40,14 +38,22 @@ class KotlinApplicationTest(@param:Autowired private val mockMvc: MockMvc) {
     @Test
     fun `valid user permitted to log in`() {
         mockMvc
-            .perform(formLogin("/log-in").user("user").password("password"))
+            .perform(
+                formLogin("/log-in")
+                    .user("user")
+                    .password("password")
+            )
             .andExpect(authenticated())
     }
 
     @Test
     fun `invalid user not permitted to log in`() {
         mockMvc
-            .perform(formLogin("/log-in").user("invalid").password("invalid"))
+            .perform(
+                formLogin("/log-in")
+                    .user("invalid")
+                    .password("invalid")
+            )
             .andExpect(unauthenticated())
             .andExpect(status().is3xxRedirection)
             .andReturn()
@@ -56,13 +62,22 @@ class KotlinApplicationTest(@param:Autowired private val mockMvc: MockMvc) {
     @Test
     fun `logged in user can access protected page`() {
         val mvcResult = mockMvc
-            .perform(formLogin("/log-in").user("user").password("password"))
+            .perform(
+                formLogin(
+                    "/log-in"
+                )
+                    .user("user")
+                    .password("password")
+            )
             .andExpect(authenticated())
             .andReturn()
 
         val httpSession = mvcResult.request.getSession(false) as MockHttpSession
 
-        mockMvc.perform(get("/user/index").session(httpSession))
+        mockMvc
+            .perform(
+                get("/user/index").session(httpSession)
+            )
             .andExpect(status().isOk())
     }
 }
