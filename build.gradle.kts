@@ -122,18 +122,39 @@ subprojects {
             options.isIncremental = true
         }
 
+        compileKotlin {
+            compilerOptions {
+                incremental = true
+            }
+        }
+
+        // 멀티 모듈들을 테스트 시에만 동시에 실행되지 않게 하기 위해 Mutex 를 활용합니다.
+        abstract class TestMutexService: BuildService<BuildServiceParameters.None>
+
+        val testMutex = gradle.sharedServices.registerIfAbsent(
+            "test-mutex",
+            TestMutexService::class
+        ) {
+            maxParallelUsages.set(1)
+        }
+
         test {
+            // 멀티 모듈들을 테스트 시에만 동시에 실행되지 않게 하기 위해 Mutex 를 활용합니다.
+            usesService(testMutex)
+
             useJUnitPlatform()
 
-            // 테스트 시 아래와 같은 예외 메시지를 제거하기 위해서 
+            // 테스트 시 아래와 같은 예외 메시지를 제거하기 위해서
             // OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
             jvmArgs(
-                "-XX:+UseZGC",
                 "-Xshare:off",
-                "-Xms4G",
-                "-Xmx8G",
-                "--enable-preview",
+                "-Xms2G",
+                "-Xmx4G",
+                "-XX:+UseZGC",
+                "-XX:+UnlockExperimentalVMOptions",
                 "-XX:+EnableDynamicAgentLoading",
+                "--enable-preview",
+                "-Didea.io.use.nio2=true"
             )
 
             if (project.name.contains("quarkus")) {
