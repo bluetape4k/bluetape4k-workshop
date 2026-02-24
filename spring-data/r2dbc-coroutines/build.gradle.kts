@@ -39,6 +39,7 @@ dependencies {
     implementation(Libs.springBootStarter("data-r2dbc"))
     testImplementation(Libs.springBootStarter("data-r2dbc-test"))
 
+    runtimeOnly(Libs.h2_v2)
     implementation(Libs.r2dbc_h2)
     implementation(Libs.r2dbc_pool)
     implementation(Libs.r2dbc_postgresql)
