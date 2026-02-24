@@ -27,6 +27,10 @@ dependencies {
 
     testImplementation(project(":shared"))
 
+    // JDK 25
+    runtimeOnly(Libs.bluetape4k_virtualthread_jdk25)
+    // runtimeOnly(Libs.bluetape4k_virtualthread_jdk21)
+
     // bluetape4k
     implementation(Libs.bluetape4k_io)
     implementation(Libs.bluetape4k_jdbc)
