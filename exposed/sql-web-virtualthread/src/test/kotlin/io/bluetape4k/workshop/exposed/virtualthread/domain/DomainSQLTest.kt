@@ -42,8 +42,8 @@ class DomainSQLTest(
         @Test
         fun `get all actors in multiple platform threads`() {
             MultithreadingTester()
-                .numThreads(Runtimex.availableProcessors * 2)
-                .roundsPerThread(4)
+                .workers(Runtimex.availableProcessors * 2)
+                .rounds(4)
                 .add {
                     transaction(db) {
                         val actors = Actors.selectAll().map { it.toActorDTO() }
@@ -70,7 +70,7 @@ class DomainSQLTest(
         @Test
         fun `get all actors in multiple virtual threads`() {
             StructuredTaskScopeTester()
-                .roundsPerTask(Runtimex.availableProcessors * 2 * 4)
+                .rounds(Runtimex.availableProcessors * 2 * 4)
                 .add {
                     transaction(db) {
                         val actors = Actor.all().toList()

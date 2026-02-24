@@ -45,8 +45,8 @@ abstract class AbstractSingletonTest<T>(private val singletonInstanceMethod: () 
         val instances = CopyOnWriteArrayList<T>()
 
         MultithreadingTester()
-            .numThreads(Runtimex.availableProcessors * 2)
-            .roundsPerThread(2)
+            .workers(Runtimex.availableProcessors * 2)
+            .rounds(2)
             .add {
                 instances.add(singletonInstanceMethod())
             }
@@ -62,7 +62,7 @@ abstract class AbstractSingletonTest<T>(private val singletonInstanceMethod: () 
         val instances = CopyOnWriteArrayList<T>()
 
         StructuredTaskScopeTester()
-            .roundsPerTask(Runtimex.availableProcessors * 4)
+            .rounds(Runtimex.availableProcessors * 4)
             .add {
                 instances.add(singletonInstanceMethod())
             }
@@ -77,8 +77,8 @@ abstract class AbstractSingletonTest<T>(private val singletonInstanceMethod: () 
         val instances = CopyOnWriteArrayList<T>()
 
         SuspendedJobTester()
-            .numThreads(Runtimex.availableProcessors * 2)
-            .roundsPerJob(Runtimex.availableProcessors * 2 * 2)
+            .workers(Runtimex.availableProcessors * 2)
+            .rounds(Runtimex.availableProcessors * 2 * 2)
             .add {
                 instances.add(singletonInstanceMethod())
             }

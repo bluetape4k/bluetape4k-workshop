@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.redisson.locks
 
-import io.bluetape4k.coroutines.support.suspendAwait
+import io.bluetape4k.coroutines.support.awaitSuspending
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
@@ -32,24 +32,24 @@ class SemaphoreExamples: AbstractRedissonTest() {
         val semaphore = redisson.getSemaphore(semaphoreName)
 
         // 5개 확보
-        semaphore.trySetPermitsAsync(5).suspendAwait().shouldBeTrue()
+        semaphore.trySetPermitsAsync(5).awaitSuspending().shouldBeTrue()
 
         // 3개 획득
-        semaphore.acquireAsync(3).suspendAwait()
+        semaphore.acquireAsync(3).awaitSuspending()
 
         val redisson2 = newRedisson()
         val redisson3 = newRedisson()
 
         SuspendedJobTester()
-            .numThreads(4)
-            .roundsPerJob(16)
+            .workers(4)
+            .rounds(16)
             .add {
                 // 해당 Job은 semaphore 2개 반납
                 val s2 = redisson2.getSemaphore(semaphoreName)
                 delay(1)
 
                 // 2개 반납 (4개 남음)
-                s2.releaseAsync(2).suspendAwait()
+                s2.releaseAsync(2).awaitSuspending()
                 yield()
             }
             .add {
@@ -57,24 +57,24 @@ class SemaphoreExamples: AbstractRedissonTest() {
                 val s3 = redisson3.getSemaphore(semaphoreName)
                 delay(1)
                 // 2개 확보
-                s3.tryAcquireAsync(2, 5.seconds.toJavaDuration()).suspendAwait().shouldBeTrue()
+                s3.tryAcquireAsync(2, 5.seconds.toJavaDuration()).awaitSuspending().shouldBeTrue()
                 delay(1)
             }
             .run()
         redisson2.shutdown()
         redisson3.shutdown()
 
-        semaphore.availablePermitsAsync().suspendAwait() shouldBeEqualTo 2
+        semaphore.availablePermitsAsync().awaitSuspending() shouldBeEqualTo 2
 
         // 4개 반납
-        semaphore.releaseAsync(4).suspendAwait()
-        semaphore.availablePermitsAsync().suspendAwait() shouldBeEqualTo 6
+        semaphore.releaseAsync(4).awaitSuspending()
+        semaphore.availablePermitsAsync().awaitSuspending() shouldBeEqualTo 6
 
         // 여유분을 모두 반납합니다.
-        semaphore.drainPermitsAsync().suspendAwait() shouldBeEqualTo 6
-        semaphore.availablePermitsAsync().suspendAwait() shouldBeEqualTo 0
+        semaphore.drainPermitsAsync().awaitSuspending() shouldBeEqualTo 6
+        semaphore.availablePermitsAsync().awaitSuspending() shouldBeEqualTo 0
 
-        semaphore.deleteAsync().suspendAwait()
+        semaphore.deleteAsync().awaitSuspending()
     }
 
     @Test
@@ -92,8 +92,8 @@ class SemaphoreExamples: AbstractRedissonTest() {
         val redisson3 = newRedisson()
 
         MultithreadingTester()
-            .numThreads(4)
-            .roundsPerThread(4)
+            .workers(4)
+            .rounds(4)
             .add {
                 val s2 = redisson2.getSemaphore(semaphoreName)
                 Thread.sleep(1)
@@ -142,7 +142,7 @@ class SemaphoreExamples: AbstractRedissonTest() {
         val redisson3 = newRedisson()
 
         StructuredTaskScopeTester()
-            .roundsPerTask(16)
+            .rounds(16)
             .add {
                 val s2 = redisson2.getSemaphore(semaphoreName)
                 // 2개 반납 (4개 남음)

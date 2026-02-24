@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.redisson.locks
 
-import io.bluetape4k.coroutines.support.suspendAwait
+import io.bluetape4k.coroutines.support.awaitSuspending
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
@@ -94,8 +94,8 @@ class FencedLockExamples: AbstractRedissonTest() {
         val lockCounter = AtomicInteger(0)
 
         MultithreadingTester()
-            .numThreads(8)
-            .roundsPerThread(2)
+            .workers(8)
+            .rounds(2)
             .add {
                 // 락 획득 시도
                 val token = lock.tryLockAndGetTokenAsync(5, 10, TimeUnit.SECONDS).get() ?: 0
@@ -122,7 +122,7 @@ class FencedLockExamples: AbstractRedissonTest() {
         val lockCounter = AtomicInteger(0)
 
         StructuredTaskScopeTester()
-            .roundsPerTask(16)
+            .rounds(16)
             .add {
                 // 락 획득 시도 및 토큰 반환
                 val token = lock.tryLockAndGetTokenAsync(5, 10, TimeUnit.SECONDS).get() ?: 0
@@ -150,13 +150,13 @@ class FencedLockExamples: AbstractRedissonTest() {
         val lockCounter = AtomicInteger(0)
 
         SuspendedJobTester()
-            .numThreads(8)
-            .roundsPerJob(16)
+            .workers(8)
+            .rounds(16)
             .add {
                 val mlockId = redisson.getLockId("ferncedLock")
-                val locked = lock.tryLockAsync(5, 10, TimeUnit.SECONDS, mlockId).suspendAwait()
+                val locked = lock.tryLockAsync(5, 10, TimeUnit.SECONDS, mlockId).awaitSuspending()
                 if (locked) {
-                    val token = lock.tokenAsync.suspendAwait()
+                    val token = lock.tokenAsync.awaitSuspending()
                     if (token > 0) {
                         log.debug { "Lock 획득. locked=$token" }
                         lockCounter.incrementAndGet()
@@ -164,7 +164,7 @@ class FencedLockExamples: AbstractRedissonTest() {
                         delay(Random.nextLong(50))
 
                         // lock 해제
-                        lock.unlockAsync(mlockId).suspendAwait()
+                        lock.unlockAsync(mlockId).awaitSuspending()
                         log.debug { "Lock 해제." }
                         delay(1)
                     }

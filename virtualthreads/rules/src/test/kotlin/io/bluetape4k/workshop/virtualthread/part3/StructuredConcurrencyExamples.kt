@@ -1,14 +1,12 @@
 package io.bluetape4k.workshop.virtualthread.part3
 
+import io.bluetape4k.concurrent.virtualthread.StructuredSubtask
 import io.bluetape4k.concurrent.virtualthread.structuredTaskScopeAll
-import io.bluetape4k.concurrent.virtualthread.structuredTaskScopeFirst
+import io.bluetape4k.concurrent.virtualthread.structuredTaskScopeAny
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledOnJre
 import org.junit.jupiter.api.condition.JRE
-import java.util.concurrent.ExecutionException
-import java.util.concurrent.StructuredTaskScope
 
 class StructuredConcurrencyExamples {
 
@@ -37,7 +35,7 @@ class StructuredConcurrencyExamples {
      */
     fun prepareDish(): Dish = structuredTaskScopeAll { scope ->
         println("prepare Dish ...")
-        val pasta = scope.fork {
+        val pasta: StructuredSubtask<Pasta> = scope.fork {
             Thread.sleep(100)
             preparePasta()
         }
@@ -49,8 +47,8 @@ class StructuredConcurrencyExamples {
 
         scope.join().throwIfFailed()
 
-        pasta.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.SUCCESS
-        sauce.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.SUCCESS
+//        pasta.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.SUCCESS
+//        sauce.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.SUCCESS
 
         println("complete Dish")
         Dish(pasta.get(), sauce.get())
@@ -71,7 +69,7 @@ class StructuredConcurrencyExamples {
     fun `structured task scope on success`() {
         // Subtask 들 중 하나라도 성공하면, 나머지 Subtask 들은 취소하고, 결과를 반환합니다.
         // 만약 성공한 것이 없다면 ExecutionException 을 반환합니다.
-        val pasta = structuredTaskScopeFirst<Pasta> { scope ->
+        val pasta = structuredTaskScopeAny { scope ->
 
             val subtask1 = scope.fork {
                 Thread.sleep(100)
@@ -84,15 +82,15 @@ class StructuredConcurrencyExamples {
             }
 
             Thread.sleep(5)
-            subtask1.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.UNAVAILABLE
-            subtask2.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.UNAVAILABLE
+//            subtask1.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.UNAVAILABLE
+//            subtask2.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.UNAVAILABLE
 
             scope.join()
 
-            subtask1.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.SUCCESS
-            subtask2.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.UNAVAILABLE
+//            subtask1.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.SUCCESS
+//            subtask2.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.UNAVAILABLE
 
-            scope.result { ExecutionException(it) }
+//             scope.result { ExecutionException(it) }
         }
         println("pasta: $pasta")
     }

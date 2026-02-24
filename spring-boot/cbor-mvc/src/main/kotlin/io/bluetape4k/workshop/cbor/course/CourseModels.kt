@@ -1,12 +1,11 @@
 package io.bluetape4k.workshop.cbor.course
 
-import io.bluetape4k.collections.eclipse.fastListOf
 import java.io.Serializable
 
 data class Course(
     val id: Int,
     val name: String,
-    val students: MutableList<Student> = fastListOf(),
+    val students: MutableList<Student> = mutableListOf(),
 ): Serializable
 
 data class Student(
@@ -14,7 +13,7 @@ data class Student(
     val firstName: String,
     val lastName: String,
     val email: String,
-    val phones: MutableList<Phone> = fastListOf(),
+    val phones: MutableList<Phone> = mutableListOf(),
 ): Serializable
 
 data class Phone(

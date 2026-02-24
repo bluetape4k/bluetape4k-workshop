@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.redisson.objects
 
-import io.bluetape4k.coroutines.support.suspendAwait
+import io.bluetape4k.coroutines.support.awaitSuspending
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.random.RandomizedTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
@@ -77,6 +77,6 @@ class BloomFilterExamples: AbstractRedissonTest() {
         val notExistMessage = Message(42, randomString())
         bloomFilter.contains(notExistMessage).shouldBeFalse()
 
-        bloomFilter.deleteAsync().suspendAwait().shouldBeTrue()
+        bloomFilter.deleteAsync().awaitSuspending().shouldBeTrue()
     }
 }

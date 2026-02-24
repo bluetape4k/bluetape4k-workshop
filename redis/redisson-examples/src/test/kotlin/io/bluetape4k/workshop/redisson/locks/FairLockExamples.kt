@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.redisson.locks
 
-import io.bluetape4k.coroutines.support.suspendAwait
+import io.bluetape4k.coroutines.support.awaitSuspending
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
@@ -37,20 +37,20 @@ class FairLockExamples: AbstractRedissonTest() {
         val lockCounter = AtomicInteger(0)
 
         SuspendedJobTester()
-            .numThreads(16)
-            .roundsPerJob(16 * 2)
+            .workers(16)
+            .rounds(16 * 2)
             .add {
                 // NOTE: Coroutine에서 Lock 소유자를 구분하기 위해 lockId 를 발급받습니다.
                 val lockId = redisson.getLockId(lock.name)
 
                 // 락 획득에 5초를 대기하고, 10초 후에 lock을 자동 해제합니다.
-                val locked = lock.tryLockAsync(5, 10, TimeUnit.SECONDS, lockId).suspendAwait()
+                val locked = lock.tryLockAsync(5, 10, TimeUnit.SECONDS, lockId).awaitSuspending()
 
                 if (locked) {
                     lockCounter.incrementAndGet()
                     delay(10)
                     // Coroutine 환경에서는 unlock 시에도 lock 소유자를 지정해줘야 합니다.
-                    lock.unlockAsync(lockId).suspendAwait()
+                    lock.unlockAsync(lockId).awaitSuspending()
                 }
             }
             .run()
@@ -64,8 +64,8 @@ class FairLockExamples: AbstractRedissonTest() {
         val lockCounter = AtomicInteger(0)
 
         MultithreadingTester()
-            .numThreads(16)
-            .roundsPerThread(2)
+            .workers(16)
+            .rounds(2)
             .add {
                 // 락 획득에 5초를 대기하고, 10초 후에 lock을 자동 해제합니다.
                 val locked = lock.tryLock(5, 10, TimeUnit.SECONDS)
@@ -88,7 +88,7 @@ class FairLockExamples: AbstractRedissonTest() {
         val lockCounter = AtomicInteger(0)
 
         StructuredTaskScopeTester()
-            .roundsPerTask(16 * 2)
+            .rounds(16 * 2)
             .add {
                 // 락 획득에 5초를 대기하고, 10초 후에 lock을 자동 해제합니다.
                 val locked = lock.tryLock(5, 10, TimeUnit.SECONDS)

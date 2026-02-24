@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.redisson.collections
 
-import io.bluetape4k.coroutines.support.suspendAwait
+import io.bluetape4k.coroutines.support.awaitSuspending
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.test.runTest
@@ -40,6 +40,6 @@ class SortedSetExamples: AbstractRedissonTest() {
         // 첫번째 요소는 2가 됨 
         zset.first() shouldBeEqualTo 2
 
-        zset.deleteAsync().suspendAwait()
+        zset.deleteAsync().awaitSuspending()
     }
 }

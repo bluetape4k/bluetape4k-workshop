@@ -1,6 +1,5 @@
 package io.bluetape4k.workshop.coroutines.controller
 
-import io.bluetape4k.coroutines.flow.extensions.toFastList
 import io.bluetape4k.junit5.coroutines.runSuspendDefault
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
@@ -12,6 +11,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
 import org.amshove.kluent.shouldBeEqualTo
@@ -61,7 +61,7 @@ class DefaultCoroutineControllerTest: AbstractCoroutineApplicationTest() {
             .expectStatus().is2xxSuccessful
             .returnResult<Banner>().responseBody
             .asFlow()
-            .toFastList() shouldBeEqualTo listOf(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
+            .toList() shouldBeEqualTo listOf(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
     }
 
     @RepeatedTest(REPEAT_SIZE)
@@ -71,7 +71,7 @@ class DefaultCoroutineControllerTest: AbstractCoroutineApplicationTest() {
             .expectStatus().is2xxSuccessful
             .returnResult<Banner>().responseBody
             .asFlow()
-            .toFastList() shouldBeEqualTo listOf(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
+            .toList() shouldBeEqualTo listOf(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
     }
 
     @RepeatedTest(REPEAT_SIZE)

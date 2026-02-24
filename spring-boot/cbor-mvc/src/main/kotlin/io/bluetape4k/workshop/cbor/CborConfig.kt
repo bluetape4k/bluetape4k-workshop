@@ -1,7 +1,5 @@
 package io.bluetape4k.workshop.cbor
 
-import io.bluetape4k.collections.eclipse.fastListOf
-import io.bluetape4k.collections.eclipse.unifiedMapOf
 import io.bluetape4k.workshop.cbor.course.Course
 import io.bluetape4k.workshop.cbor.course.CourseRepository
 import io.bluetape4k.workshop.cbor.course.Phone
@@ -29,7 +27,7 @@ class CborConfig: WebMvcConfigurer {
 
     @Bean
     fun courseRepository(): CourseRepository {
-        val courses = unifiedMapOf(
+        val courses = mutableMapOf(
             1 to Course(
                 id = 1,
                 name = "Kotlin Programming",
@@ -88,6 +86,6 @@ class CborConfig: WebMvcConfigurer {
             )
         )
 
-        return fastListOf(student1, student2, student3)
+        return mutableListOf(student1, student2, student3)
     }
 }

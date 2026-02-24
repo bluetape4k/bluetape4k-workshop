@@ -24,7 +24,7 @@ class GreetingService(private val observationRegistry: ObservationRegistry) {
     }
 
     fun sayHello(): String {
-        return greetingObservation.observe(Supplier { sayHelloInternal() })!!
+        return greetingObservation.observe(Supplier { sayHelloInternal() })
     }
 
     fun sayHelloWithName(name: String): String {

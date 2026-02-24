@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.virtualthread.part2
 
+import io.bluetape4k.concurrent.virtualthread.structuredTaskScopeAll
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import org.amshove.kluent.internal.assertFailsWith
 import org.amshove.kluent.shouldBeEqualTo
@@ -9,7 +10,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledOnJre
 import org.junit.jupiter.api.condition.JRE
 import org.junit.jupiter.api.fail
-import java.util.concurrent.StructuredTaskScope
 
 
 /**
@@ -52,17 +52,17 @@ class Rule5UseThreadLocalVariablesCarefully {
         @EnabledOnJre(JRE.JAVA_21)
         @Test
         fun `추천 - ScopedValue 사용하기`() {
-            ScopedValue.runWhere(scopedValue, "zero") {
+            ScopedValue.where(scopedValue, "zero").run {
                 scopedValue.get() shouldBeEqualTo "zero"
 
-                ScopedValue.runWhere(scopedValue, "one") {
+                ScopedValue.where(scopedValue, "one").run {
                     scopedValue.get() shouldBeEqualTo "one"
                 }
 
                 scopedValue.get() shouldBeEqualTo "zero"
 
                 try {
-                    StructuredTaskScope.ShutdownOnFailure().use { scope ->
+                    structuredTaskScopeAll { scope ->
                         // Scope 안에서 sub task를 생성합니다.
                         scope.fork {
                             scopedValue.get() shouldBeEqualTo "zero"

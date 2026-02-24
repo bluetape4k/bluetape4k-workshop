@@ -1,6 +1,6 @@
 package io.bluetape4k.okio.coroutines
 
-import io.bluetape4k.coroutines.support.suspendAwait
+import io.bluetape4k.coroutines.support.awaitSuspending
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import okio.Buffer
@@ -25,7 +25,7 @@ class SuspendedFileChannelSink(
 
         val length = minOf(source.size, byteCount)
         val byteBuffer = ByteBuffer.wrap(source.readByteArray(length))
-        val byteWritten = channel.write(byteBuffer, position).suspendAwait()
+        val byteWritten = channel.write(byteBuffer, position).awaitSuspending()
         position += byteWritten
         log.debug { "Wrote $byteWritten bytes to channel at position $position" }
 

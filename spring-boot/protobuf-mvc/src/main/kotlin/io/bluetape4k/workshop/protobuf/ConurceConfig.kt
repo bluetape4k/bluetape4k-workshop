@@ -1,7 +1,5 @@
 package io.bluetape4k.workshop.protobuf
 
-import io.bluetape4k.collections.eclipse.fastListOf
-import io.bluetape4k.collections.eclipse.unifiedMapOf
 import io.bluetape4k.workshop.protobuf.School.Student
 import io.bluetape4k.workshop.protobuf.StudentKt.phoneNumber
 import org.springframework.context.annotation.Bean
@@ -18,7 +16,7 @@ class ConurceConfig {
 
     @Bean
     fun courceRepository(): CourseRepository {
-        val courses = unifiedMapOf(
+        val courses = mutableMapOf(
             1 to course {
                 id = 1
                 courseName = "Kotlin Programming"
@@ -70,6 +68,6 @@ class ConurceConfig {
             }
         }
 
-        return fastListOf(student1, student2, student3)
+        return mutableListOf(student1, student2, student3)
     }
 }

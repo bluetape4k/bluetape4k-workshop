@@ -98,7 +98,7 @@ class TransactionIsolationTest: AbstractExposedTest() {
         }
 
         transaction(transactionIsolation = Connection.TRANSACTION_REPEATABLE_READ, db = db) {
-            manager?.defaultIsolationLevel shouldBeEqualTo Connection.TRANSACTION_READ_COMMITTED
+            manager.defaultIsolationLevel shouldBeEqualTo Connection.TRANSACTION_READ_COMMITTED
 
             // database level should be set by transaction-specific setting
             assertTransactionIsolationLevel(testDB, Connection.TRANSACTION_REPEATABLE_READ)
@@ -130,15 +130,19 @@ class TransactionIsolationTest: AbstractExposedTest() {
 
     private fun JdbcTransaction.assertTransactionIsolationLevel(testDB: TestDB, expected: Int) {
         val (sql, repeatable, committed) = when (testDB) {
-            TestDB.POSTGRESQL -> Triple("SHOW TRANSACTION ISOLATION LEVEL", "repeatable read", "read committed")
+            TestDB.POSTGRESQL -> Triple(
+                "SHOW TRANSACTION ISOLATION LEVEL",
+                "repeatable read",
+                "read committed"
+            )
             in TestDB.ALL_MYSQL_MARIADB -> Triple("SELECT @@tx_isolation", "REPEATABLE-READ", "READ-COMMITTED")
-            else -> throw UnsupportedOperationException("Unsupported testDB: $testDB")
+            else              -> throw UnsupportedOperationException("Unsupported testDB: $testDB")
         }
 
         val expectedLevel = when (expected) {
             Connection.TRANSACTION_READ_COMMITTED -> committed
             Connection.TRANSACTION_REPEATABLE_READ -> repeatable
-            else -> throw UnsupportedOperationException("Unsupported transaction isolation level: $expected")
+            else                                  -> throw UnsupportedOperationException("Unsupported transaction isolation level: $expected")
         }
 
         val actual = exec("$sql;") { resultSet ->

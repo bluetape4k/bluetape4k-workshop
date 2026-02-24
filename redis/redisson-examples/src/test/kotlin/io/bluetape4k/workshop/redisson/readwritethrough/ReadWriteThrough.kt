@@ -45,9 +45,9 @@ object ReadWriteThrough: KLogging() {
 
                             rs.extract {
                                 Actor(
-                                    int[Actor::id.name]!!,
-                                    string[Actor::firstname.name]!!,
-                                    string[Actor::lastname.name]!!
+                                    int[Actor::id.name],
+                                    string[Actor::firstname.name],
+                                    string[Actor::lastname.name]
                                 )
                             }
                         }
@@ -63,7 +63,7 @@ object ReadWriteThrough: KLogging() {
                     // TODO: extract 시에 꼭 Sequence 나 Iterable 로 해야 한다. 끝까지 읽지 않는 작업이 있을 수 있다
                     // loadAllKeys 도 모두 읽는 게 아니라, Map의 제한만큼만 읽어야 하기 때문이다.
                     rs.extract {
-                        int[Actor::id.name]!!
+                        int[Actor::id.name]
                     }
                 }.toMutableList()
             }

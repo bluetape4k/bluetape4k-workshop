@@ -67,7 +67,7 @@ object Plugins {
 object Versions {
 
     // Java 21, Kotlin 2.0 이상에서 사용하세요
-    const val bluetape4k = "1.1.0"    // Bluetape4k Github Package 로 배포됩니다.
+    const val bluetape4k = "1.2.0-SNAPSHOT"    // Bluetape4k Github Package 로 배포됩니다.
 
     const val kotlin = "2.3.0"                 // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
     const val kotlinx_coroutines = "1.10.2"     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
@@ -267,6 +267,10 @@ object Libs {
     val bluetape4k_junit5 = bluetape4k("junit5")
     val bluetape4k_testcontainers = bluetape4k("testcontainers")
 
+    val bluetape4k_virtualthread_api = bluetape4k("virtualthread-api")
+    val bluetape4k_virtualthread_jdk21 = bluetape4k("virtualthread-jdk21")
+    val bluetape4k_virtualthread_jdk25 = bluetape4k("virtualthread-jdk25")
+
     // IO
     val bluetape4k_avro = bluetape4k("avro")
     val bluetape4k_crypto = bluetape4k("crypto")
@@ -288,6 +292,11 @@ object Libs {
     // Data
     val bluetape4k_cassandra = bluetape4k("cassandra")
     val bluetape4k_exposed = bluetape4k("exposed")
+    val bluetape4k_exposed_core = bluetape4k("exposed-core")
+    val bluetape4k_exposed_dao = bluetape4k("exposed-dao")
+    val bluetape4k_exposed_jdbc = bluetape4k("exposed-jdbc")
+    val bluetape4k_exposed_jdbc_redisson = bluetape4k("exposed-jdbc-redisson")
+    val bluetape4k_exposed_jdbc_tests = bluetape4k("exposed-jdbc-tests")
     val bluetape4k_exposed_fastjson2 = bluetape4k("exposed-fastjson2")
     val bluetape4k_exposed_jackson = bluetape4k("exposed-jackson")
     val bluetape4k_exposed_jackson3 = bluetape4k("exposed-jackson3")
@@ -295,8 +304,7 @@ object Libs {
     val bluetape4k_exposed_r2dbc = bluetape4k("exposed-r2dbc")
     val bluetape4k_exposed_r2dbc_redisson = bluetape4k("exposed-r2dbc-redisson")
     val bluetape4k_exposed_r2dbc_tests = bluetape4k("exposed-r2dbc-tests")
-    val bluetape4k_exposed_redisson = bluetape4k("exposed-redisson")
-    val bluetape4k_exposed_tests = bluetape4k("exposed-tests")
+
     val bluetape4k_hibernate = bluetape4k("hibernate")
     val bluetape4k_hibernate_reactive = bluetape4k("hibernate-reactive")
     val bluetape4k_jdbc = bluetape4k("jdbc")

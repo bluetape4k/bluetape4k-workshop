@@ -45,6 +45,9 @@ dependencies {
     // Kapt 사용 시 필수적으로 추가해야 함
     // api(Libs.jakarta_annotation_api)
 
+    // VirtualThread JDK 25
+    runtimeOnly(Libs.bluetape4k_virtualthread_jdk25)
+
     // JPA/Hibernate
     implementation(Libs.bluetape4k_hibernate)
 //    implementation(Libs.bluetape4k_spring_jpa)

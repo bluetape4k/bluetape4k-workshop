@@ -21,6 +21,9 @@ dependencies {
     implementation(Libs.bluetape4k_io)
     implementation(Libs.bluetape4k_jackson3)
 
+    // VirtualThread JDK 25
+    runtimeOnly(Libs.bluetape4k_virtualthread_jdk25)
+
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))
     annotationProcessor(Libs.springBoot("autoconfigure-processor"))

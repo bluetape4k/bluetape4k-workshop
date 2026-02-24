@@ -88,8 +88,8 @@ class CountryRepositoryTest(
 
         measureTimeMillis {
             MultithreadingTester()
-                .numThreads(8)
-                .roundsPerThread(8)
+                .workers(8)
+                .rounds(8)
                 .add {
                     val country = retreiveCountry()
                     codeMap[country.code] = country
@@ -107,7 +107,7 @@ class CountryRepositoryTest(
 
         measureTimeMillis {
             StructuredTaskScopeTester()
-                .roundsPerTask(8 * 8)
+                .rounds(8 * 8)
                 .add {
                     val country = retreiveCountry()
                     codeMap[country.code] = country
