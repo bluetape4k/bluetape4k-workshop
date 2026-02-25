@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.virtualthread.part2
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
+import io.bluetape4k.workshop.virtualThreads.AbstractVirtualThreadTest
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -13,7 +14,7 @@ import java.util.concurrent.Semaphore
 /**
  * Rule 4: 동시성을 제어할 때에는 FixedThreadPool 을 사용하지 말고, [Semaphore]를 사용하세요
  */
-class Rule4UseSemaphoreInsteadOfFixedThreadPools {
+class Rule4UseSemaphoreInsteadOfFixedThreadPools: AbstractVirtualThreadTest() {
 
     companion object: KLoggingChannel()
 

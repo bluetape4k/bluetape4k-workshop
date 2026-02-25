@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.virtualthread.part2
 
 import io.bluetape4k.concurrent.virtualthread.structuredTaskScopeAll
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.workshop.virtualThreads.AbstractVirtualThreadTest
 import org.amshove.kluent.internal.assertFailsWith
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
@@ -15,7 +16,7 @@ import org.junit.jupiter.api.fail
 /**
  * Rule 5: Virtual Thread 사용 시에는 ThreadLocal 를 사용하지 말고, [ScopedValue]를 사용하세요
  */
-class Rule5UseThreadLocalVariablesCarefully {
+class Rule5UseThreadLocalVariablesCarefully: AbstractVirtualThreadTest() {
 
     companion object: KLoggingChannel()
 

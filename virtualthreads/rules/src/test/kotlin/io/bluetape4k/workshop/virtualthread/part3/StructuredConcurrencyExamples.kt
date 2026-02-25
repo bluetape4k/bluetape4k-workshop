@@ -4,11 +4,12 @@ import io.bluetape4k.concurrent.virtualthread.StructuredSubtask
 import io.bluetape4k.concurrent.virtualthread.structuredTaskScopeAll
 import io.bluetape4k.concurrent.virtualthread.structuredTaskScopeAny
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.workshop.virtualThreads.AbstractVirtualThreadTest
+import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.condition.EnabledOnJre
-import org.junit.jupiter.api.condition.JRE
+import java.util.concurrent.StructuredTaskScope
 
-class StructuredConcurrencyExamples {
+class StructuredConcurrencyExamples: AbstractVirtualThreadTest() {
 
     companion object: KLoggingChannel()
 
@@ -47,8 +48,8 @@ class StructuredConcurrencyExamples {
 
         scope.join().throwIfFailed()
 
-//        pasta.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.SUCCESS
-//        sauce.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.SUCCESS
+        pasta.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.SUCCESS
+        sauce.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.SUCCESS
 
         println("complete Dish")
         Dish(pasta.get(), sauce.get())
@@ -64,7 +65,7 @@ class StructuredConcurrencyExamples {
         cookPasta()
     }
 
-    @EnabledOnJre(JRE.JAVA_21)
+
     @Test
     fun `structured task scope on success`() {
         // Subtask 들 중 하나라도 성공하면, 나머지 Subtask 들은 취소하고, 결과를 반환합니다.
@@ -82,15 +83,16 @@ class StructuredConcurrencyExamples {
             }
 
             Thread.sleep(5)
-//            subtask1.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.UNAVAILABLE
-//            subtask2.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.UNAVAILABLE
+            subtask1.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.UNAVAILABLE
+            subtask2.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.UNAVAILABLE
+
 
             scope.join()
 
-//            subtask1.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.SUCCESS
-//            subtask2.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.UNAVAILABLE
+            subtask1.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.SUCCESS
+            subtask2.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.UNAVAILABLE
 
-//             scope.result { ExecutionException(it) }
+            scope.result { RuntimeException(it) }
         }
         println("pasta: $pasta")
     }
