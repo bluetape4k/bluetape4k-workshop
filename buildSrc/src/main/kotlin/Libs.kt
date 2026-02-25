@@ -257,7 +257,7 @@ object Libs {
 
 
     // bluetape4k
-    fun bluetape4k(module: String, version: String = Versions.bluetape4k) = "io.bluetape4k:bluetape4k-$module:$version"
+    fun bluetape4k(module: String, version: String = Versions.bluetape4k) = "io.github.bluetape4k:bluetape4k-$module:$version"
 
     val bluetape4k_bom = bluetape4k("bom")
 
