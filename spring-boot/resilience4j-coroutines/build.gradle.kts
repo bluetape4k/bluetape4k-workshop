@@ -14,7 +14,8 @@ configurations {
 }
 
 dependencies {
-    implementation(Libs.bluetape4k_jackson)
+    testImplementation(project(":shared"))
+    
     testImplementation(Libs.bluetape4k_junit5)
 
     // Bucket4j
@@ -30,13 +31,11 @@ dependencies {
     annotationProcessor(Libs.springBoot("configuration-processor"))
     runtimeOnly(Libs.springBoot("devtools"))
 
-    implementation(Libs.springBootStarter("aop"))
+    implementation(Libs.springBootStarter("aspectj"))
     implementation(Libs.springBootStarter("actuator"))
     implementation(Libs.springBootStarter("validation"))
     implementation(Libs.springBootStarter("webflux"))
-    implementation(Libs.bluetape4k_spring_webflux)
-    
-    testImplementation(Libs.bluetape4k_spring_tests)
+    testImplementation(Libs.springBootStarter("webflux-test"))
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

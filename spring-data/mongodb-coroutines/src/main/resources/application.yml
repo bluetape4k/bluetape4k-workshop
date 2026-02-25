@@ -1,7 +1,6 @@
 spring:
     aot:
-        enabled: true  # AOT (Ahead Of Time) 컴파일 활성화
-    data:
-        mongodb:
-            uri: ${testcontainers.mongo.url}
-            database: people
+        enabled: false  # AOT (Ahead Of Time) 컴파일 활성화
+
+    main:
+        allow-bean-definition-overriding: true

@@ -6,7 +6,7 @@ import org.springframework.data.repository.reactive.ReactiveCrudRepository
 /**
  * Person repository
  *
- * Query by Example 예제를 위해 [ReactiveQueryByExampleExecutor] 를 상속받습니다.
+ * Query by Example 예제를 위해 [org.springframework.data.repository.query.ReactiveQueryByExampleExecutor] 를 상속받습니다.
  */
 interface PersonRepository: ReactiveCrudRepository<Person, Int>, ReactiveQueryByExampleExecutor<Person> {
 }

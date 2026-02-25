@@ -13,6 +13,9 @@ spring:
         enabled: true  # AOT (Ahead Of Time) 컴파일 활성화
     cache:
         type: hazelcast
+    hazelcast:
+        config: hazelcast.yaml
+
 
 # bucket4j-spring-boot-starter 에서 사용하는 설정
 bucket4j:
@@ -31,3 +34,4 @@ bucket4j:
                         -   capacity: 5
                             time: 10
                             unit: seconds
+    cache-to-use: hazelcast

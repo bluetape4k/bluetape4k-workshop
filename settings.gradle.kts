@@ -6,7 +6,7 @@ pluginManagement {
     }
     plugins {
         // https://plugins.gradle.org/plugin/org.gradle.toolchains.foojay-resolver-convention
-        id("org.gradle.toolchains.foojay-resolver-convention") version ("0.9.0")
+        id("org.gradle.toolchains.foojay-resolver-convention") version ("1.0.0")
     }
 }
 
@@ -25,7 +25,6 @@ includeModules("gateway", false, false)
 includeModules("gatling", false, true)
 includeModules("graalvm", false, false)
 includeModules("io", false, false)
-includeModules("jmolecules", false, true)
 includeModules("json", false, false)
 includeModules("kotlin", false, true)
 includeModules("mapping", false, true)

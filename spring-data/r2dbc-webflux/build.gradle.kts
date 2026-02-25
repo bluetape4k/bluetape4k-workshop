@@ -13,7 +13,7 @@ configurations {
 }
 
 dependencies {
-    implementation(Libs.bluetape4k_spring_core)
+    implementation(platform(Libs.spring_boot4_dependencies))
     testImplementation(Libs.bluetape4k_junit5)
 
     // Coroutines
@@ -29,14 +29,21 @@ dependencies {
     testImplementation(Libs.reactor_test)
 
     // R2DBC
-    implementation(Libs.bluetape4k_spring_r2dbc)
+    implementation(Libs.bluetape4k_r2dbc)
     implementation(Libs.springBootStarter("data-r2dbc"))
+    testImplementation(Libs.springBootStarter("data-r2dbc-test"))
     implementation(Libs.r2dbc_h2)
     implementation(Libs.r2dbc_pool)
 
+    // Spring Boot
+    implementation(Libs.springBoot("autoconfigure"))
+    annotationProcessor(Libs.springBoot("autoconfigure-processor"))
+    annotationProcessor(Libs.springBoot("configuration-processor"))
+    runtimeOnly(Libs.springBoot("devtools"))
+
     // Webflux
-    implementation(Libs.bluetape4k_netty)
     implementation(Libs.springBootStarter("webflux"))
+    testImplementation(Libs.springBootStarter("webflux-test"))
 
     testImplementation(Libs.bluetape4k_spring_tests)
     testImplementation(Libs.springBootStarter("test")) {

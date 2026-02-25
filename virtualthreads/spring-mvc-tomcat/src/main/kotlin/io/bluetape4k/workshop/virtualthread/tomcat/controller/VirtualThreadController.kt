@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.virtualthread.tomcat.controller
 
+import io.bluetape4k.concurrent.virtualthread.structuredTaskScopeAll
 import io.bluetape4k.concurrent.virtualthread.virtualFutureAll
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
@@ -8,7 +9,6 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.util.concurrent.ExecutorService
-import java.util.concurrent.StructuredTaskScope
 import kotlin.random.Random
 
 @RestController
@@ -32,8 +32,8 @@ class VirtualThreadController(private val executor: ExecutorService) {
     fun multipleTasks(): String {
         val taskSize = 100
 
-        // ShutdownOnFailure - 하나라도 실패하면 즉시 종료 (진행 중인 다른 Task 들은 중단된다)
-        StructuredTaskScope.ShutdownOnFailure("multi", factory).use { scope ->
+        // 모든 Task 를 수행하고, Subtask 에 예외가 있다면, 예외를 던진다.
+        structuredTaskScopeAll("multi", factory) { scope ->
             repeat(taskSize) {
                 scope.fork {
                     Thread.sleep(Random.nextLong(500, 1000))
@@ -41,6 +41,7 @@ class VirtualThreadController(private val executor: ExecutorService) {
                 }
             }
             scope.join().throwIfFailed()
+            Unit
         }
 
         return "Run multiple[$taskSize] tasks. (${Thread.currentThread()})"

@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.redisson.readwritethrough
 
-import io.bluetape4k.coroutines.support.suspendAwait
+import io.bluetape4k.coroutines.support.awaitSuspending
 import io.bluetape4k.jdbc.sql.withConnect
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
@@ -201,7 +201,7 @@ class ReadWriteThroughExamples: AbstractRedissonTest() {
             launch {
                 val id = 300_000 + it
                 val actor = newActor(id)
-                map.fastPutAsync(id, actor).suspendAwait().shouldBeTrue()
+                map.fastPutAsync(id, actor).awaitSuspending().shouldBeTrue()
             }
         }
         insertJobs.joinAll()
@@ -212,12 +212,12 @@ class ReadWriteThroughExamples: AbstractRedissonTest() {
         val checkJob = List(ACTOR_SIZE) {
             launch {
                 val id = 300_000 + it
-                map.getAsync(id).suspendAwait().shouldNotBeNull()
+                map.getAsync(id).awaitSuspending().shouldNotBeNull()
             }
         }
         checkJob.joinAll()
 
-        map.deleteAsync().suspendAwait()
+        map.deleteAsync().awaitSuspending()
     }
 
     @Test
@@ -241,7 +241,7 @@ class ReadWriteThroughExamples: AbstractRedissonTest() {
             launch {
                 val id = 400_000 + it
                 val actor = newActor(id)
-                map.fastPutAsync(id, actor).suspendAwait().shouldBeTrue()
+                map.fastPutAsync(id, actor).awaitSuspending().shouldBeTrue()
             }
         }
         insertJobs.joinAll()
@@ -255,11 +255,11 @@ class ReadWriteThroughExamples: AbstractRedissonTest() {
         val checkJob = List(ACTOR_SIZE) {
             launch {
                 val id = 400_000 + it
-                map.getAsync(id).suspendAwait().shouldNotBeNull()
+                map.getAsync(id).awaitSuspending().shouldNotBeNull()
             }
         }
         checkJob.joinAll()
 
-        map.deleteAsync().suspendAwait()
+        map.deleteAsync().awaitSuspending()
     }
 }

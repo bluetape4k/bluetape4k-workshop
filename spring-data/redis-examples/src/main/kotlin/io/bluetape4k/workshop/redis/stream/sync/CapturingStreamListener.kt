@@ -26,7 +26,7 @@ class CapturingStreamListener: StreamListener<String, MapRecord<String, String, 
         counter.incrementAndGet()
     }
 
-    val receivedRecordCount by counter
+    val receivedRecordCount get() = counter.value
 
     fun take(): MapRecord<String, String, String> {
         return dequeue.take()

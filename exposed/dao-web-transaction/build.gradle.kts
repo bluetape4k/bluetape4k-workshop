@@ -25,21 +25,25 @@ configurations {
 
 dependencies {
 
-    implementation(project(":shared"))
+    implementation(platform(Libs.spring_boot4_dependencies))
+
+    testImplementation(project(":shared"))
 
     // bluetape4k
     implementation(Libs.bluetape4k_io)
     implementation(Libs.bluetape4k_jdbc)
-    implementation(Libs.bluetape4k_spring_core)
-    testImplementation(Libs.bluetape4k_spring_tests)
 
     // Exposed
     implementation(Libs.bluetape4k_exposed)
     implementation(Libs.exposed_core)
     implementation(Libs.exposed_dao)
     implementation(Libs.exposed_kotlin_datetime)
-    implementation(Libs.exposed_spring_boot_starter)
-    implementation(Libs.exposed_spring_transaction)
+    implementation(Libs.exposed_spring_boot4_starter)
+    implementation(Libs.exposed_spring7_transaction)
+
+    // Jackson for Kotlin
+    implementation(Libs.jackson3_module_kotlin)
+    implementation(Libs.jackson3_module_blackbird)
 
     // Database Drivers
     implementation(Libs.hikaricp)
@@ -47,16 +51,17 @@ dependencies {
     // H2
     implementation(Libs.h2_v2)
 
-    // Spring Boot
+    // Spring Boot 4
     implementation(Libs.springBoot("autoconfigure"))
     annotationProcessor(Libs.springBoot("autoconfigure-processor"))
     annotationProcessor(Libs.springBoot("configuration-processor"))
     runtimeOnly(Libs.springBoot("devtools"))
 
-    implementation(Libs.springBootStarter("web"))
-    implementation(Libs.springBootStarter("aop"))
     implementation(Libs.springBootStarter("actuator"))
+    implementation(Libs.springBootStarter("aspectj"))
+    implementation(Libs.springBootStarter("jdbc"))
     implementation(Libs.springBootStarter("validation"))
+    implementation(Libs.springBootStarter("webmvc"))
 
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
@@ -66,7 +71,7 @@ dependencies {
 
     // Coroutines
     implementation(Libs.bluetape4k_coroutines)
-    testImplementation(Libs.kotlinx_coroutines_core)
+    implementation(Libs.kotlinx_coroutines_core)
     testImplementation(Libs.kotlinx_coroutines_reactor)
     testImplementation(Libs.kotlinx_coroutines_test)
 

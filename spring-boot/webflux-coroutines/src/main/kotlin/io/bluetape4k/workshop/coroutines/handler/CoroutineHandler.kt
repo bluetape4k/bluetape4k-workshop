@@ -1,10 +1,12 @@
 package io.bluetape4k.workshop.coroutines.handler
 
+import io.bluetape4k.coroutines.flow.async
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.coroutines.model.Banner
+import io.bluetape4k.workshop.shared.web.httpGet
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -12,7 +14,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asFlow
-import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flow
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.MediaType
@@ -23,7 +24,6 @@ import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
 import org.springframework.web.reactive.function.server.bodyAndAwait
 import org.springframework.web.reactive.function.server.bodyValueAndAwait
-import org.springframework.web.reactive.function.server.renderAndAwait
 
 @Component
 class CoroutineHandler(
@@ -31,7 +31,7 @@ class CoroutineHandler(
 ): CoroutineScope by CoroutineScope(Dispatchers.IO + CoroutineName("handler")) {
 
     companion object: KLoggingChannel() {
-        private const val DEFAULT_DELAY = 500L
+        private const val DEFAULT_DELAY = 100L
     }
 
     @Value("\${server.port:8080}")
@@ -49,7 +49,9 @@ class CoroutineHandler(
         delay(DEFAULT_DELAY)
 
         return ServerResponse.ok()
-            .renderAndAwait("index", mapOf("banner" to banner))
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValueAndAwait(banner)
+        //.renderAndAwait("index", mapOf("banner" to banner))
     }
 
     suspend fun suspending(request: ServerRequest): ServerResponse {
@@ -90,8 +92,8 @@ class CoroutineHandler(
         log.info { "Get banners in concurrent mode." }
 
         val flow = (0..3).asFlow()
-            .flatMapMerge {
-                flow { emit(retrieveBanner()) }
+            .async {
+                retrieveBanner()
             }
 
         return ServerResponse.ok()
@@ -107,10 +109,8 @@ class CoroutineHandler(
     private suspend fun retrieveBanner(): Banner {
         log.debug { "Retrieve banner from /suspend" }
 
-        return client.get()
-            .uri("/suspend")
-            .accept(MediaType.APPLICATION_JSON)
-            .retrieve()
-            .awaitBody()
+        return client
+            .httpGet("/suspend", MediaType.APPLICATION_JSON)
+            .awaitBody<Banner>()
     }
 }

@@ -11,6 +11,7 @@ import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
+import org.jetbrains.exposed.v1.jdbc.transactions.JdbcTransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -44,28 +45,28 @@ class TransactionIsolationTest: AbstractExposedTest() {
         val db = Database.connect(
             HikariDataSource(setupHikariConfig(testDB, "TRANSACTION_REPEATABLE_READ"))
         )
-        val manager = TransactionManager.managerFor(db)
+        val manager: JdbcTransactionManager = TransactionManager.managerFor(db)
 
         transaction(db) {
             // transaction manager should use database default since no level is provided other than hikari
-            manager?.defaultIsolationLevel shouldBeEqualTo Database.getDefaultIsolationLevel(db)
+            manager.defaultIsolationLevel shouldBeEqualTo Database.getDefaultIsolationLevel(db)
 
             // database level should be set by hikari dataSource
             assertTransactionIsolationLevel(testDB, Connection.TRANSACTION_REPEATABLE_READ)
 
             // after first connection, transaction manager should use hikari level by default
-            manager?.defaultIsolationLevel shouldBeEqualTo Connection.TRANSACTION_REPEATABLE_READ
+            manager.defaultIsolationLevel shouldBeEqualTo Connection.TRANSACTION_REPEATABLE_READ
         }
 
         transaction(transactionIsolation = Connection.TRANSACTION_READ_COMMITTED, db = db) {
-            manager?.defaultIsolationLevel shouldBeEqualTo Connection.TRANSACTION_REPEATABLE_READ
+            manager.defaultIsolationLevel shouldBeEqualTo Connection.TRANSACTION_REPEATABLE_READ
 
             // database level should be set by transaction-specific setting
             assertTransactionIsolationLevel(testDB, Connection.TRANSACTION_READ_COMMITTED)
         }
 
         transaction(db) {
-            manager?.defaultIsolationLevel shouldBeEqualTo Connection.TRANSACTION_REPEATABLE_READ
+            manager.defaultIsolationLevel shouldBeEqualTo Connection.TRANSACTION_REPEATABLE_READ
 
             // database level should be set by hikari dataSource
             assertTransactionIsolationLevel(testDB, Connection.TRANSACTION_REPEATABLE_READ)
@@ -84,27 +85,27 @@ class TransactionIsolationTest: AbstractExposedTest() {
             databaseConfig = DatabaseConfig { defaultIsolationLevel = Connection.TRANSACTION_READ_COMMITTED }
         )
 
-        val manager = TransactionManager.managerFor(db)
+        val manager: JdbcTransactionManager = TransactionManager.managerFor(db)
 
         transaction(db) {
             // transaction manager should default to use DatabaseConfig level
-            manager?.defaultIsolationLevel shouldBeEqualTo Connection.TRANSACTION_READ_COMMITTED
+            manager.defaultIsolationLevel shouldBeEqualTo Connection.TRANSACTION_READ_COMMITTED
 
             // database level should be set by DatabaseConfig
             assertTransactionIsolationLevel(testDB, Connection.TRANSACTION_READ_COMMITTED)
             // after first connection, transaction manager should retain DatabaseConfig level
-            manager?.defaultIsolationLevel shouldBeEqualTo Connection.TRANSACTION_READ_COMMITTED
+            manager.defaultIsolationLevel shouldBeEqualTo Connection.TRANSACTION_READ_COMMITTED
         }
 
         transaction(transactionIsolation = Connection.TRANSACTION_REPEATABLE_READ, db = db) {
-            manager?.defaultIsolationLevel shouldBeEqualTo Connection.TRANSACTION_READ_COMMITTED
+            manager.defaultIsolationLevel shouldBeEqualTo Connection.TRANSACTION_READ_COMMITTED
 
             // database level should be set by transaction-specific setting
             assertTransactionIsolationLevel(testDB, Connection.TRANSACTION_REPEATABLE_READ)
         }
 
         transaction(db) {
-            manager?.defaultIsolationLevel shouldBeEqualTo Connection.TRANSACTION_READ_COMMITTED
+            manager.defaultIsolationLevel shouldBeEqualTo Connection.TRANSACTION_READ_COMMITTED
 
             // database level should be set by DatabaseConfig
             assertTransactionIsolationLevel(testDB, Connection.TRANSACTION_READ_COMMITTED)
@@ -129,15 +130,19 @@ class TransactionIsolationTest: AbstractExposedTest() {
 
     private fun JdbcTransaction.assertTransactionIsolationLevel(testDB: TestDB, expected: Int) {
         val (sql, repeatable, committed) = when (testDB) {
-            TestDB.POSTGRESQL -> Triple("SHOW TRANSACTION ISOLATION LEVEL", "repeatable read", "read committed")
+            TestDB.POSTGRESQL -> Triple(
+                "SHOW TRANSACTION ISOLATION LEVEL",
+                "repeatable read",
+                "read committed"
+            )
             in TestDB.ALL_MYSQL_MARIADB -> Triple("SELECT @@tx_isolation", "REPEATABLE-READ", "READ-COMMITTED")
-            else -> throw UnsupportedOperationException("Unsupported testDB: $testDB")
+            else              -> throw UnsupportedOperationException("Unsupported testDB: $testDB")
         }
 
         val expectedLevel = when (expected) {
             Connection.TRANSACTION_READ_COMMITTED -> committed
             Connection.TRANSACTION_REPEATABLE_READ -> repeatable
-            else -> throw UnsupportedOperationException("Unsupported transaction isolation level: $expected")
+            else                                  -> throw UnsupportedOperationException("Unsupported transaction isolation level: $expected")
         }
 
         val actual = exec("$sql;") { resultSet ->

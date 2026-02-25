@@ -1,14 +1,14 @@
 package io.bluetape4k.workshop.jsonview.config
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import io.bluetape4k.jackson.Jackson
+import io.bluetape4k.jackson3.Jackson
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import tools.jackson.databind.json.JsonMapper
 
 @Configuration
 class JacksonConfig {
 
     @Bean
-    fun objectMapper(): ObjectMapper = Jackson.defaultJsonMapper
+    fun jsonMapper(): JsonMapper = Jackson.defaultJsonMapper
 
 }

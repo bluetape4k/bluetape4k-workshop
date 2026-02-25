@@ -2,21 +2,17 @@ package io.bluetape4k.workshop.gateway.routes
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.gateway.GatewayApplicationTest
 import io.bluetape4k.workshop.gateway.RateLimitHeaders
+import io.bluetape4k.workshop.shared.web.httpGet
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
-import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 
 
-class DemoRoutesTest(
-    @param:Autowired private val client: WebTestClient,
-): GatewayApplicationTest() {
+class DemoRoutesTest: GatewayApplicationTest() {
 
     companion object: KLoggingChannel()
 
@@ -27,14 +23,18 @@ class DemoRoutesTest(
 
     @Test
     fun `call root path`() {
-        client.httpGet("/")
+        client
+            .httpGet("/")
+            .expectStatus().is2xxSuccessful
             .expectBody()
             .jsonPath("$.name").isEqualTo("Gateway Application")
     }
 
     @Test
     fun `단순 Path Route 기능 - nghttp2를 사용`() {
-        client.httpGet("/get")
+        client
+            .httpGet("/get")
+            .expectStatus().is2xxSuccessful
             .expectBody<Map<*, *>>()
             .consumeWith {
                 it.responseBody!!["url"].toString() shouldBeEqualTo "https://nghttp2.org/httpbin/get"
@@ -47,7 +47,7 @@ class DemoRoutesTest(
             .uri("/headers")
             .header("Host", "www.myhost.org")
             .exchange()
-            .expectStatus().isOk
+            .expectStatus().is2xxSuccessful
             .expectBody<Map<*, *>>().consumeWith {
                 it.responseBody!!.forEach { (key, value) ->
                     log.debug { "key=$key, value=$value" }
@@ -66,7 +66,7 @@ class DemoRoutesTest(
             .uri("/foo/get")
             .header("Host", "www.rewrite.org")
             .exchange()
-            .expectStatus().isOk
+            .expectStatus().is2xxSuccessful
             .expectBody<Map<*, *>>().consumeWith {
                 it.responseBody!!["url"].toString() shouldBeEqualTo "https://nghttp2.org/httpbin/get"
             }
@@ -88,14 +88,14 @@ class DemoRoutesTest(
             .uri("/delay/3")
             .header("Host", "www.circuitbreakerfallback.org")
             .exchange()
-            .expectStatus().isOk
+            .expectStatus().is2xxSuccessful
             .expectBody<String>().consumeWith {
                 it.responseBody!! shouldBeEqualTo "Fallback for circuit breaker"
             }
     }
 
     @Test
-    fun `rate limit per healingpaper uid`() {
+    fun `rate limit per user id`() {
         // NOTE: 이 방식보다 Bucket4j 방식이 더 좋다.
         // 1. 여러가지 Rate Limit 을 적용이 가능하다
         // 2. Path 별로 따로 Rate Limit 을 적용할 수 있다.

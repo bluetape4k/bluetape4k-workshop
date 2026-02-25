@@ -1,9 +1,7 @@
 package io.bluetape4k.workshop.webflux.service
 
-import com.fasterxml.jackson.core.JsonProcessingException
 import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.idgenerators.uuid.TimebasedUuid
-import io.bluetape4k.jackson.Jackson
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.error
 import io.bluetape4k.workshop.webflux.model.Event
@@ -23,6 +21,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.yield
 import org.springframework.stereotype.Service
 import reactor.core.publisher.Flux
+import tools.jackson.core.JacksonException
+import tools.jackson.module.kotlin.jsonMapper
 import java.math.BigDecimal
 import java.math.MathContext
 import java.time.Duration
@@ -33,7 +33,7 @@ import kotlin.random.Random
 class QuoteGenerator {
 
     companion object: KLoggingChannel() {
-        private val mapper by lazy { Jackson.defaultJsonMapper }
+        private val mapper by lazy { jsonMapper() }
         private val MATH_CONTEXT = MathContext(2)
     }
 
@@ -65,7 +65,7 @@ class QuoteGenerator {
     private fun generateStringQuotes(interval: Long): String {
         return try {
             mapper.writeValueAsString(createEvent(interval))
-        } catch (e: JsonProcessingException) {
+        } catch (e: JacksonException) {
             log.error(e) { "Fail to json serialize. interval=$interval" }
             "{}"
         }
@@ -89,7 +89,7 @@ class QuoteGenerator {
     }
 
     private fun createEvent(interval: Long): Event {
-        val traceId = TimebasedUuid.nextBase62String()
+        val traceId = TimebasedUuid.Reordered.nextIdAsString()
         return Event(traceId, generateQuotes(interval))
     }
 

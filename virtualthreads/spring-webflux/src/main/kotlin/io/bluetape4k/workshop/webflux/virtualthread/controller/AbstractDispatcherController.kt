@@ -1,6 +1,5 @@
 package io.bluetape4k.workshop.webflux.virtualthread.controller
 
-import com.fasterxml.jackson.databind.JsonNode
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.uninitialized
@@ -25,11 +24,10 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.reactive.function.client.ExchangeStrategies
 import org.springframework.web.reactive.function.client.WebClient
+import tools.jackson.databind.JsonNode
 
 @RestController
-abstract class AbstractDispatcherController(
-    protected val webClientBuilder: WebClient.Builder,
-) {
+abstract class AbstractDispatcherController {
 
     companion object: KLoggingChannel() {
         protected val faker = Faker()
@@ -37,6 +35,8 @@ abstract class AbstractDispatcherController(
         protected const val DEFAULT_DELAY = 100L
         protected const val FLOW_SIZE = 4
     }
+
+    protected val webClientBuilder: WebClient.Builder = WebClient.builder()
 
     @Value("\${server.port:8080}")
     private val port: String = uninitialized()

@@ -13,11 +13,10 @@ configurations {
 }
 
 dependencies {
-    implementation(Libs.bluetape4k_spring_core)
-    implementation(Libs.bluetape4k_jackson)
-    implementation(Libs.bluetape4k_netty)
+    implementation(Libs.bluetape4k_core)
     testImplementation(Libs.bluetape4k_junit5)
 
+    // FIXME: chaos monkey 3.2.2 는 아직 Spring Boot 4 를 지원하지 않습니다.
     // Chaos Monkey (https://github.com/codecentric/chaos-monkey-spring-boot)
     implementation(Libs.chaos_monkey_spring_boot)
 
@@ -30,11 +29,9 @@ dependencies {
     implementation(Libs.springBootStarter("web"))
     implementation(Libs.springBootStarter("jdbc"))
     implementation(Libs.springBootStarter("actuator"))
-    implementation(Libs.springBootStarter("aop"))
+    implementation(Libs.springBootStarter("aspectj"))
 
     testImplementation(Libs.springBootStarter("webflux"))
-
-    testImplementation(Libs.bluetape4k_spring_tests)
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

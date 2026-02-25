@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.kafka.pong
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.testcontainers.mq.KafkaServer
-import org.springframework.boot.WebApplicationType
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.admin.SpringApplicationAdminJmxAutoConfiguration
 import org.springframework.boot.runApplication
@@ -21,7 +20,6 @@ class PongApplication {
 
 fun main(vararg args: String) {
     runApplication<PongApplication>(*args) {
-        webApplicationType = WebApplicationType.NONE
         setDefaultProperties(
             mapOf(
                 "spring.jmx.enabled" to false,

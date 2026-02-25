@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.exposed.domain.shared.dml
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
-import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.idgenerators.uuid.TimebasedUuid
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
@@ -20,6 +20,7 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.core.statements.InsertStatement
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
@@ -297,11 +298,10 @@ class ColumnWithTransformTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("simple", simple)
-                .add("chained", chained)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("simple", simple)
+            .add("chained", chained)
+            .toString()
     }
 
     @ParameterizedTest
@@ -353,7 +353,7 @@ class ColumnWithTransformTest: AbstractExposedTest() {
          * ```
          */
         val tester = object: IdTable<CustomId>("tester") {
-            override val id: Column<EntityID<CustomId>> = uuid("id")
+            override val id: Column<EntityID<CustomId>> = javaUUID("id")
                 .transform(wrap = { CustomId(it) }, unwrap = { it.id })  // value class 는 이렇게 사용하면 된다.
                 .entityId()
 

@@ -5,6 +5,8 @@ logging:
         com.giffing.bucket4j: debug
 
 spring:
+    aot:
+        enabled: true  # AOT (Ahead Of Time) 컴파일 활성화
     cache:
         cache-names:
             - buckets_test

@@ -1,16 +1,11 @@
 package io.bluetape4k.workshop.r2dbc.config
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.r2dbc.connection.init.resourceDatabasePopulatorOf
 import io.bluetape4k.workshop.r2dbc.handler.UserHandler
-import io.r2dbc.spi.ConnectionFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.core.io.ClassPathResource
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories
 import org.springframework.http.MediaType
-import org.springframework.r2dbc.connection.init.CompositeDatabasePopulator
-import org.springframework.r2dbc.connection.init.ConnectionFactoryInitializer
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import org.springframework.web.reactive.function.server.coRouter
 
@@ -33,15 +28,18 @@ class WebfluxR2dbcConfiguration {
         }
     }
 
-    @Bean
-    fun initializer(connectionFactory: ConnectionFactory): ConnectionFactoryInitializer {
-        return ConnectionFactoryInitializer().apply {
-            setConnectionFactory(connectionFactory)
-            val populator = CompositeDatabasePopulator().apply {
-                addPopulators(resourceDatabasePopulatorOf(ClassPathResource("data/schema.sql")))
-                addPopulators(resourceDatabasePopulatorOf(ClassPathResource("data/data.sql")))
-            }
-            setDatabasePopulator(populator)
-        }
-    }
+    // NOTE: application.yml 에 population 설정을 정의함
+//    @Bean
+//    fun initializer(connectionFactory: ConnectionFactory): ConnectionFactoryInitializer {
+//        log.info { "schema 와 data 를 추가합니다." }
+//        return ConnectionFactoryInitializer().apply {
+//            setConnectionFactory(connectionFactory)
+//            val populator = CompositeDatabasePopulator().apply {
+//                addPopulators(resourceDatabasePopulatorOf(ClassPathResource("data/schema.sql")))
+//                addPopulators(resourceDatabasePopulatorOf(ClassPathResource("data/data.sql")))
+//            }
+//            setDatabasePopulator(populator)
+//            afterPropertiesSet()
+//        }
+//    }
 }

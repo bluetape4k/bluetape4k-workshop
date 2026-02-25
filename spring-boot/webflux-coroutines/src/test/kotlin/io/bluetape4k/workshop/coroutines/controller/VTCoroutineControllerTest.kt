@@ -1,22 +1,26 @@
 package io.bluetape4k.workshop.coroutines.controller
 
-import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import io.bluetape4k.junit5.coroutines.runSuspendVT
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.spring.tests.httpGet
-import io.bluetape4k.spring.tests.httpPost
 import io.bluetape4k.workshop.coroutines.AbstractCoroutineApplicationTest
 import io.bluetape4k.workshop.coroutines.model.Banner
+import io.bluetape4k.workshop.shared.web.httpGet
+import io.bluetape4k.workshop.shared.web.httpPost
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.reactive.asFlow
+import kotlinx.coroutines.reactive.awaitSingle
+import org.amshove.kluent.shouldBeEqualTo
+import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.expectBody
-import org.springframework.test.web.reactive.server.expectBodyList
+import org.springframework.test.web.reactive.server.returnResult
+import tools.jackson.databind.node.JsonNodeFactory
 
 class VTCoroutineControllerTest: AbstractCoroutineApplicationTest() {
 
@@ -26,39 +30,56 @@ class VTCoroutineControllerTest: AbstractCoroutineApplicationTest() {
 
     @Test
     fun index() = runSuspendVT {
-        client.httpGet("$BASE_PATH/")
-            .expectBody<Banner>().isEqualTo(expectedBanner)
+        client
+            .httpGet(BASE_PATH)
+            .expectStatus().is2xxSuccessful
+            .returnResult<Banner>().responseBody
+            .awaitSingle() shouldBeEqualTo expectedBanner
     }
 
     @RepeatedTest(REPEAT_SIZE)
     fun suspending() = runSuspendVT {
-        client.httpGet("$BASE_PATH/suspend")
-            .expectBody<Banner>().isEqualTo(expectedBanner)
+        client
+            .httpGet("${BASE_PATH}/suspend")
+            .returnResult<Banner>().responseBody
+            .awaitSingle() shouldBeEqualTo expectedBanner
     }
 
     @RepeatedTest(REPEAT_SIZE)
     fun deferred() = runSuspendVT {
-        client.httpGet("$BASE_PATH/deferred")
-            .expectBody<Banner>().isEqualTo(expectedBanner)
+        client
+            .httpGet("${BASE_PATH}/deferred")
+            .expectStatus().is2xxSuccessful
+            .returnResult<Banner>().responseBody
+            .awaitSingle() shouldBeEqualTo expectedBanner
     }
 
     @RepeatedTest(REPEAT_SIZE)
     fun `sequential flow`() = runSuspendVT {
-        client.httpGet("$BASE_PATH/sequential-flow")
-            .expectBodyList<Banner>()
-            .contains(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
+        client
+            .httpGet("${BASE_PATH}/sequential-flow")
+            .expectStatus().is2xxSuccessful
+            .returnResult<Banner>().responseBody
+            .shouldNotBeNull()
+            .asFlow()
+            .toList() shouldBeEqualTo listOf(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
     }
 
     @RepeatedTest(REPEAT_SIZE)
     fun `concurrent flow`() = runSuspendVT {
-        client.httpGet("$BASE_PATH/concurrent-flow")
-            .expectBodyList<Banner>()
-            .contains(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
+        client
+            .httpGet("${BASE_PATH}/concurrent-flow")
+            .returnResult<Banner>().responseBody
+            .shouldNotBeNull()
+            .asFlow()
+            .toList() shouldBeEqualTo listOf(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
     }
 
     @RepeatedTest(REPEAT_SIZE)
     fun error() = runSuspendVT {
-        client.httpGet("$BASE_PATH/error", HttpStatus.INTERNAL_SERVER_ERROR)
+        client
+            .httpGet("${BASE_PATH}/error")
+            .expectStatus().is5xxServerError
     }
 
     @RepeatedTest(REPEAT_SIZE)
@@ -72,7 +93,11 @@ class VTCoroutineControllerTest: AbstractCoroutineApplicationTest() {
                 JsonNodeFactory.instance.numberNode(it)
             }
 
-        client.httpPost("$BASE_PATH/request-as-flow", request)
-            .expectBody<String>().isEqualTo("12345")
+        client
+            .httpPost("${BASE_PATH}/request-as-flow", request)
+            .expectStatus().is2xxSuccessful
+            .expectBody<String>()
+            .returnResult().responseBody
+            .shouldNotBeNull() shouldBeEqualTo "12345"
     }
 }

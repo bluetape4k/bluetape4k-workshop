@@ -1,6 +1,5 @@
 package io.bluetape4k.okio.base64
 
-import io.bluetape4k.io.okio.base64.ApacheBase64Source
 import io.bluetape4k.io.okio.bufferOf
 import io.bluetape4k.logging.KLogging
 import okio.Buffer

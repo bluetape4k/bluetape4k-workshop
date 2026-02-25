@@ -1,6 +1,5 @@
 package io.bluetape4k.okio.base64
 
-import io.bluetape4k.io.okio.base64.Base64Sink
 import io.bluetape4k.logging.KLogging
 import okio.ByteString
 import okio.ByteString.Companion.decodeBase64

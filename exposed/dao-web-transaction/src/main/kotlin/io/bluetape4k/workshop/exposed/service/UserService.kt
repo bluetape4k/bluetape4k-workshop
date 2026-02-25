@@ -29,7 +29,6 @@ class UserService {
         log.debug { "find all users" }
 
         return UserEntity.all().map { it.toUser() }
-        // return UserTable.selectAll().map { it.toUser() }
     }
 
     @Transactional(readOnly = true)
@@ -37,7 +36,6 @@ class UserService {
         log.debug { "find user by id: ${id.value}" }
 
         return UserEntity.findById(id)?.toUser()
-
     }
 
     fun findUserByIdWithSql(id: UserId): User? {

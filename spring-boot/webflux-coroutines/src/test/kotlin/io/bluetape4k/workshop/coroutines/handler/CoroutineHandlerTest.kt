@@ -2,18 +2,18 @@ package io.bluetape4k.workshop.coroutines.handler
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.coroutines.AbstractCoroutineApplicationTest
 import io.bluetape4k.workshop.coroutines.model.Banner
+import io.bluetape4k.workshop.shared.web.httpGet
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
-import kotlinx.coroutines.reactive.awaitLast
 import kotlinx.coroutines.reactive.awaitSingle
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeEmpty
+import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpStatus
+import org.springframework.test.web.reactive.server.expectBody
 import org.springframework.test.web.reactive.server.returnResult
 
 class CoroutineHandlerTest: AbstractCoroutineApplicationTest() {
@@ -22,44 +22,59 @@ class CoroutineHandlerTest: AbstractCoroutineApplicationTest() {
 
     @Test
     fun index() = runSuspendIO {
-        client.httpGet("/")
-            .returnResult<String>().responseBody
-            .awaitLast()
+        client
+            .httpGet("/")
+            .expectStatus().is2xxSuccessful
+            .expectBody<String>()
+            .returnResult().responseBody
+            .shouldNotBeNull()
             .shouldNotBeEmpty()
     }
 
     @RepeatedTest(REPEAT_SIZE)
     fun suspend() = runSuspendIO {
-        client.httpGet("/suspend")
+        client
+            .httpGet("/suspend")
+            .expectStatus().is2xxSuccessful
             .returnResult<Banner>().responseBody
             .awaitSingle() shouldBeEqualTo expectedBanner
     }
 
     @RepeatedTest(REPEAT_SIZE)
     fun deferred() = runSuspendIO {
-        client.httpGet("/deferred")
+        client
+            .httpGet("/deferred")
+            .expectStatus().is2xxSuccessful
             .returnResult<Banner>().responseBody
             .awaitSingle() shouldBeEqualTo expectedBanner
     }
 
     @RepeatedTest(REPEAT_SIZE)
     fun `sequential-flow`() = runSuspendIO {
-        client.httpGet("/sequential-flow")
+        client
+            .httpGet("/sequential-flow")
+            .expectStatus().is2xxSuccessful
             .returnResult<Banner>().responseBody
+            .shouldNotBeNull()
             .asFlow()
             .toList() shouldBeEqualTo listOf(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
     }
 
     @RepeatedTest(REPEAT_SIZE)
     fun `concurrent-flow`() = runSuspendIO {
-        client.httpGet("/concurrent-flow")
+        client
+            .httpGet("/concurrent-flow")
+            .expectStatus().is2xxSuccessful
             .returnResult<Banner>().responseBody
+            .shouldNotBeNull()
             .asFlow()
             .toList() shouldBeEqualTo listOf(expectedBanner, expectedBanner, expectedBanner, expectedBanner)
     }
 
     @Test
     fun error() = runSuspendIO {
-        client.httpGet("/error", HttpStatus.INTERNAL_SERVER_ERROR)
+        client
+            .httpGet("/error")
+            .expectStatus().is5xxServerError
     }
 }

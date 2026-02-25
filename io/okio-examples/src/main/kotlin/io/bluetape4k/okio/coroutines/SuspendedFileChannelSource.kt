@@ -1,6 +1,6 @@
 package io.bluetape4k.okio.coroutines
 
-import io.bluetape4k.coroutines.support.suspendAwait
+import io.bluetape4k.coroutines.support.awaitSuspending
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import okio.Buffer
@@ -27,7 +27,7 @@ class SuspendedFileChannelSource(
         while (remaining > 0) {
             val length = minOf(remaining, DEFAULT_BUFFER_SIZE.toLong())
             val buffer = ByteBuffer.allocate(length.toInt())
-            val bytesRead = channel.read(buffer, position).suspendAwait()
+            val bytesRead = channel.read(buffer, position).awaitSuspending()
 
             if (bytesRead <= 0) break // EOF or no data read
 

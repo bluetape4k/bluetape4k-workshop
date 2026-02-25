@@ -3,25 +3,20 @@ package io.bluetape4k.workshop.exposed.virtualthread.controller
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.exposed.virtualthread.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.MovieActorCountDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.MovieWithActorDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.MovieWithProducingActorDTO
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.asFlow
+import io.bluetape4k.workshop.shared.web.httpGet
 import kotlinx.coroutines.reactive.awaitSingle
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeEmpty
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.test.web.reactive.server.returnResult
 
-class MovieActorControllerTest(
-    @param:Autowired private val client: WebTestClient,
-): AbstractExposedTest() {
+class MovieActorControllerTest: AbstractExposedTest() {
 
     companion object: KLoggingChannel()
 
@@ -31,6 +26,7 @@ class MovieActorControllerTest(
 
         val movieWithActors = client
             .httpGet("/movie-actors/$movieId")
+            .expectStatus().is2xxSuccessful
             .returnResult<MovieWithActorDTO>().responseBody
             .awaitSingle()
 
@@ -45,9 +41,10 @@ class MovieActorControllerTest(
 
         val movieActorCounts = client
             .httpGet("/movie-actors/count")
-            .returnResult<MovieActorCountDTO>().responseBody
-            .asFlow()
-            .toList()
+            .expectStatus().is2xxSuccessful
+            .expectBodyList<MovieActorCountDTO>()
+            .returnResult().responseBody
+            .shouldNotBeNull()
 
         movieActorCounts.shouldNotBeEmpty()
 
@@ -60,9 +57,10 @@ class MovieActorControllerTest(
     fun `get movie and acting producer`() = runSuspendIO {
         val movieWithProducers = client
             .httpGet("/movie-actors/acting-producers")
-            .returnResult<MovieWithProducingActorDTO>().responseBody
-            .asFlow()
-            .toList()
+            .expectStatus().is2xxSuccessful
+            .expectBodyList<MovieWithProducingActorDTO>()
+            .returnResult().responseBody
+            .shouldNotBeNull()
 
         movieWithProducers.forEach {
             log.debug { "movieWithProducer=$it" }

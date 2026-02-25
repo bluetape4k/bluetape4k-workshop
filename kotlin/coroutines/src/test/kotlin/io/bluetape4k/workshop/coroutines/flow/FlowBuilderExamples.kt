@@ -5,7 +5,6 @@ import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.coroutines.tests.assertResult
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.asFlow
@@ -20,6 +19,7 @@ import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
+import java.util.concurrent.atomic.AtomicInteger
 
 class FlowBuilderExamples {
 
@@ -93,8 +93,8 @@ class FlowBuilderExamples {
             }
         }
 
-        val counter1 = atomic(0)
-        val counter2 = atomic(0)
+        val counter1 = AtomicInteger(0)
+        val counter2 = AtomicInteger(0)
         // flow 를 여러 subscriber 가 중복해서 받아갈 수 있다
         coroutineScope {
             launch {
@@ -133,7 +133,7 @@ class FlowBuilderExamples {
                     }
             }
         }
-        counter1.value shouldBeEqualTo 3
-        counter2.value shouldBeEqualTo 3
+        counter1.get() shouldBeEqualTo 3
+        counter2.get() shouldBeEqualTo 3
     }
 }

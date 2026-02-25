@@ -19,7 +19,7 @@ data class Student(
 data class Phone(
     val number: String,
     val type: PhoneType,
-)
+): Serializable
 
 enum class PhoneType {
     MOBILE,

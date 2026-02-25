@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.exposed.domain
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
-import io.bluetape4k.exposed.dao.toStringBuilder
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.ColumnTransformer
 import org.jetbrains.exposed.v1.core.ColumnWithTransform
@@ -47,15 +47,9 @@ class UserEntity(id: EntityID<UserId>): Entity<UserId>(id) {
     var name by UserTable.name
     var age by UserTable.age
 
-    fun toUser(): User = User(
-        id = id.value,
-        name = name,
-        age = age,
-    )
-
     override fun equals(other: Any?): Boolean = idEquals(other)
     override fun hashCode(): Int = idHashCode()
-    override fun toString(): String = toStringBuilder()
+    override fun toString(): String = entityToStringBuilder()
         .add("name", name)
         .add("age", age)
         .toString()

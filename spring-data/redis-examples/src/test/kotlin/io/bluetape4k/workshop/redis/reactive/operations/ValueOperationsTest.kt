@@ -28,6 +28,7 @@ class ValueOperationsTest(
     }
 
     private val valueCreationCounter = atomic(0)
+    private var valueCreationCount by valueCreationCounter
 
     @BeforeEach
     fun beforeEach() {
@@ -37,7 +38,7 @@ class ValueOperationsTest(
                 connection.serverCommands().flushAll()
             }.awaitSingle() shouldBeEqualTo "OK"
         }
-        valueCreationCounter.value = 0
+        valueCreationCount = 0
     }
 
     @Test
@@ -64,7 +65,7 @@ class ValueOperationsTest(
         }
         // cacheValue() 실행이 3초가 걸리므로
         elapsed shouldBeLessOrEqualTo 5_000L
-        valueCreationCounter.value shouldBeEqualTo 1
+        valueCreationCount shouldBeEqualTo 1
     }
 
     private suspend fun cacheValue(): String {

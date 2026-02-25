@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.exposed.sql.javatime
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
-import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
@@ -123,12 +123,11 @@ class DefaultsTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = id.value.hashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("field", field)
-                .add("t1", t1)
-                .add("clientDefault", clientDefault)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("field", field)
+            .add("t1", t1)
+            .add("clientDefault", clientDefault)
+            .toString()
     }
 
     @ParameterizedTest

@@ -6,7 +6,6 @@ import io.bluetape4k.workshop.exposed.virtualthread.domain.DatabaseInitializer
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
-import org.springframework.boot.WebApplicationType
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
@@ -25,7 +24,5 @@ class ExposedSqlVirtualThreadMvcApp: ApplicationRunner {
 }
 
 fun main(vararg args: String) {
-    runApplication<ExposedSqlVirtualThreadMvcApp>(*args) {
-        webApplicationType = WebApplicationType.SERVLET
-    }
+    runApplication<ExposedSqlVirtualThreadMvcApp>(*args) 
 }

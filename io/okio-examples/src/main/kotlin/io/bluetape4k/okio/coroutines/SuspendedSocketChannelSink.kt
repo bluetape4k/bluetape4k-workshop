@@ -2,6 +2,7 @@ package io.bluetape4k.okio.coroutines
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
+import kotlinx.coroutines.coroutineScope
 import okio.Buffer
 import java.nio.ByteBuffer
 import java.nio.channels.AsynchronousSocketChannel
@@ -30,7 +31,7 @@ class SuspendedSocketChannelSink(
         // Nothing to do here
     }
 
-    override suspend fun close() {
+    override suspend fun close() = coroutineScope {
         if (channel.isOpen) {
             log.debug { "Closing file channel" }
             channel.close()

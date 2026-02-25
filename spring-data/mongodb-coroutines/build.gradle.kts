@@ -8,24 +8,24 @@ springBoot {
     mainClass.set("io.bluetape4k.workshop.mongodb.MongodbApplicationKt")
 }
 
-
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
 
 dependencies {
     implementation(Libs.springBootStarter("actuator"))
-    implementation(Libs.springBootStarter("aop"))
-    implementation(Libs.springBootStarter("webflux"))
+    implementation(Libs.springBootStarter("aspectj"))
     implementation(Libs.springBootStarter("validation"))
+    implementation(Libs.springBootStarter("webflux"))
+    testImplementation(Libs.springBootStarter("webflux-test"))
 
     implementation(Libs.springBootStarter("data-mongodb"))
     implementation(Libs.springBootStarter("data-mongodb-reactive"))
+    testImplementation(Libs.springBootStarter("data-mongodb-test"))
 
     runtimeOnly(Libs.springBoot("devtools"))
     annotationProcessor(Libs.springBoot("configuration-processor"))
 
-    testImplementation(Libs.bluetape4k_spring_tests)
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
@@ -33,8 +33,9 @@ dependencies {
     }
 
     // Mongo Driver
-    implementation(Libs.mongodb_driver_sync)
-    implementation(Libs.mongodb_driver_reactivestreams)
+    implementation(Libs.mongodb_driver_kotlin_sync)
+    implementation(Libs.mongodb_driver_kotlin_coroutine)
+    implementation(Libs.mongodb_driver_kotlin_extensions)
 
     // MongoDB Testcontainers
     implementation(Libs.bluetape4k_testcontainers)
@@ -52,7 +53,9 @@ dependencies {
     testImplementation(Libs.reactor_test)
     testImplementation(Libs.turbine)
 
-    implementation(Libs.bluetape4k_jackson)
     implementation(Libs.bluetape4k_idgenerators)
     implementation(Libs.bluetape4k_netty)
+
+    implementation(Libs.jackson3_module_kotlin)
+    implementation(Libs.jackson3_module_blackbird)
 }

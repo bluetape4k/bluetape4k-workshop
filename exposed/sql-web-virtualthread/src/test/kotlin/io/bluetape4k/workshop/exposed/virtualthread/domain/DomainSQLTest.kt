@@ -16,6 +16,8 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.JRE
 import org.springframework.beans.factory.annotation.Autowired
 
 class DomainSQLTest(
@@ -40,8 +42,8 @@ class DomainSQLTest(
         @Test
         fun `get all actors in multiple platform threads`() {
             MultithreadingTester()
-                .numThreads(Runtimex.availableProcessors * 2)
-                .roundsPerThread(4)
+                .workers(Runtimex.availableProcessors * 2)
+                .rounds(4)
                 .add {
                     transaction(db) {
                         val actors = Actors.selectAll().map { it.toActorDTO() }
@@ -64,10 +66,11 @@ class DomainSQLTest(
             }.await()
         }
 
+        @EnabledOnJre(JRE.JAVA_21)
         @Test
         fun `get all actors in multiple virtual threads`() {
             StructuredTaskScopeTester()
-                .roundsPerTask(Runtimex.availableProcessors * 2 * 4)
+                .rounds(Runtimex.availableProcessors * 2 * 4)
                 .add {
                     transaction(db) {
                         val actors = Actor.all().toList()

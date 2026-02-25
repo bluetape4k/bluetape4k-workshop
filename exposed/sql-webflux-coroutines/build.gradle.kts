@@ -18,27 +18,25 @@ springBoot {
     }
 }
 
-
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
 
 dependencies {
 
-    implementation(project(":shared"))
+    testImplementation(project(":shared"))
 
     // bluetape4k
     implementation(Libs.bluetape4k_jdbc)
-    testImplementation(Libs.bluetape4k_spring_tests)
 
     // Exposed
     implementation(Libs.bluetape4k_exposed)
     implementation(Libs.exposed_core)
+    implementation(Libs.exposed_dao)
     implementation(Libs.exposed_jdbc)
     implementation(Libs.exposed_kotlin_datetime)
     implementation(Libs.exposed_migration_jdbc)
-    implementation(Libs.exposed_spring_boot_starter)
-    implementation(Libs.exposed_spring_transaction)
+    // implementation(Libs.exposed_spring_boot_starter) // 직접 DatabaseConfig 에서 Database를 설정해서, 중복됨
 
     // Database Drivers
     implementation(Libs.hikaricp)
@@ -51,18 +49,22 @@ dependencies {
     implementation(Libs.testcontainers_mysql)
     implementation(Libs.mysql_connector_j)
 
+    // Jackson for Kotlin
+    implementation(Libs.jackson3_module_kotlin)
+    implementation(Libs.jackson3_module_blackbird)
+
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))
     annotationProcessor(Libs.springBoot("autoconfigure-processor"))
     annotationProcessor(Libs.springBoot("configuration-processor"))
     runtimeOnly(Libs.springBoot("devtools"))
 
-    implementation(Libs.springBootStarter("webflux"))
-    implementation(Libs.springBootStarter("aop"))
+    implementation(Libs.springBootStarter("aspectj"))
     implementation(Libs.springBootStarter("actuator"))
     implementation(Libs.springBootStarter("validation"))
-
-    testImplementation(Libs.bluetape4k_spring_tests)
+    implementation(Libs.springBootStarter("jdbc"))
+    implementation(Libs.springBootStarter("webflux"))
+    testImplementation(Libs.springBootStarter("webflux-test"))
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

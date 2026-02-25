@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.associations.onetoone
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
 import io.bluetape4k.exposed.dao.idValue
-import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
@@ -97,10 +97,9 @@ class MapIdOneToOneTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("name", name)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("name", name)
+            .toString()
     }
 
     class Picture(id: EntityID<Int>): IntEntity(id) {
@@ -113,11 +112,10 @@ class MapIdOneToOneTest: AbstractExposedTest() {
         // NOTE: id 속성 중 table 이 one-to-one 의 owner 테이블을 가르킨다.
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("path", path)
-                .add("author id", author.idValue)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("path", path)
+            .add("author id", author.idValue)
+            .toString()
     }
 
     class Biography(id: EntityID<Int>): IntEntity(id) {
@@ -130,11 +128,10 @@ class MapIdOneToOneTest: AbstractExposedTest() {
         // NOTE: id 속성 중 table 이 one-to-one 의 owner 테이블을 가르킨다.
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("infomation", infomation)
-                .add("author id", author.idValue)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("infomation", infomation)
+            .add("author id", author.idValue)
+            .toString()
     }
 
     @ParameterizedTest

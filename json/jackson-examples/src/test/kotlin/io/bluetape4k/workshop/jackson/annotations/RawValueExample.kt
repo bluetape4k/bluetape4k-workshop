@@ -2,32 +2,27 @@ package io.bluetape4k.workshop.jackson.annotations
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonRawValue
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.jackson.AbstractJacksonTest
 import io.bluetape4k.workshop.jackson.readAs
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
+import tools.jackson.databind.JsonNode
+import tools.jackson.module.kotlin.readValue
 
 class RawValueExample: AbstractJacksonTest() {
 
     companion object: KLogging()
 
-    class UserData() {
-
-        constructor(name: String, json: String): this() {
-            this.name = name
-            this.json = json
-        }
+    open class UserData {
 
         var name: String = ""
 
         @field:JsonRawValue
         var json: String = ""
 
-        @JsonProperty(value = "json")
+        @JsonProperty("json")
         private fun setJsonRaw(jsonNode: JsonNode) {
             this.json = jsonNode.toString()
         }
@@ -37,7 +32,10 @@ class RawValueExample: AbstractJacksonTest() {
     fun `Raw value conversion object to json`() {
         val name = faker.name().fullName()
         val json = """{"id":1, "name":"$name"}"""
-        val user = UserData(name, json)
+        val user = UserData().apply {
+            this.name = name
+            this.json = json
+        }
 
         val jsonStr = defaultMapper.writeValueAsString(user)
         log.debug { "Json=$jsonStr" }

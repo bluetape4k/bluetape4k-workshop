@@ -19,11 +19,11 @@ import java.util.concurrent.Executors
 
 @RestController
 @RequestMapping("/httpbin")
-class HttpbinController(
-    webClientBuilder: WebClient.Builder,
-) {
+class HttpbinController {
 
     companion object: KLoggingChannel()
+
+    private val webClientBuilder = WebClient.builder()
 
     private val webClient: WebClient =
         webClientBuilder

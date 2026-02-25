@@ -65,6 +65,6 @@ abstract class AbstractBase64Source(delegate: Source): ForwardingSource(delegate
         val bytesToReturn = byteCount.coerceAtMost(decodedBuffer.size)
         sink.write(decodedBuffer, bytesToReturn)
 
-        return if (streamEnded) -1 else bytesToReturn
+        return if (streamEnded) -1L else bytesToReturn
     }
 }

@@ -1,19 +1,22 @@
 package io.bluetape4k.workshop.virtualthread.part2
 
+import io.bluetape4k.concurrent.virtualthread.structuredTaskScopeAll
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.workshop.virtualThreads.AbstractVirtualThreadTest
 import org.amshove.kluent.internal.assertFailsWith
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.JRE
 import org.junit.jupiter.api.fail
-import java.util.concurrent.StructuredTaskScope
 
 
 /**
  * Rule 5: Virtual Thread 사용 시에는 ThreadLocal 를 사용하지 말고, [ScopedValue]를 사용하세요
  */
-class Rule5UseThreadLocalVariablesCarefully {
+class Rule5UseThreadLocalVariablesCarefully: AbstractVirtualThreadTest() {
 
     companion object: KLoggingChannel()
 
@@ -47,19 +50,20 @@ class Rule5UseThreadLocalVariablesCarefully {
 
         private val scopedValue = ScopedValue.newInstance<String>()
 
+        @EnabledOnJre(JRE.JAVA_21)
         @Test
         fun `추천 - ScopedValue 사용하기`() {
-            ScopedValue.runWhere(scopedValue, "zero") {
+            ScopedValue.where(scopedValue, "zero").run {
                 scopedValue.get() shouldBeEqualTo "zero"
 
-                ScopedValue.runWhere(scopedValue, "one") {
+                ScopedValue.where(scopedValue, "one").run {
                     scopedValue.get() shouldBeEqualTo "one"
                 }
 
                 scopedValue.get() shouldBeEqualTo "zero"
 
                 try {
-                    StructuredTaskScope.ShutdownOnFailure().use { scope ->
+                    structuredTaskScopeAll { scope ->
                         // Scope 안에서 sub task를 생성합니다.
                         scope.fork {
                             scopedValue.get() shouldBeEqualTo "zero"

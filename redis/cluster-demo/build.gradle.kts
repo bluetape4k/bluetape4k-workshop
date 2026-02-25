@@ -13,9 +13,11 @@ configurations {
 }
 
 dependencies {
+
+    testImplementation(project(":shared"))
+
     implementation(Libs.bluetape4k_core)
-    implementation(Libs.bluetape4k_spring_core)
-    implementation(Libs.bluetape4k_jackson)
+    implementation(Libs.bluetape4k_jackson3)
     implementation(Libs.bluetape4k_idgenerators)
     testImplementation(Libs.bluetape4k_junit5)
     implementation(Libs.bluetape4k_testcontainers)
@@ -28,9 +30,8 @@ dependencies {
     // implementation(Libs.redisson_spring_data_27)
 
     // Codecs
-    implementation(Libs.kryo)
-    implementation(Libs.fury_kotlin)
     implementation(Libs.fory_kotlin)
+    implementation(Libs.kryo5)
 
     // Compressor
     implementation(Libs.lz4_java)
@@ -53,7 +54,6 @@ dependencies {
 
     implementation(Libs.springBoot("autoconfigure"))
 
-    testImplementation(Libs.bluetape4k_spring_tests)
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

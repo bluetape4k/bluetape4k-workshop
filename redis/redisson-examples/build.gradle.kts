@@ -8,6 +8,8 @@ configurations {
 
 dependencies {
 
+    testImplementation(project(":shared"))
+
     // Redis
     implementation(Libs.bluetape4k_redis)
     testImplementation(Libs.bluetape4k_testcontainers)
@@ -19,19 +21,18 @@ dependencies {
     // Lettuce
     implementation(Libs.lettuce_core)
 
-    // Codecs
-    implementation(Libs.kryo)
-    implementation(Libs.fury_kotlin)
-    implementation(Libs.fory_kotlin)
-
     // Jackson
-    implementation(Libs.bluetape4k_jackson)
-    implementation(Libs.jackson_dataformat_protobuf)
-    implementation(Libs.jackson_module_kotlin)
-    implementation(Libs.jackson_module_blackbird)
+    implementation(Libs.bluetape4k_jackson3)
+    implementation(Libs.jackson3_dataformat_protobuf)
+    implementation(Libs.jackson3_module_kotlin)
+    implementation(Libs.jackson3_module_blackbird)
 
     // Grpc
     implementation(Libs.bluetape4k_grpc)
+
+    // Codecs
+    implementation(Libs.fory_kotlin)
+    implementation(Libs.kryo)
 
     // Compressor
     implementation(Libs.lz4_java)
@@ -64,6 +65,7 @@ dependencies {
     testImplementation(Libs.springBootStarter("jdbc"))
 
     testImplementation(Libs.springBootStarter("data-redis"))
+    testImplementation(Libs.springBootStarter("data-redis-test"))
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

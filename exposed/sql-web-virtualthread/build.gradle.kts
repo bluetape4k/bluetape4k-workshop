@@ -25,12 +25,15 @@ configurations {
 
 dependencies {
 
-    implementation(project(":shared"))
+    testImplementation(project(":shared"))
+
+    // JDK 25
+    runtimeOnly(Libs.bluetape4k_virtualthread_jdk25)
+    // runtimeOnly(Libs.bluetape4k_virtualthread_jdk21)
 
     // bluetape4k
     implementation(Libs.bluetape4k_io)
     implementation(Libs.bluetape4k_jdbc)
-    testImplementation(Libs.bluetape4k_spring_tests)
 
     // Exposed
     implementation(Libs.bluetape4k_exposed)
@@ -52,23 +55,29 @@ dependencies {
     implementation(Libs.testcontainers_mysql)
     implementation(Libs.mysql_connector_j)
 
+    // Jackson for Kotlin
+    implementation(Libs.jackson3_module_kotlin)
+    implementation(Libs.jackson3_module_blackbird)
+
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))
     annotationProcessor(Libs.springBoot("autoconfigure-processor"))
     annotationProcessor(Libs.springBoot("configuration-processor"))
     runtimeOnly(Libs.springBoot("devtools"))
 
-    implementation(Libs.springBootStarter("web"))
-    implementation(Libs.springBootStarter("aop"))
+    implementation(Libs.springBootStarter("aspectj"))
     implementation(Libs.springBootStarter("actuator"))
     implementation(Libs.springBootStarter("validation"))
+    implementation(Libs.springBootStarter("webmvc"))
+    testImplementation(Libs.springBootStarter("webmvc-test"))
 
-    testImplementation(Libs.bluetape4k_spring_tests)
+    testImplementation(Libs.springBootStarter("webflux"))
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")
     }
+
 
     testImplementation(Libs.bluetape4k_coroutines)
     testImplementation(Libs.kotlinx_coroutines_reactor)

@@ -6,13 +6,10 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.reactive.function.client.WebClient
 
 @RestController
 @RequestMapping("/$DEFAULT_PATH")
-class DefaultDispatcherController(
-    override val webClientBuilder: WebClient.Builder,
-): AbstractDispatcherController(webClientBuilder) {
+class DefaultDispatcherController: AbstractDispatcherController() {
 
     companion object: KLoggingChannel() {
         internal const val DEFAULT_PATH = "default"

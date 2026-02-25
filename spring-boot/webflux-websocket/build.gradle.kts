@@ -11,7 +11,7 @@ springBoot {
 dependencyManagement {
     imports {
         mavenBom(Libs.spring_cloud_dependencies)
-        mavenBom(Libs.spring_boot_dependencies)
+        mavenBom(Libs.spring_boot4_dependencies)
     }
 }
 
@@ -21,11 +21,10 @@ configurations {
 }
 
 dependencies {
-    implementation(Libs.bluetape4k_spring_core)
-    implementation(Libs.bluetape4k_jackson)
-    implementation(Libs.bluetape4k_netty)
     implementation(Libs.bluetape4k_idgenerators)
     testImplementation(Libs.bluetape4k_junit5)
+
+    implementation(Libs.jackson3_module_kotlin)
 
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))
@@ -34,8 +33,8 @@ dependencies {
     runtimeOnly(Libs.springBoot("devtools"))
 
     implementation(Libs.springBootStarter("webflux"))
+    testImplementation(Libs.springBootStarter("webflux-test"))
 
-    testImplementation(Libs.bluetape4k_spring_tests)
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

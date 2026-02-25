@@ -16,7 +16,7 @@ class SchemaInitializer: ApplicationRunner {
 
     companion object: KLogging()
 
-    override fun run(args: ApplicationArguments?) {
+    override fun run(args: ApplicationArguments) {
         log.info { "Initialize Database Schema" }
         SchemaUtils.create(UserTable)
 

@@ -112,14 +112,14 @@ class NestedTransactionsTest: AbstractExposedTest() {
         }
 
         transaction(db) {
-            val outerTxId = this.id
+            val outerTxId = this.transactionId
 
             cities.insert { it[name] = "City A" }
             cities.selectAll().count().toInt() shouldBeEqualTo 1
 
             try {
                 inTopLevelTransaction(db) {
-                    val innerTxId = this.id
+                    val innerTxId = this.transactionId
                     innerTxId shouldNotBeEqualTo outerTxId
 
                     cities.insert { it[name] = "City B" }           // 이 코드는 실행되지 않는다.
@@ -134,14 +134,14 @@ class NestedTransactionsTest: AbstractExposedTest() {
         assertSingleRecordInNewTransactionAndReset()
 
         transaction(db) {
-            val outerTxId = this.id
+            val outerTxId = this.transactionId
 
             cities.insert { it[cities.name] = "City A" }
             cities.selectAll().count().toInt() shouldBeEqualTo 1
 
             try {
                 transaction(db) {
-                    val innerTxId = this.id
+                    val innerTxId = this.transactionId
                     innerTxId shouldNotBeEqualTo outerTxId
 
                     cities.insert { it[cities.name] = "City B" }      // 이 코드는 실행되지 않는다.
@@ -172,13 +172,13 @@ class NestedTransactionsTest: AbstractExposedTest() {
         }
 
         transaction(db) {
-            val outerTxId = this.id
+            val outerTxId = this.transactionId
             cities.insert { it[name] = "City A" }
             cities.selectAll().count().toInt() shouldBeEqualTo 1
 
             try {
                 inTopLevelTransaction(db) {
-                    val innerTxId = this.id
+                    val innerTxId = this.transactionId
                     innerTxId shouldNotBeEqualTo outerTxId
 
                     cities.insert { it[name] = "City B" }       // 이 코드는 실행되지 않는다.
@@ -192,13 +192,13 @@ class NestedTransactionsTest: AbstractExposedTest() {
         assertSingleRecordInNewTransactionAndReset()
 
         transaction(db) {
-            val outerTxId = this.id
+            val outerTxId = this.transactionId
             cities.insert { it[name] = "City A" }
             cities.selectAll().count().toInt() shouldBeEqualTo 1
 
             try {
                 transaction(db) {
-                    val innerTxId = this.id
+                    val innerTxId = this.transactionId
                     innerTxId shouldNotBeEqualTo outerTxId
 
                     cities.insert { it[name] = "City B" }       // 이 코드는 실행되지 않는다.

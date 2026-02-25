@@ -16,13 +16,15 @@ class IndexController {
 
     @GetMapping("/hello")
     fun hello(): String {
-        log.debug { "Hello called. ${helloCounter.incrementAndGet()}" }
+        val helloCount = helloCounter.incrementAndGet()
+        log.debug { "Hello called. $helloCount" }
         return "Hello World"
     }
 
     @GetMapping("/world")
     fun world(): String {
-        log.debug { "World called. ${worldCounter.incrementAndGet()}" }
+        val worldCount = worldCounter.incrementAndGet()
+        log.debug { "World called. $worldCount" }
         return "Hello World"
     }
 }

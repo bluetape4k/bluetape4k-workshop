@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.associations.manytomany
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
-import io.bluetape4k.exposed.dao.toStringBuilder
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -84,10 +84,9 @@ object BankSchema {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("number", number)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("number", number)
+            .toString()
     }
 
     /**
@@ -101,9 +100,8 @@ object BankSchema {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("ssn", ssn)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("ssn", ssn)
+            .toString()
     }
 }

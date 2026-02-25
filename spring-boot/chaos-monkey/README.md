@@ -1,4 +1,4 @@
-# Chaos Monkey + Spring Boot 2 Demo
+# Chaos Monkey + Spring Boot 3 Demo
 
 원본: [chaos-monkey-springboot](https://github.com/vaquarkhan/chaos-monkey-springboot)
 

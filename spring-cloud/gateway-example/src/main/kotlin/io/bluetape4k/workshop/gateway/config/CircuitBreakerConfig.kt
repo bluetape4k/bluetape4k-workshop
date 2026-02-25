@@ -26,6 +26,7 @@ class CircuitBreakerConfig {
         return ReactiveResilience4JCircuitBreakerFactory(
             circuitBreakerRegistry,
             timeLimiterRegistry,
+            null,
             resilience4jConfig
         )
     }

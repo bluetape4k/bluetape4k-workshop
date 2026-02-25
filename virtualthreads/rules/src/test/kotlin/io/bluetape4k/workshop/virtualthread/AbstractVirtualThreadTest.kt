@@ -3,8 +3,11 @@ package io.bluetape4k.workshop.virtualThreads
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import kotlinx.coroutines.delay
+import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.JRE
 import java.util.concurrent.TimeUnit
 
+@EnabledOnJre(JRE.JAVA_21, JRE.JAVA_25)
 abstract class AbstractVirtualThreadTest {
 
     companion object: KLoggingChannel() {

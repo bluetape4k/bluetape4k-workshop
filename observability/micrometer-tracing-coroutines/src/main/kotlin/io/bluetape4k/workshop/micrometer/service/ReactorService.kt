@@ -13,12 +13,13 @@ import java.time.Duration
 
 @Service
 @Observed
-class ReactorService(webClientBuilder: WebClient.Builder) {
+class ReactorService {
 
     companion object: KLoggingChannel() {
         val faker = Faker()
     }
 
+    private val webClientBuilder = WebClient.builder()
     private val client = webClientBuilder.baseUrl("https://jsonplaceholder.typicode.com").build()
 
     fun getName(): Mono<String> {

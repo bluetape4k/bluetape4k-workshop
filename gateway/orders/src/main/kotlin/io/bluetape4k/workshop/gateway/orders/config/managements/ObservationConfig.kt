@@ -46,7 +46,7 @@ class ObservationConfig {
     fun metricsHttpServerUriFilter(): MeterFilter {
         return MeterFilter
             .deny { id ->
-                val tag = id?.getTag("uri")
+                val tag = id.getTag("uri")
                 tag?.let { t -> ignorePaths.any { path -> t.contains(path) } } ?: false
             }
     }

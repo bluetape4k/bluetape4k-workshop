@@ -23,13 +23,16 @@ configurations {
 
 dependencies {
     implementation(Libs.springBootStarter("data-elasticsearch"))
+    testImplementation(Libs.springBootStarter("data-elasticsearch-test"))
     implementation(Libs.elasticsearch_rest_client)
 
     // Elasticsearch Local Server 관련 의존성
     implementation(Libs.bluetape4k_testcontainers)
+    implementation(Libs.testcontainers)
     implementation(Libs.testcontainers_elasticsearch)
 
     implementation(Libs.springBootStarter("webflux"))
+    testImplementation(Libs.springBootStarter("webflux-test"))
 
     testImplementation(Libs.bluetape4k_spring_tests)
     testImplementation(Libs.springBootStarter("test")) {
@@ -38,7 +41,7 @@ dependencies {
         exclude(group = "org.mockito", module = "mockito-core")
     }
 
-    implementation(Libs.bluetape4k_jackson)
+    implementation(Libs.bluetape4k_jackson3)
     testImplementation(Libs.bluetape4k_junit5)
 
     // Coroutines

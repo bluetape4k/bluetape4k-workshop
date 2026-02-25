@@ -1,14 +1,14 @@
 package io.bluetape4k.workshop.jackson
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
 import com.jayway.jsonpath.Configuration
 import com.jayway.jsonpath.DocumentContext
 import com.jayway.jsonpath.JsonPath
 import com.jayway.jsonpath.Option
-import io.bluetape4k.jackson.Jackson
+import io.bluetape4k.jackson3.Jackson
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.KLogging
+import tools.jackson.databind.SerializationFeature
+import tools.jackson.databind.json.JsonMapper
 
 abstract class AbstractJacksonTest {
 
@@ -19,9 +19,13 @@ abstract class AbstractJacksonTest {
         const val REPEAT_SIZE = 5
     }
 
-    protected val defaultMapper: ObjectMapper by lazy {
+    protected val defaultMapper: JsonMapper by lazy {
         Jackson.defaultJsonMapper
-            .enable(SerializationFeature.INDENT_OUTPUT)
+            .rebuild()
+            .apply {
+                configure(SerializationFeature.INDENT_OUTPUT, true)
+            }
+            .build()
     }
 
     private val jsonPathConfiguratrion: Configuration = Configuration.defaultConfiguration()

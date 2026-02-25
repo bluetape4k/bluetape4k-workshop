@@ -59,7 +59,7 @@ class DemoRoutes {
             filters {
                 prefixPath("/httpbin")
                 circuitBreaker {
-                    it.name = "slowcmd"
+                    it.setName("slowcmd")
                 }
             }
             uri(testUri)
@@ -69,8 +69,8 @@ class DemoRoutes {
             filters {
                 prefixPath("/httpbin")
                 circuitBreaker {
-                    it.name = "slowcmd"
-                    it.fallbackUri = URI.create("forward:/circuitbreaker/fallback")
+                    it.setName("slowcmd")
+                    it.setFallbackUri(URI.create("forward:/circuitbreaker/fallback"))
                 }
             }
             uri(testUri)

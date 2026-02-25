@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.jackson.annotations
 
 import com.fasterxml.jackson.annotation.JsonBackReference
 import com.fasterxml.jackson.annotation.JsonManagedReference
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.jackson.AbstractJacksonTest
@@ -10,6 +9,7 @@ import io.bluetape4k.workshop.jackson.readAs
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.junit.jupiter.api.Test
+import tools.jackson.module.kotlin.readValue
 
 /**
  * `@JsonManagedReference` 를 이용하여 순환 참조를 해결하는 예제

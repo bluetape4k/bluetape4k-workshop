@@ -21,13 +21,13 @@ import org.springframework.web.reactive.function.client.bodyToMono
  */
 @Service
 class SyncService(
-    private val webClientBuilder: WebClient.Builder,
     private val observationRegistry: ObservationRegistry,
 ) {
     companion object: KLogging() {
         val faker = Faker()
     }
 
+    private val webClientBuilder = WebClient.builder()
     private val client = webClientBuilder.baseUrl("https://jsonplaceholder.typicode.com").build()
 
     @Observed(contextualName = "sync-get-name-at-service")
@@ -41,7 +41,7 @@ class SyncService(
                 log.debug { "Get fake name in sync service." }
                 Thread.sleep(100)
                 faker.name().fullName()
-            } as String
+            }
 
         // Nested span 으로 사용하기 위해서는 @Observed 대신 `withObservation` 함수를 사용하여 관찰을 합니다.
 //        return withObservation("sync-get-name-at-function", observationRegistry) {
@@ -65,7 +65,7 @@ class SyncService(
     private fun getTodoById(id: Int): Todo? {
         return Observation
             .createNotStarted("get-todo-by-webclient", observationRegistry)
-            .observe<Todo> {
+            .observe<Todo?> {
                 log.debug { "Get todo by id[$id] in sync service." }
                 Thread.sleep(100)
 
@@ -103,7 +103,6 @@ class SyncService(
         withObservation("post-processing", observationRegistry) {
             log.debug { "Post processing ..." }
             Thread.sleep(100)
-
         }
     }
 }

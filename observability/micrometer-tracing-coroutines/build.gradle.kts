@@ -16,10 +16,11 @@ configurations {
 dependencies {
     implementation(platform(Libs.micrometer_bom))
     implementation(platform(Libs.micrometer_tracing_bom))
-    
+
+    testImplementation(project(":shared"))
+
     implementation(Libs.bluetape4k_micrometer)
-    implementation(Libs.bluetape4k_spring_core)
-    implementation(Libs.bluetape4k_jackson)
+    implementation(Libs.bluetape4k_jackson3)
     implementation(Libs.bluetape4k_testcontainers)
     testImplementation(Libs.bluetape4k_junit5)
 
@@ -50,12 +51,12 @@ dependencies {
     annotationProcessor(Libs.springBoot("configuration-processor"))
     runtimeOnly(Libs.springBoot("devtools"))
 
-    implementation(Libs.springBootStarter("aop"))
     implementation(Libs.springBootStarter("actuator"))
+    implementation(Libs.springBootStarter("aspectj"))
+    implementation(Libs.springBootStarter("opentelemetry"))
+    testImplementation(Libs.springBootStarter("opentelemetry-test"))
     implementation(Libs.springBootStarter("webflux"))
-    implementation(Libs.bluetape4k_spring_webflux)
-
-    testImplementation(Libs.bluetape4k_spring_tests)
+    testImplementation(Libs.springBootStarter("webflux-test"))
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

@@ -29,7 +29,7 @@ class DatabaseInitializer: ApplicationRunner {
 
     companion object: KLogging()
 
-    override fun run(args: ApplicationArguments?) {
+    override fun run(args: ApplicationArguments) {
         createSchemaAndTestData()
     }
 
