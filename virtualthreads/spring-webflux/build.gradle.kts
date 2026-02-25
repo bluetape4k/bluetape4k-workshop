@@ -18,18 +18,18 @@ configurations {
 dependencies {
 
     // bluetape4k
+    implementation(Libs.bluetape4k_core)
+    // VirtualThread of JDK 25
+    implementation(Libs.bluetape4k_virtualthread_api)
+    runtimeOnly(Libs.bluetape4k_virtualthread_jdk25)
     implementation(Libs.bluetape4k_io)
     implementation(Libs.bluetape4k_jackson3)
-
-    // VirtualThread JDK 25
-    runtimeOnly(Libs.bluetape4k_virtualthread_jdk25)
 
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))
     annotationProcessor(Libs.springBoot("autoconfigure-processor"))
     annotationProcessor(Libs.springBoot("configuration-processor"))
     runtimeOnly(Libs.springBoot("devtools"))
-
 
     implementation(Libs.springBootStarter("actuator"))
     implementation(Libs.springBootStarter("aspectj"))
