@@ -8,17 +8,16 @@ springBoot {
     mainClass.set("io.bluetape4k.workshop.coroutines.CoroutineApplicationKt")
 }
 
-@Suppress("UnstableApiUsage")
-configurations {
-    testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
-}
+//configurations {
+//    testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
+//}
 
 dependencies {
-    implementation(Libs.bluetape4k_io)
-    testImplementation(Libs.bluetape4k_junit5)
+    implementation(project(":shared"))
 
-    implementation(Libs.bluetape4k_spring_webflux)
-    testImplementation(Libs.bluetape4k_spring_tests)
+    implementation(Libs.bluetape4k_io)
+    implementation(Libs.bluetape4k_jackson3)
+    testImplementation(Libs.bluetape4k_junit5)
 
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))
@@ -26,12 +25,13 @@ dependencies {
     annotationProcessor(Libs.springBoot("configuration-processor"))
     runtimeOnly(Libs.springBoot("devtools"))
 
+    implementation(Libs.springBootStarter("aspectj"))
     implementation(Libs.springBootStarter("mustache"))
     implementation(Libs.springBootStarter("actuator"))
     implementation(Libs.springBootStarter("validation"))
     implementation(Libs.springBootStarter("webflux"))
+    testImplementation(Libs.springBootStarter("webflux-test"))
 
-    testImplementation(Libs.bluetape4k_spring_tests)
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
@@ -48,4 +48,13 @@ dependencies {
     implementation(Libs.reactor_netty)
     implementation(Libs.reactor_kotlin_extensions)
     testImplementation(Libs.reactor_test)
+
+    // Observability
+    implementation(Libs.micrometer_core)
+    implementation(Libs.micrometer_registry_prometheus)
+    implementation(Libs.micrometer_observation)
+    testImplementation(Libs.micrometer_observation_test)
+
+    // SpringDoc - OpenAPI 3.0
+    implementation(Libs.springdoc_openapi_starter_webflux_ui)
 }

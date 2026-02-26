@@ -1,14 +1,11 @@
 package io.bluetape4k.workshop.stomp.websocket
 
-import io.bluetape4k.jackson.Jackson
-import io.bluetape4k.junit5.awaitility.coUntil
+import io.bluetape4k.junit5.awaitility.untilSuspending
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.stomp.websocket.model.Greeting
 import io.bluetape4k.workshop.stomp.websocket.model.HelloMessage
-import kotlinx.atomicfu.AtomicRef
-import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.future.await
 import org.amshove.kluent.shouldBeEqualTo
 import org.awaitility.kotlin.await
@@ -16,9 +13,10 @@ import org.awaitility.kotlin.until
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.fail
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
-import org.springframework.messaging.converter.MappingJackson2MessageConverter
+import org.springframework.messaging.converter.JacksonJsonMessageConverter
 import org.springframework.messaging.simp.stomp.StompFrameHandler
 import org.springframework.messaging.simp.stomp.StompHeaders
 import org.springframework.messaging.simp.stomp.StompSession
@@ -29,11 +27,15 @@ import org.springframework.web.socket.messaging.WebSocketStompClient
 import org.springframework.web.socket.sockjs.client.SockJsClient
 import org.springframework.web.socket.sockjs.client.Transport
 import org.springframework.web.socket.sockjs.client.WebSocketTransport
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.jsonMapper
 import java.lang.reflect.Type
+import java.util.concurrent.atomic.AtomicReference
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class GreetingIntegrationTest(
-    @LocalServerPort private val port: Int,
+    @param:LocalServerPort private val port: Int,
+    @Autowired private val jacksonJsonMapper: JsonMapper,
 ) {
     companion object: KLogging()
 
@@ -47,17 +49,15 @@ class GreetingIntegrationTest(
         val transports = listOf<Transport>(WebSocketTransport(StandardWebSocketClient()))
         val socketJsClient = SockJsClient(transports)
         this.stompClient = WebSocketStompClient(socketJsClient).apply {
-            messageConverter = MappingJackson2MessageConverter().apply {
-                objectMapper = Jackson.defaultJsonMapper
-            }
+            messageConverter = JacksonJsonMessageConverter(jsonMapper())
         }
         log.debug { "Local server port: $port" }
     }
 
     @Test
     fun `get greeting`() {
-        val received = atomic<Greeting?>(null)
-        val failure = atomic<Throwable?>(null)
+        val received = AtomicReference<Greeting>(null)
+        val failure = AtomicReference<Throwable>(null)
         val handler: StompSessionHandler = getStopmSessionHandler(received, failure)
 
         val session = stompClient.connectAsync(wsUrl, headers, handler, port).get()
@@ -66,22 +66,22 @@ class GreetingIntegrationTest(
         try {
             session.send("/app/hello", HelloMessage("Spring"))
         } catch (e: Throwable) {
-            failure.value = e
+            failure.set(e)
         }
 
-        await until { received.value != null || failure.value != null }
+        await until { received.get() != null || failure.get() != null }
 
-        if (failure.value == null) {
-            received.value!!.content shouldBeEqualTo "Hello, Spring!"
+        if (failure.get() == null) {
+            received.get()!!.content shouldBeEqualTo "Hello, Spring!"
         } else {
-            fail(failure.value)
+            fail(failure.get())
         }
     }
 
     @Test
     fun `get greeting with coroutines`() = runSuspendIO {
-        val received = atomic<Greeting?>(null)
-        val failure = atomic<Throwable?>(null)
+        val received = AtomicReference<Greeting>(null)
+        val failure = AtomicReference<Throwable>(null)
         val handler: StompSessionHandler = getStopmSessionHandler(received, failure)
 
         val session = stompClient.connectAsync(wsUrl, headers, handler, port).await()
@@ -90,21 +90,21 @@ class GreetingIntegrationTest(
         try {
             session.send("/app/hello", HelloMessage("Spring"))
         } catch (e: Throwable) {
-            failure.value = e
+            failure.set(e)
         }
 
-        await coUntil { received.value != null || failure.value != null }
+        await untilSuspending { received.get() != null || failure.get() != null }
 
-        if (failure.value == null) {
-            received.value!!.content shouldBeEqualTo "Hello, Spring!"
+        if (failure.get() == null) {
+            received.get()!!.content shouldBeEqualTo "Hello, Spring!"
         } else {
-            fail(failure.value)
+            fail(failure.get())
         }
     }
 
     private fun getStopmSessionHandler(
-        received: AtomicRef<Greeting?>,
-        failure: AtomicRef<Throwable?>,
+        received: AtomicReference<Greeting>,
+        failure: AtomicReference<Throwable>,
     ): StompSessionHandler = object: TestSessionHandler(failure) {
         override fun afterConnected(session: StompSession, connectedHeaders: StompHeaders) {
             log.debug { "Stomp session connected. subscribe /topic/greetings" }
@@ -117,10 +117,10 @@ class GreetingIntegrationTest(
                         log.debug { "Payload: $payload" }
                         try {
                             val greeting = payload as Greeting
-                            received.value = greeting
+                            received.set(greeting)
                             log.debug { "Receive: $greeting" }
                         } catch (e: Throwable) {
-                            failure.value = e
+                            failure.set(e)
                         } finally {
                             session.disconnect()
                         }

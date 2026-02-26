@@ -1,11 +1,11 @@
 package io.bluetape4k.workshop.redisson.objects
 
+import io.bluetape4k.coroutines.support.awaitSuspending
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.redis.redisson.coroutines.coAwait
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.joinAll
@@ -14,6 +14,8 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeTrue
 import org.junit.jupiter.api.RepeatedTest
+import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.JRE
 
 class AtomicLongExamples: AbstractRedissonTest() {
 
@@ -29,35 +31,35 @@ class AtomicLongExamples: AbstractRedissonTest() {
         // TEST_COUNT 만큼의 코루틴을 생성하여 incrementAndGetAsync()를 호출합니다.
         val jobs = List(TEST_COUNT) {
             scope.launch {
-                counter.incrementAndGetAsync().coAwait()
+                counter.incrementAndGetAsync().awaitSuspending()
             }
         }
         jobs.joinAll()
 
         // counter 값이 TEST_COUNT 와 같아야 합니다. (비동기로 다중의 코루틴이 동시에 호출되었지만, Atomic하기 때문에 값이 정확해야 합니다.)
-        counter.async.coAwait() shouldBeEqualTo TEST_COUNT.toLong()
-        counter.deleteAsync().coAwait().shouldBeTrue()
+        counter.async.awaitSuspending() shouldBeEqualTo TEST_COUNT.toLong()
+        counter.deleteAsync().awaitSuspending().shouldBeTrue()
     }
 
     @RepeatedTest(REPEAT_SIZE)
     fun `AtomicLog operatiions`() = runSuspendIO {
         val counter = redisson.getAtomicLong(randomName())
 
-        counter.setAsync(0).coAwait()
-        counter.addAndGetAsync(10L).coAwait() shouldBeEqualTo 10L
+        counter.setAsync(0).awaitSuspending()
+        counter.addAndGetAsync(10L).awaitSuspending() shouldBeEqualTo 10L
 
-        counter.compareAndSetAsync(-1L, 42L).coAwait().shouldBeFalse()
-        counter.compareAndSetAsync(10L, 42L).coAwait().shouldBeTrue()
+        counter.compareAndSetAsync(-1L, 42L).awaitSuspending().shouldBeFalse()
+        counter.compareAndSetAsync(10L, 42L).awaitSuspending().shouldBeTrue()
 
-        counter.decrementAndGetAsync().coAwait() shouldBeEqualTo 41L
-        counter.incrementAndGetAsync().coAwait() shouldBeEqualTo 42L
+        counter.decrementAndGetAsync().awaitSuspending() shouldBeEqualTo 41L
+        counter.incrementAndGetAsync().awaitSuspending() shouldBeEqualTo 42L
 
-        counter.getAndAddAsync(3L).coAwait() shouldBeEqualTo 42L
+        counter.getAndAddAsync(3L).awaitSuspending() shouldBeEqualTo 42L
 
-        counter.getAndDecrementAsync().coAwait() shouldBeEqualTo 45L
-        counter.getAndIncrementAsync().coAwait() shouldBeEqualTo 44L
+        counter.getAndDecrementAsync().awaitSuspending() shouldBeEqualTo 45L
+        counter.getAndIncrementAsync().awaitSuspending() shouldBeEqualTo 44L
 
-        counter.deleteAsync().coAwait().shouldBeTrue()
+        counter.deleteAsync().awaitSuspending().shouldBeTrue()
     }
 
     @RepeatedTest(REPEAT_SIZE)
@@ -66,16 +68,16 @@ class AtomicLongExamples: AbstractRedissonTest() {
 
         // Multi Job 환경에서 AtomicLong이 안정적으로 동작하는지 확인합니다.
         SuspendedJobTester()
-            .numThreads(8)
-            .roundsPerJob(8 * 32)
+            .workers(8)
+            .rounds(8 * 32)
             .add {
-                counter.incrementAndGetAsync().coAwait()
+                counter.incrementAndGetAsync().awaitSuspending()
                 delay(10)
             }
             .run()
 
-        counter.async.coAwait() shouldBeEqualTo 8 * 32L
-        counter.deleteAsync().coAwait().shouldBeTrue()
+        counter.async.awaitSuspending() shouldBeEqualTo 8 * 32L
+        counter.deleteAsync().awaitSuspending().shouldBeTrue()
     }
 
     @RepeatedTest(REPEAT_SIZE)
@@ -84,8 +86,8 @@ class AtomicLongExamples: AbstractRedissonTest() {
 
         // Multi threading 환경에서 AtomicLong이 안정적으로 동작하는지 확인합니다.
         MultithreadingTester()
-            .numThreads(32)
-            .roundsPerThread(8)
+            .workers(32)
+            .rounds(8)
             .add {
                 counter.incrementAndGet()
                 Thread.sleep(10)
@@ -96,13 +98,14 @@ class AtomicLongExamples: AbstractRedissonTest() {
         counter.delete().shouldBeTrue()
     }
 
+    @EnabledOnJre(JRE.JAVA_21)
     @RepeatedTest(REPEAT_SIZE)
     fun `AtomicLong in Virtual Threads`() {
         val counter = redisson.getAtomicLong(randomName())
 
         // Multi threading 환경에서 AtomicLong이 안정적으로 동작하는지 확인합니다.
         StructuredTaskScopeTester()
-            .roundsPerTask(32 * 8)
+            .rounds(32 * 8)
             .add {
                 counter.incrementAndGet()
                 Thread.sleep(10)

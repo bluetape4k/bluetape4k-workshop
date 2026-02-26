@@ -21,7 +21,7 @@ class ChaosApplication: CommandLineRunner {
     @Autowired
     private val repository: StudentJdbcRepository = uninitialized()
 
-    override fun run(vararg args: String?) {
+    override fun run(vararg args: String) {
         log.info { "Student id 10001 -> ${repository.findById(10001)}" }
         log.info { "All users 1 -> ${repository.findAll()}" }
 

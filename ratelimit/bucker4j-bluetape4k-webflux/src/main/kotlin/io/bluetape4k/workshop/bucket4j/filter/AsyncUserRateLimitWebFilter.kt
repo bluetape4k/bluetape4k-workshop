@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.bucket4j.filter
 
-import io.bluetape4k.bucket4j.ratelimit.distributed.DistributedCoRateLimiter
+import io.bluetape4k.bucket4j.ratelimit.distributed.DistributedSuspendRateLimiter
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.trace
 import io.bluetape4k.logging.warn
@@ -22,7 +22,7 @@ import reactor.core.publisher.Mono
 @Order(1)
 class AsyncUserRateLimitWebFilter(
     private val keyResolver: UserKeyResolver,
-    private val rateLimiter: DistributedCoRateLimiter,
+    private val rateLimiter: DistributedSuspendRateLimiter,
     private val targetProvider: RateLimitTargetProvider,
 ): WebFilter {
 
@@ -41,7 +41,7 @@ class AsyncUserRateLimitWebFilter(
                 log.trace { "Extracted key=$this" }
 
                 if (!key.isNullOrBlank()) {
-                    val result = rateLimiter.coConsume(key, 1L)
+                    val result = rateLimiter.consume(key, 1L)
                     writeRateLimitHeaders(exchange, result.availableTokens)
                     if (result.consumedTokens > 0L) {
                         log.trace { "Bucket[$key] remains token=${result.availableTokens}" }

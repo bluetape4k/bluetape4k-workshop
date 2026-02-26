@@ -40,10 +40,10 @@ dependencies {
     implementation(Libs.mybatis_dynamic_sql)
 
     // Vetx SqlClient Templates 에서 Jackson Databind 를 이용한 매핑을 사용한다
-    implementation(Libs.bluetape4k_jackson)
-    implementation(Libs.jackson_module_kotlin)
-    implementation(Libs.jackson_datatype_jdk8)
-    implementation(Libs.jackson_datatype_jsr310)
+    implementation(Libs.bluetape4k_jackson3)
+    implementation(Libs.jackson3_datatype_jsr353)
+    implementation(Libs.jackson3_module_kotlin)
+    implementation(Libs.jackson3_module_blackbird)
 
     testImplementation(Libs.h2)
     testImplementation(Libs.mysql_connector_j)

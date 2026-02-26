@@ -1,15 +1,15 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.inheritance
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
-import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.dao.entityCache
@@ -82,13 +82,11 @@ class SingleTableInheritanceTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String {
-            return toStringBuilder()
-                .add("owner", owner)
-                .add("swift", swift)
-                .add("dtype", dtype)
-                .toString()
-        }
+        override fun toString(): String = entityToStringBuilder()
+            .add("owner", owner)
+            .add("swift", swift)
+            .add("dtype", dtype)
+            .toString()
     }
 
     class CreditCard(id: EntityID<Int>): Billing(id) {
@@ -135,18 +133,17 @@ class SingleTableInheritanceTest: AbstractExposedTest() {
         override fun equals(other: Any?): Boolean = idEquals(other)
 
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("owner", owner)
-                .add("swift", swift)
-                .add("dtype", dtype)
-                .add("cardNumber", cardNumber)
-                .add("companyName", companyName)
-                .add("expMonth", expMonth)
-                .add("expYear", expYear)
-                .add("startDate", startDate)
-                .add("endDate", endDate)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("owner", owner)
+            .add("swift", swift)
+            .add("dtype", dtype)
+            .add("cardNumber", cardNumber)
+            .add("companyName", companyName)
+            .add("expMonth", expMonth)
+            .add("expYear", expYear)
+            .add("startDate", startDate)
+            .add("endDate", endDate)
+            .toString()
     }
 
     class BankAccount(id: EntityID<Int>): Billing(id) {
@@ -185,7 +182,7 @@ class SingleTableInheritanceTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("owner", owner)
             .add("swift", swift)
             .add("dtype", dtype)

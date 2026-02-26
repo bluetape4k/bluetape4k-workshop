@@ -5,6 +5,8 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.dto.UserCreateRequest
 import io.bluetape4k.workshop.exposed.dto.UserUpdateRequest
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.web.server.LocalServerPort
+import org.springframework.test.web.reactive.server.WebTestClient
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class AbstractExposedApplicationTest {
@@ -26,6 +28,16 @@ class AbstractExposedApplicationTest {
                 name = faker.name().fullName(),
                 age = null
             )
+    }
+
+    @LocalServerPort
+    private val port: Int = 0
+
+    protected val webTestClient: WebTestClient by lazy {
+        WebTestClient
+            .bindToServer()
+            .baseUrl("http://localhost:$port")
+            .build()
     }
 
 }

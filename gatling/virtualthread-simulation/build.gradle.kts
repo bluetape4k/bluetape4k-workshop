@@ -9,18 +9,17 @@ springBoot {
     mainClass.set("io.bluetape4k.workshop.gatling.KotlinGatlingApplicationKt")
 }
 
-@Suppress("UnstableApiUsage")
+
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
 
 dependencies {
 
-    implementation(Libs.bluetape4k_io)
-    implementation(Libs.bluetape4k_jackson)
+    testImplementation(project(":shared"))
 
-    implementation(Libs.bluetape4k_spring_core)
-    testImplementation(Libs.bluetape4k_spring_tests)
+    implementation(Libs.bluetape4k_io)
+    implementation(Libs.bluetape4k_jackson3)
 
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))
@@ -28,9 +27,10 @@ dependencies {
     annotationProcessor(Libs.springBoot("configuration-processor"))
     runtimeOnly(Libs.springBoot("devtools"))
 
-    implementation(Libs.springBootStarter("web"))
-    implementation(Libs.springBootStarter("aop"))
     implementation(Libs.springBootStarter("actuator"))
+    implementation(Libs.springBootStarter("aspectj"))
+    implementation(Libs.springBootStarter("web"))
+    testImplementation(Libs.springBootStarter("webflux"))
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
@@ -58,5 +58,4 @@ dependencies {
 
     // Gatling Scenario에서 bluetape4k-io 를 사용하려고 추가
     gatling(Libs.bluetape4k_io)
-
 }

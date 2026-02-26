@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.gateway
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.testcontainers.storage.RedisServer
-import org.springframework.boot.WebApplicationType
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
@@ -15,7 +14,5 @@ class GatewayApplication {
 }
 
 fun main(vararg args: String) {
-    runApplication<GatewayApplication>(*args) {
-        webApplicationType = WebApplicationType.REACTIVE
-    }
+    runApplication<GatewayApplication>(*args)
 }

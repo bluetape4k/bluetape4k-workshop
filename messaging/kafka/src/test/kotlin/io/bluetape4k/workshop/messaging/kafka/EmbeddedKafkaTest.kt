@@ -42,7 +42,7 @@ class EmbeddedKafkaTest {
     }
 
     @Autowired
-    private val kafkaTemplate: KafkaTemplate<String, Any?> = uninitialized()
+    private val kafkaTemplate: KafkaTemplate<Any, Any> = uninitialized()
 
     @Test
     fun `send and receive message`() {

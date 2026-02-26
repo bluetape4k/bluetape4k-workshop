@@ -8,7 +8,9 @@ import io.bluetape4k.workshop.elasticsearch.domain.model.Book
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.ApplicationContext
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchTemplate
+import org.springframework.test.web.reactive.server.WebTestClient
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 abstract class AbstractElasticsearchApplicationTest {
@@ -16,6 +18,13 @@ abstract class AbstractElasticsearchApplicationTest {
     companion object: KLogging() {
         @JvmStatic
         val faker = Fakers.faker
+    }
+
+    @Autowired
+    protected val context: ApplicationContext = uninitialized()
+
+    protected val client: WebTestClient by lazy {
+        WebTestClient.bindToApplicationContext(context).build()
     }
 
     @Autowired

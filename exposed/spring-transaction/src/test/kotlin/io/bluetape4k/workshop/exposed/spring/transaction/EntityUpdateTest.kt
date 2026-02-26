@@ -1,11 +1,12 @@
 package io.bluetape4k.workshop.exposed.spring.transaction
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
-import io.bluetape4k.exposed.dao.toStringBuilder
 import org.amshove.kluent.shouldBeEqualTo
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
@@ -46,7 +47,9 @@ open class EntityUpdateTest: SpringTransactionTestBase() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder().add("c1", c1).toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("c1", c1)
+            .toString()
     }
 
     @BeforeAll

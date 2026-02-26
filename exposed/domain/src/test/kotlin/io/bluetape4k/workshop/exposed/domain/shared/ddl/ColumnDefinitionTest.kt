@@ -12,6 +12,7 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.statements.StatementType
 import org.jetbrains.exposed.v1.core.stringLiteral
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
@@ -24,6 +25,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.sql.SQLException
 
+@Suppress("DEPRECATION")
 class ColumnDefinitionTest: AbstractExposedTest() {
 
     val columnCommentSupportedDB = TestDB.ALL_H2 + TestDB.MYSQL_V8

@@ -25,10 +25,9 @@ dependencies {
     implementation(Libs.vertx_web_client)
 
     // Json
-    implementation(Libs.bluetape4k_jackson)
-    implementation(Libs.jackson_module_kotlin)
-    implementation(Libs.jackson_datatype_jdk8)
-    implementation(Libs.jackson_datatype_jsr310)
+    implementation(Libs.bluetape4k_jackson3)
+    implementation(Libs.jackson3_module_kotlin)
+    implementation(Libs.jackson3_module_blackbird)
 
     // Coroutines
     implementation(Libs.bluetape4k_coroutines)

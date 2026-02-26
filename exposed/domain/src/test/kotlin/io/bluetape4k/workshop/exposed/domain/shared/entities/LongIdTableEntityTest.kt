@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
-import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
@@ -81,10 +81,9 @@ object LongIdTables {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("name", name)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("name", name)
+            .toString()
     }
 
     class Person(id: EntityID<Long>): LongEntity(id) {
@@ -95,11 +94,10 @@ object LongIdTables {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("name", name)
-                .add("city", city.name)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("name", name)
+            .add("city", city.name)
+            .toString()
     }
 
 
@@ -110,10 +108,9 @@ object LongIdTables {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("city", city.name)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("city", city.name)
+            .toString()
     }
 }
 

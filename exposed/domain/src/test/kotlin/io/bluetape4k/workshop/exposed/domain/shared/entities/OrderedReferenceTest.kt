@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
-import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
@@ -80,10 +80,9 @@ class OrderedReferenceTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("value", value)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("value", value)
+            .toString()
     }
 
     class UserNullableRatingDefaultOrder(id: EntityID<Int>): IntEntity(id) {
@@ -94,10 +93,9 @@ class OrderedReferenceTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("value", value)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("value", value)
+            .toString()
     }
 
     class UserDefaultOrder(id: EntityID<Int>): IntEntity(id) {
@@ -113,7 +111,7 @@ class OrderedReferenceTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder().toString()
+        override fun toString(): String = entityToStringBuilder().toString()
     }
 
     private val unsortedRatingValues = listOf(0, 3, 1, 2, 4, 4, 5, 4, 5, 6, 9, 8)
@@ -192,10 +190,9 @@ class OrderedReferenceTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("value", value)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("value", value)
+            .toString()
     }
 
     class UserNullableRatingMultiColumn(id: EntityID<Int>): IntEntity(id) {
@@ -206,10 +203,9 @@ class OrderedReferenceTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("value", value)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("value", value)
+            .toString()
     }
 
     class UserMultiColumn(id: EntityID<Int>): IntEntity(id) {
@@ -229,7 +225,7 @@ class OrderedReferenceTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder().toString()
+        override fun toString(): String = entityToStringBuilder().toString()
     }
 
     @ParameterizedTest
@@ -302,10 +298,9 @@ class OrderedReferenceTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("value", value)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("value", value)
+            .toString()
     }
 
     class UserChainedColumn(id: EntityID<Int>): IntEntity(id) {
@@ -318,7 +313,7 @@ class OrderedReferenceTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder().toString()
+        override fun toString(): String = entityToStringBuilder().toString()
     }
 
     @ParameterizedTest

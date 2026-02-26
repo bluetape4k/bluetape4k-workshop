@@ -1,11 +1,12 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.tree
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
 import io.bluetape4k.exposed.dao.idValue
-import io.bluetape4k.exposed.dao.toStringBuilder
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.dao.LongEntity
 import org.jetbrains.exposed.v1.dao.LongEntityClass
 import org.jetbrains.exposed.v1.jdbc.JdbcTransaction
@@ -60,13 +61,12 @@ class TreeNode(id: EntityID<Long>): LongEntity(id) {
 
     override fun equals(other: Any?): Boolean = idEquals(other)
     override fun hashCode(): Int = idHashCode()
-    override fun toString(): String =
-        toStringBuilder()
-            .add("title", title)
-            .add("description", description)
-            .add("depth", depth)
-            .add("parent id", parent?.idValue)
-            .toString()
+    override fun toString(): String = entityToStringBuilder()
+        .add("title", title)
+        .add("description", description)
+        .add("depth", depth)
+        .add("parent id", parent?.idValue)
+        .toString()
 }
 
 internal fun JdbcTransaction.buildTreeNodes() {

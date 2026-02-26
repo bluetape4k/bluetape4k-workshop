@@ -1,7 +1,6 @@
 package io.bluetape4k.workshop.problem
 
 import io.bluetape4k.logging.KLogging
-import org.springframework.boot.WebApplicationType
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
@@ -11,7 +10,5 @@ class ProblemApplication {
 }
 
 fun main(vararg args: String) {
-    runApplication<ProblemApplication>(*args) {
-        webApplicationType = WebApplicationType.REACTIVE
-    }
+    runApplication<ProblemApplication>(*args)
 }

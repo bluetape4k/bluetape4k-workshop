@@ -38,7 +38,10 @@ fun withTables(
             } catch (ex: Exception) {
                 log.error(ex) { "Drop Tables 에서 예외가 발생했습니다. 삭제할 테이블: ${tables.joinToString { it.tableName }}" }
                 val database = testDB.db!!
-                inTopLevelTransaction(database.transactionManager.defaultIsolationLevel, db = database) {
+                inTopLevelTransaction(
+                    db = database,
+                    transactionIsolation = database.transactionManager.defaultIsolationLevel
+                ) {
                     maxAttempts = 1
                     SchemaUtils.drop(*tables)
                 }
@@ -71,7 +74,10 @@ suspend fun withSuspendedTables(
             } catch (ex: Exception) {
                 log.error(ex) { "Fail to drop tables, ${tables.joinToString { it.tableName }}" }
                 val database = testDB.db!!
-                inTopLevelTransaction(database.transactionManager.defaultIsolationLevel, db = database) {
+                inTopLevelTransaction(
+                    db = database,
+                    transactionIsolation = database.transactionManager.defaultIsolationLevel
+                ) {
                     maxAttempts = 1
                     SchemaUtils.drop(*tables)
                 }

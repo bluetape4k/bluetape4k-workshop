@@ -1,11 +1,11 @@
 package io.bluetape4k.workshop.cbor
 
-import io.bluetape4k.jackson.binary.JacksonBinary
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.cbor.course.Course
 import io.bluetape4k.workshop.cbor.course.PhoneType
+import io.bluetape4k.workshop.shared.web.httpGet
 import kotlinx.coroutines.reactive.awaitSingle
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
@@ -15,9 +15,9 @@ import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.MediaType
-import org.springframework.http.codec.cbor.Jackson2CborDecoder
-import org.springframework.http.codec.cbor.Jackson2CborEncoder
-import org.springframework.http.converter.cbor.MappingJackson2CborHttpMessageConverter
+import org.springframework.http.codec.cbor.JacksonCborDecoder
+import org.springframework.http.codec.cbor.JacksonCborEncoder
+import org.springframework.http.converter.cbor.JacksonCborHttpMessageConverter
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 import org.springframework.web.client.RestClient
@@ -26,7 +26,7 @@ import org.springframework.web.client.body
 import org.springframework.web.client.getForEntity
 import org.springframework.web.reactive.function.client.ExchangeStrategies
 import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.bodyToMono
+import org.springframework.web.reactive.function.client.awaitBody
 
 @SpringBootTest(
     classes = [CborApplication::class],
@@ -36,18 +36,24 @@ class CborApplicationTest {
 
     companion object: KLoggingChannel()
 
+    private val cborHttpMessageConverter = JacksonCborHttpMessageConverter()
+    private val jacksonCborEncoder = JacksonCborEncoder()
+    private val jacksonCborDecoder = JacksonCborDecoder()
+
     private val restTemplate: RestTemplate by lazy {
-        RestTemplate(listOf(MappingJackson2CborHttpMessageConverter()))
+        RestTemplate(listOf(cborHttpMessageConverter))
     }
 
     @LocalServerPort
-    private var port: Int = 8080
+    private val port: Int = 0
 
     private val baseUrl by lazy { "http://localhost:$port" }
 
-    private val restClient by lazy {
+    private val restClient: RestClient by lazy {
         RestClient.builder()
-            .messageConverters { it.add(MappingJackson2CborHttpMessageConverter()) }
+            .configureMessageConverters {
+                it.addCustomConverter(cborHttpMessageConverter)
+            }
             .baseUrl(baseUrl)
             .build()
     }
@@ -55,8 +61,8 @@ class CborApplicationTest {
     private val client: WebClient by lazy {
         val strategies = ExchangeStrategies.builder()
             .codecs { cfg ->
-                cfg.defaultCodecs().jackson2JsonDecoder(Jackson2CborDecoder(JacksonBinary.CBOR.defaultMapper))
-                cfg.defaultCodecs().jackson2JsonEncoder(Jackson2CborEncoder(JacksonBinary.CBOR.defaultMapper))
+                cfg.defaultCodecs().jacksonJsonDecoder(jacksonCborDecoder)
+                cfg.defaultCodecs().jacksonJsonEncoder(jacksonCborEncoder)
             }
             .build()
 
@@ -69,8 +75,8 @@ class CborApplicationTest {
     private val testClient: WebTestClient by lazy {
         val strategies = ExchangeStrategies.builder()
             .codecs { cfg ->
-                cfg.defaultCodecs().jackson2JsonDecoder(Jackson2CborDecoder())
-                cfg.defaultCodecs().jackson2JsonEncoder(Jackson2CborEncoder())
+                cfg.defaultCodecs().jacksonJsonDecoder(jacksonCborDecoder)
+                cfg.defaultCodecs().jacksonJsonEncoder(jacksonCborEncoder)
             }
             .build()
 
@@ -96,43 +102,45 @@ class CborApplicationTest {
 
     @Test
     fun `using restClient`() {
-        val course1 = restClient.get()
-            .uri("/courses/1")
-            .retrieve()
+        val course1 = restClient
+            .httpGet("/courses/1", accept = MediaType.APPLICATION_CBOR)
             .body<Course>()
+            .shouldNotBeNull()
 
-        course1.shouldNotBeNull()
         log.debug { "course1: $course1" }
         assertCourse1(course1)
     }
 
-    @Disabled("WebClient 에서는 아직 CBOR 지원을 하지 않습니다.")
     @Test
     fun `using webClient`() = runSuspendIO {
         val course1 = client.get()
             .uri("/courses/1")
             .accept(MediaType.APPLICATION_CBOR)
             .retrieve()
-            .bodyToMono<Course>()
-            .awaitSingle()
+            .awaitBody<Course>()
 
         course1.shouldNotBeNull()
         log.debug { "course1: $course1" }
         assertCourse1(course1)
+
+        val course2 = client
+            .httpGet("/courses/1", accept = MediaType.APPLICATION_CBOR)
+            .awaitBody<Course>()
+
+        log.debug { "course2: $course2" }
+        assertCourse1(course2)
     }
 
     @Disabled("WebTestClient 에서는 아직 CBOR 지원을 하지 않습니다.")
     @Test
     fun `using webTestClient`() = runSuspendIO {
-        val course1 = testClient.get()
-            .uri("/courses/1")
-            .accept(MediaType.APPLICATION_CBOR)
-            .exchange()
-            .expectStatus().isOk
+        val course1 = testClient
+            .httpGet("/courses/1", accept = MediaType.APPLICATION_CBOR)
+            .expectStatus().is2xxSuccessful
             .returnResult<Course>().responseBody
             .awaitSingle()
+            .shouldNotBeNull()
 
-        course1.shouldNotBeNull()
         log.debug { "course1: $course1" }
         assertCourse1(course1)
     }

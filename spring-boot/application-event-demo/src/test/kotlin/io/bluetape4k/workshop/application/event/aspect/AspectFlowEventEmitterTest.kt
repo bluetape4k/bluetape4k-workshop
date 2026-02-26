@@ -15,7 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest
 @OutputCapture
 @SpringBootTest(classes = [EventApplication::class])
 class AspectFlowEventEmitterTest(
-    @Autowired private val myEventService: MyEventService,
+    @param:Autowired private val myEventService: MyEventService,
 ) {
     companion object: KLoggingChannel() {
         val faker = Fakers.faker

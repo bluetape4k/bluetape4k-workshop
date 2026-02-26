@@ -39,13 +39,14 @@ import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.PrimaryKeyMetadata
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.exists
-import org.jetbrains.exposed.v1.migration.MigrationUtils
+import org.jetbrains.exposed.v1.migration.jdbc.MigrationUtils
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
 import kotlin.properties.Delegates
 
+@Suppress("DEPRECATION")
 @OptIn(ExperimentalDatabaseMigrationApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class DatabaseMigrationTest: AbstractExposedTest() {

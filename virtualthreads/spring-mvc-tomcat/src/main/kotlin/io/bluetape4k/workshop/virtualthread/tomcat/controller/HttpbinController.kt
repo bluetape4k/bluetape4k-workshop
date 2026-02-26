@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.virtualthread.tomcat.controller
 
-import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import io.swagger.v3.oas.annotations.Operation
 import org.springframework.web.bind.annotation.GetMapping
@@ -12,10 +12,10 @@ import reactor.core.scheduler.Schedulers
 
 @RestController
 @RequestMapping("/httpbin")
-class HttpbinController(
-    clientBuilder: WebClient.Builder,
-) {
-    companion object: KLogging()
+class HttpbinController {
+    companion object: KLoggingChannel()
+
+    private val clientBuilder = WebClient.builder()
 
     private val client = clientBuilder
         .baseUrl("https://nghttp2.org/httpbin")

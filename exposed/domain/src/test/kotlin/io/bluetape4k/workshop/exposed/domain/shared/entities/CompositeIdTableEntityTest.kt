@@ -28,13 +28,16 @@ import org.amshove.kluent.shouldContainSame
 import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.v1.core.Column
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.CompositeID
 import org.jetbrains.exposed.v1.core.dao.id.CompositeIdTable
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.idParam
+import org.jetbrains.exposed.v1.core.isNull
+import org.jetbrains.exposed.v1.core.like
+import org.jetbrains.exposed.v1.core.neq
 import org.jetbrains.exposed.v1.dao.CompositeEntity
 import org.jetbrains.exposed.v1.dao.CompositeEntityClass
 import org.jetbrains.exposed.v1.dao.Entity
@@ -61,6 +64,7 @@ import kotlin.test.assertIs
 
 // SQLite excluded from most tests as it only allows auto-increment on single column PKs.
 // SQL Server is sometimes excluded because it doesn't allow inserting explicit values for identity columns.
+@Suppress("DEPRECATION")
 class CompositeIdTableEntityTest: AbstractExposedTest() {
 
     companion object: KLogging()
@@ -693,7 +697,7 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
              *  VALUES ('1A2 3B4', 'Town A', 1000)
              *  ```
              */
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 Town.new(id) {
                     population = 1000
                 }
@@ -701,14 +705,14 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
             /**
              * EntityID를 이용하여 조회한 후, population 값을 갱신한다.
              */
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 val town = Town[id]
                 town.population = 2000
             }
             /**
              * EntityID를 이용하여 조회한 후, population 값을 확인한다
              */
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 val town = Town[id]
                 town.population shouldBeEqualTo 2000
             }
@@ -862,7 +866,7 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
              *  WHERE (publishers.pub_id, publishers.isbn_code) = (1, 'd2090a50-3290-4026-88c1-1aa92bd775b0')
              * ```
              */
-            inTopLevelTransaction(Connection.TRANSACTION_READ_COMMITTED) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_READ_COMMITTED) {
                 maxAttempts = 1
                 // preload referencedOn - child to single parent
                 Author.find { Authors.id eq authorA.id }.first().load(Author::publisher)
@@ -894,7 +898,7 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
              * ```
              *
              */
-            inTopLevelTransaction(Connection.TRANSACTION_READ_COMMITTED) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_READ_COMMITTED) {
                 maxAttempts = 1
 
                 // preload optionalReferencedOn - child to single parent?
@@ -959,7 +963,7 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
              *
              * ```
              */
-            inTopLevelTransaction(Connection.TRANSACTION_READ_COMMITTED) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_READ_COMMITTED) {
                 maxAttempts = 1
                 // preload backReferencedOn - parent to single child
                 val cache = TransactionManager.current().entityCache
@@ -990,7 +994,7 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
              *  WHERE (offices.publisher_id, offices.publisher_isbn) = (1, '24bbfafe-1de3-4b9e-9601-4955b9f0b360')
              * ```
              */
-            inTopLevelTransaction(Connection.TRANSACTION_READ_COMMITTED) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_READ_COMMITTED) {
                 maxAttempts = 1
                 // preload optionalBackReferencedOn - parent to single child?
                 val cache = TransactionManager.current().entityCache
@@ -1057,7 +1061,7 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
              *  WHERE (authors.publisher_id, authors.publisher_isbn) = (1, 'e36de68c-3425-4188-8f73-ae4b658d86c9')
              * ```
              */
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 // preload referrersOn - parent to multiple children
                 val cache = TransactionManager.current().entityCache
@@ -1087,7 +1091,7 @@ class CompositeIdTableEntityTest: AbstractExposedTest() {
              *  WHERE (offices.publisher_id, offices.publisher_isbn) = (1, 'e36de68c-3425-4188-8f73-ae4b658d86c9')
              * ```
              */
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 // preload optionalReferrersOn - parent to multiple children?
                 val cache = TransactionManager.current().entityCache

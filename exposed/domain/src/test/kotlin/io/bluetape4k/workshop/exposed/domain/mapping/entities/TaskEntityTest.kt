@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.entities
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
-import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withTables
@@ -46,13 +46,11 @@ class TaskEntityTest: AbstractExposedTest() {
 
         override fun hashCode(): Int = idHashCode()
         override fun equals(other: Any?): Boolean = idEquals(other)
-        override fun toString(): String {
-            return toStringBuilder()
-                .add("status", status)
-                .add("changedOn", changedOn)
-                .add("changedBy", changedBy)
-                .toString()
-        }
+        override fun toString(): String = entityToStringBuilder()
+            .add("status", status)
+            .add("changedOn", changedOn)
+            .add("changedBy", changedBy)
+            .toString()
     }
 
     enum class TaskStatusType {

@@ -9,9 +9,9 @@ import kotlin.test.assertFailsWith
 
 @IntegrationTest
 class OrderEventPublicationTests(
-    @Autowired private val orders: OrderManagement,
-    @Autowired private val listener: OrderListeners.ConfigurableEventListener,
-    @Autowired private val txListener: OrderListeners.ConfigurableTransactionalListener,
+    @param:Autowired private val orders: OrderManagement,
+    @param:Autowired private val listener: OrderListeners.ConfigurableEventListener,
+    @param:Autowired private val txListener: OrderListeners.ConfigurableTransactionalListener,
 ) {
     companion object: KLogging()
 

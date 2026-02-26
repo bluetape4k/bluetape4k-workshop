@@ -19,15 +19,15 @@ class ReactiveController {
 
     @GetMapping("/hello")
     fun hello(): Mono<String> {
-        helloCounter.incrementAndGet()
-        log.debug { "hello called. call count=${helloCounter.value}" }
+        val helloCount = helloCounter.incrementAndGet()
+        log.debug { "hello called. call count=$helloCount" }
         return Mono.just("Hello World")
     }
 
     @GetMapping("/world")
     fun world(): Mono<String> {
-        worldCounter.incrementAndGet()
-        log.debug { "world called. call count=${worldCounter.value}" }
+        val worldCount = worldCounter.incrementAndGet()
+        log.debug { "world called. call count=$worldCount" }
         return Mono.just("Hello World")
     }
 }

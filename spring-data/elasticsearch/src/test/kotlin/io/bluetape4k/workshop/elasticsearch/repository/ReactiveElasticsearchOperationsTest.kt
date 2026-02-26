@@ -19,7 +19,7 @@ import org.springframework.data.elasticsearch.core.query.CriteriaQuery
 import org.springframework.data.elasticsearch.core.search
 
 class ReactiveElasticsearchOperationsTest(
-    @Autowired private val operations: ReactiveElasticsearchOperations,
+    @param:Autowired private val operations: ReactiveElasticsearchOperations,
 ): AbstractElasticsearchTest() {
 
     companion object: KLogging()

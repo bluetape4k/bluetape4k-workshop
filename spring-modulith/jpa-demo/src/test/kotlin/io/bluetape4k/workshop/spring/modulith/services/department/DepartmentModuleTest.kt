@@ -18,8 +18,8 @@ import org.springframework.modulith.test.Scenario
 @ApplicationModuleTest(ApplicationModuleTest.BootstrapMode.DIRECT_DEPENDENCIES)
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class DepartmentModuleTest(
-    @Autowired private val repository: DepartmentRepository,
-    @Autowired private val mapper: DepartmentMapper,
+    @param:Autowired private val repository: DepartmentRepository,
+    @param:Autowired private val mapper: DepartmentMapper,
 ) {
 
     companion object: KLoggingChannel() {
@@ -29,7 +29,8 @@ class DepartmentModuleTest(
     @Test
     @Order(1)
     fun `should add department on event`(scenario: Scenario) {
-        scenario.publish(OrganizationAddEvent(TEST_ID))
+        scenario
+            .publish(OrganizationAddEvent(TEST_ID))
             .andWaitForStateChange {
                 repository.findDTOByOrganizationId(TEST_ID)
             }
@@ -41,7 +42,8 @@ class DepartmentModuleTest(
     @Test
     @Order(2)
     fun `should remove departments on event`(scenario: Scenario) {
-        scenario.publish(OrganizationRemoveEvent(TEST_ID))
+        scenario
+            .publish(OrganizationRemoveEvent(TEST_ID))
             .andWaitForStateChange {
                 // 상태 변화가 완료되었다고 했는데, 아직 삭제되지 않은 경우가 있다.
                 Thread.sleep(10)

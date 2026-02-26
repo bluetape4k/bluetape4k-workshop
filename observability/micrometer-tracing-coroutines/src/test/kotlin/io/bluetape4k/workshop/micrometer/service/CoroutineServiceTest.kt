@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 
 class CoroutineServiceTest(
-    @Autowired private val service: CoroutineService,
+    @param:Autowired private val service: CoroutineService,
 ): AbstractTracingTest() {
 
     companion object: KLoggingChannel()

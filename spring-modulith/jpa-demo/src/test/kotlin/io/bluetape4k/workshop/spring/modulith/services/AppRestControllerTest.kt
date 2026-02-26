@@ -19,7 +19,7 @@ import org.springframework.test.web.reactive.server.returnResult
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class AppRestControllerTest(
-    @Autowired private val webClient: WebTestClient,
+    @param:Autowired private val webClient: WebTestClient,
 ) {
     companion object: KLoggingChannel() {
         val faker = Fakers.faker

@@ -12,19 +12,14 @@ import java.util.*
 fun String.inProperCase(): String =
     TransactionManager.currentOrNull()?.db?.identifierManager?.inProperCase(this) ?: this
 
-val currentDialectTest: DatabaseDialect get() = TransactionManager.current().db.dialect
+val currentDialectTest: DatabaseDialect
+    get() = TransactionManager.current().db.dialect
 
 val currentDialectMetadataTest: DatabaseDialectMetadata
     get() = TransactionManager.current().db.dialectMetadata
 
-
 val currentDialectIfAvailableTest: DatabaseDialect?
-    get() =
-        if (TransactionManager.isInitialized() && TransactionManager.currentOrNull() != null) {
-            currentDialectTest
-        } else {
-            null
-        }
+    get() = TransactionManager.currentOrNull()?.db?.dialect
 
 inline fun <reified E: Enum<E>> enumSetOf(vararg elements: E): EnumSet<E> =
     elements.toCollection(EnumSet.noneOf(E::class.java))

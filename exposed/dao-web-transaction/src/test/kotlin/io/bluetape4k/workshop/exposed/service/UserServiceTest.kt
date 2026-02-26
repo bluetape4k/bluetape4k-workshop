@@ -21,7 +21,7 @@ class UserServiceTest(
 ): AbstractExposedApplicationTest() {
 
     companion object: KLogging() {
-        private const val newUserSize = 100
+        private const val NEW_USER_SIZE = 100
     }
 
     @Test
@@ -34,7 +34,7 @@ class UserServiceTest(
     @Test
     @Order(1)
     fun `create multiple users`() {
-        repeat(newUserSize) {
+        repeat(NEW_USER_SIZE) {
             val userId = userService.create(newUserCreateRequest())
             log.debug { "Create user. userId=${userId.value}" }
         }
@@ -43,9 +43,9 @@ class UserServiceTest(
     @Test
     @Order(2)
     fun `create multiple users with batch insert`() {
-        val requests = List(newUserSize) { newUserCreateRequest() }
+        val requests = List(NEW_USER_SIZE) { newUserCreateRequest() }
         val userIds = userService.createBatch(requests)
-        userIds shouldHaveSize newUserSize
+        userIds shouldHaveSize NEW_USER_SIZE
     }
 
     @Test

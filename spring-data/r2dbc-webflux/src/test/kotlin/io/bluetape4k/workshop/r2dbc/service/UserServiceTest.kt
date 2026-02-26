@@ -26,9 +26,9 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class UserServiceTest(
-    @Autowired private val connectionFactory: ConnectionFactory,
-    @Autowired private val service: UserService,
-    @Autowired private val repository: UserRepository,
+    @param:Autowired private val connectionFactory: ConnectionFactory,
+    @param:Autowired private val service: UserService,
+    @param:Autowired private val repository: UserRepository,
 ): AbstractWebfluxR2dbcApplicationTest() {
 
     companion object: KLoggingChannel()

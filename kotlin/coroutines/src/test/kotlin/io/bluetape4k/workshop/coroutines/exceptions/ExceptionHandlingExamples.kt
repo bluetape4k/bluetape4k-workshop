@@ -1,12 +1,11 @@
 package io.bluetape4k.workshop.coroutines.exceptions
 
-import io.bluetape4k.coroutines.support.coLogging
 import io.bluetape4k.coroutines.support.log
+import io.bluetape4k.coroutines.support.suspendLogging
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.error
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
-import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -27,6 +26,7 @@ import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.cancellation.CancellationException
 
 class ExceptionHandlingExamples {
@@ -99,7 +99,7 @@ class ExceptionHandlingExamples {
                     delay(100L)
                     throw RuntimeException("Boom!")
                 } catch (e: Throwable) {
-                    coLogging { "에외를 잡았습니다." }
+                    suspendLogging { "에외를 잡았습니다." }
                     e shouldBeInstanceOf RuntimeException::class
                     capturedException = e
                 }
@@ -120,25 +120,25 @@ class ExceptionHandlingExamples {
     fun `SupervisorJob을 활용하여 예외처리하기`() = runTest {
         val job = SupervisorJob()
         val scope = CoroutineScope(job)
-        val run2 = atomic(false)
+        val run2 = AtomicBoolean(false)
 
         scope.launch(exceptionHandler) {
             delay(100L)
-            coLogging { "예외가 발생합니다 ..." }
+            suspendLogging { "예외가 발생합니다 ..." }
             throw RuntimeException("Boom!")
         }.log("#1")
 
         scope.launch(exceptionHandler) {
             delay(200L)
-            run2.value = true
-            coLogging { "이 코드는 실행되어야 합니다" }
+            run2.set(true)
+            suspendLogging { "이 코드는 실행되어야 합니다" }
         }.log("#2")
 
         yield()
 
         job.complete().shouldBeTrue()
         job.join()
-        run2.value.shouldBeTrue()
+        run2.get().shouldBeTrue()
 
         scope.cancel()
     }
@@ -149,7 +149,7 @@ class ExceptionHandlingExamples {
      */
     @Test
     fun `SupervisorJob을 잘 못 사용하는 예`() = runTest {
-        val secondJob = atomic(false)
+        val secondJob = AtomicBoolean(false)
         // 이렇게 주입해버리면, parent job 으로서 complete(), join() 을 못하므로 문제가 발생합니다.
         // 자식 Job 에게는 SupervisorJob 이 적용되지 않는다
         val job = launch(SupervisorJob() + exceptionHandler) {
@@ -162,14 +162,14 @@ class ExceptionHandlingExamples {
             launch {
                 // 위의 Job
                 delay(200)
-                secondJob.value = true
+                secondJob.set(true)
                 log.error { "출력되지 않습니다." }
             }.log("#2")
         }.log("Parent")
 
         job.join()
         // secondJob 이 실행되지 않습니다. - SupervisorJob 잘 못 적용한 사례
-        secondJob.value.shouldBeFalse()
+        secondJob.get().shouldBeFalse()
     }
 
     @Test
@@ -295,7 +295,7 @@ class ExceptionHandlingExamples {
         scope.launch {
             delay(200)
             job2Executed = true
-            coLogging { "이 코드는 출력되어야 합니다." }
+            suspendLogging { "이 코드는 출력되어야 합니다." }
         }.log("#2")
 
         job.complete()

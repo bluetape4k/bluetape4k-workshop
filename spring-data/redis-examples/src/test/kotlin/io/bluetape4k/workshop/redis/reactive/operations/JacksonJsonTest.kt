@@ -22,7 +22,7 @@ import org.springframework.data.redis.core.ReactiveRedisOperations
 
 class JacksonJsonTest @Autowired constructor(
     private val typedOperations: ReactiveRedisOperations<String, Person>,
-    private val genericOperations: ReactiveRedisOperations<String, Any?>,
+    private val genericOperations: ReactiveRedisOperations<String, Any>,
 ): AbstractReactiveRedisTest() {
 
     companion object: KLoggingChannel()

@@ -8,19 +8,22 @@ springBoot {
     mainClass.set("io.bluetape4k.workshop.jsonview.JsonViewApplicationKt")
 }
 
-@Suppress("UnstableApiUsage")
+
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
 
 dependencies {
+
+    testImplementation(project(":shared"))
+
     // Jackson
-    implementation(Libs.bluetape4k_jackson)
-    implementation(Libs.jackson_databind)
-    implementation(Libs.jackson_datatype_jdk8)
-    implementation(Libs.jackson_datatype_jsr310)
-    implementation(Libs.jackson_module_kotlin)
-    implementation(Libs.jackson_module_blackbird)
+    implementation(Libs.bluetape4k_jackson3)
+    implementation(Libs.jackson_annotations)
+    implementation(Libs.jackson3_core)
+    implementation(Libs.jackson3_databind)
+    implementation(Libs.jackson3_module_kotlin)
+    implementation(Libs.jackson3_module_blackbird)
 
     compileOnly(Libs.jsonpath)
     testImplementation(Libs.jsonassert)
@@ -35,8 +38,9 @@ dependencies {
     annotationProcessor(Libs.springBoot("configuration-processor"))
     runtimeOnly(Libs.springBoot("devtools"))
 
-    implementation(Libs.springBootStarter("webflux"))
     implementation(Libs.springBootStarter("actuator"))
+    implementation(Libs.springBootStarter("webflux"))
+    testImplementation(Libs.springBootStarter("webflux-test"))
 
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")

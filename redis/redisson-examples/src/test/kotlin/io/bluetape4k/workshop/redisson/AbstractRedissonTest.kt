@@ -4,7 +4,6 @@ import io.bluetape4k.codec.Base58
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.error
-import io.bluetape4k.redis.redisson.redissonClientOf
 import io.bluetape4k.testcontainers.storage.RedisServer
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
@@ -52,7 +51,7 @@ abstract class AbstractRedissonTest {
 
     protected fun newRedisson(): RedissonClient {
         val config = RedisServer.Launcher.RedissonLib.getRedissonConfig(redis.url)
-        return redissonClientOf(config)
+        return Redisson.create(config)
     }
 
     protected val scope = CoroutineScope(CoroutineName("redisson") + Dispatchers.IO)

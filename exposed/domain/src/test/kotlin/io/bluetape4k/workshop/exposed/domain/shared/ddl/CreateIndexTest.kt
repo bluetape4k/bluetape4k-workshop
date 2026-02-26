@@ -17,13 +17,15 @@ import org.jetbrains.exposed.v1.core.Coalesce
 import org.jetbrains.exposed.v1.core.Index
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.Schema
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.neq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.times
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greaterEq
 import org.jetbrains.exposed.v1.core.lowerCase
+import org.jetbrains.exposed.v1.core.neq
 import org.jetbrains.exposed.v1.core.stringLiteral
+import org.jetbrains.exposed.v1.core.times
 import org.jetbrains.exposed.v1.core.vendors.PostgreSQLDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLiteDialect
@@ -35,6 +37,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import kotlin.test.expect
 
+@Suppress("DEPRECATION")
 class CreateIndexTest: AbstractExposedTest() {
 
     /**

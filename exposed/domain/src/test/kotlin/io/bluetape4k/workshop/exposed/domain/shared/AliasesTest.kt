@@ -15,23 +15,26 @@ import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldContainSame
 import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeNull
-import org.jetbrains.exposed.v1.core.Expression
 import org.jetbrains.exposed.v1.core.Join
 import org.jetbrains.exposed.v1.core.JoinType
 import org.jetbrains.exposed.v1.core.QueryBuilder
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.alias
+import org.jetbrains.exposed.v1.core.coalesce
 import org.jetbrains.exposed.v1.core.count
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
-import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
 import org.jetbrains.exposed.v1.core.decimalLiteral
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.innerJoin
+import org.jetbrains.exposed.v1.core.isNotNull
+import org.jetbrains.exposed.v1.core.isNull
 import org.jetbrains.exposed.v1.core.joinQuery
 import org.jetbrains.exposed.v1.core.lastQueryAlias
 import org.jetbrains.exposed.v1.core.leftJoin
 import org.jetbrains.exposed.v1.core.max
+import org.jetbrains.exposed.v1.core.neq
 import org.jetbrains.exposed.v1.core.stringLiteral
 import org.jetbrains.exposed.v1.core.sum
 import org.jetbrains.exposed.v1.dao.entityCache
@@ -648,8 +651,9 @@ class AliasesTest: AbstractExposedTest() {
                 it[isDraft] = false
             }
 
-            val inputSum = SqlExpressionBuilder.coalesce(
-                subInvoices.mainAmount.sum(), decimalLiteral(BigDecimal.ZERO)
+            val inputSum = coalesce(
+                expr = subInvoices.mainAmount.sum(),
+                alternate = decimalLiteral(BigDecimal.ZERO)
             ).alias("input_sum")
 
             val input = subInvoices.select(subInvoices.productId, inputSum)
@@ -657,9 +661,10 @@ class AliasesTest: AbstractExposedTest() {
                     subInvoices.isDraft eq false
                 }.groupBy(subInvoices.productId).alias("input")
 
-            val sumTotal = Expression.build {
-                coalesce(input[inputSum], decimalLiteral(BigDecimal.ZERO))
-            }.alias("inventory")
+            val sumTotal = coalesce(
+                expr = input[inputSum],
+                alternate = decimalLiteral(BigDecimal.ZERO)
+            ).alias("inventory")
 
             val booleanValue = "FALSE"
 

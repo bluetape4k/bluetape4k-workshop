@@ -20,7 +20,6 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -89,7 +88,7 @@ class NestedTransactionsTest: AbstractExposedTest() {
             TransactionManager.currentOrNull().shouldNotBeNull()
 
             try {
-                inTopLevelTransaction(this.transactionIsolation) {
+                inTopLevelTransaction(transactionIsolation = this.transactionIsolation) {
                     maxAttempts = 1
                     throw IllegalStateException("Should be rethrow")
                 }
@@ -113,14 +112,14 @@ class NestedTransactionsTest: AbstractExposedTest() {
         }
 
         transaction(db) {
-            val outerTxId = this.id
+            val outerTxId = this.transactionId
 
             cities.insert { it[name] = "City A" }
             cities.selectAll().count().toInt() shouldBeEqualTo 1
 
             try {
-                inTopLevelTransaction(db.transactionManager.defaultIsolationLevel, db = db) {
-                    val innerTxId = this.id
+                inTopLevelTransaction(db) {
+                    val innerTxId = this.transactionId
                     innerTxId shouldNotBeEqualTo outerTxId
 
                     cities.insert { it[name] = "City B" }           // 이 코드는 실행되지 않는다.
@@ -135,14 +134,14 @@ class NestedTransactionsTest: AbstractExposedTest() {
         assertSingleRecordInNewTransactionAndReset()
 
         transaction(db) {
-            val outerTxId = this.id
+            val outerTxId = this.transactionId
 
             cities.insert { it[cities.name] = "City A" }
             cities.selectAll().count().toInt() shouldBeEqualTo 1
 
             try {
                 transaction(db) {
-                    val innerTxId = this.id
+                    val innerTxId = this.transactionId
                     innerTxId shouldNotBeEqualTo outerTxId
 
                     cities.insert { it[cities.name] = "City B" }      // 이 코드는 실행되지 않는다.
@@ -173,13 +172,13 @@ class NestedTransactionsTest: AbstractExposedTest() {
         }
 
         transaction(db) {
-            val outerTxId = this.id
+            val outerTxId = this.transactionId
             cities.insert { it[name] = "City A" }
             cities.selectAll().count().toInt() shouldBeEqualTo 1
 
             try {
-                inTopLevelTransaction(db.transactionManager.defaultIsolationLevel, db = db) {
-                    val innerTxId = this.id
+                inTopLevelTransaction(db) {
+                    val innerTxId = this.transactionId
                     innerTxId shouldNotBeEqualTo outerTxId
 
                     cities.insert { it[name] = "City B" }       // 이 코드는 실행되지 않는다.
@@ -193,13 +192,13 @@ class NestedTransactionsTest: AbstractExposedTest() {
         assertSingleRecordInNewTransactionAndReset()
 
         transaction(db) {
-            val outerTxId = this.id
+            val outerTxId = this.transactionId
             cities.insert { it[name] = "City A" }
             cities.selectAll().count().toInt() shouldBeEqualTo 1
 
             try {
                 transaction(db) {
-                    val innerTxId = this.id
+                    val innerTxId = this.transactionId
                     innerTxId shouldNotBeEqualTo outerTxId
 
                     cities.insert { it[name] = "City B" }       // 이 코드는 실행되지 않는다.

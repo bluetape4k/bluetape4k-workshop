@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional
 
 @Transactional(readOnly = true)
 class TeamRepositoryTest(
-    @Autowired private val teamRepo: TeamRepository,
+    @param:Autowired private val teamRepo: TeamRepository,
 ): AbstractDomainTest() {
 
     companion object: KLoggingChannel()

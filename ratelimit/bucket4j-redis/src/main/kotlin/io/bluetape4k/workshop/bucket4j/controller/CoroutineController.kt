@@ -18,15 +18,15 @@ class CoroutineController {
 
     @GetMapping("/hello")
     suspend fun hello(): String {
-        helloCounter.incrementAndGet()
-        log.debug { "hello called. call count=${helloCounter.value}" }
+        val helloCount = helloCounter.incrementAndGet()
+        log.debug { "hello called. call count=$helloCount" }
         return "Hello World"
     }
 
     @GetMapping("/world")
     suspend fun world(): String {
-        worldCounter.incrementAndGet()
-        log.debug { "world called. call count=${worldCounter.value}" }
+        val worldCount = worldCounter.incrementAndGet()
+        log.debug { "world called. call count=$worldCount" }
         return "Hello World"
     }
 }

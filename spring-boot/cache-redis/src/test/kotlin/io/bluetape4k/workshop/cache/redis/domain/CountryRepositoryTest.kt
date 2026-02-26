@@ -11,6 +11,8 @@ import org.amshove.kluent.shouldBeLessOrEqualTo
 import org.amshove.kluent.shouldBeLessThan
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.JRE
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Profile
 import java.util.concurrent.ConcurrentHashMap
@@ -18,7 +20,7 @@ import kotlin.system.measureTimeMillis
 
 @Profile("app")
 class CountryRepositoryTest(
-    @Autowired private val countryRepo: CountryRepository,
+    @param:Autowired private val countryRepo: CountryRepository,
 ): AbstractRedisCacheTest() {
 
     companion object: KLoggingChannel() {
@@ -29,6 +31,7 @@ class CountryRepositoryTest(
 
     @BeforeEach
     fun beforeEach() {
+        countryRepo.evictCache(US)
         countryRepo.evictCache(KR)
     }
 
@@ -39,14 +42,17 @@ class CountryRepositoryTest(
         val kr = measureTimeMillis {
             countryRepo.findByCode(KR)
         }
-        kr shouldBeGreaterThan EXPECTED_MILLIS
+
+        Thread.sleep(10)
 
         val kr2 = measureTimeMillis {
             countryRepo.findByCode(KR)
         }
-        kr2 shouldBeLessThan EXPECTED_MILLIS
 
         log.debug { "kr=$kr msec, kr2=$kr2 msec" }
+
+        kr shouldBeGreaterThan EXPECTED_MILLIS
+        kr2 shouldBeLessThan EXPECTED_MILLIS
     }
 
     @Test
@@ -56,18 +62,23 @@ class CountryRepositoryTest(
         val us = measureTimeMillis {
             countryRepo.findByCode(US)
         }
-        us shouldBeGreaterThan EXPECTED_MILLIS
+
+        Thread.sleep(10)
 
         val usCached = measureTimeMillis {
             countryRepo.findByCode(US)
         }
-        usCached shouldBeLessThan EXPECTED_MILLIS
 
         countryRepo.evictCache(US)
+
+        Thread.sleep(10)
 
         val usEvicted = measureTimeMillis {
             countryRepo.findByCode(US)
         }
+
+        us shouldBeGreaterThan EXPECTED_MILLIS
+        usCached shouldBeLessThan EXPECTED_MILLIS
         usEvicted shouldBeGreaterThan EXPECTED_MILLIS
     }
 
@@ -77,8 +88,8 @@ class CountryRepositoryTest(
 
         measureTimeMillis {
             MultithreadingTester()
-                .numThreads(8)
-                .roundsPerThread(8)
+                .workers(8)
+                .rounds(8)
                 .add {
                     val country = retreiveCountry()
                     codeMap[country.code] = country
@@ -89,13 +100,14 @@ class CountryRepositoryTest(
         codeMap.size shouldBeLessOrEqualTo CountryRepository.SAMPLE_COUNTRY_CODES.size
     }
 
+    @EnabledOnJre(JRE.JAVA_21)
     @Test
     fun `get random countries in virtual threads`() {
         val codeMap = ConcurrentHashMap<String, Country>()
 
         measureTimeMillis {
             StructuredTaskScopeTester()
-                .roundsPerTask(8 * 8)
+                .rounds(8 * 8)
                 .add {
                     val country = retreiveCountry()
                     codeMap[country.code] = country

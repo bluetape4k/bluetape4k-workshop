@@ -12,6 +12,7 @@ import kotlinx.coroutines.newSingleThreadContext
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeFalse
+import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldBeTrue
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.jdbc.Database
@@ -24,8 +25,6 @@ import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.withSuspendTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -33,6 +32,7 @@ import org.junit.jupiter.api.TestInstance
 import java.sql.Connection
 import java.util.concurrent.Executors
 
+@Suppress("DEPRECATION")
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class MultiDatabaseTest {
 
@@ -67,15 +67,9 @@ class MultiDatabaseTest {
     fun beforeEach() {
         Assumptions.assumeTrue { TestDB.H2 in TestDB.enabledDialects() }
 
-        if (TransactionManager.isInitialized()) {
-            currentDB = TransactionManager.currentOrNull()?.db
+        TransactionManager.currentOrNull()?.let {
+            currentDB = it.db
         }
-    }
-
-    @AfterEach
-    fun afterEach() {
-        // Assumptions.assumeTrue { TestDB.H2 in TestDB.enabledDialects() }
-        TransactionManager.resetCurrent(currentDB?.transactionManager)
     }
 
     @Test
@@ -256,7 +250,9 @@ class MultiDatabaseTest {
     fun `when default database is not explicitly set - should return the latest connection`() {
         db1
         db2
-        db2 shouldBeEqualTo TransactionManager.defaultDatabase
+
+        TransactionManager.defaultDatabase.shouldBeNull()
+        TransactionManager.primaryDatabase shouldBeEqualTo db2
     }
 
     @Test
@@ -274,7 +270,9 @@ class MultiDatabaseTest {
         db2
         TransactionManager.defaultDatabase = db1
         TransactionManager.closeAndUnregister(db1)
-        db2 shouldBeEqualTo TransactionManager.defaultDatabase
+
+        TransactionManager.defaultDatabase.shouldBeNull()
+        TransactionManager.primaryDatabase shouldBeEqualTo db2
         TransactionManager.defaultDatabase = null
     }
 

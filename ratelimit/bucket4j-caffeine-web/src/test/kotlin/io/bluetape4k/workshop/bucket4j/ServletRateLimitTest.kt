@@ -2,17 +2,26 @@ package io.bluetape4k.workshop.bucket4j
 
 import io.bluetape4k.logging.KLogging
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.reactive.server.WebTestClient
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("servlet")
-class ServletRateLimitTest(@Autowired private val client: WebTestClient) {
+class ServletRateLimitTest {
 
     companion object: KLogging()
+
+    @LocalServerPort
+    private val port: Int = 0
+
+    private val client by lazy {
+        WebTestClient
+            .bindToServer().baseUrl("http://localhost:$port")
+            .build()
+    }
 
     @Test
     fun `hello with 5 times late limit`() {
@@ -51,6 +60,6 @@ class ServletRateLimitTest(@Autowired private val client: WebTestClient) {
             .uri(url)
             .exchange()
             .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
-            .expectBody().jsonPath("error", "Too many requests!")
+            .expectBody().jsonPath("$.message").isEqualTo("Too many requests!")
     }
 }

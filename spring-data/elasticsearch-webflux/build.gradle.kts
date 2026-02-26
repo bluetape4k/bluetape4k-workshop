@@ -26,12 +26,14 @@ springBoot {
     }
 }
 
-@Suppress("UnstableApiUsage")
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
 
 dependencies {
+
+    testImplementation(project(":shared"))
+
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))
     annotationProcessor(Libs.springBoot("autoconfigure-processor"))
@@ -39,14 +41,15 @@ dependencies {
     runtimeOnly(Libs.springBoot("devtools"))
 
     implementation(Libs.springBootStarter("actuator"))
-    implementation(Libs.springBootStarter("aop"))
-    implementation(Libs.springBootStarter("webflux"))
+    implementation(Libs.springBootStarter("aspectj"))
     implementation(Libs.springBootStarter("validation"))
+    implementation(Libs.springBootStarter("webflux"))
+    testImplementation(Libs.springBootStarter("webflux-test"))
 
     implementation(Libs.springBootStarter("data-elasticsearch"))
+    testImplementation(Libs.springBootStarter("data-elasticsearch-test"))
     implementation(Libs.elasticsearch_rest_client)
 
-    testImplementation(Libs.bluetape4k_spring_tests)
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
@@ -59,10 +62,12 @@ dependencies {
 
     // Swagger
     implementation(Libs.springdoc_openapi_starter_webflux_ui)
-    implementation(Libs.jackson_module_kotlin)
-    implementation(Libs.jackson_module_blackbird)
 
-    implementation(Libs.bluetape4k_jackson)
+    // Jackson
+    implementation(Libs.bluetape4k_jackson3)
+    implementation(Libs.jackson3_module_kotlin)
+    implementation(Libs.jackson3_module_blackbird)
+
     testImplementation(Libs.bluetape4k_junit5)
 
     // Coroutines

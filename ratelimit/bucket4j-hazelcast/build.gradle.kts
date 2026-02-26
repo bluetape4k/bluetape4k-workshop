@@ -8,24 +8,23 @@ springBoot {
     mainClass.set("io.bluetape4k.workshop.bucket4j.hazelcast.Bucket4jHazelcastApplicationKt")
 }
 
-@Suppress("UnstableApiUsage")
+
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
 
 dependencies {
-    implementation(Libs.bluetape4k_spring_core)
-    implementation(Libs.bluetape4k_jackson)
+    implementation(Libs.bluetape4k_jackson3)
     testImplementation(Libs.bluetape4k_junit5)
 
     // Bucket4j
     implementation(Libs.bucket4j_core)
-    implementation(Libs.bucket4j_jdk8_hazelcast)
+    implementation(Libs.bucket4j_hazelcast)
     implementation(Libs.bucket4j_spring_boot_starter)
 
     // Hazelcast
-    api(Libs.hazelcast)
-    api(Libs.hazelcast_spring)
+    implementation(Libs.hazelcast)
+    implementation(Libs.bluetape4k_testcontainers)
 
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))
@@ -33,12 +32,13 @@ dependencies {
     annotationProcessor(Libs.springBoot("configuration-processor"))
     runtimeOnly(Libs.springBoot("devtools"))
 
-    implementation(Libs.springBootStarter("webflux"))
-    implementation(Libs.springBootStarter("cache"))
-    implementation(Libs.springBootStarter("validation"))
     implementation(Libs.springBootStarter("actuator"))
+    implementation(Libs.springBootStarter("cache"))
+    implementation(Libs.springBootStarter("hazelcast"))
+    implementation(Libs.springBootStarter("validation"))
+    implementation(Libs.springBootStarter("webflux"))
+    testImplementation(Libs.springBootStarter("webflux-test"))
 
-    testImplementation(Libs.bluetape4k_spring_tests)
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

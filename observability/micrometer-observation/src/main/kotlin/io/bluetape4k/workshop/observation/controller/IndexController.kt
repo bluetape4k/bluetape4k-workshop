@@ -12,7 +12,7 @@ class IndexController {
 
     companion object: KLogging()
 
-    @GetMapping("/ping")
+    @GetMapping("", "/", "/ping")
     @Observed(name = "index.ping")
     fun ping(): String {
         return "PONG!"

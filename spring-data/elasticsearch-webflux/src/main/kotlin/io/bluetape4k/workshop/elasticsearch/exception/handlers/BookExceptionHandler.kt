@@ -13,8 +13,8 @@ import java.io.Serializable
 class BookExceptionHandler {
 
     @ExceptionHandler(value = [BookNotFoundException::class])
-    fun doHandleNotFoundException(ex: BookNotFoundException): Mono<ResponseEntity<Any?>> = mono {
-        ResponseEntity.notFound().build()
+    fun doHandleNotFoundException(ex: BookNotFoundException): Mono<ResponseEntity<Any>> = mono {
+        ResponseEntity.notFound().build<Any>()
     }
 
     @ExceptionHandler(value = [DuplicatedIsbnException::class])

@@ -2,13 +2,13 @@ package io.bluetape4k.workshop.jackson.annotations
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter
 import com.fasterxml.jackson.annotation.JsonAnySetter
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.jackson.AbstractJacksonTest
 import io.bluetape4k.workshop.jackson.readAs
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
+import tools.jackson.module.kotlin.readValue
 
 /**
  * `@JsonAnyGetter` 와 `@JsonAnySetter` 를 이용하여 동적 속성을 처리하는 예제

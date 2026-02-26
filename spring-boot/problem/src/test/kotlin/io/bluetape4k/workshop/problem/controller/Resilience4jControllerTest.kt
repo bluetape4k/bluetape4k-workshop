@@ -3,17 +3,12 @@ package io.bluetape4k.workshop.problem.controller
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.support.toUtf8String
 import io.bluetape4k.workshop.problem.AbstractProblemTest
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
-import org.springframework.test.web.reactive.server.WebTestClient
 
-class Resilience4jControllerTest(
-    @Autowired private val client: WebTestClient,
-): AbstractProblemTest() {
+class Resilience4jControllerTest: AbstractProblemTest() {
 
     companion object: KLogging()
 
@@ -31,7 +26,11 @@ class Resilience4jControllerTest(
      */
     @Test
     fun `when circuit breaker is opened returns CallNotPermittedException`() = runSuspendIO {
-        client.httpGet("/resilience4j/circuit-breaker-open", HttpStatus.SERVICE_UNAVAILABLE)
+        client
+            .get()
+            .uri("/resilience4j/circuit-breaker-open")
+            .exchange()
+            .expectStatus().isEqualTo(HttpStatus.SERVICE_UNAVAILABLE)
             .expectBody()
             .jsonPath("$.detail")
             .isEqualTo("CircuitBreaker 'default' is OPEN and does not permit further calls")
@@ -55,7 +54,11 @@ class Resilience4jControllerTest(
      */
     @Test
     fun `when retry exceeed max attempts`() = runSuspendIO {
-        client.httpGet("/resilience4j/retry", HttpStatus.INTERNAL_SERVER_ERROR)
+        client
+            .get()
+            .uri("/resilience4j/retry")
+            .exchange()
+            .expectStatus().isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
             .expectBody()
             .jsonPath("$.detail")
             .isEqualTo("Retry 'default' has exhausted all attempts (3)")

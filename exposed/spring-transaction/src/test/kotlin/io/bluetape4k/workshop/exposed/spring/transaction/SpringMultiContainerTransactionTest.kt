@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.exposed.spring.transaction
 
 import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
-import io.bluetape4k.jdbc.JdbcDrivers
 import io.bluetape4k.logging.KLogging
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
@@ -13,7 +12,7 @@ import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.deleteAll
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import org.jetbrains.exposed.v1.spring.transaction.SpringTransactionManager
+import org.jetbrains.exposed.v1.spring7.transaction.SpringTransactionManager
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
@@ -192,7 +191,7 @@ open class SpringMultiContainerTransactionTest {
         fun dataSource(): DataSource {
             val config = HikariConfig().apply {
                 jdbcUrl = "jdbc:h2:mem:order;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL"
-                driverClassName = JdbcDrivers.DRIVER_CLASS_H2
+                driverClassName = "org.h2.Driver"
                 username = "sa"
                 password = ""
             }
@@ -254,7 +253,7 @@ open class SpringMultiContainerTransactionTest {
         fun dataSource(): DataSource {
             val config = HikariConfig().apply {
                 jdbcUrl = "jdbc:h2:mem:payment;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL"
-                driverClassName = JdbcDrivers.DRIVER_CLASS_H2
+                driverClassName = "org.h2.Driver"
                 username = "sa"
                 password = ""
             }

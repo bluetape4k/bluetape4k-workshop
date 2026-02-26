@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
 import io.bluetape4k.exposed.dao.idValue
-import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
@@ -22,11 +22,12 @@ import org.amshove.kluent.shouldContain
 import org.amshove.kluent.shouldContainSame
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
-import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
-import org.jetbrains.exposed.v1.dao.UUIDEntity
-import org.jetbrains.exposed.v1.dao.UUIDEntityClass
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.dao.entityCache
 import org.jetbrains.exposed.v1.dao.flushCache
+import org.jetbrains.exposed.v1.dao.java.UUIDEntity
+import org.jetbrains.exposed.v1.dao.java.UUIDEntityClass
 import org.jetbrains.exposed.v1.dao.with
 import org.jetbrains.exposed.v1.jdbc.exists
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId
@@ -105,7 +106,7 @@ object UUIDTables {
      * ```
      */
     object Towns: UUIDTable("towns") {
-        val cityId = uuid("city_id").references(Cities.id)
+        val cityId = javaUUID("city_id").references(Cities.id)
     }
 
     class City(id: EntityID<UUID>): UUIDEntity(id) {
@@ -116,10 +117,9 @@ object UUIDTables {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("name", name)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("name", name)
+            .toString()
     }
 
     class Person(id: EntityID<UUID>): UUIDEntity(id) {
@@ -130,11 +130,10 @@ object UUIDTables {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("name", name)
-                .add("city id", city.idValue)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("name", name)
+            .add("city id", city.idValue)
+            .toString()
     }
 
     class Address(id: EntityID<UUID>): UUIDEntity(id) {
@@ -146,12 +145,11 @@ object UUIDTables {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("address", address)
-                .add("person id", person.idValue)
-                .add("city id", city.idValue)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("address", address)
+            .add("person id", person.idValue)
+            .add("city id", city.idValue)
+            .toString()
     }
 
     class Town(id: EntityID<UUID>): UUIDEntity(id) {
@@ -161,10 +159,9 @@ object UUIDTables {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("city id", city.idValue)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("city id", city.idValue)
+            .toString()
     }
 }
 

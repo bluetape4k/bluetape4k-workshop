@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTime::class)
+
 package io.bluetape4k.workshop.exposed.sql.kotlin.datetime
 
 import io.bluetape4k.exposed.dao.idEquals
@@ -12,9 +14,7 @@ import io.bluetape4k.workshop.exposed.expectException
 import io.bluetape4k.workshop.exposed.inProperCase
 import io.bluetape4k.workshop.exposed.insertAndWait
 import io.bluetape4k.workshop.exposed.withTables
-import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
@@ -40,8 +40,11 @@ import org.jetbrains.exposed.v1.core.IColumnType
 import org.jetbrains.exposed.v1.core.IntegerColumnType
 import org.jetbrains.exposed.v1.core.QueryBuilder
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.between
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.statements.BatchDataInconsistentException
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
@@ -79,7 +82,7 @@ import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.update
-import org.jetbrains.exposed.v1.migration.MigrationUtils
+import org.jetbrains.exposed.v1.migration.jdbc.MigrationUtils
 import org.junit.Test
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.params.ParameterizedTest
@@ -88,8 +91,11 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Clock
 import kotlin.time.DurationUnit
 import kotlin.time.DurationUnit.DAYS
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 import kotlin.time.toDuration
 
 fun now() = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
@@ -100,6 +106,7 @@ private val dbTimestampNow: CustomFunction<OffsetDateTime>
 /**
  * kotlinx-datetime 수형을 exposed 에서 사용할 때 기본값 설정과 관련된 예제
  */
+@Suppress("DEPRECATION")
 class DefaultsTest: AbstractExposedTest() {
 
     companion object: KLogging()

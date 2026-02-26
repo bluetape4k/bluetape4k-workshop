@@ -7,14 +7,14 @@ import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.QueryAlias
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.greater
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.plus
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.times
 import org.jetbrains.exposed.v1.core.alias
 import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.plus
 import org.jetbrains.exposed.v1.core.stringLiteral
+import org.jetbrains.exposed.v1.core.times
 import org.jetbrains.exposed.v1.jdbc.mergeFrom
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.jupiter.api.Assumptions
@@ -32,7 +32,7 @@ class MergeSelectTest: MergeBaseTest() {
 
     private val sourceQuery: QueryAlias = Source.selectAll().alias("sub")
 
-    private fun SqlExpressionBuilder.defaultOnCondition(): Op<Boolean> =
+    private fun defaultOnCondition(): Op<Boolean> =
         Dest.key eq sourceQuery[Source.key]
 
     /**

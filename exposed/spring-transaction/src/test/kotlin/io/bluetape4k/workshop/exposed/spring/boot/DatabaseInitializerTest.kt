@@ -11,15 +11,16 @@ import org.jetbrains.exposed.v1.exceptions.ExposedSQLException
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.spring.boot.DatabaseInitializer
+import org.jetbrains.exposed.v1.spring.boot4.DatabaseInitializer
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.DefaultApplicationArguments
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.ApplicationContext
 
 @SpringBootTest(
     classes = [Application::class],
-    properties = ["spring.autoconfigure.exclude=org.jetbrains.exposed.v1.spring.boot.autoconfigure.ExposedAutoConfiguration"]
+    properties = ["spring.autoconfigure.exclude=org.jetbrains.exposed.v1.spring.boot4.autoconfigure.ExposedAutoConfiguration"]
 )
 class DatabaseInitializerTest {
 
@@ -35,7 +36,7 @@ class DatabaseInitializerTest {
             // `IgnoreTable` 은 `DatabaseInitializer` 에서 제외되어야 한다.
             val excludedPackages = listOf(DatabaseInitializerTest::class.java.`package`.name + ".tables.ignore")
             log.debug { "Excluded packages: $excludedPackages" }
-            DatabaseInitializer(applicationContext, excludedPackages).run(null)
+            DatabaseInitializer(applicationContext, excludedPackages).run(DefaultApplicationArguments())
 
             TestTable.selectAll().count().toInt() shouldBeEqualTo 0
 

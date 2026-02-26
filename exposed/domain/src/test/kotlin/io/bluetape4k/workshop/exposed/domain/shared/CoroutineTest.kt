@@ -22,6 +22,7 @@ import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
 import org.jetbrains.exposed.v1.dao.entityCache
@@ -277,11 +278,11 @@ class CoroutineTest: AbstractExposedTest() {
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `nested suspend async transaction test`(testDB: TestDB) = runSuspendIO {
-        val recordCount = 10
-
         withSuspendedTables(testDB, Testing, context = Dispatchers.IO) {
+            val recordCount = 10
+            
             val mainJob = async {
-                val job = launch {
+                val job = launch(Dispatchers.IO) {
                     newSuspendedTransaction(db = db) {
                         repeat(recordCount) {
                             Testing.insert { }
@@ -289,8 +290,8 @@ class CoroutineTest: AbstractExposedTest() {
                         commit()
 
                         // 동시에 여러개의 Coroutines 방식의 트랜잭션을 실행한다.
-                        val lists = List(5) {
-                            suspendedTransactionAsync(context = Dispatchers.IO) {
+                        val lists = List(recordCount) {
+                            suspendedTransactionAsync {
                                 Testing.selectAll().toList()
                             }
                         }
@@ -299,14 +300,12 @@ class CoroutineTest: AbstractExposedTest() {
                 }
                 job.join()
 
-                val result = newSuspendedTransaction(Dispatchers.IO, db = db) {
+                val result = newSuspendedTransaction(context = Dispatchers.IO, db = db) {
                     Testing.selectAll().count()
                 }
                 result shouldBeEqualTo recordCount.toLong()
             }
             mainJob.await()
-            // mainJob.getCompletionExceptionOrNull()?.let { throw it }
-
             Testing.selectAll().count().toInt() shouldBeEqualTo recordCount
         }
     }

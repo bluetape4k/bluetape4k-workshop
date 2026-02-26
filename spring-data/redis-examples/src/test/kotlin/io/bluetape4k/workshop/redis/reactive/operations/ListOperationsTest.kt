@@ -17,7 +17,7 @@ import java.time.Duration
 import java.util.logging.Level
 
 class ListOperationsTest(
-    @Autowired private val operations: ReactiveRedisOperations<String, String>,
+    @param:Autowired private val operations: ReactiveRedisOperations<String, String>,
 ): AbstractReactiveRedisTest() {
 
     companion object: KLoggingChannel() {

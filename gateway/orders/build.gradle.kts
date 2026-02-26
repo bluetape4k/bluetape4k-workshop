@@ -5,7 +5,7 @@ plugins {
 }
 
 springBoot {
-    mainClass.set("io.bluetape4k.workshop.gatway.order.OrderApplicationKt")
+    mainClass.set("io.bluetape4k.workshop.gateway.orders.OrderApplicationKt")
 
     buildInfo {
         properties {
@@ -17,7 +17,7 @@ springBoot {
     }
 }
 
-@Suppress("UnstableApiUsage")
+
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
@@ -25,8 +25,9 @@ configurations {
 dependencies {
     implementation(platform(Libs.micrometer_bom))
 
-    implementation(Libs.bluetape4k_spring_core)
-    implementation(Libs.bluetape4k_jackson)
+    testImplementation(project(":shared"))
+
+    implementation(Libs.bluetape4k_jackson3)
     implementation(Libs.bluetape4k_idgenerators)
     testImplementation(Libs.bluetape4k_junit5)
 
@@ -38,12 +39,12 @@ dependencies {
     annotationProcessor(Libs.springBoot("configuration-processor"))
     runtimeOnly(Libs.springBoot("devtools"))
 
-
-    implementation(Libs.springBootStarter("webflux"))
-    implementation(Libs.springBootStarter("aop"))
+    implementation(Libs.springBootStarter("actuator"))
+    implementation(Libs.springBootStarter("aspectj"))
     implementation(Libs.springBootStarter("cache"))
     implementation(Libs.springBootStarter("validation"))
-    implementation(Libs.springBootStarter("actuator"))
+    implementation(Libs.springBootStarter("webflux"))
+    
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

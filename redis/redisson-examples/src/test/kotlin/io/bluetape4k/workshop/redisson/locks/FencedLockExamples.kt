@@ -1,21 +1,23 @@
 package io.bluetape4k.workshop.redisson.locks
 
+import io.bluetape4k.coroutines.support.awaitSuspending
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.redis.redisson.coroutines.coAwait
 import io.bluetape4k.redis.redisson.coroutines.getLockId
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
-import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.delay
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeGreaterThan
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.JRE
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
 
 /**
@@ -89,11 +91,11 @@ class FencedLockExamples: AbstractRedissonTest() {
     @RepeatedTest(REPEAT_SIZE)
     fun `멀티 스레드 환경에서 FencedLock 획득 및 해제`() {
         val lock = redisson.getFencedLock(randomName())
-        val lockCounter = atomic(0)
+        val lockCounter = AtomicInteger(0)
 
         MultithreadingTester()
-            .numThreads(8)
-            .roundsPerThread(2)
+            .workers(8)
+            .rounds(2)
             .add {
                 // 락 획득 시도
                 val token = lock.tryLockAndGetTokenAsync(5, 10, TimeUnit.SECONDS).get() ?: 0
@@ -110,16 +112,17 @@ class FencedLockExamples: AbstractRedissonTest() {
             }
             .run()
 
-        lockCounter.value shouldBeEqualTo 8 * 2
+        lockCounter.get() shouldBeEqualTo 8 * 2
     }
 
+    @EnabledOnJre(JRE.JAVA_21)
     @RepeatedTest(REPEAT_SIZE)
     fun `Virtual Thread 환경에서 FencedLock 획득 및 해제`() {
         val lock = redisson.getFencedLock(randomName())
-        val lockCounter = atomic(0)
+        val lockCounter = AtomicInteger(0)
 
         StructuredTaskScopeTester()
-            .roundsPerTask(16)
+            .rounds(16)
             .add {
                 // 락 획득 시도 및 토큰 반환
                 val token = lock.tryLockAndGetTokenAsync(5, 10, TimeUnit.SECONDS).get() ?: 0
@@ -138,22 +141,22 @@ class FencedLockExamples: AbstractRedissonTest() {
             }
             .run()
 
-        lockCounter.value shouldBeEqualTo 16
+        lockCounter.get() shouldBeEqualTo 16
     }
 
     @RepeatedTest(LockExamples.REPEAT_SIZE)
     fun `코루틴 환경에서 FencedLock 획득 및 해제`() = runSuspendIO {
         val lock = redisson.getFencedLock(randomName())
-        val lockCounter = atomic(0)
+        val lockCounter = AtomicInteger(0)
 
         SuspendedJobTester()
-            .numThreads(8)
-            .roundsPerJob(16)
+            .workers(8)
+            .rounds(16)
             .add {
                 val mlockId = redisson.getLockId("ferncedLock")
-                val locked = lock.tryLockAsync(5, 10, TimeUnit.SECONDS, mlockId).coAwait()
+                val locked = lock.tryLockAsync(5, 10, TimeUnit.SECONDS, mlockId).awaitSuspending()
                 if (locked) {
-                    val token = lock.tokenAsync.coAwait()
+                    val token = lock.tokenAsync.awaitSuspending()
                     if (token > 0) {
                         log.debug { "Lock 획득. locked=$token" }
                         lockCounter.incrementAndGet()
@@ -161,7 +164,7 @@ class FencedLockExamples: AbstractRedissonTest() {
                         delay(Random.nextLong(50))
 
                         // lock 해제
-                        lock.unlockAsync(mlockId).coAwait()
+                        lock.unlockAsync(mlockId).awaitSuspending()
                         log.debug { "Lock 해제." }
                         delay(1)
                     }
@@ -169,6 +172,6 @@ class FencedLockExamples: AbstractRedissonTest() {
             }
             .run()
 
-        lockCounter.value shouldBeEqualTo 16
+        lockCounter.get() shouldBeEqualTo 16
     }
 }

@@ -25,4 +25,5 @@ interface Service {
     fun futureSuccess(): CompletableFuture<String>
     fun futureFailure(): CompletableFuture<String>
     fun futureTimeout(): CompletableFuture<String>
+
 }

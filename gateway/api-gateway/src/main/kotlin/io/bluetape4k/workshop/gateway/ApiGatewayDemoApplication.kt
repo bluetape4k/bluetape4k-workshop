@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.gateway
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
-import org.springframework.boot.WebApplicationType
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient
@@ -19,7 +18,5 @@ class ApiGatewayDemoApplication {
 }
 
 fun main(vararg args: String) {
-    runApplication<ApiGatewayDemoApplication>(*args) {
-        webApplicationType = WebApplicationType.REACTIVE
-    }
+    runApplication<ApiGatewayDemoApplication>(*args) 
 }

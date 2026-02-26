@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 
 class MemberRepositoryTest(
-    @Autowired private val memberRepository: MemberRepository,
+    @param:Autowired private val memberRepository: MemberRepository,
 ): AbstractR2dbcApplicationTest() {
 
     companion object: KLoggingChannel()
@@ -27,7 +27,7 @@ class MemberRepositoryTest(
         savedMember.shouldNotBeNull()
         savedMember.id.shouldNotBeNull()
 
-        val loadedMember = memberRepository.findById(savedMember.id!!)!!
+        val loadedMember = memberRepository.findById(savedMember.id)!!
         loadedMember.name shouldBeEqualTo member.name
         loadedMember.age shouldBeEqualTo member.age
         loadedMember.email shouldBeEqualTo member.email

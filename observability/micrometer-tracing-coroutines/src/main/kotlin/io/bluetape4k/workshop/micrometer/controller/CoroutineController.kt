@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.micrometer.controller
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.spring.webflux.controller.AbstractCoroutineIOController
 import io.bluetape4k.workshop.micrometer.model.Todo
 import io.bluetape4k.workshop.micrometer.service.CoroutineService
 import kotlinx.coroutines.delay
@@ -18,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/coroutine")
 class CoroutineController(
     private val coroutineService: CoroutineService,
-): AbstractCoroutineIOController() {
+) {
 
     companion object: KLoggingChannel()
 
@@ -29,7 +28,7 @@ class CoroutineController(
     }
 
     @GetMapping("/todos/{id}")
-    suspend fun getTodo(@PathVariable(name = "id", required = true) id: Int): Todo? {
+    suspend fun getTodo(@PathVariable(required = true) id: Int): Todo? {
         log.debug { "Get todo[$id] in coroutines" }
         delay(100)
         return coroutineService.getTodo(id).apply {

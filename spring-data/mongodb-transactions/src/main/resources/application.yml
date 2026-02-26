@@ -3,3 +3,5 @@ spring:
         mongodb:
             uri: ${testcontainers.mongo.url}
             database: spring-data-mongo-transactions-demo
+#    aot:
+#        enabled: true  # AOT (Ahead Of Time) 컴파일 활성화

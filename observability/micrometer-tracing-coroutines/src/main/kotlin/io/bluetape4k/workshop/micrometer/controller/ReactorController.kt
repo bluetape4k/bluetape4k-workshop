@@ -26,7 +26,7 @@ class ReactorController(
     }
 
     @GetMapping("/todos/{id}")
-    fun getTodo(@PathVariable(name = "id", required = true) id: Int): Mono<Todo> {
+    fun getTodo(@PathVariable(required = true) id: Int): Mono<Todo> {
         log.debug { "Get todo[$id] in reactive" }
 
         return Mono.delay(Duration.ofMillis(100))

@@ -7,4 +7,4 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 @SpringBootApplication
 @EnableTransactionManagement
 @EnableR2dbcRepositories(basePackageClasses = [PersonRepository::class])
-class InfrastructureConfiguration 
+class InfrastructureConfiguration

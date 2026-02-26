@@ -9,7 +9,7 @@ import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.ActorDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.mapper.toActorDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Actor
 import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Actors
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.andWhere
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
@@ -31,18 +31,10 @@ class ActorRepository(private val db: Database) {
 
     fun findById(id: Int): VirtualFuture<ActorDTO?> = virtualFuture(virtualExecutor) {
         log.debug { "Find Actor by id. id: $id" }
-
-//        transaction(db) {
-//            Actors.selectAll()
-//                .where(Actors.id eq id)
-//                .firstOrNull()
-//                ?.toActorDTO()
-//        }
         transaction(db) {
             Actor.findById(id)?.toActorDTO()
         }
     }
-
 
     fun searchActor(params: Map<String, String?>): VirtualFuture<List<ActorDTO>> = virtualFuture(virtualExecutor) {
         log.debug { "Search Actor by params. params: $params" }

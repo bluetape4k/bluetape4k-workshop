@@ -5,7 +5,7 @@ plugins {
 }
 
 springBoot {
-    mainClass.set("io.bluetape4k.workshop.gatway.customer.CustomerApplicationKt")
+    mainClass.set("io.bluetape4k.workshop.gateway.customer.CustomerApplicationKt")
 
     buildInfo {
         properties {
@@ -23,14 +23,15 @@ dependencyManagement {
     }
 }
 
-@Suppress("UnstableApiUsage")
+
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
 
 dependencies {
-    implementation(Libs.bluetape4k_spring_core)
-    implementation(Libs.bluetape4k_jackson)
+    testImplementation(project(":shared"))
+
+    implementation(Libs.bluetape4k_jackson3)
     implementation(Libs.bluetape4k_netty)
     testImplementation(Libs.bluetape4k_junit5)
 
@@ -42,12 +43,11 @@ dependencies {
     annotationProcessor(Libs.springBoot("configuration-processor"))
     runtimeOnly(Libs.springBoot("devtools"))
 
-
-    implementation(Libs.springBootStarter("webflux"))
-    implementation(Libs.springBootStarter("aop"))
+    implementation(Libs.springBootStarter("actuator"))
+    implementation(Libs.springBootStarter("aspectj"))
     implementation(Libs.springBootStarter("cache"))
     implementation(Libs.springBootStarter("validation"))
-    implementation(Libs.springBootStarter("actuator"))
+    implementation(Libs.springBootStarter("webflux"))
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

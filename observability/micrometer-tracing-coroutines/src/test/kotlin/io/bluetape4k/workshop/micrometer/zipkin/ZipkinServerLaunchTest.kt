@@ -18,28 +18,27 @@ class ZipkinServerLaunchTest {
 
     companion object: KLoggingChannel()
 
-    private val webClient = WebClient.create()
+    private val zipkin by lazy { ZipkinServer.Launcher.zipkin }
+    private val webClient by lazy { WebClient.create() }
 
     @Test
     fun `launch zipkin server`() = runTest(timeout = 30.seconds) {
+        zipkin.start()
+        zipkin.isRunning.shouldBeTrue()
 
-        ZipkinServer().use {
-            it.start()
-            it.isRunning.shouldBeTrue()
+        val zipkinUrl = Systemx.getProp("testcontainers.zipkin.url")
+        log.debug { "zipkinUrl=$zipkinUrl" }
+        zipkinUrl.shouldNotBeNull() shouldBeEqualTo zipkin.url
 
-            val zipkinUrl = Systemx.getProp("testcontainers.zipkin.url")
-            zipkinUrl.shouldNotBeNull() shouldBeEqualTo it.url
+        val client = WebClient.builder().baseUrl(zipkinUrl).build()
 
-            val client = WebClient.builder().baseUrl(zipkinUrl).build()
+        val response = client.get()
+            .uri("/zipkin/")
+            .retrieve()
+            .bodyToMono<String>()
+            .awaitSingleOrNull()
 
-            val response = client.get()
-                .uri("/zipkin/")
-                .retrieve()
-                .bodyToMono<String>()
-                .awaitSingleOrNull()
-
-            log.debug { "response=$response" }
-            response.shouldNotBeNull()
-        }
+        log.debug { "response=$response" }
+        response.shouldNotBeNull()
     }
 }

@@ -14,9 +14,9 @@ configurations {
 }
 
 dependencies {
-    api(Libs.bluetape4k_spring_core)
-    testImplementation(Libs.bluetape4k_spring_tests)
-    testImplementation(Libs.bluetape4k_jackson)
+    testImplementation(project(":shared"))
+
+    testImplementation(Libs.bluetape4k_jackson3)
     testImplementation(Libs.bluetape4k_junit5)
 
     // Spring Security
@@ -25,6 +25,7 @@ dependencies {
     testImplementation(Libs.springSecurity("test"))
 
     implementation(Libs.springBootStarter("webflux"))
+    testImplementation(Libs.springBootStarter("webflux-test"))
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
@@ -33,13 +34,13 @@ dependencies {
     // testImplementation(Libs.okhttp3_mockwebserver)
 
     // Coroutines
-    api(Libs.kotlinx_coroutines_reactor)
-    api(Libs.kotlinx_coroutines_core)
-    api(Libs.kotlinx_coroutines_reactor)
+    implementation(Libs.bluetape4k_coroutines)
+    implementation(Libs.kotlinx_coroutines_core)
+    implementation(Libs.kotlinx_coroutines_reactor)
     testImplementation(Libs.kotlinx_coroutines_test)
 
     // Reactor
-    compileOnly(Libs.reactor_core)
-    compileOnly(Libs.reactor_kotlin_extensions)
-    compileOnly(Libs.reactor_test)
+    implementation(Libs.reactor_core)
+    implementation(Libs.reactor_kotlin_extensions)
+    testImplementation(Libs.reactor_test)
 }

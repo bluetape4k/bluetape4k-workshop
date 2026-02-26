@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.redisson.locks
 
+import io.bluetape4k.coroutines.support.awaitSuspending
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.redis.redisson.coroutines.coAwait
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -35,12 +35,12 @@ class CountDownLatchExamples: AbstractRedissonTest() {
             launch {
                 delay(Random.nextLong(100, 500))
                 log.debug { "Before Latch count=${latch.count}" }
-                latch.countDownAsync().coAwait()
+                latch.countDownAsync().awaitSuspending()
                 log.debug { "After Latch count=${latch.count}" }
             }
         }
 
         // latch count 가 0이 될 때까지 대기
-        latch.awaitAsync().coAwait()
+        latch.awaitAsync().awaitSuspending()
     }
 }

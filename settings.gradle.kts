@@ -6,7 +6,7 @@ pluginManagement {
     }
     plugins {
         // https://plugins.gradle.org/plugin/org.gradle.toolchains.foojay-resolver-convention
-        id("org.gradle.toolchains.foojay-resolver-convention") version ("0.9.0")
+        id("org.gradle.toolchains.foojay-resolver-convention") version ("1.0.0")
     }
 }
 
@@ -17,20 +17,20 @@ rootProject.name = "$PROJECT_NAME-workshop"
 include("shared")
 
 includeModules("aws", false, true)
-includeModules("ddd", false, true)
-includeModules("docker", false, true)
+// includeModules("ddd", false, true)
+// includeModules("docker", false, true)
 includeModules("examples", false, false)
 includeModules("exposed", false, true)
 includeModules("gateway", false, false)
 includeModules("gatling", false, true)
 includeModules("graalvm", false, false)
-includeModules("jmolecules", false, true)
+includeModules("io", false, false)
 includeModules("json", false, false)
 includeModules("kotlin", false, true)
 includeModules("mapping", false, true)
 includeModules("messaging", false, true)
 includeModules("observability", false, false)
-includeModules("quarkus", false, true)
+// includeModules("quarkus", false, true)
 includeModules("ratelimit", false, false)
 includeModules("reactive", false, true)
 includeModules("redis", false, true)

@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalTime::class)
+
 package io.bluetape4k.workshop.exposed.sql.kotlin.datetime
 
 import io.bluetape4k.logging.debug
@@ -10,15 +12,14 @@ import io.bluetape4k.workshop.exposed.currentDialectTest
 import io.bluetape4k.workshop.exposed.expectException
 import io.bluetape4k.workshop.exposed.withDb
 import io.bluetape4k.workshop.exposed.withTables
-import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
 import kotlinx.datetime.minus
+import kotlinx.datetime.number
 import kotlinx.datetime.plus
 import kotlinx.datetime.toJavaLocalDateTime
 import kotlinx.datetime.toKotlinLocalDate
@@ -37,7 +38,10 @@ import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.castTo
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.get
+import org.jetbrains.exposed.v1.core.greater
+import org.jetbrains.exposed.v1.core.less
 import org.jetbrains.exposed.v1.core.max
 import org.jetbrains.exposed.v1.core.min
 import org.jetbrains.exposed.v1.core.slice
@@ -83,8 +87,12 @@ import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit.MILLIS
+import kotlin.time.Clock
 import kotlin.time.Duration
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
+@Suppress("DEPRECATION")
 class KotlinTimeTest: AbstractExposedTest() {
 
     private val timestampWithTimeZoneUnsupportedDB = TestDB.ALL_MARIADB + TestDB.MYSQL_V5
@@ -152,7 +160,7 @@ class KotlinTimeTest: AbstractExposedTest() {
                 .single()[CitiesTime.local_time.second()]
 
             insertedYear shouldBeEqualTo now.year
-            insertedMonth shouldBeEqualTo now.month.value
+            insertedMonth shouldBeEqualTo now.month.number
             insertedDay shouldBeEqualTo now.dayOfMonth
             insertedHour shouldBeEqualTo now.hour
             insertedMinute shouldBeEqualTo now.minute

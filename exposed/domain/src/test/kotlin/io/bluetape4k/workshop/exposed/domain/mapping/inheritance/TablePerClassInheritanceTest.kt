@@ -1,12 +1,12 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.inheritance
 
+import io.bluetape4k.exposed.core.dao.id.TimebasedUUIDTable
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntity
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityClass
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityID
-import io.bluetape4k.exposed.dao.id.TimebasedUUIDTable
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
-import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withTables
@@ -89,13 +89,12 @@ class TablePerClassInheritanceTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("owner", owner)
-                .add("swift", swift)
-                .add("card number", cardNumber)
-                .add("company name", companyName)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("owner", owner)
+            .add("swift", swift)
+            .add("card number", cardNumber)
+            .add("company name", companyName)
+            .toString()
     }
 
     class BankAccount(id: TimebasedUUIDEntityID): TimebasedUUIDEntity(id) {
@@ -109,13 +108,12 @@ class TablePerClassInheritanceTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("owner", owner)
-                .add("swift", swift)
-                .add("account number", accountNumber)
-                .add("bank name", bankName)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("owner", owner)
+            .add("swift", swift)
+            .add("account number", accountNumber)
+            .add("bank name", bankName)
+            .toString()
     }
 
     @ParameterizedTest

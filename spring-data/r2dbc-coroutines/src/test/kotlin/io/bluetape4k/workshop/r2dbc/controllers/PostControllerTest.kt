@@ -3,8 +3,6 @@ package io.bluetape4k.workshop.r2dbc.controllers
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.spring.tests.httpGet
-import io.bluetape4k.spring.tests.httpPost
 import io.bluetape4k.workshop.r2dbc.AbstractR2dbcApplicationTest
 import io.bluetape4k.workshop.r2dbc.domain.Post
 import kotlinx.coroutines.flow.toList
@@ -16,21 +14,19 @@ import org.amshove.kluent.shouldBeGreaterOrEqualTo
 import org.amshove.kluent.shouldNotBeEmpty
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.http.HttpStatus
-import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 
-class PostControllerTest(
-    @Autowired private val client: WebTestClient,
-): AbstractR2dbcApplicationTest() {
+class PostControllerTest: AbstractR2dbcApplicationTest() {
 
     companion object: KLoggingChannel()
 
     @Test
     fun `find all posts`() = runSuspendIO {
-        val posts = client
-            .httpGet("/posts")
+        val posts = webTestClient
+            .get()
+            .uri("/posts")
+            .exchange()
+            .expectStatus().is2xxSuccessful
             .returnResult<Post>().responseBody
             .asFlow()
             .toList()
@@ -43,8 +39,11 @@ class PostControllerTest(
 
     @Test
     fun `find one post by id`() = runSuspendIO {
-        val post = client
-            .httpGet("/posts/1")
+        val post = webTestClient
+            .get()
+            .uri("/posts/1")
+            .exchange()
+            .expectStatus().is2xxSuccessful
             .returnResult<Post>().responseBody
             .awaitSingle()
 
@@ -54,8 +53,11 @@ class PostControllerTest(
 
     @Test
     fun `find one post by non-existing id`() = runSuspendIO {
-        client
-            .httpGet("/posts/9999", HttpStatus.NOT_FOUND)
+        webTestClient
+            .get()
+            .uri("/posts/99999")
+            .exchange()
+            .expectStatus().isNotFound
             .returnResult<Post>().responseBody
             .awaitFirstOrNull()
     }
@@ -64,8 +66,12 @@ class PostControllerTest(
     fun `save new post`() = runSuspendIO {
         val newPost = createPost()
 
-        val savedPost = client
-            .httpPost("/posts", newPost)
+        val savedPost = webTestClient
+            .post()
+            .uri("/posts")
+            .bodyValue(newPost)
+            .exchange()
+            .expectStatus().is2xxSuccessful
             .returnResult<Post>().responseBody
             .awaitSingle()
 
@@ -88,8 +94,11 @@ class PostControllerTest(
     }
 
     private suspend fun countOfCommentByPostId(postId: Long): Long {
-        return client
-            .httpGet("/posts/$postId/comments/count")
+        return webTestClient
+            .get()
+            .uri("/posts/$postId/comments/count")
+            .exchange()
+            .expectStatus().is2xxSuccessful
             .returnResult<Long>().responseBody
             .awaitSingle()
     }

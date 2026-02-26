@@ -1,8 +1,7 @@
 package io.bluetape4k.workshop.jackson.annotations
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.module.kotlin.readValue
-import io.bluetape4k.jackson.writeAsString
+import io.bluetape4k.jackson3.writeAsString
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.jackson.AbstractJacksonTest
@@ -10,6 +9,7 @@ import io.bluetape4k.workshop.jackson.readAs
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.junit.jupiter.api.RepeatedTest
+import tools.jackson.module.kotlin.readValue
 
 class OnewayExample: AbstractJacksonTest() {
 
@@ -36,7 +36,7 @@ class OnewayExample: AbstractJacksonTest() {
     @RepeatedTest(REPEAT_SIZE)
     fun `Oneway conversion object to json`() {
         val name = faker.name().fullName()
-        val password = faker.internet().password()
+        val password = faker.credentials().password()
         val user = User(name, password, 100)
 
         val json = defaultMapper.writeAsString(user)!!
@@ -52,7 +52,7 @@ class OnewayExample: AbstractJacksonTest() {
     @RepeatedTest(REPEAT_SIZE)
     fun `Oneway conversion json to object`() {
         val name = faker.name().fullName()
-        val password = faker.internet().password()
+        val password = faker.credentials().password()
         val json = """{"name":"$name", "password":"$password", "identifier":100}"""
 
         val user = defaultMapper.readValue<User>(json)

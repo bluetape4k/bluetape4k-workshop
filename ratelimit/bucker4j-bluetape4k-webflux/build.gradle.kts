@@ -16,7 +16,7 @@ springBoot {
     }
 }
 
-@Suppress("UnstableApiUsage")
+
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
@@ -29,7 +29,8 @@ dependencies {
     // Bucket4j
     implementation(Libs.bluetape4k_bucket4j)
     implementation(Libs.bucket4j_core)
-    implementation(Libs.bucket4j_redis)
+    implementation(Libs.bucket4j_lettuce)
+    implementation(Libs.bucket4j_redisson)
 
     // Redis
     implementation(Libs.bluetape4k_redis)
@@ -37,18 +38,18 @@ dependencies {
     implementation(Libs.redisson)
     implementation(Libs.bluetape4k_testcontainers)
 
-    api(Libs.javax_cache_api)
-    api(Libs.jakarta_servlet_api)
-
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))
     annotationProcessor(Libs.springBoot("autoconfigure-processor"))
     annotationProcessor(Libs.springBoot("configuration-processor"))
     runtimeOnly(Libs.springBoot("devtools"))
 
-    implementation(Libs.springBootStarter("webflux"))
-    implementation(Libs.springBootStarter("aop"))
     implementation(Libs.springBootStarter("actuator"))
+    implementation(Libs.springBootStarter("aspectj"))
+    implementation(Libs.springBootStarter("cache"))
+    implementation(Libs.springBootStarter("validation"))
+    implementation(Libs.springBootStarter("webflux"))
+    testImplementation(Libs.springBootStarter("webflux-test"))
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

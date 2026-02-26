@@ -1,14 +1,12 @@
 plugins {
     kotlin("plugin.spring")
     id(Plugins.spring_boot)
-    id(Plugins.graalvm_native)
 }
 
 springBoot {
     mainClass.set("io.bluetape4k.workshop.kafka.KafkaApplicationKt")
 }
 
-@Suppress("UnstableApiUsage")
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
@@ -19,11 +17,11 @@ dependencies {
     compileOnly(Libs.kafka_metadata)
     compileOnly(Libs.kafka_streams)
 
-    api(Libs.spring_kafka)
+    implementation(Libs.spring_kafka)
     implementation(Libs.spring_kafka_test)
     implementation(Libs.springData("commons"))
 
-    api(Libs.bluetape4k_kafka)
+    // implementation(Libs.bluetape4k_kafka)
     implementation(Libs.bluetape4k_testcontainers)
     implementation(Libs.testcontainers_kafka)
 
@@ -31,9 +29,10 @@ dependencies {
     api(Libs.bluetape4k_jackson)
     api(Libs.jackson_databind)
     api(Libs.jackson_module_kotlin)
+    api(Libs.jackson_module_blackbird)
 
     // Coroutines
-    api(Libs.bluetape4k_coroutines)
+    implementation(Libs.bluetape4k_coroutines)
     implementation(Libs.kotlinx_coroutines_core)
     implementation(Libs.kotlinx_coroutines_reactor)
     testImplementation(Libs.kotlinx_coroutines_test)
@@ -43,7 +42,7 @@ dependencies {
     compileOnly(Libs.reactor_kotlin_extensions)
     testImplementation(Libs.reactor_test)
 
-    api(Libs.bluetape4k_spring_core)
+    api(Libs.bluetape4k_spring_webflux)
     testImplementation(Libs.bluetape4k_spring_tests)
 
     // Spring Boot

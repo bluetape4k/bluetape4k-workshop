@@ -1,12 +1,12 @@
 package io.bluetape4k.workshop.coroutines.cancellation
 
-import io.bluetape4k.coroutines.support.coLogging
 import io.bluetape4k.coroutines.support.log
+import io.bluetape4k.coroutines.support.suspendLogging
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.error
 import io.bluetape4k.logging.info
-import kotlinx.atomicfu.atomic
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancelAndJoin
@@ -19,6 +19,9 @@ import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeGreaterOrEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.junit.jupiter.api.Test
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.coroutines.cancellation.CancellationException
 
 class CancellationExamples {
@@ -27,8 +30,7 @@ class CancellationExamples {
 
     @Test
     fun `Basic cancellation`() = runTest {
-        val counter = atomic(0L)
-        val count by counter
+        val counter = AtomicLong(0L)
 
         log.debug { "Start Job." }
 
@@ -42,14 +44,16 @@ class CancellationExamples {
 
         delay(1100)
         job.cancelAndJoin()
-        count shouldBeEqualTo 5L
+        counter.get() shouldBeEqualTo 5L
         log.debug { "Cancelled successfully." }
     }
 
     @Test
     fun `작업 취소 시는 cancellation 예외를 catch 합니다`() = runTest {
         val job = Job()
-        launch(job) {
+        val scope = CoroutineScope(coroutineContext + job)
+
+        scope.launch {
             try {
                 repeat(1000) {
                     delay(200)
@@ -60,6 +64,7 @@ class CancellationExamples {
                 throw e
             }
         }.log("job")
+
         delay(1100)
         job.cancelAndJoin()
         log.debug { "Cancelled successfully" }
@@ -67,11 +72,11 @@ class CancellationExamples {
 
     @Test
     fun `NonCancellable context 하에서 취소 시에도 정리 작업 수행하기`() = runTest {
-        val counter = atomic(0)
-        val count by counter
+        val counter = AtomicInteger(0)
         var cleanup = false
         val job = Job()
-        launch(job) {
+        val scope = CoroutineScope(coroutineContext + job)
+        scope.launch {
             try {
                 delay(200)
                 // 이 작업은 수행되지 않습니다.
@@ -92,19 +97,19 @@ class CancellationExamples {
         job.cancelAndJoin()
         log.info { "Done" }
 
-        count shouldBeEqualTo 0 // 작업이 cancel 되므로 ...
+        counter.get() shouldBeEqualTo 0 // 작업이 cancel 되므로 ...
         cleanup.shouldBeTrue()
     }
 
     @Test
     fun `invokeOnCompletion event listener 로 취소 시 작업 수행`() = runTest {
-        val canceled = atomic(false)
+        val canceled = AtomicBoolean(false)
         val job = launch { delay(1000) }.log("delayed")
 
         // invoeOnCompletion Handler를 사용하여, Cancel 에 대한 처리를 수행할 수 있습니다.
         job.invokeOnCompletion(onCancelling = true) { cause: Throwable? ->
             if (cause is CancellationException) {
-                canceled.value = true
+                canceled.set(true)
                 log.info { "Cancelled" }
             } else {
                 log.info { "Finished" }
@@ -114,25 +119,26 @@ class CancellationExamples {
         delay(100)
         job.cancelAndJoin()     // Cancelled
 
-        canceled.value.shouldBeTrue()
+        canceled.get().shouldBeTrue()
     }
 
     @Test
     fun `Job isActive 를 활용하여 suspend point 잡기`() = runTest {
-        val counter = atomic(0)
+        val counter = AtomicInteger(0)
         val job = Job()
-        launch(job) {
+        val scope = CoroutineScope(coroutineContext + job)
+        scope.launch {
             while (isActive) {
                 delay(100)         // delay 나 yield 로 suspend point 를 줘야 `isActive` 를 조회할 수 있다
                 counter.incrementAndGet()
-                coLogging { "[#1] Printing. count=${counter.value}" }
+                suspendLogging { "[#1] Printing. count=${counter.get()}" }
             }
         }.log("#1")
 
         delay(550)
         job.cancelAndJoin()
 
-        counter.value shouldBeGreaterOrEqualTo 5
+        counter.get() shouldBeGreaterOrEqualTo 5
         log.info { "Cancelled successfully." }
     }
 }

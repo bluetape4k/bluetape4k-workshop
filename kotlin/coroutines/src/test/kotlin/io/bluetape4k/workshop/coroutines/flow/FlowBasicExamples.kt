@@ -19,6 +19,7 @@ class FlowBasicExamples {
     companion object: KLoggingChannel()
 
     private val sequencer = atomic(0L)
+    private var sequence by sequencer
 
     private suspend fun computeNextValue(): Long {
         delay(10)
@@ -27,7 +28,7 @@ class FlowBasicExamples {
 
     @BeforeEach
     fun setup() {
-        sequencer.value = 0
+        sequence = 0
     }
 
     /**

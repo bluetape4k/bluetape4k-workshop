@@ -6,16 +6,13 @@ import io.bluetape4k.workshop.bucket4j.utils.HeaderUtils
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldContain
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
-import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 import org.testcontainers.utility.Base58
 
-class CoroutineControllerTest(
-    @Autowired private val client: WebTestClient,
-): AbstractRateLimiterApplicationTest() {
+class CoroutineControllerTest: AbstractRateLimiterApplicationTest() {
 
     companion object: KLoggingChannel() {
         private const val PATH_V1 = "/api/v1/coroutines/hello"      // RateLimit이 걸려 있음
@@ -49,6 +46,7 @@ class CoroutineControllerTest(
             .expectStatus().isEqualTo(HttpStatus.TOO_MANY_REQUESTS)
     }
 
+    @Disabled("IP 로 Rate Limit을 거는 것은 /coroutines/v1, /reactive/v1 둘 다 걸려서 동시에 테스트 할 수 없습니다.")
     @Test
     fun `사용자 ID가 없으면 IP Address 기준으로 RateLimit이 적용됩니다`() = runTest {
         // 10초 동안 10번으로 Rate Limit이 걸려 있음

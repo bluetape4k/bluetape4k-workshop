@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
-import io.bluetape4k.exposed.dao.toStringBuilder
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.dao.IntEntity
@@ -55,10 +55,9 @@ object ResturantSchema {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("name", name)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("name", name)
+            .toString()
     }
 
     class Menu(id: EntityID<Int>): IntEntity(id) {
@@ -72,12 +71,11 @@ object ResturantSchema {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("name", name)
-                .add("price", price)
-                .add("restaurant id", restaurant.id._value)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("name", name)
+            .add("price", price)
+            .add("restaurant id", restaurant.id._value)
+            .toString()
     }
 
 }

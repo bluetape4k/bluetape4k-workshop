@@ -13,25 +13,28 @@ import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeEqualTo
 import org.amshove.kluent.shouldNotBeNull
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.concat
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.less
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.like
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.minus
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.neq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.plus
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.times
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.concat
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.core.dao.id.UUIDTable
+import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
 import org.jetbrains.exposed.v1.core.intLiteral
+import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.core.less
+import org.jetbrains.exposed.v1.core.like
+import org.jetbrains.exposed.v1.core.minus
+import org.jetbrains.exposed.v1.core.neq
+import org.jetbrains.exposed.v1.core.plus
 import org.jetbrains.exposed.v1.core.statements.BatchUpsertStatement
 import org.jetbrains.exposed.v1.core.statements.InsertStatement
 import org.jetbrains.exposed.v1.core.statements.UpdateStatement
 import org.jetbrains.exposed.v1.core.statements.UpsertBuilder
 import org.jetbrains.exposed.v1.core.stringLiteral
 import org.jetbrains.exposed.v1.core.stringParam
+import org.jetbrains.exposed.v1.core.times
 import org.jetbrains.exposed.v1.exceptions.UnsupportedByDialectException
 import org.jetbrains.exposed.v1.jdbc.batchUpsert
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -434,7 +437,7 @@ class UpsertTest: AbstractExposedTest() {
          * ```
          */
         val tester = object: Table("tester") {
-            val id = uuid("id").autoGenerate()
+            val id = javaUUID("id").autoGenerate()
             val title = text("title")
 
             override val primaryKey = PrimaryKey(id)
@@ -861,7 +864,7 @@ class UpsertTest: AbstractExposedTest() {
          */
         val tester = object: Table("tester") {
             val item = varchar("item", 64).uniqueIndex()
-            val code = uuid("code").clientDefault { UUID.randomUUID() }
+            val code = javaUUID("code").clientDefault { UUID.randomUUID() }
             val gains = integer("gains")
             val losses = integer("losses")
         }

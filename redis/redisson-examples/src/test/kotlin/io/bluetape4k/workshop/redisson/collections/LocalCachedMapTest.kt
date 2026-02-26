@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.redisson.collections
 
-import io.bluetape4k.junit5.awaitility.coUntil
+import io.bluetape4k.coroutines.support.awaitSuspending
+import io.bluetape4k.junit5.awaitility.untilSuspending
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.redis.redisson.coroutines.coAwait
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
@@ -80,11 +80,11 @@ class LocalCachedMapTest: AbstractRedissonTest() {
         val keyToAdd = randomName()
 
         log.debug { "front cache1: put key=$keyToAdd" }
-        frontCache1.fastPutAsync(keyToAdd, 42).coAwait()
-        await coUntil { backCache.containsKeyAsync(keyToAdd).coAwait() }
+        frontCache1.fastPutAsync(keyToAdd, 42).awaitSuspending()
+        await untilSuspending { backCache.containsKeyAsync(keyToAdd).awaitSuspending() }
 
         log.debug { "front cache2: get key=$keyToAdd" }
-        frontCache2.getAsync(keyToAdd).coAwait() shouldBeEqualTo 42
+        frontCache2.getAsync(keyToAdd).awaitSuspending() shouldBeEqualTo 42
     }
 
     @Test
@@ -92,16 +92,16 @@ class LocalCachedMapTest: AbstractRedissonTest() {
         val keyToRemove = randomName()
 
         log.debug { "front cache1: put $keyToRemove" }
-        frontCache1.fastPutAsync(keyToRemove, 42).coAwait()
-        await coUntil { backCache.containsKeyAsync(keyToRemove).coAwait() }
+        frontCache1.fastPutAsync(keyToRemove, 42).awaitSuspending()
+        await untilSuspending { backCache.containsKeyAsync(keyToRemove).awaitSuspending() }
 
-        frontCache2.getAsync(keyToRemove).coAwait() shouldBeEqualTo 42
+        frontCache2.getAsync(keyToRemove).awaitSuspending() shouldBeEqualTo 42
 
         log.debug { "front cache1: remove $keyToRemove" }
-        frontCache1.fastRemoveAsync(keyToRemove).coAwait()
-        await coUntil { !backCache.containsKeyAsync(keyToRemove).coAwait() }
+        frontCache1.fastRemoveAsync(keyToRemove).awaitSuspending()
+        await untilSuspending { !backCache.containsKeyAsync(keyToRemove).awaitSuspending() }
 
-        frontCache2.getAsync(keyToRemove).coAwait().shouldBeNull()
+        frontCache2.getAsync(keyToRemove).awaitSuspending().shouldBeNull()
     }
 
     @Test
@@ -109,26 +109,26 @@ class LocalCachedMapTest: AbstractRedissonTest() {
         val key = randomName()
 
         // 초기에 frontCache에 존재하지 않는다.
-        frontCache1.containsKeyAsync(key).coAwait().shouldBeFalse()
-        frontCache2.containsKeyAsync(key).coAwait().shouldBeFalse()
+        frontCache1.containsKeyAsync(key).awaitSuspending().shouldBeFalse()
+        frontCache2.containsKeyAsync(key).awaitSuspending().shouldBeFalse()
 
         // bachCache에 cache 등록
-        backCache.fastPutAsync(key, 42).coAwait().shouldBeTrue()
+        backCache.fastPutAsync(key, 42).awaitSuspending().shouldBeTrue()
         // frontCache2에서도 추가될 때까지 대기 (pub/sub로 전파될 때까지)
-        await atMost 1.seconds.toJavaDuration() coUntil { frontCache2.containsKeyAsync(key).coAwait() }
+        await atMost 1.seconds.toJavaDuration() untilSuspending { frontCache2.containsKeyAsync(key).awaitSuspending() }
 
         // frontCache에 등록 반영
-        frontCache1.containsKeyAsync(key).coAwait().shouldBeTrue()
-        frontCache2.containsKeyAsync(key).coAwait().shouldBeTrue()
+        frontCache1.containsKeyAsync(key).awaitSuspending().shouldBeTrue()
+        frontCache2.containsKeyAsync(key).awaitSuspending().shouldBeTrue()
 
         // backCache에서 cache 삭제
-        backCache.fastRemoveAsync(key).coAwait() shouldBeEqualTo 1L
+        backCache.fastRemoveAsync(key).awaitSuspending() shouldBeEqualTo 1L
         // frontCache1에서도 삭제될 때까지 대기 (pub/sub로 전파될 때까지)
-        await atMost 1.seconds.toJavaDuration() coUntil { !frontCache1.containsKeyAsync(key).coAwait() }
+        await atMost 1.seconds.toJavaDuration() untilSuspending { !frontCache1.containsKeyAsync(key).awaitSuspending() }
 
         // frontCache에 삭제 반영
-        frontCache1.containsKeyAsync(key).coAwait().shouldBeFalse()
-        frontCache2.containsKeyAsync(key).coAwait().shouldBeFalse()
+        frontCache1.containsKeyAsync(key).awaitSuspending().shouldBeFalse()
+        frontCache2.containsKeyAsync(key).awaitSuspending().shouldBeFalse()
     }
 
     /**
@@ -142,14 +142,14 @@ class LocalCachedMapTest: AbstractRedissonTest() {
         val keyToEvict = randomName()
 
         log.debug { "front cache1: put $keyToEvict" }
-        frontCache1.fastPutAsync(keyToEvict, 42).coAwait()
+        frontCache1.fastPutAsync(keyToEvict, 42).awaitSuspending()
         await atMost 5.seconds.toJavaDuration() until { frontCache2.containsKey(keyToEvict) }
 
-        frontCache2.getAsync(keyToEvict).coAwait() shouldBeEqualTo 42
+        frontCache2.getAsync(keyToEvict).awaitSuspending() shouldBeEqualTo 42
 
         delay(5000L)
         log.debug { "front cache1: expired $keyToEvict" }
         await atMost 5.seconds.toJavaDuration() until { frontCache2.containsKey(keyToEvict).not() }
-        frontCache2.getAsync(keyToEvict).coAwait().shouldBeNull()
+        frontCache2.getAsync(keyToEvict).awaitSuspending().shouldBeNull()
     }
 }

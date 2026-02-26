@@ -1,7 +1,6 @@
 package io.bluetape4k.workshop.problem.controller
 
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.spring.webflux.controller.AbstractCoroutineIOController
 import io.bluetape4k.workshop.problem.exceptions.ExampleException
 import io.bluetape4k.workshop.problem.exceptions.InvalidTaskIdException
 import io.bluetape4k.workshop.problem.exceptions.TaskNotFoundException
@@ -18,7 +17,7 @@ import java.nio.file.AccessDeniedException
 
 @RestController
 @RequestMapping("/tasks")
-class TaskController: AbstractCoroutineIOController() {
+class TaskController {
 
     data class Task(val id: Long, val name: String): Serializable
 

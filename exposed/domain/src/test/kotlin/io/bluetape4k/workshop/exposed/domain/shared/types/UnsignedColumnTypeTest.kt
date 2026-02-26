@@ -13,6 +13,8 @@ import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldContainSame
 import org.amshove.kluent.shouldHaveSize
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.less
 import org.jetbrains.exposed.v1.core.vendors.MysqlDialect
 import org.jetbrains.exposed.v1.core.vendors.SQLServerDialect
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
@@ -154,7 +156,8 @@ class UnsignedColumnTypeTest: AbstractExposedTest() {
                 val number2 = (Byte.MAX_VALUE + 1).toUByte()
                 assertFailAndRollback("Out-of-range (OoR) error") {
                     UByteTable.insert { it[unsignedByte] = number2 }
-                    UByteTable.selectAll().where { UByteTable.unsignedByte less 0u }.count().toInt() shouldBeEqualTo 0
+                    UByteTable.selectAll().where { UByteTable.unsignedByte less 0u.toUByte() }.count()
+                        .toInt() shouldBeEqualTo 0
                 }
 
                 // modify column to now have SMALLINT type
@@ -233,7 +236,7 @@ class UnsignedColumnTypeTest: AbstractExposedTest() {
                 val number2 = (Short.MAX_VALUE + 1).toUShort()
                 assertFailAndRollback("Out-of-range (OoR) error") {
                     UShortTable.insert { it[unsignedShort] = number2 }
-                    UShortTable.selectAll().where { UShortTable.unsignedShort less 0u }.count()
+                    UShortTable.selectAll().where { UShortTable.unsignedShort less 0u.toUShort() }.count()
                         .toInt() shouldBeEqualTo 0
                 }
 

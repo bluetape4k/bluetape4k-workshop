@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.redis.reactive
 
+
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.support.uninitialized
@@ -13,10 +14,13 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory
 import org.springframework.data.redis.core.ReactiveRedisTemplate
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer
+import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer
+import org.springframework.data.redis.serializer.JacksonJsonRedisSerializer
 import org.springframework.data.redis.serializer.RedisSerializationContext
 import org.springframework.data.redis.serializer.RedisSerializer
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.databind.jsontype.BasicPolymorphicTypeValidator
+import tools.jackson.module.kotlin.kotlinModule
 
 /**
  * [RedisApplication] 과 분리해서 독립적으로 테스트하기 위해서 [SpringBootApplication] 을 선언합니다.
@@ -36,11 +40,11 @@ class ReactiveRedisConfiguration {
     private val reactiveRedisConnectionFactory: ReactiveRedisConnectionFactory = uninitialized()
 
     /**
-     * Configures a [ReactiveRedisTemplate] with [String] keys and a typed [Jackson2JsonRedisSerializer].
+     * Configures a [ReactiveRedisTemplate] with [String] keys and a typed [JacksonJsonRedisSerializer].
      */
     @Bean
     fun reactiveJsonPersonRedisTemplate(factory: ReactiveRedisConnectionFactory): ReactiveRedisTemplate<String, Person> {
-        val valueSerializer = Jackson2JsonRedisSerializer(Person::class.java)
+        val valueSerializer = JacksonJsonRedisSerializer(Person::class.java)
         val context = RedisSerializationContext
             .newSerializationContext<String, Person>(RedisSerializer.string())
             .value(valueSerializer)
@@ -56,12 +60,24 @@ class ReactiveRedisConfiguration {
      * 참고: [io.bluetape4k.workshop.redis.reactive.model.EmailAddress]
      */
     @Bean
-    fun reactiveJsonObjectRedisTemplate(factory: ReactiveRedisConnectionFactory): ReactiveRedisTemplate<String, Any?> {
+    fun reactiveJsonObjectRedisTemplate(factory: ReactiveRedisConnectionFactory): ReactiveRedisTemplate<String, Any> {
         // Value에 해당하는 Object 는 `@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)` 가 선언되어 있어야만 Class 정보를 알 수 있다
-        val valueSerializer = GenericJackson2JsonRedisSerializer("@class")
+        val valueSerializer = GenericJacksonJsonRedisSerializer
+            .builder {
+                JsonMapper.builder()
+                    .addModule(kotlinModule())
+            }
+            .typePropertyName("@class")
+            // 핵심: 다형성 타입을 JSON에 포함하고 읽을 수 있도록 설정합니다.
+            .enableDefaultTyping(
+                BasicPolymorphicTypeValidator.builder()
+                    .allowIfBaseType(Any::class.java) // 모든 타입을 허용하거나 특정 패키지만 허용하도록 제한 가능
+                    .build()
+            )
+            .build()
 
         val context = RedisSerializationContext
-            .newSerializationContext<String, Any?>(RedisSerializer.string())
+            .newSerializationContext<String, Any>(RedisSerializer.string())
             .value(valueSerializer)
             .build()
 

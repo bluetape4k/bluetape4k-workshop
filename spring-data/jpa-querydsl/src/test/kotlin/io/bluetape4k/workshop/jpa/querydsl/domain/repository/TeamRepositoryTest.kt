@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 
 class TeamRepositoryTest(
-    @Autowired private val teamRepo: TeamRepository,
+    @param:Autowired private val teamRepo: TeamRepository,
 ): AbstractDomainTest() {
 
     @Test

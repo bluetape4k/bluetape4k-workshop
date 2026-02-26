@@ -10,7 +10,7 @@ import org.springframework.modulith.test.PublishedEvents
 
 @ApplicationModuleTest
 class OrderModuleTest(
-    @Autowired private val orders: OrderManagement,
+    @param:Autowired private val orders: OrderManagement,
 ) {
 
     companion object: KLogging()

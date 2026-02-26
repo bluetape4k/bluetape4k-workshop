@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.coroutines.model
 
+import io.bluetape4k.codec.Base58
 import java.io.Serializable
 
 /**
@@ -11,6 +12,6 @@ data class Banner(
 ): Serializable {
 
     companion object {
-        val TEST_BANNER = Banner("제목", "동해물과 백두산이 마르고 닳도록".repeat(10))
+        val TEST_BANNER = Banner("애국가", "동해물과 백두산이 마르고 닳도록".repeat(4) + Base58.randomString(256))
     }
 }

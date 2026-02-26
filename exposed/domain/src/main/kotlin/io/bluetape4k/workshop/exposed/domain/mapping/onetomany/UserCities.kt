@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.exposed.domain.mapping.onetomany
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
-import io.bluetape4k.exposed.dao.toStringBuilder
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -95,12 +95,10 @@ class User(id: EntityID<Int>): IntEntity(id) {
 
     override fun equals(other: Any?): Boolean = idEquals(other)
     override fun hashCode(): Int = idHashCode()
-    override fun toString(): String {
-        return toStringBuilder()
-            .add("name", name)
-            .add("age", age)
-            .toString()
-    }
+    override fun toString(): String = entityToStringBuilder()
+        .add("name", name)
+        .add("age", age)
+        .toString()
 }
 
 class City(id: EntityID<Int>): IntEntity(id) {
@@ -112,13 +110,11 @@ class City(id: EntityID<Int>): IntEntity(id) {
 
     override fun equals(other: Any?): Boolean = idEquals(other)
     override fun hashCode(): Int = idHashCode()
-    override fun toString(): String {
-        return toStringBuilder()
-            .add("id", id)
-            .add("name", name)
-            .add("country", country)
-            .toString()
-    }
+    override fun toString(): String = entityToStringBuilder()
+        .add("id", id)
+        .add("name", name)
+        .add("country", country)
+        .toString()
 }
 
 class Country(id: EntityID<Int>): IntEntity(id) {
@@ -129,10 +125,8 @@ class Country(id: EntityID<Int>): IntEntity(id) {
 
     override fun equals(other: Any?): Boolean = idEquals(other)
     override fun hashCode(): Int = idHashCode()
-    override fun toString(): String {
-        return toStringBuilder()
-            .add("id", id)
-            .add("name", name)
-            .toString()
-    }
+    override fun toString(): String = entityToStringBuilder()
+        .add("id", id)
+        .add("name", name)
+        .toString()
 }

@@ -8,7 +8,7 @@ springBoot {
     mainClass.set("io.bluetape4k.workshop.aws.s3.SpringCloudAwsS3SampleKt")
 }
 
-@Suppress("UnstableApiUsage")
+
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
@@ -28,10 +28,10 @@ dependencies {
     implementation(Libs.testcontainers_localstack)
 
     // Jackson
-    implementation(Libs.bluetape4k_jackson)
-    implementation(Libs.jackson_databind)
-    implementation(Libs.jackson_module_kotlin)
-    implementation(Libs.jackson_module_blackbird)
+    implementation(Libs.bluetape4k_jackson3)
+    implementation(Libs.jackson3_databind)
+    implementation(Libs.jackson3_module_kotlin)
+    implementation(Libs.jackson3_module_blackbird)
 
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))

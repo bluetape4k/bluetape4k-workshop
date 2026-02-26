@@ -17,3 +17,9 @@ fun User.toUserDTO(): UserDTO = UserDTO(
     name = name,
     age = age,
 )
+
+fun UserEntity.toUser(): User = User(
+    id = id.value,
+    name = name,
+    age = age,
+)

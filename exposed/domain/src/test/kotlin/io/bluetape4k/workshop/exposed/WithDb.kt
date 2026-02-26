@@ -48,10 +48,10 @@ fun withDb(
     val registeredDb = testDB.db!!
     try {
         if (newConfiguration) {
-            testDB.db = testDB.connect(configure ?: {})
+            testDB.db = testDB.connect(configure)
         }
         val database = testDB.db!!
-        transaction(database.transactionManager.defaultIsolationLevel, db = database) {
+        transaction(db = database, transactionIsolation = database.transactionManager.defaultIsolationLevel) {
             maxAttempts = 1
             registerInterceptor(CurrentTestDBInterceptor)  // interceptor 를 통해 다양한 작업을 할 수 있다
             currentTestDB = testDB
@@ -90,10 +90,11 @@ suspend fun withSuspendedDb(
 
     try {
         if (newConfiguration) {
-            testDB.db = testDB.connect(configure ?: {})
+            testDB.db = testDB.connect(configure)
         }
         val database = testDB.db!!
 
+        @Suppress("DEPRECATION")
         newSuspendedTransaction(
             context = context,
             db = database,

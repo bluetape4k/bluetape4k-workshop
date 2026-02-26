@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.vertx.sqlclient.dataobject
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.vertx.sqlclient.tests.testWithTransactionSuspending
+import io.bluetape4k.vertx.sqlclient.tests.testWithSuspendTransaction
 import io.bluetape4k.workshop.vertx.sqlclient.AbstractSqlClientTest
 import io.vertx.core.Vertx
 import io.vertx.junit5.VertxTestContext
@@ -60,7 +60,7 @@ class DataObjectMappingExamples: AbstractSqlClientTest() {
         testContext: VertxTestContext,
     ) = runSuspendIO {
         val pool = vertx.getH2Pool()
-        vertx.testWithTransactionSuspending(testContext, pool) {
+        vertx.testWithSuspendTransaction(testContext, pool) {
             val users: RowSet<UserDataObject> = SqlTemplate
                 .forQuery(pool, "SELECT * FROM users WHERE id=#{id}")
                 .mapTo(UserDataObjectRowMapper.INSTANCE)
@@ -82,7 +82,7 @@ class DataObjectMappingExamples: AbstractSqlClientTest() {
         testContext: VertxTestContext,
     ) = runSuspendIO {
         val pool = vertx.getH2Pool()
-        vertx.testWithTransactionSuspending(testContext, pool) {
+        vertx.testWithSuspendTransaction(testContext, pool) {
 
             //            val user = UserDataObject().apply {
             //                id = 42

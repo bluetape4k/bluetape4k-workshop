@@ -13,13 +13,13 @@ plugins {
     kotlin("plugin.noarg") version Versions.kotlin apply false
     kotlin("plugin.jpa") version Versions.kotlin apply false
     kotlin("plugin.serialization") version Versions.kotlin apply false
-    kotlin("plugin.atomicfu") version Versions.kotlin
+    id("org.jetbrains.kotlinx.atomicfu") version Versions.kotlinx_atomicfu
     kotlin("kapt") version Versions.kotlin apply false
 
     id(Plugins.detekt) version Plugins.Versions.detekt
 
     id(Plugins.dependency_management) version Plugins.Versions.dependency_management
-    id(Plugins.spring_boot) version Plugins.Versions.spring_boot apply false
+    id(Plugins.spring_boot) version Plugins.Versions.spring_boot4 apply false
     id(Plugins.quarkus) version Plugins.Versions.quarkus apply false
 
     id(Plugins.dokka) version Plugins.Versions.dokka
@@ -32,30 +32,17 @@ plugins {
     id("net.bytebuddy.byte-buddy-gradle-plugin") version "1.15.10" apply false
 }
 
-// NOTE: Github 에 등록된 Package 를 다운받기 위해서 사용합니다.
-// NOTE: ~/.gradle/gradle.properties gpr.user,gpr.key 를 정의하던가
-// NOTE: ~/.zshrc 에 GITHUB_USERNAME, GITHUB_TOKEN 을 정의합니다.
-fun getEnvOrProjectProperty(propertyKey: String, envKey: String): String {
-    return project.findProperty(propertyKey) as? String ?: System.getenv(envKey)
-}
-
-val bluetape4kGprKey: String = getEnvOrProjectProperty("bluetape4k.gpr.key", "BLUETAPE4K_GITHUB_TOKEN")
-
 allprojects {
     repositories {
         mavenCentral()
         google()
         maven {
-            name = "bluetape4k"
-            url = uri("https://maven.pkg.github.com/bluetape4k/bluetape4k-projects")
-
-            credentials {
-                username = "debop"
-                password = bluetape4kGprKey
-            }
+            name = "central-portal-snapshots"
+            url = uri("https://central.sonatype.com/repository/maven-snapshots/")
         }
     }
 
+    // bluetape4k snapshot 버전 사용 시만 사용하세요.
     configurations.all {
         resolutionStrategy.cacheChangingModulesFor(1, TimeUnit.DAYS)
     }
@@ -68,8 +55,10 @@ subprojects {
         // Kotlin 1.9.20 부터는 pluginId 를 지정해줘야 합니다.
         plugin("org.jetbrains.kotlin.jvm")
 
+        // Atomicfu
+        plugin("org.jetbrains.kotlinx.atomicfu")
+
         // plugin("jacoco")
-        plugin("maven-publish")
 
         plugin(Plugins.dependency_management)
 
@@ -79,24 +68,22 @@ subprojects {
 
     java {
         toolchain {
-            languageVersion.set(JavaLanguageVersion.of(21))
+            languageVersion.set(JavaLanguageVersion.of(25))
         }
     }
 
     kotlin {
-        jvmToolchain {
-            languageVersion.set(JavaLanguageVersion.of(21))
-        }
+        jvmToolchain(25)
         compilerOptions {
-            languageVersion.set(KotlinVersion.KOTLIN_2_1)
-            apiVersion.set(KotlinVersion.KOTLIN_2_1)
+            languageVersion.set(KotlinVersion.KOTLIN_2_3)
+            apiVersion.set(KotlinVersion.KOTLIN_2_3)
             freeCompilerArgs = listOf(
                 "-Xjsr305=strict",
-                "-Xjvm-default=all",
+                "-jvm-default=enable",
                 "-Xinline-classes",
                 "-Xstring-concat=indy",         // since Kotlin 1.4.20 for JVM 9+
-                "-Xenable-builder-inference",   // since Kotlin 1.6
-                "-Xcontext-receivers"           // since Kotlin 1.6
+                "-Xcontext-parameters",           // since Kotlin 1.6
+                "-Xannotation-default-target=param-property",
             )
             val experimentalAnnotations = listOf(
                 "kotlin.RequiresOptIn",
@@ -112,17 +99,50 @@ subprojects {
         }
     }
 
+    atomicfu {
+        transformJvm = true
+        jvmVariant = "VH"     //  FU, VH, BOTH
+    }
+
     tasks {
         compileJava {
             options.isIncremental = true
         }
 
+        compileKotlin {
+            compilerOptions {
+                incremental = true
+            }
+        }
+
+        // 멀티 모듈들을 테스트 시에만 동시에 실행되지 않게 하기 위해 Mutex 를 활용합니다.
+        abstract class TestMutexService: BuildService<BuildServiceParameters.None>
+
+        val testMutex = gradle.sharedServices.registerIfAbsent(
+            "test-mutex",
+            TestMutexService::class
+        ) {
+            maxParallelUsages.set(1)
+        }
+
         test {
+            // 멀티 모듈들을 테스트 시에만 동시에 실행되지 않게 하기 위해 Mutex 를 활용합니다.
+            usesService(testMutex)
+
             useJUnitPlatform()
 
-            // 테스트 시 아래와 같은 예외 메시지를 제거하기 위해서 
+            // 테스트 시 아래와 같은 예외 메시지를 제거하기 위해서
             // OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
-            jvmArgs("-Xshare:off", "-Xmx8G")
+            jvmArgs(
+                "-Xshare:off",
+                "-Xms2G",
+                "-Xmx4G",
+                "-XX:+UseZGC",
+                "-XX:+UnlockExperimentalVMOptions",
+                "-XX:+EnableDynamicAgentLoading",
+                "--enable-preview",
+                "-Didea.io.use.nio2=true"
+            )
 
             if (project.name.contains("quarkus")) {
                 // [Quarkus Logging](https://quarkus.io/guides/logging)
@@ -156,89 +176,21 @@ subprojects {
             }
         }
 
-//        jacoco {
-//            toolVersion = Plugins.Versions.jacoco
-//        }
-//
-//        jacocoTestReport {
-//            reports {
-//                html.required.set(true)
-//                xml.required.set(true)
-//            }
-//        }
-//
-//        jacocoTestCoverageVerification {
-//            dependsOn(jacocoTestReport)
-//
-//            violationRules {
-//                rule {
-//                    // 룰 검증 수행 여부
-//                    enabled = true
-//
-//                    // 룰을 검증할 단위를 클래스 단위로 한다
-//                    element = "CLASS"         // BUNDLE|PACKAGE|CLASS|SOURCEFILE|METHOD
-//
-//                    // 브랜치 커버리지를 최소한 10% 를 만족시켜야 한다
-//                    limit {
-//                        counter =
-//                            "INSTRUCTION"       // INSTRUCTION, LINE, BRANCH, COMPLEXITY, METHOD and CLASS. Defaults to INSTRUCTION.
-//                        value =
-//                            "COVEREDRATIO"   // TOTALCOUNT, MISSEDCOUNT, COVEREDCOUNT, MISSEDRATIO and COVEREDRATIO. Defaults to COVEREDRATIO
-//                        minimum = 0.10.toBigDecimal()
-//                    }
-//                }
-//            }
-//        }
-//
-//        jacocoTestCoverageVerification {
-//            dependsOn(jacocoTestReport)
-//
-//            violationRules {
-//                rule {
-//                    // 룰 검증 수행 여부
-//                    enabled = true
-//
-//                    // 룰을 검증할 단위를 클래스 단위로 한다
-//                    element = "CLASS"         // BUNDLE|PACKAGE|CLASS|SOURCEFILE|METHOD
-//
-//                    // 브랜치 커버리지를 최소한 10% 를 만족시켜야 한다
-//                    limit {
-//                        counter =
-//                            "INSTRUCTION"       // INSTRUCTION, LINE, BRANCH, COMPLEXITY, METHOD and CLASS. Defaults to INSTRUCTION.
-//                        value =
-//                            "COVEREDRATIO"   // TOTALCOUNT, MISSEDCOUNT, COVEREDCOUNT, MISSEDRATIO and COVEREDRATIO. Defaults to COVEREDRATIO
-//                        minimum = 0.10.toBigDecimal()
-//                    }
-//                }
-//            }
-//        }
-
-        jar {
-            manifest.attributes["Specification-Title"] = project.name
-            manifest.attributes["Specification-Version"] = project.version
-            manifest.attributes["Implementation-Title"] = project.name
-            manifest.attributes["Implementation-Version"] = project.version
-            manifest.attributes["Automatic-Module-Name"] = project.name.replace('-', '.')
-            manifest.attributes["Created-By"] =
-                "${System.getProperty("java.version")} (${System.getProperty("java.specification.vendor")})"
-        }
-
         // https://kotlin.github.io/dokka/1.6.0/user_guide/gradle/usage/
-        withType<org.jetbrains.dokka.gradle.DokkaTask>().configureEach {
-            val javadocDir = layout.buildDirectory.asFile.get().resolve("javadoc")
-            outputDirectory.set(javadocDir)
-            // outputDirectory.set(layout.buildDirectory.asFile.get().resolve("javadoc"))
-            dokkaSourceSets {
-                configureEach {
-                    includes.from("README.md")
+        dokka {
+            configureEach {
+//                val javadocDir = layout.buildDirectory.asFile.get().resolve("javadoc")
+//                outputs.dir(javadocDir)
+
+                dokkaSourceSets {
+                    configureEach {
+                        includes.from("README.md")
+                    }
+                }
+                dokkaPublications.html {
+                    outputDirectory.set(project.file("docs/api"))
                 }
             }
-        }
-
-        dokkaHtml.configure {
-            val dokkaDir = layout.buildDirectory.asFile.get().resolve("dokka")
-            outputDirectory.set(dokkaDir)
-            // outputDirectory.set(layout.buildDirectory.asFile.get().resolve("dokka"))
         }
 
         clean {
@@ -259,7 +211,7 @@ subprojects {
             mavenBom(Libs.bluetape4k_bom)
             mavenBom(Libs.spring_integration_bom)
             mavenBom(Libs.spring_cloud_dependencies)
-            mavenBom(Libs.spring_boot_dependencies)
+            mavenBom(Libs.spring_boot4_dependencies)
             mavenBom(Libs.spring_modulith_bom)
 
             mavenBom(Libs.feign_bom)
@@ -281,6 +233,7 @@ subprojects {
             mavenBom(Libs.resilience4j_bom)
             mavenBom(Libs.netty_bom)
             mavenBom(Libs.jackson_bom)
+            mavenBom(Libs.jackson3_bom)
 
             mavenBom(Libs.kotlinx_coroutines_bom)
             mavenBom(Libs.kotlin_bom)
@@ -292,9 +245,6 @@ subprojects {
             dependency(Libs.kotlinx_coroutines_bom)
             dependency(Libs.kotlinx_coroutines_core)
             dependency(Libs.kotlinx_coroutines_core_jvm)
-            dependency(Libs.kotlinx_coroutines_jdk8)
-            dependency(Libs.kotlinx_coroutines_jdk9)
-            dependency(Libs.kotlinx_coroutines_jdk8)
             dependency(Libs.kotlinx_coroutines_reactive)
             dependency(Libs.kotlinx_coroutines_reactor)
             dependency(Libs.kotlinx_coroutines_rx2)
@@ -325,20 +275,6 @@ subprojects {
             dependency(Libs.logback)
             dependency(Libs.logback_core)
 
-            // Javax API
-            dependency(Libs.javax_activation_api)
-            dependency(Libs.javax_annotation_api)
-            dependency(Libs.javax_el_api)
-            dependency(Libs.javax_cache_api)
-            dependency(Libs.javax_inject)
-            dependency(Libs.javax_json_api)
-            dependency(Libs.javax_persistence_api)
-            dependency(Libs.javax_servlet_api)
-            dependency(Libs.javax_transaction_api)
-            dependency(Libs.javax_validation_api)
-            dependency(Libs.javax_ws_rs_api)
-            dependency(Libs.javax_xml_bind)
-
             // jakarta
             dependency(Libs.jakarta_activation_api)
             dependency(Libs.jakarta_annotation_api)
@@ -355,6 +291,13 @@ subprojects {
             dependency(Libs.jakarta_ws_rs_api)
             dependency(Libs.jakarta_xml_bind)
 
+            // Jackson
+            dependency(Libs.jackson_annotations)
+            dependency(Libs.jackson_core)
+
+            // Jackson 3
+            dependency(Libs.jackson3_core)
+
             // Compressor
             dependency(Libs.snappy_java)
             dependency(Libs.lz4_java)
@@ -368,22 +311,8 @@ subprojects {
             dependency(Libs.guava)
 
             dependency(Libs.kryo)
-            dependency(Libs.fury_kotlin)
-
-            // Jackson (이상하게 mavenBom 에 적용이 안되어서 강제로 추가하였다)
-            dependency(Libs.jackson_bom)
-            dependency(Libs.jackson_annotations)
-            dependency(Libs.jackson_core)
-            dependency(Libs.jackson_databind)
-            dependency(Libs.jackson_datatype_jdk8)
-            dependency(Libs.jackson_datatype_jsr310)
-            dependency(Libs.jackson_datatype_jsr353)
-            dependency(Libs.jackson_module_kotlin)
-            dependency(Libs.jackson_module_paranamer)
-            dependency(Libs.jackson_module_parameter_names)
-            dependency(Libs.jackson_module_blackbird)
-            dependency(Libs.jackson_module_jsonSchema)
-
+            dependency(Libs.fory_kotlin)
+            
             // Retrofit
             dependency(Libs.retrofit2)
             dependency(Libs.retrofit2_adapter_java8)
@@ -408,8 +337,15 @@ subprojects {
             dependency(Libs.grpc_kotlin_stub)
 
             dependency(Libs.mongo_bson)
+            dependency(Libs.mongo_bson_kotlin)
+            dependency(Libs.mongo_bson_kotlinx)
             dependency(Libs.mongodb_driver_core)
             dependency(Libs.mongodb_driver_reactivestreams)
+            dependency(Libs.mongodb_driver_sync)
+            dependency(Libs.mongodb_driver_kotlin_coroutine)
+            dependency(Libs.mongodb_driver_kotlin_extensions)
+            dependency(Libs.mongodb_driver_kotlin_sync)
+
 
             // Kafka
             dependency(Libs.kafka_clients)
@@ -436,10 +372,10 @@ subprojects {
             dependency(Libs.querydsl_jpa)
 
             // Validators
-            dependency(Libs.javax_validation_api)
+            dependency(Libs.jakarta_validation_api)
+            dependency(Libs.jakarta_el_api)
             dependency(Libs.hibernate_validator)
             dependency(Libs.hibernate_validator_annotation_processor)
-            dependency(Libs.javax_el)
 
             dependency(Libs.hikaricp)
             dependency(Libs.mysql_connector_j)
@@ -509,22 +445,21 @@ subprojects {
         val testRuntimeOnly by configurations
 
         compileOnly(platform(Libs.bluetape4k_bom))
-        compileOnly(platform(Libs.spring_boot_dependencies))
+        compileOnly(platform(Libs.spring_boot4_dependencies))
         compileOnly(platform(Libs.jackson_bom))
         compileOnly(platform(Libs.kotlinx_coroutines_bom))
 
-        api(Libs.kotlin_stdlib)
-        api(Libs.kotlin_stdlib_jdk8)
-        api(Libs.kotlin_reflect)
-        api(Libs.kotlinx_atomicfu)
+        implementation(Libs.kotlin_stdlib)
+        implementation(Libs.kotlin_reflect)
         testImplementation(Libs.kotlin_test)
         testImplementation(Libs.kotlin_test_junit5)
 
-        compileOnly(Libs.kotlinx_coroutines_core)
+        implementation(Libs.kotlinx_coroutines_core)
+        implementation(Libs.kotlinx_atomicfu)
 
         // 개발 시에는 logback 이 검증하기에 더 좋고, Production에서 비동기 로깅은 log4j2 가 성능이 좋다고 합니다.
-        api(Libs.slf4j_api)
-        api(Libs.bluetape4k_logging)
+        implementation(Libs.slf4j_api)
+        implementation(Libs.bluetape4k_logging)
         implementation(Libs.logback)
         testImplementation(Libs.jcl_over_slf4j)
         testImplementation(Libs.jul_to_slf4j)
@@ -534,7 +469,6 @@ subprojects {
         testImplementation(Libs.bluetape4k_junit5)
         testImplementation(Libs.junit_jupiter)
         testRuntimeOnly(Libs.junit_platform_engine)
-        testImplementation(Libs.junit_jupiter_migrationsupport)
 
         testImplementation(Libs.kluent)
         testImplementation(Libs.mockk)
@@ -544,15 +478,4 @@ subprojects {
         testImplementation(Libs.datafaker)
         testImplementation(Libs.random_beans)
     }
-
-    tasks.withType<Jar> {
-        manifest.attributes["Specification-Title"] = project.name
-        manifest.attributes["Specification-Version"] = project.version
-        manifest.attributes["Implementation-Title"] = project.name
-        manifest.attributes["Implementation-Version"] = project.version
-        manifest.attributes["Automatic-Module-Name"] = project.name.replace('-', '.')
-        manifest.attributes["Created-By"] =
-            "${System.getProperty("java.version")} (${System.getProperty("java.specification.vendor")})"
-    }
-
 }

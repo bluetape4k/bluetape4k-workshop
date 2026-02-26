@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cache.CacheManager
 
 class LettuceRedisCacheConfigurationTest(
-    @Autowired private val cacheManager: CacheManager,
+    @param:Autowired private val cacheManager: CacheManager,
 ): AbstractRedisCacheTest() {
 
     companion object: KLoggingChannel()

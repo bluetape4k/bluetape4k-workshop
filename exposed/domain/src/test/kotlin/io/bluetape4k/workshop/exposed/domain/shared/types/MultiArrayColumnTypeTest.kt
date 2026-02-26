@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.exposed.domain.shared.types
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
-import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
@@ -17,7 +17,9 @@ import org.jetbrains.exposed.v1.core.arrayLiteral
 import org.jetbrains.exposed.v1.core.arrayParam
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.get
+import org.jetbrains.exposed.v1.core.greater
 import org.jetbrains.exposed.v1.core.slice
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
@@ -575,10 +577,9 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("multiArray", multiArray)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("multiArray", multiArray)
+            .toString()
     }
 
     /**
@@ -643,7 +644,7 @@ class MultiArrayColumnTypeTest: AbstractExposedTest() {
             fetchedEntity shouldBeEqualTo entity // Same reference
 
             fetchedEntity!!.multiArray shouldBeEqualTo updatedArray
-            fetchedEntity!!.multiArray.flatten() shouldBeEqualTo updatedArray.flatten()
+            fetchedEntity.multiArray.flatten() shouldBeEqualTo updatedArray.flatten()
         }
     }
 }

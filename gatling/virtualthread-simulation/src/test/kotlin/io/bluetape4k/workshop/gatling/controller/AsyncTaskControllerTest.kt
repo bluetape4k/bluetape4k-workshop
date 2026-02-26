@@ -3,18 +3,14 @@ package io.bluetape4k.workshop.gatling.controller
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
-import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.gatling.AbstractGatlingTest
+import io.bluetape4k.workshop.shared.web.httpGet
 import kotlinx.coroutines.reactive.awaitSingle
 import org.amshove.kluent.shouldNotBeNull
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 import kotlin.test.Test
 
-class AsyncTaskControllerTest(
-    @Autowired private val client: WebTestClient,
-): AbstractGatlingTest() {
+class AsyncTaskControllerTest: AbstractGatlingTest() {
 
     companion object: KLogging()
 
@@ -29,9 +25,10 @@ class AsyncTaskControllerTest(
 
         val response = client
             .httpGet("/async/$seconds")
-            .returnResult<String>().responseBody
+            .expectStatus().is2xxSuccessful
+            .returnResult<Long>().responseBody
             .awaitSingle()
 
-        log.info { "Response: $response" }
+        log.info { "delay time: $response msec" }
     }
 }

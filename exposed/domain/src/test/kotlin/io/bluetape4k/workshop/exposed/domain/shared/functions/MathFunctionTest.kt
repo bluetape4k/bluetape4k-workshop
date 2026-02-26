@@ -5,10 +5,11 @@ import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.expectException
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.div
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.decimalLiteral
+import org.jetbrains.exposed.v1.core.div
 import org.jetbrains.exposed.v1.core.doubleLiteral
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.functions.math.AbsFunction
 import org.jetbrains.exposed.v1.core.functions.math.CeilingFunction
 import org.jetbrains.exposed.v1.core.functions.math.ExpFunction

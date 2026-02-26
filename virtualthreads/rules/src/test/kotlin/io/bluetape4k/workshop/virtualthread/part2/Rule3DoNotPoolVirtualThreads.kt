@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.virtualthread.part2
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
+import io.bluetape4k.workshop.virtualThreads.AbstractVirtualThreadTest
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -16,7 +17,7 @@ import java.util.concurrent.Executors
  * 즉, Virtual Thread 생성 수가 Platform Thread의 수에 의해 제한될 수 있습니다.
  * 또한 작업들이 Virtual Thread 를 재활용하도록 한다. (이건 Virtual Thread에는 장점이 아니다.)
  */
-class Rule3DoNotPoolVirtualThreads {
+class Rule3DoNotPoolVirtualThreads: AbstractVirtualThreadTest() {
 
     companion object: KLoggingChannel()
 

@@ -1,14 +1,17 @@
+@file:OptIn(ExperimentalTime::class)
+
 package io.bluetape4k.workshop.exposed.sql.kotlin.datetime
 
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withTables
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldNotBeNull
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.less
 import org.jetbrains.exposed.v1.datetime.date
 import org.jetbrains.exposed.v1.datetime.dateLiteral
 import org.jetbrains.exposed.v1.datetime.dateTimeLiteral
@@ -20,6 +23,8 @@ import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 
 /**
  * DATE, DATEIME 용 리터럴을 사용한 테스트

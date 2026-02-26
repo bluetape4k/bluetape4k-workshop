@@ -68,6 +68,6 @@ class ConurceConfig {
             }
         }
 
-        return listOf(student1, student2, student3)
+        return mutableListOf(student1, student2, student3)
     }
 }

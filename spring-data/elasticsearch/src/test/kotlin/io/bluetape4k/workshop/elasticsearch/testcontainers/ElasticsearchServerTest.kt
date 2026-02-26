@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
-import org.springframework.data.elasticsearch.client.elc.ElasticsearchClients
+import org.springframework.data.elasticsearch.client.elc.rest5_client.Rest5Clients
 
 @Execution(ExecutionMode.SAME_THREAD)
 class ElasticsearchServerTest {
@@ -33,7 +33,10 @@ class ElasticsearchServerTest {
                 es.isRunning.shouldBeTrue()
 
                 val config = ElasticsearchServer.Launcher.getClientConfiguration(es)
-                val client = ElasticsearchClients.getRestClient(config)
+                // val client = ElasticsearchClients.createImperative(config) //  .getRestClient(config)
+                // client.isRunning.shouldBeTrue()
+
+                val client = Rest5Clients.getRest5Client(config)
                 client.isRunning.shouldBeTrue()
             }
         }

@@ -9,19 +9,16 @@ springBoot {
     mainClass.set("io.bluetape4k.workshop.application.event.EventApplicationKt")
 }
 
-@Suppress("UnstableApiUsage")
+
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
 
 dependencies {
-    implementation(platform(Libs.spring_boot_dependencies))
+    implementation(platform(Libs.spring_boot4_dependencies))
 
     // Bluetape4k
     implementation(Libs.bluetape4k_io)
-    implementation(Libs.bluetape4k_jackson)
-    implementation(Libs.bluetape4k_spring_core)
-    testImplementation(Libs.bluetape4k_spring_tests)
 
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))
@@ -29,10 +26,10 @@ dependencies {
     annotationProcessor(Libs.springBoot("configuration-processor"))
     runtimeOnly(Libs.springBoot("devtools"))
 
-    implementation(Libs.springBootStarter("aop"))
-    implementation(Libs.springBootStarter("webflux"))
     implementation(Libs.springBootStarter("actuator"))
+    implementation(Libs.springBootStarter("aspectj"))
     implementation(Libs.springBootStarter("validation"))
+    implementation(Libs.springBootStarter("webflux"))
 
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")

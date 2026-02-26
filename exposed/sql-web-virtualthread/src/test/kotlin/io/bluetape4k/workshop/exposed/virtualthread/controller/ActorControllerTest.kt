@@ -3,26 +3,20 @@ package io.bluetape4k.workshop.exposed.virtualthread.controller
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.spring.tests.httpDelete
-import io.bluetape4k.spring.tests.httpGet
-import io.bluetape4k.spring.tests.httpPost
 import io.bluetape4k.workshop.exposed.virtualthread.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.ActorDTO
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.asFlow
+import io.bluetape4k.workshop.shared.web.httpDelete
+import io.bluetape4k.workshop.shared.web.httpGet
+import io.bluetape4k.workshop.shared.web.httpPost
 import kotlinx.coroutines.reactive.awaitSingle
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.test.web.reactive.server.returnResult
 
-class ActorControllerTest(
-    @Autowired private val client: WebTestClient,
-): AbstractExposedTest() {
+class ActorControllerTest: AbstractExposedTest() {
 
     companion object: KLoggingChannel() {
         private fun newActor(): ActorDTO = ActorDTO(
@@ -36,7 +30,9 @@ class ActorControllerTest(
     fun `get actor by id`() = runSuspendIO {
         val id = 1
 
-        val actor = client.httpGet("/actors/$id")
+        val actor = client
+            .httpGet("/actors/$id")
+            .expectStatus().is2xxSuccessful
             .returnResult<ActorDTO>().responseBody
             .awaitSingle()
 
@@ -52,9 +48,9 @@ class ActorControllerTest(
 
         val actors = client
             .httpGet("/actors?lastName=$lastName")
-            .returnResult<ActorDTO>().responseBody
-            .asFlow()
-            .toList()
+            .expectStatus().is2xxSuccessful
+            .expectBodyList<ActorDTO>()
+            .returnResult().responseBody
 
         log.debug { "actors=$actors" }
 
@@ -64,6 +60,7 @@ class ActorControllerTest(
         val firstName = "Angelina"
         val angelinas = client
             .httpGet("/actors?firstName=$firstName")
+            .expectStatus().is2xxSuccessful
             .expectBodyList<ActorDTO>()
             .returnResult().responseBody
 
@@ -78,6 +75,7 @@ class ActorControllerTest(
 
         val newActor = client
             .httpPost("/actors", actor)
+            .expectStatus().is2xxSuccessful
             .returnResult<ActorDTO>().responseBody
             .awaitSingle()
 
@@ -90,11 +88,13 @@ class ActorControllerTest(
 
         val newActor = client
             .httpPost("/actors", actor)
+            .expectStatus().is2xxSuccessful
             .returnResult<ActorDTO>().responseBody
             .awaitSingle()
 
         val deletedCount = client
             .httpDelete("/actors/${newActor.id}")
+            .expectStatus().is2xxSuccessful
             .returnResult<Int>().responseBody
             .awaitSingle()
 

@@ -1,16 +1,16 @@
 package io.bluetape4k.workshop.redisson.objects
 
+import io.bluetape4k.coroutines.support.awaitSuspending
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.redis.redisson.coroutines.coAwait
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
-import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.yield
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.until
 import org.junit.jupiter.api.Test
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Reliable topic examples
@@ -36,7 +36,7 @@ class ReliableTopicExamples: AbstractRedissonTest() {
     fun `자동 재구독이 되는 Topic`() = runTest {
         val topicName = randomName()
         val topic = redisson.getReliableTopic(topicName)
-        val listenCounter = atomic(0)
+        val listenCounter = AtomicInteger(0)
 
         topic.addListener(String::class.java) { channel, msg ->
             log.debug { "Listener: channel[$channel] received: $msg" }
@@ -45,11 +45,11 @@ class ReliableTopicExamples: AbstractRedissonTest() {
 
         val job = launch {
             val topic2 = redisson.getReliableTopic(topicName)
-            topic2.publishAsync("Message-${randomString()}").coAwait()
+            topic2.publishAsync("Message-${randomString()}").awaitSuspending()
         }
         yield()
         job.join()
 
-        await until { listenCounter.value >= 1 }
+        await until { listenCounter.get() >= 1 }
     }
 }

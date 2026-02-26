@@ -11,8 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.redis.connection.RedisConnectionFactory
 
 class NumberServiceTest(
-    @Autowired private val numberService: NumberService,
-    @Autowired private val connectionFactory: RedisConnectionFactory,
+    @param:Autowired private val numberService: NumberService,
+    @param:Autowired private val connectionFactory: RedisConnectionFactory,
 ): AbstractRedisClusterTest() {
 
     companion object: KLoggingChannel()

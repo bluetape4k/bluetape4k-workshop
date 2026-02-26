@@ -8,18 +8,21 @@ springBoot {
     mainClass.set("io.bluetape4k.workshop.stomp.websocket.StompWebSocketApplicationKt")
 }
 
-@Suppress("UnstableApiUsage")
+
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
 
 dependencies {
-    implementation(Libs.bluetape4k_spring_core)
-    implementation(Libs.bluetape4k_jackson)
-    implementation(Libs.bluetape4k_netty)
+    testImplementation(project(":shared"))
+    
+    implementation(Libs.bluetape4k_core)
     testImplementation(Libs.bluetape4k_junit5)
 
     api(Libs.jakarta_annotation_api)
+
+    // Jackson 3
+    implementation(Libs.jackson3_module_kotlin)
 
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))
@@ -28,7 +31,7 @@ dependencies {
     runtimeOnly(Libs.springBoot("devtools"))
 
     implementation(Libs.springBootStarter("websocket"))
-    testImplementation(Libs.bluetape4k_spring_tests)
+    testImplementation(Libs.springBootStarter("websocket-test"))
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
@@ -45,7 +48,6 @@ dependencies {
     // Coroutines
     implementation(Libs.bluetape4k_coroutines)
     implementation(Libs.kotlinx_coroutines_core)
-    implementation(Libs.kotlinx_coroutines_jdk8)
     implementation(Libs.kotlinx_coroutines_reactor)
     testImplementation(Libs.kotlinx_coroutines_test)
 

@@ -14,13 +14,13 @@ configurations {
 
 dependencies {
     implementation(Libs.bluetape4k_redis)
-    implementation(Libs.bluetape4k_spring_core)
+    implementation(Libs.bluetape4k_jackson3)
     testImplementation(Libs.bluetape4k_junit5)
     implementation(Libs.bluetape4k_testcontainers)
 
     // Codecs
     implementation(Libs.kryo)
-    implementation(Libs.fury_kotlin)
+    implementation(Libs.fory_kotlin)
 
     // Compressor
     implementation(Libs.commons_compress)
@@ -42,10 +42,16 @@ dependencies {
     implementation(Libs.lettuce_core)
     implementation(Libs.commons_pool2)
 
-    implementation(Libs.springBootStarter("cache"))
-    implementation(Libs.springBootStarter("data-redis"))
+    // Netty
+    implementation(platform(Libs.netty_bom))
+    implementation(Libs.netty_all)
+    implementation(Libs.netty_transport_native_epoll)
+    implementation(Libs.netty_transport_native_kqueue)
 
-    testImplementation(Libs.bluetape4k_spring_tests)
+    implementation(Libs.springBootStarter("cache"))
+    testImplementation(Libs.springBootStarter("cache-test"))
+    implementation(Libs.springBootStarter("data-redis"))
+    testImplementation(Libs.springBootStarter("data-redis-test"))
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

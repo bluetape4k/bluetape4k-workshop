@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.exposed.domain.shared.dml
 
 import io.bluetape4k.codec.Base58
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
-import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.idgenerators.uuid.TimebasedUuid.Epoch
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
@@ -17,7 +17,6 @@ import io.bluetape4k.workshop.exposed.inProperCase
 import io.bluetape4k.workshop.exposed.withDb
 import io.bluetape4k.workshop.exposed.withSuspendedDb
 import io.bluetape4k.workshop.exposed.withTables
-import kotlinx.coroutines.runBlocking
 import org.amshove.kluent.fail
 import org.amshove.kluent.shouldBeEmpty
 import org.amshove.kluent.shouldBeEqualTo
@@ -30,10 +29,16 @@ import org.jetbrains.exposed.v1.core.CustomFunction
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.Transaction
-import org.jetbrains.exposed.v1.core.UUIDColumnType
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.greater
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.isNull
+import org.jetbrains.exposed.v1.core.java.UUIDColumnType
+import org.jetbrains.exposed.v1.core.java.javaUUID
+import org.jetbrains.exposed.v1.core.like
 import org.jetbrains.exposed.v1.core.statements.BatchInsertStatement
 import org.jetbrains.exposed.v1.core.stringLiteral
 import org.jetbrains.exposed.v1.core.substring
@@ -660,11 +665,10 @@ class InsertTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("name", name)
-                .add("order", order)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("name", name)
+            .add("order", order)
+            .toString()
     }
 
     /**
@@ -899,14 +903,12 @@ class InsertTest: AbstractExposedTest() {
         }
         try {
             try {
-                runBlocking {
-                    withSuspendedDb(testDB) {
-                        SchemaUtils.create(testTable)
-                        testTable.insert { it[foo] = 1 }
-                        testTable.insert { it[foo] = 0 } // foo > 0 조건을 만족하지 않음 (예외 발생)
-                    }
-                    fail("예외가 발생해서 Rollback 이 수행되어야 합니다.")
+                withSuspendedDb(testDB) {
+                    SchemaUtils.create(testTable)
+                    testTable.insert { it[foo] = 1 }
+                    testTable.insert { it[foo] = 0 } // foo > 0 조건을 만족하지 않음 (예외 발생)
                 }
+                fail("예외가 발생해서 Rollback 이 수행되어야 합니다.")
             } catch (e: Throwable) {
                 // log.warn(e) { "Fail to insert" }
             }
@@ -1153,7 +1155,7 @@ class InsertTest: AbstractExposedTest() {
         val randomPGUUID = object: CustomFunction<UUID>("gen_random_uuid", UUIDColumnType()) {}
 
         val tester = object: IdTable<UUID>("test_uuid_table") {
-            override val id: Column<EntityID<UUID>> = uuid("id").defaultExpression(randomPGUUID).entityId()
+            override val id: Column<EntityID<UUID>> = javaUUID("id").defaultExpression(randomPGUUID).entityId()
             override val primaryKey = PrimaryKey(id)
         }
 

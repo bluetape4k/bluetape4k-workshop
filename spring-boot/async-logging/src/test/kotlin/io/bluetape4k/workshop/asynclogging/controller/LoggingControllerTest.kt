@@ -3,19 +3,16 @@ package io.bluetape4k.workshop.asynclogging.controller
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
-import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.asynclogging.AbstractAsyncLoggerTest
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
 
 class LoggingControllerTest(
-    @Autowired private val client: WebTestClient,
+
 ): AbstractAsyncLoggerTest() {
 
     companion object: KLoggingChannel()
@@ -51,7 +48,11 @@ class LoggingControllerTest(
     }
 
     private suspend fun callLoggerApi(path: String) = runSuspendIO {
-        val response = client.httpGet("/$path")
+        val response = client
+            .get()
+            .uri("/$path")
+            .exchange()
+            .expectStatus().isOk
             .returnResult<String>().responseBody
             .asFlow()
             .toList()

@@ -5,38 +5,31 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.jsonview.AbstractJsonViewApplicationTest
 import io.bluetape4k.workshop.jsonview.dto.ArticleDTO
-import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.reactive.asFlow
+import io.bluetape4k.workshop.shared.web.httpGet
 import kotlinx.coroutines.reactive.awaitSingle
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldHaveSize
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.test.web.reactive.server.returnResult
 
-class ArticleControllerTest(
-    @Autowired private val client: WebTestClient,
-): AbstractJsonViewApplicationTest() {
+class ArticleControllerTest: AbstractJsonViewApplicationTest() {
 
     companion object: KLoggingChannel() {
         private const val BASE_PATH = "/articles"
     }
 
-    fun WebTestClient.httpGet(url: String) =
-        this.get().uri(url)
-            .exchange()
-            .expectStatus().isOk
 
     @Test
     fun `get all articles`() = runSuspendIO {
         val articles = client
             .httpGet(BASE_PATH)
-            .returnResult<ArticleDTO>().responseBody
-            .asFlow()
-            .toList()
+            .expectStatus().is2xxSuccessful
+            .expectBodyList<ArticleDTO>()
+            .returnResult().responseBody
+            .shouldNotBeNull()
 
         articles shouldHaveSize 2
 
@@ -51,6 +44,7 @@ class ArticleControllerTest(
     fun `get article details by id`() = runSuspendIO {
         val article = client
             .httpGet("$BASE_PATH/1")
+            .expectStatus().is2xxSuccessful
             .returnResult<ArticleDTO>().responseBody
             .awaitSingle()
 
@@ -64,6 +58,7 @@ class ArticleControllerTest(
     fun `get article for analytics`() = runSuspendIO {
         val article = client
             .httpGet("$BASE_PATH/1/analytics")
+            .expectStatus().is2xxSuccessful
             .returnResult<ArticleDTO>().responseBody
             .awaitSingle()
 
@@ -81,6 +76,7 @@ class ArticleControllerTest(
     fun `get articles for internal`() = runSuspendIO {
         val article = client
             .httpGet("$BASE_PATH/1/internal")
+            .expectStatus().is2xxSuccessful
             .returnResult<ArticleDTO>().responseBody
             .awaitSingle()
 

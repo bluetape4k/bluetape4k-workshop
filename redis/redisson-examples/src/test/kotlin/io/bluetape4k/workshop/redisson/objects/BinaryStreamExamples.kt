@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.redisson.objects
 
+import io.bluetape4k.coroutines.support.awaitSuspending
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.redis.redisson.coroutines.coAwait
 import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.support.toUtf8String
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
@@ -36,9 +36,9 @@ class BinaryStreamExamples: AbstractRedissonTest() {
         val contentBytes = contentStr.toUtf8Bytes()
 
         // 값이 없으면 설정하고, TTL 을 10초로 준다 
-        stream.setIfAbsentAsync(contentBytes, 10.seconds.toJavaDuration()).coAwait().shouldBeTrue()
+        stream.setIfAbsentAsync(contentBytes, 10.seconds.toJavaDuration()).awaitSuspending().shouldBeTrue()
         // 값을 다시 설정한다
-        stream.setAsync(contentBytes).coAwait()
+        stream.setAsync(contentBytes).awaitSuspending()
 
         // 입력 스트림을 읽는다
         val loadedBytes = stream.inputStream.readBytes()
@@ -48,11 +48,11 @@ class BinaryStreamExamples: AbstractRedissonTest() {
         // 기존 값을 비교해서 새로운 Bytes 로 대체한다
         val contentBytes2 = randomString().toUtf8Bytes()
 
-        stream.compareAndSetAsync(contentBytes, contentBytes2).coAwait().shouldBeTrue()
+        stream.compareAndSetAsync(contentBytes, contentBytes2).awaitSuspending().shouldBeTrue()
 
         // 대체된 값을 확인한다
         stream.inputStream.readBytes() shouldBeEqualTo contentBytes2
 
-        stream.deleteAsync().coAwait().shouldBeTrue()
+        stream.deleteAsync().awaitSuspending().shouldBeTrue()
     }
 }

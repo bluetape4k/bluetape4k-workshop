@@ -14,6 +14,8 @@ import org.amshove.kluent.shouldBeLessOrEqualTo
 import org.amshove.kluent.shouldBeLessThan
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.JRE
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Profile
 import java.util.concurrent.ConcurrentHashMap
@@ -21,7 +23,7 @@ import kotlin.system.measureTimeMillis
 
 @Profile("app")
 class CountryRepositoryTest(
-    @Autowired private val countryRepo: CountryRepository,
+    @param:Autowired private val countryRepo: CountryRepository,
 ): AbstractCaffeineCacheApplicationTest() {
 
     companion object: KLoggingChannel() {
@@ -59,6 +61,7 @@ class CountryRepositoryTest(
         val us = measureTimeMillis {
             countryRepo.findByCode(US)
         }
+        Thread.sleep(10)
         us shouldBeGreaterThan EXPECTED_MILLIS
 
         val usCached = measureTimeMillis {
@@ -67,6 +70,7 @@ class CountryRepositoryTest(
         usCached shouldBeLessThan EXPECTED_MILLIS
 
         countryRepo.evictCache(US)
+        Thread.sleep(10)
 
         val usEvicted = measureTimeMillis {
             countryRepo.findByCode(US)
@@ -80,8 +84,8 @@ class CountryRepositoryTest(
 
         measureTimeMillis {
             MultithreadingTester()
-                .numThreads(8 * Runtimex.availableProcessors)
-                .roundsPerThread(8)
+                .workers(8 * Runtimex.availableProcessors)
+                .rounds(8)
                 .add {
                     val country = retreiveCountry()
                     codeMap[country.code] = country
@@ -92,13 +96,14 @@ class CountryRepositoryTest(
         codeMap.size shouldBeLessOrEqualTo CountryRepository.SAMPLE_COUNTRY_CODES.size
     }
 
+    @EnabledOnJre(JRE.JAVA_21)
     @Test
     fun `get random countries in virtual threads`() {
         val codeMap = ConcurrentHashMap<String, Country>()
 
         measureTimeMillis {
             StructuredTaskScopeTester()
-                .roundsPerTask(8 * 8 * Runtimex.availableProcessors)
+                .rounds(8 * 8 * Runtimex.availableProcessors)
                 .add {
                     val country = retreiveCountry()
                     codeMap[country.code] = country
@@ -115,8 +120,8 @@ class CountryRepositoryTest(
 
         measureTimeMillis {
             SuspendedJobTester()
-                .numThreads(8 * Runtimex.availableProcessors)
-                .roundsPerJob(8)
+                .workers(8 * Runtimex.availableProcessors)
+                .rounds(8)
                 .add {
                     val country = retreiveCountry()
                     codeMap[country.code] = country

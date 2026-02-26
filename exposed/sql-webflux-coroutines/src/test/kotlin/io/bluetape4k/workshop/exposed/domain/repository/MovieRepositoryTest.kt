@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 
 class MovieRepositoryTest(
-    @Autowired private val movieRepo: MovieRepository,
+    @param:Autowired private val movieRepo: MovieRepository,
 ): AbstractExposedSqlTest() {
 
     companion object: KLoggingChannel() {

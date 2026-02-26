@@ -11,6 +11,7 @@ import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.VarCharColumnType
 import org.jetbrains.exposed.v1.core.autoIncColumnType
 import org.jetbrains.exposed.v1.core.castTo
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.intLiteral
 import org.jetbrains.exposed.v1.core.intParam
 import org.jetbrains.exposed.v1.core.stringParam
@@ -98,6 +99,7 @@ class InsertSelectTest: AbstractExposedTest() {
      *   FROM users
      * ```
      */
+    @Suppress("UNCHECKED_CAST")
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `insert select example 03`(testDB: TestDB) {

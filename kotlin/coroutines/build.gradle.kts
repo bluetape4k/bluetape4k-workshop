@@ -7,8 +7,6 @@ configurations {
 }
 
 dependencies {
-    implementation(Libs.kotlinx_atomicfu)
-
     // Coroutines
     implementation(Libs.bluetape4k_coroutines)
     implementation(Libs.kotlinx_coroutines_core)

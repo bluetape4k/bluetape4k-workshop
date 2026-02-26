@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.reactive.function.client.ExchangeStrategies
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Mono
 import reactor.core.scheduler.Scheduler
@@ -18,15 +19,24 @@ import java.util.concurrent.Executors
 
 @RestController
 @RequestMapping("/httpbin")
-class HttpbinController(
-    private val webClientBuilder: WebClient.Builder,
-) {
+class HttpbinController {
 
     companion object: KLoggingChannel()
 
-    private val webClient: WebClient by lazy {
-        webClientBuilder.baseUrl("https://nghttp2.org/httpbin").build()
-    }
+    private val webClientBuilder = WebClient.builder()
+
+    private val webClient: WebClient =
+        webClientBuilder
+            .baseUrl("https://nghttp2.org/httpbin")
+            .defaultHeader("Accept", "application/json")
+            .exchangeStrategies(
+                ExchangeStrategies.builder()
+                    .codecs { configurer ->
+                        configurer.defaultCodecs().maxInMemorySize(16 * 1024 * 1024) // 16MB
+                    }
+                    .build()
+            )
+            .build()
 
     /**
      * Virtual Thread 를 사용하는 [Scheduler]

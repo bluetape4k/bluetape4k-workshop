@@ -5,22 +5,22 @@ plugins {
 }
 
 springBoot {
-    mainClass.set("io.bluetape4k.workshop.bucket4j.redis.Bucket4jRedisApplicationKt")
+    mainClass.set("io.bluetape4k.workshop.bucket4j.Bucket4jRedisApplicationKt")
 }
 
-@Suppress("UnstableApiUsage")
+
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
 
 dependencies {
-    implementation(Libs.bluetape4k_spring_core)
-    implementation(Libs.bluetape4k_jackson)
+    implementation(Libs.bluetape4k_jackson3)
     testImplementation(Libs.bluetape4k_junit5)
 
     // Bucket4j
     implementation(Libs.bucket4j_core)
-    implementation(Libs.bucket4j_redis)
+    implementation(Libs.bucket4j_lettuce)
+    implementation(Libs.bucket4j_redisson)
     implementation(Libs.bucket4j_spring_boot_starter)
 
     // Redis
@@ -34,12 +34,11 @@ dependencies {
     annotationProcessor(Libs.springBoot("configuration-processor"))
     runtimeOnly(Libs.springBoot("devtools"))
 
-    implementation(Libs.springBootStarter("webflux"))
+    implementation(Libs.springBootStarter("actuator"))
     implementation(Libs.springBootStarter("cache"))
     implementation(Libs.springBootStarter("validation"))
-    implementation(Libs.springBootStarter("actuator"))
-
-    testImplementation(Libs.bluetape4k_spring_tests)
+    implementation(Libs.springBootStarter("webflux"))
+    testImplementation(Libs.springBootStarter("webflux-test"))
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

@@ -22,9 +22,9 @@ import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperatio
 import kotlin.test.assertFailsWith
 
 class DefaultBookServiceTest(
-    @Autowired private val service: BookService,
-    @Autowired private val repository: BookRepository,
-    @Autowired private val reactiveOps: ReactiveElasticsearchOperations,
+    @param:Autowired private val service: BookService,
+    @param:Autowired private val repository: BookRepository,
+    @param:Autowired private val reactiveOps: ReactiveElasticsearchOperations,
 ): AbstractElasticsearchApplicationTest() {
 
     companion object: KLogging()

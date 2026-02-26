@@ -1,10 +1,10 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
 import io.bluetape4k.exposed.core.timebasedGenerated
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
 import io.bluetape4k.exposed.dao.idValue
-import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
@@ -31,15 +31,15 @@ import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.ExpressionWithColumnType
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.SortOrder
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.less
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.Transaction
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IdTable
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.idParam
+import org.jetbrains.exposed.v1.core.less
 import org.jetbrains.exposed.v1.dao.Entity
 import org.jetbrains.exposed.v1.dao.EntityClass
 import org.jetbrains.exposed.v1.dao.IntEntity
@@ -184,7 +184,7 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("h", h)
             .toString()
     }
@@ -206,7 +206,7 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("name", name)
             .add("human id", human.idValue)
             .toString()
@@ -481,7 +481,7 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("name", name)
             .toString()
     }
@@ -497,7 +497,7 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder().toString()
+        override fun toString(): String = entityToStringBuilder().toString()
     }
 
     class Category(id: EntityID<Int>): IntEntity(id) {
@@ -510,7 +510,7 @@ class EntityTest: AbstractExposedTest() {
         override fun equals(other: Any?): Boolean = idEquals(other)
 
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("uniqueId", uniqueId)
             .add("title", title)
             .toString()
@@ -836,7 +836,7 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("name", name)
             .add("price", price)
             .toString()
@@ -1061,7 +1061,7 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("parent id", parent?.value)
             .toString()
     }
@@ -1293,7 +1293,7 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("name", name)
             .toString()
     }
@@ -1306,7 +1306,7 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("name", name)
             .add("parent id", parent.idValue)
             .toString()
@@ -1357,13 +1357,7 @@ class EntityTest: AbstractExposedTest() {
     }
 
     private fun <T> newTransaction(statement: Transaction.() -> T): T =
-        inTopLevelTransaction(
-            TransactionManager.manager.defaultIsolationLevel,
-            readOnly = false,
-            db = null,
-            outerTransaction = null,
-            statement = statement
-        )
+        inTopLevelTransaction(db = null, statement = statement)
 
     /**
      * 트랜잭션마다 새로운 `EntityCache`를 생성합니다.
@@ -1554,16 +1548,15 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("name", name)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("name", name)
+            .toString()
     }
 
     abstract class ComparableLongEntity<T: LongEntity>(id: EntityID<Long>): LongEntity(id) {
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder().toString()
+        override fun toString(): String = entityToStringBuilder().toString()
     }
 
     class Student(id: EntityID<Long>): ComparableLongEntity<Student>(id) {
@@ -1575,7 +1568,7 @@ class EntityTest: AbstractExposedTest() {
         val notes by Note.referrersOn(Notes.student, cache = true)
         val detentions by Detention optionalReferrersOn Detentions.student
 
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("name", name)
             .add("school id", school.idValue)
             .toString()
@@ -1587,7 +1580,7 @@ class EntityTest: AbstractExposedTest() {
         var student by Student referencedOn StudentBios.student
         var dateOfBirth by StudentBios.dateOfBirth
 
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("date of birth", dateOfBirth)
             .add("student id", student.idValue)
             .toString()
@@ -1599,7 +1592,7 @@ class EntityTest: AbstractExposedTest() {
         var text by Notes.text
         var student by Student referencedOn Notes.student
 
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("text", text)
             .add("student id", student.idValue)
             .toString()
@@ -1611,7 +1604,7 @@ class EntityTest: AbstractExposedTest() {
         var reason by Detentions.reason
         var student by Student optionalReferencedOn Detentions.student
 
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("reason", reason)
             .add("student id", student?.idValue)
             .toString()
@@ -1623,7 +1616,7 @@ class EntityTest: AbstractExposedTest() {
         var holidayStart by Holidays.holidayStart
         var holidayEnd by Holidays.holidayEnd
 
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("holiday start", holidayStart)
             .add("holiday end", holidayEnd)
             .toString()
@@ -1640,7 +1633,7 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("name", name)
             .add("region", region.idValue)
             .add("secondaryRegion", secondaryRegion?.idValue)
@@ -1662,7 +1655,7 @@ class EntityTest: AbstractExposedTest() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 /**
                  * `with` 를 이용하여 eager loading 을 수행한다.
                  *
@@ -1703,7 +1696,7 @@ class EntityTest: AbstractExposedTest() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 debug = true
 
                 /**
@@ -1745,7 +1738,7 @@ class EntityTest: AbstractExposedTest() {
             }
 
             // 로딩 후 SizedIterable 쿼리가 변경되면 캐시된 결과가 전파되지 않는지 테스트
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 debug = true
 
                 /**
@@ -1801,7 +1794,7 @@ class EntityTest: AbstractExposedTest() {
             }
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
 
                 val school2 = School
@@ -1848,7 +1841,7 @@ class EntityTest: AbstractExposedTest() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
 
                 val cache = TransactionManager.current().entityCache
@@ -1901,7 +1894,7 @@ class EntityTest: AbstractExposedTest() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
 
                 val cache = TransactionManager.current().entityCache
@@ -1954,7 +1947,7 @@ class EntityTest: AbstractExposedTest() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 val cache = TransactionManager.current().entityCache
 
@@ -2015,7 +2008,7 @@ class EntityTest: AbstractExposedTest() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 val cache = TransactionManager.current().entityCache
 
@@ -2168,7 +2161,7 @@ class EntityTest: AbstractExposedTest() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 val cache = TransactionManager.current().entityCache
 
@@ -2206,7 +2199,7 @@ class EntityTest: AbstractExposedTest() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
                 val cache = TransactionManager.current().entityCache
 
@@ -2336,7 +2329,7 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("requestId", requestId)
             .toString()
     }
@@ -2380,7 +2373,7 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("number", number)
             .add("spendingLimit", spendingLimit)
             .toString()
@@ -2556,7 +2549,7 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("name", name)
             .toString()
     }
@@ -2569,7 +2562,7 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("name", name)
             .toString()
     }
@@ -2657,7 +2650,7 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("emailAddress", emailAddress)
             .add("name", name)
             .toString()
@@ -2689,7 +2682,7 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("name", name)
             .toString()
     }
@@ -2770,7 +2763,7 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("value", value)
             .toString()
     }
@@ -2785,7 +2778,7 @@ class EntityTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String = toStringBuilder()
+        override fun toString(): String = entityToStringBuilder()
             .add("value", value)
             .toString()
     }

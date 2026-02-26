@@ -16,7 +16,6 @@ configurations {
 dependencies {
     implementation(Libs.bluetape4k_redis)
     implementation(Libs.bluetape4k_spring_core)
-    implementation(Libs.bluetape4k_jackson)
     implementation(Libs.bluetape4k_idgenerators)
     testImplementation(Libs.bluetape4k_junit5)
     implementation(Libs.bluetape4k_testcontainers)
@@ -30,7 +29,7 @@ dependencies {
 
     // Codecs
     implementation(Libs.kryo)
-    implementation(Libs.fury_kotlin)
+    implementation(Libs.fory_kotlin)
 
     // Compressor
     implementation(Libs.lz4_java)
@@ -40,6 +39,7 @@ dependencies {
     // Coroutines
     implementation(Libs.bluetape4k_coroutines)
     implementation(Libs.kotlinx_coroutines_core)
+    implementation(Libs.kotlinx_coroutines_reactive)
     implementation(Libs.kotlinx_coroutines_reactor)
     testImplementation(Libs.kotlinx_coroutines_test)
 
@@ -48,7 +48,20 @@ dependencies {
 
     implementation(Libs.lettuce_core)
     implementation(Libs.commons_pool2)
+
     implementation(Libs.springBootStarter("data-redis"))
+    testImplementation(Libs.springBootStarter("data-redis-test"))
+
+    implementation(Libs.bluetape4k_jackson3)
+    implementation(Libs.jackson3_core)
+    implementation(Libs.jackson3_databind)
+    implementation(Libs.jackson3_module_kotlin)
+
+    // Netty
+    implementation(platform(Libs.netty_bom))
+    implementation(Libs.netty_all)
+    implementation(Libs.netty_transport_native_epoll)
+    implementation(Libs.netty_transport_native_kqueue)
 
     testImplementation(Libs.bluetape4k_spring_tests)
     testImplementation(Libs.springBootStarter("test")) {

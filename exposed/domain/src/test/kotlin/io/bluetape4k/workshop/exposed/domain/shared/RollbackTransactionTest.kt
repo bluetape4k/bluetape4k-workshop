@@ -7,12 +7,12 @@ import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.fail
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldContain
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.inTopLevelTransaction
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -30,7 +30,7 @@ class RollbackTransactionTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `rollback without save points`(testDB: TestDB) {
         withTables(testDB, RollbackTable) {
-            inTopLevelTransaction(db.transactionManager.defaultIsolationLevel) {
+            inTopLevelTransaction(db) {
                 maxAttempts = 1
                 RollbackTable.insert { it[value] = "before-dummy" }
 
@@ -57,7 +57,7 @@ class RollbackTransactionTest: AbstractExposedTest() {
     @MethodSource(ENABLE_DIALECTS_METHOD)
     fun `rollback with save points`(testDB: TestDB) {
         withTables(testDB, RollbackTable, configure = { useNestedTransactions = true }) {
-            inTopLevelTransaction(db.transactionManager.defaultIsolationLevel) {
+            inTopLevelTransaction(db) {
                 maxAttempts = 1
                 RollbackTable.insert { it[value] = "before-dummy" }
 
@@ -95,14 +95,14 @@ class RollbackTransactionTest: AbstractExposedTest() {
         // database exception triggers rollback from inner to outer tx
         transaction {
             val fakeSQLString = "BROKEN_SQL_THAT_CAUSES_EXCEPTION"
-            val outerTxId = this.id
+            val outerTxId = this.transactionId
 
             RollbackTable.insert { it[value] = "City A" }
             RollbackTable.selectAll().count().toInt() shouldBeEqualTo 1
 
             try {
                 transaction {
-                    val innerTxId = this.id
+                    val innerTxId = this.transactionId
                     innerTxId shouldBeEqualTo outerTxId
 
                     RollbackTable.insert { it[value] = "City B" }
@@ -120,14 +120,14 @@ class RollbackTransactionTest: AbstractExposedTest() {
         // non-db exception propagates from inner to outer without rollback and is handled, if caught.
         // if not caught & exception propagates all the way to outer tx, full rollback occurs (as always).
         transaction {
-            val outerTxId = this.id
+            val outerTxId = this.transactionId
 
             RollbackTable.insert { it[value] = "City A" }
             RollbackTable.selectAll().count().toInt() shouldBeEqualTo 1
 
             try {
                 transaction(db) {
-                    val innerTxId = this.id
+                    val innerTxId = this.transactionId
                     innerTxId shouldBeEqualTo outerTxId
 
                     RollbackTable.insert { it[value] = "City B" }

@@ -21,7 +21,7 @@ import org.springframework.data.mongodb.core.dropCollection
 import reactor.core.publisher.Mono
 
 abstract class AbstractReactiveMongoTest(
-    @Autowired private val operations: ReactiveMongoOperations,
+    @param:Autowired private val operations: ReactiveMongoOperations,
 ): AbstractMongodbTest() {
 
     companion object: KLoggingChannel()

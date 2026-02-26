@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.redis.core.RedisOperations
 
 class BasicUsageTest(
-    @Autowired private val operations: RedisOperations<String, String>,
+    @param:Autowired private val operations: RedisOperations<String, String>,
 ): AbstractRedisClusterTest() {
 
     companion object: KLoggingChannel()
@@ -118,6 +118,7 @@ class BasicUsageTest(
             multiGet(listOf(key1, key2, key3))!! shouldContainSame listOf(value1, value2, value3)
         }
 
+        // NOTE: lettuce-core 7.x 에서는 작동하지 않습니다.
         operations.keys("*")!! shouldContainAll listOf(key1, key2, key3)
     }
 }

@@ -14,8 +14,7 @@ import org.jetbrains.exposed.v1.core.InternalApi
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.avg
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.core.transactions.CoreTransactionManager
-import org.jetbrains.exposed.v1.core.transactions.TransactionManagerApi
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.vendors.H2Dialect
 import org.jetbrains.exposed.v1.core.vendors.currentDialect
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
@@ -24,6 +23,7 @@ import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.replace
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.JdbcTransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transactionManager
 import org.junit.jupiter.api.Assumptions
@@ -32,6 +32,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit.SECONDS
 
+@Suppress("DEPRECATION")
 class H2Test: AbstractExposedTest() {
 
     companion object: KLogging()
@@ -63,7 +64,7 @@ class H2Test: AbstractExposedTest() {
                 it[id] = 1
                 it[string] = "one"
             }
-            val row = Testing.selectAll().where { Testing.id.eq(1) }.single()
+            val row = Testing.selectAll().where { Testing.id eq 1 }.single()
             row[Testing.string] shouldBeEqualTo "one"
         }
     }
@@ -78,7 +79,7 @@ class H2Test: AbstractExposedTest() {
                 it[id] = 1
                 it[string] = "one"
             }
-            val row = Testing.selectAll().where { Testing.id.eq(1) }.single()
+            val row = Testing.selectAll().where { Testing.id eq 1 }.single()
             row[Testing.string] shouldBeEqualTo "one"
         }
     }
@@ -94,7 +95,7 @@ class H2Test: AbstractExposedTest() {
 
             try {
                 @OptIn(InternalApi::class)
-                CoreTransactionManager.registerDatabaseManager(db, WrappedTransactionManager(db.transactionManager))
+                TransactionManager.registerManager(db, WrappedTransactionManager(db.transactionManager))
                 Executors.newSingleThreadExecutor().apply {
                     submit {
                         TransactionManager.closeAndUnregister(db)
@@ -155,7 +156,7 @@ class H2Test: AbstractExposedTest() {
         }
     }
 
-    class WrappedTransactionManager(val tm: TransactionManagerApi): TransactionManagerApi by tm
+    class WrappedTransactionManager(val tm: JdbcTransactionManager): JdbcTransactionManager by tm
 
     object Testing: Table("H2_TESTING") {
         val id = integer("id").autoIncrement()

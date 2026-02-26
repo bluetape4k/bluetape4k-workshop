@@ -1,7 +1,6 @@
 package io.bluetape4k.workshop.jackson.annotations
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.jackson.AbstractJacksonTest
@@ -9,6 +8,7 @@ import io.bluetape4k.workshop.jackson.readAs
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.junit.jupiter.api.RepeatedTest
+import tools.jackson.module.kotlin.readValue
 
 class IgnoreExample: AbstractJacksonTest() {
 

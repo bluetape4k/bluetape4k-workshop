@@ -14,12 +14,12 @@ import io.bluetape4k.workshop.exposed.virtualthread.domain.mapper.toMovieDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Actors
 import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.ActorsInMovies
 import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Movies
-import org.jetbrains.exposed.v1.core.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.v1.core.count
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.andWhere
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
-import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -42,7 +42,14 @@ class MovieRepository(private val db: Database) {
         log.debug { "Find Movie by id. id: $movieId" }
 
         transaction(db) {
-            Movies.selectAll().where { Movies.id eq movieId }.firstOrNull()?.toMovieDTO()
+            // Use DAO
+            // Movie.findById(movieId)?.toMovieDTO()
+
+            // Use Exposed SQL DSL
+            Movies.selectAll()
+                .where { Movies.id eq movieId }
+                .firstOrNull()
+                ?.toMovieDTO()
         }
     }
 
@@ -69,13 +76,13 @@ class MovieRepository(private val db: Database) {
 
     fun create(movie: MovieDTO): VirtualFuture<MovieDTO> = virtualFuture(virtualExecutor) {
         transaction(db) {
-            val movieId = Movies.insert {
+            val movieId = Movies.insertAndGetId {
                 it[Movies.name] = movie.name
                 it[Movies.producerName] = movie.producerName
                 if (movie.releaseDate.isNotBlank()) {
                     it[Movies.releaseDate] = LocalDate.parse(movie.releaseDate).atTime(0, 0)
                 }
-            } get Movies.id
+            }
 
             movie.copy(id = movieId.value)
         }
@@ -91,8 +98,12 @@ class MovieRepository(private val db: Database) {
         log.debug { "Get all movies with actors." }
 
         transaction(db) {
-            Movies.innerJoin(ActorsInMovies).innerJoin(Actors).selectAll().toList()
-                .groupingBy { it[Movies.id] }
+            Movies
+                .innerJoin(ActorsInMovies)
+                .innerJoin(Actors)
+                .selectAll()
+                .toList()
+                .groupingBy { it[Movies.id] } // 이 것보다 One-To-Many 를 집계하는 함수를 사용하는 것을 추천한다.
                 .fold(mutableListOf<MovieWithActorDTO>()) { acc, element ->
                     val lastMovieId = acc.lastOrNull()?.id
                     if (lastMovieId != element[Movies.id].value) {
@@ -133,26 +144,26 @@ class MovieRepository(private val db: Database) {
 
             query.groupingBy { it[Movies.id] }
                 .fold(mutableListOf<MovieWithActorDTO>()) { acc, row ->
-                val prevId = acc.lastOrNull()?.id
-                if (prevId != row[Movies.id].value) {
-                    val movie = MovieWithActorDTO(
-                        id = row[Movies.id].value,
-                        name = row[Movies.name],
-                        producerName = row[Movies.producerName],
-                        releaseDate = row[Movies.releaseDate].toString(),
-                    )
-                    acc.add(movie)
-                } else {
-                    val actor = ActorDTO(
-                        id = row[Actors.id].value,
-                        firstName = row[Actors.firstName],
-                        lastName = row[Actors.lastName],
-                        dateOfBirth = row[Actors.dateOfBirth].toString()
-                    )
-                    acc.lastOrNull()?.actors?.add(actor)
-                }
-                acc
-            }.toList()
+                    val prevId = acc.lastOrNull()?.id
+                    if (prevId != row[Movies.id].value) {
+                        val movie = MovieWithActorDTO(
+                            id = row[Movies.id].value,
+                            name = row[Movies.name],
+                            producerName = row[Movies.producerName],
+                            releaseDate = row[Movies.releaseDate].toString(),
+                        )
+                        acc.add(movie)
+                    } else {
+                        val actor = ActorDTO(
+                            id = row[Actors.id].value,
+                            firstName = row[Actors.firstName],
+                            lastName = row[Actors.lastName],
+                            dateOfBirth = row[Actors.dateOfBirth].toString()
+                        )
+                        acc.lastOrNull()?.actors?.add(actor)
+                    }
+                    acc
+                }.toList()
         }.firstOrNull()?.second?.firstOrNull()
     }
 

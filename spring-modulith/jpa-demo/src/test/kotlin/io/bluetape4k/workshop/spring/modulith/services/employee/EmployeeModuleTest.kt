@@ -15,7 +15,7 @@ import org.springframework.modulith.test.Scenario
 @ApplicationModuleTest(ApplicationModuleTest.BootstrapMode.DIRECT_DEPENDENCIES)
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class EmployeeModuleTest(
-    @Autowired private val repository: EmployeeRepository,
+    @param:Autowired private val repository: EmployeeRepository,
 ) {
 
     companion object: KLoggingChannel()
@@ -23,8 +23,11 @@ class EmployeeModuleTest(
     @Test
     @Order(1)
     fun `should remove employees on event`(scenario: Scenario) {
-        scenario.publish(OrganizationRemoveEvent(1L))
-            .andWaitForStateChange { repository.count() }
+        scenario
+            .publish(OrganizationRemoveEvent(1L))
+            .andWaitForStateChange {
+                repository.count()
+            }
             .andVerify { result ->
                 result.toInt() shouldBeEqualTo 0
             }

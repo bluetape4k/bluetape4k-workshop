@@ -4,7 +4,7 @@ import io.micrometer.observation.Observation
 import java.util.function.Supplier
 
 fun <T: Any> Observation.observe(supplier: () -> T): T {
-    return observe(Supplier { supplier() })!!
+    return observe(Supplier { supplier() })
 }
 
 fun <T: Any> Observation.observeOrNull(action: () -> T): T? {

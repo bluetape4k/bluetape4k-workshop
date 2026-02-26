@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.problem.controller
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
-import io.bluetape4k.spring.webflux.controller.AbstractCoroutineDefaultController
 import io.github.resilience4j.circuitbreaker.CircuitBreaker
 import io.github.resilience4j.retry.MaxRetriesExceededException
 import io.github.resilience4j.retry.Retry
@@ -12,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/resilience4j")
-class Resilience4jController: AbstractCoroutineDefaultController() {
+class Resilience4jController {
 
     companion object: KLogging()
 

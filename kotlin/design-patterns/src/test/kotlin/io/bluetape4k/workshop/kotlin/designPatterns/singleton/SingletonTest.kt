@@ -11,6 +11,8 @@ import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldBeTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.condition.EnabledOnJre
+import org.junit.jupiter.api.condition.JRE
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import java.util.concurrent.CopyOnWriteArrayList
@@ -43,8 +45,8 @@ abstract class AbstractSingletonTest<T>(private val singletonInstanceMethod: () 
         val instances = CopyOnWriteArrayList<T>()
 
         MultithreadingTester()
-            .numThreads(Runtimex.availableProcessors * 2)
-            .roundsPerThread(2)
+            .workers(Runtimex.availableProcessors * 2)
+            .rounds(2)
             .add {
                 instances.add(singletonInstanceMethod())
             }
@@ -54,12 +56,13 @@ abstract class AbstractSingletonTest<T>(private val singletonInstanceMethod: () 
         instances.all { it === expectedInstance }.shouldBeTrue()
     }
 
+    @EnabledOnJre(JRE.JAVA_21)
     @Test
     fun `Virtual 스레드 환경에서 싱글턴 객체를 생성한다`() {
         val instances = CopyOnWriteArrayList<T>()
 
         StructuredTaskScopeTester()
-            .roundsPerTask(Runtimex.availableProcessors * 4)
+            .rounds(Runtimex.availableProcessors * 4)
             .add {
                 instances.add(singletonInstanceMethod())
             }
@@ -74,11 +77,12 @@ abstract class AbstractSingletonTest<T>(private val singletonInstanceMethod: () 
         val instances = CopyOnWriteArrayList<T>()
 
         SuspendedJobTester()
-            .numThreads(Runtimex.availableProcessors * 2)
-            .roundsPerJob(Runtimex.availableProcessors * 2 * 2)
+            .workers(Runtimex.availableProcessors * 2)
+            .rounds(Runtimex.availableProcessors * 2 * 2)
             .add {
                 instances.add(singletonInstanceMethod())
             }
+            .run()
 
         val expectedInstance = singletonInstanceMethod()
         instances.all { it === expectedInstance }.shouldBeTrue()

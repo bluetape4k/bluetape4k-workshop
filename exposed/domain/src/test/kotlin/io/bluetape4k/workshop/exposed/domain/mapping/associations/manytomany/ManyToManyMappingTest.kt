@@ -16,6 +16,7 @@ import io.bluetape4k.workshop.exposed.domain.mapping.associations.manytomany.Mem
 import io.bluetape4k.workshop.exposed.withSuspendedTables
 import io.bluetape4k.workshop.exposed.withTables
 import org.amshove.kluent.shouldBeEqualTo
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Query
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -23,6 +24,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTrans
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 
+@Suppress("DEPRECATION")
 class ManyToManyMappingTest: AbstractExposedTest() {
 
     companion object: KLogging()
@@ -71,7 +73,7 @@ class ManyToManyMappingTest: AbstractExposedTest() {
 
             // rollback()을 호출하면 transaction은 롤백된다.
             User.new {
-                username = faker.internet().username()
+                username = faker.credentials().username()
                 firstName = faker.name().firstName()
                 lastName = faker.name().lastName()
                 status = ACTIVE
@@ -79,7 +81,7 @@ class ManyToManyMappingTest: AbstractExposedTest() {
 
             newSuspendedTransaction {
                 User.new {
-                    username = faker.internet().username()
+                    username = faker.credentials().username()
                     firstName = faker.name().firstName()
                     lastName = faker.name().lastName()
                     status = INACTIVE

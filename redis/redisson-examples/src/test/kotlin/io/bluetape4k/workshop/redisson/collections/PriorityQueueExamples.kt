@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.redisson.collections
 
+import io.bluetape4k.coroutines.support.awaitSuspending
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.redis.redisson.RedissonCodecs
-import io.bluetape4k.redis.redisson.coroutines.coAwait
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.Test
@@ -35,7 +35,7 @@ class PriorityQueueExamples: AbstractRedissonTest() {
     @Test
     fun `우선순위 큐 사용 예`() = runSuspendIO {
         val queueName = randomName()
-        val queue = redisson.getPriorityQueue<Item>(queueName, RedissonCodecs.LZ4Kryo5)
+        val queue = redisson.getPriorityQueue<Item>(queueName, RedissonCodecs.LZ4Fory)
 
         // Item의 key를 기준으로 정렬 (a, b, c)
         queue.add(Item("b", 1))
@@ -50,13 +50,13 @@ class PriorityQueueExamples: AbstractRedissonTest() {
         queue.count() shouldBeEqualTo 6
 
         // 첫번째 요소 조회
-        queue.peekAsync().coAwait() shouldBeEqualTo Item("a", 3)
+        queue.peekAsync().awaitSuspending() shouldBeEqualTo Item("a", 3)
 
         // 첫번째 요소 가져오기
-        queue.pollAsync().coAwait() shouldBeEqualTo Item("a", 3)
+        queue.pollAsync().awaitSuspending() shouldBeEqualTo Item("a", 3)
 
         // 나머지 요소들을 가져온다. b, c, x, y, z 순으로 정렬
-        queue.pollAsync(5).coAwait() shouldBeEqualTo listOf(
+        queue.pollAsync(5).awaitSuspending() shouldBeEqualTo listOf(
             Item("b", 1),
             Item("c", 2),
             Item("x", 33),
@@ -65,6 +65,6 @@ class PriorityQueueExamples: AbstractRedissonTest() {
         )
 
         // NOTE: queue.delete(), queue.deleteAsync() 가 제대로 동작하는지 모르겠다. 항상 False 가 반환된다.
-        queue.deleteAsync().coAwait()
+        queue.deleteAsync().awaitSuspending()
     }
 }

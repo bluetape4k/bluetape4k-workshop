@@ -19,7 +19,7 @@ import reactor.core.publisher.Mono
 @EnableR2dbcRepositories(basePackageClasses = [CustomerRepository::class])
 class ApplicationConfiguration {
 
-    companion object: KLoggingChannel() 
+    companion object: KLoggingChannel()
 
     /**
      * Auto increment identifier 를 callback 으로 받아서 저장한 [Customer]의 Id 값에 적용합니다.
@@ -43,10 +43,10 @@ class ApplicationConfiguration {
     /**
      * Database 초기화 함수
      *
-     * @param connectionFactory [ConnectionFactory] 인스턴스
-     * @return [ConnectionFactoryInitializer] 인스턴스
+     * @param connectionFactory [io.r2dbc.spi.ConnectionFactory] 인스턴스
+     * @return [org.springframework.r2dbc.connection.init.ConnectionFactoryInitializer] 인스턴스
      *
-     * @see [ResourceDatabasePopulator]
+     * @see [org.springframework.r2dbc.connection.init.ResourceDatabasePopulator]
      * @see [org.springframework.r2dbc.connection.init.CompositeDatabasePopulator]
      * @see [org.springframework.core.io.ClassPathResource]
      */

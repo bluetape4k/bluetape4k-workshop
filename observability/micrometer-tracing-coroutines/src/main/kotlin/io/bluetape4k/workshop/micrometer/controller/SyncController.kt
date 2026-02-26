@@ -29,7 +29,7 @@ class SyncController(private val syncService: SyncService) {
 
     @Observed(contextualName = "sync-get-todo-at-controller")
     @GetMapping("/todos/{id}")
-    fun getTodo(@PathVariable(name = "id", required = true) id: Int): Todo? {
+    fun getTodo(@PathVariable(required = true) id: Int): Todo? {
         log.debug { "Get todo[$id] in sync" }
         Thread.sleep(100)
         return syncService.getTodo(id).apply {

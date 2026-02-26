@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.exposed.sql.json
 
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
-import io.bluetape4k.exposed.dao.toStringBuilder
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
@@ -52,10 +52,9 @@ object JsonTestData {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("jsonColumn", jsonColumn)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("jsonColumn", jsonColumn)
+            .toString()
     }
 
     class JsonBEntity(id: EntityID<Int>): IntEntity(id) {
@@ -65,10 +64,9 @@ object JsonTestData {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("jsonBColumn", jsonBColumn)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("jsonBColumn", jsonBColumn)
+            .toString()
     }
 
     /**

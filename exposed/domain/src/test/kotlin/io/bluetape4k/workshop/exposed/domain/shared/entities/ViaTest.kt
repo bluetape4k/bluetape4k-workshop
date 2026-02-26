@@ -1,14 +1,14 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
+import io.bluetape4k.exposed.core.dao.id.SnowflakeIdTable
+import io.bluetape4k.exposed.core.dao.id.TimebasedUUIDTable
+import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.id.SnowflakeIdEntity
 import io.bluetape4k.exposed.dao.id.SnowflakeIdEntityClass
-import io.bluetape4k.exposed.dao.id.SnowflakeIdTable
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntity
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityClass
-import io.bluetape4k.exposed.dao.id.TimebasedUUIDTable
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
-import io.bluetape4k.exposed.dao.toStringBuilder
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.domain.shared.entities.ViaTestData.VNumber
@@ -141,10 +141,9 @@ object ViaTestData {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("number", number)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("number", number)
+            .toString()
     }
 
     class VString(id: EntityID<Long>): SnowflakeIdEntity(id) {
@@ -154,10 +153,9 @@ object ViaTestData {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("text", text)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("text", text)
+            .toString()
     }
 }
 
@@ -568,10 +566,9 @@ class ViaTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("name", name)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("name", name)
+            .toString()
     }
 
     class ProjectTask(id: EntityID<CompositeID>): CompositeEntity(id) {
@@ -581,10 +578,9 @@ class ViaTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("approved", approved)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("approved", approved)
+            .toString()
     }
 
     class Task(id: EntityID<Int>): IntEntity(id) {
@@ -595,11 +591,10 @@ class ViaTest: AbstractExposedTest() {
 
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
-        override fun toString(): String =
-            toStringBuilder()
-                .add("title", title)
-                .add("approved", approved)
-                .toString()
+        override fun toString(): String = entityToStringBuilder()
+            .add("title", title)
+            .add("approved", approved)
+            .toString()
     }
 
     /**
@@ -650,7 +645,7 @@ class ViaTest: AbstractExposedTest() {
 
             commit()
 
-            inTopLevelTransaction(Connection.TRANSACTION_SERIALIZABLE) {
+            inTopLevelTransaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE) {
                 maxAttempts = 1
 
                 /**
