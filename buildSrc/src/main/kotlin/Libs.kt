@@ -134,9 +134,10 @@ object Versions {
     const val okio = "3.16.4"        // https://mvnrepository.com/artifact/com.squareup.okio/okio
     const val asynchttpclient = "2.12.4"  // https://mvnrepository.com/artifact/org.asynchttpclient/async-http-client
 
-    // NOTE: Jackson 2 는 2.20.x 만 사용하세요.
-    const val jackson = "2.20.2" // https://mvnrepository.com/artifact/com.fasterxml.jackson/jackson-bom
-    const val jackson3 = "3.0.4" // https://mvnrepository.com/artifact/tools.jackson/jackson-bom
+
+    const val jackson_annotations = "2.21" // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-annotations
+    const val jackson = "2.21.1" // https://mvnrepository.com/artifact/com.fasterxml.jackson/jackson-bom
+    const val jackson3 = "3.1.0" // https://mvnrepository.com/artifact/tools.jackson/jackson-bom
     const val fastjson2 = "2.0.60" // https://mvnrepository.com/artifact/com.alibaba.fastjson2/fastjson2
     const val jjwt = "0.11.5"    // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api
 
@@ -982,6 +983,7 @@ object Libs {
 
     fun jacksonCore(module: String, version: String = Versions.jackson) = jackson("core", module, version)
 
+    val jackson_annotations = jacksonCore("annotations", Versions.jackson_annotations)
     val jackson_core = jacksonCore("core")
     val jackson_databind = jacksonCore("databind")
 

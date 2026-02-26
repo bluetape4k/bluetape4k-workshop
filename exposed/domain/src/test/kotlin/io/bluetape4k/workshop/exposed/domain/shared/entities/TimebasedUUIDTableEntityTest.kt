@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.exposed.domain.shared.entities
 
+import io.bluetape4k.exposed.core.dao.id.TimebasedUUIDTable
 import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntity
 import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityClass
-import io.bluetape4k.exposed.dao.id.TimebasedUUIDTable
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
 import io.bluetape4k.exposed.dao.idValue
@@ -121,8 +121,8 @@ object TimebasedUUIDTables {
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
         override fun toString(): String = entityToStringBuilder()
-                .add("name", name)
-                .toString()
+            .add("name", name)
+            .toString()
     }
 
     class Person(id: EntityID<UUID>): TimebasedUUIDEntity(id) {
@@ -134,9 +134,9 @@ object TimebasedUUIDTables {
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
         override fun toString(): String = entityToStringBuilder()
-                .add("name", name)
-                .add("city id", city.idValue)
-                .toString()
+            .add("name", name)
+            .add("city id", city.idValue)
+            .toString()
     }
 
     class Address(id: EntityID<UUID>): TimebasedUUIDEntity(id) {
@@ -149,10 +149,10 @@ object TimebasedUUIDTables {
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
         override fun toString(): String = entityToStringBuilder()
-                .add("address", address)
-                .add("person id", person.idValue)
-                .add("city id", city.idValue)
-                .toString()
+            .add("address", address)
+            .add("person id", person.idValue)
+            .add("city id", city.idValue)
+            .toString()
     }
 
     class Town(id: EntityID<UUID>): TimebasedUUIDEntity(id) {
@@ -163,8 +163,8 @@ object TimebasedUUIDTables {
         override fun equals(other: Any?): Boolean = idEquals(other)
         override fun hashCode(): Int = idHashCode()
         override fun toString(): String = entityToStringBuilder()
-                .add("city id", city.idValue)
-                .toString()
+            .add("city id", city.idValue)
+            .toString()
     }
 }
 

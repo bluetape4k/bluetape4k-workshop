@@ -19,6 +19,8 @@ dependencies {
 
     // Jackson
     implementation(Libs.bluetape4k_jackson3)
+    implementation(Libs.jackson_annotations)
+    implementation(Libs.jackson3_core)
     implementation(Libs.jackson3_databind)
     implementation(Libs.jackson3_module_kotlin)
     implementation(Libs.jackson3_module_blackbird)

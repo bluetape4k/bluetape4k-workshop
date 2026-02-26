@@ -232,6 +232,8 @@ subprojects {
             mavenBom(Libs.fabric8_kubernetes_client_bom)
             mavenBom(Libs.resilience4j_bom)
             mavenBom(Libs.netty_bom)
+            mavenBom(Libs.jackson_bom)
+            mavenBom(Libs.jackson3_bom)
 
             mavenBom(Libs.kotlinx_coroutines_bom)
             mavenBom(Libs.kotlin_bom)
@@ -288,6 +290,13 @@ subprojects {
             dependency(Libs.jakarta_validation_api)
             dependency(Libs.jakarta_ws_rs_api)
             dependency(Libs.jakarta_xml_bind)
+
+            // Jackson
+            dependency(Libs.jackson_annotations)
+            dependency(Libs.jackson_core)
+
+            // Jackson 3
+            dependency(Libs.jackson3_core)
 
             // Compressor
             dependency(Libs.snappy_java)
