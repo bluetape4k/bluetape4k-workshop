@@ -18,7 +18,7 @@ object Plugins {
         const val shadow = "9.2.2"      // https://plugins.gradle.org/plugin/com.gradleup.shadow
         const val kotlinx_benchmark = "0.4.15" // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-benchmark-plugin
 
-        const val spring_boot3 = "3.5.10"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
+        const val spring_boot3 = "3.5.11"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
         const val spring_boot4 = "4.0.2"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
         const val quarkus = "3.31.0"      // https://mvnrepository.com/artifact/io.quarkus/quarkus-bom
 
@@ -110,7 +110,7 @@ object Versions {
 
     const val bucket4j = "8.16.0"       // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17-core
     const val resilience4j = "2.3.0"   // https://mvnrepository.com/artifact/io.github.resilience4j/resilience4j-bom
-    const val netty = "4.2.9.Final"  // https://mvnrepository.com/artifact/io.netty/netty-all
+    const val netty = "4.2.10.Final"  // https://mvnrepository.com/artifact/io.netty/netty-all
 
     const val aws = "1.12.785"          // https://mvnrepository.com/artifact/com.amazonaws
     const val aws2 = "2.39.2"           // https://mvnrepository.com/artifact/software.amazon.awssdk/aws-sdk-java
@@ -133,7 +133,6 @@ object Versions {
     const val okhttp3 = "5.3.2"     // https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
     const val okio = "3.16.4"        // https://mvnrepository.com/artifact/com.squareup.okio/okio
     const val asynchttpclient = "2.12.4"  // https://mvnrepository.com/artifact/org.asynchttpclient/async-http-client
-
 
     const val jackson_annotations = "2.21" // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-annotations
     const val jackson = "2.21.1" // https://mvnrepository.com/artifact/com.fasterxml.jackson/jackson-bom
@@ -192,8 +191,8 @@ object Versions {
     const val cassandra = "4.19.1"          // https://mvnrepository.com/artifact/org.apache.cassandra/java-driver-core
     const val elasticsearch = "9.1.6"       // https://mvnrepository.com/artifact/org.elasticsearch.client/elasticsearch-rest-client
 
-    const val kafka = "4.1.1"           // https://mvnrepository.com/artifact/org.apache.kafka/kafka
-    const val spring_kafka = "4.0.1"    // https://mvnrepository.com/artifact/org.springframework.kafka/spring-kafka
+    const val kafka = "4.2.0"           // https://mvnrepository.com/artifact/org.apache.kafka/kafka
+    const val spring_kafka = "4.0.3"    // https://mvnrepository.com/artifact/org.springframework.kafka/spring-kafka
 
     const val timefold_solver = "1.27.0" // https://mvnrepository.com/artifact/ai.timefold.solver/timefold-solver-core
 
@@ -310,15 +309,24 @@ object Libs {
     val bluetape4k_hibernate_reactive = bluetape4k("hibernate-reactive")
     val bluetape4k_jdbc = bluetape4k("jdbc")
     val bluetape4k_r2dbc = bluetape4k("r2dbc")
-    val bluetape4k_redis = bluetape4k("redis")
+
 
     // Infrastructure
     val bluetape4k_bucket4j = bluetape4k("bucket4j")
     val bluetape4k_cache = bluetape4k("cache")
+    val bluetape4k_cache_core = bluetape4k("cache-core")
+    val bluetape4k_cache_hazelcast = bluetape4k("cache-hazelcast")
+    val bluetape4k_cache_hazelcast_near = bluetape4k("cache-hazelcast-near")
+    val bluetape4k_cache_ignite = bluetape4k("cache-ignite")
+    val bluetape4k_cache_ignite_near = bluetape4k("cache-ignite-near")
+    val bluetape4k_cache_local = bluetape4k("cache-local")
+    val bluetape4k_cache_redisson = bluetape4k("cache-redisson")
+    val bluetape4k_cache_redisson_near = bluetape4k("cache-redisson-near")
     val bluetape4k_kafka = bluetape4k("kafka")
     val bluetape4k_micrometer = bluetape4k("micrometer")
     val bluetape4k_nats = bluetape4k("nats")
     val bluetape4k_otel = bluetape4k("otel")
+    val bluetape4k_redis = bluetape4k("redis")
     val bluetape4k_resilience4j = bluetape4k("resilience4j")
 
     // Quarkus
@@ -428,6 +436,9 @@ object Libs {
 
     val kotlinx_benchmark_runtime = kotlinxBenchmark("runtime")
     val kotlinx_benchmark_runtime_jvm = kotlinxBenchmark("runtime-jvm")
+
+    // javax api
+    const val javax_cache_api = "javax.cache:cache-api:1.1.1"
 
     // Java Money
     const val javax_money_api = "javax.money:money-api:1.1"    // https://mvnrepository.com/artifact/javax.money/money-api
@@ -751,6 +762,7 @@ object Libs {
     val netty_codec_socks = netty("codec-socks")
     val netty_handler = netty("handler")
     val netty_handler_proxy = netty("handler-proxy")
+    val netty_handler_ssl_ocsp = netty("handler-ssl-ocsp")
     val netty_resolver = netty("resolver")
     val netty_resolver_dns = netty("resolver-dns")
     val netty_resolver_dns_native_macos = netty("resolver-dns-native-macos")

@@ -1,9 +1,0 @@
-hazelcast:
-    instance-name: bucket4j-instance
-    cluster-name: bucket4j-cluster
-    network:
-        join:
-            multicast:
-                enabled: false
-            tcp-ip:
-                enabled: false

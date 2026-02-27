@@ -22,6 +22,7 @@ dependencies {
     // VirtualThread of JDK 25
     implementation(Libs.bluetape4k_virtualthread_api)
     runtimeOnly(Libs.bluetape4k_virtualthread_jdk25)
+
     implementation(Libs.bluetape4k_io)
     implementation(Libs.bluetape4k_jackson3)
 

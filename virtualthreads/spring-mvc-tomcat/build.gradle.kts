@@ -52,7 +52,6 @@ dependencies {
 
     // JPA/Hibernate
     implementation(Libs.bluetape4k_hibernate)
-//    implementation(Libs.bluetape4k_spring_jpa)
     implementation(Libs.hibernate_core)
     implementation(Libs.hibernate_jcache)
     implementation(Libs.hibernate_validator)
@@ -79,7 +78,7 @@ dependencies {
     implementation(Libs.testcontainers_mysql)
 
     // Cache
-    implementation(Libs.bluetape4k_cache)
+    implementation(Libs.bluetape4k_cache_local)
     implementation(Libs.caffeine)
     implementation(Libs.caffeine_jcache)
 

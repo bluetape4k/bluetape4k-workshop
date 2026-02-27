@@ -58,6 +58,7 @@ dependencies {
     testImplementation(Libs.springCloudStarter("loadbalancer"))
     testImplementation(Libs.springCloud("test-support"))
     testImplementation(Libs.springCloud("gateway-server-webflux") + "::tests")
+    testImplementation(Libs.jmh_core)
 
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))

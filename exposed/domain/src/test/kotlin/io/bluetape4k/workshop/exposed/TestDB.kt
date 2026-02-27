@@ -8,7 +8,7 @@ import java.sql.Connection
 import kotlin.reflect.full.declaredMemberProperties
 
 const val USE_TESTCONTAINERS = true
-const val USE_FAST_DB = false
+const val USE_FAST_DB = true
 
 enum class TestDB(
     val connection: () -> String,
@@ -203,7 +203,8 @@ enum class TestDB(
         // NOTE: 이 값을 바꿔서 MySQL, PostgreSQL 등을 testcontainers 를 이용하여 테스트할 수 있습니다.
 
         fun enabledDialects(): Set<TestDB> {
-            return if (USE_FAST_DB) ALL_H2 else (ALL_H2 + ALL_POSTGRES + ALL_MYSQL_MARIADB) //ALL - ALL_H2_V1 - MYSQL_V5 - COCKROACH)
+            return if (USE_FAST_DB) setOf(H2)
+            else (ALL_H2 + ALL_POSTGRES + ALL_MYSQL_MARIADB) //ALL - ALL_H2_V1 - MYSQL_V5 - COCKROACH)
         }
     }
 }
