@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.elasticsearch
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.uninitialized
-import io.bluetape4k.testcontainers.storage.ElasticsearchServer
+import io.bluetape4k.testcontainers.storage.ElasticsearchOssServer
 import io.bluetape4k.workshop.elasticsearch.model.Conference
 import io.bluetape4k.workshop.elasticsearch.repository.ConferenceRepository
 import jakarta.annotation.PostConstruct
@@ -11,6 +11,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations
 import org.springframework.data.elasticsearch.core.geo.GeoPoint
+import org.springframework.data.elasticsearch.core.indexOps
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories
 
 @SpringBootApplication
@@ -19,7 +20,7 @@ class ElasticsearchApplication {
 
     companion object: KLogging() {
         // Elasticsearch Server
-        val elasticsearch = ElasticsearchServer.Launcher.elasticsearch
+        val elasticsearch = ElasticsearchOssServer.Launcher.elasticsearchOssServer
     }
 
     @Autowired
@@ -30,7 +31,7 @@ class ElasticsearchApplication {
 
     @PostConstruct
     fun insertSampleData() {
-        operations.indexOps(Conference::class.java).refresh()
+        operations.indexOps<Conference>().refresh()
 
         // Save sample data
         val documents = listOf(

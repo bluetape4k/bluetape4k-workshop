@@ -3,6 +3,9 @@ package io.bluetape4k.workshop.redisson.locks
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.future.await
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.util.concurrent.TimeUnit
 
@@ -53,6 +56,37 @@ class PermitExpirableSemaphoreExamples: AbstractRedissonTest() {
             } finally {
                 semaphore.release(id5)
             }
+        }
+    }
+
+    @Test
+    fun `basic async usage for PermitExpirableSemaphore`() = runTest {
+        val semaphoreName = randomName()
+        val semaphore = redisson.getPermitExpirableSemaphore(semaphoreName)
+
+        // 23개 확보
+        semaphore.trySetPermitsAsync(23).await()
+
+
+        // 방법 1 : 기본 방법
+        val id1 = semaphore.acquireAsync().await()
+
+        // 방법 2: 10초 동안 유효한 권한을 획득
+        val id2 = semaphore.acquireAsync(10, TimeUnit.SECONDS).await()
+
+        // 방법 3: 획득 시도
+        val id3 = semaphore.tryAcquireAsync().await()
+
+        // 방법 4: 10초 동안 유효한 권한을 획득 시도
+        val id4 = semaphore.tryAcquireAsync(10, TimeUnit.SECONDS).await()
+
+        // 방법 5: 획득 대기 시간을 10초 주고, 15초 동안 유효한 권한을 획득 시도
+        val id5 = semaphore.tryAcquireAsync(10, 15, TimeUnit.SECONDS).await()
+
+        if (id5 != null) {
+            log.debug { "Semaphore id5=$id5" }
+            delay(100)
+            semaphore.release(id5)
         }
     }
 }

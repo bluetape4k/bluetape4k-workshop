@@ -44,7 +44,7 @@ allprojects {
 
     // bluetape4k snapshot 버전 사용 시만 사용하세요.
     configurations.all {
-        resolutionStrategy.cacheChangingModulesFor(1, TimeUnit.DAYS)
+        resolutionStrategy.cacheChangingModulesFor(0, TimeUnit.DAYS)
     }
 }
 
@@ -414,23 +414,23 @@ subprojects {
             dependency(Libs.bouncycastle_bcprov)
 
             // Prometheus
-            dependency(Libs.prometheus_simpleclient)
-            dependency(Libs.prometheus_simpleclient_common)
-            dependency(Libs.prometheus_simpleclient_httpserver)
-            dependency(Libs.prometheus_simpleclient_pushgateway)
-            dependency(Libs.prometheus_simpleclient_spring_boot)
-            dependency(Libs.prometheus_simpleclient_tracer_common)
-            dependency(Libs.prometheus_simpleclient_tracer_otel)
-            dependency(Libs.prometheus_simpleclient_tracer_otel_agent)
+//            dependency(Libs.prometheus_simpleclient)
+//            dependency(Libs.prometheus_simpleclient_common)
+//            dependency(Libs.prometheus_simpleclient_httpserver)
+//            dependency(Libs.prometheus_simpleclient_pushgateway)
+//            dependency(Libs.prometheus_simpleclient_spring_boot)
+//            dependency(Libs.prometheus_simpleclient_tracer_common)
+//            dependency(Libs.prometheus_simpleclient_tracer_otel)
+//            dependency(Libs.prometheus_simpleclient_tracer_otel_agent)
 
             // OW2 ASM
-            dependency(Libs.ow2_asm)
-            dependency(Libs.ow2_asm_commons)
-            dependency(Libs.ow2_asm_util)
-            dependency(Libs.ow2_asm_tree)
-
-            dependency(Libs.snakeyaml)
-            dependency(Libs.jna)
+//            dependency(Libs.ow2_asm)
+//            dependency(Libs.ow2_asm_commons)
+//            dependency(Libs.ow2_asm_util)
+//            dependency(Libs.ow2_asm_tree)
+//
+//            dependency(Libs.snakeyaml)
+//            dependency(Libs.jna)
         }
     }
 

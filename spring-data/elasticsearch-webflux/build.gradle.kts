@@ -58,7 +58,10 @@ dependencies {
 
     // Elasticsearch Server 관련 의존성
     implementation(Libs.bluetape4k_testcontainers)
+    implementation(Libs.testcontainers)
     implementation(Libs.testcontainers_elasticsearch)
+
+    implementation(Libs.commons_lang3)
 
     // Swagger
     implementation(Libs.springdoc_openapi_starter_webflux_ui)

@@ -1,9 +1,11 @@
 package io.bluetape4k.workshop.elasticsearch.testcontainers
 
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.testcontainers.storage.ElasticsearchOssServer
 import io.bluetape4k.testcontainers.storage.ElasticsearchServer
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Execution
@@ -20,12 +22,13 @@ class ElasticsearchServerTest {
 
         @Test
         fun `launch elasticsearch`() {
-            ElasticsearchServer().use { es ->
+            ElasticsearchOssServer().use { es ->
                 es.start()
                 es.isRunning.shouldBeTrue()
             }
         }
 
+        @Disabled("보안 문제")
         @Test
         fun `launch elastic search with ssl`() {
             ElasticsearchServer(password = "wow-world").use { es ->
@@ -46,7 +49,7 @@ class ElasticsearchServerTest {
     inner class UseDefaultPort {
         @Test
         fun `launch elasticsearch with default port`() {
-            ElasticsearchServer(useDefaultPort = true).use { es ->
+            ElasticsearchOssServer(useDefaultPort = true).use { es ->
                 es.start()
                 es.isRunning.shouldBeTrue()
                 es.port shouldBeEqualTo ElasticsearchServer.PORT

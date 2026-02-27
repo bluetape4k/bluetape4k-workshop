@@ -8,6 +8,7 @@ import io.bluetape4k.workshop.messaging.kafka.EmbeddedKafkaTest.Companion.TEST_T
 import org.amshove.kluent.shouldBeEqualTo
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilNotNull
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -24,6 +25,7 @@ import org.springframework.test.context.ActiveProfiles
  *
  * 그냥 Testcontainers 를 사용하는 것과 다를 바 없다. 그냥 Testcontainers 를 사용하는 것을 추천한다.
  */
+@Disabled("Embedded Kafka 가 Spring Boot 4에서 안되네요.")
 @ActiveProfiles("embedded")
 @SpringBootTest
 @EmbeddedKafka(

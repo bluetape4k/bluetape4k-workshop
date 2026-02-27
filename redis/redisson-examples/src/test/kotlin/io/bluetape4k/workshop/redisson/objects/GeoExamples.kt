@@ -1,13 +1,14 @@
 package io.bluetape4k.workshop.redisson.objects
 
-import io.bluetape4k.coroutines.support.awaitSuspending
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
+import kotlinx.coroutines.future.await
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.junit.jupiter.api.Test
+import org.redisson.api.RGeo
 import org.redisson.api.geo.GeoEntry
 import org.redisson.api.geo.GeoPosition
 import org.redisson.api.geo.GeoSearchArgs
@@ -28,52 +29,52 @@ class GeoExamples: AbstractRedissonTest() {
     @Test
     fun `RGeo example`() = runSuspendIO {
 
-        val geo = redisson.getGeo<String>(randomName())
+        val geo: RGeo<String> = redisson.getGeo(randomName())
 
         val palermo = GeoEntry(13.361389, 38.115556, "Palermo")
         val catania = GeoEntry(15.087269, 37.502669, "Catania")
 
-        geo.addAsync(palermo, catania).awaitSuspending() shouldBeEqualTo 2L
+        geo.addAsync(palermo, catania).await() shouldBeEqualTo 2L
 
-        val dist = geo.distAsync("Palermo", "Catania", GeoUnit.METERS).awaitSuspending()
-        val pos = geo.posAsync("Palermo", "Catania").awaitSuspending()
+        val dist = geo.distAsync("Palermo", "Catania", GeoUnit.METERS).await()
+        val pos = geo.posAsync("Palermo", "Catania").await()
 
         log.debug { "distance=$dist, pos=$pos" }
 
         // 중심점으로부터 반경 200 km 내의 도시 찾기
         val fromLocation = GeoSearchArgs.from(15.0, 37.0).radius(200.0, GeoUnit.KILOMETERS)
-        val cities = geo.searchAsync(fromLocation).awaitSuspending()
+        val cities = geo.searchAsync(fromLocation).await()
         cities shouldBeEqualTo listOf("Palermo", "Catania")
 
         // Palermo 시를 중심으로 반경 10 km 내의 도시 찾기
         val fromPalermo = GeoSearchArgs.from("Palermo").radius(10.0, GeoUnit.KILOMETERS)
-        val allNearCities = geo.searchAsync(fromPalermo).awaitSuspending()
+        val allNearCities = geo.searchAsync(fromPalermo).await()
         allNearCities shouldBeEqualTo listOf("Palermo")
 
 
         val geoSearch200 = GeoSearchArgs.from(15.0, 37.0).radius(200.0, GeoUnit.KILOMETERS)
-        val citiesWithDistance = geo.searchWithDistanceAsync(geoSearch200).awaitSuspending()
+        val citiesWithDistance = geo.searchWithDistanceAsync(geoSearch200).await()
         citiesWithDistance.forEach { (city, distance) ->
             log.debug { "city=$city, distance from (15.0, 37.0)=$distance km" }
         }
 
         val fromPalermo200 = GeoSearchArgs.from("Palermo").radius(200.0, GeoUnit.KILOMETERS)
-        val allNearCitiesDistance = geo.searchWithDistanceAsync(fromPalermo200).awaitSuspending()
+        val allNearCitiesDistance = geo.searchWithDistanceAsync(fromPalermo200).await()
         allNearCitiesDistance.forEach { (city, distance) ->
             log.debug { "city=$city, distance from Palermo=$distance km" }
         }
 
-        val citiesWithPosition = geo.searchWithPositionAsync(geoSearch200).awaitSuspending()
+        val citiesWithPosition = geo.searchWithPositionAsync(geoSearch200).await()
         citiesWithPosition.forEach { (city, position) ->
             log.debug { "city=$city, position=$position" }
         }
 
         val allNearCitiesPosition: MutableMap<String, GeoPosition> =
-            geo.searchWithPositionAsync(fromPalermo200).awaitSuspending()
+            geo.searchWithPositionAsync(fromPalermo200).await()
         allNearCitiesPosition.forEach { (city, position) ->
             log.debug { "city=$city, position=$position" }
         }
 
-        geo.deleteAsync().awaitSuspending().shouldBeTrue()
+        geo.deleteAsync().await().shouldBeTrue()
     }
 }

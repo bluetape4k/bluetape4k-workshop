@@ -42,6 +42,7 @@ dependencies {
     }
 
     implementation(Libs.bluetape4k_jackson3)
+    implementation(Libs.bluetape4k_jackson)
     testImplementation(Libs.bluetape4k_junit5)
 
     // Coroutines

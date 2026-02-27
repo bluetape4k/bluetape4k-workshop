@@ -1,6 +1,5 @@
 package io.bluetape4k.workshop.redisson.objects
 
-import io.bluetape4k.coroutines.support.awaitSuspending
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.random.RandomizedTest
 import io.bluetape4k.logging.coroutines.KLoggingChannel
@@ -8,6 +7,7 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.redis.redisson.RedissonCodecs
 import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
+import kotlinx.coroutines.future.await
 import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldBeTrue
 import org.junit.jupiter.api.Test
@@ -56,11 +56,11 @@ class BloomFilterExamples: AbstractRedissonTest() {
             randomName(),
             RedissonCodecs.LZ4Fory
         )
-        bloomFilter.tryInit(100_000L, 0.01).shouldBeTrue()
+        bloomFilter.tryInitAsync(100_000L, 0.01).await().shouldBeTrue()
 
         // BloomFilter에 요소를 추가한다
         val messages = randomMessages(10_000)
-        bloomFilter.add(messages)
+        bloomFilter.addAsync(messages).await()
 
         // bloomFilter.count() shouldBeEqualTo messages.size
         val messageTotalSize = messages.sumOf { it.content.toUtf8Bytes().size }
@@ -71,12 +71,12 @@ class BloomFilterExamples: AbstractRedissonTest() {
         log.debug { "Redis used memory size=${bloomFilter.size}, messages total size=$messageTotalSize" }
 
         // BloomFilter로 요소가 존재하는지 판단한다
-        messages.all { bloomFilter.contains(it) }.shouldBeTrue()
+        messages.all { bloomFilter.containsAsync(it).await() }.shouldBeTrue()
 
         // 존재하지 않는 요소는 false 를 반환한다
         val notExistMessage = Message(42, randomString())
-        bloomFilter.contains(notExistMessage).shouldBeFalse()
+        bloomFilter.containsAsync(notExistMessage).await().shouldBeFalse()
 
-        bloomFilter.deleteAsync().awaitSuspending().shouldBeTrue()
+        bloomFilter.deleteAsync().await().shouldBeTrue()
     }
 }

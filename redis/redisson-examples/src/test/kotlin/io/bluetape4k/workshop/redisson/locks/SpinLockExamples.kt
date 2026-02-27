@@ -3,6 +3,8 @@ package io.bluetape4k.workshop.redisson.locks
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
+import kotlinx.coroutines.future.await
+import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldBeTrue
 import org.junit.jupiter.api.Test
 import java.util.concurrent.TimeUnit
@@ -48,6 +50,30 @@ class SpinLockExamples: AbstractRedissonTest() {
             }
         } finally {
             lock.unlock()
+        }
+        locked.shouldBeTrue() // lock이 획득되었는지 확인합니다.
+    }
+
+    @Test
+    fun `basic async usage of SpinLock`() = runTest {
+        val lockName = randomName()
+        val lock = redisson.getSpinLock(lockName)
+        var locked = false
+
+        // 방법 1: 기본적인 lock 메서드를 사용하여 잠금을 획득합니다.
+        // lock.lock()
+
+        // 방법 2: 자동 락 해제 시간 (10초) 저정하여 잠금 획득
+        // lock.lock(10, TimeUnit.SECONDS)
+
+        try {
+            // 방법 3: 락 획득 대기 시간을 100초 주고, 락을 획득하고, 자동 락 해제 시간을 10초를 지정하는 방식
+            locked = lock.tryLockAsync(100, 10, TimeUnit.SECONDS).await()
+            if (locked) {
+                log.debug { "lock SpinLock[$lockName]" }
+            }
+        } finally {
+            lock.unlockAsync().await()
         }
         locked.shouldBeTrue() // lock이 획득되었는지 확인합니다.
     }

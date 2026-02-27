@@ -48,7 +48,7 @@ class GatewayManagement(
         return departmentExternalAPI.add(departmentDTO)
     }
 
-    @RequestMapping("/employees")
+    @PostMapping("/employees")
     fun apiAddEmployee(@RequestBody employeeDTO: EmployeeDTO): EmployeeDTO {
         return employeeExternalAPI.add(employeeDTO)
     }

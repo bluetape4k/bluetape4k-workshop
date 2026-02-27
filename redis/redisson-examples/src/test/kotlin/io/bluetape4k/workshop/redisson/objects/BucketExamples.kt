@@ -1,6 +1,5 @@
 package io.bluetape4k.workshop.redisson.objects
 
-import io.bluetape4k.coroutines.support.awaitSuspending
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.redis.redisson.RedissonCodecs
@@ -8,6 +7,7 @@ import io.bluetape4k.support.toUtf8Bytes
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.amshove.kluent.shouldBeEqualTo
@@ -44,33 +44,33 @@ class BucketExamples: AbstractRedissonTest() {
         val bucket: RBucket<String> = redisson.getBucket(randomName(), RedissonCodecs.String)
 
         // bucket에 object를 설정한다
-        bucket.setAsync("000", 60.seconds.toJavaDuration()).awaitSuspending()
+        bucket.setAsync("000", 60.seconds.toJavaDuration()).await()
         delay(100)
 
         // 기존 TTL을 유지하면서 신규 value로 변경한다
-        bucket.setAndKeepTTLAsync("123").awaitSuspending()
+        bucket.setAndKeepTTLAsync("123").await()
 
         // TTL 정보
-        bucket.remainTimeToLiveAsync().awaitSuspending() shouldBeInRange (0L until 60 * 1000L)
+        bucket.remainTimeToLiveAsync().await() shouldBeInRange (0L until 60 * 1000L)
 
         // "123" 값을 가지고 있으면 "2032" 로 변경한다
-        bucket.compareAndSetAsync("123", "2032").awaitSuspending().shouldBeTrue()
+        bucket.compareAndSetAsync("123", "2032").await().shouldBeTrue()
 
         // 기존 값을 가져오고, 새로운 값으로 설정
-        bucket.getAndSetAsync("5081").awaitSuspending() shouldBeEqualTo "2032"
+        bucket.getAndSetAsync("5081").await() shouldBeEqualTo "2032"
 
         // bucket에 object가 없을 때에 set을 수행한다 (이미 있으므로 실패)
-        bucket.setIfAbsentAsync("7777", 60.seconds.toJavaDuration()).awaitSuspending().shouldBeFalse()
+        bucket.setIfAbsentAsync("7777", 60.seconds.toJavaDuration()).await().shouldBeFalse()
 
         // 기존 값이 있을 때에만 새로 설정한다
-        bucket.setIfExistsAsync("9999").awaitSuspending().shouldBeTrue()
+        bucket.setIfExistsAsync("9999").await().shouldBeTrue()
 
         // object size in bytes
         log.debug { "Current bucket size=${bucket.size()}" }
         bucket.get() shouldBeEqualTo "9999"
         bucket.size() shouldBeEqualTo "9999".toUtf8Bytes().size.toLong()  // String Codec 이어야만 함 
 
-        bucket.deleteAsync().awaitSuspending()
+        bucket.deleteAsync().await()
     }
 
     @Test
@@ -78,19 +78,19 @@ class BucketExamples: AbstractRedissonTest() {
         val bucket: RBucket<String> = redisson.getBucket(randomName())
 
         // bucket에 object를 설정한다
-        bucket.setAsync("000", 60, TimeUnit.SECONDS).awaitSuspending()
+        bucket.setAsync("000", 60, TimeUnit.SECONDS).await()
 
         val job = launch(Dispatchers.IO) {
             delay(10)
-            bucket.compareAndSetAsync("000", "111").awaitSuspending().shouldBeTrue()
+            bucket.compareAndSetAsync("000", "111").await().shouldBeTrue()
         }
 
         delay(100)
         job.join()
 
-        bucket.getAndDeleteAsync().awaitSuspending() shouldBeEqualTo "111"
+        bucket.getAndDeleteAsync().await() shouldBeEqualTo "111"
 
-        bucket.deleteAsync().awaitSuspending()
+        bucket.deleteAsync().await()
     }
 
     @Test
@@ -102,7 +102,7 @@ class BucketExamples: AbstractRedissonTest() {
         val bucketName3 = randomName()
 
         // 기존에 데이터를 가진 bucket 이 없다
-        val existBuckets1 = buckets.getAsync<String>(bucketName1, bucketName2, bucketName3).awaitSuspending()
+        val existBuckets1 = buckets.getAsync<String>(bucketName1, bucketName2, bucketName3).await()
         existBuckets1.size shouldBeEqualTo 0
 
 
@@ -111,10 +111,10 @@ class BucketExamples: AbstractRedissonTest() {
             bucketName2 to "object2"
         )
         // 복수의 bucket에 한번에 데이터를 저장한다 (기존에 데이터가 있는 bucket 이 하나라도 있다면 실패한다)
-        buckets.trySetAsync(map).awaitSuspending().shouldBeTrue()
+        buckets.trySetAsync(map).await().shouldBeTrue()
 
         // object를 가진 bucket 은 2개이다.
-        val nameAndValues = buckets.getAsync<String>(bucketName1, bucketName2, bucketName3).awaitSuspending()
+        val nameAndValues = buckets.getAsync<String>(bucketName1, bucketName2, bucketName3).await()
         nameAndValues.size shouldBeEqualTo 2
         nameAndValues.map { it.key } shouldContainSame listOf(bucketName1, bucketName2)
 
@@ -122,11 +122,11 @@ class BucketExamples: AbstractRedissonTest() {
         bucket1.get() shouldBeEqualTo "object1"
 
         // 기존에 데이터가 있는 bucket 이 하나라도 있다면 실패한다
-        buckets.trySetAsync(map).awaitSuspending().shouldBeFalse()
+        buckets.trySetAsync(map).await().shouldBeFalse()
 
-        redisson.getBucket<String>(bucketName1).deleteAsync().awaitSuspending().shouldBeTrue()
-        redisson.getBucket<String>(bucketName2).deleteAsync().awaitSuspending().shouldBeTrue()
-        redisson.getBucket<String>(bucketName3).deleteAsync().awaitSuspending().shouldBeFalse()
+        redisson.getBucket<String>(bucketName1).deleteAsync().await().shouldBeTrue()
+        redisson.getBucket<String>(bucketName2).deleteAsync().await().shouldBeTrue()
+        redisson.getBucket<String>(bucketName3).deleteAsync().await().shouldBeFalse()
     }
 
     @Test
@@ -191,22 +191,22 @@ class BucketExamples: AbstractRedissonTest() {
             deleted.incrementAndGet()
         })
 
-        bucket.setAsync("123").awaitSuspending()
+        bucket.setAsync("123").await()
         delay(10)
         await until { added.get() > 0 }
 
         added.get() shouldBeGreaterThan 0
         deleted.get() shouldBeEqualTo 0
 
-        bucket.andDeleteAsync.awaitSuspending() shouldBeEqualTo "123"
+        bucket.andDeleteAsync.await() shouldBeEqualTo "123"
         delay(10)
         await until { deleted.get() > 0 }
 
         deleted.get() shouldBeGreaterThan 0
 
-        bucket.removeListenerAsync(listenerId1).awaitSuspending()
-        bucket.removeListenerAsync(listenerId2).awaitSuspending()
+        bucket.removeListenerAsync(listenerId1).await()
+        bucket.removeListenerAsync(listenerId2).await()
 
-        bucket.deleteAsync().awaitSuspending()
+        bucket.deleteAsync().await()
     }
 }
