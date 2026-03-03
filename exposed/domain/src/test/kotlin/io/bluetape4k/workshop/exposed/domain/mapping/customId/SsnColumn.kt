@@ -24,6 +24,6 @@ open class SsnColumnType(
 ): ColumnWithTransform<String, Ssn>(CharColumnType(length), StringToSsnTransformer())
 
 class StringToSsnTransformer: ColumnTransformer<String, Ssn> {
-    override fun unwrap(ssn: Ssn): String = ssn.value
+    override fun unwrap(value: Ssn): String = value.value
     override fun wrap(value: String): Ssn = Ssn(value)
 }

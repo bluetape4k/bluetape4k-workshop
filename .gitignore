@@ -23,6 +23,11 @@ hs_err_pid*
 .checkstyle
 .kotlin
 
+# AI
+.claude/
+.omc/
+.ai/
+
 .gradle/
 build/
 out/

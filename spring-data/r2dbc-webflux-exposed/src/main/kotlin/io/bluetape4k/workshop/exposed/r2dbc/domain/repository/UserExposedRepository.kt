@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.exposed.r2dbc.domain.repository
 
-import io.bluetape4k.exposed.r2dbc.repository.ExposedR2dbcRepository
+import io.bluetape4k.exposed.r2dbc.repository.R2dbcRepository
 import io.bluetape4k.workshop.exposed.r2dbc.domain.model.UserRecord
 import io.bluetape4k.workshop.exposed.r2dbc.domain.model.toUserRecord
-import io.bluetape4k.workshop.exposed.r2dbc.domain.schema.UserSchema
+import io.bluetape4k.workshop.exposed.r2dbc.domain.schema.UserSchema.UserTable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.jetbrains.exposed.v1.core.ResultRow
@@ -16,9 +16,9 @@ import org.jetbrains.exposed.v1.r2dbc.upsert
 import org.springframework.stereotype.Repository
 
 @Repository
-class UserExposedRepository: ExposedR2dbcRepository<UserRecord, Int> {
+class UserExposedRepository: R2dbcRepository<Int, UserTable, UserRecord> {
 
-    override val table: UserSchema.UserTable = UserSchema.UserTable
+    override val table: UserTable = UserTable
 
     override suspend fun ResultRow.toEntity(): UserRecord = toUserRecord()
 
