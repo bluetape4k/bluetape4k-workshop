@@ -1,10 +1,52 @@
-# Kotlin Exposed (SQL library) with Coroutines and Webflux demo
+# Exposed SQL + Spring WebFlux + Kotlin Coroutines
 
-This repository accompanies a blog
-post [Kotlin Exposed - A lightweight SQL library](https://blog.jdriven.com/2019/07/kotlin-exposed-a-lightweight-sql-library/).
+Spring WebFlux 환경에서 Kotlin Coroutines와 JetBrains Exposed SQL DSL을 조합하여 Actor·Movie CRUD REST API를 구현하는 예제입니다.
 
-The application stores Actors and Movies in an SQL database and exposes them via a
-simple REST api. The REST API is built with [Javalin](https://javalin.io/).
+## 기술 스택
+
+| 기술 | 역할 |
+|---|---|
+| Spring WebFlux + Netty | 비동기 HTTP 서버 |
+| Kotlin Coroutines | suspend 기반 비동기 처리 |
+| Exposed SQL DSL | 타입 안전 SQL 쿼리 |
+| H2 (In-Memory) | 기본 데이터베이스 |
+| SpringDoc OpenAPI | Swagger UI (`/swagger-ui.html`) |
+
+## 핵심 패턴
+
+Exposed의 `newSuspendedTransaction`을 사용하면 suspend 함수 안에서 트랜잭션을 수행할 수 있습니다:
+
+```kotlin
+suspend fun findAll(): List<ActorDTO> = newSuspendedTransaction(Dispatchers.IO) {
+    ActorTable.selectAll().map { it.toActorDTO() }
+}
+```
+
+## REST API 엔드포인트
+
+| Method | 경로 | 설명 |
+|---|---|---|
+| GET | `/actors` | 전체 배우 목록 |
+| GET | `/actors/{id}` | 배우 조회 |
+| POST | `/actors` | 배우 생성 |
+| PUT | `/actors/{id}` | 배우 수정 |
+| DELETE | `/actors/{id}` | 배우 삭제 |
+| GET | `/movies` | 전체 영화 목록 |
+| GET | `/movies/{id}` | 영화 조회 |
+| GET | `/movie-actors` | 영화-배우 연관 목록 |
+
+## 실행
+
+```bash
+./gradlew :exposed-sql-webflux-coroutines:bootRun
+```
+
+Swagger UI: http://localhost:8080/swagger-ui.html
+
+## 참고
+
+- [Exposed — Coroutines 트랜잭션](https://github.com/JetBrains/Exposed/wiki/Transactions#working-with-coroutines)
+- [Spring WebFlux + Kotlin Coroutines](https://docs.spring.io/spring-framework/reference/languages/kotlin/coroutines.html)
 
 There are two variants, one with H2 and one with Postgres. H2 is the easiest starting point because it is an
 in-memory database.
