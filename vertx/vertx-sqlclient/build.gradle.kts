@@ -2,6 +2,10 @@ plugins {
     kotlin("kapt")
 }
 
+kapt {
+    includeCompileClasspath = true
+}
+
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
