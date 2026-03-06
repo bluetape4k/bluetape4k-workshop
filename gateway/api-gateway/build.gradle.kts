@@ -43,7 +43,7 @@ dependencies {
     implementation(Libs.bucket4j_redisson)
 
     // Redis Cache
-    implementation(Libs.bluetape4k_cache)
+    implementation(Libs.bluetape4k_cache_core)
     implementation(Libs.lettuce_core)
 
     implementation(Libs.bluetape4k_testcontainers)

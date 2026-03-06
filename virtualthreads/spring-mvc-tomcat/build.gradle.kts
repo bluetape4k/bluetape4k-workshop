@@ -79,7 +79,7 @@ dependencies {
     implementation(Libs.testcontainers_mysql)
 
     // Cache
-    implementation(Libs.bluetape4k_cache_local)
+    implementation(Libs.bluetape4k_cache_core)
     implementation(Libs.caffeine)
     implementation(Libs.caffeine_jcache)
 

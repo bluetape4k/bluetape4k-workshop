@@ -67,7 +67,7 @@ object Plugins {
 object Versions {
 
     // Java 21, Kotlin 2.0 이상에서 사용하세요
-    const val bluetape4k = "1.2.3"    // Bluetape4k Github Package 로 배포됩니다.
+    const val bluetape4k = "1.3.0"    // Bluetape4k Github Package 로 배포됩니다.
 
     const val kotlin = "2.3.0"                 // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
     const val kotlinx_coroutines = "1.10.2"     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
@@ -289,6 +289,7 @@ object Libs {
     val bluetape4k_jackson3_text = bluetape4k("jackson3-text")
     val bluetape4k_netty = bluetape4k("netty")
     val bluetape4k_retrofit2 = bluetape4k("retrofit2")
+    val bluetape4k_tink = bluetape4k("tink")
 
     // Data
     val bluetape4k_cassandra = bluetape4k("cassandra")
@@ -306,6 +307,7 @@ object Libs {
     val bluetape4k_exposed_r2dbc = bluetape4k("exposed-r2dbc")
     val bluetape4k_exposed_r2dbc_redisson = bluetape4k("exposed-r2dbc-redisson")
     val bluetape4k_exposed_r2dbc_tests = bluetape4k("exposed-r2dbc-tests")
+    val bluetape4k_exposed_tink = bluetape4k("exposed-tink")
     val bluetape4k_hibernate = bluetape4k("hibernate")
     val bluetape4k_hibernate_reactive = bluetape4k("hibernate-reactive")
     val bluetape4k_mongodb = bluetape4k("mongodb")
@@ -317,12 +319,9 @@ object Libs {
     val bluetape4k_cache = bluetape4k("cache")
     val bluetape4k_cache_core = bluetape4k("cache-core")
     val bluetape4k_cache_hazelcast = bluetape4k("cache-hazelcast")
-    val bluetape4k_cache_hazelcast_near = bluetape4k("cache-hazelcast-near")
     val bluetape4k_cache_ignite = bluetape4k("cache-ignite")
-    val bluetape4k_cache_ignite_near = bluetape4k("cache-ignite-near")
-    val bluetape4k_cache_local = bluetape4k("cache-local")
+    val bluetape4k_cache_lettuce = bluetape4k("cache-lettuce")
     val bluetape4k_cache_redisson = bluetape4k("cache-redisson")
-    val bluetape4k_cache_redisson_near = bluetape4k("cache-redisson-near")
     val bluetape4k_kafka = bluetape4k("kafka")
     val bluetape4k_micrometer = bluetape4k("micrometer")
     val bluetape4k_nats = bluetape4k("nats")
@@ -373,8 +372,8 @@ object Libs {
     val bluetape4k_jwt = bluetape4k("jwt")
     val bluetape4k_math = bluetape4k("math")
     val bluetape4k_measured = bluetape4k("measured")
-    val bluetape4k_mutiny = bluetape4k("mutiny")
     val bluetape4k_money = bluetape4k("money")
+    val bluetape4k_mutiny = bluetape4k("mutiny")
     val bluetape4k_units = bluetape4k("units")
 
     // TOKENIZER
