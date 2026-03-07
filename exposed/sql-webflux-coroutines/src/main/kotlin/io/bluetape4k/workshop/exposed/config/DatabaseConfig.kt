@@ -14,7 +14,7 @@ import javax.sql.DataSource
 /**
  * exposed-spring-boot-starter 를 사용하면 되지만, 여기서는 직접 설정했다
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class DatabaseConfig {
 
     companion object: KLogging() {

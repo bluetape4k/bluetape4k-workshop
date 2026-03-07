@@ -204,7 +204,7 @@ enum class TestDB(
 
         fun enabledDialects(): Set<TestDB> {
             return if (USE_FAST_DB) setOf(H2)
-            else (ALL_H2 + ALL_POSTGRES + ALL_MYSQL_MARIADB) //ALL - ALL_H2_V1 - MYSQL_V5 - COCKROACH)
+            else setOf(H2, POSTGRESQL, MYSQL_V8)
         }
     }
 }

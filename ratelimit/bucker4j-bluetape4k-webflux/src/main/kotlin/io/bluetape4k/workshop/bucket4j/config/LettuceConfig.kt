@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration
 /**
  * Lettuce 의 [RedisClient]를 제공하는 Configuration 입니다.
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class LettuceConfig {
 
     @Value("\${spring.data.redis.url}")

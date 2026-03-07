@@ -18,8 +18,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import java.time.Duration
 
-
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class Bucket4jConfig {
 
     /**

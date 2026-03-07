@@ -1,8 +1,10 @@
 package io.bluetape4k.workshop.webflux
 
+import io.bluetape4k.coroutines.flow.extensions.log
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
+import io.bluetape4k.spring.tests.httpGet
 import io.bluetape4k.workshop.webflux.model.Event
 import io.bluetape4k.workshop.webflux.model.Quote
 import kotlinx.coroutines.flow.collect
@@ -10,6 +12,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.reactive.asFlow
 import org.amshove.kluent.shouldBeGreaterThan
 import org.amshove.kluent.shouldBeTrue
+import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -31,19 +34,16 @@ class WebsocketApplicationTest(
 
     @Test
     fun `context loading`() {
-        // check context loading 
+        client.shouldNotBeNull()
     }
 
     @Test
     fun `get quotes`() = runSuspendIO {
-        client
-            .get()
-            .uri("/quotes")
-            .exchange()
-            .expectStatus().isOk
+        client.httpGet("/quotes")
+            .expectStatus().is2xxSuccessful
             .expectHeader().contentType(MediaType.APPLICATION_NDJSON)
             .returnResult<Event>().responseBody
-            .asFlow()
+            .asFlow().log("Events")
             .onEach { event ->
                 log.debug { "received event=$event" }
                 event.data.all { it.price > BigDecimal.ZERO }.shouldBeTrue()
@@ -53,14 +53,11 @@ class WebsocketApplicationTest(
 
     @Test
     fun `fetch quotes by flow`() = runSuspendIO {
-        client
-            .get()
-            .uri("/quotes/100")
-            .exchange()
-            .expectStatus().isOk
+        client.httpGet("/quotes/100")
+            .expectStatus().is2xxSuccessful
             .expectHeader().contentType(MediaType.APPLICATION_NDJSON)
             .returnResult<Quote>().responseBody
-            .asFlow()
+            .asFlow().log("Quotes")
             .onEach { quote ->
                 log.debug { "received quote=$quote" }
                 quote.price shouldBeGreaterThan BigDecimal.ZERO

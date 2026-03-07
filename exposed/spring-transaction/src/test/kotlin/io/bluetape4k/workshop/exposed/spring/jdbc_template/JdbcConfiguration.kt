@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.transaction.support.TransactionOperations
 import org.springframework.transaction.support.TransactionTemplate
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class JdbcConfiguration {
 
     @Bean

@@ -20,7 +20,7 @@ import java.time.Duration
  *
  * 고성능을 원할 경우 Netty 설정을 튜닝하는 걸 추천합니다.
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class NettyConfig {
 
     companion object: KLoggingChannel()
@@ -38,8 +38,8 @@ class NettyConfig {
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .option(ChannelOption.SO_BACKLOG, 1000)
                 .doOnConnection { conn ->
-                    conn.addHandlerLast(ReadTimeoutHandler(10))
-                    conn.addHandlerLast(WriteTimeoutHandler(10))
+                    conn.addHandlerLast(ReadTimeoutHandler(30))
+                    conn.addHandlerLast(WriteTimeoutHandler(30))
                 }
         }
     }
@@ -55,7 +55,7 @@ class NettyConfig {
 
             loopResources = LoopResources.create(
                 "event-loop",
-                4,
+                8,
                 maxOf(Runtimex.availableProcessors * 2, 8),
                 true
             )

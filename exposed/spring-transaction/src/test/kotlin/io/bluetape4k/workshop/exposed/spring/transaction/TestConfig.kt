@@ -17,7 +17,7 @@ import javax.sql.DataSource
 @EnableTransactionManagement
 class TestConfig: TransactionManagementConfigurer {
 
-    @Bean
+    @Bean(destroyMethod = "close")
     fun dataSource(): DataSource {
         val config = HikariConfig().apply {
             jdbcUrl = "jdbc:h2:mem:${Base58.randomString(8)};DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL"
