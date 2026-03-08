@@ -8,7 +8,7 @@ import org.springframework.data.elasticsearch.client.elc.ElasticsearchConfigurat
 import org.springframework.data.elasticsearch.config.EnableReactiveElasticsearchAuditing
 import org.springframework.data.elasticsearch.repository.config.EnableReactiveElasticsearchRepositories
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableReactiveElasticsearchRepositories
 @EnableReactiveElasticsearchAuditing
 class ElasticsearchClientConfig: ElasticsearchConfiguration() {

@@ -11,7 +11,7 @@ import tools.jackson.databind.ObjectMapper
  *
  * @constructor Create empty Problem config
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(ProblemModule::class, ObjectMapper::class)
 class ProblemConfig {
 

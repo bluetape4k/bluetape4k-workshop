@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableMongoRepositories(basePackages = ["io.bluetape4k.workshop.mongodb.domain"])
 class MongoClientConfig: AbstractMongoClientConfiguration() {
 

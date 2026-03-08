@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.data.elasticsearch.client.ClientConfiguration
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchConfiguration
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class ElasticsearchClientConfig: ElasticsearchConfiguration() {
 
     companion object: KLogging()

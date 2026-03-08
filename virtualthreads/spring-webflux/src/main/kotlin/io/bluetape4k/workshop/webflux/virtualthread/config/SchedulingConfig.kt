@@ -8,7 +8,7 @@ import org.springframework.scheduling.annotation.EnableScheduling
 import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler
 import java.util.concurrent.Executors
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableScheduling
 class SchedulingConfig {
 

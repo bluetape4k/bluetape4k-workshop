@@ -12,7 +12,7 @@ import org.springframework.http.converter.HttpMessageConverters
 import org.springframework.http.converter.cbor.JacksonCborHttpMessageConverter
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class CborConfig: WebMvcConfigurer {
 
     @Bean

@@ -11,7 +11,7 @@ import java.util.concurrent.Executors
 /**
  * CountryPrefetcher 가 주기적으로 동작하도록 하기 위해 사용합니다.
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableScheduling
 class SchedulingConfig {
 

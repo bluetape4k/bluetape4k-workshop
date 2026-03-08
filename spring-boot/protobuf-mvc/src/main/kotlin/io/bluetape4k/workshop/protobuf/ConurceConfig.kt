@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.converter.protobuf.ProtobufHttpMessageConverter
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class ConurceConfig {
 
     @Bean

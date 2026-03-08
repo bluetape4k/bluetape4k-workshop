@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Configuration
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class VirtualThreadConfig {
 
     @Bean

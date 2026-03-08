@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.data.mongodb.config.AbstractReactiveMongoConfiguration
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableReactiveMongoRepositories(basePackages = ["io.bluetape4k.workshop.mongodb.domain"])
 class ReactiveMongoConfig: AbstractReactiveMongoConfiguration() {
 

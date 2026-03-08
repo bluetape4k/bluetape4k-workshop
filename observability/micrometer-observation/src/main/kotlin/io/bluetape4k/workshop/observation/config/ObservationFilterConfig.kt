@@ -13,7 +13,7 @@ import org.springframework.web.server.WebFilter
 /**
  * spring-boot-starter-aop 를 참조하고, spring-boot-starter-web 의존성이 있는 경우에만 활성화됩니다.
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class ObservationFilterConfig {
 
     companion object: KLogging()

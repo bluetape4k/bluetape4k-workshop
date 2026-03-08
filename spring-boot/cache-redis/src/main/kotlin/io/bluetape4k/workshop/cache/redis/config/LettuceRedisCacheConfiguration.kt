@@ -18,7 +18,7 @@ import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.serializer.StringRedisSerializer
 import java.time.Duration
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableCaching
 class LettuceRedisCacheConfiguration {
 

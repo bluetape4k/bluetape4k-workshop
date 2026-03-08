@@ -8,7 +8,7 @@ import org.springframework.core.task.support.TaskExecutorAdapter
 import org.springframework.scheduling.annotation.EnableAsync
 import java.util.concurrent.Executors
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableAsync
 class AsyncConfig {
 

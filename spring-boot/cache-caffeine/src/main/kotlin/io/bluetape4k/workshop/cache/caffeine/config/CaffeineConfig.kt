@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.toJavaDuration
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableCaching
 class CaffeineConfig {
 
