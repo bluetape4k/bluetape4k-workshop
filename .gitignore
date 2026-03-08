@@ -26,6 +26,7 @@ hs_err_pid*
 # AI
 .claude/
 .omc/
+.omx/
 .ai/
 
 .gradle/
