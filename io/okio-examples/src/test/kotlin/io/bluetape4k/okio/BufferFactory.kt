@@ -1,6 +1,6 @@
 package io.bluetape4k.okio
 
-import io.bluetape4k.io.okio.bufferOf
+
 import okio.Buffer
 import kotlin.random.Random
 

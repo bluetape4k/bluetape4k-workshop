@@ -1,9 +1,9 @@
 package io.bluetape4k.okio.compress
 
 import io.bluetape4k.io.compressor.Compressor
-import io.bluetape4k.io.okio.bufferOf
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.okio.bufferOf
 import okio.Buffer
 import okio.ForwardingSink
 import okio.Sink

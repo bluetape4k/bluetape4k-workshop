@@ -1,6 +1,6 @@
 package io.bluetape4k.okio
 
-import io.bluetape4k.io.okio.bufferOf
+
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import okio.Buffer

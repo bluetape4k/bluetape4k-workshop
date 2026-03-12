@@ -1,8 +1,8 @@
 package io.bluetape4k.okio.cipher
 
-import io.bluetape4k.io.okio.bufferOf
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.trace
+import io.bluetape4k.okio.bufferOf
 import okio.ForwardingSink
 import okio.Sink
 import javax.crypto.Cipher

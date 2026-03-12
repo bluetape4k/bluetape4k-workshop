@@ -1,7 +1,6 @@
 package io.bluetape4k.okio
 
-import io.bluetape4k.io.okio.bufferOf
-import io.bluetape4k.io.okio.buffered
+
 import io.bluetape4k.junit5.concurrency.TestingExecutors
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.system.assumeNotWindows

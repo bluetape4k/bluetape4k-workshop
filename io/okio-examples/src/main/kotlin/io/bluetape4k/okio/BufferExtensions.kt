@@ -1,6 +1,5 @@
 package io.bluetape4k.okio
 
-import io.bluetape4k.io.okio.buffered
 import okio.Buffer
 import okio.BufferedSink
 import okio.BufferedSource

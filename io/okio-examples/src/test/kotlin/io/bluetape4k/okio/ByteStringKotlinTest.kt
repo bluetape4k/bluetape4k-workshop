@@ -1,6 +1,5 @@
 package io.bluetape4k.okio
 
-import io.bluetape4k.io.okio.byteStringOf
 import io.bluetape4k.logging.KLogging
 import okio.ByteString.Companion.encode
 import okio.ByteString.Companion.encodeUtf8

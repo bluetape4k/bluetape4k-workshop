@@ -13,7 +13,6 @@ import org.springframework.context.annotation.Bean
 import org.springframework.core.io.Resource
 import org.springframework.core.io.ResourceLoader
 import org.springframework.core.io.WritableResource
-import org.testcontainers.containers.localstack.LocalStackContainer
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
 import java.util.*
@@ -28,8 +27,7 @@ class SpringCloudAwsS3Sample {
     companion object: KLogging() {
         private const val TEST_FILE_URL = "s3://spring-cloud-aws-sample-bucket1/test-file.txt"
 
-        private val s3Server = LocalStackServer.Launcher.localStack
-            .withServices(LocalStackContainer.Service.S3)
+        private val s3Server = LocalStackServer.Launcher.localStack.withServices("s3")
     }
 
 //    @Value(TEST_FILE_URL)

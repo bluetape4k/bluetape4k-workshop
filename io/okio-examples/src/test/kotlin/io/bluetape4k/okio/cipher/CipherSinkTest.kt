@@ -1,8 +1,9 @@
 package io.bluetape4k.okio.cipher
 
-import io.bluetape4k.io.okio.bufferOf
+
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.okio.bufferOf
 import okio.Buffer
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.api.RepeatedTest

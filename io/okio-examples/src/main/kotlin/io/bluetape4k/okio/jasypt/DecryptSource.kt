@@ -1,9 +1,9 @@
 package io.bluetape4k.okio.jasypt
 
 import io.bluetape4k.crypto.encrypt.Encryptor
-import io.bluetape4k.io.okio.bufferOf
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.okio.bufferOf
 import okio.Buffer
 import okio.ForwardingSource
 import okio.Source
