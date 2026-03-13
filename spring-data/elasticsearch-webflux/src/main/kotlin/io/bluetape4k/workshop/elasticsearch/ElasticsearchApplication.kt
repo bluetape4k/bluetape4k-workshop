@@ -8,8 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations
 
-@SpringBootApplication
-
+@SpringBootApplication(proxyBeanMethods = false)
 class ElasticsearchApplication {
 
     companion object: KLogging() {

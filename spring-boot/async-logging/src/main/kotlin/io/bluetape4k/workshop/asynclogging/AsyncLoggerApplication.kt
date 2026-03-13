@@ -6,7 +6,7 @@ import io.bluetape4k.utils.Runtimex
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
-@SpringBootApplication
+@SpringBootApplication(proxyBeanMethods = false)
 class AsyncLoggerApplication {
 
     companion object: KLoggingChannel() {

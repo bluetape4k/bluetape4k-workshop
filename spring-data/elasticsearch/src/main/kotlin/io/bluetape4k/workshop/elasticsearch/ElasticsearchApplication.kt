@@ -14,7 +14,7 @@ import org.springframework.data.elasticsearch.core.geo.GeoPoint
 import org.springframework.data.elasticsearch.core.indexOps
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories
 
-@SpringBootApplication
+@SpringBootApplication(proxyBeanMethods = false)
 @EnableElasticsearchRepositories
 class ElasticsearchApplication {
 

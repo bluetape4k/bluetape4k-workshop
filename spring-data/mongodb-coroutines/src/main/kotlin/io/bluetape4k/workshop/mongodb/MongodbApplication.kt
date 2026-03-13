@@ -7,7 +7,7 @@ import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.data.mongodb.core.mapping.event.LoggingEventListener
 
-@SpringBootApplication
+@SpringBootApplication(proxyBeanMethods = false)
 class MongoApplication {
 
     companion object: KLoggingChannel() {

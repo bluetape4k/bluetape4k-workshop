@@ -11,7 +11,7 @@ import org.springframework.kafka.listener.ConcurrentMessageListenerContainer
 import org.springframework.kafka.listener.GenericMessageListenerContainer
 import org.springframework.kafka.requestreply.ReplyingKafkaTemplate
 
-@SpringBootApplication
+@SpringBootApplication(proxyBeanMethods = false)
 class PingApplication {
 
     companion object: KLoggingChannel() {

@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.cache.annotation.EnableCaching
 
-@SpringBootApplication
+@SpringBootApplication(proxyBeanMethods = false)
 @EnableCaching
 class CaffeineApplication {
     companion object: KLogging()

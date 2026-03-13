@@ -4,7 +4,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories
 import org.springframework.transaction.annotation.EnableTransactionManagement
 
-@SpringBootApplication
+@SpringBootApplication(proxyBeanMethods = false)
 @EnableTransactionManagement
 @EnableR2dbcRepositories(basePackageClasses = [PersonRepository::class])
 class InfrastructureConfiguration

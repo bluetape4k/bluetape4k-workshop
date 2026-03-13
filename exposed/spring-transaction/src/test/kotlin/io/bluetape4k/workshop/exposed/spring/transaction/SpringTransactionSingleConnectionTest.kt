@@ -74,7 +74,7 @@ class SpringTransactionSingleConnectionTest {
         }
     }
 
-    @Configuration
+    @Configuration(proxyBeanMethods = false)
     @EnableTransactionManagement(proxyTargetClass = true)
     class SingleConnectionH2TestConfig {
 

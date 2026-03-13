@@ -13,7 +13,7 @@ import org.springframework.r2dbc.connection.init.CompositeDatabasePopulator
 import org.springframework.r2dbc.connection.init.ConnectionFactoryInitializer
 import org.springframework.r2dbc.connection.init.ResourceDatabasePopulator
 
-@SpringBootApplication
+@SpringBootApplication(proxyBeanMethods = false)
 class R2dbcApplication: AbstractR2dbcConfiguration() {
 
     companion object: KLoggingChannel()

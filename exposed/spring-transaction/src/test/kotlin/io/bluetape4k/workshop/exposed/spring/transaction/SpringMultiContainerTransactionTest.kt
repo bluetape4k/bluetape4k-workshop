@@ -181,7 +181,7 @@ open class SpringMultiContainerTransactionTest {
     }
 
 
-    @Configuration
+    @Configuration(proxyBeanMethods = false)
     @EnableTransactionManagement(proxyTargetClass = true)
     class OrderConfig {
 
@@ -243,7 +243,7 @@ open class SpringMultiContainerTransactionTest {
     }
 
 
-    @Configuration
+    @Configuration(proxyBeanMethods = false)
     @EnableTransactionManagement(proxyTargetClass = true)
     class PaymentConfig {
 

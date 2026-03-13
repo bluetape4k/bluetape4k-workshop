@@ -7,7 +7,7 @@ import org.springframework.boot.runApplication
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient
 
 @EnableDiscoveryClient
-@SpringBootApplication
+@SpringBootApplication(proxyBeanMethods = false)
 class ApiGatewayDemoApplication {
 
     companion object: KLoggingChannel() {

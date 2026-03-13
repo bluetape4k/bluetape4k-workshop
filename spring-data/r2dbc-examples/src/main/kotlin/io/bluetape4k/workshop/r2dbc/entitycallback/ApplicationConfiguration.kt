@@ -15,7 +15,7 @@ import org.springframework.r2dbc.connection.init.ResourceDatabasePopulator
 import org.springframework.r2dbc.core.DatabaseClient
 import reactor.core.publisher.Mono
 
-@SpringBootApplication
+@SpringBootApplication(proxyBeanMethods = false)
 @EnableR2dbcRepositories(basePackageClasses = [CustomerRepository::class])
 class ApplicationConfiguration {
 

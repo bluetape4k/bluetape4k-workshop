@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.admin.SpringApplicationAdminJmxAut
 import org.springframework.boot.runApplication
 
 @SpringBootApplication(
+    proxyBeanMethods = false,
     // NOTE: Spring Application Admin 의 JMX 설정을 제외합니다. (Ping Application 과 중복됨)
     exclude = [SpringApplicationAdminJmxAutoConfiguration::class]
 )

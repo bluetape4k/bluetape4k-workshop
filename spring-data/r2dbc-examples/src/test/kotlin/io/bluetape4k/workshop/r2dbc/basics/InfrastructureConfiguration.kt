@@ -6,7 +6,7 @@ import org.springframework.context.annotation.ComponentScan
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories
 import org.springframework.transaction.annotation.EnableTransactionManagement
 
-@SpringBootApplication
+@SpringBootApplication(proxyBeanMethods = false)
 @EnableTransactionManagement
 @ComponentScan(basePackageClasses = [CustomerRepository::class])
 @EnableR2dbcRepositories(basePackageClasses = [CustomerRepository::class])

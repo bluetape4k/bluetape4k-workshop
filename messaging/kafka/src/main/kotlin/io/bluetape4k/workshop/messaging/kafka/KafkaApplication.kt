@@ -5,7 +5,7 @@ import io.bluetape4k.testcontainers.mq.KafkaServer
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
-@SpringBootApplication
+@SpringBootApplication(proxyBeanMethods = false)
 class KafkaApplication {
 
     companion object: KLoggingChannel() {

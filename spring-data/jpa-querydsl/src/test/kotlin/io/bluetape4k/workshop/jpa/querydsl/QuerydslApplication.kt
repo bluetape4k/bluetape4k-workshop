@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories
 import org.springframework.data.repository.config.BootstrapMode
 
-@SpringBootApplication
+@SpringBootApplication(proxyBeanMethods = false)
 @EnableJpaAuditing(modifyOnCreate = true)
 @EnableJpaRepositories(bootstrapMode = BootstrapMode.DEFERRED)
 class QueryDslApplication {

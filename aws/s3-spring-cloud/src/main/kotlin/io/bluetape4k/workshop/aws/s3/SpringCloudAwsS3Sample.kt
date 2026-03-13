@@ -21,7 +21,7 @@ fun main(vararg args: String) {
     runApplication<SpringCloudAwsS3Sample>(*args)
 }
 
-@SpringBootApplication
+@SpringBootApplication(proxyBeanMethods = false)
 class SpringCloudAwsS3Sample {
 
     companion object: KLogging() {

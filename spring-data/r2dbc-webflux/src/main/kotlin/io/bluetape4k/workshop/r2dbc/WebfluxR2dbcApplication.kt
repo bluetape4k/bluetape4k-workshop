@@ -4,7 +4,7 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
-@SpringBootApplication
+@SpringBootApplication(proxyBeanMethods = false)
 class WebfluxR2dbcApplication {
     companion object: KLoggingChannel()
 }

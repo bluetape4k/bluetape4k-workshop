@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.bucket4j.config
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
-import io.bluetape4k.support.sysProperty
 import io.bluetape4k.testcontainers.storage.RedisServer
 import io.bluetape4k.utils.ShutdownQueue
 import org.springframework.context.annotation.Bean
@@ -10,7 +9,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import org.springframework.core.annotation.Order
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @Profile("dev", "test")
 @Order(0)
 class TestRedisConfig {
@@ -20,6 +19,12 @@ class TestRedisConfig {
             start()
             ShutdownQueue.register(this)
         }
+
+        init {
+            System.setProperty("testcontainers.redis.url", redis.url)
+            System.setProperty("testcontainers.redis.host", redis.host)
+            System.setProperty("testcontainers.redis.port", redis.port.toString())
+        }
     }
 
     @Bean
@@ -28,8 +33,6 @@ class TestRedisConfig {
             redis.start()
         }
         log.info { "Redis Server=${redis.url}" }
-
-        sysProperty["spring.data.redis.url"] = redis.url
         return redis
     }
 }

@@ -4,7 +4,7 @@ import io.bluetape4k.logging.KLogging
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
-@SpringBootApplication
+@SpringBootApplication(proxyBeanMethods = false)
 class SpringModulith {
     companion object: KLogging()
 }
