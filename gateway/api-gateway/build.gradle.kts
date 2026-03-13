@@ -43,7 +43,7 @@ dependencies {
     implementation(Libs.bucket4j_redisson)
 
     // Redis Cache
-    implementation(Libs.bluetape4k_cache)
+    implementation(Libs.bluetape4k_cache_core)
     implementation(Libs.lettuce_core)
 
     implementation(Libs.bluetape4k_testcontainers)
@@ -58,6 +58,7 @@ dependencies {
     testImplementation(Libs.springCloudStarter("loadbalancer"))
     testImplementation(Libs.springCloud("test-support"))
     testImplementation(Libs.springCloud("gateway-server-webflux") + "::tests")
+    testImplementation(Libs.jmh_core)
 
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))

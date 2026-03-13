@@ -2,10 +2,10 @@ package io.bluetape4k.okio.compress
 
 import io.bluetape4k.io.compressor.Compressor
 import io.bluetape4k.io.compressor.Compressors
-import io.bluetape4k.io.okio.bufferOf
-import io.bluetape4k.io.okio.byteStringOf
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.okio.AbstractOkioTest
+import io.bluetape4k.okio.bufferOf
+import io.bluetape4k.okio.byteStringOf
 import okio.Buffer
 import org.amshove.kluent.shouldBeEqualTo
 import org.junit.jupiter.params.ParameterizedTest

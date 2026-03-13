@@ -18,7 +18,7 @@ import org.springframework.context.annotation.Configuration
  *   - [Micrometer Observability](https://micrometer.io/docs/concepts#_observability)
  *
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(ObservedAspect::class)
 class ObservationConfig {
 

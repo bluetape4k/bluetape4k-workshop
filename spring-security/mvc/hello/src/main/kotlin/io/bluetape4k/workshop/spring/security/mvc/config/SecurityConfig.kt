@@ -13,7 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.provisioning.InMemoryUserDetailsManager
 import org.springframework.security.web.SecurityFilterChain
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableWebSecurity
 class SecurityConfig {
 

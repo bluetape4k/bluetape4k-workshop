@@ -26,7 +26,7 @@ import org.springframework.web.reactive.config.EnableWebFlux
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableWebFlux
 @EnableWebFluxSecurity
 class JwtConfig {

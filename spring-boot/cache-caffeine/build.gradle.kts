@@ -16,7 +16,7 @@ configurations {
 dependencies {
 
     // Cache
-    implementation(Libs.bluetape4k_cache)
+    implementation(Libs.bluetape4k_cache_core)
     implementation(Libs.caffeine)
     implementation(Libs.caffeine_jcache)
     implementation(Libs.springBootStarter("cache"))

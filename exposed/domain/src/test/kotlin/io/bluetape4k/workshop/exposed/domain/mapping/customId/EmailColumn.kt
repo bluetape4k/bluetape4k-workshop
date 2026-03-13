@@ -24,6 +24,6 @@ open class EmailColumnType(val length: Int = 64):
     )
 
 class StringToEmailTransformer: ColumnTransformer<String, Email> {
-    override fun unwrap(email: Email): String = email.value
+    override fun unwrap(value: Email): String = value.value
     override fun wrap(value: String): Email = Email(value)
 }

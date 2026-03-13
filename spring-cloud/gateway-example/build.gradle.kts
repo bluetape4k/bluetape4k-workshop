@@ -34,7 +34,7 @@ dependencies {
     implementation(Libs.bluetape4k_testcontainers)
 
     // Redis Cache
-    implementation(Libs.bluetape4k_cache)
+    implementation(Libs.bluetape4k_cache_core)
 
     api(Libs.jakarta_servlet_api)
 

@@ -6,7 +6,7 @@ import org.springframework.boot.runApplication
 import org.springframework.scheduling.annotation.EnableAsync
 
 @EnableAsync
-@SpringBootApplication(exclude = [DataSourceTransactionManagerAutoConfiguration::class])
+@SpringBootApplication(proxyBeanMethods = false, exclude = [DataSourceTransactionManagerAutoConfiguration::class])
 class Application {
 }
 

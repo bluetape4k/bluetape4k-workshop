@@ -23,6 +23,10 @@ class Order: AbstractJpaEntity<String>() {
         this.status = OrderStatus.COMPLETED
     }
 
+    override fun equalProperties(other: Any): Boolean {
+        return other is Order && status == other.status
+    }
+
     override fun buildStringHelper(): ToStringBuilder {
         return super.buildStringHelper()
             .add("status", status)

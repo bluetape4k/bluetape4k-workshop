@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import tools.jackson.databind.json.JsonMapper
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class JacksonConfig {
 
     companion object: KLogging()

@@ -18,7 +18,7 @@ object Plugins {
         const val shadow = "9.2.2"      // https://plugins.gradle.org/plugin/com.gradleup.shadow
         const val kotlinx_benchmark = "0.4.15" // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-benchmark-plugin
 
-        const val spring_boot3 = "3.5.10"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
+        const val spring_boot3 = "3.5.11"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
         const val spring_boot4 = "4.0.2"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
         const val quarkus = "3.31.0"      // https://mvnrepository.com/artifact/io.quarkus/quarkus-bom
 
@@ -67,9 +67,9 @@ object Plugins {
 object Versions {
 
     // Java 21, Kotlin 2.0 이상에서 사용하세요
-    const val bluetape4k = "1.2.0-SNAPSHOT"    // Bluetape4k Github Package 로 배포됩니다.
+    const val bluetape4k = "1.5.0-SNAPSHOT"    // Bluetape4k Github Package 로 배포됩니다.
 
-    const val kotlin = "2.3.0"                 // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
+    const val kotlin = "2.3.20-RC3"                 // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
     const val kotlinx_coroutines = "1.10.2"     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
     const val kotlinx_serialization = "1.9.0"   // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-serialization-json-jvm
     const val kotlinx_atomicfu = "0.31.0"      // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/atomicfu
@@ -82,9 +82,9 @@ object Versions {
     const val spring_integration = "7.0.1"  // https://mvnrepository.com/artifact/org.springframework.integration/spring-integration-core
     const val reactor_bom = "2025.0.1"      // https://mvnrepository.com/artifact/io.projectreactor/reactor-bom
     const val spring_statemachine = "4.0.1" // https://mvnrepository.com/artifact/org.springframework.statemachine/spring-statemachine-core
-    const val spring_modulith = "2.0.1"     // https://mvnrepository.com/artifact/org.springframework.modulith/spring-modulith-bom
+    const val spring_modulith = "2.0.3"     // https://mvnrepository.com/artifact/org.springframework.modulith/spring-modulith-bom
 
-    const val chaos_monkey = "3.2.2"        // https://mvnrepository.com/artifact/de.codecentric/chaos-monkey-spring-boot
+    const val chaos_monkey = "4.0.0"        // https://mvnrepository.com/artifact/de.codecentric/chaos-monkey-spring-boot
     const val blockhound = "1.0.14.RELEASE"  // https://mvnrepository.com/artifact/io.projectreactor.tools/blockhound
 
     const val quarkus = Plugins.Versions.quarkus
@@ -101,16 +101,16 @@ object Versions {
     const val mutiny = "3.1.0"                // https://mvnrepository.com/artifact/io.smallrye.reactive/mutiny
     const val camel_quarkus = "3.30.0"        // https://mvnrepository.com/artifact/org.apache.camel.quarkus/camel-quarkus-bom
 
-    const val vertx = "5.0.7"               // https://mvnrepository.com/artifact/io.vertx/vertx-core
+    const val vertx = "5.0.8"               // https://mvnrepository.com/artifact/io.vertx/vertx-core
 
     const val swagger = "2.2.37"              // https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-annotations
     const val springdoc_openapi = "3.0.0"    // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webmvc-ui
     const val springfox_swagger = "3.0.0"
     const val problem = "0.29.1"             // https://mvnrepository.com/artifact/org.zalando/problem-spring-web
 
-    const val bucket4j = "8.16.0"       // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17-core
+    const val bucket4j = "8.16.1"       // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17-core
     const val resilience4j = "2.3.0"   // https://mvnrepository.com/artifact/io.github.resilience4j/resilience4j-bom
-    const val netty = "4.2.9.Final"  // https://mvnrepository.com/artifact/io.netty/netty-all
+    const val netty = "4.2.10.Final"  // https://mvnrepository.com/artifact/io.netty/netty-all
 
     const val aws = "1.12.785"          // https://mvnrepository.com/artifact/com.amazonaws
     const val aws2 = "2.39.2"           // https://mvnrepository.com/artifact/software.amazon.awssdk/aws-sdk-java
@@ -118,7 +118,7 @@ object Versions {
     const val aws_kotlin = "1.5.90"     // https://mvnrepository.com/artifact/aws.sdk.kotlin/aws-http-jvm
     const val aws_smithy_kotlin = "1.5.20" // https://mvnrepository.com/artifact/aws.smithy.kotlin/http-client-engine-crt-jvm
 
-    const val aws_spring_cloud = "4.0.0-M1"  // https://mvnrepository.com/artifact/io.awspring.cloud/spring-cloud-aws-starter
+    const val aws_spring_cloud = "4.0.0"  // https://mvnrepository.com/artifact/io.awspring.cloud/spring-cloud-aws-starter
 
     const val grpc = "1.76.0"       // https://mvnrepository.com/artifact/io.grpc/grpc-stub
     const val grpc_kotlin = "1.5.0" // https://mvnrepository.com/artifact/io.grpc/grpc-kotlin-stub
@@ -134,11 +134,10 @@ object Versions {
     const val okio = "3.16.4"        // https://mvnrepository.com/artifact/com.squareup.okio/okio
     const val asynchttpclient = "2.12.4"  // https://mvnrepository.com/artifact/org.asynchttpclient/async-http-client
 
-
     const val jackson_annotations = "2.21" // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-annotations
     const val jackson = "2.21.1" // https://mvnrepository.com/artifact/com.fasterxml.jackson/jackson-bom
     const val jackson3 = "3.1.0" // https://mvnrepository.com/artifact/tools.jackson/jackson-bom
-    const val fastjson2 = "2.0.60" // https://mvnrepository.com/artifact/com.alibaba.fastjson2/fastjson2
+    const val fastjson2 = "2.0.61" // https://mvnrepository.com/artifact/com.alibaba.fastjson2/fastjson2
     const val jjwt = "0.11.5"    // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api
 
     const val mapstruct = "1.6.3" // https://mvnrepository.com/artifact/org.mapstruct/mapstruct
@@ -146,20 +145,20 @@ object Versions {
 
     const val mongo_driver = "5.5.2"   // https://mvnrepository.com/artifact/org.mongodb/mongodb-driver-sync
     const val lettuce = "6.8.2.RELEASE" // https://mvnrepository.com/artifact/io.lettuce/lettuce-core
-    const val redisson = "4.1.0"       // https://mvnrepository.com/artifact/org.redisson/redisson
+    const val redisson = "4.2.0"       // https://mvnrepository.com/artifact/org.redisson/redisson
 
     // NOTE: Hibernate 는 jakarta 버전인 경우 orm, validator 등이 group 에 포함됩니다.
     // NOTE: 이 경우 기존 javax 를 사용하는 버전과 충돌이 생길 수 있으니 조심하세요
     // https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-core
 
-    const val hibernate = "7.2.0.Final"          // https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-core
+    const val hibernate = "7.2.5.Final"          // https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-core
     const val hibernate_reactive = "2.4.8.Final"  // https://mvnrepository.com/artifact/org.hibernate.reactive/hibernate-reactive-core
     const val hibernate_validator = "8.0.3.Final" // https://mvnrepository.com/artifact/org.hibernate.validator/hibernate-validator
     const val querydsl = "5.1.0"                  // https://mvnrepository.com/artifact/com.querydsl/querydsl-jpa
 
-    const val exposed = "1.0.0"       // https://mvnrepository.com/artifact/org.jetbrains.exposed/exposed-core
-    const val r2dbc = "1.0.0.RELEASE"        // https://mvnrepository.com/artifact/io.r2dbc/r2dbc-spi
-    const val agroal = "2.8"          // https://mvnrepository.com/artifact/io.agroal/agroal-api
+    const val exposed = "1.1.0"         // https://mvnrepository.com/artifact/org.jetbrains.exposed/exposed-core
+    const val r2dbc = "1.0.0.RELEASE"   // https://mvnrepository.com/artifact/io.r2dbc/r2dbc-spi
+    const val agroal = "2.8"            // https://mvnrepository.com/artifact/io.agroal/agroal-api
 
     const val blaze_persistence = "3.29.4" // https://mvnrepository.com/artifact/io.quarkus.platform/quarkus-blaze-persistence-bom
     const val javers = "7.8.6"             // https://mvnrepository.com/artifact/org.javers/javers-core
@@ -192,8 +191,8 @@ object Versions {
     const val cassandra = "4.19.1"          // https://mvnrepository.com/artifact/org.apache.cassandra/java-driver-core
     const val elasticsearch = "9.1.6"       // https://mvnrepository.com/artifact/org.elasticsearch.client/elasticsearch-rest-client
 
-    const val kafka = "4.1.1"           // https://mvnrepository.com/artifact/org.apache.kafka/kafka
-    const val spring_kafka = "4.0.1"    // https://mvnrepository.com/artifact/org.springframework.kafka/spring-kafka
+    const val kafka = "4.2.0"           // https://mvnrepository.com/artifact/org.apache.kafka/kafka
+    const val spring_kafka = "4.0.3"    // https://mvnrepository.com/artifact/org.springframework.kafka/spring-kafka
 
     const val timefold_solver = "1.27.0" // https://mvnrepository.com/artifact/ai.timefold.solver/timefold-solver-core
 
@@ -211,7 +210,7 @@ object Versions {
     const val springmockk = "4.0.2"         // https://mvnrepository.com/artifact/com.ninja-squad/springmockk
     const val awaitility = "4.3.0"          // https://mvnrepository.com/artifact/org.awaitility/awaitility
     const val jmh = "1.37"                  // https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-core
-    const val testcontainers = "1.21.4"     // https://mvnrepository.com/artifact/org.testcontainers/testcontainers
+    const val testcontainers = "2.0.3"      // https://mvnrepository.com/artifact/org.testcontainers/testcontainers
     const val jna = "5.18.1"                // https://mvnrepository.com/artifact/net.java.dev.jna/jna
     const val archunit = "1.4.1"           // https://mvnrepository.com/artifact/com.tngtech.archunit/archunit-junit5
     const val rest_assured = "5.5.6"        // https://mvnrepository.com/artifact/io.rest-assured/rest-assured
@@ -268,6 +267,7 @@ object Libs {
     val bluetape4k_junit5 = bluetape4k("junit5")
     val bluetape4k_testcontainers = bluetape4k("testcontainers")
 
+    // Virtual Thread
     val bluetape4k_virtualthread_api = bluetape4k("virtualthread-api")
     val bluetape4k_virtualthread_jdk21 = bluetape4k("virtualthread-jdk21")
     val bluetape4k_virtualthread_jdk25 = bluetape4k("virtualthread-jdk25")
@@ -288,7 +288,9 @@ object Libs {
     val bluetape4k_jackson3_binary = bluetape4k("jackson3-binary")
     val bluetape4k_jackson3_text = bluetape4k("jackson3-text")
     val bluetape4k_netty = bluetape4k("netty")
+    val bluetape4k_okio = bluetape4k("okio")
     val bluetape4k_retrofit2 = bluetape4k("retrofit2")
+    val bluetape4k_tink = bluetape4k("tink")
 
     // Data
     val bluetape4k_cassandra = bluetape4k("cassandra")
@@ -296,65 +298,91 @@ object Libs {
     val bluetape4k_exposed_core = bluetape4k("exposed-core")
     val bluetape4k_exposed_dao = bluetape4k("exposed-dao")
     val bluetape4k_exposed_jdbc = bluetape4k("exposed-jdbc")
-    val bluetape4k_exposed_jdbc_redisson = bluetape4k("exposed-jdbc-redisson")
-    val bluetape4k_exposed_jdbc_tests = bluetape4k("exposed-jdbc-tests")
     val bluetape4k_exposed_fastjson2 = bluetape4k("exposed-fastjson2")
     val bluetape4k_exposed_jackson = bluetape4k("exposed-jackson")
     val bluetape4k_exposed_jackson3 = bluetape4k("exposed-jackson3")
     val bluetape4k_exposed_jasypt = bluetape4k("exposed-jasypt")
+    val bluetape4k_exposed_jdbc_redisson = bluetape4k("exposed-jdbc-redisson")
+    val bluetape4k_exposed_jdbc_tests = bluetape4k("exposed-jdbc-tests")
+    val bluetape4k_exposed_measured = bluetape4k("exposed-measured")
     val bluetape4k_exposed_r2dbc = bluetape4k("exposed-r2dbc")
     val bluetape4k_exposed_r2dbc_redisson = bluetape4k("exposed-r2dbc-redisson")
     val bluetape4k_exposed_r2dbc_tests = bluetape4k("exposed-r2dbc-tests")
-
+    val bluetape4k_exposed_tink = bluetape4k("exposed-tink")
     val bluetape4k_hibernate = bluetape4k("hibernate")
     val bluetape4k_hibernate_reactive = bluetape4k("hibernate-reactive")
+    val bluetape4k_mongodb = bluetape4k("mongodb")
     val bluetape4k_jdbc = bluetape4k("jdbc")
     val bluetape4k_r2dbc = bluetape4k("r2dbc")
-    val bluetape4k_redis = bluetape4k("redis")
 
     // Infrastructure
     val bluetape4k_bucket4j = bluetape4k("bucket4j")
     val bluetape4k_cache = bluetape4k("cache")
+    val bluetape4k_cache_core = bluetape4k("cache-core")
+    val bluetape4k_cache_hazelcast = bluetape4k("cache-hazelcast")
+    val bluetape4k_cache_ignite = bluetape4k("cache-ignite")
+    val bluetape4k_cache_lettuce = bluetape4k("cache-lettuce")
+    val bluetape4k_cache_redisson = bluetape4k("cache-redisson")
     val bluetape4k_kafka = bluetape4k("kafka")
+    val bluetape4k_lettuce = bluetape4k("lettuce")
     val bluetape4k_micrometer = bluetape4k("micrometer")
     val bluetape4k_nats = bluetape4k("nats")
     val bluetape4k_otel = bluetape4k("otel")
+    val bluetape4k_redis = bluetape4k("redis")
+    val bluetape4k_redisson = bluetape4k("redisson")
     val bluetape4k_resilience4j = bluetape4k("resilience4j")
-
-    // Quarkus
-    val bluetape4k_quarkus_core = bluetape4k("quarkus-core")
-    val bluetape4k_quarkus_tests = bluetape4k("quarkus-tests")
 
     // Spring
     val bluetape4k_spring_cassandra = bluetape4k("spring-cassandra")
     val bluetape4k_spring_core = bluetape4k("spring-core")
     val bluetape4k_spring_jpa = bluetape4k("spring-jpa")
+    val bluetape4k_spring_mongodb = bluetape4k("spring-mongodb")
     val bluetape4k_spring_r2dbc = bluetape4k("spring-r2dbc")
     val bluetape4k_spring_retrofit2 = bluetape4k("spring-retrofit2")
-    // val bluetape4k_spring_security = bluetape4k("spring-security")
     val bluetape4k_spring_tests = bluetape4k("spring-tests")
     val bluetape4k_spring_webflux = bluetape4k("spring-webflux")
 
     // AWS
+    val bluetape4k_aws_cloudwatch = bluetape4k("aws-cloudwatch")
     val bluetape4k_aws_core = bluetape4k("aws-core")
-    // val bluetape4k_aws_dynamodb = bluetape4k("aws-dynamodb")
+    val bluetape4k_aws_dynamodb = bluetape4k("aws-dynamodb")
+    val bluetape4k_aws_kinesis = bluetape4k("aws-kinesis")
     val bluetape4k_aws_s3 = bluetape4k("aws-s3")
-    // val bluetape4k_aws_ses = bluetape4k("aws-ses")
+    val bluetape4k_aws_ses = bluetape4k("aws-ses")
+    val bluetape4k_aws_sns = bluetape4k("aws-sns")
     val bluetape4k_aws_sqs = bluetape4k("aws-sqs")
+    val bluetape4k_aws_sts = bluetape4k("aws-sts")
+
+    val bluetape4k_aws_kotlin_cloudwatch = bluetape4k("aws-kotlin-cloudwatch")
+    val bluetape4k_aws_kotlin_core = bluetape4k("aws-kotlin-core")
+    val bluetape4k_aws_kotlin_dynamodb = bluetape4k("aws-kotlin-dynamodb")
+    val bluetape4k_aws_kotlin_kinesis = bluetape4k("aws-kotlin-kinesis")
+    val bluetape4k_aws_kotlin_s3 = bluetape4k("aws-kotlin-s3")
+    val bluetape4k_aws_kotlin_ses = bluetape4k("aws-kotlin-ses")
+    val bluetape4k_aws_kotlin_sns = bluetape4k("aws-kotlin-sns")
+    val bluetape4k_aws_kotlin_sqs = bluetape4k("aws-kotlin-sqs")
+    val bluetape4k_aws_kotlin_sts = bluetape4k("aws-kotlin-sts")
 
     // UTILS
+    val bluetape4k_ahocorasick = bluetape4k("ahocorasick")
     val bluetape4k_captcha = bluetape4k("captcha")
     val bluetape4k_geocode = bluetape4k("geocode")
     val bluetape4k_geohash = bluetape4k("geohash")
     val bluetape4k_geoip2 = bluetape4k("geoip2")
     val bluetape4k_idgenerators = bluetape4k("idgenerators")
     val bluetape4k_images = bluetape4k("images")
+    val bluetape4k_javatimes = bluetape4k("javatimes")
     val bluetape4k_jwt = bluetape4k("jwt")
     val bluetape4k_math = bluetape4k("math")
-    val bluetape4k_mutiny = bluetape4k("mutiny")
+    val bluetape4k_measured = bluetape4k("measured")
     val bluetape4k_money = bluetape4k("money")
-    val bluetape4k_times = bluetape4k("times")
-    val bluetape4k_units = bluetape4k("unit")
+    val bluetape4k_mutiny = bluetape4k("mutiny")
+    val bluetape4k_units = bluetape4k("units")
+
+    // TOKENIZER
+    val bluetape4k_tokenizer_core = bluetape4k("tokenizer-core")
+    val bluetape4k_tokenizer_japanese = bluetape4k("tokenizer-japanese")
+    val bluetape4k_tokenizer_korean = bluetape4k("tokenizer-korean")
 
     // VERTX
     val bluetape4k_vertx_core = bluetape4k("vertx-core")
@@ -428,6 +456,9 @@ object Libs {
 
     val kotlinx_benchmark_runtime = kotlinxBenchmark("runtime")
     val kotlinx_benchmark_runtime_jvm = kotlinxBenchmark("runtime-jvm")
+
+    // javax api
+    const val javax_cache_api = "javax.cache:cache-api:1.1.1"
 
     // Java Money
     const val javax_money_api = "javax.money:money-api:1.1"    // https://mvnrepository.com/artifact/javax.money/money-api
@@ -751,6 +782,7 @@ object Libs {
     val netty_codec_socks = netty("codec-socks")
     val netty_handler = netty("handler")
     val netty_handler_proxy = netty("handler-proxy")
+    val netty_handler_ssl_ocsp = netty("handler-ssl-ocsp")
     val netty_resolver = netty("resolver")
     val netty_resolver_dns = netty("resolver-dns")
     val netty_resolver_dns_native_macos = netty("resolver-dns-native-macos")
@@ -1587,77 +1619,83 @@ object Libs {
     // -------------------------------------------------------------------------------------------
     // Testcontainers
     //
-    fun testcontainers(module: String) = "org.testcontainers:$module:${Versions.testcontainers}"
+    private fun testcontainersCore(module: String) = "org.testcontainers:$module:${Versions.testcontainers}"
+    private fun testcontainersModule(module: String) = "org.testcontainers:testcontainers-$module:${Versions.testcontainers}"
 
-    val testcontainers_bom = testcontainers("testcontainers-bom")
-    val testcontainers = testcontainers("testcontainers")
-    val testcontainers_junit_jupiter = testcontainers("junit-jupiter")
-    val testcontainers_cassandra = testcontainers("cassandra")
-    val testcontainers_chromadb = testcontainers("chromadb")
-    val testcontainers_clickhouse = testcontainers("clickhouse")
-    val testcontainers_cockroachdb = testcontainers("cockroachdb")
-    val testcontainers_couchbase = testcontainers("couchbase")
-    val testcontainers_elasticsearch = testcontainers("elasticsearch")
-    val testcontainers_influxdb = testcontainers("influxdb")
-    val testcontainers_dynalite = testcontainers("dynalite")
-    val testcontainers_mariadb = testcontainers("mariadb")
-    val testcontainers_mongodb = testcontainers("mongodb")
-    val testcontainers_mysql = testcontainers("mysql")
-    val testcontaiiners_nginx = testcontainers("nginx")
-    val testcontainers_ollama = testcontainers("ollama")
-    val testcontainers_oracle_xe = testcontainers("oracle-xe")
-    val testcontainers_postgresql = testcontainers("postgresql")
-    val testcontainers_kafka = testcontainers("kafka")
-    val testcontainers_pulsar = testcontainers("pulsar")
-    val testcontainers_redpanda = testcontainers("redpanda")
-    val testcontainers_rabbitmq = testcontainers("rabbitmq")
-    val testcontainers_selenuim = testcontainers("selenuim")
-    val testcontainers_solace = testcontainers("solace")
-    val testcontainers_tidb = testcontainers("tidb")
-    val testcontainers_vault = testcontainers("vault")
+    val testcontainers_bom = testcontainersCore("testcontainers-bom")
+    val testcontainers = testcontainersCore("testcontainers")
+    val testcontainers_junit_jupiter = testcontainersModule("junit-jupiter")
+    val testcontainers_cassandra = testcontainersModule("cassandra")
+    val testcontainers_chromadb = testcontainersModule("chromadb")
+    val testcontainers_clickhouse = testcontainersModule("clickhouse")
+    val testcontainers_cockroachdb = testcontainersModule("cockroachdb")
+    val testcontainers_couchbase = testcontainersModule("couchbase")
+    val testcontainers_elasticsearch = testcontainersModule("elasticsearch")
+    val testcontainers_influxdb = testcontainersModule("influxdb")
+    val testcontainers_dynalite = testcontainersModule("dynalite")
+    val testcontainers_mariadb = testcontainersModule("mariadb")
+    val testcontainers_mongodb = testcontainersModule("mongodb")
+    val testcontainers_mysql = testcontainersModule("mysql")
+    val testcontaiiners_nginx = testcontainersModule("nginx")
+    val testcontainers_ollama = testcontainersModule("ollama")
+    val testcontainers_oracle_xe = testcontainersModule("oracle-xe")
+    val testcontainers_postgresql = testcontainersModule("postgresql")
+    val testcontainers_kafka = testcontainersModule("kafka")
+    val testcontainers_pulsar = testcontainersModule("pulsar")
+    val testcontainers_redpanda = testcontainersModule("redpanda")
+    val testcontainers_rabbitmq = testcontainersModule("rabbitmq")
+    val testcontainers_selenuim = testcontainersModule("selenuim")
+    val testcontainers_solace = testcontainersModule("solace")
+    @Deprecated(
+        message = "Testcontainers 2.x에서 TiDB 모듈이 제공되지 않아 deprecated 되었습니다.",
+        level = DeprecationLevel.WARNING
+    )
+    // NOTE: TiDB module은 2.0.3 좌표가 제공되지 않아 마지막 1.x 릴리스를 유지합니다.
+    val testcontainers_tidb = "org.testcontainers:tidb:1.21.4"
+    val testcontainers_vault = testcontainersModule("vault")
 
     // the Atlassian's LocalStack, 'a fully functional local AWS cloud stack'.
-    val testcontainers_localstack = testcontainers("localstack")
-    val testcontainers_mockserver = testcontainers("mockserver")
+    val testcontainers_localstack = testcontainersModule("localstack")
+    val testcontainers_mockserver = testcontainersModule("mockserver")
 
-    val testcontainers_nginx = testcontainers("nginx")
-    val testcontainers_r2dbc = testcontainers("r2dbc")
+    val testcontainers_nginx = testcontainersModule("nginx")
+    val testcontainers_r2dbc = testcontainersModule("r2dbc")
 
-    val testcontainers_gcloud = testcontainers("gcloud")
+    val testcontainers_gcloud = testcontainersModule("gcloud")
 
     // kubernetes
-    val testcontainers_k3s = testcontainers("k3s")
-    const val fabric8_kubernetes_client_bom = "io.fabric8:kubernetes-client-bom:6.13.4" // https://mvnrepository.com/artifact/io.fabric8/kubernetes-client-bom
-    const val fabric8_kubernetes_client = "io.fabric8:kubernetes-client:6.13.4"  // https://mvnrepository.com/artifact/io.fabric8/kubernetes-client
-    const val kubernetes_client_java = "io.kubernetes:client-java:21.0.2"   // https://mvnrepository.com/artifact/io.kubernetes/client-java
+    val testcontainers_k3s = testcontainersModule("k3s")
+    const val fabric8_kubernetes_client_bom = "io.fabric8:kubernetes-client-bom:7.3.1" // https://mvnrepository.com/artifact/io.fabric8/kubernetes-client-bom
+    const val fabric8_kubernetes_client = "io.fabric8:kubernetes-client:7.3.1"  // https://mvnrepository.com/artifact/io.fabric8/kubernetes-client
+    const val kubernetes_client_java = "io.kubernetes:client-java:24.0.0"   // https://mvnrepository.com/artifact/io.kubernetes/client-java
 
     // Minio
-    const val minio = "io.minio:minio:8.5.17" // https://mvnrepository.com/artifact/io.minio/minio
-    val testcontainers_minio = testcontainers("minio")
+    const val minio = "io.minio:minio:8.6.0" // https://mvnrepository.com/artifact/io.minio/minio
+    val testcontainers_minio = testcontainersModule("minio")
 
     // Milvus
-    const val milvus_sdk_java = "io.milvus:milvus-sdk-java:2.6.2" // https://mvnrepository.com/artifact/io.milvus/milvus-sdk-java
+    const val milvus_sdk_java = "io.milvus:milvus-sdk-java:2.6.13" // https://mvnrepository.com/artifact/io.milvus/milvus-sdk-java
 
     // Immudb
     const val immudb4j = "io.codenotary:immudb4j:1.0.1" // https://mvnrepository.com/artifact/io.codenotary/immudb4j
 
     // Zookeeper
-    const val zookeeper = "org.apache.zookeeper:zookeeper:3.9.3" // https://mvnrepository.com/artifact/org.apache.zookeeper/zookeeper
+    const val zookeeper = "org.apache.zookeeper:zookeeper:3.9.4" // https://mvnrepository.com/artifact/org.apache.zookeeper/zookeeper
     const val curator_framework = "org.apache.curator:curator-framework:5.9.0" // https://mvnrepository.com/artifact/org.apache.curator/curator-framework
 
     // Weaviate
-    val testcontainers_weaviate = testcontainers("weaviate")
-    const val weaviate_client = "io.weaviate:client:5.4.0"   // https://mvnrepository.com/artifact/io.weaviate/client
+    val testcontainers_weaviate = testcontainersModule("weaviate")
+    const val weaviate_client = "io.weaviate:client6:6.0.1"   // https://mvnrepository.com/artifact/io.weaviate/client6
 
     // Apple Silicon에서 testcontainers 를 사용하기 위해 참조해야 합니다.
     const val jna = "net.java.dev.jna:jna:${Versions.jna}"
     const val jna_platform = "net.java.dev.jna:jna-platform:${Versions.jna}"
 
     // wiremock
-    const val wiremock_jre8 = "com.github.tomakehurst:wiremock-jre8:2.33.2"
+    const val wiremock = "org.wiremock:wiremock:3.13.2" // https://mvnrepository.com/artifact/org.wiremock/wiremock
 
     // OpenSearch Testcontainers
-    const val testcontainers_opensearch = "org.opensearch:opensearch-testcontainers:4.0.0"  // https://mvnrepository.com/artifact/org.opensearch/opensearch-testcontainers
+    const val testcontainers_opensearch = "org.opensearch:opensearch-testcontainers:4.1.0"  // https://mvnrepository.com/artifact/org.opensearch/opensearch-testcontainers
 
     // rest-assured
     fun restAssured(module: String) = "io.rest-assured:$module:${Versions.rest_assured}"

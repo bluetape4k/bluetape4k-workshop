@@ -5,7 +5,7 @@ import io.bluetape4k.logging.info
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
-@SpringBootApplication
+@SpringBootApplication(proxyBeanMethods = false)
 class KotlinApplication {
     companion object: KLogging() {
         init {

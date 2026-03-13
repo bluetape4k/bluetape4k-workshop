@@ -13,6 +13,7 @@ import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
 import org.amshove.kluent.shouldContain
 import org.amshove.kluent.shouldContainAll
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations
@@ -21,6 +22,7 @@ import org.springframework.data.elasticsearch.core.query.CriteriaQuery
 import org.springframework.data.elasticsearch.core.query.Query
 import org.springframework.data.elasticsearch.core.search
 
+@Disabled("Elasticsearch Client 가 Jackson2 를 사용합니다. Spring Boot 4 는 Jackson 3를 사용해서 충돌이 발생합니다.")
 class ReactiveElasticsearchOperationsTest(
     @param:Autowired val reactiveOps: ReactiveElasticsearchOperations,
 ): AbstractElasticsearchApplicationTest() {

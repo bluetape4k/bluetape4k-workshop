@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.redisson.objects
 
-import io.bluetape4k.coroutines.support.awaitSuspending
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
+import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.yield
@@ -45,7 +45,7 @@ class ReliableTopicExamples: AbstractRedissonTest() {
 
         val job = launch {
             val topic2 = redisson.getReliableTopic(topicName)
-            topic2.publishAsync("Message-${randomString()}").awaitSuspending()
+            topic2.publishAsync("Message-${randomString()}").await()
         }
         yield()
         job.join()

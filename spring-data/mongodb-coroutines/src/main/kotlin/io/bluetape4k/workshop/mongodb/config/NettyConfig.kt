@@ -20,7 +20,7 @@ import java.time.Duration
  *
  * 고성능을 원할 경우 Netty 설정을 튜닝하는 걸 추천합니다.
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class NettyConfig {
 
     companion object: KLoggingChannel()

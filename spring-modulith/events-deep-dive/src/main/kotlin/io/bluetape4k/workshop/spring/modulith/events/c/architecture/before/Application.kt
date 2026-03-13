@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Import
 
-@SpringBootApplication
+@SpringBootApplication(proxyBeanMethods = false)
 @Import(LoggingConfiguration::class)
 class Application {
     companion object: KLogging()

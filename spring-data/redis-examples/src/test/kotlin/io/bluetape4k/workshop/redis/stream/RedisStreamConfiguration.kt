@@ -15,7 +15,7 @@ import org.springframework.data.redis.stream.StreamReceiver
 /**
  * [io.bluetape4k.workshop.redis.reactive.ReactiveRedisConfiguration] 에
  */
-@SpringBootApplication
+@SpringBootApplication(proxyBeanMethods = false)
 class RedisStreamConfiguration {
 
     companion object: KLoggingChannel() {

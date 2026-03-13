@@ -8,16 +8,16 @@ import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.spring7.transaction.SpringTransactionManager
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.annotation.EnableTransactionManagement
-import org.springframework.transaction.annotation.TransactionManagementConfigurer
 import javax.sql.DataSource
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableTransactionManagement
-class TestConfig: TransactionManagementConfigurer {
+class TestConfig {
 
-    @Bean
+    @Bean(destroyMethod = "close")
     fun dataSource(): DataSource {
         val config = HikariConfig().apply {
             jdbcUrl = "jdbc:h2:mem:${Base58.randomString(8)};DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL"
@@ -29,8 +29,9 @@ class TestConfig: TransactionManagementConfigurer {
     }
 
     @Bean
-    override fun annotationDrivenTransactionManager(): PlatformTransactionManager =
-        SpringTransactionManager(dataSource(), DatabaseConfig { useNestedTransactions = true })
+    @Primary
+    fun transactionManager(dataSource: DataSource): PlatformTransactionManager =
+        SpringTransactionManager(dataSource, DatabaseConfig { useNestedTransactions = true })
 
     @Bean
     fun orderService(): OrderService = OrderService()

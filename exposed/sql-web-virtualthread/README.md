@@ -1,10 +1,63 @@
-# Kotlin Exposed (SQL library) with Virtual Threads and Spring Web demo
+# Exposed SQL + Spring WebMVC + Virtual Threads
 
-This repository accompanies a blog
-post [Kotlin Exposed - A lightweight SQL library](https://blog.jdriven.com/2019/07/kotlin-exposed-a-lightweight-sql-library/).
+Spring WebMVC(Tomcat)와 Java Virtual Threads, JetBrains Exposed SQL DSL을 조합하여 Actor·Movie CRUD REST API를 구현하는 예제입니다.
 
-The application stores Actors and Movies in an SQL database and exposes them via a
-simple REST api. The REST API is built with [Javalin](https://javalin.io/).
+## 기술 스택
+
+| 기술 | 역할 |
+|---|---|
+| Spring WebMVC + Tomcat | 동기 HTTP 서버 (Virtual Thread 적용) |
+| Java Virtual Threads | 경량 스레드 기반 동시성 |
+| Exposed SQL DSL | 타입 안전 SQL 쿼리 |
+| H2 (In-Memory) | 기본 데이터베이스 |
+| SpringDoc OpenAPI | Swagger UI (`/swagger-ui.html`) |
+
+## Virtual Thread 설정
+
+```yaml
+# application.yml
+spring:
+  threads:
+    virtual:
+      enabled: true
+```
+
+```kotlin
+// Tomcat 요청 처리에 Virtual Thread 적용
+@Bean
+fun protocolHandlerVirtualThreadExecutorCustomizer(): TomcatProtocolHandlerCustomizer<*> =
+    TomcatProtocolHandlerCustomizer { it.executor = Executors.newVirtualThreadPerTaskExecutor() }
+
+// @Async 작업에도 Virtual Thread 적용
+@Bean
+fun asyncTaskExecutor(): AsyncTaskExecutor =
+    TaskExecutorAdapter(Executors.newVirtualThreadPerTaskExecutor())
+```
+
+## REST API 엔드포인트
+
+| Method | 경로 | 설명 |
+|---|---|---|
+| GET | `/actors` | 전체 배우 목록 |
+| GET | `/actors/{id}` | 배우 조회 |
+| POST | `/actors` | 배우 생성 |
+| PUT | `/actors/{id}` | 배우 수정 |
+| DELETE | `/actors/{id}` | 배우 삭제 |
+| GET | `/movies` | 전체 영화 목록 |
+| GET | `/movie-actors` | 영화-배우 연관 목록 |
+
+## 실행
+
+```bash
+./gradlew :exposed-sql-web-virtualthread:bootRun
+```
+
+Swagger UI: http://localhost:8080/swagger-ui.html
+
+## 참고
+
+- [Virtual Threads in Spring Boot](https://spring.io/blog/2022/10/11/embracing-virtual-threads)
+- [Exposed SQL DSL](https://github.com/JetBrains/Exposed/wiki/DSL)
 
 There are two variants, one with H2 and one with Postgres. H2 is the easiest starting point because it is an
 in-memory database.

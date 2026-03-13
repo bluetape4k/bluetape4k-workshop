@@ -1,24 +1,23 @@
 package io.bluetape4k.workshop.elasticsearch.config
 
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.elasticsearch.ElasticsearchApplication.Companion.elasticsearch
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.elasticsearch.client.ClientConfiguration
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchConfiguration
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class ElasticsearchClientConfig: ElasticsearchConfiguration() {
 
     companion object: KLogging()
 
     override fun clientConfiguration(): ClientConfiguration {
-        log.info { "Create Elasticsearch client configuration. username=elastic, password=${elasticsearch.password}" }
+        // log.info { "Create Elasticsearch client configuration. username=elastic, url=${elasticsearch.url}" }
 
         return ClientConfiguration.builder()
             .connectedTo(elasticsearch.url)
-            .usingSsl(elasticsearch.createSslContextFromCa())
-            .withBasicAuth("elastic", elasticsearch.password)
+            // .usingSsl(elasticsearch.createSslContextFromCa())
+            .withBasicAuth("elastic", "changeme")
             .build()
     }
 }

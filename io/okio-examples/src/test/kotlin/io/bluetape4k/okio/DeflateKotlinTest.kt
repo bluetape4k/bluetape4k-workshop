@@ -1,7 +1,6 @@
 package io.bluetape4k.okio
 
-import io.bluetape4k.io.okio.bufferOf
-import io.bluetape4k.io.okio.buffered
+
 import io.bluetape4k.logging.KLogging
 import okio.Buffer
 import okio.ByteString.Companion.decodeHex

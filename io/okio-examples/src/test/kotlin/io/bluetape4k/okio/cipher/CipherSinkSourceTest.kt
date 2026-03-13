@@ -1,9 +1,10 @@
 package io.bluetape4k.okio.cipher
 
-import io.bluetape4k.io.okio.bufferOf
+
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.junit5.tempfolder.TempFolder
 import io.bluetape4k.junit5.tempfolder.TempFolderTest
+import io.bluetape4k.okio.bufferOf
 import io.bluetape4k.okio.channels.FileChannelSink
 import io.bluetape4k.okio.channels.FileChannelSource
 import io.bluetape4k.support.toUtf8Bytes

@@ -25,7 +25,7 @@ import tools.jackson.module.kotlin.kotlinModule
 /**
  * [RedisApplication] 과 분리해서 독립적으로 테스트하기 위해서 [SpringBootApplication] 을 선언합니다.
  */
-@SpringBootApplication
+@SpringBootApplication(proxyBeanMethods = false)
 class ReactiveRedisConfiguration {
 
     companion object: KLoggingChannel() {

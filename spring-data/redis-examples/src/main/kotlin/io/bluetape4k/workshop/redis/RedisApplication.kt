@@ -26,7 +26,7 @@ fun main(vararg args: String) {
     runApplication<RedisApplication>(*args)
 }
 
-@SpringBootApplication
+@SpringBootApplication(proxyBeanMethods = false)
 class RedisApplication {
 
     companion object: KLoggingChannel() {

@@ -14,6 +14,8 @@ configurations {
 }
 
 dependencies {
+    implementation(platform(Libs.spring_boot4_dependencies))
+    
     // Kafka
     // implementation(Libs.bluetape4k_kafka)
     implementation(Libs.kafka_clients)

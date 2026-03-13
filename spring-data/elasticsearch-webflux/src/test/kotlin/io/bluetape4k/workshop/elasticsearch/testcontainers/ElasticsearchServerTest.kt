@@ -1,11 +1,11 @@
 package io.bluetape4k.workshop.elasticsearch.testcontainers
 
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.testcontainers.storage.ElasticsearchOssServer
 import io.bluetape4k.testcontainers.storage.ElasticsearchServer
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
-import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.Nested
+import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
@@ -16,41 +16,36 @@ class ElasticsearchServerTest {
 
     companion object: KLogging()
 
-    @Nested
-    inner class UseDockerPort {
 
-        @Test
-        fun `launch elasticsearch`() {
-            ElasticsearchServer().use { es ->
-                es.start()
-                es.isRunning.shouldBeTrue()
-            }
-        }
-
-        @Disabled("testcontainers issue")
-        @Test
-        fun `launch elastic search with ssl`() {
-            ElasticsearchServer(password = "wow-world").use { es ->
-                es.start()
-                es.isRunning.shouldBeTrue()
-
-                val config = ElasticsearchServer.Launcher.getClientConfiguration(es)
-
-                val client = Rest5Clients.getRest5Client(config)
-                client.isRunning.shouldBeTrue()
-            }
+    @Test
+    fun `launch elasticsearch`() {
+        ElasticsearchOssServer().use { es ->
+            es.start()
+            es.isRunning.shouldBeTrue()
         }
     }
 
-    @Nested
-    inner class UseDefaultPort {
-        @Test
-        fun `launch elasticsearch with default port`() {
-            ElasticsearchServer(useDefaultPort = true).use { es ->
-                es.start()
-                es.isRunning.shouldBeTrue()
-                es.port shouldBeEqualTo ElasticsearchServer.PORT
-            }
+    @Test
+    fun `launch elastic search with ssl`() {
+        ElasticsearchServer(password = "wow-world").use { es ->
+            es.start()
+            es.isRunning.shouldBeTrue()
+
+            val config = ElasticsearchServer.Launcher.getClientConfiguration(es)
+
+            val client = Rest5Clients.getRest5Client(config)
+
+            println((client.httpClient as CloseableHttpAsyncClient).status)
+            // client.isRunning.shouldBeTrue()
+        }
+    }
+
+    @Test
+    fun `launch elasticsearch with default port`() {
+        ElasticsearchOssServer(useDefaultPort = true).use { es ->
+            es.start()
+            es.isRunning.shouldBeTrue()
+            es.port shouldBeEqualTo ElasticsearchServer.PORT
         }
     }
 }

@@ -16,6 +16,7 @@ allOpen {
 }
 
 kapt {
+    includeCompileClasspath = true
     correctErrorTypes = true
     showProcessorStats = true
 
@@ -84,6 +85,7 @@ dependencies {
     implementation(Libs.springBootStarter("validation"))
     implementation(Libs.springBootStarter("web"))
 
+    testImplementation(Libs.springBootStarter("webflux"))
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

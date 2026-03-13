@@ -1,7 +1,6 @@
 package io.bluetape4k.okio
 
-import io.bluetape4k.io.okio.bufferOf
-import io.bluetape4k.io.okio.byteStringOf
+
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.KLogging
 import okio.Buffer
@@ -146,7 +145,7 @@ class DeflaterSinkTest: AbstractOkioTest() {
         val data = bufferOf(Fakers.randomString())
         val defaterSink = DeflaterSink(data, deflater)
 
-        assertFailsWith<IOException> {
+        assertFailsWith<IllegalStateException> {
             defaterSink.write(data, data.size)
         }
     }

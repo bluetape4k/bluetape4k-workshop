@@ -1,7 +1,6 @@
 package io.bluetape4k.workshop.exposed.config
 
 import io.bluetape4k.support.uninitialized
-import io.bluetape4k.support.unsafeLazy
 import io.swagger.v3.oas.models.OpenAPI
 import io.swagger.v3.oas.models.info.Contact
 import io.swagger.v3.oas.models.info.Info
@@ -14,7 +13,7 @@ import org.springframework.context.annotation.Configuration
 /**
  * Swagger 설정을 위한 Configuration
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class SwaggerConfig {
 
     @Autowired
@@ -25,7 +24,7 @@ class SwaggerConfig {
         return OpenAPI().info(info)
     }
 
-    private val info by unsafeLazy {
+    private val info by lazy {
         Info().title(buildProps.name)
             .description("Bluetape4k 서비스에서 공용으로 사용하는 서비스를 제공합니다.")
             .version(buildProps.version)
@@ -33,14 +32,14 @@ class SwaggerConfig {
             .license(license)
     }
 
-    private val contact by unsafeLazy {
+    private val contact by lazy {
         Contact()
             .name("Bluetape4k Kotlin Workshop")
             .email("sunghyouk.bae@gmail.com")
             .url("https://github.com/bluetape4k/bluetape4k-workshop")
     }
 
-    private val license by unsafeLazy {
+    private val license by lazy {
         License()
             .name("Bluetape4k License 1.0")
             .url("https://bluetape4k.io/license")

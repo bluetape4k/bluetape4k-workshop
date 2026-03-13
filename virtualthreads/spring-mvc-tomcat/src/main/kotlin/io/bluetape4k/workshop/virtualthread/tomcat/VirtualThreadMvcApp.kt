@@ -13,7 +13,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories
 import org.springframework.data.repository.config.BootstrapMode
 import org.springframework.transaction.annotation.EnableTransactionManagement
 
-@SpringBootApplication
+@SpringBootApplication(proxyBeanMethods = false)
 @EnableJpaRepositories(
     basePackageClasses = [DatabaseInitializer::class],
     bootstrapMode = BootstrapMode.DEFERRED

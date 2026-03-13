@@ -75,4 +75,8 @@ dependencies {
     testImplementation(Libs.reactor_test)
 
     implementation(Libs.datafaker)
+
+    // Zipkin 에서 사용하는 Netty modules
+    implementation(Libs.netty_all)
+    implementation(Libs.netty_handler_ssl_ocsp)
 }

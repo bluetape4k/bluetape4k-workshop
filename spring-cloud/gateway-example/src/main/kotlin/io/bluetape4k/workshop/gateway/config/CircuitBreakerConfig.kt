@@ -10,7 +10,7 @@ import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JConfigu
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class CircuitBreakerConfig {
 
     companion object: KLoggingChannel()

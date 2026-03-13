@@ -31,6 +31,7 @@ dependencies {
     implementation(Libs.bucket4j_core)
     implementation(Libs.bucket4j_lettuce)
     implementation(Libs.bucket4j_redisson)
+    implementation(Libs.commons_pool2)
 
     // Redis
     implementation(Libs.bluetape4k_redis)

@@ -8,7 +8,7 @@ import org.springframework.web.reactive.HandlerMapping
 import org.springframework.web.reactive.handler.SimpleUrlHandlerMapping
 import org.springframework.web.reactive.socket.server.support.WebSocketHandlerAdapter
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class ReactiveWebSocketConfiguration {
 
     companion object: KLoggingChannel()

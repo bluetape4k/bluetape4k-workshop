@@ -18,7 +18,7 @@ import org.springframework.context.annotation.Primary
 import java.time.Duration
 import kotlin.math.max
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 class ExposedR2dbcConfig {
 
     companion object: KLoggingChannel()

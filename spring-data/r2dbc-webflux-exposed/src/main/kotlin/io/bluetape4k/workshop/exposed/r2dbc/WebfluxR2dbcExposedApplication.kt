@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.http.MediaType
 import org.springframework.web.reactive.function.server.coRouter
 
-@SpringBootApplication
+@SpringBootApplication(proxyBeanMethods = false)
 class WebfluxR2dbcExposedApplication {
 
     companion object: KLoggingChannel()

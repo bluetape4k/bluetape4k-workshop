@@ -1,6 +1,5 @@
 package io.bluetape4k.workshop.redisson.locks
 
-import io.bluetape4k.coroutines.support.awaitSuspending
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
@@ -8,6 +7,7 @@ import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.future.await
 import kotlinx.coroutines.yield
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
@@ -32,10 +32,10 @@ class SemaphoreExamples: AbstractRedissonTest() {
         val semaphore = redisson.getSemaphore(semaphoreName)
 
         // 5개 확보
-        semaphore.trySetPermitsAsync(5).awaitSuspending().shouldBeTrue()
+        semaphore.trySetPermitsAsync(5).await().shouldBeTrue()
 
         // 3개 획득
-        semaphore.acquireAsync(3).awaitSuspending()
+        semaphore.acquireAsync(3).await()
 
         val redisson2 = newRedisson()
         val redisson3 = newRedisson()
@@ -49,7 +49,7 @@ class SemaphoreExamples: AbstractRedissonTest() {
                 delay(1)
 
                 // 2개 반납 (4개 남음)
-                s2.releaseAsync(2).awaitSuspending()
+                s2.releaseAsync(2).await()
                 yield()
             }
             .add {
@@ -57,24 +57,24 @@ class SemaphoreExamples: AbstractRedissonTest() {
                 val s3 = redisson3.getSemaphore(semaphoreName)
                 delay(1)
                 // 2개 확보
-                s3.tryAcquireAsync(2, 5.seconds.toJavaDuration()).awaitSuspending().shouldBeTrue()
+                s3.tryAcquireAsync(2, 5.seconds.toJavaDuration()).await().shouldBeTrue()
                 delay(1)
             }
             .run()
         redisson2.shutdown()
         redisson3.shutdown()
 
-        semaphore.availablePermitsAsync().awaitSuspending() shouldBeEqualTo 2
+        semaphore.availablePermitsAsync().await() shouldBeEqualTo 2
 
         // 4개 반납
-        semaphore.releaseAsync(4).awaitSuspending()
-        semaphore.availablePermitsAsync().awaitSuspending() shouldBeEqualTo 6
+        semaphore.releaseAsync(4).await()
+        semaphore.availablePermitsAsync().await() shouldBeEqualTo 6
 
         // 여유분을 모두 반납합니다.
-        semaphore.drainPermitsAsync().awaitSuspending() shouldBeEqualTo 6
-        semaphore.availablePermitsAsync().awaitSuspending() shouldBeEqualTo 0
+        semaphore.drainPermitsAsync().await() shouldBeEqualTo 6
+        semaphore.availablePermitsAsync().await() shouldBeEqualTo 0
 
-        semaphore.deleteAsync().awaitSuspending()
+        semaphore.deleteAsync().await()
     }
 
     @Test

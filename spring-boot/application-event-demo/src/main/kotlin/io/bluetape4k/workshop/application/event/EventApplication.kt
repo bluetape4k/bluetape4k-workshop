@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.EnableAspectJAutoProxy
 
-@SpringBootApplication
+@SpringBootApplication(proxyBeanMethods = false)
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 class EventApplication {
     companion object: KLoggingChannel()

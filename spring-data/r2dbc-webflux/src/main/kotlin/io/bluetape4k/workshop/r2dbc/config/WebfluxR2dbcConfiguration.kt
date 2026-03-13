@@ -9,7 +9,7 @@ import org.springframework.http.MediaType
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import org.springframework.web.reactive.function.server.coRouter
 
-@Configuration
+@Configuration(proxyBeanMethods = false)
 @EnableTransactionManagement
 @EnableR2dbcRepositories
 class WebfluxR2dbcConfiguration {

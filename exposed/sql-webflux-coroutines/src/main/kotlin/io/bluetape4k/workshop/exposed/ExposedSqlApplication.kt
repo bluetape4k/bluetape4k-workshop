@@ -4,7 +4,7 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
-@SpringBootApplication
+@SpringBootApplication(proxyBeanMethods = false)
 // ExposedAutoConfiguration is a Spring Boot auto-configuration class that configures Exposed.
 // @ImportAutoConfiguration(ExposedAutoConfiguration::class)
 class ExposedApplication {

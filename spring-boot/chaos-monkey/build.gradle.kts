@@ -31,7 +31,11 @@ dependencies {
     implementation(Libs.springBootStarter("actuator"))
     implementation(Libs.springBootStarter("aspectj"))
 
+    implementation(Libs.springBootStarter("restclient"))
+    implementation(Libs.springBootStarter("webclient"))
+
     testImplementation(Libs.springBootStarter("webflux"))
+    testImplementation(Libs.springBootStarter("webflux-test"))
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
