@@ -39,7 +39,7 @@ Bluetape4k 라이브러리 활용 백엔드 예제 모음. **Kotlin 2.3 + Java 2
 - **테스트**: JUnit 5 + Kluent + MockK + Testcontainers (MariaDB/MySQL/PostgreSQL/CockroachDB)
     - 공통 베이스: `exposed/domain/src/test` (`AbstractExposedTest`, `ContainerProvider`)
     - 직렬 실행: `TestMutexService` (maxParallelUsages=1) — DB 충돌 방지
-- **JVM**: ZGC, `-Xms2G -Xmx4G`, `--enable-preview`
+- **JVM**: G1GC, `-Xms2G -Xmx4G`, `--enable-preview`
 - **Spring Boot 모듈**: `springBoot { mainClass.set(...) }` + `testImplementation.extendsFrom(compileOnly, runtimeOnly)`
 
 ## 주요 bluetape4k 모듈

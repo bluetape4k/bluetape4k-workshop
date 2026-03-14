@@ -81,7 +81,7 @@ Async/Non-Blocking, Coroutines, 라이브러리 API 안정성을 우선한다.
 - 테스트 스택은 JUnit 5 + Kluent + MockK + Testcontainers 이다.
 - DB 통합 테스트 공통 베이스는 `exposed/domain/src/test` 의 `AbstractExposedTest`, `ContainerProvider` 를 우선 확인한다.
 - DB 충돌 방지를 위해 직렬 실행이 필요한 테스트는 `TestMutexService` (`maxParallelUsages=1`) 패턴을 따른다.
-- JVM 실행 가정은 ZGC, `-Xms2G -Xmx4G`, `--enable-preview` 이다.
+- JVM 실행 가정은 G1GC, `-Xms2G -Xmx4G`, `--enable-preview` 이다.
 - Spring Boot 모듈은 `springBoot { mainClass.set(...) }` 와 `testImplementation.extendsFrom(compileOnly, runtimeOnly)` 패턴을 따른다.
 - 주요 bluetape4k 모듈은 `bluetape4k-logging`, `bluetape4k-junit5`, `bluetape4k-coroutines`, `bluetape4k-exposed`, `bluetape4k-testcontainers` 이다.
 
