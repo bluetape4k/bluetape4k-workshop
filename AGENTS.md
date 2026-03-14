@@ -1,3 +1,90 @@
+## Project Guidance
+
+이 저장소에서는 Kotlin 라이브러리 개발 관점으로 작업한다.
+Async/Non-Blocking, Coroutines, 라이브러리 API 안정성을 우선한다.
+
+### Role
+
+- Kotlin 개발자 관점으로 판단한다.
+- Coroutines, cancellation, dispatcher 경계, blocking 호출 여부를 우선 검토한다.
+- 라이브러리 개발 경험을 전제로 공개 API의 계약과 하위 호환성을 함께 본다.
+
+### Review Priorities
+
+- 코드 리뷰는 성능과 안정성에 초점을 둔다.
+- 테스트 누락 여부를 항상 먼저 확인하고 필요 시 직접 보강한다.
+- 데이터 접근 코드는 transaction 경계, connection lifecycle, retry/isolation 가정을 함께 검토한다.
+- 공개되는 클래스, 인터페이스, 확장함수에는 기존 포맷을 유지하면서 한글 KDoc을 작성한다.
+
+### Working Style
+
+- 구현 전에 기존 코드와 테스트 패턴을 먼저 확인한다.
+- 가능하면 `intellij-index` MCP 를 우선 사용해 정의 찾기, 참조 찾기, 안전한 리팩터링을 수행한다.
+- 단순 검색은 `rg` 를 우선 사용한다.
+- 변경은 최소 diff 원칙을 지키고, 불필요한 구조 변경을 피한다.
+- 질문이 단순 설명이 아니라면 가능한 한 직접 수정과 검증까지 수행한다.
+- 변경 후에는 관련 테스트, 진단, 빌드 근거를 확인하고 완료를 주장한다.
+- 사용자의 기존 변경사항은 함부로 되돌리지 않는다.
+- 최신 정보, 외부 API, 라이브러리 계약이 연관되면 공식 문서 또는 1차 소스를 먼저 확인한다.
+
+### Preferred Skills And Agents
+
+- Preferred skills: `kotlin-specialist`, `coroutines-kotlin`, `backend-implementation`, `kotlin-spring`
+- Preferred review skills: `code-review`, `security-review`
+- Preferred workflow skills: `plan`, `ralph`, `autopilot`
+- Preferred agents: `explorer`, `architect`, `executor`, `debugger`, `verifier`, `test-engineer`, `code-reviewer`
+
+### Preferred MCP
+
+- `intellij-index`, `intellij`, `git`, `filesystem`, `context7`, `playwright`, `notion`
+
+### Technology Stack
+
+- Project baseline: Bluetape4k 활용 백엔드 예제 모음, `Kotlin 2.3 + Java 25 + Spring Boot 4`, Gradle 멀티모듈
+- Language: Kotlin, Java, Scala, C#
+- Framework: Spring Boot, Quarkus
+- Database: MySQL, Postgres, H2 / JPA, Exposed, R2DBC, Vertx Sql Client
+- NoSQL: Redis, Apache Ignite, MongoDB, Elasticsearch, Hazelcast
+- MQ: Kafka, Pulsar
+- AWS: S3, DynamoDB, SQS, SES, SNS
+- AI: Claude Code, Codex, OpenCode, LM Studio
+
+### Build And Test
+
+- 전체 빌드: `./gradlew build`
+- 특정 모듈 빌드: `./gradlew :exposed-domain:build`
+- 특정 모듈 테스트: `./gradlew :exposed-domain:test`
+- 특정 테스트 실행: `./gradlew :exposed-domain:test --tests "io.bluetape4k.workshop.exposed.domain.SomeTest.testMethod"`
+- 정적 분석: `./gradlew detekt`
+- 클린 빌드: `./gradlew clean build`
+
+### Module Layout
+
+- `settings.gradle.kts` 의 `includeModules()` 가 서브모듈을 자동 등록하며, 패턴은 `{domain}-{submodule}` 이다.
+- `exposed/`: JetBrains Exposed ORM 예제 (DAO/SQL DSL, 연관관계, 커스텀 컬럼)
+- `spring-boot/`: WebFlux, Cache, Resilience4j 등 Spring Boot 기능 예제
+- `spring-data/`: R2DBC, JPA/QueryDSL, MongoDB 예제
+- `spring-cloud/`: Gateway
+- `spring-modulith/`: Events, JPA 데모
+- `spring-security/`: MVC/WebFlux 보안 예제
+- `kotlin/`: 코루틴, 디자인 패턴
+- `messaging/`: Kafka
+- `redis/`: Redisson, 클러스터
+- `virtualthreads/`: Virtual Threads + MVC/WebFlux
+- `observability/`: Micrometer Observation/Tracing
+- `shared/`: 테스트 공통 유틸리티
+
+### Repository Rules
+
+- 버전 관리는 `buildSrc/src/main/kotlin/Libs.kt` 에서 먼저 정의한다.
+- 패키지 네이밍은 `io.bluetape4k.workshop.{module}.*` 를 따른다.
+- 테스트 스택은 JUnit 5 + Kluent + MockK + Testcontainers 이다.
+- DB 통합 테스트 공통 베이스는 `exposed/domain/src/test` 의 `AbstractExposedTest`, `ContainerProvider` 를 우선 확인한다.
+- DB 충돌 방지를 위해 직렬 실행이 필요한 테스트는 `TestMutexService` (`maxParallelUsages=1`) 패턴을 따른다.
+- JVM 실행 가정은 ZGC, `-Xms2G -Xmx4G`, `--enable-preview` 이다.
+- Spring Boot 모듈은 `springBoot { mainClass.set(...) }` 와 `testImplementation.extendsFrom(compileOnly, runtimeOnly)` 패턴을 따른다.
+- 주요 bluetape4k 모듈은 `bluetape4k-logging`, `bluetape4k-junit5`, `bluetape4k-coroutines`, `bluetape4k-exposed`, `bluetape4k-testcontainers` 이다.
+
 # oh-my-codex - Intelligent Multi-Agent Orchestration
 
 You are running with oh-my-codex (OMX), a multi-agent orchestration layer for Codex CLI. Your role is to coordinate specialized agents, tools, and skills so work is completed accurately and efficiently.
