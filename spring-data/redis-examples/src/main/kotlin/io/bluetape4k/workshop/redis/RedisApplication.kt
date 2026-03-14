@@ -44,7 +44,7 @@ class RedisApplication {
     fun redisTemplate(factory: RedisConnectionFactory): RedisTemplate<*, *> {
         // RedisSerializer 를 압축이 가능한 BinarySerializer 를 사용합니다.
         return RedisTemplate<ByteArray, ByteArray>().apply {
-            setConnectionFactory(factory)
+            connectionFactory = factory
             keySerializer = StringRedisSerializer.UTF_8
             valueSerializer = RedisBinarySerializers.LZ4Fory
         }
@@ -52,7 +52,7 @@ class RedisApplication {
 
     @Bean
     fun reactiveRedisTemplate(factory: ReactiveRedisConnectionFactory): ReactiveRedisTemplate<*, *> {
-        val context = redisSerializationContext<ByteArray, Any>(RedisSerializer.byteArray()) {
+        val context = redisSerializationContext(RedisSerializer.byteArray()) {
             key(RedisSerializer.byteArray())
             hashKey(RedisSerializer.byteArray())
             value(RedisBinarySerializers.LZ4Fory)
@@ -81,7 +81,7 @@ class RedisApplication {
                 // RepositoryFactory가 Repository를 생성할 때 작업을 추가할 수 있습니다.
                 bean.addRepositoryFactoryCustomizer { factory ->
                     /**
-                     * [CrudRepository] 실행 정보를 Metrics로 측정할 수 있도록 할 수 있습니다.
+                     * [org.springframework.data.repository.CrudRepository] 실행 정보를 Metrics로 측정할 수 있도록 할 수 있습니다.
                      */
                     factory.addInvocationListener { invocation ->
                         log.debug {

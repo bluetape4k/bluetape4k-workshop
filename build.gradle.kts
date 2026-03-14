@@ -231,7 +231,6 @@ subprojects {
             mavenBom(Libs.okhttp3_bom)
             mavenBom(Libs.grpc_bom)
             mavenBom(Libs.protobuf_bom)
-            mavenBom(Libs.metrics_bom)
             mavenBom(Libs.fabric8_kubernetes_client_bom)
             mavenBom(Libs.resilience4j_bom)
             mavenBom(Libs.netty_bom)
@@ -412,28 +411,6 @@ subprojects {
 
             dependency(Libs.jsonpath)
             dependency(Libs.jsonassert)
-
-            dependency(Libs.bouncycastle_bcpkix)
-            dependency(Libs.bouncycastle_bcprov)
-
-            // Prometheus
-//            dependency(Libs.prometheus_simpleclient)
-//            dependency(Libs.prometheus_simpleclient_common)
-//            dependency(Libs.prometheus_simpleclient_httpserver)
-//            dependency(Libs.prometheus_simpleclient_pushgateway)
-//            dependency(Libs.prometheus_simpleclient_spring_boot)
-//            dependency(Libs.prometheus_simpleclient_tracer_common)
-//            dependency(Libs.prometheus_simpleclient_tracer_otel)
-//            dependency(Libs.prometheus_simpleclient_tracer_otel_agent)
-
-            // OW2 ASM
-//            dependency(Libs.ow2_asm)
-//            dependency(Libs.ow2_asm_commons)
-//            dependency(Libs.ow2_asm_util)
-//            dependency(Libs.ow2_asm_tree)
-//
-//            dependency(Libs.snakeyaml)
-//            dependency(Libs.jna)
         }
     }
 

@@ -19,15 +19,15 @@ object Plugins {
         const val kotlinx_benchmark = "0.4.15" // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-benchmark-plugin
 
         const val spring_boot3 = "3.5.11"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
-        const val spring_boot4 = "4.0.2"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
+        const val spring_boot4 = "4.0.3"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
         const val quarkus = "3.31.0"      // https://mvnrepository.com/artifact/io.quarkus/quarkus-bom
 
-        const val docker_compose = "0.17.20"  // https://plugins.gradle.org/plugin/com.avast.gradle.docker-compose
+        const val docker_compose = "0.17.21"  // https://plugins.gradle.org/plugin/com.avast.gradle.docker-compose
 
         // 참고: https://docs.gatling.io/reference/integrations/build-tools/gradle-plugin/
         const val gatling = "3.14.9"  // https://plugins.gradle.org/plugin/io.gatling.gradle
 
-        const val graalvm_native = "0.11.4" // https://mvnrepository.com/artifact/org.graalvm.buildtools.native/org.graalvm.buildtools.native.gradle.plugin
+        const val graalvm_native = "0.11.5" // https://mvnrepository.com/artifact/org.graalvm.buildtools.native/org.graalvm.buildtools.native.gradle.plugin
     }
 
     const val detekt = "io.gitlab.arturbosch.detekt"
@@ -145,20 +145,20 @@ object Versions {
 
     const val mongo_driver = "5.5.2"   // https://mvnrepository.com/artifact/org.mongodb/mongodb-driver-sync
     const val lettuce = "6.8.2.RELEASE" // https://mvnrepository.com/artifact/io.lettuce/lettuce-core
-    const val redisson = "4.2.0"       // https://mvnrepository.com/artifact/org.redisson/redisson
+    const val redisson = "4.3.0"       // https://mvnrepository.com/artifact/org.redisson/redisson
 
     // NOTE: Hibernate 는 jakarta 버전인 경우 orm, validator 등이 group 에 포함됩니다.
     // NOTE: 이 경우 기존 javax 를 사용하는 버전과 충돌이 생길 수 있으니 조심하세요
     // https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-core
 
-    const val hibernate = "7.2.5.Final"          // https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-core
+    const val hibernate = "7.2.6.Final"          // https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-core
     const val hibernate_reactive = "2.4.8.Final"  // https://mvnrepository.com/artifact/org.hibernate.reactive/hibernate-reactive-core
-    const val hibernate_validator = "8.0.3.Final" // https://mvnrepository.com/artifact/org.hibernate.validator/hibernate-validator
+    const val hibernate_validator = "9.1.0.Final" // https://mvnrepository.com/artifact/org.hibernate.validator/hibernate-validator
     const val querydsl = "5.1.0"                  // https://mvnrepository.com/artifact/com.querydsl/querydsl-jpa
 
-    const val exposed = "1.1.0"         // https://mvnrepository.com/artifact/org.jetbrains.exposed/exposed-core
+    const val exposed = "1.1.1"         // https://mvnrepository.com/artifact/org.jetbrains.exposed/exposed-core
     const val r2dbc = "1.0.0.RELEASE"   // https://mvnrepository.com/artifact/io.r2dbc/r2dbc-spi
-    const val agroal = "2.8"            // https://mvnrepository.com/artifact/io.agroal/agroal-api
+    const val agroal = "3.0"            // https://mvnrepository.com/artifact/io.agroal/agroal-api
 
     const val blaze_persistence = "3.29.4" // https://mvnrepository.com/artifact/io.quarkus.platform/quarkus-blaze-persistence-bom
     const val javers = "7.8.6"             // https://mvnrepository.com/artifact/org.javers/javers-core
@@ -168,17 +168,16 @@ object Versions {
     const val log4j = "2.25.2"       // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core
     const val logcaptor = "2.12.2"         // https://mvnrepository.com/artifact/io.github.hakky54/logcaptor
 
-    const val metrics = "4.2.32"        // https://mvnrepository.com/artifact/io.dropwizard.metrics/metrics-core
     const val prometheus = "0.16.0"     // https://mvnrepository.com/artifact/io.prometheus/simpleclient
 
-    const val micrometer = "1.16.1"         // https://mvnrepository.com/artifact/io.micrometer/micrometer-core
-    const val micrometerTracing = "1.6.1"   // https://mvnrepository.com/artifact/io.micrometer/micrometer-tracing
-    const val micrometerContextPropagation = "1.2.0" // https://mvnrepository.com/artifact/io.micrometer/context-propagation
+    const val micrometer = "1.16.4"         // https://mvnrepository.com/artifact/io.micrometer/micrometer-core
+    const val micrometerTracing = "1.6.4"   // https://mvnrepository.com/artifact/io.micrometer/micrometer-tracing
+    const val micrometerContextPropagation = "1.2.1" // https://mvnrepository.com/artifact/io.micrometer/context-propagation
 
     const val opentelemetry = "1.57.0" // https://mvnrepository.com/artifact/io.opentelemetry/opentelemetry-bom
     const val opentelemetryAlpha = "$opentelemetry-alpha" // https://mvnrepository.com/artifact/io.opentelemetry/opentelemetry-bom-alpha
 
-    const val opentelemetryJavaAgent = "2.23.0" // https://mvnrepository.com/artifact/io.opentelemetry.javaagent/opentelemetry-javaagent
+    const val opentelemetryJavaAgent = "2.25.0" // https://mvnrepository.com/artifact/io.opentelemetry.javaagent/opentelemetry-javaagent
     const val opentelemetryInstrumentationAlpha = "$opentelemetryJavaAgent-alpha" // https://mvnrepository.com/artifact/io.opentelemetry.instrumentation/opentelemetry-instrumentation-bom-alpha
 
     const val caffeine = "3.2.2"        // https://mvnrepository.com/artifact/com.github.ben-manes.caffeine/caffeine
@@ -196,17 +195,16 @@ object Versions {
 
     const val timefold_solver = "1.27.0" // https://mvnrepository.com/artifact/ai.timefold.solver/timefold-solver-core
 
-    const val pods4k = "0.7.0"              // https://mvnrepository.com/artifact/com.danrusu.pods4k/bom
     const val eclipse_collections = "13.0.0"  // https://mvnrepository.com/artifact/org.eclipse.collections/eclipse-collections
     const val jctools = "4.0.5"             // https://mvnrepository.com/artifact/org.jctools/jctools-core
 
     const val ow2_asm = "9.8"               // https://mvnrepository.com/artifact/org.ow2.asm/asm
 
-    const val junit_jupiter = "6.0.2"      // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
-    const val junit_platform = "6.0.2"     // https://mvnrepository.com/artifact/org.junit.platform/junit-platform-launcher
-    const val assertj_core = "3.27.6"       // https://mvnrepository.com/artifact/org.assertj/assertj-core
+    const val junit_jupiter = "6.0.3"      // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
+    const val junit_platform = "6.0.3"     // https://mvnrepository.com/artifact/org.junit.platform/junit-platform-launcher
+    const val assertj_core = "3.27.7"       // https://mvnrepository.com/artifact/org.assertj/assertj-core
     const val kluent = "1.73"               // https://mvnrepository.com/artifact/org.amshove.kluent/kluent
-    const val mockk = "1.14.6"              // https://mvnrepository.com/artifact/io.mockk/mockk
+    const val mockk = "1.14.9"              // https://mvnrepository.com/artifact/io.mockk/mockk
     const val springmockk = "4.0.2"         // https://mvnrepository.com/artifact/com.ninja-squad/springmockk
     const val awaitility = "4.3.0"          // https://mvnrepository.com/artifact/org.awaitility/awaitility
     const val jmh = "1.37"                  // https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-core
@@ -215,15 +213,15 @@ object Versions {
     const val archunit = "1.4.1"           // https://mvnrepository.com/artifact/com.tngtech.archunit/archunit-junit5
     const val rest_assured = "5.5.6"        // https://mvnrepository.com/artifact/io.rest-assured/rest-assured
 
-    const val datafaker = "2.5.3"          // https://mvnrepository.com/artifact/net.datafaker/datafaker
-    const val snakeyaml = "2.5"            // https://mvnrepository.com/artifact/org.yaml/snakeyaml
+    const val datafaker = "2.5.4"          // https://mvnrepository.com/artifact/net.datafaker/datafaker
+    const val snakeyaml = "2.6"            // https://mvnrepository.com/artifact/org.yaml/snakeyaml
     const val random_beans = "3.9.0"
 
     const val logback_slack_appender = "1.6.1"  // https://mvnrepository.com/artifact/com.github.maricn/logback-slack-appender
 
     const val sentry_logback = "8.22.0"  // https://mvnrepository.com/artifact/io.sentry/sentry-logback
 
-    const val scrimage = "4.3.5"  // https://mvnrepository.com/artifact/com.sksamuel.scrimage/scrimage-core
+    const val scrimage = "4.3.8"  // https://mvnrepository.com/artifact/com.sksamuel.scrimage/scrimage-core
 
     // Gatling
     const val gatling = "3.14.9" // https://mvnrepository.com/artifact/io.gatling/gatling-core
@@ -253,7 +251,7 @@ object Libs {
         }
     }
 
-    const val jetbrains_annotations = "org.jetbrains:annotations:26.0.2" // https://mvnrepository.com/artifact/org.jetbrains/annotations
+    const val jetbrains_annotations = "org.jetbrains:annotations:26.1.0" // https://mvnrepository.com/artifact/org.jetbrains/annotations
 
 
     // bluetape4k
@@ -1164,19 +1162,6 @@ object Libs {
     // Smallrye Mutiny
     const val mutiny = "io.smallrye.reactive:mutiny:${Versions.mutiny}"
     const val mutiny_kotlin = "io.smallrye.reactive:mutiny-kotlin:${Versions.mutiny}"
-
-    // Metrics
-    fun metrics(module: String) = "io.dropwizard.metrics:metrics-$module:${Versions.metrics}"
-
-    val metrics_bom = metrics("bom")
-    val metrics_annotation = metrics("annotation")
-    val metrics_core = metrics("core")
-    val metrics_json = metrics("json")
-    val metrics_jvm = metrics("jvm")
-    val metrics_graphite = metrics("graphite")
-    val metrics_healthchecks = metrics("healthchecks")
-    val metrics_jcache = metrics("jcache")
-    val metrics_jmx = metrics("jmx")
 
     // Prometheus
     fun prometheusSimple(module: String) = "io.prometheus:simpleclient_$module:${Versions.prometheus}"
