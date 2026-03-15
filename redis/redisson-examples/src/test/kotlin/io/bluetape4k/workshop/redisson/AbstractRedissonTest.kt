@@ -31,10 +31,10 @@ abstract class AbstractRedissonTest {
             val config = Config().apply {
                 useSingleServer()
                     .setAddress(redis.url)
-                    .setConnectionPoolSize(256)
+                    .setConnectionPoolSize(128)
                     .setConnectionMinimumIdleSize(32) // 최소 연결을 충분히 확보하여 Latency 방지
                     .setIdleConnectionTimeout(100_000)  // 연결 유지를 넉넉히 (100초)
-                    .setTimeout(1000)
+                    .setTimeout(5000)
                     .setRetryAttempts(3)
                     .setRetryDelay { attempt -> Duration.ofMillis((attempt + 1) * 10L) }
 
@@ -42,9 +42,10 @@ abstract class AbstractRedissonTest {
 
                 executor = VirtualThreadExecutor
                 threads = 256
-                nettyThreads = 256
-                codec = RedissonCodecs.LZ4Fory
+                nettyThreads = 128
+                codec = RedissonCodecs.LZ4ForyComposite
                 setTcpNoDelay(true)
+                setTcpUserTimeout(5000)
             }
 
             return Redisson.create(config).apply {
