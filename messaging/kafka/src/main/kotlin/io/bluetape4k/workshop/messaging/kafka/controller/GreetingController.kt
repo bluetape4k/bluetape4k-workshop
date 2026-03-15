@@ -6,11 +6,6 @@ import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.messaging.kafka.KafkaTopics
 import io.bluetape4k.workshop.messaging.kafka.listener.LoggerMessageHandler
 import io.bluetape4k.workshop.messaging.kafka.model.GreetingRequest
-import jakarta.annotation.PreDestroy
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.kafka.core.KafkaTemplate
@@ -24,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("/greeting")
-class GreetingController: CoroutineScope by CoroutineScope(Dispatchers.IO + SupervisorJob()) {
+class GreetingController {
 
     companion object: KLoggingChannel()
 
@@ -49,10 +44,5 @@ class GreetingController: CoroutineScope by CoroutineScope(Dispatchers.IO + Supe
     suspend fun sendGreetingRequest(@RequestBody greeting: GreetingRequest) {
         log.debug { "Send greeting: $greeting" }
         kafkaTemplate.send(KafkaTopics.TOPIC_GREETING, greeting)
-    }
-
-    @PreDestroy
-    private fun destroy() {
-        coroutineContext.cancel()
     }
 }

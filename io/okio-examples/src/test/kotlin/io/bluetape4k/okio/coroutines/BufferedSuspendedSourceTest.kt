@@ -5,6 +5,8 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.okio.AbstractOkioTest
 import okio.Buffer
 import okio.EOFException
+import okio.Options
+import okio.ByteString.Companion.encodeUtf8
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldBeTrue
@@ -87,6 +89,26 @@ class BufferedSuspendedSourceTest: AbstractOkioTest() {
         source.readUtf8Line() shouldBeEqualTo "hello"
         source.readUtf8Line() shouldBeEqualTo "world"
         source.readUtf8Line().shouldBeNull() // No more lines
+    }
+
+    @Test
+    fun `select consumes the matched option`() = runSuspendIO {
+        val buffer = Buffer().writeUtf8("width=640\n")
+        val source = RealBufferedSuspendedSource(FakeSuspendedSource(buffer))
+        val options = Options.of("depth=".encodeUtf8(), "height=".encodeUtf8(), "width=".encodeUtf8())
+
+        source.select(options) shouldBeEqualTo 2
+        source.readDecimalLong() shouldBeEqualTo 640L
+    }
+
+    @Test
+    fun `select returns minus one when no option matches and keeps buffered data`() = runSuspendIO {
+        val buffer = Buffer().writeUtf8("unknown")
+        val source = RealBufferedSuspendedSource(FakeSuspendedSource(buffer))
+        val options = Options.of("depth=".encodeUtf8(), "height=".encodeUtf8())
+
+        source.select(options) shouldBeEqualTo -1
+        source.readUtf8() shouldBeEqualTo "unknown"
     }
 
     @Test

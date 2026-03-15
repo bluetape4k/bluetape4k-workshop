@@ -25,10 +25,10 @@ abstract class AbstractRedissonTest {
         val redis: RedisServer by lazy { RedisServer.Launcher.redis }
 
         @JvmStatic
-        val redissonClient: Redisson by lazy { createRedisson() }
+        val redissonClient: Redisson by lazy { createRedisson(registerShutdownHook = true) }
 
-        private fun createRedisson(): Redisson {
-            val config = Config().apply {
+        private fun createRedissonConfig(): Config {
+            return Config().apply {
                 useSingleServer()
                     .setAddress(redis.url)
                     .setConnectionPoolSize(128)
@@ -47,10 +47,14 @@ abstract class AbstractRedissonTest {
                 setTcpNoDelay(true)
                 setTcpUserTimeout(5000)
             }
+        }
 
-            return Redisson.create(config).apply {
-                ShutdownQueue.register { shutdown() }
-            } as Redisson
+        private fun createRedisson(registerShutdownHook: Boolean = false): Redisson {
+            return (Redisson.create(createRedissonConfig()) as Redisson).apply {
+                if (registerShutdownHook) {
+                    ShutdownQueue.register { shutdown() }
+                }
+            }
         }
 
         @JvmStatic
@@ -74,6 +78,10 @@ abstract class AbstractRedissonTest {
 
     protected fun newRedisson(): RedissonClient {
         return createRedisson()
+    }
+
+    protected fun newRedissonConfig(): Config {
+        return createRedissonConfig()
     }
 
     protected val scope = CoroutineScope(CoroutineName("redisson") + Dispatchers.IO)

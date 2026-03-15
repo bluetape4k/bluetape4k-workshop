@@ -5,9 +5,6 @@ import io.bluetape4k.workshop.exposed.domain.dto.MovieActorCountDTO
 import io.bluetape4k.workshop.exposed.domain.dto.MovieWithActorDTO
 import io.bluetape4k.workshop.exposed.domain.dto.MovieWithProducingActorDTO
 import io.bluetape4k.workshop.exposed.domain.respository.MovieRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
@@ -20,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/movie-actors")
 class MovieActorsController(
     private val movieRepo: MovieRepository,
-): CoroutineScope by CoroutineScope(Dispatchers.IO + SupervisorJob()) {
+) {
 
     companion object: KLoggingChannel()
 

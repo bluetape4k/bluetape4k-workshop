@@ -150,27 +150,23 @@ class RealBufferedSuspendedSource(
     }
 
     override suspend fun select(options: Options): Int {
-        TODO("Not yet implemented")
-//    checkNotClosed()
-//
-//    while (true) {
-//      val index = buffer.selectPrefix(options, selectTruncated = true)
-//      when (index) {
-//        -1 -> {
-//          return -1
-//        }
-//        -2 -> {
-//          // We need to grow the buffer. Do that, then try it all again.
-//          if (source.read(buffer, SEGMENT_SIZE) == -1L) return -1
-//        }
-//        else -> {
-//          // We matched a full byte string: consume it and return it.
-//          val selectedSize = options.byteStrings[index].size
-//          buffer.skip(selectedSize.toLong())
-//          return index
-//        }
-//      }
-//    }
+        checkNotClosed()
+
+        while (true) {
+            options.forEachIndexed { index, byteString ->
+                if (request(byteString.size.toLong()) && rangeEquals(0L, byteString, 0, byteString.size)) {
+                    buffer.skip(byteString.size.toLong())
+                    return index
+                }
+            }
+
+            if (!hasAnyMatchingPrefix(options)) {
+                return -1
+            }
+            if (source.read(buffer, SEGMENT_SIZE) == -1L) {
+                return -1
+            }
+        }
     }
 
     override suspend fun readByteArray(): ByteArray {
@@ -409,6 +405,16 @@ class RealBufferedSuspendedSource(
 
     private fun checkNotClosed() {
         check(!closed.value) { "RealBufferedSuspendedSource is closed" }
+    }
+
+    private fun hasAnyMatchingPrefix(options: Options): Boolean {
+        if (buffer.size == 0L) {
+            return options.isNotEmpty()
+        }
+        return options.any { byteString ->
+            val prefixLength = minOf(buffer.size.toInt(), byteString.size)
+            prefixLength > 0 && (0 until prefixLength).all { index -> buffer[index.toLong()] == byteString[index] }
+        }
     }
 
     private fun Buffer.readUtf8Line(newline: Long): String = when {

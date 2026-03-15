@@ -75,6 +75,20 @@ class LocalCachedMapTest: AbstractRedissonTest() {
         }
     }
 
+    private suspend fun awaitFrontCachesContain(key: String) {
+        await atMost 10.seconds untilSuspending {
+            frontCache1.containsKeyAsync(key).await() &&
+                    frontCache2.containsKeyAsync(key).await()
+        }
+    }
+
+    private suspend fun awaitFrontCachesMissing(key: String) {
+        await atMost 10.seconds untilSuspending {
+            !frontCache1.containsKeyAsync(key).await() &&
+                    !frontCache2.containsKeyAsync(key).await()
+        }
+    }
+
     @Test
     fun `frontCache1 에 cache item을 추가하면 frontCache2에 추가됩니다`() = runTest {
         val keyToAdd = randomName()
@@ -82,6 +96,7 @@ class LocalCachedMapTest: AbstractRedissonTest() {
         log.debug { "front cache1: put key=$keyToAdd" }
         frontCache1.fastPutAsync(keyToAdd, 42).await()
         await atMost 10.seconds untilSuspending { backCache.containsKeyAsync(keyToAdd).await() }
+        awaitFrontCachesContain(keyToAdd)
 
         log.debug { "front cache2: get key=$keyToAdd" }
         frontCache2.getAsync(keyToAdd).await() shouldBeEqualTo 42
@@ -94,12 +109,14 @@ class LocalCachedMapTest: AbstractRedissonTest() {
         log.debug { "front cache1: put $keyToRemove" }
         frontCache1.fastPutAsync(keyToRemove, 42).await()
         await atMost 10.seconds untilSuspending { backCache.containsKeyAsync(keyToRemove).await() }
+        awaitFrontCachesContain(keyToRemove)
 
         frontCache2.getAsync(keyToRemove).await() shouldBeEqualTo 42
 
         log.debug { "front cache1: remove $keyToRemove" }
         frontCache1.fastRemoveAsync(keyToRemove).await()
         await atMost 10.seconds untilSuspending { !backCache.containsKeyAsync(keyToRemove).await() }
+        awaitFrontCachesMissing(keyToRemove)
 
         frontCache2.getAsync(keyToRemove).await().shouldBeNull()
     }
@@ -114,8 +131,8 @@ class LocalCachedMapTest: AbstractRedissonTest() {
 
         // bachCache에 cache 등록
         backCache.fastPutAsync(key, 42).await().shouldBeTrue()
-        // frontCache2에서도 추가될 때까지 대기 (pub/sub로 전파될 때까지)
-        await atMost 10.seconds.toJavaDuration() untilSuspending { frontCache2.containsKeyAsync(key).await() }
+        // frontCache 모두에 추가될 때까지 대기 (pub/sub로 전파될 때까지)
+        awaitFrontCachesContain(key)
 
         // frontCache에 등록 반영
         frontCache1.containsKeyAsync(key).await().shouldBeTrue()
@@ -123,8 +140,8 @@ class LocalCachedMapTest: AbstractRedissonTest() {
 
         // backCache에서 cache 삭제
         backCache.fastRemoveAsync(key).await() shouldBeEqualTo 1L
-        // frontCache1에서도 삭제될 때까지 대기 (pub/sub로 전파될 때까지)
-        await atMost 10.seconds.toJavaDuration() untilSuspending { !frontCache1.containsKeyAsync(key).await() }
+        // frontCache 모두에서 삭제될 때까지 대기 (pub/sub로 전파될 때까지)
+        awaitFrontCachesMissing(key)
 
         // frontCache에 삭제 반영
         frontCache1.containsKeyAsync(key).await().shouldBeFalse()

@@ -5,9 +5,6 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.domain.dto.MovieDTO
 import io.bluetape4k.workshop.exposed.domain.respository.MovieRepository
 import io.bluetape4k.workshop.exposed.domain.schema.Movies
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import org.springframework.http.server.reactive.ServerHttpRequest
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -24,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/movies")
 class MovieController(
     private val movieRepo: MovieRepository,
-): CoroutineScope by CoroutineScope(Dispatchers.IO + SupervisorJob()) {
+) {
 
     companion object: KLoggingChannel()
 

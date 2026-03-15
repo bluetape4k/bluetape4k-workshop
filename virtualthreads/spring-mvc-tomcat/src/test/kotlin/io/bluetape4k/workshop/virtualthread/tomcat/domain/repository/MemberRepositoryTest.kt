@@ -13,6 +13,7 @@ import org.amshove.kluent.shouldNotBeEmpty
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.repository.findByIdOrNull
 
 class MemberRepositoryTest(
@@ -62,5 +63,31 @@ class MemberRepositoryTest(
         memberTeamDtos.forEach {
             log.debug { it }
         }
+    }
+
+    @Test
+    fun `paged search methods return the same first page slice`() {
+        val searchCondition = MemberSearchCondition(teamName = "teamA", ageGoe = 50)
+        val page = PageRequest.of(0, 5)
+
+        val simple = memberRepo.searchPageSimple(searchCondition, page)
+        val complex = memberRepo.searchPageComplex(searchCondition, page)
+        val extreme = memberRepo.searchPageExtremeCountQuery(searchCondition, page)
+
+        simple shouldHaveSize 5
+        simple.map { it.name } shouldBeEqualTo listOf("member-50", "member-52", "member-54", "member-56", "member-58")
+        complex shouldBeEqualTo simple
+        extreme shouldBeEqualTo simple
+    }
+
+    @Test
+    fun `paged search methods honor page offset`() {
+        val searchCondition = MemberSearchCondition(teamName = "teamA", ageGoe = 50)
+        val page = PageRequest.of(1, 3)
+
+        val members = memberRepo.searchPageSimple(searchCondition, page)
+
+        members shouldHaveSize 3
+        members.map { it.name } shouldBeEqualTo listOf("member-56", "member-58", "member-60")
     }
 }

@@ -3,9 +3,6 @@ package io.bluetape4k.workshop.exposed.controller
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.exposed.domain.dto.ActorDTO
 import io.bluetape4k.workshop.exposed.domain.respository.ActorRepository
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import org.springframework.http.server.reactive.ServerHttpRequest
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -20,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 class ActorController(
     private val actorRepo: ActorRepository,
-): CoroutineScope by CoroutineScope(Dispatchers.IO + SupervisorJob()) {
+) {
 
     companion object: KLoggingChannel()
 

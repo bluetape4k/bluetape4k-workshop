@@ -4,9 +4,6 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.r2dbc.domain.User
 import io.bluetape4k.workshop.r2dbc.domain.UserDTO
 import io.bluetape4k.workshop.r2dbc.service.UserService
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -24,7 +21,7 @@ import org.springframework.web.server.ResponseStatusException
 @RequestMapping(path = ["/api"])
 class UserController(
     private val service: UserService,
-): CoroutineScope by CoroutineScope(Dispatchers.IO + SupervisorJob()) {
+) {
 
     companion object: KLoggingChannel()
 
