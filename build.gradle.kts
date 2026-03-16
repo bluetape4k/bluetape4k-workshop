@@ -35,19 +35,18 @@ plugins {
 allprojects {
     repositories {
         mavenCentral()
-        mavenLocal()
         google()
 
         // bluetape4k snapshot 버전 사용 시만 사용하세요.
-//        maven {
-//            name = "central-portal-snapshots"
-//            url = uri("https://central.sonatype.com/repository/maven-snapshots/")
-//        }
+        maven {
+            name = "central-portal-snapshots"
+            url = uri("https://central.sonatype.com/repository/maven-snapshots/")
+        }
     }
 
     // bluetape4k snapshot 버전 사용 시만 사용하세요.
     configurations.all {
-        resolutionStrategy.cacheChangingModulesFor(0, TimeUnit.DAYS)
+        resolutionStrategy.cacheChangingModulesFor(1, TimeUnit.DAYS)
     }
 }
 
