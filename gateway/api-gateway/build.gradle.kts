@@ -1,7 +1,7 @@
 plugins {
     kotlin("plugin.spring")
     id(Plugins.spring_boot)
-    id(Plugins.graalvm_native)
+//    id(Plugins.graalvm_native)   // spring-cloud 는 아직 aot 를 지원하지 않는다
 }
 
 springBoot {
@@ -51,7 +51,7 @@ dependencies {
     implementation(Libs.jakarta_servlet_api)
 
     implementation(Libs.bluetape4k_resilience4j)
-    implementation(Libs.resilience4j_spring_boot3)
+    implementation(Libs.resilience4j_spring_boot4)
 
     // Spring Cloud
     implementation(Libs.springCloudStarter("gateway-server-webflux"))

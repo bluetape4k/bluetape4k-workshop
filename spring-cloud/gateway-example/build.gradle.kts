@@ -1,7 +1,7 @@
 plugins {
     kotlin("plugin.spring")
     id(Plugins.spring_boot)
-    id(Plugins.graalvm_native)
+    // id(Plugins.graalvm_native)  // spring-cloud 는 아직 aot 를 지원하지 않는다
 }
 
 springBoot {
@@ -17,7 +17,6 @@ springBoot {
     }
 }
 
-
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
@@ -26,6 +25,7 @@ dependencies {
     implementation(platform(Libs.spring_boot4_dependencies))
     implementation(platform(Libs.spring_cloud_dependencies))
     implementation(platform(Libs.micrometer_bom))
+    implementation(enforcedPlatform(Libs.resilience4j_bom))
 
     testImplementation(project(":shared"))
 
@@ -39,11 +39,17 @@ dependencies {
     api(Libs.jakarta_servlet_api)
 
     implementation(Libs.bluetape4k_resilience4j)
-    implementation(Libs.resilience4j_spring_boot3) // TODO: resilience4j-spring-boot4 가 개발 중입니다.
+    implementation(Libs.resilience4j_all)
+    implementation(Libs.resilience4j_kotlin)
+    implementation(Libs.resilience4j_spring_boot4) 
 
     // Spring Cloud
     implementation(Libs.springCloudStarter("gateway-server-webflux"))
     implementation(Libs.springCloudStarter("circuitbreaker-reactor-resilience4j"))
+    testImplementation(Libs.springCloudStarter("loadbalancer"))
+    testImplementation(Libs.springCloud("test-support"))
+    testImplementation(Libs.springCloud("gateway-server-webflux") + "::tests")
+    testImplementation(Libs.jmh_core)
 
     // Spring Data Redis
     implementation(Libs.bluetape4k_redis)

@@ -23,7 +23,7 @@ dependencies {
     implementation(Libs.resilience4j_all)
     implementation(Libs.resilience4j_kotlin)
     implementation(Libs.resilience4j_reactor)
-    implementation(Libs.resilience4j_spring_boot3)
+    implementation(Libs.resilience4j_spring_boot4)
 
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))

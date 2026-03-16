@@ -36,7 +36,8 @@ includeModules("reactive", false, true)
 includeModules("redis", false, true)
 
 includeModules("spring-boot", false, true)
-includeModules("spring-cloud", false, true)
+// TODO: spring-cloud 는 아직 spring-boot4, resilience4j 2.4.0 을 사용하지 않아 동작이 안됩니다.
+// includeModules("spring-cloud", false, true)
 includeModules("spring-data", false, true)
 includeModules("spring-modulith", false, true)
 includeModules("spring-security/mvc", false, true)
