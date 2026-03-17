@@ -1,0 +1,277 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1773663091821,
+  "projectRoot": "/Users/debop/work/bluetape4k/bluetape4k-workshop",
+  "techStack": {
+    "languages": [
+      {
+        "name": "Kotlin",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "build.gradle.kts"
+        ]
+      }
+    ],
+    "frameworks": [],
+    "packageManager": "gradle",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [],
+    "gitBranches": {
+      "defaultBranch": "develop",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "aws": {
+      "path": "aws",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1773663091702,
+      "keyFiles": [
+        "README.md"
+      ]
+    },
+    "buildSrc": {
+      "path": "buildSrc",
+      "purpose": null,
+      "fileCount": 2,
+      "lastAccessed": 1773663091702,
+      "keyFiles": [
+        "build.gradle.kts",
+        "gradle.properties"
+      ]
+    },
+    "docker": {
+      "path": "docker",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1773663091703,
+      "keyFiles": []
+    },
+    "exposed": {
+      "path": "exposed",
+      "purpose": null,
+      "fileCount": 2,
+      "lastAccessed": 1773663091704,
+      "keyFiles": [
+        "README.md"
+      ]
+    },
+    "gateway": {
+      "path": "gateway",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1773663091705,
+      "keyFiles": [
+        "README.md"
+      ]
+    },
+    "gatling": {
+      "path": "gatling",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1773663091763,
+      "keyFiles": []
+    },
+    "gradle": {
+      "path": "gradle",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1773663091780,
+      "keyFiles": []
+    },
+    "io": {
+      "path": "io",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1773663091783,
+      "keyFiles": []
+    },
+    "json": {
+      "path": "json",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1773663091784,
+      "keyFiles": []
+    },
+    "kotlin": {
+      "path": "kotlin",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1773663091784,
+      "keyFiles": []
+    },
+    "mapping": {
+      "path": "mapping",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1773663091784,
+      "keyFiles": []
+    },
+    "messaging": {
+      "path": "messaging",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1773663091785,
+      "keyFiles": []
+    },
+    "observability": {
+      "path": "observability",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1773663091785,
+      "keyFiles": []
+    },
+    "quarkus": {
+      "path": "quarkus",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1773663091785,
+      "keyFiles": [
+        "README.md"
+      ]
+    },
+    "ratelimit": {
+      "path": "ratelimit",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1773663091786,
+      "keyFiles": [
+        "README.md"
+      ]
+    },
+    "reactive": {
+      "path": "reactive",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1773663091786,
+      "keyFiles": []
+    },
+    "redis": {
+      "path": "redis",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1773663091786,
+      "keyFiles": []
+    },
+    "shared": {
+      "path": "shared",
+      "purpose": null,
+      "fileCount": 2,
+      "lastAccessed": 1773663091787,
+      "keyFiles": [
+        "README.md",
+        "build.gradle.kts"
+      ]
+    },
+    "spring-boot": {
+      "path": "spring-boot",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1773663091790,
+      "keyFiles": []
+    },
+    "spring-cloud": {
+      "path": "spring-cloud",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1773663091793,
+      "keyFiles": []
+    },
+    "spring-data": {
+      "path": "spring-data",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1773663091794,
+      "keyFiles": []
+    },
+    "spring-modulith": {
+      "path": "spring-modulith",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1773663091794,
+      "keyFiles": []
+    },
+    "spring-security": {
+      "path": "spring-security",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1773663091794,
+      "keyFiles": [
+        "README.md"
+      ]
+    },
+    "templates": {
+      "path": "templates",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1773663091795,
+      "keyFiles": []
+    },
+    "vertx": {
+      "path": "vertx",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1773663091796,
+      "keyFiles": [
+        "README.md"
+      ]
+    },
+    "virtualthreads": {
+      "path": "virtualthreads",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1773663091797,
+      "keyFiles": []
+    },
+    "buildSrc/build": {
+      "path": "buildSrc/build",
+      "purpose": "Build output",
+      "fileCount": 0,
+      "lastAccessed": 1773663091802,
+      "keyFiles": []
+    },
+    "buildSrc/src": {
+      "path": "buildSrc/src",
+      "purpose": "Source code",
+      "fileCount": 0,
+      "lastAccessed": 1773663091802,
+      "keyFiles": []
+    },
+    "shared/src": {
+      "path": "shared/src",
+      "purpose": "Source code",
+      "fileCount": 0,
+      "lastAccessed": 1773663091813,
+      "keyFiles": []
+    },
+    "templates/test": {
+      "path": "templates/test",
+      "purpose": "Test files",
+      "fileCount": 0,
+      "lastAccessed": 1773663091821,
+      "keyFiles": []
+    }
+  },
+  "hotPaths": [],
+  "userDirectives": []
+}
