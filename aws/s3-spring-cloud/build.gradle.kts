@@ -21,7 +21,7 @@ dependencies {
     implementation(Libs.aws2_s3)
     implementation(Libs.aws2_s3_transfer_manager)
     implementation(Libs.aws2_aws_crt_client)
-    implementation(Libs.bluetape4k_aws_s3)
+    implementation(Libs.bluetape4k_aws)
 
     // AWS Testcontainers
     implementation(Libs.bluetape4k_testcontainers)

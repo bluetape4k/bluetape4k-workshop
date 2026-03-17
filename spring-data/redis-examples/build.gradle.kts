@@ -15,7 +15,7 @@ configurations {
 
 dependencies {
     implementation(Libs.bluetape4k_redis)
-    implementation(Libs.bluetape4k_spring_core)
+    implementation(Libs.bluetape4k_spring_boot3)
     implementation(Libs.bluetape4k_idgenerators)
     testImplementation(Libs.bluetape4k_junit5)
     implementation(Libs.bluetape4k_testcontainers)
@@ -63,7 +63,6 @@ dependencies {
     implementation(Libs.netty_transport_native_epoll)
     implementation(Libs.netty_transport_native_kqueue)
 
-    testImplementation(Libs.bluetape4k_spring_tests)
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

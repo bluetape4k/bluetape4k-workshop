@@ -22,9 +22,8 @@ configurations {
 }
 
 dependencies {
-    implementation(Libs.bluetape4k_jackson)
-    implementation(Libs.bluetape4k_spring_webflux)
-    testImplementation(Libs.bluetape4k_spring_tests)
+    implementation(Libs.bluetape4k_jackson3)
+    //implementation(Libs.bluetape4k_spring_boot3)
 
     // Bucket4j
     implementation(Libs.bluetape4k_bucket4j)

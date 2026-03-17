@@ -16,8 +16,7 @@ dependencies {
     testImplementation(Libs.bluetape4k_junit5)
 
     // Vertx
-    api(Libs.bluetape4k_vertx_core)
-    api(Libs.bluetape4k_vertx_sqlclient)
+    implementation(Libs.bluetape4k_vertx)
     testImplementation(Libs.vertx_junit5)
 
     // Vertx Kotlin

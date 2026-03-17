@@ -26,7 +26,7 @@ dependencies {
     implementation(Libs.testcontainers_kafka)
 
     // Jackson
-    api(Libs.bluetape4k_jackson)
+    api(Libs.bluetape4k_jackson2)
     api(Libs.jackson_databind)
     api(Libs.jackson_module_kotlin)
     api(Libs.jackson_module_blackbird)
@@ -42,8 +42,7 @@ dependencies {
     compileOnly(Libs.reactor_kotlin_extensions)
     testImplementation(Libs.reactor_test)
 
-    api(Libs.bluetape4k_spring_webflux)
-    testImplementation(Libs.bluetape4k_spring_tests)
+    implementation(Libs.bluetape4k_spring_boot3)
 
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))

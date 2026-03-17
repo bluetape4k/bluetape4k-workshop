@@ -63,7 +63,7 @@ dependencies {
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")
     }
-    testImplementation(Libs.bluetape4k_spring_tests)
+    testImplementation(Libs.bluetape4k_spring_boot3)
 
     testImplementation(Libs.bluetape4k_testcontainers)
     testImplementation(Libs.testcontainers_mysql)

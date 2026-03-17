@@ -83,10 +83,6 @@ dependencies {
     implementation(Libs.caffeine)
     implementation(Libs.caffeine_jcache)
 
-    // Spring
-    implementation(Libs.bluetape4k_spring_core)
-    testImplementation(Libs.bluetape4k_spring_tests)
-
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))
     annotationProcessor(Libs.springBoot("autoconfigure-processor"))

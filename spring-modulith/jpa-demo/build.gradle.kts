@@ -34,6 +34,7 @@ configurations {
 }
 
 dependencies {
+    implementation(platform(Libs.spring_boot4_dependencies))
     implementation(platform(Libs.spring_modulith_bom))
 
     // Spring Modulith
@@ -102,7 +103,6 @@ dependencies {
     implementation(Libs.springdoc_openapi_starter_webmvc_api)
 
     implementation(Libs.bluetape4k_idgenerators)
-    testImplementation(Libs.bluetape4k_spring_tests)
 
     testImplementation(Libs.springmockk)
 }

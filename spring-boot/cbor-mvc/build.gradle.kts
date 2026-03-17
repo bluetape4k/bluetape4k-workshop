@@ -14,7 +14,7 @@ dependencies {
     testImplementation(project(":shared"))
 
     // Jackson CBOR
-    implementation(Libs.bluetape4k_jackson3_binary)
+    implementation(Libs.bluetape4k_jackson3)
     implementation(Libs.jackson3_dataformat_cbor)    // smile 도 가능
 
     implementation(Libs.springBootStarter("actuator"))

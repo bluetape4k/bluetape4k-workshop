@@ -36,7 +36,7 @@ dependencies {
     testImplementation(Libs.rest_assured_kotlin)
 
     // Bluetape4k
-    implementation(Libs.bluetape4k_jackson)
+    implementation(Libs.bluetape4k_jackson2)
     implementation(Libs.bluetape4k_quarkus_core)
     testImplementation(Libs.bluetape4k_quarkus_tests)
     testImplementation(Libs.bluetape4k_idgenerators)
