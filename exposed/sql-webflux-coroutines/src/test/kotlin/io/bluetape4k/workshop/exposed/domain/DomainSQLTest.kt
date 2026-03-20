@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.exposed.domain
 
-import io.bluetape4k.exposed.core.transactions.newVirtualThreadTransaction
-import io.bluetape4k.exposed.core.transactions.virtualThreadTransactionAsync
+import io.bluetape4k.exposed.jdbc.newVirtualThreadJdbcTransaction
+import io.bluetape4k.exposed.jdbc.virtualThreadJdbcTransactionAsync
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import io.bluetape4k.junit5.coroutines.runSuspendIO
@@ -58,7 +58,7 @@ class DomainSQLTest: AbstractExposedSqlTest() {
 
         @RepeatedTest(REPEAT_SIZE)
         fun `get all actors in virtual threads`() {
-            newVirtualThreadTransaction {
+            newVirtualThreadJdbcTransaction {
                 val actors = Actors.selectAll().map { it.toActorDTO() }
                 actors.shouldNotBeEmpty()
             }
@@ -70,7 +70,7 @@ class DomainSQLTest: AbstractExposedSqlTest() {
             StructuredTaskScopeTester()
                 .roundsPerTask(Runtimex.availableProcessors * 2 * 4)
                 .add {
-                    val actors = virtualThreadTransactionAsync {
+                    val actors = virtualThreadJdbcTransactionAsync {
                         Actors.selectAll().map { it.toActorDTO() }
                     }.await()
                     actors.shouldNotBeEmpty()

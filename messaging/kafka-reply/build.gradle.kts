@@ -42,7 +42,7 @@ dependencies {
     compileOnly(Libs.reactor_kotlin_extensions)
     testImplementation(Libs.reactor_test)
 
-    implementation(Libs.bluetape4k_spring_boot3)
+    implementation(Libs.bluetape4k_spring_boot4_core)
 
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))

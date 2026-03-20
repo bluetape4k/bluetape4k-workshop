@@ -35,7 +35,7 @@ dependencies {
 
     // R2DBC
     implementation(Libs.bluetape4k_r2dbc)
-    implementation(Libs.bluetape4k_spring_r2dbc)
+    implementation(Libs.bluetape4k_spring_boot4_r2dbc)
     implementation(Libs.springBootStarter("data-r2dbc"))
     testImplementation(Libs.springBootStarter("data-r2dbc-test"))
 
@@ -47,7 +47,7 @@ dependencies {
     implementation(Libs.springBootStarter("webflux"))
     testImplementation(Libs.springBootStarter("webflux-test"))
 
-    testImplementation(Libs.bluetape4k_spring_boot3)
+    testImplementation(Libs.bluetape4k_spring_boot4_core)
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

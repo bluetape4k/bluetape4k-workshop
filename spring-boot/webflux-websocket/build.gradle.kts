@@ -23,7 +23,7 @@ configurations {
 dependencies {
     implementation(Libs.bluetape4k_idgenerators)
     testImplementation(Libs.bluetape4k_junit5)
-    testImplementation(Libs.bluetape4k_spring_boot3)
+    testImplementation(Libs.bluetape4k_spring_boot4_core)
 
     implementation(Libs.jackson3_module_kotlin)
 

@@ -77,7 +77,7 @@ dependencies {
 
     // Bluetape4k
     implementation(Libs.bluetape4k_idgenerators)
-    testImplementation(Libs.bluetape4k_spring_boot3)
+    testImplementation(Libs.bluetape4k_spring_boot4_core)
 
     // Mockk
     testImplementation(Libs.mockk)

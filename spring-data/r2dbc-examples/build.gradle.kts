@@ -11,7 +11,7 @@ dependencies {
 
     implementation(Libs.bluetape4k_core)
     implementation(Libs.bluetape4k_r2dbc)
-    implementation(Libs.bluetape4k_spring_r2dbc)
+    implementation(Libs.bluetape4k_spring_boot4_r2dbc)
     testImplementation(Libs.bluetape4k_junit5)
 
     // Coroutines
@@ -33,7 +33,7 @@ dependencies {
     implementation(Libs.r2dbc_h2)
     implementation(Libs.r2dbc_pool)
 
-    testImplementation(Libs.bluetape4k_spring_boot3)
+    testImplementation(Libs.bluetape4k_spring_boot4_core)
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

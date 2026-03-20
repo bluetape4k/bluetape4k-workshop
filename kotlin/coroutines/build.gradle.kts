@@ -29,7 +29,7 @@ dependencies {
 
     // Spring Boot
     implementation(Libs.spring("context"))
-    implementation(Libs.bluetape4k_spring_boot3)
+    implementation(Libs.bluetape4k_spring_boot4_core)
 
     testImplementation(Libs.springBootStarter("test")) {
         exclude(group = "junit", module = "junit")

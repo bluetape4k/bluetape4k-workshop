@@ -3,8 +3,8 @@ package io.bluetape4k.workshop.redis
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
-import io.bluetape4k.redis.spring.serializer.RedisBinarySerializers
-import io.bluetape4k.redis.spring.serializer.redisSerializationContext
+import io.bluetape4k.spring.redis.serializer.RedisBinarySerializers
+import io.bluetape4k.spring.redis.serializer.redisSerializationContext
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.testcontainers.storage.RedisServer
 import jakarta.annotation.PreDestroy

@@ -13,8 +13,10 @@ configurations {
 }
 
 dependencies {
-    implementation(Libs.bluetape4k_redis)
+    implementation(Libs.bluetape4k_lettuce)
     implementation(Libs.bluetape4k_jackson3)
+    implementation(Libs.bluetape4k_spring_boot4_core)
+    implementation(Libs.bluetape4k_spring_boot4_redis)
     testImplementation(Libs.bluetape4k_junit5)
     implementation(Libs.bluetape4k_testcontainers)
 
