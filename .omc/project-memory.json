@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1773663091821,
+  "lastScanned": 1774000126949,
   "projectRoot": "/Users/debop/work/bluetape4k/bluetape4k-workshop",
   "techStack": {
     "languages": [
@@ -45,16 +45,23 @@
       "path": "aws",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1773663091702,
+      "lastAccessed": 1774000126941,
       "keyFiles": [
         "README.md"
       ]
+    },
+    "build": {
+      "path": "build",
+      "purpose": "Build output",
+      "fileCount": 0,
+      "lastAccessed": 1774000126941,
+      "keyFiles": []
     },
     "buildSrc": {
       "path": "buildSrc",
       "purpose": null,
       "fileCount": 2,
-      "lastAccessed": 1773663091702,
+      "lastAccessed": 1774000126942,
       "keyFiles": [
         "build.gradle.kts",
         "gradle.properties"
@@ -64,14 +71,14 @@
       "path": "docker",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1773663091703,
+      "lastAccessed": 1774000126942,
       "keyFiles": []
     },
     "exposed": {
       "path": "exposed",
       "purpose": null,
       "fileCount": 2,
-      "lastAccessed": 1773663091704,
+      "lastAccessed": 1774000126942,
       "keyFiles": [
         "README.md"
       ]
@@ -80,7 +87,7 @@
       "path": "gateway",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1773663091705,
+      "lastAccessed": 1774000126943,
       "keyFiles": [
         "README.md"
       ]
@@ -89,63 +96,63 @@
       "path": "gatling",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1773663091763,
+      "lastAccessed": 1774000126943,
       "keyFiles": []
     },
     "gradle": {
       "path": "gradle",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1773663091780,
+      "lastAccessed": 1774000126944,
       "keyFiles": []
     },
     "io": {
       "path": "io",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1773663091783,
+      "lastAccessed": 1774000126945,
       "keyFiles": []
     },
     "json": {
       "path": "json",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1773663091784,
+      "lastAccessed": 1774000126945,
       "keyFiles": []
     },
     "kotlin": {
       "path": "kotlin",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1773663091784,
+      "lastAccessed": 1774000126945,
       "keyFiles": []
     },
     "mapping": {
       "path": "mapping",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1773663091784,
+      "lastAccessed": 1774000126945,
       "keyFiles": []
     },
     "messaging": {
       "path": "messaging",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1773663091785,
+      "lastAccessed": 1774000126945,
       "keyFiles": []
     },
     "observability": {
       "path": "observability",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1773663091785,
+      "lastAccessed": 1774000126945,
       "keyFiles": []
     },
     "quarkus": {
       "path": "quarkus",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1773663091785,
+      "lastAccessed": 1774000126945,
       "keyFiles": [
         "README.md"
       ]
@@ -154,7 +161,7 @@
       "path": "ratelimit",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1773663091786,
+      "lastAccessed": 1774000126946,
       "keyFiles": [
         "README.md"
       ]
@@ -163,21 +170,21 @@
       "path": "reactive",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1773663091786,
+      "lastAccessed": 1774000126946,
       "keyFiles": []
     },
     "redis": {
       "path": "redis",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1773663091786,
+      "lastAccessed": 1774000126946,
       "keyFiles": []
     },
     "shared": {
       "path": "shared",
       "purpose": null,
       "fileCount": 2,
-      "lastAccessed": 1773663091787,
+      "lastAccessed": 1774000126946,
       "keyFiles": [
         "README.md",
         "build.gradle.kts"
@@ -187,35 +194,35 @@
       "path": "spring-boot",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1773663091790,
+      "lastAccessed": 1774000126946,
       "keyFiles": []
     },
     "spring-cloud": {
       "path": "spring-cloud",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1773663091793,
+      "lastAccessed": 1774000126946,
       "keyFiles": []
     },
     "spring-data": {
       "path": "spring-data",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1773663091794,
+      "lastAccessed": 1774000126946,
       "keyFiles": []
     },
     "spring-modulith": {
       "path": "spring-modulith",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1773663091794,
+      "lastAccessed": 1774000126946,
       "keyFiles": []
     },
     "spring-security": {
       "path": "spring-security",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1773663091794,
+      "lastAccessed": 1774000126946,
       "keyFiles": [
         "README.md"
       ]
@@ -224,14 +231,14 @@
       "path": "templates",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1773663091795,
+      "lastAccessed": 1774000126946,
       "keyFiles": []
     },
     "vertx": {
       "path": "vertx",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1773663091796,
+      "lastAccessed": 1774000126946,
       "keyFiles": [
         "README.md"
       ]
@@ -240,38 +247,346 @@
       "path": "virtualthreads",
       "purpose": null,
       "fileCount": 1,
-      "lastAccessed": 1773663091797,
+      "lastAccessed": 1774000126946,
       "keyFiles": []
     },
     "buildSrc/build": {
       "path": "buildSrc/build",
       "purpose": "Build output",
       "fileCount": 0,
-      "lastAccessed": 1773663091802,
+      "lastAccessed": 1774000126947,
       "keyFiles": []
     },
     "buildSrc/src": {
       "path": "buildSrc/src",
       "purpose": "Source code",
       "fileCount": 0,
-      "lastAccessed": 1773663091802,
+      "lastAccessed": 1774000126947,
+      "keyFiles": []
+    },
+    "shared/build": {
+      "path": "shared/build",
+      "purpose": "Build output",
+      "fileCount": 0,
+      "lastAccessed": 1774000126948,
       "keyFiles": []
     },
     "shared/src": {
       "path": "shared/src",
       "purpose": "Source code",
       "fileCount": 0,
-      "lastAccessed": 1773663091813,
+      "lastAccessed": 1774000126948,
       "keyFiles": []
     },
     "templates/test": {
       "path": "templates/test",
       "purpose": "Test files",
       "fileCount": 0,
-      "lastAccessed": 1773663091821,
+      "lastAccessed": 1774000126948,
       "keyFiles": []
     }
   },
-  "hotPaths": [],
+  "hotPaths": [
+    {
+      "path": "CLAUDE.md",
+      "accessCount": 6,
+      "lastAccessed": 1774000271873,
+      "type": "file"
+    },
+    {
+      "path": "spring-data/elasticsearch-webflux/README.md",
+      "accessCount": 4,
+      "lastAccessed": 1774000788420,
+      "type": "file"
+    },
+    {
+      "path": "README.md",
+      "accessCount": 3,
+      "lastAccessed": 1774000752937,
+      "type": "file"
+    },
+    {
+      "path": "exposed/README.md",
+      "accessCount": 3,
+      "lastAccessed": 1774000758188,
+      "type": "file"
+    },
+    {
+      "path": "spring-security/README.md",
+      "accessCount": 3,
+      "lastAccessed": 1774000763457,
+      "type": "file"
+    },
+    {
+      "path": "spring-boot/resilience4j-coroutines/README.md",
+      "accessCount": 3,
+      "lastAccessed": 1774000768698,
+      "type": "file"
+    },
+    {
+      "path": "ratelimit/README.md",
+      "accessCount": 3,
+      "lastAccessed": 1774000779203,
+      "type": "file"
+    },
+    {
+      "path": "spring-boot/problem/README.md",
+      "accessCount": 3,
+      "lastAccessed": 1774000800508,
+      "type": "file"
+    },
+    {
+      "path": "spring-boot/webflux-websocket/README.md",
+      "accessCount": 2,
+      "lastAccessed": 1774000372366,
+      "type": "file"
+    },
+    {
+      "path": "spring-data/r2dbc-coroutines/README.md",
+      "accessCount": 2,
+      "lastAccessed": 1774000787624,
+      "type": "file"
+    },
+    {
+      "path": "spring-data/r2dbc-examples/README.md",
+      "accessCount": 2,
+      "lastAccessed": 1774000787878,
+      "type": "file"
+    },
+    {
+      "path": "settings.gradle.kts",
+      "accessCount": 1,
+      "lastAccessed": 1774000162017,
+      "type": "file"
+    },
+    {
+      "path": "shared/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000332201,
+      "type": "file"
+    },
+    {
+      "path": "aws/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000332408,
+      "type": "file"
+    },
+    {
+      "path": "gateway/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000332885,
+      "type": "file"
+    },
+    {
+      "path": "quarkus/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000333049,
+      "type": "file"
+    },
+    {
+      "path": "vertx/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000333737,
+      "type": "file"
+    },
+    {
+      "path": "kotlin/design-patterns/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000333814,
+      "type": "file"
+    },
+    {
+      "path": "spring-boot/async-logging/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000335528,
+      "type": "file"
+    },
+    {
+      "path": "spring-boot/cbor-mvc/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000335696,
+      "type": "file"
+    },
+    {
+      "path": "spring-boot/chaos-monkey/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000336714,
+      "type": "file"
+    },
+    {
+      "path": "spring-boot/protobuf-mvc/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000336758,
+      "type": "file"
+    },
+    {
+      "path": "spring-boot/application-event-demo/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000336962,
+      "type": "file"
+    },
+    {
+      "path": "spring-boot/cache-caffeine/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000337170,
+      "type": "file"
+    },
+    {
+      "path": "spring-boot/cache-redis/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000337378,
+      "type": "file"
+    },
+    {
+      "path": "spring-boot/stomp-websocket/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000337591,
+      "type": "file"
+    },
+    {
+      "path": "spring-boot/webflux-coroutines/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000337763,
+      "type": "file"
+    },
+    {
+      "path": "spring-data/jpa-querydsl/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000340641,
+      "type": "file"
+    },
+    {
+      "path": "spring-data/mongodb-coroutines/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000340852,
+      "type": "file"
+    },
+    {
+      "path": "spring-data/mongodb-transactions/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000341061,
+      "type": "file"
+    },
+    {
+      "path": "spring-data/redis-examples/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000341906,
+      "type": "file"
+    },
+    {
+      "path": "spring-data/elasticsearch/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000342119,
+      "type": "file"
+    },
+    {
+      "path": "spring-data/r2dbc-webflux-exposed/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000342329,
+      "type": "file"
+    },
+    {
+      "path": "spring-data/r2dbc-webflux/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000342539,
+      "type": "file"
+    },
+    {
+      "path": "spring-data/redis-examples/src/main/kotlin/io/bluetape4k/workshop/redis/stream/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000342750,
+      "type": "file"
+    },
+    {
+      "path": "exposed/dao-web-transaction/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000342964,
+      "type": "file"
+    },
+    {
+      "path": "exposed/domain/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000343166,
+      "type": "file"
+    },
+    {
+      "path": "exposed/sql-web-virtualthread/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000343385,
+      "type": "file"
+    },
+    {
+      "path": "exposed/sql-webflux-coroutines/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000343596,
+      "type": "file"
+    },
+    {
+      "path": "aws/s3-spring-cloud/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000353456,
+      "type": "file"
+    },
+    {
+      "path": "docker/compose-demo/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000353665,
+      "type": "file"
+    },
+    {
+      "path": "docker/compose-plugin-demo/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000354421,
+      "type": "file"
+    },
+    {
+      "path": "gateway/api-gateway/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000354600,
+      "type": "file"
+    },
+    {
+      "path": "gatling/gradle-plugin-demo/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000354789,
+      "type": "file"
+    },
+    {
+      "path": "gatling/virtualthread-simulation/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000354958,
+      "type": "file"
+    },
+    {
+      "path": "json/jsonview-examples/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000355271,
+      "type": "file"
+    },
+    {
+      "path": "json/jackson-examples/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000355356,
+      "type": "file"
+    },
+    {
+      "path": "io/okio-examples/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000355795,
+      "type": "file"
+    },
+    {
+      "path": "mapping/mapstruct/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000355969,
+      "type": "file"
+    },
+    {
+      "path": "messaging/kafka-reply/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1774000358426,
+      "type": "file"
+    }
+  ],
   "userDirectives": []
 }

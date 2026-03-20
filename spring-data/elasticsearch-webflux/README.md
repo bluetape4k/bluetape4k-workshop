@@ -1,4 +1,4 @@
-# Spring Data Elasticsearch Example with Spring Boot 3 and ElasticSearch 8
+# Spring Data Elasticsearch Example with Spring Boot 4 and Elasticsearch 8
 
 ## Introduction
 

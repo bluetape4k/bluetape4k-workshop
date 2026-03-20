@@ -4,8 +4,7 @@ Spring Boot MVC 에서 Virtual Thread 를 사용하는 예제입니다.
 
 ## 환경 설정
 
-[Kotlin + Spring Boot, Virtual Thread 적용하기](https://jsonobject.tistory.com/631) 를 참고하여 기본적인 JDK 21을 설치한다.
-현 예제는 zulu-jdk.21 을 사용하였습니다.
+[Kotlin + Spring Boot, Virtual Thread 적용하기](https://jsonobject.tistory.com/631) 를 참고하여 JDK 25를 설치한다. 현 예제는 JDK 25 를 사용합니다.
 
 ### Spring Boot 설정
 

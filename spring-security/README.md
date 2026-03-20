@@ -4,7 +4,7 @@
 
 ### Documents
 
-* [Spring Security Reference](https://docs.spring.io/spring-security/reference/5.8/index.html)
+* [Spring Security Reference](https://docs.spring.io/spring-security/reference/)
 
 ### Examples
 
