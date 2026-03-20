@@ -1,10 +1,10 @@
 package io.bluetape4k.workshop.spring.modulith.events.a.fundamentals.quickstart
 
-import io.bluetape4k.idgenerators.uuid.TimebasedUuid
+import io.bluetape4k.idgenerators.uuid.Uuid
 import java.io.Serializable
 
 data class Order(
-    val id: String = TimebasedUuid.Reordered.nextIdAsString(),
+    val id: String = Uuid.V7.nextIdAsString(),
 ): Serializable {
 
     var status: OrderStatus = OrderStatus.OPEN

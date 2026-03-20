@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.gateway.orders.controller
 
-import io.bluetape4k.idgenerators.uuid.TimebasedUuid
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.gateway.orders.model.Order
 import org.springframework.web.bind.annotation.CrossOrigin
@@ -15,7 +15,7 @@ class OrderController {
 
     companion object: KLoggingChannel()
 
-    private val uuidGenerator = TimebasedUuid.Reordered
+    private val uuidGenerator = Uuid.V6
 
     @GetMapping("", "/")
     suspend fun getAll(): List<Order> {

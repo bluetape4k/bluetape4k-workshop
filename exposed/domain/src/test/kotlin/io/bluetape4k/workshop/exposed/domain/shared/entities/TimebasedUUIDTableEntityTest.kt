@@ -7,7 +7,7 @@ import io.bluetape4k.exposed.dao.id.TimebasedUUIDEntityClass
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
 import io.bluetape4k.exposed.dao.idValue
-import io.bluetape4k.idgenerators.uuid.TimebasedUuid.Epoch
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
@@ -186,11 +186,11 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
             val seoul = City.new { name = "Seoul" }
             val busan = City.new { name = "Busan" }
 
-            Person.new(Epoch.nextId()) {
+            Person.new(Uuid.V7.nextId()) {
                 name = "Debop"
                 city = seoul
             }
-            Person.new(Epoch.nextId()) {
+            Person.new(Uuid.V7.nextId()) {
                 name = "BTS"
                 city = seoul
             }
@@ -237,11 +237,11 @@ class TimebasedUUIDTableEntityTest: AbstractExposedTest() {
             val seoul = City.new { name = "Seoul" }
             val busan = City.new { name = "Busan" }
 
-            Person.new(Epoch.nextId()) {
+            Person.new(Uuid.V7.nextId()) {
                 name = "Debop"
                 city = seoul
             }
-            Person.new(Epoch.nextId()) {
+            Person.new(Uuid.V7.nextId()) {
                 name = "BTS"
                 city = seoul
             }

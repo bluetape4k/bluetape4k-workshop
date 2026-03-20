@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.spring.modulith.events.util
 
 import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.hibernate.model.JpaEntity
-import io.bluetape4k.idgenerators.uuid.TimebasedUuid
+import io.bluetape4k.idgenerators.uuid.Uuid
 import jakarta.persistence.Id
 import jakarta.persistence.MappedSuperclass
 import org.springframework.data.domain.AbstractAggregateRoot
@@ -13,7 +13,7 @@ abstract class StringAggregate<T: AbstractAggregateRoot<T>>
     : AbstractAggregateRoot<T>(), JpaEntity<String>, Serializable {
 
     @Id
-    override var id: String? = TimebasedUuid.Reordered.nextIdAsString()
+    override var id: String? = Uuid.V7.nextIdAsString()
 
     // TODO: 이 방식은 Auto Generated Identifier에서만 유용한 방식이다. Entity Listener를 통한 @OnPersist 등에서 처리해야 한다
     @Transient

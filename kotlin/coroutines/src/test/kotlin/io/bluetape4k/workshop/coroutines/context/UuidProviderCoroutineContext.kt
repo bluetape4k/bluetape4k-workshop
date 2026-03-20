@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.coroutines.context
 
-import io.bluetape4k.idgenerators.uuid.TimebasedUuid
+import io.bluetape4k.idgenerators.uuid.Uuid
 import kotlin.coroutines.CoroutineContext
 
 /**
@@ -27,7 +27,7 @@ abstract class UuidProviderCoroutineContext: CoroutineContext.Element {
 class TimebasedUuidProviderCoroutineContext: UuidProviderCoroutineContext() {
 
     override fun nextUuid(): String {
-        return TimebasedUuid.Reordered.nextIdAsString()
+        return Uuid.V7.nextIdAsString()
     }
 }
 

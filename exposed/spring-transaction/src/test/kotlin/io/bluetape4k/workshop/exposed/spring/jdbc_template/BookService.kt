@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.exposed.spring.jdbc_template
 
-import io.bluetape4k.idgenerators.uuid.TimebasedUuid
+import io.bluetape4k.idgenerators.uuid.Uuid
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.jdbc.core.JdbcTemplate
@@ -21,7 +21,7 @@ class BookService(
 
     fun testWithSpringTransaction() {
         operations1.execute {
-            val id = TimebasedUuid.Epoch.nextId().toString()
+            val id = Uuid.V7.nextId().toString()
             val query = "INSERT INTO AUTHORS(id, description) values ('$id', '234234')"
             jdbcTemplate.execute(query)
         }
@@ -38,7 +38,7 @@ class BookService(
             Book.new { description = "1234" }
         }
         operations2.execute {
-            val id = TimebasedUuid.Epoch.nextId().toString()
+            val id = Uuid.V7.nextId().toString()
             val query = "INSERT INTO AUTHORS(id, description) values ('$id', '234234')"
             jdbcTemplate.execute(query)
         }

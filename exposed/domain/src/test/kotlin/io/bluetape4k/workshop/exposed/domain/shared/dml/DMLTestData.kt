@@ -2,7 +2,7 @@
 
 package io.bluetape4k.workshop.exposed.domain.shared.dml
 
-import io.bluetape4k.idgenerators.uuid.TimebasedUuid
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withTables
@@ -301,7 +301,7 @@ fun AbstractExposedTest.withSalesAndSomeAmounts(
 object Orgs: IntIdTable() {
     val uid = varchar("uid", 36)
         .uniqueIndex()
-        .clientDefault { TimebasedUuid.Reordered.nextIdAsString() }
+        .clientDefault { Uuid.V6.nextIdAsString() }
     val name = varchar("name", 255)
 }
 

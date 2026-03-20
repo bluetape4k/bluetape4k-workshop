@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.redisson.collections
 
-import io.bluetape4k.idgenerators.uuid.TimebasedUuid
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
@@ -34,7 +34,7 @@ class StreamExamples: AbstractRedissonTest() {
 
     @Test
     fun `stream 기본 사용 예`() {
-        val groupName = "testGroup-" + TimebasedUuid.Reordered.nextIdAsString()
+        val groupName = "testGroup-" + Uuid.V7.nextIdAsString()
 
         val stream = redisson.getStream<String, String>(randomName())
 
@@ -88,9 +88,9 @@ class StreamExamples: AbstractRedissonTest() {
 
     @Test
     fun `stream usage`() = runSuspendIO {
-        val groupName = "group-" + TimebasedUuid.Reordered.nextIdAsString()
-        val consumerName1 = "consumer-" + TimebasedUuid.Reordered.nextIdAsString()
-        val consumerName2 = "consumer-" + TimebasedUuid.Reordered.nextIdAsString()
+        val groupName = "group-" + Uuid.V7.nextIdAsString()
+        val consumerName1 = "consumer-" + Uuid.V7.nextIdAsString()
+        val consumerName2 = "consumer-" + Uuid.V7.nextIdAsString()
 
         val stream: RStream<String, Int> = redisson.getStream(randomName())
 

@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.shared.dml
 
-import io.bluetape4k.idgenerators.uuid.TimebasedUuid.Epoch
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withTables
@@ -408,7 +408,7 @@ class ReplaceTest: AbstractExposedTest() {
         withTables(testDB, cities) {
             val amountOfNames = 25
             val names = List(amountOfNames) { index ->
-                index + 1 to Epoch.nextIdAsString()
+                index + 1 to Uuid.V7.nextIdAsString()
             }.asSequence()
 
             cities.batchReplace(names) { (index, name) ->
@@ -421,7 +421,7 @@ class ReplaceTest: AbstractExposedTest() {
             namesFromDB1 shouldBeEqualTo names.unzip().second
 
             val namesToReplace = List(amountOfNames) { index ->
-                index + 1 to Epoch.nextIdAsString()
+                index + 1 to Uuid.V7.nextIdAsString()
             }.asSequence()
 
             cities.batchReplace(namesToReplace) { (index, name) ->
