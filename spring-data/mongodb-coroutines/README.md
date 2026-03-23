@@ -1,5 +1,59 @@
 # mongodb-coroutine demo
 
+## 아키텍처 다이어그램
+
+```mermaid
+classDiagram
+    class Person {
+        +String? firstname
+        +String? lastname
+        +Int age
+        +String? id
+    }
+    class PersonRepository {
+        <<interface>>
+        +findOneByFirstname(firstname) Person?
+        +findOneOrNoneByFirstname(firstname) Person?
+        +findNullableByFirstname(firstname) Person?
+    }
+    class PersonCoroutineRepository {
+        <<interface>>
+        +findByFirstname(firstname) Person?
+        +findAll() Flow~Person~
+    }
+    class PersonReactiveRepository {
+        <<interface>>
+        +findByFirstname(firstname) Mono~Person~
+        +findAll() Flux~Person~
+    }
+    class ReactiveMongoConfig {
+        +mongoClient() MongoClient
+        +reactiveMongoDatabaseFactory() ReactiveMongoDatabaseFactory
+    }
+
+    PersonRepository --> Person : 동기 CRUD
+    PersonCoroutineRepository --> Person : 코루틴 CRUD
+    PersonReactiveRepository --> Person : 리액티브 CRUD
+```
+
+```mermaid
+sequenceDiagram
+    participant 클라이언트 as 테스트/서비스
+    participant 코루틴저장소 as PersonCoroutineRepository
+    participant 리액티브저장소 as PersonReactiveRepository
+    participant MongoDB as MongoDB
+
+    클라이언트->>코루틴저장소: findByFirstname("Walter") [suspend]
+    코루틴저장소->>MongoDB: db.persons.findOne({firstname: "Walter"})
+    MongoDB-->>코루틴저장소: Document
+    코루틴저장소-->>클라이언트: Person?
+
+    클라이언트->>리액티브저장소: findAll()
+    리액티브저장소->>MongoDB: db.persons.find({})
+    MongoDB-->>리액티브저장소: Cursor
+    리액티브저장소-->>클라이언트: Flux~Person~.asFlow()
+```
+
 MongoDB 관련 작업을 `Spring Data Mongo` 와 Kotlin Coroutines 으로 수행하는 예입니다.
 
 ## 참고

@@ -2,6 +2,31 @@
 
 Logback 으로 로그를 출력할 때, `AsyncAppender` 를 사용하여 로그를 비동기로 출력하는 방법에 대한 예제입니다.
 
+## 비동기 로깅 흐름
+
+```mermaid
+flowchart LR
+    앱코드[애플리케이션\nLoggingController] -->|로그 이벤트| Logger[SLF4J Logger]
+
+    subgraph Logback Appender 체인
+        Logger -->|dev 프로파일| ASYNC_CONSOLE[ASYNC_CONSOLE\nAsyncAppender]
+        Logger -->|모든 프로파일| ASYNC_ROLLING[ASYNC_ROLLING_FILE\nAsyncAppender]
+        Logger -->|알림| ASYNC_SLACK[ASYNC_SLACK\nAsyncAppender]
+
+        ASYNC_CONSOLE -->|큐 버퍼링\nqueueSize=10| CONSOLE[ConsoleAppender]
+        ASYNC_ROLLING -->|큐 버퍼링\nqueueSize=512| ROLLING[RollingFileAppender\n일 단위 롤링]
+        ASYNC_SLACK --> SLACK[Slack Webhook]
+    end
+
+    subgraph 프로파일별 설정
+        DEV[dev] -->|TRACE 레벨| ASYNC_CONSOLE
+        TEST[test] -->|DEBUG 레벨| CONSOLE
+        PROD[prod] -->|INFO 레벨| ASYNC_ROLLING
+    end
+
+    ROLLING -->|JSON 포맷\nLogstashEncoder| 로그파일[(로그 파일\n30일 보관)]
+```
+
 ## Console 로깅
 
 로그를 일반적인 Console 에 출력할 때에는 다음과 같이 `ConsoleAppender` 를 사용합니다.

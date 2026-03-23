@@ -9,6 +9,33 @@ article ["Gatling Load Testing Tutorial"](https://medium.com/@mdportnov/stress-t
 which provides
 an introduction to Gatling, a popular open-source load testing tool for web applications.
 
+```mermaid
+flowchart TD
+    subgraph 앱["Spring Boot 애플리케이션 (포트 8080)"]
+        subgraph 동기["Sync (Virtual Thread)"]
+            SC["SyncTaskController\nGET /sync/{id}"]
+            SS["SyncTaskService"]
+        end
+        subgraph 비동기["Async (Coroutine)"]
+            AC["AsyncTaskController\nGET /async/{id}"]
+            AS["AsyncTaskService"]
+        end
+    end
+
+    subgraph 시뮬레이션["Gatling 시뮬레이션"]
+        SyncSim["SyncTaskSimulation\nrampConcurrentUsers 10→20 / 10초"]
+        AsyncSim["AsyncTaskSimulation\nrampConcurrentUsers 10→20 / 10초"]
+    end
+
+    Report["결과 리포트\nbuild/reports/gatling"]
+
+    SyncSim -->|"GET /sync/1, /sync/2"| SC
+    AsyncSim -->|"GET /async/1, /async/2"| AC
+    SC --> SS
+    AC --> AS
+    시뮬레이션 --> Report
+```
+
 ### Running the Examples
 
 To run the examples in this repository, you will need to have Gradle installed on your system. Once you have Gradle

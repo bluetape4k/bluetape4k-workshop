@@ -1,5 +1,74 @@
 # Spring Data R2DBC Demo
 
+## 아키텍처 다이어그램
+
+```mermaid
+classDiagram
+    class Post {
+        +String? title
+        +String? content
+        +Long? id
+    }
+    class Comment {
+        +String? content
+        +Long? postId
+        +Long? id
+    }
+    class Member {
+        +String name
+        +Int age
+        +String email
+        +Long? id
+    }
+    class PostRepository {
+        <<interface>>
+        +findAll() Flow~Post~
+        +findById(id) Post?
+    }
+    class CommentRepository {
+        <<interface>>
+        +findByPostId(postId) Flow~Comment~
+    }
+    class MemberRepository {
+        <<interface>>
+        +findAll() Flow~Member~
+    }
+    class PostController {
+        +getPosts() List~Post~
+        +getPost(id) Post
+        +createPost(post) Post
+    }
+
+    Post "1" --> "0..*" Comment : has
+    PostRepository --> Post : 관리
+    CommentRepository --> Comment : 관리
+    MemberRepository --> Member : 관리
+    PostController --> PostRepository : 사용
+    PostController --> CommentRepository : 사용
+```
+
+```mermaid
+sequenceDiagram
+    participant 클라이언트 as HTTP 클라이언트
+    participant 컨트롤러 as PostController
+    participant 저장소 as PostRepository
+    participant DB as R2DBC DB
+
+    클라이언트->>컨트롤러: GET /posts
+    컨트롤러->>저장소: findAll() [suspend]
+    저장소->>DB: SELECT * FROM posts
+    DB-->>저장소: Flow~Post~
+    저장소-->>컨트롤러: List~Post~
+    컨트롤러-->>클라이언트: 200 OK [JSON]
+
+    클라이언트->>컨트롤러: POST /posts
+    컨트롤러->>저장소: save(post) [suspend]
+    저장소->>DB: INSERT INTO posts
+    DB-->>저장소: Post (id 생성)
+    저장소-->>컨트롤러: Post
+    컨트롤러-->>클라이언트: 201 Created
+```
+
 ## 참고
 
 * [Spring Data Examples - r2dbc/example](https://github.com/spring-projects/spring-data-examples/tree/main/r2dbc/example)

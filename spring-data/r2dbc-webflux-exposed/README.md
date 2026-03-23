@@ -1,5 +1,39 @@
 # R2DBC + WebFlux + Exposed ORM
 
+## 아키텍처 다이어그램
+
+```mermaid
+flowchart TB
+    subgraph API 레이어
+        RC[UserController\n@RestController]
+        RH[UserHandler\n함수형 라우터]
+    end
+
+    subgraph 서비스 레이어
+        S[UserService\nsuspend 함수]
+    end
+
+    subgraph Exposed R2DBC 레이어
+        REPO[UserExposedRepository\nsuspendedTransaction]
+        SCHEMA[UserSchema\nExposed LongIdTable]
+    end
+
+    subgraph 인프라 레이어
+        CFG[ExposedR2dbcConfig\nR2DBC + Exposed 연동]
+        INIT[SchemaInitializer\n스키마 자동 생성]
+        DB[(H2 R2DBC)]
+    end
+
+    RC --> S
+    RH --> S
+    S --> REPO
+    REPO --> SCHEMA
+    REPO -->|suspendedTransaction| DB
+    CFG --> DB
+    INIT --> SCHEMA
+    INIT --> DB
+```
+
 Spring Data R2DBC와 Spring WebFlux, JetBrains Exposed ORM을 함께 사용하는 예제입니다.
 `bluetape4k-exposed-r2dbc` 모듈을 활용해 Exposed 테이블 정의를 R2DBC 환경에서 사용합니다.
 

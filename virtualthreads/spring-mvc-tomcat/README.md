@@ -2,6 +2,46 @@
 
 Spring Boot MVC 에서 Virtual Thread 를 사용하는 예제입니다.
 
+## Virtual Thread 처리 모델
+
+```mermaid
+flowchart TD
+    subgraph HTTP 요청
+        A[클라이언트 요청]
+    end
+
+    subgraph Tomcat - Virtual Thread
+        B[TomcatProtocolHandler]
+        C[VirtualThreadPerTaskExecutor]
+        B --> C
+    end
+
+    subgraph Spring MVC 컨트롤러
+        D[MemberController]
+        E[TeamController]
+        F[VirtualThreadController]
+        G[HttpbinController]
+    end
+
+    subgraph 도메인 레이어
+        H[MemberRepository]
+        I[TeamRepository]
+        J[DatabaseInitializer]
+    end
+
+    subgraph 비동기 설정
+        K[AsyncConfig\n@EnableAsync]
+        L[SchedulingConfig\n@EnableScheduling]
+        K --> M[TaskExecutorAdapter\nVirtualThread]
+    end
+
+    A --> B
+    C --> D & E & F & G
+    D --> H
+    E --> I
+    H & I --> J
+```
+
 ## 환경 설정
 
 [Kotlin + Spring Boot, Virtual Thread 적용하기](https://jsonobject.tistory.com/631) 를 참고하여 JDK 25를 설치한다. 현 예제는 JDK 25 를 사용합니다.

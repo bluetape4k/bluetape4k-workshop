@@ -10,6 +10,34 @@ Chaos Monkey for Spring Boot 에 대한 예제입니다.
 
 ----------------------------------
 
+## Chaos Engineering 흐름
+
+```mermaid
+flowchart LR
+    클라이언트 -->|HTTP 요청| StudentController
+
+    subgraph 애플리케이션 레이어
+        StudentController -->|findAll / findById| StudentService
+        StudentService -->|CRUD| StudentJdbcRepository
+        StudentJdbcRepository -->|SQL| DB[(H2 DB)]
+    end
+
+    subgraph Chaos Monkey 감시 대상
+        ChaosMonkey -->|Watcher: controller| StudentController
+        ChaosMonkey -->|Watcher: service| StudentService
+        ChaosMonkey -->|Watcher: repository| StudentJdbcRepository
+    end
+
+    subgraph Assault 유형
+        ChaosMonkey -->|latencyActive=true| 지연[응답 지연\n20000ms~50000ms]
+        ChaosMonkey -->|exceptionsActive=true| 예외[예외 주입\nIllegalArgumentException]
+        ChaosMonkey -->|killApplicationActive=true| 종료[앱 강제 종료]
+    end
+
+    Actuator[/actuator/chaosmonkey] -->|enable/disable\nassaults 설정| ChaosMonkey
+    클라이언트 -->|GET/POST| Actuator
+```
+
 ## PRINCIPLES OF CHAOS ENGINEERING
 
 - https://principlesofchaos.org/?lang=ENcontent

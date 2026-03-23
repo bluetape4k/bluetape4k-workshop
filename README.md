@@ -21,6 +21,32 @@ Bluetape4k 라이브러리를 활용한 백엔드 예제 모음입니다.
 ./gradlew detekt                         # 정적 분석
 ```
 
+## 전체 모듈 구성
+
+```mermaid
+flowchart LR
+    subgraph Core["핵심 모듈"]
+        EX["exposed/"]
+        SB["spring-boot/"]
+        SD["spring-data/"]
+    end
+    subgraph Infra["인프라/메시징"]
+        MSG["messaging/"]
+        RD["redis/"]
+        GW["gateway/"]
+    end
+    subgraph Obs["관찰 가능성"]
+        OB["observability/"]
+        RL["ratelimit/"]
+    end
+    subgraph Alt["대안 기술"]
+        VX["vertx/"]
+        QK["quarkus/"]
+        RE["reactive/"]
+    end
+    SH["shared/"] --> Core & Infra
+```
+
 ## 모듈 구조
 
 | 디렉토리               | 내용                                                |

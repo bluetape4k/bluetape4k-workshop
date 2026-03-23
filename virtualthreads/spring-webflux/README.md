@@ -2,6 +2,38 @@
 
 Spring Webflux 환경에서 다양한 Coroutine Dispatcher 의 성능을 비교했습니다.
 
+## Dispatcher 처리 모델 비교
+
+```mermaid
+flowchart TD
+    subgraph 클라이언트
+        A[Gatling 부하 테스트\n10 ~ 400 동시 사용자]
+    end
+
+    subgraph WebfluxVirtualThreadApp
+        B[Netty 서버\nNettyConfig]
+    end
+
+    subgraph 컨트롤러 - Dispatcher 별
+        C[DefaultDispatcherController\nDispatchers.Default]
+        D[IODispatcherController\nDispatchers.IO]
+        E[CustomDispatcherController\nFixedThreadPool 16]
+        F[VirtualThreadDispatcherController\nnewVirtualThreadPerTaskExecutor]
+        G[HttpbinController\n외부 API 프록시]
+    end
+
+    subgraph API 엔드포인트
+        H[suspend]
+        I[deferred]
+        J[sequential-flow]
+        K[concurrent-flow]
+    end
+
+    A --> B
+    B --> C & D & E & F & G
+    C & D & E & F --> H & I & J & K
+```
+
 1. Dispatchers.Default
 2. Dispatchers.IO
 3. Custom Dispatcher with Thread Pool (size=16)

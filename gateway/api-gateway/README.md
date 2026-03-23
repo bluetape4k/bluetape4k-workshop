@@ -2,6 +2,36 @@
 
 Spring Webflux 기반의 API Gateway 에 대한 예제입니다.
 
+## 아키텍처 다이어그램
+
+```mermaid
+flowchart LR
+    subgraph 클라이언트
+        C[HTTP 클라이언트]
+    end
+
+    subgraph API Gateway :8080
+        GW[ApiGatewayDemoApplication\nSpring WebFlux]
+        RF[RedirectWebFilter]
+        SW[Swagger UI 통합\n/swagger-ui.html]
+        RL[Rate Limiter\nBucket4j 토큰 기반]
+    end
+
+    subgraph 백엔드 서비스
+        CS[CustomerService\n:8081\n/customers]
+        OS[OrderService\n:8082\n/orders\n/products]
+    end
+
+    C -->|HTTP 요청| RF
+    RF --> GW
+    GW --> RL
+    RL -->|라우팅| CS
+    RL -->|라우팅| OS
+    GW --> SW
+    SW -->|API 문서 집계| CS
+    SW -->|API 문서 집계| OS
+```
+
 API Gateway 가 Customer Service, Order Service 에 대한
 다음과 같은 기능을 제공합니다.
 

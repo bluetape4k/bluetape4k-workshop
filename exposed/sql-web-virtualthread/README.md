@@ -2,6 +2,45 @@
 
 Spring WebMVC(Tomcat)와 Java Virtual Threads, JetBrains Exposed SQL DSL을 조합하여 Actor·Movie CRUD REST API를 구현하는 예제입니다.
 
+## Virtual Thread 기반 요청 처리 흐름
+
+```mermaid
+flowchart LR
+    클라이언트([HTTP 클라이언트]) --> Tomcat
+
+    subgraph 서버["Spring WebMVC + Tomcat"]
+        Tomcat["Tomcat\nVirtualThreadExecutor"]
+        VT["Virtual Thread\n(요청별 1개)"]
+        Controller["ActorController\nMovieController\nMovieActorsController"]
+        Tomcat -->|요청 할당| VT
+        VT --> Controller
+    end
+
+    subgraph 비동기설정["Virtual Thread 설정"]
+        TomcatConfig["TomcatConfig\nnewVirtualThreadPerTaskExecutor()"]
+        AsyncConfig["AsyncConfig\nAsyncTaskExecutor"]
+        SchedulingConfig["SchedulingConfig\nScheduler"]
+    end
+
+    subgraph 리포지토리["데이터 레이어 (Exposed SQL DSL)"]
+        ActorRepo["ActorRepository\ntransaction 블록"]
+        MovieRepo["MovieRepository\ntransaction 블록"]
+        Actors["Actors 테이블"]
+        Movies["Movies 테이블"]
+        ActorsInMovies["ActorsInMovies 테이블\n(다대다)"]
+    end
+
+    TomcatConfig -->|설정| Tomcat
+    Controller --> ActorRepo
+    Controller --> MovieRepo
+    ActorRepo -->|transaction| Actors
+    MovieRepo -->|transaction| Movies
+    ActorsInMovies --> Actors
+    ActorsInMovies --> Movies
+    Actors --> DB[(H2 / MySQL)]
+    Movies --> DB
+```
+
 ## 기술 스택
 
 | 기술 | 역할 |

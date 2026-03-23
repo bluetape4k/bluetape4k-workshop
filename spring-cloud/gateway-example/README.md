@@ -1,5 +1,48 @@
 # Spring Cloud Gateway Sample
 
+## 아키텍처 다이어그램
+
+```mermaid
+flowchart LR
+    subgraph 클라이언트
+        C[HTTP 클라이언트]
+    end
+
+    subgraph Spring Cloud Gateway :8080
+        RL[RedisRateLimiter\nRequestRateLimiter 필터]
+        CB[CircuitBreaker\nResilience4j slowcmd]
+        UK[UserKeyResolver\n사용자 키 추출]
+        FB[FallbackController\n/circuitbreaker/fallback]
+
+        subgraph 라우트 규칙
+            PR[path_route\nGET /get]
+            HR[host_route\n*.myhost.org]
+            RR[rewrite_route\n*.rewrite.org\n/foo/* → /*]
+            CCR[circuitbreaker_route\n*.circuitbreaker.org]
+            CCFR[circuitbreaker_fallback_route\n*.circuitbreakerfallback.org]
+            LR[limit_route\n*.limited.org]
+            WR[websocket_route\n/echo]
+        end
+    end
+
+    subgraph 백엔드
+        BE[nghttp2.org\nhttpbin]
+        WS[WebSocket 서버\n:9000]
+        RD[(Redis\n레이트 리밋 상태)]
+    end
+
+    C --> PR & HR & RR & CCR & CCFR & LR & WR
+    PR & HR & RR --> BE
+    CCR --> CB --> BE
+    CCFR --> CB
+    CB -->|폴백| FB
+    LR --> RL
+    RL <--> RD
+    UK --> RL
+    RL --> BE
+    WR --> WS
+```
+
 ## 참고
 
 이 예제는 Bucket4j 를 사용하지 않고, Spring Cloud에서 자체 제공하는

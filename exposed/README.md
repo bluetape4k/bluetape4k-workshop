@@ -2,6 +2,32 @@
 
 Kotlinx [Exposed](https://github.com/JetBrains/Exposed) 를 이용한 Data Access 예제입니다.
 
+## 서브모듈 구성
+
+```mermaid
+flowchart LR
+    subgraph 공통["공통 모듈"]
+        domain["domain\n매핑 패턴·SQL DSL 테스트"]
+    end
+
+    subgraph 웹서버["웹 서버 모듈"]
+        webflux["sql-webflux-coroutines\nWebFlux + Coroutines"]
+        vthread["sql-web-virtualthread\nWebMVC + Virtual Threads"]
+        dao["dao-web-transaction\nDAO + @Transactional"]
+        spring["spring-transaction\nSpring Transaction 통합"]
+    end
+
+    domain -->|테스트 인프라 제공| webflux
+    domain -->|테스트 인프라 제공| vthread
+    domain -->|테스트 인프라 제공| dao
+    domain -->|테스트 인프라 제공| spring
+
+    webflux -->|newSuspendedTransaction| DB[(데이터베이스\nH2 / MySQL)]
+    vthread -->|VirtualThread + transaction| DB
+    dao -->|@Transactional + DAO| DB
+    spring -->|SpringTransactionManager| DB
+```
+
 ## sql-webflux-coroutines
 
 Spring Webflux + Kotlin Coroutines + Exposed 를 이용하여 H2, MySQL 데이터베이스 작업을 수행하는 예제입니다.

@@ -2,6 +2,39 @@
 
 Spring Cloud API Gateway 를 사용하여 내부 서비스인 Customer API, Order API 를 API Gateway 를 통해 서비스하는 예제입니다.
 
+## 아키텍처 다이어그램
+
+```mermaid
+flowchart LR
+    subgraph 클라이언트
+        C[HTTP 클라이언트]
+    end
+
+    subgraph API Gateway :8080
+        GW[api-gateway\nSpring Cloud Gateway]
+        subgraph 라우팅 규칙
+            R1[/customer-api/** → Customers]
+            R2[/order-api/** → Orders]
+            R3[/product-api/** → Orders]
+        end
+    end
+
+    subgraph 백엔드 서비스
+        CS[customers\n:8081]
+        OS[orders\n:8082]
+    end
+
+    C -->|GET /customer-api/customers| GW
+    C -->|GET /order-api/orders| GW
+    C -->|GET /product-api/products| GW
+    GW --> R1
+    GW --> R2
+    GW --> R3
+    R1 -->|프록시| CS
+    R2 -->|프록시| OS
+    R3 -->|프록시| OS
+```
+
 -. API Gateway : http://localhost:8080
 -. Customer API: http://localhost:8081/customers
 -. Order API : http://localhost:8082/orders

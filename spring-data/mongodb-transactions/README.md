@@ -1,5 +1,66 @@
 # mongo-transactions demo
 
+## 아키텍처 다이어그램
+
+```mermaid
+classDiagram
+    class Process {
+        +Int id
+        +State state
+        +Int transitionCount
+    }
+    class State {
+        <<enumeration>>
+        UNKNOWN
+        CREATED
+        ACTIVE
+        DONE
+    }
+    class TransitionService {
+        +run(id) void
+        -lookup(id) Process
+        -start(process) Process
+        -verify(process) Process
+        -finish(process) Process
+    }
+    class ReactiveTransitionService {
+        +run(id) Mono~Int~
+    }
+    class ReactiveManagedTransitionService {
+        +run(id) Mono~Int~
+    }
+    class CoroutineManagedTransitionService {
+        +run(id) Int
+    }
+
+    Process --> State : 상태 보유
+    TransitionService --> Process : 동기 트랜잭션
+    ReactiveTransitionService --> Process : 프로그래밍 리액티브
+    ReactiveManagedTransitionService --> Process : 선언적 리액티브
+    CoroutineManagedTransitionService --> Process : 코루틴 트랜잭션
+```
+
+```mermaid
+sequenceDiagram
+    participant 서비스 as CoroutineManagedTransitionService
+    participant 저장소 as CoroutineProcessRepository
+    participant TM as ReactiveTransactionManager
+    participant MongoDB as MongoDB ReplicaSet
+
+    서비스->>TM: @Transactional 시작
+    TM->>MongoDB: startTransaction (ClientSession)
+    서비스->>저장소: findById(id) [suspend]
+    저장소->>MongoDB: db.processes.findOne({_id: id})
+    MongoDB-->>저장소: Process (CREATED)
+    저장소-->>서비스: Process
+    서비스->>저장소: save(process.copy(state=ACTIVE))
+    저장소->>MongoDB: db.processes.replaceOne(...)
+    서비스->>저장소: save(process.copy(state=DONE))
+    저장소->>MongoDB: db.processes.replaceOne(...)
+    TM->>MongoDB: commitTransaction
+    MongoDB-->>서비스: 완료
+```
+
 MongoDB 관련 작업을 `Spring Data Mongo` 와 Kotlin Coroutines 으로 수행하는 예입니다.
 
 ## 참고
