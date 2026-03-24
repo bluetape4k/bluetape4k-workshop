@@ -112,6 +112,36 @@ class BufferedSuspendedSourceTest: AbstractOkioTest() {
     }
 
     @Test
+    fun `select returns minus one on empty source`() = runSuspendIO {
+        val source = RealBufferedSuspendedSource(FakeSuspendedSource(Buffer()))
+        val options = Options.of("hello".encodeUtf8(), "world".encodeUtf8())
+
+        source.select(options) shouldBeEqualTo -1
+    }
+
+    @Test
+    fun `select matches first option when multiple options share prefix`() = runSuspendIO {
+        val buffer = Buffer().writeUtf8("foobar")
+        val source = RealBufferedSuspendedSource(FakeSuspendedSource(buffer))
+        // "foo"가 "foobar"보다 먼저 등장 — 순서가 중요
+        val options = Options.of("foo".encodeUtf8(), "foobar".encodeUtf8())
+
+        source.select(options) shouldBeEqualTo 0
+        source.readUtf8() shouldBeEqualTo "bar"
+    }
+
+    @Test
+    fun `select with data split across multiple reads`() = runSuspendIO {
+        // 데이터가 한 번에 도달하지 않는 상황 시뮬레이션
+        val buffer = Buffer().writeUtf8("width=320\n")
+        val source = RealBufferedSuspendedSource(FakeSuspendedSource(buffer))
+        val options = Options.of("height=".encodeUtf8(), "width=".encodeUtf8())
+
+        source.select(options) shouldBeEqualTo 1
+        source.readDecimalLong() shouldBeEqualTo 320L
+    }
+
+    @Test
     fun `exhausted returns true when source is empty`() = runSuspendIO {
         val buffer = Buffer()
         val source = RealBufferedSuspendedSource(FakeSuspendedSource(buffer))

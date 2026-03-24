@@ -15,7 +15,7 @@ class OrderController {
 
     companion object: KLoggingChannel()
 
-    private val uuidGenerator = Uuid.V6
+    private val uuidGenerator = Uuid.V7
 
     @GetMapping("", "/")
     suspend fun getAll(): List<Order> {

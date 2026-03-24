@@ -409,7 +409,9 @@ class RealBufferedSuspendedSource(
 
     private fun hasAnyMatchingPrefix(options: Options): Boolean {
         if (buffer.size == 0L) {
-            return options.isNotEmpty()
+            // 버퍼가 비어 있으면 비어있지 않은 옵션이 존재할 때만 더 읽어야 함
+            // 빈 ByteString 옵션은 이미 위 루프에서 매칭됐을 것임
+            return options.any { it.size > 0 }
         }
         return options.any { byteString ->
             val prefixLength = minOf(buffer.size.toInt(), byteString.size)

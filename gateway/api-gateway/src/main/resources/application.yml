@@ -16,7 +16,7 @@ management:
 
 spring:
     aot:
-        enabled: false  # AOT (Ahead Of Time) 컴파일 활성화
+        enabled: false  # Spring Cloud Gateway + Spring Boot 4.x AOT 호환성 이슈로 임시 비활성화
     cloud:
         compatibility-verifier:
             enabled: false

@@ -90,14 +90,26 @@ class MemberRepositoryImpl: QuerydslRepositorySupport(Member::class.java), Membe
             .fetch()
     }
 
+    /**
+     * 단순 offset/limit 페이징 예제.
+     * 참고: jpa-querydsl 모듈의 동일 메서드는 PageImpl + fetchCount()를 사용하는 완전한 구현을 제공합니다.
+     */
     override fun searchPageSimple(condition: MemberSearchCondition, page: Pageable): List<MemberWithTeamDTO> {
         return pagedSearch(condition, page)
     }
 
+    /**
+     * PageableExecutionUtils 기반 count 최적화 페이징 예제 (단순화된 버전).
+     * 참고: jpa-querydsl 모듈의 동일 메서드는 PageableExecutionUtils.getPage()를 사용하는 완전한 구현을 제공합니다.
+     */
     override fun searchPageComplex(condition: MemberSearchCondition, page: Pageable): List<MemberWithTeamDTO> {
         return pagedSearch(condition, page)
     }
 
+    /**
+     * countDistinct 최적화 페이징 예제 (단순화된 버전).
+     * 참고: jpa-querydsl 모듈의 동일 메서드는 countDistinct 기반 극단적 count 최적화 구현을 제공합니다.
+     */
     override fun searchPageExtremeCountQuery(
         condition: MemberSearchCondition,
         page: Pageable,
