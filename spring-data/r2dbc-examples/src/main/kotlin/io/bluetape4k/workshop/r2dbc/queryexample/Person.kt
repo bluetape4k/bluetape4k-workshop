@@ -8,10 +8,7 @@ data class Person(
     val lastname: String,
     val age: Int,
 ): Serializable {
-
     @Id
     var id: Int? = null
-
     val hasId: Boolean get() = id != null
-
 }
