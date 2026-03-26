@@ -8,7 +8,7 @@ import io.bluetape4k.utils.ShutdownQueue
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.ActorDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.mapper.toActorDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Actor
-import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Actors
+import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.ActorTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.andWhere
@@ -40,15 +40,15 @@ class ActorRepository(private val db: Database) {
         log.debug { "Search Actor by params. params: $params" }
 
         transaction(db) {
-            val query = Actors.selectAll()
+            val query = ActorTable.selectAll()
 
             params.forEach { (key, value) ->
                 when (key) {
-                    Actors::id.name -> value?.run { query.andWhere { Actors.id eq value.toInt() } }
-                    Actors::firstName.name -> value?.run { query.andWhere { Actors.firstName eq value } }
-                    Actors::lastName.name -> value?.run { query.andWhere { Actors.lastName eq value } }
-                    Actors::dateOfBirth.name -> value?.run {
-                        query.andWhere { Actors.dateOfBirth eq LocalDate.parse(value) }
+                    ActorTable::id.name          -> value?.run { query.andWhere { ActorTable.id eq value.toInt() } }
+                    ActorTable::firstName.name   -> value?.run { query.andWhere { ActorTable.firstName eq value } }
+                    ActorTable::lastName.name    -> value?.run { query.andWhere { ActorTable.lastName eq value } }
+                    ActorTable::dateOfBirth.name -> value?.run {
+                        query.andWhere { ActorTable.dateOfBirth eq LocalDate.parse(value) }
                     }
                 }
             }
@@ -94,7 +94,7 @@ class ActorRepository(private val db: Database) {
         log.debug { "Delete Actor by id. actorId: $actorId" }
 
         transaction(db) {
-            Actors.deleteWhere { Actors.id eq actorId }
+            ActorTable.deleteWhere { ActorTable.id eq actorId }
         }
     }
 }

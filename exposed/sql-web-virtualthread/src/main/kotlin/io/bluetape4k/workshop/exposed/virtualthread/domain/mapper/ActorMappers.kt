@@ -2,14 +2,14 @@ package io.bluetape4k.workshop.exposed.virtualthread.domain.mapper
 
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.ActorDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Actor
-import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Actors
+import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.ActorTable
 import org.jetbrains.exposed.v1.core.ResultRow
 
 fun ResultRow.toActorDTO() = ActorDTO(
-    id = this[Actors.id].value,
-    firstName = this[Actors.firstName],
-    lastName = this[Actors.lastName],
-    dateOfBirth = this[Actors.dateOfBirth].toString()
+    id = this[ActorTable.id].value,
+    firstName = this[ActorTable.firstName],
+    lastName = this[ActorTable.lastName],
+    dateOfBirth = this[ActorTable.dateOfBirth].toString()
 )
 
 fun Actor.toActorDTO() = ActorDTO(

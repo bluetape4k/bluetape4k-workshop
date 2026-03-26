@@ -6,9 +6,9 @@ import io.bluetape4k.workshop.exposed.domain.dto.ActorDTO
 import io.bluetape4k.workshop.exposed.domain.dto.MovieWithActorDTO
 import io.bluetape4k.workshop.exposed.domain.mapper.toActorDTO
 import io.bluetape4k.workshop.exposed.domain.mapper.toMovieDTO
-import io.bluetape4k.workshop.exposed.domain.schema.Actors
-import io.bluetape4k.workshop.exposed.domain.schema.ActorsInMovies
-import io.bluetape4k.workshop.exposed.domain.schema.Movies
+import io.bluetape4k.workshop.exposed.domain.schema.ActorInMovieTable
+import io.bluetape4k.workshop.exposed.domain.schema.ActorTable
+import io.bluetape4k.workshop.exposed.domain.schema.MovieTable
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.atTime
 import org.jetbrains.exposed.v1.jdbc.batchInsert
@@ -46,7 +46,7 @@ class DatabaseInitializer: ApplicationRunner {
 
         transaction {
             // SchemaUtils.createMissingTablesAndColumns(Actors, Movies, ActorsInMovies)
-            val stmts = MigrationUtils.statementsRequiredForDatabaseMigration(Actors, Movies, ActorsInMovies)
+            val stmts = MigrationUtils.statementsRequiredForDatabaseMigration(ActorTable, MovieTable, ActorInMovieTable)
             if (stmts.isNotEmpty()) {
                 log.info { "Executing migration statements: $stmts" }
                 exec(stmts.joinToString(";"))
@@ -57,7 +57,7 @@ class DatabaseInitializer: ApplicationRunner {
     private fun insertTestData() {
 
         val totalActors = transaction {
-            Actors.selectAll().count()
+            ActorTable.selectAll().count()
         }
 
         if (totalActors > 0) {
@@ -117,18 +117,18 @@ class DatabaseInitializer: ApplicationRunner {
         )
 
         transaction {
-            val actorDTOs = Actors.batchInsert(actors) {
-                this[Actors.firstName] = it.firstName
-                this[Actors.lastName] = it.lastName
+            val actorDTOs = ActorTable.batchInsert(actors) {
+                this[ActorTable.firstName] = it.firstName
+                this[ActorTable.lastName] = it.lastName
                 it.dateOfBirth?.let { birthDay ->
-                    this[Actors.dateOfBirth] = LocalDate.parse(birthDay)
+                    this[ActorTable.dateOfBirth] = LocalDate.parse(birthDay)
                 }
             }.map { it.toActorDTO() }
 
-            val movieDTOs = Movies.batchInsert(movies) {
-                this[Movies.name] = it.name
-                this[Movies.producerName] = it.producerName
-                this[Movies.releaseDate] = LocalDate.parse(it.releaseDate).atTime(0, 0)
+            val movieDTOs = MovieTable.batchInsert(movies) {
+                this[MovieTable.name] = it.name
+                this[MovieTable.producerName] = it.producerName
+                this[MovieTable.releaseDate] = LocalDate.parse(it.releaseDate).atTime(0, 0)
             }.map { it.toMovieDTO() }
 
             val movieActorIds = movies.mapNotNull { movie ->
@@ -144,9 +144,9 @@ class DatabaseInitializer: ApplicationRunner {
                 }
             }.flatten()
 
-            ActorsInMovies.batchInsert(movieActorIds) {
-                this[ActorsInMovies.movieId] = it.first
-                this[ActorsInMovies.actorId] = it.second
+            ActorInMovieTable.batchInsert(movieActorIds) {
+                this[ActorInMovieTable.movieId] = it.first
+                this[ActorInMovieTable.actorId] = it.second
             }
         }
     }

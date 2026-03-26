@@ -1,4 +1,4 @@
-package io.bluetape4k.workshop.exposed.domain.schema
+package io.bluetape4k.workshop.exposed.virtualthread.domain.schema
 
 import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
@@ -7,7 +7,7 @@ import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.dao.IntEntity
 import org.jetbrains.exposed.v1.dao.IntEntityClass
-import org.jetbrains.exposed.v1.datetime.datetime
+import org.jetbrains.exposed.v1.javatime.datetime
 import java.io.Serializable
 
 /**
@@ -15,25 +15,25 @@ import java.io.Serializable
  *
  * ```sql
  * CREATE TABLE IF NOT EXISTS MOVIES (
- *      ID INT AUTO_INCREMENT PRIMARY KEY,
+ *      ID SERIAL PRIMARY KEY,
  *      "name" VARCHAR(255) NOT NULL,
  *      PRODUCER_NAME VARCHAR(255) NOT NULL,
- *      RELEASE_DATE DATETIME(9) NOT NULL
+ *      RELEASE_DATE TIMESTAMP NOT NULL
  * );
  * ```
  */
-object Movies: IntIdTable("movies") {
+object MovieTable: IntIdTable("movies") {
     val name = varchar("name", 255)
     val producerName = varchar("producer_name", 255)
     val releaseDate = datetime("release_date")
 }
 
 class Movie(id: EntityID<Int>): IntEntity(id), Serializable {
-    companion object: IntEntityClass<Movie>(Movies)
+    companion object: IntEntityClass<Movie>(MovieTable)
 
-    var name by Movies.name
-    var producerName by Movies.producerName
-    var releaseDate by Movies.releaseDate
+    var name by MovieTable.name
+    var producerName by MovieTable.producerName
+    var releaseDate by MovieTable.releaseDate
 
     override fun equals(other: Any?): Boolean = idEquals(other)
     override fun hashCode(): Int = idHashCode()

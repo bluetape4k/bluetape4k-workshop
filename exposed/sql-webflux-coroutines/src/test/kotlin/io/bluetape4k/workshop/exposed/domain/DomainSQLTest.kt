@@ -9,7 +9,7 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.utils.Runtimex
 import io.bluetape4k.workshop.exposed.AbstractExposedSqlTest
 import io.bluetape4k.workshop.exposed.domain.mapper.toActorDTO
-import io.bluetape4k.workshop.exposed.domain.schema.Actors
+import io.bluetape4k.workshop.exposed.domain.schema.ActorTable
 import org.amshove.kluent.shouldNotBeEmpty
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
@@ -32,7 +32,7 @@ class DomainSQLTest: AbstractExposedSqlTest() {
         @RepeatedTest(REPEAT_SIZE)
         fun `get all actors in coroutines`() = runSuspendIO {
             newSuspendedTransaction {
-                val actors = Actors.selectAll().map { it.toActorDTO() }
+                val actors = ActorTable.selectAll().map { it.toActorDTO() }
                 actors.shouldNotBeEmpty()
             }
         }
@@ -45,7 +45,7 @@ class DomainSQLTest: AbstractExposedSqlTest() {
                 .add {
                     newSuspendedTransaction {
                         // addLogger(StdOutSqlLogger)
-                        val actors = Actors.selectAll().map { it.toActorDTO() }
+                        val actors = ActorTable.selectAll().map { it.toActorDTO() }
                         actors.shouldNotBeEmpty()
                     }
                 }
@@ -59,7 +59,7 @@ class DomainSQLTest: AbstractExposedSqlTest() {
         @RepeatedTest(REPEAT_SIZE)
         fun `get all actors in virtual threads`() {
             newVirtualThreadJdbcTransaction {
-                val actors = Actors.selectAll().map { it.toActorDTO() }
+                val actors = ActorTable.selectAll().map { it.toActorDTO() }
                 actors.shouldNotBeEmpty()
             }
         }
@@ -71,7 +71,7 @@ class DomainSQLTest: AbstractExposedSqlTest() {
                 .roundsPerTask(Runtimex.availableProcessors * 2 * 4)
                 .add {
                     val actors = virtualThreadJdbcTransactionAsync {
-                        Actors.selectAll().map { it.toActorDTO() }
+                        ActorTable.selectAll().map { it.toActorDTO() }
                     }.await()
                     actors.shouldNotBeEmpty()
                 }
