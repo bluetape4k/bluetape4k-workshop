@@ -20,7 +20,6 @@ object Plugins {
 
         const val spring_boot3 = "3.5.11"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
         const val spring_boot4 = "4.0.3"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
-        const val quarkus = "3.31.0"      // https://mvnrepository.com/artifact/io.quarkus/quarkus-bom
 
         const val docker_compose = "0.17.21"  // https://plugins.gradle.org/plugin/com.avast.gradle.docker-compose
 
@@ -67,7 +66,7 @@ object Plugins {
 object Versions {
 
     // Java 21, Kotlin 2.0 이상에서 사용하세요
-    const val bluetape4k = "1.5.0-Beta2"    // Bluetape4k Github Package 로 배포됩니다.
+    const val bluetape4k = "1.5.0-Beta3"    // Bluetape4k Github Package 로 배포됩니다.
 
     const val kotlin = "2.3.20"                 // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
     const val kotlinx_coroutines = "1.10.2"     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
@@ -87,16 +86,6 @@ object Versions {
     const val chaos_monkey = "4.0.0"        // https://mvnrepository.com/artifact/de.codecentric/chaos-monkey-spring-boot
     const val blockhound = "1.0.14.RELEASE"  // https://mvnrepository.com/artifact/io.projectreactor.tools/blockhound
 
-    const val quarkus = Plugins.Versions.quarkus
-
-    object Quarkiverse {
-        const val aws = "1.1.3"             //
-        const val junit5_mockk = "1.1.1"
-        const val logging_sentry = "1.2.1"
-        const val vault = "1.1.0"
-        const val reactive_messaging_http = "1.0.3"
-    }
-
     const val resteasy = "6.2.15.Final"       // https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-bom
     const val mutiny = "3.1.0"                // https://mvnrepository.com/artifact/io.smallrye.reactive/mutiny
     const val camel_quarkus = "3.30.0"        // https://mvnrepository.com/artifact/org.apache.camel.quarkus/camel-quarkus-bom
@@ -110,13 +99,12 @@ object Versions {
 
     const val bucket4j = "8.17.0"       // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17-core
     const val resilience4j = "2.4.0"   // https://mvnrepository.com/artifact/io.github.resilience4j/resilience4j-bom
-    const val netty = "4.2.10.Final"  // https://mvnrepository.com/artifact/io.netty/netty-all
+    const val netty = "4.2.12.Final"  // https://mvnrepository.com/artifact/io.netty/netty-all
 
-    const val aws = "1.12.785"          // https://mvnrepository.com/artifact/com.amazonaws
-    const val aws2 = "2.39.2"           // https://mvnrepository.com/artifact/software.amazon.awssdk/aws-sdk-java
-    const val aws2_crt = "0.39.4"      // https://mvnrepository.com/artifact/software.amazon.awssdk.crt/aws-crt
-    const val aws_kotlin = "1.5.90"     // https://mvnrepository.com/artifact/aws.sdk.kotlin/aws-http-jvm
-    const val aws_smithy_kotlin = "1.5.20" // https://mvnrepository.com/artifact/aws.smithy.kotlin/http-client-engine-crt-jvm
+    const val aws2 = "2.42.23"           // https://mvnrepository.com/artifact/software.amazon.awssdk/aws-sdk-java
+    const val aws2_crt = "0.44.0"      // https://mvnrepository.com/artifact/software.amazon.awssdk.crt/aws-crt
+    const val aws_kotlin = "1.6.46"     // https://mvnrepository.com/artifact/aws.sdk.kotlin/aws-http-jvm
+    const val aws_smithy_kotlin = "1.6.7" // https://mvnrepository.com/artifact/aws.smithy.kotlin/http-client-engine-crt-jvm
 
     const val aws_spring_cloud = "4.0.0"  // https://mvnrepository.com/artifact/io.awspring.cloud/spring-cloud-aws-starter
 
@@ -125,25 +113,26 @@ object Versions {
     const val protobuf = "4.33.0"   // https://mvnrepository.com/artifact/com.google.protobuf/protobuf-java
     const val grpc_google_common_protos = "2.62.0" // https://mvnrepository.com/artifact/com.google.api.grpc/proto-google-common-protos
     const val avro = "1.12.1"       // https://mvnrepository.com/artifact/org.apache.avro/avro
+    const val avrok = "2.10.0"      // https://mvnrepository.com/artifact/com.github.avro-kotlin.avro4k/avro4k-core
 
-    const val feign = "13.6"         // https://mvnrepository.com/artifact/io.github.openfeign/feign-core
+    const val feign = "13.11"         // https://mvnrepository.com/artifact/io.github.openfeign/feign-core
     const val httpclient5 = "5.6"  // https://mvnrepository.com/artifact/org.apache.httpcomponents.client5/httpclient5
     const val httpcore5 = "5.4"    // https://mvnrepository.com/artifact/org.apache.httpcomponents.core5/httpcore5
     const val retrofit2 = "3.0.0"   // https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit
     const val okhttp3 = "5.3.2"     // https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
-    const val okio = "3.16.4"        // https://mvnrepository.com/artifact/com.squareup.okio/okio
+    const val okio = "3.17.0"        // https://mvnrepository.com/artifact/com.squareup.okio/okio
     const val asynchttpclient = "2.12.4"  // https://mvnrepository.com/artifact/org.asynchttpclient/async-http-client
 
     const val jackson_annotations = "2.21" // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-annotations
-    const val jackson = "2.21.1" // https://mvnrepository.com/artifact/com.fasterxml.jackson/jackson-bom
-    const val jackson3 = "3.1.0" // https://mvnrepository.com/artifact/tools.jackson/jackson-bom
+    const val jackson = "2.21.2" // https://mvnrepository.com/artifact/com.fasterxml.jackson/jackson-bom
+    const val jackson3 = "3.1.1" // https://mvnrepository.com/artifact/tools.jackson/jackson-bom
     const val fastjson2 = "2.0.61" // https://mvnrepository.com/artifact/com.alibaba.fastjson2/fastjson2
     const val jjwt = "0.11.5"    // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt-api
 
     const val mapstruct = "1.6.3" // https://mvnrepository.com/artifact/org.mapstruct/mapstruct
     const val reflectasm = "1.11.9"     // https://mvnrepository.com/artifact/com.esotericsoftware/reflectasm
 
-    const val mongo_driver = "5.5.2"   // https://mvnrepository.com/artifact/org.mongodb/mongodb-driver-sync
+    const val mongo_driver = "5.6.4"   // https://mvnrepository.com/artifact/org.mongodb/mongodb-driver-sync
     const val lettuce = "6.8.2.RELEASE" // https://mvnrepository.com/artifact/io.lettuce/lettuce-core
     const val redisson = "4.3.0"       // https://mvnrepository.com/artifact/org.redisson/redisson
 
@@ -261,8 +250,8 @@ object Libs {
 
     val bluetape4k_core = bluetape4k("core")
     val bluetape4k_coroutines = bluetape4k("coroutines")
-    val bluetape4k_logging = bluetape4k("logging")
     val bluetape4k_junit5 = bluetape4k("junit5")
+    val bluetape4k_logging = bluetape4k("logging")
     val bluetape4k_testcontainers = bluetape4k("testcontainers")
 
     // Virtual Thread
@@ -281,8 +270,10 @@ object Libs {
     val bluetape4k_io = bluetape4k("io")
     val bluetape4k_jackson2 = bluetape4k("jackson2")
     val bluetape4k_jackson3 = bluetape4k("jackson3")
+    val bluetape4k_json = bluetape4k("json")
     val bluetape4k_netty = bluetape4k("netty")
     val bluetape4k_okio = bluetape4k("okio")
+    val bluetape4k_protobuf = bluetape4k("protobuf")
     val bluetape4k_retrofit2 = bluetape4k("retrofit2")
     val bluetape4k_tink = bluetape4k("tink")
     val bluetape4k_vertx = bluetape4k("vertx")
@@ -291,22 +282,29 @@ object Libs {
     val bluetape4k_cassandra = bluetape4k("cassandra")
 
     val bluetape4k_exposed = bluetape4k("exposed")
+    val bluetape4k_exposed_bigquery = bluetape4k("exposed-bigquery")
     val bluetape4k_exposed_core = bluetape4k("exposed-core")
     val bluetape4k_exposed_dao = bluetape4k("exposed-dao")
-    val bluetape4k_exposed_jdbc = bluetape4k("exposed-jdbc")
+    val bluetape4k_exposed_duckdb = bluetape4k("exposed-duckdb")
     val bluetape4k_exposed_fastjson2 = bluetape4k("exposed-fastjson2")
     val bluetape4k_exposed_jackson2 = bluetape4k("exposed-jackson2")
     val bluetape4k_exposed_jackson3 = bluetape4k("exposed-jackson3")
     val bluetape4k_exposed_jasypt = bluetape4k("exposed-jasypt")
+    val bluetape4k_exposed_jdbc = bluetape4k("exposed-jdbc")
+    val bluetape4k_exposed_jdbc_lettuce = bluetape4k("exposed-jdbc-lettuce")
     val bluetape4k_exposed_jdbc_redisson = bluetape4k("exposed-jdbc-redisson")
     val bluetape4k_exposed_jdbc_tests = bluetape4k("exposed-jdbc-tests")
     val bluetape4k_exposed_measured = bluetape4k("exposed-measured")
+    val bluetape4k_exposed_mysql8 = bluetape4k("exposed-mysql8")
+    val bluetape4k_exposed_postgresql = bluetape4k("exposed-postgresql")
     val bluetape4k_exposed_r2dbc = bluetape4k("exposed-r2dbc")
+    val bluetape4k_exposed_r2dbc_lettuce = bluetape4k("exposed-r2dbc-lettuce")
     val bluetape4k_exposed_r2dbc_redisson = bluetape4k("exposed-r2dbc-redisson")
     val bluetape4k_exposed_r2dbc_tests = bluetape4k("exposed-r2dbc-tests")
     val bluetape4k_exposed_tink = bluetape4k("exposed-tink")
 
     val bluetape4k_hibernate = bluetape4k("hibernate")
+    val bluetape4k_hibernate_cache_lettuce = bluetape4k("hibernate-cache-lettuce")
     val bluetape4k_hibernate_reactive = bluetape4k("hibernate-reactive")
 
     val bluetape4k_jdbc = bluetape4k("jdbc")
@@ -329,15 +327,21 @@ object Libs {
     val bluetape4k_resilience4j = bluetape4k("resilience4j")
 
     // Spring Boot 3
-    val bluetape4k_spring_boot3_core = bluetape4k("spring-boot3-core")
     val bluetape4k_spring_boot3_cassandra = bluetape4k("spring-boot3-cassandra")
+    val bluetape4k_spring_boot3_core = bluetape4k("spring-boot3-core")
+    val bluetape4k_spring_boot3_exposed_jdbc = bluetape4k("spring-boot3-exposed-jdbc")
+    val bluetape4k_spring_boot3_exposed_r2dbc = bluetape4k("spring-boot3-exposed-r2dbc")
+    val bluetape4k_spring_boot3_hibernate_lettuce = bluetape4k("spring-boot3-hibernate-lettuce")
     val bluetape4k_spring_boot3_mongodb = bluetape4k("spring-boot3-mongodb")
     val bluetape4k_spring_boot3_r2dbc = bluetape4k("spring-boot3-r2dbc")
     val bluetape4k_spring_boot3_redis = bluetape4k("spring-boot3-redis")
 
     // Spring Boot 4
-    val bluetape4k_spring_boot4_core = bluetape4k("spring-boot4-core")
     val bluetape4k_spring_boot4_cassandra = bluetape4k("spring-boot4-cassandra")
+    val bluetape4k_spring_boot4_core = bluetape4k("spring-boot4-core")
+    val bluetape4k_spring_boot4_exposed_jdbc = bluetape4k("spring-boot4-exposed-jdbc")
+    val bluetape4k_spring_boot4_exposed_r2dbc = bluetape4k("spring-boot4-exposed-r2dbc")
+    val bluetape4k_spring_boot4_hibernate_lettuce = bluetape4k("spring-boot4-hibernate-lettuce")
     val bluetape4k_spring_boot4_mongodb = bluetape4k("spring-boot4-mongodb")
     val bluetape4k_spring_boot4_r2dbc = bluetape4k("spring-boot4-r2dbc")
     val bluetape4k_spring_boot4_redis = bluetape4k("spring-boot4-redis")
@@ -357,6 +361,9 @@ object Libs {
     val bluetape4k_measured = bluetape4k("measured")
     val bluetape4k_money = bluetape4k("money")
     val bluetape4k_mutiny = bluetape4k("mutiny")
+
+    // Timefold
+    val bluetape4k_timefold_solver_persistence_exposed = bluetape4k("timefold-solver-persistence-exposed")
 
     // kotlin
     fun kotlin(module: String, version: String = Versions.kotlin) = "org.jetbrains.kotlin:kotlin-$module:$version"
@@ -604,72 +611,6 @@ object Libs {
     // Chaos Monkey (https://github.com/codecentric/chaos-monkey-spring-boot)
     const val chaos_monkey_spring_boot = "de.codecentric:chaos-monkey-spring-boot:${Versions.chaos_monkey}"
 
-    // Quarkus
-    fun quarkus(extension: String) = "io.quarkus:quarkus-$extension:${Versions.quarkus}"
-
-    const val quarkus_bom = "io.quarkus.platform:quarkus-bom:${Versions.quarkus}"
-    val quarkus_universe_bom = quarkus("universe-bom")
-
-    val quarkus_arc = quarkus("arc")
-    val quarkus_hibernate_reactive_panache = quarkus("hibernate-reactive-panache")
-    val quarkus_junit5 = quarkus("junit5")
-    val quarkus_kotlin = quarkus("kotlin")
-    val quarkus_mutiny = quarkus("mutiny")
-    val quarkus_opentelemetry = quarkus("opentelemetry")
-    val quarkus_security = quarkus("security")
-    val quarkus_vertx = quarkus("vertx")
-    val quarkus_vertx_http = quarkus("vertx-http")
-
-    val quarkus_reactive_routes = quarkus("reactive-routes")
-    val quarkus_reactive_mysql_client = quarkus("reactive-routes-mysql-client")
-    val quarkus_reactive_pg_client = quarkus("reactive-routes-pg-client")
-
-    val quarkus_test_security = quarkus("test-security")
-    val quarkus_test_keycloak_server = quarkus("test-keycloak-server")
-
-    // Quarkiverse AWS
-    const val quarkiverse_aws_bom =
-        "io.quarkiverse.amazonservices:quarkus-amazon-services-bom:${Versions.Quarkiverse.aws}"
-
-    fun quarkiverseAws(module: String) = "io.quarkiverse.amazonservices:quarkus-amazon-$module"
-    val quarkiverse_amazon_s3 = quarkiverseAws("s3")
-
-    // Quarkiverse ( https://github.com/quarkiverse/quarkiverse/wiki )
-    // Quarkiverse/quarkus-mockk (https://github.com/quarkiverse/quarkus-mockk)
-    const val quarkiverse_junit5_mockk =
-        "io.quarkiverse.mockk:quarkus-junit5-mockk:${Versions.Quarkiverse.junit5_mockk}"
-    const val quarkiverse_logging_sentry =
-        "io.quarkiverse.loggingsentry:quarkus-logging-sentry:${Versions.Quarkiverse.logging_sentry}"
-    const val quarkiverse_vault = "io.Quarkiverse.vault:quarkus-vault:${Versions.Quarkiverse.vault}"
-
-    const val quarkiverse_reactivemessaing_http = "io.quarkiverse.reactivemessaging.http:quarkus-reactive-messaging-http:${Versions.Quarkiverse.reactive_messaging_http}"
-
-    // Quarkus Blaze Persistence
-    const val quarkus_blaze_persistence_bom = "io.quarkus.platform:quarkus-blaze-persistence-bom:${Versions.quarkus}"
-
-    // Smallrye
-    fun smallrye(module: String) = "io.smallrye:smallrye-$module"
-    fun smallryeReactive(module: String) = "io.smallrye.reactive:smallrye-$module"
-
-    // Resteasy (https://resteasy.dev/)
-    fun resteasy(module: String, version: String = Versions.resteasy) = "org.jboss.resteasy:resteasy-$module:$version"
-    val resteasy_bom = resteasy("bom")
-
-    val resteasy_cdi = resteasy("cdi")
-    val resteasy_client = resteasy("client")
-    val resteasy_jackson2_provider = resteasy("jackson2-provider")
-    val resteasy_spring = resteasy("spring")
-    val resteasy_vertx = resteasy("vertx")
-
-    // Camel Quarkus
-    fun camelQuarkus(extension: String, version: String = Versions.camel_quarkus) =
-        "org.apache.camel.quarkus:camel-quarkus-$extension:$version"
-
-    val camel_quarkus_bom = camelQuarkus("bom")
-    val camel_quarkus_sql = camelQuarkus("sql")
-    val camel_quarkus_kotlin = camelQuarkus("kotlin")
-    val camel_quarkus_vertx = camelQuarkus("vertx")
-
     // Vert.x (https://vertx.io/docs/)
     fun vertx(module: String, version: String = Versions.vertx) = "io.vertx:vertx-$module:$version"
     val vertx_dependencies = vertx("dependencies")
@@ -686,7 +627,6 @@ object Libs {
     val vertx_web = vertx("web")
     val vertx_web_client = vertx("web-client")
     val vertx_junit5 = vertx("junit5")
-
 
     // Resilience4j
     fun resilience4j(module: String, version: String = Versions.resilience4j) =
@@ -805,18 +745,7 @@ object Libs {
     val avro_protobuf = avro("avro-protobuf")
 
     // https://mvnrepository.com/artifact/com.github.avro-kotlin.avro4k/avro4k-core
-    const val avro_kotlin = "com.github.avro-kotlin.avro4k:avro4k-core:1.8.0"
-
-    fun awsSdk(name: String, version: String = Versions.aws) = "com.amazonaws:aws-java-sdk-$name:$version"
-    val aws_bom = awsSdk("bom")
-    val aws_java_sdk_s3 = awsSdk("s3")
-    val aws_java_sdk_dynamodb = awsSdk("dynamodb")
-    val aws_java_sdk_ses = awsSdk("ses")
-    val aws_java_sdk_sns = awsSdk("sns")
-    val aws_java_sdk_sqs = awsSdk("sqs")
-    val aws_java_sdk_sts = awsSdk("sts")
-    val aws_java_sdk_ec2 = awsSdk("ec2")
-    val aws_java_sdk_test_utils = awsSdk("test-utils")
+    const val avro_kotlin = "com.github.avro-kotlin.avro4k:avro4k-core:${Versions.avrok}"
 
     fun awsSdkV2(name: String, version: String = Versions.aws2) = "software.amazon.awssdk:$name:$version"
     val aws2_bom = awsSdkV2("bom")

@@ -20,7 +20,6 @@ plugins {
 
     id(Plugins.dependency_management) version Plugins.Versions.dependency_management
     id(Plugins.spring_boot) version Plugins.Versions.spring_boot4 apply false
-    id(Plugins.quarkus) version Plugins.Versions.quarkus apply false
 
     id(Plugins.dokka) version Plugins.Versions.dokka
     id(Plugins.testLogger) version Plugins.Versions.testLogger
@@ -225,7 +224,6 @@ subprojects {
             mavenBom(Libs.log4j_bom)
             mavenBom(Libs.testcontainers_bom)
             mavenBom(Libs.junit_bom)
-            mavenBom(Libs.aws_bom)
             mavenBom(Libs.aws2_bom)
             mavenBom(Libs.okhttp3_bom)
             mavenBom(Libs.grpc_bom)
@@ -410,6 +408,10 @@ subprojects {
 
             dependency(Libs.jsonpath)
             dependency(Libs.jsonassert)
+
+            // Redis
+            dependency(Libs.lettuce_core)
+            dependency(Libs.redisson)
         }
     }
 
