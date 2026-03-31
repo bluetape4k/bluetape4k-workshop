@@ -25,6 +25,7 @@ dependencies {
 
     implementation(Libs.bluetape4k_io)
     implementation(Libs.bluetape4k_jackson3)
+    implementation(Libs.bluetape4k_testcontainers)
 
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))

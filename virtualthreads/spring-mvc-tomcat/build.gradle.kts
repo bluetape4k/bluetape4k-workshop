@@ -51,6 +51,8 @@ dependencies {
     implementation(Libs.bluetape4k_virtualthread_api)
     runtimeOnly(Libs.bluetape4k_virtualthread_jdk25)
 
+    implementation(Libs.bluetape4k_testcontainers)
+
     // JPA/Hibernate
     implementation(Libs.bluetape4k_hibernate)
     implementation(Libs.hibernate_core)
