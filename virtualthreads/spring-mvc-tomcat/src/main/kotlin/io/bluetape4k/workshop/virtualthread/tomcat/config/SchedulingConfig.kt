@@ -22,7 +22,7 @@ class SchedulingConfig {
     @Bean
     fun taskScheduler(): TaskScheduler {
         val factory = Thread.ofVirtual().name("virtual-task-").factory()
-        val poolSize = Runtimex.availableProcessors
+        val poolSize = Runtimex.availableProcessors * 4
         val executor = Executors.newScheduledThreadPool(poolSize, factory)
 
         log.info { "TaskScheduler with VirtualThread created. poolSize=$poolSize" }
