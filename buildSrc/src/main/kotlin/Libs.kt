@@ -66,7 +66,7 @@ object Plugins {
 object Versions {
 
     // Java 21, Kotlin 2.0 이상에서 사용하세요
-    const val bluetape4k = "1.5.0-RC1"    // Bluetape4k Github Package 로 배포됩니다.
+    const val bluetape4k = "1.5.0"    // Bluetape4k Github Package 로 배포됩니다.
 
     const val kotlin = "2.3.20"                 // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
     const val kotlinx_coroutines = "1.10.2"     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
@@ -250,8 +250,8 @@ object Libs {
 
     val bluetape4k_core = bluetape4k("core")
     val bluetape4k_coroutines = bluetape4k("coroutines")
-    val bluetape4k_junit5 = bluetape4k("junit5")
     val bluetape4k_logging = bluetape4k("logging")
+    val bluetape4k_junit5 = bluetape4k("junit5")
     val bluetape4k_testcontainers = bluetape4k("testcontainers")
 
     // Virtual Thread
@@ -286,11 +286,11 @@ object Libs {
     val bluetape4k_exposed_core = bluetape4k("exposed-core")
     val bluetape4k_exposed_dao = bluetape4k("exposed-dao")
     val bluetape4k_exposed_duckdb = bluetape4k("exposed-duckdb")
+    val bluetape4k_exposed_jdbc = bluetape4k("exposed-jdbc")
     val bluetape4k_exposed_fastjson2 = bluetape4k("exposed-fastjson2")
     val bluetape4k_exposed_jackson2 = bluetape4k("exposed-jackson2")
     val bluetape4k_exposed_jackson3 = bluetape4k("exposed-jackson3")
     val bluetape4k_exposed_jasypt = bluetape4k("exposed-jasypt")
-    val bluetape4k_exposed_jdbc = bluetape4k("exposed-jdbc")
     val bluetape4k_exposed_jdbc_lettuce = bluetape4k("exposed-jdbc-lettuce")
     val bluetape4k_exposed_jdbc_redisson = bluetape4k("exposed-jdbc-redisson")
     val bluetape4k_exposed_jdbc_tests = bluetape4k("exposed-jdbc-tests")
@@ -302,6 +302,7 @@ object Libs {
     val bluetape4k_exposed_r2dbc_redisson = bluetape4k("exposed-r2dbc-redisson")
     val bluetape4k_exposed_r2dbc_tests = bluetape4k("exposed-r2dbc-tests")
     val bluetape4k_exposed_tink = bluetape4k("exposed-tink")
+    val bluetape4k_exposed_trino = bluetape4k("exposed-trino")
 
     val bluetape4k_hibernate = bluetape4k("hibernate")
     val bluetape4k_hibernate_cache_lettuce = bluetape4k("hibernate-cache-lettuce")
@@ -327,8 +328,8 @@ object Libs {
     val bluetape4k_resilience4j = bluetape4k("resilience4j")
 
     // Spring Boot 3
-    val bluetape4k_spring_boot3_cassandra = bluetape4k("spring-boot3-cassandra")
     val bluetape4k_spring_boot3_core = bluetape4k("spring-boot3-core")
+    val bluetape4k_spring_boot3_cassandra = bluetape4k("spring-boot3-cassandra")
     val bluetape4k_spring_boot3_exposed_jdbc = bluetape4k("spring-boot3-exposed-jdbc")
     val bluetape4k_spring_boot3_exposed_r2dbc = bluetape4k("spring-boot3-exposed-r2dbc")
     val bluetape4k_spring_boot3_hibernate_lettuce = bluetape4k("spring-boot3-hibernate-lettuce")
@@ -337,8 +338,8 @@ object Libs {
     val bluetape4k_spring_boot3_redis = bluetape4k("spring-boot3-redis")
 
     // Spring Boot 4
-    val bluetape4k_spring_boot4_cassandra = bluetape4k("spring-boot4-cassandra")
     val bluetape4k_spring_boot4_core = bluetape4k("spring-boot4-core")
+    val bluetape4k_spring_boot4_cassandra = bluetape4k("spring-boot4-cassandra")
     val bluetape4k_spring_boot4_exposed_jdbc = bluetape4k("spring-boot4-exposed-jdbc")
     val bluetape4k_spring_boot4_exposed_r2dbc = bluetape4k("spring-boot4-exposed-r2dbc")
     val bluetape4k_spring_boot4_hibernate_lettuce = bluetape4k("spring-boot4-hibernate-lettuce")
@@ -361,9 +362,12 @@ object Libs {
     val bluetape4k_measured = bluetape4k("measured")
     val bluetape4k_money = bluetape4k("money")
     val bluetape4k_mutiny = bluetape4k("mutiny")
-
-    // Timefold
+    val bluetape4k_rule_engine = bluetape4k("rule-engine")
+    val bluetape4k_science = bluetape4k("science")
+    val bluetape4k_states = bluetape4k("states")
     val bluetape4k_timefold_solver_persistence_exposed = bluetape4k("timefold-solver-persistence-exposed")
+    val bluetape4k_workflow = bluetape4k("workflow")
+    
 
     // kotlin
     fun kotlin(module: String, version: String = Versions.kotlin) = "org.jetbrains.kotlin:kotlin-$module:$version"
