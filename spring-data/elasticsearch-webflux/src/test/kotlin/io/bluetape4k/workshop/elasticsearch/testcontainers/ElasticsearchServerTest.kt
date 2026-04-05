@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.elasticsearch.testcontainers
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.storage.ElasticsearchOssServer
 import io.bluetape4k.testcontainers.storage.ElasticsearchServer
+import io.bluetape4k.testcontainers.storage.Spring
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeTrue
 import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient
@@ -31,7 +32,7 @@ class ElasticsearchServerTest {
             es.start()
             es.isRunning.shouldBeTrue()
 
-            val config = ElasticsearchServer.Launcher.getClientConfiguration(es)
+            val config = ElasticsearchServer.Launcher.Spring.getClientConfiguration(es)
 
             val client = Rest5Clients.getRest5Client(config)
 
