@@ -6,7 +6,7 @@ spring:
             repositories:
                 enabled: true
             cluster:
-                nodes: ${testcontainers.redis.cluster.nodes}
+                nodes: ${testcontainers.redis-cluster.nodes}
             lettuce:
                 cluster:
                     refresh:
