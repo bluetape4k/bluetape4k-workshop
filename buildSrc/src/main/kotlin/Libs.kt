@@ -66,7 +66,7 @@ object Plugins {
 object Versions {
 
     // Java 21, Kotlin 2.0 이상에서 사용하세요
-    const val bluetape4k = "1.6.0"    // Bluetape4k Github Package 로 배포됩니다.
+    const val bluetape4k = "1.6.1"    // Bluetape4k Github Package 로 배포됩니다.
 
     const val kotlin = "2.3.20"                 // https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-stdlib
     const val kotlinx_coroutines = "1.10.2"     // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
@@ -97,7 +97,7 @@ object Versions {
     const val springfox_swagger = "3.0.0"
     const val problem = "0.29.1"             // https://mvnrepository.com/artifact/org.zalando/problem-spring-web
 
-    const val bucket4j = "8.17.0"       // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17-core
+    const val bucket4j = "8.18.0"       // https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17-core
     const val resilience4j = "2.4.0"   // https://mvnrepository.com/artifact/io.github.resilience4j/resilience4j-bom
     const val netty = "4.2.12.Final"  // https://mvnrepository.com/artifact/io.netty/netty-all
 

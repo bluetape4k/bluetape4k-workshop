@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.webflux.virtualthread.controller
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
-import io.bluetape4k.testcontainers.http.HttpbinHttp2Server
+import io.bluetape4k.testcontainers.http.BluetapeHttpServer
 import kotlinx.coroutines.ExecutorCoroutineDispatcher
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.reactive.awaitSingle
@@ -23,14 +23,14 @@ import java.util.concurrent.Executors
 class HttpbinController {
 
     companion object: KLoggingChannel() {
-        val httpbin by lazy { HttpbinHttp2Server.Launcher.httpbinHttp2 }
+        val bluetapeHttpServer by lazy { BluetapeHttpServer.Launcher.bluetapeHttpServer }
     }
 
     private val webClientBuilder = WebClient.builder()
 
     private val webClient: WebClient =
         webClientBuilder
-            .baseUrl(httpbin.url)
+            .baseUrl(bluetapeHttpServer.httpbinUrl)
             .defaultHeader("Accept", "application/json")
             .exchangeStrategies(
                 ExchangeStrategies.builder()

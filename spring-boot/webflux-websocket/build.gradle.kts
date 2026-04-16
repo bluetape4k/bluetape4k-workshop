@@ -15,7 +15,6 @@ dependencyManagement {
     }
 }
 
-
 configurations {
     testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
 }
@@ -23,9 +22,13 @@ configurations {
 dependencies {
     implementation(Libs.bluetape4k_idgenerators)
     testImplementation(Libs.bluetape4k_junit5)
-    testImplementation(Libs.bluetape4k_spring_boot4_core)
+    testImplementation(Libs.bluetape4k_spring_boot4_core) {
+        exclude(group = "org.springframework.boot", module = "spring-boot-starter-web")
+    }
 
+    implementation(Libs.bluetape4k_jackson3)
     implementation(Libs.jackson3_module_kotlin)
+    implementation(Libs.jackson3_module_blackbird)
 
     // Spring Boot
     implementation(Libs.springBoot("autoconfigure"))
