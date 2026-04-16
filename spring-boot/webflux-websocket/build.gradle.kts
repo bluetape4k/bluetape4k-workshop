@@ -22,9 +22,7 @@ configurations {
 dependencies {
     implementation(Libs.bluetape4k_idgenerators)
     testImplementation(Libs.bluetape4k_junit5)
-    testImplementation(Libs.bluetape4k_spring_boot4_core) {
-        exclude(group = "org.springframework.boot", module = "spring-boot-starter-web")
-    }
+    testImplementation(Libs.bluetape4k_spring_boot4_core)
 
     implementation(Libs.bluetape4k_jackson3)
     implementation(Libs.jackson3_module_kotlin)

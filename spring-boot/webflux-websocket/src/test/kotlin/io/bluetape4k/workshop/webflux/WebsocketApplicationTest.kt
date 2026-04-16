@@ -14,8 +14,9 @@ import org.amshove.kluent.shouldBeGreaterThan
 import org.amshove.kluent.shouldBeTrue
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.server.LocalServerPort
+import org.springframework.context.ApplicationContext
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.returnResult
@@ -23,12 +24,12 @@ import java.math.BigDecimal
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class WebsocketApplicationTest(
-    @param:LocalServerPort val port: Int,
+    @param:Autowired val context: ApplicationContext,
 ) {
     companion object: KLoggingChannel()
 
     private val client by lazy {
-        WebTestClient.bindToServer().baseUrl("http://localhost:$port").build()
+        WebTestClient.bindToApplicationContext(context).build()
     }
 
     @Test
