@@ -5,7 +5,7 @@ import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 object Plugins {
 
     object Versions {
-        const val dokka = "2.1.0"      // https://mvnrepository.com/artifact/org.jetbrains.dokka/dokka-gradle-plugin
+        const val dokka = "2.2.0"      // https://mvnrepository.com/artifact/org.jetbrains.dokka/dokka-gradle-plugin
         const val detekt = "1.23.8"     // https://mvnrepository.com/artifact/io.gitlab.arturbosch.detekt/detekt-gradle-plugin
         const val dependency_management = "1.1.7"  // https://mvnrepository.com/artifact/io.spring.gradle/dependency-management-plugin
         const val jooq = "9.0"       // https://mvnrepository.com/artifact/nu.studer.jooq/jooq-gradle-plugin
@@ -13,18 +13,17 @@ object Plugins {
         const val avro = "1.9.1"  // https://mvnrepository.com/artifact/com.github.davidmc24.gradle.plugin.avro/com.github.davidmc24.gradle.plugin.avro.gradle.plugin
 
         const val jacoco = "0.8.11"
-        const val jarTest = "1.0.1"
+        const val jarTest = "1.1.0"      // https://plugins.gradle.org/plugin/com.github.hauner.jarTest
         const val testLogger = "4.0.0"
         const val shadow = "9.2.2"      // https://plugins.gradle.org/plugin/com.gradleup.shadow
         const val kotlinx_benchmark = "0.4.15" // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-benchmark-plugin
 
-        const val spring_boot3 = "3.5.13"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
         const val spring_boot4 = "4.0.5"  // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-dependencies
 
         const val docker_compose = "0.17.21"  // https://plugins.gradle.org/plugin/com.avast.gradle.docker-compose
 
         // 참고: https://docs.gatling.io/reference/integrations/build-tools/gradle-plugin/
-        const val gatling = "3.14.9"  // https://plugins.gradle.org/plugin/io.gatling.gradle
+        const val gatling = "3.15.0.1"  // https://plugins.gradle.org/plugin/io.gatling.gradle
 
         const val graalvm_native = "0.11.5" // https://mvnrepository.com/artifact/org.graalvm.buildtools.native/org.graalvm.buildtools.native.gradle.plugin
     }
@@ -75,11 +74,10 @@ object Versions {
 
     const val kotlinx_benchmark = Plugins.Versions.kotlinx_benchmark
 
-    const val spring_boot3 = Plugins.Versions.spring_boot3
     const val spring_boot4 = Plugins.Versions.spring_boot4
     const val spring_cloud = "2025.1.1"     // https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-dependencies
-    const val spring_integration = "7.0.3"  // https://mvnrepository.com/artifact/org.springframework.integration/spring-integration-core
-    const val reactor_bom = "2025.0.4"      // https://mvnrepository.com/artifact/io.projectreactor/reactor-bom
+    const val spring_integration = "7.0.4"  // https://mvnrepository.com/artifact/org.springframework.integration/spring-integration-core
+    const val reactor_bom = "2025.0.5"      // https://mvnrepository.com/artifact/io.projectreactor/reactor-bom
     const val spring_statemachine = "4.0.1" // https://mvnrepository.com/artifact/org.springframework.statemachine/spring-statemachine-core
     const val spring_modulith = "2.0.3"     // https://mvnrepository.com/artifact/org.springframework.modulith/spring-modulith-bom
 
@@ -92,8 +90,8 @@ object Versions {
 
     const val vertx = "5.0.10"               // https://mvnrepository.com/artifact/io.vertx/vertx-core
 
-    const val swagger = "2.2.37"              // https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-annotations
-    const val springdoc_openapi = "3.0.0"    // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webmvc-ui
+    const val swagger = "2.2.48"              // https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-annotations
+    const val springdoc_openapi = "3.0.3"    // https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webmvc-ui
     const val springfox_swagger = "3.0.0"
     const val problem = "0.29.1"             // https://mvnrepository.com/artifact/org.zalando/problem-spring-web
 
@@ -101,10 +99,10 @@ object Versions {
     const val resilience4j = "2.4.0"   // https://mvnrepository.com/artifact/io.github.resilience4j/resilience4j-bom
     const val netty = "4.2.12.Final"  // https://mvnrepository.com/artifact/io.netty/netty-all
 
-    const val aws2 = "2.42.33"           // https://mvnrepository.com/artifact/software.amazon.awssdk/aws-sdk-java
-    const val aws2_crt = "0.44.0"      // https://mvnrepository.com/artifact/software.amazon.awssdk.crt/aws-crt
-    const val aws_kotlin = "1.6.56"     // https://mvnrepository.com/artifact/aws.sdk.kotlin/aws-http-jvm
-    const val aws_smithy_kotlin = "1.6.9" // https://mvnrepository.com/artifact/aws.smithy.kotlin/http-client-engine-crt-jvm
+    const val aws2 = "2.42.34"           // https://mvnrepository.com/artifact/software.amazon.awssdk/aws-sdk-java
+    const val aws2_crt = "0.45.0"      // https://mvnrepository.com/artifact/software.amazon.awssdk.crt/aws-crt
+    const val aws_kotlin = "1.6.57"     // https://mvnrepository.com/artifact/aws.sdk.kotlin/aws-http-jvm
+    const val aws_smithy_kotlin = "1.6.10" // https://mvnrepository.com/artifact/aws.smithy.kotlin/http-client-engine-crt-jvm
 
     const val aws_spring_cloud = "4.0.0"  // https://mvnrepository.com/artifact/io.awspring.cloud/spring-cloud-aws-starter
 
@@ -117,7 +115,7 @@ object Versions {
 
     const val feign = "13.11"         // https://mvnrepository.com/artifact/io.github.openfeign/feign-core
     const val httpclient5 = "5.6"  // https://mvnrepository.com/artifact/org.apache.httpcomponents.client5/httpclient5
-    const val httpcore5 = "5.4"    // https://mvnrepository.com/artifact/org.apache.httpcomponents.core5/httpcore5
+    const val httpcore5 = "5.4.2"    // https://mvnrepository.com/artifact/org.apache.httpcomponents.core5/httpcore5
     const val retrofit2 = "3.0.0"   // https://mvnrepository.com/artifact/com.squareup.retrofit2/retrofit
     const val okhttp3 = "5.3.2"     // https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
     const val okio = "3.17.0"        // https://mvnrepository.com/artifact/com.squareup.okio/okio
@@ -132,7 +130,7 @@ object Versions {
     const val mapstruct = "1.6.3" // https://mvnrepository.com/artifact/org.mapstruct/mapstruct
     const val reflectasm = "1.11.9"     // https://mvnrepository.com/artifact/com.esotericsoftware/reflectasm
 
-    const val mongo_driver = "5.6.4"   // https://mvnrepository.com/artifact/org.mongodb/mongodb-driver-sync
+    const val mongo_driver = "5.6.5"   // https://mvnrepository.com/artifact/org.mongodb/mongodb-driver-sync
     const val lettuce = "6.8.2.RELEASE" // https://mvnrepository.com/artifact/io.lettuce/lettuce-core
     const val redisson = "4.3.1"       // https://mvnrepository.com/artifact/org.redisson/redisson
 
@@ -147,23 +145,23 @@ object Versions {
 
     const val exposed = "1.2.0"         // https://mvnrepository.com/artifact/org.jetbrains.exposed/exposed-core
     const val r2dbc = "1.0.0.RELEASE"   // https://mvnrepository.com/artifact/io.r2dbc/r2dbc-spi
-    const val agroal = "3.0"            // https://mvnrepository.com/artifact/io.agroal/agroal-api
+    const val agroal = "3.0.1"            // https://mvnrepository.com/artifact/io.agroal/agroal-api
 
-    const val blaze_persistence = "3.29.4" // https://mvnrepository.com/artifact/io.quarkus.platform/quarkus-blaze-persistence-bom
+    const val blaze_persistence = "3.34.3" // https://mvnrepository.com/artifact/io.quarkus.platform/quarkus-blaze-persistence-bom
     const val javers = "7.8.6"             // https://mvnrepository.com/artifact/org.javers/javers-core
 
     const val slf4j = "2.0.17"       // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
     const val logback = "1.5.21"     // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
-    const val log4j = "2.25.2"       // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core
-    const val logcaptor = "2.12.2"         // https://mvnrepository.com/artifact/io.github.hakky54/logcaptor
+    const val log4j = "2.25.4"       // https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core
+    const val logcaptor = "2.12.6"         // https://mvnrepository.com/artifact/io.github.hakky54/logcaptor
 
     const val prometheus = "0.16.0"     // https://mvnrepository.com/artifact/io.prometheus/simpleclient
 
-    const val micrometer = "1.16.4"         // https://mvnrepository.com/artifact/io.micrometer/micrometer-core
-    const val micrometerTracing = "1.6.4"   // https://mvnrepository.com/artifact/io.micrometer/micrometer-tracing
+    const val micrometer = "1.16.5"         // https://mvnrepository.com/artifact/io.micrometer/micrometer-core
+    const val micrometerTracing = "1.6.5"   // https://mvnrepository.com/artifact/io.micrometer/micrometer-tracing
     const val micrometerContextPropagation = "1.2.1" // https://mvnrepository.com/artifact/io.micrometer/context-propagation
 
-    const val opentelemetry = "1.57.0" // https://mvnrepository.com/artifact/io.opentelemetry/opentelemetry-bom
+    const val opentelemetry = "1.61.0" // https://mvnrepository.com/artifact/io.opentelemetry/opentelemetry-bom
     const val opentelemetryAlpha = "$opentelemetry-alpha" // https://mvnrepository.com/artifact/io.opentelemetry/opentelemetry-bom-alpha
 
     const val opentelemetryJavaAgent = "2.25.0" // https://mvnrepository.com/artifact/io.opentelemetry.javaagent/opentelemetry-javaagent
@@ -176,18 +174,18 @@ object Versions {
     const val ignite = "2.17.0"             // https://mvnrepository.com/artifact/org.apache.ignite/ignite-core
     const val hazelcast = "5.6.0"           // https://mvnrepository.com/artifact/com.hazelcast/hazelcast
 
-    const val cassandra = "4.19.1"          // https://mvnrepository.com/artifact/org.apache.cassandra/java-driver-core
-    const val elasticsearch = "9.1.6"       // https://mvnrepository.com/artifact/org.elasticsearch.client/elasticsearch-rest-client
+    const val cassandra = "4.19.2"          // https://mvnrepository.com/artifact/org.apache.cassandra/java-driver-core
+    const val elasticsearch = "9.3.3"       // https://mvnrepository.com/artifact/org.elasticsearch.client/elasticsearch-rest-client
 
     const val kafka = "4.2.0"           // https://mvnrepository.com/artifact/org.apache.kafka/kafka
-    const val spring_kafka = "4.0.3"    // https://mvnrepository.com/artifact/org.springframework.kafka/spring-kafka
+    const val spring_kafka = "4.0.4"    // https://mvnrepository.com/artifact/org.springframework.kafka/spring-kafka
 
     const val timefold_solver = "1.32.0" // https://mvnrepository.com/artifact/ai.timefold.solver/timefold-solver-core
 
     const val eclipse_collections = "13.0.0"  // https://mvnrepository.com/artifact/org.eclipse.collections/eclipse-collections
     const val jctools = "4.0.5"             // https://mvnrepository.com/artifact/org.jctools/jctools-core
 
-    const val ow2_asm = "9.8"               // https://mvnrepository.com/artifact/org.ow2.asm/asm
+    const val ow2_asm = "9.9.1"               // https://mvnrepository.com/artifact/org.ow2.asm/asm
 
     const val junit_jupiter = "6.0.3"      // https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api
     const val junit_platform = "6.0.3"     // https://mvnrepository.com/artifact/org.junit.platform/junit-platform-launcher
@@ -197,7 +195,7 @@ object Versions {
     const val springmockk = "4.0.2"         // https://mvnrepository.com/artifact/com.ninja-squad/springmockk
     const val awaitility = "4.3.0"          // https://mvnrepository.com/artifact/org.awaitility/awaitility
     const val jmh = "1.37"                  // https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-core
-    const val testcontainers = "2.0.3"      // https://mvnrepository.com/artifact/org.testcontainers/testcontainers
+    const val testcontainers = "2.0.4"      // https://mvnrepository.com/artifact/org.testcontainers/testcontainers
     const val jna = "5.18.1"                // https://mvnrepository.com/artifact/net.java.dev.jna/jna
     const val archunit = "1.4.1"           // https://mvnrepository.com/artifact/com.tngtech.archunit/archunit-junit5
     const val rest_assured = "5.5.6"        // https://mvnrepository.com/artifact/io.rest-assured/rest-assured
@@ -210,10 +208,10 @@ object Versions {
 
     const val sentry_logback = "8.22.0"  // https://mvnrepository.com/artifact/io.sentry/sentry-logback
 
-    const val scrimage = "4.3.8"  // https://mvnrepository.com/artifact/com.sksamuel.scrimage/scrimage-core
+    const val scrimage = "4.3.10"  // https://mvnrepository.com/artifact/com.sksamuel.scrimage/scrimage-core
 
     // Gatling
-    const val gatling = "3.14.9" // https://mvnrepository.com/artifact/io.gatling/gatling-core
+    const val gatling = "3.15.0" // https://mvnrepository.com/artifact/io.gatling/gatling-core
 }
 
 object Libs {
@@ -523,9 +521,6 @@ object Libs {
     const val kryo = "com.esotericsoftware:kryo:5.6.2" // https://mvnrepository.com/artifact/com.esotericsoftware/kryo
     const val kryo5 = "com.esotericsoftware:kryo:5.6.2" // https://mvnrepository.com/artifact/com.esotericsoftware/kryo
     const val fory_kotlin = "org.apache.fory:fory-kotlin:0.14.1" // https://mvnrepository.com/artifact/org.apache.fory/fory-kotlin
-
-    // Spring Boot
-    const val spring_boot3_dependencies = "org.springframework.boot:spring-boot-dependencies:${Versions.spring_boot3}"
 
     // Spring Boot
     const val spring_boot4_dependencies = "org.springframework.boot:spring-boot-dependencies:${Versions.spring_boot4}"
@@ -1269,8 +1264,8 @@ object Libs {
     val timefold_solver_webui = timefoldSolver("webui")
 
     // Zipkin
-    const val zipkin_brave = "io.zipkin.brave:brave:6.3.0"              // https://mvnrepository.com/artifact/io.zipkin.brave/brave
-    const val zipkin_brave_tests = "io.zipkin.brave:brave-tests:6.3.0"  // https://mvnrepository.com/artifact/io.zipkin.brave/brave-tests
+    const val zipkin_brave = "io.zipkin.brave:brave:6.3.1"              // https://mvnrepository.com/artifact/io.zipkin.brave/brave
+    const val zipkin_brave_tests = "io.zipkin.brave:brave-tests:6.3.1"  // https://mvnrepository.com/artifact/io.zipkin.brave/brave-tests
 
     // Hashicorp Vault
     const val vault_java_driver = "com.bettercloud:vault-java-driver:5.1.0"
@@ -1327,7 +1322,7 @@ object Libs {
 
     // 참고 : https://github.com/asyncer-io/r2dbc-mysql
     const val r2dbc_mysql = "io.asyncer:r2dbc-mysql:1.4.1"  // https://mvnrepository.com/artifact/io.asyncer/r2dbc-mysql
-    const val r2dbc_mariadb = "org.mariadb:r2dbc-mariadb:1.3.0" // https://github.com/mariadb-corporation/mariadb-connector-r2dbc
+    const val r2dbc_mariadb = "org.mariadb:r2dbc-mariadb:1.4.0" // https://github.com/mariadb-corporation/mariadb-connector-r2dbc
     // https://github.com/pgjdbc/r2dbc-postgresql
     const val r2dbc_postgresql = "org.postgresql:r2dbc-postgresql:1.1.1.RELEASE" // https://mvnrepository.com/artifact/org.postgresql/r2dbc-postgresql
 
