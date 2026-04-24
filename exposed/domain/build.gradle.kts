@@ -13,7 +13,6 @@ dependencies {
 
     implementation(Libs.bluetape4k_exposed)
     implementation(Libs.bluetape4k_exposed_jackson3)
-    implementation(Libs.bluetape4k_exposed_jasypt)
     testImplementation(Libs.bluetape4k_exposed_jdbc_tests)
 
     implementation(Libs.exposed_core)
