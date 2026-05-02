@@ -127,7 +127,7 @@ dependency-management = "1.1.7"
 dokka = "2.2.0"
 test-logger = "4.0.0"
 shadow = "9.2.2"
-graalvm-native = "0.11.5"
+graalvm-native = "1.1.0"
 docker-compose = "0.17.21"
 protobuf-plugin = "0.9.5"
 gatling-plugin = "3.15.0.1"
@@ -297,7 +297,7 @@ spring-integration-bom = { module = "org.springframework.integration:spring-inte
 spring-modulith-bom = { module = "org.springframework.modulith:spring-modulith-bom", version.ref = "spring-modulith" }
 
 # spring-boot function equivalents
-spring-context = { module = "org.springframework:spring-context", version.ref = "spring-boot4" }
+spring-context = { module = "org.springframework:spring-context" }
 spring-boot-autoconfigure-lib = { module = "org.springframework.boot:spring-boot-autoconfigure", version.ref = "spring-boot4" }
 spring-boot-autoconfigure-processor = { module = "org.springframework.boot:spring-boot-autoconfigure-processor", version.ref = "spring-boot4" }
 spring-boot-configuration-processor = { module = "org.springframework.boot:spring-boot-configuration-processor", version.ref = "spring-boot4" }
