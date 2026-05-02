@@ -1,5 +1,5 @@
 plugins {
-    id(Plugins.gatling) version Plugins.Versions.gatling
+    alias(libs.plugins.gatling.plugin)
 }
 
 gatling {
@@ -14,9 +14,9 @@ gatling {
 
 dependencies {
     // Gatling
-    implementation(Libs.gatling_app)
-    implementation(Libs.gatling_core_java)
-    implementation(Libs.gatling_http_java)
-    implementation(Libs.gatling_recorder)
-    implementation(Libs.gatling_charts_highcharts)
+    implementation(libs.gatling.app)
+    implementation(libs.gatling.core.java)
+    implementation(libs.gatling.http.java)
+    implementation(libs.gatling.recorder)
+    implementation(libs.gatling.charts.highcharts)
 }

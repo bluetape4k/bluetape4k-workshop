@@ -1,8 +1,8 @@
 plugins {
-    id(Plugins.spring_boot)
-    kotlin("plugin.spring")
-    kotlin("plugin.noarg")
-    kotlin("plugin.allopen")
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.kotlin.noarg)
+    alias(libs.plugins.kotlin.allopen)
 }
 
 allOpen {
@@ -22,36 +22,36 @@ configurations {
 }
 
 dependencies {
-    implementation(Libs.springBootStarter("data-elasticsearch"))
-    testImplementation(Libs.springBootStarter("data-elasticsearch-test"))
-    implementation(Libs.elasticsearch_rest_client)
+    implementation(libs.spring.boot.starter.data.elasticsearch.lib)
+    testImplementation(libs.spring.boot.starter.data.elasticsearch.test)
+    implementation(libs.elasticsearch.rest.client)
 
     // Elasticsearch Local Server 관련 의존성
-    implementation(Libs.bluetape4k_testcontainers)
-    implementation(Libs.testcontainers)
-    implementation(Libs.testcontainers_elasticsearch)
+    implementation(libs.bluetape4k.testcontainers)
+    implementation(libs.testcontainers.lib)
+    implementation(libs.testcontainers.elasticsearch)
 
-    implementation(Libs.springBootStarter("webflux"))
-    testImplementation(Libs.springBootStarter("webflux-test"))
+    implementation(libs.spring.boot.starter.webflux.lib)
+    testImplementation(libs.spring.boot.starter.webflux.test)
 
-    testImplementation(Libs.bluetape4k_spring_boot4_core)
-    testImplementation(Libs.springBootStarter("test")) {
+    testImplementation(libs.bluetape4k.spring.boot4.core)
+    testImplementation(libs.spring.boot.starter.test) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(group = "org.mockito", module = "mockito-core")
     }
 
-    implementation(Libs.bluetape4k_jackson3)
-    implementation(Libs.bluetape4k_jackson2)
-    testImplementation(Libs.bluetape4k_junit5)
+    implementation(libs.bluetape4k.jackson3)
+    implementation(libs.bluetape4k.jackson2)
+    testImplementation(libs.bluetape4k.junit5)
 
     // Coroutines
-    implementation(Libs.bluetape4k_coroutines)
-    implementation(Libs.kotlinx_coroutines_core)
-    implementation(Libs.kotlinx_coroutines_reactor)
-    testImplementation(Libs.kotlinx_coroutines_test)
+    implementation(libs.bluetape4k.coroutines)
+    implementation(libs.kotlinx.coroutines.core.lib)
+    implementation(libs.kotlinx.coroutines.reactor)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
 
-    implementation(Libs.reactor_core)
-    implementation(Libs.reactor_kotlin_extensions)
-    testImplementation(Libs.reactor_test)
+    implementation(libs.reactor.core)
+    implementation(libs.reactor.kotlin.extensions)
+    testImplementation(libs.reactor.test)
 }

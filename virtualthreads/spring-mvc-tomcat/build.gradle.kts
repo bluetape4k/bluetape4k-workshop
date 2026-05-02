@@ -1,11 +1,11 @@
 plugins {
-    kotlin("plugin.spring")
-    kotlin("plugin.allopen")
-    kotlin("plugin.noarg")
-    kotlin("kapt")
-    id(Plugins.spring_boot)
-    id(Plugins.graalvm_native)
-    id(Plugins.gatling) version Plugins.Versions.gatling
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.kotlin.allopen)
+    alias(libs.plugins.kotlin.noarg)
+    alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.graalvm.native)
+    alias(libs.plugins.gatling.plugin)
 }
 
 // JPA Entities 들을 Java와 같이 모두 override 가능하게 합니다 (Kotlin 은 기본이 final 입니다)
@@ -44,82 +44,82 @@ configurations {
 
 dependencies {
     // Kapt 사용 시 필수적으로 추가해야 함
-    // api(Libs.jakarta_annotation_api)
+    // api(libs.jakarta.annotation.api)
 
-    implementation(Libs.bluetape4k_core)
+    implementation(libs.bluetape4k.core)
     // VirtualThread of JDK 25
-    implementation(Libs.bluetape4k_virtualthread_api)
-    runtimeOnly(Libs.bluetape4k_virtualthread_jdk25)
+    implementation(libs.bluetape4k.virtualthread.api)
+    runtimeOnly(libs.bluetape4k.virtualthread.jdk25)
 
-    implementation(Libs.bluetape4k_testcontainers)
+    implementation(libs.bluetape4k.testcontainers)
 
     // JPA/Hibernate
-    implementation(Libs.bluetape4k_hibernate)
-    implementation(Libs.hibernate_core)
-    implementation(Libs.hibernate_jcache)
-    implementation(Libs.hibernate_validator)
-    implementation(Libs.springBootStarter("data-jpa"))
-    testImplementation(Libs.springBootStarter("data-jpa-test"))
+    implementation(libs.bluetape4k.hibernate)
+    implementation(libs.hibernate.core)
+    implementation(libs.hibernate.jcache)
+    implementation(libs.hibernate.validator.lib)
+    implementation(libs.spring.boot.starter.data.jpa.lib)
+    testImplementation(libs.spring.boot.starter.data.jpa.test)
 
-    api(Libs.jakarta_persistence_api)
-    api(Libs.hibernate_core)
+    api(libs.jakarta.persistence.api)
+    api(libs.hibernate.core)
 
     // QueryDsl
-    implementation(Libs.querydsl_jpa + ":jakarta")
-    kapt(Libs.querydsl_apt + ":jakarta")
-    kaptTest(Libs.querydsl_apt + ":jakarta")
+    implementation(libs.querydsl.jpa.get().toString() + ":jakarta")
+    kapt(libs.querydsl.apt.get().toString() + ":jakarta")
+    kaptTest(libs.querydsl.apt.get().toString() + ":jakarta")
 
     // Database
-    implementation(Libs.hikaricp)
+    implementation(libs.hikaricp)
 
     // H2
-    implementation(Libs.h2_v2)
+    implementation(libs.h2.v2)
 
     // MySQL
-    implementation(Libs.mysql_connector_j)
-    implementation(Libs.bluetape4k_testcontainers)
-    implementation(Libs.testcontainers_mysql)
+    implementation(libs.mysql.connector.j)
+    implementation(libs.bluetape4k.testcontainers)
+    implementation(libs.testcontainers.mysql)
 
     // Cache
-    implementation(Libs.bluetape4k_cache_core)
-    implementation(Libs.caffeine)
-    implementation(Libs.caffeine_jcache)
+    implementation(libs.bluetape4k.cache.core)
+    implementation(libs.caffeine.lib)
+    implementation(libs.caffeine.jcache)
 
     // Spring Boot
-    implementation(Libs.springBoot("autoconfigure"))
-    annotationProcessor(Libs.springBoot("autoconfigure-processor"))
-    annotationProcessor(Libs.springBoot("configuration-processor"))
-    runtimeOnly(Libs.springBoot("devtools"))
+    implementation(libs.spring.boot.autoconfigure.lib)
+    annotationProcessor(libs.spring.boot.autoconfigure.processor)
+    annotationProcessor(libs.spring.boot.configuration.processor)
+    runtimeOnly(libs.spring.boot.devtools)
 
-    implementation(Libs.springBootStarter("actuator"))
-    implementation(Libs.springBootStarter("aspectj"))
-    implementation(Libs.springBootStarter("cache"))
-    implementation(Libs.springBootStarter("validation"))
-    implementation(Libs.springBootStarter("web"))
-    testImplementation(Libs.springBootStarter("webmvc-test"))
-    testImplementation(Libs.springBootStarter("test")) {
+    implementation(libs.spring.boot.starter.actuator)
+    implementation(libs.spring.boot.starter.aspectj)
+    implementation(libs.spring.boot.starter.cache.lib)
+    implementation(libs.spring.boot.starter.validation)
+    implementation(libs.spring.boot.starter.web)
+    testImplementation(libs.spring.boot.starter.webmvc.test)
+    testImplementation(libs.spring.boot.starter.test) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")
     }
     // WebClient 사용을 위해
-    implementation(Libs.springBootStarter("webflux"))
-    testImplementation(Libs.springBootStarter("webflux-test"))
+    implementation(libs.spring.boot.starter.webflux.lib)
+    testImplementation(libs.spring.boot.starter.webflux.test)
 
     // Coroutines
-    implementation(Libs.bluetape4k_coroutines)
-    implementation(Libs.kotlinx_coroutines_core)
-    implementation(Libs.kotlinx_coroutines_reactor)
-    testImplementation(Libs.kotlinx_coroutines_test)
+    implementation(libs.bluetape4k.coroutines)
+    implementation(libs.kotlinx.coroutines.core.lib)
+    implementation(libs.kotlinx.coroutines.reactor)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
 
     // SpringDoc - OpenAPI 3.0
-    implementation(Libs.springdoc_openapi_starter_webmvc_ui)
+    implementation(libs.springdoc.openapi.starter.webmvc.ui)
 
     // Gatling
-    implementation(Libs.gatling_app)
-    implementation(Libs.gatling_core_java)
-    implementation(Libs.gatling_http_java)
-    implementation(Libs.gatling_recorder)
-    implementation(Libs.gatling_charts_highcharts)
-    testImplementation(Libs.gatling_test_framework)
+    implementation(libs.gatling.app)
+    implementation(libs.gatling.core.java)
+    implementation(libs.gatling.http.java)
+    implementation(libs.gatling.recorder)
+    implementation(libs.gatling.charts.highcharts)
+    testImplementation(libs.gatling.test.framework)
 }

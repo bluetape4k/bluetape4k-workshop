@@ -1,7 +1,7 @@
 plugins {
-    kotlin("plugin.spring")
-    id(Plugins.spring_boot)
-    id(Plugins.graalvm_native)
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.graalvm.native)
 }
 
 springBoot {
@@ -14,25 +14,25 @@ dependencies {
     testImplementation(project(":shared"))
 
     // Jackson CBOR
-    implementation(Libs.bluetape4k_jackson3)
-    implementation(Libs.jackson3_dataformat_cbor)    // smile 도 가능
+    implementation(libs.bluetape4k.jackson3)
+    implementation(libs.jackson3.dataformat.cbor)    // smile 도 가능
 
-    implementation(Libs.springBootStarter("actuator"))
-    implementation(Libs.springBootStarter("web"))
-    testImplementation(Libs.springBootStarter("webmvc-test"))
-    testImplementation(Libs.springBootStarter("test")) {
+    implementation(libs.spring.boot.starter.actuator)
+    implementation(libs.spring.boot.starter.web)
+    testImplementation(libs.spring.boot.starter.webmvc.test)
+    testImplementation(libs.spring.boot.starter.test) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")
     }
 
     // Spring Webflux
-    testImplementation(Libs.springBootStarter("webflux"))
+    testImplementation(libs.spring.boot.starter.webflux.lib)
 
     // Coroutines & Reactor
-    testImplementation(Libs.bluetape4k_coroutines)
-    testImplementation(Libs.kotlinx_coroutines_reactor)
-    testImplementation(Libs.kotlinx_coroutines_test)
-    testImplementation(Libs.reactor_kotlin_extensions)
-    testImplementation(Libs.reactor_test)
+    testImplementation(libs.bluetape4k.coroutines)
+    testImplementation(libs.kotlinx.coroutines.reactor)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
+    testImplementation(libs.reactor.kotlin.extensions)
+    testImplementation(libs.reactor.test)
 }

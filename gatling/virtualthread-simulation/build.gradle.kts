@@ -1,8 +1,8 @@
 plugins {
-    kotlin("plugin.spring")
-    id(Plugins.spring_boot)
-    id(Plugins.graalvm_native)
-    id(Plugins.gatling) version Plugins.Versions.gatling
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.graalvm.native)
+    alias(libs.plugins.gatling.plugin)
 }
 
 springBoot {
@@ -18,44 +18,44 @@ dependencies {
 
     testImplementation(project(":shared"))
 
-    implementation(Libs.bluetape4k_io)
-    implementation(Libs.bluetape4k_jackson3)
+    implementation(libs.bluetape4k.io)
+    implementation(libs.bluetape4k.jackson3)
 
     // Spring Boot
-    implementation(Libs.springBoot("autoconfigure"))
-    annotationProcessor(Libs.springBoot("autoconfigure-processor"))
-    annotationProcessor(Libs.springBoot("configuration-processor"))
-    runtimeOnly(Libs.springBoot("devtools"))
+    implementation(libs.spring.boot.autoconfigure.lib)
+    annotationProcessor(libs.spring.boot.autoconfigure.processor)
+    annotationProcessor(libs.spring.boot.configuration.processor)
+    runtimeOnly(libs.spring.boot.devtools)
 
-    implementation(Libs.springBootStarter("actuator"))
-    implementation(Libs.springBootStarter("aspectj"))
-    implementation(Libs.springBootStarter("web"))
-    testImplementation(Libs.springBootStarter("webflux"))
-    testImplementation(Libs.springBootStarter("test")) {
+    implementation(libs.spring.boot.starter.actuator)
+    implementation(libs.spring.boot.starter.aspectj)
+    implementation(libs.spring.boot.starter.web)
+    testImplementation(libs.spring.boot.starter.webflux.lib)
+    testImplementation(libs.spring.boot.starter.test) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")
     }
 
-    testImplementation(Libs.bluetape4k_coroutines)
-    testImplementation(Libs.kotlinx_coroutines_reactor)
-    testImplementation(Libs.kotlinx_coroutines_test)
-    testImplementation(Libs.reactor_kotlin_extensions)
+    testImplementation(libs.bluetape4k.coroutines)
+    testImplementation(libs.kotlinx.coroutines.reactor)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
+    testImplementation(libs.reactor.kotlin.extensions)
 
     // SpringDoc - OpenAPI 3.0
-    implementation(Libs.springdoc_openapi_starter_webmvc_ui)
+    implementation(libs.springdoc.openapi.starter.webmvc.ui)
 
     // Sample Data
-    implementation(Libs.datafaker)
+    implementation(libs.datafaker)
 
     // Gatling
-    implementation(Libs.gatling_app)
-    implementation(Libs.gatling_core_java)
-    implementation(Libs.gatling_http_java)
-    implementation(Libs.gatling_recorder)
-    implementation(Libs.gatling_charts_highcharts)
-    testImplementation(Libs.gatling_test_framework)
+    implementation(libs.gatling.app)
+    implementation(libs.gatling.core.java)
+    implementation(libs.gatling.http.java)
+    implementation(libs.gatling.recorder)
+    implementation(libs.gatling.charts.highcharts)
+    testImplementation(libs.gatling.test.framework)
 
     // Gatling Scenario에서 bluetape4k-io 를 사용하려고 추가
-    gatling(Libs.bluetape4k_io)
+    gatling(libs.bluetape4k.io)
 }

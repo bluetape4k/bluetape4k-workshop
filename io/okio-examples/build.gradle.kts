@@ -4,28 +4,28 @@ configurations {
 
 dependencies {
     // OKIO
-    implementation(Libs.okio)
-    implementation(Libs.okio_fakefilesystem)
+    implementation(libs.okio.lib)
+    implementation(libs.okio.fakefilesystem)
 
     // bluetape4k
-    implementation(Libs.bluetape4k_io)
-    implementation(Libs.bluetape4k_okio)
-    implementation(Libs.bluetape4k_coroutines)
-    testImplementation(Libs.bluetape4k_junit5)
+    implementation(libs.bluetape4k.io)
+    implementation(libs.bluetape4k.okio)
+    implementation(libs.bluetape4k.coroutines)
+    testImplementation(libs.bluetape4k.junit5)
 
-    implementation(Libs.commons_io)
+    implementation(libs.commons.io)
 
     // Coroutines
-    implementation(Libs.kotlinx_coroutines_core)
-    testImplementation(Libs.kotlinx_coroutines_test)
+    implementation(libs.kotlinx.coroutines.core.lib)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
 
     // Serialization Libraries
-    implementation(Libs.kryo5)
-    implementation(Libs.fory_kotlin)
+    implementation(libs.kryo5)
+    implementation(libs.fory.kotlin)
 
     // Compression libraries
-    implementation(Libs.commons_compress)
-    implementation(Libs.lz4_java)
-    implementation(Libs.snappy_java)
-    implementation(Libs.zstd_jni)
+    implementation(libs.commons.compress)
+    implementation(libs.lz4.java)
+    implementation(libs.snappy.java)
+    implementation(libs.zstd.jni)
 }

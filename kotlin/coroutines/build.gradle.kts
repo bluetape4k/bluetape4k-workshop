@@ -1,5 +1,5 @@
 plugins {
-    kotlin("plugin.spring")
+    alias(libs.plugins.kotlin.spring)
 }
 
 configurations {
@@ -8,30 +8,30 @@ configurations {
 
 dependencies {
     // Coroutines
-    implementation(Libs.bluetape4k_coroutines)
-    implementation(Libs.kotlinx_coroutines_core)
-    implementation(Libs.kotlinx_coroutines_slf4j)
-    implementation(Libs.kotlinx_coroutines_reactor)
-    testImplementation(Libs.kotlinx_coroutines_test)
+    implementation(libs.bluetape4k.coroutines)
+    implementation(libs.kotlinx.coroutines.core.lib)
+    implementation(libs.kotlinx.coroutines.slf4j)
+    implementation(libs.kotlinx.coroutines.reactor)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
 
     // Id Generators
-    implementation(Libs.bluetape4k_idgenerators)
-    implementation(Libs.java_uuid_generator)
+    implementation(libs.bluetape4k.idgenerators)
+    implementation(libs.java.uuid.generator)
 
     // Coroutines Flow를 Reactor처럼 테스트 할 수 있도록 해줍니다.
     // 참고: https://github.com/cashapp/turbine/
-    testImplementation(Libs.turbine)
+    testImplementation(libs.turbine)
 
     // TestContainers
-    testImplementation(Libs.bluetape4k_testcontainers)
-    testImplementation(Libs.testcontainers)
-    testImplementation(Libs.testcontainers_junit_jupiter)
+    testImplementation(libs.bluetape4k.testcontainers)
+    testImplementation(libs.testcontainers.lib)
+    testImplementation(libs.testcontainers.junit.jupiter)
 
     // Spring Boot
-    implementation(Libs.spring("context"))
-    implementation(Libs.bluetape4k_spring_boot4_core)
+    implementation(libs.spring.context)
+    implementation(libs.bluetape4k.spring.boot4.core)
 
-    testImplementation(Libs.springBootStarter("test")) {
+    testImplementation(libs.spring.boot.starter.test) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")

@@ -3,9 +3,9 @@ configurations {
 }
 
 dependencies {
-    implementation(Libs.bluetape4k_io)
-    testImplementation(Libs.bluetape4k_junit5)
+    implementation(libs.bluetape4k.io)
+    testImplementation(libs.bluetape4k.junit5)
 
-    implementation(Libs.bluetape4k_coroutines)
-    testImplementation(Libs.kotlinx_coroutines_test)
+    implementation(libs.bluetape4k.coroutines)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
 }

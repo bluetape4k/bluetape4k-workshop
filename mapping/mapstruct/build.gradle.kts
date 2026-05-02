@@ -1,5 +1,5 @@
 plugins {
-    kotlin("kapt")
+    alias(libs.plugins.kotlin.kapt)
 }
 
 configurations {
@@ -7,9 +7,9 @@ configurations {
 }
 
 dependencies {
-    api(Libs.mapstruct)
-    kapt(Libs.mapstruct_processor)
-    kaptTest(Libs.mapstruct_processor)
+    api(libs.mapstruct.lib)
+    kapt(libs.mapstruct.processor)
+    kaptTest(libs.mapstruct.processor)
 
-    implementation(Libs.bluetape4k_io)
+    implementation(libs.bluetape4k.io)
 }

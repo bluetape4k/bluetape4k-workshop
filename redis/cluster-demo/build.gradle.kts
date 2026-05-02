@@ -1,7 +1,7 @@
 plugins {
-    kotlin("plugin.spring")
-    id(Plugins.spring_boot)
-    id(Plugins.graalvm_native)
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.graalvm.native)
 }
 
 springBoot {
@@ -16,45 +16,45 @@ dependencies {
 
     testImplementation(project(":shared"))
 
-    implementation(Libs.bluetape4k_core)
-    implementation(Libs.bluetape4k_jackson3)
-    implementation(Libs.bluetape4k_idgenerators)
-    testImplementation(Libs.bluetape4k_junit5)
-    implementation(Libs.bluetape4k_testcontainers)
+    implementation(libs.bluetape4k.core)
+    implementation(libs.bluetape4k.jackson3)
+    implementation(libs.bluetape4k.idgenerators)
+    testImplementation(libs.bluetape4k.junit5)
+    implementation(libs.bluetape4k.testcontainers)
 
     // spring-data-redis에서는 기본적으로 lettuce를 사용합니다.
     // Redisson
-    // implementation(Libs.redisson)
+    // implementation(libs.redisson.lib)
     // https://github.com/redisson/redisson/blob/master/redisson-spring-data/README.md
     // spring-data-redis 2.7.x 를 사용하므로, redisson도 같은 버전을 참조해야 한다
-    // implementation(Libs.redisson_spring_data_27)
+    // implementation(libs.redisson.spring.data.27)
 
     // Codecs
-    implementation(Libs.fory_kotlin)
-    implementation(Libs.kryo5)
+    implementation(libs.fory.kotlin)
+    implementation(libs.kryo5)
 
     // Compressor
-    implementation(Libs.lz4_java)
-    implementation(Libs.snappy_java)
-    implementation(Libs.zstd_jni)
+    implementation(libs.lz4.java)
+    implementation(libs.snappy.java)
+    implementation(libs.zstd.jni)
 
     // Coroutines
-    implementation(Libs.bluetape4k_coroutines)
-    implementation(Libs.kotlinx_coroutines_core)
-    implementation(Libs.kotlinx_coroutines_reactor)
-    testImplementation(Libs.kotlinx_coroutines_test)
+    implementation(libs.bluetape4k.coroutines)
+    implementation(libs.kotlinx.coroutines.core.lib)
+    implementation(libs.kotlinx.coroutines.reactor)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
 
     // Reactor
-    implementation(Libs.reactor_kotlin_extensions)
-    testImplementation(Libs.reactor_test)
+    implementation(libs.reactor.kotlin.extensions)
+    testImplementation(libs.reactor.test)
 
-    implementation(Libs.lettuce_core)
-    implementation(Libs.commons_pool2)
-    implementation(Libs.springBootStarter("data-redis"))
+    implementation(libs.lettuce.core)
+    implementation(libs.commons.pool2)
+    implementation(libs.spring.boot.starter.data.redis.lib)
 
-    implementation(Libs.springBoot("autoconfigure"))
+    implementation(libs.spring.boot.autoconfigure.lib)
 
-    testImplementation(Libs.springBootStarter("test")) {
+    testImplementation(libs.spring.boot.starter.test) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(group = "org.mockito", module = "mockito-core")

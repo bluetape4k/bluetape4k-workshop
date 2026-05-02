@@ -1,6 +1,6 @@
 plugins {
-    kotlin("plugin.spring")
-    id(Plugins.spring_boot)
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.spring.boot)
 }
 
 springBoot {
@@ -14,48 +14,48 @@ configurations {
 }
 
 dependencies {
-    testImplementation(Libs.bluetape4k_junit5)
+    testImplementation(libs.bluetape4k.junit5)
 
     // Problem
-    implementation(Libs.problem_jackson_datatype)
-    implementation(Libs.problem_spring_webflux)
+    implementation(libs.problem.jackson.datatype)
+    implementation(libs.problem.spring.webflux)
 
-    api(Libs.jakarta_validation_api)
+    api(libs.jakarta.validation.api)
 
     // Resilience4j
-    implementation(Libs.bluetape4k_resilience4j)
-    implementation(Libs.resilience4j_all)
-    implementation(Libs.resilience4j_kotlin)
+    implementation(libs.bluetape4k.resilience4j)
+    implementation(libs.resilience4j.all)
+    implementation(libs.resilience4j.kotlin)
 
     // Spring Boot
-    implementation(Libs.springBoot("autoconfigure"))
-    annotationProcessor(Libs.springBoot("autoconfigure-processor"))
-    annotationProcessor(Libs.springBoot("configuration-processor"))
-    runtimeOnly(Libs.springBoot("devtools"))
+    implementation(libs.spring.boot.autoconfigure.lib)
+    annotationProcessor(libs.spring.boot.autoconfigure.processor)
+    annotationProcessor(libs.spring.boot.configuration.processor)
+    runtimeOnly(libs.spring.boot.devtools)
 
-    implementation(Libs.springBootStarter("actuator"))
-    implementation(Libs.springBootStarter("aspectj"))
+    implementation(libs.spring.boot.starter.actuator)
+    implementation(libs.spring.boot.starter.aspectj)
 
-    implementation(Libs.springBootStarter("webflux"))
+    implementation(libs.spring.boot.starter.webflux.lib)
 
-    testImplementation(Libs.springBootStarter("test")) {
+    testImplementation(libs.spring.boot.starter.test) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")
     }
 
     // Jackson 3
-    implementation(Libs.jackson3_module_kotlin)
+    implementation(libs.jackson3.module.kotlin)
 
     // Coroutines
-    implementation(Libs.bluetape4k_coroutines)
-    implementation(Libs.kotlinx_coroutines_core)
-    implementation(Libs.kotlinx_coroutines_reactor)
-    testImplementation(Libs.kotlinx_coroutines_test)
+    implementation(libs.bluetape4k.coroutines)
+    implementation(libs.kotlinx.coroutines.core.lib)
+    implementation(libs.kotlinx.coroutines.reactor)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
 
     // Reactor
-    implementation(Libs.netty_all)
-    implementation(Libs.reactor_netty)
-    implementation(Libs.reactor_kotlin_extensions)
-    testImplementation(Libs.reactor_test)
+    implementation(libs.netty.all)
+    implementation(libs.reactor.netty)
+    implementation(libs.reactor.kotlin.extensions)
+    testImplementation(libs.reactor.test)
 }

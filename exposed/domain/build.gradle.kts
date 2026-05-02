@@ -1,5 +1,5 @@
 plugins {
-    kotlin("plugin.serialization")
+    alias(libs.plugins.kotlin.serialization)
 }
 
 configurations {
@@ -7,65 +7,65 @@ configurations {
 }
 
 dependencies {
-    implementation(platform(Libs.exposed_bom))
+    implementation(platform(libs.exposed.bom))
 
     testImplementation(project(":shared"))
 
-    implementation(Libs.bluetape4k_exposed)
-    implementation(Libs.bluetape4k_exposed_jackson3)
-    testImplementation(Libs.bluetape4k_exposed_jdbc_tests)
+    implementation(libs.bluetape4k.exposed.lib)
+    implementation(libs.bluetape4k.exposed.jackson3)
+    testImplementation(libs.bluetape4k.exposed.jdbc.tests)
 
-    implementation(Libs.exposed_core)
-    implementation(Libs.exposed_crypt)
-    implementation(Libs.exposed_dao)
-    implementation(Libs.exposed_java_time)
-    implementation(Libs.exposed_jdbc)
-    implementation(Libs.exposed_json)
-    implementation(Libs.exposed_kotlin_datetime)
-    implementation(Libs.exposed_migration_jdbc)
-    implementation(Libs.exposed_money)
-    implementation(Libs.exposed_spring_boot4_starter)
+    implementation(libs.exposed.core)
+    implementation(libs.exposed.crypt)
+    implementation(libs.exposed.dao)
+    implementation(libs.exposed.java.time)
+    implementation(libs.exposed.jdbc)
+    implementation(libs.exposed.json)
+    implementation(libs.exposed.kotlin.datetime)
+    implementation(libs.exposed.migration.jdbc)
+    implementation(libs.exposed.money)
+    implementation(libs.exposed.spring.boot4.starter)
 
-    implementation(Libs.bluetape4k_jdbc)
-    testImplementation(Libs.bluetape4k_junit5)
+    implementation(libs.bluetape4k.jdbc)
+    testImplementation(libs.bluetape4k.junit5)
 
-    compileOnly(Libs.h2_v2)
-    compileOnly(Libs.mariadb_java_client)
-    compileOnly(Libs.mysql_connector_j)
-    compileOnly(Libs.postgresql_driver)
-    compileOnly(Libs.pgjdbc_ng)
+    compileOnly(libs.h2.v2)
+    compileOnly(libs.mariadb.java.client)
+    compileOnly(libs.mysql.connector.j)
+    compileOnly(libs.postgresql.driver)
+    compileOnly(libs.pgjdbc.ng)
 
-    testImplementation(Libs.bluetape4k_testcontainers)
-    testImplementation(Libs.testcontainers)
-    testImplementation(Libs.testcontainers_junit_jupiter)
-    testImplementation(Libs.testcontainers_mariadb)
-    testImplementation(Libs.testcontainers_mysql)
-    testImplementation(Libs.testcontainers_postgresql)
-    testImplementation(Libs.testcontainers_cockroachdb)
+    testImplementation(libs.bluetape4k.testcontainers)
+    testImplementation(libs.testcontainers.lib)
+    testImplementation(libs.testcontainers.junit.jupiter)
+    testImplementation(libs.testcontainers.mariadb)
+    testImplementation(libs.testcontainers.mysql)
+    testImplementation(libs.testcontainers.postgresql)
+    testImplementation(libs.testcontainers.cockroachdb)
 
     // Identifier 자동 생성
-    implementation(Libs.bluetape4k_idgenerators)
-    implementation(Libs.java_uuid_generator)
+    implementation(libs.bluetape4k.idgenerators)
+    implementation(libs.java.uuid.generator)
 
     // Coroutines
-    implementation(Libs.bluetape4k_coroutines)
-    implementation(Libs.kotlinx_coroutines_core)
-    testImplementation(Libs.kotlinx_coroutines_test)
+    implementation(libs.bluetape4k.coroutines)
+    implementation(libs.kotlinx.coroutines.core.lib)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
 
-    testImplementation(Libs.logcaptor)
+    testImplementation(libs.logcaptor)
 
     // Kotlin Serialization JSON
-    implementation(platform(Libs.kotlinx_serialization_bom))
-    implementation(Libs.kotlinx_serialization_json)
+    implementation(platform(libs.kotlinx.serialization.bom))
+    implementation(libs.kotlinx.serialization.json)
 
     // Jackson 3 for Kotlin
-    implementation(Libs.bluetape4k_jackson3)
-    implementation(Libs.jackson3_module_kotlin)
-    implementation(Libs.jackson3_module_blackbird)
+    implementation(libs.bluetape4k.jackson3)
+    implementation(libs.jackson3.module.kotlin)
+    implementation(libs.jackson3.module.blackbird)
 
     // Java Money
-    implementation(Libs.bluetape4k_money)
-    implementation(Libs.javax_money_api)
-    implementation(Libs.javamoney_moneta)
+    implementation(libs.bluetape4k.money)
+    implementation(libs.javax.money.api)
+    implementation(libs.javamoney.moneta)
 
 }

@@ -1,10 +1,10 @@
 plugins {
-    id(Plugins.quarkus)
-    kotlin("plugin.allopen")
+    id("io.quarkus")
+    alias(libs.plugins.kotlin.allopen)
 
     // NOTE: Quarkus 에서는 JPA 용 Entity를 open 으로 변경하는 것이 작동하지 않는다.
     // NOTE: 아럐 annotation("javax.persistence.Entity") 를 추가해주어야 한다
-    kotlin("plugin.jpa")
+    alias(libs.plugins.kotlin.jpa)
 }
 
 allOpen {
@@ -23,43 +23,43 @@ configurations {
 
 dependencies {
     // NOTE: Quarkus 는 꼭 gradle platform 으로 참조해야 제대로 빌드가 된다.
-    implementation(platform(Libs.quarkus_bom))
-    implementation(platform(Libs.quarkus_universe_bom))
-    implementation(platform(Libs.resteasy_bom))
+    implementation(platform(libs.quarkus.bom))
+    implementation(platform(libs.quarkus.universe.bom))
+    implementation(platform(libs.resteasy.bom))
 
     // Quarkus 라이브러리 (https://quarkus.io/extensions/)
-    implementation(Libs.quarkus("hibernate-reactive-panache"))
-    implementation(Libs.quarkus("hibernate-validator"))
-    implementation(Libs.quarkus("kotlin"))
-    implementation(Libs.quarkus("smallrye-openapi"))
+    implementation("io.quarkus.quarkus-hibernate-reactive-panache")
+    implementation("io.quarkus.quarkus-hibernate-validator")
+    implementation("io.quarkus.quarkus-kotlin")
+    implementation("io.quarkus.quarkus-smallrye-openapi")
 
     // 참고: https://quarkus.io/guides/hibernate-reactive-panache#testing
-    implementation(Libs.quarkus("vertx"))
-    testImplementation(Libs.quarkus("test-vertx"))
-    testImplementation(Libs.quarkus("test-hibernate-reactive-panache"))
+    implementation("io.quarkus.quarkus-vertx")
+    testImplementation("io.quarkus.quarkus-test-vertx")
+    testImplementation("io.quarkus.quarkus-test-hibernate-reactive-panache")
 
     // rest
-    implementation(Libs.quarkus("rest"))
-    implementation(Libs.quarkus("rest-kotlin"))
-    implementation(Libs.quarkus("rest-jackson"))
+    implementation("io.quarkus.quarkus-rest")
+    implementation("io.quarkus.quarkus-rest-kotlin")
+    implementation("io.quarkus.quarkus-rest-jackson")
 
     // see: https://quarkus.io/guides/datasource
     // rective datasource 는 mysql, postres 밖에 없다
-    // implementation(Libs.quarkus("reactive-mysql-client"))
-    implementation(Libs.quarkus("reactive-pg-client"))
+    // implementation("io.quarkus.quarkus-reactive-mysql-client")
+    implementation("io.quarkus.quarkus-reactive-pg-client")
 
-    testImplementation(Libs.quarkus_junit5)
-    testImplementation(Libs.rest_assured_kotlin)
+    testImplementation(libs.quarkus.junit5)
+    testImplementation(libs.rest.assured.kotlin)
 
     // Bluetape4k
-    implementation(Libs.bluetape4k_jackson2)
-    implementation(Libs.bluetape4k_quarkus_core)
-    testImplementation(Libs.bluetape4k_quarkus_tests)
-    testImplementation(Libs.bluetape4k_idgenerators)
+    implementation(libs.bluetape4k.jackson2)
+    implementation(libs.bluetape4k.quarkus.core)
+    testImplementation(libs.bluetape4k.quarkus.tests)
+    testImplementation(libs.bluetape4k.idgenerators)
 
     // coroutines
-    implementation(Libs.bluetape4k_coroutines)
-    implementation(Libs.kotlinx_coroutines_core)
-    implementation(Libs.kotlinx_coroutines_reactive)
-    testImplementation(Libs.kotlinx_coroutines_test)
+    implementation(libs.bluetape4k.coroutines)
+    implementation(libs.kotlinx.coroutines.core.lib)
+    implementation(libs.kotlinx.coroutines.reactive)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
 }

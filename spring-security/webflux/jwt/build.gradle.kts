@@ -1,7 +1,7 @@
 plugins {
-    kotlin("plugin.spring")
-    id(Plugins.spring_boot)
-    id(Plugins.graalvm_native)
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.graalvm.native)
 }
 
 springBoot {
@@ -16,31 +16,31 @@ configurations {
 dependencies {
     testImplementation(project(":shared"))
 
-    testImplementation(Libs.bluetape4k_jackson3)
-    testImplementation(Libs.bluetape4k_junit5)
+    testImplementation(libs.bluetape4k.jackson3)
+    testImplementation(libs.bluetape4k.junit5)
 
     // Spring Security
-    implementation(Libs.springBootStarter("security"))
-    implementation(Libs.springBootStarter("oauth2-resource-server"))
-    testImplementation(Libs.springSecurity("test"))
+    implementation(libs.spring.boot.starter.security)
+    implementation(libs.spring.boot.starter.oauth2.resource.server)
+    testImplementation(libs.spring.security.test)
 
-    implementation(Libs.springBootStarter("webflux"))
-    testImplementation(Libs.springBootStarter("webflux-test"))
-    testImplementation(Libs.springBootStarter("test")) {
+    implementation(libs.spring.boot.starter.webflux.lib)
+    testImplementation(libs.spring.boot.starter.webflux.test)
+    testImplementation(libs.spring.boot.starter.test) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")
     }
-    // testImplementation(Libs.okhttp3_mockwebserver)
+    // testImplementation(libs.okhttp3.mockwebserver)
 
     // Coroutines
-    implementation(Libs.bluetape4k_coroutines)
-    implementation(Libs.kotlinx_coroutines_core)
-    implementation(Libs.kotlinx_coroutines_reactor)
-    testImplementation(Libs.kotlinx_coroutines_test)
+    implementation(libs.bluetape4k.coroutines)
+    implementation(libs.kotlinx.coroutines.core.lib)
+    implementation(libs.kotlinx.coroutines.reactor)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
 
     // Reactor
-    implementation(Libs.reactor_core)
-    implementation(Libs.reactor_kotlin_extensions)
-    testImplementation(Libs.reactor_test)
+    implementation(libs.reactor.core)
+    implementation(libs.reactor.kotlin.extensions)
+    testImplementation(libs.reactor.test)
 }

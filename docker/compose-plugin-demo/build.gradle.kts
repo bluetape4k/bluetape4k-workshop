@@ -1,7 +1,7 @@
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 
 plugins {
-    id(Plugins.docker_compose) version Plugins.Versions.docker_compose
+    alias(libs.plugins.docker.compose)
 }
 
 // docker-compose.yml 파일을 참조하여 docker service 를 실행한다.
@@ -78,9 +78,9 @@ configurations {
 
 dependencies {
 
-    implementation(Libs.bluetape4k_io)
-    testImplementation(Libs.bluetape4k_junit5)
+    implementation(libs.bluetape4k.io)
+    testImplementation(libs.bluetape4k.junit5)
 
-    implementation(Libs.redisson)
+    implementation(libs.redisson.lib)
 
 }

@@ -1,8 +1,8 @@
 plugins {
-    kotlin("plugin.spring")
-    id(Plugins.spring_boot)
-    id(Plugins.graalvm_native)
-    id(Plugins.gatling) version Plugins.Versions.gatling
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.graalvm.native)
+    alias(libs.plugins.gatling.plugin)
 }
 
 springBoot {
@@ -18,53 +18,53 @@ configurations {
 dependencies {
 
     // bluetape4k
-    implementation(Libs.bluetape4k_core)
+    implementation(libs.bluetape4k.core)
     // VirtualThread of JDK 25
-    implementation(Libs.bluetape4k_virtualthread_api)
-    runtimeOnly(Libs.bluetape4k_virtualthread_jdk25)
+    implementation(libs.bluetape4k.virtualthread.api)
+    runtimeOnly(libs.bluetape4k.virtualthread.jdk25)
 
-    implementation(Libs.bluetape4k_io)
-    implementation(Libs.bluetape4k_jackson3)
-    implementation(Libs.bluetape4k_testcontainers)
+    implementation(libs.bluetape4k.io)
+    implementation(libs.bluetape4k.jackson3)
+    implementation(libs.bluetape4k.testcontainers)
 
     // Spring Boot
-    implementation(Libs.springBoot("autoconfigure"))
-    annotationProcessor(Libs.springBoot("autoconfigure-processor"))
-    annotationProcessor(Libs.springBoot("configuration-processor"))
-    runtimeOnly(Libs.springBoot("devtools"))
+    implementation(libs.spring.boot.autoconfigure.lib)
+    annotationProcessor(libs.spring.boot.autoconfigure.processor)
+    annotationProcessor(libs.spring.boot.configuration.processor)
+    runtimeOnly(libs.spring.boot.devtools)
 
-    implementation(Libs.springBootStarter("actuator"))
-    implementation(Libs.springBootStarter("aspectj"))
-    implementation(Libs.springBootStarter("webflux"))
-    testImplementation(Libs.springBootStarter("webflux-test"))
+    implementation(libs.spring.boot.starter.actuator)
+    implementation(libs.spring.boot.starter.aspectj)
+    implementation(libs.spring.boot.starter.webflux.lib)
+    testImplementation(libs.spring.boot.starter.webflux.test)
 
-    testImplementation(Libs.springBootStarter("test")) {
+    testImplementation(libs.spring.boot.starter.test) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")
     }
 
     // SpringDoc - OpenAPI 3.0
-    implementation(Libs.springdoc_openapi_starter_webmvc_ui)
+    implementation(libs.springdoc.openapi.starter.webmvc.ui)
 
     // Coroutines
-    implementation(Libs.bluetape4k_coroutines)
-    implementation(Libs.kotlinx_coroutines_core)
-    implementation(Libs.kotlinx_coroutines_reactor)
-    testImplementation(Libs.kotlinx_coroutines_test)
+    implementation(libs.bluetape4k.coroutines)
+    implementation(libs.kotlinx.coroutines.core.lib)
+    implementation(libs.kotlinx.coroutines.reactor)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
 
     // Reactor
-    implementation(Libs.reactor_core)
-    implementation(Libs.reactor_kotlin_extensions)
-    testImplementation(Libs.reactor_test)
+    implementation(libs.reactor.core)
+    implementation(libs.reactor.kotlin.extensions)
+    testImplementation(libs.reactor.test)
 
     // Gatling
-    implementation(Libs.gatling_app)
-    implementation(Libs.gatling_core_java)
-    implementation(Libs.gatling_http_java)
-    implementation(Libs.gatling_recorder)
-    implementation(Libs.gatling_charts_highcharts)
-    testImplementation(Libs.gatling_test_framework)
+    implementation(libs.gatling.app)
+    implementation(libs.gatling.core.java)
+    implementation(libs.gatling.http.java)
+    implementation(libs.gatling.recorder)
+    implementation(libs.gatling.charts.highcharts)
+    testImplementation(libs.gatling.test.framework)
 
-    implementation(Libs.datafaker)
+    implementation(libs.datafaker)
 }

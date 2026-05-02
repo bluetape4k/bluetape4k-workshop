@@ -3,8 +3,8 @@ configurations {
 }
 
 dependencies {
-    implementation(Libs.bluetape4k_core)
-    implementation(Libs.bluetape4k_coroutines)
+    implementation(libs.bluetape4k.core)
+    implementation(libs.bluetape4k.coroutines)
 
-    testImplementation(Libs.bluetape4k_junit5)
+    testImplementation(libs.bluetape4k.junit5)
 }

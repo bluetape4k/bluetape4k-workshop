@@ -3,10 +3,10 @@ import com.google.protobuf.gradle.id
 plugins {
     `java-library`
     idea
-    id(Plugins.protobuf) version Plugins.Versions.protobuf
-    kotlin("plugin.spring")
-    id(Plugins.spring_boot)
-    id(Plugins.graalvm_native)
+    alias(libs.plugins.protobuf.plugin)
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.graalvm.native)
 }
 
 idea {
@@ -19,7 +19,7 @@ idea {
 // 참고: https://github.com/grpc/grpc-kotlin/blob/master/compiler/README.md
 protobuf {
     protoc {
-        artifact = Libs.protobuf_protoc
+        artifact = libs.protobuf.protoc.get().toString()
     }
     generateProtoTasks {
         all().forEach { task ->
@@ -45,24 +45,24 @@ dependencies {
     testImplementation(project(":shared"))
 
     // Protobuf
-    implementation(Libs.bluetape4k_grpc)
-    implementation(Libs.protobuf_java)
-    implementation(Libs.protobuf_java_util)
-    implementation(Libs.protobuf_kotlin)
+    implementation(libs.bluetape4k.grpc)
+    implementation(libs.protobuf.java.lib)
+    implementation(libs.protobuf.java.util)
+    implementation(libs.protobuf.kotlin)
 
-    implementation(Libs.springBootStarter("webmvc"))
-    testImplementation(Libs.springBootStarter("webmvc-test"))
-    testImplementation(Libs.springBootStarter("test")) {
+    implementation(libs.spring.boot.starter.webmvc.lib)
+    testImplementation(libs.spring.boot.starter.webmvc.test)
+    testImplementation(libs.spring.boot.starter.test) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")
     }
 
     // WebClient
-    testImplementation(Libs.springBootStarter("webflux"))
+    testImplementation(libs.spring.boot.starter.webflux.lib)
 
-    testImplementation(Libs.bluetape4k_coroutines)
-    testImplementation(Libs.kotlinx_coroutines_reactor)
-    testImplementation(Libs.kotlinx_coroutines_test)
-    testImplementation(Libs.reactor_test)
+    testImplementation(libs.bluetape4k.coroutines)
+    testImplementation(libs.kotlinx.coroutines.reactor)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
+    testImplementation(libs.reactor.test)
 }

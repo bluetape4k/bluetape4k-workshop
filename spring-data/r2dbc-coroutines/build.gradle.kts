@@ -1,7 +1,7 @@
 plugins {
-    kotlin("plugin.spring")
-    id(Plugins.spring_boot)
-    id(Plugins.graalvm_native)
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.graalvm.native)
 }
 
 springBoot {
@@ -13,42 +13,42 @@ configurations {
 }
 
 dependencies {
-    implementation(platform(Libs.spring_boot4_dependencies))
+    implementation(platform(libs.spring.boot4.dependencies))
     
-    implementation(Libs.bluetape4k_io)
-    testImplementation(Libs.bluetape4k_junit5)
+    implementation(libs.bluetape4k.io)
+    testImplementation(libs.bluetape4k.junit5)
 
     // PostgreSql Server
-    implementation(Libs.bluetape4k_testcontainers)
-    implementation(Libs.testcontainers_postgresql)
+    implementation(libs.bluetape4k.testcontainers)
+    implementation(libs.testcontainers.postgresql)
 
     // Coroutines
-    implementation(Libs.bluetape4k_coroutines)
-    implementation(Libs.kotlinx_coroutines_core)
-    implementation(Libs.kotlinx_coroutines_reactor)
-    testImplementation(Libs.kotlinx_coroutines_test)
+    implementation(libs.bluetape4k.coroutines)
+    implementation(libs.kotlinx.coroutines.core.lib)
+    implementation(libs.kotlinx.coroutines.reactor)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
 
     // Reactor
-    implementation(Libs.reactor_core)
-    implementation(Libs.reactor_kotlin_extensions)
-    testImplementation(Libs.reactor_test)
+    implementation(libs.reactor.core)
+    implementation(libs.reactor.kotlin.extensions)
+    testImplementation(libs.reactor.test)
 
     // R2DBC
-    implementation(Libs.bluetape4k_r2dbc)
-    implementation(Libs.bluetape4k_spring_boot4_r2dbc)
-    implementation(Libs.springBootStarter("data-r2dbc"))
-    testImplementation(Libs.springBootStarter("data-r2dbc-test"))
+    implementation(libs.bluetape4k.r2dbc)
+    implementation(libs.bluetape4k.spring.boot4.r2dbc)
+    implementation(libs.spring.boot.starter.data.r2dbc.lib)
+    testImplementation(libs.spring.boot.starter.data.r2dbc.test)
 
-    runtimeOnly(Libs.h2_v2)
-    implementation(Libs.r2dbc_h2)
-    implementation(Libs.r2dbc_pool)
-    implementation(Libs.r2dbc_postgresql)
+    runtimeOnly(libs.h2.v2)
+    implementation(libs.r2dbc.h2)
+    implementation(libs.r2dbc.pool)
+    implementation(libs.r2dbc.postgresql)
 
-    implementation(Libs.springBootStarter("webflux"))
-    testImplementation(Libs.springBootStarter("webflux-test"))
+    implementation(libs.spring.boot.starter.webflux.lib)
+    testImplementation(libs.spring.boot.starter.webflux.test)
 
-    testImplementation(Libs.bluetape4k_spring_boot4_core)
-    testImplementation(Libs.springBootStarter("test")) {
+    testImplementation(libs.bluetape4k.spring.boot4.core)
+    testImplementation(libs.spring.boot.starter.test) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")

@@ -1,7 +1,7 @@
 plugins {
-    kotlin("plugin.spring")
-    kotlin("plugin.noarg")
-    id(Plugins.spring_boot)
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.kotlin.noarg)
+    alias(libs.plugins.spring.boot)
 }
 
 springBoot {
@@ -16,32 +16,32 @@ configurations {
 dependencies {
 
     // AWS S3
-    implementation(Libs.spring_cloud_aws_starter)
-    implementation(Libs.spring_cloud_aws_s3)
-    implementation(Libs.aws2_s3)
-    implementation(Libs.aws2_s3_transfer_manager)
-    implementation(Libs.aws2_aws_crt_client)
-    implementation(Libs.bluetape4k_aws)
+    implementation(libs.spring.cloud.aws.starter)
+    implementation(libs.spring.cloud.aws.s3)
+    implementation(libs.aws2.s3.lib)
+    implementation(libs.aws2.s3.transfer.manager)
+    implementation(libs.aws2.aws.crt.client)
+    implementation(libs.bluetape4k.aws)
 
     // AWS Testcontainers
-    implementation(Libs.bluetape4k_testcontainers)
-    implementation(Libs.testcontainers_localstack)
+    implementation(libs.bluetape4k.testcontainers)
+    implementation(libs.testcontainers.localstack)
 
     // Jackson
-    implementation(Libs.bluetape4k_jackson3)
-    implementation(Libs.jackson3_databind)
-    implementation(Libs.jackson3_module_kotlin)
-    implementation(Libs.jackson3_module_blackbird)
+    implementation(libs.bluetape4k.jackson3)
+    implementation(libs.jackson3.databind)
+    implementation(libs.jackson3.module.kotlin)
+    implementation(libs.jackson3.module.blackbird)
 
     // Spring Boot
-    implementation(Libs.springBoot("autoconfigure"))
-    annotationProcessor(Libs.springBoot("autoconfigure-processor"))
-    annotationProcessor(Libs.springBoot("configuration-processor"))
-    runtimeOnly(Libs.springBoot("devtools"))
+    implementation(libs.spring.boot.autoconfigure.lib)
+    annotationProcessor(libs.spring.boot.autoconfigure.processor)
+    annotationProcessor(libs.spring.boot.configuration.processor)
+    runtimeOnly(libs.spring.boot.devtools)
 
-    implementation(Libs.springBootStarter("web"))
-    implementation(Libs.springBootStarter("actuator"))
-    testImplementation(Libs.springBootStarter("test")) {
+    implementation(libs.spring.boot.starter.web)
+    implementation(libs.spring.boot.starter.actuator)
+    testImplementation(libs.spring.boot.starter.test) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")

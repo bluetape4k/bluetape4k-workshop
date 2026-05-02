@@ -1,6 +1,6 @@
 plugins {
-    kotlin("plugin.spring")
-    id(Plugins.spring_boot)
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.spring.boot)
 }
 
 springBoot {
@@ -13,46 +13,46 @@ configurations {
 
 dependencies {
     // Kafka
-    api(Libs.kafka_clients)
-    compileOnly(Libs.kafka_metadata)
-    compileOnly(Libs.kafka_streams)
+    api(libs.kafka.clients)
+    compileOnly(libs.kafka.metadata)
+    compileOnly(libs.kafka.streams.lib)
 
-    implementation(Libs.spring_kafka)
-    implementation(Libs.spring_kafka_test)
-    implementation(Libs.springData("commons"))
+    implementation(libs.spring.kafka.lib)
+    implementation(libs.spring.kafka.test)
+    implementation(libs.spring.data.commons)
 
-    // implementation(Libs.bluetape4k_kafka)
-    implementation(Libs.bluetape4k_testcontainers)
-    implementation(Libs.testcontainers_kafka)
+    // implementation(libs.bluetape4k.kafka)
+    implementation(libs.bluetape4k.testcontainers)
+    implementation(libs.testcontainers.kafka)
 
     // Jackson
-    api(Libs.bluetape4k_jackson2)
-    api(Libs.jackson_databind)
-    api(Libs.jackson_module_kotlin)
-    api(Libs.jackson_module_blackbird)
+    api(libs.bluetape4k.jackson2)
+    api(libs.jackson.databind)
+    api(libs.jackson.module.kotlin)
+    api(libs.jackson.module.blackbird)
 
     // Coroutines
-    implementation(Libs.bluetape4k_coroutines)
-    implementation(Libs.kotlinx_coroutines_core)
-    implementation(Libs.kotlinx_coroutines_reactor)
-    testImplementation(Libs.kotlinx_coroutines_test)
+    implementation(libs.bluetape4k.coroutines)
+    implementation(libs.kotlinx.coroutines.core.lib)
+    implementation(libs.kotlinx.coroutines.reactor)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
 
     // Reactor
-    compileOnly(Libs.reactor_kafka)
-    compileOnly(Libs.reactor_kotlin_extensions)
-    testImplementation(Libs.reactor_test)
+    compileOnly(libs.reactor.kafka)
+    compileOnly(libs.reactor.kotlin.extensions)
+    testImplementation(libs.reactor.test)
 
-    implementation(Libs.bluetape4k_spring_boot4_core)
+    implementation(libs.bluetape4k.spring.boot4.core)
 
     // Spring Boot
-    implementation(Libs.springBoot("autoconfigure"))
-    annotationProcessor(Libs.springBoot("autoconfigure-processor"))
-    annotationProcessor(Libs.springBoot("configuration-processor"))
-    // runtimeOnly(Libs.springBoot("devtools"))
+    implementation(libs.spring.boot.autoconfigure.lib)
+    annotationProcessor(libs.spring.boot.autoconfigure.processor)
+    annotationProcessor(libs.spring.boot.configuration.processor)
+    // runtimeOnly(libs.spring.boot.devtools)
 
-    implementation(Libs.springBootStarter("webflux"))
+    implementation(libs.spring.boot.starter.webflux.lib)
 
-    testImplementation(Libs.springBootStarter("test")) {
+    testImplementation(libs.spring.boot.starter.test) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")

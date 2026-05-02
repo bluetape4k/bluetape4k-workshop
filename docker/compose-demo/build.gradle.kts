@@ -4,14 +4,14 @@ configurations {
 
 dependencies {
 
-    implementation(Libs.bluetape4k_core)
+    implementation(libs.bluetape4k.core)
 
-    testImplementation(Libs.redisson)
+    testImplementation(libs.redisson.lib)
 
-    testImplementation(Libs.testcontainers)
-    testImplementation(Libs.testcontainers_junit_jupiter)
+    testImplementation(libs.testcontainers.lib)
+    testImplementation(libs.testcontainers.junit.jupiter)
 
     // Apple Silicon M1 에서 linux/amd64 platform 용 Docker 이미지를 실행하기 위해서 필요한 라이브러리
-    testImplementation(Libs.jna)
-    testImplementation(Libs.jna_platform)
+    testImplementation(libs.jna.lib)
+    testImplementation(libs.jna.platform)
 }

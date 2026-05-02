@@ -1,5 +1,5 @@
 plugins {
-    kotlin("plugin.spring")
+    alias(libs.plugins.kotlin.spring)
 }
 
 configurations {
@@ -7,45 +7,45 @@ configurations {
 }
 
 dependencies {
-    runtimeOnly(Libs.springBoot("devtools"))
-    annotationProcessor(Libs.springBoot("configuration-processor"))
+    runtimeOnly(libs.spring.boot.devtools)
+    annotationProcessor(libs.spring.boot.configuration.processor)
 
-    implementation(Libs.springBootStarter("actuator"))
-    implementation(Libs.springBootStarter("aspectj"))
-    implementation(Libs.springBootStarter("validation"))
-    implementation(Libs.springBootStarter("webflux"))
-    testImplementation(Libs.springBootStarter("webflux-test"))
+    implementation(libs.spring.boot.starter.actuator)
+    implementation(libs.spring.boot.starter.aspectj)
+    implementation(libs.spring.boot.starter.validation)
+    implementation(libs.spring.boot.starter.webflux.lib)
+    testImplementation(libs.spring.boot.starter.webflux.test)
 
-    implementation(Libs.springBootStarter("data-mongodb"))
-    implementation(Libs.springBootStarter("data-mongodb-reactive"))
-    testImplementation(Libs.springBootStarter("data-mongodb-test"))
+    implementation(libs.spring.boot.starter.data.mongodb.lib)
+    implementation(libs.spring.boot.starter.data.mongodb.reactive)
+    testImplementation(libs.spring.boot.starter.data.mongodb.test)
 
-    testImplementation(Libs.springBootStarter("test")) {
+    testImplementation(libs.spring.boot.starter.test) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")
     }
 
     // Mongo Driver
-    implementation(Libs.mongodb_driver_kotlin_sync)
-    implementation(Libs.mongodb_driver_kotlin_coroutine)
-    implementation(Libs.mongodb_driver_kotlin_extensions)
+    implementation(libs.mongodb.driver.kotlin.sync)
+    implementation(libs.mongodb.driver.kotlin.coroutine)
+    implementation(libs.mongodb.driver.kotlin.extensions)
 
     // MongoDB Testcontainers
-    implementation(Libs.bluetape4k_testcontainers)
-    implementation(Libs.testcontainers)
-    implementation(Libs.testcontainers_mongodb)
+    implementation(libs.bluetape4k.testcontainers)
+    implementation(libs.testcontainers.lib)
+    implementation(libs.testcontainers.mongodb)
 
     // Coroutines
-    implementation(Libs.bluetape4k_coroutines)
-    implementation(Libs.kotlinx_coroutines_core)
-    implementation(Libs.kotlinx_coroutines_reactive)
-    implementation(Libs.kotlinx_coroutines_reactor)
-    testImplementation(Libs.kotlinx_coroutines_test)
+    implementation(libs.bluetape4k.coroutines)
+    implementation(libs.kotlinx.coroutines.core.lib)
+    implementation(libs.kotlinx.coroutines.reactive)
+    implementation(libs.kotlinx.coroutines.reactor)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
 
-    implementation(Libs.bluetape4k_idgenerators)
-    testImplementation(Libs.bluetape4k_junit5)
+    implementation(libs.bluetape4k.idgenerators)
+    testImplementation(libs.bluetape4k.junit5)
 
-    testImplementation(Libs.reactor_test)
-    testImplementation(Libs.turbine)
+    testImplementation(libs.reactor.test)
+    testImplementation(libs.turbine)
 }

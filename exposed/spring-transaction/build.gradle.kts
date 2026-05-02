@@ -1,6 +1,6 @@
 plugins {
-    kotlin("plugin.spring")
-    id(Plugins.gatling) version Plugins.Versions.gatling
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.gatling.plugin)
 }
 
 
@@ -9,49 +9,49 @@ configurations {
 }
 
 dependencies {
-    implementation(platform(Libs.exposed_bom))
+    implementation(platform(libs.exposed.bom))
     implementation(project(":exposed-domain"))
 
     // Exposed
-    implementation(Libs.bluetape4k_exposed)
-    implementation(Libs.exposed_core)
-    implementation(Libs.exposed_dao)
-    implementation(Libs.exposed_jdbc)
-    implementation(Libs.exposed_kotlin_datetime)
-    implementation(Libs.exposed_spring_boot4_starter)
+    implementation(libs.bluetape4k.exposed.lib)
+    implementation(libs.exposed.core)
+    implementation(libs.exposed.dao)
+    implementation(libs.exposed.jdbc)
+    implementation(libs.exposed.kotlin.datetime)
+    implementation(libs.exposed.spring.boot4.starter)
 
     // Database Drivers
-    implementation(Libs.hikaricp)
+    implementation(libs.hikaricp)
 
     // H2
-    implementation(Libs.h2_v2)
+    implementation(libs.h2.v2)
 
     // Bluetape4k
-    implementation(Libs.bluetape4k_idgenerators)
-    implementation(Libs.bluetape4k_io)
+    implementation(libs.bluetape4k.idgenerators)
+    implementation(libs.bluetape4k.io)
 
     // Jackson for Kotlin
-    implementation(Libs.jackson3_module_kotlin)
-    implementation(Libs.jackson3_module_blackbird)
+    implementation(libs.jackson3.module.kotlin)
+    implementation(libs.jackson3.module.blackbird)
 
     // Spring Boot 4
-    implementation(Libs.springBoot("autoconfigure"))
-    annotationProcessor(Libs.springBoot("autoconfigure-processor"))
-    annotationProcessor(Libs.springBoot("configuration-processor"))
-    runtimeOnly(Libs.springBoot("devtools"))
+    implementation(libs.spring.boot.autoconfigure.lib)
+    annotationProcessor(libs.spring.boot.autoconfigure.processor)
+    annotationProcessor(libs.spring.boot.configuration.processor)
+    runtimeOnly(libs.spring.boot.devtools)
     
-    implementation(Libs.springBootStarter("jdbc"))
-    implementation(Libs.springBootStarter("jdbc-test"))
-    testImplementation(Libs.springBootStarter("test")) {
+    implementation(libs.spring.boot.starter.jdbc.lib)
+    implementation(libs.spring.boot.starter.jdbc.test)
+    testImplementation(libs.spring.boot.starter.test) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")
     }
 
     // Coroutines
-    implementation(Libs.bluetape4k_coroutines)
-    testImplementation(Libs.kotlinx_coroutines_core)
-    testImplementation(Libs.kotlinx_coroutines_reactor)
-    testImplementation(Libs.kotlinx_coroutines_debug)
-    testImplementation(Libs.kotlinx_coroutines_test)
+    implementation(libs.bluetape4k.coroutines)
+    testImplementation(libs.kotlinx.coroutines.core.lib)
+    testImplementation(libs.kotlinx.coroutines.reactor)
+    testImplementation(libs.kotlinx.coroutines.debug)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
 }

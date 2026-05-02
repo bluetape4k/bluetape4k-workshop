@@ -4,16 +4,16 @@ configurations {
 
 dependencies {
     // Jackson
-    implementation(Libs.bluetape4k_jackson3)
-    implementation(Libs.jackson3_databind)
-    implementation(Libs.jackson3_module_kotlin)
-    implementation(Libs.jackson3_module_blackbird)
+    implementation(libs.bluetape4k.jackson3)
+    implementation(libs.jackson3.databind)
+    implementation(libs.jackson3.module.kotlin)
+    implementation(libs.jackson3.module.blackbird)
 
-    compileOnly(Libs.jsonpath)
-    testImplementation(Libs.jsonassert)
+    compileOnly(libs.jsonpath)
+    testImplementation(libs.jsonassert)
 
     // bluetape4k
-    implementation(Libs.bluetape4k_core)
-    implementation(Libs.bluetape4k_coroutines)
-    testImplementation(Libs.bluetape4k_junit5)
+    implementation(libs.bluetape4k.core)
+    implementation(libs.bluetape4k.coroutines)
+    testImplementation(libs.bluetape4k.junit5)
 }
