@@ -19,7 +19,7 @@ idea {
 // 참고: https://github.com/grpc/grpc-kotlin/blob/master/compiler/README.md
 protobuf {
     protoc {
-        artifact = libs.protobuf.protoc.get().toString()
+        artifact = "com.google.protobuf:protoc:${libs.versions.protobuf.asProvider().get()}"
     }
     generateProtoTasks {
         all().forEach { task ->
