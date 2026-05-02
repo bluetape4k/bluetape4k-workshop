@@ -239,6 +239,11 @@ subprojects {
             mavenBom(rootLibs.kotlinx.coroutines.bom.get().toString())
             mavenBom(rootLibs.kotlin.bom.get().toString())
         }
+        dependencies {
+            // spring-boot BOM 의 logback 버전을 catalog 정의(1.5.32)로 override
+            dependency(rootLibs.logback.lib.get().toString())
+            dependency(rootLibs.logback.core.get().toString())
+        }
     }
 
     dependencies {
