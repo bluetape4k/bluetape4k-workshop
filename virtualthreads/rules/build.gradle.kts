@@ -6,15 +6,16 @@ configurations {
 
 dependencies {
 
-    implementation(Libs.bluetape4k_core)
+    implementation(libs.bluetape4k.core)
     // VirtualThread of JDK 25
-    implementation(Libs.bluetape4k_virtualthread_api)
-    runtimeOnly(Libs.bluetape4k_virtualthread_jdk25)
+    implementation(libs.bluetape4k.virtualthread.api)
+    // runtimeOnly(libs.bluetape4k.virtualthread.jdk21)
+    runtimeOnly(libs.bluetape4k.virtualthread.jdk25)
 
     // Coroutines
-    implementation(Libs.bluetape4k_coroutines)
-    implementation(Libs.kotlinx_coroutines_core)
-    implementation(Libs.kotlinx_coroutines_reactor)
-    testImplementation(Libs.kotlinx_coroutines_test)
+    implementation(libs.bluetape4k.coroutines)
+    implementation(libs.kotlinx.coroutines.core.lib)
+    implementation(libs.kotlinx.coroutines.reactor)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
 
 }

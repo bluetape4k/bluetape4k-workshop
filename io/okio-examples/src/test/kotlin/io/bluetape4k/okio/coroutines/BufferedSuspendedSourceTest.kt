@@ -5,6 +5,8 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.okio.AbstractOkioTest
 import okio.Buffer
 import okio.EOFException
+import okio.Options
+import okio.ByteString.Companion.encodeUtf8
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldBeNull
 import org.amshove.kluent.shouldBeTrue
@@ -87,6 +89,56 @@ class BufferedSuspendedSourceTest: AbstractOkioTest() {
         source.readUtf8Line() shouldBeEqualTo "hello"
         source.readUtf8Line() shouldBeEqualTo "world"
         source.readUtf8Line().shouldBeNull() // No more lines
+    }
+
+    @Test
+    fun `select consumes the matched option`() = runSuspendIO {
+        val buffer = Buffer().writeUtf8("width=640\n")
+        val source = RealBufferedSuspendedSource(FakeSuspendedSource(buffer))
+        val options = Options.of("depth=".encodeUtf8(), "height=".encodeUtf8(), "width=".encodeUtf8())
+
+        source.select(options) shouldBeEqualTo 2
+        source.readDecimalLong() shouldBeEqualTo 640L
+    }
+
+    @Test
+    fun `select returns minus one when no option matches and keeps buffered data`() = runSuspendIO {
+        val buffer = Buffer().writeUtf8("unknown")
+        val source = RealBufferedSuspendedSource(FakeSuspendedSource(buffer))
+        val options = Options.of("depth=".encodeUtf8(), "height=".encodeUtf8())
+
+        source.select(options) shouldBeEqualTo -1
+        source.readUtf8() shouldBeEqualTo "unknown"
+    }
+
+    @Test
+    fun `select returns minus one on empty source`() = runSuspendIO {
+        val source = RealBufferedSuspendedSource(FakeSuspendedSource(Buffer()))
+        val options = Options.of("hello".encodeUtf8(), "world".encodeUtf8())
+
+        source.select(options) shouldBeEqualTo -1
+    }
+
+    @Test
+    fun `select matches first option when multiple options share prefix`() = runSuspendIO {
+        val buffer = Buffer().writeUtf8("foobar")
+        val source = RealBufferedSuspendedSource(FakeSuspendedSource(buffer))
+        // "foo"가 "foobar"보다 먼저 등장 — 순서가 중요
+        val options = Options.of("foo".encodeUtf8(), "foobar".encodeUtf8())
+
+        source.select(options) shouldBeEqualTo 0
+        source.readUtf8() shouldBeEqualTo "bar"
+    }
+
+    @Test
+    fun `select with data split across multiple reads`() = runSuspendIO {
+        // 데이터가 한 번에 도달하지 않는 상황 시뮬레이션
+        val buffer = Buffer().writeUtf8("width=320\n")
+        val source = RealBufferedSuspendedSource(FakeSuspendedSource(buffer))
+        val options = Options.of("height=".encodeUtf8(), "width=".encodeUtf8())
+
+        source.select(options) shouldBeEqualTo 1
+        source.readDecimalLong() shouldBeEqualTo 320L
     }
 
     @Test

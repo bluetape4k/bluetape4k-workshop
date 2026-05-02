@@ -1,7 +1,7 @@
 plugins {
-    kotlin("plugin.spring")
-    id(Plugins.spring_boot)
-    id(Plugins.graalvm_native)
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.graalvm.native)
 }
 
 springBoot {
@@ -13,46 +13,48 @@ configurations {
 }
 
 dependencies {
-    implementation(Libs.bluetape4k_redis)
-    implementation(Libs.bluetape4k_jackson3)
-    testImplementation(Libs.bluetape4k_junit5)
-    implementation(Libs.bluetape4k_testcontainers)
+    implementation(libs.bluetape4k.lettuce)
+    implementation(libs.bluetape4k.jackson3)
+    implementation(libs.bluetape4k.spring.boot4.core)
+    implementation(libs.bluetape4k.spring.boot4.redis)
+    testImplementation(libs.bluetape4k.junit5)
+    implementation(libs.bluetape4k.testcontainers)
 
     // Codecs
-    implementation(Libs.kryo)
-    implementation(Libs.fory_kotlin)
+    implementation(libs.kryo)
+    implementation(libs.fory.kotlin)
 
     // Compressor
-    implementation(Libs.commons_compress)
-    implementation(Libs.lz4_java)
-    implementation(Libs.snappy_java)
-    implementation(Libs.zstd_jni)
+    implementation(libs.commons.compress)
+    implementation(libs.lz4.java)
+    implementation(libs.snappy.java)
+    implementation(libs.zstd.jni)
 
     // Coroutines
-    implementation(Libs.bluetape4k_coroutines)
-    implementation(Libs.kotlinx_coroutines_core)
-    implementation(Libs.kotlinx_coroutines_reactor)
-    testImplementation(Libs.kotlinx_coroutines_test)
+    implementation(libs.bluetape4k.coroutines)
+    implementation(libs.kotlinx.coroutines.core.lib)
+    implementation(libs.kotlinx.coroutines.reactor)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
 
     // Reactor
-    implementation(Libs.reactor_kotlin_extensions)
-    testImplementation(Libs.reactor_test)
+    implementation(libs.reactor.kotlin.extensions)
+    testImplementation(libs.reactor.test)
 
     // Lettuce
-    implementation(Libs.lettuce_core)
-    implementation(Libs.commons_pool2)
+    implementation(libs.lettuce.core)
+    implementation(libs.commons.pool2)
 
     // Netty
-    implementation(platform(Libs.netty_bom))
-    implementation(Libs.netty_all)
-    implementation(Libs.netty_transport_native_epoll)
-    implementation(Libs.netty_transport_native_kqueue)
+    implementation(platform(libs.netty.bom))
+    implementation(libs.netty.all)
+    implementation(libs.netty.transport.native.epoll)
+    implementation(libs.netty.transport.native.kqueue)
 
-    implementation(Libs.springBootStarter("cache"))
-    testImplementation(Libs.springBootStarter("cache-test"))
-    implementation(Libs.springBootStarter("data-redis"))
-    testImplementation(Libs.springBootStarter("data-redis-test"))
-    testImplementation(Libs.springBootStarter("test")) {
+    implementation(libs.spring.boot.starter.cache.lib)
+    testImplementation(libs.spring.boot.starter.cache.test)
+    implementation(libs.spring.boot.starter.data.redis.lib)
+    testImplementation(libs.spring.boot.starter.data.redis.test)
+    testImplementation(libs.spring.boot.starter.test) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")

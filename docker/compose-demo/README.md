@@ -9,6 +9,36 @@
 
 이 예제는 `Testcontainers`의 `DockerComposeContainer` 사용하여 `docker-compose.yml` 파일로부터 복수의 컨테이너를 실행하는 방법을 보여줍니다.
 
+```mermaid
+flowchart TD
+    subgraph 테스트["JUnit 5 테스트"]
+        TC["Testcontainers\nDockerComposeContainer"]
+    end
+
+    subgraph 컴포즈파일["docker-compose 파일"]
+        Single1["docker-compose-postgres.yml"]
+        Single2["docker-compose-redis.yml"]
+        Multi["docker-compose-multiple.yml"]
+    end
+
+    subgraph 컨테이너["실행 컨테이너"]
+        PG["PostgreSQL 18\n(포트 5432)"]
+        Redis["Redis 7\n(포트 6379)"]
+        ES["Elasticsearch 8\n(포트 9200)"]
+    end
+
+    TC -->|"파일 지정"| Single1
+    TC -->|"파일 지정"| Single2
+    TC -->|"파일 지정"| Multi
+
+    Single1 --> PG
+    Single2 --> Redis
+    Multi --> PG
+    Multi --> ES
+
+    테스트 -->|"컨테이너 준비 완료 후 테스트 실행"| 컨테이너
+```
+
 ## 참고
 
 * [Docker Compose Module](https://www.testcontainers.org/modules/docker_compose/)

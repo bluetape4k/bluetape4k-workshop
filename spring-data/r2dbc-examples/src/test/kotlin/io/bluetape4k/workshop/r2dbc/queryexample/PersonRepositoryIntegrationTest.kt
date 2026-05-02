@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.domain.Example
 import org.springframework.data.domain.ExampleMatcher
+import org.springframework.data.domain.ExampleMatcher.GenericPropertyMatchers
 import org.springframework.r2dbc.core.DatabaseClient
 import java.util.*
 
@@ -74,7 +75,7 @@ class PersonRepositoryIntegrationTest @Autowired constructor(
         // Kotlin 클래스에 대해서 non-null 때문에 Example 만드는 것은 이렇게 Example에 지정할 속성명을 특정해주는 [ExampleMatcher]를 사용해야 한다!!!
         val matcher = Person::class
             .buildExampleMatcher(Person::lastname.name)
-            .withMatcher(Person::lastname.name, ExampleMatcher.GenericPropertyMatchers.exact())
+            .withMatcher(Person::lastname.name, GenericPropertyMatchers.exact())
             .withIgnoreNullValues()
 
         val personExample = Person("", "White", 0)
@@ -88,7 +89,7 @@ class PersonRepositoryIntegrationTest @Autowired constructor(
         // Kotlin 클래스에 대해서 non-null 때문에 Example 만드는 것은 이렇게 Example에 지정할 속성명을 특정해주는 [ExampleMatcher]를 사용해야 한다!!!
         val matcher = Person::class
             .buildExampleMatcher(Person::age.name)
-            .withMatcher(Person::age.name, ExampleMatcher.GenericPropertyMatchers.exact())
+            .withMatcher(Person::age.name, GenericPropertyMatchers.exact())
             .withIgnoreNullValues()
 
         val example = Example.of(flynn, matcher)
@@ -101,8 +102,8 @@ class PersonRepositoryIntegrationTest @Autowired constructor(
         // Kotlin 클래스에 대해서 non-null 때문에 Example 만드는 것은 이렇게 Example에 지정할 속성명을 특정해주는 [ExampleMatcher]를 사용해야 한다!!!
         val matcher = Person::class
             .buildExampleMatcher(Person::firstname.name, Person::lastname.name)
-            .withMatcher(Person::firstname.name, ExampleMatcher.GenericPropertyMatchers.startsWith())
-            .withMatcher(Person::lastname.name, ExampleMatcher.GenericPropertyMatchers.ignoreCase())
+            .withMatcher(Person::firstname.name, GenericPropertyMatchers.startsWith())
+            .withMatcher(Person::lastname.name, GenericPropertyMatchers.ignoreCase())
             .withIgnoreNullValues()
 
         val example = Example.of(Person("Walter", "WHITE", 0), matcher)
@@ -115,8 +116,8 @@ class PersonRepositoryIntegrationTest @Autowired constructor(
         // Kotlin 클래스에 대해서 non-null 때문에 Example 만드는 것은 이렇게 Example에 지정할 속성명을 특정해주는 [ExampleMatcher]를 사용해야 한다!!!
         val matcher = ExampleMatcher.matching()
             .withIgnorePaths(Person::age.name)
-            .withMatcher(Person::firstname.name, ExampleMatcher.GenericPropertyMatchers.startsWith())
-            .withMatcher(Person::lastname.name, ExampleMatcher.GenericPropertyMatchers.ignoreCase())
+            .withMatcher(Person::firstname.name, GenericPropertyMatchers.startsWith())
+            .withMatcher(Person::lastname.name, GenericPropertyMatchers.ignoreCase())
             .withIgnoreNullValues()
 
         val example = Example.of(Person("Walter", "WHITE", 0), matcher)

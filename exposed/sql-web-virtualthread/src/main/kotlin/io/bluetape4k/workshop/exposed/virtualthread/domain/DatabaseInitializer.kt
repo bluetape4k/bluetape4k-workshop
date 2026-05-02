@@ -4,15 +4,14 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.ActorDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.dto.MovieWithActorDTO
-import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Actors
-import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.ActorsInMovies
-import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Movies
+import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.ActorInMovieTable
+import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.ActorTable
+import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.MovieTable
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.batchInsert
-import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -42,14 +41,14 @@ class DatabaseInitializer(
         log.info { "Creating schema and test data ..." }
 
         transaction(database) {
-            SchemaUtils.createMissingTablesAndColumns(Actors, Movies, ActorsInMovies)
+            SchemaUtils.createMissingTablesAndColumns(ActorTable, MovieTable, ActorInMovieTable)
         }
     }
 
     private fun insertTestData(database: Database) {
 
         val totalActors = transaction(database) {
-            Actors.selectAll().count()
+            ActorTable.selectAll().count()
         }
 
         if (totalActors > 0) {
@@ -109,36 +108,37 @@ class DatabaseInitializer(
         )
 
         transaction(database) {
-            Actors.batchInsert(actors) {
-                this[Actors.firstName] = it.firstName
-                this[Actors.lastName] = it.lastName
+            ActorTable.batchInsert(actors) {
+                this[ActorTable.firstName] = it.firstName
+                this[ActorTable.lastName] = it.lastName
                 it.dateOfBirth?.let { birthDay ->
-                    this[Actors.dateOfBirth] = LocalDate.parse(birthDay)
+                    this[ActorTable.dateOfBirth] = LocalDate.parse(birthDay)
                 }
             }
 
-            Movies.batchInsert(movies) {
-                this[Movies.name] = it.name
-                this[Movies.producerName] = it.producerName
-                this[Movies.releaseDate] = LocalDate.parse(it.releaseDate).atTime(0, 0)
+            MovieTable.batchInsert(movies) {
+                this[MovieTable.name] = it.name
+                this[MovieTable.producerName] = it.producerName
+                this[MovieTable.releaseDate] = LocalDate.parse(it.releaseDate).atTime(0, 0)
             }
 
             movies.forEach { movie ->
-                val movieId = Movies
-                    .select(Movies.id)
-                    .where { Movies.name eq movie.name }
-                    .first()[Movies.id]
+                val movieId = MovieTable
+                    .select(MovieTable.id)
+                    .where { MovieTable.name eq movie.name }
+                    .first()[MovieTable.id]
 
-                movie.actors.forEach { actor ->
-                    val actorId = Actors
-                        .select(Actors.id)
-                        .where { (Actors.firstName eq actor.firstName) and (Actors.lastName eq actor.lastName) }
-                        .first()[Actors.id]
+                val actorIds = movie.actors.map { actor ->
+                    ActorTable
+                        .select(ActorTable.id)
+                        .where { (ActorTable.firstName eq actor.firstName) and (ActorTable.lastName eq actor.lastName) }
+                        .first()[ActorTable.id]
+                }
 
-                    ActorsInMovies.insert {
-                        it[ActorsInMovies.actorId] = actorId.value
-                        it[ActorsInMovies.movieId] = movieId.value
-                    }
+                val movieActorIds = actorIds.map { movieId to it }
+                ActorInMovieTable.batchInsert(movieActorIds) {
+                    this[ActorInMovieTable.movieId] = it.first.value
+                    this[ActorInMovieTable.actorId] = it.second.value
                 }
             }
         }

@@ -8,7 +8,7 @@ import io.bluetape4k.utils.Runtimex
 import io.bluetape4k.workshop.exposed.virtualthread.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.virtualthread.domain.mapper.toActorDTO
 import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Actor
-import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.Actors
+import io.bluetape4k.workshop.exposed.virtualthread.domain.schema.ActorTable
 import org.amshove.kluent.shouldNotBeEmpty
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -34,7 +34,7 @@ class DomainSQLTest(
         @RepeatedTest(REPEAT_SIZE)
         fun `get all actors in platform threads`() {
             transaction {
-                val actors = Actors.selectAll().map { it.toActorDTO() }
+                val actors = ActorTable.selectAll().map { it.toActorDTO() }
                 actors.shouldNotBeEmpty()
             }
         }
@@ -46,7 +46,7 @@ class DomainSQLTest(
                 .rounds(4)
                 .add {
                     transaction(db) {
-                        val actors = Actors.selectAll().map { it.toActorDTO() }
+                        val actors = ActorTable.selectAll().map { it.toActorDTO() }
                         actors.shouldNotBeEmpty()
                     }
                 }
@@ -60,7 +60,7 @@ class DomainSQLTest(
         fun `get all actors in virtual threads`() {
             virtualFuture {
                 transaction {
-                    val actors = Actors.selectAll().map { it.toActorDTO() }
+                    val actors = ActorTable.selectAll().map { it.toActorDTO() }
                     actors.shouldNotBeEmpty()
                 }
             }.await()

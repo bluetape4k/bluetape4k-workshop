@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.spring.modulith.events.c.architecture.before.orde
 
 import io.bluetape4k.ToStringBuilder
 import io.bluetape4k.hibernate.model.AbstractJpaEntity
-import io.bluetape4k.idgenerators.uuid.TimebasedUuid
+import io.bluetape4k.idgenerators.uuid.Uuid
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
@@ -16,7 +16,7 @@ import org.hibernate.annotations.DynamicUpdate
 class Order: AbstractJpaEntity<String>() {
 
     @Id
-    override var id: String? = TimebasedUuid.Reordered.nextIdAsString()
+    override var id: String? = Uuid.V7.nextIdAsString()
     var status: OrderStatus = OrderStatus.OPEN
 
     fun complete() {

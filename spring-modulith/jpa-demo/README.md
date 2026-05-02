@@ -2,6 +2,56 @@
 
 원본: [sample-spring-modulith](https://github.com/piomin/sample-spring-modulith )
 
+## 모듈 의존성 구조
+
+```mermaid
+flowchart LR
+    subgraph gateway["gateway 모듈 (외부 노출)"]
+        GatewayMgmt["GatewayManagement\nREST API 진입점"]
+    end
+
+    subgraph organization["organization 모듈"]
+        OrgExternalAPI["OrganizationExternalAPI\n공개 인터페이스"]
+        OrgMgmt["OrganizationManagement"]
+        OrgRepo["OrganizationRepository"]
+        OrgModel["Organization 엔티티"]
+        OrgExternalAPI --> OrgMgmt --> OrgRepo --> OrgModel
+    end
+
+    subgraph department["department 모듈"]
+        DeptExternalAPI["DepartmentExternalAPI\n공개 인터페이스"]
+        DeptInternalAPI["DepartmentInternalAPI\n내부 인터페이스"]
+        DeptMgmt["DepartmentManagement"]
+        DeptRepo["DepartmentRepository"]
+        DeptModel["Department 엔티티"]
+        DeptExternalAPI --> DeptMgmt --> DeptRepo --> DeptModel
+        DeptInternalAPI --> DeptMgmt
+    end
+
+    subgraph employee["employee 모듈"]
+        EmpExternalAPI["EmployeeExternalAPI\n공개 인터페이스"]
+        EmpInternalAPI["EmployeeInternalAPI\n내부 인터페이스"]
+        EmpMgmt["EmployeeManagement"]
+        EmpRepo["EmployeeRepository"]
+        EmpModel["Employee 엔티티"]
+        EmpExternalAPI --> EmpMgmt --> EmpRepo --> EmpModel
+        EmpInternalAPI --> EmpMgmt
+    end
+
+    subgraph 이벤트["Spring Modulith 이벤트"]
+        OrgAddEvent["OrganizationAddEvent"]
+        OrgRemoveEvent["OrganizationRemoveEvent"]
+    end
+
+    GatewayMgmt --> OrgExternalAPI
+    GatewayMgmt --> DeptExternalAPI
+    GatewayMgmt --> EmpExternalAPI
+    OrgMgmt -->|발행| OrgAddEvent
+    OrgMgmt -->|발행| OrgRemoveEvent
+    DeptMgmt -->|구독| OrgAddEvent
+    EmpMgmt -->|구독| OrgAddEvent
+```
+
 ## 참고 자료
 
 - [Spring Modulith 공식 문서](https://docs.spring.io/spring-modulith/reference/index.html)

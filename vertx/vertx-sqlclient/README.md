@@ -1,5 +1,28 @@
 # Vert.x Sql Client Example
 
+## Reactive SQL 처리 흐름
+
+```mermaid
+sequenceDiagram
+    participant 테스트 as 테스트 코드
+    participant 풀 as JDBCPool / MySQLPool
+    participant 템플릿 as SqlClientTemplate
+    participant DB as 데이터베이스
+
+    테스트->>풀: pool.preparedQuery(sql)
+    풀->>DB: 비동기 SQL 실행
+    DB-->>풀: RowSet 반환
+    풀-->>테스트: coAwait() 결과
+
+    테스트->>템플릿: SqlTemplate.forQuery(pool, sql)
+    템플릿->>DB: 파라미터 바인딩 + 실행
+    DB-->>템플릿: 결과 행
+    템플릿-->>테스트: User 객체 매핑
+
+    Note over 템플릿,DB: DataObject(@VertxDataObject) 매핑
+    Note over 풀,DB: Non-Blocking Reactive I/O
+```
+
 [Vert.x Sql Client](https://vertx.io/docs/vertx-sql-client/java/) 와
 [MyBatis Dynamic SQL](https://mybatis.org/mybatis-dynamic-sql/docs/introduction.html) 을
 사용하여 Async/Non-Blocking 방식으로 데이터베이스를 사용하는 예제입니다.

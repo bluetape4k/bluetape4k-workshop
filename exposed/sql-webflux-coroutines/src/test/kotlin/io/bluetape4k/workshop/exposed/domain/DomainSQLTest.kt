@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.exposed.domain
 
-import io.bluetape4k.exposed.core.transactions.newVirtualThreadTransaction
-import io.bluetape4k.exposed.core.transactions.virtualThreadTransactionAsync
+import io.bluetape4k.exposed.jdbc.newVirtualThreadJdbcTransaction
+import io.bluetape4k.exposed.jdbc.virtualThreadJdbcTransactionAsync
 import io.bluetape4k.junit5.concurrency.StructuredTaskScopeTester
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import io.bluetape4k.junit5.coroutines.runSuspendIO
@@ -9,7 +9,7 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.utils.Runtimex
 import io.bluetape4k.workshop.exposed.AbstractExposedSqlTest
 import io.bluetape4k.workshop.exposed.domain.mapper.toActorDTO
-import io.bluetape4k.workshop.exposed.domain.schema.Actors
+import io.bluetape4k.workshop.exposed.domain.schema.ActorTable
 import org.amshove.kluent.shouldNotBeEmpty
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.experimental.newSuspendedTransaction
@@ -32,7 +32,7 @@ class DomainSQLTest: AbstractExposedSqlTest() {
         @RepeatedTest(REPEAT_SIZE)
         fun `get all actors in coroutines`() = runSuspendIO {
             newSuspendedTransaction {
-                val actors = Actors.selectAll().map { it.toActorDTO() }
+                val actors = ActorTable.selectAll().map { it.toActorDTO() }
                 actors.shouldNotBeEmpty()
             }
         }
@@ -45,7 +45,7 @@ class DomainSQLTest: AbstractExposedSqlTest() {
                 .add {
                     newSuspendedTransaction {
                         // addLogger(StdOutSqlLogger)
-                        val actors = Actors.selectAll().map { it.toActorDTO() }
+                        val actors = ActorTable.selectAll().map { it.toActorDTO() }
                         actors.shouldNotBeEmpty()
                     }
                 }
@@ -58,8 +58,8 @@ class DomainSQLTest: AbstractExposedSqlTest() {
 
         @RepeatedTest(REPEAT_SIZE)
         fun `get all actors in virtual threads`() {
-            newVirtualThreadTransaction {
-                val actors = Actors.selectAll().map { it.toActorDTO() }
+            newVirtualThreadJdbcTransaction {
+                val actors = ActorTable.selectAll().map { it.toActorDTO() }
                 actors.shouldNotBeEmpty()
             }
         }
@@ -70,8 +70,8 @@ class DomainSQLTest: AbstractExposedSqlTest() {
             StructuredTaskScopeTester()
                 .roundsPerTask(Runtimex.availableProcessors * 2 * 4)
                 .add {
-                    val actors = virtualThreadTransactionAsync {
-                        Actors.selectAll().map { it.toActorDTO() }
+                    val actors = virtualThreadJdbcTransactionAsync {
+                        ActorTable.selectAll().map { it.toActorDTO() }
                     }.await()
                     actors.shouldNotBeEmpty()
                 }

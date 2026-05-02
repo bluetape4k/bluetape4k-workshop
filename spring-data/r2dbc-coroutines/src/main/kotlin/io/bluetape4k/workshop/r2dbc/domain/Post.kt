@@ -9,10 +9,8 @@ import java.io.Serializable
 data class Post(
     @Column("title")
     val title: String? = null,
-
     @Column("content")
     val content: String? = null,
-
     @Id
     val id: Long? = null,
 ): Serializable

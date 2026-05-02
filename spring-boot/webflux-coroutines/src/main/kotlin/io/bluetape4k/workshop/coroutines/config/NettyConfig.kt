@@ -37,6 +37,7 @@ class NettyConfig {
             return httpServer
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .option(ChannelOption.SO_BACKLOG, 1000)
+                .option(ChannelOption.SO_LINGER, 0)
                 .doOnConnection { conn ->
                     conn.addHandlerLast(ReadTimeoutHandler(10))
                     conn.addHandlerLast(WriteTimeoutHandler(10))
@@ -55,8 +56,7 @@ class NettyConfig {
 
             loopResources = LoopResources.create(
                 "event-loop",
-                4,
-                maxOf(Runtimex.availableProcessors * 2, 8),
+                maxOf(Runtimex.availableProcessors * 8, 64),
                 true
             )
         }

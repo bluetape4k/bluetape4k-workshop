@@ -2,6 +2,45 @@
 
 Kotlin Coroutines의 핵심 개념을 학습하는 예제 모음입니다.
 
+## 코루틴 구조 개요
+
+```mermaid
+flowchart TD
+    subgraph CoroutineScope
+        A[CoroutineScope\n구조화된 동시성]
+        A --> B[launch 빌더\nJob 반환]
+        A --> C[async 빌더\nDeferred 반환]
+        A --> D[runBlocking\n테스트/진입점]
+    end
+
+    subgraph Dispatcher - 실행 스레드
+        E[Dispatchers.Default\nCPU 바운드]
+        F[Dispatchers.IO\nI/O 바운드]
+        G[Dispatchers.Main\nUI 스레드]
+        H[VirtualThread Dispatcher\nVirtual Thread 기반]
+    end
+
+    subgraph Flow - 비동기 스트림
+        I[Flow\nCold Stream]
+        J[SharedFlow\nHot Stream]
+        K[StateFlow\n상태 관리]
+        L[Channel\nProducer-Consumer]
+    end
+
+    subgraph Context 요소
+        M[CoroutineContext]
+        M --> N[Job]
+        M --> O[CoroutineDispatcher]
+        M --> P[커스텀 Element\nCounterContext 등]
+    end
+
+    B & C --> E & F & G & H
+    I --> J --> K
+    L -.->|asFlow| I
+```
+
+## 예제 범주
+
 ## 예제 범주
 
 ### 기초 (`guide/`)

@@ -1,13 +1,12 @@
 package io.bluetape4k.workshop.bucket4j.controller
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.spring.webflux.controller.AbstractCoroutineDefaultController
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
 import java.time.Instant
 
 @RestController
-class CoroutineController: AbstractCoroutineDefaultController() {
+class CoroutineController {
 
     companion object: KLoggingChannel()
 

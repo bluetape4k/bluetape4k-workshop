@@ -1,9 +1,9 @@
 plugins {
-    kotlin("plugin.spring")
-    kotlin("plugin.allopen")
-    kotlin("plugin.noarg")
-    kotlin("plugin.jpa")
-    kotlin("kapt")
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.kotlin.allopen)
+    alias(libs.plugins.kotlin.noarg)
+    alias(libs.plugins.kotlin.jpa)
+    alias(libs.plugins.kotlin.kapt)
 }
 
 // JPA Entities 들을 Java와 같이 모두 override 가능하게 합니다 (Kotlin 은 기본이 final 입니다)
@@ -34,75 +34,75 @@ configurations {
 }
 
 dependencies {
-    implementation(platform(Libs.spring_modulith_bom))
+    implementation(platform(libs.spring.boot4.dependencies))
+    implementation(platform(libs.spring.modulith.bom))
 
     // Spring Modulith
-    implementation(Libs.spring_modulith_actuator)
-    implementation(Libs.spring_modulith_observability)
-    implementation(Libs.spring_modulith_starter_core)
-    implementation(Libs.spring_modulith_starter_jpa)
-    testImplementation(Libs.spring_modulith_starter_test)
+    implementation(libs.spring.modulith.actuator)
+    implementation(libs.spring.modulith.observability)
+    implementation(libs.spring.modulith.starter.core)
+    implementation(libs.spring.modulith.starter.jpa)
+    testImplementation(libs.spring.modulith.starter.test)
 
     // Observability
-    implementation(Libs.micrometer_tracing_bridge_otel)
-    implementation(Libs.opentelemetry_exporter_zipkin)
+    implementation(libs.micrometer.tracing.bridge.otel)
+    implementation(libs.opentelemetry.exporter.zipkin)
 
-    api(Libs.jakarta_annotation_api)
-    api(Libs.jakarta_persistence_api)
-    api(Libs.hibernate_core)
+    api(libs.jakarta.annotation.api)
+    api(libs.jakarta.persistence.api)
+    api(libs.hibernate.core)
 
     // JPA / Hibernate
-    implementation(Libs.bluetape4k_hibernate)
+    implementation(libs.bluetape4k.hibernate)
 
     // QueryDsl
-    implementation(Libs.querydsl_jpa + ":jakarta")
-    kapt(Libs.querydsl_apt + ":jakarta")
-    kaptTest(Libs.querydsl_apt + ":jakarta")
+    implementation(libs.querydsl.jpa.get().toString() + ":jakarta")
+    kapt(libs.querydsl.apt.get().toString() + ":jakarta")
+    kaptTest(libs.querydsl.apt.get().toString() + ":jakarta")
 
-    implementation(Libs.hikaricp)
-    implementation(Libs.h2_v2)
+    implementation(libs.hikaricp)
+    implementation(libs.h2.v2)
 
     // MapStruct
-    implementation(Libs.mapstruct)
-    kapt(Libs.mapstruct_processor)
-    kaptTest(Libs.mapstruct_processor)
+    implementation(libs.mapstruct.lib)
+    kapt(libs.mapstruct.processor)
+    kaptTest(libs.mapstruct.processor)
 
     // Vaidators
-    implementation(Libs.hibernate_validator)
-    runtimeOnly(Libs.jakarta_validation_api)
+    implementation(libs.hibernate.validator.lib)
+    runtimeOnly(libs.jakarta.validation.api)
 
     // Testcontainers
-    implementation(Libs.bluetape4k_testcontainers)
+    implementation(libs.bluetape4k.testcontainers)
 
     // Spring Boot
-    testImplementation(Libs.springBoot("autoconfigure"))
-    annotationProcessor(Libs.springBoot("autoconfigure-processor"))
-    annotationProcessor(Libs.springBoot("configuration-processor"))
-    runtimeOnly(Libs.springBoot("devtools"))
+    testImplementation(libs.spring.boot.autoconfigure.lib)
+    annotationProcessor(libs.spring.boot.autoconfigure.processor)
+    annotationProcessor(libs.spring.boot.configuration.processor)
+    runtimeOnly(libs.spring.boot.devtools)
 
-    implementation(Libs.springBootStarter("actuator"))
-    implementation(Libs.springBootStarter("data-jpa"))
-    implementation(Libs.springBootStarter("validation"))
-    implementation(Libs.springBootStarter("web"))
+    implementation(libs.spring.boot.starter.actuator)
+    implementation(libs.spring.boot.starter.data.jpa.lib)
+    implementation(libs.spring.boot.starter.validation)
+    implementation(libs.spring.boot.starter.web)
 
-    testImplementation(Libs.springBootStarter("webflux"))
-    testImplementation(Libs.springBootStarter("test")) {
+    testImplementation(libs.spring.boot.starter.webflux.lib)
+    testImplementation(libs.spring.boot.starter.test) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")
     }
 
-    testImplementation(Libs.bluetape4k_coroutines)
-    testImplementation(Libs.kotlinx_coroutines_reactor)
-    testImplementation(Libs.kotlinx_coroutines_test)
-    testImplementation(Libs.reactor_kotlin_extensions)
-    testImplementation(Libs.reactor_test)
+    testImplementation(libs.bluetape4k.coroutines)
+    testImplementation(libs.kotlinx.coroutines.reactor)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
+    testImplementation(libs.reactor.kotlin.extensions)
+    testImplementation(libs.reactor.test)
 
     // OpenAPI Documentation
-    implementation(Libs.springdoc_openapi_starter_webmvc_api)
+    implementation(libs.springdoc.openapi.starter.webmvc.api)
 
-    implementation(Libs.bluetape4k_idgenerators)
-    testImplementation(Libs.bluetape4k_spring_tests)
+    implementation(libs.bluetape4k.idgenerators)
 
-    testImplementation(Libs.springmockk)
+    testImplementation(libs.springmockk)
 }

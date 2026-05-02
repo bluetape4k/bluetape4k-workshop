@@ -1,7 +1,7 @@
 plugins {
-    kotlin("plugin.spring")
-    id(Plugins.spring_boot)
-    id(Plugins.graalvm_native)
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.spring.boot)
+//    alias(libs.plugins.graalvm.native)   // spring-cloud 는 아직 aot 를 지원하지 않는다
 }
 
 springBoot {
@@ -19,7 +19,7 @@ springBoot {
 
 dependencyManagement {
     imports {
-        mavenBom(Libs.micrometer_bom)
+        mavenBom(libs.micrometer.bom.get().toString())
     }
 }
 
@@ -32,68 +32,68 @@ dependencies {
 
     testImplementation(project(":shared"))
 
-    implementation(Libs.bluetape4k_jackson3)
-    implementation(Libs.bluetape4k_netty)
-    testImplementation(Libs.bluetape4k_junit5)
+    implementation(libs.bluetape4k.jackson3)
+    implementation(libs.bluetape4k.netty)
+    testImplementation(libs.bluetape4k.junit5)
 
     // Bucket4j
-    implementation(Libs.bluetape4k_bucket4j)
-    implementation(Libs.bucket4j_core)
-    implementation(Libs.bucket4j_lettuce)
-    implementation(Libs.bucket4j_redisson)
+    implementation(libs.bluetape4k.bucket4j)
+    implementation(libs.bucket4j.core)
+    implementation(libs.bucket4j.lettuce)
+    implementation(libs.bucket4j.redisson)
 
     // Redis Cache
-    implementation(Libs.bluetape4k_cache_core)
-    implementation(Libs.lettuce_core)
+    implementation(libs.bluetape4k.cache.core)
+    implementation(libs.lettuce.core)
 
-    implementation(Libs.bluetape4k_testcontainers)
+    implementation(libs.bluetape4k.testcontainers)
 
-    implementation(Libs.jakarta_servlet_api)
+    implementation(libs.jakarta.servlet.api)
 
-    implementation(Libs.bluetape4k_resilience4j)
-    implementation(Libs.resilience4j_spring_boot3)
+    implementation(libs.bluetape4k.resilience4j)
+    implementation(libs.resilience4j.spring.boot4)
 
     // Spring Cloud
-    implementation(Libs.springCloudStarter("gateway-server-webflux"))
-    testImplementation(Libs.springCloudStarter("loadbalancer"))
-    testImplementation(Libs.springCloud("test-support"))
-    testImplementation(Libs.springCloud("gateway-server-webflux") + "::tests")
-    testImplementation(Libs.jmh_core)
+    implementation(libs.spring.cloud.starter.gateway.server.webflux)
+    testImplementation(libs.spring.cloud.starter.loadbalancer)
+    testImplementation(libs.spring.cloud.test.support)
+    testImplementation("org.springframework.cloud:spring-cloud-gateway-server-webflux::tests")
+    testImplementation(libs.jmh.core)
 
     // Spring Boot
-    implementation(Libs.springBoot("autoconfigure"))
-    annotationProcessor(Libs.springBoot("autoconfigure-processor"))
-    annotationProcessor(Libs.springBoot("configuration-processor"))
-    runtimeOnly(Libs.springBoot("devtools"))
+    implementation(libs.spring.boot.autoconfigure.lib)
+    annotationProcessor(libs.spring.boot.autoconfigure.processor)
+    annotationProcessor(libs.spring.boot.configuration.processor)
+    runtimeOnly(libs.spring.boot.devtools)
 
-    implementation(Libs.springBootStarter("actuator"))
-    implementation(Libs.springBootStarter("aspectj"))
-    implementation(Libs.springBootStarter("cache"))
-    implementation(Libs.springBootStarter("validation"))
-    implementation(Libs.springBootStarter("webflux"))
-    implementation(Libs.springBootStarter("webflux-test"))
-    testImplementation(Libs.springBootStarter("test")) {
+    implementation(libs.spring.boot.starter.actuator)
+    implementation(libs.spring.boot.starter.aspectj)
+    implementation(libs.spring.boot.starter.cache.lib)
+    implementation(libs.spring.boot.starter.validation)
+    implementation(libs.spring.boot.starter.webflux.lib)
+    implementation(libs.spring.boot.starter.webflux.test)
+    testImplementation(libs.spring.boot.starter.test) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")
     }
 
     // Coroutines
-    implementation(Libs.bluetape4k_coroutines)
-    implementation(Libs.kotlinx_coroutines_core)
-    implementation(Libs.kotlinx_coroutines_reactor)
-    testImplementation(Libs.kotlinx_coroutines_test)
+    implementation(libs.bluetape4k.coroutines)
+    implementation(libs.kotlinx.coroutines.core.lib)
+    implementation(libs.kotlinx.coroutines.reactor)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
 
     // Reactor
-    implementation(Libs.reactor_netty)
-    implementation(Libs.reactor_kotlin_extensions)
-    testImplementation(Libs.reactor_test)
+    implementation(libs.reactor.netty)
+    implementation(libs.reactor.kotlin.extensions)
+    testImplementation(libs.reactor.test)
 
     // Observability
-    implementation(Libs.micrometer_core)
-    implementation(Libs.micrometer_observation)
-    testImplementation(Libs.micrometer_observation_test)
+    implementation(libs.micrometer.core)
+    implementation(libs.micrometer.observation.lib)
+    testImplementation(libs.micrometer.observation.test)
 
     // SpringDoc - OpenAPI 3.0
-    implementation(Libs.springdoc_openapi_starter_webflux_ui)
+    implementation(libs.springdoc.openapi.starter.webflux.ui)
 }

@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.shared.ddl
 
-import io.bluetape4k.exposed.core.selectImplicitAll
+import io.bluetape4k.exposed.jdbc.selectImplicitAll
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.TestDB.MYSQL_V8

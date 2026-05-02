@@ -1,7 +1,7 @@
 plugins {
-    kotlin("plugin.spring")
-    id(Plugins.spring_boot)
-    id(Plugins.graalvm_native)
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.graalvm.native)
 }
 
 springBoot {
@@ -14,50 +14,50 @@ configurations {
 }
 
 dependencies {
-    implementation(platform(Libs.spring_boot4_dependencies))
+    implementation(platform(libs.spring.boot4.dependencies))
     
     // Kafka
-    // implementation(Libs.bluetape4k_kafka)
-    implementation(Libs.kafka_clients)
-    implementation(Libs.spring_kafka)
-    testImplementation(Libs.spring_kafka_test)
+    // implementation(libs.bluetape4k.kafka)
+    implementation(libs.kafka.clients)
+    implementation(libs.spring.kafka.lib)
+    testImplementation(libs.spring.kafka.test)
 
     // Testcontainers
-    implementation(Libs.bluetape4k_testcontainers)
-    implementation(Libs.testcontainers_kafka)
+    implementation(libs.bluetape4k.testcontainers)
+    implementation(libs.testcontainers.kafka)
 
-    implementation(Libs.bluetape4k_jackson3)
-    testImplementation(Libs.bluetape4k_junit5)
+    implementation(libs.bluetape4k.jackson3)
+    testImplementation(libs.bluetape4k.junit5)
 
-    runtimeOnly(Libs.springBoot("devtools"))
-    annotationProcessor(Libs.springBoot("configuration-processor"))
+    runtimeOnly(libs.spring.boot.devtools)
+    annotationProcessor(libs.spring.boot.configuration.processor)
 
-    implementation(Libs.springBootStarter("actuator"))
-    implementation(Libs.springBootStarter("aspectj"))
-    implementation(Libs.springBootStarter("webflux"))
+    implementation(libs.spring.boot.starter.actuator)
+    implementation(libs.spring.boot.starter.aspectj)
+    implementation(libs.spring.boot.starter.webflux.lib)
 
-    testImplementation(Libs.bluetape4k_spring_tests)
-    testImplementation(Libs.springBootStarter("test")) {
+    testImplementation(libs.bluetape4k.spring.boot4.core)
+    testImplementation(libs.spring.boot.starter.test) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")
     }
 
     // Observability
-    implementation(Libs.micrometer_core)
-    implementation(Libs.micrometer_registry_prometheus)
-    implementation(Libs.micrometer_observation)
-    testImplementation(Libs.micrometer_observation_test)
+    implementation(libs.micrometer.core)
+    implementation(libs.micrometer.registry.prometheus)
+    implementation(libs.micrometer.observation.lib)
+    testImplementation(libs.micrometer.observation.test)
 
     // Coroutines
-    implementation(Libs.bluetape4k_coroutines)
-    implementation(Libs.kotlinx_coroutines_core)
-    implementation(Libs.kotlinx_coroutines_reactor)
-    testImplementation(Libs.kotlinx_coroutines_test)
+    implementation(libs.bluetape4k.coroutines)
+    implementation(libs.kotlinx.coroutines.core.lib)
+    implementation(libs.kotlinx.coroutines.reactor)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
 
-    implementation(Libs.reactor_kotlin_extensions)
-    testImplementation(Libs.reactor_test)
+    implementation(libs.reactor.kotlin.extensions)
+    testImplementation(libs.reactor.test)
 
     // SpringDoc - OpenAPI 3.0
-    implementation(Libs.springdoc_openapi_starter_webflux_ui)
+    implementation(libs.springdoc.openapi.starter.webflux.ui)
 }

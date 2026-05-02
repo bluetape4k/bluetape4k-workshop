@@ -5,7 +5,7 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.exposed.domain.dto.ActorDTO
 import io.bluetape4k.workshop.exposed.domain.mapper.toActorDTO
 import io.bluetape4k.workshop.exposed.domain.schema.Actor
-import io.bluetape4k.workshop.exposed.domain.schema.Actors
+import io.bluetape4k.workshop.exposed.domain.schema.ActorTable
 import kotlinx.datetime.LocalDate
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.andWhere
@@ -36,14 +36,14 @@ class ActorRepository {
         log.debug { "Search Actor by params. params: $params" }
 
         return newSuspendedTransaction {
-            val query = Actors.selectAll()
+            val query = ActorTable.selectAll()
 
             params.forEach { (key, value) ->
                 when (key) {
-                    "id" -> query.andWhere { Actors.id eq value.toInt() }
-                    "firstName" -> query.andWhere { Actors.firstName eq value }
-                    "lastName" -> query.andWhere { Actors.lastName eq value }
-                    "dateOfBirth" -> query.andWhere { Actors.dateOfBirth eq LocalDate.parse(value) }
+                    "id"          -> query.andWhere { ActorTable.id eq value.toInt() }
+                    "firstName"   -> query.andWhere { ActorTable.firstName eq value }
+                    "lastName"    -> query.andWhere { ActorTable.lastName eq value }
+                    "dateOfBirth" -> query.andWhere { ActorTable.dateOfBirth eq LocalDate.parse(value) }
                 }
             }
 
@@ -56,17 +56,17 @@ class ActorRepository {
         log.debug { "Create Actor. actor: $actor" }
 
         return newSuspendedTransaction {
-            val actorId = Actors.insertAndGetId {
-                it[Actors.firstName] = actor.firstName
-                it[Actors.lastName] = actor.lastName
+            val actorId = ActorTable.insertAndGetId {
+                it[ActorTable.firstName] = actor.firstName
+                it[ActorTable.lastName] = actor.lastName
                 actor.dateOfBirth?.let { dateOfBirth ->
-                    it[Actors.dateOfBirth] = LocalDate.parse(dateOfBirth)
+                    it[ActorTable.dateOfBirth] = LocalDate.parse(dateOfBirth)
                 }
             }
 
             // 이렇게 새로 읽는 것이 정식이지만, 단순히 actor.copy(id=actorId)로 반환해도 무방합니다.
-            Actors.selectAll()
-                .where { Actors.id eq actorId }
+            ActorTable.selectAll()
+                .where { ActorTable.id eq actorId }
                 .first()
                 .toActorDTO()
         }
@@ -95,7 +95,7 @@ class ActorRepository {
         log.debug { "Delete Actor by id. actorId: $actorId" }
 
         return newSuspendedTransaction {
-            Actors.deleteWhere { Actors.id eq actorId }
+            ActorTable.deleteWhere { ActorTable.id eq actorId }
         }
     }
 }

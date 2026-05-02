@@ -145,7 +145,7 @@ class DeflaterSinkTest: AbstractOkioTest() {
         val data = bufferOf(Fakers.randomString())
         val defaterSink = DeflaterSink(data, deflater)
 
-        assertFailsWith<IllegalStateException> {
+        assertFailsWith<IOException> {
             defaterSink.write(data, data.size)
         }
     }

@@ -1,7 +1,7 @@
 plugins {
-    kotlin("plugin.spring")
-    id(Plugins.spring_boot)
-    id(Plugins.gatling) version Plugins.Versions.gatling
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.gatling.plugin)
 }
 
 
@@ -25,68 +25,68 @@ configurations {
 
 dependencies {
 
-    implementation(platform(Libs.spring_boot4_dependencies))
+    implementation(platform(libs.spring.boot4.dependencies))
 
     testImplementation(project(":shared"))
 
     // bluetape4k
-    implementation(Libs.bluetape4k_io)
-    implementation(Libs.bluetape4k_jdbc)
+    implementation(libs.bluetape4k.io)
+    implementation(libs.bluetape4k.jdbc)
 
     // Exposed
-    implementation(Libs.bluetape4k_exposed)
-    implementation(Libs.exposed_core)
-    implementation(Libs.exposed_dao)
-    implementation(Libs.exposed_kotlin_datetime)
-    implementation(Libs.exposed_spring_boot4_starter)
-    implementation(Libs.exposed_spring7_transaction)
+    implementation(libs.bluetape4k.exposed.lib)
+    implementation(libs.exposed.core)
+    implementation(libs.exposed.dao)
+    implementation(libs.exposed.kotlin.datetime)
+    implementation(libs.exposed.spring.boot4.starter)
+    implementation(libs.exposed.spring7.transaction)
 
     // Jackson for Kotlin
-    implementation(Libs.jackson3_module_kotlin)
-    implementation(Libs.jackson3_module_blackbird)
+    implementation(libs.jackson3.module.kotlin)
+    implementation(libs.jackson3.module.blackbird)
 
     // Database Drivers
-    implementation(Libs.hikaricp)
+    implementation(libs.hikaricp)
 
     // H2
-    implementation(Libs.h2_v2)
+    implementation(libs.h2.v2)
 
     // Spring Boot 4
-    implementation(Libs.springBoot("autoconfigure"))
-    annotationProcessor(Libs.springBoot("autoconfigure-processor"))
-    annotationProcessor(Libs.springBoot("configuration-processor"))
-    runtimeOnly(Libs.springBoot("devtools"))
+    implementation(libs.spring.boot.autoconfigure.lib)
+    annotationProcessor(libs.spring.boot.autoconfigure.processor)
+    annotationProcessor(libs.spring.boot.configuration.processor)
+    runtimeOnly(libs.spring.boot.devtools)
 
-    implementation(Libs.springBootStarter("actuator"))
-    implementation(Libs.springBootStarter("aspectj"))
-    implementation(Libs.springBootStarter("jdbc"))
-    implementation(Libs.springBootStarter("validation"))
-    implementation(Libs.springBootStarter("webmvc"))
+    implementation(libs.spring.boot.starter.actuator)
+    implementation(libs.spring.boot.starter.aspectj)
+    implementation(libs.spring.boot.starter.jdbc.lib)
+    implementation(libs.spring.boot.starter.validation)
+    implementation(libs.spring.boot.starter.webmvc.lib)
 
-    testImplementation(Libs.springBootStarter("test")) {
+    testImplementation(libs.spring.boot.starter.test) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")
     }
 
     // Coroutines
-    implementation(Libs.bluetape4k_coroutines)
-    implementation(Libs.kotlinx_coroutines_core)
-    testImplementation(Libs.kotlinx_coroutines_reactor)
-    testImplementation(Libs.kotlinx_coroutines_test)
+    implementation(libs.bluetape4k.coroutines)
+    implementation(libs.kotlinx.coroutines.core.lib)
+    testImplementation(libs.kotlinx.coroutines.reactor)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
 
     // Monitoring
-    implementation(Libs.micrometer_core)
-    implementation(Libs.micrometer_registry_prometheus)
+    implementation(libs.micrometer.core)
+    implementation(libs.micrometer.registry.prometheus)
 
     // SpringDoc - OpenAPI 3.0
-    implementation(Libs.springdoc_openapi_starter_webflux_ui)
+    implementation(libs.springdoc.openapi.starter.webflux.ui)
 
     // Gatling
-    implementation(Libs.gatling_app)
-    implementation(Libs.gatling_core_java)
-    implementation(Libs.gatling_http_java)
-    implementation(Libs.gatling_recorder)
-    implementation(Libs.gatling_charts_highcharts)
-    testImplementation(Libs.gatling_test_framework)
+    implementation(libs.gatling.app)
+    implementation(libs.gatling.core.java)
+    implementation(libs.gatling.http.java)
+    implementation(libs.gatling.recorder)
+    implementation(libs.gatling.charts.highcharts)
+    testImplementation(libs.gatling.test.framework)
 }

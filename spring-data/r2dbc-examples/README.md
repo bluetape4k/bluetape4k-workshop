@@ -1,5 +1,60 @@
 # Spring Data R2DBC Demo
 
+## 아키텍처 다이어그램
+
+```mermaid
+classDiagram
+    class Customer {
+        +String firstname
+        +String lastname
+        +Long? id
+        +Boolean hasId
+    }
+    class Person {
+        +String firstname
+        +String lastname
+        +Int age
+        +Int? id
+        +Boolean hasId
+    }
+    class CustomerRepository {
+        <<interface>>
+        +findByLastname(lastname) Flux~Customer~
+        +findByFirstname(firstname) Mono~Customer~
+    }
+    class PersonRepository {
+        <<interface>>
+        +findAll(example) Flux~Person~
+        +count(example) Mono~Long~
+    }
+    class TransactionalService {
+        +insert(customers) Flux~Customer~
+    }
+
+    CustomerRepository --> Customer : 관리
+    PersonRepository --> Person : 관리
+    TransactionalService --> CustomerRepository : 사용
+```
+
+```mermaid
+sequenceDiagram
+    participant 테스트 as 통합테스트
+    participant 서비스 as TransactionalService
+    participant 저장소 as CustomerRepository
+    participant DB as H2 (R2DBC)
+
+    테스트->>서비스: insert(customers)
+    서비스->>저장소: saveAll(customers)
+    저장소->>DB: SQL INSERT (비동기)
+    DB-->>저장소: Flux~Customer~
+    저장소-->>서비스: Flux~Customer~
+    서비스-->>테스트: 결과 반환
+    테스트->>저장소: findByLastname("Snow")
+    저장소->>DB: SELECT WHERE lastname=?
+    DB-->>저장소: Flux~Customer~
+    저장소-->>테스트: 조회 결과
+```
+
 ## 참고
 
 * [Spring Data Examples - r2dbc/example](https://github.com/spring-projects/spring-data-examples/tree/main/r2dbc/example)

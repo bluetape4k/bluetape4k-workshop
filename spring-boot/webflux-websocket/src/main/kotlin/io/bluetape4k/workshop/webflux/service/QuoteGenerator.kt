@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.webflux.service
 
 import io.bluetape4k.coroutines.flow.extensions.log
-import io.bluetape4k.idgenerators.uuid.TimebasedUuid
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.error
 import io.bluetape4k.workshop.webflux.model.Event
@@ -89,7 +89,7 @@ class QuoteGenerator {
     }
 
     private fun createEvent(interval: Long): Event {
-        val traceId = TimebasedUuid.Reordered.nextIdAsString()
+        val traceId = Uuid.V7.nextIdAsString()
         return Event(traceId, generateQuotes(interval))
     }
 

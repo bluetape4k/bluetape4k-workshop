@@ -1,10 +1,13 @@
 package io.bluetape4k.workshop.redisson
 
 import io.bluetape4k.codec.Base58
+import io.bluetape4k.concurrent.virtualthread.VirtualThreadExecutor
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.error
+import io.bluetape4k.redis.redisson.codec.RedissonCodecs
 import io.bluetape4k.testcontainers.storage.RedisServer
+import io.bluetape4k.utils.ShutdownQueue
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -12,6 +15,8 @@ import kotlinx.coroutines.Dispatchers
 import org.junit.jupiter.api.BeforeAll
 import org.redisson.Redisson
 import org.redisson.api.RedissonClient
+import org.redisson.config.Config
+import java.time.Duration
 
 abstract class AbstractRedissonTest {
 
@@ -20,14 +25,36 @@ abstract class AbstractRedissonTest {
         val redis: RedisServer by lazy { RedisServer.Launcher.redis }
 
         @JvmStatic
-        val redissonClient by lazy {
-            RedisServer.Launcher.RedissonLib.getRedisson(
-                redis.url,
-                connectionPoolSize = 256,
-                minimumIdleSize = 16,
-                threads = 128,
-                nettyThreads = 512
-            ) as Redisson
+        val redissonClient: Redisson by lazy { createRedisson(registerShutdownHook = true) }
+
+        private fun createRedissonConfig(): Config {
+            return Config().apply {
+                useSingleServer()
+                    .setAddress(redis.url)
+                    .setConnectionPoolSize(128)
+                    .setConnectionMinimumIdleSize(32) // 최소 연결을 충분히 확보하여 Latency 방지
+                    .setIdleConnectionTimeout(100_000)  // 연결 유지를 넉넉히 (100초)
+                    .setTimeout(5000)
+                    .setRetryAttempts(3)
+                    .setRetryDelay { attempt -> Duration.ofMillis((attempt + 1) * 10L) }
+
+                    .setDnsMonitoringInterval(5000)  // DNS 변경 감지 (Cloud 환경 필수)
+
+                executor = VirtualThreadExecutor
+                threads = 256
+                nettyThreads = 128
+                codec = RedissonCodecs.LZ4ForyComposite
+                setTcpNoDelay(true)
+                setTcpUserTimeout(5000)
+            }
+        }
+
+        private fun createRedisson(registerShutdownHook: Boolean = false): Redisson {
+            return (Redisson.create(createRedissonConfig()) as Redisson).apply {
+                if (registerShutdownHook) {
+                    ShutdownQueue.register { shutdown() }
+                }
+            }
         }
 
         @JvmStatic
@@ -50,8 +77,11 @@ abstract class AbstractRedissonTest {
     }
 
     protected fun newRedisson(): RedissonClient {
-        val config = RedisServer.Launcher.RedissonLib.getRedissonConfig(redis.url)
-        return Redisson.create(config)
+        return createRedisson()
+    }
+
+    protected fun newRedissonConfig(): Config {
+        return createRedissonConfig()
     }
 
     protected val scope = CoroutineScope(CoroutineName("redisson") + Dispatchers.IO)

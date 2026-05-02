@@ -1,6 +1,6 @@
 plugins {
-    id(Plugins.quarkus)
-    kotlin("plugin.allopen")
+    id("io.quarkus")
+    alias(libs.plugins.kotlin.allopen)
 }
 
 allOpen {
@@ -16,34 +16,34 @@ configurations {
 
 dependencies {
     // NOTE: Quarkus 는 꼭 gradle platform 으로 참조해야 제대로 빌드가 된다.
-    implementation(enforcedPlatform(Libs.quarkus_bom))
-    implementation(platform(Libs.quarkus_universe_bom))
-    implementation(platform(Libs.resteasy_bom))
+    implementation(enforcedPlatform(libs.quarkus.bom))
+    implementation(platform(libs.quarkus.universe.bom))
+    implementation(platform(libs.resteasy.bom))
 
-    implementation(platform(Libs.bluetape4k_bom))
+    implementation(platform(libs.bluetape4k.bom))
 
     // Quarkus 라이브러리 (https://quarkus.io/extensions/)
     // rest
-    implementation(Libs.quarkus("rest"))
-    implementation(Libs.quarkus("rest-kotlin"))
-    implementation(Libs.quarkus("rest-jackson"))
+    implementation("io.quarkus.quarkus-rest")
+    implementation("io.quarkus.quarkus-rest-kotlin")
+    implementation("io.quarkus.quarkus-rest-jackson")
 
     // rest client
-    implementation(Libs.quarkus("rest-client"))
-    implementation(Libs.quarkus("rest-client-jackson"))
+    implementation("io.quarkus.quarkus-rest-client")
+    implementation("io.quarkus.quarkus-rest-client-jackson")
 
-    testImplementation(Libs.quarkus_junit5)
-    testImplementation(Libs.rest_assured_kotlin)
+    testImplementation(libs.quarkus.junit5)
+    testImplementation(libs.rest.assured.kotlin)
 
     // Bluetape4k
-    implementation(Libs.bluetape4k_jackson)
-    implementation(Libs.bluetape4k_quarkus_core)
-    testImplementation(Libs.bluetape4k_quarkus_tests)
-    testImplementation(Libs.bluetape4k_idgenerators)
+    implementation(libs.bluetape4k.jackson2)
+    implementation(libs.bluetape4k.quarkus.core)
+    testImplementation(libs.bluetape4k.quarkus.tests)
+    testImplementation(libs.bluetape4k.idgenerators)
 
     // coroutines
-    implementation(Libs.bluetape4k_coroutines)
-    implementation(Libs.kotlinx_coroutines_core)
-    implementation(Libs.kotlinx_coroutines_reactive)
-    testImplementation(Libs.kotlinx_coroutines_test)
+    implementation(libs.bluetape4k.coroutines)
+    implementation(libs.kotlinx.coroutines.core.lib)
+    implementation(libs.kotlinx.coroutines.reactive)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
 }

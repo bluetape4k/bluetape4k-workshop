@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.cache.redis.config
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.redis.spring.serializer.RedisBinarySerializers
+import io.bluetape4k.spring.redis.serializer.RedisBinarySerializers
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.cache.CacheManager

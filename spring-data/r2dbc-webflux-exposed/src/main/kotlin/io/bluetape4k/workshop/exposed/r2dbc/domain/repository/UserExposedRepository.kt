@@ -16,9 +16,11 @@ import org.jetbrains.exposed.v1.r2dbc.upsert
 import org.springframework.stereotype.Repository
 
 @Repository
-class UserExposedRepository: R2dbcRepository<Int, UserTable, UserRecord> {
+class UserExposedRepository: R2dbcRepository<Int, UserRecord> {
 
     override val table: UserTable = UserTable
+
+    override fun extractId(entity: UserRecord): Int = entity.id
 
     override suspend fun ResultRow.toEntity(): UserRecord = toUserRecord()
 

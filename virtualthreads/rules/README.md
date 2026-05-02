@@ -1,5 +1,38 @@
 # Concurrent programming in Java with virtual threads
 
+## Virtual Thread 개념 구조
+
+```mermaid
+flowchart TD
+    subgraph JVM 스케줄러
+        A[ForkJoinPool\n캐리어 스레드 풀]
+    end
+
+    subgraph 가상 스레드 - Virtual Thread
+        B[VirtualThread 1]
+        C[VirtualThread 2]
+        D[VirtualThread N\n수백만 개 생성 가능]
+    end
+
+    subgraph 플랫폼 스레드 - Platform Thread
+        E[OS 스레드 1]
+        F[OS 스레드 2]
+    end
+
+    subgraph 사용 규칙
+        G[I/O 바운드 작업에 적합]
+        H[CPU 바운드 작업 사용 금지]
+        I[스레드 풀링 금지\nnewVirtualThreadPerTaskExecutor 사용]
+        J[synchronized 대신 ReentrantLock 사용]
+        K[ThreadLocal 대신 ScopedValue 검토]
+    end
+
+    B & C & D -->|마운트/언마운트| A
+    A --> E & F
+    B -.->|블로킹 I/O 시 언마운트| A
+    G & H & I & J & K --> B
+```
+
 ## Introduction
 
 Java _virtual threads_ are lightweight threads designed to increase throughput in concurrent applications. Pre-existing

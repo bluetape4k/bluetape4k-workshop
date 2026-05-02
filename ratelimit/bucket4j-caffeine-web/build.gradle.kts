@@ -1,7 +1,7 @@
 plugins {
-    kotlin("plugin.spring")
-    id(Plugins.spring_boot)
-    id(Plugins.graalvm_native)
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.graalvm.native)
 }
 
 springBoot {
@@ -14,39 +14,39 @@ configurations {
 }
 
 dependencies {
-    implementation(Libs.bluetape4k_jackson3)
-    testImplementation(Libs.bluetape4k_junit5)
+    implementation(libs.bluetape4k.jackson3)
+    testImplementation(libs.bluetape4k.junit5)
 
     // Bucket4j
-    api(Libs.bucket4j_core)
-    api(Libs.bucket4j_caffeine)
-    api(Libs.bucket4j_spring_boot_starter)
+    api(libs.bucket4j.core)
+    api(libs.bucket4j.caffeine)
+    api(libs.bucket4j.spring.boot.starter)
 
     // Caffeine - 로컬 캐시는 AsyncCacheResolver를 구현한 것이 아니므로 Webflux 에서는 사용하지 못한다.
-    api(Libs.caffeine)
-    api(Libs.caffeine_jcache)
+    api(libs.caffeine.lib)
+    api(libs.caffeine.jcache)
 
     // Spring Boot
-    implementation(Libs.springBoot("autoconfigure"))
-    annotationProcessor(Libs.springBoot("autoconfigure-processor"))
-    annotationProcessor(Libs.springBoot("configuration-processor"))
-    runtimeOnly(Libs.springBoot("devtools"))
+    implementation(libs.spring.boot.autoconfigure.lib)
+    annotationProcessor(libs.spring.boot.autoconfigure.processor)
+    annotationProcessor(libs.spring.boot.configuration.processor)
+    runtimeOnly(libs.spring.boot.devtools)
 
-    implementation(Libs.springBootStarter("actuator"))
-    implementation(Libs.springBootStarter("aspectj"))
-    implementation(Libs.springBootStarter("cache"))
-    testImplementation(Libs.springBootStarter("cache-test"))
-    implementation(Libs.springBootStarter("validation"))
-    implementation(Libs.springBootStarter("web"))
-    testImplementation(Libs.springBootStarter("webmvc-test"))
+    implementation(libs.spring.boot.starter.actuator)
+    implementation(libs.spring.boot.starter.aspectj)
+    implementation(libs.spring.boot.starter.cache.lib)
+    testImplementation(libs.spring.boot.starter.cache.test)
+    implementation(libs.spring.boot.starter.validation)
+    implementation(libs.spring.boot.starter.web)
+    testImplementation(libs.spring.boot.starter.webmvc.test)
 
-    testImplementation(Libs.springBootStarter("test")) {
+    testImplementation(libs.spring.boot.starter.test) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")
     }
 
     // WebTestClient 사용
-    testImplementation(Libs.springBootStarter("webflux"))
-    testImplementation(Libs.springBootStarter("webflux-test"))
+    testImplementation(libs.spring.boot.starter.webflux.lib)
+    testImplementation(libs.spring.boot.starter.webflux.test)
 }

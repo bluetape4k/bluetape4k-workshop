@@ -3,37 +3,37 @@ configurations {
 }
 
 dependencies {
-    implementation(Libs.bluetape4k_io)
-    implementation(Libs.bluetape4k_jdbc)
+    implementation(libs.bluetape4k.io)
+    implementation(libs.bluetape4k.jdbc)
 
     // Vertx
-    api(Libs.bluetape4k_vertx_core)
-    testImplementation(Libs.vertx_junit5)
+    implementation(libs.bluetape4k.vertx)
+    testImplementation(libs.vertx.junit5)
 
     // Vertx Kotlin
-    implementation(Libs.vertx_core)
-    implementation(Libs.vertx_lang_kotlin)
-    implementation(Libs.vertx_lang_kotlin_coroutines)
+    implementation(libs.vertx.core)
+    implementation(libs.vertx.lang.kotlin.lib)
+    implementation(libs.vertx.lang.kotlin.coroutines)
 
     // Vertx Jdbc
-    implementation(Libs.vertx_jdbc_client)
-    implementation(Libs.agroal_pool)
-    implementation(Libs.h2)
+    implementation(libs.vertx.jdbc.client)
+    implementation(libs.agroal.pool)
+    implementation(libs.h2.lib)
 
     // Vertx Web & WebClient
-    implementation(Libs.vertx_web)
-    implementation(Libs.vertx_web_client)
+    implementation(libs.vertx.web.lib)
+    implementation(libs.vertx.web.client)
 
     // Json
-    implementation(Libs.bluetape4k_jackson3)
-    implementation(Libs.jackson3_module_kotlin)
-    implementation(Libs.jackson3_module_blackbird)
+    implementation(libs.bluetape4k.jackson3)
+    implementation(libs.jackson3.module.kotlin)
+    implementation(libs.jackson3.module.blackbird)
 
     // Coroutines
-    implementation(Libs.bluetape4k_coroutines)
-    implementation(Libs.kotlinx_coroutines_core)
-    implementation(Libs.kotlinx_coroutines_reactor)
-    testImplementation(Libs.kotlinx_coroutines_test)
+    implementation(libs.bluetape4k.coroutines)
+    implementation(libs.kotlinx.coroutines.core.lib)
+    implementation(libs.kotlinx.coroutines.reactor)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
 
-    implementation(Libs.logback)
+    implementation(libs.logback.lib)
 }

@@ -1,7 +1,7 @@
 plugins {
-    kotlin("plugin.spring")
-    id(Plugins.spring_boot)
-    id(Plugins.graalvm_native) 
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.graalvm.native) 
 }
 
 springBoot {
@@ -16,46 +16,46 @@ configurations {
 dependencies {
     testImplementation(project(":shared"))
     
-    implementation(Libs.bluetape4k_core)
-    testImplementation(Libs.bluetape4k_junit5)
+    implementation(libs.bluetape4k.core)
+    testImplementation(libs.bluetape4k.junit5)
 
-    api(Libs.jakarta_annotation_api)
+    api(libs.jakarta.annotation.api)
 
     // Jackson 3
-    implementation(Libs.jackson3_module_kotlin)
+    implementation(libs.jackson3.module.kotlin)
 
     // Spring Boot
-    implementation(Libs.springBoot("autoconfigure"))
-    annotationProcessor(Libs.springBoot("autoconfigure-processor"))
-    annotationProcessor(Libs.springBoot("configuration-processor"))
-    runtimeOnly(Libs.springBoot("devtools"))
+    implementation(libs.spring.boot.autoconfigure.lib)
+    annotationProcessor(libs.spring.boot.autoconfigure.processor)
+    annotationProcessor(libs.spring.boot.configuration.processor)
+    runtimeOnly(libs.spring.boot.devtools)
 
-    implementation(Libs.springBootStarter("websocket"))
-    testImplementation(Libs.springBootStarter("websocket-test"))
-    testImplementation(Libs.springBootStarter("test")) {
+    implementation(libs.spring.boot.starter.websocket.lib)
+    testImplementation(libs.spring.boot.starter.websocket.test)
+    testImplementation(libs.spring.boot.starter.test) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
     }
 
     // Websocket
-    implementation(Libs.webjar("webjars-locator-core", "0.52"))
-    implementation(Libs.webjar("sockjs-client", "1.5.1"))
-    implementation(Libs.webjar("stomp-websocket", "2.3.4"))
-    implementation(Libs.webjar("bootstrap", "5.2.3"))
-    implementation(Libs.webjar("jquery", "3.6.4"))
-    implementation(Libs.webjar("font-awesome", "6.4.0"))
+    implementation(libs.webjar.webjars.locator.core)
+    implementation(libs.webjar.sockjs.client)
+    implementation(libs.webjar.stomp.websocket)
+    implementation(libs.webjar.bootstrap)
+    implementation(libs.webjar.jquery)
+    implementation(libs.webjar.font.awesome)
 
     // Coroutines
-    implementation(Libs.bluetape4k_coroutines)
-    implementation(Libs.kotlinx_coroutines_core)
-    implementation(Libs.kotlinx_coroutines_reactor)
-    testImplementation(Libs.kotlinx_coroutines_test)
+    implementation(libs.bluetape4k.coroutines)
+    implementation(libs.kotlinx.coroutines.core.lib)
+    implementation(libs.kotlinx.coroutines.reactor)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
 
     // Reactor
-    implementation(Libs.netty_all)
-    implementation(Libs.reactor_netty)
-    implementation(Libs.reactor_kotlin_extensions)
-    testImplementation(Libs.reactor_test)
+    implementation(libs.netty.all)
+    implementation(libs.reactor.netty)
+    implementation(libs.reactor.kotlin.extensions)
+    testImplementation(libs.reactor.test)
 
-    implementation(Libs.logback)
+    implementation(libs.logback.lib)
 }

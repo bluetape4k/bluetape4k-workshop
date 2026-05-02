@@ -4,10 +4,12 @@ import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.output.OutputCapture
 import io.bluetape4k.junit5.output.OutputCapturer
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.reactive.awaitSingle
 import org.amshove.kluent.shouldBeEqualTo
 import org.amshove.kluent.shouldContain
+import org.amshove.kluent.shouldBeFalse
 import org.amshove.kluent.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,6 +22,7 @@ import org.springframework.test.web.reactive.server.returnResult
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class CustomEventPublisherTest(
     @param:Autowired private val context: ApplicationContext,
+    @param:Autowired private val controller: CustomEventController,
 ) {
 
     companion object: KLoggingChannel()
@@ -31,6 +34,11 @@ class CustomEventPublisherTest(
     @Test
     fun `context loading`() {
         client.shouldNotBeNull()
+    }
+
+    @Test
+    fun `custom event controller does not keep its own coroutine scope`() {
+        (controller is CoroutineScope).shouldBeFalse()
     }
 
     @Test

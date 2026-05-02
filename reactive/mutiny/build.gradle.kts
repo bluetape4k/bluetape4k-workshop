@@ -3,14 +3,14 @@ configurations {
 }
 
 dependencies {
-    implementation(Libs.bluetape4k_mutiny)
+    implementation(libs.bluetape4k.mutiny)
 
     // Smallrye Mutiny
-    implementation(Libs.mutiny)
-    implementation(Libs.mutiny_kotlin)
+    implementation(libs.mutiny.lib)
+    implementation(libs.mutiny.kotlin)
 
     // Coroutines
-    implementation(Libs.bluetape4k_coroutines)
-    implementation(Libs.kotlinx_coroutines_core)
-    testImplementation(Libs.kotlinx_coroutines_test)
+    implementation(libs.bluetape4k.coroutines)
+    implementation(libs.kotlinx.coroutines.core.lib)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
 }

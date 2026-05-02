@@ -1,7 +1,7 @@
 plugins {
-    kotlin("plugin.spring")
-    id(Plugins.spring_boot)
-    id(Plugins.graalvm_native)
+    alias(libs.plugins.kotlin.spring)
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.graalvm.native)
 }
 
 springBoot {
@@ -16,21 +16,21 @@ configurations {
 dependencies {
     testImplementation(project(":shared"))
 
-    testImplementation(Libs.bluetape4k_jackson3)
-    testImplementation(Libs.bluetape4k_junit5)
+    testImplementation(libs.bluetape4k.jackson3)
+    testImplementation(libs.bluetape4k.junit5)
 
     // Spring Security
-    implementation(Libs.springBootStarter("security"))
-    implementation(Libs.springBootStarter("thymeleaf"))
+    implementation(libs.spring.boot.starter.security)
+    implementation(libs.spring.boot.starter.thymeleaf)
 
-    implementation(Libs.springBootStarter("web"))
-    testImplementation(Libs.springBootStarter("webmvc-test"))
+    implementation(libs.spring.boot.starter.web)
+    testImplementation(libs.spring.boot.starter.webmvc.test)
 
     // https://mvnrepository.com/artifact/org.thymeleaf.extras/thymeleaf-extras-springsecurity6
     implementation("org.thymeleaf.extras:thymeleaf-extras-springsecurity6")
 
-    testImplementation(Libs.springSecurity("test"))
-    testImplementation(Libs.springBootStarter("test")) {
+    testImplementation(libs.spring.security.test)
+    testImplementation(libs.spring.boot.starter.test) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
         exclude(module = "mockito-core")

@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.exposed.domain.shared.ddl
 
-import io.bluetape4k.idgenerators.uuid.TimebasedUuid
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
@@ -85,7 +85,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
     fun testCreateMissingTablesAndColumns02(testDB: TestDB) {
         val testTable = object: IdTable<String>("Users2") {
             override val id: Column<EntityID<String>> = varchar("id", 22)
-                .clientDefault { TimebasedUuid.Epoch.nextIdAsString() }
+                .clientDefault { Uuid.V7.nextIdAsString() }
                 .entityId()
 
             val name = varchar("name", 255)
@@ -212,7 +212,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
                 val alterColumnWord = when (currentDialectTest) {
                     is MysqlDialect -> "MODIFY COLUMN"
                     is OracleDialect -> "MODIFY"
-                    else -> "ALTER COLUMN"
+                    else            -> "ALTER COLUMN"
                 }
 
                 val expected = if (t1.id.nameInDatabaseCase() != t2.id.nameInDatabaseCase()) {
@@ -478,7 +478,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
                     val alterColumnWord = when (currentDialectTest) {
                         is MysqlDialect -> "MODIFY COLUMN"
                         is OracleDialect -> "MODIFY"
-                        else -> "ALTER COLUMN"
+                        else            -> "ALTER COLUMN"
                     }
                     val expected = setOf(
                         "ALTER TABLE ${t2.nameInDatabaseCase()} $alterColumnWord ${t2.col.nameInDatabaseCase()} ${t2.col.columnType.sqlType()} DEFAULT 1 NOT NULL",
@@ -508,7 +508,7 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
                     val alterColumnWord = when (currentDialectTest) {
                         is MysqlDialect -> "MODIFY COLUMN"
                         is OracleDialect -> "MODIFY"
-                        else -> "ALTER COLUMN"
+                        else            -> "ALTER COLUMN"
                     }
                     val expected = setOf(
                         "ALTER TABLE ${t2.nameInDatabaseCase()} $alterColumnWord ${t1.col.nameInDatabaseCase()} ${t1.col.columnType.sqlType()} NULL",
@@ -528,7 +528,11 @@ class CreateMissingTablesAndColumnsTest: AbstractExposedTest() {
         }
     }
 
-    private enum class TestEnum { A, B, C }
+    private enum class TestEnum {
+        A,
+        B,
+        C
+    }
 
     @ParameterizedTest
     @MethodSource(ENABLE_DIALECTS_METHOD)

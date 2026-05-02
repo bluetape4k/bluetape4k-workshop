@@ -4,7 +4,7 @@ import io.bluetape4k.codec.Base58
 import io.bluetape4k.exposed.dao.entityToStringBuilder
 import io.bluetape4k.exposed.dao.idEquals
 import io.bluetape4k.exposed.dao.idHashCode
-import io.bluetape4k.idgenerators.uuid.TimebasedUuid.Epoch
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
@@ -317,7 +317,7 @@ class InsertTest: AbstractExposedTest() {
         val cities = DMLTestData.Cities
         withTables(testDB, cities) {
             val batchSize = 25
-            val names = generateSequence { Epoch.nextIdAsString() }.take(batchSize)
+            val names = generateSequence { Uuid.V7.nextIdAsString() }.take(batchSize)
 
             val inserted = cities.batchInsert(names) { name ->
                 this[cities.name] = name

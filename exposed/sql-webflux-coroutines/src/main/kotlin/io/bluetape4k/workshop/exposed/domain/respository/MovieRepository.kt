@@ -8,9 +8,9 @@ import io.bluetape4k.workshop.exposed.domain.dto.MovieDTO
 import io.bluetape4k.workshop.exposed.domain.dto.MovieWithActorDTO
 import io.bluetape4k.workshop.exposed.domain.dto.MovieWithProducingActorDTO
 import io.bluetape4k.workshop.exposed.domain.mapper.toMovieDTO
-import io.bluetape4k.workshop.exposed.domain.schema.Actors
-import io.bluetape4k.workshop.exposed.domain.schema.ActorsInMovies
-import io.bluetape4k.workshop.exposed.domain.schema.Movies
+import io.bluetape4k.workshop.exposed.domain.schema.ActorInMovieTable
+import io.bluetape4k.workshop.exposed.domain.schema.ActorTable
+import io.bluetape4k.workshop.exposed.domain.schema.MovieTable
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.atTime
@@ -30,16 +30,16 @@ class MovieRepository {
 
     companion object: KLogging() {
         private val MovieInnerJoinActors by lazy {
-            Movies
-                .innerJoin(ActorsInMovies)
-                .innerJoin(Actors)
+            MovieTable
+                .innerJoin(ActorInMovieTable)
+                .innerJoin(ActorTable)
         }
     }
 
     suspend fun findById(movieId: Int): MovieDTO? = newSuspendedTransaction {
         log.debug { "Find Movie by id. id: $movieId" }
-        Movies.selectAll()
-            .where { Movies.id eq movieId }
+        MovieTable.selectAll()
+            .where { MovieTable.id eq movieId }
             .firstOrNull()
             ?.toMovieDTO()
     }
@@ -47,14 +47,14 @@ class MovieRepository {
     suspend fun searchMovie(params: Map<String, String>): List<MovieDTO> = newSuspendedTransaction {
         log.debug { "Search Movie by params. params: $params" }
 
-        val query = Movies.selectAll()
+        val query = MovieTable.selectAll()
 
         params.forEach { (key, value) ->
             when (key) {
-                "id" -> query.andWhere { Movies.id eq value.toInt() }
-                "name" -> query.andWhere { Movies.name eq value }
-                "producerName" -> query.andWhere { Movies.producerName eq value }
-                "releaseDate" -> query.andWhere { Movies.releaseDate eq LocalDateTime.parse(value) }
+                "id"           -> query.andWhere { MovieTable.id eq value.toInt() }
+                "name"         -> query.andWhere { MovieTable.name eq value }
+                "producerName" -> query.andWhere { MovieTable.producerName eq value }
+                "releaseDate"  -> query.andWhere { MovieTable.releaseDate eq LocalDateTime.parse(value) }
             }
         }
 
@@ -62,11 +62,11 @@ class MovieRepository {
     }
 
     suspend fun create(movie: MovieDTO): MovieDTO? = newSuspendedTransaction {
-        val movieId = Movies.insertAndGetId {
-            it[Movies.name] = movie.name
-            it[Movies.producerName] = movie.producerName
+        val movieId = MovieTable.insertAndGetId {
+            it[MovieTable.name] = movie.name
+            it[MovieTable.producerName] = movie.producerName
             if (movie.releaseDate.isNotBlank()) {
-                it[Movies.releaseDate] = LocalDate.parse(movie.releaseDate).atTime(0, 0)
+                it[MovieTable.releaseDate] = LocalDate.parse(movie.releaseDate).atTime(0, 0)
             }
         }
 
@@ -74,7 +74,7 @@ class MovieRepository {
     }
 
     suspend fun deleteById(movieId: Int): Int = newSuspendedTransaction {
-        Movies.deleteWhere { Movies.id eq movieId }
+        MovieTable.deleteWhere { MovieTable.id eq movieId }
     }
 
     suspend fun getAllMoviesWithActors(): List<MovieWithActorDTO> {
@@ -83,24 +83,24 @@ class MovieRepository {
         return newSuspendedTransaction {
             MovieInnerJoinActors
                 .selectAll()
-                .groupingBy { it[Movies.id] }
+                .groupingBy { it[MovieTable.id] }
                 .fold(mutableListOf<MovieWithActorDTO>()) { acc, element ->
                     val lastMovieId = acc.lastOrNull()?.id
-                    if (lastMovieId != element[Movies.id].value) {
+                    if (lastMovieId != element[MovieTable.id].value) {
                         val movie = MovieWithActorDTO(
-                            id = element[Movies.id].value,
-                            name = element[Movies.name],
-                            producerName = element[Movies.producerName],
-                            releaseDate = element[Movies.releaseDate].toString(),
+                            id = element[MovieTable.id].value,
+                            name = element[MovieTable.name],
+                            producerName = element[MovieTable.producerName],
+                            releaseDate = element[MovieTable.releaseDate].toString(),
                         )
                         acc.add(movie)
                     } else {
                         acc.lastOrNull()?.actors?.let {
                             val actor = ActorDTO(
-                                id = element[Actors.id].value,
-                                firstName = element[Actors.firstName],
-                                lastName = element[Actors.lastName],
-                                dateOfBirth = element[Actors.dateOfBirth].toString()
+                                id = element[ActorTable.id].value,
+                                firstName = element[ActorTable.firstName],
+                                lastName = element[ActorTable.lastName],
+                                dateOfBirth = element[ActorTable.dateOfBirth].toString()
                             )
                             it.add(actor)
                         }
@@ -117,28 +117,28 @@ class MovieRepository {
 
         val query = MovieInnerJoinActors
             .selectAll()
-            .where { Movies.id eq movieId }
+            .where { MovieTable.id eq movieId }
 
         log.debug { "query: ${query.prepareSQL(this, true)}" }
 
         query
-            .groupingBy { it[Movies.id] }
+            .groupingBy { it[MovieTable.id] }
             .fold(mutableListOf<MovieWithActorDTO>()) { acc, row ->
                 val prevId = acc.lastOrNull()?.id
-                if (prevId != row[Movies.id].value) {
+                if (prevId != row[MovieTable.id].value) {
                     val movie = MovieWithActorDTO(
-                        id = row[Movies.id].value,
-                        name = row[Movies.name],
-                        producerName = row[Movies.producerName],
-                        releaseDate = row[Movies.releaseDate].toString(),
+                        id = row[MovieTable.id].value,
+                        name = row[MovieTable.name],
+                        producerName = row[MovieTable.producerName],
+                        releaseDate = row[MovieTable.releaseDate].toString(),
                     )
                     acc.add(movie)
                 } else {
                     val actor = ActorDTO(
-                        id = row[Actors.id].value,
-                        firstName = row[Actors.firstName],
-                        lastName = row[Actors.lastName],
-                        dateOfBirth = row[Actors.dateOfBirth].toString()
+                        id = row[ActorTable.id].value,
+                        firstName = row[ActorTable.firstName],
+                        lastName = row[ActorTable.lastName],
+                        dateOfBirth = row[ActorTable.dateOfBirth].toString()
                     )
                     acc.lastOrNull()?.actors?.add(actor)
                 }
@@ -150,12 +150,12 @@ class MovieRepository {
     suspend fun getMovieActorsCount(): List<MovieActorCountDTO> = newSuspendedTransaction {
         log.debug { "Get movie with actors count" }
         MovieInnerJoinActors
-            .select(Movies.name, Actors.firstName.count())
-            .groupBy(Movies.name)
+            .select(MovieTable.name, ActorTable.firstName.count())
+            .groupBy(MovieTable.name)
             .map {
                 MovieActorCountDTO(
-                    movieName = it[Movies.name],
-                    actorCount = it[Actors.firstName.count()].toInt()
+                    movieName = it[MovieTable.name],
+                    actorCount = it[ActorTable.firstName.count()].toInt()
                 )
             }
     }
@@ -164,11 +164,11 @@ class MovieRepository {
         log.debug { "Find movies with acting producers" }
 
         MovieInnerJoinActors
-            .select(Movies.name, Actors.firstName, Actors.lastName)
+            .select(MovieTable.name, ActorTable.firstName, ActorTable.lastName)
             .map {
                 MovieWithProducingActorDTO(
-                    movieName = it[Movies.name],
-                    producerActorName = "${it[Actors.firstName]} ${it[Actors.lastName]}"
+                    movieName = it[MovieTable.name],
+                    producerActorName = "${it[ActorTable.firstName]} ${it[ActorTable.lastName]}"
                 )
             }
     }
