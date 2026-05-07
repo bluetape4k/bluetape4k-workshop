@@ -1,5 +1,9 @@
 # bluetape4k-workshop
 
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.3-7F52FF?logo=kotlin)](https://kotlinlang.org)
+[![JVM](https://img.shields.io/badge/JVM-21-ED8B00?logo=openjdk)](https://openjdk.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Bluetape4k 라이브러리를 활용한 백엔드 예제 모음입니다.
 
 ## 기술 스택
