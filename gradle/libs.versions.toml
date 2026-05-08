@@ -101,7 +101,6 @@ ow2-asm = "9.9.1"
 junit-jupiter = "6.0.3"
 junit-platform = "6.0.3"
 assertj-core = "3.27.7"
-kluent = "1.73"
 mockk = "1.14.9"
 springmockk = "4.0.2"
 awaitility = "4.3.0"
@@ -162,6 +161,7 @@ bluetape4k-core = { module = "io.github.bluetape4k:bluetape4k-core" }
 bluetape4k-coroutines = { module = "io.github.bluetape4k:bluetape4k-coroutines" }
 bluetape4k-logging = { module = "io.github.bluetape4k:bluetape4k-logging" }
 bluetape4k-junit5 = { module = "io.github.bluetape4k:bluetape4k-junit5" }
+bluetape4k-assertions = { module = "io.github.bluetape4k:bluetape4k-assertions" }
 bluetape4k-testcontainers = { module = "io.github.bluetape4k:bluetape4k-testcontainers" }
 bluetape4k-mock-web-server = { module = "io.github.bluetape4k:bluetape4k-mock-web-server" }
 bluetape4k-mock-webflux-server = { module = "io.github.bluetape4k:bluetape4k-mock-webflux-server" }
@@ -647,7 +647,6 @@ junit-platform-engine = { module = "org.junit.platform:junit-platform-engine" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 junit-platform-runner = { module = "org.junit.platform:junit-platform-runner" }
 
-kluent = { module = "org.amshove.kluent:kluent", version.ref = "kluent" }
 assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj-core" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 springmockk = { module = "com.ninja-squad:springmockk", version.ref = "springmockk" }

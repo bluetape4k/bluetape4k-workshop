@@ -282,7 +282,7 @@ subprojects {
         testImplementation(rootLibs.junit.jupiter.lib)
         testRuntimeOnly(rootLibs.junit.platform.engine)
 
-        testImplementation(rootLibs.kluent)
+        testImplementation(rootLibs.bluetape4k.assertions)
         testImplementation(rootLibs.mockk)
         testImplementation(rootLibs.awaitility.kotlin)
 
