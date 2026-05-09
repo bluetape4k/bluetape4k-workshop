@@ -2,10 +2,10 @@
 
 Backend examples using bluetape4k libraries.
 
-- Kotlin 2.3.20
-- Java 25
-- Spring Boot 4.0.3
-- bluetape4k 1.5.0-Beta2
+- Kotlin 2.3.21
+- Java 21
+- Spring Boot 4.0.6
+- bluetape4k 1.7.0
 
 ## Commands
 
@@ -48,10 +48,10 @@ names.
 
 ## Rules
 
-- Dependency versions live in `buildSrc/src/main/kotlin/Libs.kt`.
+- Dependency versions live in `gradle/libs.versions.toml`.
 - Package prefix: `io.bluetape4k.workshop.{module}.*`.
 - Tests are serialized by `TestMutexService` to avoid DB conflicts.
-- JVM uses ZGC, 2-4 GB heap, and preview features.
+- JVM uses the Java 21 toolchain, ZGC, 2-4 GB heap, and preview features.
 - Spring Boot modules use `springBoot { mainClass.set(...) }` and extend test
   dependencies from `compileOnly`/`runtimeOnly` where the repo already does so.
 - Common bluetape4k modules include logging, JUnit5, coroutines, Exposed, and
