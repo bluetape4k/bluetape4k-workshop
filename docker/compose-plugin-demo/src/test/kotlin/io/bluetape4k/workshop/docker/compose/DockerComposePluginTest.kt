@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.docker.compose
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
-import org.amshove.kluent.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 import org.redisson.Redisson
 import org.redisson.config.Config

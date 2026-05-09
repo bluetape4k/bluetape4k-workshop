@@ -8,9 +8,9 @@ import io.bluetape4k.workshop.exposed.domain.mapping.PersonSchema.Address
 import io.bluetape4k.workshop.exposed.domain.mapping.PersonSchema.Person
 import io.bluetape4k.workshop.exposed.domain.mapping.PersonSchema.PersonRecord
 import io.bluetape4k.workshop.exposed.domain.mapping.withPersonsAndAddress
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeTrue
-import org.amshove.kluent.shouldHaveSize
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldHaveSize
 import org.jetbrains.exposed.v1.core.Op
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.count

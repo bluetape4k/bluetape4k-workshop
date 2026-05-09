@@ -7,7 +7,7 @@ import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.resilience.AbstractResilienceTest
 import io.bluetape4k.workshop.shared.web.httpGet
 import io.github.resilience4j.retry.RetryRegistry
-import org.amshove.kluent.shouldNotBeNull
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.expectBody
 

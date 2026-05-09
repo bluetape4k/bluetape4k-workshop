@@ -16,10 +16,10 @@ import io.bluetape4k.workshop.exposed.domain.shared.entities.UUIDTables.Person
 import io.bluetape4k.workshop.exposed.domain.shared.entities.UUIDTables.Town
 import io.bluetape4k.workshop.exposed.domain.shared.entities.UUIDTables.Towns
 import io.bluetape4k.workshop.exposed.withTables
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeTrue
-import org.amshove.kluent.shouldContain
-import org.amshove.kluent.shouldContainSame
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldContainSame
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.java.UUIDTable

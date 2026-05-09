@@ -2,8 +2,8 @@ package io.bluetape4k.workshop.spring.security.mvc.controller
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.spring.security.mvc.AbstractSecurityApplicationTest
-import org.amshove.kluent.shouldEndWith
-import org.amshove.kluent.shouldNotBeNull
+import io.bluetape4k.assertions.shouldEndWith
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.mock.web.MockHttpSession
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin

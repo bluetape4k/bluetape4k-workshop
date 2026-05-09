@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.spring.modulith.events.d.architecture.after.order
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.spring.modulith.events.d.architecture.after.order.Order.OrderCompleted
-import org.amshove.kluent.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldNotBeEmpty
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.modulith.test.ApplicationModuleTest

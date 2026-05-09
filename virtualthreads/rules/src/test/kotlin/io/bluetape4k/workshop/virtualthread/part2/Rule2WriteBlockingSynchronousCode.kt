@@ -6,8 +6,8 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.virtualThreads.AbstractVirtualThreadTest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeInRange
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeInRange
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.fail
 import java.util.concurrent.CompletableFuture

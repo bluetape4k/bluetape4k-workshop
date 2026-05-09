@@ -2,9 +2,9 @@ package io.bluetape4k.workshop.kotlin.designPatterns.builder
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldNotBeEmpty
-import org.amshove.kluent.shouldNotBeNull
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
 
 class HeroTest {

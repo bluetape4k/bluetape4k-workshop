@@ -9,7 +9,7 @@ import io.bluetape4k.support.toUtf8Bytes
 import okio.Buffer
 import okio.sink
 import okio.source
-import org.amshove.kluent.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayInputStream

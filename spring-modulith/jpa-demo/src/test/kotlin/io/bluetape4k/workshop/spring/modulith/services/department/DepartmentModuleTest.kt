@@ -5,8 +5,8 @@ import io.bluetape4k.workshop.spring.modulith.services.OrganizationAddEvent
 import io.bluetape4k.workshop.spring.modulith.services.OrganizationRemoveEvent
 import io.bluetape4k.workshop.spring.modulith.services.department.mapper.DepartmentMapper
 import io.bluetape4k.workshop.spring.modulith.services.department.repository.DepartmentRepository
-import org.amshove.kluent.shouldBeEmpty
-import org.amshove.kluent.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldBeEmpty
+import io.bluetape4k.assertions.shouldNotBeEmpty
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order

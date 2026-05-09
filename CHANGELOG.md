@@ -16,7 +16,7 @@ This repository contains runnable workshop and example applications.
 
 - Spring Boot 4.0.0 applied to workshop examples ([PR #7](https://github.com/bluetape4k/bluetape4k-workshop/pull/7)).
 - Migrated `buildSrc` dependency declarations to `gradle/libs.versions.toml` and upgraded Gradle to 9.5.0 ([PR #15](https://github.com/bluetape4k/bluetape4k-workshop/pull/15)).
-- Test code migrated from Kluent to `bluetape4k-assertions` ([PR #20](https://github.com/bluetape4k/bluetape4k-workshop/pull/20)).
+- Test code migrated from bluetape4k-assertions to `bluetape4k-assertions` ([PR #20](https://github.com/bluetape4k/bluetape4k-workshop/pull/20)).
 
 ### Fixed
 

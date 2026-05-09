@@ -8,11 +8,11 @@ import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.withTables
 import nl.altindag.log.LogCaptor
-import org.amshove.kluent.internal.assertFailsWith
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldContainNone
-import org.amshove.kluent.shouldNotBeEmpty
-import org.amshove.kluent.shouldStartWith
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldNotContain
+import io.bluetape4k.assertions.shouldStartWith
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.exposedLogger
@@ -107,7 +107,7 @@ class EncryptedColumnTest: AbstractExposedTest() {
 
             val insertLog = logCaptor.debugLogs.single()
             insertLog.shouldStartWith("INSERT ")
-            insertLog.shouldContainNone(insertedStrings)
+            insertedStrings.forEach { insertLog shouldNotContain it }
 
             logCaptor.clearLogs()
             logCaptor.resetLogLevel()
@@ -177,7 +177,7 @@ class EncryptedColumnTest: AbstractExposedTest() {
 
             val insertLog = logCaptor.debugLogs.single()
             insertLog.shouldStartWith("INSERT ")
-            insertLog.shouldContainNone(insertedStrings)
+            insertedStrings.forEach { insertLog shouldNotContain it }
 
             logCaptor.clearLogs()
 
@@ -200,7 +200,7 @@ class EncryptedColumnTest: AbstractExposedTest() {
 
             val updateLog = logCaptor.debugLogs.single()
             updateLog.shouldStartWith("UPDATE ")
-            updateLog.shouldContainNone(updatedStrings)
+            updatedStrings.forEach { updateLog shouldNotContain it }
 
             logCaptor.clearLogs()
             logCaptor.resetLogLevel()

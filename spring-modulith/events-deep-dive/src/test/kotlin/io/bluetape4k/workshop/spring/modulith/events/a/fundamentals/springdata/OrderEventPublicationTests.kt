@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.spring.modulith.events.a.fundamentals.springdata
 
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.spring.modulith.events.util.IntegrationTest
-import org.amshove.kluent.shouldHaveSize
+import io.bluetape4k.assertions.shouldHaveSize
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.event.ApplicationEvents

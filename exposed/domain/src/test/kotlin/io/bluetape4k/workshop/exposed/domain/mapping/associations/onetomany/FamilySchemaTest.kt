@@ -8,7 +8,7 @@ import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.Fami
 import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.FamilySchema.Father
 import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.FamilySchema.FatherTable
 import io.bluetape4k.workshop.exposed.withTables
-import org.amshove.kluent.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeEqualTo
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.dao.entityCache
 import org.jetbrains.exposed.v1.jdbc.insertAndGetId

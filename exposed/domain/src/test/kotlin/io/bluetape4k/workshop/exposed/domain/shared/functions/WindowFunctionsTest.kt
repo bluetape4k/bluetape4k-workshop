@@ -6,7 +6,7 @@ import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.domain.shared.dml.DMLTestData
 import io.bluetape4k.workshop.exposed.domain.shared.dml.withSales
-import org.amshove.kluent.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeEqualTo
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.WindowFrameBound
 import org.jetbrains.exposed.v1.core.WindowFunctionDefinition

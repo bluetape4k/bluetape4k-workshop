@@ -3,8 +3,8 @@ package io.bluetape4k.workshop.spring.modulith.events.d.architecture.after.order
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.spring.modulith.events.d.architecture.after.inventory.Inventory
 import io.bluetape4k.workshop.spring.modulith.events.util.IntegrationTest
-import org.amshove.kluent.internal.assertFailsWith
-import org.amshove.kluent.shouldBeInstanceOf
+import io.bluetape4k.assertions.assertFailsWith
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import org.junit.jupiter.api.Test
 import org.springframework.dao.InvalidDataAccessApiUsageException
 

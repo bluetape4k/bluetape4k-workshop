@@ -13,7 +13,7 @@ import io.restassured.module.kotlin.extensions.Extract
 import io.restassured.module.kotlin.extensions.Given
 import io.restassured.module.kotlin.extensions.Then
 import io.restassured.module.kotlin.extensions.When
-import org.amshove.kluent.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeEqualTo
 import org.hamcrest.CoreMatchers
 import org.jboss.resteasy.reactive.RestResponse
 import org.junit.jupiter.api.Test

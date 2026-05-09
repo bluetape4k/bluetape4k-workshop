@@ -8,7 +8,7 @@ import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.Batc
 import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.BatchSchema.BatchItemTable
 import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.BatchSchema.BatchTable
 import io.bluetape4k.workshop.exposed.withTables
-import org.amshove.kluent.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeEqualTo
 import org.jetbrains.exposed.v1.dao.entityCache
 import org.jetbrains.exposed.v1.dao.load
 import org.jetbrains.exposed.v1.dao.with

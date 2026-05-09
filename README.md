@@ -80,6 +80,6 @@ flowchart LR
 
 ## 테스트
 
-- JUnit 5 + Kluent + MockK
+- JUnit 5 + bluetape4k-assertions + MockK
 - Testcontainers (MariaDB, MySQL, PostgreSQL, CockroachDB)
 - JVM: ZGC, `-Xms2G -Xmx4G`, `--enable-preview`

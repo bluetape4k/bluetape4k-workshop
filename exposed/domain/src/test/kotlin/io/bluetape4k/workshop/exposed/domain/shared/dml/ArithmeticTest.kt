@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.exposed.domain.shared.dml
 
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import org.amshove.kluent.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeEqualTo
 import org.jetbrains.exposed.v1.core.DivideOp
 import org.jetbrains.exposed.v1.core.DivideOp.Companion.withScale
 import org.jetbrains.exposed.v1.core.decimalLiteral

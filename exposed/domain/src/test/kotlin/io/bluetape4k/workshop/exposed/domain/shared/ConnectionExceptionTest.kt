@@ -1,11 +1,11 @@
 package io.bluetape4k.workshop.exposed.domain.shared
 
 import io.bluetape4k.workshop.exposed.TestDB
-import org.amshove.kluent.fail
-import org.amshove.kluent.shouldBeFalse
-import org.amshove.kluent.shouldBeTrue
-import org.amshove.kluent.shouldContainIgnoringCase
-import org.amshove.kluent.shouldHaveSize
+import io.bluetape4k.assertions.fail
+import io.bluetape4k.assertions.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContainIgnoringCase
+import io.bluetape4k.assertions.shouldHaveSize
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.junit.jupiter.api.Assumptions

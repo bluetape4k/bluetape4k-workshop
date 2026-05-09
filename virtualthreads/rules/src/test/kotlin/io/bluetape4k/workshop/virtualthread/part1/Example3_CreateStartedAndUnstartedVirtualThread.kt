@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.virtualthread.part1
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.virtualThreads.AbstractVirtualThreadTest
-import org.amshove.kluent.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 
 class Example3_CreateStartedAndUnstartedVirtualThread: AbstractVirtualThreadTest() {

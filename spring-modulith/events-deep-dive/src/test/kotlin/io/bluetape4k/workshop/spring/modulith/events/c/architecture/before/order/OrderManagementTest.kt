@@ -1,7 +1,6 @@
 package io.bluetape4k.workshop.spring.modulith.events.c.architecture.before.order
 
 import com.ninjasquad.springmockk.MockkBean
-import com.ninjasquad.springmockk.MockkBeans
 import io.bluetape4k.workshop.spring.modulith.events.c.architecture.before.inventory.Inventory
 import io.mockk.every
 import io.mockk.verify
@@ -11,10 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.junit.jupiter.SpringExtension
 
 @ExtendWith(SpringExtension::class)
-@MockkBeans(
-    MockkBean(Inventory::class, relaxed = true),
-    MockkBean(OrderRepository::class, relaxed = true),
-)
+@MockkBean(types = [Inventory::class], relaxed = true)
+@MockkBean(types = [OrderRepository::class], relaxed = true)
 class OrderManagementTest(
     @param:Autowired private val inventory: Inventory,
     @param:Autowired private val orderRepository: OrderRepository,

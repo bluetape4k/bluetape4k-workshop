@@ -7,7 +7,7 @@ import okio.Buffer
 import okio.Deflater
 import okio.DeflaterSink
 import okio.IOException
-import org.amshove.kluent.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import java.util.zip.InflaterInputStream

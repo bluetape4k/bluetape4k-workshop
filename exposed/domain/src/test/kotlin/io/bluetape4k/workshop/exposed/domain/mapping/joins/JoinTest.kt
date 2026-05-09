@@ -9,9 +9,9 @@ import io.bluetape4k.workshop.exposed.domain.mapping.OrderSchema
 import io.bluetape4k.workshop.exposed.domain.mapping.OrderSchema.OrderRecord
 import io.bluetape4k.workshop.exposed.domain.mapping.withOrdersTables
 import io.bluetape4k.workshop.exposed.domain.mapping.withPersonsAndAddress
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldHaveSize
-import org.amshove.kluent.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotBeEmpty
 import org.jetbrains.exposed.v1.core.Join
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.alias

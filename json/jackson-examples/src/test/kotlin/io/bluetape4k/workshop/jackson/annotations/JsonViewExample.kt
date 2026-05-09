@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonView
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.jackson.AbstractJacksonTest
-import org.amshove.kluent.shouldContain
-import org.amshove.kluent.shouldNotContain
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldNotContain
 import org.junit.jupiter.api.Test
 import tools.jackson.databind.ObjectWriter
 import tools.jackson.databind.SerializationFeature

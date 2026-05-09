@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.kotlin.patterns
 
-import org.amshove.kluent.shouldBeInstanceOf
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import org.junit.jupiter.api.Test
 
 class FactoryMethod {

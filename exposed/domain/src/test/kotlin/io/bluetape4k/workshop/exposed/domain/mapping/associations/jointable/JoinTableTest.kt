@@ -8,7 +8,7 @@ import io.bluetape4k.workshop.exposed.domain.mapping.associations.jointable.Join
 import io.bluetape4k.workshop.exposed.domain.mapping.associations.jointable.JoinSchema.newUser
 import io.bluetape4k.workshop.exposed.domain.mapping.associations.jointable.JoinSchema.withJoinSchema
 import io.bluetape4k.workshop.exposed.withDb
-import org.amshove.kluent.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeEqualTo
 import org.jetbrains.exposed.v1.dao.entityCache
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.junit.jupiter.params.ParameterizedTest

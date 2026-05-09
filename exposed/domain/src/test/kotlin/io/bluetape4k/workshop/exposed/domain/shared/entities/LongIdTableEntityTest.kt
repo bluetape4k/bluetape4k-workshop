@@ -13,9 +13,9 @@ import io.bluetape4k.workshop.exposed.domain.shared.entities.LongIdTables.Person
 import io.bluetape4k.workshop.exposed.domain.shared.entities.LongIdTables.Town
 import io.bluetape4k.workshop.exposed.domain.shared.entities.LongIdTables.Towns
 import io.bluetape4k.workshop.exposed.withTables
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeTrue
-import org.amshove.kluent.shouldContainSame
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContainSame
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.dao.LongEntity

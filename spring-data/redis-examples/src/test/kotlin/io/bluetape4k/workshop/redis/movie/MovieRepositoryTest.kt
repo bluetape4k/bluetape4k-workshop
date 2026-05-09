@@ -12,9 +12,9 @@ import io.bluetape4k.workshop.redis.movie.repository.ActorRepository
 import io.bluetape4k.workshop.redis.movie.repository.MovieActorReferenceRepository
 import io.bluetape4k.workshop.redis.movie.repository.MovieActorRepository
 import io.bluetape4k.workshop.redis.movie.repository.MovieRepository
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldContainSame
-import org.amshove.kluent.shouldHaveSize
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldContainSame
+import io.bluetape4k.assertions.shouldHaveSize
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired

@@ -28,10 +28,10 @@ import kotlinx.datetime.toKotlinLocalTime
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import org.amshove.kluent.shouldBeEmpty
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeTrue
-import org.amshove.kluent.shouldHaveSize
+import io.bluetape4k.assertions.shouldBeEmpty
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldHaveSize
 import org.jetbrains.exposed.v1.core.Cast
 import org.jetbrains.exposed.v1.core.Column
 import org.jetbrains.exposed.v1.core.Table
@@ -989,7 +989,7 @@ private infix fun Int.shouldFractionalPartEqualTo(nano2: Int) {
             nano1.nanoRoundToMilli() shouldBeEqualTo nano2.nanoRoundToMilli()
         is SQLiteDialect ->
             nano1.nanoFloorToMilli() shouldBeEqualTo nano2.nanoFloorToMilli()
-        else -> org.amshove.kluent.fail("Unknown dialect $db")
+        else -> io.bluetape4k.assertions.fail("Unknown dialect $db")
     }
 }
 

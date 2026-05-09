@@ -7,10 +7,10 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.virtualthread.tomcat.domain.AbstractDomainTest
 import io.bluetape4k.workshop.virtualthread.tomcat.domain.dto.MemberSearchCondition
 import io.bluetape4k.workshop.virtualthread.tomcat.domain.dto.toMemberDTO
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldHaveSize
-import org.amshove.kluent.shouldNotBeEmpty
-import org.amshove.kluent.shouldNotBeNull
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageRequest

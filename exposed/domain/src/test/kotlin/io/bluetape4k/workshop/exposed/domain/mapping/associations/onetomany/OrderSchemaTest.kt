@@ -8,10 +8,10 @@ import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.Orde
 import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.OrderSchema.OrderItemTable
 import io.bluetape4k.workshop.exposed.domain.mapping.associations.onetomany.OrderSchema.OrderTable
 import io.bluetape4k.workshop.exposed.withTables
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeTrue
-import org.amshove.kluent.shouldContain
-import org.amshove.kluent.shouldHaveSize
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldHaveSize
 import org.jetbrains.exposed.v1.dao.entityCache
 import org.jetbrains.exposed.v1.dao.flushCache
 import org.jetbrains.exposed.v1.dao.with

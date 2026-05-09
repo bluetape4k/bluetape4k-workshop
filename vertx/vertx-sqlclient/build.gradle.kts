@@ -34,10 +34,10 @@ dependencies {
     implementation(libs.vertx.jdbc.client)
     implementation(libs.agroal.pool)
 
-    // vertx-sql-cleint-templates 에서 @DataObject, @RowMapped 를 위해 사용
+    // vertx-sql-client-templates 에서 @DataObject, @RowMapped 를 위해 사용
     compileOnly(libs.vertx.codegen)
-    kapt(libs.vertx.codegen)
-    kaptTest(libs.vertx.codegen)
+    kapt(variantOf(libs.vertx.codegen) { classifier("processor") })
+    kaptTest(variantOf(libs.vertx.codegen) { classifier("processor") })
 
     // MyBatis
     implementation(libs.mybatis.dynamic.sql)

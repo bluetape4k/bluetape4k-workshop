@@ -36,18 +36,15 @@ val rootLibs = libs
 allprojects {
     repositories {
         mavenCentral()
-        google()
-
-        // bluetape4k snapshot 버전 사용 시만 사용하세요.
         maven {
-            name = "central-portal-snapshots"
+            name = "central-snapshots"
             url = uri("https://central.sonatype.com/repository/maven-snapshots/")
         }
     }
 
     // bluetape4k snapshot 버전 사용 시만 사용하세요.
     configurations.all {
-        resolutionStrategy.cacheChangingModulesFor(0, TimeUnit.DAYS)
+        resolutionStrategy.cacheChangingModulesFor(0, TimeUnit.SECONDS)
     }
 }
 
@@ -243,6 +240,16 @@ subprojects {
             // spring-boot BOM 의 logback 버전을 catalog 정의(1.5.32)로 override
             dependency(rootLibs.logback.lib.get().toString())
             dependency(rootLibs.logback.core.get().toString())
+
+            val coroutinesVersion = rootLibs.versions.kotlinx.coroutines.get()
+            dependency("org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion")
+            dependency("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$coroutinesVersion")
+            dependency("org.jetbrains.kotlinx:kotlinx-coroutines-debug:$coroutinesVersion")
+            dependency("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:$coroutinesVersion")
+            dependency("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:$coroutinesVersion")
+            dependency("org.jetbrains.kotlinx:kotlinx-coroutines-slf4j:$coroutinesVersion")
+            dependency("org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutinesVersion")
+            dependency("org.jetbrains.kotlinx:kotlinx-coroutines-test-jvm:$coroutinesVersion")
         }
     }
 
@@ -256,7 +263,7 @@ subprojects {
         val testCompileOnly by configurations
         val testRuntimeOnly by configurations
 
-        compileOnly(platform(rootLibs.bluetape4k.bom))
+        implementation(platform(rootLibs.bluetape4k.dependencies))
         compileOnly(platform(rootLibs.spring.boot4.dependencies))
         compileOnly(platform(rootLibs.jackson.bom))
         compileOnly(platform(rootLibs.kotlinx.coroutines.bom))
@@ -282,7 +289,6 @@ subprojects {
         testImplementation(rootLibs.junit.jupiter.lib)
         testRuntimeOnly(rootLibs.junit.platform.engine)
 
-        testImplementation(rootLibs.bluetape4k.assertions)
         testImplementation(rootLibs.mockk)
         testImplementation(rootLibs.awaitility.kotlin)
 

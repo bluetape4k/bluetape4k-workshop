@@ -8,8 +8,8 @@ import io.bluetape4k.workshop.exposed.domain.mapping.associations.manytomany.Ban
 import io.bluetape4k.workshop.exposed.domain.mapping.associations.manytomany.BankSchema.BankAccount
 import io.bluetape4k.workshop.exposed.domain.mapping.associations.manytomany.BankSchema.OwnerAccountMapTable
 import io.bluetape4k.workshop.exposed.withTables
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldContainSame
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldContainSame
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.dao.entityCache
