@@ -13,7 +13,7 @@ import okio.BufferedSource
 import okio.Sink
 import okio.Source
 import okio.Timeout
-import org.amshove.kluent.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 
 class SuspendInteropTest: AbstractOkioTest() {

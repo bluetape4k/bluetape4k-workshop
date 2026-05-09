@@ -7,9 +7,9 @@ import io.bluetape4k.workshop.observation.AbstractObservationTest
 import io.bluetape4k.workshop.observation.service.GreetingService
 import io.micrometer.observation.tck.TestObservationRegistry
 import io.micrometer.tracing.test.simple.SimpleTracer
-import org.amshove.kluent.shouldBeTrue
-import org.amshove.kluent.shouldNotBeEmpty
-import org.amshove.kluent.shouldNotBeNull
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration

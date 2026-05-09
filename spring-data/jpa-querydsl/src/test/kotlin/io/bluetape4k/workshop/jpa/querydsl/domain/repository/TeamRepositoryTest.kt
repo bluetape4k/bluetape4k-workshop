@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.jpa.querydsl.domain.repository
 
 import io.bluetape4k.workshop.jpa.querydsl.domain.AbstractDomainTest
-import org.amshove.kluent.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldNotBeEmpty
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 

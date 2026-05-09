@@ -4,9 +4,9 @@ package io.bluetape4k.workshop.redis.commands
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.redis.AbstractRedisTest
-import org.amshove.kluent.shouldBeInRange
-import org.amshove.kluent.shouldContainSame
-import org.amshove.kluent.shouldHaveSize
+import io.bluetape4k.assertions.shouldBeInRange
+import io.bluetape4k.assertions.shouldContainSame
+import io.bluetape4k.assertions.shouldHaveSize
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired

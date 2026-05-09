@@ -6,7 +6,7 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.spring.modulith.services.department.DepartmentDTO
 import io.bluetape4k.workshop.spring.modulith.services.employee.EmployeeDTO
 import kotlinx.coroutines.reactive.awaitSingle
-import org.amshove.kluent.shouldNotBeNull
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order

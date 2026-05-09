@@ -9,9 +9,9 @@ import io.bluetape4k.workshop.shared.web.httpDelete
 import io.bluetape4k.workshop.shared.web.httpGet
 import io.bluetape4k.workshop.shared.web.httpPost
 import kotlinx.coroutines.reactive.awaitSingle
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldHaveSize
-import org.amshove.kluent.shouldNotBeNull
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.expectBodyList
 import org.springframework.test.web.reactive.server.returnResult

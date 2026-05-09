@@ -7,9 +7,9 @@ import io.bluetape4k.workshop.protobuf.School.Student
 import io.bluetape4k.workshop.protobuf.StudentKt.phoneNumber
 import io.bluetape4k.workshop.protobuf.course
 import io.bluetape4k.workshop.protobuf.student
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldContain
-import org.amshove.kluent.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldNotBeEmpty
 import org.junit.jupiter.api.Test
 
 class ProtobufConverterTest {

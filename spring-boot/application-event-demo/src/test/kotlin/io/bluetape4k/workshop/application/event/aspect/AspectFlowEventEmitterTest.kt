@@ -7,7 +7,7 @@ import io.bluetape4k.junit5.output.OutputCapturer
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.application.event.EventApplication
 import kotlinx.coroutines.delay
-import org.amshove.kluent.shouldContain
+import io.bluetape4k.assertions.shouldContain
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest

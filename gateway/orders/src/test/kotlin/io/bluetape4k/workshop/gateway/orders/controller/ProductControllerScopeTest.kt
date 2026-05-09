@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.gateway.orders.controller
 
 import kotlinx.coroutines.CoroutineScope
-import org.amshove.kluent.shouldBeFalse
+import io.bluetape4k.assertions.shouldBeFalse
 import org.junit.jupiter.api.Test
 
 class ProductControllerScopeTest {

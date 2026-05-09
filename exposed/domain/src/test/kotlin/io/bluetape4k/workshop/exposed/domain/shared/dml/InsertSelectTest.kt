@@ -3,8 +3,8 @@ package io.bluetape4k.workshop.exposed.domain.shared.dml
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldHaveSize
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldHaveSize
 import org.jetbrains.exposed.v1.core.Expression
 import org.jetbrains.exposed.v1.core.Random
 import org.jetbrains.exposed.v1.core.SortOrder

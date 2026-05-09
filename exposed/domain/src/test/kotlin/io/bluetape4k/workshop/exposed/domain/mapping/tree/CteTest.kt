@@ -5,7 +5,7 @@
 //import io.bluetape4k.workshop.exposed.AbstractExposedTest
 //import io.bluetape4k.workshop.exposed.TestDB
 //import io.bluetape4k.workshop.exposed.withTables
-//import org.amshove.kluent.shouldHaveSize
+//import io.bluetape4k.assertions.shouldHaveSize
 //import org.jetbrains.exposed.v1.core.IColumnType
 //import org.jetbrains.exposed.v1.core.statements.Statement
 //import org.jetbrains.exposed.v1.core.statements.StatementType

@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.resilience.config
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.resilience.AbstractResilienceTest
-import org.amshove.kluent.shouldNotBeNull
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
 
 class Resilience4jConfigTest: AbstractResilienceTest() {

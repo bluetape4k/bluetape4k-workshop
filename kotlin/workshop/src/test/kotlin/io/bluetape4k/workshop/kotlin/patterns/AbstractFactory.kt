@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.kotlin.patterns
 
-import org.amshove.kluent.shouldHaveSize
+import io.bluetape4k.assertions.shouldHaveSize
 import org.junit.jupiter.api.Test
 
 class AbstractFactory {

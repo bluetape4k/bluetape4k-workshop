@@ -4,8 +4,8 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.storage.ElasticsearchOssServer
 import io.bluetape4k.testcontainers.storage.ElasticsearchServer
 import io.bluetape4k.testcontainers.storage.Spring
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import org.apache.hc.client5.http.impl.async.CloseableHttpAsyncClient
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Execution

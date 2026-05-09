@@ -3,7 +3,7 @@ package io.bluetape4k.okio
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import okio.Buffer
-import org.amshove.kluent.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeEqualTo
 import kotlin.random.Random
 
 object TestUtil: KLogging() {

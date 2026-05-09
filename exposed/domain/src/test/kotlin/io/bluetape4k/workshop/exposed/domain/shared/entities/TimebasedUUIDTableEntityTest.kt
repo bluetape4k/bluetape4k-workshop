@@ -20,8 +20,8 @@ import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables
 import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables.Town
 import io.bluetape4k.workshop.exposed.domain.shared.entities.TimebasedUUIDTables.Towns
 import io.bluetape4k.workshop.exposed.withTables
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.dao.entityCache

@@ -11,8 +11,8 @@ import io.bluetape4k.workshop.exposed.domain.shared.entities.ImmutableEntityTest
 import io.bluetape4k.workshop.exposed.domain.shared.entities.ImmutableEntityTest.Schema.EOrganization
 import io.bluetape4k.workshop.exposed.domain.shared.entities.ImmutableEntityTest.Schema.Organization
 import io.bluetape4k.workshop.exposed.withTables
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldNotBeEqualTo
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeEqualTo
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import org.jetbrains.exposed.v1.core.eq

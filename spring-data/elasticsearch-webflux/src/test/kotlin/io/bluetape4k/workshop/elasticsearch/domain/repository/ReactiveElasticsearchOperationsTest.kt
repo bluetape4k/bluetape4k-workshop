@@ -11,8 +11,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
-import org.amshove.kluent.shouldContain
-import org.amshove.kluent.shouldContainAll
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldContainAll
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired

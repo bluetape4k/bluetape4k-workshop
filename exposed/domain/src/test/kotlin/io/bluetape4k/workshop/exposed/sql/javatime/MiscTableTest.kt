@@ -9,7 +9,7 @@ import io.bluetape4k.workshop.exposed.domain.shared.checkInsert
 import io.bluetape4k.workshop.exposed.domain.shared.checkRow
 import io.bluetape4k.workshop.exposed.withDb
 import io.bluetape4k.workshop.exposed.withTables
-import org.amshove.kluent.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeEqualTo
 import org.jetbrains.exposed.v1.core.Cast
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table

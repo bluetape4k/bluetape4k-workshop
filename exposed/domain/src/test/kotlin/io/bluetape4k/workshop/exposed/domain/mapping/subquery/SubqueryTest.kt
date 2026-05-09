@@ -7,8 +7,8 @@ import io.bluetape4k.workshop.exposed.AbstractExposedTest
 import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.domain.mapping.PersonSchema.Person
 import io.bluetape4k.workshop.exposed.domain.mapping.withPersonsAndAddress
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldHaveSize
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldHaveSize
 import org.jetbrains.exposed.v1.core.CustomOperator
 import org.jetbrains.exposed.v1.core.Expression
 import org.jetbrains.exposed.v1.core.IntegerColumnType

@@ -5,7 +5,7 @@ import io.bluetape4k.workshop.bucket4j.AbstractRateLimiterApplicationTest
 import io.bluetape4k.workshop.bucket4j.utils.HeaderUtils
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.test.runTest
-import org.amshove.kluent.shouldContain
+import io.bluetape4k.assertions.shouldContain
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus

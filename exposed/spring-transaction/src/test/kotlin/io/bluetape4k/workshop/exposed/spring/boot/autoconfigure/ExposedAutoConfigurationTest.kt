@@ -3,8 +3,8 @@ package io.bluetape4k.workshop.exposed.spring.boot.autoconfigure
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.exposed.spring.boot.Application
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldNotBeNull
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.spring.boot4.DatabaseInitializer
 import org.jetbrains.exposed.v1.spring7.transaction.SpringTransactionManager

@@ -5,8 +5,8 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.gateway.GatewayApplicationTest
 import io.bluetape4k.workshop.gateway.RateLimitHeaders
 import io.bluetape4k.workshop.shared.web.httpGet
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldNotBeNull
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.expectBody

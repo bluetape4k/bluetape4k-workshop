@@ -22,11 +22,11 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.yield
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeIn
-import org.amshove.kluent.shouldContain
-import org.amshove.kluent.shouldContainSame
-import org.amshove.kluent.shouldHaveSize
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeIn
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldContainSame
+import io.bluetape4k.assertions.shouldHaveSize
 import org.junit.jupiter.api.Test
 import java.io.IOException
 import java.time.Duration
@@ -127,7 +127,7 @@ class CompositionTransformationExamples {
         val one = Uni.combine().any().of(first, second, third)
             .await().indefinitely()
 
-        one shouldBeIn intArrayOf(1, 2, 3)
+        one shouldBeIn listOf(1, 2, 3)
     }
 
     @Test

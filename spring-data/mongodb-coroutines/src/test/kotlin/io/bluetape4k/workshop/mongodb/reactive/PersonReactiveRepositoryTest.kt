@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.mongodb.reactive
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.mongodb.domain.Person
 import io.bluetape4k.workshop.mongodb.domain.PersonReactiveRepository
-import org.amshove.kluent.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.mongodb.core.ReactiveMongoOperations

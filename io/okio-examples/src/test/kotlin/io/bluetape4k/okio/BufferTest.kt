@@ -8,8 +8,8 @@ import okio.ByteString
 import okio.ByteString.Companion.decodeHex
 import okio.EOFException
 import okio.IOException
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -320,7 +320,7 @@ class BufferTest: AbstractOkioTest() {
     @Test
     fun `get byte of empty buffer`() {
         val buffer = Buffer()
-        org.amshove.kluent.internal.assertFailsWith<IndexOutOfBoundsException> {
+        io.bluetape4k.assertions.assertFailsWith<IndexOutOfBoundsException> {
             buffer[0]
         }
     }

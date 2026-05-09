@@ -6,10 +6,10 @@ import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.XEnt
 import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.XTable
 import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.YEntity
 import io.bluetape4k.workshop.exposed.domain.shared.entities.EntityTestData.YTable
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeNull
-import org.amshove.kluent.shouldBeTrue
-import org.amshove.kluent.shouldNotBeNull
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.jetbrains.exposed.v1.core.DatabaseConfig
 import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.jdbc.Database

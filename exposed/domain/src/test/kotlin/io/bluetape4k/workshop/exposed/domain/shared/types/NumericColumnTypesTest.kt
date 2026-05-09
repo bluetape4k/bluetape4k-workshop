@@ -6,8 +6,8 @@ import io.bluetape4k.workshop.exposed.TestDB
 import io.bluetape4k.workshop.exposed.assertFailAndRollback
 import io.bluetape4k.workshop.exposed.currentDialectTest
 import io.bluetape4k.workshop.exposed.withTables
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldEndWithIgnoringCase
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.byteParam
 import org.jetbrains.exposed.v1.core.decimalParam
@@ -29,6 +29,10 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.math.BigDecimal
+
+private fun String.shouldEndWithIgnoringCase(expected: String) {
+    endsWith(expected, ignoreCase = true).shouldBeTrue()
+}
 
 class NumericColumnTypesTest: AbstractExposedTest() {
 

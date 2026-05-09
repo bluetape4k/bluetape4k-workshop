@@ -22,11 +22,11 @@ import io.bluetape4k.workshop.exposed.domain.shared.entities.ViaTestData
 import io.bluetape4k.workshop.exposed.domain.shared.entities.ViaTestData.VNumber
 import io.bluetape4k.workshop.exposed.domain.shared.entities.ViaTestData.VString
 import io.bluetape4k.workshop.exposed.withTables
-import org.amshove.kluent.shouldBeEmpty
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeNull
-import org.amshove.kluent.shouldHaveSize
-import org.amshove.kluent.shouldNotBeNull
+import io.bluetape4k.assertions.shouldBeEmpty
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.EntityID

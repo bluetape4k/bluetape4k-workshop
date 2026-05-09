@@ -9,8 +9,8 @@ import io.bluetape4k.workshop.virtualThreads.AbstractVirtualThreadTest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 
 class Example4_VirtualThreadFactory: AbstractVirtualThreadTest() {

@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.redisson
 
 import io.bluetape4k.redis.redisson.codec.RedissonCodecs
-import org.amshove.kluent.shouldBeEqualTo
-import org.amshove.kluent.shouldBeTrue
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
 import org.redisson.config.Config
 import org.redisson.config.SingleServerConfig

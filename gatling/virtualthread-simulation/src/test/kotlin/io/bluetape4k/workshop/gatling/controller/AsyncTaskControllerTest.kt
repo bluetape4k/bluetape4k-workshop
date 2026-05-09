@@ -6,7 +6,7 @@ import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.gatling.AbstractGatlingTest
 import io.bluetape4k.workshop.shared.web.httpGet
 import kotlinx.coroutines.reactive.awaitSingle
-import org.amshove.kluent.shouldNotBeNull
+import io.bluetape4k.assertions.shouldNotBeNull
 import org.springframework.test.web.reactive.server.returnResult
 import kotlin.test.Test
 
