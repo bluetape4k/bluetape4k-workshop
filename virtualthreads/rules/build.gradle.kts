@@ -7,10 +7,9 @@ configurations {
 dependencies {
 
     implementation(libs.bluetape4k.core)
-    // VirtualThread of JDK 25
+    // VirtualThread of JDK 21
     implementation(libs.bluetape4k.virtualthread.api)
-    // runtimeOnly(libs.bluetape4k.virtualthread.jdk21)
-    runtimeOnly(libs.bluetape4k.virtualthread.jdk25)
+    runtimeOnly(libs.bluetape4k.virtualthread.jdk21)
 
     // Coroutines
     implementation(libs.bluetape4k.coroutines)
