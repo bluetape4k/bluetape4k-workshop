@@ -10,10 +10,10 @@ Bluetape4k 라이브러리를 활용한 백엔드 예제 모음입니다.
 
 | 항목          | 버전               |
 |-------------|------------------|
-| Kotlin      | 2.3.20           |
-| Java        | 25               |
-| Spring Boot | 4.0.3            |
-| bluetape4k  | 1.5.0-SNAPSHOT   |
+| Kotlin      | 2.3.21           |
+| Java        | 21               |
+| Spring Boot | 4.0.6            |
+| bluetape4k  | 1.7.0            |
 | Gradle      | Kotlin DSL, 멀티모듈 |
 
 ## 빌드
@@ -80,6 +80,6 @@ flowchart LR
 
 ## 테스트
 
-- JUnit 5 + Kluent + MockK
+- JUnit 5 + bluetape4k-assertions + MockK
 - Testcontainers (MariaDB, MySQL, PostgreSQL, CockroachDB)
 - JVM: ZGC, `-Xms2G -Xmx4G`, `--enable-preview`
