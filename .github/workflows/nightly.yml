@@ -50,11 +50,24 @@ jobs:
         with:
           gradle-version: wrapper
           cache-read-only: true
+      - name: Checkout bluetape4k projects
+        uses: actions/checkout@v4
+        with:
+          repository: bluetape4k/bluetape4k-projects
+          ref: develop
+          path: .bluetape4k-projects
+      - name: Build bluetape4k mock server images
+        working-directory: .bluetape4k-projects
+        run: ./gradlew :bluetape4k-mock-web-server:jibDockerBuild :bluetape4k-mock-webflux-server:jibDockerBuild --no-configuration-cache --max-workers=1
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
       - name: Run tests
         env:
           GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
           TESTCONTAINERS_RYUK_DISABLED: "true"
           DOCKER_HOST: "unix:///var/run/docker.sock"
+          DD_API_KEY: "test-api-key"
+          DD_APPLICATION_KEY: "test-application-key"
         run: ./gradlew test --continue --max-workers=1
       - name: Upload test results
         if: always()

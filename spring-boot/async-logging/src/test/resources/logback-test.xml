@@ -36,7 +36,7 @@
 
     <!-- JSON 포맷으로 로그가 저장되는지 확인하기 위한 File Appender -->
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-        <file>${LOG_FILE}</file>
+        <file>${LOG_PATH}/plain-app.log</file>
         <!-- Log 정보를 파일로 저장 시, JSON 포맷으로 변경하기 위해 logstash 를 사용합니다. -->
         <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
     </appender>
@@ -49,7 +49,7 @@
         <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
         <!-- Rolling file policy -->
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${LOG_FILE}.%d{yyyy-MM-dd}</fileNamePattern>
+            <fileNamePattern>${LOG_PATH}/rolling-app.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>5</maxHistory>
             
         </rollingPolicy>

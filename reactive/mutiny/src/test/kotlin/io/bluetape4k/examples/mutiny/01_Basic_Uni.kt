@@ -99,7 +99,7 @@ class UniBasicExamples {
         repeat(5) {
             deferred.subscribe().with { results.add(it) }
         }
-        results shouldBeEqualTo listOf(1, 2, 3, 4, 5)
+        results shouldBeEqualTo listOf(1L, 2L, 3L, 4L, 5L)
     }
 
     @Test
@@ -135,7 +135,7 @@ class UniBasicExamples {
         repeat(5) {
             uni.subscribe().with { results.add(it) }
         }
-        results shouldBeEqualTo listOf(10, 20, 30, 40, 50)
+        results shouldBeEqualTo listOf(10L, 20L, 30L, 40L, 50L)
     }
 
     // NOTE: 예외가 발생해도, onFailureCallback 이 없다면 예외를 rethrow 하지는 않는다

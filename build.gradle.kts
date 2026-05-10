@@ -149,6 +149,18 @@ subprojects {
                 systemProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager")
             }
 
+            // CI 기본 locale 은 `en` 처럼 국가가 없어 javax.money 기본 currency 를 해석하지 못합니다.
+            systemProperty("user.language", "en")
+            systemProperty("user.country", "US")
+
+            // Datadog registry auto-config 가 placeholder 를 그대로 URI 에 넣지 않도록 테스트 기본값을 제공합니다.
+            systemProperty("management.datadog.metrics.export.enabled", "false")
+            environment("DD_API_KEY", providers.environmentVariable("DD_API_KEY").orElse("test-api-key").get())
+            environment(
+                "DD_APPLICATION_KEY",
+                providers.environmentVariable("DD_APPLICATION_KEY").orElse("test-application-key").get()
+            )
+
             testLogging {
                 showExceptions = true
                 showCauses = true
