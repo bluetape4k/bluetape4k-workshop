@@ -1,6 +1,6 @@
 # WIP - bluetape4k-workshop
 
-Snapshot: 2026-05-09 KST
+Snapshot: 2026-05-10 KST
 Scope: open GitHub issues assigned to `debop`, created on or after 2026-01-01.
 Open count: 6 issues.
 
@@ -8,7 +8,7 @@ Open count: 6 issues.
 
 Workshop issues should consume stable library APIs. Avoid building graph or
 leader runnable examples before the owning library repo has settled the core API
-or semantics.
+or semantics. Graph batch insert is still merge-waiting in PR #78.
 
 ## Priority Queue
 
