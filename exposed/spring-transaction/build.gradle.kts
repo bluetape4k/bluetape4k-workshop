@@ -13,7 +13,7 @@ dependencies {
     implementation(project(":exposed-domain"))
 
     // Exposed
-    implementation(libs.bluetape4k.exposed.lib)
+    implementation(libs.bluetape4k.exposed.core)
     implementation(libs.exposed.core)
     implementation(libs.exposed.dao)
     implementation(libs.exposed.jdbc)
