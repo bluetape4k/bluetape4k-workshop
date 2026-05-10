@@ -51,7 +51,7 @@ class BucketExamples: AbstractRedissonTest() {
         bucket.setAndKeepTTLAsync("123").await()
 
         // TTL 정보
-        bucket.remainTimeToLiveAsync().await() shouldBeInRange (0L until 60 * 1000L)
+        bucket.remainTimeToLiveAsync().await() shouldBeInRange (0L..60 * 1000L)
 
         // "123" 값을 가지고 있으면 "2032" 로 변경한다
         bucket.compareAndSetAsync("123", "2032").await().shouldBeTrue()

@@ -5,6 +5,7 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.micrometer.model.Todo
 import io.micrometer.observation.annotation.Observed
 import net.datafaker.Faker
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.bodyToMono
@@ -13,14 +14,17 @@ import java.time.Duration
 
 @Service
 @Observed
-class ReactorService {
+class ReactorService(
+    @param:Value("\${workshop.micrometer.jsonplaceholder-base-url:https://jsonplaceholder.typicode.com}")
+    private val jsonplaceholderBaseUrl: String,
+) {
 
     companion object: KLoggingChannel() {
         val faker = Faker()
     }
 
     private val webClientBuilder = WebClient.builder()
-    private val client = webClientBuilder.baseUrl("https://jsonplaceholder.typicode.com").build()
+    private val client = webClientBuilder.baseUrl(jsonplaceholderBaseUrl).build()
 
     fun getName(): Mono<String> {
         return Mono.just(faker.name().fullName())

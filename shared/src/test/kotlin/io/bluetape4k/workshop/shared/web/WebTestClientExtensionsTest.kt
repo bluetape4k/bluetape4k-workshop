@@ -7,7 +7,10 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeNull
+import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Order
+import org.junit.jupiter.api.TestMethodOrder
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
@@ -23,8 +26,10 @@ class WebTestClientExtensionsTest: AbstractSpringTest() {
         .build()
 
     @Nested
+    @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
     inner class Get {
         @Test
+        @Order(1)
         fun `httGet httpbin`() {
             val response = client
                 .httpGet("/get")
@@ -40,6 +45,7 @@ class WebTestClientExtensionsTest: AbstractSpringTest() {
         }
 
         @Test
+        @Order(2)
         fun `httGet httpbin anything`() = runTest {
             val response = client
                 .httpGet("/anything")
@@ -53,6 +59,7 @@ class WebTestClientExtensionsTest: AbstractSpringTest() {
         }
 
         @Test
+        @Order(3)
         fun `httGet httpbin not found`() {
             client
                 .httpGet("/not-existing", HttpStatus.NOT_FOUND)
