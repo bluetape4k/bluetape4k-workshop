@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 import kotlinx.coroutines.runBlocking
 import net.datafaker.Faker
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.bodyToMono
@@ -22,13 +23,15 @@ import org.springframework.web.reactive.function.client.bodyToMono
 @Service
 class SyncService(
     private val observationRegistry: ObservationRegistry,
+    @param:Value("\${workshop.micrometer.jsonplaceholder-base-url:https://jsonplaceholder.typicode.com}")
+    private val jsonplaceholderBaseUrl: String,
 ) {
     companion object: KLogging() {
         val faker = Faker()
     }
 
     private val webClientBuilder = WebClient.builder()
-    private val client = webClientBuilder.baseUrl("https://jsonplaceholder.typicode.com").build()
+    private val client = webClientBuilder.baseUrl(jsonplaceholderBaseUrl).build()
 
     @Observed(contextualName = "sync-get-name-at-service")
     fun getName(): String {

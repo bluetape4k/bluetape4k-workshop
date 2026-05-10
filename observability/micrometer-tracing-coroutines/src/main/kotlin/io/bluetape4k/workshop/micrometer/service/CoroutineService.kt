@@ -7,6 +7,7 @@ import io.bluetape4k.workshop.micrometer.model.Todo
 import io.micrometer.observation.ObservationRegistry
 import kotlinx.coroutines.delay
 import net.datafaker.Faker
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBodyOrNull
@@ -14,6 +15,8 @@ import org.springframework.web.reactive.function.client.awaitBodyOrNull
 @Service
 class CoroutineService(
     private val observationRegistry: ObservationRegistry,
+    @param:Value("\${workshop.micrometer.jsonplaceholder-base-url:https://jsonplaceholder.typicode.com}")
+    private val jsonplaceholderBaseUrl: String,
 ) {
 
     companion object: KLoggingChannel() {
@@ -22,7 +25,7 @@ class CoroutineService(
 
     private val webClientBuilder = WebClient.builder()
 
-    private val client = webClientBuilder.baseUrl("https://jsonplaceholder.typicode.com").build()
+    private val client = webClientBuilder.baseUrl(jsonplaceholderBaseUrl).build()
 
     suspend fun getName(): String {
         log.debug { "Get fake name in coroutine service." }

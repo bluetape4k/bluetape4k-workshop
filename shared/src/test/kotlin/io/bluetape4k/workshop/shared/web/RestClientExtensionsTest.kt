@@ -5,7 +5,10 @@ import io.bluetape4k.logging.debug
 import kotlinx.coroutines.flow.flowOf
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeNull
+import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Order
+import org.junit.jupiter.api.TestMethodOrder
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.toEntity
@@ -22,8 +25,10 @@ class RestClientExtensionsTest: AbstractSpringTest() {
         .build()
 
     @Nested
+    @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
     inner class Get {
         @Test
+        @Order(1)
         fun `httGet httpbin`() {
             val response = client.httpGet("/get")
                 .toEntity<String>()
@@ -34,6 +39,7 @@ class RestClientExtensionsTest: AbstractSpringTest() {
         }
 
         @Test
+        @Order(2)
         fun `httGet httpbin anything`() {
             val response = client.httpGet("/anything")
                 .toEntity<String>()
@@ -44,6 +50,7 @@ class RestClientExtensionsTest: AbstractSpringTest() {
         }
 
         @Test
+        @Order(3)
         fun `httGet httpbin not found`() {
             assertFailsWith<HttpClientErrorException.NotFound> {
                 client.httpGet("/not-existing").toEntity<String>()
