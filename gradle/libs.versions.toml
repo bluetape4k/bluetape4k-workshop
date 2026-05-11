@@ -93,7 +93,7 @@ cassandra = "4.19.2"  # https://mvnrepository.com/artifact/org.apache.cassandra/
 elasticsearch = "9.4.0"  # https://mvnrepository.com/artifact/org.elasticsearch.client/elasticsearch-rest-client
 
 kafka = "4.2.0"  # https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients
-spring-kafka = "4.0.5"  # https://mvnrepository.com/artifact/org.springframework.kafka/spring-kafka
+spring-kafka4 = "4.0.5"  # https://mvnrepository.com/artifact/org.springframework.kafka/spring-kafka
 
 bucket4j = "8.18.0"  # https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17-caffeine
 vertx = "5.0.12"  # https://mvnrepository.com/artifact/io.vertx/vertx-core
@@ -299,7 +299,7 @@ guava = { module = "com.google.guava:guava", version = "33.4.8-jre" }  # https:/
 # Serialization
 kryo = { module = "com.esotericsoftware:kryo", version = "5.6.2" }  # https://mvnrepository.com/artifact/com.esotericsoftware/kryo
 kryo5 = { module = "com.esotericsoftware:kryo", version = "5.6.2" }  # https://mvnrepository.com/artifact/com.esotericsoftware/kryo
-fory-kotlin = { module = "org.apache.fory:fory-kotlin", version = "0.14.1" }  # https://mvnrepository.com/artifact/org.apache.fory/fory-kotlin
+fory-kotlin = { module = "org.apache.fory:fory-kotlin", version = "0.15.0" }  # https://mvnrepository.com/artifact/org.apache.fory/fory-kotlin
 
 # Spring Boot
 spring-boot4-dependencies = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot4" }
@@ -380,8 +380,8 @@ spring-modulith-starter-jpa = { module = "org.springframework.modulith:spring-mo
 spring-modulith-starter-test = { module = "org.springframework.modulith:spring-modulith-starter-test" }
 
 # Spring Kafka
-spring-kafka-lib = { module = "org.springframework.kafka:spring-kafka", version.ref = "spring-kafka" }
-spring-kafka-test = { module = "org.springframework.kafka:spring-kafka-test", version.ref = "spring-kafka" }
+spring-kafka-lib = { module = "org.springframework.kafka:spring-kafka", version.ref = "spring-kafka4" }
+spring-kafka-test = { module = "org.springframework.kafka:spring-kafka-test", version.ref = "spring-kafka4" }
 
 # Springdoc OpenAPI
 springdoc-openapi-starter-webmvc-api = { module = "org.springdoc:springdoc-openapi-starter-webmvc-api", version.ref = "springdoc-openapi" }
