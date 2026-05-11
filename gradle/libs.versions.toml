@@ -282,7 +282,7 @@ javamoney-moneta = { module = "org.javamoney:moneta", version = "1.4.4" }  # htt
 commons-beanutils = { module = "commons-beanutils:commons-beanutils", version = "1.11.0" }  # https://mvnrepository.com/artifact/commons-beanutils/commons-beanutils
 commons-codec = { module = "commons-codec:commons-codec", version = "1.18.0" }  # https://mvnrepository.com/artifact/commons-codec/commons-codec
 commons-collections4 = { module = "org.apache.commons:commons-collections4", version = "4.5.0" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-collections4
-commons-compress = { module = "org.apache.commons:commons-compress", version = "1.27.1" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-compress
+commons-compress = { module = "org.apache.commons:commons-compress", version = "1.28.0" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-compress
 commons-csv = { module = "org.apache.commons:commons-csv", version = "1.14.0" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-csv
 commons-exec = { module = "org.apache.commons:commons-exec", version = "1.5.0" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-exec
 commons-io = { module = "commons-io:commons-io", version = "2.19.0" }  # https://mvnrepository.com/artifact/commons-io/commons-io
