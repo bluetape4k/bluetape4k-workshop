@@ -571,7 +571,7 @@ hibernate-core = { module = "org.hibernate.orm:hibernate-core", version.ref = "h
 hibernate-jcache = { module = "org.hibernate.orm:hibernate-jcache", version.ref = "hibernate" }
 hibernate-validator-lib = { module = "org.hibernate.validator:hibernate-validator", version.ref = "hibernate-validator" }
 hibernate-validator-annotation-processor = { module = "org.hibernate:hibernate-validator-annotation-processor", version.ref = "hibernate-validator" }
-javassist = { module = "org.javassist:javassist", version = "3.30.2-GA" }  # https://mvnrepository.com/artifact/org.javassist/javassist
+javassist = { module = "org.javassist:javassist", version = "3.31.0-GA" }  # https://mvnrepository.com/artifact/org.javassist/javassist
 antlr4-runtime = { module = "org.antlr:antlr4-runtime", version = "4.13.2" }  # https://mvnrepository.com/artifact/org.antlr/antlr4-runtime
 antlr4-tool = { module = "org.antlr:antlr4", version = "4.13.2" }  # https://mvnrepository.com/artifact/org.antlr/antlr4
 
