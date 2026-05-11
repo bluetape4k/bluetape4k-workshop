@@ -629,7 +629,7 @@ mapstruct-processor = { module = "org.mapstruct:mapstruct-processor", version.re
 
 # Misc
 reflectasm = { module = "com.esotericsoftware:reflectasm", version.ref = "reflectasm" }
-objenesis = { module = "org.objenesis:objenesis", version = "3.4" }  # https://mvnrepository.com/artifact/org.objenesis/objenesis
+objenesis = { module = "org.objenesis:objenesis", version = "3.5" }  # https://mvnrepository.com/artifact/org.objenesis/objenesis
 ow2-asm = { module = "org.ow2.asm:asm", version.ref = "ow2-asm" }
 jsonpath = { module = "com.jayway.jsonpath:json-path", version = "2.10.0" }  # https://mvnrepository.com/artifact/com.jayway.jsonpath/json-path
 jsonassert = { module = "org.skyscreamer:jsonassert", version = "2.0-rc1" }  # https://mvnrepository.com/artifact/org.skyscreamer/jsonassert
