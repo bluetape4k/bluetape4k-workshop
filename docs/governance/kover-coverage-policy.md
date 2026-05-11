@@ -16,10 +16,10 @@ not a production release gate.
 ## Threshold Plan
 
 - Keep examples compiling and tests passing.
-- Add local coverage checks only for examples that become reusable production
-  templates.
+- Use coverage reports only as an informational signal when an example becomes a
+  reusable production template.
 
 ## CI/Nightly Contract
 
-CI/Nightly run build/test signals. No `koverVerify` task is required unless a
-module is promoted from demo code to a maintained template.
+CI/Nightly run build/test signals. Coverage reports, if added, must remain
+informational and must not introduce a failing threshold by default.
