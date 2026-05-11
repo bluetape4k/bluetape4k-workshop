@@ -196,6 +196,7 @@ bluetape4k-vertx = { module = "io.github.bluetape4k:bluetape4k-vertx" , version.
 bluetape4k-cassandra = { module = "io.github.bluetape4k:bluetape4k-cassandra" , version.ref = "bluetape4k" }
 bluetape4k-exposed-core = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-core" , version.ref = "bluetape4k" }
 bluetape4k-exposed-dao = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-dao" , version.ref = "bluetape4k" }
+bluetape4k-exposed-jdbc = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-jdbc" , version.ref = "bluetape4k" }
 bluetape4k-exposed-jackson3 = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-jackson3" , version.ref = "bluetape4k" }
 bluetape4k-exposed-jdbc-tests = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-jdbc-tests" , version.ref = "bluetape4k" }
 bluetape4k-exposed-r2dbc = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-r2dbc" , version.ref = "bluetape4k" }
