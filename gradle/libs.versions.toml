@@ -79,7 +79,7 @@ micrometer-tracing = "1.6.5"  # https://mvnrepository.com/artifact/io.micrometer
 micrometer-context-propagation = "1.2.1"  # https://mvnrepository.com/artifact/io.micrometer/context-propagation
 
 opentelemetry = "1.62.0"  # https://mvnrepository.com/artifact/io.opentelemetry/opentelemetry-bom
-opentelemetry-alpha = "1.62.0-alpha"  # https://mvnrepository.com/artifact/io.opentelemetry/opentelemetry-bom-alpha
+opentelemetry-alpha = "1.63.0-alpha-SNAPSHOT"  # https://mvnrepository.com/artifact/io.opentelemetry/opentelemetry-bom-alpha
 opentelemetry-java-agent = "2.27.0"  # https://mvnrepository.com/artifact/io.opentelemetry.javaagent/opentelemetry-javaagent
 opentelemetry-instrumentation-alpha = "2.27.0-alpha"  # https://mvnrepository.com/artifact/io.opentelemetry.instrumentation/opentelemetry-instrumentation-bom-alpha
 
