@@ -138,7 +138,7 @@ shadow = "9.2.2"  # https://mvnrepository.com/artifact/com.gradleup.shadow/shado
 graalvm-native = "1.1.0"  # https://mvnrepository.com/artifact/org.graalvm.buildtools/native-gradle-plugin
 docker-compose = "0.17.21"  # https://mvnrepository.com/artifact/com.avast.gradle/gradle-docker-compose-plugin
 protobuf-plugin = "0.9.5"  # https://mvnrepository.com/artifact/com.google.protobuf/protobuf-gradle-plugin
-gatling-plugin = "3.15.0.1"  # https://mvnrepository.com/artifact/io.gatling/gatling-gradle-plugin
+gatling-plugin = "3.15.0.2"  # https://mvnrepository.com/artifact/io.gatling/gatling-gradle-plugin
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
