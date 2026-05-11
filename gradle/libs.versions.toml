@@ -704,7 +704,7 @@ bluetape4k-quarkus-tests = { module = "io.github.bluetape4k:bluetape4k-quarkus-t
 
 # WebJars
 webjar-bootstrap = { module = "org.webjars:bootstrap", version = "5.2.3" }  # https://mvnrepository.com/artifact/org.webjars/bootstrap
-webjar-font-awesome = { module = "org.webjars:font-awesome", version = "6.4.0" }  # https://mvnrepository.com/artifact/org.webjars/font-awesome
+webjar-font-awesome = { module = "org.webjars:font-awesome", version = "7.2.0" }  # https://mvnrepository.com/artifact/org.webjars/font-awesome
 webjar-jquery = { module = "org.webjars:jquery", version = "3.6.4" }  # https://mvnrepository.com/artifact/org.webjars/jquery
 webjar-sockjs-client = { module = "org.webjars:sockjs-client", version = "1.5.1" }  # https://mvnrepository.com/artifact/org.webjars/sockjs-client
 webjar-stomp-websocket = { module = "org.webjars:stomp-websocket", version = "2.3.4" }  # https://mvnrepository.com/artifact/org.webjars/stomp-websocket
