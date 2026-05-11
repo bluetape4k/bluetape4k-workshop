@@ -2,8 +2,18 @@ name: Nightly
 
 on:
   schedule:
-    - cron: '0 19 * * *'  # 매일 UTC 19:00 (KST 04:00)
+    - cron: '0 19 * * 1-6'  # Daily smoke, UTC 19:00 (KST 04:00) Mon-Sat
+    - cron: '0 19 * * 0'    # Weekly full, UTC 19:00 (KST 04:00) Sunday
   workflow_dispatch:
+    inputs:
+      scope:
+        description: 'Nightly scope to run'
+        required: true
+        type: choice
+        default: full
+        options:
+          - smoke
+          - full
 
 env:
   JAVA_VERSION: '21'
@@ -38,6 +48,8 @@ jobs:
 
   test:
     name: Test (Testcontainers)
+    if: ${{ (github.event_name == 'schedule' && github.event.schedule == '0 19 * * 0') || (github.event_name == 'workflow_dispatch' && inputs.scope == 'full') }}
+
     runs-on: ubuntu-latest
     needs: build
     steps:
