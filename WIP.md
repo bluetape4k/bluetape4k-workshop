@@ -1,8 +1,8 @@
 # WIP - bluetape4k-workshop
 
-Snapshot: 2026-05-10 KST
+Snapshot: 2026-05-12 KST
 Scope: open GitHub issues assigned to `debop`, created on or after 2026-01-01.
-Open count: 6 issues.
+Open count: 7 issues.
 
 ## Current Direction
 
@@ -10,10 +10,14 @@ Workshop issues should consume stable library APIs. Avoid building graph or
 leader runnable examples before the owning library repo has settled the core API
 or semantics. Graph batch insert is still merge-waiting in PR #78.
 
+`bluetape4k-projects` keeps lightweight/minimal examples.
+This repository focuses on integrated workshop examples.
+
 ## Priority Queue
 
 | Priority | Issue | Difficulty | Notes |
 |---|---|---:|---|
+| P2 | [#62](https://github.com/bluetape4k/bluetape4k-workshop/issues/62) idgenerator workshop examples | L | Multi-node, Redis, Kafka, tracing, benchmark examples. |
 | P3 | [#14](https://github.com/bluetape4k/bluetape4k-workshop/issues/14) Ktor-first workshop example | M | Independent enough to start, but lower strategic leverage. |
 | P3 | [#9](https://github.com/bluetape4k/bluetape4k-workshop/issues/9) bluetape4k-graph examples epic | L | Track runnable workshop side only; graph library examples belong in `bluetape4k-graph #10`. |
 | P3 | [#11](https://github.com/bluetape4k/bluetape4k-workshop/issues/11) knowledge-graph example | M | Depends on graph example/core API stability. |
@@ -24,6 +28,16 @@ or semantics. Graph batch insert is still merge-waiting in PR #78.
 ## Dependency Map
 
 ```text
+bluetape4k-projects #416 minimal examples
+  -> #62 integrated workshop examples
+      -> multi-node Snowflake
+      -> Redis worker-id allocation
+      -> REST API + persistence
+      -> Ktor + Coroutines + Exposed
+      -> Kafka event id generation
+      -> OpenTelemetry tracing
+      -> benchmark scenarios
+
 bluetape4k-graph #10 and core graph APIs
   -> #9 graph workshop epic
       -> #11 knowledge graph
@@ -41,6 +55,7 @@ bluetape4k-leader #36 and lease/state semantics
 
 | Lane | Limit | Current next |
 |---|---:|---|
+| Integrated workshop examples | 1 | `#62` idgenerator workshops. |
 | Independent workshop | 1 | `#14` if examples are desired now. |
 | Graph examples | 0 until graph core settles | `#9/#11/#12/#13` wait. |
 | Leader examples | 0 until leader semantics settle | `#10` waits. |
