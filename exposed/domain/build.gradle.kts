@@ -14,6 +14,7 @@ dependencies {
     implementation(libs.bluetape4k.exposed.core)
     implementation(libs.bluetape4k.exposed.dao)
     implementation(libs.bluetape4k.exposed.jackson3)
+    testImplementation(libs.bluetape4k.exposed.jdbc)
     testImplementation(libs.bluetape4k.exposed.jdbc.tests)
 
     implementation(libs.exposed.core)
