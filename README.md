@@ -25,6 +25,11 @@ Bluetape4k 라이브러리를 활용한 백엔드 예제 모음입니다.
 ./gradlew detekt                         # 정적 분석
 ```
 
+`exposed-domain` 테스트는 `io.bluetape4k.exposed.jdbc.selectImplicitAll` 같은
+main JDBC helper extension을 직접 검증합니다. `bluetape4k-exposed-jdbc-tests`는
+test fixture 계약만 제공하므로, 해당 테스트 모듈에는 `bluetape4k-exposed-jdbc`
+test dependency도 함께 선언해야 합니다.
+
 ## 전체 모듈 구성
 
 ```mermaid
