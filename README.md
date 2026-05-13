@@ -4,7 +4,22 @@
 [![JVM](https://img.shields.io/badge/JVM-21-ED8B00?logo=openjdk)](https://openjdk.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+![Bluetape4k workshop workbench](./docs/assets/workshop-workbench.png)
+
 Bluetape4k 라이브러리를 활용한 백엔드 예제 모음입니다.
+
+## Project Purpose
+
+`bluetape4k-workshop` collects runnable backend examples that show how stable
+bluetape4k libraries fit into Spring Boot, Exposed, Redis, Kafka, security,
+observability, virtual threads, Vert.x, and gateway-style applications.
+
+## What It Provides
+
+- **Runnable module groups** for common backend stacks.
+- **Integration examples** for bluetape4k data, infra, I/O, and testing modules.
+- **Test-first learning material** with Testcontainers and shared utilities.
+- **Adoption bridge** from isolated library APIs to application-shaped examples.
 
 ## 기술 스택
 
