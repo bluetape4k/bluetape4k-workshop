@@ -46,6 +46,8 @@ names.
 | `virtualthreads/` | Virtual threads with MVC/WebFlux |
 | `shared/` | Shared test utilities |
 
+Root README visual assets live under `docs/assets/`.
+
 ## Rules
 
 - Dependency versions live in `gradle/libs.versions.toml`.
