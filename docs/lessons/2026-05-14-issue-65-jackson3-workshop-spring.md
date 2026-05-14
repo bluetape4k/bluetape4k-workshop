@@ -14,15 +14,16 @@ unchanged because they still expose Jackson2 APIs in local source.
 ## Outcome
 
 The Spring Kafka reply example and Spring Data Elasticsearch example no longer
-depend on `bluetape4k-jackson2`.
+depend on `bluetape4k-jackson2`. The version catalog duplicate
+`bluetape4k-exposed-jdbc` alias was removed because it blocked every Gradle
+configuration before module validation could start.
 
 ## Verification
 
-- Blocked: Gradle configuration fails before task selection because
-  `gradle/libs.versions.toml` already contains a duplicate
-  `bluetape4k-exposed-jdbc` alias.
+- `./gradlew :messaging-kafka-reply:testClasses :spring-data-elasticsearch:testClasses`
 
 ## Future Notes
 
-Resolve catalog duplicate aliases before validating or expanding workshop-wide
-dependency migrations.
+When Gradle fails before task selection during dependency migration, inspect the
+version catalog first; unrelated duplicate aliases can mask module-level
+Jackson compatibility results.
