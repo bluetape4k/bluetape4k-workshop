@@ -22,8 +22,8 @@ class CapturingStreamListener: StreamListener<String, MapRecord<String, String, 
      * @param message
      */
     override fun onMessage(message: MapRecord<String, String, String>) {
-        dequeue.add(message)
         counter.incrementAndGet()
+        dequeue.add(message)
     }
 
     val receivedRecordCount get() = counter.value
