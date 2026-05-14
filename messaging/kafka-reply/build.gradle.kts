@@ -26,10 +26,10 @@ dependencies {
     implementation(libs.testcontainers.kafka)
 
     // Jackson
-    api(libs.bluetape4k.jackson2)
-    api(libs.jackson.databind)
-    api(libs.jackson.module.kotlin)
-    api(libs.jackson.module.blackbird)
+    api(libs.bluetape4k.jackson3)
+    api(libs.jackson3.databind)
+    api(libs.jackson3.module.kotlin)
+    api(libs.jackson3.module.blackbird)
 
     // Coroutines
     implementation(libs.bluetape4k.coroutines)
