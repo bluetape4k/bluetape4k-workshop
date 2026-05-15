@@ -1,4 +1,4 @@
-# Chaos Monkey + Spring Boot 3 Demo
+# Chaos Monkey + Spring Boot 4 Demo
 
 원본: [chaos-monkey-springboot](https://github.com/vaquarkhan/chaos-monkey-springboot)
 
@@ -53,7 +53,7 @@ There are two required steps for enabling Chaos Monkey for a Spring Boot applica
 <dependency>
     <groupId>de.codecentric</groupId>
     <artifactId>chaos-monkey-spring-boot</artifactId>
-    <version>2.2.0</version>
+    <version>4.0.0</version>
 </dependency>
 ```
 
