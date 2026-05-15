@@ -1,6 +1,6 @@
 # Exposed Dao Web Transaction Example
 
-This Spring Boot 3 based project uses Exposed for CRUD (Create, Read, Update, Delete) operations.
+This Spring Boot 4 based project uses Exposed for CRUD (Create, Read, Update, Delete) operations.
 
 ## 트랜잭션 처리 흐름
 

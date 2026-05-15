@@ -1,4 +1,4 @@
-# Micrometer Observation for Spring Boot 3 Webflux & Coroutines
+# Micrometer Observation for Spring Boot 4 WebFlux & Coroutines
 
 ## 아키텍처 다이어그램
 
