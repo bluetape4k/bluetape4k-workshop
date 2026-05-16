@@ -34,13 +34,13 @@ dependencies {
     implementation(libs.bluetape4k.jdbc)
 
     // Exposed
-    implementation(libs.bluetape4k.exposed.core)
-    implementation(libs.bluetape4k.exposed.dao)
     implementation(libs.exposed.core)
     implementation(libs.exposed.dao)
-    implementation(libs.exposed.kotlin.datetime)
-    implementation(libs.exposed.spring.boot4.starter)
-    implementation(libs.exposed.spring7.transaction)
+    implementation(libs.jetbrains.exposed.core)
+    implementation(libs.jetbrains.exposed.dao)
+    implementation(libs.jetbrains.exposed.kotlin.datetime)
+    implementation(libs.jetbrains.exposed.spring.boot4.starter)
+    implementation(libs.jetbrains.exposed.spring7.transaction)
 
     // Jackson for Kotlin
     implementation(libs.jackson3.module.kotlin)

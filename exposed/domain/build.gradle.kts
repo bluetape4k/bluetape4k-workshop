@@ -7,27 +7,27 @@ configurations {
 }
 
 dependencies {
-    implementation(platform(libs.exposed.bom))
+    implementation(platform(libs.jetbrains.exposed.bom))
 
     testImplementation(project(":shared"))
 
-    implementation(libs.bluetape4k.exposed.core)
-    implementation(libs.bluetape4k.exposed.dao)
-    testImplementation(libs.bluetape4k.exposed.jdbc)
-    implementation(libs.bluetape4k.exposed.jackson3)
-    testImplementation(libs.bluetape4k.exposed.jdbc)
-    testImplementation(libs.bluetape4k.exposed.jdbc.tests)
-
     implementation(libs.exposed.core)
-    implementation(libs.exposed.crypt)
     implementation(libs.exposed.dao)
-    implementation(libs.exposed.java.time)
-    implementation(libs.exposed.jdbc)
-    implementation(libs.exposed.json)
-    implementation(libs.exposed.kotlin.datetime)
-    implementation(libs.exposed.migration.jdbc)
-    implementation(libs.exposed.money)
-    implementation(libs.exposed.spring.boot4.starter)
+    testImplementation(libs.exposed.jdbc)
+    implementation(libs.exposed.jackson3)
+    testImplementation(libs.exposed.jdbc)
+    testImplementation(libs.exposed.jdbc.tests)
+
+    implementation(libs.jetbrains.exposed.core)
+    implementation(libs.jetbrains.exposed.crypt)
+    implementation(libs.jetbrains.exposed.dao)
+    implementation(libs.jetbrains.exposed.java.time)
+    implementation(libs.jetbrains.exposed.jdbc)
+    implementation(libs.jetbrains.exposed.json)
+    implementation(libs.jetbrains.exposed.kotlin.datetime)
+    implementation(libs.jetbrains.exposed.migration.jdbc)
+    implementation(libs.jetbrains.exposed.money)
+    implementation(libs.jetbrains.exposed.spring.boot4.starter)
 
     implementation(libs.bluetape4k.jdbc)
     testImplementation(libs.bluetape4k.junit5)

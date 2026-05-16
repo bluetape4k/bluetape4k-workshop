@@ -26,8 +26,8 @@ dependencies {
     implementation(libs.h2.v2)
 
     // Exposed R2dbc
-    implementation(libs.bluetape4k.exposed.r2dbc)
     implementation(libs.exposed.r2dbc)
+    implementation(libs.jetbrains.exposed.r2dbc)
 
     // Spring Boot
     implementation(libs.spring.boot.autoconfigure.lib)

@@ -194,12 +194,12 @@ bluetape4k-protobuf = { module = "io.github.bluetape4k:bluetape4k-protobuf" , ve
 bluetape4k-retrofit2 = { module = "io.github.bluetape4k:bluetape4k-retrofit2" , version.ref = "bluetape4k" }
 bluetape4k-vertx = { module = "io.github.bluetape4k:bluetape4k-vertx" , version.ref = "bluetape4k" }
 bluetape4k-cassandra = { module = "io.github.bluetape4k:bluetape4k-cassandra" , version.ref = "bluetape4k" }
-bluetape4k-exposed-core = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-core" , version.ref = "bluetape4k" }
-bluetape4k-exposed-dao = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-dao" , version.ref = "bluetape4k" }
-bluetape4k-exposed-jdbc = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-jdbc" , version.ref = "bluetape4k" }
-bluetape4k-exposed-jackson3 = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-jackson3" , version.ref = "bluetape4k" }
-bluetape4k-exposed-jdbc-tests = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-jdbc-tests" , version.ref = "bluetape4k" }
-bluetape4k-exposed-r2dbc = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-r2dbc" , version.ref = "bluetape4k" }
+exposed-core = { module = "io.github.bluetape4k.exposed:exposed-core" , version.ref = "bluetape4k" }
+exposed-dao = { module = "io.github.bluetape4k.exposed:exposed-dao" , version.ref = "bluetape4k" }
+exposed-jdbc = { module = "io.github.bluetape4k.exposed:exposed-jdbc" , version.ref = "bluetape4k" }
+exposed-jackson3 = { module = "io.github.bluetape4k.exposed:exposed-jackson3" , version.ref = "bluetape4k" }
+exposed-jdbc-tests = { module = "io.github.bluetape4k.exposed:exposed-jdbc-tests" , version.ref = "bluetape4k" }
+exposed-r2dbc = { module = "io.github.bluetape4k.exposed:exposed-r2dbc" , version.ref = "bluetape4k" }
 bluetape4k-hibernate = { module = "io.github.bluetape4k:bluetape4k-hibernate" , version.ref = "bluetape4k" }
 bluetape4k-jdbc = { module = "io.github.bluetape4k:bluetape4k-jdbc" , version.ref = "bluetape4k" }
 bluetape4k-mongodb = { module = "io.github.bluetape4k:bluetape4k-mongodb" , version.ref = "bluetape4k" }
@@ -585,20 +585,20 @@ querydsl-jpa = { module = "com.querydsl:querydsl-jpa", version.ref = "querydsl" 
 mybatis-dynamic-sql = { module = "org.mybatis.dynamic-sql:mybatis-dynamic-sql", version = "1.5.2" }  # https://mvnrepository.com/artifact/org.mybatis.dynamic-sql/mybatis-dynamic-sql
 
 # Exposed
-exposed-bom = { module = "org.jetbrains.exposed:exposed-bom", version.ref = "exposed" }
-exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
-exposed-crypt = { module = "org.jetbrains.exposed:exposed-crypt", version.ref = "exposed" }
-exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
-exposed-java-time = { module = "org.jetbrains.exposed:exposed-java-time", version.ref = "exposed" }
-exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
-exposed-json = { module = "org.jetbrains.exposed:exposed-json", version.ref = "exposed" }
-exposed-kotlin-datetime = { module = "org.jetbrains.exposed:exposed-kotlin-datetime", version.ref = "exposed" }
-exposed-migration-jdbc = { module = "org.jetbrains.exposed:exposed-migration-jdbc", version.ref = "exposed" }
-exposed-money = { module = "org.jetbrains.exposed:exposed-money", version.ref = "exposed" }
-exposed-r2dbc = { module = "org.jetbrains.exposed:exposed-r2dbc", version.ref = "exposed" }
-exposed-spring-boot-starter = { module = "org.jetbrains.exposed:exposed-spring-boot-starter", version.ref = "exposed" }
-exposed-spring-boot4-starter = { module = "org.jetbrains.exposed:exposed-spring-boot4-starter", version.ref = "exposed" }
-exposed-spring7-transaction = { module = "org.jetbrains.exposed:spring7-transaction", version.ref = "exposed" }
+jetbrains-exposed-bom = { module = "org.jetbrains.exposed:exposed-bom", version.ref = "exposed" }
+jetbrains-exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
+jetbrains-exposed-crypt = { module = "org.jetbrains.exposed:exposed-crypt", version.ref = "exposed" }
+jetbrains-exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
+jetbrains-exposed-java-time = { module = "org.jetbrains.exposed:exposed-java-time", version.ref = "exposed" }
+jetbrains-exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
+jetbrains-exposed-json = { module = "org.jetbrains.exposed:exposed-json", version.ref = "exposed" }
+jetbrains-exposed-kotlin-datetime = { module = "org.jetbrains.exposed:exposed-kotlin-datetime", version.ref = "exposed" }
+jetbrains-exposed-migration-jdbc = { module = "org.jetbrains.exposed:exposed-migration-jdbc", version.ref = "exposed" }
+jetbrains-exposed-money = { module = "org.jetbrains.exposed:exposed-money", version.ref = "exposed" }
+jetbrains-exposed-r2dbc = { module = "org.jetbrains.exposed:exposed-r2dbc", version.ref = "exposed" }
+jetbrains-exposed-spring-boot-starter = { module = "org.jetbrains.exposed:exposed-spring-boot-starter", version.ref = "exposed" }
+jetbrains-exposed-spring-boot4-starter = { module = "org.jetbrains.exposed:exposed-spring-boot4-starter", version.ref = "exposed" }
+jetbrains-exposed-spring7-transaction = { module = "org.jetbrains.exposed:spring7-transaction", version.ref = "exposed" }
 
 # R2DBC
 r2dbc-h2 = { module = "io.r2dbc:r2dbc-h2", version.ref = "r2dbc-h2" }

@@ -35,14 +35,14 @@ dependencies {
     implementation(libs.bluetape4k.jdbc)
 
     // Exposed
-    implementation(libs.bluetape4k.exposed.core)
-    implementation(libs.bluetape4k.exposed.dao)
     implementation(libs.exposed.core)
-    implementation(libs.exposed.jdbc)
     implementation(libs.exposed.dao)
-    implementation(libs.exposed.java.time)
-    implementation(libs.exposed.migration.jdbc)
-    // implementation(libs.exposed.spring.boot.starter) // 직접 DatabaseConfig 에서 Database를 설정해서, 중복됨
+    implementation(libs.jetbrains.exposed.core)
+    implementation(libs.jetbrains.exposed.jdbc)
+    implementation(libs.jetbrains.exposed.dao)
+    implementation(libs.jetbrains.exposed.java.time)
+    implementation(libs.jetbrains.exposed.migration.jdbc)
+    // implementation(libs.jetbrains.exposed.spring.boot.starter) // 직접 DatabaseConfig 에서 Database를 설정해서, 중복됨
 
     // Database Drivers
     implementation(libs.hikaricp)

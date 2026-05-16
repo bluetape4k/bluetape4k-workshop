@@ -9,17 +9,17 @@ configurations {
 }
 
 dependencies {
-    implementation(platform(libs.exposed.bom))
+    implementation(platform(libs.jetbrains.exposed.bom))
     implementation(project(":exposed-domain"))
 
     // Exposed
-    implementation(libs.bluetape4k.exposed.core)
-    implementation(libs.bluetape4k.exposed.dao)
     implementation(libs.exposed.core)
     implementation(libs.exposed.dao)
-    implementation(libs.exposed.jdbc)
-    implementation(libs.exposed.kotlin.datetime)
-    implementation(libs.exposed.spring.boot4.starter)
+    implementation(libs.jetbrains.exposed.core)
+    implementation(libs.jetbrains.exposed.dao)
+    implementation(libs.jetbrains.exposed.jdbc)
+    implementation(libs.jetbrains.exposed.kotlin.datetime)
+    implementation(libs.jetbrains.exposed.spring.boot4.starter)
 
     // Database Drivers
     implementation(libs.hikaricp)
