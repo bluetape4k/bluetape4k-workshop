@@ -2,8 +2,9 @@
 # Gradle Version Catalog — migrated from buildSrc/src/main/kotlin/Libs.kt
 
 [versions]
-bluetape4k = "1.8.0-SNAPSHOT"  # https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-bom
-bluetape4k-dependencies-version = "1.0.0-SNAPSHOT"  # https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-dependencies
+bluetape4k-bom = "1.8.0"  # https://mvnrepository.com/artifact/io.github.bluetape4k/bluetape4k-bom
+bluetape4k-exposed-bom = "1.8.0"  # https://mvnrepository.com/artifact/io.github.bluetape4k.exposed/bluetape4k-exposed-bom
+bluetape4k-aws-bom = "0.1.0"  # https://central.sonatype.com/artifact/io.github.bluetape4k.aws/bluetape4k-aws-bom
 
 kotlin = "2.3.21"  # https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-bom
 kotlinx-coroutines = "1.11.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-bom
@@ -165,63 +166,62 @@ gatling-plugin = { id = "io.gatling.gradle", version.ref = "gatling-plugin" }
 jetbrains-annotations = { module = "org.jetbrains:annotations", version = "26.1.0" }  # https://mvnrepository.com/artifact/org.jetbrains/annotations
 
 # bluetape4k
-bluetape4k-dependencies = { module = "io.github.bluetape4k:bluetape4k-dependencies", version.ref = "bluetape4k-dependencies-version" }
-bluetape4k-bom = { module = "io.github.bluetape4k:bluetape4k-bom", version.ref = "bluetape4k" }
-bluetape4k-core = { module = "io.github.bluetape4k:bluetape4k-core" , version.ref = "bluetape4k" }
-bluetape4k-coroutines = { module = "io.github.bluetape4k:bluetape4k-coroutines" , version.ref = "bluetape4k" }
-bluetape4k-logging = { module = "io.github.bluetape4k:bluetape4k-logging" , version.ref = "bluetape4k" }
-bluetape4k-junit5 = { module = "io.github.bluetape4k:bluetape4k-junit5" , version.ref = "bluetape4k" }
-bluetape4k-assertions = { module = "io.github.bluetape4k:bluetape4k-assertions", version.ref = "bluetape4k" }
-bluetape4k-testcontainers = { module = "io.github.bluetape4k:bluetape4k-testcontainers" , version.ref = "bluetape4k" }
-bluetape4k-mock-web-server = { module = "io.github.bluetape4k:bluetape4k-mock-web-server" , version.ref = "bluetape4k" }
-bluetape4k-mock-webflux-server = { module = "io.github.bluetape4k:bluetape4k-mock-webflux-server" , version.ref = "bluetape4k" }
-bluetape4k-virtualthread-api = { module = "io.github.bluetape4k:bluetape4k-virtualthread-api" , version.ref = "bluetape4k" }
-bluetape4k-virtualthread-jdk21 = { module = "io.github.bluetape4k:bluetape4k-virtualthread-jdk21" , version.ref = "bluetape4k" }
-bluetape4k-virtualthread-jdk25 = { module = "io.github.bluetape4k:bluetape4k-virtualthread-jdk25" , version.ref = "bluetape4k" }
-bluetape4k-avro = { module = "io.github.bluetape4k:bluetape4k-avro" , version.ref = "bluetape4k" }
-bluetape4k-csv = { module = "io.github.bluetape4k:bluetape4k-csv" , version.ref = "bluetape4k" }
-bluetape4k-fastjson2 = { module = "io.github.bluetape4k:bluetape4k-fastjson2" , version.ref = "bluetape4k" }
-bluetape4k-feign = { module = "io.github.bluetape4k:bluetape4k-feign" , version.ref = "bluetape4k" }
-bluetape4k-grpc = { module = "io.github.bluetape4k:bluetape4k-grpc" , version.ref = "bluetape4k" }
-bluetape4k-http = { module = "io.github.bluetape4k:bluetape4k-http" , version.ref = "bluetape4k" }
-bluetape4k-io = { module = "io.github.bluetape4k:bluetape4k-io" , version.ref = "bluetape4k" }
-bluetape4k-jackson2 = { module = "io.github.bluetape4k:bluetape4k-jackson2" , version.ref = "bluetape4k" }
-bluetape4k-jackson3 = { module = "io.github.bluetape4k:bluetape4k-jackson3" , version.ref = "bluetape4k" }
-bluetape4k-json = { module = "io.github.bluetape4k:bluetape4k-json" , version.ref = "bluetape4k" }
-bluetape4k-netty = { module = "io.github.bluetape4k:bluetape4k-netty" , version.ref = "bluetape4k" }
-bluetape4k-okio = { module = "io.github.bluetape4k:bluetape4k-okio" , version.ref = "bluetape4k" }
-bluetape4k-protobuf = { module = "io.github.bluetape4k:bluetape4k-protobuf" , version.ref = "bluetape4k" }
-bluetape4k-retrofit2 = { module = "io.github.bluetape4k:bluetape4k-retrofit2" , version.ref = "bluetape4k" }
-bluetape4k-vertx = { module = "io.github.bluetape4k:bluetape4k-vertx" , version.ref = "bluetape4k" }
-bluetape4k-cassandra = { module = "io.github.bluetape4k:bluetape4k-cassandra" , version.ref = "bluetape4k" }
-exposed-core = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-core" , version.ref = "bluetape4k" }
-exposed-dao = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-dao" , version.ref = "bluetape4k" }
-exposed-jdbc = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-jdbc" , version.ref = "bluetape4k" }
-exposed-jackson3 = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-jackson3" , version.ref = "bluetape4k" }
-exposed-jdbc-tests = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-jdbc-tests" , version.ref = "bluetape4k" }
-exposed-r2dbc = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-r2dbc" , version.ref = "bluetape4k" }
-bluetape4k-hibernate = { module = "io.github.bluetape4k:bluetape4k-hibernate" , version.ref = "bluetape4k" }
-bluetape4k-jdbc = { module = "io.github.bluetape4k:bluetape4k-jdbc" , version.ref = "bluetape4k" }
-bluetape4k-mongodb = { module = "io.github.bluetape4k:bluetape4k-mongodb" , version.ref = "bluetape4k" }
-bluetape4k-r2dbc = { module = "io.github.bluetape4k:bluetape4k-r2dbc" , version.ref = "bluetape4k" }
-bluetape4k-bucket4j = { module = "io.github.bluetape4k:bluetape4k-bucket4j" , version.ref = "bluetape4k" }
-bluetape4k-cache-lib = { module = "io.github.bluetape4k:bluetape4k-cache" , version.ref = "bluetape4k" }
-bluetape4k-cache-core = { module = "io.github.bluetape4k:bluetape4k-cache-core" , version.ref = "bluetape4k" }
-bluetape4k-kafka = { module = "io.github.bluetape4k:bluetape4k-kafka" , version.ref = "bluetape4k" }
-bluetape4k-lettuce = { module = "io.github.bluetape4k:bluetape4k-lettuce" , version.ref = "bluetape4k" }
-bluetape4k-micrometer = { module = "io.github.bluetape4k:bluetape4k-micrometer" , version.ref = "bluetape4k" }
-bluetape4k-redis = { module = "io.github.bluetape4k:bluetape4k-redis" , version.ref = "bluetape4k" }
-bluetape4k-redisson = { module = "io.github.bluetape4k:bluetape4k-redisson" , version.ref = "bluetape4k" }
-bluetape4k-resilience4j = { module = "io.github.bluetape4k:bluetape4k-resilience4j" , version.ref = "bluetape4k" }
-bluetape4k-spring-boot3 = { module = "io.github.bluetape4k:bluetape4k-spring-boot3-core" , version.ref = "bluetape4k" }
-bluetape4k-spring-boot4-core = { module = "io.github.bluetape4k:bluetape4k-spring-boot4-core" , version.ref = "bluetape4k" }
-bluetape4k-spring-boot4-r2dbc = { module = "io.github.bluetape4k:bluetape4k-spring-boot4-r2dbc" , version.ref = "bluetape4k" }
-bluetape4k-spring-boot4-redis = { module = "io.github.bluetape4k:bluetape4k-spring-boot4-redis" , version.ref = "bluetape4k" }
-bluetape4k-aws = { module = "io.github.bluetape4k:bluetape4k-aws" , version.ref = "bluetape4k" }
-bluetape4k-idgenerators = { module = "io.github.bluetape4k:bluetape4k-idgenerators" , version.ref = "bluetape4k" }
-bluetape4k-money = { module = "io.github.bluetape4k:bluetape4k-money" , version.ref = "bluetape4k" }
-bluetape4k-mutiny = { module = "io.github.bluetape4k:bluetape4k-mutiny" , version.ref = "bluetape4k" }
-bluetape4k-opentelemetry = { module = "io.github.bluetape4k:bluetape4k-opentelemetry" , version.ref = "bluetape4k" }
+bluetape4k-bom = { module = "io.github.bluetape4k:bluetape4k-bom", version.ref = "bluetape4k-bom" }
+bluetape4k-core = { module = "io.github.bluetape4k:bluetape4k-core" , version.ref = "bluetape4k-bom" }
+bluetape4k-coroutines = { module = "io.github.bluetape4k:bluetape4k-coroutines" , version.ref = "bluetape4k-bom" }
+bluetape4k-logging = { module = "io.github.bluetape4k:bluetape4k-logging" , version.ref = "bluetape4k-bom" }
+bluetape4k-junit5 = { module = "io.github.bluetape4k:bluetape4k-junit5" , version.ref = "bluetape4k-bom" }
+bluetape4k-assertions = { module = "io.github.bluetape4k:bluetape4k-assertions", version.ref = "bluetape4k-bom" }
+bluetape4k-testcontainers = { module = "io.github.bluetape4k:bluetape4k-testcontainers" , version.ref = "bluetape4k-bom" }
+bluetape4k-mock-web-server = { module = "io.github.bluetape4k:bluetape4k-mock-web-server" , version.ref = "bluetape4k-bom" }
+bluetape4k-mock-webflux-server = { module = "io.github.bluetape4k:bluetape4k-mock-webflux-server" , version.ref = "bluetape4k-bom" }
+bluetape4k-virtualthread-api = { module = "io.github.bluetape4k:bluetape4k-virtualthread-api" , version.ref = "bluetape4k-bom" }
+bluetape4k-virtualthread-jdk21 = { module = "io.github.bluetape4k:bluetape4k-virtualthread-jdk21" , version.ref = "bluetape4k-bom" }
+bluetape4k-virtualthread-jdk25 = { module = "io.github.bluetape4k:bluetape4k-virtualthread-jdk25" , version.ref = "bluetape4k-bom" }
+bluetape4k-avro = { module = "io.github.bluetape4k:bluetape4k-avro" , version.ref = "bluetape4k-bom" }
+bluetape4k-csv = { module = "io.github.bluetape4k:bluetape4k-csv" , version.ref = "bluetape4k-bom" }
+bluetape4k-fastjson2 = { module = "io.github.bluetape4k:bluetape4k-fastjson2" , version.ref = "bluetape4k-bom" }
+bluetape4k-feign = { module = "io.github.bluetape4k:bluetape4k-feign" , version.ref = "bluetape4k-bom" }
+bluetape4k-grpc = { module = "io.github.bluetape4k:bluetape4k-grpc" , version.ref = "bluetape4k-bom" }
+bluetape4k-http = { module = "io.github.bluetape4k:bluetape4k-http" , version.ref = "bluetape4k-bom" }
+bluetape4k-io = { module = "io.github.bluetape4k:bluetape4k-io" , version.ref = "bluetape4k-bom" }
+bluetape4k-jackson2 = { module = "io.github.bluetape4k:bluetape4k-jackson2" , version.ref = "bluetape4k-bom" }
+bluetape4k-jackson3 = { module = "io.github.bluetape4k:bluetape4k-jackson3" , version.ref = "bluetape4k-bom" }
+bluetape4k-json = { module = "io.github.bluetape4k:bluetape4k-json" , version.ref = "bluetape4k-bom" }
+bluetape4k-netty = { module = "io.github.bluetape4k:bluetape4k-netty" , version.ref = "bluetape4k-bom" }
+bluetape4k-okio = { module = "io.github.bluetape4k:bluetape4k-okio" , version.ref = "bluetape4k-bom" }
+bluetape4k-protobuf = { module = "io.github.bluetape4k:bluetape4k-protobuf" , version.ref = "bluetape4k-bom" }
+bluetape4k-retrofit2 = { module = "io.github.bluetape4k:bluetape4k-retrofit2" , version.ref = "bluetape4k-bom" }
+bluetape4k-vertx = { module = "io.github.bluetape4k:bluetape4k-vertx" , version.ref = "bluetape4k-bom" }
+bluetape4k-cassandra = { module = "io.github.bluetape4k:bluetape4k-cassandra" , version.ref = "bluetape4k-bom" }
+exposed-core = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-core" , version.ref = "bluetape4k-exposed-bom" }
+exposed-dao = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-dao" , version.ref = "bluetape4k-exposed-bom" }
+exposed-jdbc = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-jdbc" , version.ref = "bluetape4k-exposed-bom" }
+exposed-jackson3 = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-jackson3" , version.ref = "bluetape4k-exposed-bom" }
+exposed-jdbc-tests = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-jdbc-tests" , version.ref = "bluetape4k-exposed-bom" }
+exposed-r2dbc = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-r2dbc" , version.ref = "bluetape4k-exposed-bom" }
+bluetape4k-hibernate = { module = "io.github.bluetape4k:bluetape4k-hibernate" , version.ref = "bluetape4k-bom" }
+bluetape4k-jdbc = { module = "io.github.bluetape4k:bluetape4k-jdbc" , version.ref = "bluetape4k-bom" }
+bluetape4k-mongodb = { module = "io.github.bluetape4k:bluetape4k-mongodb" , version.ref = "bluetape4k-bom" }
+bluetape4k-r2dbc = { module = "io.github.bluetape4k:bluetape4k-r2dbc" , version.ref = "bluetape4k-bom" }
+bluetape4k-bucket4j = { module = "io.github.bluetape4k:bluetape4k-bucket4j" , version.ref = "bluetape4k-bom" }
+bluetape4k-cache-lib = { module = "io.github.bluetape4k:bluetape4k-cache" , version.ref = "bluetape4k-bom" }
+bluetape4k-cache-core = { module = "io.github.bluetape4k:bluetape4k-cache-core" , version.ref = "bluetape4k-bom" }
+bluetape4k-kafka = { module = "io.github.bluetape4k:bluetape4k-kafka" , version.ref = "bluetape4k-bom" }
+bluetape4k-lettuce = { module = "io.github.bluetape4k:bluetape4k-lettuce" , version.ref = "bluetape4k-bom" }
+bluetape4k-micrometer = { module = "io.github.bluetape4k:bluetape4k-micrometer" , version.ref = "bluetape4k-bom" }
+bluetape4k-redis = { module = "io.github.bluetape4k:bluetape4k-redis" , version.ref = "bluetape4k-bom" }
+bluetape4k-redisson = { module = "io.github.bluetape4k:bluetape4k-redisson" , version.ref = "bluetape4k-bom" }
+bluetape4k-resilience4j = { module = "io.github.bluetape4k:bluetape4k-resilience4j" , version.ref = "bluetape4k-bom" }
+bluetape4k-spring-boot3 = { module = "io.github.bluetape4k:bluetape4k-spring-boot3-core" , version.ref = "bluetape4k-bom" }
+bluetape4k-spring-boot4-core = { module = "io.github.bluetape4k:bluetape4k-spring-boot4-core" , version.ref = "bluetape4k-bom" }
+bluetape4k-spring-boot4-r2dbc = { module = "io.github.bluetape4k:bluetape4k-spring-boot4-r2dbc" , version.ref = "bluetape4k-bom" }
+bluetape4k-spring-boot4-redis = { module = "io.github.bluetape4k:bluetape4k-spring-boot4-redis" , version.ref = "bluetape4k-bom" }
+bluetape4k-aws = { module = "io.github.bluetape4k.aws:bluetape4k-aws-java" , version.ref = "bluetape4k-aws-bom" }
+bluetape4k-idgenerators = { module = "io.github.bluetape4k:bluetape4k-idgenerators" , version.ref = "bluetape4k-bom" }
+bluetape4k-money = { module = "io.github.bluetape4k:bluetape4k-money" , version.ref = "bluetape4k-bom" }
+bluetape4k-mutiny = { module = "io.github.bluetape4k:bluetape4k-mutiny" , version.ref = "bluetape4k-bom" }
+bluetape4k-opentelemetry = { module = "io.github.bluetape4k:bluetape4k-opentelemetry" , version.ref = "bluetape4k-bom" }
 
 # Kotlin
 kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
@@ -700,8 +700,8 @@ quarkus-junit5 = { module = "io.quarkus:quarkus-junit5", version.ref = "quarkus"
 resteasy-bom = { module = "org.jboss.resteasy:resteasy-bom", version.ref = "resteasy" }
 
 # bluetape4k Quarkus
-bluetape4k-quarkus-core = { module = "io.github.bluetape4k:bluetape4k-quarkus-core" , version.ref = "bluetape4k" }
-bluetape4k-quarkus-tests = { module = "io.github.bluetape4k:bluetape4k-quarkus-tests" , version.ref = "bluetape4k" }
+bluetape4k-quarkus-core = { module = "io.github.bluetape4k:bluetape4k-quarkus-core" , version.ref = "bluetape4k-bom" }
+bluetape4k-quarkus-tests = { module = "io.github.bluetape4k:bluetape4k-quarkus-tests" , version.ref = "bluetape4k-bom" }
 
 # WebJars
 webjar-bootstrap = { module = "org.webjars:bootstrap", version = "5.3.8" }  # https://mvnrepository.com/artifact/org.webjars/bootstrap

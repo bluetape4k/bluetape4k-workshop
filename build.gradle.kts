@@ -275,7 +275,7 @@ subprojects {
         val testCompileOnly by configurations
         val testRuntimeOnly by configurations
 
-        implementation(platform(rootLibs.bluetape4k.dependencies))
+        implementation(platform(rootLibs.bluetape4k.bom))
         compileOnly(platform(rootLibs.spring.boot4.dependencies))
         compileOnly(platform(rootLibs.jackson.bom))
         compileOnly(platform(rootLibs.kotlinx.coroutines.bom))
