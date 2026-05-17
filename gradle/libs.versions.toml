@@ -65,7 +65,7 @@ mysql-connector-j = "9.7.0"  # https://mvnrepository.com/artifact/com.mysql/mysq
 mariadb-java-client = "3.5.8"  # https://mvnrepository.com/artifact/org.mariadb.jdbc/mariadb-java-client
 postgresql = "42.7.11"  # https://mvnrepository.com/artifact/org.postgresql/postgresql
 h2-v2 = "2.4.240"  # https://mvnrepository.com/artifact/com.h2database/h2
-agroal = "3.1"  # https://mvnrepository.com/artifact/io.agroal/agroal-pool
+agroal = "3.1.2"  # https://mvnrepository.com/artifact/io.agroal/agroal-pool
 
 slf4j = "2.0.17"  # https://mvnrepository.com/artifact/org.slf4j/slf4j-api
 logback = "1.5.32"  # https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
