@@ -709,4 +709,4 @@ webjar-font-awesome = { module = "org.webjars:font-awesome", version = "6.4.0" }
 webjar-jquery = { module = "org.webjars:jquery", version = "3.6.4" }  # https://mvnrepository.com/artifact/org.webjars/jquery
 webjar-sockjs-client = { module = "org.webjars:sockjs-client", version = "1.5.1" }  # https://mvnrepository.com/artifact/org.webjars/sockjs-client
 webjar-stomp-websocket = { module = "org.webjars:stomp-websocket", version = "2.3.4" }  # https://mvnrepository.com/artifact/org.webjars/stomp-websocket
-webjar-webjars-locator-core = { module = "org.webjars:webjars-locator-core", version = "0.52" }  # https://mvnrepository.com/artifact/org.webjars/webjars-locator-core
+webjar-webjars-locator-core = { module = "org.webjars:webjars-locator-core", version = "0.59" }  # https://mvnrepository.com/artifact/org.webjars/webjars-locator-core
