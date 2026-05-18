@@ -19,7 +19,7 @@ reactor-bom = "2025.0.5"  # https://mvnrepository.com/artifact/io.projectreactor
 resilience4j = "2.4.0"  # https://mvnrepository.com/artifact/io.github.resilience4j/resilience4j-bom
 netty = "4.2.13.Final"  # https://mvnrepository.com/artifact/io.netty/netty-bom
 
-aws2 = "2.44.4"  # https://mvnrepository.com/artifact/software.amazon.awssdk/bom
+aws2 = "2.44.7"  # https://mvnrepository.com/artifact/software.amazon.awssdk/bom
 aws2-crt = "0.45.3"  # https://mvnrepository.com/artifact/software.amazon.awssdk.crt/aws-crt
 aws-kotlin = "1.6.72"  # https://mvnrepository.com/artifact/aws.sdk.kotlin/aws-core
 aws-spring-cloud = "4.0.2"  # https://mvnrepository.com/artifact/io.awspring.cloud/spring-cloud-aws-s3
@@ -48,7 +48,7 @@ reflectasm = "1.11.9"  # https://mvnrepository.com/artifact/com.esotericsoftware
 
 mongo-driver = "5.7.0"  # https://mvnrepository.com/artifact/org.mongodb/mongodb-driver-sync
 lettuce = "6.8.2.RELEASE"  # https://mvnrepository.com/artifact/io.lettuce/lettuce-core
-redisson = "4.3.1"  # https://mvnrepository.com/artifact/org.redisson/redisson
+redisson = "4.4.0"  # https://mvnrepository.com/artifact/org.redisson/redisson
 lz4 = "1.11.0"  # https://mvnrepository.com/artifact/at.yawk.lz4/lz4-java
 
 hibernate = "7.3.3.Final"  # https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-core
@@ -65,9 +65,9 @@ mysql-connector-j = "9.7.0"  # https://mvnrepository.com/artifact/com.mysql/mysq
 mariadb-java-client = "3.5.8"  # https://mvnrepository.com/artifact/org.mariadb.jdbc/mariadb-java-client
 postgresql = "42.7.11"  # https://mvnrepository.com/artifact/org.postgresql/postgresql
 h2-v2 = "2.4.240"  # https://mvnrepository.com/artifact/com.h2database/h2
-agroal = "3.1"  # https://mvnrepository.com/artifact/io.agroal/agroal-pool
+agroal = "3.1.2"  # https://mvnrepository.com/artifact/io.agroal/agroal-pool
 
-slf4j = "2.0.17"  # https://mvnrepository.com/artifact/org.slf4j/slf4j-api
+slf4j = "2.0.18"  # https://mvnrepository.com/artifact/org.slf4j/slf4j-api
 logback = "1.5.32"  # https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
 log4j = "2.26.0"  # https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-bom
 logcaptor = "2.12.6"  # https://mvnrepository.com/artifact/io.github.hakky54/logcaptor
@@ -87,7 +87,7 @@ caffeine = "3.2.4"  # https://mvnrepository.com/artifact/com.github.ben-manes.ca
 ehcache = "3.12.0"  # https://mvnrepository.com/artifact/org.ehcache/ehcache
 cache2k = "2.6.1.Final"  # https://mvnrepository.com/artifact/org.cache2k/cache2k-api
 ignite = "2.18.0"  # https://mvnrepository.com/artifact/org.apache.ignite/ignite-core
-hazelcast = "5.6.0"  # https://mvnrepository.com/artifact/com.hazelcast/hazelcast
+hazelcast = "5.7.0"  # https://mvnrepository.com/artifact/com.hazelcast/hazelcast
 
 cassandra = "4.19.2"  # https://mvnrepository.com/artifact/org.apache.cassandra/java-driver-core
 elasticsearch = "9.4.0"  # https://mvnrepository.com/artifact/org.elasticsearch.client/elasticsearch-rest-client
@@ -101,11 +101,11 @@ vertx = "5.0.12"  # https://mvnrepository.com/artifact/io.vertx/vertx-core
 quarkus = "3.35.2"  # https://mvnrepository.com/artifact/io.quarkus.platform/quarkus-bom
 resteasy = "7.0.2.Final"  # https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-bom
 
-timefold-solver = "2.0.0"  # https://mvnrepository.com/artifact/ai.timefold.solver/timefold-solver-bom
+timefold-solver = "1.33.0"  # https://mvnrepository.com/artifact/ai.timefold.solver/timefold-solver-bom
 
 eclipse-collections = "13.0.0"  # https://mvnrepository.com/artifact/org.eclipse.collections/eclipse-collections
 jctools = "4.0.6"  # https://mvnrepository.com/artifact/org.jctools/jctools-core
-ow2-asm = "9.9.1"  # https://mvnrepository.com/artifact/org.ow2.asm/asm
+ow2-asm = "9.10"  # https://mvnrepository.com/artifact/org.ow2.asm/asm
 
 junit-jupiter = "6.0.3"  # https://mvnrepository.com/artifact/org.junit/junit-bom
 junit-platform = "6.0.3"  # https://mvnrepository.com/artifact/org.junit.platform/junit-platform-commons
@@ -126,7 +126,7 @@ random-beans = "3.9.0"  # https://mvnrepository.com/artifact/io.github.benas/ran
 springdoc-openapi = "3.0.3"  # https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webmvc-api
 problem = "0.29.1"  # https://mvnrepository.com/artifact/org.zalando/problem-spring-webflux
 
-scrimage = "4.5.1"  # https://mvnrepository.com/artifact/com.sksamuel.scrimage/scrimage-core
+scrimage = "4.5.4"  # https://mvnrepository.com/artifact/com.sksamuel.scrimage/scrimage-core
 gatling = "3.15.0"  # https://mvnrepository.com/artifact/io.gatling/gatling-app
 
 # Plugin versions
@@ -134,7 +134,7 @@ detekt = "1.23.8"  # https://mvnrepository.com/artifact/io.gitlab.arturbosch.det
 dependency-management = "1.1.7"  # https://mvnrepository.com/artifact/io.spring.gradle/dependency-management-plugin
 dokka = "2.2.0"  # https://mvnrepository.com/artifact/org.jetbrains.dokka/dokka-gradle-plugin
 test-logger = "4.0.0"  # https://mvnrepository.com/artifact/com.adarshr/gradle-test-logger-plugin
-shadow = "9.2.2"  # https://mvnrepository.com/artifact/com.gradleup.shadow/shadow-gradle-plugin
+shadow = "9.4.1"  # https://mvnrepository.com/artifact/com.gradleup.shadow/shadow-gradle-plugin
 graalvm-native = "1.1.0"  # https://mvnrepository.com/artifact/org.graalvm.buildtools/native-gradle-plugin
 docker-compose = "0.17.21"  # https://mvnrepository.com/artifact/com.avast.gradle/gradle-docker-compose-plugin
 protobuf-plugin = "0.9.5"  # https://mvnrepository.com/artifact/com.google.protobuf/protobuf-gradle-plugin
@@ -274,28 +274,28 @@ jakarta-servlet-api = { module = "jakarta.servlet:jakarta.servlet-api", version 
 jakarta-transaction-api = { module = "jakarta.transaction:jakarta.transaction-api", version = "2.0.1" }  # https://mvnrepository.com/artifact/jakarta.transaction/jakarta.transaction-api
 jakarta-validation-api = { module = "jakarta.validation:jakarta.validation-api", version = "3.1.1" }  # https://mvnrepository.com/artifact/jakarta.validation/jakarta.validation-api
 jakarta-ws-rs-api = { module = "jakarta.ws.rs:jakarta.ws.rs-api", version = "4.0.0" }  # https://mvnrepository.com/artifact/jakarta.ws.rs/jakarta.ws.rs-api
-jakarta-xml-bind = { module = "jakarta.xml.bind:jakarta.xml.bind-api", version = "4.0.2" }  # https://mvnrepository.com/artifact/jakarta.xml.bind/jakarta.xml.bind-api
+jakarta-xml-bind = { module = "jakarta.xml.bind:jakarta.xml.bind-api", version = "4.0.5" }  # https://mvnrepository.com/artifact/jakarta.xml.bind/jakarta.xml.bind-api
 javax-annotation-api = { module = "javax.annotation:javax.annotation-api", version = "1.3.2" }  # https://mvnrepository.com/artifact/javax.annotation/javax.annotation-api
 javax-money-api = { module = "javax.money:money-api", version = "1.1" }  # https://mvnrepository.com/artifact/javax.money/money-api
 javamoney-moneta = { module = "org.javamoney:moneta", version = "1.4.5" }  # https://mvnrepository.com/artifact/org.javamoney/moneta
 
 # Apache Commons
 commons-beanutils = { module = "commons-beanutils:commons-beanutils", version = "1.11.0" }  # https://mvnrepository.com/artifact/commons-beanutils/commons-beanutils
-commons-codec = { module = "commons-codec:commons-codec", version = "1.18.0" }  # https://mvnrepository.com/artifact/commons-codec/commons-codec
+commons-codec = { module = "commons-codec:commons-codec", version = "1.22.0" }  # https://mvnrepository.com/artifact/commons-codec/commons-codec
 commons-collections4 = { module = "org.apache.commons:commons-collections4", version = "4.5.0" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-collections4
 commons-compress = { module = "org.apache.commons:commons-compress", version = "1.28.0" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-compress
-commons-csv = { module = "org.apache.commons:commons-csv", version = "1.14.0" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-csv
-commons-exec = { module = "org.apache.commons:commons-exec", version = "1.5.0" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-exec
-commons-io = { module = "commons-io:commons-io", version = "2.19.0" }  # https://mvnrepository.com/artifact/commons-io/commons-io
+commons-csv = { module = "org.apache.commons:commons-csv", version = "1.14.1" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-csv
+commons-exec = { module = "org.apache.commons:commons-exec", version = "1.6.0" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-exec
+commons-io = { module = "commons-io:commons-io", version = "2.22.0" }  # https://mvnrepository.com/artifact/commons-io/commons-io
 commons-lang3 = { module = "org.apache.commons:commons-lang3", version = "3.20.0" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
-commons-logging = { module = "commons-logging:commons-logging", version = "1.3.5" }  # https://mvnrepository.com/artifact/commons-logging/commons-logging
+commons-logging = { module = "commons-logging:commons-logging", version = "1.3.6" }  # https://mvnrepository.com/artifact/commons-logging/commons-logging
 commons-math3 = { module = "org.apache.commons:commons-math3", version = "3.6.1" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-math3
-commons-pool2 = { module = "org.apache.commons:commons-pool2", version = "2.12.1" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-pool2
+commons-pool2 = { module = "org.apache.commons:commons-pool2", version = "2.13.1" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-pool2
 commons-text = { module = "org.apache.commons:commons-text", version = "1.15.0" }  # https://mvnrepository.com/artifact/org.apache.commons/commons-text
 
 # Find bugs / Guava
 findbugs = { module = "com.google.code.findbugs:jsr305", version = "3.0.2" }  # https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
-guava = { module = "com.google.guava:guava", version = "33.4.8-jre" }  # https://mvnrepository.com/artifact/com.google.guava/guava
+guava = { module = "com.google.guava:guava", version = "33.6.0-jre" }  # https://mvnrepository.com/artifact/com.google.guava/guava
 
 # Serialization
 kryo = { module = "com.esotericsoftware:kryo", version = "5.6.2" }  # https://mvnrepository.com/artifact/com.esotericsoftware/kryo
@@ -497,7 +497,7 @@ jackson3-module-blackbird = { module = "tools.jackson.module:jackson-module-blac
 # Compression
 snappy-java = { module = "org.xerial.snappy:snappy-java", version = "1.1.10.8" }  # https://mvnrepository.com/artifact/org.xerial.snappy/snappy-java
 lz4-java = { module = "at.yawk.lz4:lz4-java", version.ref = "lz4" }
-zstd-jni = { module = "com.github.luben:zstd-jni", version = "1.5.7-4" }  # https://mvnrepository.com/artifact/com.github.luben/zstd-jni
+zstd-jni = { module = "com.github.luben:zstd-jni", version = "1.5.7-8" }  # https://mvnrepository.com/artifact/com.github.luben/zstd-jni
 
 # Reactor
 reactor-core = { module = "io.projectreactor:reactor-core" }
