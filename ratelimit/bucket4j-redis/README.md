@@ -2,35 +2,7 @@
 
 ## 아키텍처 다이어그램
 
-```mermaid
-flowchart LR
-    subgraph 클라이언트
-        C[HTTP 클라이언트]
-    end
-
-    subgraph Spring WebFlux
-        RL[Rate Limit 필터\nbucket4j-spring-boot-starter]
-        CC[CoroutineController]
-        RC[ReactiveController]
-    end
-
-    subgraph Bucket4j 분산 버킷
-        PM[ProxyManager\nLettuceBasedProxyManager]
-        BK[BucketProxy\n토큰 소비/충전]
-    end
-
-    subgraph 저장소
-        R[(Redis\n분산 버킷 상태)]
-    end
-
-    C -->|HTTP 요청 + IP| RL
-    RL -->|IP 키 조회| PM
-    PM <-->|버킷 상태 CAS| R
-    PM --> BK
-    BK -->|토큰 있음| CC
-    BK -->|토큰 있음| RC
-    BK -->|토큰 없음 429| C
-```
+![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/ratelimit-bucket4j-redis-diagram-01.svg)
 
 Spring Webflux Application 에서 Redis를 Bucket 저장소로 사용하는 Rate Limit 을 Bucket4j 로 구현한 예제입니다.
 

@@ -4,31 +4,7 @@ Kotlin 언어의 기능을 익히고, 실습을 통해 활용하는 워크샵 �
 
 ## Kotlin 기능 카테고리
 
-```mermaid
-flowchart TD
-    subgraph Kotlin Workshop
-        A[kotlin/workshop]
-    end
-
-    subgraph 언어 기능
-        A --> B[BuilderInference\n타입 추론 빌더]
-    end
-
-    subgraph 디자인 패턴
-        A --> C[patterns/]
-        C --> C1[Singleton\ncompanion object / object]
-        C --> C2[AbstractFactory\n팩토리 인터페이스]
-        C --> C3[FactoryMethod\n팩토리 메서드]
-    end
-
-    subgraph Kotlin 관용 표현
-        B --> D1[타입 안전 DSL]
-        B --> D2[제네릭 추론]
-        C1 --> E1[object 키워드]
-        C2 --> E2[sealed class 활용]
-        C3 --> E3[확장 함수 패턴]
-    end
-```
+![Kotlin 기능 카테고리 1](../../docs/images/readme-diagrams/kotlin-workshop-diagram-01.svg)
 
 ## 학습 주제 목록
 

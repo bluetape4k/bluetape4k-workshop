@@ -2,39 +2,7 @@
 
 ## 아키텍처 다이어그램
 
-```mermaid
-classDiagram
-    class Person {
-        +String? firstname
-        +String? lastname
-        +Int age
-        +String? id
-    }
-    class PersonRepository {
-        <<interface>>
-        +findOneByFirstname(firstname) Person?
-        +findOneOrNoneByFirstname(firstname) Person?
-        +findNullableByFirstname(firstname) Person?
-    }
-    class PersonCoroutineRepository {
-        <<interface>>
-        +findByFirstname(firstname) Person?
-        +findAll() Flow~Person~
-    }
-    class PersonReactiveRepository {
-        <<interface>>
-        +findByFirstname(firstname) Mono~Person~
-        +findAll() Flux~Person~
-    }
-    class ReactiveMongoConfig {
-        +mongoClient() MongoClient
-        +reactiveMongoDatabaseFactory() ReactiveMongoDatabaseFactory
-    }
-
-    PersonRepository --> Person : 동기 CRUD
-    PersonCoroutineRepository --> Person : 코루틴 CRUD
-    PersonReactiveRepository --> Person : 리액티브 CRUD
-```
+![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/spring-data-mongodb-coroutines-diagram-01.svg)
 
 ```mermaid
 sequenceDiagram

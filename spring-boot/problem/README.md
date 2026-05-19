@@ -2,32 +2,7 @@
 
 ## 에러 처리 흐름
 
-```mermaid
-flowchart LR
-    클라이언트 -->|HTTP 요청| RestControllerLoggingFilter
-    RestControllerLoggingFilter -->|요청 로깅| TaskController
-
-    subgraph 컨트롤러 레이어
-        TaskController -->|정상 처리| 응답[200 OK]
-        TaskController -->|잘못된 ID| InvalidTaskIdException
-        TaskController -->|없는 태스크| TaskNotFoundException
-        TaskController -->|일반 오류| ExampleException
-        Resilience4jController -->|Circuit Breaker 오류| BusinessException
-    end
-
-    subgraph 예외 처리 레이어
-        InvalidTaskIdException --> RestApiExceptionHandler
-        TaskNotFoundException --> RestApiExceptionHandler
-        ExampleException --> RestApiExceptionHandler
-        BusinessException --> Resilience4jTrait
-        RestApiExceptionHandler --> TaskAdviceTrait
-        Resilience4jTrait --> ProblemResponse
-        TaskAdviceTrait --> ProblemResponse
-    end
-
-    ProblemResponse -->|RFC 9457\napplication/problem+json| 클라이언트
-    응답 --> 클라이언트
-```
+![에러 처리 흐름 1](../../docs/images/readme-diagrams/spring-boot-problem-diagram-01.svg)
 
 ## 참고
 

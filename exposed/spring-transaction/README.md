@@ -5,73 +5,11 @@ JetBrains Exposed ORM과 Spring Transaction을 통합하는 예제 모듈.
 
 ## 아키텍처 흐름
 
-```mermaid
-flowchart LR
-    subgraph 애플리케이션 레이어
-        A[Spring Application]
-        B["@Transactional 서비스"]
-    end
-
-    subgraph 트랜잭션 레이어
-        C[SpringTransactionManager]
-        D[TransactionTemplate]
-    end
-
-    subgraph Exposed 레이어
-        E[Exposed TransactionManager]
-        F[Database / DatabaseConfig]
-    end
-
-    subgraph 데이터 소스 레이어
-        G[HikariCP DataSource]
-        H[(H2 / RDBMS)]
-    end
-
-    A --> B
-    B --> C
-    C --> D
-    D --> E
-    E --> F
-    F --> G
-    G --> H
-```
+![아키텍처 흐름 1](../../docs/images/readme-diagrams/exposed-spring-transaction-diagram-01.svg)
 
 ## 트랜잭션 전파 방식
 
-```mermaid
-flowchart LR
-    subgraph 외부 트랜잭션
-        T1[기존 트랜잭션 존재]
-        T0[트랜잭션 없음]
-    end
-
-    subgraph 전파 속성
-        P1[REQUIRED]
-        P2[REQUIRES_NEW]
-        P3[NESTED]
-        P4[NOT_SUPPORTED]
-        P5[MANDATORY]
-        P6[SUPPORTS]
-    end
-
-    subgraph 결과
-        R1[기존 트랜잭션 참여]
-        R2[새 트랜잭션 시작]
-        R3[SavePoint 생성 후 중첩 실행]
-        R4[트랜잭션 없이 실행]
-        R5[예외 발생 IllegalTransactionStateException]
-        R6[트랜잭션 있으면 참여 없으면 비트랜잭션]
-    end
-
-    T1 --> P1 --> R1
-    T1 --> P2 --> R2
-    T1 --> P3 --> R3
-    T1 --> P4 --> R4
-    T0 --> P5 --> R5
-    T1 --> P5 --> R1
-    T1 --> P6 --> R6
-    T0 --> P6 --> R6
-```
+![트랜잭션 전파 방식 2](../../docs/images/readme-diagrams/exposed-spring-transaction-diagram-02.svg)
 
 ## 주요 기능
 

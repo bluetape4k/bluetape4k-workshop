@@ -18,27 +18,7 @@ Reactor를 직접 다루면 잘못된 스레드 전환으로 Meltdown이 발생�
 
 ## Dispatcher 전략 흐름
 
-```mermaid
-flowchart LR
-    클라이언트 -->|HTTP 요청| 라우터
-
-    subgraph 컨트롤러 레이어
-        라우터 --> DC[DefaultCoroutineController\nDispatchers.IO]
-        라우터 --> IC[IOCoroutineController\nDispatchers.IO 명시]
-        라우터 --> VT[VTCoroutineController\nVirtualThread Dispatcher]
-        라우터 --> CH[CoroutineHandler\ncoRouter DSL]
-    end
-
-    subgraph Dispatcher 레이어
-        DC -->|withContext| IO스레드풀[IO 스레드 풀]
-        IC -->|withContext| IO스레드풀
-        VT -->|asCoroutineDispatcher| 가상스레드[Virtual Thread Executor]
-        CH -->|coRouter| IO스레드풀
-    end
-
-    IO스레드풀 -->|suspend 응답| 클라이언트
-    가상스레드 -->|suspend 응답| 클라이언트
-```
+![Dispatcher 전략 흐름 1](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-diagram-01.svg)
 
 ## 요청 처리 흐름
 

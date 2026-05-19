@@ -2,31 +2,7 @@
 
 Jackson 3.x 라이브러리를 사용하여 JSON 데이터를 Java 객체로 변환하거나 Java 객체를 JSON 데이터로 변환하는 방법을 설명합니다.
 
-```mermaid
-flowchart LR
-    subgraph 애노테이션["Jackson 애노테이션 예제"]
-        A1["@JsonIgnore\n필드 무시"]
-        A2["@JsonUnwrapped\n중첩 객체 펼치기"]
-        A3["@JsonView\n뷰 기반 필터링"]
-        A4["@JsonTypeInfo\n@JsonSubTypes\n다형성 처리"]
-        A5["@JsonRawValue\n원시 JSON 삽입"]
-        A6["@JsonProperty\n필드명 변경"]
-        A7["JavaTimeModule\n날짜/시간 직렬화"]
-    end
-
-    subgraph 변환흐름["직렬화 / 역직렬화 흐름"]
-        KotlinObj["Kotlin data class\n/ POJO"]
-        Mapper["ObjectMapper"]
-        JSON["JSON 문자열"]
-    end
-
-    KotlinObj -->|"writeValueAsString()"| Mapper
-    Mapper --> JSON
-    JSON -->|"readValue()"| Mapper
-    Mapper --> KotlinObj
-
-    애노테이션 -->|"애노테이션 적용"| KotlinObj
-```
+![Jackson Examples 1](../../docs/images/readme-diagrams/json-jackson-examples-diagram-01.svg)
 
 ## 주요 기능
 

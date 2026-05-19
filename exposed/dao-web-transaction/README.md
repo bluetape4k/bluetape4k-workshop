@@ -36,35 +36,7 @@ sequenceDiagram
 
 ## 도메인 모델
 
-```mermaid
-classDiagram
-    class User {
-        +UserId id
-        +String name
-        +Int age
-    }
-    class UserDTO {
-        +Long id
-        +String name
-        +Int age
-    }
-    class UserCreateRequest {
-        +String name
-        +Int age
-    }
-    class UserCreateResponse {
-        +Long id
-    }
-    class UserUpdateRequest {
-        +String name
-        +Int age
-    }
-
-    UserCreateRequest ..> User : 생성
-    User ..> UserDTO : 변환
-    User ..> UserCreateResponse : 응답
-    UserUpdateRequest ..> User : 수정
-```
+![도메인 모델 1](../../docs/images/readme-diagrams/exposed-dao-web-transaction-diagram-01.svg)
 
 - [UserEntity.kt](src/main/kotlin/domain/UserEntity.kt): Describes our database schema. If you need to modify the
   structure, please take care to

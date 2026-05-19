@@ -5,35 +5,7 @@
 
 ## 리액티브 스트림 구성
 
-```mermaid
-flowchart TD
-    subgraph Uni["Uni - 단일 항목 (0 또는 1)"]
-        U1["Uni.createFrom()\n항목 생성"]
-        U2["uni.onItem()\n항목 변환"]
-        U3["uni.onFailure()\n오류 처리/복구"]
-        U4["uni.subscribe()\n구독 및 소비"]
-        U1 --> U2 --> U3 --> U4
-    end
-
-    subgraph Multi["Multi - 다수 항목 (0..N)"]
-        M1["Multi.createFrom()\n스트림 생성"]
-        M2["multi.onItem().transform()\n항목 변환"]
-        M3["multi.group()\n그룹화"]
-        M4["multi.merge() / concatenate()\n합성"]
-        M5["Backpressure\nDrop / Buffer"]
-        M1 --> M2 --> M3
-        M2 --> M4
-        M1 --> M5
-    end
-
-    subgraph Threading["스레드 제어"]
-        T1["emitOn(executor)\n방출 스레드 지정"]
-        T2["runSubscriptionOn(executor)\n구독 스레드 지정"]
-    end
-
-    Uni --> Threading
-    Multi --> Threading
-```
+![리액티브 스트림 구성 1](../../docs/images/readme-diagrams/reactive-mutiny-diagram-01.svg)
 
 ## 예제 파일 목록
 

@@ -4,36 +4,7 @@
 
 ## Circuit Breaker 상태 전이
 
-```mermaid
-flowchart LR
-    클라이언트 -->|요청| 컨트롤러
-
-    subgraph 컨트롤러 레이어
-        컨트롤러 --> BAC[BackendAController\n@CircuitBreaker]
-        컨트롤러 --> BBC[BackendBController\n@RateLimiter]
-        컨트롤러 --> BCC[BackendCController\n@Retry]
-        컨트롤러 --> SAC[SuspendBackendAController\n코루틴 + @CircuitBreaker]
-        컨트롤러 --> SBC[SuspendBackendBController\n코루틴 + @Retry]
-    end
-
-    subgraph 서비스 레이어
-        BAC --> BAS[BackendAService]
-        BBC --> BBS[BackendBService]
-        BCC --> BCS[BackendCService]
-        SAC --> BACS[BackendACoService]
-        SBC --> BBCS[BackendBCoService]
-    end
-
-    subgraph Circuit Breaker 상태
-        CLOSED[CLOSED\n정상 처리] -->|실패율 초과| OPEN[OPEN\n즉시 거부]
-        OPEN -->|대기 시간 경과| HALF_OPEN[HALF-OPEN\n일부 허용]
-        HALF_OPEN -->|성공| CLOSED
-        HALF_OPEN -->|실패| OPEN
-    end
-
-    BAS --> CLOSED
-    BACS --> CLOSED
-```
+![Circuit Breaker 상태 전이 1](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-diagram-01.svg)
 
 ## 개요
 

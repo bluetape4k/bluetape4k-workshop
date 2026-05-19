@@ -2,29 +2,7 @@
 
 ## 아키텍처 다이어그램
 
-```mermaid
-flowchart LR
-    subgraph 클라이언트
-        C[HTTP 클라이언트]
-    end
-
-    subgraph Spring Boot WebMVC
-        RL[Rate Limit 필터\nbucket4j-spring-boot-starter]
-        IC[IndexController\nGET /hello\nGET /world]
-    end
-
-    subgraph Bucket4j 토큰 버킷
-        CAF[(Caffeine JCache\n인메모리 저장소)]
-        BK[Bucket\n토큰 소비/충전]
-    end
-
-    C -->|HTTP 요청| RL
-    RL -->|tryConsume| BK
-    BK <-->|버킷 상태 관리| CAF
-    BK -->|토큰 있음| IC
-    BK -->|토큰 없음 429| C
-    IC -->|응답| C
-```
+![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/ratelimit-bucket4j-caffeine-web-diagram-01.svg)
 
 Bucket4j 저장소로 Caffeine 을 사용하는 Spring Boot WebMVC 데모 프로젝트입니다.
 Caffeine JCache 가 동기 방식밖에 지원하지 않기 때문에 Spring Boot WebMVC 에서만 가능합니다.

@@ -2,45 +2,9 @@
 
 Spring Boot REST API 에서 응답 시 `@JsonView` 를 사용하여 응답 데이터를 필터링하는 방법을 알아보겠습니다.
 
-```mermaid
-classDiagram
-    class Views {
-        <<interface>>
-    }
-    class Public {
-        <<interface>>
-    }
-    class Analytics {
-        <<interface>>
-    }
-    class Internal {
-        <<interface>>
-    }
-    Views <|-- Public
-    Views <|-- Analytics
-    Internal --|> Public
-    Internal --|> Analytics
+![JsonView in Spring Boot Demo 1](../../docs/images/readme-diagrams/json-jsonview-examples-diagram-01.svg)
 
-    class ArticleDTO {
-        +id: Long          @JsonView(Public)
-        +title: String     @JsonView(Public)
-        +category: String  @JsonView(Public)
-        +content: String   (뷰 없음 - 미노출)
-        +views: Long       @JsonView(Analytics)
-        +likes: Long       @JsonView(Analytics)
-    }
-```
-
-```mermaid
-flowchart LR
-    클라이언트["클라이언트"] -->|"GET /articles/public"| Controller["ArticleController"]
-    클라이언트 -->|"GET /articles/analytics"| Controller
-    클라이언트 -->|"GET /articles/internal"| Controller
-
-    Controller -->|"@JsonView(Public)"| PublicResp["응답: id, title, category"]
-    Controller -->|"@JsonView(Analytics)"| AnalyticsResp["응답: views, likes"]
-    Controller -->|"@JsonView(Internal)"| InternalResp["응답: id, title, category,\nviews, likes"]
-```
+![JsonView in Spring Boot Demo 2](../../docs/images/readme-diagrams/json-jsonview-examples-diagram-02.svg)
 
 ## 주요 기능
 

@@ -2,30 +2,7 @@
 
 AWS Java SDK V2 와 [Spring Cloud AWS](https://github.com/awspring/spring-cloud-aws) 를 사용한 예제를 제공합니다.
 
-```mermaid
-flowchart TD
-    subgraph 서브모듈["AWS 서브모듈"]
-        S3["s3-spring-cloud\nSpring Cloud AWS S3 연동"]
-    end
-
-    subgraph 인프라["인프라 (LocalStack)"]
-        LocalStack["LocalStack\n(Docker 컨테이너)"]
-        S3Svc["S3 서비스"]
-    end
-
-    subgraph 라이브러리["핵심 라이브러리"]
-        SDKV2["AWS SDK v2"]
-        SpringCloudAWS["Spring Cloud AWS"]
-        Testcontainers["Testcontainers\n(LocalStackServer)"]
-    end
-
-    S3 --> SpringCloudAWS
-    S3 --> SDKV2
-    S3 --> Testcontainers
-    Testcontainers --> LocalStack
-    LocalStack --> S3Svc
-    S3 -->|"버킷 생성 / 파일 업로드 / 다운로드"| S3Svc
-```
+![AWS Demo 1](../docs/images/readme-diagrams/aws-diagram-01.svg)
 
 ## 모듈 구조
 

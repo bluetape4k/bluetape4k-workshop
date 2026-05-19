@@ -2,49 +2,7 @@
 
 ## 아키텍처 다이어그램
 
-```mermaid
-flowchart LR
-    subgraph 클라이언트
-        C[HTTP 클라이언트\nX-BLUETAPE4K-UID 헤더]
-    end
-
-    subgraph WebFlux 필터 체인
-        UF[UserRateLimitWebFilter\n동기]
-        AUF[AsyncUserRateLimitWebFilter\n비동기 코루틴]
-        KR[UserKeyResolver\nUID 키 추출]
-    end
-
-    subgraph 컨트롤러
-        CC[CoroutineController]
-        RC[ReactiveController]
-    end
-
-    subgraph Bucket4j 인프라
-        BPP[BucketProxyProvider\n동기]
-        ABPP[AsyncBucketProxyProvider\n비동기]
-        PM[LettuceBasedProxyManager]
-        BC[BucketConfiguration\n10토큰/10초\n100토큰/1분]
-    end
-
-    subgraph Redis
-        R[(Redis\n사용자별 버킷 상태)]
-    end
-
-    C -->|요청| UF
-    C -->|요청| AUF
-    UF --> KR
-    AUF --> KR
-    KR -->|UID| BPP
-    KR -->|UID| ABPP
-    BPP --> PM
-    ABPP --> PM
-    PM <-->|CAS 연산| R
-    BC --> PM
-    BPP -->|토큰 있음| CC
-    ABPP -->|토큰 있음| RC
-    BPP -->|토큰 없음 429| C
-    ABPP -->|토큰 없음 429| C
-```
+![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/ratelimit-bucker4j-bluetape4k-webflux-diagram-01.svg)
 
 Spring Webflux 환경에서 IpAddress 가 아닌 User Token으로 Rate Limit을 적용하는 예제입니다.
 
