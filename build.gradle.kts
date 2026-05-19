@@ -28,7 +28,7 @@ plugins {
     alias(libs.plugins.graalvm.native) apply false
 
     // for JMolecules
-    id("net.bytebuddy.byte-buddy-gradle-plugin") version "1.15.10" apply false
+    id("net.bytebuddy.byte-buddy-gradle-plugin") version "1.18.8" apply false
 }
 
 val rootLibs = libs
