@@ -2,7 +2,7 @@
 
 ## 아키텍처 다이어그램
 
-![Architecture Diagram 1](../../docs/images/readme-diagrams/ratelimit-bucker4j-bluetape4k-webflux-diagram-01.svg)
+![Architecture Diagram 1](../../docs/images/readme-diagrams/ratelimit-bucker4j-bluetape4k-webflux-diagram-01.png)
 
 Spring Webflux 환경에서 IpAddress 가 아닌 User Token으로 Rate Limit을 적용하는 예제입니다.
 

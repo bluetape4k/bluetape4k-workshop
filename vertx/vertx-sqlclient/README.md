@@ -2,7 +2,7 @@
 
 ## Reactive SQL 처리 흐름
 
-![Reactive SQL Component Component 1](../../docs/images/readme-diagrams/vertx-vertx-sqlclient-diagram-01.svg)
+![Reactive SQL Component Component 1](../../docs/images/readme-diagrams/vertx-vertx-sqlclient-diagram-01.png)
 
 [Vert.x Sql Client](https://vertx.io/docs/vertx-sql-client/java/) 와
 [MyBatis Dynamic SQL](https://mybatis.org/mybatis-dynamic-sql/docs/introduction.html) 을

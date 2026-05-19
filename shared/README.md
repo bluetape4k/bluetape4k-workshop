@@ -13,7 +13,7 @@ Bluetape4k Workshop 에서 공용으로 사용하고자 하는 기능을 제공�
 
 ## 모듈 구성
 
-![Component Configuration 1](../docs/images/readme-diagrams/shared-diagram-01.svg)
+![Component Configuration 1](../docs/images/readme-diagrams/shared-diagram-01.png)
 
 ## 제공 유틸리티 목록
 

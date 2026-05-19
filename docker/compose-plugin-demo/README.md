@@ -4,7 +4,7 @@
 gradle build script
 만으로 docker-compose 를 실행하는 방법을 보여줍니다.
 
-![docker-compose-plugin example 1](../../docs/images/readme-diagrams/docker-compose-plugin-demo-diagram-01.svg)
+![docker-compose-plugin example 1](../../docs/images/readme-diagrams/docker-compose-plugin-demo-diagram-01.png)
 
 Custom Server를 구성하고, 테스트 할 때에는 이 방식이 가장 편리합니다.
 

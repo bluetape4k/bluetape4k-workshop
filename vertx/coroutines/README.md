@@ -4,7 +4,7 @@ Vert.x 를 Kotlin Coroutines 와 함께 사용하는 예제입니다.
 
 ## 처리 흐름
 
-![Component Component 1](../../docs/images/readme-diagrams/vertx-coroutines-diagram-01.svg)
+![Component Component 1](../../docs/images/readme-diagrams/vertx-coroutines-diagram-01.png)
 
 ## Vert.x 코루틴 통합 설명
 
@@ -34,7 +34,7 @@ router.get("/movie/:id").suspendHandler { ctx ->
 
 ## 데이터 모델
 
-![Data Component 2](../../docs/images/readme-diagrams/vertx-coroutines-diagram-02.svg)
+![Data Component 2](../../docs/images/readme-diagrams/vertx-coroutines-diagram-02.png)
 
 ## 제공 API 엔드포인트
 

@@ -2,9 +2,9 @@
 
 ## 아키텍처 다이어그램
 
-![Architecture Diagram 1](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-diagram-01.svg)
+![Architecture Diagram 1](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-diagram-01.png)
 
-![Architecture Diagram 2](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-diagram-02.svg)
+![Architecture Diagram 2](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-diagram-02.png)
 
 Spring Data R2DBC와 WebFlux 함수형 라우터(Handler + Router)를 조합한 리액티브 CRUD 예제입니다.
 H2 인메모리 데이터베이스를 사용합니다.

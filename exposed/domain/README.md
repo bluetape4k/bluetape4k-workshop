@@ -5,11 +5,11 @@ JetBrains [Exposed](https://github.com/JetBrains/Exposed) ORM의 다양한 매�
 
 ## 테스트 인프라 구조
 
-![Test Infrastructure Component 1](../../docs/images/readme-diagrams/exposed-domain-diagram-01.svg)
+![Test Infrastructure Component 1](../../docs/images/readme-diagrams/exposed-domain-diagram-01.png)
 
 ## 도메인 모델 (엔티티 관계)
 
-![Domain Component (Component Component) 2](../../docs/images/readme-diagrams/exposed-domain-diagram-02.svg)
+![Domain Component (Component Component) 2](../../docs/images/readme-diagrams/exposed-domain-diagram-02.png)
 
 ## 테스트 인프라
 

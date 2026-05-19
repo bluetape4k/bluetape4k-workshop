@@ -18,11 +18,11 @@ Reactor를 직접 다루면 잘못된 스레드 전환으로 Meltdown이 발생�
 
 ## Dispatcher 전략 흐름
 
-![Dispatcher Component Component 1](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-diagram-01.svg)
+![Dispatcher Component Component 1](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-diagram-01.png)
 
 ## 요청 처리 흐름
 
-![Request Component Component 2](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-diagram-02.svg)
+![Request Component Component 2](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-diagram-02.png)
 
 ## Virtual Thread Dispatcher 설정
 

@@ -4,11 +4,11 @@ Spring Security를 활용한 MVC·WebFlux 보안 예제 모음입니다.
 
 ## 서브모듈 구성
 
-![Component Configuration 1](../docs/images/readme-diagrams/spring-security-diagram-01.svg)
+![Component Configuration 1](../docs/images/readme-diagrams/spring-security-diagram-01.png)
 
 ## Security Filter Chain 흐름
 
-![Security Filter Chain Component 2](../docs/images/readme-diagrams/spring-security-diagram-02.svg)
+![Security Filter Chain Component 2](../docs/images/readme-diagrams/spring-security-diagram-02.png)
 
 ## 참고
 

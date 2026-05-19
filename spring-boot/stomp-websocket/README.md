@@ -15,7 +15,7 @@ Virtual Thread를 적용한 Tomcat 위에서 동작합니다.
 
 ## STOMP 메시지 흐름
 
-![STOMP Message Component 1](../../docs/images/readme-diagrams/spring-boot-stomp-websocket-diagram-01.svg)
+![STOMP Message Component 1](../../docs/images/readme-diagrams/spring-boot-stomp-websocket-diagram-01.png)
 
 ## 핵심 설정
 

@@ -2,7 +2,7 @@
 
 ## 아키텍처 다이어그램
 
-![Architecture Diagram 1](../../docs/images/readme-diagrams/messaging-kafka-reply-diagram-01.svg)
+![Architecture Diagram 1](../../docs/images/readme-diagrams/messaging-kafka-reply-diagram-01.png)
 
 ## 설명
 

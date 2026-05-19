@@ -4,7 +4,7 @@
 
 ## I/O 흐름 구성
 
-![I/O Component Configuration 1](../../docs/images/readme-diagrams/io-okio-examples-diagram-01.svg)
+![I/O Component Configuration 1](../../docs/images/readme-diagrams/io-okio-examples-diagram-01.png)
 
 ---
 
@@ -43,7 +43,7 @@ bs.base64() // Base64 인코딩 문자열
 
 ## 클래스 계층 다이어그램
 
-![Component Component Diagram 2](../../docs/images/readme-diagrams/io-okio-examples-diagram-02.svg)
+![Component Component Diagram 2](../../docs/images/readme-diagrams/io-okio-examples-diagram-02.png)
 
 ---
 

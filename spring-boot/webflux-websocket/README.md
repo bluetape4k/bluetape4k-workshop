@@ -8,7 +8,7 @@ Webflux의 비동기 방식으로 Websocket 통신을 하는 방식에 대한 �
 
 ## WebSocket 연결 및 메시지 흐름
 
-![WebSocket Connection Component Message Component 1](../../docs/images/readme-diagrams/spring-boot-webflux-websocket-diagram-01.svg)
+![WebSocket Connection Component Message Component 1](../../docs/images/readme-diagrams/spring-boot-webflux-websocket-diagram-01.png)
 
 ## 주요 컴포넌트
 

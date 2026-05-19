@@ -4,7 +4,7 @@
 
 ## Protobuf 직렬화 흐름
 
-![Protobuf Component Component 1](../../docs/images/readme-diagrams/spring-boot-protobuf-mvc-diagram-01.svg)
+![Protobuf Component Component 1](../../docs/images/readme-diagrams/spring-boot-protobuf-mvc-diagram-01.png)
 
 ## Protobuf 개념
 

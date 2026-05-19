@@ -4,7 +4,7 @@
 
 ## 모듈 의존성 구조
 
-![Component Component Component 1](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-diagram-01.svg)
+![Component Component Component 1](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-diagram-01.png)
 
 ## 참고 자료
 

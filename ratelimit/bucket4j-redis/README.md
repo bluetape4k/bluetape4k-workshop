@@ -2,7 +2,7 @@
 
 ## 아키텍처 다이어그램
 
-![Architecture Diagram 1](../../docs/images/readme-diagrams/ratelimit-bucket4j-redis-diagram-01.svg)
+![Architecture Diagram 1](../../docs/images/readme-diagrams/ratelimit-bucket4j-redis-diagram-01.png)
 
 Spring Webflux Application 에서 Redis를 Bucket 저장소로 사용하는 Rate Limit 을 Bucket4j 로 구현한 예제입니다.
 
@@ -11,7 +11,7 @@ Spring Webflux Application 에서 Redis를 Bucket 저장소로 사용하는 Rate
 
 ## Redis 기반 Rate Limit 요청 처리 흐름
 
-![Redis Component Rate Limit Request Component Component 2](../../docs/images/readme-diagrams/ratelimit-bucket4j-redis-diagram-02.svg)
+![Redis Component Rate Limit Request Component Component 2](../../docs/images/readme-diagrams/ratelimit-bucket4j-redis-diagram-02.png)
 
 ## application.yml 설정 예제
 

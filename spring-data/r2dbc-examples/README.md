@@ -2,9 +2,9 @@
 
 ## 아키텍처 다이어그램
 
-![Architecture Diagram 1](../../docs/images/readme-diagrams/spring-data-r2dbc-examples-diagram-01.svg)
+![Architecture Diagram 1](../../docs/images/readme-diagrams/spring-data-r2dbc-examples-diagram-01.png)
 
-![Architecture Diagram 2](../../docs/images/readme-diagrams/spring-data-r2dbc-examples-diagram-02.svg)
+![Architecture Diagram 2](../../docs/images/readme-diagrams/spring-data-r2dbc-examples-diagram-02.png)
 
 ## 참고
 

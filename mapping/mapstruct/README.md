@@ -4,4 +4,4 @@
 
 ## 매핑 구조
 
-![Component Component 1](../../docs/images/readme-diagrams/mapping-mapstruct-diagram-01.svg)
+![Component Component 1](../../docs/images/readme-diagrams/mapping-mapstruct-diagram-01.png)

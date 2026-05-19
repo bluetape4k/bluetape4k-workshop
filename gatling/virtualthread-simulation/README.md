@@ -9,7 +9,7 @@ article ["Gatling Load Testing Tutorial"](https://medium.com/@mdportnov/stress-t
 which provides
 an introduction to Gatling, a popular open-source load testing tool for web applications.
 
-![Gatling Load Testing Tutorial for Kotlin 1](../../docs/images/readme-diagrams/gatling-virtualthread-simulation-diagram-01.svg)
+![Gatling Load Testing Tutorial for Kotlin 1](../../docs/images/readme-diagrams/gatling-virtualthread-simulation-diagram-01.png)
 
 ### Running the Examples
 

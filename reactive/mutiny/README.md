@@ -5,7 +5,7 @@
 
 ## 리액티브 스트림 구성
 
-![Component Component Configuration 1](../../docs/images/readme-diagrams/reactive-mutiny-diagram-01.svg)
+![Component Component Configuration 1](../../docs/images/readme-diagrams/reactive-mutiny-diagram-01.png)
 
 ## 예제 파일 목록
 

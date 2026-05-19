@@ -2,7 +2,7 @@
 
 ## 에러 처리 흐름
 
-![Component Component Component 1](../../docs/images/readme-diagrams/spring-boot-problem-diagram-01.svg)
+![Component Component Component 1](../../docs/images/readme-diagrams/spring-boot-problem-diagram-01.png)
 
 ## 참고
 
