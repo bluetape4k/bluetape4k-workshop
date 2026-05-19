@@ -642,7 +642,7 @@ aws2-s3-transfer-manager = { module = "software.amazon.awssdk:s3-transfer-manage
 aws2-aws-crt-client = { module = "software.amazon.awssdk:aws-crt-client" }
 
 # Kubernetes
-fabric8-kubernetes-client-bom = { module = "io.fabric8:kubernetes-client-bom", version = "7.3.1" }  # https://mvnrepository.com/artifact/io.fabric8/kubernetes-client-bom
+fabric8-kubernetes-client-bom = { module = "io.fabric8:kubernetes-client-bom", version = "7.7.0" }  # https://mvnrepository.com/artifact/io.fabric8/kubernetes-client-bom
 
 # JMH
 jmh-core = { module = "org.openjdk.jmh:jmh-core", version.ref = "jmh" }
