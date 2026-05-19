@@ -5,7 +5,7 @@ Testcontainers로 Redis 컨테이너를 자동으로 구동하여 통합 테스�
 
 ## Redisson 분산 패턴 구조
 
-![Redisson 분산 패턴 구조 1](../../docs/images/readme-diagrams/redis-redisson-examples-diagram-01.svg)
+![Redisson diagram](../../docs/images/readme-diagrams/redis-redisson-examples-diagram-01.png)
 
 ## 예제 범주
 

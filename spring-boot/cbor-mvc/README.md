@@ -4,7 +4,7 @@ REST API 통신 프로토콜을 일반적인 JSON이 아닌 Binary JSON 포맷�
 
 ## CBOR 직렬화 흐름
 
-![CBOR Serialization diagram](../../docs/images/readme-diagrams/spring-boot-cbor-mvc-sequence-01.png)
+![CBOR diagram](../../docs/images/readme-diagrams/spring-boot-cbor-mvc-sequence-01.png)
 
 ## CBOR 개념
 

@@ -4,11 +4,11 @@ This Spring Boot 4 based project uses Exposed for CRUD (Create, Read, Update, De
 
 ## 트랜잭션 처리 흐름
 
-![Transaction Processing diagram](../../docs/images/readme-diagrams/exposed-dao-web-transaction-sequence-01.png)
+![dao web transaction Sequence Flow diagram](../../docs/images/readme-diagrams/exposed-dao-web-transaction-sequence-01.png)
 
 ## 도메인 모델
 
-![도메인 모델 1](../../docs/images/readme-diagrams/exposed-dao-web-transaction-diagram-01.svg)
+![dao web transaction Class Structure 2 diagram](../../docs/images/readme-diagrams/exposed-dao-web-transaction-diagram-01.png)
 
 - [UserEntity.kt](src/main/kotlin/domain/UserEntity.kt): Describes our database schema. If you need to modify the
   structure, please take care to

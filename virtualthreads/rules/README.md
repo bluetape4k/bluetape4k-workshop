@@ -2,7 +2,7 @@
 
 ## Virtual Thread 개념 구조
 
-![Virtual Thread 개념 구조 1](../../docs/images/readme-diagrams/virtualthreads-rules-diagram-01.svg)
+![Virtual Thread diagram](../../docs/images/readme-diagrams/virtualthreads-rules-diagram-01.png)
 
 ## Introduction
 
@@ -208,7 +208,7 @@ scalability.
 
 Virtual threads are instances of the nonpublic `VirtualThread` class, which is a subclass of the `Thread` class.
 
-![thread class diagram](/images/thread_class_diagram.png)
+![thread class diagram](images/thread_class_diagram.png)
 
 The `Thread` class has public constructors and the inner `Thread.Builder` interface for creating and starting threads.
 For backward compatibility, all public constructors of the `Thread` class can create only platform threads for now.

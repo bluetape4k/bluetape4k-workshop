@@ -4,7 +4,7 @@ Spring WebMVC(Tomcat)와 Java Virtual Threads, JetBrains Exposed SQL DSL을 조�
 
 ## Virtual Thread 기반 요청 처리 흐름
 
-![Virtual Thread 기반 요청 처리 흐름 1](../../docs/images/readme-diagrams/exposed-sql-web-virtualthread-diagram-01.svg)
+![Virtual Thread diagram](../../docs/images/readme-diagrams/exposed-sql-web-virtualthread-diagram-01.png)
 
 ## 기술 스택
 

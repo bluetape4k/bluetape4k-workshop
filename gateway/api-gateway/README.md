@@ -4,7 +4,7 @@ Spring Webflux 기반의 API Gateway 에 대한 예제입니다.
 
 ## 아키텍처 다이어그램
 
-![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/gateway-api-gateway-diagram-01.svg)
+![api gateway Architecture diagram](../../docs/images/readme-diagrams/gateway-api-gateway-diagram-01.png)
 
 API Gateway 가 Customer Service, Order Service 에 대한
 다음과 같은 기능을 제공합니다.

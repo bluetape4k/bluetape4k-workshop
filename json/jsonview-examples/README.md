@@ -2,9 +2,9 @@
 
 Spring Boot REST API 에서 응답 시 `@JsonView` 를 사용하여 응답 데이터를 필터링하는 방법을 알아보겠습니다.
 
-![JsonView in Spring Boot Demo 1](../../docs/images/readme-diagrams/json-jsonview-examples-diagram-01.svg)
+![JsonView in Spring Boot Demo diagram](../../docs/images/readme-diagrams/json-jsonview-examples-diagram-01.png)
 
-![JsonView in Spring Boot Demo 2](../../docs/images/readme-diagrams/json-jsonview-examples-diagram-02.svg)
+![JsonView in Spring Boot Demo diagram](../../docs/images/readme-diagrams/json-jsonview-examples-diagram-02.png)
 
 ## 주요 기능
 

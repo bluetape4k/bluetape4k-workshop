@@ -4,7 +4,7 @@
 
 ## Protobuf 직렬화 흐름
 
-![Protobuf Serialization diagram](../../docs/images/readme-diagrams/spring-boot-protobuf-mvc-sequence-01.png)
+![Protobuf diagram](../../docs/images/readme-diagrams/spring-boot-protobuf-mvc-sequence-01.png)
 
 ## Protobuf 개념
 

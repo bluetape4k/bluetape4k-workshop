@@ -2,7 +2,7 @@
 
 ## 에러 처리 흐름
 
-![에러 처리 흐름 1](../../docs/images/readme-diagrams/spring-boot-problem-diagram-01.svg)
+![problem Architecture diagram](../../docs/images/readme-diagrams/spring-boot-problem-diagram-01.png)
 
 ## 참고
 

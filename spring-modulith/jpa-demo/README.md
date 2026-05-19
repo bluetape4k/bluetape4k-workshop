@@ -4,7 +4,7 @@
 
 ## 모듈 의존성 구조
 
-![모듈 의존성 구조 1](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-diagram-01.svg)
+![jpa demo Architecture diagram](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-diagram-01.png)
 
 ## 참고 자료
 

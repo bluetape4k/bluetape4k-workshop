@@ -2,7 +2,7 @@
 
 ## 아키텍처 다이어그램
 
-![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/ratelimit-bucket4j-caffeine-web-diagram-01.svg)
+![bucket4j caffeine web Architecture diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-caffeine-web-diagram-01.png)
 
 Bucket4j 저장소로 Caffeine 을 사용하는 Spring Boot WebMVC 데모 프로젝트입니다.
 Caffeine JCache 가 동기 방식밖에 지원하지 않기 때문에 Spring Boot WebMVC 에서만 가능합니다.
@@ -12,7 +12,7 @@ Caffeine JCache 가 동기 방식밖에 지원하지 않기 때문에 Spring Boo
 
 ## Rate Limit 요청 처리 흐름
 
-![Rate Limit Request Processing diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-caffeine-web-sequence-01.png)
+![Rate Limit diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-caffeine-web-sequence-01.png)
 
 ## application.yml 설정 예제
 

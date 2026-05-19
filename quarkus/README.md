@@ -6,7 +6,7 @@
 
 ## 모듈 구성
 
-![모듈 구성 1](../docs/images/readme-diagrams/quarkus-diagram-01.svg)
+![quarkus Architecture diagram](../docs/images/readme-diagrams/quarkus-diagram-01.png)
 
 ## 프로젝트 생성
 

@@ -4,4 +4,4 @@
 
 ## 매핑 구조
 
-![매핑 구조 1](../../docs/images/readme-diagrams/mapping-mapstruct-diagram-01.svg)
+![mapstruct Class Structure diagram](../../docs/images/readme-diagrams/mapping-mapstruct-diagram-01.png)

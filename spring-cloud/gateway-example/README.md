@@ -2,7 +2,7 @@
 
 ## 아키텍처 다이어그램
 
-![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/spring-cloud-gateway-example-diagram-01.svg)
+![gateway example Architecture diagram](../../docs/images/readme-diagrams/spring-cloud-gateway-example-diagram-01.png)
 
 ## 참고
 

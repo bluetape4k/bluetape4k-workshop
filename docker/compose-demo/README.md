@@ -9,7 +9,7 @@
 
 이 예제는 `Testcontainers`의 `DockerComposeContainer` 사용하여 `docker-compose.yml` 파일로부터 복수의 컨테이너를 실행하는 방법을 보여줍니다.
 
-![개요 1](../../docs/images/readme-diagrams/docker-compose-demo-diagram-01.svg)
+![compose demo Architecture diagram](../../docs/images/readme-diagrams/docker-compose-demo-diagram-01.png)
 
 ## 참고
 

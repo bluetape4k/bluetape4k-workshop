@@ -4,7 +4,7 @@
 
 ## Circuit Breaker 상태 전이
 
-![Circuit Breaker 상태 전이 1](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-diagram-01.svg)
+![Circuit Breaker diagram](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-diagram-01.png)
 
 ## 개요
 

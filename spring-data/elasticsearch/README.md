@@ -2,9 +2,9 @@
 
 ## 아키텍처 다이어그램
 
-![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/spring-data-elasticsearch-diagram-01.svg)
+![elasticsearch Class Structure diagram](../../docs/images/readme-diagrams/spring-data-elasticsearch-diagram-01.png)
 
-![Architecture diagram](../../docs/images/readme-diagrams/spring-data-elasticsearch-sequence-01.png)
+![elasticsearch Sequence Flow 2 diagram](../../docs/images/readme-diagrams/spring-data-elasticsearch-sequence-01.png)
 
 Spring Data Elasticsearch를 활용하는 동기(MVC) 방식 예제입니다.
 Testcontainers로 Elasticsearch 컨테이너를 자동으로 구동하여 통합 테스트를 수행합니다.

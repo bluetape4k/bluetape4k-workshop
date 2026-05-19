@@ -4,11 +4,11 @@ Spring Application Event를 비동기 방식(Reactor, Coroutines)으로 발행�
 
 ## 이벤트 발행/수신 흐름
 
-![Event Publish / diagram](../../docs/images/readme-diagrams/spring-boot-application-event-demo-sequence-01.png)
+![/ diagram](../../docs/images/readme-diagrams/spring-boot-application-event-demo-sequence-01.png)
 
 ## AOP 기반 이벤트 흐름
 
-![AOP Event diagram](../../docs/images/readme-diagrams/spring-boot-application-event-demo-sequence-02.png)
+![AOP diagram](../../docs/images/readme-diagrams/spring-boot-application-event-demo-sequence-02.png)
 
 ## 두 가지 이벤트 발행 방식
 
