@@ -1,4 +1,6 @@
 version: 2
+# Gradle/Maven library version updates are centralized in bluetape4k-dependencies.
+# Leaf repositories keep Dependabot only for GitHub Actions updates.
 updates:
   - package-ecosystem: "gradle"
     directory: "/"
