@@ -245,7 +245,7 @@ kotlinx-coroutines-test-jvm = { module = "org.jetbrains.kotlinx:kotlinx-coroutin
 kotlinx-serialization-bom = { module = "org.jetbrains.kotlinx:kotlinx-serialization-bom", version.ref = "kotlinx-serialization" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json" }
 kotlinx-atomicfu = { module = "org.jetbrains.kotlinx:atomicfu", version.ref = "kotlinx-atomicfu" }
-turbine = { module = "app.cash.turbine:turbine", version = "1.1.0" }  # https://mvnrepository.com/artifact/app.cash.turbine/turbine
+turbine = { module = "app.cash.turbine:turbine", version = "1.2.1" }  # https://mvnrepository.com/artifact/app.cash.turbine/turbine
 
 # Logging
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
