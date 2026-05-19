@@ -4,29 +4,7 @@ REST API 통신 프로토콜을 일반적인 JSON이 아닌 Binary JSON 포맷�
 
 ## CBOR 직렬화 흐름
 
-```mermaid
-sequenceDiagram
-    participant 클라이언트
-    participant CborConfig
-    participant CourseController
-    participant CourseRepository
-
-    클라이언트->>CourseController: GET /courses\nAccept: application/cbor
-
-    CourseController->>CourseRepository: findAll()
-    CourseRepository-->>CourseController: List<Course>
-
-    CourseController->>CborConfig: HttpMessageConverter 선택
-    CborConfig->>CborConfig: CBORMapper\n(Binary JSON 직렬화)
-    CborConfig-->>클라이언트: 200 OK\nContent-Type: application/cbor\n[바이너리 데이터]
-
-    클라이언트->>CourseController: POST /courses\nContent-Type: application/cbor\n[바이너리 데이터]
-    CourseController->>CborConfig: CBORMapper 역직렬화
-    CborConfig-->>CourseController: Course 객체
-    CourseController->>CourseRepository: save(course)
-    CourseRepository-->>CourseController: 저장된 Course
-    CourseController-->>클라이언트: 201 Created\napplication/cbor
-```
+![CBOR Serialization diagram](../../docs/images/readme-diagrams/spring-boot-cbor-mvc-sequence-01.png)
 
 ## CBOR 개념
 

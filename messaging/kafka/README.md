@@ -17,21 +17,7 @@ Testcontainers로 Kafka 컨테이너를 자동으로 구동하여 통합 테스�
 
 ## 실행 흐름
 
-```mermaid
-sequenceDiagram
-    participant 클라이언트
-    participant GreetingController
-    participant KafkaTemplate
-    participant greeting.topic.1
-    participant GreetingMessageHandler
-
-    클라이언트->>GreetingController: POST /greeting
-    GreetingController->>KafkaTemplate: send(topic, key, value)
-    KafkaTemplate->>greeting.topic.1: 메시지 발행
-    greeting.topic.1-->>GreetingMessageHandler: @KafkaListener 수신
-    GreetingMessageHandler-->>GreetingController: GreetingResult 반환
-    GreetingController-->>클라이언트: HTTP 200 응답
-```
+![Execution diagram](../../docs/images/readme-diagrams/messaging-kafka-sequence-01.png)
 
 ## 관련 모듈
 

@@ -5,28 +5,7 @@ Spring의 WebClient와 비슷한 기능을 제공하지만, Reactor 를 사용�
 
 ## HTTP 요청 처리 흐름
 
-```mermaid
-sequenceDiagram
-    participant 테스트 as 테스트 코드
-    participant 클라이언트 as WebClient
-    participant 서버 as 외부 HTTP 서버
-
-    테스트->>클라이언트: WebClient.create(vertx)
-    테스트->>클라이언트: client.get(port, host, path)
-    클라이언트->>서버: HTTP GET 요청 (Non-Blocking)
-    서버-->>클라이언트: HTTP 응답
-
-    Note over 테스트,클라이언트: Callback 방식
-    클라이언트-->>테스트: send(handler)
-
-    Note over 테스트,클라이언트: 코루틴 방식
-    클라이언트-->>테스트: sendAwait() / coAwait()
-
-    테스트->>클라이언트: client.post(port, host, path)
-    클라이언트->>서버: HTTP POST + JSON Body
-    서버-->>클라이언트: 응답 코드 + Body
-    클라이언트-->>테스트: HttpResponse 반환
-```
+![HTTP Request Processing diagram](../../docs/images/readme-diagrams/vertx-vertx-webclient-sequence-01.png)
 
 ## 주요 기능
 

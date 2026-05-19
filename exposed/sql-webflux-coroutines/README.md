@@ -8,32 +8,7 @@ Spring WebFlux 환경에서 Kotlin Coroutines와 JetBrains Exposed SQL DSL을 �
 
 ## HTTP 요청 처리 흐름
 
-```mermaid
-sequenceDiagram
-    participant 클라이언트
-    participant Controller
-    participant Repository
-    participant ExposedDSL as Exposed SQL DSL
-    participant DB as 데이터베이스
-
-    클라이언트->>Controller: GET /movies
-    Controller->>Repository: findAll()
-    Repository->>ExposedDSL: newSuspendedTransaction(Dispatchers.IO)
-    ExposedDSL->>DB: SELECT * FROM movies
-    DB-->>ExposedDSL: ResultSet
-    ExposedDSL-->>Repository: List~MovieDTO~
-    Repository-->>Controller: List~MovieDTO~
-    Controller-->>클라이언트: 200 OK (JSON)
-
-    클라이언트->>Controller: POST /actors
-    Controller->>Repository: create(actorDTO)
-    Repository->>ExposedDSL: newSuspendedTransaction(Dispatchers.IO)
-    ExposedDSL->>DB: INSERT INTO actors ...
-    DB-->>ExposedDSL: generated id
-    ExposedDSL-->>Repository: ActorDTO
-    Repository-->>Controller: ActorDTO
-    Controller-->>클라이언트: 201 Created (JSON)
-```
+![HTTP Request Processing diagram](../../docs/images/readme-diagrams/exposed-sql-webflux-coroutines-sequence-01.png)
 
 ## 기술 스택
 

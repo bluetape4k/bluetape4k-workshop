@@ -4,27 +4,7 @@
 
 ![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/spring-data-r2dbc-coroutines-diagram-01.svg)
 
-```mermaid
-sequenceDiagram
-    participant 클라이언트 as HTTP 클라이언트
-    participant 컨트롤러 as PostController
-    participant 저장소 as PostRepository
-    participant DB as R2DBC DB
-
-    클라이언트->>컨트롤러: GET /posts
-    컨트롤러->>저장소: findAll() [suspend]
-    저장소->>DB: SELECT * FROM posts
-    DB-->>저장소: Flow~Post~
-    저장소-->>컨트롤러: List~Post~
-    컨트롤러-->>클라이언트: 200 OK [JSON]
-
-    클라이언트->>컨트롤러: POST /posts
-    컨트롤러->>저장소: save(post) [suspend]
-    저장소->>DB: INSERT INTO posts
-    DB-->>저장소: Post (id 생성)
-    저장소-->>컨트롤러: Post
-    컨트롤러-->>클라이언트: 201 Created
-```
+![Architecture diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-coroutines-sequence-01.png)
 
 ## 참고
 
