@@ -47,29 +47,7 @@ test dependency도 함께 선언해야 합니다.
 
 ## 전체 모듈 구성
 
-```mermaid
-flowchart LR
-    subgraph Core["핵심 모듈"]
-        EX["exposed/"]
-        SB["spring-boot/"]
-        SD["spring-data/"]
-    end
-    subgraph Infra["인프라/메시징"]
-        MSG["messaging/"]
-        RD["redis/"]
-        GW["gateway/"]
-    end
-    subgraph Obs["관찰 가능성"]
-        OB["observability/"]
-        RL["ratelimit/"]
-    end
-    subgraph Alt["대안 기술"]
-        VX["vertx/"]
-        QK["quarkus/"]
-        RE["reactive/"]
-    end
-    SH["shared/"] --> Core & Infra
-```
+![전체 모듈 구성 1](docs/images/readme-diagrams/root-readme-en-diagram-01.svg)
 
 ## 모듈 구조
 

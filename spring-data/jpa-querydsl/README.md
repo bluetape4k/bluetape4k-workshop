@@ -4,55 +4,7 @@ JPA & QueryDSL example using Spring Boot.
 
 ## 아키텍처 다이어그램
 
-```mermaid
-classDiagram
-    class LongJpaEntity {
-        <<abstract>>
-        +Long? id
-    }
-    class Team {
-        +String name
-        +MutableList~Member~ members
-        +addMember(member)
-        +removeMember(member)
-    }
-    class Member {
-        +String name
-        +Int? age
-        +Team? team
-        +changeTeam(team)
-    }
-    class MemberDto {
-        +Long? memberId
-        +String username
-        +Int? age
-    }
-    class MemberTeamDto {
-        +Long? memberId
-        +String username
-        +Int? age
-        +Long? teamId
-        +String? teamName
-    }
-    class MemberSearchCondition {
-        +String? username
-        +String? teamName
-        +Int? ageGoe
-        +Int? ageLoe
-    }
-    class MemberRepository {
-        <<interface>>
-        +findAll(condition) List~MemberTeamDto~
-        +searchPageSimple(condition, pageable) Page~MemberTeamDto~
-    }
-
-    LongJpaEntity <|-- Team
-    LongJpaEntity <|-- Member
-    Member "*" --> "0..1" Team : ManyToOne
-    Team "1" --> "*" Member : OneToMany
-    MemberRepository --> MemberSearchCondition : 검색 조건
-    MemberRepository --> MemberTeamDto : 결과 반환
-```
+![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/spring-data-jpa-querydsl-diagram-01.svg)
 
 ```mermaid
 sequenceDiagram

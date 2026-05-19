@@ -2,39 +2,7 @@
 
 ## 아키텍처 다이어그램
 
-```mermaid
-classDiagram
-    class Customer {
-        +String firstname
-        +String lastname
-        +Long? id
-        +Boolean hasId
-    }
-    class Person {
-        +String firstname
-        +String lastname
-        +Int age
-        +Int? id
-        +Boolean hasId
-    }
-    class CustomerRepository {
-        <<interface>>
-        +findByLastname(lastname) Flux~Customer~
-        +findByFirstname(firstname) Mono~Customer~
-    }
-    class PersonRepository {
-        <<interface>>
-        +findAll(example) Flux~Person~
-        +count(example) Mono~Long~
-    }
-    class TransactionalService {
-        +insert(customers) Flux~Customer~
-    }
-
-    CustomerRepository --> Customer : 관리
-    PersonRepository --> Person : 관리
-    TransactionalService --> CustomerRepository : 사용
-```
+![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/spring-data-r2dbc-examples-diagram-01.svg)
 
 ```mermaid
 sequenceDiagram

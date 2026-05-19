@@ -2,30 +2,7 @@
 
 ## 서브모듈 구조
 
-```mermaid
-flowchart TD
-    subgraph ratelimit 모듈
-        BW[bucker4j-bluetape4k-webflux\n사용자 토큰 기반 / Redis / WebFlux\n추천]
-        BR[bucket4j-redis\nIP 기반 / Redis / WebFlux\nbucket4j-spring-boot-starter]
-        BC[bucket4j-caffeine-web\nIP 기반 / Caffeine / WebMVC\n로컬 전용]
-    end
-
-    subgraph 저장소
-        R[(Redis)]
-        CAF[(Caffeine\n인메모리)]
-    end
-
-    subgraph 클라이언트
-        CLI[HTTP 클라이언트]
-    end
-
-    CLI --> BW
-    CLI --> BR
-    CLI --> BC
-    BW --> R
-    BR --> R
-    BC --> CAF
-```
+![서브모듈 구조 1](../docs/images/readme-diagrams/ratelimit-diagram-01.svg)
 
 ## bucket4j-bluetape4k-webflux (추천)
 
@@ -75,21 +52,7 @@ bucker4j-bluetape4k-webflux 버킷 설정 예시:
 
 ### WebFilter 동작 흐름
 
-```mermaid
-flowchart LR
-    요청 -->|모든 HTTP 요청| UserRateLimitWebFilter
-
-    subgraph UserRateLimitWebFilter
-        T{대상 경로?}
-        T -->|아님| PASS[다음 필터]
-        T -->|맞음| KEY[키 추출]
-        KEY --> CONSUME[토큰 소비]
-        CONSUME -->|토큰 있음| PASS
-        CONSUME -->|토큰 없음| REJECT[429 응답]
-    end
-
-    PASS --> Controller
-```
+![WebFilter 동작 흐름 2](../docs/images/readme-diagrams/ratelimit-diagram-02.svg)
 
 응답 헤더 `X-Bluetape4k-Remaining-Token`으로 남은 토큰 수를 클라이언트에 전달합니다.
 

@@ -24,37 +24,4 @@ sequenceDiagram
     CoroutineController-->>클라이언트: HTTP 200 Todo
 ```
 
-```mermaid
-flowchart LR
-    subgraph 컨트롤러 레이어
-        CC[CoroutineController\n/coroutine]
-        SC[SyncController\n/sync]
-        RC[ReactorController\n/reactor]
-    end
-
-    subgraph 서비스 레이어
-        CS[CoroutineService\nwithObservationSuspending]
-        SS[SyncService\nObservation.observe]
-        RS[ReactorService\nobserve Mono/Flux]
-    end
-
-    subgraph Observation 인프라
-        OR[ObservationRegistry]
-        OC[ObservationConfig\nTracingObservationHandler]
-    end
-
-    subgraph 관측 출력
-        TR[트레이싱\nSpan 전파]
-        MT[메트릭\nMicrometer]
-    end
-
-    CC --> CS
-    SC --> SS
-    RC --> RS
-    CS --> OR
-    SS --> OR
-    RS --> OR
-    OC --> OR
-    OR --> TR
-    OR --> MT
-```
+![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/observability-micrometer-tracing-coroutines-diagram-01.svg)

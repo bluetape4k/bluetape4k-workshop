@@ -2,34 +2,7 @@
 
 ## 아키텍처 다이어그램
 
-```mermaid
-classDiagram
-    class Conference {
-        +String name
-        +String date
-        +GeoPoint? location
-        +MutableList~String~ keywords
-        +String? id
-    }
-    class ConferenceRepository {
-        <<interface>>
-        +findByKeywordsContaining(keyword) List~Conference~
-        +findByDateAfter(date) List~Conference~
-        +findByLocationNear(point, distance) List~Conference~
-    }
-    class ReactiveConferenceRepository {
-        <<interface>>
-        +findByKeywordsContaining(keyword) Flux~Conference~
-        +findByDateAfter(date) Flux~Conference~
-    }
-    class ElasticsearchClientConfig {
-        +elasticsearchClient() ElasticsearchClient
-        +reactiveElasticsearchClient() ReactiveElasticsearchClient
-    }
-
-    ConferenceRepository --> Conference : 동기 검색
-    ReactiveConferenceRepository --> Conference : 리액티브 검색
-```
+![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/spring-data-elasticsearch-diagram-01.svg)
 
 ```mermaid
 sequenceDiagram

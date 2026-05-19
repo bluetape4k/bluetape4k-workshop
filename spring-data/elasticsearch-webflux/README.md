@@ -2,49 +2,7 @@
 
 ## 아키텍처 다이어그램
 
-```mermaid
-classDiagram
-    class Book {
-        +String title
-        +String authorName
-        +Int publicationYear
-        +String isbn
-        +String? id
-    }
-    class BookService {
-        <<interface>>
-        +findAll() Flux~Book~
-        +findByIsbn(isbn) Mono~Book~
-        +save(book) Mono~Book~
-        +update(id, request) Mono~Book~
-        +deleteById(id) Mono~Void~
-        +searchByAuthorAndTitle(author, title) Flux~Book~
-    }
-    class DefaultBookService {
-        -BookRepository bookRepository
-    }
-    class BookRepository {
-        <<interface>>
-        +findByIsbn(isbn) Mono~Book~
-        +searchByAuthorAndTitle(author, title) Flux~Book~
-    }
-    class BookController {
-        +getBooks() Flux~Book~
-        +getBookByIsbn(isbn) Mono~Book~
-        +createBook(book) Mono~Book~
-        +updateBook(id, request) Mono~Book~
-        +deleteBook(id) Mono~Void~
-    }
-    class PublicationYearValidator {
-        +isValid(year, context) Boolean
-    }
-
-    BookService <|.. DefaultBookService
-    DefaultBookService --> BookRepository
-    BookController --> BookService
-    BookRepository --> Book
-    Book --> PublicationYearValidator : 검증
-```
+![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/spring-data-elasticsearch-webflux-diagram-01.svg)
 
 ```mermaid
 sequenceDiagram

@@ -2,34 +2,7 @@
 
 ## 아키텍처 다이어그램
 
-```mermaid
-flowchart TB
-    subgraph 클라이언트 레이어
-        C[HTTP 클라이언트]
-    end
-
-    subgraph WebFlux 레이어
-        R[Router\ncoRouter 함수형 라우터]
-        H[UserHandler\nsuspend 함수]
-        UC[UserController\n@RestController]
-    end
-
-    subgraph 서비스 레이어
-        S[UserService\n비즈니스 로직]
-    end
-
-    subgraph 데이터 레이어
-        REPO[UserRepository\nReactiveCrudRepository]
-        DB[(H2 R2DBC)]
-    end
-
-    C -->|GET/POST/DELETE /users| R
-    R --> H
-    H --> S
-    UC --> S
-    S --> REPO
-    REPO -->|비동기 SQL| DB
-```
+![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-diagram-01.svg)
 
 ```mermaid
 sequenceDiagram

@@ -13,35 +13,7 @@ Testcontainers로 Kafka 컨테이너를 자동으로 구동하여 통합 테스�
 
 ## 아키텍처 다이어그램
 
-```mermaid
-flowchart LR
-    subgraph 프로듀서 레이어
-        GC[GreetingController\nPOST /greeting]
-        KT[KafkaTemplate]
-    end
-
-    subgraph Kafka 브로커
-        T1[greeting.topic.1]
-        T2[simple.topic.1]
-        T3[logger.topic.1]
-    end
-
-    subgraph 컨슈머 레이어
-        GMH[GreetingMessageHandler\n@KafkaListener]
-        SMH[SimpleMessageHandler\n@KafkaListener]
-        CSMH[CoroutineSimpleMessageHandler\n@KafkaListener]
-        LMH[LoggerMessageHandler\n@KafkaListener]
-    end
-
-    GC -->|send| KT
-    KT -->|publish| T1
-    KT -->|publish| T2
-    KT -->|publish| T3
-    T1 --> GMH
-    T2 --> SMH
-    T2 --> CSMH
-    T3 --> LMH
-```
+![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/messaging-kafka-diagram-01.svg)
 
 ## 실행 흐름
 

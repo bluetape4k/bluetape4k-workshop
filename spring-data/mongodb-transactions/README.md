@@ -2,43 +2,7 @@
 
 ## 아키텍처 다이어그램
 
-```mermaid
-classDiagram
-    class Process {
-        +Int id
-        +State state
-        +Int transitionCount
-    }
-    class State {
-        <<enumeration>>
-        UNKNOWN
-        CREATED
-        ACTIVE
-        DONE
-    }
-    class TransitionService {
-        +run(id) void
-        -lookup(id) Process
-        -start(process) Process
-        -verify(process) Process
-        -finish(process) Process
-    }
-    class ReactiveTransitionService {
-        +run(id) Mono~Int~
-    }
-    class ReactiveManagedTransitionService {
-        +run(id) Mono~Int~
-    }
-    class CoroutineManagedTransitionService {
-        +run(id) Int
-    }
-
-    Process --> State : 상태 보유
-    TransitionService --> Process : 동기 트랜잭션
-    ReactiveTransitionService --> Process : 프로그래밍 리액티브
-    ReactiveManagedTransitionService --> Process : 선언적 리액티브
-    CoroutineManagedTransitionService --> Process : 코루틴 트랜잭션
-```
+![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/spring-data-mongodb-transactions-diagram-01.svg)
 
 ```mermaid
 sequenceDiagram

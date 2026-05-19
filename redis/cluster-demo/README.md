@@ -5,30 +5,7 @@
 
 ## Redis Cluster 토폴로지
 
-```mermaid
-flowchart TD
-    subgraph 애플리케이션
-        A[RedisClusterApplication]
-        B[NumberService]
-        A --> B
-    end
-
-    subgraph Spring Data Redis
-        B --> C[StringRedisTemplate]
-        C --> D[ClusterConnection]
-    end
-
-    subgraph Redis Cluster - Testcontainers
-        D --> M1[마스터 노드 1\n슬롯 0-5460]
-        D --> M2[마스터 노드 2\n슬롯 5461-10922]
-        D --> M3[마스터 노드 3\n슬롯 10923-16383]
-        M1 --- S1[슬레이브 노드 1]
-        M2 --- S2[슬레이브 노드 2]
-        M3 --- S3[슬레이브 노드 3]
-    end
-
-    B -->|multiplyAndSave / get| C
-```
+![Redis Cluster 토폴로지 1](../../docs/images/readme-diagrams/redis-cluster-demo-diagram-01.svg)
 
 ## 주요 구성 요소
 

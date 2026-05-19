@@ -58,19 +58,7 @@ router.get("/movie/:id").suspendHandler { ctx ->
 
 ## 데이터 모델
 
-```mermaid
-erDiagram
-    MOVIE {
-        VARCHAR ID PK
-        VARCHAR TITLE
-    }
-    RATING {
-        INT ID PK
-        INT RATE_VALUE
-        VARCHAR MOVIE_ID FK
-    }
-    MOVIE ||--o{ RATING : "has"
-```
+![데이터 모델 1](../../docs/images/readme-diagrams/vertx-coroutines-diagram-01.svg)
 
 ## 제공 API 엔드포인트
 

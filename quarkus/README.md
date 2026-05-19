@@ -6,32 +6,7 @@
 
 ## 모듈 구성
 
-```mermaid
-flowchart LR
-    subgraph Quarkus["quarkus/ (빌드 비활성)"]
-        HRP["hibernate-reactive-panache\nHibernate Reactive + Panache CRUD"]
-        RC["rest-coroutine\nQuarkus REST + 코루틴/Flow"]
-    end
-
-    subgraph HRP_Detail["hibernate-reactive-panache 구성"]
-        FR["FruitResource\n/fruits"]
-        FRepo["FruitRepository\nPanacheRepositoryBase"]
-        FModel["Fruit\n@Entity"]
-        DB[(PostgreSQL)]
-    end
-
-    subgraph RC_Detail["rest-coroutine 구성"]
-        GCR["GreetingCoroutineResource\n/coroutine"]
-        GCS["GreetingCoroutineService"]
-        GCC["GreetingCoroutineClient\nRestClientBuilder"]
-    end
-
-    HRP --> HRP_Detail
-    RC --> RC_Detail
-    FR --> FRepo --> FModel --> DB
-    GCR --> GCS
-    GCR --> GCC
-```
+![모듈 구성 1](../docs/images/readme-diagrams/quarkus-diagram-01.svg)
 
 ## 프로젝트 생성
 

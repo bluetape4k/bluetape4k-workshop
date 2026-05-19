@@ -13,33 +13,7 @@ Bluetape4k Workshop 에서 공용으로 사용하고자 하는 기능을 제공�
 
 ## 모듈 구성
 
-```mermaid
-flowchart TD
-    subgraph Shared["shared 모듈"]
-        subgraph Main["main - 공용 유틸리티"]
-            RC["RestClientExtensions\nhttpGet / httpPost / httpPut\nhttpPatch / httpDelete"]
-            WC["WebClientExtensions\n리액티브 WebClient 확장"]
-            WTC["WebTestClientExtensions\n테스트용 WebTestClient 확장"]
-        end
-
-        subgraph Test["test - 테스트 기반 클래스"]
-            AST["AbstractSpringTest\nSpring 테스트 기본 클래스"]
-            ASH["AbstractSharedTest\n공용 테스트 기본 클래스"]
-        end
-    end
-
-    subgraph Consumers["사용 모듈"]
-        SB["spring-boot/"]
-        SD["spring-data/"]
-        GW["gateway/"]
-        Others["기타 모듈들..."]
-    end
-
-    RC -->|"HTTP 동기 호출"| Consumers
-    WC -->|"HTTP 비동기 호출"| Consumers
-    WTC -->|"통합 테스트"| Consumers
-    AST --> ASH
-```
+![모듈 구성 1](../docs/images/readme-diagrams/shared-diagram-01.svg)
 
 ## 제공 유틸리티 목록
 

@@ -4,34 +4,7 @@ Spring WebFlux 환경에서 Kotlin Coroutines와 JetBrains Exposed SQL DSL을 �
 
 ## 아키텍처 흐름
 
-```mermaid
-flowchart LR
-    클라이언트([HTTP 클라이언트]) --> Controller
-
-    subgraph 웹레이어["웹 레이어 (WebFlux + Netty)"]
-        Controller["ActorController\nMovieController\nMovieActorsController"]
-    end
-
-    subgraph 서비스레이어["서비스 레이어 (Coroutines)"]
-        ActorRepo["ActorRepository\nsuspend 함수"]
-        MovieRepo["MovieRepository\nsuspend 함수"]
-    end
-
-    subgraph 데이터레이어["데이터 레이어 (Exposed SQL DSL)"]
-        Actors["Actors 테이블\nfirstName, lastName\ndateOfBirth"]
-        Movies["Movies 테이블\nname, producerName\nreleaseDate"]
-        ActorsInMovies["ActorsInMovies 테이블\n(다대다 연결)"]
-    end
-
-    Controller --> ActorRepo
-    Controller --> MovieRepo
-    ActorRepo -->|newSuspendedTransaction| Actors
-    MovieRepo -->|newSuspendedTransaction| Movies
-    ActorsInMovies --> Actors
-    ActorsInMovies --> Movies
-    Actors --> DB[(H2 / MySQL)]
-    Movies --> DB
-```
+![아키텍처 흐름 1](../../docs/images/readme-diagrams/exposed-sql-webflux-coroutines-diagram-01.svg)
 
 ## HTTP 요청 처리 흐름
 

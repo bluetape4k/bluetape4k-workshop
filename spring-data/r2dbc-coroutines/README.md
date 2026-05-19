@@ -2,50 +2,7 @@
 
 ## 아키텍처 다이어그램
 
-```mermaid
-classDiagram
-    class Post {
-        +String? title
-        +String? content
-        +Long? id
-    }
-    class Comment {
-        +String? content
-        +Long? postId
-        +Long? id
-    }
-    class Member {
-        +String name
-        +Int age
-        +String email
-        +Long? id
-    }
-    class PostRepository {
-        <<interface>>
-        +findAll() Flow~Post~
-        +findById(id) Post?
-    }
-    class CommentRepository {
-        <<interface>>
-        +findByPostId(postId) Flow~Comment~
-    }
-    class MemberRepository {
-        <<interface>>
-        +findAll() Flow~Member~
-    }
-    class PostController {
-        +getPosts() List~Post~
-        +getPost(id) Post
-        +createPost(post) Post
-    }
-
-    Post "1" --> "0..*" Comment : has
-    PostRepository --> Post : 관리
-    CommentRepository --> Comment : 관리
-    MemberRepository --> Member : 관리
-    PostController --> PostRepository : 사용
-    PostController --> CommentRepository : 사용
-```
+![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/spring-data-r2dbc-coroutines-diagram-01.svg)
 
 ```mermaid
 sequenceDiagram

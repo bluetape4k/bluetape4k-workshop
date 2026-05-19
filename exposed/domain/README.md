@@ -5,62 +5,11 @@ JetBrains [Exposed](https://github.com/JetBrains/Exposed) ORM의 다양한 매�
 
 ## 테스트 인프라 구조
 
-```mermaid
-flowchart LR
-    subgraph 테스트인프라["테스트 인프라"]
-        AbstractExposedTest["AbstractExposedTest\n베이스 클래스"]
-        ContainerProvider["ContainerProvider\nTestcontainers 싱글턴"]
-        WithDb["WithDb\n@TestDB 어노테이션\n대상 DB 선택"]
-        WithTables["WithTables\n테이블 자동 생성·삭제"]
-    end
-
-    subgraph DB["지원 데이터베이스"]
-        MariaDB[(MariaDB)]
-        MySQL[(MySQL)]
-        PostgreSQL[(PostgreSQL)]
-        CockroachDB[(CockroachDB)]
-    end
-
-    AbstractExposedTest --> WithDb
-    AbstractExposedTest --> WithTables
-    WithDb --> ContainerProvider
-    ContainerProvider --> MariaDB
-    ContainerProvider --> MySQL
-    ContainerProvider --> PostgreSQL
-    ContainerProvider --> CockroachDB
-```
+![테스트 인프라 구조 1](../../docs/images/readme-diagrams/exposed-domain-diagram-01.svg)
 
 ## 도메인 모델 (엔티티 관계)
 
-```mermaid
-classDiagram
-    class Country {
-        +Int id
-        +String name
-        +cities: SizedIterable~City~
-    }
-    class City {
-        +Int id
-        +String name
-        +country: Country
-        +users: SizedIterable~User~
-    }
-    class User {
-        +Int id
-        +String name
-        +Int age
-        +cities: SizedIterable~City~
-    }
-    class AccountEntity {
-        +Long id
-        +String name
-        +BigDecimal balance
-    }
-
-    Country "1" --> "0..*" City : one-to-many
-    City "0..*" --> "1" Country : many-to-one
-    User "0..*" <--> "0..*" City : many-to-many (UserToCityTable)
-```
+![도메인 모델 (엔티티 관계) 2](../../docs/images/readme-diagrams/exposed-domain-diagram-02.svg)
 
 ## 테스트 인프라
 

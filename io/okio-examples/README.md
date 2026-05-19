@@ -4,42 +4,7 @@
 
 ## I/O 흐름 구성
 
-```mermaid
-flowchart LR
-    subgraph 소스["Source (읽기)"]
-        FS["FileSystem\n파일 Source"]
-        BS["BufferedSource\n버퍼링된 읽기"]
-        B64S["Base64Source\nBase64 디코딩"]
-        CZS["GzipSource\n압축 해제"]
-    end
-
-    subgraph 싱크["Sink (쓰기)"]
-        FSink["FileSystem\n파일 Sink"]
-        BSink["BufferedSink\n버퍼링된 쓰기"]
-        B64Sink["Base64Sink\nBase64 인코딩"]
-        CZSink["GzipSink\n압축"]
-        TeeSink["TeeSink\n두 싱크에 동시 쓰기"]
-    end
-
-    subgraph 버퍼["Buffer"]
-        Buf["Buffer\n인메모리 I/O"]
-    end
-
-    subgraph 파이프["Pipe"]
-        Pipe["Pipe\n비동기 Source-Sink 연결"]
-    end
-
-    FS --> BS --> B64S
-    BS --> CZS
-    FSink --> BSink --> B64Sink
-    BSink --> CZSink
-    BSink --> TeeSink
-    Buf --> 소스
-    Buf --> 싱크
-    소스 -.->|"Pipe"| 싱크
-    Pipe --> 소스
-    Pipe --> 싱크
-```
+![I/O 흐름 구성 1](../../docs/images/readme-diagrams/io-okio-examples-diagram-01.svg)
 
 ---
 
@@ -78,66 +43,7 @@ bs.base64() // Base64 인코딩 문자열
 
 ## 클래스 계층 다이어그램
 
-```mermaid
-classDiagram
-    class Source {
-        <<interface>>
-        +read(sink: Buffer, byteCount: Long) Long
-        +timeout() Timeout
-        +close()
-    }
-    class Sink {
-        <<interface>>
-        +write(source: Buffer, byteCount: Long)
-        +flush()
-        +timeout() Timeout
-        +close()
-    }
-    class BufferedSource {
-        <<interface>>
-        +readUtf8() String
-        +readByteString() ByteString
-        +readInt() Int
-        +readLong() Long
-        +exhausted() Boolean
-        +request(byteCount: Long) Boolean
-    }
-    class BufferedSink {
-        <<interface>>
-        +writeUtf8(string: String) BufferedSink
-        +write(byteString: ByteString) BufferedSink
-        +writeInt(i: Int) BufferedSink
-        +writeLong(v: Long) BufferedSink
-        +flush()
-    }
-    class Buffer {
-        +size: Long
-        +clone() Buffer
-        +snapshot() ByteString
-        +clear()
-    }
-    class ForwardingSource {
-        #delegate: Source
-    }
-    class ForwardingSink {
-        #delegate: Sink
-    }
-    class CipherSource
-    class CipherSink
-    class GzipSource
-    class GzipSink
-
-    Source <|-- BufferedSource
-    Sink <|-- BufferedSink
-    BufferedSource <|.. Buffer
-    BufferedSink <|.. Buffer
-    Source <|-- ForwardingSource
-    Sink <|-- ForwardingSink
-    ForwardingSource <|-- CipherSource
-    ForwardingSink <|-- CipherSink
-    ForwardingSource <|-- GzipSource
-    ForwardingSink <|-- GzipSink
-```
+![클래스 계층 다이어그램 2](../../docs/images/readme-diagrams/io-okio-examples-diagram-02.svg)
 
 ---
 
