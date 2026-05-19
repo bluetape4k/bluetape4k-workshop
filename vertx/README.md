@@ -2,7 +2,7 @@
 
 ## 모듈 구조
 
-![모듈 구조 1](../docs/images/readme-diagrams/vertx-diagram-01.svg)
+![Module Structure 1](../docs/images/readme-diagrams/vertx-diagram-01.svg)
 
 ## 참고 자료
 

@@ -4,7 +4,7 @@ Gatling plugin for Gradle - Kotlin demo project
 A simple showcase of a Gradle project using the Gatling plugin for Gradle. Refer to the plugin documentation
 [on the Gatling website](https://gatling.io/docs/current/extensions/gradle_plugin/) for usage.
 
-![Mermaid diagram 1](../../docs/images/readme-diagrams/gatling-gradle-plugin-demo-diagram-01.svg)
+![Diagram 1](../../docs/images/readme-diagrams/gatling-gradle-plugin-demo-diagram-01.svg)
 
 This project is written in Kotlin, others are available
 for [Java](https://github.com/gatling/gatling-gradle-plugin-demo-java)

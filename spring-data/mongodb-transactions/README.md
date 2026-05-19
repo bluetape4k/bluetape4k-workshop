@@ -2,28 +2,9 @@
 
 ## 아키텍처 다이어그램
 
-![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/spring-data-mongodb-transactions-diagram-01.svg)
+![Architecture Diagram 1](../../docs/images/readme-diagrams/spring-data-mongodb-transactions-diagram-01.svg)
 
-```mermaid
-sequenceDiagram
-    participant 서비스 as CoroutineManagedTransitionService
-    participant 저장소 as CoroutineProcessRepository
-    participant TM as ReactiveTransactionManager
-    participant MongoDB as MongoDB ReplicaSet
-
-    서비스->>TM: @Transactional 시작
-    TM->>MongoDB: startTransaction (ClientSession)
-    서비스->>저장소: findById(id) [suspend]
-    저장소->>MongoDB: db.processes.findOne({_id: id})
-    MongoDB-->>저장소: Process (CREATED)
-    저장소-->>서비스: Process
-    서비스->>저장소: save(process.copy(state=ACTIVE))
-    저장소->>MongoDB: db.processes.replaceOne(...)
-    서비스->>저장소: save(process.copy(state=DONE))
-    저장소->>MongoDB: db.processes.replaceOne(...)
-    TM->>MongoDB: commitTransaction
-    MongoDB-->>서비스: 완료
-```
+![Architecture Diagram 2](../../docs/images/readme-diagrams/spring-data-mongodb-transactions-diagram-02.svg)
 
 MongoDB 관련 작업을 `Spring Data Mongo` 와 Kotlin Coroutines 으로 수행하는 예입니다.
 

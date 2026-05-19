@@ -4,7 +4,7 @@ Logback 으로 로그를 출력할 때, `AsyncAppender` 를 사용하여 로그�
 
 ## 비동기 로깅 흐름
 
-![비동기 로깅 흐름 1](../../docs/images/readme-diagrams/spring-boot-async-logging-diagram-01.svg)
+![Async Component Component 1](../../docs/images/readme-diagrams/spring-boot-async-logging-diagram-01.svg)
 
 ## Console 로깅
 

@@ -15,24 +15,7 @@ Virtual Thread를 적용한 Tomcat 위에서 동작합니다.
 
 ## STOMP 메시지 흐름
 
-```mermaid
-sequenceDiagram
-    participant 브라우저
-    participant WebSocketConfig
-    participant SimpleBroker
-    participant GreetingController
-
-    브라우저->>WebSocketConfig: CONNECT /gs-guide-websocket
-    WebSocketConfig-->>브라우저: CONNECTED
-
-    브라우저->>GreetingController: SEND /app/hello\n{name: "사용자"}
-    GreetingController->>GreetingController: handle(HelloMessage)\n→ Greeting 생성
-    GreetingController->>SimpleBroker: publishEvent → /topic/greetings
-
-    SimpleBroker-->>브라우저: MESSAGE /topic/greetings\n{content: "Hello, 사용자!"}
-
-    브라우저->>WebSocketConfig: DISCONNECT
-```
+![STOMP Message Component 1](../../docs/images/readme-diagrams/spring-boot-stomp-websocket-diagram-01.svg)
 
 ## 핵심 설정
 

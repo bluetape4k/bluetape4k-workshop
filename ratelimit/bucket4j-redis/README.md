@@ -2,7 +2,7 @@
 
 ## 아키텍처 다이어그램
 
-![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/ratelimit-bucket4j-redis-diagram-01.svg)
+![Architecture Diagram 1](../../docs/images/readme-diagrams/ratelimit-bucket4j-redis-diagram-01.svg)
 
 Spring Webflux Application 에서 Redis를 Bucket 저장소로 사용하는 Rate Limit 을 Bucket4j 로 구현한 예제입니다.
 
@@ -11,26 +11,7 @@ Spring Webflux Application 에서 Redis를 Bucket 저장소로 사용하는 Rate
 
 ## Redis 기반 Rate Limit 요청 처리 흐름
 
-```mermaid
-sequenceDiagram
-    participant C as HTTP 클라이언트
-    participant F as Bucket4j WebFlux 필터
-    participant PM as LettuceBasedProxyManager
-    participant R as Redis (Testcontainers)
-    participant Ctrl as CoroutineController / ReactiveController
-
-    C->>F: GET /coroutines/hello (또는 /reactive/hello)
-    F->>PM: IP 키로 BucketProxy 조회
-    PM->>R: CAS(Compare-And-Swap) 버킷 상태 읽기
-    R-->>PM: 현재 토큰 수 반환
-    alt 토큰 있음
-        PM->>R: 토큰 차감 후 상태 저장
-        F->>Ctrl: 요청 전달
-        Ctrl-->>C: 200 OK
-    else 토큰 없음
-        F-->>C: 429 Too Many Requests
-    end
-```
+![Redis Component Rate Limit Request Component Component 2](../../docs/images/readme-diagrams/ratelimit-bucket4j-redis-diagram-02.svg)
 
 ## application.yml 설정 예제
 

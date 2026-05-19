@@ -4,31 +4,7 @@ Vert.x 를 Kotlin Coroutines 와 함께 사용하는 예제입니다.
 
 ## 처리 흐름
 
-```mermaid
-sequenceDiagram
-    participant 클라이언트 as HTTP 클라이언트
-    participant 서버 as Vert.x HTTP 서버
-    participant 버티클 as MovieRatingVerticle
-    participant DB as JDBCPool (H2)
-
-    클라이언트->>서버: GET /movie/:id
-    서버->>버티클: suspendHandler { getMovie(ctx) }
-    버티클->>DB: preparedQuery(SELECT TITLE) coAwait()
-    DB-->>버티클: RowSet 반환
-    버티클-->>서버: JSON 응답
-
-    클라이언트->>서버: POST /rateMovie/:id
-    서버->>버티클: suspendHandler { rateMovie(ctx) }
-    버티클->>DB: preparedQuery(INSERT INTO RATING) coAwait()
-    DB-->>버티클: 완료
-    버티클-->>서버: 200 OK
-
-    클라이언트->>서버: GET /getRating/:id
-    서버->>버티클: suspendHandler { getRating(ctx) }
-    버티클->>DB: preparedQuery(SELECT AVG) coAwait()
-    DB-->>버티클: 평균 평점
-    버티클-->>서버: JSON 응답
-```
+![Component Component 1](../../docs/images/readme-diagrams/vertx-coroutines-diagram-01.svg)
 
 ## Vert.x 코루틴 통합 설명
 
@@ -58,7 +34,7 @@ router.get("/movie/:id").suspendHandler { ctx ->
 
 ## 데이터 모델
 
-![데이터 모델 1](../../docs/images/readme-diagrams/vertx-coroutines-diagram-01.svg)
+![Data Component 2](../../docs/images/readme-diagrams/vertx-coroutines-diagram-02.svg)
 
 ## 제공 API 엔드포인트
 

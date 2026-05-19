@@ -18,27 +18,11 @@ Reactor를 직접 다루면 잘못된 스레드 전환으로 Meltdown이 발생�
 
 ## Dispatcher 전략 흐름
 
-![Dispatcher 전략 흐름 1](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-diagram-01.svg)
+![Dispatcher Component Component 1](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-diagram-01.svg)
 
 ## 요청 처리 흐름
 
-```mermaid
-sequenceDiagram
-    participant 클라이언트
-    participant NettyServer
-    participant CoroutineController
-    participant Dispatcher
-    participant 외부서비스
-
-    클라이언트->>NettyServer: HTTP GET /api/delay
-    NettyServer->>CoroutineController: suspend fun handle()
-    CoroutineController->>Dispatcher: withContext(Dispatchers.IO)
-    Dispatcher->>외부서비스: 비동기 I/O 호출
-    외부서비스-->>Dispatcher: 결과 반환
-    Dispatcher-->>CoroutineController: resume coroutine
-    CoroutineController-->>NettyServer: ResponseEntity
-    NettyServer-->>클라이언트: HTTP 200 OK
-```
+![Request Component Component 2](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-diagram-02.svg)
 
 ## Virtual Thread Dispatcher 설정
 

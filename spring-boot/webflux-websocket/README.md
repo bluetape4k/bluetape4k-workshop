@@ -8,29 +8,7 @@ Webflux의 비동기 방식으로 Websocket 통신을 하는 방식에 대한 �
 
 ## WebSocket 연결 및 메시지 흐름
 
-```mermaid
-sequenceDiagram
-    participant 클라이언트
-    participant NettyServer
-    participant ReactiveWebSocketConfiguration
-    participant ReactiveWebSocketHandler
-    participant QuoteGenerator
-
-    클라이언트->>NettyServer: HTTP Upgrade: websocket\nGET /websocket/quotes
-    NettyServer->>ReactiveWebSocketConfiguration: SampleWebfluxRouter 라우팅
-    ReactiveWebSocketConfiguration->>ReactiveWebSocketHandler: handle(session)
-
-    ReactiveWebSocketHandler->>QuoteGenerator: fetchQuoteStream(1초 간격)
-    QuoteGenerator-->>ReactiveWebSocketHandler: Flux<Quote>
-
-    loop 실시간 스트리밍
-        QuoteGenerator->>ReactiveWebSocketHandler: Quote 데이터 emit
-        ReactiveWebSocketHandler->>클라이언트: WebSocket TextMessage\n{ticker, price, timestamp}
-    end
-
-    클라이언트->>NettyServer: WebSocket Close
-    NettyServer-->>클라이언트: Connection Closed
-```
+![WebSocket Connection Component Message Component 1](../../docs/images/readme-diagrams/spring-boot-webflux-websocket-diagram-01.svg)
 
 ## 주요 컴포넌트
 

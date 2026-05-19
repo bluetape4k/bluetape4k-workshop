@@ -4,7 +4,7 @@ Kotlin Coroutines의 핵심 개념을 학습하는 예제 모음입니다.
 
 ## 코루틴 구조 개요
 
-![코루틴 구조 개요 1](../../docs/images/readme-diagrams/kotlin-coroutines-diagram-01.svg)
+![Coroutines Component Component 1](../../docs/images/readme-diagrams/kotlin-coroutines-diagram-01.svg)
 
 ## 예제 범주
 

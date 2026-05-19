@@ -12,7 +12,7 @@ Chaos Monkey for Spring Boot 에 대한 예제입니다.
 
 ## Chaos Engineering 흐름
 
-![Chaos Engineering 흐름 1](../../docs/images/readme-diagrams/spring-boot-chaos-monkey-diagram-01.svg)
+![Chaos Engineering Component 1](../../docs/images/readme-diagrams/spring-boot-chaos-monkey-diagram-01.svg)
 
 ## PRINCIPLES OF CHAOS ENGINEERING
 

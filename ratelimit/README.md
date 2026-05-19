@@ -2,7 +2,7 @@
 
 ## 서브모듈 구조
 
-![서브모듈 구조 1](../docs/images/readme-diagrams/ratelimit-diagram-01.svg)
+![ComponentModule Structure 1](../docs/images/readme-diagrams/ratelimit-diagram-01.svg)
 
 ## bucket4j-bluetape4k-webflux (추천)
 
@@ -52,7 +52,7 @@ bucker4j-bluetape4k-webflux 버킷 설정 예시:
 
 ### WebFilter 동작 흐름
 
-![WebFilter 동작 흐름 2](../docs/images/readme-diagrams/ratelimit-diagram-02.svg)
+![WebFilter Component Component 2](../docs/images/readme-diagrams/ratelimit-diagram-02.svg)
 
 응답 헤더 `X-Bluetape4k-Remaining-Token`으로 남은 토큰 수를 클라이언트에 전달합니다.
 

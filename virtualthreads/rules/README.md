@@ -2,7 +2,7 @@
 
 ## Virtual Thread 개념 구조
 
-![Virtual Thread 개념 구조 1](../../docs/images/readme-diagrams/virtualthreads-rules-diagram-01.svg)
+![Virtual Thread Component Component 1](../../docs/images/readme-diagrams/virtualthreads-rules-diagram-01.svg)
 
 ## Introduction
 

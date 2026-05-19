@@ -47,7 +47,7 @@ test dependency도 함께 선언해야 합니다.
 
 ## 전체 모듈 구성
 
-![전체 모듈 구성 1](docs/images/readme-diagrams/root-readme-en-diagram-01.svg)
+![Component Component Configuration 1](docs/images/readme-diagrams/root-readme-en-diagram-01.svg)
 
 ## 모듈 구조
 

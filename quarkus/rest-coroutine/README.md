@@ -4,32 +4,7 @@ This project uses Quarkus, the Supersonic Subatomic Java Framework.
 
 ## 아키텍처 흐름
 
-```mermaid
-sequenceDiagram
-    participant 클라이언트
-    participant GreetingCoroutineResource
-    participant GreetingCoroutineService
-    participant GreetingCoroutineClient
-
-    클라이언트->>GreetingCoroutineResource: GET /coroutine
-    GreetingCoroutineResource->>GreetingCoroutineResource: suspend hello()
-    GreetingCoroutineResource-->>클라이언트: 인사말 문자열
-
-    클라이언트->>GreetingCoroutineResource: GET /coroutine/greeting/{name}
-    GreetingCoroutineResource->>GreetingCoroutineService: greeting(name)
-    GreetingCoroutineService-->>GreetingCoroutineResource: Greeting
-    GreetingCoroutineResource-->>클라이언트: Greeting JSON
-
-    클라이언트->>GreetingCoroutineResource: GET /coroutine/greeting/{count}/{name}
-    GreetingCoroutineResource->>GreetingCoroutineService: greetings(count, name)
-    GreetingCoroutineService-->>GreetingCoroutineResource: Flow<Greeting>
-    GreetingCoroutineResource-->>클라이언트: 스트림 응답
-
-    클라이언트->>GreetingCoroutineResource: GET /coroutine/sequential-hello
-    GreetingCoroutineResource->>GreetingCoroutineClient: hello() (원격 호출)
-    GreetingCoroutineClient-->>GreetingCoroutineResource: Flow<String>
-    GreetingCoroutineResource-->>클라이언트: 순차 스트림
-```
+![Architecture Component 1](../../docs/images/readme-diagrams/quarkus-rest-coroutine-diagram-01.svg)
 
 If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
 

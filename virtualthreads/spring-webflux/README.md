@@ -4,7 +4,7 @@ Spring Webflux 환경에서 다양한 Coroutine Dispatcher 의 성능을 비교�
 
 ## Dispatcher 처리 모델 비교
 
-![Dispatcher 처리 모델 비교 1](../../docs/images/readme-diagrams/virtualthreads-spring-webflux-diagram-01.svg)
+![Dispatcher Component Component Component 1](../../docs/images/readme-diagrams/virtualthreads-spring-webflux-diagram-01.svg)
 
 1. Dispatchers.Default
 2. Dispatchers.IO

@@ -4,7 +4,7 @@ Spring Cloud API Gateway 를 사용하여 내부 서비스인 Customer API, Orde
 
 ## 아키텍처 다이어그램
 
-![아키텍처 다이어그램 1](../docs/images/readme-diagrams/gateway-diagram-01.svg)
+![Architecture Diagram 1](../docs/images/readme-diagrams/gateway-diagram-01.svg)
 
 -. API Gateway : http://localhost:8080
 -. Customer API: http://localhost:8081/customers

@@ -5,11 +5,11 @@ JetBrains Exposed ORM과 Spring Transaction을 통합하는 예제 모듈.
 
 ## 아키텍처 흐름
 
-![아키텍처 흐름 1](../../docs/images/readme-diagrams/exposed-spring-transaction-diagram-01.svg)
+![Architecture Component 1](../../docs/images/readme-diagrams/exposed-spring-transaction-diagram-01.svg)
 
 ## 트랜잭션 전파 방식
 
-![트랜잭션 전파 방식 2](../../docs/images/readme-diagrams/exposed-spring-transaction-diagram-02.svg)
+![Transaction Component Component 2](../../docs/images/readme-diagrams/exposed-spring-transaction-diagram-02.svg)
 
 ## 주요 기능
 

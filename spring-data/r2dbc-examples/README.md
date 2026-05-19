@@ -2,26 +2,9 @@
 
 ## 아키텍처 다이어그램
 
-![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/spring-data-r2dbc-examples-diagram-01.svg)
+![Architecture Diagram 1](../../docs/images/readme-diagrams/spring-data-r2dbc-examples-diagram-01.svg)
 
-```mermaid
-sequenceDiagram
-    participant 테스트 as 통합테스트
-    participant 서비스 as TransactionalService
-    participant 저장소 as CustomerRepository
-    participant DB as H2 (R2DBC)
-
-    테스트->>서비스: insert(customers)
-    서비스->>저장소: saveAll(customers)
-    저장소->>DB: SQL INSERT (비동기)
-    DB-->>저장소: Flux~Customer~
-    저장소-->>서비스: Flux~Customer~
-    서비스-->>테스트: 결과 반환
-    테스트->>저장소: findByLastname("Snow")
-    저장소->>DB: SELECT WHERE lastname=?
-    DB-->>저장소: Flux~Customer~
-    저장소-->>테스트: 조회 결과
-```
+![Architecture Diagram 2](../../docs/images/readme-diagrams/spring-data-r2dbc-examples-diagram-02.svg)
 
 ## 참고
 

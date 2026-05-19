@@ -4,39 +4,11 @@ This Spring Boot 4 based project uses Exposed for CRUD (Create, Read, Update, De
 
 ## 트랜잭션 처리 흐름
 
-```mermaid
-sequenceDiagram
-    participant 클라이언트
-    participant UserController
-    participant UserService
-    participant UserTable as Exposed DAO (UserTable)
-    participant DB as 데이터베이스 (H2)
-
-    클라이언트->>UserController: POST /users (UserCreateRequest)
-    UserController->>UserService: create(request)
-    Note over UserService: @Transactional 시작
-    UserService->>UserTable: insert { name, age }
-    UserTable->>DB: INSERT INTO users ...
-    DB-->>UserTable: generated UserId
-    UserTable-->>UserService: UserEntity
-    UserService-->>UserController: UserCreateResponse
-    Note over UserService: @Transactional 커밋
-    UserController-->>클라이언트: 201 Created
-
-    클라이언트->>UserController: GET /users/{id}
-    UserController->>UserService: findById(id)
-    Note over UserService: @Transactional(readOnly=true)
-    UserService->>UserTable: select where id = ?
-    UserTable->>DB: SELECT * FROM users WHERE id = ?
-    DB-->>UserTable: ResultRow
-    UserTable-->>UserService: UserDTO
-    UserService-->>UserController: UserDTO
-    UserController-->>클라이언트: 200 OK (JSON)
-```
+![Transaction Component Component 1](../../docs/images/readme-diagrams/exposed-dao-web-transaction-diagram-01.svg)
 
 ## 도메인 모델
 
-![도메인 모델 1](../../docs/images/readme-diagrams/exposed-dao-web-transaction-diagram-01.svg)
+![Domain Component 2](../../docs/images/readme-diagrams/exposed-dao-web-transaction-diagram-02.svg)
 
 - [UserEntity.kt](src/main/kotlin/domain/UserEntity.kt): Describes our database schema. If you need to modify the
   structure, please take care to

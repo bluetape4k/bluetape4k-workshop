@@ -5,7 +5,7 @@ Micrometer Observation API를 Spring MVC와 연동하는 예제입니다.
 
 ## 아키텍처 다이어그램
 
-![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/observability-micrometer-observation-diagram-01.svg)
+![Architecture Diagram 1](../../docs/images/readme-diagrams/observability-micrometer-observation-diagram-01.svg)
 
 ## 주요 구성
 

@@ -4,32 +4,7 @@
 
 ## Protobuf 직렬화 흐름
 
-```mermaid
-sequenceDiagram
-    participant 클라이언트
-    participant ConurceConfig
-    participant CourseController
-    participant ProtobufConverter
-    participant CourseRepository
-
-    클라이언트->>CourseController: GET /courses\nAccept: application/x-protobuf
-
-    CourseController->>CourseRepository: findAll()
-    CourseRepository-->>CourseController: List<Course> (Kotlin 도메인)
-
-    CourseController->>ProtobufConverter: toProto(Course)
-    ProtobufConverter->>ProtobufConverter: Kotlin 도메인 → .proto 메시지 변환
-    ProtobufConverter-->>CourseController: CourseProto 메시지
-
-    CourseController->>ConurceConfig: ProtobufHttpMessageConverter 선택
-    ConurceConfig-->>클라이언트: 200 OK\nContent-Type: application/x-protobuf\n[바이너리 데이터]
-
-    클라이언트->>CourseController: POST /courses\nContent-Type: application/x-protobuf
-    CourseController->>ProtobufConverter: fromProto(CourseProto)
-    ProtobufConverter-->>CourseController: Course 도메인 객체
-    CourseController->>CourseRepository: save(course)
-    CourseController-->>클라이언트: 201 Created
-```
+![Protobuf Component Component 1](../../docs/images/readme-diagrams/spring-boot-protobuf-mvc-diagram-01.svg)
 
 ## Protobuf 개념
 
