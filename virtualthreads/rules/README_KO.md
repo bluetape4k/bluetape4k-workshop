@@ -2,7 +2,7 @@
 
 ## Virtual Thread 개념 구조
 
-![Virtual Thread Structure diagram](../../docs/images/readme-diagrams/virtualthreads-rules-readme-ko-md-architecture-01.png)
+![Virtual Thread diagram](../../docs/images/readme-diagrams/virtualthreads-rules-readme-ko-md-architecture-01.png)
 
 ## 소개
 
@@ -186,7 +186,7 @@ OS 스레드 캡처는 일시적으로 캐리어 스레드를 스케줄러에 �
 
 가상 스레드는 `Thread` 클래스의 서브클래스인 private `VirtualThread` 클래스의 인스턴스입니다.
 
-![thread class diagram](/images/thread_class_diagram.png)
+![thread class diagram](images/thread_class_diagram.png)
 
 `Thread` 클래스에는 스레드 생성 및 시작을 위한 공용 생성자와 내부 `Thread.Builder` 인터페이스가 있습니다.
 이전 버전과의 호환성을 위해 현재 `Thread` 클래스의 모든 공용 생성자는 플랫폼 스레드만 생성할 수 있습니다.

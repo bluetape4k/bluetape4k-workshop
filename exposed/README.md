@@ -4,7 +4,7 @@ Kotlinx [Exposed](https://github.com/JetBrains/Exposed) 를 이용한 Data Acces
 
 ## 서브모듈 구성
 
-![서브모듈 구성 1](../docs/images/readme-diagrams/exposed-diagram-01.svg)
+![exposed Architecture diagram](../docs/images/readme-diagrams/exposed-diagram-01.png)
 
 ## sql-webflux-coroutines
 

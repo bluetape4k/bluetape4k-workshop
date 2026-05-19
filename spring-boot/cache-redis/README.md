@@ -14,7 +14,7 @@ Testcontainers로 Redis 컨테이너를 자동으로 구동하여 통합 테스�
 
 ## Redis 캐시 HIT/MISS 흐름
 
-![Redis 캐시 HIT/MISS 흐름 1](../../docs/images/readme-diagrams/spring-boot-cache-redis-diagram-01.svg)
+![Redis HIT/MISS diagram](../../docs/images/readme-diagrams/spring-boot-cache-redis-diagram-01.png)
 
 ## 캐시 설정 예시
 

@@ -4,11 +4,11 @@ Spring WebFlux 환경에서 Kotlin Coroutines와 JetBrains Exposed SQL DSL을 �
 
 ## 아키텍처 흐름
 
-![아키텍처 흐름 1](../../docs/images/readme-diagrams/exposed-sql-webflux-coroutines-diagram-01.svg)
+![sql webflux coroutines Architecture diagram](../../docs/images/readme-diagrams/exposed-sql-webflux-coroutines-diagram-01.png)
 
 ## HTTP 요청 처리 흐름
 
-![HTTP Request Processing diagram](../../docs/images/readme-diagrams/exposed-sql-webflux-coroutines-sequence-01.png)
+![HTTP diagram](../../docs/images/readme-diagrams/exposed-sql-webflux-coroutines-sequence-01.png)
 
 ## 기술 스택
 

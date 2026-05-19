@@ -2,9 +2,9 @@
 
 ## 아키텍처 다이어그램
 
-![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/spring-data-mongodb-transactions-diagram-01.svg)
+![mongodb transactions Class Structure diagram](../../docs/images/readme-diagrams/spring-data-mongodb-transactions-diagram-01.png)
 
-![Architecture diagram](../../docs/images/readme-diagrams/spring-data-mongodb-transactions-sequence-01.png)
+![mongodb transactions Sequence Flow 2 diagram](../../docs/images/readme-diagrams/spring-data-mongodb-transactions-sequence-01.png)
 
 MongoDB 관련 작업을 `Spring Data Mongo` 와 Kotlin Coroutines 으로 수행하는 예입니다.
 

@@ -4,7 +4,7 @@ Spring Boot MVC 에서 Virtual Thread 를 사용하는 예제입니다.
 
 ## Virtual Thread 처리 모델
 
-![Virtual Thread 처리 모델 1](../../docs/images/readme-diagrams/virtualthreads-spring-mvc-tomcat-diagram-01.svg)
+![Virtual Thread diagram](../../docs/images/readme-diagrams/virtualthreads-spring-mvc-tomcat-diagram-01.png)
 
 ## 환경 설정
 

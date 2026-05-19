@@ -2,9 +2,9 @@
 
 ## 아키텍처 다이어그램
 
-![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/spring-data-redis-examples-diagram-01.svg)
+![redis examples Class Structure diagram](../../docs/images/readme-diagrams/spring-data-redis-examples-diagram-01.png)
 
-![아키텍처 다이어그램 2](../../docs/images/readme-diagrams/spring-data-redis-examples-diagram-02.svg)
+![redis examples Architecture 2 diagram](../../docs/images/readme-diagrams/spring-data-redis-examples-diagram-02.png)
 
 Spring Data Redis를 활용하는 다양한 데이터 구조 예제 모음입니다.
 Testcontainers로 Redis 컨테이너를 자동으로 구동하여 통합 테스트를 수행합니다.

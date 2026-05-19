@@ -5,7 +5,7 @@
 
 ## Redis Cluster 토폴로지
 
-![Redis Cluster 토폴로지 1](../../docs/images/readme-diagrams/redis-cluster-demo-diagram-01.svg)
+![Redis Cluster diagram](../../docs/images/readme-diagrams/redis-cluster-demo-diagram-01.png)
 
 ## 주요 구성 요소
 

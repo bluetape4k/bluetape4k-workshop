@@ -2,9 +2,9 @@
 
 ## 아키텍처 다이어그램
 
-![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/spring-data-r2dbc-coroutines-diagram-01.svg)
+![r2dbc coroutines Class Structure diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-coroutines-diagram-01.png)
 
-![Architecture diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-coroutines-sequence-01.png)
+![r2dbc coroutines Sequence Flow 2 diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-coroutines-sequence-01.png)
 
 ## 참고
 

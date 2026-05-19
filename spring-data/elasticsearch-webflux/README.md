@@ -2,9 +2,9 @@
 
 ## 아키텍처 다이어그램
 
-![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/spring-data-elasticsearch-webflux-diagram-01.svg)
+![elasticsearch webflux Class Structure diagram](../../docs/images/readme-diagrams/spring-data-elasticsearch-webflux-diagram-01.png)
 
-![Architecture diagram](../../docs/images/readme-diagrams/spring-data-elasticsearch-webflux-sequence-01.png)
+![elasticsearch webflux Sequence Flow 2 diagram](../../docs/images/readme-diagrams/spring-data-elasticsearch-webflux-sequence-01.png)
 
 ## Introduction
 

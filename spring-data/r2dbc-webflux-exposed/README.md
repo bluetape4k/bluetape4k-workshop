@@ -2,7 +2,7 @@
 
 ## 아키텍처 다이어그램
 
-![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-exposed-diagram-01.svg)
+![r2dbc webflux exposed Architecture diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-exposed-diagram-01.png)
 
 Spring Data R2DBC와 Spring WebFlux, JetBrains Exposed ORM을 함께 사용하는 예제입니다.
 `exposed-r2dbc` 모듈을 활용해 Exposed 테이블 정의를 R2DBC 환경에서 사용합니다.

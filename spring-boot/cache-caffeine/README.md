@@ -13,7 +13,7 @@
 
 ## 캐시 HIT/MISS 흐름
 
-![캐시 HIT/MISS 흐름 1](../../docs/images/readme-diagrams/spring-boot-cache-caffeine-diagram-01.svg)
+![HIT/MISS diagram](../../docs/images/readme-diagrams/spring-boot-cache-caffeine-diagram-01.png)
 
 ## 캐시 설정 예시
 

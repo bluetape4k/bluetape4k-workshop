@@ -4,7 +4,7 @@ Kotlin 언어의 기능을 익히고, 실습을 통해 활용하는 워크샵 �
 
 ## Kotlin 기능 카테고리
 
-![Kotlin 기능 카테고리 1](../../docs/images/readme-diagrams/kotlin-workshop-diagram-01.svg)
+![Kotlin diagram](../../docs/images/readme-diagrams/kotlin-workshop-diagram-01.png)
 
 ## 학습 주제 목록
 

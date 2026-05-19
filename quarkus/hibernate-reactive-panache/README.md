@@ -4,7 +4,7 @@ This project uses Quarkus, the Supersonic Subatomic Java Framework.
 
 ## 아키텍처 흐름
 
-![Architecture diagram](../../docs/images/readme-diagrams/quarkus-hibernate-reactive-panache-sequence-01.png)
+![hibernate reactive panache Sequence Flow diagram](../../docs/images/readme-diagrams/quarkus-hibernate-reactive-panache-sequence-01.png)
 
 If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
 

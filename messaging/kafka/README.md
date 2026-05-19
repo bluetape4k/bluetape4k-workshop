@@ -13,11 +13,11 @@ Testcontainers로 Kafka 컨테이너를 자동으로 구동하여 통합 테스�
 
 ## 아키텍처 다이어그램
 
-![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/messaging-kafka-diagram-01.svg)
+![kafka Architecture diagram](../../docs/images/readme-diagrams/messaging-kafka-diagram-01.png)
 
 ## 실행 흐름
 
-![Execution diagram](../../docs/images/readme-diagrams/messaging-kafka-sequence-01.png)
+![kafka Sequence Flow 2 diagram](../../docs/images/readme-diagrams/messaging-kafka-sequence-01.png)
 
 ## 관련 모듈
 
