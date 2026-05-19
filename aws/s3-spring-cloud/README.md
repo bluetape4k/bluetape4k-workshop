@@ -2,26 +2,7 @@
 
 [Spring Cloud AWS](https://github.com/awspring/spring-cloud-aws) 를 이용하여 S3 서비스를 사용하는 예제입니다.
 
-```mermaid
-sequenceDiagram
-    participant 앱 as SpringCloudAwsS3Sample
-    participant S3Client as S3Client (AWS SDK v2)
-    participant S3Template as S3Template (Spring Cloud AWS)
-    participant LocalStack as LocalStack S3
-
-    앱->>LocalStack: 컨테이너 시작 (Testcontainers)
-    앱->>S3Client: 빈 생성 (endpointOverride, region, credentials)
-    앱->>S3Client: createBucket("spring-cloud-aws-sample-bucket1")
-    앱->>S3Client: createBucket("spring-cloud-aws-sample-bucket2")
-    S3Client->>LocalStack: 버킷 생성 요청
-    앱->>S3Template: store(bucket1, "test-file.txt", content)
-    앱->>S3Template: store(bucket1, "my-file.txt", content)
-    S3Template->>LocalStack: 파일 업로드
-    앱->>S3Client: listObjects(bucket1)
-    LocalStack-->>S3Client: 오브젝트 목록 반환
-    앱->>앱: ResourceLoader.getResource("s3://...") 로 파일 읽기
-    LocalStack-->>앱: 파일 내용 반환
-```
+![Spring Cloud AWS S3 Demo diagram](../../docs/images/readme-diagrams/aws-s3-spring-cloud-sequence-01.png)
 
 ## 주요 기능
 

@@ -12,24 +12,7 @@ Caffeine JCache 가 동기 방식밖에 지원하지 않기 때문에 Spring Boo
 
 ## Rate Limit 요청 처리 흐름
 
-```mermaid
-sequenceDiagram
-    participant C as HTTP 클라이언트
-    participant F as Bucket4j 필터
-    participant CAF as Caffeine JCache
-    participant IC as IndexController
-
-    C->>F: GET /hello (또는 /world)
-    F->>CAF: 버킷 상태 조회 (IP 키)
-    CAF-->>F: 현재 토큰 수 반환
-    alt 토큰 있음
-        F->>CAF: tryConsume(1) → 토큰 차감
-        F->>IC: 요청 전달
-        IC-->>C: 200 OK + 응답 본문
-    else 토큰 없음 (초과)
-        F-->>C: 429 Too Many Requests
-    end
-```
+![Rate Limit Request Processing diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-caffeine-web-sequence-01.png)
 
 ## application.yml 설정 예제
 

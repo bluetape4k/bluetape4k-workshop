@@ -4,33 +4,7 @@
 
 ![아키텍처 다이어그램 1](../../docs/images/readme-diagrams/spring-data-elasticsearch-webflux-diagram-01.svg)
 
-```mermaid
-sequenceDiagram
-    participant 클라이언트 as HTTP 클라이언트
-    participant 컨트롤러 as BookController
-    participant 서비스 as DefaultBookService
-    participant 저장소 as BookRepository
-    participant ES as Elasticsearch
-
-    클라이언트->>컨트롤러: POST /books
-    컨트롤러->>서비스: save(book)
-    서비스->>저장소: existsByIsbn(isbn)
-    저장소->>ES: 중복 ISBN 확인
-    ES-->>저장소: false
-    서비스->>저장소: save(book)
-    저장소->>ES: PUT /books/_doc/{id}
-    ES-->>저장소: Book (id 생성)
-    저장소-->>서비스: Mono~Book~
-    서비스-->>컨트롤러: Book
-    컨트롤러-->>클라이언트: 201 Created
-
-    클라이언트->>컨트롤러: GET /books/search?author=&title=
-    컨트롤러->>서비스: searchByAuthorAndTitle(author, title)
-    서비스->>저장소: fuzzy search 쿼리
-    저장소->>ES: multi_match + fuzzy
-    ES-->>저장소: SearchHits
-    저장소-->>클라이언트: Flux~Book~
-```
+![Architecture diagram](../../docs/images/readme-diagrams/spring-data-elasticsearch-webflux-sequence-01.png)
 
 ## Introduction
 
