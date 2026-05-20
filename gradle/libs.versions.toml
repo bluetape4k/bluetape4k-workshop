@@ -19,9 +19,9 @@ reactor-bom = "2025.0.5"  # https://mvnrepository.com/artifact/io.projectreactor
 resilience4j = "2.4.0"  # https://mvnrepository.com/artifact/io.github.resilience4j/resilience4j-bom
 netty = "4.2.13.Final"  # https://mvnrepository.com/artifact/io.netty/netty-bom
 
-aws2 = "2.44.7"  # https://mvnrepository.com/artifact/software.amazon.awssdk/bom
+aws2 = "2.44.9"  # https://mvnrepository.com/artifact/software.amazon.awssdk/bom
 aws2-crt = "0.45.3"  # https://mvnrepository.com/artifact/software.amazon.awssdk.crt/aws-crt
-aws-kotlin = "1.6.72"  # https://mvnrepository.com/artifact/aws.sdk.kotlin/aws-core
+aws-kotlin = "1.6.77"  # https://mvnrepository.com/artifact/aws.sdk.kotlin/aws-core
 aws-spring-cloud = "4.0.2"  # https://mvnrepository.com/artifact/io.awspring.cloud/spring-cloud-aws-s3
 
 grpc = "1.81.0"  # https://mvnrepository.com/artifact/io.grpc/grpc-bom
@@ -101,7 +101,7 @@ vertx = "5.0.12"  # https://mvnrepository.com/artifact/io.vertx/vertx-core
 quarkus = "3.35.2"  # https://mvnrepository.com/artifact/io.quarkus.platform/quarkus-bom
 resteasy = "7.0.2.Final"  # https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-bom
 
-timefold-solver = "1.33.0"  # https://mvnrepository.com/artifact/ai.timefold.solver/timefold-solver-bom
+timefold-solver = "2.1.0"   # https://mvnrepository.com/artifact/ai.timefold.solver/timefold-solver-bom
 
 eclipse-collections = "13.0.0"  # https://mvnrepository.com/artifact/org.eclipse.collections/eclipse-collections
 jctools = "4.0.6"  # https://mvnrepository.com/artifact/org.jctools/jctools-core
@@ -300,7 +300,7 @@ guava = { module = "com.google.guava:guava", version = "33.6.0-jre" }  # https:/
 # Serialization
 kryo = { module = "com.esotericsoftware:kryo", version = "5.6.2" }  # https://mvnrepository.com/artifact/com.esotericsoftware/kryo
 kryo5 = { module = "com.esotericsoftware:kryo", version = "5.6.2" }  # https://mvnrepository.com/artifact/com.esotericsoftware/kryo
-fory-kotlin = { module = "org.apache.fory:fory-kotlin", version = "0.15.0" }  # https://mvnrepository.com/artifact/org.apache.fory/fory-kotlin
+fory-kotlin = { module = "org.apache.fory:fory-kotlin", version = "0.17.0" }  # https://mvnrepository.com/artifact/org.apache.fory/fory-kotlin
 
 # Spring Boot
 spring-boot4-dependencies = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot4" }
@@ -582,7 +582,7 @@ querydsl-core = { module = "com.querydsl:querydsl-core", version.ref = "querydsl
 querydsl-jpa = { module = "com.querydsl:querydsl-jpa", version.ref = "querydsl" }
 
 # MyBatis
-mybatis-dynamic-sql = { module = "org.mybatis.dynamic-sql:mybatis-dynamic-sql", version = "1.5.2" }  # https://mvnrepository.com/artifact/org.mybatis.dynamic-sql/mybatis-dynamic-sql
+mybatis-dynamic-sql = { module = "org.mybatis.dynamic-sql:mybatis-dynamic-sql", version = "2.0.0" }  # https://mvnrepository.com/artifact/org.mybatis.dynamic-sql/mybatis-dynamic-sql
 
 # Exposed
 jetbrains-exposed-bom = { module = "org.jetbrains.exposed:exposed-bom", version.ref = "exposed" }
