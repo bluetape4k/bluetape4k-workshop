@@ -95,7 +95,7 @@ elasticsearch = "9.4.1"  # https://mvnrepository.com/artifact/org.elasticsearch.
 kafka = "4.2.0"  # https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients
 spring-kafka4 = "4.0.5"  # https://mvnrepository.com/artifact/org.springframework.kafka/spring-kafka
 
-bucket4j = "8.18.0"  # https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17-caffeine
+bucket4j = "8.19.0"  # https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17-caffeine
 vertx = "5.0.12"  # https://mvnrepository.com/artifact/io.vertx/vertx-core
 
 quarkus = "3.35.2"  # https://mvnrepository.com/artifact/io.quarkus.platform/quarkus-bom
