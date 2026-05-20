@@ -26,7 +26,7 @@ aws-spring-cloud = "4.0.2"  # https://mvnrepository.com/artifact/io.awspring.clo
 
 grpc = "1.81.0"  # https://mvnrepository.com/artifact/io.grpc/grpc-bom
 grpc-kotlin = "1.5.0"  # https://mvnrepository.com/artifact/io.grpc/grpc-kotlin-stub
-protobuf = "4.34.1"  # https://mvnrepository.com/artifact/com.google.protobuf/protobuf-bom
+protobuf = "4.35.0"  # https://mvnrepository.com/artifact/com.google.protobuf/protobuf-bom
 grpc-google-common-protos = "2.71.0"  # https://mvnrepository.com/artifact/com.google.api.grpc/grpc-google-common-protos
 avro = "1.12.1"  # https://mvnrepository.com/artifact/org.apache.avro/avro
 
