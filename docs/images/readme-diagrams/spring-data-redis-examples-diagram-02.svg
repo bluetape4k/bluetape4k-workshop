@@ -24,12 +24,12 @@
 <rect class="frame" x="32" y="28" width="980" height="636" rx="28"/>
 <text class="title" x="66" y="82">redis examples Architecture 2</text>
 <text class="subtitle" x="70" y="118">Architecture nodes and edges from the original Mermaid source</text>
-<path class="line" d="M856 552 C856 469 188 469 188 386"/>
-<path class="line" d="M522 552 C522 469 188 469 188 386"/>
-<path class="line" d="M188 552 C188 386 522 386 522 220"/>
-<path class="line" d="M856 386 C856 303 856 303 856 220"/>
-<path class="line" d="M856 386 C856 386 188 386 188 386"/>
-<path class="line" d="M522 386 C522 303 188 303 188 220"/>
+<path class="line" d="M706 552 C706 469 338 469 338 386"/>
+<path class="line" d="M372 552 C372 469 338 469 338 386"/>
+<path class="line" d="M338 552 C338 386 372 386 372 220"/>
+<path class="line" d="M856 326 C856 303 856 303 856 280"/>
+<path class="line" d="M706 386 C706 386 338 386 338 386"/>
+<path class="line" d="M372 386 C372 303 338 303 338 220"/>
 <g transform="translate(48,170)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
   <text class="smallLabel" x="140" y="33" text-anchor="middle">Hash Movie, Actor,</text>

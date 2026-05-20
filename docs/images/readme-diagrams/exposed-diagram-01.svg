@@ -24,32 +24,34 @@
 <rect class="frame" x="32" y="28" width="1314" height="470" rx="28"/>
 <text class="title" x="66" y="82">exposed Architecture</text>
 <text class="subtitle" x="70" y="118">Architecture nodes and edges from the original Mermaid source</text>
-<path class="line" d="M522 386 C522 386 856 386 856 386"/>
-<path class="line" d="M1190 220 C1190 303 856 303 856 386"/>
-<path class="line" d="M856 220 C856 303 856 303 856 386"/>
-<path class="line" d="M522 220 C522 303 856 303 856 386"/>
-<path class="line" d="M188 220 C188 303 522 303 522 386"/>
-<path class="line" d="M188 220 C188 220 1190 220 1190 220"/>
-<path class="line" d="M188 220 C188 220 856 220 856 220"/>
-<path class="line" d="M188 220 C188 220 522 220 522 220"/>
+<path class="line" d="M672 386 C672 386 706 386 706 386"/>
+<path class="line" d="M1040 220 C1040 303 1006 303 1006 386"/>
+<path class="line" d="M856 280 C856 303 856 303 856 326"/>
+<path class="line" d="M672 220 C672 303 706 303 706 386"/>
+<path class="line" d="M338 220 C338 303 372 303 372 386"/>
+<path class="line" d="M338 220 C338 220 1040 220 1040 220"/>
+<path class="line" d="M338 220 C338 220 706 220 706 220"/>
+<path class="line" d="M338 220 C338 220 372 220 372 220"/>
 <g transform="translate(48,170)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
   <text class="smallLabel" x="140" y="45" text-anchor="middle">domain ·SQL DSL</text>
 </g>
 <g transform="translate(382,170)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">sql-webflux-coroutines</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">WebFlux + Coroutines</text>
+  <text class="smallLabel" x="140" y="21" text-anchor="middle">sql-webflux-coroutin</text>
+<text class="smallLabel" x="140" y="47" text-anchor="middle">es WebFlux +</text>
+<text class="smallLabel" x="140" y="73" text-anchor="middle">Coroutines</text>
 </g>
 <g transform="translate(716,170)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">sql-web-virtualthread</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">WebMVC + Virtual Threads</text>
+  <text class="smallLabel" x="140" y="21" text-anchor="middle">sql-web-virtualthrea</text>
+<text class="smallLabel" x="140" y="47" text-anchor="middle">d WebMVC + Virtual</text>
+<text class="smallLabel" x="140" y="73" text-anchor="middle">Threads</text>
 </g>
 <g transform="translate(1050,170)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">dao-web-transaction DAO</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">+ @Transactional</text>
+  <text class="smallLabel" x="140" y="33" text-anchor="middle">dao-web-transaction</text>
+<text class="smallLabel" x="140" y="59" text-anchor="middle">DAO + @Transactional</text>
 </g>
 <g transform="translate(382,336)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
@@ -60,8 +62,4 @@
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F1ECFF" stroke="#8A72D6"/>
   <text class="smallLabel" x="140" y="45" text-anchor="middle">( H2 / MySQL)</text>
 </g>
-<text class="small" x="689" y="295" text-anchor="middle">newSuspendedTrans.</text>
-<text class="small" x="856" y="295" text-anchor="middle">VirtualThread + t.</text>
-<text class="small" x="1023" y="295" text-anchor="middle">@Transactional +.</text>
-<text class="small" x="689" y="378" text-anchor="middle">SpringTransaction.</text>
 </svg>

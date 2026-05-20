@@ -24,13 +24,13 @@
 <rect class="frame" x="32" y="28" width="1314" height="470" rx="28"/>
 <text class="title" x="66" y="82">HIT/MISS</text>
 <text class="subtitle" x="70" y="118">Architecture nodes and edges from the original Mermaid source</text>
-<path class="line" d="M689 386 C689 303 188 303 188 220"/>
-<path class="line" d="M522 220 C522 220 188 220 188 220"/>
-<path class="line" d="M1190 220 C1190 220 522 220 522 220"/>
-<path class="line" d="M856 220 C856 220 522 220 522 220"/>
-<path class="line" d="M856 220 C856 220 188 220 188 220"/>
-<path class="line" d="M188 220 C188 220 856 220 856 220"/>
-<path class="line" d="M522 220 C522 220 188 220 188 220"/>
+<path class="line" d="M539 386 C539 303 338 303 338 220"/>
+<path class="line" d="M372 220 C372 220 338 220 338 220"/>
+<path class="line" d="M1040 220 C1040 220 672 220 672 220"/>
+<path class="line" d="M706 220 C706 220 672 220 672 220"/>
+<path class="line" d="M706 220 C706 220 338 220 338 220"/>
+<path class="line" d="M338 220 C338 220 706 220 706 220"/>
+<path class="line" d="M372 220 C372 220 338 220 338 220"/>
 <g transform="translate(48,170)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
   <text class="smallLabel" x="140" y="45" text-anchor="middle">HIT?</text>
@@ -51,9 +51,4 @@
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
   <text class="smallLabel" x="140" y="45" text-anchor="middle">CaffeineConfig</text>
 </g>
-<text class="small" x="355" y="212" text-anchor="middle">@Cacheable</text>
-<text class="small" x="522" y="212" text-anchor="middle">MISS</text>
-<text class="small" x="856" y="212" text-anchor="middle">@Scheduled</text>
-<text class="small" x="355" y="212" text-anchor="middle">@CacheEvict</text>
-<text class="small" x="438.5" y="295" text-anchor="middle">TTL 10 / 1000</text>
 </svg>

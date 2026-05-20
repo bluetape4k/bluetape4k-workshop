@@ -24,27 +24,29 @@
 <rect class="frame" x="32" y="28" width="1314" height="470" rx="28"/>
 <text class="title" x="66" y="82">sql webflux coroutines Architecture</text>
 <text class="subtitle" x="70" y="118">Architecture nodes and edges from the original Mermaid source</text>
-<path class="line" d="M355 386 C355 386 1023 386 1023 386"/>
-<path class="line" d="M1190 220 C1190 303 1023 303 1023 386"/>
-<path class="line" d="M689 386 C689 386 355 386 355 386"/>
-<path class="line" d="M689 386 C689 303 1190 303 1190 220"/>
-<path class="line" d="M856 220 C856 303 355 303 355 386"/>
-<path class="line" d="M522 220 C522 220 1190 220 1190 220"/>
-<path class="line" d="M188 220 C188 220 856 220 856 220"/>
-<path class="line" d="M188 220 C188 220 522 220 522 220"/>
+<path class="line" d="M505 386 C505 386 873 386 873 386"/>
+<path class="line" d="M1040 220 C1040 303 1173 303 1173 386"/>
+<path class="line" d="M539 386 C539 386 505 386 505 386"/>
+<path class="line" d="M839 386 C839 303 1040 303 1040 220"/>
+<path class="line" d="M706 220 C706 303 505 303 505 386"/>
+<path class="line" d="M672 220 C672 220 1040 220 1040 220"/>
+<path class="line" d="M338 220 C338 220 706 220 706 220"/>
+<path class="line" d="M338 220 C338 220 372 220 372 220"/>
 <g transform="translate(48,170)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
   <text class="smallLabel" x="140" y="21" text-anchor="middle">ActorController</text>
 <text class="smallLabel" x="140" y="47" text-anchor="middle">MovieController</text>
-<text class="smallLabel" x="140" y="73" text-anchor="middle">MovieActorsController</text>
+<text class="smallLabel" x="140" y="73" text-anchor="middle">Movie Actors</text>
 </g>
 <g transform="translate(382,170)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">ActorRepository suspend</text>
+  <text class="smallLabel" x="140" y="33" text-anchor="middle">ActorRepository</text>
+<text class="smallLabel" x="140" y="59" text-anchor="middle">suspend</text>
 </g>
 <g transform="translate(716,170)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">MovieRepository suspend</text>
+  <text class="smallLabel" x="140" y="33" text-anchor="middle">MovieRepository</text>
+<text class="smallLabel" x="140" y="59" text-anchor="middle">suspend</text>
 </g>
 <g transform="translate(1050,170)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
@@ -53,8 +55,9 @@
 </g>
 <g transform="translate(215,336)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">Movies name,</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">producerName releaseDate</text>
+  <text class="smallLabel" x="140" y="21" text-anchor="middle">Movies name,</text>
+<text class="smallLabel" x="140" y="47" text-anchor="middle">producerName</text>
+<text class="smallLabel" x="140" y="73" text-anchor="middle">releaseDate</text>
 </g>
 <g transform="translate(549,336)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F1ECFF" stroke="#8A72D6"/>
@@ -64,6 +67,4 @@
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F7F1E7" stroke="#B88A44"/>
   <text class="smallLabel" x="140" y="45" text-anchor="middle">(H2 / MySQL)</text>
 </g>
-<text class="small" x="856" y="212" text-anchor="middle">newSuspendedTrans.</text>
-<text class="small" x="605.5" y="295" text-anchor="middle">newSuspendedTrans.</text>
 </svg>

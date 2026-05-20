@@ -24,9 +24,9 @@
 <rect class="frame" x="32" y="28" width="1314" height="470" rx="28"/>
 <text class="title" x="66" y="82">Dispatcher</text>
 <text class="subtitle" x="70" y="118">Architecture nodes and edges from the original Mermaid source</text>
-<path class="line" d="M1190 220 C1190 303 689 303 689 386"/>
-<path class="line" d="M522 220 C522 303 689 303 689 386"/>
-<path class="line" d="M188 220 C188 303 689 303 689 386"/>
+<path class="line" d="M1040 220 C1040 303 839 303 839 386"/>
+<path class="line" d="M672 220 C672 303 539 303 539 386"/>
+<path class="line" d="M338 220 C338 303 539 303 539 386"/>
 <g transform="translate(48,170)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
   <text class="smallLabel" x="140" y="21" text-anchor="middle">Default Coroutine</text>
@@ -35,13 +35,15 @@
 </g>
 <g transform="translate(382,170)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">IOCoroutineController</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">Dispatchers.IO</text>
+  <text class="smallLabel" x="140" y="21" text-anchor="middle">IOCoroutine</text>
+<text class="smallLabel" x="140" y="47" text-anchor="middle">Controller</text>
+<text class="smallLabel" x="140" y="73" text-anchor="middle">Dispatchers.IO</text>
 </g>
 <g transform="translate(716,170)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">VTCoroutineController</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">VirtualThread Dispatcher</text>
+  <text class="smallLabel" x="140" y="21" text-anchor="middle">VTCoroutine</text>
+<text class="smallLabel" x="140" y="47" text-anchor="middle">Controller</text>
+<text class="smallLabel" x="140" y="73" text-anchor="middle">VirtualThread</text>
 </g>
 <g transform="translate(1050,170)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
@@ -52,7 +54,4 @@
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
   <text class="smallLabel" x="140" y="45" text-anchor="middle">IO</text>
 </g>
-<text class="small" x="438.5" y="295" text-anchor="middle">withContext</text>
-<text class="small" x="605.5" y="295" text-anchor="middle">withContext</text>
-<text class="small" x="939.5" y="295" text-anchor="middle">coRouter</text>
 </svg>

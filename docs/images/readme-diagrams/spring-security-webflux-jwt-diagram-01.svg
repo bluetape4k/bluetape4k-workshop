@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1378" height="526" viewBox="0 0 1378 526" role="img" aria-label="Spring Security WebFlux JWT Architecture">
+<defs>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  <style>
+    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
+    .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
+    .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#536273}
+    .card{stroke-width:2.1;filter:url(#shadow)}.line{fill:none;stroke:#758297;stroke-width:2.1;marker-end:url(#openArrow)}
+  </style>
+</defs>
+<rect class="canvas" width="1378" height="526"/>
+<rect class="frame" x="32" y="28" width="1314" height="470" rx="28"/>
+<text class="title" x="66" y="82">WebFlux JWT Security</text>
+<text class="subtitle" x="70" y="118">HTTP Basic token issuance and bearer-token resource access</text>
+<path class="line" d="M308 258 C374 258 402 258 468 258"/>
+<path class="line" d="M748 214 C818 190 850 176 920 158"/>
+<path class="line" d="M748 258 C818 258 850 258 920 258"/>
+<path class="line" d="M748 302 C818 330 850 344 920 376"/>
+<path class="line" d="M1060 208 C1060 224 1060 226 1060 242"/>
+<g transform="translate(66,208)">
+  <rect class="card" x="0" y="0" width="242" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="smallLabel" x="121" y="38" text-anchor="middle">Client</text>
+  <text class="small" x="121" y="66" text-anchor="middle">Basic auth then bearer</text>
+</g>
+<g transform="translate(468,208)">
+  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="smallLabel" x="140" y="32" text-anchor="middle">SecurityWebFilterChain</text>
+  <text class="small" x="140" y="58" text-anchor="middle">HTTP Basic + JWT</text>
+  <text class="small" x="140" y="78" text-anchor="middle">CSRF disabled</text>
+</g>
+<g transform="translate(920,116)">
+  <rect class="card" x="0" y="0" width="280" height="92" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="smallLabel" x="140" y="30" text-anchor="middle">TokenController</text>
+  <text class="small" x="140" y="56" text-anchor="middle">POST /token</text>
+  <text class="small" x="140" y="74" text-anchor="middle">10 hour self-issued JWT</text>
+</g>
+<g transform="translate(920,242)">
+  <rect class="card" x="0" y="0" width="280" height="92" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
+  <text class="smallLabel" x="140" y="30" text-anchor="middle">RSA Key Pair</text>
+  <text class="small" x="140" y="56" text-anchor="middle">classpath PEM resources</text>
+  <text class="small" x="140" y="74" text-anchor="middle">encoder and decoder</text>
+</g>
+<g transform="translate(920,368)">
+  <rect class="card" x="0" y="0" width="280" height="92" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
+  <text class="smallLabel" x="140" y="30" text-anchor="middle">HelloController</text>
+  <text class="small" x="140" y="56" text-anchor="middle">GET /</text>
+  <text class="small" x="140" y="74" text-anchor="middle">authenticated principal</text>
+</g>
+</svg>

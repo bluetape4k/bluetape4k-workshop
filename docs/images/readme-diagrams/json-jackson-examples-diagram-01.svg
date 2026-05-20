@@ -24,10 +24,10 @@
 <rect class="frame" x="32" y="28" width="1314" height="636" rx="28"/>
 <text class="title" x="66" y="82">Jackson Examples</text>
 <text class="subtitle" x="70" y="118">Architecture nodes and edges from the original Mermaid source</text>
-<path class="line" d="M522 552 C522 469 1190 469 1190 386"/>
-<path class="line" d="M856 552 C856 552 522 552 522 552"/>
-<path class="line" d="M522 552 C522 552 856 552 856 552"/>
-<path class="line" d="M1190 386 C1190 469 522 469 522 552"/>
+<path class="line" d="M672 552 C672 469 1040 469 1040 386"/>
+<path class="line" d="M706 552 C706 552 672 552 672 552"/>
+<path class="line" d="M672 552 C672 552 706 552 706 552"/>
+<path class="line" d="M1040 386 C1040 469 672 469 672 552"/>
 <g transform="translate(48,170)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
   <text class="smallLabel" x="140" y="45" text-anchor="middle">@JsonIgnore</text>
@@ -59,7 +59,8 @@
 </g>
 <g transform="translate(1050,336)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EEF6D9" stroke="#8BA84D"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">Kotlin data class / POJO</text>
+  <text class="smallLabel" x="140" y="33" text-anchor="middle">Kotlin data class /</text>
+<text class="smallLabel" x="140" y="59" text-anchor="middle">POJO</text>
 </g>
 <g transform="translate(382,502)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
@@ -69,6 +70,4 @@
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
   <text class="smallLabel" x="140" y="45" text-anchor="middle">JSON</text>
 </g>
-<text class="small" x="856" y="461" text-anchor="middle">writeValueAsStrin.</text>
-<text class="small" x="689" y="544" text-anchor="middle">readValue()</text>
 </svg>

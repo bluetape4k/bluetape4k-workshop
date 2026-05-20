@@ -24,10 +24,10 @@
 <rect class="frame" x="32" y="28" width="1314" height="636" rx="28"/>
 <text class="title" x="66" y="82">Virtual Thread</text>
 <text class="subtitle" x="70" y="118">Architecture nodes and edges from the original Mermaid source</text>
-<path class="line" d="M856 386 C856 303 522 303 522 220"/>
-<path class="line" d="M522 220 C522 220 188 220 188 220"/>
-<path class="line" d="M188 220 C188 303 188 303 188 386"/>
-<path class="line" d="M522 220 C522 220 188 220 188 220"/>
+<path class="line" d="M706 386 C706 303 672 303 672 220"/>
+<path class="line" d="M372 220 C372 220 338 220 338 220"/>
+<path class="line" d="M188 280 C188 303 188 303 188 326"/>
+<path class="line" d="M372 220 C372 220 338 220 338 220"/>
 <g transform="translate(48,170)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
   <text class="smallLabel" x="140" y="45" text-anchor="middle">ForkJoinPool</text>
@@ -62,8 +62,8 @@
 </g>
 <g transform="translate(215,502)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">new Virtual Thread Per</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">Task Executor</text>
+  <text class="smallLabel" x="140" y="33" text-anchor="middle">new Virtual Thread</text>
+<text class="smallLabel" x="140" y="59" text-anchor="middle">Per Task Executor</text>
 </g>
 <g transform="translate(549,502)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
@@ -72,7 +72,7 @@
 </g>
 <g transform="translate(883,502)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">ThreadLocal ScopedValue</text>
+  <text class="smallLabel" x="140" y="33" text-anchor="middle">ThreadLocal</text>
+<text class="smallLabel" x="140" y="59" text-anchor="middle">ScopedValue</text>
 </g>
-<text class="small" x="355" y="212" text-anchor="middle">I/O</text>
 </svg>

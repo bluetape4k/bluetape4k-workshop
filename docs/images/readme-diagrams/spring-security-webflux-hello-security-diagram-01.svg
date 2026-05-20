@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1378" height="526" viewBox="0 0 1378 526" role="img" aria-label="Spring Security WebFlux Hello Architecture">
+<defs>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  <style>
+    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
+    .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
+    .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#536273}
+    .card{stroke-width:2.1;filter:url(#shadow)}.line{fill:none;stroke:#758297;stroke-width:2.1;marker-end:url(#openArrow)}
+  </style>
+</defs>
+<rect class="canvas" width="1378" height="526"/>
+<rect class="frame" x="32" y="28" width="1314" height="470" rx="28"/>
+<text class="title" x="66" y="82">WebFlux Hello Security</text>
+<text class="subtitle" x="70" y="118">Reactive security chain, form login, and role-protected view routes</text>
+<path class="line" d="M308 258 C378 258 408 258 478 258"/>
+<path class="line" d="M758 258 C826 214 858 194 926 172"/>
+<path class="line" d="M758 258 C826 258 858 258 926 258"/>
+<path class="line" d="M758 258 C826 312 858 340 926 378"/>
+<g transform="translate(66,208)">
+  <rect class="card" x="0" y="0" width="242" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="smallLabel" x="121" y="38" text-anchor="middle">Browser</text>
+  <text class="small" x="121" y="66" text-anchor="middle">Reactive HTTP flow</text>
+</g>
+<g transform="translate(478,208)">
+  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="smallLabel" x="140" y="32" text-anchor="middle">SecurityWebFilterChain</text>
+  <text class="small" x="140" y="58" text-anchor="middle">ServerHttpSecurity DSL</text>
+  <text class="small" x="140" y="78" text-anchor="middle">form login /log-in</text>
+</g>
+<g transform="translate(926,128)">
+  <rect class="card" x="0" y="0" width="300" height="86" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="smallLabel" x="150" y="32" text-anchor="middle">Public Routes</text>
+  <text class="small" x="150" y="58" text-anchor="middle">/, /log-in, /css/**</text>
+</g>
+<g transform="translate(926,236)">
+  <rect class="card" x="0" y="0" width="300" height="86" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
+  <text class="smallLabel" x="150" y="32" text-anchor="middle">User Route</text>
+  <text class="small" x="150" y="58" text-anchor="middle">/user/** requires ROLE_USER</text>
+</g>
+<g transform="translate(926,344)">
+  <rect class="card" x="0" y="0" width="300" height="86" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
+  <text class="smallLabel" x="150" y="32" text-anchor="middle">Reactive User Store</text>
+  <text class="small" x="150" y="58" text-anchor="middle">MapReactiveUserDetailsService</text>
+</g>
+</svg>

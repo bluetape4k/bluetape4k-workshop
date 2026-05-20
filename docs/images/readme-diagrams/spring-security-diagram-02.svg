@@ -24,24 +24,26 @@
 <rect class="frame" x="32" y="28" width="1246" height="374" rx="28"/>
 <text class="title" x="66" y="82">Security Filter Chain</text>
 <text class="subtitle" x="70" y="118">Architecture nodes and edges from the original Mermaid source</text>
-<path class="line" d="M178 220 C178 220 496 220 496 220"/>
-<path class="line" d="M178 220 C178 220 1132 220 1132 220"/>
-<path class="line" d="M178 220 C178 220 814 220 814 220"/>
+<path class="line" d="M318 220 C318 220 356 220 356 220"/>
+<path class="line" d="M318 220 C318 220 992 220 992 220"/>
+<path class="line" d="M318 220 C318 220 674 220 674 220"/>
 <g transform="translate(48,170)">
   <rect class="card" x="0" y="0" width="260" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
   <text class="smallLabel" x="130" y="45" text-anchor="middle">(Form / JWT / Basic)</text>
 </g>
 <g transform="translate(366,170)">
   <rect class="card" x="0" y="0" width="260" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="130" y="45" text-anchor="middle">authorizeHttpRequests</text>
+  <text class="smallLabel" x="130" y="33" text-anchor="middle">authorize Http</text>
+<text class="smallLabel" x="130" y="59" text-anchor="middle">Requests</text>
 </g>
 <g transform="translate(684,170)">
   <rect class="card" x="0" y="0" width="260" height="100" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="130" y="33" text-anchor="middle">UserDetailsService ( /</text>
-<text class="smallLabel" x="130" y="59" text-anchor="middle">DB)</text>
+  <text class="smallLabel" x="130" y="33" text-anchor="middle">UserDetailsService (</text>
+<text class="smallLabel" x="130" y="59" text-anchor="middle">/ DB)</text>
 </g>
 <g transform="translate(1002,170)">
   <rect class="card" x="0" y="0" width="260" height="100" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="130" y="45" text-anchor="middle">BCryptPasswordEncoder</text>
+  <text class="smallLabel" x="130" y="33" text-anchor="middle">BCrypt Password</text>
+<text class="smallLabel" x="130" y="59" text-anchor="middle">Encoder</text>
 </g>
 </svg>
