@@ -611,7 +611,7 @@ mysql-connector-j = { module = "com.mysql:mysql-connector-j", version.ref = "mys
 mariadb-java-client = { module = "org.mariadb.jdbc:mariadb-java-client", version.ref = "mariadb-java-client" }
 postgresql-driver = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 pgjdbc-ng = { module = "com.impossibl.pgjdbc-ng:pgjdbc-ng", version = "0.8.9" }  # https://mvnrepository.com/artifact/com.impossibl.pgjdbc-ng/pgjdbc-ng
-h2-lib = { module = "com.h2database:h2", version = "1.4.197" }  # https://mvnrepository.com/artifact/com.h2database/h2
+h2-lib = { module = "com.h2database:h2", version = "2.4.240" }  # https://mvnrepository.com/artifact/com.h2database/h2
 h2-v2 = { module = "com.h2database:h2", version.ref = "h2-v2" }
 
 # Agroal
