@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1378" height="526" viewBox="0 0 1378 526" role="img" aria-label="Gateway Orders Architecture">
+<defs>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  <style>
+    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
+    .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
+    .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#536273}
+    .card{stroke-width:2.1;filter:url(#shadow)}.line{fill:none;stroke:#758297;stroke-width:2.1;marker-end:url(#openArrow)}
+  </style>
+</defs>
+<rect class="canvas" width="1378" height="526"/>
+<rect class="frame" x="32" y="28" width="1314" height="470" rx="28"/>
+<text class="title" x="66" y="82">Gateway Orders</text>
+<text class="subtitle" x="70" y="118">Reactive order and product APIs with UUID v7 sample data</text>
+<path class="line" d="M318 258 C398 258 418 258 498 258"/>
+<path class="line" d="M778 224 C858 206 878 198 958 190"/>
+<path class="line" d="M778 292 C858 318 878 334 958 354"/>
+<path class="line" d="M638 308 C638 356 638 366 638 414"/>
+<g transform="translate(66,208)">
+  <rect class="card" x="0" y="0" width="252" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="smallLabel" x="126" y="38" text-anchor="middle">Workshop Client</text>
+  <text class="small" x="126" y="66" text-anchor="middle">HTTP requests</text>
+</g>
+<g transform="translate(498,208)">
+  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="smallLabel" x="140" y="32" text-anchor="middle">Order Service</text>
+  <text class="small" x="140" y="58" text-anchor="middle">Spring WebFlux on :8082</text>
+  <text class="small" x="140" y="78" text-anchor="middle">Swagger and Actuator</text>
+</g>
+<g transform="translate(958,138)">
+  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="smallLabel" x="140" y="32" text-anchor="middle">ProductController</text>
+  <text class="small" x="140" y="58" text-anchor="middle">GET /api/v1/products</text>
+  <text class="small" x="140" y="78" text-anchor="middle">Mac Book Pro, iPhone</text>
+</g>
+<g transform="translate(958,318)">
+  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="smallLabel" x="140" y="32" text-anchor="middle">OrderController</text>
+  <text class="small" x="140" y="58" text-anchor="middle">GET /api/v1/orders</text>
+  <text class="small" x="140" y="78" text-anchor="middle">Winter, Spring orders</text>
+</g>
+<g transform="translate(498,414)">
+  <rect class="card" x="0" y="0" width="280" height="66" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
+  <text class="smallLabel" x="140" y="28" text-anchor="middle">RedirectWebFilter</text>
+  <text class="small" x="140" y="50" text-anchor="middle">/ to /swagger-ui.html</text>
+</g>
+</svg>

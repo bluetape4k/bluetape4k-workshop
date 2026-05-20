@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="1016" viewBox="0 0 1040 1016" role="img" aria-label="webflux coroutines Sequence Flow 2">
+<svg xmlns="http://www.w3.org/2000/svg" width="1258" height="796" viewBox="0 0 1258 796" role="img" aria-label="webflux coroutines Sequence Flow 2">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
   <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
@@ -20,29 +20,29 @@
     .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
   </style>
 </defs>
-<rect class="canvas" width="1040" height="1016"/>
-<rect class="frame" x="32" y="28" width="976" height="960" rx="28"/>
+<rect class="canvas" width="1258" height="796"/>
+<rect class="frame" x="32" y="28" width="1194" height="740" rx="28"/>
 <text class="title" x="66" y="82">webflux coroutines Sequence Flow 2</text>
 <text class="subtitle" x="70" y="118">Sequence messages from the original Mermaid source</text>
-<rect class="card" x="35" y="166" width="210" height="72" rx="20" fill="#E8F3FF" stroke="#5B8DEF"/>
+<rect class="card" x="-5" y="166" width="290" height="72" rx="20" fill="#E8F3FF" stroke="#5B8DEF"/>
 <text class="smallLabel" x="140" y="209" text-anchor="middle">NettyServer</text>
-<line x1="140" y1="252" x2="140" y2="956" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="415" y="166" width="210" height="72" rx="20" fill="#EAF7EF" stroke="#58A978"/>
-<text class="smallLabel" x="520" y="209" text-anchor="middle">CoroutineController</text>
-<line x1="520" y1="252" x2="520" y2="956" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="795" y="166" width="210" height="72" rx="20" fill="#FFF3D9" stroke="#D6A441"/>
-<text class="smallLabel" x="900" y="209" text-anchor="middle">Dispatcher</text>
-<line x1="900" y1="252" x2="900" y2="956" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect x="158" y="352" width="344" height="39" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="174" y="379" text-anchor="start">2. suspend fun handle()</text>
-<path class="line" d="M140 392 L520 392"/>
-<rect x="538" y="434" width="344" height="39" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="554" y="461" text-anchor="start">3. withContext(Dispatchers.IO)</text>
-<path class="line" d="M520 474 L900 474"/>
-<rect x="538" y="680" width="344" height="39" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="554" y="707" text-anchor="start">6. resume coroutine</text>
-<path class="dashed" d="M900 720 L520 720"/>
-<rect x="158" y="762" width="344" height="39" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="174" y="789" text-anchor="start">7. ResponseEntity</text>
-<path class="dashed" d="M520 802 L140 802"/>
+<line class="lifeline" x1="140" y1="252" x2="140" y2="736" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
+<rect class="card" x="484" y="166" width="290" height="72" rx="20" fill="#EAF7EF" stroke="#58A978"/>
+<text class="smallLabel" x="629" y="209" text-anchor="middle">CoroutineController</text>
+<line class="lifeline" x1="629" y1="252" x2="629" y2="736" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
+<rect class="card" x="973" y="166" width="290" height="72" rx="20" fill="#FFF3D9" stroke="#D6A441"/>
+<text class="smallLabel" x="1118" y="209" text-anchor="middle">Dispatcher</text>
+<line class="lifeline" x1="1118" y1="252" x2="1118" y2="736" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
+<rect x="273.5" y="286" width="222" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
+<text class="strong" x="291.5" y="313" text-anchor="start">2. suspend fun handle()</text>
+<path class="line" d="M140 344 L629 344"/>
+<rect x="734.5" y="396" width="278" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
+<text class="strong" x="752.5" y="423" text-anchor="start">3. withContext(Dispatchers.IO)</text>
+<path class="line" d="M629 454 L1118 454"/>
+<rect x="768.5" y="506" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
+<text class="strong" x="786.5" y="533" text-anchor="start">6. resume coroutine</text>
+<path class="dashed" d="M1118 564 L629 564"/>
+<rect x="279.5" y="616" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
+<text class="strong" x="297.5" y="643" text-anchor="start">7. ResponseEntity</text>
+<path class="dashed" d="M629 674 L140 674"/>
 </svg>

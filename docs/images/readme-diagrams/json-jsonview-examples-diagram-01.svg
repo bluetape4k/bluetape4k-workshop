@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="998" height="1132" viewBox="0 0 998 1132" role="img" aria-label="JsonView in Spring Boot Demo">
+<svg xmlns="http://www.w3.org/2000/svg" width="998" height="1162" viewBox="0 0 998 1162" role="img" aria-label="JsonView in Spring Boot Demo">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
   <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
@@ -20,52 +20,52 @@
     .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
   </style>
 </defs>
-<rect class="canvas" width="998" height="1132"/>
-<rect class="frame" x="32" y="28" width="934" height="1076" rx="28"/>
+<rect class="canvas" width="998" height="1162"/>
+<rect class="frame" x="32" y="28" width="934" height="1106" rx="28"/>
 <text class="title" x="66" y="82">JsonView in Spring Boot Demo</text>
 <text class="subtitle" x="70" y="118">UML classes from the original Mermaid source</text>
-<path class="inheritLine" d="M499 808 C499 741 274 741 274 674"/>
-<path class="inheritLine" d="M499 808 C499 741 724 741 724 674"/>
-<path class="inheritLine" d="M274 562 C274 423 724 423 724 284"/>
-<path class="inheritLine" d="M724 562 C724 423 724 423 724 284"/>
+<path class="inheritLine" d="M499 822 C499 755 274 755 274 688"/>
+<path class="inheritLine" d="M499 822 C499 755 724 755 724 688"/>
+<path class="inheritLine" d="M274 560 C274 430 724 430 724 300"/>
+<path class="inheritLine" d="M724 560 C724 430 724 430 724 300"/>
 <g transform="translate(84,180)">
-  <rect class="card" x="0" y="0" width="380" height="240" rx="5" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <rect class="card" x="0" y="0" width="380" height="238" rx="5" fill="#E8F3FF" stroke="#5B8DEF"/>
   <line class="compartment" x1="0" y1="78" x2="380" y2="78" stroke="#5B8DEF"/>
   <text class="small" x="190" y="26" text-anchor="middle"></text>
-  <text class="label" x="190" y="57" text-anchor="middle">ArticleDTO</text>
+  <text class="label" x="190" y="61" text-anchor="middle">ArticleDTO</text>
   <text class="mono" x="18" y="108">+id: Long @JsonView(Public)</text>
-<text class="mono" x="18" y="132">+title: String @JsonView(Public)</text>
-<text class="mono" x="18" y="156">+category: String @JsonView(Public)</text>
-<text class="mono" x="18" y="180">+content: String ( - )</text>
-<text class="mono" x="18" y="204">+views: Long @JsonView(Analytics)</text>
-<text class="mono" x="18" y="228">+likes: Long @JsonView(Analytics)</text>
+<text class="mono" x="18" y="129">+title: String @JsonView(Public)</text>
+<text class="mono" x="18" y="150">+category: String @JsonView(Public)</text>
+<text class="mono" x="18" y="171">+content: String ( - )</text>
+<text class="mono" x="18" y="192">+views: Long @JsonView(Analytics)</text>
+<text class="mono" x="18" y="213">+likes: Long @JsonView(Analytics)</text>
 </g>
 <g transform="translate(534,180)">
-  <rect class="card" x="0" y="0" width="380" height="96" rx="5" fill="#EAF7EF" stroke="#58A978"/>
+  <rect class="card" x="0" y="0" width="380" height="112" rx="5" fill="#EAF7EF" stroke="#58A978"/>
   <line class="compartment" x1="0" y1="78" x2="380" y2="78" stroke="#58A978"/>
   <text class="small" x="190" y="26" text-anchor="middle">«interface»</text>
-  <text class="label" x="190" y="57" text-anchor="middle">Views</text>
+  <text class="label" x="190" y="61" text-anchor="middle">Views</text>
 
 </g>
-<g transform="translate(84,570)">
-  <rect class="card" x="0" y="0" width="380" height="96" rx="5" fill="#FFF3D9" stroke="#D6A441"/>
+<g transform="translate(84,568)">
+  <rect class="card" x="0" y="0" width="380" height="112" rx="5" fill="#FFF3D9" stroke="#D6A441"/>
   <line class="compartment" x1="0" y1="78" x2="380" y2="78" stroke="#D6A441"/>
   <text class="small" x="190" y="26" text-anchor="middle">«interface»</text>
-  <text class="label" x="190" y="57" text-anchor="middle">Analytics</text>
+  <text class="label" x="190" y="61" text-anchor="middle">Analytics</text>
 
 </g>
-<g transform="translate(534,570)">
-  <rect class="card" x="0" y="0" width="380" height="96" rx="5" fill="#FDECEF" stroke="#DC6B82"/>
+<g transform="translate(534,568)">
+  <rect class="card" x="0" y="0" width="380" height="112" rx="5" fill="#FDECEF" stroke="#DC6B82"/>
   <line class="compartment" x1="0" y1="78" x2="380" y2="78" stroke="#DC6B82"/>
   <text class="small" x="190" y="26" text-anchor="middle">«interface»</text>
-  <text class="label" x="190" y="57" text-anchor="middle">Public</text>
+  <text class="label" x="190" y="61" text-anchor="middle">Public</text>
 
 </g>
-<g transform="translate(309,816)">
-  <rect class="card" x="0" y="0" width="380" height="96" rx="5" fill="#E9F7F6" stroke="#45A7A1"/>
+<g transform="translate(309,830)">
+  <rect class="card" x="0" y="0" width="380" height="112" rx="5" fill="#E9F7F6" stroke="#45A7A1"/>
   <line class="compartment" x1="0" y1="78" x2="380" y2="78" stroke="#45A7A1"/>
   <text class="small" x="190" y="26" text-anchor="middle">«interface»</text>
-  <text class="label" x="190" y="57" text-anchor="middle">Internal</text>
+  <text class="label" x="190" y="61" text-anchor="middle">Internal</text>
 
 </g>
 </svg>

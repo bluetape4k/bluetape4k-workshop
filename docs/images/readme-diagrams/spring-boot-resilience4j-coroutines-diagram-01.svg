@@ -24,17 +24,17 @@
 <rect class="frame" x="32" y="28" width="1314" height="802" rx="28"/>
 <text class="title" x="66" y="82">Circuit Breaker</text>
 <text class="subtitle" x="70" y="118">Architecture nodes and edges from the original Mermaid source</text>
-<path class="line" d="M188 552 C188 552 856 552 856 552"/>
-<path class="line" d="M522 386 C522 469 856 469 856 552"/>
-<path class="line" d="M689 718 C689 635 1190 635 1190 552"/>
-<path class="line" d="M689 718 C689 635 856 635 856 552"/>
-<path class="line" d="M1190 552 C1190 635 689 635 689 718"/>
-<path class="line" d="M856 552 C856 552 1190 552 1190 552"/>
-<path class="line" d="M188 386 C188 469 522 469 522 552"/>
-<path class="line" d="M1190 220 C1190 386 188 386 188 552"/>
-<path class="line" d="M856 220 C856 303 1190 303 1190 386"/>
-<path class="line" d="M522 220 C522 303 856 303 856 386"/>
-<path class="line" d="M188 220 C188 303 522 303 522 386"/>
+<path class="line" d="M338 552 C338 552 706 552 706 552"/>
+<path class="line" d="M672 386 C672 469 706 469 706 552"/>
+<path class="line" d="M839 718 C839 635 1040 635 1040 552"/>
+<path class="line" d="M839 718 C839 635 706 635 706 552"/>
+<path class="line" d="M1040 552 C1040 635 839 635 839 718"/>
+<path class="line" d="M1006 552 C1006 552 1040 552 1040 552"/>
+<path class="line" d="M338 386 C338 469 372 469 372 552"/>
+<path class="line" d="M1040 220 C1040 386 338 386 338 552"/>
+<path class="line" d="M1006 220 C1006 303 1040 303 1040 386"/>
+<path class="line" d="M672 220 C672 303 706 303 706 386"/>
+<path class="line" d="M338 220 C338 303 372 303 372 386"/>
 <g transform="translate(48,170)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
   <text class="smallLabel" x="140" y="33" text-anchor="middle">BackendAController</text>
