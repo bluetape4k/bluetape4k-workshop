@@ -21,6 +21,16 @@ observability, virtual threads, Vert.x, and gateway-style applications.
 - **Test-first learning material** with Testcontainers and shared utilities.
 - **Adoption bridge** from isolated library APIs to application-shaped examples.
 
+<!-- README_VISUAL_OVERVIEW:START -->
+## Overview Diagram
+
+![Bluetape4k Workshop overview diagram](docs/images/readme-diagrams/root-readme-overview-01.png)
+
+## Module Composition Chart
+
+![Bluetape4k Workshop module composition chart](docs/images/readme-charts/root-readme-module-chart-01.png)
+<!-- README_VISUAL_OVERVIEW:END -->
+
 ## 기술 스택
 
 | 항목          | 버전               |
