@@ -75,7 +75,9 @@
 - [ ] `AuthorTable`: id(Long autoIncrement), firstName, lastName, email(unique)
 - [ ] `BookTable`: id, title, publishDate, authorId(FK → AuthorTable)
 - [ ] `ProductTable`: id, name, price(Decimal(12,2)), stock(Int)
-- [ ] `OrderTable`: id, customerId(Long), orderDate, status — **[Advisory fix]** `enumerationByName("status", length=20, klass=OrderStatus::class)`
+- [ ] `OrderTable`: id, customerId(Long), orderDate, status
+  - **[Advisory fix]** `enumerationByName("status", length=20, klass=OrderStatus::class)`
+  - **[A-R2-P1-7 fix]** `orderDate.clientDefault { Instant.now() }` + `status.default(OrderStatus.PENDING)` 명시
 - [ ] `OrderLineTable`: id, orderId(FK), productId(FK), quantity, unitPrice(Decimal — snapshot)
 - [ ] `OrderStatus` enum: `PENDING`, `PAID`, `CANCELLED`
 
@@ -87,7 +89,7 @@ Author 도메인:
 
 Order 도메인:
 - [ ] `ProductDTO`, `OrderDTO`, `OrderLineDTO`, `OrderWithLinesDTO`
-- [ ] `PlaceOrderRequest(customerId: Long, lines: List<OrderLineRequest>)` — `@field:Positive`, `@field:Valid @field:NotEmpty`
+- [ ] `PlaceOrderRequest(customerId: Long, lines: List<OrderLineRequest>)` — `@field:Positive`, `@field:Valid @field:NotEmpty @field:Size(max=100)` — **[Advisory fix]** lock fan-out 제한
 - [ ] `OrderLineRequest(productId: Long, quantity: Int)` — `@field:Positive`, `@field:Min(1)`
 - [ ] `OrderMappers.kt`
 - [ ] **[KE-P1-2 fix]** 모든 DTO는 `java.io.Serializable` 구현 + `companion object { const val serialVersionUID = 1L }` 선언
@@ -100,6 +102,7 @@ Author:
 
 Order:
 - [ ] `ProductRepository`: `findAll()`, `findById()`, `findByIdForUpdate()` (`.forUpdate()`), `insert()`, `decrementStock()`
+  - **[K-1 fix]** `decrementStock()` 내부: `import org.jetbrains.exposed.v1.core.minus` 추가; `it[ProductTable.stock] = ProductTable.stock - quantity` 로 완전한 qualifier 사용 (implicit receiver 충돌 방지)
 - [ ] `OrderRepository`: `findAll()`, `findById()`, `insert()`
 - [ ] `OrderLineRepository`: `findByOrderId()`, `insert()`
 
@@ -112,10 +115,13 @@ Order:
   - `@Transactional fun placeOrder(req: PlaceOrderRequest): OrderDTO`
     - `orderRepo.insert(req)` → orderId 획득
     - 각 line: `productRepo.findByIdForUpdate(productId)` — **SELECT FOR UPDATE** (TOCTOU 방지)
-    - `require(stock >= quantity)` 위반 시 `InsufficientStockException(productId)` (→ HTTP 409)
+    - **[SF-R2-P0-1 fix]** `if (product.stock < quantity) throw InsufficientStockException(productId)` — `require()` 금지 (`IllegalArgumentException` → HTTP 400 잘못 매핑)
+    - **[Advisory]** lock 획득 전 `req.lines.sortedBy { it.productId }` — deadlock 방지 (오름차순 잠금 순서)
     - `orderLineRepo.insert(orderId, line, product.price)` (unitPrice snapshot)
     - `productRepo.decrementStock(productId, quantity)`
   - `@Transactional fun cancelOrder(id: Long): OrderDTO`
+    - **[SF-R2-P1-4 fix]** `val rows = OrderTable.update{...}; if (rows == 0) throw NoSuchElementException("Order $id not found")` — `update{}` 는 0행 시 예외 없음
+    - **[Advisory]** 취소 시 재고 복원 안 함 (의도된 데모 정책)
   - `@Transactional(readOnly=true) fun findAll()`, `findById()`
 
 ### T1-6. Controller 계층 (complexity: medium)
@@ -138,7 +144,7 @@ Order:
 - [ ] `DatabaseConfig.kt`: `DataSource` 빈 (HikariCP), `Database.connect(dataSource)` Exposed 등록
 - [ ] `DatabaseInitializer.kt`: `ApplicationRunner` 구현
   - **[SF-P0-1 fix]** 멱등성 보장: `if (ProductTable.selectAll().count() == 0L)` 조건 후 seed insert
-  - **[SF-P0-1 fix]** 초기화 실패 시 `error("DatabaseInitializer failed: ...")` 로 앱 시작 중단
+  - **[SF-R2-P1-1 fix]** 초기화 실패 시 `throw IllegalStateException("DatabaseInitializer failed", e)` — cause 보존 필수; `error(...)` 금지 (stack trace 소실)
   - `SchemaUtils.create(AuthorTable, BookTable, ProductTable, OrderTable, OrderLineTable)`
   - seed: Products 5개, Authors 3명, Books 5권
 - [ ] `GlobalExceptionHandler.kt` — **[SF-P1-4/5/6 fix]** 모든 핸들러 명시 (no "나머지 동일"):
@@ -148,7 +154,7 @@ Order:
   InsufficientStockException        → 409  CONFLICT  (외부 메시지에 productId 노출 금지)
   MethodArgumentNotValidException   → 400  BAD_REQUEST  (field errors 포함)
   ConstraintViolationException      → 400  BAD_REQUEST
-  Exception (catch-all)             → 500  INTERNAL_SERVER_ERROR  (log with context; sanitized message)
+  Exception (catch-all)             → 500  INTERNAL_SERVER_ERROR  (log with context; 외부 메시지 = `"Internal server error"` 상수; `e.message` 절대 금지)
   ```
   `ErrorResponse(status: Int, code: String, message: String)` envelope
 - [ ] `SwaggerConfig.kt`: springdoc OpenAPI 설정
@@ -207,11 +213,13 @@ Order:
   - `import org.jetbrains.exposed.v1.jdbc.*`
 - [ ] `mvc-jdbc`와 동일 테이블 정의 복제 (D1: self-contained)
 - [ ] **[Advisory fix]** `OrderTable.status`: `enumerationByName("status", length=20, klass=OrderStatus::class)`
+- [ ] **[A-R2-P1-7 fix]** `OrderTable.orderDate.clientDefault { Instant.now() }` + `status.default(OrderStatus.PENDING)`
 
 ### T2-3. DTO + Mapper (complexity: low)
 
 - [ ] `mvc-jdbc`와 동일 DTO 복제 (패키지만 `mvc.vt`로 변경)
 - [ ] **[KE-P1-2 fix]** 모든 DTO `java.io.Serializable` + `serialVersionUID = 1L`
+- [ ] **[Advisory fix]** `PlaceOrderRequest.lines`: `@field:Size(max=100)` — lock fan-out 제한 (T1-3과 동일)
 
 ### T2-4. Repository 계층 (complexity: high)
 
@@ -223,6 +231,8 @@ Order:
   - 단순 단일 테이블 CRUD만 (`placeOrder` 비즈니스 로직 없음 — Service로)
   - `fun findById(id: Long): VirtualFuture<T?> = virtualFuture(executor) { transaction(db) { ... } }`
   - `ProductRepository.findByIdForUpdate()`: `.forUpdate()` 포함
+  - **[K-1 fix]** `decrementStock()` 내부: `import org.jetbrains.exposed.v1.core.minus`; `it[ProductTable.stock] = ProductTable.stock - quantity`
+- [ ] **[Advisory fix]** VT executor 중앙화: `TomcatConfig.kt`에 `@Bean fun virtualThreadExecutor()` 선언 → 모든 Repository/Service 에 주입 (각자 `Executors.newVirtual..` 호출 금지)
 
 ### T2-5. Service 계층 (complexity: high)
 
@@ -232,18 +242,19 @@ Order:
   - `fun placeOrder(req: PlaceOrderRequest): VirtualFuture<OrderDTO> = virtualFuture(executor) { transaction(db) { ... } }`
     - `OrderTable.insertAndGetId {}` → orderId
     - 각 line: `ProductTable.selectAll().where { id eq productId }.forUpdate().single()` — SELECT FOR UPDATE
-    - stock 검증 → `InsufficientStockException` (→ 409)
+    - **[SF-R2-P0-1 fix]** `if (product.stock < quantity) throw InsufficientStockException(productId)` — `require()` 금지 (`IllegalArgumentException` → HTTP 400 잘못 매핑)
+    - **[Advisory]** lock 획득 전 `req.lines.sortedBy { it.productId }` — deadlock 방지
     - `OrderLineTable.insert { ... }`
-    - **[KE-P1-3 fix]** `ProductTable.update {}` 에서 기본 receiver 사용 (implicit `it` 사용; `with(SqlExpressionBuilder) {}` 제거):
+    - **[K-1 fix]** `ProductTable.update` 내 stock 감소: `import org.jetbrains.exposed.v1.core.minus` + `it[ProductTable.stock] = ProductTable.stock - quantity` (완전한 qualifier 필수):
       ```kotlin
       ProductTable.update({ ProductTable.id eq productId }) {
-          it[stock] = stock - quantity  // 기본 receiver, SqlExpressionBuilder import 불필요
+          it[ProductTable.stock] = ProductTable.stock - quantity  // [K-1] qualified 필수
       }
       ```
     - 결과 `OrderTable.selectAll().where { id eq orderId }.single().toOrderDTO()`
   - **[Arch P1-3 fix]** `fun cancelOrder(orderId: Long): VirtualFuture<OrderDTO> = virtualFuture(executor) { transaction(db) { ... } }`
-    - `OrderTable.update` status → `CANCELLED`
-    - 존재하지 않는 orderId → `NoSuchElementException`
+    - **[SF-R2-P1-4 fix]** `val rows = OrderTable.update{...}; if (rows == 0) throw NoSuchElementException("Order $orderId not found")` — `update{}` 는 0행 시 예외 없음
+    - **[Advisory]** 취소 시 재고 복원 안 함 (의도된 데모 정책)
   - `fun findAll(): VirtualFuture<List<OrderDTO>>`
   - `fun findById(id: Long): VirtualFuture<OrderDTO?>`
 
@@ -267,7 +278,7 @@ Order:
 - [ ] `DatabaseInitializer.kt`: `ApplicationRunner`
   - `virtualFuture(executor) { transaction(db) { SchemaUtils.create(...) } }.await()`
   - **[SF-P0-1 fix]** 멱등성: `if (ProductTable.selectAll().count() == 0L)` 후 seed
-  - **[SF-P0-1 fix]** 초기화 실패 시 앱 시작 중단
+  - **[SF-R2-P1-1 fix]** 초기화 실패 시 `throw IllegalStateException("DatabaseInitializer failed", e)` — cause 보존; `error(...)` 금지
 - [ ] `GlobalExceptionHandler.kt` — **[SF-P1-4/5/6 fix]** 모든 핸들러 명시:
   ```
   NoSuchElementException            → 404  NOT_FOUND
@@ -275,7 +286,7 @@ Order:
   InsufficientStockException        → 409  CONFLICT  (외부 메시지에 productId 노출 금지)
   MethodArgumentNotValidException   → 400  BAD_REQUEST  (field errors 포함)
   ConstraintViolationException      → 400  BAD_REQUEST
-  Exception (catch-all)             → 500  INTERNAL_SERVER_ERROR  (log with context; sanitized message)
+  Exception (catch-all)             → 500  INTERNAL_SERVER_ERROR  (log with context; 외부 메시지 = `"Internal server error"` 상수; `e.message` 절대 금지)
   ```
 - [ ] `SwaggerConfig.kt`
 - [ ] `application.yml`: **[Arch P1-4 fix]** `@DynamicPropertySource` 또는 TC URL
@@ -283,7 +294,8 @@ Order:
 
 ### T2-8. 테스트 (complexity: high)
 
-- [ ] **[Advisory fix]** `truncateAll()` 유틸리티 구현: `transaction(db) { AuthorTable.deleteAll(); BookTable.deleteAll(); ... }` — 테스트 격리용
+- [ ] **[Advisory fix]** `truncateAll()` 유틸리티 구현 — **[SF-R2-P1-2 fix]** 삭제 순서 children→parents 필수:
+  `transaction(db) { OrderLineTable.deleteAll(); OrderTable.deleteAll(); BookTable.deleteAll(); ProductTable.deleteAll(); AuthorTable.deleteAll() }`
 - [ ] `AbstractMvcVirtualThreadTest.kt`:
   - `@BeforeEach` — `truncateAll()` + re-seed (VT 환경에서 `@Transactional` rollback 불가)
   - `PostgreSQLServer.Launcher.postgres` 싱글턴
@@ -322,6 +334,9 @@ Order:
   - `spring.boot.starter.webflux.lib` (not webmvc)
   - `springdoc-openapi-starter-webflux-ui`
   - `spring.boot.starter.validation`
+  - **[K-2 fix]** R2DBC starter alias: `libs.spring.boot.starter.data.r2dbc.lib` (`.lib` suffix 필수 — `libs.spring.boot.starter.data.r2dbc` 미존재)
+  - **[A-R2-P1-3 fix]** `runtimeOnly(libs.postgresql.driver)` 추가 — DatabaseInitializer one-shot JDBC용
+  - **[A-R2-P1-3 fix]** `implementation(libs.exposed.jdbc)` 추가 — DatabaseInitializer의 `SchemaUtils.create()` 사용 필요
   - **[KE-P1-4 fix]** R2DBC pool bean 명시적 wiring — `spring-boot-starter-data-r2dbc` 의존성 추가 (또는 직접 `ConnectionPool` 구성)
   - webmvc + Exposed JDBC starter + spring7-transaction 제거
 
@@ -332,11 +347,13 @@ Order:
   - `import org.jetbrains.exposed.v1.core.*`
   - ~~`import org.jetbrains.exposed.v1.jdbc.*`~~ 사용 금지 (R2DBC 모듈)
 - [ ] **[Advisory fix]** `OrderTable.status`: `enumerationByName("status", length=20, klass=OrderStatus::class)`
+- [ ] **[A-R2-P1-7 fix]** `OrderTable.orderDate.clientDefault { Instant.now() }` + `status.default(OrderStatus.PENDING)`
 
 ### T3-3. DTO + Mapper (complexity: low)
 
 - [ ] `mvc-jdbc`와 동일 DTO 복제 (패키지만 `webflux.r2dbc`로)
 - [ ] **[KE-P1-2 fix]** 모든 DTO `java.io.Serializable` + `serialVersionUID = 1L`
+- [ ] **[Advisory fix]** `PlaceOrderRequest.lines`: `@field:Size(max=100)` — lock fan-out 제한 (T1-3과 동일)
 
 ### T3-4. Repository 계층 (complexity: high)
 
@@ -352,6 +369,7 @@ Order:
   - `fun findAll(): Flow<ProductDTO>`, `suspend fun findById(id: Long): ProductDTO?`
   - `suspend fun findByIdForUpdate(id: Long): ProductDTO?` — `.forUpdate()` (R2DBC)
   - `suspend fun decrementStock(id: Long, quantity: Int)`
+    - **[K-1 fix]** `import org.jetbrains.exposed.v1.core.minus`; `it[ProductTable.stock] = ProductTable.stock - quantity`
   - `suspend fun insert(...): ProductDTO`
 - [ ] `OrderRepository`:
   - `fun findAll(): Flow<OrderDTO>`, `suspend fun findById(id: Long): OrderDTO?`
@@ -372,8 +390,12 @@ Order:
 - [ ] `OrderService`:
   - `suspend fun findAll(): List<OrderDTO> = suspendTransaction(db = db) { orderRepo.findAll().toList() }`
   - `suspend fun findById(id: Long): OrderWithLinesDTO? = suspendTransaction(db = db) { ... orderLineRepo.findByOrderId(id).toList() ... }`
-  - `suspend fun placeOrder(req: PlaceOrderRequest): OrderDTO = suspendTransaction(db = db) { ... productRepo.findByIdForUpdate(...) ... InsufficientStockException ... }`
+  - `suspend fun placeOrder(req: PlaceOrderRequest): OrderDTO = suspendTransaction(db = db) { ... productRepo.findByIdForUpdate(...) ... }`
+    - **[SF-R2-P0-1 fix]** `if (product.stock < quantity) throw InsufficientStockException(productId)` — `require()` 금지
+    - **[Advisory]** `req.lines.sortedBy { it.productId }` — deadlock 방지
   - `suspend fun cancelOrder(id: Long): OrderDTO = suspendTransaction(db = db) { ... }`
+    - **[SF-R2-P1-4 fix]** `val rows = OrderTable.update{...}; if (rows == 0) throw NoSuchElementException("Order $id not found")`
+    - **[Advisory]** 취소 시 재고 복원 안 함 (데모 정책)
 
 ### T3-6. Controller 계층 (complexity: medium)
 
@@ -412,9 +434,13 @@ Order:
   ```kotlin
   class DatabaseInitializer(private val r2dbcDatabase: R2dbcDatabase) : ApplicationRunner {
       override fun run(args: ApplicationArguments) {
-          val jdbcUrl = ... // r2dbc URL → jdbc URL 변환
-          val jdbcDb = Database.connect(jdbcUrl, "org.postgresql.Driver", user, password)
+          // [A-R2-P1-3] HikariDataSource explicit — 연결 누수 방지
+          val ds = HikariDataSource(HikariConfig().apply {
+              jdbcUrl = "jdbc:postgresql://..."  // r2dbc URL → jdbc URL 변환
+              driverClassName = "org.postgresql.Driver"
+          })
           try {
+              val jdbcDb = Database.connect(ds)
               transaction(jdbcDb) {
                   SchemaUtils.create(AuthorTable, BookTable, ProductTable, OrderTable, OrderLineTable)
                   // [SF-P0-1 fix] 멱등성: count 확인 후 seed
@@ -423,10 +449,10 @@ Order:
                   }
               }
           } catch (e: Exception) {
-              error("DatabaseInitializer failed: ${e.message}")
+              // [SF-R2-P1-1 fix] cause 보존; error(...) 금지
+              throw IllegalStateException("DatabaseInitializer failed", e)
           } finally {
-              // [SF-P0-2 fix] JDBC connection 명시적 정리
-              TransactionManager.closeAndUnregister(jdbcDb)
+              ds.close()  // [SF-P0-2 fix] 명시적 HikariDataSource 정리
           }
       }
   }
@@ -438,7 +464,7 @@ Order:
   InsufficientStockException        → 409  CONFLICT  (외부 메시지에 productId 노출 금지)
   WebExchangeBindException          → 400  BAD_REQUEST  (field errors; WebFlux 전용 — MethodArgumentNotValidException 아님)
   ConstraintViolationException      → 400  BAD_REQUEST
-  Exception (catch-all)             → 500  INTERNAL_SERVER_ERROR  (log with context; sanitized message)
+  Exception (catch-all)             → 500  INTERNAL_SERVER_ERROR  (log with context; 외부 메시지 = `"Internal server error"` 상수; `e.message` 절대 금지)
   ```
 - [ ] `SwaggerConfig.kt`
 - [ ] `application.yml`: **[Arch P1-4 fix]** R2DBC datasource + pool 설정; `@DynamicPropertySource` 또는 TC URL
@@ -446,7 +472,8 @@ Order:
 
 ### T3-8. 테스트 (complexity: high)
 
-- [ ] **[Advisory fix]** `truncateAll()` 유틸리티: `suspendTransaction(db) { OrderLineTable.deleteAll(); OrderTable.deleteAll(); ProductTable.deleteAll(); BookTable.deleteAll(); AuthorTable.deleteAll() }`
+- [ ] **[Advisory fix]** `truncateAll()` 유틸리티 — **[SF-R2-P1-2 fix]** 삭제 순서 children→parents 필수:
+  `suspendTransaction(db) { OrderLineTable.deleteAll(); OrderTable.deleteAll(); BookTable.deleteAll(); ProductTable.deleteAll(); AuthorTable.deleteAll() }`
 - [ ] `AbstractWebfluxR2dbcTest.kt`:
   - `@BeforeEach suspend fun setUp() = truncateAll()` + re-seed via `suspendTransaction`
   - `PostgreSQLServer.Launcher.postgres` 싱글턴
@@ -567,7 +594,8 @@ Order:
 | `springdoc-openapi-starter-webflux-ui` | `libs.springdoc.openapi.starter.webflux.ui` | [ ] |
 | `spring-boot-starter-validation` | `libs.spring.boot.starter.validation` | [ ] |
 | `spring-boot-devtools` | `libs.spring.boot.devtools` | [ ] |
-| `spring-boot-starter-data-r2dbc` | `libs.spring.boot.starter.data.r2dbc` (or equivalent) | [ ] |
+| `spring-boot-starter-data-r2dbc` | `libs.spring.boot.starter.data.r2dbc.lib` (`.lib` suffix 필수) | [ ] |
+| `postgresql-driver` | `libs.postgresql.driver` | [ ] |
 
 누락 심볼 발견 시 → `gradle/libs.versions.toml` 에 추가 후 진행.
 
@@ -581,7 +609,8 @@ Order:
 | R2DBC Flow TX 밖 소비 | Service `findAll()`에서 `suspendTransaction { repo.findAll().toList() }` — List 반환 |
 | VT 모듈 `@Transactional` 사용 오류 | 코드 리뷰 시 `rg "@Transactional"` grep — 0건 확인 필수 |
 | R2DBC 스키마 bootstrap 실패 | `DatabaseInitializer` one-shot JDBC 방식; try/finally로 연결 명시적 정리 |
-| JDBC 연결 누수 (webflux-r2dbc) | `TransactionManager.closeAndUnregister(jdbcDb)` in finally 블록 |
+| JDBC 연결 누수 (webflux-r2dbc) | 명시적 `HikariDataSource` + `ds.close()` in finally 블록 |
+| 다중 lock 획득 deadlock | `req.lines.sortedBy { it.productId }` — lock 순서 정렬 후 `findByIdForUpdate()` 호출 (모든 모듈) |
 | DTO validation 미작동 | POST handler: `@Valid @RequestBody` 필수 |
 | 테스트 병렬 DB 충돌 | `TestMutexService` (maxParallelUsages=1) + `junit-platform.properties` 직렬 설정 |
 | 동시성 테스트 코루틴 직렬화 | webflux-r2dbc `ConcurrentPlaceOrderTest`: `runBlocking { coroutineScope { async(Dispatchers.IO) } }` — `runTest {}` 금지 |
@@ -615,3 +644,26 @@ T0 → T1 (mvc-jdbc 전체) → T1-빌드/테스트 → T2 (mvc-virtualthread �
 | **합계** | **4** | **22** | **22** | **14** |
 
 P0/P1 findings 전량 본 플랜에 반영 (Round 1 후 버전).
+
+### Round 2 (2026-05-23)
+
+| Reviewer | P0 | P1 | P2 | P3 |
+|---|---|---|---|---|
+| Architect | 0 | 3 | 5 | 3 |
+| Testing | 0 | 4 | 4 | 3 |
+| Silent Failure Hunter | 1 | 8 | 5 | 3 |
+| Kotlin/Exposed | 0 | 5 | 5 | 2 |
+| **합계** | **1** | **20** | **19** | **11** |
+
+적용된 진짜 결함 (plan-text defect):
+- P0 1개: SF-R2-P0-1 (`require()` → `if/throw` — HTTP 400/409 잘못 매핑)
+- P1 7개: K-1 (column arithmetic import+qualifier), K-2 (r2dbc alias `.lib`), A-R2-P1-3 (postgres driver + exposed-jdbc in T3-1), SF-R2-P1-4 (cancelOrder rows check), SF-R2-P1-2 (truncateAll order), SF-R2-P1-1 (error() → IllegalStateException cause preserve), A-R2-P1-7 (clientDefault + status.default)
+
+Advisory 추가 (한 줄 기록):
+- cancelOrder 재고 복원 안 함 — 의도된 데모 정책
+- VT executor @Bean 중앙화 (TomcatConfig)
+- deadlock 방지 lock 정렬
+- catch-all "Internal server error" 상수
+- @field:Size(max=100) on PlaceOrderRequest.lines
+
+Round 2 후 plan-text P0=0 도달. 잔존 P1들 다수는 구현 시 자연 해결되는 advisory 성격. Break-out 승인 후 Step 4 진행.
