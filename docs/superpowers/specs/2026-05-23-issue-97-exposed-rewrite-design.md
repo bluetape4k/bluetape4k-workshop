@@ -324,18 +324,19 @@ class DatabaseInitializer(
 ) : ApplicationRunner {
     override fun run(args: ApplicationArguments) {
         // R2DBC ConnectionFactoryOptions에서 JDBC URL 조립 (one-shot bootstrap)
-        val host = connectionFactoryOptions.getValue(ConnectionFactoryOptions.HOST) as String
+        val host = connectionFactoryOptions.getValue(ConnectionFactoryOptions.HOST)?.toString() ?: "localhost"
         val port = connectionFactoryOptions.getValue(ConnectionFactoryOptions.PORT) as Int
-        val database = connectionFactoryOptions.getValue(ConnectionFactoryOptions.DATABASE) as String
-        val user = connectionFactoryOptions.getValue(ConnectionFactoryOptions.USER) as String
-        val password = connectionFactoryOptions.getValue(ConnectionFactoryOptions.PASSWORD) as String
+        val database = connectionFactoryOptions.getValue(ConnectionFactoryOptions.DATABASE)?.toString() ?: error("DB name required")
+        val user = connectionFactoryOptions.getValue(ConnectionFactoryOptions.USER)?.toString() ?: "postgres"
+        val password = connectionFactoryOptions.getValue(ConnectionFactoryOptions.PASSWORD)?.toString() ?: ""
+        // P2-A fix: PASSWORD/USER options are Option<CharSequence> — use toString() not direct cast
 
         val jdbcUrl = "jdbc:postgresql://$host:$port/$database"
         val jdbcDb = Database.connect(jdbcUrl, "org.postgresql.Driver", user, password)
         transaction(jdbcDb) {
             SchemaUtils.create(AuthorTable, BookTable, ProductTable, OrderTable, OrderLineTable)
         }
-        // HikariCP 풀 자동 정리 — 명시적 close 불필요 (JVM shutdown hook)
+        // DriverManager 연결 — HikariCP 아님. 단일 연결, 트랜잭션 완료 후 JVM GC로 정리됨 (P3-A fix)
     }
 }
 ```
@@ -553,7 +554,18 @@ class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException::class)
     fun handleBadRequest(ex: IllegalArgumentException) =
         ResponseEntity.status(400).body(ErrorResponse(400, "BAD_REQUEST", ex.message ?: "Bad request"))
+
+    // P1-12 fix: @Valid @RequestBody throws MethodArgumentNotValidException (MVC), NOT ConstraintViolationException
+    @ExceptionHandler(MethodArgumentNotValidException::class)
+    fun handleBodyValidation(ex: MethodArgumentNotValidException) =
+        ResponseEntity.status(400).body(
+            ErrorResponse(400, "VALIDATION_FAILED",
+                ex.bindingResult.fieldErrors.joinToString { "${it.field}: ${it.defaultMessage}" })
+        )
 }
+
+// webflux-r2dbc GlobalExceptionHandler: WebExchangeBindException instead
+// @ExceptionHandler(WebExchangeBindException::class) → same 400 / VALIDATION_FAILED mapping
 ```
 
 > **에러 메시지 가이드** (P1-7 fix): external 응답에 `productId`, DB 내부 상태 노출 금지.
