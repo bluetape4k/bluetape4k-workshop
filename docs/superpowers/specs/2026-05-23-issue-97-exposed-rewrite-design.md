@@ -170,7 +170,7 @@ io.bluetape4k.workshop.exposed.{module}/
 Controller → Service(@Transactional) → Repository(no TX) → Exposed DSL → HikariCP → PostgreSQL
 ```
 
-- Controller: `T?`, `List<T>`, `ResponseEntity<T>` 반환
+- Controller: `T?`, `List<T>`, `ResponseEntity<T>` 반환; **POST/PUT handler에 `@Valid @RequestBody` 필수** — 없으면 DTO의 `@field:Positive` 등이 실행되지 않음 (P1-A fix)
 - Service: `@Transactional`/`@Transactional(readOnly=true)` 경계 — 모든 TX 오픈/커밋
 - Repository: plain `fun`, TX 없음, Exposed DSL 직접 호출
 - `jetbrains-exposed-spring-boot4-starter`가 `SpringTransactionManager` 자동 등록
@@ -209,7 +209,7 @@ class InsufficientStockException(productId: Long) :
 Controller(.await()) → Service(VirtualFuture) → virtualExecutor VT → transaction(db){} → Exposed DSL → HikariCP → PostgreSQL
 ```
 
-- Controller: `val result = service.foo(...).await()` (Tomcat VT 환경에서 블로킹 안전)
+- Controller: `val result = service.foo(...).await()` (Tomcat VT 환경에서 블로킹 안전); **POST handler에 `@Valid @RequestBody` 필수** (P1-A fix)
 - **Service**: 다중 테이블 비즈니스 로직 + `VirtualFuture<T>` 소유 (P1-2 fix: Repository에서 Service로 이동)
 - **Repository**: 단일 테이블 단순 CRUD만 — `fun foo(): VirtualFuture<T> = virtualFuture(executor) { transaction(db) { ... } }`
 - **`@Transactional` 사용 금지**: Spring AOP TX는 호출 스레드에 `Connection`을 바인딩한다. `virtualFuture { transaction(db) {} }`는 별도 VT에서 실행되므로 AOP 관리 Connection이 실제 SQL VT에 전달되지 않음 → TX 경계 누락. VT 모듈은 `transaction(db){}` 수동 관리만 사용 (D8)
@@ -269,7 +269,7 @@ class OrderRepository(private val db: Database) {
 Controller(suspend/Flow) → Service(suspendTransaction) → Repository(suspend/Flow) → Exposed R2DBC DSL → R2DBC Pool → PostgreSQL
 ```
 
-- Controller: `suspend fun` for scalars, `suspend fun` for lists (List 반환) — `Flow<T>`는 Repository 레이어에서만
+- Controller: `suspend fun` for scalars, `suspend fun` for lists (List 반환) — `Flow<T>`는 Repository 레이어에서만; **`@Valid @RequestBody` 필수** (P1-A fix)
 - Service: `suspendTransaction(db = db) {}` 모든 쓰기 + 읽기 (P0-2 fix: Flow는 TX 내에서 collect)
 - Repository: `suspend fun findById(): T?`, `fun findAll(): Flow<T>` — TX 없음
 - R2DBC imports: `org.jetbrains.exposed.v1.r2dbc.*` (not `jdbc`)
@@ -361,6 +361,7 @@ class DatabaseInitializer(
 - `OrderControllerTest`, `ProductControllerTest`
 - `AuthorRepositoryTest`, `OrderRepositoryTest`
 - `PlaceOrderRollbackTest` — 핵심: 중간 실패 시 전체 롤백 검증
+- `ConcurrentPlaceOrderTest` — **TOCTOU 수정 검증** (P1-B fix): stock=1 상품에 N개 병렬 주문 발행 → 정확히 1건 성공(200) + 나머지 409 Conflict 검증 (`assertFailsWith<InsufficientStockException>` 또는 MockMvc 409 응답 확인)
 
 ---
 
@@ -402,7 +403,7 @@ exposed/mvc-jdbc/
         ├── kotlin/io/bluetape4k/workshop/exposed/mvc/jdbc/
         │   ├── AbstractMvcJdbcTest.kt
         │   ├── author/{AuthorControllerTest,BookControllerTest,AuthorRepositoryTest}.kt
-        │   └── order/{OrderControllerTest,ProductControllerTest,OrderRepositoryTest,PlaceOrderRollbackTest}.kt
+        │   └── order/{OrderControllerTest,ProductControllerTest,OrderRepositoryTest,PlaceOrderRollbackTest,ConcurrentPlaceOrderTest}.kt
         └── resources/{junit-platform.properties,logback-test.xml}
 
 exposed/mvc-virtualthread/  (동일 구조, mvc/vt 패키지, +TomcatConfig, +AsyncConfig)
@@ -603,7 +604,8 @@ class GlobalExceptionHandler {
 |---|---|
 | R2DBC `SchemaUtils` 제한 | One-shot JDBC bootstrap (§4-3 스니펫) |
 | VT + `@Transactional` 혼용 | 명시적 금지 + 레이어 분리 (Service에 placeOrder) + `PlaceOrderRollbackTest` |
-| TOCTOU 재고 경쟁 | SELECT … FOR UPDATE (모든 3개 모듈, §3, §4-2) |
+| TOCTOU 재고 경쟁 | SELECT … FOR UPDATE (모든 3개 모듈, §3, §4-2); `ConcurrentPlaceOrderTest`로 검증 |
+| Lock contention on hot products | FOR UPDATE는 TX 완료까지 row lock 유지 → 인기 상품 직렬화 포인트 될 수 있음; 워크샵 용도에선 허용, 고부하 환경엔 conditional UPDATE + row-count check 대안 고려 (P2-C) |
 | `SqlExpressionBuilder.eq` deprecated import | lint + CLAUDE.md 규칙 준수 |
 | Implicit receiver shadowing in `insert {}` | 로컬 변수 추출 |
 | `exposed/domain` 교육 테스트 소실 | 소실 수용 (#77 결정); 추후 별도 이슈 가능 |
@@ -646,6 +648,7 @@ class GlobalExceptionHandler {
 | Round | Reviewers | P0 | P1 | P2 | P3 | Status |
 |---|---|---|---|---|---|---|
 | Round 1 | Phase 1 (4×parallel) + Claude Code 6-tier advisor + Phase 2 critic | 3 | 11 | 8 | 2 | Applied |
+| Round 2 | Phase 1 re-run + Tier 5/6 focused | 0 | 3 (P1-12+P1-A+P1-B) | 4 | 4 | Applied |
 
 **Round 1 findings summary**:
 - P0-1: TOCTOU stock race → SELECT FOR UPDATE (모든 3개 모듈)
@@ -663,4 +666,9 @@ class GlobalExceptionHandler {
 - P1-10: no rollback plan → §9에 git revert 절차 추가
 - P1-11: missing learner decision tree → §4-0 추가
 
-**Round 2**: 미시작 (Phase 3 Codex — agent timeout 발생; 재실행 필요)
+**Round 2 findings summary**:
+- P1-12 (Phase 1): GlobalExceptionHandler missing `MethodArgumentNotValidException` → added ✅
+- P1-A (6-tier): Controller parameters missing `@Valid @RequestBody` — DTO constraints never fire → added to §4-2 layer contracts ✅
+- P1-B (6-tier): No concurrent test for TOCTOU fix → `ConcurrentPlaceOrderTest` added to §4-4 and §5 ✅
+- `forUpdate()` R2DBC availability confirmed against `exposed-r2dbc-1.3.0-sources.jar` ✅
+- Phase 3 Codex: agent timeout in Round 1; not re-run (Phase 1+2+6-tier coverage deemed sufficient given P0=0)
