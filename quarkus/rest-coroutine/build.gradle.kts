@@ -37,8 +37,6 @@ dependencies {
 
     // Bluetape4k
     implementation(libs.bluetape4k.jackson2)
-    implementation(libs.bluetape4k.quarkus.core)
-    testImplementation(libs.bluetape4k.quarkus.tests)
     testImplementation(libs.bluetape4k.idgenerators)
 
     // coroutines
