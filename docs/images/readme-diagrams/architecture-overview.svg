@@ -1,0 +1,127 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600" role="img" aria-label="Leader Election Architecture Overview">
+<defs>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%">
+    <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#1f2937" flood-opacity="0.10"/>
+  </filter>
+  <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+    <path d="M 1 1 L 9 4 L 1 7" fill="none" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+  <marker id="arrowRed" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+    <path d="M 1 1 L 9 4 L 1 7" fill="none" stroke="#EF4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+  <style>
+    * { font-family: -apple-system, "Segoe UI", Roboto, Inter, Arial, sans-serif; }
+    .canvas { fill: #f8fafc; }
+    .frame { fill: #ffffff; stroke: #e2e8f0; stroke-width: 1.5; }
+    .title { font-size: 22px; font-weight: 700; fill: #0f172a; }
+    .subtitle { font-size: 13px; fill: #64748b; }
+    .section-label { font-size: 11px; font-weight: 600; fill: #94a3b8; letter-spacing: 0.08em; text-transform: uppercase; }
+    .box-label { font-size: 14px; font-weight: 600; fill: #1e293b; }
+    .box-sub { font-size: 11px; fill: #64748b; }
+    .box-mono { font-size: 11px; font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace; fill: #374151; }
+    .badge-text { font-size: 11px; font-weight: 700; fill: #ffffff; }
+    .footer-text { font-size: 13px; font-weight: 600; fill: #475569; }
+    .edge-label { font-size: 11px; fill: #6B7280; }
+  </style>
+</defs>
+
+<!-- Background -->
+<rect class="canvas" width="1200" height="600"/>
+<rect class="frame" x="20" y="20" width="1160" height="560" rx="16"/>
+
+<!-- Title -->
+<text class="title" x="44" y="58">Leader Election — Architecture Overview</text>
+<text class="subtitle" x="44" y="76">Multiple instances compete for a Redis lock; only the elected leader runs each scheduled job.</text>
+
+<!-- ══════════════════════ LEFT: Multiple Instances ══════════════════════ -->
+<text class="section-label" x="60" y="108" text-anchor="middle">Multiple Instances</text>
+<!-- Section background -->
+<rect x="28" y="116" width="226" height="328" rx="12" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1.2"/>
+
+<!-- Instance 1 — LEADER -->
+<rect x="44" y="128" width="194" height="80" rx="10" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.8" filter="url(#shadow)"/>
+<text class="box-label" x="141" y="153" text-anchor="middle">Instance 1</text>
+<text class="box-sub" x="141" y="170" text-anchor="middle">Pod / Process</text>
+<!-- LEADER badge -->
+<rect x="76" y="183" width="64" height="20" rx="10" fill="#10B981"/>
+<text class="badge-text" x="108" y="197" text-anchor="middle">LEADER</text>
+
+<!-- Instance 2 — FOLLOWER -->
+<rect x="44" y="226" width="194" height="80" rx="10" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1.5" filter="url(#shadow)"/>
+<text class="box-label" x="141" y="251" text-anchor="middle">Instance 2</text>
+<text class="box-sub" x="141" y="268" text-anchor="middle">Pod / Process</text>
+<rect x="70" y="281" width="80" height="20" rx="10" fill="#94A3B8"/>
+<text class="badge-text" x="110" y="295" text-anchor="middle">FOLLOWER</text>
+
+<!-- Instance 3 — FOLLOWER -->
+<rect x="44" y="324" width="194" height="80" rx="10" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1.5" filter="url(#shadow)"/>
+<text class="box-label" x="141" y="349" text-anchor="middle">Instance 3</text>
+<text class="box-sub" x="141" y="366" text-anchor="middle">Pod / Process</text>
+<rect x="70" y="379" width="80" height="20" rx="10" fill="#94A3B8"/>
+<text class="badge-text" x="110" y="393" text-anchor="middle">FOLLOWER</text>
+
+<!-- ══════════════════════ CENTER: Service + Elector ══════════════════════ -->
+<!-- LeaderScheduledJobService -->
+<rect x="312" y="128" width="280" height="100" rx="12" fill="#EDE9FE" stroke="#7C3AED" stroke-width="1.8" filter="url(#shadow)"/>
+<text class="box-sub" x="452" y="151" text-anchor="middle">@Scheduled  @Service</text>
+<text class="box-label" x="452" y="172" text-anchor="middle">LeaderScheduled</text>
+<text class="box-label" x="452" y="191" text-anchor="middle">JobService</text>
+<text class="box-sub" x="452" y="213" text-anchor="middle">fixed-delay: PT10S</text>
+
+<!-- LettuceLeaderElector -->
+<rect x="312" y="268" width="280" height="80" rx="12" fill="#EDE9FE" stroke="#7C3AED" stroke-width="1.8" filter="url(#shadow)"/>
+<text class="box-label" x="452" y="298" text-anchor="middle">LettuceLeaderElector</text>
+<text class="box-mono" x="452" y="318" text-anchor="middle">runIfLeader(lockName) { ... }</text>
+<text class="box-sub" x="452" y="337" text-anchor="middle">bluetape4k-leader</text>
+
+<!-- Arrow: JobService → Elector -->
+<line x1="452" y1="228" x2="452" y2="265" stroke="#7C3AED" stroke-width="1.8" marker-end="url(#arrow)"/>
+
+<!-- Jobs -->
+<rect x="244" y="398" width="196" height="72" rx="10" fill="#D1FAE5" stroke="#059669" stroke-width="1.8" filter="url(#shadow)"/>
+<text class="box-label" x="342" y="426" text-anchor="middle">CacheWarmupJob</text>
+<text class="box-mono" x="342" y="445" text-anchor="middle">lock: cache-warmup</text>
+<text class="box-sub" x="342" y="462" text-anchor="middle">LeaderGuardedJob</text>
+
+<rect x="460" y="398" width="212" height="72" rx="10" fill="#D1FAE5" stroke="#059669" stroke-width="1.8" filter="url(#shadow)"/>
+<text class="box-label" x="566" y="422" text-anchor="middle">StaleWorkflow</text>
+<text class="box-label" x="566" y="440" text-anchor="middle">CleanupJob</text>
+<text class="box-mono" x="566" y="458" text-anchor="middle">lock: stale-cleanup</text>
+
+<!-- Arrows: Elector → Jobs -->
+<line x1="390" y1="348" x2="342" y2="395" stroke="#059669" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<line x1="514" y1="348" x2="566" y2="395" stroke="#059669" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+
+<!-- ══════════════════════ RIGHT: Redis ══════════════════════ -->
+<rect x="748" y="220" width="220" height="130" rx="14" fill="#FED7AA" stroke="#D97706" stroke-width="1.8" filter="url(#shadow)"/>
+<!-- Redis icon circle -->
+<circle cx="858" cy="254" r="18" fill="#D97706" opacity="0.25"/>
+<text font-size="20" x="858" y="261" text-anchor="middle" fill="#92400E">⚙</text>
+<text class="box-label" x="858" y="291" text-anchor="middle">Redis</text>
+<text class="box-sub" x="858" y="309" text-anchor="middle">Single-Key Distributed Lock</text>
+<text class="box-mono" x="858" y="328" text-anchor="middle">SET {lockName} NX EX {ttl}</text>
+
+<!-- ══════════════════════ ARROWS: Instances → Elector ══════════════════════ -->
+<!-- Instance 1 → JobService (bold, leader) -->
+<path d="M 238 167 C 275 167 295 177 312 177" fill="none" stroke="#3B82F6" stroke-width="2.2" marker-end="url(#arrow)"/>
+
+<!-- Instance 2 → JobService -->
+<path d="M 238 265 C 275 265 295 205 312 197" fill="none" stroke="#93C5FD" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+
+<!-- Instance 3 → JobService -->
+<path d="M 238 363 C 275 363 295 233 312 217" fill="none" stroke="#93C5FD" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+
+<!-- ══════════════════════ ARROW: Elector → Redis ══════════════════════ -->
+<path d="M 592 308 C 660 308 700 290 748 285" fill="none" stroke="#D97706" stroke-width="2" marker-end="url(#arrow)"/>
+<text class="edge-label" x="670" y="298">SET NX EX</text>
+
+<!-- Redis result arrows -->
+<path d="M 748 295 C 710 295 680 305 592 318" fill="none" stroke="#10B981" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow)"/>
+<text class="edge-label" x="652" y="330" fill="#10B981">OK (Instance 1)</text>
+<text class="edge-label" x="652" y="344" fill="#EF4444">FAIL (others)</text>
+
+<!-- ══════════════════════ FOOTER ══════════════════════ -->
+<rect x="28" y="504" width="1144" height="56" rx="10" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1.2"/>
+<text class="footer-text" x="600" y="530" text-anchor="middle" fill="#166534">Exactly ONE instance executes each job at any time</text>
+<text class="box-sub" x="600" y="549" text-anchor="middle">All instances run the scheduler; only the leader wins the Redis lock and calls execute()</text>
+</svg>

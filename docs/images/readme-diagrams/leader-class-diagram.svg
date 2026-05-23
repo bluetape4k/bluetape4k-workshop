@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="500" viewBox="0 0 1200 500" role="img" aria-label="Leader Election Class Diagram">
+<defs>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%">
+    <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.09"/>
+  </filter>
+  <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+    <path d="M 1 1 L 9 4 L 1 7" fill="none" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+  <marker id="impl" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth">
+    <path d="M 1 1 L 12 6 L 1 11 Z" fill="#ffffff" stroke="#6B7280" stroke-width="1.5"/>
+  </marker>
+  <marker id="uses" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
+    <path d="M 1 1 L 9 4 L 1 7" fill="none" stroke="#94A3B8" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+  <style>
+    * { font-family: -apple-system, "Segoe UI", Roboto, Inter, Arial, sans-serif; }
+    .canvas { fill: #f8fafc; }
+    .frame { fill: #ffffff; stroke: #e2e8f0; stroke-width: 1.5; }
+    .title { font-size: 20px; font-weight: 700; fill: #0f172a; }
+    .subtitle { font-size: 13px; fill: #64748b; }
+    .stereotype { font-size: 11px; font-style: italic; fill: #6366F1; }
+    .class-name { font-size: 14px; font-weight: 700; fill: #1e293b; }
+    .method { font-size: 11px; font-family: "SF Mono", "Fira Code", monospace; fill: #374151; }
+    .divider { stroke: #e2e8f0; stroke-width: 1; }
+    .edge-label { font-size: 10px; fill: #94A3B8; }
+  </style>
+</defs>
+
+<rect class="canvas" width="1200" height="500"/>
+<rect class="frame" x="20" y="20" width="1160" height="460" rx="16"/>
+
+<!-- Title -->
+<text class="title" x="44" y="56">Leader Election — Class Diagram</text>
+<text class="subtitle" x="44" y="74">UML class relationships for the leader-election module</text>
+
+<!-- ══════════════════════ LeaderElector (interface) — col 1 top ══════════════════════ -->
+<rect x="50" y="106" width="230" height="115" rx="10" fill="#EDE9FE" stroke="#7C3AED" stroke-width="1.8" filter="url(#shadow)"/>
+<rect x="50" y="106" width="230" height="38" rx="10" fill="#DDD6FE" stroke="#7C3AED" stroke-width="1.8"/>
+<rect x="50" y="130" width="230" height="14" fill="#DDD6FE"/><!-- bottom-radius masking -->
+<text class="stereotype" x="165" y="122" text-anchor="middle">&lt;&lt;interface&gt;&gt;</text>
+<text class="class-name" x="165" y="138" text-anchor="middle">LeaderElector</text>
+<line class="divider" x1="50" y1="144" x2="280" y2="144"/>
+<text class="method" x="62" y="162">+ runIfLeader(lockName, block): T?</text>
+<text class="method" x="62" y="178">+ isLeader(lockName): Boolean</text>
+<text class="method" x="62" y="194">+ release(lockName)</text>
+<text class="edge-label" x="165" y="212" text-anchor="middle">bluetape4k-leader-core</text>
+
+<!-- ══════════════════════ LettuceLeaderElector (impl) — col 1 bottom ══════════════════════ -->
+<rect x="50" y="280" width="230" height="105" rx="10" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.8" filter="url(#shadow)"/>
+<rect x="50" y="280" width="230" height="38" rx="10" fill="#EDE9FE" stroke="#7C3AED" stroke-width="1.8"/>
+<rect x="50" y="304" width="230" height="14" fill="#EDE9FE"/>
+<text class="class-name" x="165" y="304" text-anchor="middle">LettuceLeaderElector</text>
+<line class="divider" x1="50" y1="318" x2="280" y2="318"/>
+<text class="method" x="62" y="336">- redisClient: RedisClient</text>
+<text class="method" x="62" y="352">- options: LeaderElectionOptions</text>
+<text class="method" x="62" y="368">+ runIfLeader(lockName, block): T?</text>
+<text class="edge-label" x="165" y="380" text-anchor="middle">bluetape4k-leader-redis-lettuce</text>
+
+<!-- impl arrow: LettuceLeaderElector → LeaderElector -->
+<line x1="165" y1="280" x2="165" y2="221" stroke="#7C3AED" stroke-width="1.8" stroke-dasharray="7 5" marker-end="url(#impl)"/>
+<text class="edge-label" x="174" y="258">implements</text>
+
+<!-- ══════════════════════ LeaderGuardedJob (interface) — col 2 top ══════════════════════ -->
+<rect x="460" y="106" width="240" height="100" rx="10" fill="#ECFDF5" stroke="#059669" stroke-width="1.8" filter="url(#shadow)"/>
+<rect x="460" y="106" width="240" height="38" rx="10" fill="#D1FAE5" stroke="#059669" stroke-width="1.8"/>
+<rect x="460" y="130" width="240" height="14" fill="#D1FAE5"/>
+<text class="stereotype" x="580" y="122" text-anchor="middle">&lt;&lt;interface&gt;&gt;</text>
+<text class="class-name" x="580" y="138" text-anchor="middle">LeaderGuardedJob</text>
+<line class="divider" x1="460" y1="144" x2="700" y2="144"/>
+<text class="method" x="472" y="162">+ lockName: String</text>
+<text class="method" x="472" y="178">+ execute()</text>
+<text class="edge-label" x="580" y="198" text-anchor="middle">workshop module</text>
+
+<!-- ══════════════════════ CacheWarmupJob — col 2 bottom-left ══════════════════════ -->
+<rect x="370" y="285" width="200" height="95" rx="10" fill="#F0FDF4" stroke="#059669" stroke-width="1.6" filter="url(#shadow)"/>
+<rect x="370" y="285" width="200" height="34" rx="10" fill="#DCFCE7" stroke="#059669" stroke-width="1.6"/>
+<rect x="370" y="307" width="200" height="12" fill="#DCFCE7"/>
+<text class="class-name" x="470" y="306" text-anchor="middle">CacheWarmupJob</text>
+<line class="divider" x1="370" y1="319" x2="570" y2="319"/>
+<text class="method" x="382" y="336">+ lockName = "cache-warmup"</text>
+<text class="method" x="382" y="352">+ execute()</text>
+<text class="stereotype" x="470" y="372" text-anchor="middle">@Component</text>
+
+<!-- ══════════════════════ StaleWorkflowCleanupJob — col 2 bottom-right ══════════════════════ -->
+<rect x="590" y="285" width="224" height="95" rx="10" fill="#F0FDF4" stroke="#059669" stroke-width="1.6" filter="url(#shadow)"/>
+<rect x="590" y="285" width="224" height="34" rx="10" fill="#DCFCE7" stroke="#059669" stroke-width="1.6"/>
+<rect x="590" y="307" width="224" height="12" fill="#DCFCE7"/>
+<text class="class-name" x="702" y="306" text-anchor="middle">StaleWorkflowCleanupJob</text>
+<line class="divider" x1="590" y1="319" x2="814" y2="319"/>
+<text class="method" x="602" y="336">+ lockName = "stale-cleanup"</text>
+<text class="method" x="602" y="352">+ execute()</text>
+<text class="stereotype" x="702" y="372" text-anchor="middle">@Component</text>
+
+<!-- impl arrows: jobs → LeaderGuardedJob -->
+<line x1="470" y1="285" x2="526" y2="206" stroke="#059669" stroke-width="1.6" stroke-dasharray="7 5" marker-end="url(#impl)"/>
+<line x1="702" y1="285" x2="634" y2="206" stroke="#059669" stroke-width="1.6" stroke-dasharray="7 5" marker-end="url(#impl)"/>
+
+<!-- ══════════════════════ LeaderScheduledJobService — col 3 top ══════════════════════ -->
+<rect x="858" y="106" width="270" height="130" rx="10" fill="#FEF3C7" stroke="#D97706" stroke-width="1.8" filter="url(#shadow)"/>
+<rect x="858" y="106" width="270" height="38" rx="10" fill="#FDE68A" stroke="#D97706" stroke-width="1.8"/>
+<rect x="858" y="130" width="270" height="14" fill="#FDE68A"/>
+<text class="stereotype" x="993" y="120" text-anchor="middle">&lt;&lt;service&gt;&gt;</text>
+<text class="class-name" x="993" y="138" text-anchor="middle">LeaderScheduledJobService</text>
+<line class="divider" x1="858" y1="144" x2="1128" y2="144"/>
+<text class="method" x="870" y="162">- leaderElector: LeaderElector</text>
+<text class="method" x="870" y="178">- jobs: List&lt;LeaderGuardedJob&gt;</text>
+<text class="method" x="870" y="194">+ runScheduledJobs()</text>
+<text class="stereotype" x="993" y="220" text-anchor="middle">@Scheduled(fixedDelayString)</text>
+
+<!-- LeaderElectionConfig — col 3 bottom-left -->
+<rect x="840" y="290" width="200" height="95" rx="10" fill="#FFF7ED" stroke="#D97706" stroke-width="1.6" filter="url(#shadow)"/>
+<rect x="840" y="290" width="200" height="34" rx="10" fill="#FED7AA" stroke="#D97706" stroke-width="1.6"/>
+<rect x="840" y="312" width="200" height="12" fill="#FED7AA"/>
+<text class="class-name" x="940" y="311" text-anchor="middle">LeaderElectionConfig</text>
+<line class="divider" x1="840" y1="324" x2="1040" y2="324"/>
+<text class="method" x="852" y="341">+ leaderElector(…): LeaderElector</text>
+<text class="method" x="852" y="357">+ leaderElectionProperties()</text>
+<text class="stereotype" x="940" y="377" text-anchor="middle">@Configuration</text>
+
+<!-- LeaderElectionProperties — col 3 bottom-right -->
+<rect x="1060" y="290" width="110" height="95" rx="10" fill="#FFF7ED" stroke="#D97706" stroke-width="1.4" filter="url(#shadow)"/>
+<rect x="1060" y="290" width="110" height="34" rx="10" fill="#FED7AA" stroke="#D97706" stroke-width="1.4"/>
+<rect x="1060" y="312" width="110" height="12" fill="#FED7AA"/>
+<text class="class-name" x="1115" y="308" text-anchor="middle" font-size="11px">LeaderElection</text>
+<text class="class-name" x="1115" y="322" text-anchor="middle" font-size="11px">Properties</text>
+<line class="divider" x1="1060" y1="324" x2="1170" y2="324"/>
+<text class="method" x="1072" y="341">url: String</text>
+<text class="method" x="1072" y="357">waitTime</text>
+<text class="method" x="1072" y="373">leaseTime</text>
+<text class="stereotype" x="1115" y="381" text-anchor="middle" font-size="10px">@ConfigProps</text>
+
+<!-- Arrows: Config → LeaderElector (creates) -->
+<path d="M 940 290 C 940 250 700 180 280 178" fill="none" stroke="#D97706" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#uses)"/>
+<text class="edge-label" x="620" y="254">creates &lt;&lt;bean&gt;&gt;</text>
+
+<!-- Config uses Properties -->
+<line x1="1040" y1="330" x2="1060" y2="330" stroke="#D97706" stroke-width="1.3" stroke-dasharray="4 3" marker-end="url(#uses)"/>
+
+<!-- Service depends on LeaderElector (dashed) -->
+<path d="M 858 155 C 700 155 350 245 280 310" fill="none" stroke="#6B7280" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+<text class="edge-label" x="555" y="200">depends on</text>
+
+<!-- Service depends on LeaderGuardedJob -->
+<path d="M 858 185 C 780 185 720 220 700 206" fill="none" stroke="#6B7280" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+</svg>
