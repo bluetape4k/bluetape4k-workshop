@@ -220,7 +220,7 @@ subprojects {
         setApplyMavenExclusions(false)
 
         imports {
-            mavenBom(rootLibs.bluetape4k.bom.get().toString())
+            mavenBom(rootLibs.bluetape4k.dependencies.get().toString())
             mavenBom(rootLibs.spring.integration.bom.get().toString())
             mavenBom(rootLibs.spring.cloud.dependencies.get().toString())
             mavenBom(rootLibs.spring.boot4.dependencies.get().toString())
