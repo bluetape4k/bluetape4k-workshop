@@ -1,4 +1,4 @@
-# Issue #103 — Observability End-to-End 예제 설계 (Rev 3)
+# Issue #103 — Observability End-to-End 예제 설계 (Rev 4)
 
 **작성일**: 2026-05-23  
 **브랜치**: `feat/issue-103-observability-e2e`  
@@ -374,18 +374,15 @@ Main `logback-spring.xml`과 동일 내용 — 명시적으로 복사 (byte-iden
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractFocusedTest {
     companion object : KLogging() {  // test base class: not coroutine-heavy → KLogging
+        // Shared across all subclasses (serial execution, PER_CLASS).
+        // NOTE: do NOT @AfterAll shutdown here — multiple subclasses share this instance.
+        // JVM shutdown cleans up; MockWebServer is lightweight.
         val mockServer = MockWebServer()
 
         @JvmStatic
         @DynamicPropertySource
         fun props(registry: DynamicPropertyRegistry) {
             registry.add("workshop.observability.inventory.base-url") { mockServer.url("/").toString() }
-        }
-
-        @JvmStatic
-        @AfterAll
-        fun shutdownMockServer() {
-            mockServer.shutdown()
         }
     }
 
@@ -400,9 +397,10 @@ abstract class AbstractFocusedTest {
     }
 
     @AfterEach
-    fun drainMockServer() {
-        // 미소비 응답 드레인 — 다음 테스트 오염 방지
-        while (mockServer.takeRequest(0, TimeUnit.MILLISECONDS) != null) { /* drain */ }
+    fun resetMockServerDispatcher() {
+        // response-queue 초기화 — 다음 테스트에 잔류 응답 오염 방지
+        // (takeRequest drains received requests; QueueDispatcher() resets the response queue)
+        mockServer.dispatcher = QueueDispatcher()
     }
 }
 ```
@@ -461,7 +459,14 @@ class OrderServiceTest : AbstractFocusedTest() {
         // Stub 5xx error → WebClient throws; observation should capture error
         mockServer.enqueue(MockResponse().setResponseCode(500))
         testRegistry.clear()
-        val result = runCatching { orderService.getOrder(1L) }
+        // Use explicit try/catch — runCatching swallows CancellationException (forbidden in suspend)
+        try {
+            orderService.getOrder(1L)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            // expected — 5xx triggers exception in WebClient
+        }
         // span must be stopped and carry the error
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("order.service.fetch").that().hasBeenStopped()
@@ -480,12 +485,15 @@ class OrderServiceTest : AbstractFocusedTest() {
                 .addHeader("Content-Type", "application/json")
                 .setBodyDelay(500, TimeUnit.MILLISECONDS)
         )
-        val job = CoroutineScope(Dispatchers.Default).launch {
-            orderService.getOrder(1L)
+        // supervisorScope: child cancellation doesn't propagate to parent scope
+        supervisorScope {
+            val job = launch(Dispatchers.Default) {
+                orderService.getOrder(1L)
+            }
+            delay(50)  // let coroutine start and issue WebClient request
+            job.cancelAndJoin()
+            job.isCancelled.shouldBeTrue()
         }
-        delay(50)  // let coroutine start and issue WebClient request
-        job.cancelAndJoin()
-        job.isCancelled.shouldBeTrue()
         // After cancel, no observation should remain open
         ObservationRegistryAssert.assertThat(testRegistry)
             .doesNotHaveAnyRemainingCurrentObservation()
@@ -501,6 +509,12 @@ class OrderControllerTest : AbstractFocusedTest() {
 
     @BeforeEach
     fun clearRegistry() { testRegistry.clear() }
+
+    @AfterEach
+    fun assertNoLeakedObservation() {
+        ObservationRegistryAssert.assertThat(testRegistry)
+            .doesNotHaveAnyRemainingCurrentObservation()
+    }
 
     @Test
     fun `GET orders id - 200 OK with order.service.fetch span`() = runSuspendIO {
@@ -950,6 +964,12 @@ class UserServiceTest : AbstractFullstackTest() {
         cache.delete(testUser.id)
     }
 
+    @AfterEach
+    fun assertNoLeakedObservation() {
+        ObservationRegistryAssert.assertThat(testRegistry)
+            .doesNotHaveAnyRemainingCurrentObservation()
+    }
+
     @Test
     fun `getById - cache miss instruments expected spans`() = runSuspendIO {
         repo.save(testUser)
@@ -1011,6 +1031,12 @@ class UserControllerTest : AbstractFullstackTest() {
     fun setup() = runSuspendIO {
         testRegistry.clear()
         withContext(Dispatchers.IO) { transaction { Users.deleteAll() } }  // transaction is blocking
+    }
+
+    @AfterEach
+    fun assertNoLeakedObservation() {
+        ObservationRegistryAssert.assertThat(testRegistry)
+            .doesNotHaveAnyRemainingCurrentObservation()
     }
 
     @Test
