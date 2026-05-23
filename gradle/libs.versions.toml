@@ -97,9 +97,6 @@ spring-kafka4 = "4.0.5"  # https://mvnrepository.com/artifact/org.springframewor
 bucket4j = "8.19.0"  # https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17-caffeine
 vertx = "5.0.12"  # https://mvnrepository.com/artifact/io.vertx/vertx-core
 
-quarkus = "3.35.2"  # https://mvnrepository.com/artifact/io.quarkus.platform/quarkus-bom
-resteasy = "7.0.2.Final"  # https://mvnrepository.com/artifact/org.jboss.resteasy/resteasy-bom
-
 timefold-solver = "2.1.0"   # https://mvnrepository.com/artifact/ai.timefold.solver/timefold-solver-bom
 
 eclipse-collections = "13.0.0"  # https://mvnrepository.com/artifact/org.eclipse.collections/eclipse-collections
@@ -686,14 +683,6 @@ gatling-core-java = { module = "io.gatling:gatling-core-java", version.ref = "ga
 gatling-http-java = { module = "io.gatling:gatling-http-java", version.ref = "gatling" }
 gatling-recorder = { module = "io.gatling:gatling-recorder", version.ref = "gatling" }
 gatling-test-framework = { module = "io.gatling:gatling-test-framework", version.ref = "gatling" }
-
-# Quarkus (modules not included in settings.gradle.kts; entries kept for completeness)
-quarkus-bom = { module = "io.quarkus.platform:quarkus-bom", version.ref = "quarkus" }
-quarkus-universe-bom = { module = "io.quarkus.platform:quarkus-universe-bom", version.ref = "quarkus" }
-quarkus-junit5 = { module = "io.quarkus:quarkus-junit5", version.ref = "quarkus" }
-
-# Resteasy
-resteasy-bom = { module = "org.jboss.resteasy:resteasy-bom", version.ref = "resteasy" }
 
 # WebJars
 webjar-bootstrap = { module = "org.webjars:bootstrap", version = "5.3.8" }  # https://mvnrepository.com/artifact/org.webjars/bootstrap

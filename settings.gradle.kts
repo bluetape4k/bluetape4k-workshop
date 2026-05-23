@@ -31,7 +31,6 @@ includeModules("leader", false, true)   // leader-leader-election: distributed l
 // includeModules("mapping", false, true)  // archived: mapping/mapstruct removed in #78 (low BT value)
 includeModules("messaging", false, true)
 includeModules("observability", false, false)
-// includeModules("quarkus", false, true)
 includeModules("ratelimit", false, false)
 // includeModules("reactive", false, true)  // archived: reactive/mutiny removed in #78 (Quarkus-adjacent, low BT value)
 includeModules("redis", false, true)
