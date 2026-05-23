@@ -27,6 +27,7 @@ includeModules("graalvm", false, false)
 includeModules("io", false, false)
 includeModules("json", false, false)
 includeModules("kotlin", false, true)
+includeModules("leader", false, true)   // leader-leader-election: distributed leader election workshop example
 // includeModules("mapping", false, true)  // archived: mapping/mapstruct removed in #78 (low BT value)
 includeModules("messaging", false, true)
 includeModules("observability", false, false)

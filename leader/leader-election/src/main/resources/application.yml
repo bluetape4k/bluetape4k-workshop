@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: leader-election
+
+leader:
+  redis:
+    url: redis://localhost:6379
+  wait-time: 2s
+  lease-time: 30s
+  job-fixed-delay: PT10S
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    io.bluetape4k.workshop.leader: INFO
+    io.bluetape4k.leader: DEBUG
