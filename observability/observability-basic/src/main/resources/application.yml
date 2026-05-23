@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: observability-basic-demo
+  jackson:
+    serialization:
+      indent-output: false
+
+workshop:
+  observability:
+    inventory:
+      base-url: http://localhost:8080
+
+management:
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      export:
+        enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics

@@ -29,7 +29,7 @@ Bluetape4k 라이브러리 활용 백엔드 예제 모음.
 | `kotlin/` | 코루틴, 디자인 패턴, 워크샵 |
 | `mapping/` | MapStruct 매핑 |
 | `messaging/` | Kafka, Kafka Reply |
-| `observability/` | Micrometer Observation/Tracing (코루틴 포함) |
+| `observability/` | Micrometer Observation/Tracing (코루틴 포함): `observability-basic` (WebFlux+coroutine span, MockWebServer, TestObservationRegistry), `observability-advanced` (HTTP+DB+Redis 전계층 추적, Testcontainers) |
 | `ratelimit/` | Bucket4j 기반 Rate Limiting (Caffeine, Redis, WebFlux) |
 | `reactive/` | Mutiny 리액티브 스트림 |
 | `redis/` | Redisson, 클러스터 |
