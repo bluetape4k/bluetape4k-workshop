@@ -1,9 +1,9 @@
-# Issue #103 — Observability End-to-End 예제 설계 (Rev 2)
+# Issue #103 — Observability End-to-End 예제 설계 (Rev 3)
 
 **작성일**: 2026-05-23  
 **브랜치**: `feat/issue-103-observability-e2e`  
 **스택**: Kotlin 2.3.21 + Java 25 + Spring Boot 4.0.6 + bluetape4k 1.8.0-SNAPSHOT  
-**라이브러리 버그 수정**: `bluetape4k-projects` `develop` — `withObservationContextSuspending` happy-path `stop()` 누락 수정 (commit 5ee122b1c)
+**라이브러리 버그 수정**: `bluetape4k-projects` `fix/observation-coroutines-stop` 브랜치 — `withObservationContextSuspending` happy-path `stop()` 누락 수정 (commit 742551713)
 
 ---
 
@@ -39,7 +39,7 @@ Issue #103: 분산 시스템에서 trace/log/metric 상관관계(correlation)를
 **문제**: `withObservationContextSuspending` (두 오버로드 모두) happy path에서 `observation.stop()` 미호출 → 모든 성공 스팬이 OTel/Zipkin에 보고되지 않음.
 
 **수정**: `bluetape4k-projects infra/micrometer/.../ObservationCoroutinesSupport.kt` — happy path에 `val result = withContext(...) { block() }; observation.stop(); return result` 추가.  
-커밋: `5ee122b1c` in `bluetape4k-projects develop`.
+브랜치: `fix/observation-coroutines-stop` in `bluetape4k-projects` (commit 742551713). 이 브랜치가 머지되고 SNAPSHOT 재발행 후에만 workshop CI 테스트가 통과함 (§8 CI 선행조건 참조).
 
 **영향**: 수정 후 `TestObservationRegistry`의 `hasBeenStopped()` 정상 통과.
 
@@ -341,10 +341,18 @@ management:
 
 #### `src/test/resources/application-test.yml`
 ```yaml
+spring:
+  application:
+    name: observability-focused-test   # 명시 — main profile 상속에 의존하지 않음
+
 management:
   tracing:
     sampling:
       probability: 1.0
+  otlp:
+    tracing:
+      export:
+        enabled: false   # 테스트 중 OTLP export 비활성화
 ```
 
 #### `src/test/resources/junit-platform.properties`
@@ -354,7 +362,8 @@ junit.jupiter.execution.parallel.enabled=false
 ```
 
 #### `src/test/resources/logback-test.xml`
-Main `logback-spring.xml`과 동일 패턴.
+Main `logback-spring.xml`과 동일 내용 — 명시적으로 복사 (byte-identical).
+`%X{traceId:-}` / `%X{spanId:-}` MDC syntax 확인 필수 (property substitution `${...}` 금지).
 
 ### 3.6 테스트 전략
 
@@ -364,13 +373,19 @@ Main `logback-spring.xml`과 동일 패턴.
 @ActiveProfiles("test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractFocusedTest {
-    companion object : KLoggingChannel() {
+    companion object : KLogging() {  // test base class: not coroutine-heavy → KLogging
         val mockServer = MockWebServer()
 
         @JvmStatic
         @DynamicPropertySource
         fun props(registry: DynamicPropertyRegistry) {
             registry.add("workshop.observability.inventory.base-url") { mockServer.url("/").toString() }
+        }
+
+        @JvmStatic
+        @AfterAll
+        fun shutdownMockServer() {
+            mockServer.shutdown()
         }
     }
 
@@ -383,6 +398,12 @@ abstract class AbstractFocusedTest {
         val body = """{"itemId":1,"available":50}"""
         mockServer.enqueue(MockResponse().setBody(body).addHeader("Content-Type", "application/json"))
     }
+
+    @AfterEach
+    fun drainMockServer() {
+        // 미소비 응답 드레인 — 다음 테스트 오염 방지
+        while (mockServer.takeRequest(0, TimeUnit.MILLISECONDS) != null) { /* drain */ }
+    }
 }
 ```
 
@@ -394,9 +415,16 @@ class TestObservationConfig {
     fun testObservationRegistry(): TestObservationRegistry = TestObservationRegistry.create()
 }
 
+@Import(TestObservationConfig::class)
 class OrderServiceTest : AbstractFocusedTest() {
     @Autowired lateinit var orderService: OrderService
     @Autowired lateinit var testRegistry: TestObservationRegistry
+
+    @AfterEach
+    fun assertNoLeakedObservation() {
+        ObservationRegistryAssert.assertThat(testRegistry)
+            .doesNotHaveAnyRemainingCurrentObservation()
+    }
 
     @BeforeEach
     fun clearRegistry() {
@@ -422,15 +450,42 @@ class OrderServiceTest : AbstractFocusedTest() {
         testRegistry.clear()
         val result = orderService.getOrder(999L)
         result.shouldBeNull()
+        // span must still be stopped even on null result (no error)
+        TestObservationRegistryAssert.assertThat(testRegistry)
+            .hasObservationWithNameEqualTo("order.service.fetch").that().hasBeenStopped()
+        testRegistry.observations.all { it.context.error == null }.shouldBeTrue()
     }
 
     @Test
-    fun `getOrder - observation stopped even on cancellation`() = runTest {
-        val job = launch {
+    fun `getOrder - observation records error on 5xx`() = runSuspendIO {
+        // Stub 5xx error → WebClient throws; observation should capture error
+        mockServer.enqueue(MockResponse().setResponseCode(500))
+        testRegistry.clear()
+        val result = runCatching { orderService.getOrder(1L) }
+        // span must be stopped and carry the error
+        TestObservationRegistryAssert.assertThat(testRegistry)
+            .hasObservationWithNameEqualTo("order.service.fetch").that().hasBeenStopped()
+        testRegistry.observations
+            .filter { it.context.name == "order.service.fetch" }
+            .any { it.context.error != null }
+            .shouldBeTrue()
+    }
+
+    @Test
+    fun `getOrder - observation stopped even on cancellation`() = runSuspendIO {
+        // Use slow stub so cancel races the in-flight request reliably
+        mockServer.enqueue(
+            MockResponse()
+                .setBody("""{"itemId":1,"available":50}""")
+                .addHeader("Content-Type", "application/json")
+                .setBodyDelay(500, TimeUnit.MILLISECONDS)
+        )
+        val job = CoroutineScope(Dispatchers.Default).launch {
             orderService.getOrder(1L)
         }
-        delay(5)
+        delay(50)  // let coroutine start and issue WebClient request
         job.cancelAndJoin()
+        job.isCancelled.shouldBeTrue()
         // After cancel, no observation should remain open
         ObservationRegistryAssert.assertThat(testRegistry)
             .doesNotHaveAnyRemainingCurrentObservation()
@@ -440,6 +495,7 @@ class OrderServiceTest : AbstractFocusedTest() {
 
 #### `OrderControllerTest` — W3C propagation 검증 포함
 ```kotlin
+@Import(TestObservationConfig::class)
 class OrderControllerTest : AbstractFocusedTest() {
     @Autowired lateinit var testRegistry: TestObservationRegistry
 
@@ -462,12 +518,7 @@ class OrderControllerTest : AbstractFocusedTest() {
 
     @Test
     fun `GET orders id - traceparent header propagated to downstream`() = runSuspendIO {
-        // Enqueue extra response for this test
-        mockServer.enqueue(
-            MockResponse()
-                .setBody("""{"itemId":2,"available":30}""")
-                .addHeader("Content-Type", "application/json")
-        )
+        // @BeforeEach already enqueued one response — use it directly
         webTestClient.httpGet("/orders/1").exchange()
 
         val request = mockServer.takeRequest(1, TimeUnit.SECONDS)
@@ -654,12 +705,14 @@ class UserService(
         }
 
     suspend fun create(user: User): User =
-        withObservationSuspending("user.service.create", observationRegistry) {
-            withObservationSuspending("user.db.save", observationRegistry) {
-                repo.save(user)
-                user
+        requireNotNull(
+            withObservationSuspending("user.service.create", observationRegistry) {
+                withObservationSuspending("user.db.save", observationRegistry) {
+                    repo.save(user)
+                    user
+                }
             }
-        } ?: user  // fallback: should not happen after library fix
+        ) { "user.service.create returned null — observation contract violated" }
 }
 ```
 
@@ -834,10 +887,18 @@ Module A의 `logback-spring.xml`과 동일 (`%X{traceId}`, `%X{spanId}` 모두 �
 
 #### `src/test/resources/application-test.yml`
 ```yaml
+spring:
+  application:
+    name: observability-fullstack-test   # 명시 — main profile 상속에 의존하지 않음
+
 management:
   tracing:
     sampling:
       probability: 1.0
+  otlp:
+    tracing:
+      export:
+        enabled: false   # 테스트 중 OTLP export 비활성화
 ```
 
 #### `src/test/resources/junit-platform.properties`, `logback-test.xml`
@@ -851,7 +912,7 @@ Module A와 동일.
 @ActiveProfiles("test")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractFullstackTest {
-    companion object : KLoggingChannel() {
+    companion object : KLogging() {  // test base class: not coroutine-heavy → KLogging
         private val redis = RedisServer.Launcher.redis
 
         @JvmStatic
@@ -873,6 +934,7 @@ class TestObservationConfig {
     fun testObservationRegistry(): TestObservationRegistry = TestObservationRegistry.create()
 }
 
+@Import(TestObservationConfig::class)
 class UserServiceTest : AbstractFullstackTest() {
     @Autowired lateinit var service: UserService
     @Autowired lateinit var repo: UserRepository
@@ -884,7 +946,7 @@ class UserServiceTest : AbstractFullstackTest() {
     @BeforeEach
     fun setup() = runSuspendIO {
         testRegistry.clear()
-        transaction { Users.deleteAll() }
+        withContext(Dispatchers.IO) { transaction { Users.deleteAll() } }  // transaction is blocking
         cache.delete(testUser.id)
     }
 
@@ -941,13 +1003,14 @@ class UserServiceTest : AbstractFullstackTest() {
 
 #### `UserControllerTest`
 ```kotlin
+@Import(TestObservationConfig::class)
 class UserControllerTest : AbstractFullstackTest() {
     @Autowired lateinit var testRegistry: TestObservationRegistry
 
     @BeforeEach
     fun setup() = runSuspendIO {
         testRegistry.clear()
-        transaction { Users.deleteAll() }
+        withContext(Dispatchers.IO) { transaction { Users.deleteAll() } }  // transaction is blocking
     }
 
     @Test
@@ -957,16 +1020,17 @@ class UserControllerTest : AbstractFullstackTest() {
             .exchange().expectStatus().isCreated
 
         testRegistry.clear()
-        // First GET — cache miss
+        // First GET — cache miss: must hit DB
         webTestClient.httpGet("/users/${user.id}").expectStatus().is2xxSuccessful()
-        val missObsCount = testRegistry.observations.size
+        TestObservationRegistryAssert.assertThat(testRegistry)
+            .hasObservationWithNameEqualTo("user.service.get").that().hasBeenStopped()
+        testRegistry.observations.any { it.context.name == "user.db.find" }.shouldBeTrue()
 
         testRegistry.clear()
-        // Second GET — cache hit (fewer observations)
+        // Second GET — cache hit: must NOT hit DB
         webTestClient.httpGet("/users/${user.id}").expectStatus().is2xxSuccessful()
-        val hitObsCount = testRegistry.observations.size
-
-        (hitObsCount < missObsCount).shouldBeTrue()
+        TestObservationRegistryAssert.assertThat(testRegistry)
+            .hasObservationWithNameEqualTo("user.service.get").that().hasBeenStopped()
         testRegistry.observations.none { it.context.name == "user.db.find" }.shouldBeTrue()
     }
 }
@@ -978,7 +1042,7 @@ class UserControllerTest : AbstractFullstackTest() {
 
 | 리스크 | 심각도 | 완화 |
 |-------|------|------|
-| `withObservationContextSuspending` happy-path stop() 누락 | P0 → **수정 완료** (commit 5ee122b1c) | — |
+| `withObservationContextSuspending` happy-path stop() 누락 | P0 → **수정 완료** (branch `fix/observation-coroutines-stop` commit 742551713) | 머지 + SNAPSHOT 재발행 후 CI 통과 (§8 참조) |
 | `TestObservationRegistry` 테스트 간 미초기화 | P0 | `@BeforeEach testRegistry.clear()` 필수 |
 | Redis/H2 상태 누출 | P0 | `@BeforeEach`: `Users.deleteAll()` + `cache.delete(id)` |
 | MockWebServer 응답 불일치 | P0 | MockWebServer `/inventory/{id}` stub, 명시적 JSON 응답 |
@@ -1003,7 +1067,7 @@ class UserControllerTest : AbstractFullstackTest() {
 ### Module B
 - [ ] `./gradlew :observability-fullstack:compileKotlin` 성공
 - [ ] `./gradlew :observability-fullstack:test` — 모든 테스트 통과
-- [ ] `UserServiceTest`: cache miss 4개 관측, cache hit 2개 관측, create 2개 관측 검증
+- [ ] `UserServiceTest`: cache miss 경로에 `user.service.get` + `user.db.find` span 포함, cache hit 경로에 `user.db.find` span 미포함 (이름 기반 검증 — 개수 기반 금지)
 - [ ] `UserControllerTest`: POST + GET miss/hit 시나리오 통과
 - [ ] Testcontainers Redis 연동 확인
 - [ ] README.md (English) + README.ko.md (cache-aside span tree 다이어그램 포함)
@@ -1016,6 +1080,34 @@ class UserControllerTest : AbstractFullstackTest() {
 - `.github/workflows/nightly-tests.yml` — `:observability-focused:test`, `:observability-fullstack:test` 추가
 - `smoke-validate.sh` observability 그룹 — 신규 모듈 등록
 - CLAUDE.md 모듈 테이블 업데이트
+
+---
+
+## 8. CI 선행조건 (크로스-저장소 결합)
+
+> ⚠️ **이 섹션은 구현자가 반드시 확인해야 할 선행조건입니다.**
+
+Workshop CI가 `./gradlew :observability-focused:test` / `:observability-fullstack:test` 를 통과하려면:
+
+1. **`bluetape4k-projects/fix/observation-coroutines-stop` 브랜치 (commit 742551713) 머지 필수**  
+   — `withObservationContextSuspending` happy-path `stop()` 버그 수정 포함.  
+   — 이 변경이 없으면 모든 `hasBeenStopped()` 단언이 실패.
+
+2. **`1.8.0-SNAPSHOT` 재발행 필수**  
+   — 머지 후 `./gradlew :bluetape4k-micrometer:publishToMavenLocal` (로컬) 또는  
+     Sonatype Snapshots CI 자동 발행 대기.  
+   — Workshop `gradle.properties`: `bluetape4k.version=1.8.0-SNAPSHOT`
+
+3. **검증 순서**  
+   ```bash
+   # 1. bluetape4k-projects 에서
+   cd .worktrees/fix-observation-coroutines-stop
+   ./gradlew :bluetape4k-micrometer:publishToMavenLocal
+   
+   # 2. workshop worktree 에서
+   cd <workshop>/.worktrees/feat/issue-103-observability-e2e
+   ./gradlew :observability-focused:test :observability-fullstack:test
+   ```
 
 ---
 
