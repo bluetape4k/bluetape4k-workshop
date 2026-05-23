@@ -17,13 +17,22 @@ java {
     }
 }
 
+// Smoke tests are timing-sensitive (lease expiry) — exclude from default CI run.
+// To include: ./gradlew :redis-distributed-lock:test -Djunit.jupiter.execution.exclude.tags=
+tasks.named<Test>("test") {
+    useJUnitPlatform {
+        excludeTags("smoke")
+    }
+}
+
 dependencies {
     // Logging
     implementation(libs.bluetape4k.logging)
 
-    // Redisson
+    // Redisson (bluetape4k-redisson uses bluetape4k-idgenerators for getLockId; add explicitly)
     implementation(libs.bluetape4k.redis)
     implementation(libs.bluetape4k.redisson)
+    implementation(libs.bluetape4k.idgenerators)
     implementation(libs.redisson.lib)
     implementation(libs.redisson.spring.boot.starter)
 

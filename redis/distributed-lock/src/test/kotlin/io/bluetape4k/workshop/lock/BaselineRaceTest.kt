@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.lock
 
+import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.workshop.lock.domain.DeductionResult.Success
 import io.bluetape4k.workshop.lock.domain.Inventory
@@ -37,9 +38,9 @@ class BaselineRaceTest : AbstractDistributedLockTest() {
 
         val currentStock = store.currentStock(inventoryId)
         // Race condition: either more than 10 successes OR stock went negative
+        // Race must be observed: either more than 10 successes OR stock went negative.
+        // shouldBeTrue() from bluetape4k-assertions always throws (never gated on -ea).
         val raceObserved = successCount.get() > 10 || currentStock < 0
-        assert(raceObserved) {
-            "Expected race condition (oversell) but got: successCount=${successCount.get()}, currentStock=$currentStock"
-        }
+        raceObserved.shouldBeTrue()
     }
 }

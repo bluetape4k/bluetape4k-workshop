@@ -8,12 +8,11 @@ import io.bluetape4k.workshop.lock.service.FencedInventoryService
 import io.bluetape4k.workshop.lock.service.LockedInventoryService
 import io.bluetape4k.workshop.lock.service.SuspendingFencedInventoryService
 import io.bluetape4k.workshop.lock.service.UnsafeInventoryService
+import io.bluetape4k.redis.redisson.redissonClient
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
-import org.redisson.Redisson
 import org.redisson.api.RedissonClient
-import org.redisson.config.Config
 import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -25,11 +24,9 @@ abstract class AbstractDistributedLockTest {
     }
 
     protected val redisson: RedissonClient by lazy {
-        Redisson.create(
-            Config().apply {
-                useSingleServer().setAddress(redisUrl)
-            }
-        )
+        redissonClient {
+            useSingleServer().setAddress(redisUrl)
+        }
     }
 
     protected val store = InventoryStore()
