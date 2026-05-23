@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: distributed-lock-test
+  main:
+    web-application-type: none
