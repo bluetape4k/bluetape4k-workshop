@@ -6,6 +6,21 @@
 
 ---
 
+## 0. 학습 경로 (Start Here)
+
+이 워크샵은 네 단계로 경험한다. 각 단계는 이전 단계의 문제를 해결하는 구조다.
+
+| 단계 | 서비스 | 테스트 | 학습 내용 |
+|---|---|---|---|
+| 1 | `UnsafeInventoryService` | `BaselineRaceTest` | 락 없이 race → oversell 발생 확인 |
+| 2 | `LockedInventoryService` | `DistributedLockTest` | `RLock`으로 oversell 방지 |
+| 3 | `FencedInventoryService` | `FencedLockTest`, `FencedStaleHolderTest` | `RFencedLock`으로 구 소유자(stale holder) 거부 |
+| 4 | `SuspendingFencedInventoryService` | `SuspendFencedLockTest` | 코루틴에서 `getLockId` + `NonCancellable` 패턴 |
+
+**권장 순서:** 1 → 2 → 3 → 4 (각 서비스 소스 → 대응 테스트 순서)
+
+---
+
 ## 1. 목적과 배경
 
 ### 문제 정의
@@ -126,6 +141,13 @@
 - **해결**: `@Tag("smoke")` + `junit-platform.properties`의 `junit.jupiter.execution.exclude.tags=smoke`로 기본 실행에서 제외
 - **검증**: `./gradlew :redis-distributed-lock:test` 빌드 안정적, 명시적 `-Djunit.jupiter.execution.exclude.tags=` 로 스모크도 실행 가능
 
+### Risk 6: Redis 불가용 시 tryLockAsync 무한 대기
+
+- **원인**: `tryLockAsync(waitMs, leaseMs, MILLISECONDS, lockId).await()`는 Redis 접속 불가 시 `waitMs` 만큼 대기 후 연결 오류 예외를 던짐. 워크샵 범위에서 circuit breaker / fallback 없음
+- **해결**: 서비스 단에서 `try/catch(Exception)`으로 `LockNotAcquired` 반환 (표준 실패 경로) + `waitMs` 를 합리적인 값(2초 이하)으로 설정. Redis Testcontainers가 항상 실행 중인 환경에서만 테스트
+- **leaseTime 선정 기준**: 임계 구역 예상 최대 수행 시간의 5배 이상을 leaseTime으로 설정 (watchdog 없는 경우). 예: 도메인 로직 500ms → leaseTime 3000ms 이상
+- **검증**: Testcontainers `RedisServer.Launcher.redis` 사용으로 항상 가용. Redis 다운 시나리오는 Out-of-Scope (단위 테스트 불가, 통합 환경 필요)
+
 ---
 
 ## 6. 컴포넌트 설계
@@ -143,13 +165,25 @@ data class Inventory(val id: Long, val name: String, val initialStock: Int) : Se
     companion object : KLogging() { private const val serialVersionUID = 1L }
 }
 
-// DeductionResult.kt  
+// DeductionResult.kt
+// 모든 서브타입은 JVM 직렬화를 위해 별도 serialVersionUID를 선언해야 한다 (CLAUDE.md 규칙).
 sealed interface DeductionResult {
-    data class Success(val remaining: Int, val token: Long? = null) : DeductionResult, Serializable
-    data object InsufficientStock : DeductionResult, Serializable
-    data object Rejected : DeductionResult, Serializable  // fenced token rejected
-    data object LockNotAcquired : DeductionResult, Serializable  // lock timeout
-    companion object { private const val serialVersionUID = 1L }
+    /** 차감 성공. token은 fenced 경로에서만 값을 가짐 (non-fenced 경로는 null). */
+    data class Success(val remaining: Int, val token: Long? = null) : DeductionResult, Serializable {
+        companion object { private const val serialVersionUID = 1L }
+    }
+    /** 재고 부족 (차감 수량 > 현재 재고). */
+    data class InsufficientStock(val requested: Int, val available: Int) : DeductionResult, Serializable {
+        companion object { private const val serialVersionUID = 1L }
+    }
+    /** Fenced 토큰 거부 (구 소유자의 토큰이 현재 기대값보다 낮음). */
+    data class Rejected(val token: Long) : DeductionResult, Serializable {
+        companion object { private const val serialVersionUID = 1L }
+    }
+    /** 락 획득 타임아웃 (waitMs 내 획득 실패 또는 Redis 예외). */
+    data class LockNotAcquired(val lockName: String) : DeductionResult, Serializable {
+        companion object { private const val serialVersionUID = 1L }
+    }
 }
 
 // InventoryStore.kt
@@ -169,9 +203,12 @@ class InventoryStore {
 ```kotlin
 // UnsafeInventoryService.kt — race 데모용
 class UnsafeInventoryService(private val store: InventoryStore) {
+    companion object : KLogging()
+
     fun deduct(id: Long, qty: Int): DeductionResult {
+        qty.requirePositiveNumber("qty")  // 음수/0 qty는 스톡을 증가시키므로 반드시 검증
         val current = store.currentStock(id)  // READ
-        if (current < qty) return InsufficientStock
+        if (current < qty) return InsufficientStock(qty, current)
         Thread.sleep(1)                        // ← 강제 race window
         val remaining = store.applyChange(id, -qty)  // WRITE
         return Success(remaining)
@@ -180,13 +217,20 @@ class UnsafeInventoryService(private val store: InventoryStore) {
 
 // LockedInventoryService.kt — RLock
 class LockedInventoryService(private val redisson: RedissonClient, private val store: InventoryStore) {
+    companion object : KLogging()
+
     fun deduct(id: Long, qty: Int, waitMs: Long = 2000L, leaseMs: Long = 5000L): DeductionResult {
-        val lock = redisson.getLock("inventory:lock:$id")
+        qty.requirePositiveNumber("qty")
+        val lockName = "inventory:lock:$id"
+        val lock = redisson.getLock(lockName)
         val acquired = lock.tryLock(waitMs, leaseMs, MILLISECONDS)  // 명시적 leaseTime → watchdog 비활성화
-        if (!acquired) return LockNotAcquired
+        if (!acquired) {
+            log.warn { "Lock not acquired: $lockName (wait=${waitMs}ms)" }
+            return LockNotAcquired(lockName)
+        }
         try {
             val current = store.currentStock(id)
-            if (current < qty) return InsufficientStock
+            if (current < qty) return InsufficientStock(qty, current)
             val remaining = store.applyChange(id, -qty)
             return Success(remaining)
         } finally {
@@ -201,18 +245,31 @@ class FencedInventoryService(
     private val store: InventoryStore,
     private val fencedResources: FencedResources,
 ) {
+    companion object : KLogging()
+
     fun deduct(id: Long, qty: Int, waitMs: Long = 2000L, leaseMs: Long = 5000L): DeductionResult {
-        val fLock = redisson.getFencedLock("inventory:fenced:$id")
-        val token = fLock.tryLockAndGetToken(waitMs, leaseMs, MILLISECONDS) ?: return LockNotAcquired
+        qty.requirePositiveNumber("qty")
+        val lockName = "inventory:fenced:$id"
+        val fLock = redisson.getFencedLock(lockName)
+        val token = fLock.tryLockAndGetToken(waitMs, leaseMs, MILLISECONDS)
+            ?: run {
+                log.warn { "Fenced lock not acquired: $lockName (wait=${waitMs}ms)" }
+                return LockNotAcquired(lockName)
+            }
         try {
             val result = fencedResources.forResource(id).apply(token) {
                 val current = store.currentStock(id)
-                if (current < qty) InsufficientStock
+                if (current < qty) InsufficientStock(qty, current)
                 else Success(store.applyChange(id, -qty), token)
             }
-            return result ?: Rejected
+            return result ?: run {
+                log.warn { "Fenced token $token rejected for $lockName" }
+                Rejected(token)
+            }
         } finally {
-            runCatching { fLock.unlock() }  // non-suspend, safe to use runCatching
+            runCatching { fLock.unlock() }.onFailure { e ->
+                log.warn(e) { "Fenced unlock failed (lease may have expired): $lockName" }
+            }
         }
     }
 }
@@ -220,19 +277,34 @@ class FencedInventoryService(
 
 ### 6.3 펜스 거부 가드
 
+> **워크샵 범위 한계 (알려진 제약사항):**
+> - `FencedResource`는 JVM 인-메모리 CAS 가드다. JVM 재시작 시 `lastSeenToken`이 0으로 리셋된다.
+>   실 운영에서는 Redis나 DB에 토큰 상태를 영속화해야 하지만, 이 모듈의 범위를 벗어난다.
+> - `FencedResources.map`은 크기 제한이 없다. 워크샵의 고정된 자원 ID 세트에는 문제없지만,
+>   실 운영에서는 eviction 정책이 필요하다.
+> - **동일 토큰(equal token) 정책**: `token == current` (동일 임차자의 재진입)는 허용한다.
+>   즉, 같은 lease 내에서 동일 토큰으로 `apply`를 여러 번 호출할 수 있다 (멱등성 보장 시).
+>   `work()`는 반드시 멱등적이어야 한다.
+
 ```kotlin
 // FencedResource.kt
 class FencedResource(val resourceId: Long) {
     private val lastSeenToken = AtomicLong(0L)
     
+    /**
+     * Applies [work] if [token] is greater than or equal to the last seen token.
+     * - Returns `null` if [token] is stale (strictly less than current token).
+     * - Allows equal tokens for reentrant access within the same lease (work must be idempotent).
+     * - Thread-safe via CAS loop.
+     */
     fun <T : Any> apply(token: Long, work: () -> T): T? {
         while (true) {
             val current = lastSeenToken.get()
-            if (token < current) return null  // stale token → reject
+            if (token < current) return null  // stale token → reject (strictly less-than)
             if (lastSeenToken.compareAndSet(current, maxOf(current, token))) {
                 return work()
             }
-            // CAS lost, retry
+            // CAS lost to concurrent apply, retry
         }
     }
 }
@@ -240,6 +312,7 @@ class FencedResource(val resourceId: Long) {
 // FencedResources.kt
 @Component
 class FencedResources {
+    // Workshop scope: unbounded, in-memory, state lost on JVM restart
     private val map = ConcurrentHashMap<Long, FencedResource>()
     fun forResource(id: Long) = map.computeIfAbsent(id) { FencedResource(it) }
     fun reset(id: Long) { map.remove(id) }
@@ -247,6 +320,17 @@ class FencedResources {
 ```
 
 ### 6.4 코루틴 변형
+
+> **getLockId 수명주기 계약 (MUST — 위반 시 락 미해제):**
+> 1. `getLockId(lockName)` 는 락 이름당 호출 횟수가 아니라 **호출 시점의 현재 스레드/코루틴 컨텍스트**를 기반으로 안정적인 Long ID를 반환한다.
+> 2. 하나의 acquire/release 사이클에서 **반드시 `val lockId`를 한 번 결정하고 로컬 변수에 저장**한다.
+>    `tryLockAsync(..., lockId)`와 `unlockAsync(lockId)` 에 동일한 값을 사용해야 한다.
+> 3. acquire와 release 사이에 `getLockId`를 재호출하거나 다른 값으로 `unlockAsync`를 호출하면 락이 해제되지 않는다.
+>
+> **NonCancellable unlock 계약 (P0 — 위반 시 락 리크):**
+> 코루틴이 취소될 때 `finally` 블록 내 `await()`는 즉시 `CancellationException`을 던지고 Redis unlock 명령을 디스패치하지 않는다.
+> 모든 코루틴 측 Redisson unlock은 반드시 `withContext(NonCancellable) { ... }` 으로 감싸야 한다.
+> 이 패턴은 `bluetape4k-leader`의 `RedissonSuspendLeaderElector`에서 확립된 프로젝트 관례다.
 
 ```kotlin
 // SuspendingFencedInventoryService.kt
@@ -259,32 +343,57 @@ class SuspendingFencedInventoryService(
     companion object : KLoggingChannel()
     
     suspend fun deduct(id: Long, qty: Int, waitMs: Long = 2000L, leaseMs: Long = 5000L): DeductionResult {
+        qty.requirePositiveNumber("qty")
         val lockName = "inventory:sfenced:$id"
-        val lockId = redisson.getLockId(lockName)  // 코루틴 안전 정체성
+        
+        // [1] getLockId는 한 번만 결정하여 acquire와 release에 동일 값 사용 (수명주기 계약)
+        //     코루틴은 suspend 후 다른 스레드에서 재개될 수 있으므로 Thread.id 대신 안정적 lockId 사용
+        val lockId = redisson.getLockId(lockName)
         val fLock = redisson.getFencedLock(lockName)
         
+        // [2] tryLockAsync: lockId를 포함한 안전한 취득 (Redisson 4.4.0 RLockAsync)
+        //     tryLockAndGetTokenAsync는 threadId 파라미터를 지원하지 않으므로 코루틴에서는 두 단계 사용.
+        //     false이면 waitMs 내 획득 실패 → LockNotAcquired
         val acquired = fLock.tryLockAsync(waitMs, leaseMs, MILLISECONDS, lockId).await()
-        if (!acquired) return LockNotAcquired
+        if (!acquired) {
+            log.warn { "Suspending fenced lock not acquired: $lockName (wait=${waitMs}ms)" }
+            return LockNotAcquired(lockName)
+        }
+        
+        // [3] 취득 후 토큰 읽기 (getTokenAsync: 현재 보유 중인 fencing token 반환)
+        val token: Long = fLock.getTokenAsync().await()
         
         try {
-            val token = fLock.tokenAsync.await()
             val result = fencedResources.forResource(id).apply(token) {
                 val current = store.currentStock(id)
-                if (current < qty) InsufficientStock
+                if (current < qty) InsufficientStock(qty, current)
                 else Success(store.applyChange(id, -qty), token)
             }
-            return result ?: Rejected
+            return result ?: run {
+                log.warn { "Suspending fenced token $token rejected for $lockName" }
+                Rejected(token)
+            }
         } finally {
-            try {
-                fLock.unlockAsync(lockId).await()
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                log.warn(e) { "unlock failed for lockId=$lockId" }
+            // [4] withContext(NonCancellable): 코루틴 취소 시에도 Redis unlock 명령 디스패치 보장
+            //     이 패턴 없이 await()를 쓰면 취소 즉시 CancellationException이 throw되어 락이 리크됨
+            withContext(NonCancellable) {
+                try {
+                    fLock.unlockAsync(lockId).await()
+                } catch (e: Exception) {
+                    log.warn(e) { "Suspending fenced unlock failed (lease may have expired): lockId=$lockId, $lockName" }
+                }
             }
         }
     }
 }
+```
+
+> **설계 결정: 코루틴 변형은 두 단계 (tryLockAsync + getTokenAsync)를 사용한다.**
+>
+> `tryLockAndGetTokenAsync(waitMs, leaseMs, unit)` 는 원자적이지만 `lockId(threadId)` 파라미터를 지원하지 않는다.
+> 코루틴은 suspend 후 다른 스레드에서 재개되므로 Redisson 내부의 `Thread.currentThread().id` 가 unlock 시점과 불일치할 수 있다.
+> 따라서 코루틴 변형은 `tryLockAsync(..., lockId)` + `getTokenAsync()` 두 단계로 lockId 안전성을 유지한다.
+> (추가 RTT 1회는 코루틴 안전성 확보를 위한 필수 비용이다.)
 ```
 
 ---
@@ -360,7 +469,34 @@ fun `구 토큰으로 apply 시도 시 null 반환`() {
     val resource = FencedResource(1L)
     resource.apply(5L) { "ok" }.shouldNotBeNull()
     resource.apply(3L) { "should reject" }.shouldBeNull()
-    resource.apply(5L) { "same ok" }.shouldNotBeNull()  // equal token 허용
+    resource.apply(5L) { "same ok" }.shouldNotBeNull()  // equal token 허용 (동일 임차자 재진입)
+    resource.apply(4L) { "also reject" }.shouldBeNull()  // 이미 5 이상 — 4는 stale
+}
+```
+
+### 7.3-코루틴 취소 안전성 테스트 (SuspendFencedLockTest — P0 검증)
+
+> 이 테스트가 없으면 P0 (NonCancellable unlock) 수정은 검증 불가 상태다.
+
+```kotlin
+@Test
+fun `코루틴 취소 시 락이 정상 해제됨`() = runSuspendIO {
+    val lockName = "sfenced-cancel-test"
+    val fLock = redisson.getFencedLock(lockName)
+    store.register(Inventory(999L, "취소테스트", 100))
+    
+    val job = launch {
+        service.deduct(999L, 10, waitMs = 2000L, leaseMs = 5000L)
+        // suspend 내에서 실제 Redis 작업 수행 후 취소 도달
+        delay(100)  // 임계 구역 내에서 취소 트리거 기회를 줌
+    }
+    
+    delay(50)  // deduct 진입 후 취소
+    job.cancel()
+    job.join()
+    
+    // NonCancellable 덕분에 unlock이 Redis에 디스패치됨 → 락 해제 확인
+    fLock.isLocked shouldBeEqualTo false
 }
 ```
 
@@ -486,6 +622,37 @@ redis/distributed-lock/
 
 ## 11. 리뷰 이터레이션 로그 (Appendix)
 
-| 라운드 | Reviewer | P0/P1 | P2/P3 | 반영 커밋 |
+### Round 1 (Step 2-R) — 2026-05-23
+
+**Reviewers:** Security (Phase 1), Ops/SRE (Phase 1), UX/Caller (Phase 1), Developer (Phase 1), Opus Critic (Phase 2), Claude Code Advisor
+
+| Reviewer | P0 | P1 | P2 | P3 |
 |---|---|---|---|---|
-| Round 1 spec | (작성 중) | - | - | - |
+| Security | 0 | 1 | 1 | 1 |
+| Ops/SRE | 0 | 7 | 1 | 0 |
+| UX/Caller | 0 | 3 | 3 | 0 |
+| Developer | 1 | 3 | 1 | 0 |
+| Opus Critic (synthesized) | 1 | 9 | 9 | 3 |
+
+**P0 findings:**
+1. `SuspendingFencedInventoryService.finally` — `withContext(NonCancellable)` 누락 → 코루틴 취소 시 락 리크
+
+**P1 findings (10개):**
+1. `tryLockAsync` + `tokenAsync` 2단계 → `tryLockAndGetTokenAsync` 원자적 메서드로 교체
+2. `FencedResource.apply()` equal-token 정책 미정의 → 동일 토큰 허용(재진입) 문서화
+3. `DeductionResult` 서브타입 `serialVersionUID` 누락 → per-class 추가
+4. `qty.requirePositiveNumber("qty")` 누락 → 모든 deduct() 변형에 추가
+5. `getLockId` 수명주기 계약 미문서 → §6.4에 계약 명시
+6. Redis 불가용 동작 미정의 → Risk 6 추가
+7. `DeductionResult` 실패 타입 진단 컨텍스트 없음 → `data class`로 변환 + 필드 추가
+8. `FencedResource` JVM 재시작 시 상태 리셋 미문서 → §6.3에 명시
+9. 학습 경로 없음 → §0 추가
+10. P0 취소 안전성 검증 테스트 없음 → §7.3-코루틴 추가
+
+**반영:** 이 커밋 (Round 1 spec revision)
+
+**Round 1 후 카운트:**
+- P0: 1 → **0**
+- P1: 10 → **0**
+- P2: 9 (implementation 시점 처리)
+- P3: 3 (N/A or implementation-time)
