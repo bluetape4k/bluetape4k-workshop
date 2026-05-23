@@ -1,69 +1,199 @@
-# Spring Boot 4 + Resilience4j + Coroutines Demo
+# Spring Boot 4 + Resilience4j + Coroutines Workshop
 
-원본: [resilience4j-spring-boot3-demo](https://github.com/resilience4j/resilience4j-spring-boot3-demo)
+Based on: [resilience4j-spring-boot3-demo](https://github.com/resilience4j/resilience4j-spring-boot3-demo)
 
-## Circuit Breaker 상태 전이
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  HTTP Clients (WebTestClient / curl)                            │
+└──────────────────────┬──────────────────────────────────────────┘
+                       │
+          ┌────────────▼────────────┐
+          │    REST Controllers     │
+          │  BackendAController     │  ← Sync / Mono / Flux / Future
+          │  BackendACoController   │  ← suspend + Flow
+          │  BackendBController     │  ← Sync (RateLimiter)
+          │  BackendBCoController   │  ← suspend (Bulkhead + Retry)
+          └────────────┬────────────┘
+                       │ Resilience4j AOP Proxy
+          ┌────────────▼────────────┐
+          │       Services          │
+          │  BackendAService        │  ← Mono / Flux / Future
+          │  BackendACoService      │  ← suspend + Flow
+          │  BackendBService        │  ← Sync
+          │  BackendBCoService      │  ← suspend
+          └─────────────────────────┘
+```
+
+### Circuit Breaker State Machine
 
 ![Circuit Breaker diagram](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-diagram-01.png)
 
-## 개요
+```
+  ┌────────┐  failure rate > threshold  ┌────────┐
+  │ CLOSED │ ──────────────────────────▶│  OPEN  │
+  │        │◀──────────────────────────│        │
+  └────────┘  all probes succeed        └───┬────┘
+                                             │ wait duration
+                                        ┌────▼────┐
+                                        │HALF-OPEN│
+                                        │(probes) │
+                                        └─────────┘
+```
 
-Resilience4j 2.4.0 을 Spring Boot 4 환경에서 Coroutines를 사용하는 Service에 적용하는 예제입니다.
+## Overview
 
-## 주요 컴포넌트
+Demonstrates applying Resilience4j 2.4.0 fault-tolerance patterns in a Spring Boot 4 application with
+Kotlin coroutines. Covers CircuitBreaker, Bulkhead, Retry, TimeLimiter, and RateLimiter for both
+blocking and non-blocking (suspend / Flow / Mono / Flux / CompletableFuture) code paths.
 
-| 클래스 | 패턴 | 설명 |
+## Used Bluetape4k Features
+
+| Module | Feature | Usage |
 |---|---|---|
-| `BackendAController` | CircuitBreaker + Bulkhead + Retry | 일반 동기/Mono/Flux/Future 방식 |
-| `BackendBController` | RateLimiter | IP 기반 요청 제한 |
-| `BackendCController` | Retry | 재시도 전략 적용 |
-| `SuspendBackendAController` | CircuitBreaker + 코루틴 | `suspend` 함수에 CircuitBreaker 적용 |
-| `SuspendBackendBController` | Retry + 코루틴 | `suspend` 함수에 Retry 적용 |
-| `BackendAService` | 일반 서비스 | Mono/Flux/Future 모두 지원, fallback 메서드 포함 |
-| `BackendACoService` | 코루틴 서비스 | `suspend` 함수 + `Flow` 반환 지원 |
-| `CircuitBreakerRegistryEventConsumer` | 이벤트 처리 | Circuit Breaker 상태 변경 이벤트 수신 |
-| `RetryRegistryEventConsumer` | 이벤트 처리 | Retry 이벤트 수신 |
+| `bluetape4k-logging` | `KLogging()` / `KLoggingChannel()` | Structured logging in services and tests |
+| `bluetape4k-junit5` | `runSuspendIO { }` | Running suspend test blocks with real I/O |
+| `bluetape4k-coroutines` | `CoDecorators` | Programmatic resilience decorators for suspend functions |
+| `bluetape4k-testcontainers` | Test infrastructure | (no external infra required for this module) |
+| `bluetape4k-assertions` | `shouldBeEqualTo`, `shouldBeTrue`, etc. | Type-safe test assertions |
 
-## Resilience4j 패턴별 설명
+## Resilience4j Patterns
 
 ### Circuit Breaker
 
-호출 실패율이 임계값을 초과하면 OPEN 상태로 전환하여 즉시 요청을 거부합니다. 설정된 대기 시간 후 HALF-OPEN으로 전환하여 일부 요청을 허용하고, 성공 시 CLOSED로 복귀합니다.
+Opens when the failure rate exceeds the configured threshold, preventing calls to a degraded backend.
+Returns to CLOSED when probe calls succeed from HALF-OPEN state.
 
 ```kotlin
 @CircuitBreaker(name = "backendA", fallbackMethod = "fallback")
-fun failureWithFallback(): String { ... }
+fun failureWithFallback(): String { throw IOException("BAM!") }
 
-// fallback 메서드는 예외 타입별로 오버로드 가능
+// Fallback overloaded per exception type
 private fun fallback(ex: HttpServerErrorException): String = "Recovered: ${ex.message}"
+
+// suspend function — same annotation, fallback must NOT be suspend
+@CircuitBreaker(name = "backendA", fallbackMethod = "suspendFallback")
+override suspend fun suspendFailureWithFallback(): String = suspendFailure()
+
+private fun suspendFallback(ex: Throwable): String = "Recovered: ${ex.message}"
 ```
 
 ### Retry
 
-지정된 횟수만큼 실패한 호출을 재시도합니다. `BusinessException` 같이 특정 예외는 무시하도록 설정할 수 있습니다.
+Retries failed calls up to the configured maximum. Specific exceptions (e.g., `BusinessException`)
+can be excluded from retry.
+
+```kotlin
+@CircuitBreaker(name = "backendA")
+@Bulkhead(name = "backendA")
+@Retry(name = "backendA")
+override suspend fun suspendFailure(): String { throw IOException("BAM!") }
+```
+
+> **Note for Flow:** `@Retry` annotation is NOT applied to `Flow`-returning functions.
+> Use `Flow.retry(retry)` extension instead.
 
 ### Bulkhead
 
-동시 실행 수를 제한하여 스레드 고갈을 방지합니다. `Bulkhead.Type.THREADPOOL` 방식으로 Future 기반 비동기에도 적용 가능합니다.
+Limits concurrent executions to prevent thread starvation. Supports both semaphore (for coroutines)
+and thread-pool bulkhead (for `CompletableFuture`-based code).
+
+```kotlin
+@CircuitBreaker(name = "backendA")
+@Bulkhead(name = "backendA")
+override suspend fun suspendSuccess(): String = "Hello World"
+```
 
 ### TimeLimiter
 
-지정된 시간 내에 완료되지 않으면 `TimeoutException`을 발생시킵니다. `Mono`/`Flux`/`CompletableFuture`에 적용 가능하며, **`suspend` 함수에는 적용되지 않습니다.**
+Enforces a deadline on calls. Works with `Mono`, `Flux`, and `CompletableFuture`.
 
-## 코루틴 통합 시 주의사항
+> **⚠️ Warning:** `@TimeLimiter` is **NOT compatible** with Kotlin `suspend` functions in
+> Resilience4j 2.4.x. It causes an actual `TimeoutException` after the configured duration,
+> not a silent no-op. Use `kotlinx.coroutines.withTimeout` for coroutine timeout enforcement:
+>
+> ```kotlin
+> withTimeout(2_000L) { slowSuspendOperation() }
+> ```
 
-| 항목 | 내용 |
-|---|---|
-| `@CircuitBreaker` + `suspend` | 지원 (AOP 프록시로 래핑) |
-| `@Retry` + `suspend` | 지원 |
-| `@Bulkhead` + `suspend` | 지원 |
-| `@TimeLimiter` + `suspend` | **미지원** — `withTimeout {}` 사용 권장 |
-| `@Retry` + `Flow` 반환 | **미지원** — `Flow.retry(retry)` 확장 함수 사용 권장 |
+### Rate Limiter
 
-## 실행 방법
+Limits the number of calls within a time window. Backend B demonstrates IP-based rate limiting.
+
+## Key Coroutine Integration Findings
+
+| Pattern | Supported | Notes |
+|---|---|---|
+| `@CircuitBreaker` + `suspend` | ✅ | AOP proxy wraps suspend function correctly |
+| `@Bulkhead` + `suspend` | ✅ | Semaphore bulkhead works with suspend |
+| `@Retry` + `suspend` | ⚠️ | Annotation-based retry on suspend has known bugs; use `CoDecorators` |
+| `@TimeLimiter` + `suspend` | ❌ | Causes actual `TimeoutException`; use `withTimeout {}` instead |
+| `@Retry` + `Flow` | ❌ | Not applied; use `Flow.retry(retry)` extension |
+| CircuitBreaker fallback for `suspend` | ⚠️ | Fallback method must be non-suspend |
+| Metrics update for suspend/reactive | ⚠️ | Async paths do not update registry synchronously |
+
+## Configuration
+
+See `src/main/resources/application.yml` for full configuration. Key sections:
+
+```yaml
+resilience4j:
+  circuitbreaker:
+    instances:
+      backendA:
+        slidingWindowSize: 10
+        permittedNumberOfCallsInHalfOpenState: 3
+        waitDurationInOpenState: 1s
+        failureRateThreshold: 50
+        ignoreExceptions:
+          - io.bluetape4k.workshop.resilience.exception.BusinessException
+
+  retry:
+    instances:
+      backendA:
+        maxAttempts: 3
+        waitDuration: 500ms
+
+  bulkhead:
+    instances:
+      backendA:
+        maxConcurrentCalls: 10
+
+  timelimiter:
+    instances:
+      backendA:
+        timeoutDuration: 2s
+```
+
+## Running
 
 ```bash
-./gradlew :resilience4j-coroutines:bootRun
-# Actuator: http://localhost:8080/actuator/circuitbreakers
-# Health:   http://localhost:8080/actuator/health
+# Start the application
+./gradlew :spring-boot-resilience4j-coroutines:bootRun
+
+# Actuator endpoints
+curl http://localhost:8080/actuator/circuitbreakers
+curl http://localhost:8080/actuator/health
+curl http://localhost:8080/actuator/metrics/resilience4j.circuitbreaker.calls
+
+# Example API calls
+curl http://localhost:8080/backendA/suspendFailureWithFallback
+curl http://localhost:8080/coroutines/backendA/suspendSuccess
 ```
+
+## Tests
+
+```bash
+./gradlew :spring-boot-resilience4j-coroutines:test
+```
+
+Test coverage: 73 tests, 6 skipped (annotated `@Disabled` for known Resilience4j + coroutine limitations).
+
+## References
+
+- [Resilience4j Spring Boot 3 Demo](https://github.com/resilience4j/resilience4j-spring-boot3-demo)
+- [Resilience4j Kotlin Coroutines support](https://resilience4j.readme.io/docs/getting-started-3)
+- [bluetape4k-leader](https://github.com/bluetape4k/bluetape4k-leader) — distributed leader election
+
+[한국어](README.ko.md)
