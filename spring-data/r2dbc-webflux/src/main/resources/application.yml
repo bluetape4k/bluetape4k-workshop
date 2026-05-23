@@ -5,12 +5,13 @@ spring:
         pool:
             initial-size: 16
             max-size: 16
-        url: r2dbc:h2:mem:///pocdb?options=DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+        url: r2dbc:h2:mem:///pocdb?options=DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;CASE_INSENSITIVE_IDENTIFIERS=TRUE
         username: sa
         password:
 
-    sql:
-        init:
-            schema-locations: classpath:data/schema.sql
-            data-locations: classpath:data/data.sql
-            mode: always
+    # sql.init not used — ConnectionFactoryInitializer bean handles schema/data setup explicitly
+    # sql:
+    #     init:
+    #         schema-locations: classpath:data/schema.sql
+    #         data-locations: classpath:data/data.sql
+    #         mode: always
