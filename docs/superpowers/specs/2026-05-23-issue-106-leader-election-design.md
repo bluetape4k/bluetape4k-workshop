@@ -318,21 +318,32 @@ fun main(args: Array<String>) {
 ### T0: Spring Boot Context Loading Test
 ```kotlin
 @SpringBootTest
-@TestPropertySource(properties = ["leader.redis.url=redis://localhost:\${redis.port}"])
 class LeaderElectionContextTest(
     @Autowired val leaderElector: LeaderElector,
     @Autowired val jobService: LeaderScheduledJobService,
     @Autowired val jobs: List<LeaderGuardedJob>,
 ) {
+    companion object : KLogging() {
+        val redis = RedisServer.Launcher.redis
+
+        @JvmStatic
+        @DynamicPropertySource
+        fun registerProperties(registry: DynamicPropertyRegistry) {
+            registry.add("leader.redis.url") { redis.url }
+        }
+    }
+
     @Test
-    fun `Spring Boot context loads successfully`() {
+    fun `Spring Boot context loads with all leader beans`() {
         leaderElector.shouldNotBeNull()
         jobService.shouldNotBeNull()
         jobs.shouldHaveSize(2)  // CacheWarmupJob + StaleWorkflowCleanupJob
     }
 }
 ```
-> **T0 목적**: `@Component` 누락, Duration 타입 불일치, Config 바인딩 오류를 컴파일 전에 runtime에서 조기 감지.
+> **T0 목적**: `@Component` 누락, Duration 타입 불일치, Config 바인딩 오류를 컴파일 전에 runtime에서 조기 감지.  
+> **`@TestPropertySource(properties = ["leader.redis.url=redis://localhost:\${redis.port}"])` 패턴 금지** — placeholder 해석 안 됨.  
+> `@DynamicPropertySource` companion static method 가 올바른 방법.  
 > AC "Spring Boot 패턴 시연" 을 달성하는 최소 통합 증거.
 
 ### T1: 단일 인스턴스 Job 실행
@@ -552,6 +563,9 @@ rg "leader" .github/workflows/nightly.yml   # 현재 없어야 정상 (자동 �
 | Round 2 | 6-Tier Advisor | 2 | 2 | 3 | 10 | 반영됨 |
 | Round 2 통합 raw | | 7 | 18 | - | - | — |
 | Round 2 통합 (workshop scope 적용 후) | | 0 | 0 | - | - | **반영 완료** |
+| Step 3-R Round 1 | Architect + SFH + Test + Type (4 perspective) | 5 | 4 | 5 | 2 | 반영됨 (plan) |
+| Step 3-R | 6-Tier Advisor (catalog key / T0 pattern / Codex) | 1 | 2 | 1 | 0 | 반영됨 |
+| Step 3-R 통합 (workshop scope 적용 후) | | 0 | 0 | - | - | **반영 완료** |
 
 ### Round 2 반영 항목 요약
 1. `LeaderElectionOptions(waitTime = props.waitTime.toKotlinDuration(), ...)` — Duration 타입 변환 추가 (§5-3)

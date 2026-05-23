@@ -41,7 +41,8 @@
   - Spec §8 의 의존성 목록 반영:
     - `implementation(libs.bluetape4k.leader.core)`, `implementation(libs.bluetape4k.leader.redis.lettuce)`, `implementation(libs.lettuce.core)`
     - `implementation(libs.bluetape4k.logging)`
-    - `implementation(libs.spring.boot.starter)` + `annotationProcessor(libs.spring.boot.configuration.processor)`
+    - `implementation(libs.spring.boot.autoconfigure.lib)` + `implementation(libs.spring.boot.starter.actuator)` (sibling 모듈 패턴과 동일; bare `spring-boot-starter` 키는 카탈로그에 없음)
+    - `annotationProcessor(libs.spring.boot.autoconfigure.processor)` + `annotationProcessor(libs.spring.boot.configuration.processor)`
     - 테스트: `testImplementation(project(":shared"))`, `libs.bluetape4k.junit5`, `libs.bluetape4k.testcontainers`, `libs.bluetape4k.assertions`
     - `libs.spring.boot.starter.test` (junit/vintage/mockito-core 제외)
 
@@ -150,8 +151,10 @@
   - `leader/leader-election/src/test/resources/logback-test.xml`
 - **what**:
   - `junit-platform.properties`: 다른 워크샵 모듈 패턴 복사 후 조정.
-    - `junit.jupiter.execution.parallel.enabled=false` (직렬 실행 — DB/Redis 충돌 방지).
+    - `junit.jupiter.execution.parallel.enabled=false` (직렬 실행 — Redis 충돌 방지).
     - `junit.jupiter.testinstance.lifecycle.default=per_class`.
+    - **`@Tag("smoke")` 제외**: `junit.jupiter.execution.exclude.tags=smoke` 추가
+      (T5 LeaseExpiryTest, T6 RedisFailureTest 는 기본 `test` task 에서 제외; `@Tag("smoke")` 테스트는 별도 Gradle task 또는 Nightly 에서만 실행).
   - `logback-test.xml`: 콘솔 appender.
     - `io.bluetape4k.workshop.leader=DEBUG`, `io.bluetape4k.leader=TRACE`, root `INFO`.
 
@@ -172,7 +175,19 @@
 - **file(s)**:
   - `leader/leader-election/src/test/kotlin/io/bluetape4k/workshop/leader/LeaderElectionContextTest.kt`
 - **what**:
-  - `@SpringBootTest` + `@DynamicPropertySource` 또는 `@TestPropertySource` 로 Testcontainers Redis URL 주입.
+  - `@SpringBootTest` + **`@DynamicPropertySource` companion static method** 로 Testcontainers Redis URL 주입.
+    - `@TestPropertySource(properties = ["...${redis.port}"])` 패턴 금지 — placeholder 해석 안 됨.
+    - 올바른 패턴:
+      ```kotlin
+      companion object : KLogging() {
+          val redis = RedisServer.Launcher.redis
+          @JvmStatic
+          @DynamicPropertySource
+          fun registerProperties(registry: DynamicPropertyRegistry) {
+              registry.add("leader.redis.url") { redis.url }
+          }
+      }
+      ```
   - 생성자 주입: `@Autowired val leaderElector: LeaderElector`, `@Autowired val jobService: LeaderScheduledJobService`, `@Autowired val jobs: List<LeaderGuardedJob>`.
   - 테스트: `\`Spring Boot context loads with all leader beans\``:
     - `leaderElector.shouldNotBeNull()`, `jobService.shouldNotBeNull()`, `jobs.shouldHaveSize(2)`.
@@ -246,9 +261,12 @@
 - **what**:
   - **`@Tag("smoke")` 부착 필수**.
   - 별도 Testcontainers Redis 컨테이너 생성 (singleton 공유 금지 — `stop()` 호출 시 다른 테스트 영향).
+    - `GenericContainer("redis:7-alpine").withExposedPorts(6379).apply { start() }` 로 직접 생성.
   - 시나리오: 정상 elector 생성 → Redis stop → `runIfLeader` 호출 시 동작 관찰.
   - 예외 전파 또는 timeout — silent hang 이면 안 됨.
-  - `assertFailsWith<Exception> { ... }` 또는 `assertTimeoutPreemptively` 로 검증.
+  - 검증 방법 (확정): `assertTimeoutPreemptively(Duration.ofSeconds(10)) { assertFailsWith<Exception> { elector.runIfLeader(lockName) { } } }`
+    - outer `assertTimeoutPreemptively`: silent hang 방지 (library 가 끝없이 기다리는 경우 대비).
+    - inner `assertFailsWith<Exception>`: 연결 실패 예외 전파 검증.
   - KDoc 에 "educational smoke — library contract" 명시.
 
 #### P3-10: LockReleaseTest (T7) — 즉시 재획득
@@ -264,6 +282,53 @@
   - `val result = elector2.runIfLeader(lockName) { "reacquired" }` → 즉시 재획득.
   - `result.shouldNotBeNull() shouldBeEqualTo "reacquired"` — leaseTime(30s) 만료 대기 없이 성공.
   - **`connection.close()` 호출 금지** — Redis key 삭제 안 됨 (잘못된 가정, Spec §6 T7 수정).
+
+#### P3-11: DuplicateLockNameTest — lockName 중복 감지 단위 테스트
+- **complexity**: low
+- **file(s)**:
+  - `leader/leader-election/src/test/kotlin/io/bluetape4k/workshop/leader/DuplicateLockNameTest.kt`
+- **what**:
+  - `AbstractLeaderElectionTest` 상속 불필요 — Redis 컨테이너 없이 순수 단위 테스트.
+  - `val elector = mockk<LeaderElector>()` (MockK 사용).
+  - `val job1 = object : LeaderGuardedJob { override val lockName = "leader:cache-warmup"; override fun execute() {} }`
+    `val job2 = object : LeaderGuardedJob { override val lockName = "leader:cache-warmup"; override fun execute() {} }` (동일 lockName)
+  - `assertFailsWith<IllegalStateException> { LeaderScheduledJobService(elector, listOf(job1, job2)) }`.
+  - KDoc: "Validates duplicate lockName detection in LeaderScheduledJobService init{}".
+
+#### P3-12: JobIsolationTest — 첫 번째 Job 실패 시 나머지 Job 계속 실행
+- **complexity**: medium
+- **file(s)**:
+  - `leader/leader-election/src/test/kotlin/io/bluetape4k/workshop/leader/JobIsolationTest.kt`
+- **what**:
+  - `AbstractLeaderElectionTest` 상속.
+  - `val failingJob = object : LeaderGuardedJob { override val lockName = "test:isolate:fail"; override fun execute() { throw RuntimeException("intentional") } }`
+  - `val successJob = object : LeaderGuardedJob { override val lockName = "test:isolate:success"; override fun execute() { successCount.incrementAndGet() } }`
+  - `val successCount = AtomicInteger(0)` (java.util.concurrent.atomic — local 변수 규칙).
+  - `runJobs()` 직접 호출 (reflection 불필요 — `@Scheduled` 는 테스트에서 비활성).
+  - `successCount.get() shouldBeEqualTo 1` — failingJob 예외가 successJob 실행을 차단하지 않음.
+  - MockK 로 `LeaderElector.runIfLeader` stub: 두 lockName 모두 실제 실행 (null 아님).
+
+#### P3-13: PropertiesValidationTest — LeaderElectionProperties init{} 검증
+- **complexity**: low
+- **file(s)**:
+  - `leader/leader-election/src/test/kotlin/io/bluetape4k/workshop/leader/PropertiesValidationTest.kt`
+- **what**:
+  - Spring 컨텍스트 불필요 — 순수 단위 테스트.
+  - `\`leaseTime less than waitTime throws IllegalArgumentException\``:
+    ```kotlin
+    assertFailsWith<IllegalArgumentException> {
+        LeaderElectionProperties(
+            waitTime = Duration.ofSeconds(30),
+            leaseTime = Duration.ofSeconds(10),  // leaseTime < waitTime — invalid
+        )
+    }
+    ```
+  - `\`valid properties construction succeeds\``:
+    ```kotlin
+    val props = LeaderElectionProperties(waitTime = Duration.ofSeconds(2), leaseTime = Duration.ofSeconds(30))
+    props.waitTime.toSeconds() shouldBeEqualTo 2L
+    props.leaseTime.toSeconds() shouldBeEqualTo 30L
+    ```
 
 ---
 
