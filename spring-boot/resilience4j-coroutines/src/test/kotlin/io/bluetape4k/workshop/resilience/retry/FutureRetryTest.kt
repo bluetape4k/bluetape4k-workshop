@@ -9,6 +9,9 @@ class FutureRetryTest: AbstractRetryTest() {
 
     companion object: KLoggingChannel()
 
+    // CompletableFuture pipelines do not update Resilience4j registry metrics synchronously.
+    override fun metricsAssertionEnabled(): Boolean = false
+
     @Nested
     inner class BackendA {
         @Test

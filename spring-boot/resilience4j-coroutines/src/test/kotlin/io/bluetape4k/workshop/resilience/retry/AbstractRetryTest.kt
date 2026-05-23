@@ -31,27 +31,32 @@ abstract class AbstractRetryTest: AbstractResilienceTest() {
     }
 
     /**
-     * Logs the current retry metric counter for diagnostic purposes.
+     * Verifies the retry metric counter equals [count] using the [RetryRegistry] directly.
      *
-     * ## Why no hard assertion here?
+     * Blocking callers (e.g., [RetryTest]) update the registry synchronously — the delta assertion
+     * `currentCount + 1` is reliable for those paths.
      *
-     * Two known limitations prevent reliable assertion:
+     * Subclasses with asynchronous publish semantics (reactive `Mono`/`Flux`, `CompletableFuture`,
+     * coroutines) should override [metricsAssertionEnabled] to return `false` because those paths
+     * do not update the registry synchronously.
      *
-     * 1. **Prometheus format mismatch**: Resilience4j + Spring Boot 4 Prometheus integration
-     *    produces metric names in a format that does not match the expected pattern.
-     *    Tracked: https://github.com/bluetape4k/bluetape4k-workshop/issues (area:resilience)
-     *
-     * 2. **Reactive publisher asynchrony**: For `Mono`/`Flux` decorated with `@Retry`,
-     *    `numberOfSuccessfulCallsWithoutRetryAttempt` and `numberOfFailedCallsWithRetryAttempt`
-     *    may not update synchronously with the reactive pipeline completion, making a
-     *    delta-assertion across tests non-deterministic.
-     *
-     * The [getCurrentCount] helper is kept so callers can snapshot and compare values
-     * for blocking or suspend calls where synchronous metric updates are guaranteed.
+     * **Note:** Prometheus endpoint assertions are omitted; Resilience4j + Spring Boot 4 produces
+     * a metric name format that does not match the expected Prometheus pattern.
+     * Tracked: https://github.com/bluetape4k/bluetape4k-workshop/issues (area:resilience)
      */
     protected fun checkMetrics(kind: String, serviceName: String, count: Float) {
         val actual = getCurrentCount(kind, serviceName)
-        log.debug { "checkMetrics kind=$kind service=$serviceName expected=$count actual=$actual" }
-        // Assertion intentionally skipped — see KDoc above for rationale.
+        log.debug { "checkMetrics kind=$kind service=$serviceName expected=$count actual=$actual asserting=${metricsAssertionEnabled()}" }
+        if (metricsAssertionEnabled()) {
+            actual shouldBeEqualTo count
+        }
     }
+
+    /**
+     * Controls whether [checkMetrics] performs a hard assertion.
+     *
+     * Override to return `false` in subclasses where metric updates are asynchronous
+     * (reactive Mono/Flux, CompletableFuture, coroutines).
+     */
+    protected open fun metricsAssertionEnabled(): Boolean = true
 }
