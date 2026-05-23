@@ -165,15 +165,12 @@ jetbrains-annotations = { module = "org.jetbrains:annotations", version = "26.1.
 
 # bluetape4k
 bluetape4k-dependencies = { module = "io.github.bluetape4k:bluetape4k-dependencies", version.ref = "bluetape4k-dependencies-version" }
-bluetape4k-bom = { module = "io.github.bluetape4k:bluetape4k-bom" }
 bluetape4k-core = { module = "io.github.bluetape4k:bluetape4k-core" }
 bluetape4k-coroutines = { module = "io.github.bluetape4k:bluetape4k-coroutines" }
 bluetape4k-logging = { module = "io.github.bluetape4k:bluetape4k-logging" }
 bluetape4k-junit5 = { module = "io.github.bluetape4k:bluetape4k-junit5" }
 bluetape4k-assertions = { module = "io.github.bluetape4k:bluetape4k-assertions" }
 bluetape4k-testcontainers = { module = "io.github.bluetape4k:bluetape4k-testcontainers" }
-bluetape4k-mock-web-server = { module = "io.github.bluetape4k:bluetape4k-mock-web-server" }
-bluetape4k-mock-webflux-server = { module = "io.github.bluetape4k:bluetape4k-mock-webflux-server" }
 bluetape4k-virtualthread-api = { module = "io.github.bluetape4k:bluetape4k-virtualthread-api" }
 bluetape4k-virtualthread-jdk21 = { module = "io.github.bluetape4k:bluetape4k-virtualthread-jdk21" }
 bluetape4k-virtualthread-jdk25 = { module = "io.github.bluetape4k:bluetape4k-virtualthread-jdk25" }
@@ -204,7 +201,6 @@ bluetape4k-jdbc = { module = "io.github.bluetape4k:bluetape4k-jdbc" }
 bluetape4k-mongodb = { module = "io.github.bluetape4k:bluetape4k-mongodb" }
 bluetape4k-r2dbc = { module = "io.github.bluetape4k:bluetape4k-r2dbc" }
 bluetape4k-bucket4j = { module = "io.github.bluetape4k:bluetape4k-bucket4j" }
-bluetape4k-cache-lib = { module = "io.github.bluetape4k:bluetape4k-cache" }
 bluetape4k-cache-core = { module = "io.github.bluetape4k:bluetape4k-cache-core" }
 bluetape4k-kafka = { module = "io.github.bluetape4k:bluetape4k-kafka" }
 bluetape4k-lettuce = { module = "io.github.bluetape4k:bluetape4k-lettuce" }
@@ -214,11 +210,10 @@ bluetape4k-micrometer = { module = "io.github.bluetape4k:bluetape4k-micrometer" 
 bluetape4k-redis = { module = "io.github.bluetape4k:bluetape4k-redis" }
 bluetape4k-redisson = { module = "io.github.bluetape4k:bluetape4k-redisson" }
 bluetape4k-resilience4j = { module = "io.github.bluetape4k:bluetape4k-resilience4j" }
-bluetape4k-spring-boot3 = { module = "io.github.bluetape4k:bluetape4k-spring-boot3-core" }
-bluetape4k-spring-boot4-core = { module = "io.github.bluetape4k:bluetape4k-spring-boot4-core" }
-bluetape4k-spring-boot4-r2dbc = { module = "io.github.bluetape4k:bluetape4k-spring-boot4-r2dbc" }
-bluetape4k-spring-boot4-redis = { module = "io.github.bluetape4k:bluetape4k-spring-boot4-redis" }
-bluetape4k-aws = { module = "io.github.bluetape4k:bluetape4k-aws" }
+bluetape4k-spring-boot4-core = { module = "io.github.bluetape4k:bluetape4k-spring-boot-core" }
+bluetape4k-spring-boot4-r2dbc = { module = "io.github.bluetape4k:bluetape4k-spring-boot-r2dbc" }
+bluetape4k-spring-boot4-redis = { module = "io.github.bluetape4k:bluetape4k-spring-boot-redis" }
+bluetape4k-aws = { module = "io.github.bluetape4k.aws:bluetape4k-aws-spring-boot" }
 bluetape4k-idgenerators = { module = "io.github.bluetape4k:bluetape4k-idgenerators" }
 bluetape4k-money = { module = "io.github.bluetape4k:bluetape4k-money" }
 bluetape4k-mutiny = { module = "io.github.bluetape4k:bluetape4k-mutiny" }
@@ -699,10 +694,6 @@ quarkus-junit5 = { module = "io.quarkus:quarkus-junit5", version.ref = "quarkus"
 
 # Resteasy
 resteasy-bom = { module = "org.jboss.resteasy:resteasy-bom", version.ref = "resteasy" }
-
-# bluetape4k Quarkus
-bluetape4k-quarkus-core = { module = "io.github.bluetape4k:bluetape4k-quarkus-core" }
-bluetape4k-quarkus-tests = { module = "io.github.bluetape4k:bluetape4k-quarkus-tests" }
 
 # WebJars
 webjar-bootstrap = { module = "org.webjars:bootstrap", version = "5.3.8" }  # https://mvnrepository.com/artifact/org.webjars/bootstrap
