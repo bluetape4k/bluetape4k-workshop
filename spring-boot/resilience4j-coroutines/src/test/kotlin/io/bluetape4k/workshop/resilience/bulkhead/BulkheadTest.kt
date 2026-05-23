@@ -103,15 +103,17 @@ class BulkheadTest : AbstractResilienceTest() {
     @Test
     fun `executing beyond bulkhead limit throws BulkheadFullException`() {
         val bulkhead = bulkheadRegistry.bulkhead(BACKEND_A)
-        val maxCalls = bulkhead.bulkheadConfig.maxConcurrentCalls
+        val available = bulkhead.metrics.availableConcurrentCalls
+        log.debug { "backendA initial available=$available" }
 
-        // Saturate the bulkhead
-        repeat(maxCalls) {
-            bulkhead.tryAcquirePermission()
-        }
-
+        // Saturate the bulkhead — track actual acquisitions to avoid over-releasing in finally
+        var acquired = 0
         var exceptionThrown = false
         try {
+            repeat(available) {
+                if (bulkhead.tryAcquirePermission()) acquired++
+            }
+
             bulkhead.executeCallable {
                 "this should not execute when bulkhead is full"
             }
@@ -119,7 +121,7 @@ class BulkheadTest : AbstractResilienceTest() {
             exceptionThrown = true
             log.debug { "BulkheadFullException correctly thrown: ${e.message}" }
         } finally {
-            repeat(maxCalls) { bulkhead.releasePermission() }
+            repeat(acquired) { bulkhead.releasePermission() }
         }
 
         exceptionThrown.shouldBeTrue()
@@ -132,11 +134,14 @@ class BulkheadTest : AbstractResilienceTest() {
 
         initialAvailable shouldBeGreaterOrEqualTo 0
 
-        // Acquire one permit and verify metrics update
+        // Acquire one permit — assert it succeeds, then verify metrics update
         val acquired = bulkhead.tryAcquirePermission()
-        if (acquired) {
+        acquired.shouldBeTrue()
+        try {
             val availableAfterAcquire = bulkhead.metrics.availableConcurrentCalls
+            availableAfterAcquire shouldBeEqualTo (initialAvailable - 1)
             log.debug { "Available after acquire: $availableAfterAcquire (was $initialAvailable)" }
+        } finally {
             bulkhead.releasePermission()
         }
     }

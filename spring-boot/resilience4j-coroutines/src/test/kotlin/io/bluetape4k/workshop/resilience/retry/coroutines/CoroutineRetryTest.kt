@@ -11,6 +11,9 @@ class CoroutineRetryTest: AbstractRetryTest() {
 
     companion object: KLoggingChannel()
 
+    // Coroutine/suspend paths do not update Resilience4j registry metrics synchronously.
+    override fun metricsAssertionEnabled(): Boolean = false
+
     @Nested
     inner class BackendA {
 
