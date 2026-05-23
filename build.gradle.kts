@@ -144,10 +144,6 @@ subprojects {
                 "-Didea.io.use.nio2=true"
             )
 
-            if (project.name.contains("quarkus")) {
-                // [Quarkus Logging](https://quarkus.io/guides/logging)
-                systemProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager")
-            }
 
             // CI 기본 locale 은 `en` 처럼 국가가 없어 javax.money 기본 currency 를 해석하지 못합니다.
             systemProperty("user.language", "en")
