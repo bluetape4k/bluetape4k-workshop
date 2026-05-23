@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: observability-basic-test
+
+management:
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      export:
+        enabled: false
