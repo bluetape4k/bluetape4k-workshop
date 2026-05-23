@@ -37,11 +37,11 @@ http.server.requests              (자동)
 
 | 개념 | 구현 |
 |------|------|
-| 다계층 스팬 | 서비스 + 캐시 계층에 `withObservationSuspending` |
+| 다계층 스팬 | 서비스 + 캐시 계층에 `observed()` 헬퍼 적용 |
 | 디스패처 경계 | `withObservation { withContext(IO) { transaction { } } }` (Observation OUTER) |
 | Redis Soft-fail | catch + log.warn, DB 폴백 |
 | Cache-aside 패턴 | get → miss → DB → put |
-| 긍정 테스트 어설션 | `ObservationRegistryAssert.assertThat(testRegistry).hasObservationWithNameEqualTo(...)` |
+| 긍정 테스트 어설션 | `TestObservationRegistryAssert.assertThat(testRegistry).hasObservationWithNameEqualTo(...)` |
 | 부정 테스트 어설션 | `TestObservationRegistryAssert.assertThat(testRegistry).hasNumberOfObservationsWithNameEqualTo(name, 0)` |
 
 ## 테스트 커버리지
@@ -51,7 +51,7 @@ http.server.requests              (자동)
 
 ## 의존성
 
-- `bluetape4k-micrometer` — `withObservationSuspending` 코루틴 헬퍼
+- `bluetape4k-micrometer` — 로컬 `observed()` 코루틴 래퍼 (finally-safe)
 - `bluetape4k-redisson` — `redissonClient {}` DSL (`io.bluetape4k.redis.redisson`)
 - `micrometer-context-propagation` — 디스패처 경계 스팬 연속성
 - `jetbrains-exposed-spring-boot4-starter` — Exposed 자동 구성

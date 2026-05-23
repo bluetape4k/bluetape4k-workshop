@@ -19,7 +19,7 @@ graph TD
 
 ```
 http.server.requests            (auto — Spring Boot)
-  └─ order.service.fetch        (manual — withObservationSuspending)
+  └─ order.service.fetch        (manual — observed())
        └─ http.client.requests  (auto — Micrometer WebClient)
             └─ downstream inventory service
 ```
@@ -28,7 +28,7 @@ http.server.requests            (auto — Spring Boot)
 
 | Concept | Implementation |
 |---------|---------------|
-| Manual span | `withObservationSuspending("order.service.fetch", registry) { }` |
+| Manual span | `observed("order.service.fetch", registry) { }` |
 | W3C traceparent propagation | Auto via Spring Boot's `WebClient.Builder` bean |
 | Test assertions | `TestObservationRegistry` (no Zipkin required) |
 | 4xx handling | `onStatus(4xx) { Mono.empty() }` → returns null |
@@ -59,7 +59,7 @@ management:
 
 ## Dependencies
 
-- `bluetape4k-micrometer` — `withObservationSuspending` coroutine helper
+- `bluetape4k-micrometer` — `observed()` coroutine helper (stop-safe wrapper; see ObservationSupport.kt)
 - `micrometer-tracing-bridge-otel` — OTel bridge for W3C propagation
 - `micrometer-context-propagation` — reactor ↔ coroutine context bridging
 - `spring-boot-starter-opentelemetry` — auto-configures WebClient instrumentation

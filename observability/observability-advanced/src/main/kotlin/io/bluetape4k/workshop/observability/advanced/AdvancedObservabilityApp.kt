@@ -6,7 +6,8 @@ import org.springframework.boot.runApplication
 /**
  * Advanced observability demo: HTTP (WebFlux) → coroutine service → H2 DB (Exposed JDBC) + Redis cache.
  *
- * Demonstrates multi-layer span instrumentation via `withObservationSuspending`,
+ * Demonstrates multi-layer span instrumentation via the local `observed()` helper
+ * (a `finally { stop() }`-safe coroutine wrapper — see `ObservationSupport.kt`),
  * Redis cache-aside pattern with soft-fail, and coroutine dispatcher boundary propagation.
  */
 @SpringBootApplication
