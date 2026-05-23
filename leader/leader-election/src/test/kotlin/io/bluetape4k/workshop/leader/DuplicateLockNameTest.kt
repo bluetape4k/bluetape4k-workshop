@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.leader
 
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.workshop.leader.job.LeaderGuardedJob
 import io.bluetape4k.workshop.leader.job.LeaderScheduledJobService
 import io.mockk.mockk
@@ -47,6 +48,6 @@ class DuplicateLockNameTest {
 
         // Must not throw
         val service = LeaderScheduledJobService(elector, listOf(job1, job2))
-        assert(service != null)
+        service.shouldNotBeNull()
     }
 }

@@ -1,6 +1,5 @@
 package io.bluetape4k.workshop.leader.job
 
-import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.*
 import io.bluetape4k.support.requireNotBlank
 import org.springframework.stereotype.Component

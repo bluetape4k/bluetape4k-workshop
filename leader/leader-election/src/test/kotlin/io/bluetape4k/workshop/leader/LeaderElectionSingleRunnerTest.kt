@@ -1,6 +1,5 @@
 package io.bluetape4k.workshop.leader
 
-import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
@@ -33,10 +32,5 @@ class LeaderElectionSingleRunnerTest : AbstractLeaderElectionTest() {
 
         result1.shouldNotBeNull() shouldBeEqualTo 1
         result2.shouldNotBeNull() shouldBeEqualTo 2
-    }
-
-    companion object {
-        @JvmStatic
-        val faker = Fakers.faker
     }
 }
