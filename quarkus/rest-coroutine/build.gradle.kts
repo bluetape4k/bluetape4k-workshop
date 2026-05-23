@@ -20,7 +20,7 @@ dependencies {
     implementation(platform(libs.quarkus.universe.bom))
     implementation(platform(libs.resteasy.bom))
 
-    implementation(platform(libs.bluetape4k.bom))
+    implementation(platform(libs.bluetape4k.dependencies))
 
     // Quarkus 라이브러리 (https://quarkus.io/extensions/)
     // rest
