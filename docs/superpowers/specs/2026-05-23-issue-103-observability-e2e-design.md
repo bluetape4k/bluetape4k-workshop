@@ -1,4 +1,4 @@
-# Issue #103 — Observability End-to-End 예제 설계 (Rev 5)
+# Issue #103 — Observability End-to-End 예제 설계 (Rev 6)
 
 **작성일**: 2026-05-23  
 **브랜치**: `feat/issue-103-observability-e2e`  
@@ -172,7 +172,9 @@ class InventoryClient(
     suspend fun fetchInventory(itemId: Long): Inventory? =
         client.get().uri("/inventory/{id}", itemId)
             .retrieve()
-            .onStatus({ it.isError }) { resp ->
+            // Only intercept 5xx as errors; 404 falls through → awaitBodyOrNull returns null
+            // This aligns with "item not found" semantics: 404 → null, 5xx → exception
+            .onStatus({ it.is5xxServerError }) { resp ->
                 resp.createException().flatMap { Mono.error(it) }
             }
             .awaitBodyOrNull<Inventory>()
@@ -180,7 +182,8 @@ class InventoryClient(
 }
 ```
 - `/inventory/{id}` → MockWebServer에서 응답 stub.
-- 4xx/5xx는 `onStatus` → `createException()`으로 명시적 에러 전파.
+- **5xx만** `onStatus` → `createException()`으로 에러 전파.
+- **4xx (404 포함)**: `awaitBodyOrNull` → `null` 반환 — "item not found" 시맨틱스.
 - Manual observation 없음 — `http.client.requests` span 자동 생성.
 
 #### `service/OrderService.kt`
