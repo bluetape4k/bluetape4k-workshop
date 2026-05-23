@@ -19,7 +19,7 @@ graph TD
 
 ```
 http.server.requests            (자동 — Spring Boot)
-  └─ order.service.fetch        (수동 — withObservationSuspending)
+  └─ order.service.fetch        (수동 — observed())
        └─ http.client.requests  (자동 — Micrometer WebClient)
             └─ 다운스트림 인벤토리 서비스
 ```
@@ -28,7 +28,7 @@ http.server.requests            (자동 — Spring Boot)
 
 | 개념 | 구현 |
 |------|------|
-| 수동 스팬 | `withObservationSuspending("order.service.fetch", registry) { }` |
+| 수동 스팬 | `observed("order.service.fetch", registry) { }` |
 | W3C traceparent 전파 | Spring Boot `WebClient.Builder` 빈을 통해 자동 전파 |
 | 테스트 어설션 | `TestObservationRegistry` (Zipkin 불필요) |
 | 4xx 처리 | `onStatus(4xx) { Mono.empty() }` → null 반환 |
@@ -41,7 +41,7 @@ http.server.requests            (자동 — Spring Boot)
 
 ## 의존성
 
-- `bluetape4k-micrometer` — `withObservationSuspending` 코루틴 헬퍼
+- `bluetape4k-micrometer` — `observed()` 코루틴 헬퍼 (stop-safe wrapper; ObservationSupport.kt 참조)
 - `micrometer-tracing-bridge-otel` — W3C 전파를 위한 OTel 브리지
 - `micrometer-context-propagation` — reactor ↔ 코루틴 컨텍스트 브리징
 - `spring-boot-starter-opentelemetry` — WebClient 계측 자동 구성

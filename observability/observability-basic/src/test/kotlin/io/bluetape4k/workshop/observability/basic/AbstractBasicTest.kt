@@ -4,6 +4,7 @@ import io.bluetape4k.logging.KLogging
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import mockwebserver3.QueueDispatcher
+import java.util.concurrent.TimeUnit
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
@@ -22,7 +23,8 @@ import org.springframework.test.web.reactive.server.WebTestClient
  * - `@AfterAll mockServer.shutdown()` is intentionally absent: multiple subclasses share this instance,
  *   so premature shutdown would break sibling tests. JVM shutdown handles cleanup.
  * - Each test is responsible for enqueuing its own stubs (no shared `@BeforeEach` enqueue).
- * - `@AfterEach resetMockServerDispatcher()` resets queued responses to prevent test pollution.
+ * - `@AfterEach resetMockServerDispatcher()` drains recorded requests and resets queued responses
+ *   to prevent cross-context test pollution (e.g. stale entries breaking `TracePropagationTest`).
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -48,6 +50,10 @@ abstract class AbstractBasicTest {
 
     @AfterEach
     fun resetMockServerDispatcher() {
+        // Drain any unconsumed recorded requests so stale entries don't pollute
+        // cross-context tests (e.g. TracePropagationTest) that call takeRequest().
+        @Suppress("ControlFlowWithEmptyBody")
+        while (mockServer.takeRequest(0, TimeUnit.MILLISECONDS) != null) { /* drain */ }
         mockServer.dispatcher = QueueDispatcher()
     }
 

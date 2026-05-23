@@ -37,11 +37,11 @@ http.server.requests              (auto)
 
 | Concept | Implementation |
 |---------|---------------|
-| Multi-layer spans | `withObservationSuspending` at service + cache layers |
+| Multi-layer spans | `observed()` helper at service + cache layers |
 | Dispatcher boundary | `withObservation { withContext(IO) { transaction { } } }` (Observation OUTER) |
 | Redis soft-fail | catch + log.warn, fallback to DB |
 | Cache-aside pattern | get → miss → DB → put |
-| Positive test assertions | `ObservationRegistryAssert.assertThat(testRegistry).hasObservationWithNameEqualTo(...)` |
+| Positive test assertions | `TestObservationRegistryAssert.assertThat(testRegistry).hasObservationWithNameEqualTo(...)` |
 | Negative test assertions | `TestObservationRegistryAssert.assertThat(testRegistry).hasNumberOfObservationsWithNameEqualTo(name, 0)` |
 
 ## Test Coverage
@@ -69,7 +69,7 @@ management:
 
 ## Dependencies
 
-- `bluetape4k-micrometer` — `withObservationSuspending` coroutine helper
+- `bluetape4k-micrometer` — local `observed()` coroutine wrapper (finally-safe)
 - `bluetape4k-redisson` — `redissonClient {}` DSL (`io.bluetape4k.redis.redisson`)
 - `micrometer-context-propagation` — span continuity across dispatcher boundaries
 - `jetbrains-exposed-spring-boot4-starter` — Exposed auto-configuration
