@@ -1,0 +1,100 @@
+package io.bluetape4k.workshop.exposed.mvc.vt.config
+
+import io.bluetape4k.concurrent.virtualthread.virtualFuture
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.logging.info
+import io.bluetape4k.workshop.exposed.mvc.vt.author.schema.AuthorTable
+import io.bluetape4k.workshop.exposed.mvc.vt.author.schema.BookTable
+import io.bluetape4k.workshop.exposed.mvc.vt.order.schema.OrderLineTable
+import io.bluetape4k.workshop.exposed.mvc.vt.order.schema.OrderTable
+import io.bluetape4k.workshop.exposed.mvc.vt.order.schema.ProductTable
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.springframework.boot.ApplicationArguments
+import org.springframework.boot.ApplicationRunner
+import org.springframework.stereotype.Component
+import java.math.BigDecimal
+import java.util.concurrent.ExecutorService
+
+@Component
+class DatabaseInitializer(
+    private val db: Database,
+    private val executor: ExecutorService,
+) : ApplicationRunner {
+
+    companion object : KLogging()
+
+    override fun run(args: ApplicationArguments) {
+        try {
+            virtualFuture(executor) {
+                transaction(db) {
+                    log.info { "Creating schema..." }
+                    SchemaUtils.create(AuthorTable, BookTable, ProductTable, OrderTable, OrderLineTable)
+
+                    if (ProductTable.selectAll().count() == 0L) {
+                        log.info { "Seeding initial data..." }
+                        seedProducts()
+                        seedAuthors()
+                    } else {
+                        log.info { "Database already seeded. Skipping." }
+                    }
+                }
+            }.get()
+        } catch (e: Exception) {
+            throw IllegalStateException("DatabaseInitializer failed", e)
+        }
+    }
+
+    private fun seedProducts() {
+        listOf(
+            Triple("Laptop", BigDecimal("999.99"), 50),
+            Triple("Keyboard", BigDecimal("49.99"), 200),
+            Triple("Mouse", BigDecimal("29.99"), 300),
+            Triple("Monitor", BigDecimal("299.99"), 100),
+            Triple("Headset", BigDecimal("79.99"), 150),
+        ).forEach { (name, price, stock) ->
+            ProductTable.insert {
+                it[ProductTable.name] = name
+                it[ProductTable.price] = price
+                it[ProductTable.stock] = stock
+            }
+        }
+    }
+
+    private fun seedAuthors() {
+        val authorId1 = AuthorTable.insert {
+            it[firstName] = "Joshua"
+            it[lastName] = "Bloch"
+            it[email] = "joshua.bloch@example.com"
+        }[AuthorTable.id]
+
+        val authorId2 = AuthorTable.insert {
+            it[firstName] = "Martin"
+            it[lastName] = "Odersky"
+            it[email] = "martin.odersky@example.com"
+        }[AuthorTable.id]
+
+        val authorId3 = AuthorTable.insert {
+            it[firstName] = "Venkat"
+            it[lastName] = "Subramaniam"
+            it[email] = "venkat@example.com"
+        }[AuthorTable.id]
+
+        listOf(
+            Triple("Effective Java", "2018-01-01", authorId1),
+            Triple("Programming in Scala", "2021-01-01", authorId2),
+            Triple("Functional Programming in Java", "2023-01-01", authorId3),
+            Triple("Atomic Kotlin", "2021-01-01", authorId3),
+            Triple("The Joy of Kotlin", "2019-01-01", authorId3),
+        ).forEach { (title, date, aId) ->
+            BookTable.insert {
+                it[BookTable.title] = title
+                it[publishDate] = date
+                it[authorId] = aId
+            }
+        }
+    }
+}
