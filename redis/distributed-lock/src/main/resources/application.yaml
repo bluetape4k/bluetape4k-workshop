@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: distributed-lock-workshop
+  main:
+    web-application-type: none
+  redisson:
+    config: classpath:redisson.yaml
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

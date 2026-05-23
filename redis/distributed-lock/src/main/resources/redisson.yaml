@@ -1,0 +1,16 @@
+singleServerConfig:
+  idleConnectionTimeout: 10000
+  connectTimeout: 1000
+  timeout: 3000
+  retryAttempts: 3
+  retryInterval: 1500
+  password: null
+  subscriptionsPerConnection: 5
+  address: "redis://${REDIS_HOST:127.0.0.1}:${REDIS_PORT:6379}"
+  subscriptionConnectionMinimumIdleSize: 1
+  subscriptionConnectionPoolSize: 25
+  connectionMinimumIdleSize: 5
+  connectionPoolSize: 64
+  database: 0
+threads: 0
+useLinuxNativeEpoll: false
