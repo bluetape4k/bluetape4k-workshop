@@ -18,14 +18,12 @@ import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
 import org.springframework.beans.factory.annotation.Autowired
 
-@Disabled("Spring Boot가 자동 스키마 생성을 못한다. 수동 생성으로 변경해야 한다")
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class UserServiceTest(
     @param:Autowired private val connectionFactory: ConnectionFactory,

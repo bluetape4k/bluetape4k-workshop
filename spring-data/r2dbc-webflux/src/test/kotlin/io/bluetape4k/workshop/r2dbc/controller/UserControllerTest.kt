@@ -16,14 +16,12 @@ import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotBeNull
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.returnResult
 
-@Disabled("Spring Boot가 자동 스키마 생성을 못한다. 수동 생성으로 변경해야 한다")
 class UserControllerTest(
     @param:Autowired private val service: UserService,
 ): AbstractWebfluxR2dbcApplicationTest() {
@@ -190,6 +188,7 @@ class UserControllerTest(
             webTestClient
                 .put()
                 .uri("/api/users/9999")
+                .bodyValue(userToUpdate)
                 .exchange()
                 .expectStatus().isNotFound
         }

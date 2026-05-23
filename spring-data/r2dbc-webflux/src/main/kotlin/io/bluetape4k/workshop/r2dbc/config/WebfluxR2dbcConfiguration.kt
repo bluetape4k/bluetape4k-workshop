@@ -1,11 +1,17 @@
 package io.bluetape4k.workshop.r2dbc.config
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.r2dbc.handler.UserHandler
+import io.r2dbc.spi.ConnectionFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.core.io.ClassPathResource
 import org.springframework.data.r2dbc.repository.config.EnableR2dbcRepositories
 import org.springframework.http.MediaType
+import org.springframework.r2dbc.connection.init.CompositeDatabasePopulator
+import org.springframework.r2dbc.connection.init.ConnectionFactoryInitializer
+import org.springframework.r2dbc.connection.init.ResourceDatabasePopulator
 import org.springframework.transaction.annotation.EnableTransactionManagement
 import org.springframework.web.reactive.function.server.coRouter
 
@@ -28,18 +34,24 @@ class WebfluxR2dbcConfiguration {
         }
     }
 
-    // NOTE: application.yml 에 population 설정을 정의함
-//    @Bean
-//    fun initializer(connectionFactory: ConnectionFactory): ConnectionFactoryInitializer {
-//        log.info { "schema 와 data 를 추가합니다." }
-//        return ConnectionFactoryInitializer().apply {
-//            setConnectionFactory(connectionFactory)
-//            val populator = CompositeDatabasePopulator().apply {
-//                addPopulators(resourceDatabasePopulatorOf(ClassPathResource("data/schema.sql")))
-//                addPopulators(resourceDatabasePopulatorOf(ClassPathResource("data/data.sql")))
-//            }
-//            setDatabasePopulator(populator)
-//            afterPropertiesSet()
-//        }
-//    }
+    /**
+     * Initializes the database schema and seed data on startup.
+     *
+     * Uses [ConnectionFactoryInitializer] to explicitly run `data/schema.sql` followed by
+     * `data/data.sql` via R2DBC. This replaces `spring.sql.init` which is unreliable
+     * for R2DBC embedded databases under Spring Boot 4.
+     */
+    @Bean
+    fun databaseInitializer(connectionFactory: ConnectionFactory): ConnectionFactoryInitializer {
+        log.info { "Initializing database schema and seed data..." }
+        return ConnectionFactoryInitializer().apply {
+            setConnectionFactory(connectionFactory)
+            setDatabasePopulator(
+                CompositeDatabasePopulator().apply {
+                    addPopulators(ResourceDatabasePopulator(ClassPathResource("data/schema.sql")))
+                    addPopulators(ResourceDatabasePopulator(ClassPathResource("data/data.sql")))
+                }
+            )
+        }
+    }
 }
