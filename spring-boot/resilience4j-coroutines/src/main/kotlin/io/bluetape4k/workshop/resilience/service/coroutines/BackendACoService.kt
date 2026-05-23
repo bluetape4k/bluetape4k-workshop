@@ -62,6 +62,15 @@ class BackendACoService: CoService {
     @Bulkhead(name = BACKEND_A)
     @CircuitBreaker(name = BACKEND_A, fallbackMethod = "suspendFallback")
     override suspend fun suspendTimeout(): String {
+        // @TimeLimiter does NOT apply to suspend functions — the annotation is silently ignored.
+        // The delay(3s) completes without any timeout enforcement.
+        //
+        // KNOWN LIMITATION (Resilience4j 2.4.x + Spring Boot 4 + Kotlin 2.x):
+        //   @CircuitBreaker(fallbackMethod) does not reliably invoke the fallback for Kotlin
+        //   suspend functions. Exceptions propagate as HTTP 500 instead of routing to fallback.
+        //
+        // RECOMMENDED ALTERNATIVE: Use bluetape4k SuspendDecorators programmatic API
+        //   (see SuspendDecoratorsTest for working examples).
         delay(3.seconds)
         return "Hello World from backend A Coroutines"
     }
