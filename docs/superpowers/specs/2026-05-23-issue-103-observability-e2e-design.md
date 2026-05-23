@@ -1,4 +1,4 @@
-# Issue #103 — Observability End-to-End 예제 설계 (Rev 4)
+# Issue #103 — Observability End-to-End 예제 설계 (Rev 5)
 
 **작성일**: 2026-05-23  
 **브랜치**: `feat/issue-103-observability-e2e`  
@@ -389,18 +389,22 @@ abstract class AbstractFocusedTest {
     @Autowired protected lateinit var context: ApplicationContext
     protected val webTestClient: WebTestClient by lazy { WebTestClient.bindToApplicationContext(context).build() }
 
-    @BeforeEach
-    fun setup() {
-        // MockWebServer에 inventory 응답 stub 등록
-        val body = """{"itemId":1,"available":50}"""
-        mockServer.enqueue(MockResponse().setBody(body).addHeader("Content-Type", "application/json"))
-    }
+    // NOTE: No @BeforeEach enqueue here — each test enqueues its own stub.
+    // This prevents happy-path stubs from poisoning error-path / cancellation tests.
 
     @AfterEach
     fun resetMockServerDispatcher() {
         // response-queue 초기화 — 다음 테스트에 잔류 응답 오염 방지
-        // (takeRequest drains received requests; QueueDispatcher() resets the response queue)
         mockServer.dispatcher = QueueDispatcher()
+    }
+
+    /** Enqueue a default success inventory response. Called by tests that need it. */
+    protected fun enqueueSuccessInventory(itemId: Long = 1L, available: Int = 50) {
+        mockServer.enqueue(
+            MockResponse()
+                .setBody("""{"itemId":$itemId,"available":$available}""")
+                .addHeader("Content-Type", "application/json")
+        )
     }
 }
 ```
@@ -431,6 +435,7 @@ class OrderServiceTest : AbstractFocusedTest() {
 
     @Test
     fun `getOrder - order.service.fetch span started and stopped`() = runSuspendIO {
+        enqueueSuccessInventory()  // each test enqueues its own stub (no shared @BeforeEach stub)
         val result = orderService.getOrder(42L)
         result.shouldNotBeNull()
         result.inventoryAvailable shouldBeEqualTo 50
@@ -444,8 +449,7 @@ class OrderServiceTest : AbstractFocusedTest() {
 
     @Test
     fun `getOrder - returns null when inventory client returns null`() = runSuspendIO {
-        mockServer.enqueue(MockResponse().setResponseCode(404))
-        testRegistry.clear()
+        mockServer.enqueue(MockResponse().setResponseCode(404))  // no prior success stub; 404 is first
         val result = orderService.getOrder(999L)
         result.shouldBeNull()
         // span must still be stopped even on null result (no error)
@@ -518,6 +522,7 @@ class OrderControllerTest : AbstractFocusedTest() {
 
     @Test
     fun `GET orders id - 200 OK with order.service.fetch span`() = runSuspendIO {
+        enqueueSuccessInventory()  // each test enqueues its own stub
         webTestClient.httpGet("/orders/42")
             .expectStatus().is2xxSuccessful()
             .expectBody<Order>()
@@ -532,7 +537,7 @@ class OrderControllerTest : AbstractFocusedTest() {
 
     @Test
     fun `GET orders id - traceparent header propagated to downstream`() = runSuspendIO {
-        // @BeforeEach already enqueued one response — use it directly
+        enqueueSuccessInventory()  // each test enqueues its own stub
         webTestClient.httpGet("/orders/1").exchange()
 
         val request = mockServer.takeRequest(1, TimeUnit.SECONDS)
