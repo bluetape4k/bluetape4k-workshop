@@ -1,7 +1,6 @@
 package io.bluetape4k.workshop.leader
 
 import io.bluetape4k.leader.LeaderElectionOptions
-import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.*
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test

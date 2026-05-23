@@ -2,7 +2,6 @@ package io.bluetape4k.workshop.leader
 
 import io.bluetape4k.leader.lettuce.LettuceLeaderElector
 import io.bluetape4k.leader.LeaderElectionOptions
-import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.*
 import io.lettuce.core.RedisClient
 import io.lettuce.core.codec.StringCodec

@@ -1,7 +1,6 @@
 package io.bluetape4k.workshop.leader.job
 
 import io.bluetape4k.leader.LeaderElector
-import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.*
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
