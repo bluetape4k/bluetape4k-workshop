@@ -1,0 +1,14 @@
+spring:
+  r2dbc:
+    url: r2dbc:postgresql://localhost:5432/exposedwebflux
+    username: postgres
+    password: postgres
+
+server:
+  port: 8080
+
+logging:
+  level:
+    io.bluetape4k: DEBUG
+    org.jetbrains.exposed: INFO
+    org.springframework: WARN

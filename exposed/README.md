@@ -1,27 +1,28 @@
-# Kotlinx Exposed Demo
+# Exposed Examples
 
-Kotlinx [Exposed](https://github.com/JetBrains/Exposed) 를 이용한 Data Access 예제입니다.
+Production-style examples using [JetBrains Exposed](https://github.com/JetBrains/Exposed) ORM with Spring Boot.
 
-## 서브모듈 구성
+## Submodules
 
-![exposed Architecture diagram](../docs/images/readme-diagrams/exposed-diagram-01.png)
+| Module | Stack | TX Strategy |
+|--------|-------|-------------|
+| [mvc-jdbc](./mvc-jdbc/) | Spring MVC + Exposed JDBC | `@Transactional` (Spring declarative) |
+| [mvc-virtualthread](./mvc-virtualthread/) | Spring MVC + Virtual Threads + Exposed JDBC | `virtualFuture(executor){ transaction(db){} }` |
+| [webflux-r2dbc](./webflux-r2dbc/) | WebFlux + Coroutines + Exposed R2DBC | `suspendTransaction(db=db){ }` |
 
-## sql-webflux-coroutines
+## Domain
 
-Spring Webflux + Kotlin Coroutines + Exposed 를 이용하여 H2, MySQL 데이터베이스 작업을 수행하는 예제입니다.
+All three modules implement the same Author/Book/Product/Order domain with full CRUD and a
+concurrent `placeOrder` use case that demonstrates lock ordering and stock deduction.
 
-Exposed 의 `newSuspendTransaction` 을 활용하여, suspend 함수 내에서 트랜잭션을 수행할 수 있습니다.
+```
+Author ──< Book
+Product
+Order ──< OrderLine ──> Product
+```
 
-## sql-web-virtualthread
+## Key Patterns Demonstrated
 
-Spring WebMVC + Virtual Threads + Exposed 를 이용하여 H2, MySQL 데이터베이스 작업을 수행하는 예제입니다.
-
-`Bluetape4k`의 `virtualFuture` 와 Exposed 의 `transaction` 을 활용하여, Virtual Threads 내에서 트랜잭션을 수행할 수 있습니다.
-
-## dao-web-transaction
-
-Spring Boot + Exposed DAO 패턴을 사용한 CRUD 예제입니다. `@Transactional` 기반 트랜잭션 관리를 보여줍니다.
-
-## spring-transaction
-
-Spring Transaction Manager와 Exposed를 통합하는 예제입니다.
+- **mvc-jdbc**: Spring declarative `@Transactional`, SELECT FOR UPDATE, rollback verification
+- **mvc-virtualthread**: `virtualFuture` VT executor pattern, `ExecutionException` unwrapping, no `@Transactional`
+- **webflux-r2dbc**: `Flow<T>` repositories, `suspendTransaction{}`, concurrent order test with coroutines
