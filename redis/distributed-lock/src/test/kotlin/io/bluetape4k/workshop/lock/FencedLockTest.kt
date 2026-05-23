@@ -2,9 +2,12 @@ package io.bluetape4k.workshop.lock
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.junit5.concurrency.MultithreadingTester
+import io.bluetape4k.workshop.lock.domain.DeductionResult.LockNotAcquired
+import io.bluetape4k.workshop.lock.domain.DeductionResult.Rejected
 import io.bluetape4k.workshop.lock.domain.DeductionResult.Success
 import io.bluetape4k.workshop.lock.domain.Inventory
 import io.bluetape4k.workshop.lock.fenced.FencedResource
@@ -68,5 +71,44 @@ class FencedLockTest : AbstractDistributedLockTest() {
 
         successCount.get() shouldBeEqualTo 10
         store.currentStock(inventoryId) shouldBeEqualTo 0
+    }
+
+    @Test
+    fun `FencedInventoryService - 구 토큰으로 차감 시도 시 Rejected 반환`() {
+        // Pre-seed the shared FencedResource with a very high token.
+        // Any new Redisson lock token (starting from 1) will be strictly less than 9999 → Rejected.
+        fencedResources.forResource(inventoryId).apply(9999L) { Unit }
+
+        val result = fencedService.deduct(inventoryId, 10, waitMs = 2000L, leaseMs = 5000L)
+
+        result shouldBeInstanceOf Rejected::class
+    }
+
+    @Test
+    fun `FencedInventoryService - 락 획득 실패 시 LockNotAcquired 반환`() {
+        // RFencedLock is reentrant — must hold from a DIFFERENT thread to block main-thread acquisition.
+        val lockName = "inventory:fenced:$inventoryId"
+        val holderLock = redisson.getFencedLock(lockName)
+        val acquireLatch = java.util.concurrent.CountDownLatch(1)
+        val releaseLatch = java.util.concurrent.CountDownLatch(1)
+
+        val holder = Thread {
+            val token = holderLock.tryLockAndGetToken(1000, 10_000, MILLISECONDS)
+            acquireLatch.countDown()
+            if (token != null) {
+                releaseLatch.await()
+                runCatching { holderLock.unlock() }
+            }
+        }
+        holder.start()
+        acquireLatch.await()  // wait until holder thread has the fenced lock
+
+        try {
+            val result = fencedService.deduct(inventoryId, 10, waitMs = 0L, leaseMs = 1000L)
+            result shouldBeInstanceOf LockNotAcquired::class
+        } finally {
+            releaseLatch.countDown()
+            holder.join(2000)
+        }
     }
 }

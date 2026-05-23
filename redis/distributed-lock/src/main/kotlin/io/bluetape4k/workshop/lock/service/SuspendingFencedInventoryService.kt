@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.lock.service
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.warn
 import io.bluetape4k.redis.redisson.coroutines.getLockId
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.lock.domain.DeductionResult
