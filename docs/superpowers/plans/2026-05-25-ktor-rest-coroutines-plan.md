@@ -67,6 +67,11 @@
   ```kotlin
   plugins {
       alias(libs.plugins.kotlin.serialization)
+      application   // required for ./gradlew :ktor-rest-coroutines:run
+  }
+
+  application {
+      mainClass.set("io.bluetape4k.workshop.ktor.MainKt")
   }
 
   configurations {
@@ -85,13 +90,15 @@
       implementation(libs.ktor.serialization.kotlinx.json)
       implementation(libs.kotlinx.serialization.json)
 
-      implementation(Libs.bluetape4k_core)
-      implementation(Libs.bluetape4k_logging)
-      implementation(Libs.bluetape4k_coroutines)
-      implementation(Libs.bluetape4k_jackson3)
+      // Use libs.* catalog aliases (NOT Libs.*) — no Libs.kt exists in this workspace
+      implementation(libs.bluetape4k.core)
+      implementation(libs.bluetape4k.logging)
+      implementation(libs.bluetape4k.coroutines)
+      implementation(libs.bluetape4k.jackson3)
+      implementation(libs.jackson3.module.kotlin)   // required for Jackson 3 Kotlin data class serialization
 
-      testImplementation(Libs.bluetape4k_junit5)
-      testImplementation(Libs.bluetape4k_assertions)
+      testImplementation(libs.bluetape4k.junit5)
+      testImplementation(libs.bluetape4k.assertions)
       testImplementation(libs.kotlinx.coroutines.test.lib)
       testImplementation(libs.ktor.server.test.host)
       testImplementation(libs.ktor.client.core)
@@ -99,7 +106,8 @@
   }
   ```
 - **MUST NOT include**: `ktor-serialization-jackson`, any `com.fasterxml.jackson.*`, `springBoot { }` block.
-- **verify**: `./gradlew :ktor-rest-coroutines:dependencies` resolves Ktor 3.4.3 BOM.
+- **⚠ NOTE**: This workspace uses `libs.*` catalog aliases, NOT `Libs.*`. There is no `Libs.kt` / `buildSrc` object in this project.
+- **verify**: `./gradlew :ktor-rest-coroutines:dependencies --configuration runtimeClasspath | grep "com.fasterxml.jackson"` → zero matches expected.
 
 ---
 
@@ -211,14 +219,15 @@
 - **CRITICAL requirements**:
   1. `internal val AppJson = Json { ignoreUnknownKeys = true; prettyPrint = false }` — **`internal`**, NOT `private`. `BookRoutes.kt` imports via `import io.bluetape4k.workshop.ktor.AppJson`.
   2. Function signature: `fun Application.module(repository: BookRepository = InMemoryBookRepository(), jackson3: Jackson3Support = Jackson3Support())`.
-  3. StatusPages handler order (specific first, `Throwable` last):
+  3. **`CallLogging` import**: Ktor 3.x path is `import io.ktor.server.plugins.calllogging.*` (lowercase, single 'g'). Not `callLogging.*`, not the Ktor 2 variant.
+  4. StatusPages handler order (specific first, `Throwable` last):
      - `exception<DomainError.NotFound>` → 404 + `{"error":"...","type":"NotFound"}`
      - `exception<DomainError.Conflict>` → 409 + `{"error":"...","type":"Conflict"}`
      - `exception<IllegalArgumentException>` → 400 + `{"error":"...","type":"BadRequest"}`
      - `exception<BadRequestException>` → 400 + `{"error":"...","type":"BadRequest"}`
      - **`exception<Throwable>` catch-all** → 500 + `{"error":"Internal server error","type":"Internal"}` (MUST include `"type":"Internal"` — Round 2 N2 fix)
-  4. `ContentNegotiation { json(AppJson) }` — same `AppJson` instance.
-  5. Plugin install order: `CallLogging` → `ContentNegotiation` → `SSE` → `StatusPages`.
+  5. `ContentNegotiation { json(AppJson) }` — same `AppJson` instance.
+  6. Plugin install order: `CallLogging` → `ContentNegotiation` → `SSE` → `StatusPages`.
 
 ---
 
@@ -234,10 +243,11 @@
 - **file**: `ktor/rest-coroutines/src/main/kotlin/io/bluetape4k/workshop/ktor/routes/BookRoutes.kt`
 - **CRITICAL requirements**:
   1. **`sse("/books/stream") { ... }` with explicit path** — NEVER bare `sse { }` (Round 2 N1 fix).
-  2. `import io.bluetape4k.workshop.ktor.AppJson` — shared instance for SSE encoding.
-  3. `CancellationException` MUST be rethrown before `catch (e: Exception)` in the SSE collect block.
-  4. `GET /books/export` uses `call.respondBytesWriter(contentType = ContentType("application", "x-ndjson")) { jackson3.writeNdjson(this, books) }`.
-  5. Logger via `private object BookRoutesLog : KLoggingChannel()` (extension functions cannot have companion objects).
+  2. **`sse("/books/stream")` must be at the top-level `routing { }` scope, NOT nested inside `route("/books") { }`**. Nesting inside `route("/books")` would produce the double-prefix `/books/books/stream`.
+  3. `import io.bluetape4k.workshop.ktor.AppJson` — shared instance for SSE encoding.
+  4. `CancellationException` MUST be rethrown before `catch (e: Exception)` in the SSE collect block.
+  5. `GET /books/export` uses `call.respondBytesWriter(contentType = ContentType("application", "x-ndjson")) { jackson3.writeNdjson(this, books) }`.
+  6. Logger via `private object BookRoutesLog : KLoggingChannel()` (extension functions cannot have companion objects).
 - Route structure:
   ```kotlin
   route("/books") {
@@ -283,8 +293,23 @@
 ### T15 — Test resources
 - **complexity**: low
 - **files**:
-  - `ktor/rest-coroutines/src/test/resources/junit-platform.properties` — copy from workshop templates.
-  - `ktor/rest-coroutines/src/test/resources/logback-test.xml` — copy from workshop templates; adapt if Spring Boot classpath unavailable.
+  - `ktor/rest-coroutines/src/test/resources/junit-platform.properties` — copy from workshop templates (`templates/test/resources/junit-platform.properties`).
+  - `ktor/rest-coroutines/src/test/resources/logback-test.xml` — this module has NO Spring Boot on the classpath; the Spring-Boot-referencing template will fail. Use standalone minimal content:
+    ```xml
+    <?xml version="1.0" encoding="UTF-8"?>
+    <configuration scan="true">
+      <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+          <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+      </appender>
+      <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+      </root>
+      <logger name="io.bluetape4k.workshop" level="DEBUG" />
+      <logger name="io.ktor" level="INFO" />
+    </configuration>
+    ```
 
 ---
 
@@ -293,7 +318,7 @@
 ### T16 — `AbstractKtorTest.kt`
 - **complexity**: medium
 - **file**: `ktor/rest-coroutines/src/test/kotlin/io/bluetape4k/workshop/ktor/AbstractKtorTest.kt`
-- `abstract class AbstractKtorTest { companion object : KLoggingChannel() }`
+- `@TestInstance(TestInstance.Lifecycle.PER_CLASS) abstract class AbstractKtorTest { companion object : KLoggingChannel() }` — workspace CLAUDE.md mandates `PER_CLASS` on test base classes.
 - Shared Book fixture builders.
 
 ### T17 — `routes/HealthRoutesTest.kt`
@@ -303,17 +328,21 @@
 
 ### T18 — `routes/BookRoutesTest.kt`
 - **complexity**: high
-- **8 test cases**:
-  - `GET /books` → 200 + list
+- **12 test cases**:
+  - `GET /books` (empty repository) → 200 + `[]`
+  - `GET /books` (pre-seeded) → 200 + list
   - `GET /books/{id}` (exists) → 200 + book
   - `GET /books/{id}` (missing) → 404 + `{"type":"NotFound"}`
   - `POST /books` (valid) → 201 + book
   - `POST /books` (duplicate) → 409 + `{"type":"Conflict"}`
   - `POST /books` (blank title) → 400 + `{"type":"BadRequest"}`
-  - `POST /books` (year out of range) → 400
-  - `GET /books/export` → 200 + `application/x-ndjson` + one JSON object per line
-- Each test is `@Test fun foo() = testApplication { val repository = InMemoryBookRepository(); application { module(repository = repository) }; ... }`.
-- Pre-seed with `kotlinx.coroutines.runBlocking { repository.save(...) }`.
+  - `POST /books` (blank id) → 400 + `{"type":"BadRequest"}`
+  - `POST /books` (year out of range) → 400 + `{"type":"BadRequest"}`
+  - `GET /books/export` → 200 + `Content-Type: application/x-ndjson`; parse body line-by-line; assert each line deserializes to `Book`; assert line count matches seeded count
+  - `GET /health` (full module with SSE installed) → 200 + `OK` (verifies SSE route does not shadow `/health`)
+  - Catch-all 500: inject `FakeRepository` that throws `RuntimeException` on `findAll()`; assert 500 + body contains `"type":"Internal"` and does NOT contain stack trace text
+- Each test: `@Test fun foo() = testApplication { val repository = InMemoryBookRepository(); application { module(repository = repository) }; ... }` — NOT wrapped in `runSuspendTest`.
+- Pre-seed: call `repository.save(...)` directly — **`testApplication` block is `suspend`, so `save()` is callable without `runBlocking {}`**.
 
 ### T19 — `routes/BookStreamTest.kt`
 - **complexity**: high
@@ -360,10 +389,24 @@
 - Pattern: `@Test fun foo() = runSuspendTest { ... }` — pure suspend unit tests, NOT inside `testApplication`.
 - Cover: save+findById, duplicate conflict, stream emission.
 - `assertFailsWith<DomainError.Conflict> { ... }` for exception checks.
+- **Stream emission pattern** (inside `runSuspendTest { }` which IS a `TestScope`, so `this.launch {}` is available):
+  ```kotlin
+  val repo = InMemoryBookRepository()
+  val received = Channel<Book>(Channel.BUFFERED)
+  val job = launch { repo.stream().collect { received.send(it) } }
+  delay(50)
+  val book = Book("b-1", "T", "A", 2020)
+  repo.save(book)
+  withTimeoutOrNull(2_000) { received.receive() } shouldBeEqualTo book
+  job.cancel(); received.close()
+  ```
+  Note: `launch {}` is available inside `runSuspendTest` because `runSuspendTest` provides a `TestScope` receiver.
 
-### T20b — `service/BookServiceTest.kt` (optional)
+### T20b — `service/BookServiceTest.kt` (required — validation matrix)
 - **complexity**: medium
-- Validation matrix via `runSuspendTest` + `FakeBookRepository`.
+- Validation matrix via `runSuspendTest` + inline `FakeBookRepository` stub.
+- Must cover all four fields: id (blank, too long), title (blank, too long), author (blank, too long), year (< 1, > 3000).
+- Ensures 80%+ coverage on `BookService.create()` path independent of HTTP layer.
 
 ---
 
@@ -384,8 +427,9 @@
 ### T23 — Settings + catalog smoke check
 - **complexity**: low
 - `./gradlew projects | grep ktor-rest-coroutines`
-- `rg "com.fasterxml.jackson" ktor/rest-coroutines/src` → zero matches
+- `rg "com.fasterxml.jackson" ktor/rest-coroutines/src` → zero matches (source check)
 - `rg "io.ktor.serialization.jackson" ktor/rest-coroutines/src` → zero matches
+- `./gradlew :ktor-rest-coroutines:dependencies --configuration runtimeClasspath | grep "com.fasterxml.jackson"` → zero matches (classpath transitive check)
 
 ### T24 — Build, test, detekt
 - **complexity**: low
@@ -397,6 +441,15 @@
   ./gradlew detekt
   ```
 - All exit 0; test reports > 0 tests with 0 failures.
+
+### T25 — CI/nightly smoke registration + spec path correction
+- **complexity**: low
+- **Workflow Hazards Catalog (Module Addition)** — mandatory for every new Gradle module.
+- `rg ":ktor-rest-coroutines:test" .github/workflows/ scripts/` — confirm current absence.
+- Add `:ktor-rest-coroutines:test \` to `all-smoke` case in `scripts/smoke-validate.sh` (pure in-memory, no Testcontainers — qualifies for Mon-Sat smoke).
+- Bump `expected=` count by 1 in `stale-check` case of `scripts/smoke-validate.sh`.
+- Check `nightly-tests.yml`; add `:ktor-rest-coroutines:test` to the task list if missing.
+- **Spec path fix**: spec §13.4–§13.6 references `:ktor:rest-coroutines:*` — incorrect. The flat project name produced by `includeModules("ktor", false, true)` is `:ktor-rest-coroutines`. Update all spec verification commands to `:ktor-rest-coroutines:*`.
 
 ---
 
@@ -424,11 +477,12 @@
 | T18 | BookRoutesTest.kt (8 cases) | **high** |
 | T19 | BookStreamTest.kt (SSE + CoroutineScope pattern) | **high** |
 | T20 | InMemoryBookRepositoryTest.kt | medium |
-| T20b | BookServiceTest.kt (optional) | medium |
+| T20b | BookServiceTest.kt (required — validation matrix) | medium |
 | T21 | README.md | medium |
 | T22 | README.ko.md | low |
-| T23 | Smoke checks | low |
+| T23 | Smoke checks (source + classpath) | low |
 | T24 | Build/test/detekt | low |
+| T25 | CI/nightly smoke registration + spec path fix | low |
 
 **High complexity tasks**: T7, T9, T11, T18, T19 — implement these with maximum care; refer to spec critical notes.
 

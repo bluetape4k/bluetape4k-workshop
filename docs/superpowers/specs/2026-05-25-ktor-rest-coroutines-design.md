@@ -478,7 +478,7 @@ Add at the appropriate location:
 includeModules("ktor", false, true)
 ```
 
-This auto-registers `:ktor:rest-coroutines` following the workspace `{domain}-{submodule}` convention.
+This auto-registers `:ktor-rest-coroutines` (flat project name — `includeModules` with `withProjectName=false, withBaseDir=true` produces `basePath + "-" + dirName`). Verification: `./gradlew projects | grep ktor-rest-coroutines`.
 
 ### 10.2 `gradle/libs.versions.toml` (bluetape4k-workshop)
 
@@ -623,7 +623,7 @@ The module is considered done when **all** of the following are true:
 
 ### 13.1 Build & layout
 
-- [ ] `settings.gradle.kts` registers `:ktor:rest-coroutines` via `includeModules("ktor", false, true)`.
+- [ ] `settings.gradle.kts` registers `:ktor-rest-coroutines` (flat name) via `includeModules("ktor", false, true)`.
 - [ ] `gradle/libs.versions.toml` contains the Ktor 3.4.3 BOM + libraries listed in §10.2.
 - [ ] `ktor/rest-coroutines/build.gradle.kts` applies `kotlin.serialization` plugin and only the dependencies listed in §10.3.
 - [ ] The module compiles under Java 25 with the workspace's standard compiler flags.
@@ -648,7 +648,7 @@ The module is considered done when **all** of the following are true:
 
 ### 13.4 Tests
 
-- [ ] `./gradlew :ktor:rest-coroutines:test` is green.
+- [ ] `./gradlew :ktor-rest-coroutines:test` is green.
 - [ ] Route/integration tests use `@Test fun foo() = testApplication { ... }` directly (NOT wrapped in `runSuspendTest`).
 - [ ] Pure service/repository suspend tests use `runSuspendTest { }` (NOT inside `testApplication`).
 - [ ] `BookStreamTest` uses `createClient { install(SSE) }` (not `client.config { install(SSE) }`) and follows the background-subscription + Channel pattern from §11.
@@ -659,16 +659,16 @@ The module is considered done when **all** of the following are true:
 
 ### 13.5 Docs & gaps
 
-- [ ] Module README documents how to run (`./gradlew :ktor:rest-coroutines:run`) and lists all endpoints with curl examples.
+- [ ] Module README documents how to run (`./gradlew :ktor-rest-coroutines:run`) and lists all endpoints with curl examples.
 - [ ] README explicitly notes the Jackson 3 vs Jackson 2 stance (only Jackson 3 is used; Ktor JSON is `kotlinx-serialization`).
 - [ ] §9 gap is captured as a follow-up issue under `bluetape4k-projects` referencing this spec.
 
 ### 13.6 Verification commands (must succeed)
 
 ```bash
-./gradlew :ktor:rest-coroutines:compileKotlin
-./gradlew :ktor:rest-coroutines:test
-./gradlew :ktor:rest-coroutines:build
+./gradlew :ktor-rest-coroutines:compileKotlin
+./gradlew :ktor-rest-coroutines:test
+./gradlew :ktor-rest-coroutines:build
 ./gradlew detekt
 ```
 
