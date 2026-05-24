@@ -23,7 +23,7 @@ class AuthorService(
 
     @Transactional(readOnly = true)
     fun findById(id: Long): AuthorDTO =
-        authorRepo.findById(id) ?: throw NoSuchElementException("Author $id not found")
+        authorRepo.findByIdOrNull(id) ?: throw NoSuchElementException("Author $id not found")
 
     @Transactional(readOnly = true)
     fun findAllBooks(): List<BookDTO> = bookRepo.findAll()
@@ -39,10 +39,10 @@ class AuthorService(
     }
 
     @Transactional
-    fun createAuthor(req: CreateAuthorRequest): AuthorDTO = authorRepo.insert(req)
+    fun createAuthor(req: CreateAuthorRequest): AuthorDTO = authorRepo.save(req)
 
     @Transactional
-    fun createBook(req: CreateBookRequest): BookDTO = bookRepo.insert(req)
+    fun createBook(req: CreateBookRequest): BookDTO = bookRepo.save(req)
 
     @Transactional
     fun deleteAuthor(id: Long) = authorRepo.deleteById(id)

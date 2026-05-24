@@ -1,6 +1,7 @@
-# exposed/mvc-jdbc
+# exposed-mvc-jdbc
 
-Spring MVC + Exposed JDBC + Spring declarative transactions example.
+Spring MVC + JetBrains Exposed JDBC using **bluetape4k-exposed** table base classes
+and repository interfaces for type-safe, boilerplate-free data access.
 
 ## Architecture
 
@@ -8,14 +9,69 @@ Spring MVC + Exposed JDBC + Spring declarative transactions example.
 Controller → Service (@Transactional) → Repository → Exposed JDBC → PostgreSQL
 ```
 
-## Used Bluetape4k Features
+## Domain Model
 
-| Feature | Module | Usage |
-|---------|--------|-------|
-| `KLogging` | `bluetape4k-logging` | Companion object logging in every class |
-| `bluetape4k-junit5` | `bluetape4k-junit5` | `Fakers.faker` in tests |
-| `bluetape4k-assertions` | `bluetape4k-assertions` | `shouldBeEqualTo`, comparison matchers |
-| `bluetape4k-testcontainers` | `bluetape4k-testcontainers` | `PostgreSQLServer.Launcher.postgres` singleton |
+```
+AuthorTable (AuditableLongIdTable)        BookTable (LongIdTable)
+┌──────────────────────────────┐          ┌──────────────────────────────┐
+│ id          BIGSERIAL PK     │◄─────────│ id          BIGSERIAL PK     │
+│ first_name  VARCHAR(100)     │          │ title       VARCHAR(200)      │
+│ last_name   VARCHAR(100)     │          │ publish_date VARCHAR(20)      │
+│ email       VARCHAR(255) UQ  │          │ author_id   FK → authors.id  │
+│ created_by  VARCHAR(128)     │          └──────────────────────────────┘
+│ created_at  TIMESTAMP        │
+│ updated_by  VARCHAR(128)?    │
+│ updated_at  TIMESTAMP?       │
+└──────────────────────────────┘
+```
+
+## Used bluetape4k Features
+
+| Feature | Module / Artifact | Code reference | Benefit |
+|---------|-------------------|----------------|---------|
+| `AuditableLongIdTable` | `bluetape4k-exposed-core` | `AuthorTable.kt` | Audit columns (`createdAt`, `createdBy`, `updatedAt`, `updatedBy`) auto-wired |
+| `LongAuditableJdbcRepository` | `bluetape4k-exposed-jdbc` | `AuthorRepository.kt` | `findAll()`, `findById()`, `findPage()`, `count()`, `existsById()`, `deleteById()`, `batchInsert()`, `auditedUpdateById()` all inherited |
+| `LongJdbcRepository` | `bluetape4k-exposed-jdbc` | `BookRepository.kt` | Same CRUD inheritance for non-audited table |
+| `findBy(vararg filters)` | `bluetape4k-exposed-jdbc` | `BookRepository.findByAuthorId` | Type-safe predicate query — no manual `selectAll().where {}` |
+| `KLogging` | `bluetape4k-logging` | Every service/config class | Lazy lambda logging |
+| `PostgreSQLServer.Launcher` | `bluetape4k-testcontainers` | `AbstractMvcJdbcTest` | Singleton TC container |
+
+## Before / After
+
+### Table definition
+
+```kotlin
+// ❌ Before — manual id + primaryKey + no audit
+object AuthorTable : Table("authors") {
+    val id = long("id").autoIncrement()
+    override val primaryKey = PrimaryKey(id)
+}
+
+// ✅ After — bluetape4k AuditableLongIdTable
+object AuthorTable : AuditableLongIdTable("authors") {
+    // id, primaryKey, createdAt, createdBy, updatedAt, updatedBy are inherited
+}
+```
+
+### Repository
+
+```kotlin
+// ❌ Before — 35 lines of boilerplate CRUD
+class AuthorRepository {
+    fun findAll() = AuthorTable.selectAll().map { it.toAuthorDTO() }
+    fun findById(id: Long) = AuthorTable.selectAll().where { AuthorTable.id eq id }.singleOrNull()?.toAuthorDTO()
+    fun deleteById(id: Long) { AuthorTable.deleteWhere { AuthorTable.id eq id } }
+    // no findPage(), no batchInsert()
+}
+
+// ✅ After — declare intent only
+class AuthorRepository : LongAuditableJdbcRepository<AuthorDTO, AuthorTable> {
+    override val table = AuthorTable
+    override fun extractId(entity: AuthorDTO) = entity.id
+    override fun ResultRow.toEntity() = toAuthorDTO()
+    // All CRUD + pagination + batch + audited-update inherited
+}
+```
 
 ## Key Patterns
 
