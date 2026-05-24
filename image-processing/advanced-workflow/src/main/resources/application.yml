@@ -1,0 +1,34 @@
+spring:
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 25MB
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics
+
+bluetape4k:
+  images:
+    storage:
+      enabled: true
+      backend: local
+      max-size-bytes: 26214400
+      local:
+        root-dir: ${java.io.tmpdir}/bluetape4k-workshop-images
+    health:
+      enabled: true
+    metrics:
+      enabled: true
+
+workshop:
+  images:
+    advanced:
+      public-base-url: http://localhost:8080/public-images
+      max-input-bytes: 26214400
+      max-pixels: 100000000
+      request-concurrency: 2
+      variant-concurrency: 2
+      processing-timeout: 30s

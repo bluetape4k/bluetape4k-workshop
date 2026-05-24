@@ -170,6 +170,7 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 | Advanced | [`redis-cluster-demo`](redis/cluster-demo/) | `redis`, `redisson` | Redis Cluster (TC) | Redis Cluster topology and failover |
 | Basic | [`redis-redisson-examples`](redis/redisson-examples/) | `redis`, `redisson` | Redis (TC) | Redisson data structures and pub/sub |
 | Advanced | [`aws-s3-spring-cloud`](aws/s3-spring-cloud/) | `aws`, `testcontainers` | LocalStack (TC) | AWS S3 with Spring Cloud AWS + LocalStack |
+| Advanced | [`image-processing-advanced-workflow`](image-processing/advanced-workflow/) | `images-vips-java25`, `images-spring-boot`, `micrometer` | S3 or local storage | Upload → original storage → WebP variants → unsigned public URLs |
 | Advanced | [`leader-leader-election`](leader/) | `coroutines`, `redis`, `testcontainers` | Redis (TC) | Distributed leader election: blocking, coroutine, virtual thread |
 
 ```bash
@@ -200,6 +201,7 @@ bluetape4k-workshop/
 ├── exposed/                # JetBrains Exposed ORM
 ├── gateway/                # API Gateway + microservices
 ├── gatling/                # Load/performance tests
+├── image-processing/       # Image upload, VIPS derivatives, storage
 ├── io/                     # Okio I/O examples
 ├── json/                   # Jackson 3 serialization
 ├── kotlin/                 # Coroutines, design patterns
