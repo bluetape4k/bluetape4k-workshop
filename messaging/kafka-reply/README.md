@@ -5,20 +5,7 @@ bluetape4k의 `CompletableFuture.onSuccess/onFailure`, `uninitialized()`, `KLogg
 
 ## 아키텍처
 
-```mermaid
-sequenceDiagram
-    participant Client
-    participant PingController
-    participant Kafka
-    participant PongHandler
-
-    Client->>PingController: GET /ping
-    PingController->>Kafka: sendAndReceive("pingpong", "ping")
-    Kafka->>PongHandler: @KafkaListener("pingpong")
-    PongHandler-->>Kafka: @SendTo → "pong at {time}"
-    Kafka-->>PingController: ConsumerRecord reply
-    PingController-->>Client: "pong at {time}"
-```
+![kafka reply Sequence Flow diagram](../../docs/images/readme-diagrams/messaging-kafka-reply-sequence-01.png)
 
 ## 주요 구성
 

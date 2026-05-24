@@ -4,27 +4,7 @@ Duplicate-safe command handling with **Idempotency Key** pattern using Redis (Re
 
 ## Architecture
 
-```mermaid
-sequenceDiagram
-    participant Client
-    participant OrderController
-    participant IdempotencyService
-    participant Redis (RMapCache)
-
-    Client->>OrderController: POST /api/orders<br/>Idempotency-Key: <uuid>
-    OrderController->>IdempotencyService: processOrder(key, request)
-    IdempotencyService->>Redis (RMapCache): GET key
-    alt Cache HIT (replay)
-        Redis (RMapCache)-->>IdempotencyService: CachedResponse
-        IdempotencyService-->>OrderController: IdempotencyResult.Replay
-        OrderController-->>Client: 200 OK + original OrderResponse
-    else Cache MISS (first write)
-        Redis (RMapCache)-->>IdempotencyService: null
-        IdempotencyService->>Redis (RMapCache): putIfAbsent(key, response, TTL=5min)
-        IdempotencyService-->>OrderController: IdempotencyResult.Created
-        OrderController-->>Client: 201 Created + new OrderResponse
-    end
-```
+![idempotency Sequence Flow diagram](../../docs/images/readme-diagrams/spring-boot-idempotency-sequence-01.png)
 
 ## Core Features
 

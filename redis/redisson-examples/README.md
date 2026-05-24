@@ -6,18 +6,7 @@ Testcontainers로 Redis 컨테이너를 자동으로 구동하여 통합 테스�
 
 ## 아키텍처
 
-```mermaid
-graph TD
-    AbstractRedissonTest --> RedissonClient[RedissonClient\nLZ4ForyComposite codec\nVirtualThreadExecutor]
-    RedissonClient --> Redis[(Redis\nTestcontainers)]
-    RedisServer.Launcher -->|singleton| Redis
-
-    subgraph "BT Test Harnesses"
-        MultithreadingTester
-        StructuredTaskScopeTester
-        SuspendedJobTester
-    end
-```
+![redisson examples Architecture diagram](../../docs/images/readme-diagrams/redis-redisson-examples-architecture-01.png)
 
 ## 예제 범주
 

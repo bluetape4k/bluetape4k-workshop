@@ -6,17 +6,7 @@ Testcontainers로 Redis 컨테이너를 자동으로 구동하여 통합 테스�
 
 ## 아키텍처
 
-```mermaid
-graph LR
-    Controller --> Repository
-    Repository -->|Cache HIT| Redis[(Redis)]
-    Repository -->|Cache MISS| DB[(DB / Slow Source)]
-    DB --> Redis
-    Redis --> Repository
-
-    Prefetcher -->|warm-up| Repository
-    AsyncConfig -->|VT Executor| Lettuce
-```
+![cache redis Architecture diagram](../../docs/images/readme-diagrams/spring-boot-cache-redis-architecture-01.png)
 
 ## 주요 구성
 

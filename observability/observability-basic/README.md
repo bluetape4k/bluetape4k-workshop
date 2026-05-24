@@ -7,13 +7,7 @@ No infrastructure (DB, Redis, Kafka) required. MockWebServer is used for downstr
 
 ## Architecture
 
-```mermaid
-graph TD
-    Client["HTTP Client"] --> Controller["GET /orders/{id}\nhttp.server.requests (auto)"]
-    Controller --> Service["OrderService.getOrder\norder.service.fetch (manual)"]
-    Service --> WebClient["WebClient → /inventory/{id}\nhttp.client.requests (auto)"]
-    WebClient --> MockServer["MockWebServer / InventoryService"]
-```
+![observability basic Architecture diagram](../../docs/images/readme-diagrams/observability-observability-basic-architecture-01.png)
 
 ## Span Tree
 

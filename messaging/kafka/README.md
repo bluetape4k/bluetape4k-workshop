@@ -5,15 +5,7 @@ bluetape4k의 `KafkaServer.Launcher`로 Testcontainers Kafka를 자동 구동하
 
 ## 아키텍처
 
-```mermaid
-graph LR
-    Client -->|HTTP POST /greeting| Controller
-    Controller -->|KafkaTemplate.send| Kafka[(Kafka Broker)]
-    Kafka -->|@KafkaListener| SimpleHandler[SimpleMessageHandler]
-    Kafka -->|@KafkaListener| GreetingHandler[GreetingMessageHandler]
-    Kafka -->|@KafkaListener| LoggerHandler[LoggerMessageHandler]
-    KafkaServerLauncher[KafkaServer.Launcher] -->|autostart| Kafka
-```
+![kafka Architecture diagram](../../docs/images/readme-diagrams/messaging-kafka-architecture-01.png)
 
 ## 주요 구성
 

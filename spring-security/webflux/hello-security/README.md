@@ -6,7 +6,7 @@ Reactive Spring Security example with WebFlux controllers, a custom login page, 
 
 ## Architecture
 
-![Spring Security WebFlux Hello architecture](../../../docs/images/readme-diagrams/spring-security-webflux-hello-security-diagram-01.png)
+![hello security Sequence Flow diagram](../../../docs/images/readme-diagrams/spring-security-webflux-hello-security-diagram-01.png)
 
 ## What This Module Shows
 

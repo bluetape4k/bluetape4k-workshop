@@ -6,7 +6,7 @@
 
 ## 아키텍처
 
-![Spring Modulith events architecture](../../docs/images/readme-diagrams/spring-modulith-events-deep-dive-diagram-01.png)
+![events deep dive Sequence Flow diagram](../../docs/images/readme-diagrams/spring-modulith-events-deep-dive-diagram-01.png)
 
 ## 이 모듈에서 확인할 내용
 

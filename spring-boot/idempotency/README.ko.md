@@ -4,27 +4,7 @@
 
 ## 아키텍처
 
-```mermaid
-sequenceDiagram
-    participant Client
-    participant OrderController
-    participant IdempotencyService
-    participant Redis (RMapCache)
-
-    Client->>OrderController: POST /api/orders<br/>Idempotency-Key: <uuid>
-    OrderController->>IdempotencyService: processOrder(key, request)
-    IdempotencyService->>Redis (RMapCache): GET key
-    alt 캐시 HIT (재전송)
-        Redis (RMapCache)-->>IdempotencyService: CachedResponse
-        IdempotencyService-->>OrderController: IdempotencyResult.Replay
-        OrderController-->>Client: 200 OK + 원본 OrderResponse
-    else 캐시 MISS (최초 요청)
-        Redis (RMapCache)-->>IdempotencyService: null
-        IdempotencyService->>Redis (RMapCache): putIfAbsent(key, response, TTL=5분)
-        IdempotencyService-->>OrderController: IdempotencyResult.Created
-        OrderController-->>Client: 201 Created + 새 OrderResponse
-    end
-```
+![idempotency Sequence Flow diagram](../../docs/images/readme-diagrams/spring-boot-idempotency-sequence-01.png)
 
 ## 주요 기능
 

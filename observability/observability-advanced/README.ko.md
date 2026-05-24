@@ -5,15 +5,7 @@ HTTP(WebFlux), 코루틴 서비스, H2 데이터베이스(Exposed JDBC), Redis �
 
 ## 아키텍처
 
-```mermaid
-graph TD
-    Client["HTTP 클라이언트"] --> Controller["GET/POST /users\nhttp.server.requests (자동)"]
-    Controller --> Service["UserService\nuser.service.get / user.service.create (수동)"]
-    Service --> Cache["UserCacheRepository\nuser.cache.get / user.cache.put (수동)"]
-    Service --> DB["UserRepository → H2\nuser.db.find / user.db.save (수동)"]
-    Cache --> Redis[(Redis)]
-    DB --> H2[(H2 인메모리)]
-```
+![observability advanced Architecture diagram](../../docs/images/readme-diagrams/observability-observability-advanced-architecture-01.png)
 
 ## 스팬 트리
 

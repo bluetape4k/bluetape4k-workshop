@@ -28,7 +28,7 @@ Based on: [resilience4j-spring-boot3-demo](https://github.com/resilience4j/resil
 
 ### Circuit Breaker State Machine
 
-![Circuit Breaker diagram](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-diagram-01.png)
+![Circuit Breaker State Machine diagram](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-diagram-01.png)
 
 ```
   ┌────────┐  failure rate > threshold  ┌────────┐

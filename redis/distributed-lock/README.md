@@ -7,50 +7,7 @@ thread-safe locks to fenced (token-based) locks and their coroutine-native count
 
 ## Architecture
 
-```mermaid
-graph TD
-    subgraph Domain
-        Inv[Inventory]
-        Store[InventoryStore]
-        DR[DeductionResult<br/>sealed interface]
-    end
-
-    subgraph Fenced Guard
-        FR[FencedResource<br/>CAS token gate]
-        FRS[FencedResources<br/>registry]
-    end
-
-    subgraph Services
-        Unsafe[UnsafeInventoryService<br/>no lock — race demo]
-        Locked[LockedInventoryService<br/>RLock / blocking]
-        Fenced[FencedInventoryService<br/>RFencedLock / blocking]
-        Suspend[SuspendingFencedInventoryService<br/>RFencedLock / coroutine]
-    end
-
-    subgraph Tests
-        BRT[BaselineRaceTest<br/>confirms oversell without lock]
-        DLT[DistributedLockTest<br/>RLock prevents oversell]
-        FLT[FencedLockTest<br/>fenced guard prevents stale holder]
-        SFT[SuspendFencedLockTest<br/>coroutine cancel-safety]
-        FSH[FencedStaleHolderTest smoke<br/>lease expiry re-lock scenario]
-        LFT[LockFailureTest smoke<br/>tryLock timeout behaviour]
-    end
-
-    Store --> Unsafe
-    Store --> Locked
-    Store --> Fenced
-    Store --> Suspend
-    FRS  --> Fenced
-    FRS  --> Suspend
-    FR   --> FRS
-
-    Unsafe  --> BRT
-    Locked  --> DLT
-    Fenced  --> FLT
-    Suspend --> SFT
-    Fenced  --> FSH
-    Locked  --> LFT
-```
+![distributed lock Architecture diagram](../../docs/images/readme-diagrams/redis-distributed-lock-architecture-01.png)
 
 ---
 

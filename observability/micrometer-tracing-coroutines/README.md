@@ -5,9 +5,9 @@ bluetape4k의 `withObservation` / `withObservationSuspending` DSL로 코루틴 c
 
 ## 아키텍처 다이어그램
 
-![micrometer tracing coroutines Sequence Flow diagram](../../docs/images/readme-diagrams/observability-micrometer-tracing-coroutines-sequence-01.png)
+![micrometer tracing coroutines Architecture diagram](../../docs/images/readme-diagrams/observability-micrometer-tracing-coroutines-sequence-01.png)
 
-![micrometer tracing coroutines Architecture 2 diagram](../../docs/images/readme-diagrams/observability-micrometer-tracing-coroutines-diagram-01.png)
+![micrometer tracing coroutines Sequence Flow 2 diagram](../../docs/images/readme-diagrams/observability-micrometer-tracing-coroutines-diagram-01.png)
 
 ## 주요 구성
 

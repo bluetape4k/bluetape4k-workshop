@@ -6,7 +6,7 @@ Reactive JWT resource server 예제입니다. `/token`에서 RSA 서명 JWT를 �
 
 ## 아키텍처
 
-![Spring Security WebFlux JWT architecture](../../../docs/images/readme-diagrams/spring-security-webflux-jwt-diagram-01.png)
+![jwt Sequence Flow diagram](../../../docs/images/readme-diagrams/spring-security-webflux-jwt-diagram-01.png)
 
 ## 이 모듈에서 확인할 내용
 

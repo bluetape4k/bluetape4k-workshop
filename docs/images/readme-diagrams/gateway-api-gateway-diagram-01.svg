@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1378" height="526" viewBox="0 0 1378 526" role="img" aria-label="api gateway Architecture">
+<svg xmlns="http://www.w3.org/2000/svg" width="1044" height="692" viewBox="0 0 1044 692" role="img" aria-label="api gateway Architecture">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
+  <marker id="openArrow" markerWidth="10" markerHeight="8" refX="8.5" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 8.5 4 L 1 7" fill="none" stroke="#758297" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  <marker id="inherit" markerWidth="11" markerHeight="10" refX="9.5" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 0.5 1 L 9.5 5 L 0.5 9 Z" fill="#ffffff" stroke="#758297" stroke-width="1.7"/></marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
     .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
@@ -20,50 +20,55 @@
     .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
   </style>
 </defs>
-<rect class="canvas" width="1378" height="526"/>
-<rect class="frame" x="32" y="28" width="1314" height="470" rx="28"/>
+<rect class="canvas" width="1044" height="692"/>
+<rect class="frame" x="32" y="28" width="980" height="636" rx="28"/>
 <text class="title" x="66" y="82">api gateway Architecture</text>
 <text class="subtitle" x="70" y="118">Architecture nodes and edges from the original Mermaid source</text>
-<path class="line" d="M1040 220 C1040 303 1173 303 1173 386"/>
-<path class="line" d="M1040 220 C1040 303 839 303 839 386"/>
-<path class="line" d="M672 220 C672 220 1040 220 1040 220"/>
-<path class="line" d="M505 386 C505 386 873 386 873 386"/>
-<path class="line" d="M505 386 C505 386 539 386 539 386"/>
-<path class="line" d="M372 220 C372 303 505 303 505 386"/>
-<path class="line" d="M706 220 C706 220 672 220 672 220"/>
-<path class="line" d="M338 220 C338 220 706 220 706 220"/>
+<path class="line" d="M856 446 C856 469 856 469 856 492"/>
+<path class="line" d="M522 280 C522 386 522 386 522 492"/>
+<path class="line" d="M372 220 C372 386 338 386 338 552"/>
+<path class="line" d="M672 220 C672 303 706 303 706 386"/>
+<path class="line" d="M372 220 C372 303 338 303 338 386"/>
+<path class="line" d="M672 220 C672 220 706 220 706 220"/>
+<path class="line" d="M338 220 C338 220 372 220 372 220"/>
 <g transform="translate(48,170)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">HTTP</text>
+  <text class="smallLabel" x="140" y="45" text-anchor="middle">HTTP Client</text>
 </g>
 <g transform="translate(382,170)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="140" y="21" text-anchor="middle">Api Gateway Demo</text>
-<text class="smallLabel" x="140" y="47" text-anchor="middle">Application Spring</text>
-<text class="smallLabel" x="140" y="73" text-anchor="middle">WebFlux</text>
+  <text class="smallLabel" x="140" y="33" text-anchor="middle">API Gateway (Spring</text>
+<text class="smallLabel" x="140" y="59" text-anchor="middle">Cloud Gateway)</text>
 </g>
 <g transform="translate(716,170)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">RedirectWebFilter</text>
+  <text class="smallLabel" x="140" y="45" text-anchor="middle">Customer Service</text>
 </g>
-<g transform="translate(1050,170)">
+<g transform="translate(48,336)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">Swagger UI</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">/swagger-ui.html</text>
+  <text class="smallLabel" x="140" y="45" text-anchor="middle">Order Service</text>
 </g>
-<g transform="translate(215,336)">
+<g transform="translate(382,336)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">Rate Limiter</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">Bucket4j</text>
+  <text class="smallLabel" x="140" y="45" text-anchor="middle">Bucket4j</text>
 </g>
-<g transform="translate(549,336)">
+<g transform="translate(716,336)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">CustomerService</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">:8081 /customers</text>
+  <text class="smallLabel" x="140" y="33" text-anchor="middle">Rate Limit Filter</text>
+<text class="smallLabel" x="140" y="59" text-anchor="middle">Bucket4j + Lettuce</text>
 </g>
-<g transform="translate(883,336)">
+<g transform="translate(48,502)">
   <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F7F1E7" stroke="#B88A44"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">OrderService :8082</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">/orders /products</text>
+  <text class="smallLabel" x="140" y="33" text-anchor="middle">Resilience4j Circuit</text>
+<text class="smallLabel" x="140" y="59" text-anchor="middle">Breaker</text>
+</g>
+<g transform="translate(382,502)">
+  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EEF6D9" stroke="#8BA84D"/>
+  <text class="smallLabel" x="140" y="33" text-anchor="middle">Swagger UI</text>
+<text class="smallLabel" x="140" y="59" text-anchor="middle">(Aggregated)</text>
+</g>
+<g transform="translate(716,502)">
+  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="smallLabel" x="140" y="45" text-anchor="middle">(Redis)</text>
 </g>
 </svg>
