@@ -2,11 +2,13 @@ package io.bluetape4k.workshop.cache.benchmark
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.testcontainers.storage.RedisServer
+import org.junit.jupiter.api.TestInstance
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractCacheBenchmarkTest {
     companion object : KLoggingChannel() {
         val redis: RedisServer by lazy { RedisServer.Launcher.redis }
