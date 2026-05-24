@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1754" height="1219" viewBox="0 0 1754 1219" role="img" aria-label="mapstruct Class Structure">
+<svg xmlns="http://www.w3.org/2000/svg" width="1754" height="1219" viewBox="0 0 1754 1219" role="img" aria-label="MapStruct Class Structure">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
   <marker id="openArrow" markerWidth="10" markerHeight="8" refX="8.5" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 8.5 4 L 1 7" fill="none" stroke="#758297" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></marker>
@@ -22,8 +22,8 @@
 </defs>
 <rect class="canvas" width="1754" height="1219"/>
 <rect class="frame" x="32" y="28" width="1690" height="1163" rx="28"/>
-<text class="title" x="66" y="82">mapstruct Class Structure</text>
-<text class="subtitle" x="70" y="118">UML classes from the original Mermaid source</text>
+<text class="title" x="66" y="82">MapStruct Class Structure</text>
+<text class="subtitle" x="70" y="118">PersonConverter · CustomerMapper · OrderItemMapper · Customer · Person · OrderItem</text>
 <path class="dashed" d="M1082 334 L1082 410 L262 410 L262 481"/>
 <path class="dashed" d="M1082 334 L1082 481"/>
 <path class="line" d="M672 334 L672 102 L1082 102 L1082 180"/>

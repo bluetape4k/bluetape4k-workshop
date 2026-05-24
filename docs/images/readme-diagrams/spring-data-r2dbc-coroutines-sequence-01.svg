@@ -1,30 +1,69 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="560" viewBox="0 0 1040 560" role="img" aria-label="r2dbc coroutines Sequence Flow 2">
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="560" viewBox="0 0 1040 560" role="img" aria-label="R2DBC Coroutines Query Flow">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="10" markerHeight="8" refX="8.5" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 8.5 4 L 1 7" fill="none" stroke="#758297" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="11" markerHeight="10" refX="9.5" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 0.5 1 L 9.5 5 L 0.5 9 Z" fill="#ffffff" stroke="#758297" stroke-width="1.7"/></marker>
+  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
     .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
     .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
     .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
-    .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
-    .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
     .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
+    .card{stroke-width:2.1;filter:url(#shadow)}
     .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
     .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
   </style>
 </defs>
 <rect class="canvas" width="1040" height="560"/>
 <rect class="frame" x="32" y="28" width="976" height="504" rx="28"/>
-<text class="title" x="66" y="82">r2dbc coroutines Sequence Flow 2</text>
-<text class="subtitle" x="70" y="118">Sequence messages from the original Mermaid source</text>
-<rect class="card" x="405" y="166" width="230" height="72" rx="20" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="520" y="209" text-anchor="middle">R2DBC DB</text>
-<line class="lifeline" x1="520" y1="252" x2="520" y2="500" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
+<text class="title" x="66" y="82">R2DBC Coroutines Query Flow</text>
+<text class="subtitle" x="70" y="118">Netty · PostController · suspend fun · PostRepository · R2DBC · Flow&lt;Post&gt;</text>
+
+<!-- Actor: NettyServer -->
+<rect class="card" x="55" y="166" width="170" height="72" rx="20" fill="#E8F3FF" stroke="#5B8DEF"/>
+<text class="smallLabel" x="140" y="209" text-anchor="middle">NettyServer</text>
+<line x1="140" y1="252" x2="140" y2="500" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
+
+<!-- Actor: PostController -->
+<rect class="card" x="295" y="166" width="170" height="72" rx="20" fill="#EAF7EF" stroke="#58A978"/>
+<text class="smallLabel" x="380" y="200" text-anchor="middle">Post</text>
+<text class="smallLabel" x="380" y="221" text-anchor="middle">Controller</text>
+<line x1="380" y1="252" x2="380" y2="500" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
+
+<!-- Actor: PostRepository -->
+<rect class="card" x="535" y="166" width="170" height="72" rx="20" fill="#FFF3D9" stroke="#D6A441"/>
+<text class="smallLabel" x="620" y="200" text-anchor="middle">Post</text>
+<text class="smallLabel" x="620" y="221" text-anchor="middle">Repository</text>
+<line x1="620" y1="252" x2="620" y2="500" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
+
+<!-- Actor: R2DBC DB -->
+<rect class="card" x="775" y="166" width="170" height="72" rx="20" fill="#FDECEF" stroke="#DC6B82"/>
+<text class="smallLabel" x="860" y="200" text-anchor="middle">R2DBC</text>
+<text class="smallLabel" x="860" y="221" text-anchor="middle">Database</text>
+<line x1="860" y1="252" x2="860" y2="500" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
+
+<!-- Step 1: GET /posts (label y=266, arrow y=310) -->
+<rect x="168" y="266" width="170" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
+<text class="strong" x="186" y="292" text-anchor="start">1. GET /posts</text>
+<path class="line" d="M 140 310 L 380 310"/>
+
+<!-- Step 2: findAll() suspend (label y=316, arrow y=360) -->
+<rect x="388" y="316" width="194" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
+<text class="strong" x="406" y="342" text-anchor="start">2. findAll() suspend</text>
+<path class="line" d="M 380 360 L 620 360"/>
+
+<!-- Step 3: R2DBC coroutine query (label y=366, arrow y=410) -->
+<rect x="628" y="366" width="190" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
+<text class="strong" x="646" y="392" text-anchor="start">3. R2DBC coroutine</text>
+<path class="line" d="M 620 410 L 860 410"/>
+
+<!-- Step 4: Flow<Post> emit rows back (label y=411, arrow y=455) -->
+<rect x="628" y="411" width="190" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
+<text class="strong" x="646" y="437" text-anchor="start">4. Flow&lt;Post&gt; rows</text>
+<path class="dashed" d="M 860 455 L 620 455"/>
+
+<!-- Step 5: Flow<Post> to controller (label y=452, arrow y=496) -->
+<rect x="388" y="452" width="190" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
+<text class="strong" x="406" y="478" text-anchor="start">5. Flow&lt;Post&gt;</text>
+<path class="dashed" d="M 620 496 L 380 496"/>
 </svg>

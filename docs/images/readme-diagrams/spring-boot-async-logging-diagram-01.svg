@@ -1,79 +1,81 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1378" height="692" viewBox="0 0 1378 692" role="img" aria-label="async logging Architecture">
-<defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
-  <style>
-    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
-    .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
-    .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
-    .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
-  </style>
-</defs>
-<rect class="canvas" width="1378" height="692"/>
-<rect class="frame" x="32" y="28" width="1314" height="636" rx="28"/>
-<text class="title" x="66" y="82">async logging Architecture</text>
-<text class="subtitle" x="70" y="118">Architecture nodes and edges from the original Mermaid source</text>
-<path class="line" d="M856 492 C856 386 856 386 856 280"/>
-<path class="line" d="M372 552 C372 469 338 469 338 386"/>
-<path class="line" d="M1040 386 C1040 303 672 303 672 220"/>
-<path class="line" d="M1040 220 C1040 303 1006 303 1006 386"/>
-<path class="line" d="M706 220 C706 303 672 303 672 386"/>
-<path class="line" d="M372 220 C372 303 338 303 338 386"/>
-<path class="line" d="M338 220 C338 220 1040 220 1040 220"/>
-<path class="line" d="M338 220 C338 220 706 220 706 220"/>
-<path class="line" d="M338 220 C338 220 372 220 372 220"/>
-<g transform="translate(48,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">SLF4J Logger</text>
-</g>
-<g transform="translate(382,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">ASYNC_CONSOLE</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">AsyncAppender</text>
-</g>
-<g transform="translate(716,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">ASYNC_ROLLING_FILE</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">AsyncAppender</text>
-</g>
-<g transform="translate(1050,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">ASYNC_SLACK</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">AsyncAppender</text>
-</g>
-<g transform="translate(48,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">ConsoleAppender</text>
-</g>
-<g transform="translate(382,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">RollingFileAppender</text>
-</g>
-<g transform="translate(716,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F7F1E7" stroke="#B88A44"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">Slack Webhook</text>
-</g>
-<g transform="translate(1050,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EEF6D9" stroke="#8BA84D"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">dev</text>
-</g>
-<g transform="translate(382,502)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">test</text>
-</g>
-<g transform="translate(716,502)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">prod</text>
-</g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1378 580" width="1378" height="580">
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="2" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.12"/>
+    </filter>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <polygon points="1,1 8,4.5 1,8" fill="#6b7280"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1378" height="580" fill="#f6f9fc"/>
+  <rect x="20" y="20" width="1338" height="540" rx="16" fill="#fff" stroke="#d7e2ec" stroke-width="1.5"/>
+
+  <!-- Title -->
+  <text x="48" y="56" font-family="'Architects Daughter', cursive" font-size="28" fill="#1e293b">Async Logging Architecture</text>
+  <text x="48" y="76" font-family="'Comic Sans MS', cursive" font-size="13" fill="#536476">SLF4J async fan-out · logback-spring.xml · three appender backends</text>
+
+  <!-- ── Row 0: SLF4J Logger ── -->
+  <text x="689" y="97" font-family="'Architects Daughter', cursive" font-size="11" fill="#94a3b8" text-anchor="middle" letter-spacing="0.08em">LOGGER</text>
+  <rect x="559" y="100" width="260" height="80" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8" filter="url(#shadow)"/>
+  <text x="689" y="130" font-family="'Architects Daughter', cursive" font-size="18" fill="#1e3a5f" text-anchor="middle">SLF4J Logger</text>
+  <text x="689" y="152" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">companion object : KLogging()</text>
+
+  <!-- ── Row 1: AsyncAppenders ── -->
+  <text x="689" y="217" font-family="'Architects Daughter', cursive" font-size="11" fill="#94a3b8" text-anchor="middle" letter-spacing="0.08em">ASYNC APPENDERS (non-blocking delegation)</text>
+
+  <!-- ASYNC_CONSOLE -->
+  <rect x="126" y="222" width="260" height="88" rx="12" fill="#d1fae5" stroke="#059669" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="256" y="250" font-family="'Architects Daughter', cursive" font-size="16" fill="#064e3b" text-anchor="middle">ASYNC_CONSOLE</text>
+  <text x="256" y="270" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">AsyncAppender</text>
+  <rect x="186" y="281" width="140" height="20" rx="10" fill="#059669"/>
+  <text x="256" y="295" font-family="'Comic Sans MS', cursive" font-size="11" fill="#fff" text-anchor="middle">queueSize: 256</text>
+
+  <!-- ASYNC_ROLLING_FILE -->
+  <rect x="559" y="222" width="260" height="88" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="689" y="250" font-family="'Architects Daughter', cursive" font-size="15" fill="#78350f" text-anchor="middle">ASYNC_ROLLING_FILE</text>
+  <text x="689" y="270" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">AsyncAppender</text>
+  <rect x="619" y="281" width="140" height="20" rx="10" fill="#d97706"/>
+  <text x="689" y="295" font-family="'Comic Sans MS', cursive" font-size="11" fill="#fff" text-anchor="middle">queueSize: 512</text>
+
+  <!-- ASYNC_SLACK -->
+  <rect x="992" y="222" width="260" height="88" rx="12" fill="#fce7f3" stroke="#db2777" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="1122" y="250" font-family="'Architects Daughter', cursive" font-size="16" fill="#831843" text-anchor="middle">ASYNC_SLACK</text>
+  <text x="1122" y="270" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">AsyncAppender</text>
+  <rect x="1062" y="281" width="120" height="20" rx="10" fill="#db2777"/>
+  <text x="1122" y="295" font-family="'Comic Sans MS', cursive" font-size="11" fill="#fff" text-anchor="middle">ERROR only</text>
+
+  <!-- ── Row 2: Real Appenders ── -->
+  <text x="689" y="337" font-family="'Architects Daughter', cursive" font-size="11" fill="#94a3b8" text-anchor="middle" letter-spacing="0.08em">REAL APPENDERS</text>
+
+  <!-- ConsoleAppender -->
+  <rect x="126" y="342" width="260" height="74" rx="12" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="256" y="368" font-family="'Architects Daughter', cursive" font-size="16" fill="#0c4a6e" text-anchor="middle">ConsoleAppender</text>
+  <text x="256" y="388" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">stdout · dev / test</text>
+
+  <!-- RollingFileAppender -->
+  <rect x="559" y="342" width="260" height="74" rx="12" fill="#fffbeb" stroke="#b45309" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="689" y="368" font-family="'Architects Daughter', cursive" font-size="16" fill="#451a03" text-anchor="middle">RollingFileAppender</text>
+  <text x="689" y="388" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">logs/app.log · dev / prod</text>
+
+  <!-- Slack Webhook -->
+  <rect x="992" y="342" width="260" height="74" rx="12" fill="#fdf2f8" stroke="#9d174d" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="1122" y="368" font-family="'Architects Daughter', cursive" font-size="16" fill="#500724" text-anchor="middle">Slack Webhook</text>
+  <text x="1122" y="388" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">ERROR alerts · prod</text>
+
+  <!-- ── Arrows: SLF4J → AsyncAppenders ── -->
+  <path d="M689,180 C689,205 256,205 256,222" stroke="#6b7280" stroke-width="1.8" fill="none" marker-end="url(#arrow)"/>
+  <line x1="689" y1="180" x2="689" y2="222" stroke="#6b7280" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <path d="M689,180 C689,205 1122,205 1122,222" stroke="#6b7280" stroke-width="1.8" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- ── Arrows: AsyncAppenders → RealAppenders ── -->
+  <line x1="256" y1="310" x2="256" y2="342" stroke="#6b7280" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <line x1="689" y1="310" x2="689" y2="342" stroke="#6b7280" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <line x1="1122" y1="310" x2="1122" y2="342" stroke="#6b7280" stroke-width="1.8" marker-end="url(#arrow)"/>
+
+  <!-- ── Footer ── -->
+  <rect x="36" y="440" width="1306" height="50" rx="10" fill="#f0f9ff" stroke="#7dd3fc" stroke-width="1.2"/>
+  <text x="689" y="461" font-family="'Architects Daughter', cursive" font-size="14" fill="#0369a1" text-anchor="middle">AsyncAppender decouples logger thread from I/O — caller never blocks</text>
+  <text x="689" y="479" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">dev: Console + RollingFile · test: RollingFile · prod: RollingFile + Slack (ERROR)</text>
 </svg>
