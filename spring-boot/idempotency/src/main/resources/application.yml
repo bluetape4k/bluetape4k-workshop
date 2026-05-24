@@ -2,9 +2,6 @@ spring:
   application:
     name: idempotency
 
-  profiles:
-    active: app
-
   jackson:
     serialization:
       indent-output: true
