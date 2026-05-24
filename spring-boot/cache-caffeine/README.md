@@ -1,5 +1,20 @@
 # Cache Caffeine Demo
 
+[English overview](#overview) | [한국어 상세 설명](#상세-설명)
+
+Local in-memory cache example using [Caffeine](https://github.com/ben-manes/caffeine) with Spring Cache abstraction.
+Demonstrates the bluetape4k `caffeine { }` DSL and `VirtualThreadExecutor` for lazy-loading cache entries.
+
+## Overview
+
+This module shows how to wire Caffeine as a Spring `CacheManager` using the bluetape4k Kotlin DSL.
+Key features: type-safe builder with `kotlin.time.Duration`, Virtual Thread executor for lazy loading,
+and structured logging with `KLoggingChannel`.
+
+---
+
+## 상세-설명
+
 [Caffeine](https://github.com/ben-manes/caffeine)을 Spring Cache 추상화와 연동하는 예제입니다.
 bluetape4k의 `caffeine { }` DSL과 `VirtualThreadExecutor`로 로컬 인메모리 캐시를 구성합니다.
 

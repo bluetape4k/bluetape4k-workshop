@@ -22,6 +22,86 @@ Spring Modulith event publication examples that move from basic application even
 ./gradlew :spring-modulith-events-deep-dive:test
 ```
 
+## Used bluetape4k Features
+
+| Module | Feature | Usage |
+|---|---|---|
+| `bluetape4k-logging` | `KLogging()` | Lazy-lambda structured logging in `OrderManagement` and all event listeners |
+| `bluetape4k-junit5` | JUnit 5 extensions | Test base support, `@ApplicationModuleTest` integration |
+
+## bluetape4k Before / After
+
+### `KLogging()` in event-driven components
+
+```kotlin
+// Before — SLF4J directly
+private val log = LoggerFactory.getLogger(OrderManagement::class.java)
+log.info("Completing order. order=" + order)
+
+// After — KLogging() companion object (lazy, zero-cost interpolation)
+companion object : KLogging()
+log.info { "Completing order. order=$order" }
+```
+
+### Event listener patterns — Spring vs Modulith
+
+```kotlin
+// Before — plain Spring @EventListener (no transactional guarantee)
+@EventListener
+fun on(event: Order.OrderCompleted) {
+    log.info { "Received event: $event" }
+}
+
+// After — @TransactionalEventListener (executes after TX commit)
+@TransactionalEventListener
+fun on(event: Order.OrderCompleted) {
+    log.info { "Received event: $event" }
+}
+```
+
+## Event Publication Flow
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant OM as OrderManagement (@Transactional)
+    participant EP as ApplicationEventPublisher
+    participant DB as Database
+    participant EL as EventListener
+
+    Client->>OM: completeOrder(order)
+    OM->>DB: save(order.complete())
+    OM->>EP: publish(OrderCompleted)
+    Note over EP,EL: @EventListener fires within TX
+    EP->>EL: on(OrderCompleted) — immediate
+    alt @TransactionalEventListener
+        Note over EP,EL: fires AFTER commit
+        DB-->>EP: TX commit
+        EP->>EL: on(OrderCompleted) — after commit
+    end
+    OM-->>Client: done
+```
+
+## Architecture: Before vs After Module Boundary
+
+```mermaid
+graph TD
+    subgraph Before [c/architecture/before — tight coupling]
+        OM1[OrderManagement] -->|direct call| IS1[InventoryService]
+    end
+
+    subgraph After [d/architecture/after — module boundary]
+        OM2[OrderManagement] -->|publish event| EP2[ApplicationEventPublisher]
+        EP2 -->|@ApplicationModuleListener| IS2[InventoryService]
+    end
+```
+
+## Operational Notes
+
+- `@TransactionalEventListener` runs after the outer transaction commits; if the listener fails, the original transaction is **not** rolled back.
+- Use `@ApplicationModuleListener` (Spring Modulith) instead of plain `@EventListener` to enforce module-boundary semantics.
+- `ApplicationModuleTest` verifies that no module depends on internal types of another module.
+
 ## Source Map
 
 - `a/fundamentals/quickstart` publishes events directly from `OrderManagement`.
