@@ -15,22 +15,51 @@
     .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
   </style>
 </defs>
+<!--
+  Layout:
+  Row1 (y=108 h=96):
+    Uni<T>:   x=36  w=420 cx=246  right=456  bottom=204
+    Multi<T>: x=504 w=420 cx=714  right=924  bottom=204
+
+  Row2 (y=244 h=72):
+    onItem():    x=36  w=264 cx=168  right=300  bottom=316
+    onFailure(): x=348 w=264 cx=480  right=612  bottom=316
+    subscribe(): x=660 w=264 cx=792  right=924  bottom=316
+
+  Row3 (y=352 h=64):
+    Infra: x=36 w=886 cx=479  right=922  bottom=416
+
+  Arrows Row1→Row2 (bus lane at y=228):
+    Uni bottom cx (246,204) → bus y=228 → onItem cx (168,228) → onItem top (168,244)
+    Uni/Multi shared → onFailure(): from bus at onFailure cx (480):
+      need to route from Uni right-bottom (456,204) → down to bus y=228 → right to onFailure cx (480,228) → down (480,244)
+      BUT 480 > 456 so this exits Uni. Use Uni bottom at x=400 → bus → onFailure cx
+      Actually: use separate stems from each source card.
+      Uni bottom at x=246 → down to bus y=224 → right to onFailure cx=480 → down to onFailure top y=244
+    Multi bottom at x=714 → down to bus y=224 → left to subscribe cx=792 → down to subscribe top y=244
+
+  Arrows Row2→Row3 (bus lane at y=334):
+    onItem cx (168,316) → down to bus y=334 → right to infra cx=479 → down (479,352) ... long jump
+    Better: each operator just connects straight down to infra with stems at their cx, bus at y=334
+    onItem (168,316) → (168,334) → (479,334) → (479,352)  [479 is far]
+    Just use 3 vertical stems into infra (infra is full width so any cx works):
+      onItem    → stem at x=168: (168,316) → (168,352)
+      onFailure → stem at x=480: (480,316) → (480,352)
+      subscribe → stem at x=792: (792,316) → (792,352)
+-->
 <rect class="canvas" width="960" height="460"/>
 <rect class="frame" x="24" y="20" width="912" height="416" rx="20"/>
 
-<!-- Title -->
 <text class="title" x="48" y="66">SmallRye Mutiny Reactive Architecture</text>
 <text class="subtitle" x="48" y="90">Uni&#60;T&#62; · Multi&#60;T&#62; · Operators · Vert.x Integration · Reactive streams</text>
 
 <!-- Row 1: Uni and Multi -->
-<!-- Uni<T> -->
 <rect class="card" x="36" y="108" width="420" height="96" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
 <text class="smallLabel" x="246" y="136" text-anchor="middle">Uni&#60;T&#62;</text>
 <text class="small" x="246" y="158" text-anchor="middle">0 or 1 item · async single result</text>
 <text class="small" x="246" y="176" text-anchor="middle">Uni.createFrom().item() · .createFrom().failure()</text>
 <text class="small" x="246" y="193" text-anchor="middle">.onItem().transform() · .onFailure().recoverWithItem()</text>
 
-<!-- Multi<T> -->
 <rect class="card" x="504" y="108" width="420" height="96" rx="14" fill="#EAF7EF" stroke="#58A978"/>
 <text class="smallLabel" x="714" y="136" text-anchor="middle">Multi&#60;T&#62;</text>
 <text class="small" x="714" y="158" text-anchor="middle">0 to N items · async stream</text>
@@ -38,36 +67,41 @@
 <text class="small" x="714" y="193" text-anchor="middle">.onItem().transform() · .select().first(n)</text>
 
 <!-- Row 2: Operators (3-col) -->
-<!-- onItem() -->
 <rect class="card" x="36" y="244" width="264" height="72" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
 <text class="smallLabel" x="168" y="270" text-anchor="middle">onItem()</text>
 <text class="small" x="168" y="289" text-anchor="middle">transform · transformToUni</text>
 <text class="small" x="168" y="306" text-anchor="middle">invoke · delayIt</text>
 
-<!-- onFailure() -->
 <rect class="card" x="348" y="244" width="264" height="72" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
 <text class="smallLabel" x="480" y="270" text-anchor="middle">onFailure()</text>
 <text class="small" x="480" y="289" text-anchor="middle">recoverWithItem · recoverWithUni</text>
 <text class="small" x="480" y="306" text-anchor="middle">retry · retry().atMost(n)</text>
 
-<!-- subscribe() -->
 <rect class="card" x="660" y="244" width="264" height="72" rx="14" fill="#F1ECFF" stroke="#8A72D6"/>
 <text class="smallLabel" x="792" y="270" text-anchor="middle">subscribe()</text>
 <text class="small" x="792" y="289" text-anchor="middle">with(item, failure)</text>
 <text class="small" x="792" y="306" text-anchor="middle">asIterable() · await()</text>
-
-<!-- Arrows Row1 → Row2 -->
-<line class="line" x1="246" y1="204" x2="200" y2="244"/>
-<line class="line" x1="480" y1="204" x2="480" y2="244"/>
-<line class="line" x1="714" y1="204" x2="760" y2="244"/>
 
 <!-- Row 3: Infra -->
 <rect class="card" x="36" y="352" width="886" height="64" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
 <text class="smallLabel" x="479" y="378" text-anchor="middle">Mutiny + Vert.x Integration · Operators · Transformers</text>
 <text class="small" x="479" y="400" text-anchor="middle">Reactive SQL client · Event Bus · WebClient · non-blocking I/O · back-pressure</text>
 
-<!-- Arrows Row2 → Row3 -->
-<line class="line" x1="168" y1="316" x2="250" y2="352"/>
-<line class="line" x1="480" y1="316" x2="480" y2="352"/>
-<line class="line" x1="792" y1="316" x2="710" y2="352"/>
+<!--
+  Arrows Row1 → Row2
+  Bus lane at y=228 between row1 bottom (204) and row2 top (244).
+
+  Uni cx=246 → onItem cx=168: bus drop from (246,204) down to (246,228), left to (168,228), down to (168,244)
+  Uni cx=246 → onFailure cx=480: bus from (246,204) down to (246,228), right to (480,228), down to (480,244)
+    BUT (480,228) is between Uni right=456 and Multi left=504, so it's in the gap. Safe.
+  Multi cx=714 → subscribe cx=792: bus from (714,204) down to (714,228), right to (792,228), down to (792,244)
+-->
+<path class="line" d="M246,204 L246,228 L168,228 L168,244"/>
+<path class="line" d="M246,204 L246,228 L480,228 L480,244"/>
+<path class="line" d="M714,204 L714,228 L792,228 L792,244"/>
+
+<!-- Arrows Row2 → Row3: vertical stems at each operator cx -->
+<path class="line" d="M168,316 L168,352"/>
+<path class="line" d="M480,316 L480,352"/>
+<path class="line" d="M792,316 L792,352"/>
 </svg>

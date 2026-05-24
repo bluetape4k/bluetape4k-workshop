@@ -104,6 +104,6 @@
 <path class="line" d="M310,296 L268,296"/>
 <!-- CountryRepository → RedisCacheManager (through cache) -->
 <path class="line" d="M268,296 L278,296"/>
-<!-- LettuceConnection → Redis -->
-<path class="line" d="M788,296 L800,296 L868,196"/>
+<!-- RedisTemplate → Redis: vertical up from RedisTemplate top center to Redis bottom center -->
+<path class="line" d="M866,256 L866,196"/>
 </svg>

@@ -30,15 +30,15 @@
 <text class="subtitle" x="58" y="92">WebFlux · Coroutines · IP-based · LettuceBasedProxyManager · Redis Testcontainers</text>
 
 <!-- Arrows -->
-<!-- Row1 WebFilter → controllers and WebFilter (it intercepts before controllers) -->
+<!-- Row1 WebFilter → controllers (all from WebFilter bottom) -->
 <path class="line" d="M480 152 L480 182 L234 182 L234 212"/>
-<path class="line" d="M480 182 L726 182 L726 212"/>
+<path class="line" d="M480 152 L480 182 L726 182 L726 212"/>
 <!-- Row2 → Row3 (both converge) -->
 <path class="line" d="M234 292 L234 332 L480 332 L480 352"/>
 <path class="line" d="M726 292 L726 332 L480 332 L480 352"/>
-<!-- Row3 → Row4 -->
+<!-- Row3 → Row4 (all from DistributedRateLimiter bottom) -->
 <path class="line" d="M480 406 L480 436 L234 436 L234 466"/>
-<path class="line" d="M480 436 L726 436 L726 466"/>
+<path class="line" d="M480 406 L480 436 L726 436 L726 466"/>
 
 <!-- WebFilter (top center) -->
 <g transform="translate(260,98)">

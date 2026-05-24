@@ -33,10 +33,10 @@
 <text class="title" x="58" y="66">bt4k-advanced Rate Limit</text>
 <text class="subtitle" x="58" y="92">3 Strategies: IP · User · Combined(IP+userId) · DistributedSuspendRateLimiter · Redis</text>
 
-<!-- Arrows: Controller → 3 filters (bus y=182) -->
+<!-- Arrows: Controller → 3 filters (bus y=182, all from controller bottom) -->
 <path class="line" d="M480 152 L480 182 L154 182 L154 212"/>
-<path class="line" d="M480 182 L460 182 L460 212"/>
-<path class="line" d="M480 182 L766 182 L766 212"/>
+<path class="line" d="M480 152 L480 182 L460 182 L460 212"/>
+<path class="line" d="M480 152 L480 182 L766 182 L766 212"/>
 <!-- Arrows: 3 filters → 3 rate limiters (straight down) -->
 <path class="line" d="M154 292 L154 352"/>
 <path class="line" d="M460 292 L460 352"/>

@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="500" viewBox="0 0 960 500" role="img" aria-label="Gateway Orders Architecture">
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="440" viewBox="0 0 960 440" role="img" aria-label="Gateway Orders Service Architecture">
 <defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
   <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
     <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
   </marker>
@@ -15,63 +15,86 @@
     .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
   </style>
 </defs>
-<!-- Layout:
-     Frame inner: x=44..936 = 892px
-     Two column cards: w=416 each, gap=60px
-       Col1: x=44  cx=252  right=460
-       Col2: x=520 cx=728  right=936
-     API Gateway: x=248 w=464 cx=480
--->
-<rect class="canvas" width="960" height="500"/>
-<rect class="frame" x="24" y="20" width="912" height="456" rx="28"/>
-<text class="title" x="58" y="66">Gateway Orders Service</text>
-<text class="subtitle" x="58" y="92">OrderController · ProductController · WebFlux · Coroutines · UUIDv7</text>
+<!--
+  Layout: left-to-right chain
+  Row 1 (top, y=98): API Gateway
+  Row 2 (mid, y=210): OrderController — OrderService — OrderRepository — H2 DB
+  Row 3 (btm, y=330): Order model card (full-width)
 
-<!-- Gateway → OrderController (routes left) -->
-<path class="line" d="M480 152 L480 177 L252 177 L252 202"/>
-<!-- Gateway → ProductController (routes right) -->
-<path class="line" d="M480 152 L480 177 L728 177 L728 202"/>
-<!-- OrderController → Order model (straight) -->
-<path class="line" d="M252 256 L252 306"/>
-<!-- ProductController → Product model (straight) -->
-<path class="line" d="M728 256 L728 306"/>
+  Cards row2: w=190, gap=30
+    Col1 x=44  cx=139  right=234
+    Col2 x=264 cx=359  right=454
+    Col3 x=484 cx=579  right=674
+    Col4 x=704 cx=799  right=894
+
+  API Gateway: center-aligned at y=98, w=464, x=248, cx=480
+-->
+<rect class="canvas" width="960" height="440"/>
+<rect class="frame" x="24" y="20" width="912" height="396" rx="18"/>
+<text class="title" x="44" y="66">Gateway Orders Service</text>
+<text class="subtitle" x="44" y="90">OrderController · OrderService · OrderRepository · H2 · WebFlux · Coroutines · UUIDv7</text>
 
 <!-- API Gateway -->
-<g transform="translate(248,98)">
+<g transform="translate(248,104)">
   <rect class="card" x="0" y="0" width="464" height="54" rx="12" fill="#EAF7EF" stroke="#58A978"/>
   <text class="smallLabel" x="232" y="22" text-anchor="middle">API Gateway :8080</text>
   <text class="small" x="232" y="42" text-anchor="middle">/order-service/** → RewritePath → :8082</text>
 </g>
 
-<!-- OrderController  col1: x=44 w=416 cx=252 -->
-<g transform="translate(44,202)">
-  <rect class="card" x="0" y="0" width="416" height="54" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="smallLabel" x="208" y="22" text-anchor="middle">OrderController :8082</text>
-  <text class="mono" x="208" y="42" text-anchor="middle">@RequestMapping("/api/v1/orders")</text>
+<!-- OrderController -->
+<g transform="translate(44,210)">
+  <rect class="card" x="0" y="0" width="200" height="76" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="smallLabel" x="100" y="24" text-anchor="middle">Order</text>
+  <text class="smallLabel" x="100" y="46" text-anchor="middle">Controller</text>
+  <text class="mono" x="100" y="66" text-anchor="middle">:8082 /api/v1/orders</text>
 </g>
 
-<!-- ProductController  col2: x=520 w=416 cx=728 -->
-<g transform="translate(520,202)">
-  <rect class="card" x="0" y="0" width="416" height="54" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="208" y="22" text-anchor="middle">ProductController :8082</text>
-  <text class="mono" x="208" y="42" text-anchor="middle">@RequestMapping("/api/v1/products")</text>
+<!-- OrderService -->
+<g transform="translate(278,210)">
+  <rect class="card" x="0" y="0" width="200" height="76" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="smallLabel" x="100" y="24" text-anchor="middle">Order</text>
+  <text class="smallLabel" x="100" y="46" text-anchor="middle">Service</text>
+  <text class="mono" x="100" y="66" text-anchor="middle">suspend business logic</text>
 </g>
 
-<!-- Order response  col1 -->
-<g transform="translate(44,306)">
-  <rect class="card" x="0" y="0" width="416" height="100" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="208" y="26" text-anchor="middle">Order Response</text>
-  <text class="mono" x="208" y="48" text-anchor="middle">suspend fun getAll(): List&lt;Order&gt;</text>
-  <text class="mono" x="208" y="68" text-anchor="middle">id: UUIDv7  ·  amount: BigDecimal</text>
-  <text class="mono" x="208" y="86" text-anchor="middle">customerName: String</text>
+<!-- OrderRepository -->
+<g transform="translate(512,210)">
+  <rect class="card" x="0" y="0" width="200" height="76" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="smallLabel" x="100" y="24" text-anchor="middle">Order</text>
+  <text class="smallLabel" x="100" y="46" text-anchor="middle">Repository</text>
+  <text class="mono" x="100" y="66" text-anchor="middle">Exposed / R2DBC</text>
 </g>
 
-<!-- Product response  col2 -->
-<g transform="translate(520,306)">
-  <rect class="card" x="0" y="0" width="416" height="100" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="208" y="26" text-anchor="middle">Product Response</text>
-  <text class="mono" x="208" y="48" text-anchor="middle">suspend fun getAll(): List&lt;Product&gt;</text>
-  <text class="mono" x="208" y="68" text-anchor="middle">id: UUIDv7  ·  name: String</text>
-  <text class="mono" x="208" y="86" text-anchor="middle">price: BigDecimal</text>
+<!-- H2 DB -->
+<g transform="translate(746,210)">
+  <rect class="card" x="0" y="0" width="170" height="76" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
+  <text class="smallLabel" x="85" y="28" text-anchor="middle">H2 Database</text>
+  <text class="small" x="85" y="50" text-anchor="middle">in-memory</text>
+  <text class="small" x="85" y="66" text-anchor="middle">orders table</text>
 </g>
+
+<!-- Order model (full-width, bottom) -->
+<g transform="translate(44,334)">
+  <rect class="card" x="0" y="0" width="872" height="66" rx="12" fill="#E9F7F6" stroke="#45A7A1"/>
+  <text class="smallLabel" x="436" y="24" text-anchor="middle">Order Model</text>
+  <text class="mono" x="436" y="46" text-anchor="middle">id: UUIDv7  ·  amount: BigDecimal  ·  customerName: String</text>
+  <text class="small" x="436" y="62" text-anchor="middle">suspend fun getAll(): List&lt;Order&gt;  ·  suspend fun getById(id): Order  ·  suspend fun create(req): Order</text>
+</g>
+
+<!-- Arrows -->
+<!-- API Gateway → OrderController: bus from gateway bottom cx=480 → down to bus y=186 → left to OrderController cx=144 → down to OrderController top -->
+<path class="line" d="M480,158 L480,186 L144,186 L144,210"/>
+
+<!-- OrderController → OrderService -->
+<path class="line" d="M244,248 L278,248"/>
+
+<!-- OrderService → OrderRepository -->
+<path class="line" d="M478,248 L512,248"/>
+
+<!-- OrderRepository → H2 -->
+<path class="line" d="M712,248 L746,248"/>
+
+<!-- OrderRepository → Order model (vertical stem) -->
+<path class="line" d="M612,286 L612,310 L480,310 L480,334"/>
+
 </svg>

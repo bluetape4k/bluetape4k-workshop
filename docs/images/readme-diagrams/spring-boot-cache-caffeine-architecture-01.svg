@@ -15,10 +15,52 @@
     .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
   </style>
 </defs>
+<!--
+  Layout:
+  Row1 (y=116 h=80):
+    CaffeineConfig:      x=48  w=200 cx=148  right=248  bottom=196
+    CaffeineCacheManager:x=298 w=210 cx=403  right=508  bottom=196
+    CaffeineBean:        x=558 w=200 cx=658  right=758  bottom=196
+    VirtualThread:       x=772 w=160 cx=852  right=932  bottom=196
+
+  Row2 (y=252 h=90):
+    CountryRepository: x=48  w=230 cx=163  right=278  bottom=342
+    CountryPrefetcher: x=320 w=220 cx=430  right=540  bottom=342
+    LocalCache:        x=580 w=200 cx=680  right=780  bottom=342
+    DB/SlowSource:     x=800 w=136 cx=868  right=936  bottom=342
+
+  Row1 arrows (horizontal, all at y=156 mid-row):
+    CaffeineConfig (248,156) → CaffeineCacheManager (298,156): straight
+    CaffeineCacheManager (508,156) → CaffeineBean (558,156): straight
+    CaffeineBean (758,156) → VirtualThread (772,156): straight
+
+  Row1→Row2 arrows:
+    CaffeineCacheManager → CountryRepository:
+      from (403,196) down to bus y=220, left to (163,220), down to (163,252)
+    CaffeineConfig → CountryPrefetcher:
+      from (148,196) down to bus y=230, right to (430,230), down to (430,252)
+
+  Row2 arrows:
+    CountryPrefetcher → CountryRepository:
+      from left of CountryPrefetcher (320,297) straight left to CountryRepository right (278,297)
+      This is fine (no card in between, direct horizontal)
+    CountryRepository → LocalCache:
+      PROBLEM: direct horizontal at y=297 crosses CountryPrefetcher interior.
+      FIX: route via bus lane ABOVE row2 at y=248:
+        from CountryRepository top-right corner area (278, 297)
+        Actually better: go up from CountryRepository (163,252) → (163,242) → right to LocalCache cx (680,242) → down to LocalCache top (680,252)
+        But this conflicts with the row1→row2 bus lanes.
+        Use bus at y=348 BELOW row2 (bottom=342):
+          CountryRepository bottom (163,342) → (163,352) → right to LocalCache cx (680,352) → up to LocalCache bottom... no
+        OR: route around CountryPrefetcher using a jog: right then up-over:
+          (278,297) → (310,297) → (310,244) → (680,244) → (680,252)
+          310 < 320 (CountryPrefetcher left), so we stay left of Prefetcher, then go above row2 to LocalCache.
+    LocalCache → DB/SlowSource:
+      from LocalCache right (780,297) → DB left (800,297): straight
+-->
 <rect class="canvas" width="960" height="440"/>
 <rect class="frame" x="24" y="20" width="912" height="400" rx="22"/>
 
-<!-- Title -->
 <text class="title" x="48" y="68">Spring Boot Cache Caffeine</text>
 <text class="subtitle" x="52" y="92">CaffeineConfig → CacheManager → @Cacheable services → Caffeine local cache</text>
 
@@ -88,7 +130,7 @@
   <text class="small" x="68" y="76" text-anchor="middle">cache miss</text>
 </g>
 
-<!-- Arrows Row 1 -->
+<!-- Arrows Row 1 (horizontal at y=156) -->
 <!-- CaffeineConfig → CaffeineCacheManager -->
 <path class="line" d="M248,156 L298,156"/>
 <!-- CaffeineCacheManager → CaffeineBean -->
@@ -96,18 +138,25 @@
 <!-- CaffeineBean → VirtualThread -->
 <path class="line" d="M758,156 L772,156"/>
 
-<!-- Arrows Row 1→2 -->
-<!-- CaffeineCacheManager → CountryRepository -->
+<!-- Arrows Row 1 → Row 2 -->
+<!-- CaffeineCacheManager (cx=403,196) → CountryRepository (cx=163,252):
+     down to bus y=220, left to x=163, down to y=252 -->
 <path class="line" d="M403,196 L403,220 L163,220 L163,252"/>
-<!-- CaffeineConfig → CountryPrefetcher (manages scheduling) -->
-<path class="line" d="M148,196 L148,236 L430,236 L430,252"/>
+
+<!-- CaffeineConfig (cx=148,196) → CountryPrefetcher (cx=430,252):
+     down to bus y=232, right to x=430, down to y=252 -->
+<path class="line" d="M148,196 L148,232 L430,232 L430,252"/>
 
 <!-- Arrows Row 2 -->
-<!-- CountryRepository → Local Cache -->
-<path class="line" d="M278,297 L580,297"/>
-<!-- CountryPrefetcher → CountryRepository -->
+<!-- CountryPrefetcher (left=320) → CountryRepository (right=278): direct horizontal -->
 <path class="line" d="M320,297 L278,297"/>
-<!-- Local Cache → DB -->
-<path class="line" d="M780,297 L800,297"/>
 
+<!-- CountryRepository → LocalCache:
+     route AROUND CountryPrefetcher via jog above row2.
+     From CountryRepository right edge (278,297) go right to x=310 (just left of Prefetcher),
+     then up to y=244 (above row2 top=252), right to LocalCache cx=680, down to LocalCache top (680,252). -->
+<path class="line" d="M278,270 L310,270 L310,244 L680,244 L680,252"/>
+
+<!-- LocalCache (right=780) → DB (left=800): direct horizontal -->
+<path class="line" d="M780,297 L800,297"/>
 </svg>

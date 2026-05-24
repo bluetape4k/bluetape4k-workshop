@@ -15,11 +15,21 @@
     .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
   </style>
 </defs>
-<!-- Layout:
-     Canvas: 920×460  Frame: x=24 y=20 w=872 h=416
-     Row1  y=98  h=54  (ObjectMapper: center x=220 w=480 cx=460)
-     Row2  y=212 h=80  (3 cols w=260 gap=46: Input | Modules | Output)
-     Row3  y=352 h=80  (Annotations: full width)
+<!--
+  Layout:
+  Canvas: 920×460  Frame: x=24 y=20 w=872 h=416
+  Row1  y=98  h=54  ObjectMapper: x=220 w=480 cx=460  bottom=152
+  Row2  y=212 h=80  3 cols:
+    Input:        x=24  w=260 cx=154  right=284  bottom=292
+    ObjectMapper: x=330 w=260 cx=460  right=590  bottom=292
+    Output:       x=636 w=260 cx=766  right=896  bottom=292
+  Row3  y=352 h=80  Annotations: x=24 w=872 cx=460  bottom=432
+
+  Arrows:
+  - ObjectMapper(top) → Input:        bus from bottom-left of top card down, left to Input cx
+  - ObjectMapper(top) → ObjectMapper: straight down from top card bottom cx to row2 top
+  - ObjectMapper(top) → Output:       bus from bottom-right of top card down, right to Output cx
+  - ObjectMapper(row2) → Annotations: straight down
 -->
 <rect class="canvas" width="920" height="460"/>
 <rect class="frame" x="24" y="20" width="872" height="416" rx="28"/>
@@ -27,14 +37,14 @@
 <text class="subtitle" x="58" y="92">Jackson.defaultJsonMapper · KotlinModule · JavaTimeModule · Blackbird · bluetape4k-jackson3</text>
 
 <!-- Arrows -->
-<!-- Input → ObjectMapper -->
-<path class="line" d="M154 152 L154 182 L400 182 L400 212"/>
-<!-- ObjectMapper → Output -->
-<path class="line" d="M520 152 L520 182 L766 182 L766 212"/>
-<!-- ObjectMapper → Annotations -->
-<path class="line" d="M460 152 L460 182 L460 212"/>
-<!-- ObjectMapper → Annotation features (bottom) -->
-<path class="line" d="M460 292 L460 352"/>
+<!-- ObjectMapper(top) → Input: down from (300,152) to bus y=182, left to (154,182), down to (154,212) -->
+<path class="line" d="M300,152 L300,182 L154,182 L154,212"/>
+<!-- ObjectMapper(top) → ObjectMapper(row2): straight down from cx=460 -->
+<path class="line" d="M460,152 L460,212"/>
+<!-- ObjectMapper(top) → Output: down from (620,152) to bus y=182, right to (766,182), down to (766,212) -->
+<path class="line" d="M620,152 L620,182 L766,182 L766,212"/>
+<!-- ObjectMapper(row2) → Annotations: straight down from cx=460 -->
+<path class="line" d="M460,292 L460,352"/>
 
 <!-- ObjectMapper (center top) -->
 <g transform="translate(220,98)">
@@ -51,7 +61,7 @@
   <text class="small" x="130" y="64" text-anchor="middle">Java POJO · Java Time API</text>
 </g>
 
-<!-- ObjectMapper center col2 (arrow pass-through) -->
+<!-- ObjectMapper center col2 -->
 <g transform="translate(330,212)">
   <rect class="card" x="0" y="0" width="260" height="80" rx="12" fill="#E9F7F6" stroke="#45A7A1"/>
   <text class="smallLabel" x="130" y="22" text-anchor="middle">ObjectMapper</text>

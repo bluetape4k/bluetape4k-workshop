@@ -33,10 +33,10 @@
 <!-- Arrows -->
 <!-- GreetingController → GreetingService (straight down) -->
 <path class="line" d="M460 152 L460 212"/>
-<!-- GreetingService → 3 cols (fan-out bus y=322) -->
+<!-- GreetingService → 3 cols (fan-out bus y=322, all starting from GreetingService bottom) -->
 <path class="line" d="M460 292 L460 322 L154 322 L154 352"/>
-<path class="line" d="M460 322 L460 352"/>
-<path class="line" d="M460 322 L766 322 L766 352"/>
+<path class="line" d="M460 292 L460 352"/>
+<path class="line" d="M460 292 L460 322 L766 322 L766 352"/>
 
 <!-- GreetingController (center top) -->
 <g transform="translate(220,98)">

@@ -71,6 +71,6 @@
 <text class="smallLabel" x="479" y="436" text-anchor="middle">Redis (rate limit storage)</text>
 <text class="small" x="479" y="454" text-anchor="middle">RequestRateLimiter · sliding window counters · UserKeyResolver key extraction</text>
 
-<!-- Arrow RateLimiter → Redis -->
-<line class="line" x1="164" y1="284" x2="164" y2="416"/>
+<!-- Arrow RateLimiter → Redis: jog left to x=140 to avoid crossing IndexController (x=152..408) -->
+<path class="line" d="M164,284 L164,312 L140,312 L140,416"/>
 </svg>

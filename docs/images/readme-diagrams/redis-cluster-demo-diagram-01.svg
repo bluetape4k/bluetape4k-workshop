@@ -29,7 +29,7 @@
 
 <!-- Arrows -->
 <path class="line" d="M460 152 L460 182 L224 182 L224 212"/>
-<path class="line" d="M460 182 L672 182 L672 212"/>
+<path class="line" d="M460 152 L460 182 L672 182 L672 212"/>
 <path class="line" d="M224 292 L224 332 L460 332 L460 352"/>
 <path class="line" d="M672 292 L672 332 L460 332 L460 352"/>
 

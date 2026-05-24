@@ -29,13 +29,13 @@
 <text class="title" x="58" y="66">WebFilter Rate Limit Flow</text>
 <text class="subtitle" x="58" y="92">WebFilter · KeyResolver · Token Bucket · allow / 429 Too Many Requests</text>
 
-<!-- Arrows: WebFilter → 3 components (bus y=182) -->
+<!-- Arrows: WebFilter → 3 components (bus y=182, all from WebFilter bottom) -->
 <path class="line" d="M480 152 L480 182 L154 182 L154 212"/>
-<path class="line" d="M480 182 L460 182 L460 212"/>
-<path class="line" d="M480 182 L766 182 L766 212"/>
-<!-- Token Bucket → 2 outcomes (bus y=332) -->
+<path class="line" d="M480 152 L480 182 L460 182 L460 212"/>
+<path class="line" d="M480 152 L480 182 L766 182 L766 212"/>
+<!-- Token Bucket → 2 outcomes (bus y=332, both from Token Bucket bottom) -->
 <path class="line" d="M460 292 L460 332 L234 332 L234 352"/>
-<path class="line" d="M460 332 L726 332 L726 352"/>
+<path class="line" d="M460 292 L460 332 L726 332 L726 352"/>
 
 <!-- WebFilter (center top) -->
 <g transform="translate(260,98)">

@@ -46,9 +46,9 @@
 <path class="line" d="M460 292 L460 322 L480 322 L480 352"/>
 <path class="line" d="M766 292 L766 322 L480 322 L480 352"/>
 
-<!-- Arrows Row3 → Row4 (fan-out to OTel + Zipkin) -->
+<!-- Arrows Row3 → Row4 (fan-out to OTel + Zipkin, both starting from ObservationRegistry bottom) -->
 <path class="line" d="M480 406 L480 436 L234 436 L234 466"/>
-<path class="line" d="M480 436 L726 436 L726 466"/>
+<path class="line" d="M480 406 L480 436 L726 436 L726 466"/>
 
 <!-- SyncController col1 -->
 <g transform="translate(24,98)">

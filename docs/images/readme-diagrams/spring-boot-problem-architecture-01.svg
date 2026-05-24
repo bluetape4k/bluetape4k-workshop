@@ -91,8 +91,8 @@
 <!-- Row 1 → Row 2: Controllers throw exceptions → ExceptionHandler handles -->
 <path class="line" d="M374,196 L374,234 L260,234 L260,264"/>
 <path class="line" d="M626,196 L626,234 L380,234 L380,264"/>
-<!-- Exceptions → ExceptionHandler -->
-<path class="line" d="M853,196 L853,234 L380,234"/>
+<!-- Exceptions → ExceptionHandler: bus to ExceptionHandler top -->
+<path class="line" d="M853,196 L853,234 L380,234 L380,264"/>
 
 <!-- ExceptionHandler → ProblemHandling → Response -->
 <path class="line" d="M380,314 L430,314"/>

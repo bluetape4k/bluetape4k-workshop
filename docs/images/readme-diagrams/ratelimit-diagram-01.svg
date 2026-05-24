@@ -28,11 +28,11 @@
 <text class="title" x="58" y="66">Rate Limiter Modules</text>
 <text class="subtitle" x="58" y="92">Bucket4j · Token Bucket · Redis · Caffeine · WebFlux · bluetape4k-bucket4j</text>
 
-<!-- Arrows from Overview to 4 modules (bus y=182) -->
+<!-- Arrows from Overview to 4 modules (bus y=182, all from overview bottom) -->
 <path class="line" d="M480 152 L480 182 L122 182 L122 212"/>
-<path class="line" d="M480 182 L358 182 L358 212"/>
-<path class="line" d="M480 182 L594 182 L594 212"/>
-<path class="line" d="M480 182 L830 182 L830 212"/>
+<path class="line" d="M480 152 L480 182 L358 182 L358 212"/>
+<path class="line" d="M480 152 L480 182 L594 182 L594 212"/>
+<path class="line" d="M480 152 L480 182 L830 182 L830 212"/>
 <!-- 4 modules → Token Bucket (bus y=392) -->
 <path class="line" d="M122 352 L122 392 L480 392 L480 412"/>
 <path class="line" d="M358 352 L358 392 L480 392 L480 412"/>

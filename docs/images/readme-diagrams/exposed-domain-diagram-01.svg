@@ -75,7 +75,10 @@
 <!-- Relationships -->
 <path class="line" d="M244,180 L378,180"/>
 <path class="line" d="M580,180 L714,180"/>
-<path class="line" d="M144,250 L300,298"/>
-<path class="line" d="M480,250 L300,350"/>
-<path class="line" d="M480,250 L660,298"/>
+<!-- Actors → ActorsInMovies: bus via y=278 to avoid diagonal through empty space -->
+<path class="line" d="M144,250 L144,278 L300,278 L300,300"/>
+<!-- Movies → ActorsInMovies: bus via y=278 -->
+<path class="line" d="M480,250 L480,278 L300,278 L300,300"/>
+<!-- Movies → Genres: bus via y=278 -->
+<path class="line" d="M480,250 L480,278 L660,278 L660,300"/>
 </svg>

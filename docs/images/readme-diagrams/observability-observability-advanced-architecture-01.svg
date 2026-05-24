@@ -33,9 +33,9 @@
 <!-- Arrows -->
 <!-- UserController → UserService (straight down) -->
 <path class="line" d="M480 152 L480 212"/>
-<!-- UserService → UCR + UR (fan-out bus y=332) -->
+<!-- UserService → UCR + UR (fan-out bus y=332, both start from UserService bottom) -->
 <path class="line" d="M480 292 L480 332 L234 332 L234 352"/>
-<path class="line" d="M480 332 L726 332 L726 352"/>
+<path class="line" d="M480 292 L480 332 L726 332 L726 352"/>
 <!-- UCR → Redis, UR → H2 (straight down) -->
 <path class="line" d="M234 432 L234 492"/>
 <path class="line" d="M726 432 L726 492"/>

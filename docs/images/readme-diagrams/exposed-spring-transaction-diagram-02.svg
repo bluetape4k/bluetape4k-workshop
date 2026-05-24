@@ -84,12 +84,48 @@
   <text class="small" x="95" y="68" text-anchor="middle">else exception</text>
 </g>
 
-<!-- Arrows from Outer TX -->
+<!--
+  Arrows from Outer TX (cx=139, right=234) to each target.
+  Use bus lane at y=95 (above row1 cards at y=110) to avoid crossing card interiors.
+  Each arrow: goes UP from Outer TX top (y=110) to bus y=95,
+  travels horizontally to target cx, then DOWN to target card top (y=110).
+
+  Outer TX → REQUIRED (right neighbour: direct horizontal at y=150)
+-->
 <path class="line" d="M234,150 L268,150"/>
-<path class="line" d="M234,156 L494,130"/>
-<path class="line" d="M234,162 L720,130"/>
+
+<!--
+  Outer TX → REQUIRES_NEW: bus above row1
+  Outer TX top: (139, 110) → up to (139, 95) → right to (591, 95) → down to (591, 110)
+-->
+<path class="line" d="M139,110 L139,95 L591,95 L591,110"/>
+
+<!--
+  Outer TX → NESTED: bus above row1
+  Outer TX top: (139, 110) → up to (139, 88) → right to (817, 88) → down to (817, 110)
+-->
+<path class="line" d="M139,110 L139,88 L817,88 L817,110"/>
+
+<!--
+  Outer TX → NOT_SUPPORTED: vertical stem (same column)
+-->
 <path class="line" d="M139,190 L139,268"/>
-<path class="line" d="M365,190 L365,268"/>
-<path class="line" d="M591,190 L591,268"/>
-<path class="line" d="M817,190 L817,268"/>
+
+<!--
+  Outer TX → MANDATORY: bus lane at y=240 (gap between rows)
+  Start: right of Outer TX (234, 310→ midpoint of NOT_SUPPORTED column)
+  Actually use top-of-row2 bus to avoid crossing NOT_SUPPORTED interior.
+  Outer TX bottom (139,190) → down to bus y=240 → right to MANDATORY cx (365) → up to MANDATORY top (365,270)
+-->
+<path class="line" d="M139,190 L139,240 L365,240 L365,268"/>
+
+<!--
+  Outer TX → SUPPORTS: bus at y=240
+-->
+<path class="line" d="M139,190 L139,246 L591,246 L591,268"/>
+
+<!--
+  Outer TX → NEVER: bus at y=240
+-->
+<path class="line" d="M139,190 L139,252 L817,252 L817,268"/>
 </svg>

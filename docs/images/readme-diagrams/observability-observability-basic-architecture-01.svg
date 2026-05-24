@@ -31,9 +31,9 @@
 <text class="subtitle" x="58" y="92">OrderController · observed() · InventoryClient · WebClient · Micrometer Span Propagation</text>
 
 <!-- Arrows -->
-<!-- OrderController → OrderService + InventoryClient (fan-out via bus y=182) -->
+<!-- OrderController → OrderService + InventoryClient (fan-out via bus y=182, both from controller bottom) -->
 <path class="line" d="M480 152 L480 182 L234 182 L234 212"/>
-<path class="line" d="M480 182 L726 182 L726 212"/>
+<path class="line" d="M480 152 L480 182 L726 182 L726 212"/>
 <!-- OrderService + InventoryClient → Span Hierarchy (converge via bus y=332) -->
 <path class="line" d="M234 292 L234 332 L480 332 L480 352"/>
 <path class="line" d="M726 292 L726 332 L480 332 L480 352"/>
