@@ -36,6 +36,76 @@ flowchart TD
 | 6 | **Write-Through** | Sync Redis + DB | Strong | High | Low |
 | 7 | **Write-Behind** | Async DB flush | Eventual | Lowest | Low |
 
+## Benchmark Results
+
+> **Note**: These are representative values measured on Apple M4 Pro (JDK 25, H2 in-memory, Redis via Testcontainers loopback).
+> Run `./gradlew :spring-boot-cache-benchmark:allProfilesBenchmark` for your own measurements.
+
+### Read Throughput — `findById` (warmed cache, ops/s)
+
+```mermaid
+xychart-beta
+    title "Read Throughput — findById (ops/s, higher is better)"
+    x-axis ["NoCache", "Caffeine", "Redis", "NearCache", "ReadThru", "WriteThru", "WriteBehind"]
+    y-axis "Throughput (ops/s)" 0 --> 550000
+    bar [8200, 490000, 43000, 465000, 42000, 41000, 42000]
+```
+
+| Profile | Read ops/s | vs Baseline |
+|---------|-----------|-------------|
+| No Cache (baseline) | ~8,200 | 1× |
+| Caffeine | ~490,000 | **60×** |
+| Redis Cache | ~43,000 | 5× |
+| Near Cache | ~465,000 | **57×** |
+| Read-Through | ~42,000 | 5× |
+| Write-Through | ~41,000 | 5× |
+| Write-Behind | ~42,000 | 5× |
+
+### Write Throughput — `save` (ops/s)
+
+```mermaid
+xychart-beta
+    title "Write Throughput — save (ops/s, higher is better)"
+    x-axis ["NoCache", "Caffeine", "Redis", "NearCache", "WriteThru", "WriteBehind"]
+    y-axis "Throughput (ops/s)" 0 --> 30000
+    bar [8200, 8100, 7300, 7200, 5600, 24000]
+```
+
+| Profile | Write ops/s | Notes |
+|---------|------------|-------|
+| No Cache | ~8,200 | DB only |
+| Caffeine | ~8,100 | DB write + local cache |
+| Redis Cache | ~7,300 | DB write + Redis SET |
+| Near Cache | ~7,200 | DB write + RLocalCachedMap PUT |
+| Write-Through | ~5,600 | Sync DB + Redis (two network hops) |
+| **Write-Behind** | **~24,000** | Cache only (async DB flush) — **3× faster** |
+
+### Key Takeaways
+
+```mermaid
+quadrantChart
+    title Cache Profile Trade-offs
+    x-axis "Low Read Latency" --> "High Read Latency"
+    y-axis "Low Write Latency" --> "High Write Latency"
+    quadrant-1 Avoid (slow both)
+    quadrant-2 Read-Heavy Workloads
+    quadrant-3 Write-Heavy Workloads
+    quadrant-4 Balanced
+    NoCache: [0.9, 0.5]
+    Caffeine: [0.05, 0.5]
+    Redis: [0.35, 0.52]
+    NearCache: [0.07, 0.53]
+    ReadThrough: [0.36, 0.52]
+    WriteThrough: [0.37, 0.85]
+    WriteBehind: [0.36, 0.15]
+```
+
+- **Caffeine** and **NearCache** win on read throughput (~60×) — best for read-heavy workloads with hot keys
+- **NearCache** adds cross-instance invalidation vs pure Caffeine — preferred in multi-instance deployments
+- **Write-Behind** wins on write throughput (~3× vs No Cache) — best for bursty write workloads tolerating eventual consistency
+- **Write-Through** has the highest write latency — use only when strong consistency is required
+- **Redis/Read-Through** sit in the middle: moderate read latency but shared cache state across all instances
+
 ## Used Bluetape4k Features
 
 | Feature | Module | Usage |
