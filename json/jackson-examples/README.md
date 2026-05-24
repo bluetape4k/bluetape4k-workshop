@@ -1,8 +1,34 @@
 # Jackson Examples
 
 Jackson 3.x 라이브러리를 사용하여 JSON 데이터를 Java 객체로 변환하거나 Java 객체를 JSON 데이터로 변환하는 방법을 설명합니다.
+bluetape4k의 `Jackson.defaultJsonMapper`로 KotlinModule과 JavaTimeModule을 자동 등록하여 Kotlin data class와 Java Time API를 즉시 직렬화합니다.
 
 ![Jackson Examples diagram](../../docs/images/readme-diagrams/json-jackson-examples-diagram-01.png)
+
+## 사용된 bluetape4k 기능
+
+| 기능 | 아티팩트 | 코드 위치 | 이점 |
+|---|---|---|---|
+| `Jackson.defaultJsonMapper` | `bluetape4k-jackson3` | `AbstractJacksonTest` | KotlinModule + JavaTimeModule + Blackbird 사전 등록 — 별도 설정 불필요 |
+| `KLogging` | `bluetape4k-logging` | companion object | Lazy 람다 로깅 (`log.debug { "..." }`) |
+| `Fakers.faker` | `bluetape4k-junit5` | `AbstractJacksonTest` | JavaFaker 기반 테스트 데이터 생성 |
+
+## Before / After
+
+```kotlin
+// Before — KotlinModule과 JavaTimeModule을 수동으로 등록
+val mapper = JsonMapper.builder()
+    .addModule(KotlinModule.Builder().build())
+    .addModule(JavaTimeModule())
+    .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
+    .build()
+
+// After — bluetape4k Jackson.defaultJsonMapper (이미 등록됨)
+val mapper: JsonMapper = Jackson.defaultJsonMapper
+    .rebuild()
+    .apply { configure(SerializationFeature.INDENT_OUTPUT, true) }
+    .build()
+```
 
 ## 주요 기능
 

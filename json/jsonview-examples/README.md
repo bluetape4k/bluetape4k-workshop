@@ -1,6 +1,30 @@
 # JsonView in Spring Boot Demo
 
 Spring Boot REST API 에서 응답 시 `@JsonView` 를 사용하여 응답 데이터를 필터링하는 방법을 알아보겠습니다.
+bluetape4k의 `Jackson.defaultJsonMapper`를 `@Bean`으로 등록해 KotlinModule + JavaTimeModule 설정을 간소화합니다.
+
+## 사용된 bluetape4k 기능
+
+| 기능 | 아티팩트 | 코드 위치 | 이점 |
+|---|---|---|---|
+| `Jackson.defaultJsonMapper` | `bluetape4k-jackson3` | `JacksonConfig.jsonMapper()` | KotlinModule + JavaTimeModule 사전 등록 — 수동 설정 불필요 |
+| `KLogging` | `bluetape4k-logging` | companion object | Lazy 람다 로깅 |
+| `shouldBeNull()` / `shouldBeEqualTo` | `bluetape4k-assertions` | 컨트롤러 테스트 | Kluent 스타일 assertion |
+
+## Before / After
+
+```kotlin
+// Before — 수동 JsonMapper 설정
+@Bean
+fun jsonMapper(): JsonMapper = JsonMapper.builder()
+    .addModule(KotlinModule.Builder().build())
+    .addModule(JavaTimeModule())
+    .build()
+
+// After — bluetape4k Jackson.defaultJsonMapper
+@Bean
+fun jsonMapper(): JsonMapper = Jackson.defaultJsonMapper
+```
 
 ![JsonView in Spring Boot Demo diagram](../../docs/images/readme-diagrams/json-jsonview-examples-diagram-01.png)
 
