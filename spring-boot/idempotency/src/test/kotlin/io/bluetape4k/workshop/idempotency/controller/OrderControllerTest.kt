@@ -1,0 +1,158 @@
+package io.bluetape4k.workshop.idempotency.controller
+
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.logging.KLogging
+import io.bluetape4k.workshop.idempotency.AbstractIdempotencyTest
+import io.bluetape4k.workshop.idempotency.model.OrderRequest
+import io.bluetape4k.workshop.idempotency.model.OrderResponse
+import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
+import org.springframework.test.web.reactive.server.returnResult
+import reactor.kotlin.core.publisher.toMono
+import java.util.UUID
+
+class OrderControllerTest : AbstractIdempotencyTest() {
+
+    companion object : KLogging() {
+        private const val ORDERS_PATH = "/api/orders"
+        private const val IDEMPOTENCY_KEY_HEADER = "Idempotency-Key"
+    }
+
+    private fun newIdempotencyKey(): String = UUID.randomUUID().toString()
+
+    private val sampleRequest = OrderRequest(
+        productId = "prod-001",
+        quantity = 2,
+        userId = "user-123",
+    )
+
+    @Test
+    fun `새 요청은 201 Created를 반환한다`() = runTest {
+        client.post()
+            .uri(ORDERS_PATH)
+            .header(IDEMPOTENCY_KEY_HEADER, newIdempotencyKey())
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(sampleRequest)
+            .exchange()
+            .expectStatus().isCreated
+            .returnResult<OrderResponse>()
+            .responseBody
+            .toMono()
+            .block()!!
+            .also { response ->
+                response.orderId.shouldNotBeEmpty()
+                response.status shouldBeEqualTo "CREATED"
+            }
+    }
+
+    @Test
+    fun `동일한 Idempotency-Key로 재전송하면 200 OK와 동일 응답을 반환한다`() = runTest {
+        val key = newIdempotencyKey()
+
+        // First request → 201 Created
+        val first = client.post()
+            .uri(ORDERS_PATH)
+            .header(IDEMPOTENCY_KEY_HEADER, key)
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(sampleRequest)
+            .exchange()
+            .expectStatus().isCreated
+            .returnResult<OrderResponse>()
+            .responseBody
+            .toMono()
+            .block()!!
+
+        // Second request with same key → 200 OK, same orderId
+        val second = client.post()
+            .uri(ORDERS_PATH)
+            .header(IDEMPOTENCY_KEY_HEADER, key)
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(sampleRequest)
+            .exchange()
+            .expectStatus().isOk
+            .returnResult<OrderResponse>()
+            .responseBody
+            .toMono()
+            .block()!!
+
+        second.orderId shouldBeEqualTo first.orderId
+        second.processedAt shouldBeEqualTo first.processedAt
+    }
+
+    @Test
+    fun `다른 Idempotency-Key는 새로운 주문을 생성한다`() = runTest {
+        val keyA = newIdempotencyKey()
+        val keyB = newIdempotencyKey()
+
+        val responseA = client.post()
+            .uri(ORDERS_PATH)
+            .header(IDEMPOTENCY_KEY_HEADER, keyA)
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(sampleRequest)
+            .exchange()
+            .expectStatus().isCreated
+            .returnResult<OrderResponse>()
+            .responseBody.toMono().block()!!
+
+        val responseB = client.post()
+            .uri(ORDERS_PATH)
+            .header(IDEMPOTENCY_KEY_HEADER, keyB)
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(sampleRequest)
+            .exchange()
+            .expectStatus().isCreated
+            .returnResult<OrderResponse>()
+            .responseBody.toMono().block()!!
+
+        // Different keys → different order IDs
+        assert(responseA.orderId != responseB.orderId) {
+            "Different idempotency keys should produce different order IDs"
+        }
+    }
+
+    @Test
+    fun `Idempotency-Key 헤더가 없으면 400 Bad Request를 반환한다`() = runTest {
+        client.post()
+            .uri(ORDERS_PATH)
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(sampleRequest)
+            .exchange()
+            .expectStatus().isBadRequest
+    }
+
+    @Test
+    fun `빈 Idempotency-Key 헤더는 400 Bad Request를 반환한다`() = runTest {
+        client.post()
+            .uri(ORDERS_PATH)
+            .header(IDEMPOTENCY_KEY_HEADER, "   ")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(sampleRequest)
+            .exchange()
+            .expectStatus().isEqualTo(HttpStatus.BAD_REQUEST)
+    }
+
+    @Test
+    fun `세 번 재전송해도 항상 동일한 응답을 반환한다`() = runTest {
+        val key = newIdempotencyKey()
+
+        val responses = (1..3).map {
+            client.post()
+                .uri(ORDERS_PATH)
+                .header(IDEMPOTENCY_KEY_HEADER, key)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(sampleRequest)
+                .exchange()
+                .returnResult<OrderResponse>()
+                .responseBody.toMono().block()!!
+        }
+
+        // All responses must carry the same orderId
+        val distinctOrderIds = responses.map { it.orderId }.toSet()
+        assert(distinctOrderIds.size == 1) {
+            "All replays must return the same orderId, got: $distinctOrderIds"
+        }
+    }
+}

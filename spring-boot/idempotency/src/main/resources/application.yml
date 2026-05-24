@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: idempotency
+
+  profiles:
+    active: app
+
+  jackson:
+    serialization:
+      indent-output: true
+
+  data:
+    redis:
+      host: ${testcontainers.redis.host:localhost}
+      port: ${testcontainers.redis.port:6379}
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
