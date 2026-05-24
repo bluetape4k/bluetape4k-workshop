@@ -8,8 +8,6 @@ Kotlin Coroutines의 핵심 개념을 학습하는 예제 모음입니다.
 
 ## 예제 범주
 
-## 예제 범주
-
 ### 기초 (`guide/`)
 | 파일 | 내용 |
 |---|---|
@@ -39,6 +37,85 @@ Kotlin Coroutines의 핵심 개념을 학습하는 예제 모음입니다.
 
 ### Flow 테스트 (`tests/`)
 - `TurbineExamples` — [Turbine](https://github.com/cashapp/turbine) 라이브러리를 사용한 Flow 테스트
+
+## 사용된 bluetape4k 기능
+
+| 기능 | 아티팩트 | 코드 위치 | 이점 |
+|---|---|---|---|
+| `KLoggingChannel` | `bluetape4k-logging` | 모든 companion object | 코루틴 컨텍스트를 포함한 구조적 로깅; SLF4J MDC와 연동 |
+| `suspendLogging { }` | `bluetape4k-logging` | `DispatcherExamples` | suspend 컨텍스트에서 안전하게 로그 메시지 빌드 |
+| `coroutines.support.log` | `bluetape4k-coroutines` | `DispatcherExamples` | Job에 이름 태그 달아 완료 로그 자동 출력 |
+| `Flow<T>.log()` | `bluetape4k-coroutines` | `FlowBuilderExamples`, `FlowLifecycleExamples` | Flow 파이프라인 중간에 emit 값 로깅 |
+| `coroutines.tests.assertResult` | `bluetape4k-coroutines` | `FlowBuilderExamples`, `CallbackFlowExamples` | Flow 결과를 Turbine 없이 검증하는 테스트 유틸 |
+| `PropertyCoroutineContext` | `bluetape4k-coroutines` | `context/` 패키지 | 타입 안전 키-값 저장소를 가진 커스텀 CoroutineContext 구현 |
+| `runSuspendTest { }` | `bluetape4k-junit5` | 테스트 전체 | JUnit 5에서 suspend 테스트를 실행하는 확장 함수 |
+| `Fakers` | `bluetape4k-junit5` | 테스트 픽스처 | JavaFaker 기반 테스트 데이터 생성 유틸리티 |
+| `OutputCapture` / `OutputCapturer` | `bluetape4k-junit5` | 출력 검증 테스트 | stdout/stderr 캡처 JUnit 5 확장 |
+| `bluetape4k-assertions` | `bluetape4k-core` | 테스트 전체 | Kluent 스타일의 가독성 높은 단언문 (`shouldBeEqualTo`, `shouldNotBeNull` 등) |
+| `Uuid` (idgenerators) | `bluetape4k-idgenerators` | `UuidProviderCoroutineContext` | UUID v7 등 다양한 ID 생성 전략 |
+| `withLoggingContext { }` | `bluetape4k-logging` | MDC 연동 예제 | Kotlin DSL 방식의 MDC context 설정 |
+
+## bluetape4k Before / After
+
+### `KLoggingChannel` vs 표준 Logger
+
+```kotlin
+// Before — SLF4J LoggerFactory 직접 사용
+class MyClass {
+    companion object {
+        private val log = LoggerFactory.getLogger(MyClass::class.java)
+    }
+}
+
+// After — bluetape4k KLoggingChannel (코루틴 컨텍스트 포함)
+class MyClass {
+    companion object: KLoggingChannel()
+    // log 프로퍼티 자동 생성 + 코루틴 컨텍스트 정보 로그에 포함
+}
+```
+
+### `suspendLogging { }` vs 일반 로그 호출
+
+```kotlin
+// Before — 코루틴 내 일반 로그 (스레드 정보만 포함)
+launch(Dispatchers.IO) {
+    log.debug("Running on thread ${Thread.currentThread().name}")
+}
+
+// After — bluetape4k suspendLogging (코루틴 이름 + 스레드 정보 포함)
+launch(Dispatchers.IO) {
+    suspendLogging { "Running on thread ${Thread.currentThread().name}" }
+    // 출력 예: [DefaultDispatcher-worker-1 @coroutine#3] Running on thread ...
+}
+```
+
+### `Flow<T>.log()` 디버깅 연산자
+
+```kotlin
+// Before — 중간 값 확인을 위한 onEach + println
+flow { emit(1); emit(2) }
+    .onEach { println("value: $it") }
+    .collect()
+
+// After — bluetape4k .log() 확장 함수
+flow { emit(1); emit(2) }
+    .log("my-flow")   // 자동으로 emit/complete/error 이벤트 로깅
+    .collect()
+```
+
+### `coroutines.tests.assertResult` vs Turbine
+
+```kotlin
+// Before — Turbine 라이브러리 의존 필요
+someFlow.test {
+    awaitItem() shouldBeEqualTo 1
+    awaitItem() shouldBeEqualTo 2
+    awaitComplete()
+}
+
+// After — bluetape4k assertResult (추가 의존성 없음)
+someFlow.assertResult(1, 2)
+```
 
 ## 참고
 
