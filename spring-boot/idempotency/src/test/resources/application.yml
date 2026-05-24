@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: idempotency-test
+
+server:
+  port: 0
