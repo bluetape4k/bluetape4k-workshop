@@ -172,6 +172,7 @@ dependencies {
 
     // Testing
     testImplementation(libs.bluetape4k.junit5)
+    testImplementation(libs.awaitility.kotlin)
     testImplementation(libs.spring.boot.starter.test) {
         exclude(group = "junit", module = "junit")
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

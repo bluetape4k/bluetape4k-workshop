@@ -1,11 +1,9 @@
 package io.bluetape4k.workshop.cache.benchmark.service
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import io.bluetape4k.logging.warn
 import io.bluetape4k.workshop.cache.benchmark.domain.Product
 import io.bluetape4k.workshop.cache.benchmark.domain.ProductRepository
 import org.springframework.data.redis.core.RedisTemplate
-import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
 import java.time.Duration
 
@@ -14,15 +12,23 @@ import java.time.Duration
  *
  * Writes are applied immediately to the Redis cache and asynchronously to the DB.
  * - Reads: cache-first, fall through to DB on miss
- * - Writes: fast (cache only, synchronous) + async DB flush via [@Async]
+ * - Writes (new entity): DB save first to get the generated ID, then populate cache
+ * - Writes (update): cache updated immediately, DB flush deferred via [WriteBehindFlusher]
  *
- * Trade-off: lower write latency at the cost of eventual consistency.
+ * ## Why a separate flusher?
+ * Spring's `@Async` requires the call to pass through a Spring proxy.
+ * Internal `this`-calls bypass the proxy and execute synchronously.
+ * [WriteBehindFlusher] is a separate `@Component` so the async invocation
+ * goes through the proxy correctly.
+ *
+ * Trade-off: lower write latency for updates at the cost of eventual consistency.
  */
 @Service
 class WriteBehindService(
     private val productRepository: ProductRepository,
     private val redisTemplate: RedisTemplate<String, Product>,
-) : ProductCacheService {
+    private val flusher: WriteBehindFlusher,
+): ProductCacheService {
     companion object : KLoggingChannel() {
         const val KEY_PREFIX = "products:write-behind:"
         val TTL: Duration = Duration.ofSeconds(60)
@@ -41,18 +47,17 @@ class WriteBehindService(
     }
 
     override fun save(product: Product): Product {
-        // Write-behind: update cache immediately, schedule async DB write
-        redisTemplate.opsForValue().set(cacheKey(product.id), product, TTL)
-        asyncPersist(product)
-        return product
-    }
-
-    @Async
-    fun asyncPersist(product: Product) {
-        try {
-            productRepository.save(product)
-        } catch (e: Exception) {
-            log.warn(e) { "Write-behind DB flush failed for product id=${product.id}" }
+        return if (product.id == 0L) {
+            // New entity: must persist to DB first to obtain the generated ID
+            val saved = productRepository.save(product)
+            redisTemplate.opsForValue().set(cacheKey(saved.id), saved, TTL)
+            saved
+        } else {
+            // Existing entity (update): write-behind — update cache immediately,
+            // flush to DB asynchronously via proxy-based @Async flusher
+            redisTemplate.opsForValue().set(cacheKey(product.id), product, TTL)
+            flusher.persist(product)
+            product
         }
     }
 
