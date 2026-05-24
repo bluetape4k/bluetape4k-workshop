@@ -203,15 +203,16 @@
     }
     ```
   - `VERTEX_LABEL_TO_EDGE_LABEL` — companion object 에 선언 (T4-1b 동일)
-  - `rankSuspiciousUsers` — **`Flow.mapIndexed` 없음** — `.withIndex().map { (idx, s) -> SuspiciousUserScore(s.vertex, s.score, idx + 1) }` 사용:
+  - `rankSuspiciousUsers` — **`Flow.mapIndexed` 없음** — `.withIndex().map { (idx, s) -> SuspiciousUserScore(s.vertex, s.score, idx + 1) }` 사용.
+    **`flow { }` 빌더 + `Flow.forEach` 패턴 금지 — `Flow.forEach` 는 존재하지 않음 (compile error).**
+    Direct pipeline 으로 작성:
     ```kotlin
-    fun rankSuspiciousUsers(limit: Int = 10): Flow<SuspiciousUserScore> = flow {
-        ops.pageRank(PageRankOptions(...))
+    fun rankSuspiciousUsers(limit: Int = 10): Flow<SuspiciousUserScore> =
+        ops.pageRank(PageRankOptions(vertexLabel = null, edgeLabel = null, topK = Int.MAX_VALUE))
             .filter { it.vertex.label == UserLabel.label }
             .take(limit)
             .withIndex()
-            .forEach { (idx, s) -> emit(SuspiciousUserScore(s.vertex, s.score, idx + 1)) }
-    }
+            .map { (idx, s) -> SuspiciousUserScore(s.vertex, s.score, idx + 1) }
     ```
   - Flow 수집 시 `CancellationException` 전파 (runCatching 내 suspend 호출 금지)
   - 영문 KDoc + Flow 수집 방법 설명 필수
@@ -353,8 +354,10 @@
         val neo4j = Neo4jServer.Launcher.neo4j  // bluetape4k-testcontainers launcher
         val driver: Driver = GraphDatabase.driver(neo4j.boltUrl, AuthTokens.none())
     }
-    override val ops: GraphOperations = Neo4jGraphOperations(driver, graphName)
+    // ⚠️ graphName MUST be declared before ops — Kotlin initializes properties in declaration order.
+    // Declaring ops first would read graphName before it is initialized (null → NPE or wrong value).
     override val graphName = "abuser_neo4j"
+    override val ops: GraphOperations = Neo4jGraphOperations(driver, graphName)
     ```
   - `@AfterAll fun teardown()`: `runCatching { if (ops.graphExists(graphName)) ops.dropGraph(graphName) }.onFailure { log.warn }` + `driver.close()`
 
@@ -370,8 +373,9 @@
         val memgraph = MemgraphServer.Launcher.memgraph
         val driver: Driver = GraphDatabase.driver(memgraph.boltUrl, AuthTokens.none())
     }
-    override val ops: GraphOperations = MemgraphGraphOperations(driver, graphName)
+    // ⚠️ graphName MUST be declared before ops (same initialization order rule as T10-1)
     override val graphName = "abuser_memgraph"
+    override val ops: GraphOperations = MemgraphGraphOperations(driver, graphName)
     ```
 
 ### T10-3: `AbuserDetectionSuspendNeo4jTest.kt`
@@ -380,8 +384,9 @@
 - **작업**:
   - `@Tag("integration")`
   - T10-1 와 동일 container + driver wiring
+  - **⚠️ 초기화 순서**: `override val graphName = "abuser_suspend_neo4j"` 를 `override val ops` **앞에** 선언
   - `override val ops: GraphSuspendOperations = Neo4jGraphSuspendOperations(driver, graphName)`
-  - `graphName = "abuser_suspend_neo4j"` (T10-1 와 다른 unique name)
+  - `graphName = "abuser_suspend_neo4j"` (T10-1 와 다른 unique name — DB 충돌 방지)
   - `AbstractAbuserDetectionSuspendTest` 확장
 
 ### T10-4: `AbuserDetectionSuspendMemgraphTest.kt`
@@ -389,6 +394,7 @@
 - **파일**: `.../AbuserDetectionSuspendMemgraphTest.kt`
 - **작업**:
   - T10-3 패턴, `MemgraphServer.Launcher.memgraph`
+  - **⚠️ 초기화 순서**: `override val graphName = "abuser_suspend_memgraph"` 를 `override val ops` **앞에** 선언
   - `graphName = "abuser_suspend_memgraph"`
 
 ---
