@@ -1,59 +1,181 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1044" height="526" viewBox="0 0 1044 526" role="img" aria-label="AWS S3 + Spring Cloud Demo Architecture">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="580" viewBox="0 0 1200 580"
+     role="img" aria-label="AWS Workshop Module Architecture">
 <defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <marker id="arrBlue"  markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth"><path d="M1,1 L8,4.5 L1,8 Z" fill="#3b82f6"/></marker>
+  <marker id="arrGreen" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth"><path d="M1,1 L8,4.5 L1,8 Z" fill="#059669"/></marker>
+  <marker id="arrAmber" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth"><path d="M1,1 L8,4.5 L1,8 Z" fill="#d97706"/></marker>
   <style>
-    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
-    .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
-    .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
-    .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
+    .canvas{fill:#f7f9fc}
+    .frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
+    .title{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:36px;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:13px;fill:#536273}
+    .zoneLabel{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:12px;fill:#6b7280}
+    .cardLabel{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:17px;fill:#102033}
+    .cardSub{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:11px;fill:#536273}
+    .lineBlue{stroke:#3b82f6;stroke-width:2;fill:none;marker-end:url(#arrBlue)}
+    .lineGreen{stroke:#059669;stroke-width:2;fill:none;marker-end:url(#arrGreen)}
+    .lineAmber{stroke:#d97706;stroke-width:1.5;fill:none;marker-end:url(#arrAmber)}
   </style>
 </defs>
-<rect class="canvas" width="1044" height="526"/>
-<rect class="frame" x="32" y="28" width="980" height="470" rx="28"/>
-<text class="title" x="66" y="82">AWS S3 + Spring Cloud Demo Architecture</text>
-<text class="subtitle" x="70" y="118">S3 · LocalStack · AWS SDK v2 · Spring Cloud AWS · Testcontainers</text>
-<path class="line" d="M338 220 C338 220 706 220 706 220"/>
-<path class="line" d="M672 220 C672 220 706 220 706 220"/>
-<path class="line" d="M706 386 C706 303 672 303 672 220"/>
-<path class="line" d="M338 220 C338 303 706 303 706 386"/>
-<path class="line" d="M188 280 C188 303 188 303 188 326"/>
-<path class="line" d="M338 220 C338 303 372 303 372 386"/>
-<g transform="translate(48,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">s3-spring-cloud</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">Spring Cloud AWS S3</text>
-</g>
-<g transform="translate(382,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">LocalStack (Docker )</text>
-</g>
-<g transform="translate(716,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">S3</text>
-</g>
-<g transform="translate(48,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">AWS SDK v2</text>
-</g>
-<g transform="translate(382,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">Spring Cloud AWS</text>
-</g>
-<g transform="translate(716,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">Testcontainers</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">(LocalStackServer)</text>
-</g>
+
+<!--
+  Coordinate plan — routing lanes ≥50px so vertical stems (25px each side)
+  clearly exceed arrowhead depth (14px), preventing side-entry appearance.
+
+  Canvas: 1200×580   Frame: x=28 y=24 w=1144 h=532 rx=24
+
+  Title y=70   Subtitle y=96
+
+  LEFT ZONE (s3-spring-cloud): x=48 y=110 w=544 h=200 → bottom y=310
+    SpringCloudAwsS3Sample: x=68  y=134 w=504 h=54  cx=320  top=134 bottom=188
+    [routing lane 50px: y=188..238, route y=213]
+    S3Client:    x=68  y=238 w=220 h=54  cx=178  top=238 bottom=292
+    S3Template:  x=316 y=238 w=220 h=54  cx=426  top=238 bottom=292
+
+  RIGHT ZONE (storage-abstraction): x=608 y=110 w=544 h=298 → bottom y=408
+    StorageApplication: x=628 y=134 w=504 h=54  cx=880  top=134 bottom=188
+    [routing lane 50px: y=188..238, route y=213]
+    StorageService:  x=628 y=238 w=504 h=54  cx=880  top=238 bottom=292
+    [routing lane 50px: y=292..342, route y=317]
+    LocalStorage:    x=628 y=342 w=148 h=48  cx=702  top=342 bottom=390
+    S3Storage:       x=794 y=342 w=148 h=48  cx=868  top=342 bottom=390
+    S3Presigned:     x=960 y=342 w=172 h=48  cx=1046 top=342 bottom=390
+
+  STORAGE ZONE: x=48 y=440 w=1104 h=116 → bottom y=556
+    Zone label y=458
+    LocalStack S3:  x=68  y=464 w=280 h=68  cx=208  top=464 bottom=532
+    Floci (Docker): x=464 y=464 w=280 h=68  cx=604  top=464 bottom=532
+    AWS S3:         x=860 y=464 w=280 h=68  cx=1000 top=464 bottom=532
+
+  Cross-zone routing:
+    Left→Storage  gap y=310..440=130px  route y=375
+    Right→Storage gap y=408..440= 32px  routes y=418, y=428
+
+  Arrows (all start/end at card edge midpoints, vertical stems ≥25px):
+  1. SpringCloudAwsS3Sample(178,188) → S3Client(178,238)       straight down
+  2. SpringCloudAwsS3Sample(460,188) → S3Template(426,238)     routing y=213  stems 25+25
+  3. StorageApplication(880,188)     → StorageService(880,238) straight down
+  4. StorageService(780,292)         → LocalStorage(702,342)   routing y=317  stems 25+25
+  5. StorageService(868,292)         → S3Storage(868,342)      straight down
+  6. StorageService(980,292)         → S3Presigned(1046,342)   routing y=317  stems 25+25
+  7. S3Client(178,292)               → LocalStack S3(178,464)  straight vertical
+  8. S3Template(426,292)             → LocalStack S3(268,464)  routing y=375  stems 83+89
+  9. S3Storage(868,390)              → Floci(604,464)          routing y=418  stems 28+46
+ 10. S3Presigned(1046,390)           → Floci(644,464)          routing y=428  stems 38+36
+-->
+
+<rect class="canvas" width="1200" height="580"/>
+<rect class="frame" x="28" y="24" width="1144" height="532" rx="24"/>
+
+<text class="title" x="60" y="70">AWS Workshop Modules</text>
+<text class="subtitle" x="64" y="96">s3-spring-cloud (Spring Cloud AWS) · storage-abstraction (Profile-based · Floci)</text>
+
+<!-- ── LEFT ZONE: s3-spring-cloud (y=110..310) ─────────────────────── -->
+<rect x="48" y="110" width="544" height="200" rx="12" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.5"/>
+<text class="zoneLabel" x="68" y="128">s3-spring-cloud</text>
+
+<!-- SpringCloudAwsS3Sample: cx=320 top=134 bottom=188 -->
+<rect x="68" y="134" width="504" height="54" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="2" filter="url(#shadow)"/>
+<text class="cardLabel" x="320" y="158" text-anchor="middle">SpringCloudAwsS3Sample</text>
+<text class="cardSub"   x="320" y="177" text-anchor="middle">@SpringBootApplication · ResourceLoader (s3://bucket/key)</text>
+
+<!-- S3Client: cx=178 top=238 bottom=292 -->
+<rect x="68" y="238" width="220" height="54" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="2" filter="url(#shadow)"/>
+<text class="cardLabel" x="178" y="262" text-anchor="middle">S3Client</text>
+<text class="cardSub"   x="178" y="281" text-anchor="middle">AWS SDK v2 · low-level API</text>
+
+<!-- S3Template: cx=426 top=238 bottom=292 -->
+<rect x="316" y="238" width="220" height="54" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="2" filter="url(#shadow)"/>
+<text class="cardLabel" x="426" y="262" text-anchor="middle">S3Template</text>
+<text class="cardSub"   x="426" y="281" text-anchor="middle">Spring Cloud AWS · store/read</text>
+
+<!-- ── RIGHT ZONE: storage-abstraction (y=110..408) ────────────────── -->
+<rect x="608" y="110" width="544" height="298" rx="12" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.5"/>
+<text class="zoneLabel" x="628" y="128">storage-abstraction</text>
+
+<!-- StorageApplication: cx=880 top=134 bottom=188 -->
+<rect x="628" y="134" width="504" height="54" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="2" filter="url(#shadow)"/>
+<text class="cardLabel" x="880" y="158" text-anchor="middle">StorageApplication</text>
+<text class="cardSub"   x="880" y="177" text-anchor="middle">@SpringBootApplication · Spring Profile selection</text>
+
+<!-- StorageService: cx=880 top=238 bottom=292 -->
+<rect x="628" y="238" width="504" height="54" rx="10" fill="#e0e7ff" stroke="#6366f1" stroke-width="2" filter="url(#shadow)"/>
+<text class="cardLabel" x="880" y="262" text-anchor="middle">StorageService</text>
+<text class="cardSub"   x="880" y="281" text-anchor="middle">interface · upload · download · getUrl · delete</text>
+
+<!-- LocalStorage: cx=702 top=342 bottom=390 -->
+<rect x="628" y="342" width="148" height="48" rx="10" fill="#ecfccb" stroke="#65a30d" stroke-width="2" filter="url(#shadow)"/>
+<text class="cardLabel" x="702" y="363" text-anchor="middle">LocalStorage</text>
+<text class="cardSub"   x="702" y="380" text-anchor="middle">@Profile('local')</text>
+
+<!-- S3Storage: cx=868 top=342 bottom=390 -->
+<rect x="794" y="342" width="148" height="48" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="2" filter="url(#shadow)"/>
+<text class="cardLabel" x="868" y="363" text-anchor="middle">S3Storage</text>
+<text class="cardSub"   x="868" y="380" text-anchor="middle">@Profile('s3')</text>
+
+<!-- S3Presigned: cx=1046 top=342 bottom=390 -->
+<rect x="960" y="342" width="172" height="48" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="2" filter="url(#shadow)"/>
+<text class="cardLabel" x="1046" y="363" text-anchor="middle">S3Presigned</text>
+<text class="cardSub"   x="1046" y="380" text-anchor="middle">@Profile('s3-presigned')</text>
+
+<!-- ── STORAGE ZONE (y=440..556) ────────────────────────────────────── -->
+<rect x="48" y="440" width="1104" height="116" rx="12" fill="#fef3c7" stroke="#fde68a" stroke-width="1.5"/>
+<text class="zoneLabel" x="68" y="458">Storage Layer</text>
+
+<!-- LocalStack S3: cx=208 top=464 bottom=532 -->
+<rect x="68" y="464" width="280" height="68" rx="10" fill="#ecfccb" stroke="#65a30d" stroke-width="2" filter="url(#shadow)"/>
+<text class="cardLabel" x="208" y="491" text-anchor="middle">LocalStack S3</text>
+<text class="cardSub"   x="208" y="510" text-anchor="middle">Testcontainers · s3-spring-cloud</text>
+
+<!-- Floci (Docker): cx=604 top=464 bottom=532 -->
+<rect x="464" y="464" width="280" height="68" rx="10" fill="#fef9c3" stroke="#ca8a04" stroke-width="2" filter="url(#shadow)"/>
+<text class="cardLabel" x="604" y="491" text-anchor="middle">Floci (Docker)</text>
+<text class="cardSub"   x="604" y="510" text-anchor="middle">Testcontainers · storage-abstraction</text>
+
+<!-- AWS S3: cx=1000 top=464 bottom=532 -->
+<rect x="860" y="464" width="280" height="68" rx="10" fill="#fce7f3" stroke="#db2777" stroke-width="2" filter="url(#shadow)"/>
+<text class="cardLabel" x="1000" y="491" text-anchor="middle">AWS S3</text>
+<text class="cardSub"   x="1000" y="510" text-anchor="middle">production endpoint · ap-northeast-2</text>
+
+<!-- ── ARROWS ─────────────────────────────────────────────────────────
+  Within-zone routing (50px lanes, 25px stems — arrowhead 14px clears cleanly):
+    App→next row: route y=213   (y=188+25=213, y=238-25=213 ✓)
+    Interface→Impls: route y=317 (y=292+25=317, y=342-25=317 ✓)
+  Cross-zone:
+    Left→Storage: route y=375
+    Right→Storage: route y=418 / y=428
+  All paths start/end at card edge midpoints only.
+──────────────────────────────────────────────────────────────────────── -->
+
+<!-- 1. SpringCloudAwsS3Sample(178,188) → S3Client(178,238) [straight, 50px stem] -->
+<path class="lineBlue" d="M178 188 L178 238"/>
+
+<!-- 2. SpringCloudAwsS3Sample(460,188) → S3Template(426,238) [route y=213, stems 25+25] -->
+<path class="lineBlue" d="M460 188 L460 213 L426 213 L426 238"/>
+
+<!-- 3. StorageApplication(880,188) → StorageService(880,238) [straight] -->
+<path class="lineBlue" d="M880 188 L880 238"/>
+
+<!-- 4. StorageService(780,292) → LocalStorage(702,342) [route y=317, stems 25+25] -->
+<path class="lineBlue" d="M780 292 L780 317 L702 317 L702 342"/>
+
+<!-- 5. StorageService(868,292) → S3Storage(868,342) [straight] -->
+<path class="lineBlue" d="M868 292 L868 342"/>
+
+<!-- 6. StorageService(980,292) → S3Presigned(1046,342) [route y=317, stems 25+25] -->
+<path class="lineBlue" d="M980 292 L980 317 L1046 317 L1046 342"/>
+
+<!-- 7. S3Client(178,292) → LocalStack S3(178,464) [straight vertical, 172px] -->
+<path class="lineGreen" d="M178 292 L178 464"/>
+
+<!-- 8. S3Template(426,292) → LocalStack S3(268,464) [route y=375, stems 83+89] -->
+<path class="lineGreen" d="M426 292 L426 375 L268 375 L268 464"/>
+
+<!-- 9. S3Storage(868,390) → Floci(604,464) [route y=418, stems 28+46] -->
+<path class="lineGreen" d="M868 390 L868 418 L604 418 L604 464"/>
+
+<!-- 10. S3Presigned(1046,390) → Floci right entry(644,464) [route y=428, stems 38+36] -->
+<path class="lineAmber" d="M1046 390 L1046 428 L644 428 L644 464"/>
+
 </svg>

@@ -1,106 +1,110 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1378 600" width="1378" height="600">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" width="960" height="520">
   <defs>
+    <style>
+      .canvas{fill:#f7f9fc}
+      .frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
+      .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
+      .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
+      .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
+      .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
+      .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
+      .card{stroke-width:2.1;filter:url(#shadow)}
+      .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
+    </style>
     <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
       <feDropShadow dx="2" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.12"/>
     </filter>
-    <marker id="dep-arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
-      <polygon points="1,1 8,4.5 1,8" fill="#6b7280"/>
-    </marker>
-    <marker id="dep-arrow-amber" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
-      <polygon points="1,1 8,4.5 1,8" fill="#d97706"/>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+      <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
     </marker>
   </defs>
 
-  <!-- Background -->
-  <rect width="1378" height="600" fill="#f6f9fc"/>
+  <!-- Canvas background -->
+  <rect width="960" height="520" class="canvas"/>
   <!-- Outer frame -->
-  <rect x="20" y="20" width="1338" height="560" rx="16" fill="#fff" stroke="#d7e2ec" stroke-width="1.5"/>
+  <rect x="24" y="20" width="912" height="480" rx="22" class="frame"/>
 
   <!-- Title -->
-  <text x="689" y="50" font-family="'Architects Daughter', cursive" font-size="28" fill="#1e293b" text-anchor="middle">Exposed Architecture</text>
-  <text x="689" y="70" font-family="'Comic Sans MS', cursive" font-size="13" fill="#536476" text-anchor="middle">JetBrains Exposed ORM &#8212; Web layer variations sharing SQL DSL core</text>
+  <text x="480" y="65" class="title" text-anchor="middle">Exposed Architecture</text>
+  <text x="480" y="87" class="subtitle" text-anchor="middle">JetBrains Exposed ORM — Web layer variations sharing SQL DSL core</text>
 
-  <!-- ============================================================ -->
-  <!-- LAYER 1: Web Layer (y=100) -->
-  <!-- ============================================================ -->
-  <text x="52" y="96" font-family="'Architects Daughter', cursive" font-size="12" fill="#94a3b8" letter-spacing="0.1em">Web Layer</text>
+  <!-- ══════════════════════════════════════════════════════════════════ -->
+  <!-- ROW 1: 4 Web-layer cards  y=105..215                              -->
+  <!-- Layout: 4 cols, each w=192, gap=24                                -->
+  <!-- x: col1=48  col2=264  col3=480  col4=696                          -->
+  <!-- center: 144  360  576  792                                         -->
+  <!-- ══════════════════════════════════════════════════════════════════ -->
 
-  <!-- Box 1: sql-webflux-coroutines -->
-  <rect x="52" y="100" width="274" height="108" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="189" y="128" font-family="'Architects Daughter', cursive" font-size="16" fill="#1e3a5f" text-anchor="middle">sql-webflux</text>
-  <text x="189" y="148" font-family="'Architects Daughter', cursive" font-size="16" fill="#1e3a5f" text-anchor="middle">coroutines</text>
-  <text x="189" y="172" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">WebFlux + Coroutines</text>
-  <rect x="123" y="185" width="88" height="20" rx="10" fill="#0284c7"/>
-  <text x="167" y="199" font-family="'Comic Sans MS', cursive" font-size="11" fill="#fff" text-anchor="middle">REACTIVE</text>
+  <!-- Col 1: sql-webflux-coroutines — blue -->
+  <rect x="48" y="105" width="192" height="110" rx="14" class="card" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text x="144" y="138" class="smallLabel" text-anchor="middle">sql-webflux</text>
+  <text x="144" y="160" class="smallLabel" text-anchor="middle">coroutines</text>
+  <text x="144" y="181" class="small" text-anchor="middle">WebFlux + Coroutines</text>
+  <text x="144" y="197" class="mono" text-anchor="middle">Reactive async</text>
 
-  <!-- Box 2: sql-web-virtualthread -->
-  <rect x="352" y="100" width="274" height="108" rx="12" fill="#d1fae5" stroke="#059669" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="489" y="128" font-family="'Architects Daughter', cursive" font-size="16" fill="#064e3b" text-anchor="middle">sql-web</text>
-  <text x="489" y="148" font-family="'Architects Daughter', cursive" font-size="16" fill="#064e3b" text-anchor="middle">virtualthread</text>
-  <text x="489" y="172" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">WebMVC + Virtual Threads</text>
-  <rect x="443" y="185" width="60" height="20" rx="10" fill="#059669"/>
-  <text x="473" y="199" font-family="'Comic Sans MS', cursive" font-size="11" fill="#fff" text-anchor="middle">MVC</text>
+  <!-- Col 2: sql-web-virtualthread — green -->
+  <rect x="264" y="105" width="192" height="110" rx="14" class="card" fill="#EAF7EF" stroke="#58A978"/>
+  <text x="360" y="138" class="smallLabel" text-anchor="middle">sql-web</text>
+  <text x="360" y="160" class="smallLabel" text-anchor="middle">virtualthread</text>
+  <text x="360" y="181" class="small" text-anchor="middle">WebMVC + Virtual Threads</text>
+  <text x="360" y="197" class="mono" text-anchor="middle">Blocking on VT</text>
 
-  <!-- Box 3: dao-web-transaction -->
-  <rect x="652" y="100" width="274" height="108" rx="12" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="789" y="128" font-family="'Architects Daughter', cursive" font-size="16" fill="#7c2d12" text-anchor="middle">dao-web</text>
-  <text x="789" y="148" font-family="'Architects Daughter', cursive" font-size="16" fill="#7c2d12" text-anchor="middle">transaction</text>
-  <text x="789" y="172" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">DAO + @Transactional</text>
-  <rect x="751" y="185" width="60" height="20" rx="10" fill="#ea580c"/>
-  <text x="781" y="199" font-family="'Comic Sans MS', cursive" font-size="11" fill="#fff" text-anchor="middle">DAO</text>
+  <!-- Col 3: dao-web-transaction — amber -->
+  <rect x="480" y="105" width="192" height="110" rx="14" class="card" fill="#FFF3D9" stroke="#D6A441"/>
+  <text x="576" y="138" class="smallLabel" text-anchor="middle">dao-web</text>
+  <text x="576" y="160" class="smallLabel" text-anchor="middle">transaction</text>
+  <text x="576" y="181" class="small" text-anchor="middle">DAO + @Transactional</text>
+  <text x="576" y="197" class="mono" text-anchor="middle">Spring TX manager</text>
 
-  <!-- Box 4: spring-transaction -->
-  <rect x="952" y="100" width="274" height="108" rx="12" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="1089" y="128" font-family="'Architects Daughter', cursive" font-size="16" fill="#3b0764" text-anchor="middle">spring</text>
-  <text x="1089" y="148" font-family="'Architects Daughter', cursive" font-size="16" fill="#3b0764" text-anchor="middle">transaction</text>
-  <text x="1089" y="172" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">Spring @Transactional</text>
-  <rect x="1065" y="185" width="44" height="20" rx="10" fill="#7c3aed"/>
-  <text x="1087" y="199" font-family="'Comic Sans MS', cursive" font-size="11" fill="#fff" text-anchor="middle">TX</text>
+  <!-- Col 4: spring-transaction — lavender -->
+  <rect x="696" y="105" width="192" height="110" rx="14" class="card" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text x="792" y="138" class="smallLabel" text-anchor="middle">spring</text>
+  <text x="792" y="160" class="smallLabel" text-anchor="middle">transaction</text>
+  <text x="792" y="181" class="small" text-anchor="middle">Spring @Transactional</text>
+  <text x="792" y="197" class="mono" text-anchor="middle">Declarative TX</text>
 
-  <!-- ============================================================ -->
-  <!-- Arrows: Web Layer → Shared Core -->
-  <!-- ============================================================ -->
-  <!-- Box1 → domain -->
-  <path d="M189,208 Q189,235 540,260" stroke="#6b7280" stroke-width="1.8" fill="none" marker-end="url(#dep-arrow)"/>
-  <!-- Box2 → domain -->
-  <path d="M489,208 Q489,235 620,260" stroke="#6b7280" stroke-width="1.8" fill="none" marker-end="url(#dep-arrow)"/>
-  <!-- Box3 → domain -->
-  <path d="M789,208 Q789,235 760,260" stroke="#6b7280" stroke-width="1.8" fill="none" marker-end="url(#dep-arrow)"/>
-  <!-- Box4 → domain -->
-  <path d="M1089,208 Q1089,235 840,260" stroke="#6b7280" stroke-width="1.8" fill="none" marker-end="url(#dep-arrow)"/>
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- Arrows: each web card → domain band (orthogonal)               -->
+  <!-- Domain top y=265  center x=480                                  -->
+  <!-- Each card bottom y=215  centers: 144, 360, 576, 792            -->
+  <!-- Route: card bottom → down to y=245 → toward 480 → down to 265 -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
 
-  <!-- ============================================================ -->
-  <!-- LAYER 2: Shared Core (y=260) -->
-  <!-- ============================================================ -->
-  <text x="52" y="256" font-family="'Architects Daughter', cursive" font-size="12" fill="#94a3b8" letter-spacing="0.1em">Shared Core</text>
+  <!-- Col1 (144,215) → down y=245 → right to (480,245) → down to (480,265) -->
+  <path d="M 144,215 L 144,245 L 480,245 L 480,265" class="line"/>
 
-  <!-- domain (SQL DSL) -->
-  <rect x="414" y="262" width="550" height="96" rx="12" fill="#fef3c7" stroke="#d97706" stroke-width="2" filter="url(#shadow)"/>
-  <text x="689" y="292" font-family="'Architects Daughter', cursive" font-size="20" fill="#92400e" text-anchor="middle">domain</text>
-  <text x="689" y="316" font-family="'Architects Daughter', cursive" font-size="16" fill="#92400e" text-anchor="middle">SQL DSL</text>
-  <text x="689" y="340" font-family="'Comic Sans MS', cursive" font-size="12" fill="#78350f" text-anchor="middle">Core JetBrains Exposed DSL shared across all modules</text>
+  <!-- Col2 (360,215) → down y=245 → right to (480,245) — merges at waypoint -->
+  <!-- Use separate path to avoid double-drawing the final segment -->
+  <path d="M 360,215 L 360,245 L 480,245" class="line" marker-end="none"/>
 
-  <!-- ============================================================ -->
-  <!-- Arrow: domain → DB -->
-  <!-- ============================================================ -->
-  <line x1="689" y1="358" x2="689" y2="412" stroke="#d97706" stroke-width="2.2" marker-end="url(#dep-arrow-amber)"/>
+  <!-- Col3 (576,215) → down y=245 → left to (480,245) — merges at waypoint -->
+  <path d="M 576,215 L 576,245 L 480,245" class="line" marker-end="none"/>
 
-  <!-- ============================================================ -->
-  <!-- LAYER 3: Database (y=412) — Cylinder shape -->
-  <!-- ============================================================ -->
-  <text x="52" y="406" font-family="'Architects Daughter', cursive" font-size="12" fill="#94a3b8" letter-spacing="0.1em">Database</text>
+  <!-- Col4 (792,215) → down y=245 → left to (480,245) → down to (480,265) -->
+  <path d="M 792,215 L 792,245 L 480,245" class="line" marker-end="none"/>
 
-  <!-- Cylinder: body rect (sides only) -->
-  <rect x="469" y="430" width="440" height="80" fill="#e2e8f0" stroke="#64748b" stroke-width="1.5" filter="url(#shadow)"/>
-  <!-- Cylinder: bottom cap (darker for depth) -->
-  <ellipse cx="689" cy="510" rx="220" ry="18" fill="#cbd5e1" stroke="#64748b" stroke-width="1.5"/>
-  <!-- Cylinder: body left/right border lines (cover rect edges) -->
-  <line x1="469" y1="430" x2="469" y2="510" stroke="#64748b" stroke-width="1.5"/>
-  <line x1="909" y1="430" x2="909" y2="510" stroke="#64748b" stroke-width="1.5"/>
-  <!-- Cylinder: top cap (lighter, as if lit from above) -->
-  <ellipse cx="689" cy="430" rx="220" ry="18" fill="#f8fafc" stroke="#64748b" stroke-width="1.5"/>
+  <!-- Single arrowhead on the final segment going into domain -->
+  <path d="M 480,245 L 480,265" class="line"/>
 
-  <!-- DB Labels -->
-  <text x="689" y="463" font-family="'Architects Daughter', cursive" font-size="16" fill="#334155" text-anchor="middle">H2 (in-memory)  /  MySQL</text>
-  <text x="689" y="486" font-family="'Comic Sans MS', cursive" font-size="12" fill="#64748b" text-anchor="middle">Testcontainers for integration tests</text>
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- ROW 2: domain / SQL DSL (amber band, full-width)   -->
+  <!-- y=265..355                                          -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <rect x="72" y="265" width="816" height="90" rx="14" class="card" fill="#FFF3D9" stroke="#D6A441"/>
+  <text x="480" y="298" class="smallLabel" text-anchor="middle">domain  ·  SQL DSL</text>
+  <text x="480" y="320" class="small" text-anchor="middle">Core JetBrains Exposed DSL shared across all modules</text>
+  <text x="480" y="340" class="mono" text-anchor="middle">Table definitions · Query DSL · Transaction helpers</text>
+
+  <!-- Arrow: domain → database -->
+  <path d="M 480,355 L 480,393" class="line"/>
+
+  <!-- ═══════════════════════════════════════════════════ -->
+  <!-- ROW 3: H2 / MySQL database (teal band, full-width) -->
+  <!-- y=393..463                                          -->
+  <!-- ═══════════════════════════════════════════════════ -->
+  <rect x="72" y="393" width="816" height="70" rx="14" class="card" fill="#E9F7F6" stroke="#45A7A1"/>
+  <text x="480" y="424" class="smallLabel" text-anchor="middle">H2 (in-memory)  ·  MySQL</text>
+  <text x="480" y="444" class="small" text-anchor="middle">Testcontainers for integration tests</text>
+  <text x="480" y="462" class="mono" text-anchor="middle">JDBC DataSource · R2DBC ConnectionFactory</text>
+
 </svg>

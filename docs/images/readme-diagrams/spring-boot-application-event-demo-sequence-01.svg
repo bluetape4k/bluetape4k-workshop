@@ -1,65 +1,102 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1960" height="1078" viewBox="0 0 1960 1078" role="img" aria-label="/">
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="520" viewBox="0 0 960 520" role="img" aria-label="Spring ApplicationEvent publish/subscribe sequence">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
+  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
+  </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
     .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
     .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
     .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
+    .card{stroke-width:2.1;filter:url(#shadow)}
+    .lifeline{stroke:#b0bbca;stroke-width:1.5;stroke-dasharray:6 4;fill:none}
+    .reqArrow{stroke:#5B8DEF;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
+    .rspArrow{stroke:#45A7A1;stroke-width:2.1;stroke-dasharray:7 4;fill:none;marker-end:url(#arrow)}
+    .msgLabel{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;fill:#102033}
   </style>
 </defs>
-<rect class="canvas" width="1960" height="1078"/>
-<rect class="frame" x="32" y="28" width="1896" height="1022" rx="28"/>
-<text class="title" x="66" y="82">Application Event Publishing</text>
-<text class="subtitle" x="70" y="118">Spring ApplicationEvent · @EventListener · Coroutine suspend listener</text>
-<rect class="card" x="-10" y="166" width="300" height="72" rx="20" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="140" y="198.5" text-anchor="middle">Custom Event</text>
-<text class="smallLabel" x="140" y="219.5" text-anchor="middle">Controller</text>
-<line class="lifeline" x1="140" y1="252" x2="140" y2="1018" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="410" y="166" width="300" height="72" rx="20" fill="#EAF7EF" stroke="#58A978"/>
-<text class="smallLabel" x="560" y="198.5" text-anchor="middle">Custom Event</text>
-<text class="smallLabel" x="560" y="219.5" text-anchor="middle">Publisher</text>
-<line class="lifeline" x1="560" y1="252" x2="560" y2="1018" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="830" y="166" width="300" height="72" rx="20" fill="#FFF3D9" stroke="#D6A441"/>
-<text class="smallLabel" x="980" y="198.5" text-anchor="middle">Application Event</text>
-<text class="smallLabel" x="980" y="219.5" text-anchor="middle">Publisher</text>
-<line class="lifeline" x1="980" y1="252" x2="980" y2="1018" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="1250" y="166" width="300" height="72" rx="20" fill="#FDECEF" stroke="#DC6B82"/>
-<text class="smallLabel" x="1400" y="209" text-anchor="middle">CustomEventListener</text>
-<line class="lifeline" x1="1400" y1="252" x2="1400" y2="1018" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="1670" y="166" width="300" height="72" rx="20" fill="#E9F7F6" stroke="#45A7A1"/>
-<text class="smallLabel" x="1820" y="198.5" text-anchor="middle">Annotated Coroutine</text>
-<text class="smallLabel" x="1820" y="219.5" text-anchor="middle">Custom Event</text>
-<line class="lifeline" x1="1820" y1="252" x2="1820" y2="1018" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect x="245" y="286" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="263" y="313" text-anchor="start">2. publish(message)</text>
-<path class="line" d="M140 344 L560 344"/>
-<rect x="639" y="396" width="262" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="657" y="423" text-anchor="start">3. publishEvent(CustomEvent)</text>
-<path class="line" d="M560 454 L980 454"/>
-<rect x="1085" y="506" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="1103" y="533" text-anchor="start">4. @EventListener ()</text>
-<path class="dashed" d="M980 564 L1400 564"/>
-<rect x="1248.5" y="616" width="399" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="1266.5" y="643" text-anchor="start">5. CustomEventListener to CustomEventListener</text>
-<path class="line" d="M1400 674 C1464 674 1464 708 1400 708"/>
-<rect x="1269" y="746" width="262" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="1287" y="773" text-anchor="start">6. @EventListener suspend ()</text>
-<path class="dashed" d="M980 804 L1820 804"/>
-<rect x="1517" y="856" width="383" height="62" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="1535" y="883" text-anchor="start">7. AnnotatedCoroutineCustomEventListener to</text>
-<text class="strong" x="1535" y="905" text-anchor="start">AnnotatedCoroutineCustomEventListener</text>
-<path class="line" d="M1820 936 C1884 936 1884 970 1820 970"/>
+<rect class="canvas" width="960" height="520"/>
+<rect class="frame" x="24" y="20" width="912" height="480" rx="22"/>
+
+<!-- Title -->
+<text class="title" x="48" y="66">ApplicationEvent — Sync Publish/Subscribe</text>
+<text class="subtitle" x="52" y="88">Spring @EventListener · CustomEventPublisher → ApplicationEventPublisher → Listeners</text>
+
+<!-- Participants: 5 actors -->
+<!-- cx positions: 120, 280, 460, 640, 820 -->
+
+<!-- CustomEventController -->
+<g transform="translate(60,104)">
+  <rect class="card" x="0" y="0" width="120" height="72" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="smallLabel" style="font-size:17px" x="60" y="26" text-anchor="middle">Custom</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="50" text-anchor="middle">Event</text>
+  <text class="small" x="60" y="68" text-anchor="middle">Controller</text>
+</g>
+<!-- CustomEventPublisher -->
+<g transform="translate(220,104)">
+  <rect class="card" x="0" y="0" width="120" height="72" rx="12" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="smallLabel" style="font-size:17px" x="60" y="26" text-anchor="middle">Custom</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="50" text-anchor="middle">Event</text>
+  <text class="small" x="60" y="68" text-anchor="middle">Publisher</text>
+</g>
+<!-- ApplicationEventPublisher -->
+<g transform="translate(400,104)">
+  <rect class="card" x="0" y="0" width="120" height="72" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="smallLabel" style="font-size:17px" x="60" y="26" text-anchor="middle">AppEvent</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="50" text-anchor="middle">Publisher</text>
+  <text class="small" x="60" y="68" text-anchor="middle">Spring</text>
+</g>
+<!-- CustomEventListener -->
+<g transform="translate(580,104)">
+  <rect class="card" x="0" y="0" width="130" height="72" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
+  <text class="smallLabel" style="font-size:17px" x="65" y="26" text-anchor="middle">Custom</text>
+  <text class="smallLabel" style="font-size:17px" x="65" y="50" text-anchor="middle">Event</text>
+  <text class="small" x="65" y="68" text-anchor="middle">Listener</text>
+</g>
+<!-- AnnotatedCoroutine Listener -->
+<g transform="translate(770,104)">
+  <rect class="card" x="0" y="0" width="130" height="72" rx="12" fill="#E9F7F6" stroke="#45A7A1"/>
+  <text class="smallLabel" style="font-size:17px" x="65" y="26" text-anchor="middle">Coroutine</text>
+  <text class="smallLabel" style="font-size:17px" x="65" y="50" text-anchor="middle">Event</text>
+  <text class="small" x="65" y="68" text-anchor="middle">Listener</text>
+</g>
+
+<!-- Lifelines: cx = 120, 280, 460, 645, 835 -->
+<line class="lifeline" x1="120" y1="176" x2="120" y2="490"/>
+<line class="lifeline" x1="280" y1="176" x2="280" y2="490"/>
+<line class="lifeline" x1="460" y1="176" x2="460" y2="490"/>
+<line class="lifeline" x1="645" y1="176" x2="645" y2="490"/>
+<line class="lifeline" x1="835" y1="176" x2="835" y2="490"/>
+
+<!-- Step 1: Client → Controller (GET /event) -->
+<text class="msgLabel" x="48" y="208">1.</text>
+<text class="msgLabel" x="68" y="206" fill="#536273">GET /event?message=hello</text>
+<path class="reqArrow" d="M80,210 L112,210"/>
+
+<!-- Step 2: Controller → CustomEventPublisher: publish(message) -->
+<text class="msgLabel" x="132" y="244">2. publish(message)</text>
+<path class="reqArrow" d="M120,248 L272,248"/>
+
+<!-- Step 3: CustomEventPublisher → AppEventPublisher: publishEvent(CustomEvent) -->
+<text class="msgLabel" x="292" y="284">3. publishEvent(CustomEvent)</text>
+<path class="reqArrow" d="M280,288 L452,288"/>
+
+<!-- Step 4: AppEventPublisher → CustomEventListener: @EventListener -->
+<text class="msgLabel" x="472" y="324">4. @EventListener(CustomEvent)</text>
+<path class="reqArrow" d="M460,328 L637,328"/>
+
+<!-- Step 5: CustomEventListener self-loop (handle event) -->
+<text class="msgLabel" x="658" y="360">5. handle event (sync)</text>
+<path class="reqArrow" d="M645,368 C700,368 700,390 645,390"/>
+
+<!-- Step 6: AppEventPublisher → CoroutineListener: @EventListener suspend -->
+<text class="msgLabel" x="472" y="424">6. @EventListener suspend(CustomEvent)</text>
+<path class="reqArrow" d="M460,428 L827,428"/>
+
+<!-- Step 7: CoroutineListener self-loop -->
+<text class="msgLabel" x="846" y="456">7. handle (suspend)</text>
+<path class="reqArrow" d="M835,464 C890,464 890,484 835,484"/>
 </svg>

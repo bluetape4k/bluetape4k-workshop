@@ -1,42 +1,103 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1219" height="596" viewBox="0 0 1219 596" role="img" aria-label="STOMP">
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="520" viewBox="0 0 960 520" role="img" aria-label="STOMP WebSocket subscribe/message sequence">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
+  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
+  </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
     .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
     .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
     .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
+    .card{stroke-width:2.1;filter:url(#shadow)}
+    .lifeline{stroke:#b0bbca;stroke-width:1.5;stroke-dasharray:6 4;fill:none}
+    .reqArrow{stroke:#5B8DEF;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
+    .rspArrow{stroke:#45A7A1;stroke-width:2.1;stroke-dasharray:7 4;fill:none;marker-end:url(#arrow)}
+    .msgLabel{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;fill:#102033}
   </style>
 </defs>
-<rect class="canvas" width="1219" height="596"/>
-<rect class="frame" x="32" y="28" width="1155" height="540" rx="28"/>
-<text class="title" x="66" y="82">STOMP WebSocket Flow</text>
-<text class="subtitle" x="70" y="118">Spring WebSocket · SimpleBroker · /topic/greetings subscription</text>
-<rect class="card" x="1.5" y="166" width="277" height="72" rx="20" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="140" y="209" text-anchor="middle">WebSocketConfig</text>
-<line class="lifeline" x1="140" y1="252" x2="140" y2="536" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="471" y="166" width="277" height="72" rx="20" fill="#EAF7EF" stroke="#58A978"/>
-<text class="smallLabel" x="609.5" y="209" text-anchor="middle">SimpleBroker</text>
-<line class="lifeline" x1="609.5" y1="252" x2="609.5" y2="536" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="940.5" y="166" width="277" height="72" rx="20" fill="#FFF3D9" stroke="#D6A441"/>
-<text class="smallLabel" x="1079" y="209" text-anchor="middle">GreetingController</text>
-<line class="lifeline" x1="1079" y1="252" x2="1079" y2="536" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect x="848" y="286" width="311" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="866" y="313" text-anchor="start">4. handle(HelloMessage) → Greeting</text>
-<path class="line" d="M1079 344 C1143 344 1143 378 1079 378"/>
-<rect x="688.75" y="416" width="311" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="706.75" y="443" text-anchor="start">5. publishEvent → /topic/greetings</text>
-<path class="line" d="M1079 474 L609.5 474"/>
+<rect class="canvas" width="960" height="520"/>
+<rect class="frame" x="24" y="20" width="912" height="480" rx="22"/>
+
+<!-- Title -->
+<text class="title" x="48" y="66">STOMP WebSocket Flow</text>
+<text class="subtitle" x="52" y="88">WebSocketConfig → SimpleBroker(/topic) → GreetingController → /topic/greetings</text>
+
+<!-- Participants cx: 100, 270, 480, 690, 868 -->
+<!-- Browser/Client -->
+<g transform="translate(40,104)">
+  <rect class="card" x="0" y="0" width="120" height="68" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="smallLabel" style="font-size:17px" x="60" y="28" text-anchor="middle">Browser</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="52" text-anchor="middle">Client</text>
+  <text class="small" x="60" y="66" text-anchor="middle">SockJS</text>
+</g>
+<!-- WebSocketConfig -->
+<g transform="translate(210,104)">
+  <rect class="card" x="0" y="0" width="130" height="68" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="smallLabel" style="font-size:17px" x="65" y="24" text-anchor="middle">WebSocket</text>
+  <text class="smallLabel" style="font-size:17px" x="65" y="48" text-anchor="middle">Config</text>
+  <text class="small" x="65" y="66" text-anchor="middle">/gs-guide-ws</text>
+</g>
+<!-- SimpleBroker -->
+<g transform="translate(416,104)">
+  <rect class="card" x="0" y="0" width="130" height="68" rx="12" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="smallLabel" style="font-size:17px" x="65" y="28" text-anchor="middle">Simple</text>
+  <text class="smallLabel" style="font-size:17px" x="65" y="52" text-anchor="middle">Broker</text>
+  <text class="small" x="65" y="66" text-anchor="middle">/topic</text>
+</g>
+<!-- GreetingController -->
+<g transform="translate(626,104)">
+  <rect class="card" x="0" y="0" width="140" height="68" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="smallLabel" style="font-size:17px" x="70" y="26" text-anchor="middle">Greeting</text>
+  <text class="smallLabel" style="font-size:17px" x="70" y="50" text-anchor="middle">Controller</text>
+  <text class="small" x="70" y="66" text-anchor="middle">@MessageMapping</text>
+</g>
+<!-- Subscriber -->
+<g transform="translate(812,104)">
+  <rect class="card" x="0" y="0" width="120" height="68" rx="12" fill="#E9F7F6" stroke="#45A7A1"/>
+  <text class="smallLabel" style="font-size:17px" x="60" y="28" text-anchor="middle">Subscriber</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="52" text-anchor="middle">Browser</text>
+</g>
+
+<!-- Lifelines cx: 100, 275, 481, 696, 872 -->
+<line class="lifeline" x1="100" y1="172" x2="100" y2="490"/>
+<line class="lifeline" x1="275" y1="172" x2="275" y2="490"/>
+<line class="lifeline" x1="481" y1="172" x2="481" y2="490"/>
+<line class="lifeline" x1="696" y1="172" x2="696" y2="490"/>
+<line class="lifeline" x1="872" y1="172" x2="872" y2="490"/>
+
+<!-- Step 1: CONNECT to /gs-guide-websocket -->
+<text class="msgLabel" x="48" y="206">1. STOMP CONNECT /gs-guide-websocket (SockJS)</text>
+<path class="reqArrow" d="M100,210 L267,210"/>
+
+<!-- Step 2: WebSocketConfig accepts, client sends SUBSCRIBE -->
+<text class="msgLabel" x="48" y="240">2. SUBSCRIBE /topic/greetings</text>
+<path class="reqArrow" d="M100,244 L473,244"/>
+
+<!-- Step 3: Subscriber also subscribes -->
+<text class="msgLabel" x="494" y="274">3. SUBSCRIBE /topic/greetings</text>
+<path class="reqArrow" d="M872,278 L489,278"/>
+
+<!-- Step 4: Client sends HelloMessage -->
+<text class="msgLabel" x="48" y="314">4. SEND /app/hello  {name: "World"}</text>
+<path class="reqArrow" d="M100,318 L688,318"/>
+
+<!-- Step 5: GreetingController processes HelloMessage -->
+<text class="msgLabel" x="708" y="350">5. greeting(HelloMessage)</text>
+<path class="reqArrow" d="M696,354 C750,354 750,374 696,374"/>
+
+<!-- Step 6: @SendTo /topic/greetings -->
+<text class="msgLabel" x="494" y="406">6. publish Greeting to /topic/greetings</text>
+<path class="reqArrow" d="M696,410 L489,410"/>
+
+<!-- Step 7: Broker broadcasts to all subscribers -->
+<text class="msgLabel" x="48" y="442">7. MESSAGE /topic/greetings  {content: "Hello, World!"}</text>
+<path class="rspArrow" d="M481,446 L108,446"/>
+<path class="rspArrow" d="M481,458 L880,458"/>
+
+<!-- Step 8: DISCONNECT -->
+<text class="msgLabel" x="48" y="486">8. DISCONNECT</text>
+<path class="rspArrow" d="M100,490 C60,490 60,470 100,490"/>
 </svg>

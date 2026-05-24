@@ -62,3 +62,4 @@ local.properties
 Thumbs.db
 /.profileconfig.json
 .worktrees/
+docs/images/readme-diagrams/.omc/

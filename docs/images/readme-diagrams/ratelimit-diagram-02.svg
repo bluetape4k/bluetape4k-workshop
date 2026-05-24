@@ -1,57 +1,84 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1378" height="526" viewBox="0 0 1378 526" role="img" aria-label="Rate Limit WebFilter Flow">
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="440" viewBox="0 0 960 440" role="img" aria-label="Rate Limiter WebFilter Flow">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
+  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
+  </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
     .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
     .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
     .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
+    .card{stroke-width:2.1;filter:url(#shadow)}
+    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
   </style>
 </defs>
-<rect class="canvas" width="1378" height="526"/>
-<rect class="frame" x="32" y="28" width="1314" height="470" rx="28"/>
-<text class="title" x="66" y="82">Rate Limit WebFilter Flow</text>
-<text class="subtitle" x="70" y="118">WebFilter · PASS / KEY / CONSUME / 429 · Controller</text>
-<path class="line" d="M672 220 C672 303 706 303 706 386"/>
-<path class="line" d="M1040 220 C1040 303 672 303 672 386"/>
-<path class="line" d="M1040 220 C1040 220 672 220 672 220"/>
-<path class="line" d="M1006 220 C1006 220 1040 220 1040 220"/>
-<path class="line" d="M338 220 C338 220 706 220 706 220"/>
-<path class="line" d="M338 220 C338 220 372 220 372 220"/>
-<g transform="translate(48,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">?</text>
+<!-- Layout:
+     Canvas: 960×440  Frame: x=24 y=20 w=912 h=396
+     Row1  y=98  h=54  WebFilter center x=260 w=440
+     Row2  y=212 h=80  3 cols w=260 gap=46:
+       Col1: x=24  cx=154  KeyResolver
+       Col2: x=330 cx=460  Token Bucket
+       Col3: x=636 cx=766  Redis/Caffeine Store
+     Row3  y=352 h=44  2 cols: 200 OK [col-left x=24 w=420] | 429 [col-right x=516 w=420]
+-->
+<rect class="canvas" width="960" height="440"/>
+<rect class="frame" x="24" y="20" width="912" height="396" rx="28"/>
+<text class="title" x="58" y="66">WebFilter Rate Limit Flow</text>
+<text class="subtitle" x="58" y="92">WebFilter · KeyResolver · Token Bucket · allow / 429 Too Many Requests</text>
+
+<!-- Arrows: WebFilter → 3 components (bus y=182, all from WebFilter bottom) -->
+<path class="line" d="M480 152 L480 182 L154 182 L154 212"/>
+<path class="line" d="M480 152 L480 182 L460 182 L460 212"/>
+<path class="line" d="M480 152 L480 182 L766 182 L766 212"/>
+<!-- Token Bucket → 2 outcomes (bus y=332, both from Token Bucket bottom) -->
+<path class="line" d="M460 292 L460 332 L234 332 L234 352"/>
+<path class="line" d="M460 292 L460 332 L726 332 L726 352"/>
+
+<!-- WebFilter (center top) -->
+<g transform="translate(260,98)">
+  <rect class="card" x="0" y="0" width="440" height="54" rx="12" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="smallLabel" x="220" y="22" text-anchor="middle">WebFilter / Servlet Filter</text>
+  <text class="mono" x="220" y="42" text-anchor="middle">@Order(0) · intercept all matching paths · canFilter()</text>
 </g>
-<g transform="translate(382,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">PASS</text>
+
+<!-- KeyResolver col1 -->
+<g transform="translate(24,212)">
+  <rect class="card" x="0" y="0" width="260" height="80" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="smallLabel" x="130" y="22" text-anchor="middle">KeyResolver</text>
+  <text class="mono" x="130" y="44" text-anchor="middle">extractKey(exchange)</text>
+  <text class="small" x="130" y="64" text-anchor="middle">IP address / X-User-ID header</text>
 </g>
-<g transform="translate(716,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">KEY</text>
+
+<!-- Token Bucket col2 -->
+<g transform="translate(330,212)">
+  <rect class="card" x="0" y="0" width="260" height="80" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="smallLabel" x="130" y="22" text-anchor="middle">Token Bucket</text>
+  <text class="mono" x="130" y="44" text-anchor="middle">rateLimiter.consume(key, 1)</text>
+  <text class="small" x="130" y="64" text-anchor="middle">ConsumptionProbe · availableTokens</text>
 </g>
-<g transform="translate(1050,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">CONSUME</text>
+
+<!-- Redis / Caffeine col3 -->
+<g transform="translate(636,212)">
+  <rect class="card" x="0" y="0" width="260" height="80" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="smallLabel" x="130" y="22" text-anchor="middle">Bucket Store</text>
+  <text class="mono" x="130" y="44" text-anchor="middle">Redis / Caffeine</text>
+  <text class="small" x="130" y="64" text-anchor="middle">LettuceBasedProxyManager · TTL 90s</text>
 </g>
-<g transform="translate(382,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">429</text>
+
+<!-- 200 OK col-left -->
+<g transform="translate(24,352)">
+  <rect class="card" x="0" y="0" width="420" height="44" rx="12" fill="#E9F7F6" stroke="#45A7A1"/>
+  <text class="smallLabel" x="210" y="18" text-anchor="middle">200 OK — Allowed</text>
+  <text class="small" x="210" y="36" text-anchor="middle">chain.filter() → Controller · X-RateLimit-Remaining header set</text>
 </g>
-<g transform="translate(716,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">Controller</text>
+
+<!-- 429 col-right -->
+<g transform="translate(516,352)">
+  <rect class="card" x="0" y="0" width="420" height="44" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
+  <text class="smallLabel" x="210" y="18" text-anchor="middle">429 Too Many Requests</text>
+  <text class="small" x="210" y="36" text-anchor="middle">sendErrorResponse() · Retry-After header · Mono.empty()</text>
 </g>
 </svg>

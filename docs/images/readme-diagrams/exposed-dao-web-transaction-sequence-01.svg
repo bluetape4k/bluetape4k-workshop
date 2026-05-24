@@ -1,76 +1,83 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1624" height="1676" viewBox="0 0 1624 1676" role="img" aria-label="Exposed DAO Web Transaction Sequence Flow">
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="500" viewBox="0 0 960 500" role="img" aria-label="Exposed DAO Web Transaction Sequence">
 <defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
+  </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
     .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
     .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
     .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
+    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
+    .card{stroke-width:2.1;filter:url(#shadow)}
+    .lifeline{stroke:#b0bbca;stroke-width:1.5;stroke-dasharray:6 4;fill:none}
+    .reqArrow{stroke:#5B8DEF;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
+    .rspArrow{stroke:#45A7A1;stroke-width:2.1;stroke-dasharray:7 4;fill:none;marker-end:url(#arrow)}
   </style>
 </defs>
-<rect class="canvas" width="1624" height="1676"/>
-<rect class="frame" x="32" y="28" width="1560" height="1620" rx="28"/>
-<text class="title" x="66" y="82">Exposed DAO Web Transaction Sequence Flow</text>
-<text class="subtitle" x="70" y="118">UserController · UserService · Exposed DAO (UserTable) · H2</text>
-<rect class="card" x="-10" y="166" width="300" height="72" rx="20" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="140" y="209" text-anchor="middle">UserController</text>
-<line class="lifeline" x1="140" y1="252" x2="140" y2="1616" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="438" y="166" width="300" height="72" rx="20" fill="#EAF7EF" stroke="#58A978"/>
-<text class="smallLabel" x="588" y="209" text-anchor="middle">UserService</text>
-<line class="lifeline" x1="588" y1="252" x2="588" y2="1616" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="886" y="166" width="300" height="72" rx="20" fill="#FFF3D9" stroke="#D6A441"/>
-<text class="smallLabel" x="1036" y="198.5" text-anchor="middle">Exposed DAO</text>
-<text class="smallLabel" x="1036" y="219.5" text-anchor="middle">(UserTable)</text>
-<line class="lifeline" x1="1036" y1="252" x2="1036" y2="1616" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="1334" y="166" width="300" height="72" rx="20" fill="#FDECEF" stroke="#DC6B82"/>
-<text class="smallLabel" x="1484" y="209" text-anchor="middle">(H2)</text>
-<line class="lifeline" x1="1484" y1="252" x2="1484" y2="1616" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect x="259" y="286" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="277" y="313" text-anchor="start">2. create(request)</text>
-<path class="line" d="M140 344 L588 344"/>
-<rect x="701" y="396" width="222" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="719" y="423" text-anchor="start">3. insert { name, age }</text>
-<path class="line" d="M588 454 L1036 454"/>
-<rect x="1145" y="506" width="230" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="1163" y="533" text-anchor="start">4. INSERT INTO users ...</text>
-<path class="line" d="M1036 564 L1484 564"/>
-<rect x="1155" y="616" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="1173" y="643" text-anchor="start">5. generated UserId</text>
-<path class="dashed" d="M1484 674 L1036 674"/>
-<rect x="707" y="726" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="725" y="753" text-anchor="start">6. UserEntity</text>
-<path class="dashed" d="M1036 784 L588 784"/>
-<rect x="259" y="836" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="277" y="863" text-anchor="start">7. UserCreateResponse</text>
-<path class="dashed" d="M588 894 L140 894"/>
-<rect x="259" y="946" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="277" y="973" text-anchor="start">10. findById(id)</text>
-<path class="line" d="M140 1004 L588 1004"/>
-<rect x="701" y="1056" width="222" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="719" y="1083" text-anchor="start">11. select where id = ?</text>
-<path class="line" d="M588 1114 L1036 1114"/>
-<rect x="1096.5" y="1166" width="327" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="1114.5" y="1193" text-anchor="start">12. SELECT * FROM users WHERE id = ?</text>
-<path class="line" d="M1036 1224 L1484 1224"/>
-<rect x="1155" y="1276" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="1173" y="1303" text-anchor="start">13. ResultRow</text>
-<path class="dashed" d="M1484 1334 L1036 1334"/>
-<rect x="707" y="1386" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="725" y="1413" text-anchor="start">14. UserDTO</text>
-<path class="dashed" d="M1036 1444 L588 1444"/>
-<rect x="259" y="1496" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="277" y="1523" text-anchor="start">15. UserDTO</text>
-<path class="dashed" d="M588 1554 L140 1554"/>
+<rect class="canvas" width="960" height="500"/>
+<rect class="frame" x="24" y="20" width="912" height="456" rx="18"/>
+<text class="title" x="44" y="62">DAO Web Transaction Sequence</text>
+<text class="subtitle" x="44" y="84">UserController → UserService → transaction{insert{}} → UserTable (H2) → 201 Created</text>
+
+<!-- Lifeline headers -->
+<rect class="card" x="24" y="96" width="160" height="48" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
+<text class="smallLabel" style="font-size:17px" x="104" y="126" text-anchor="middle">UserController</text>
+<line class="lifeline" x1="104" y1="144" x2="104" y2="472"/>
+
+<rect class="card" x="240" y="96" width="160" height="48" rx="14" fill="#EAF7EF" stroke="#58A978"/>
+<text class="smallLabel" x="320" y="126" text-anchor="middle">UserService</text>
+<line class="lifeline" x1="320" y1="144" x2="320" y2="472"/>
+
+<rect class="card" x="456" y="96" width="160" height="48" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
+<text class="smallLabel" x="536" y="120" text-anchor="middle">transaction{}</text>
+<text class="small" x="536" y="136" text-anchor="middle">(Exposed TX)</text>
+<line class="lifeline" x1="536" y1="144" x2="536" y2="472"/>
+
+<rect class="card" x="672" y="96" width="160" height="48" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
+<text class="smallLabel" x="752" y="120" text-anchor="middle">UserTable</text>
+<text class="small" x="752" y="136" text-anchor="middle">(H2)</text>
+<line class="lifeline" x1="752" y1="144" x2="752" y2="472"/>
+
+<!-- Sequence steps -->
+<!-- 1: POST /users -->
+<rect x="108" y="162" width="180" height="28" rx="8" fill="#fff" opacity="0.95"/>
+<text class="strong" x="116" y="180">1. POST /users {name, age}</text>
+<path class="reqArrow" d="M104,190 L318,190"/>
+
+<!-- 2: create(request) -->
+<rect x="324" y="200" width="140" height="28" rx="8" fill="#fff" opacity="0.95"/>
+<text class="strong" x="332" y="218">2. create(request)</text>
+<path class="reqArrow" d="M320,228 L534,228"/>
+
+<!-- 3: begin transaction -->
+<rect x="444" y="238" width="180" height="28" rx="8" fill="#fff" opacity="0.95"/>
+<text class="strong" x="452" y="256">3. transaction { insert { } }</text>
+<path class="reqArrow" d="M536,266 L750,266"/>
+
+<!-- 4: INSERT INTO -->
+<rect x="600" y="276" width="220" height="28" rx="8" fill="#fff" opacity="0.95"/>
+<text class="strong" x="608" y="294">4. INSERT INTO users …</text>
+
+<!-- 5: generated id response -->
+<rect x="560" y="316" width="160" height="28" rx="8" fill="#fff" opacity="0.95"/>
+<text class="strong" x="568" y="334">5. generated UserId</text>
+<path class="rspArrow" d="M750,344 L538,344"/>
+
+<!-- 6: UserEntity -->
+<rect x="324" y="354" width="140" height="28" rx="8" fill="#fff" opacity="0.95"/>
+<text class="strong" x="332" y="372">6. UserEntity</text>
+<path class="rspArrow" d="M536,382 L322,382"/>
+
+<!-- 7: UserCreateResponse -->
+<rect x="108" y="392" width="180" height="28" rx="8" fill="#fff" opacity="0.95"/>
+<text class="strong" x="116" y="410">7. UserCreateResponse</text>
+<path class="rspArrow" d="M320,420 L106,420"/>
+
+<!-- 8: 201 Created -->
+<rect x="44" y="432" width="120" height="28" rx="8" fill="#fff" opacity="0.95"/>
+<text class="strong" x="52" y="450">8. 201 Created</text>
 </svg>

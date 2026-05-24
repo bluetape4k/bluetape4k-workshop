@@ -1,77 +1,95 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1044" height="692" viewBox="0 0 1044 692" role="img" aria-label="Gatling Gradle Plugin Demo Architecture">
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="420" viewBox="0 0 920 420" role="img" aria-label="Gatling Gradle Plugin Demo Architecture">
 <defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
+  </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
     .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
     .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
     .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
+    .card{stroke-width:2.1;filter:url(#shadow)}
+    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
   </style>
 </defs>
-<rect class="canvas" width="1044" height="692"/>
-<rect class="frame" x="32" y="28" width="980" height="636" rx="28"/>
-<text class="title" x="66" y="82">Gatling Gradle Plugin Demo Architecture</text>
-<text class="subtitle" x="70" y="118">Users · Admins · search → browse → edit simulation scenarios</text>
-<path class="line" d="M672 552 C672 552 706 552 706 552"/>
-<path class="line" d="M338 552 C338 386 372 386 372 220"/>
-<path class="line" d="M706 386 C706 303 338 303 338 220"/>
-<path class="line" d="M522 280 C522 303 522 303 522 326"/>
-<path class="line" d="M372 220 C372 303 338 303 338 386"/>
-<path class="line" d="M672 220 C672 220 706 220 706 220"/>
-<path class="line" d="M188 280 C188 303 188 303 188 326"/>
-<path class="line" d="M338 220 C338 220 706 220 706 220"/>
-<g transform="translate(48,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">: Users (search →</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">browse)</text>
+<rect class="canvas" width="920" height="420"/>
+<rect class="frame" x="24" y="20" width="872" height="376" rx="18"/>
+<text class="title" x="44" y="62">Gatling Gradle Plugin Demo</text>
+<text class="subtitle" x="44" y="84">GatlingPlugin → Simulation → feeder → scenario → inject → reports</text>
+
+<!-- Gradle Plugin -->
+<g transform="translate(44,100)">
+  <rect class="card" x="0" y="0" width="190" height="80" rx="10" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="smallLabel" x="95" y="26" text-anchor="middle">Gradle Plugin</text>
+  <text class="small" x="95" y="48" text-anchor="middle">io.gatling.gradle</text>
+  <text class="small" x="95" y="66" text-anchor="middle">gatlingRun task</text>
 </g>
-<g transform="translate(382,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">: Admins (search →</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">browse → edit)</text>
+
+<!-- Simulation -->
+<g transform="translate(270,100)">
+  <rect class="card" x="0" y="0" width="190" height="80" rx="10" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="smallLabel" x="95" y="26" text-anchor="middle">Simulation class</text>
+  <text class="small" x="95" y="48" text-anchor="middle">BasicSimulation</text>
+  <text class="small" x="95" y="66" text-anchor="middle">extends Simulation</text>
 </g>
-<g transform="translate(716,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">search Home → Feed →</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">Select</text>
+
+<!-- Scenario -->
+<g transform="translate(496,100)">
+  <rect class="card" x="0" y="0" width="190" height="80" rx="10" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="smallLabel" x="95" y="26" text-anchor="middle">Scenario</text>
+  <text class="small" x="95" y="48" text-anchor="middle">Users: search → browse</text>
+  <text class="small" x="95" y="66" text-anchor="middle">Admins: + edit</text>
 </g>
-<g transform="translate(48,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">browse Page 0~3</text>
+
+<!-- Target server -->
+<g transform="translate(722,100)">
+  <rect class="card" x="0" y="0" width="170" height="80" rx="10" fill="#FDECEF" stroke="#DC6B82"/>
+  <text class="smallLabel" x="85" y="26" text-anchor="middle">Target Server</text>
+  <text class="small" x="85" y="48" text-anchor="middle">computer-database</text>
+  <text class="small" x="85" y="66" text-anchor="middle">.gatling.io</text>
 </g>
-<g transform="translate(382,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">edit Form → Post</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">(tryMax 2)</text>
+
+<!-- Feeder -->
+<g transform="translate(44,256)">
+  <rect class="card" x="0" y="0" width="190" height="80" rx="10" fill="#E9F7F6" stroke="#45A7A1"/>
+  <text class="smallLabel" x="95" y="26" text-anchor="middle">CSV Feeder</text>
+  <text class="small" x="95" y="48" text-anchor="middle">search.csv</text>
+  <text class="small" x="95" y="66" text-anchor="middle">provides test data</text>
 </g>
-<g transform="translate(716,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">Users 10 / 10</text>
+
+<!-- Inject -->
+<g transform="translate(270,256)">
+  <rect class="card" x="0" y="0" width="190" height="80" rx="10" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="smallLabel" x="95" y="26" text-anchor="middle">Inject Profile</text>
+  <text class="small" x="95" y="48" text-anchor="middle">Users: 10 users / 10s</text>
+  <text class="small" x="95" y="66" text-anchor="middle">Admins: 2 users / 10s</text>
 </g>
-<g transform="translate(48,502)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F7F1E7" stroke="#B88A44"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">Admins 2 / 10</text>
+
+<!-- Assertions -->
+<g transform="translate(496,256)">
+  <rect class="card" x="0" y="0" width="190" height="80" rx="10" fill="#EEF6D9" stroke="#8BA84D"/>
+  <text class="smallLabel" x="95" y="26" text-anchor="middle">Assertions</text>
+  <text class="small" x="95" y="48" text-anchor="middle">global.successfulRequests</text>
+  <text class="small" x="95" y="66" text-anchor="middle">.percent.gte(95)</text>
 </g>
-<g transform="translate(382,502)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EEF6D9" stroke="#8BA84D"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">computer-database.ga</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">tling.io</text>
+
+<!-- Reports -->
+<g transform="translate(722,256)">
+  <rect class="card" x="0" y="0" width="170" height="80" rx="10" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="smallLabel" x="85" y="26" text-anchor="middle">HTML Reports</text>
+  <text class="small" x="85" y="48" text-anchor="middle">build/reports</text>
+  <text class="small" x="85" y="66" text-anchor="middle">/gatling/</text>
 </g>
-<g transform="translate(716,502)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">build/reports/gatlin</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">g</text>
-</g>
+
+<!-- Arrows -->
+<path class="line" d="M234,140 L268,140"/>
+<path class="line" d="M460,140 L494,140"/>
+<path class="line" d="M686,140 L720,140"/>
+<path class="line" d="M139,180 L139,254"/>
+<path class="line" d="M365,180 L365,254"/>
+<path class="line" d="M591,180 L591,254"/>
+<path class="line" d="M807,180 L807,254"/>
 </svg>

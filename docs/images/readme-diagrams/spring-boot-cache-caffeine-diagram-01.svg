@@ -1,106 +1,99 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1378 560" width="1378" height="560">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" width="960" height="600">
   <defs>
     <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
       <feDropShadow dx="2" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.12"/>
     </filter>
-    <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
-      <polygon points="1,1 8,4.5 1,8" fill="#6b7280"/>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+      <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
     </marker>
-    <marker id="arrow-blue" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
-      <polygon points="1,1 8,4.5 1,8" fill="#3b82f6"/>
-    </marker>
-    <marker id="arrow-green" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
-      <polygon points="1,1 8,4.5 1,8" fill="#059669"/>
-    </marker>
-    <marker id="arrow-amber" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
-      <polygon points="1,1 8,4.5 1,8" fill="#d97706"/>
-    </marker>
-    <marker id="arrow-red" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
-      <polygon points="1,1 8,4.5 1,8" fill="#ef4444"/>
-    </marker>
-    <marker id="arrow-purple" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
-      <polygon points="1,1 8,4.5 1,8" fill="#7c3aed"/>
-    </marker>
+    <style>
+      .canvas{fill:#f7f9fc}
+      .frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
+      .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
+      .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
+      .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
+      .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
+      .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
+      .card{stroke-width:2.1;filter:url(#shadow)}
+      .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
+    </style>
   </defs>
 
   <!-- Background -->
-  <rect width="1378" height="560" fill="#f6f9fc"/>
-  <rect x="20" y="20" width="1338" height="520" rx="16" fill="#fff" stroke="#d7e2ec" stroke-width="1.5"/>
+  <rect width="960" height="600" class="canvas"/>
+  <rect x="24" y="20" width="912" height="560" rx="22" class="frame"/>
 
   <!-- Title -->
-  <text x="48" y="56" font-family="'Architects Daughter', cursive" font-size="28" fill="#1e293b">Caffeine Cache — Cache-Aside Pattern</text>
-  <text x="48" y="76" font-family="'Comic Sans MS', cursive" font-size="13" fill="#536476">@Cacheable · CaffeineManager · CountryPrefetcher startup warm-up</text>
+  <text x="48" y="70" class="title">Caffeine Cache — Cache-Aside Pattern</text>
+  <text x="48" y="92" class="subtitle">@Cacheable · CaffeineManager · CountryPrefetcher startup warm-up</text>
 
-  <!-- ── Main flow ── -->
+  <!-- ── Row 1: Main flow cards ── -->
 
-  <!-- CountryRepository -->
-  <rect x="40" y="120" width="230" height="100" rx="12" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8" filter="url(#shadow)"/>
-  <text x="155" y="150" font-family="'Architects Daughter', cursive" font-size="17" fill="#1e3a5f" text-anchor="middle">Country</text>
-  <text x="155" y="170" font-family="'Architects Daughter', cursive" font-size="17" fill="#1e3a5f" text-anchor="middle">Repository</text>
-  <rect x="85" y="181" width="140" height="20" rx="10" fill="#3b82f6"/>
-  <text x="155" y="195" font-family="'Comic Sans MS', cursive" font-size="11" fill="#fff" text-anchor="middle">@Cacheable</text>
+  <!-- CountryRepository (Blue) -->
+  <rect x="48" y="118" width="220" height="110" rx="14" fill="#E8F3FF" stroke="#5B8DEF" class="card"/>
+  <text x="158" y="150" class="smallLabel" text-anchor="middle">Country</text>
+  <text x="158" y="174" class="smallLabel" text-anchor="middle">Repository</text>
+  <rect x="88" y="186" width="140" height="22" rx="11" fill="#5B8DEF"/>
+  <text x="158" y="201" class="mono" fill="#fff" text-anchor="middle">@Cacheable</text>
 
-  <!-- Caffeine Cache (central, prominent) -->
-  <rect x="350" y="100" width="310" height="130" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="2" filter="url(#shadow)"/>
-  <text x="505" y="130" font-family="'Architects Daughter', cursive" font-size="19" fill="#78350f" text-anchor="middle">Caffeine Cache</text>
-  <text x="505" y="152" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">CaffeineManager (Spring Cache)</text>
+  <!-- Caffeine Cache (Amber, central) -->
+  <rect x="330" y="108" width="300" height="130" rx="14" fill="#FFF3D9" stroke="#D6A441" class="card"/>
+  <text x="480" y="140" class="smallLabel" text-anchor="middle">Caffeine Cache</text>
+  <text x="480" y="162" class="small" text-anchor="middle">CaffeineManager (Spring Cache)</text>
   <!-- HIT badge -->
-  <rect x="358" y="164" width="140" height="22" rx="11" fill="#10b981"/>
-  <text x="428" y="179" font-family="'Comic Sans MS', cursive" font-size="11" fill="#fff" text-anchor="middle">HIT → return cached</text>
+  <rect x="338" y="174" width="136" height="22" rx="11" fill="#58A978"/>
+  <text x="406" y="189" class="mono" fill="#fff" text-anchor="middle">HIT → return cached</text>
   <!-- MISS badge -->
-  <rect x="504" y="164" width="148" height="22" rx="11" fill="#ef4444"/>
-  <text x="578" y="179" font-family="'Comic Sans MS', cursive" font-size="11" fill="#fff" text-anchor="middle">MISS → query H2</text>
+  <rect x="480" y="174" width="142" height="22" rx="11" fill="#DC6B82"/>
+  <text x="551" y="189" class="mono" fill="#fff" text-anchor="middle">MISS → query H2</text>
 
-  <!-- H2 Database (cylinder) -->
-  <rect x="808" y="120" width="220" height="70" fill="#e2e8f0" stroke="#64748b" stroke-width="1.5" filter="url(#shadow)"/>
-  <ellipse cx="918" cy="190" rx="110" ry="13" fill="#cbd5e1" stroke="#64748b" stroke-width="1.5"/>
-  <line x1="808" y1="120" x2="808" y2="190" stroke="#64748b" stroke-width="1.5"/>
-  <line x1="1028" y1="120" x2="1028" y2="190" stroke="#64748b" stroke-width="1.5"/>
-  <ellipse cx="918" cy="120" rx="110" ry="13" fill="#f8fafc" stroke="#64748b" stroke-width="1.5"/>
-  <text x="918" y="152" font-family="'Architects Daughter', cursive" font-size="16" fill="#334155" text-anchor="middle">H2 Database</text>
-  <text x="918" y="172" font-family="'Comic Sans MS', cursive" font-size="12" fill="#64748b" text-anchor="middle">in-memory (test)</text>
+  <!-- H2 Database (Lavender, styled as rounded card) -->
+  <rect x="700" y="118" width="212" height="100" rx="14" fill="#F1ECFF" stroke="#8A72D6" class="card"/>
+  <text x="806" y="154" class="smallLabel" text-anchor="middle">H2 Database</text>
+  <text x="806" y="178" class="small" text-anchor="middle">in-memory (test)</text>
+  <text x="806" y="198" class="small" text-anchor="middle">JPA / Exposed</text>
 
-  <!-- ── Arrows: main flow ── -->
+  <!-- ── Row 1 Arrows ── -->
   <!-- CountryRepository → Caffeine Cache: lookup -->
-  <line x1="270" y1="165" x2="350" y2="165" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrow-blue)"/>
-  <text x="310" y="158" font-family="'Comic Sans MS', cursive" font-size="11" fill="#3b82f6" text-anchor="middle">lookup</text>
+  <path d="M 268 168 H 330" class="line"/>
+  <text x="299" y="160" class="small" text-anchor="middle">lookup</text>
 
-  <!-- Caffeine Cache → H2 DB (MISS) -->
-  <line x1="660" y1="165" x2="808" y2="155" stroke="#ef4444" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#arrow-red)"/>
-  <text x="734" y="149" font-family="'Comic Sans MS', cursive" font-size="11" fill="#ef4444" text-anchor="middle">MISS</text>
+  <!-- Caffeine Cache → H2 DB (MISS, orthogonal) -->
+  <path d="M 630 155 H 700" class="line"/>
+  <text x="665" y="147" class="small" text-anchor="middle">MISS</text>
 
-  <!-- H2 → populate cache (return + populate) -->
-  <path d="M918,190 C918,240 505,240 505,230" stroke="#6b7280" stroke-width="1.5" stroke-dasharray="4 4" fill="none" marker-end="url(#arrow)"/>
-  <text x="710" y="254" font-family="'Comic Sans MS', cursive" font-size="11" fill="#6b7280" text-anchor="middle">populate cache</text>
+  <!-- H2 → Caffeine Cache: populate (return down then left) -->
+  <path d="M 806 218 V 248 H 480 V 238" class="line"/>
+  <text x="660" y="262" class="small" text-anchor="middle">populate cache</text>
 
-  <!-- HIT return: dashed arrow from cache back to repo -->
-  <path d="M505,100 C505,80 155,80 155,120" stroke="#10b981" stroke-width="1.5" stroke-dasharray="5 4" fill="none" marker-end="url(#arrow-green)"/>
-  <text x="330" y="73" font-family="'Comic Sans MS', cursive" font-size="11" fill="#10b981" text-anchor="middle">HIT ↩ return cached</text>
+  <!-- Caffeine Cache → CountryRepository: HIT return (left-pointing horizontal, below lookup) -->
+  <path d="M 330 185 H 268" class="line"/>
+  <text x="299" y="200" class="small" text-anchor="middle">HIT ↩ cached</text>
 
-  <!-- ── Supporting components ── -->
+  <!-- ── Row 2: Supporting components ── -->
 
-  <!-- CountryPrefetcher -->
-  <rect x="40" y="340" width="230" height="80" rx="12" fill="#d1fae5" stroke="#059669" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="155" y="368" font-family="'Architects Daughter', cursive" font-size="16" fill="#064e3b" text-anchor="middle">Country</text>
-  <text x="155" y="386" font-family="'Architects Daughter', cursive" font-size="16" fill="#064e3b" text-anchor="middle">Prefetcher</text>
-  <text x="155" y="406" font-family="'Comic Sans MS', cursive" font-size="11" fill="#536476" text-anchor="middle">@EventListener(AppReady)</text>
+  <!-- CountryPrefetcher (Green) -->
+  <rect x="48" y="340" width="220" height="90" rx="14" fill="#EAF7EF" stroke="#58A978" class="card"/>
+  <text x="158" y="372" class="smallLabel" text-anchor="middle">Country</text>
+  <text x="158" y="394" class="smallLabel" text-anchor="middle">Prefetcher</text>
+  <text x="158" y="416" class="small" text-anchor="middle">@EventListener(AppReady)</text>
 
-  <!-- CaffeineConfig -->
-  <rect x="350" y="340" width="230" height="80" rx="12" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="465" y="368" font-family="'Architects Daughter', cursive" font-size="16" fill="#3b0764" text-anchor="middle">CaffeineConfig</text>
-  <text x="465" y="388" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">TTL / maximumSize</text>
-  <text x="465" y="406" font-family="'Comic Sans MS', cursive" font-size="11" fill="#7c3aed" text-anchor="middle">@Bean CacheManager</text>
+  <!-- CaffeineConfig (Lavender) -->
+  <rect x="330" y="340" width="220" height="90" rx="14" fill="#F1ECFF" stroke="#8A72D6" class="card"/>
+  <text x="440" y="372" class="smallLabel" text-anchor="middle">CaffeineConfig</text>
+  <text x="440" y="394" class="small" text-anchor="middle">TTL / maximumSize</text>
+  <text x="440" y="414" class="small" text-anchor="middle">@Bean CacheManager</text>
 
-  <!-- CountryPrefetcher → CountryRepository: startup preload -->
-  <line x1="155" y1="340" x2="155" y2="220" stroke="#059669" stroke-width="1.5" marker-end="url(#arrow-green)"/>
-  <text x="180" y="285" font-family="'Comic Sans MS', cursive" font-size="11" fill="#059669">preload</text>
+  <!-- CountryPrefetcher → CountryRepository: preload (up) -->
+  <path d="M 158 340 V 228" class="line"/>
+  <text x="182" y="290" class="small">preload</text>
 
-  <!-- CaffeineConfig → Caffeine Cache: configure -->
-  <line x1="465" y1="340" x2="465" y2="230" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arrow-purple)"/>
-  <text x="490" y="290" font-family="'Comic Sans MS', cursive" font-size="11" fill="#7c3aed">configure</text>
+  <!-- CaffeineConfig → Caffeine Cache: configure (up) -->
+  <path d="M 440 340 V 238" class="line"/>
+  <text x="466" y="296" class="small">configure</text>
 
-  <!-- ── Footer ── -->
-  <rect x="36" y="450" width="1306" height="50" rx="10" fill="#fef9c3" stroke="#d97706" stroke-width="1.2"/>
-  <text x="689" y="471" font-family="'Architects Daughter', cursive" font-size="14" fill="#92400e" text-anchor="middle">Cache-Aside: check cache → HIT return instantly · MISS query H2 → populate cache</text>
-  <text x="689" y="489" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">CountryPrefetcher pre-loads all entries on startup — first request always a HIT</text>
+  <!-- ── Footer (teal) ── -->
+  <rect x="36" y="454" width="888" height="54" rx="12" fill="#E9F7F6" stroke="#45A7A1" stroke-width="1.5"/>
+  <text x="480" y="476" font-family="'Architects Daughter','Comic Sans MS',cursive" font-size="14" fill="#102033" text-anchor="middle">Cache-Aside: check cache → HIT return instantly · MISS query H2 → populate cache</text>
+  <text x="480" y="494" class="small" text-anchor="middle">CountryPrefetcher pre-loads all entries on startup — first request always a HIT</text>
 </svg>

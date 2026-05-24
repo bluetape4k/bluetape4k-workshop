@@ -1,63 +1,100 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1960" height="1016" viewBox="0 0 1960 1016" role="img" aria-label="AOP">
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="520" viewBox="0 0 960 520" role="img" aria-label="Spring AOP-Based ApplicationEvent sequence">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
+  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
+  </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
     .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
     .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
     .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
+    .card{stroke-width:2.1;filter:url(#shadow)}
+    .lifeline{stroke:#b0bbca;stroke-width:1.5;stroke-dasharray:6 4;fill:none}
+    .reqArrow{stroke:#5B8DEF;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
+    .rspArrow{stroke:#45A7A1;stroke-width:2.1;stroke-dasharray:7 4;fill:none;marker-end:url(#arrow)}
+    .msgLabel{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;fill:#102033}
   </style>
 </defs>
-<rect class="canvas" width="1960" height="1016"/>
-<rect class="frame" x="32" y="28" width="1896" height="960" rx="28"/>
-<text class="title" x="66" y="82">AOP-Based Event Publishing</text>
-<text class="subtitle" x="70" y="118">AspectEventPublisherAspect · @Around advice · Coroutine listener</text>
-<rect class="card" x="-10" y="166" width="300" height="72" rx="20" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="140" y="209" text-anchor="middle">MyEventService</text>
-<line class="lifeline" x1="140" y1="252" x2="140" y2="956" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="410" y="166" width="300" height="72" rx="20" fill="#EAF7EF" stroke="#58A978"/>
-<text class="smallLabel" x="560" y="198.5" text-anchor="middle">Aspect Event</text>
-<text class="smallLabel" x="560" y="219.5" text-anchor="middle">Publisher Aspect</text>
-<line class="lifeline" x1="560" y1="252" x2="560" y2="956" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="830" y="166" width="300" height="72" rx="20" fill="#FFF3D9" stroke="#D6A441"/>
-<text class="smallLabel" x="980" y="198.5" text-anchor="middle">Application Event</text>
-<text class="smallLabel" x="980" y="219.5" text-anchor="middle">Publisher</text>
-<line class="lifeline" x1="980" y1="252" x2="980" y2="956" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="1250" y="166" width="300" height="72" rx="20" fill="#FDECEF" stroke="#DC6B82"/>
-<text class="smallLabel" x="1400" y="209" text-anchor="middle">AspectEventListener</text>
-<line class="lifeline" x1="1400" y1="252" x2="1400" y2="956" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="1670" y="166" width="300" height="72" rx="20" fill="#E9F7F6" stroke="#45A7A1"/>
-<text class="smallLabel" x="1820" y="198.5" text-anchor="middle">Coroutine Aspect</text>
-<text class="smallLabel" x="1820" y="219.5" text-anchor="middle">Event Listener</text>
-<line class="lifeline" x1="1820" y1="252" x2="1820" y2="956" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect x="245" y="286" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="263" y="313" text-anchor="start">2. Around Advice</text>
-<path class="line" d="M140 344 L560 344"/>
-<rect x="245" y="396" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="263" y="423" text-anchor="start">3. proceed()</text>
-<path class="line" d="M560 454 L140 454"/>
-<rect x="142.5" y="506" width="415" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="160.5" y="533" text-anchor="start">4. MyEventService to AspectEventPublisherAspect</text>
-<path class="dashed" d="M140 564 L560 564"/>
-<rect x="639" y="616" width="262" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="657" y="643" text-anchor="start">5. publishEvent(AspectEvent)</text>
-<path class="line" d="M560 674 L980 674"/>
-<rect x="966" y="726" width="448" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="984" y="753" text-anchor="start">6. ApplicationEventPublisher to AspectEventListener</text>
-<path class="dashed" d="M980 784 L1400 784"/>
-<rect x="1140" y="836" width="520" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="1158" y="863" text-anchor="start">7. ApplicationEventPublisher to CoroutineAspectEventListener</text>
-<path class="dashed" d="M980 894 L1820 894"/>
+<rect class="canvas" width="960" height="520"/>
+<rect class="frame" x="24" y="20" width="912" height="480" rx="22"/>
+
+<!-- Title -->
+<text class="title" x="48" y="66">AOP-Based Event Publishing</text>
+<text class="subtitle" x="52" y="88">AspectEventPublisherAspect @Around → publishEvent → AspectEventListener / CoroutineListener</text>
+
+<!-- Participants cx: 110, 270, 450, 640, 830 -->
+
+<!-- MyEventService -->
+<g transform="translate(50,104)">
+  <rect class="card" x="0" y="0" width="120" height="72" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="smallLabel" style="font-size:17px" x="60" y="26" text-anchor="middle">MyEvent</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="50" text-anchor="middle">Service</text>
+  <text class="small" x="60" y="68" text-anchor="middle">@AspectEmitter</text>
+</g>
+<!-- AspectEventPublisherAspect -->
+<g transform="translate(210,104)">
+  <rect class="card" x="0" y="0" width="130" height="72" rx="12" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="smallLabel" style="font-size:17px" x="65" y="24" text-anchor="middle">Aspect</text>
+  <text class="smallLabel" style="font-size:17px" x="65" y="46" text-anchor="middle">Publisher</text>
+  <text class="small" x="65" y="66" text-anchor="middle">@Around advice</text>
+</g>
+<!-- ApplicationEventPublisher -->
+<g transform="translate(400,104)">
+  <rect class="card" x="0" y="0" width="120" height="72" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="smallLabel" style="font-size:17px" x="60" y="26" text-anchor="middle">AppEvent</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="50" text-anchor="middle">Publisher</text>
+  <text class="small" x="60" y="68" text-anchor="middle">Spring</text>
+</g>
+<!-- AspectEventListener -->
+<g transform="translate(580,104)">
+  <rect class="card" x="0" y="0" width="130" height="72" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
+  <text class="smallLabel" style="font-size:17px" x="65" y="26" text-anchor="middle">Aspect</text>
+  <text class="smallLabel" style="font-size:17px" x="65" y="50" text-anchor="middle">Event</text>
+  <text class="small" x="65" y="68" text-anchor="middle">Listener</text>
+</g>
+<!-- CoroutineAspectEventListener -->
+<g transform="translate(770,104)">
+  <rect class="card" x="0" y="0" width="130" height="72" rx="12" fill="#E9F7F6" stroke="#45A7A1"/>
+  <text class="smallLabel" style="font-size:17px" x="65" y="24" text-anchor="middle">Coroutine</text>
+  <text class="smallLabel" style="font-size:17px" x="65" y="46" text-anchor="middle">Aspect</text>
+  <text class="small" x="65" y="66" text-anchor="middle">EventListener</text>
+</g>
+
+<!-- Lifelines cx: 110, 275, 460, 645, 835 -->
+<line class="lifeline" x1="110" y1="176" x2="110" y2="490"/>
+<line class="lifeline" x1="275" y1="176" x2="275" y2="490"/>
+<line class="lifeline" x1="460" y1="176" x2="460" y2="490"/>
+<line class="lifeline" x1="645" y1="176" x2="645" y2="490"/>
+<line class="lifeline" x1="835" y1="176" x2="835" y2="490"/>
+
+<!-- Step 1: Service method call (triggers AOP) -->
+<text class="msgLabel" x="48" y="206">1. doWork() — @AspectEmitter triggers</text>
+<path class="reqArrow" d="M110,210 C190,210 190,240 275,240"/>
+
+<!-- Step 2: @Around intercepts → proceed() -->
+<text class="msgLabel" x="44" y="258">2. @Around intercept / proceed()</text>
+<path class="rspArrow" d="M275,262 L118,262"/>
+
+<!-- Step 3: Aspect returns control, then publishes event -->
+<text class="msgLabel" x="285" y="298">3. publishEvent(AspectEvent)</text>
+<path class="reqArrow" d="M275,302 L452,302"/>
+
+<!-- Step 4: AppEventPublisher → AspectEventListener -->
+<text class="msgLabel" x="472" y="338">4. @EventListener (AspectEvent)</text>
+<path class="reqArrow" d="M460,342 L637,342"/>
+
+<!-- Step 5: AspectEventListener handle -->
+<text class="msgLabel" x="658" y="370">5. handle (sync)</text>
+<path class="reqArrow" d="M645,378 C700,378 700,398 645,398"/>
+
+<!-- Step 6: AppEventPublisher → CoroutineAspectEventListener -->
+<text class="msgLabel" x="472" y="428">6. @EventListener suspend(AspectEvent)</text>
+<path class="reqArrow" d="M460,432 L827,432"/>
+
+<!-- Step 7: CoroutineAspectEventListener handle -->
+<text class="msgLabel" x="846" y="458">7. handle (suspend)</text>
+<path class="reqArrow" d="M835,466 C890,466 890,486 835,486"/>
 </svg>

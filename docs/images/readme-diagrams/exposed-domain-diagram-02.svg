@@ -1,65 +1,84 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1754" height="596" viewBox="0 0 1754 596" role="img" aria-label="Exposed Domain Entity Class Structure">
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="440" viewBox="0 0 960 440" role="img" aria-label="Exposed Domain Query Patterns">
 <defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="10" markerHeight="8" refX="8.5" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 8.5 4 L 1 7" fill="none" stroke="#758297" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="11" markerHeight="10" refX="9.5" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 0.5 1 L 9.5 5 L 0.5 9 Z" fill="#ffffff" stroke="#758297" stroke-width="1.7"/></marker>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
+  </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
     .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
     .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
     .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
+    .card{stroke-width:2.1;filter:url(#shadow)}
+    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
   </style>
 </defs>
-<rect class="canvas" width="1754" height="596"/>
-<rect class="frame" x="32" y="28" width="1690" height="540" rx="28"/>
-<text class="title" x="66" y="82">Exposed Domain Entity Class Structure</text>
-<text class="subtitle" x="70" y="118">Country · City · User · AccountEntity · Exposed domain entities</text>
-<g transform="translate(92,180)">
-  <rect class="card" x="0" y="0" width="340" height="175" rx="5" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <line class="compartment" x1="0" y1="78" x2="340" y2="78" stroke="#5B8DEF"/>
-  <text class="small" x="170" y="26" text-anchor="middle"></text>
-  <text class="label" x="170" y="61" text-anchor="middle">Country</text>
-  <text class="mono" x="18" y="108">+Int id</text>
-<text class="mono" x="18" y="129">+String name</text>
-<text class="mono" x="18" y="150">+cities: SizedIterable~City~</text>
+<rect class="canvas" width="960" height="440"/>
+<rect class="frame" x="24" y="20" width="912" height="396" rx="18"/>
+<text class="title" x="44" y="66">Exposed Domain Query Patterns</text>
+<text class="subtitle" x="44" y="90">join queries · eager loading · lazy loading · SizedIterable</text>
+
+<!-- Join Query -->
+<g transform="translate(44,110)">
+  <rect class="card" x="0" y="0" width="260" height="120" rx="10" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="smallLabel" x="130" y="30" text-anchor="middle">Join Query</text>
+  <text class="mono" x="12" y="56">Movies.join(ActorsInMovies,</text>
+  <text class="mono" x="12" y="74"> JoinType.INNER)</text>
+  <text class="mono" x="12" y="92"> .join(Actors, JoinType.INNER)</text>
+  <text class="mono" x="12" y="110"> .selectAll()</text>
 </g>
-<g transform="translate(502,180)">
-  <rect class="card" x="0" y="0" width="340" height="175" rx="5" fill="#EAF7EF" stroke="#58A978"/>
-  <line class="compartment" x1="0" y1="78" x2="340" y2="78" stroke="#58A978"/>
-  <text class="small" x="170" y="26" text-anchor="middle"></text>
-  <text class="label" x="170" y="61" text-anchor="middle">AccountEntity</text>
-  <text class="mono" x="18" y="108">+Long id</text>
-<text class="mono" x="18" y="129">+String name</text>
-<text class="mono" x="18" y="150">+BigDecimal balance</text>
+
+<!-- Eager Loading -->
+<g transform="translate(350,110)">
+  <rect class="card" x="0" y="0" width="260" height="120" rx="10" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="smallLabel" x="130" y="30" text-anchor="middle">Eager Loading</text>
+  <text class="mono" x="12" y="56">Movie.find { id eq movieId }</text>
+  <text class="mono" x="12" y="74">  .with(Movie::actors)</text>
+  <text class="mono" x="12" y="92">  .firstOrNull()</text>
+  <text class="mono" x="12" y="110">// batch loads relations</text>
 </g>
-<g transform="translate(912,180)">
-  <rect class="card" x="0" y="0" width="340" height="196" rx="5" fill="#FFF3D9" stroke="#D6A441"/>
-  <line class="compartment" x1="0" y1="78" x2="340" y2="78" stroke="#D6A441"/>
-  <text class="small" x="170" y="26" text-anchor="middle"></text>
-  <text class="label" x="170" y="61" text-anchor="middle">City</text>
-  <text class="mono" x="18" y="108">+Int id</text>
-<text class="mono" x="18" y="129">+String name</text>
-<text class="mono" x="18" y="150">+country: Country</text>
-<text class="mono" x="18" y="171">+users: SizedIterable~User~</text>
+
+<!-- Lazy Loading -->
+<g transform="translate(656,110)">
+  <rect class="card" x="0" y="0" width="260" height="120" rx="10" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="smallLabel" x="130" y="30" text-anchor="middle">Lazy Loading</text>
+  <text class="mono" x="12" y="56">val movie = Movie[id]</text>
+  <text class="mono" x="12" y="74">// access triggers query:</text>
+  <text class="mono" x="12" y="92">movie.actors // SizedIterable</text>
+  <text class="mono" x="12" y="110">  .toList()</text>
 </g>
-<g transform="translate(1322,180)">
-  <rect class="card" x="0" y="0" width="340" height="196" rx="5" fill="#FDECEF" stroke="#DC6B82"/>
-  <line class="compartment" x1="0" y1="78" x2="340" y2="78" stroke="#DC6B82"/>
-  <text class="small" x="170" y="26" text-anchor="middle"></text>
-  <text class="label" x="170" y="61" text-anchor="middle">User</text>
-  <text class="mono" x="18" y="108">+Int id</text>
-<text class="mono" x="18" y="129">+String name</text>
-<text class="mono" x="18" y="150">+Int age</text>
-<text class="mono" x="18" y="171">+cities: SizedIterable~City~</text>
+
+<!-- SizedIterable result -->
+<g transform="translate(44,280)">
+  <rect class="card" x="0" y="0" width="260" height="100" rx="10" fill="#FDECEF" stroke="#DC6B82"/>
+  <text class="smallLabel" x="130" y="28" text-anchor="middle">SizedIterable</text>
+  <text class="mono" x="12" y="54">actors: SizedIterable&lt;Actor&gt;</text>
+  <text class="mono" x="12" y="72">reviews: SizedIterable&lt;Review&gt;</text>
+  <text class="mono" x="12" y="90">// DAO relationship accessor</text>
 </g>
+
+<!-- DAO Result -->
+<g transform="translate(350,280)">
+  <rect class="card" x="0" y="0" width="260" height="100" rx="10" fill="#E9F7F6" stroke="#45A7A1"/>
+  <text class="smallLabel" x="130" y="28" text-anchor="middle">DAO Result Row</text>
+  <text class="mono" x="12" y="54">ResultRow → Entity.wrapRow()</text>
+  <text class="mono" x="12" y="72">Entity.wrap(id, row)</text>
+  <text class="mono" x="12" y="90">// cached per transaction</text>
+</g>
+
+<!-- SQL DSL result -->
+<g transform="translate(656,280)">
+  <rect class="card" x="0" y="0" width="260" height="100" rx="10" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="smallLabel" x="130" y="28" text-anchor="middle">SQL DSL Result</text>
+  <text class="mono" x="12" y="54">selectAll().map { row -&gt;</text>
+  <text class="mono" x="12" y="72">  MovieDTO(row[Movies.name],</text>
+  <text class="mono" x="12" y="90">  row[Movies.releaseDate]) }</text>
+</g>
+
+<!-- Arrows -->
+<path class="line" d="M174,230 L174,278"/>
+<path class="line" d="M480,230 L480,278"/>
+<path class="line" d="M786,230 L786,278"/>
 </svg>

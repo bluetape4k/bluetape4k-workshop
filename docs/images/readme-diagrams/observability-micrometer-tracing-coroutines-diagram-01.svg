@@ -1,84 +1,118 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1378" height="692" viewBox="0 0 1378 692" role="img" aria-label="Micrometer Tracing Coroutines Architecture">
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540" role="img" aria-label="Micrometer Tracing Coroutines Architecture">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
+  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
+  </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
     .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
     .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
     .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
+    .card{stroke-width:2.1;filter:url(#shadow)}
+    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
   </style>
 </defs>
-<rect class="canvas" width="1378" height="692"/>
-<rect class="frame" x="32" y="28" width="1314" height="636" rx="28"/>
-<text class="title" x="66" y="82">Micrometer Tracing Coroutines Architecture</text>
-<text class="subtitle" x="70" y="118">CoroutineController · SyncController · ReactorController · CoroutineService · tracing</text>
-<path class="line" d="M856 446 C856 469 856 469 856 492"/>
-<path class="line" d="M706 386 C706 469 672 469 672 552"/>
-<path class="line" d="M1040 386 C1040 386 1006 386 1006 386"/>
-<path class="line" d="M672 386 C672 386 706 386 706 386"/>
-<path class="line" d="M338 386 C338 386 706 386 706 386"/>
-<path class="line" d="M1040 220 C1040 303 1006 303 1006 386"/>
-<path class="line" d="M706 220 C706 303 672 303 672 386"/>
-<path class="line" d="M372 220 C372 303 338 303 338 386"/>
-<path class="line" d="M338 220 C338 220 1040 220 1040 220"/>
-<g transform="translate(48,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">CoroutineController</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">/coroutine</text>
+<!-- Layout:
+     Canvas: 960×540  Frame: x=24 y=20 w=912 h=496
+     Row1  y=98  h=54  3 cols (w=260 gap=46):
+       Col1: x=24  w=260 cx=154  SyncController
+       Col2: x=330 w=260 cx=460  CoroutineController
+       Col3: x=636 w=260 cx=766  ReactorController
+     Row2  y=212 h=80  same 3 cols
+       Col1: SyncService
+       Col2: CoroutineService
+       Col3: ReactorService
+     Row3  y=352 h=54  ObservationRegistry center x=280 w=400 cx=480
+     Row4  y=466 h=50  Col1: x=24 w=420 cx=234 (OTel Bridge)
+                        Col2: x=516 w=420 cx=726 (Zipkin)
+     Gap: col1 right=284 < col2 left=330 ✓ (gap=46px)
+     Row4 gap: col1 right=444 < col2 left=516 ✓ (gap=72px)
+-->
+<rect class="canvas" width="960" height="540"/>
+<rect class="frame" x="24" y="20" width="912" height="496" rx="28"/>
+<text class="title" x="58" y="66">Micrometer Tracing Coroutines</text>
+<text class="subtitle" x="58" y="92">SyncController · CoroutineController · ReactorController · withObservationSuspending · OTel · Zipkin</text>
+
+<!-- Arrows Row1 → Row2 (straight down per column) -->
+<path class="line" d="M154 152 L154 212"/>
+<path class="line" d="M460 152 L460 212"/>
+<path class="line" d="M766 152 L766 212"/>
+
+<!-- Arrows Row2 → Row3 (converge to ObservationRegistry) -->
+<path class="line" d="M154 292 L154 322 L480 322 L480 352"/>
+<path class="line" d="M460 292 L460 322 L480 322 L480 352"/>
+<path class="line" d="M766 292 L766 322 L480 322 L480 352"/>
+
+<!-- Arrows Row3 → Row4 (fan-out to OTel + Zipkin, both starting from ObservationRegistry bottom) -->
+<path class="line" d="M480 406 L480 436 L234 436 L234 466"/>
+<path class="line" d="M480 406 L480 436 L726 436 L726 466"/>
+
+<!-- SyncController col1 -->
+<g transform="translate(24,98)">
+  <rect class="card" x="0" y="0" width="260" height="54" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="smallLabel" x="130" y="22" text-anchor="middle">SyncController</text>
+  <text class="small" x="130" y="42" text-anchor="middle">@Observed · GET /sync/name</text>
 </g>
-<g transform="translate(382,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">SyncController /sync</text>
+
+<!-- CoroutineController col2 -->
+<g transform="translate(330,98)">
+  <rect class="card" x="0" y="0" width="260" height="54" rx="12" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="smallLabel" x="130" y="22" text-anchor="middle">CoroutineController</text>
+  <text class="small" x="130" y="42" text-anchor="middle">suspend · GET /coroutine/todos/{id}</text>
 </g>
-<g transform="translate(716,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">ReactorController</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">/reactor</text>
+
+<!-- ReactorController col3 -->
+<g transform="translate(636,98)">
+  <rect class="card" x="0" y="0" width="260" height="54" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="smallLabel" x="130" y="22" text-anchor="middle">ReactorController</text>
+  <text class="small" x="130" y="42" text-anchor="middle">Mono · GET /reactor/todos/{id}</text>
 </g>
-<g transform="translate(1050,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="140" y="21" text-anchor="middle">CoroutineService</text>
-<text class="smallLabel" x="140" y="47" text-anchor="middle">with Observation</text>
-<text class="smallLabel" x="140" y="73" text-anchor="middle">Suspending</text>
+
+<!-- SyncService col1 -->
+<g transform="translate(24,212)">
+  <rect class="card" x="0" y="0" width="260" height="80" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="smallLabel" x="130" y="22" text-anchor="middle">SyncService</text>
+  <text class="mono" x="130" y="44" text-anchor="middle">@Observed · Thread.sleep</text>
+  <text class="small" x="130" y="64" text-anchor="middle">observe(Supplier { ... })</text>
 </g>
-<g transform="translate(48,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">SyncService</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">Observation.observe</text>
+
+<!-- CoroutineService col2 -->
+<g transform="translate(330,212)">
+  <rect class="card" x="0" y="0" width="260" height="80" rx="12" fill="#E9F7F6" stroke="#45A7A1"/>
+  <text class="smallLabel" x="130" y="22" text-anchor="middle">CoroutineService</text>
+  <text class="mono" x="130" y="44" text-anchor="middle">withObservationSuspending()</text>
+  <text class="small" x="130" y="64" text-anchor="middle">delay · WebClient · awaitBodyOrNull</text>
 </g>
-<g transform="translate(382,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">ReactorService</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">observe Mono/Flux</text>
+
+<!-- ReactorService col3 -->
+<g transform="translate(636,212)">
+  <rect class="card" x="0" y="0" width="260" height="80" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
+  <text class="smallLabel" x="130" y="22" text-anchor="middle">ReactorService</text>
+  <text class="mono" x="130" y="44" text-anchor="middle">Mono.deferContextual</text>
+  <text class="small" x="130" y="64" text-anchor="middle">withObservation() · ReactorService</text>
 </g>
-<g transform="translate(716,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F7F1E7" stroke="#B88A44"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">ObservationRegistry</text>
+
+<!-- ObservationRegistry (center) -->
+<g transform="translate(280,352)">
+  <rect class="card" x="0" y="0" width="400" height="54" rx="12" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="smallLabel" x="200" y="22" text-anchor="middle">ObservationRegistry</text>
+  <text class="small" x="200" y="42" text-anchor="middle">auto-configured · micrometer-context-propagation</text>
 </g>
-<g transform="translate(1050,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EEF6D9" stroke="#8BA84D"/>
-  <text class="smallLabel" x="140" y="21" text-anchor="middle">ObservationConfig</text>
-<text class="smallLabel" x="140" y="47" text-anchor="middle">Tracing Observation</text>
-<text class="smallLabel" x="140" y="73" text-anchor="middle">Handler</text>
+
+<!-- OTel Bridge col1 -->
+<g transform="translate(24,466)">
+  <rect class="card" x="0" y="0" width="420" height="50" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="smallLabel" x="210" y="20" text-anchor="middle">OTel Bridge</text>
+  <text class="small" x="210" y="38" text-anchor="middle">micrometer-tracing-bridge-otel · span export</text>
 </g>
-<g transform="translate(382,502)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">Span</text>
-</g>
-<g transform="translate(716,502)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">Micrometer</text>
+
+<!-- Zipkin col2 -->
+<g transform="translate(516,466)">
+  <rect class="card" x="0" y="0" width="420" height="50" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="smallLabel" x="210" y="20" text-anchor="middle">Zipkin</text>
+  <text class="small" x="210" y="38" text-anchor="middle">Testcontainers · trace visualization · ZipkinServerLauncher</text>
 </g>
 </svg>
