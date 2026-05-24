@@ -5,15 +5,7 @@ across HTTP (WebFlux), coroutine service, H2 database (Exposed JDBC), and Redis 
 
 ## Architecture
 
-```mermaid
-graph TD
-    Client["HTTP Client"] --> Controller["GET/POST /users\nhttp.server.requests (auto)"]
-    Controller --> Service["UserService\nuser.service.get / user.service.create (manual)"]
-    Service --> Cache["UserCacheRepository\nuser.cache.get / user.cache.put (manual)"]
-    Service --> DB["UserRepository → H2\nuser.db.find / user.db.save (manual)"]
-    Cache --> Redis[(Redis)]
-    DB --> H2[(H2 in-memory)]
-```
+![observability advanced Architecture diagram](../../docs/images/readme-diagrams/observability-observability-advanced-architecture-01.png)
 
 ## Span Trees
 

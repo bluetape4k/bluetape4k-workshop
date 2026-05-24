@@ -5,15 +5,7 @@ Snowflake, ULID, KSUID, Hashids 각 알고리즘의 특성과 운영 시 주의�
 
 ## 아키텍처
 
-```mermaid
-graph LR
-    Client -->|HTTP GET| Router[Spring WebFlux Router]
-    Router --> Controller[IdGeneratorController]
-    Controller --> SF[Snowflakers.Default\nSnowflake Long ID]
-    Controller --> UL[UlidGenerator\n26-char Crockford Base32]
-    Controller --> KS[KsuidGenerator\n27-char Base62]
-    Controller --> HI[Hashids\nURL-safe obfuscation]
-```
+![idgenerator Architecture diagram](../../docs/images/readme-diagrams/spring-boot-idgenerator-architecture-01.png)
 
 ## API 엔드포인트
 

@@ -5,16 +5,7 @@ bluetape4k의 `KLogging`과 `bluetape4k-resilience4j`를 통해 Circuit Breaker 
 
 ## 에러 처리 흐름
 
-```mermaid
-graph TD
-    Client -->|HTTP Request| Controller
-    Controller -->|throws| Exception
-    Exception -->|@ControllerAdvice| RestApiExceptionHandler
-    RestApiExceptionHandler -->|ProblemHandling| ProblemJSON[application/problem+json]
-    RestApiExceptionHandler -->|TaskAdviceTrait| ProblemJSON
-    RestApiExceptionHandler -->|Resilience4jTrait| ProblemJSON
-    ProblemJSON -->|HTTP Response| Client
-```
+![problem Architecture diagram](../../docs/images/readme-diagrams/spring-boot-problem-architecture-01.png)
 
 ## RFC 9457 Problem Details 개념
 

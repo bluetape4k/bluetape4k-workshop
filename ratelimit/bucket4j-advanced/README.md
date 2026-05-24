@@ -5,28 +5,7 @@ rate-limit identity strategies backed by Redis (Lettuce).
 
 ## Architecture
 
-```mermaid
-flowchart TD
-    Client["HTTP Client"]
-    subgraph Filters["WebFilter Chain (ordered)"]
-        F1["IpRateLimitWebFilter\n@Order(10)\n/api/anonymous/**"]
-        F2["UserRateLimitWebFilter\n@Order(11)\n/api/authenticated/**"]
-        F3["CombinedRateLimitWebFilter\n@Order(12)\n/api/sensitive/**"]
-    end
-    subgraph Buckets["Redis Buckets (Lettuce)"]
-        B1["ip:&lt;address&gt;\n20 tokens / 10 s"]
-        B2["user:&lt;userId&gt;\n50 tokens / 10 s"]
-        B3["combined:&lt;ip&gt;:&lt;userId&gt;\n10 tokens / 10 s"]
-    end
-    Controller["RateLimitDemoController"]
-
-    Client --> F1 --> B1
-    Client --> F2 --> B2
-    Client --> F3 --> B3
-    B1 --> Controller
-    B2 --> Controller
-    B3 --> Controller
-```
+![bucket4j advanced Architecture diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-advanced-architecture-01.png)
 
 ## Rate-Limit Strategies
 

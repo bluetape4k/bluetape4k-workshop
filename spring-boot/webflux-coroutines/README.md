@@ -5,16 +5,7 @@ bluetape4k의 `Dispatchers.VT`, `Flow<T>.async`, `Runtimex` 등을 활용해 Vir
 
 ## 아키텍처
 
-```mermaid
-graph TD
-    Client -->|HTTP| Router[coRouter / @RestController]
-    Router --> DC[DefaultCoroutineController\nDispatchers.IO]
-    Router --> IC[IOCoroutineController\nDispatchers.IO 명시적]
-    Router --> VT[VTCoroutineController\nDispatchers.VT]
-    Router --> CH[CoroutineHandler\ncoRouter DSL]
-    DC & IC & VT & CH -->|suspend| Service
-    Service -->|WebClient| External[External API]
-```
+![webflux coroutines Architecture diagram](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-architecture-01.png)
 
 ## 구현 방식 비교
 

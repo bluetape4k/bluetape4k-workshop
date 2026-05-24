@@ -7,50 +7,7 @@ Redisson을 사용한 분산 락 전략을 단계별로 시연합니다.
 
 ## 아키텍처
 
-```mermaid
-graph TD
-    subgraph 도메인
-        Inv[Inventory]
-        Store[InventoryStore]
-        DR[DeductionResult<br/>sealed interface]
-    end
-
-    subgraph 펜싱 가드
-        FR[FencedResource<br/>CAS 토큰 게이트]
-        FRS[FencedResources<br/>레지스트리]
-    end
-
-    subgraph 서비스
-        Unsafe[UnsafeInventoryService<br/>락 없음 — race 데모]
-        Locked[LockedInventoryService<br/>RLock / 블로킹]
-        Fenced[FencedInventoryService<br/>RFencedLock / 블로킹]
-        Suspend[SuspendingFencedInventoryService<br/>RFencedLock / 코루틴]
-    end
-
-    subgraph 테스트
-        BRT[BaselineRaceTest<br/>락 없이 oversell 발생 확인]
-        DLT[DistributedLockTest<br/>RLock이 oversell 방지]
-        FLT[FencedLockTest<br/>펜싱 가드가 stale holder 차단]
-        SFT[SuspendFencedLockTest<br/>코루틴 취소 안전성]
-        FSH[FencedStaleHolderTest smoke<br/>리스 만료 재락 시나리오]
-        LFT[LockFailureTest smoke<br/>tryLock 타임아웃 동작]
-    end
-
-    Store --> Unsafe
-    Store --> Locked
-    Store --> Fenced
-    Store --> Suspend
-    FRS  --> Fenced
-    FRS  --> Suspend
-    FR   --> FRS
-
-    Unsafe  --> BRT
-    Locked  --> DLT
-    Fenced  --> FLT
-    Suspend --> SFT
-    Fenced  --> FSH
-    Locked  --> LFT
-```
+![distributed lock Architecture diagram](../../docs/images/readme-diagrams/redis-distributed-lock-architecture-01.png)
 
 ---
 

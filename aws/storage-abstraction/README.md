@@ -5,15 +5,7 @@ AWS S3, and S3 pre-signed URL backends via Spring Profile — without changing a
 
 ## Architecture
 
-```mermaid
-graph TD
-    Client["Application Code"] --> SI["StorageService (interface)"]
-    SI -->|"@Profile('local')"| LS["LocalStorageService\n(java.nio.file.Files)"]
-    SI -->|"@Profile('s3')"| S3["S3StorageService\n(S3Client + Floci/AWS)"]
-    SI -->|"@Profile('s3-presigned')"| SP["S3PresignedStorageService\n(S3Client + S3Presigner)"]
-    S3 --> FL["FlociServer\n(Testcontainers)"]
-    SP --> FL
-```
+![storage abstraction Architecture diagram](../../docs/images/readme-diagrams/aws-storage-abstraction-architecture-01.png)
 
 ## Key Features
 

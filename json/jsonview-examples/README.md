@@ -26,9 +26,9 @@ fun jsonMapper(): JsonMapper = JsonMapper.builder()
 fun jsonMapper(): JsonMapper = Jackson.defaultJsonMapper
 ```
 
-![JsonView in Spring Boot Demo diagram](../../docs/images/readme-diagrams/json-jsonview-examples-diagram-01.png)
+![Before / After diagram](../../docs/images/readme-diagrams/json-jsonview-examples-diagram-01.png)
 
-![JsonView in Spring Boot Demo diagram](../../docs/images/readme-diagrams/json-jsonview-examples-diagram-02.png)
+![Before / After diagram](../../docs/images/readme-diagrams/json-jsonview-examples-diagram-02.png)
 
 ## 주요 기능
 

@@ -7,13 +7,7 @@ Micrometer Observation + W3C 트레이스 전파를 보여주는 최소 Observab
 
 ## 아키텍처
 
-```mermaid
-graph TD
-    Client["HTTP 클라이언트"] --> Controller["GET /orders/{id}\nhttp.server.requests (자동)"]
-    Controller --> Service["OrderService.getOrder\norder.service.fetch (수동)"]
-    Service --> WebClient["WebClient → /inventory/{id}\nhttp.client.requests (자동)"]
-    WebClient --> MockServer["MockWebServer / InventoryService"]
-```
+![observability basic Architecture diagram](../../docs/images/readme-diagrams/observability-observability-basic-architecture-01.png)
 
 ## 스팬 트리
 

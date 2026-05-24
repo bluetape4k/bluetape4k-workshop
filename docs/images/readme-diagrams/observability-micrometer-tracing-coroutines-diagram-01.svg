@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1378" height="692" viewBox="0 0 1378 692" role="img" aria-label="micrometer tracing coroutines Architecture 2">
+<svg xmlns="http://www.w3.org/2000/svg" width="1910" height="1566" viewBox="0 0 1910 1566" role="img" aria-label="Trace Propagation Sequence">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
+  <marker id="openArrow" markerWidth="10" markerHeight="8" refX="8.5" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 8.5 4 L 1 7" fill="none" stroke="#758297" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  <marker id="inherit" markerWidth="11" markerHeight="10" refX="9.5" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 0.5 1 L 9.5 5 L 0.5 9 Z" fill="#ffffff" stroke="#758297" stroke-width="1.7"/></marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
     .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
@@ -20,65 +20,56 @@
     .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
   </style>
 </defs>
-<rect class="canvas" width="1378" height="692"/>
-<rect class="frame" x="32" y="28" width="1314" height="636" rx="28"/>
-<text class="title" x="66" y="82">micrometer tracing coroutines Architecture 2</text>
-<text class="subtitle" x="70" y="118">Architecture nodes and edges from the original Mermaid source</text>
-<path class="line" d="M856 446 C856 469 856 469 856 492"/>
-<path class="line" d="M706 386 C706 469 672 469 672 552"/>
-<path class="line" d="M1040 386 C1040 386 1006 386 1006 386"/>
-<path class="line" d="M672 386 C672 386 706 386 706 386"/>
-<path class="line" d="M338 386 C338 386 706 386 706 386"/>
-<path class="line" d="M1040 220 C1040 303 1006 303 1006 386"/>
-<path class="line" d="M706 220 C706 303 672 303 672 386"/>
-<path class="line" d="M372 220 C372 303 338 303 338 386"/>
-<path class="line" d="M338 220 C338 220 1040 220 1040 220"/>
-<g transform="translate(48,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">CoroutineController</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">/coroutine</text>
-</g>
-<g transform="translate(382,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">SyncController /sync</text>
-</g>
-<g transform="translate(716,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">ReactorController</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">/reactor</text>
-</g>
-<g transform="translate(1050,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="140" y="21" text-anchor="middle">CoroutineService</text>
-<text class="smallLabel" x="140" y="47" text-anchor="middle">with Observation</text>
-<text class="smallLabel" x="140" y="73" text-anchor="middle">Suspending</text>
-</g>
-<g transform="translate(48,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">SyncService</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">Observation.observe</text>
-</g>
-<g transform="translate(382,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">ReactorService</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">observe Mono/Flux</text>
-</g>
-<g transform="translate(716,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F7F1E7" stroke="#B88A44"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">ObservationRegistry</text>
-</g>
-<g transform="translate(1050,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EEF6D9" stroke="#8BA84D"/>
-  <text class="smallLabel" x="140" y="21" text-anchor="middle">ObservationConfig</text>
-<text class="smallLabel" x="140" y="47" text-anchor="middle">Tracing Observation</text>
-<text class="smallLabel" x="140" y="73" text-anchor="middle">Handler</text>
-</g>
-<g transform="translate(382,502)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">Span</text>
-</g>
-<g transform="translate(716,502)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">Micrometer</text>
-</g>
+<rect class="canvas" width="1910" height="1566"/>
+<rect class="frame" x="32" y="28" width="1846" height="1510" rx="28"/>
+<text class="title" x="66" y="82">Trace Propagation Sequence</text>
+<text class="subtitle" x="70" y="118">Sequence messages from the original Mermaid source</text>
+<rect class="card" x="-5" y="166" width="290" height="72" rx="20" fill="#E8F3FF" stroke="#5B8DEF"/>
+<text class="smallLabel" x="140" y="209" text-anchor="middle">Client</text>
+<line class="lifeline" x1="140" y1="252" x2="140" y2="1506" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
+<rect class="card" x="402.5" y="166" width="290" height="72" rx="20" fill="#EAF7EF" stroke="#58A978"/>
+<text class="smallLabel" x="547.5" y="209" text-anchor="middle">CoroutineController</text>
+<line class="lifeline" x1="547.5" y1="252" x2="547.5" y2="1506" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
+<rect class="card" x="810" y="166" width="290" height="72" rx="20" fill="#FFF3D9" stroke="#D6A441"/>
+<text class="smallLabel" x="955" y="209" text-anchor="middle">CoroutineService</text>
+<line class="lifeline" x1="955" y1="252" x2="955" y2="1506" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
+<rect class="card" x="1217.5" y="166" width="290" height="72" rx="20" fill="#FDECEF" stroke="#DC6B82"/>
+<text class="smallLabel" x="1362.5" y="209" text-anchor="middle">ObservationRegistry</text>
+<line class="lifeline" x1="1362.5" y1="252" x2="1362.5" y2="1506" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
+<rect class="card" x="1625" y="166" width="290" height="72" rx="20" fill="#E9F7F6" stroke="#45A7A1"/>
+<text class="smallLabel" x="1770" y="209" text-anchor="middle">Zipkin</text>
+<line class="lifeline" x1="1770" y1="252" x2="1770" y2="1506" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
+<rect x="228.75" y="286" width="230" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
+<text class="strong" x="246.75" y="313" text-anchor="start">1. GET /coroutine/todo/1</text>
+<path class="line" d="M140 344 L547.5 344"/>
+<rect x="804" y="396" width="302" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
+<text class="strong" x="822" y="423" text-anchor="start">2. create root span (HTTP server)</text>
+<path class="line" d="M547.5 454 L1362.5 454"/>
+<rect x="646.25" y="506" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
+<text class="strong" x="664.25" y="533" text-anchor="start">3. getTodo(1)</text>
+<path class="line" d="M547.5 564 L955 564"/>
+<rect x="963.25" y="616" width="391" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
+<text class="strong" x="981.25" y="643" text-anchor="start">4. withObservationSuspending(pre-processing)</text>
+<path class="line" d="M955 674 L1362.5 674"/>
+<rect x="1023.75" y="726" width="270" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
+<text class="strong" x="1041.75" y="753" text-anchor="start">5. pre-processing span closed</text>
+<path class="dashed" d="M1362.5 784 L955 784"/>
+<rect x="963.25" y="836" width="391" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
+<text class="strong" x="981.25" y="863" text-anchor="start">6. withObservationSuspending(get-todo-by-id)</text>
+<path class="line" d="M955 894 L1362.5 894"/>
+<rect x="1223.5" y="946" width="278" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
+<text class="strong" x="1241.5" y="973" text-anchor="start">7. (exported after span close)</text>
+<path class="line" d="M955 1004 L1770 1004"/>
+<rect x="1023.75" y="1056" width="270" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
+<text class="strong" x="1041.75" y="1083" text-anchor="start">8. get-todo-by-id span closed</text>
+<path class="dashed" d="M1362.5 1114 L955 1114"/>
+<rect x="959.25" y="1166" width="399" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
+<text class="strong" x="977.25" y="1193" text-anchor="start">9. withObservationSuspending(post-processing)</text>
+<path class="line" d="M955 1224 L1362.5 1224"/>
+<rect x="832" y="1276" width="246" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
+<text class="strong" x="850" y="1303" text-anchor="start">10. all child spans closed</text>
+<path class="dashed" d="M1362.5 1334 L547.5 1334"/>
+<rect x="236.75" y="1386" width="214" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
+<text class="strong" x="254.75" y="1413" text-anchor="start">11. 200 OK + Todo JSON</text>
+<path class="dashed" d="M547.5 1444 L140 1444"/>
 </svg>

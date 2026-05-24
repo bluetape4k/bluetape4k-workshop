@@ -20,16 +20,7 @@ bluetape4k의 `caffeine { }` DSL과 `VirtualThreadExecutor`로 로컬 인메모�
 
 ## 아키텍처
 
-```mermaid
-graph LR
-    Controller --> Repository
-    Repository -->|Cache HIT| CaffeineCache
-    Repository -->|Cache MISS| DB[(DB / Slow Source)]
-    DB --> CaffeineCache
-    CaffeineCache --> Repository
-
-    Prefetcher -->|warm-up| Repository
-```
+![cache caffeine Architecture diagram](../../docs/images/readme-diagrams/spring-boot-cache-caffeine-architecture-01.png)
 
 ## 주요 구성
 

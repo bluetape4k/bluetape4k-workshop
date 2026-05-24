@@ -33,9 +33,9 @@ flowchart TD
     end
 ```
 
-![micrometer tracing coroutines Sequence Flow diagram](../../docs/images/readme-diagrams/observability-micrometer-tracing-coroutines-sequence-01.png)
+![micrometer tracing coroutines Architecture diagram](../../docs/images/readme-diagrams/observability-micrometer-tracing-coroutines-sequence-01.png)
 
-![micrometer tracing coroutines Architecture 2 diagram](../../docs/images/readme-diagrams/observability-micrometer-tracing-coroutines-diagram-01.png)
+![micrometer tracing coroutines Sequence Flow 2 diagram](../../docs/images/readme-diagrams/observability-micrometer-tracing-coroutines-diagram-01.png)
 
 ## Key Components
 

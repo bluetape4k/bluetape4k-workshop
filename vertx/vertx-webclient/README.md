@@ -5,7 +5,7 @@ Spring의 WebClient와 비슷한 기능을 제공하지만, Reactor 를 사용�
 
 ## HTTP 요청 처리 흐름
 
-![HTTP Request Processing diagram](../../docs/images/readme-diagrams/vertx-vertx-webclient-sequence-01.png)
+![HTTP diagram](../../docs/images/readme-diagrams/vertx-vertx-webclient-sequence-01.png)
 
 ```mermaid
 sequenceDiagram

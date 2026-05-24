@@ -28,7 +28,7 @@
 
 ### Circuit Breaker 상태 전이
 
-![Circuit Breaker 다이어그램](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-diagram-01.png)
+![Circuit Breaker diagram](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-diagram-01.png)
 
 ```
   ┌────────┐  실패율 > 임계값  ┌────────┐

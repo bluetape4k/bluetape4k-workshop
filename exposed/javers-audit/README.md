@@ -4,19 +4,7 @@ JaVers entity change-history auditing integrated with JetBrains Exposed JDBC and
 
 ## Architecture
 
-```mermaid
-graph TD
-    Client["Client Code"] --> Service["ProductAuditService"]
-
-    Service -->|commit / compare| Javers["JaVers\n(in-memory repository)"]
-    Service -->|upsert / delete| Exposed["Exposed JDBC\n(H2 in-memory)"]
-
-    Javers -->|findSnapshots| Snapshots["CdoSnapshot list"]
-    Javers -->|getLatestSnapshot| Latest["CdoSnapshot (latest)"]
-    Javers -->|compare| Diff["Diff (ValueChange list)"]
-
-    Exposed --> DB["H2 ProductTable"]
-```
+![javers audit Architecture diagram](../../docs/images/readme-diagrams/exposed-javers-audit-architecture-01.png)
 
 ## Core Features
 
