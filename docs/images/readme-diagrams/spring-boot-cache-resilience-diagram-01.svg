@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1378 720" width="1378" height="720">
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%">
+      <feDropShadow dx="3" dy="3" stdDeviation="4" flood-color="#00000022"/>
+    </filter>
+    <style>
+      .title { font-family: 'Architects Daughter', cursive; font-size: 26px; fill: #2d3748; }
+      .label { font-family: 'Comic Sans MS', cursive; font-size: 13px; fill: #4a5568; }
+      .label-sm { font-family: 'Comic Sans MS', cursive; font-size: 11px; fill: #718096; }
+      .label-bold { font-family: 'Comic Sans MS', cursive; font-size: 13px; fill: #2d3748; font-weight: bold; }
+      .state-label { font-family: 'Comic Sans MS', cursive; font-size: 12px; fill: #ffffff; font-weight: bold; }
+      .arrow { stroke: #4a5568; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+      .arrow-success { stroke: #38a169; stroke-width: 2; fill: none; marker-end: url(#arrowhead-green); }
+      .arrow-failure { stroke: #e53e3e; stroke-width: 2; fill: none; marker-end: url(#arrowhead-red); }
+      .arrow-fallback { stroke: #ed8936; stroke-width: 2; fill: none; stroke-dasharray: 6,3; marker-end: url(#arrowhead-orange); }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4a5568"/>
+    </marker>
+    <marker id="arrowhead-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#38a169"/>
+    </marker>
+    <marker id="arrowhead-red" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#e53e3e"/>
+    </marker>
+    <marker id="arrowhead-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#ed8936"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1378" height="720" fill="#f6f8fb" rx="12"/>
+
+  <!-- Title -->
+  <text x="689" y="44" class="title" text-anchor="middle">Spring Boot Cache Resilience — CircuitBreaker + Caffeine Fallback</text>
+
+  <!-- ── Row 1: Client / Service / CB ───────────────────────────── -->
+
+  <!-- Client box -->
+  <rect x="40" y="80" width="140" height="64" rx="10" fill="#bee3f8" filter="url(#shadow)"/>
+  <text x="110" y="108" class="label-bold" text-anchor="middle">Client</text>
+  <text x="110" y="126" class="label-sm" text-anchor="middle">HTTP / test</text>
+
+  <!-- ResilientProductService box -->
+  <rect x="240" y="80" width="200" height="64" rx="10" fill="#fef3c7" filter="url(#shadow)"/>
+  <text x="340" y="104" class="label-bold" text-anchor="middle">ResilientProduct</text>
+  <text x="340" y="120" class="label-bold" text-anchor="middle">Service</text>
+  <text x="340" y="136" class="label-sm" text-anchor="middle">SuspendDecorators</text>
+
+  <!-- Circuit Breaker box -->
+  <rect x="500" y="80" width="180" height="64" rx="10" fill="#e9d8fd" filter="url(#shadow)"/>
+  <text x="590" y="104" class="label-bold" text-anchor="middle">Circuit</text>
+  <text x="590" y="120" class="label-bold" text-anchor="middle">Breaker</text>
+  <text x="590" y="136" class="label-sm" text-anchor="middle">bluetape4k-resilience4j</text>
+
+  <!-- Redis box -->
+  <rect x="750" y="80" width="150" height="64" rx="10" fill="#c6f6d5" filter="url(#shadow)"/>
+  <text x="825" y="108" class="label-bold" text-anchor="middle">Redis</text>
+  <text x="825" y="126" class="label-sm" text-anchor="middle">Primary cache</text>
+
+  <!-- Caffeine box -->
+  <rect x="750" y="200" width="150" height="64" rx="10" fill="#fed7aa" filter="url(#shadow)"/>
+  <text x="825" y="228" class="label-bold" text-anchor="middle">Caffeine</text>
+  <text x="825" y="246" class="label-sm" text-anchor="middle">Local fallback</text>
+
+  <!-- Arrows Row 1 -->
+  <line x1="180" y1="112" x2="238" y2="112" class="arrow"/>
+  <line x1="440" y1="112" x2="498" y2="112" class="arrow"/>
+  <line x1="680" y1="100" x2="748" y2="100" class="arrow-success"/>
+  <text x="714" y="93" class="label-sm" text-anchor="middle" fill="#38a169">CLOSED</text>
+  <!-- Fallback arrow CB → Caffeine -->
+  <path d="M590 144 Q590 232 748 232" class="arrow-fallback"/>
+  <text x="660" y="215" class="label-sm" fill="#ed8936">OPEN → fallback</text>
+
+  <!-- ── CB State Machine ──────────────────────────────────────── -->
+  <rect x="40" y="310" width="1300" height="350" rx="12" fill="#f7f9fc" stroke="#cbd5e0" stroke-width="1.5"/>
+  <text x="690" y="338" class="label-bold" text-anchor="middle" font-size="15" fill="#4a5568">CircuitBreaker State Machine (redis-cache instance)</text>
+
+  <!-- State: CLOSED -->
+  <circle cx="200" cy="470" r="68" fill="#38a169" filter="url(#shadow)"/>
+  <text x="200" y="465" class="state-label" text-anchor="middle" font-size="15">CLOSED</text>
+  <text x="200" y="483" class="state-label" text-anchor="middle" font-size="11">Redis ✓</text>
+
+  <!-- State: OPEN -->
+  <circle cx="590" cy="470" r="68" fill="#e53e3e" filter="url(#shadow)"/>
+  <text x="590" y="465" class="state-label" text-anchor="middle" font-size="15">OPEN</text>
+  <text x="590" y="483" class="state-label" text-anchor="middle" font-size="11">Caffeine fallback</text>
+
+  <!-- State: HALF-OPEN -->
+  <circle cx="980" cy="470" r="68" fill="#ed8936" filter="url(#shadow)"/>
+  <text x="980" y="465" class="state-label" text-anchor="middle" font-size="15">HALF-OPEN</text>
+  <text x="980" y="483" class="state-label" text-anchor="middle" font-size="11">probe Redis</text>
+
+  <!-- CLOSED → OPEN -->
+  <path d="M265 450 Q427 400 520 450" class="arrow-failure"/>
+  <text x="390" y="408" class="label-sm" text-anchor="middle" fill="#e53e3e">failures ≥ 60%</text>
+  <text x="390" y="421" class="label-sm" text-anchor="middle" fill="#e53e3e">(min 3 of 5 calls)</text>
+
+  <!-- OPEN → HALF-OPEN -->
+  <path d="M655 450 Q817 400 912 450" class="arrow"/>
+  <text x="784" y="408" class="label-sm" text-anchor="middle" fill="#4a5568">wait 5 s elapsed</text>
+  <text x="784" y="421" class="label-sm" text-anchor="middle" fill="#718096">auto-transition</text>
+
+  <!-- HALF-OPEN → CLOSED (success) -->
+  <path d="M950 540 Q590 610 230 540" class="arrow-success"/>
+  <text x="590" y="635" class="label-sm" text-anchor="middle" fill="#38a169">probe succeeded (2 calls)</text>
+
+  <!-- HALF-OPEN → OPEN (failure) -->
+  <path d="M915 510 Q755 560 655 510" class="arrow-failure"/>
+  <text x="784" y="570" class="label-sm" text-anchor="middle" fill="#e53e3e">probe failed → re-open</text>
+
+  <!-- ── ToxiproxyServer section ──────────────────────────────── -->
+  <rect x="1050" y="80" width="290" height="200" rx="10" fill="#ebf4ff" stroke="#90cdf4" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="1195" y="106" class="label-bold" text-anchor="middle" font-size="14">ToxiproxyServer</text>
+  <text x="1195" y="122" class="label-sm" text-anchor="middle">bluetape4k-testcontainers</text>
+
+  <rect x="1070" y="135" width="250" height="42" rx="6" fill="#fed7aa"/>
+  <text x="1195" y="155" class="label-sm" text-anchor="middle" fill="#7b341e">limitData(0) toxic</text>
+  <text x="1195" y="169" class="label-sm" text-anchor="middle" fill="#7b341e">→ cuts Redis connection</text>
+
+  <rect x="1070" y="187" width="250" height="42" rx="6" fill="#c6f6d5"/>
+  <text x="1195" y="207" class="label-sm" text-anchor="middle" fill="#276749">toxic.remove()</text>
+  <text x="1195" y="221" class="label-sm" text-anchor="middle" fill="#276749">→ Redis recovers</text>
+
+  <!-- Toxiproxy → Redis arrow -->
+  <path d="M1050 112 Q920 112 902 112" class="arrow-failure" stroke-dasharray="5,3"/>
+  <text x="978" y="103" class="label-sm" text-anchor="middle" fill="#e53e3e">inject failure</text>
+
+  <!-- Legend -->
+  <rect x="40" y="680" width="1300" height="28" rx="6" fill="#edf2f7"/>
+  <line x1="60" y1="694" x2="100" y2="694" stroke="#38a169" stroke-width="2"/>
+  <polygon points="97,691 104,694 97,697" fill="#38a169"/>
+  <text x="108" y="698" class="label-sm">success / CLOSED</text>
+  <line x1="220" y1="694" x2="260" y2="694" stroke="#e53e3e" stroke-width="2"/>
+  <polygon points="257,691 264,694 257,697" fill="#e53e3e"/>
+  <text x="268" y="698" class="label-sm">failure / OPEN</text>
+  <line x1="360" y1="694" x2="400" y2="694" stroke="#ed8936" stroke-width="2" stroke-dasharray="5,3"/>
+  <polygon points="397,691 404,694 397,697" fill="#ed8936"/>
+  <text x="408" y="698" class="label-sm">fallback (Caffeine)</text>
+  <text x="700" y="698" class="label-sm" text-anchor="middle">Config: slidingWindowSize=5, minimumCalls=3, failureRate=60%, waitOpen=5s, halfOpenPermitted=2</text>
+</svg>
