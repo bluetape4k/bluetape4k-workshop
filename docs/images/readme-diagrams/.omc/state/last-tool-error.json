@@ -1,7 +1,0 @@
-{
-  "tool_name": "Read",
-  "tool_input_preview": "{\"file_path\":\"/Users/debop/.claude/projects/-Users-debop-work-bluetape4k-bluetape4k-workshop/0e1c1450-c0fa-4b00-82ec-83ecf7b458a1.jsonl\",\"offset\":0,\"limit\":100}",
-  "error": "File content (68995 tokens) exceeds maximum allowed tokens (25000). Use offset and limit parameters to read specific portions of the file, or search for specific content instead of reading the whole file.",
-  "timestamp": "2026-05-24T11:25:24.359Z",
-  "retry_count": 4
-}
