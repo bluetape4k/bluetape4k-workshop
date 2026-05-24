@@ -1,66 +1,102 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="1366" viewBox="0 0 1480 1366" role="img" aria-label="Protobuf">
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="520" viewBox="0 0 960 520" role="img" aria-label="Protobuf encoding/decoding sequence through Spring MVC">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
+  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
+  </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
     .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
     .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
     .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
+    .card{stroke-width:2.1;filter:url(#shadow)}
+    .lifeline{stroke:#b0bbca;stroke-width:1.5;stroke-dasharray:6 4;fill:none}
+    .reqArrow{stroke:#5B8DEF;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
+    .rspArrow{stroke:#45A7A1;stroke-width:2.1;stroke-dasharray:7 4;fill:none;marker-end:url(#arrow)}
+    .msgLabel{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;fill:#102033}
   </style>
 </defs>
-<rect class="canvas" width="1480" height="1366"/>
-<rect class="frame" x="32" y="28" width="1416" height="1310" rx="28"/>
-<text class="title" x="66" y="82">Protobuf Serialization Flow</text>
-<text class="subtitle" x="70" y="118">Spring MVC · ProtobufHttpMessageConverter · Kotlin ↔ .proto encoding</text>
-<rect class="card" x="8" y="166" width="264" height="72" rx="20" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="140" y="209" text-anchor="middle">CourseConfig</text>
-<line class="lifeline" x1="140" y1="252" x2="140" y2="1306" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="408" y="166" width="264" height="72" rx="20" fill="#EAF7EF" stroke="#58A978"/>
-<text class="smallLabel" x="540" y="209" text-anchor="middle">CourseController</text>
-<line class="lifeline" x1="540" y1="252" x2="540" y2="1306" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="808" y="166" width="264" height="72" rx="20" fill="#FFF3D9" stroke="#D6A441"/>
-<text class="smallLabel" x="940" y="209" text-anchor="middle">ProtobufConverter</text>
-<line class="lifeline" x1="940" y1="252" x2="940" y2="1306" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="1208" y="166" width="264" height="72" rx="20" fill="#FDECEF" stroke="#DC6B82"/>
-<text class="smallLabel" x="1340" y="209" text-anchor="middle">CourseRepository</text>
-<line class="lifeline" x1="1340" y1="252" x2="1340" y2="1306" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect x="835" y="286" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="853" y="313" text-anchor="start">2. findAll()</text>
-<path class="line" d="M540 344 L1340 344"/>
-<rect x="821" y="396" width="238" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="839" y="423" text-anchor="start">3. List&lt;Course&gt; (Kotlin )</text>
-<path class="dashed" d="M1340 454 L540 454"/>
-<rect x="635" y="506" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="653" y="533" text-anchor="start">4. toProto(Course)</text>
-<path class="line" d="M540 564 L940 564"/>
-<rect x="883" y="616" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="901" y="643" text-anchor="start">5. Kotlin → .proto</text>
-<path class="line" d="M940 674 C1004 674 1004 708 940 708"/>
-<rect x="635" y="746" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="653" y="773" text-anchor="start">6. CourseProto</text>
-<path class="dashed" d="M940 804 L540 804"/>
-<rect x="197" y="856" width="286" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="215" y="883" text-anchor="start">7. ProtobufHttpMessageConverter</text>
-<path class="line" d="M540 914 L140 914"/>
-<rect x="617" y="966" width="246" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="635" y="993" text-anchor="start">10. fromProto(CourseProto)</text>
-<path class="line" d="M540 1024 L940 1024"/>
-<rect x="635" y="1076" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="653" y="1103" text-anchor="start">11. Course</text>
-<path class="dashed" d="M940 1134 L540 1134"/>
-<rect x="835" y="1186" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="853" y="1213" text-anchor="start">12. save(course)</text>
-<path class="line" d="M540 1244 L1340 1244"/>
+<rect class="canvas" width="960" height="520"/>
+<rect class="frame" x="24" y="20" width="912" height="480" rx="22"/>
+
+<!-- Title -->
+<text class="title" x="48" y="66">Protobuf Serialization via Spring MVC</text>
+<text class="subtitle" x="52" y="88">CourseConfig → CourseController → ProtobufConverter → CourseRepository</text>
+
+<!-- Participants cx: 90, 260, 460, 660, 860 -->
+<!-- Client -->
+<g transform="translate(34,104)">
+  <rect class="card" x="0" y="0" width="112" height="68" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="smallLabel" x="56" y="28" text-anchor="middle">HTTP</text>
+  <text class="smallLabel" x="56" y="52" text-anchor="middle">Client</text>
+  <text class="small" x="56" y="66" text-anchor="middle">protobuf accept</text>
+</g>
+<!-- CourseController -->
+<g transform="translate(200,104)">
+  <rect class="card" x="0" y="0" width="120" height="68" rx="12" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="smallLabel" x="60" y="28" text-anchor="middle">Course</text>
+  <text class="smallLabel" x="60" y="52" text-anchor="middle">Controller</text>
+</g>
+<!-- ProtobufConverter -->
+<g transform="translate(400,104)">
+  <rect class="card" x="0" y="0" width="140" height="68" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="smallLabel" x="70" y="26" text-anchor="middle">Protobuf</text>
+  <text class="smallLabel" x="70" y="50" text-anchor="middle">Converter</text>
+  <text class="small" x="70" y="66" text-anchor="middle">Kotlin ↔ .proto</text>
+</g>
+<!-- ProtobufHttpMessageConverter -->
+<g transform="translate(606,104)">
+  <rect class="card" x="0" y="0" width="140" height="68" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="smallLabel" x="70" y="26" text-anchor="middle">Protobuf</text>
+  <text class="smallLabel" x="70" y="50" text-anchor="middle">MsgConverter</text>
+  <text class="small" x="70" y="66" text-anchor="middle">Spring</text>
+</g>
+<!-- CourseRepository -->
+<g transform="translate(808,104)">
+  <rect class="card" x="0" y="0" width="128" height="68" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
+  <text class="smallLabel" x="64" y="26" text-anchor="middle">Course</text>
+  <text class="smallLabel" x="64" y="50" text-anchor="middle">Repository</text>
+</g>
+
+<!-- Lifelines cx: 90, 260, 470, 676, 872 -->
+<line class="lifeline" x1="90" y1="172" x2="90" y2="490"/>
+<line class="lifeline" x1="260" y1="172" x2="260" y2="490"/>
+<line class="lifeline" x1="470" y1="172" x2="470" y2="490"/>
+<line class="lifeline" x1="676" y1="172" x2="676" y2="490"/>
+<line class="lifeline" x1="872" y1="172" x2="872" y2="490"/>
+
+<!-- Step 1: GET /courses (Accept: application/x-protobuf) -->
+<text class="msgLabel" x="48" y="206">1. GET /courses (Accept: application/x-protobuf)</text>
+<path class="reqArrow" d="M90,210 L252,210"/>
+
+<!-- Step 2: Controller → Repository: findAll() -->
+<text class="msgLabel" x="272" y="242">2. findAll()</text>
+<path class="reqArrow" d="M260,246 L864,246"/>
+
+<!-- Step 3: Repository returns List<Course> Kotlin -->
+<text class="msgLabel" x="272" y="278">3. List&lt;Course&gt; (Kotlin)</text>
+<path class="rspArrow" d="M864,282 L268,282"/>
+
+<!-- Step 4: Controller → ProtobufConverter: toProto -->
+<text class="msgLabel" x="272" y="314">4. toProto(Course) → CourseProto</text>
+<path class="reqArrow" d="M260,318 L462,318"/>
+
+<!-- Step 5: ProtobufConverter self-loop: Kotlin → .proto -->
+<text class="msgLabel" x="484" y="350">5. Kotlin → .proto encode</text>
+<path class="reqArrow" d="M470,354 C530,354 530,374 470,374"/>
+
+<!-- Step 6: ProtobufConverter → HttpMessageConverter: write binary -->
+<text class="msgLabel" x="484" y="406">6. ProtobufHttpMessageConverter.write()</text>
+<path class="reqArrow" d="M470,410 L668,410"/>
+
+<!-- Step 7: HttpMessageConverter returns response to Client -->
+<text class="msgLabel" x="48" y="442">7. 200 OK (application/x-protobuf binary)</text>
+<path class="rspArrow" d="M668,446 L98,446"/>
+
+<!-- Step 8: POST /courses with protobuf body: decode -->
+<text class="msgLabel" x="48" y="478">8. POST /courses → fromProto() → save(course)</text>
+<path class="reqArrow" d="M90,482 L252,482"/>
+<path class="reqArrow" d="M260,482 L864,482"/>
 </svg>

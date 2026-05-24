@@ -1,30 +1,84 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="560" viewBox="0 0 1040 560" role="img" aria-label="elasticsearch Sequence Flow 2">
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="480" viewBox="0 0 960 480" role="img" aria-label="Elasticsearch CRUD and Search Sequence">
 <defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <marker id="arrowBlue" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth"><path d="M1,1 L8,4.5 L1,8 Z" fill="#5B8DEF"/></marker>
+  <marker id="arrowTeal" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth"><path d="M1,1 L8,4.5 L1,8 Z" fill="#45A7A1"/></marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
     .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
-    .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
     .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
+    .card{stroke-width:2.1;filter:url(#shadow)}
+    .lifeline{stroke:#b0bbca;stroke-width:1.5;stroke-dasharray:6 4;fill:none}
+    .reqArrow{stroke:#5B8DEF;stroke-width:2.1;fill:none;marker-end:url(#arrowBlue)}
+    .rspArrow{stroke:#45A7A1;stroke-width:2.1;stroke-dasharray:7 4;fill:none;marker-end:url(#arrowTeal)}
   </style>
 </defs>
-<rect class="canvas" width="1040" height="560"/>
-<rect class="frame" x="32" y="28" width="976" height="504" rx="28"/>
-<text class="title" x="66" y="82">Elasticsearch Query Flow</text>
-<text class="subtitle" x="70" y="118">Spring Data Elasticsearch · ReactiveConferenceRepository · Flux streaming</text>
-<rect class="card" x="405" y="166" width="230" height="72" rx="20" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="520" y="209" text-anchor="middle">Elasticsearch</text>
-<line class="lifeline" x1="520" y1="252" x2="520" y2="500" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
+<rect class="canvas" width="960" height="480"/>
+<rect class="frame" x="24" y="20" width="912" height="436" rx="16"/>
+<text class="title" x="48" y="66">Elasticsearch CRUD + Search Sequence</text>
+<text class="subtitle" x="48" y="90">ConferenceRepository · ReactiveConferenceRepository → Elasticsearch Testcontainers</text>
+
+<!-- Participants -->
+<rect class="card" x="40" y="108" width="110" height="44" rx="8" fill="#FDECEF" stroke="#DC6B82"/>
+<text class="smallLabel" x="95" y="135" text-anchor="middle">Test</text>
+
+<rect class="card" x="200" y="108" width="165" height="44" rx="8" fill="#E8F3FF" stroke="#5B8DEF"/>
+<text class="smallLabel" x="282" y="135" text-anchor="middle">ConferenceRepo</text>
+
+<rect class="card" x="430" y="108" width="165" height="44" rx="8" fill="#EAF7EF" stroke="#58A978"/>
+<text class="smallLabel" x="512" y="135" text-anchor="middle">ReactiveConferenceRepo</text>
+
+<rect class="card" x="670" y="108" width="180" height="44" rx="8" fill="#E9F7F6" stroke="#45A7A1"/>
+<text class="smallLabel" x="760" y="135" text-anchor="middle">Elasticsearch</text>
+
+<!-- Lifelines -->
+<line class="lifeline" x1="95" y1="152" x2="95" y2="440"/>
+<line class="lifeline" x1="282" y1="152" x2="282" y2="440"/>
+<line class="lifeline" x1="512" y1="152" x2="512" y2="440"/>
+<line class="lifeline" x1="760" y1="152" x2="760" y2="440"/>
+
+<!-- 1. save(conference) -->
+<rect fill="#EAF7EF" stroke="#58A978" stroke-width="1.2" x="40" y="172" width="110" height="22" rx="4"/>
+<text class="small" x="95" y="187" text-anchor="middle">1. save(conference)</text>
+<line class="reqArrow" x1="150" y1="183" x2="274" y2="183"/>
+
+<!-- 2. index document -->
+<rect fill="#E8F3FF" stroke="#5B8DEF" stroke-width="1.2" x="200" y="204" width="130" height="22" rx="4"/>
+<text class="small" x="265" y="219" text-anchor="middle">2. index document</text>
+<line class="reqArrow" x1="282" y1="215" x2="752" y2="215"/>
+
+<!-- 3. Conference indexed -->
+<rect fill="#f0faf8" stroke="#45A7A1" stroke-width="1.2" x="40" y="236" width="110" height="22" rx="4"/>
+<text class="small" x="95" y="251" text-anchor="middle">3. indexed</text>
+<line class="rspArrow" x1="752" y1="247" x2="150" y2="247"/>
+
+<!-- 4. findByKeyword() reactive -->
+<rect fill="#EAF7EF" stroke="#58A978" stroke-width="1.2" x="40" y="278" width="120" height="22" rx="4"/>
+<text class="small" x="100" y="293" text-anchor="middle">4. findByKeyword()</text>
+<line class="reqArrow" x1="160" y1="289" x2="504" y2="289"/>
+
+<!-- 5. search query (reactive) -->
+<rect fill="#EAF7EF" stroke="#58A978" stroke-width="1.2" x="430" y="310" width="140" height="22" rx="4"/>
+<text class="small" x="500" y="325" text-anchor="middle">5. search query</text>
+<line class="reqArrow" x1="512" y1="321" x2="752" y2="321"/>
+
+<!-- 6. Flux~Conference~ -->
+<rect fill="#f0f4ff" stroke="#5B8DEF" stroke-width="1.2" x="40" y="342" width="120" height="22" rx="4"/>
+<text class="small" x="100" y="357" text-anchor="middle">6. Flux~Conference~</text>
+<line class="rspArrow" x1="752" y1="353" x2="160" y2="353"/>
+
+<!-- 7. findByName() blocking -->
+<rect fill="#E8F3FF" stroke="#5B8DEF" stroke-width="1.2" x="40" y="384" width="110" height="22" rx="4"/>
+<text class="small" x="95" y="399" text-anchor="middle">7. findByName()</text>
+<line class="reqArrow" x1="150" y1="395" x2="274" y2="395"/>
+
+<!-- 8. search query -->
+<rect fill="#E8F3FF" stroke="#5B8DEF" stroke-width="1.2" x="200" y="416" width="130" height="22" rx="4"/>
+<text class="small" x="265" y="431" text-anchor="middle">8. search query</text>
+<line class="reqArrow" x1="282" y1="427" x2="752" y2="427"/>
+
+<!-- response -->
+<line class="rspArrow" x1="752" y1="443" x2="150" y2="443"/>
 </svg>

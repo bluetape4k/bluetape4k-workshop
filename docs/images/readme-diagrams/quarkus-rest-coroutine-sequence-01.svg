@@ -1,60 +1,79 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1288" height="1146" viewBox="0 0 1288 1146" role="img" aria-label="Quarkus REST Coroutine Sequence Flow">
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="500" viewBox="0 0 960 500" role="img" aria-label="Quarkus REST Coroutine Sequence">
 <defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.09"/></filter>
+  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
+  </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
     .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
     .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
     .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
+    .card{stroke-width:2.1;filter:url(#shadow)}
+    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
+    .lifeline{stroke:#b0bbca;stroke-width:1.5;stroke-dasharray:6 4;fill:none}
+    .reqArrow{stroke:#5B8DEF;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
+    .rspArrow{stroke:#45A7A1;stroke-width:2.1;stroke-dasharray:7 4;fill:none;marker-end:url(#arrow)}
+    .msgLabel{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;fill:#102033}
   </style>
 </defs>
-<rect class="canvas" width="1288" height="1146"/>
-<rect class="frame" x="32" y="28" width="1224" height="1090" rx="28"/>
-<text class="title" x="66" y="82">Quarkus REST Coroutine Sequence Flow</text>
-<text class="subtitle" x="70" y="118">GreetingCoroutineResource · GreetingCoroutineService · GreetingCoroutineClient</text>
-<rect class="card" x="-10" y="166" width="300" height="72" rx="20" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="140" y="198.5" text-anchor="middle">Greeting Coroutine</text>
-<text class="smallLabel" x="140" y="219.5" text-anchor="middle">Resource</text>
-<line class="lifeline" x1="140" y1="252" x2="140" y2="1086" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="494" y="166" width="300" height="72" rx="20" fill="#EAF7EF" stroke="#58A978"/>
-<text class="smallLabel" x="644" y="198.5" text-anchor="middle">Greeting Coroutine</text>
-<text class="smallLabel" x="644" y="219.5" text-anchor="middle">Service</text>
-<line class="lifeline" x1="644" y1="252" x2="644" y2="1086" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="998" y="166" width="300" height="72" rx="20" fill="#FFF3D9" stroke="#D6A441"/>
-<text class="smallLabel" x="1148" y="198.5" text-anchor="middle">Greeting Coroutine</text>
-<text class="smallLabel" x="1148" y="219.5" text-anchor="middle">Client</text>
-<line class="lifeline" x1="1148" y1="252" x2="1148" y2="1086" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect x="83" y="286" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="101" y="313" text-anchor="start">2. suspend hello()</text>
-<path class="line" d="M140 344 C204 344 204 378 140 378"/>
-<rect x="287" y="416" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="305" y="443" text-anchor="start">5. greeting(name)</text>
-<path class="line" d="M140 474 L644 474"/>
-<rect x="287" y="526" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="305" y="553" text-anchor="start">6. Greeting</text>
-<path class="dashed" d="M644 584 L140 584"/>
-<rect x="273" y="636" width="238" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="291" y="663" text-anchor="start">9. greetings(count, name)</text>
-<path class="line" d="M140 694 L644 694"/>
-<rect x="287" y="746" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="305" y="773" text-anchor="start">10. Flow&lt;Greeting&gt;</text>
-<path class="dashed" d="M644 804 L140 804"/>
-<rect x="539" y="856" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="557" y="883" text-anchor="start">13. hello() ( )</text>
-<path class="line" d="M140 914 L1148 914"/>
-<rect x="539" y="966" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="557" y="993" text-anchor="start">14. Flow&lt;String&gt;</text>
-<path class="dashed" d="M1148 1024 L140 1024"/>
+<rect class="canvas" width="960" height="500"/>
+<rect class="frame" x="24" y="20" width="912" height="456" rx="20"/>
+
+<!-- Title -->
+<text class="title" x="48" y="66">Quarkus REST + Coroutines Sequence</text>
+<text class="subtitle" x="48" y="90">RESTEasy Reactive · suspend fun · withContext(IO) · Coroutine dispatcher</text>
+
+<!-- Participants: Client=110, CoroutineResource=310, Service=530, Database=770 -->
+<rect class="card" x="26" y="108" width="168" height="56" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
+<text class="smallLabel" x="110" y="139" text-anchor="middle">Client</text>
+
+<rect class="card" x="226" y="108" width="168" height="56" rx="12" fill="#EAF7EF" stroke="#58A978"/>
+<text class="smallLabel" x="310" y="132" text-anchor="middle">Coroutine</text>
+<text class="small" x="310" y="151" text-anchor="middle">Resource</text>
+
+<rect class="card" x="446" y="108" width="168" height="56" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
+<text class="smallLabel" x="530" y="132" text-anchor="middle">Service</text>
+<text class="small" x="530" y="151" text-anchor="middle">suspend fun</text>
+
+<rect class="card" x="686" y="108" width="168" height="56" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
+<text class="smallLabel" x="770" y="132" text-anchor="middle">Database</text>
+<text class="small" x="770" y="151" text-anchor="middle">Reactive driver</text>
+
+<!-- Lifelines -->
+<line class="lifeline" x1="110" y1="164" x2="110" y2="490"/>
+<line class="lifeline" x1="310" y1="164" x2="310" y2="490"/>
+<line class="lifeline" x1="530" y1="164" x2="530" y2="490"/>
+<line class="lifeline" x1="770" y1="164" x2="770" y2="490"/>
+
+<!-- Messages -->
+<!-- 1: GET /resource/{id} -->
+<text class="msgLabel" x="113" y="202" fill="#5B8DEF">① GET /resource/{id}</text>
+<path class="reqArrow" d="M110 212 L310 212"/>
+
+<!-- 2: suspend fun get(id) -->
+<text class="msgLabel" x="313" y="242" fill="#5B8DEF">② suspend fun get(id)</text>
+<path class="reqArrow" d="M310 252 L530 252"/>
+
+<!-- 3: withContext(IO) → query -->
+<text class="msgLabel" x="533" y="282" fill="#5B8DEF">③ withContext(Dispatchers.IO) → query</text>
+<path class="reqArrow" d="M530 292 L770 292"/>
+
+<!-- 4: result row -->
+<text class="msgLabel" x="533" y="332" fill="#45A7A1">④ ResultSet / entity row</text>
+<path class="rspArrow" d="M770 342 L530 342"/>
+
+<!-- 4b: suspend completes -->
+<text class="msgLabel" x="313" y="372" fill="#45A7A1">⑤ suspend completes → dto</text>
+<path class="rspArrow" d="M530 382 L310 382"/>
+
+<!-- 5: 200 OK JSON -->
+<text class="msgLabel" x="113" y="412" fill="#45A7A1">⑥ 200 OK with JSON response</text>
+<path class="rspArrow" d="M310 422 L110 422"/>
+
+<!-- Note: coroutine context -->
+<rect x="36" y="448" width="886" height="32" rx="8" fill="#F1ECFF" opacity="0.7"/>
+<text class="small" x="479" y="469" text-anchor="middle">Quarkus coroutine dispatcher switches threads transparently · no blocking · reactive I/O throughout</text>
 </svg>

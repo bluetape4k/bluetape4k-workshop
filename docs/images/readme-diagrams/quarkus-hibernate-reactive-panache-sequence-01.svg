@@ -1,75 +1,93 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1780" height="1566" viewBox="0 0 1780 1566" role="img" aria-label="Quarkus Hibernate Reactive Panache Sequence Flow">
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="520" viewBox="0 0 1040 520" role="img" aria-label="Quarkus Hibernate Reactive Panache Sequence">
 <defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.09"/></filter>
+  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
+  </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
     .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
     .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
     .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
+    .card{stroke-width:2.1;filter:url(#shadow)}
+    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
+    .lifeline{stroke:#b0bbca;stroke-width:1.5;stroke-dasharray:6 4;fill:none}
+    .reqArrow{stroke:#5B8DEF;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
+    .rspArrow{stroke:#45A7A1;stroke-width:2.1;stroke-dasharray:7 4;fill:none;marker-end:url(#arrow)}
+    .msgLabel{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;fill:#102033}
+    .sectionLabel{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:14px;fill:#8A72D6}
   </style>
 </defs>
-<rect class="canvas" width="1780" height="1566"/>
-<rect class="frame" x="32" y="28" width="1716" height="1510" rx="28"/>
-<text class="title" x="66" y="82">Quarkus Hibernate Reactive Panache Sequence Flow</text>
-<text class="subtitle" x="70" y="118">FruitResource · FruitRepository · Hibernate Reactive · PostgreSQL</text>
-<rect class="card" x="8" y="166" width="264" height="72" rx="20" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="140" y="209" text-anchor="middle">FruitResource</text>
-<line class="lifeline" x1="140" y1="252" x2="140" y2="1506" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="383" y="166" width="264" height="72" rx="20" fill="#EAF7EF" stroke="#58A978"/>
-<text class="smallLabel" x="515" y="209" text-anchor="middle">FruitRepository</text>
-<line class="lifeline" x1="515" y1="252" x2="515" y2="1506" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="758" y="166" width="264" height="72" rx="20" fill="#FFF3D9" stroke="#D6A441"/>
-<text class="smallLabel" x="890" y="209" text-anchor="middle">Hibernate</text>
-<line class="lifeline" x1="890" y1="252" x2="890" y2="1506" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="1133" y="166" width="264" height="72" rx="20" fill="#FDECEF" stroke="#DC6B82"/>
-<text class="smallLabel" x="1265" y="209" text-anchor="middle">PostgreSQL</text>
-<line class="lifeline" x1="1265" y1="252" x2="1265" y2="1506" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="1508" y="166" width="264" height="72" rx="20" fill="#E9F7F6" stroke="#45A7A1"/>
-<text class="smallLabel" x="1640" y="209" text-anchor="middle">HibernateReactive</text>
-<line class="lifeline" x1="1640" y1="252" x2="1640" y2="1506" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect x="222.5" y="286" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="240.5" y="313" text-anchor="start">2. listAll()</text>
-<path class="line" d="M140 344 L515 344"/>
-<rect x="972.5" y="396" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="990.5" y="423" text-anchor="start">3. find all</text>
-<path class="line" d="M515 454 L1640 454"/>
-<rect x="1345.5" y="506" width="214" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="1363.5" y="533" text-anchor="start">4. SELECT * FROM Fruit</text>
-<path class="line" d="M1640 564 L1265 564"/>
-<rect x="1347.5" y="616" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="1365.5" y="643" text-anchor="start">5. ResultSet</text>
-<path class="dashed" d="M1265 674 L1640 674"/>
-<rect x="972.5" y="726" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="990.5" y="753" text-anchor="start">6. Uni&lt;List&lt;Fruit&gt;&gt;</text>
-<path class="dashed" d="M1640 784 L515 784"/>
-<rect x="222.5" y="836" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="240.5" y="863" text-anchor="start">7. Uni&lt;List&lt;Fruit&gt;&gt;</text>
-<path class="dashed" d="M515 894 L140 894"/>
-<rect x="222.5" y="946" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="240.5" y="973" text-anchor="start">10. persist(fruit)</text>
-<path class="line" d="M140 1004 L515 1004"/>
-<rect x="950.5" y="1056" width="254" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="968.5" y="1083" text-anchor="start">11. @WithTransaction insert</text>
-<path class="line" d="M515 1114 L1640 1114"/>
-<rect x="1347.5" y="1166" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="1365.5" y="1193" text-anchor="start">12. INSERT INTO Fruit</text>
-<path class="line" d="M1640 1224 L1265 1224"/>
-<rect x="1325.5" y="1276" width="254" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="1343.5" y="1303" text-anchor="start">13. DB to HibernateReactive</text>
-<path class="dashed" d="M1265 1334 L1640 1334"/>
-<rect x="785" y="1386" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="803" y="1413" text-anchor="start">14. Uni&lt;Fruit&gt;</text>
-<path class="dashed" d="M1640 1444 L140 1444"/>
+<rect class="canvas" width="1040" height="520"/>
+<rect class="frame" x="24" y="20" width="992" height="476" rx="20"/>
+
+<!-- Title -->
+<text class="title" x="48" y="66">Hibernate Reactive Panache CRUD Sequence</text>
+<text class="subtitle" x="48" y="90">Quarkus · RESTEasy · PanacheEntity · SessionFactory · PostgreSQL</text>
+
+<!-- Participants at y=108 -->
+<!-- x: Client=100, Resource=260, PanacheEntity=460, SessionFactory=660, PostgreSQL=860 -->
+<rect class="card" x="26" y="108" width="148" height="56" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
+<text class="smallLabel" x="100" y="139" text-anchor="middle">Client</text>
+
+<rect class="card" x="186" y="108" width="148" height="56" rx="12" fill="#EAF7EF" stroke="#58A978"/>
+<text class="smallLabel" x="260" y="132" text-anchor="middle">Resource</text>
+<text class="small" x="260" y="152" text-anchor="middle">RESTEasy</text>
+
+<rect class="card" x="386" y="108" width="148" height="56" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
+<text class="smallLabel" x="460" y="132" text-anchor="middle">PanacheEntity</text>
+<text class="small" x="460" y="152" text-anchor="middle">Reactive ORM</text>
+
+<rect class="card" x="586" y="108" width="148" height="56" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
+<text class="smallLabel" x="660" y="132" text-anchor="middle">SessionFactory</text>
+<text class="small" x="660" y="152" text-anchor="middle">Hibernate</text>
+
+<rect class="card" x="786" y="108" width="148" height="56" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
+<text class="smallLabel" x="860" y="132" text-anchor="middle">PostgreSQL</text>
+<text class="small" x="860" y="152" text-anchor="middle">Testcontainers</text>
+
+<!-- Lifelines -->
+<line class="lifeline" x1="100" y1="164" x2="100" y2="510"/>
+<line class="lifeline" x1="260" y1="164" x2="260" y2="510"/>
+<line class="lifeline" x1="460" y1="164" x2="460" y2="510"/>
+<line class="lifeline" x1="660" y1="164" x2="660" y2="510"/>
+<line class="lifeline" x1="860" y1="164" x2="860" y2="510"/>
+
+<!-- Section: POST create -->
+<text class="sectionLabel" x="36" y="188">POST /entity — Create</text>
+
+<!-- 1: POST /entity body -->
+<text class="msgLabel" x="103" y="210" fill="#5B8DEF">① POST /entity body</text>
+<path class="reqArrow" d="M100 220 L260 220"/>
+
+<!-- 2: entity.persist() -->
+<text class="msgLabel" x="263" y="243" fill="#5B8DEF">② entity.persist()</text>
+<path class="reqArrow" d="M260 253 L460 253"/>
+
+<!-- 3: INSERT INTO ... -->
+<text class="msgLabel" x="463" y="276" fill="#5B8DEF">③ INSERT INTO entity ...</text>
+<path class="reqArrow" d="M460 286 L660 286"/>
+<!-- to PostgreSQL -->
+<text class="msgLabel" x="663" y="309" fill="#5B8DEF">④ execute SQL</text>
+<path class="reqArrow" d="M660 319 L860 319"/>
+
+<!-- 4: entity id returned -->
+<text class="msgLabel" x="663" y="349" fill="#45A7A1">⑤ entity id returned</text>
+<path class="rspArrow" d="M860 359 L660 359"/>
+
+<text class="msgLabel" x="463" y="382" fill="#45A7A1">⑥ Uni&#60;Entity&#62;</text>
+<path class="rspArrow" d="M660 392 L460 392"/>
+
+<text class="msgLabel" x="263" y="415" fill="#45A7A1">⑦ 201 Created response</text>
+<path class="rspArrow" d="M460 425 L260 425"/>
+<path class="rspArrow" d="M260 437 L100 437"/>
+
+<!-- Section: GET find -->
+<text class="sectionLabel" x="36" y="462">GET /entity/{id} — Read</text>
+
+<text class="msgLabel" x="103" y="480" fill="#5B8DEF">⑧ GET /entity/{id} → find() → SELECT → entity → 200 OK</text>
+<path class="reqArrow" d="M100 490 L260 490"/>
+<path class="reqArrow" d="M260 500 L860 500"/>
 </svg>

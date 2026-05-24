@@ -1,48 +1,105 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1258" height="796" viewBox="0 0 1258 796" role="img" aria-label="webflux coroutines Sequence Flow 2">
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="520" viewBox="0 0 960 520" role="img" aria-label="WebFlux coroutines request handling sequence">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
+  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
+  </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
     .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
     .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
     .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
+    .card{stroke-width:2.1;filter:url(#shadow)}
+    .lifeline{stroke:#b0bbca;stroke-width:1.5;stroke-dasharray:6 4;fill:none}
+    .reqArrow{stroke:#5B8DEF;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
+    .rspArrow{stroke:#45A7A1;stroke-width:2.1;stroke-dasharray:7 4;fill:none;marker-end:url(#arrow)}
+    .msgLabel{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;fill:#102033}
   </style>
 </defs>
-<rect class="canvas" width="1258" height="796"/>
-<rect class="frame" x="32" y="28" width="1194" height="740" rx="28"/>
-<text class="title" x="66" y="82">WebFlux Coroutines Sequence Flow</text>
-<text class="subtitle" x="70" y="118">Netty → CoroutineController → suspend fun → withContext(Dispatchers.IO)</text>
-<rect class="card" x="-5" y="166" width="290" height="72" rx="20" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="140" y="209" text-anchor="middle">NettyServer</text>
-<line class="lifeline" x1="140" y1="252" x2="140" y2="736" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="484" y="166" width="290" height="72" rx="20" fill="#EAF7EF" stroke="#58A978"/>
-<text class="smallLabel" x="629" y="209" text-anchor="middle">CoroutineController</text>
-<line class="lifeline" x1="629" y1="252" x2="629" y2="736" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="973" y="166" width="290" height="72" rx="20" fill="#FFF3D9" stroke="#D6A441"/>
-<text class="smallLabel" x="1118" y="209" text-anchor="middle">Dispatcher</text>
-<line class="lifeline" x1="1118" y1="252" x2="1118" y2="736" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect x="273.5" y="286" width="222" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="291.5" y="313" text-anchor="start">2. suspend fun handle()</text>
-<path class="line" d="M140 344 L629 344"/>
-<rect x="734.5" y="396" width="278" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="752.5" y="423" text-anchor="start">3. withContext(Dispatchers.IO)</text>
-<path class="line" d="M629 454 L1118 454"/>
-<rect x="768.5" y="506" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="786.5" y="533" text-anchor="start">6. resume coroutine</text>
-<path class="dashed" d="M1118 564 L629 564"/>
-<rect x="279.5" y="616" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="297.5" y="643" text-anchor="start">7. ResponseEntity</text>
-<path class="dashed" d="M629 674 L140 674"/>
+<rect class="canvas" width="960" height="520"/>
+<rect class="frame" x="24" y="20" width="912" height="480" rx="22"/>
+
+<!-- Title -->
+<text class="title" x="48" y="66">WebFlux + Coroutines Sequence</text>
+<text class="subtitle" x="52" y="88">Netty → suspend fun handler → withContext(Dispatchers.IO) → response</text>
+
+<!-- Participants cx: 90, 260, 480, 700, 870 -->
+<!-- HTTP Client -->
+<g transform="translate(34,104)">
+  <rect class="card" x="0" y="0" width="112" height="68" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="smallLabel" x="56" y="30" text-anchor="middle">HTTP</text>
+  <text class="smallLabel" x="56" y="54" text-anchor="middle">Client</text>
+</g>
+<!-- Netty Server -->
+<g transform="translate(200,104)">
+  <rect class="card" x="0" y="0" width="120" height="68" rx="12" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="smallLabel" x="60" y="26" text-anchor="middle">Netty</text>
+  <text class="smallLabel" x="60" y="50" text-anchor="middle">Server</text>
+  <text class="small" x="60" y="66" text-anchor="middle">non-blocking I/O</text>
+</g>
+<!-- CoroutineController -->
+<g transform="translate(416,104)">
+  <rect class="card" x="0" y="0" width="150" height="68" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="smallLabel" x="75" y="26" text-anchor="middle">Coroutine</text>
+  <text class="smallLabel" x="75" y="50" text-anchor="middle">Controller</text>
+  <text class="small" x="75" y="66" text-anchor="middle">suspend fun</text>
+</g>
+<!-- Dispatchers.IO -->
+<g transform="translate(630,104)">
+  <rect class="card" x="0" y="0" width="140" height="68" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="smallLabel" x="70" y="26" text-anchor="middle">Dispatchers</text>
+  <text class="smallLabel" x="70" y="50" text-anchor="middle">.IO</text>
+  <text class="small" x="70" y="66" text-anchor="middle">or VT</text>
+</g>
+<!-- Service -->
+<g transform="translate(810,104)">
+  <rect class="card" x="0" y="0" width="126" height="68" rx="12" fill="#E9F7F6" stroke="#45A7A1"/>
+  <text class="smallLabel" x="63" y="30" text-anchor="middle">Service</text>
+  <text class="small" x="63" y="52" text-anchor="middle">suspend fun</text>
+  <text class="small" x="63" y="68" text-anchor="middle">external call</text>
+</g>
+
+<!-- Lifelines cx: 90, 260, 491, 700, 873 -->
+<line class="lifeline" x1="90" y1="172" x2="90" y2="490"/>
+<line class="lifeline" x1="260" y1="172" x2="260" y2="490"/>
+<line class="lifeline" x1="491" y1="172" x2="491" y2="490"/>
+<line class="lifeline" x1="700" y1="172" x2="700" y2="490"/>
+<line class="lifeline" x1="873" y1="172" x2="873" y2="490"/>
+
+<!-- Step 1: GET /delay (non-blocking) -->
+<text class="msgLabel" x="48" y="206">1. GET /default/delay (non-blocking)</text>
+<path class="reqArrow" d="M90,210 L252,210"/>
+
+<!-- Step 2: Netty dispatches to coroutine handler -->
+<text class="msgLabel" x="272" y="242">2. suspend fun handle(request)</text>
+<path class="reqArrow" d="M260,246 L483,246"/>
+
+<!-- Step 3: Controller → withContext(Dispatchers.IO) -->
+<text class="msgLabel" x="504" y="278">3. withContext(Dispatchers.IO)</text>
+<path class="reqArrow" d="M491,282 L692,282"/>
+
+<!-- Step 4: Dispatchers.IO → Service: blocking call -->
+<text class="msgLabel" x="712" y="314">4. service.processBlocking()</text>
+<path class="reqArrow" d="M700,318 L865,318"/>
+
+<!-- Step 5: Service returns result -->
+<text class="msgLabel" x="712" y="350">5. result</text>
+<path class="rspArrow" d="M865,354 L708,354"/>
+
+<!-- Step 6: Coroutine resumes on Netty thread -->
+<text class="msgLabel" x="504" y="386">6. resume coroutine (result)</text>
+<path class="rspArrow" d="M700,390 L499,390"/>
+
+<!-- Step 7: Controller returns ResponseEntity -->
+<text class="msgLabel" x="272" y="422">7. ResponseEntity (coroutine completes)</text>
+<path class="rspArrow" d="M491,426 L268,426"/>
+
+<!-- Step 8: Netty sends response -->
+<text class="msgLabel" x="48" y="458">8. 200 OK (response body)</text>
+<path class="rspArrow" d="M260,462 L98,462"/>
+
+<!-- Note -->
+<text class="small" x="48" y="490">Blocking work dispatched to IO/VT thread pool; Netty event loop is never blocked</text>
 </svg>

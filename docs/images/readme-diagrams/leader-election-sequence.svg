@@ -26,64 +26,66 @@
 <text class="title" x="48" y="66">Leader Election Sequence</text>
 <text class="subtitle" x="48" y="90">@Scheduled · LeaderElector · Redis SETNX atomic lock</text>
 
-<!-- Participants -->
-<!-- x positions: ScheduledTrigger=110, LeaderScheduledJobService=290, LeaderElector=490, Redis=690, Job=890 -->
-<rect class="card" x="26" y="108" width="168" height="56" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="110" y="132" text-anchor="middle">Scheduled</text>
-<text class="small" x="110" y="151" text-anchor="middle">Trigger</text>
+<!-- 5 Participants: Client, ScheduledTrigger, LeaderScheduledJobService, LeaderElector, Redis -->
+<!-- x positions: Client=86, ScheduledTrigger=250, LeaderScheduledJobService=450, LeaderElector=660, Redis=874 -->
+<rect class="card" x="26" y="108" width="120" height="56" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
+<text class="smallLabel" x="86" y="139" text-anchor="middle">Client</text>
 
-<rect class="card" x="206" y="108" width="168" height="56" rx="12" fill="#EAF7EF" stroke="#58A978"/>
-<text class="smallLabel" x="290" y="132" text-anchor="middle">LeaderScheduled</text>
-<text class="small" x="290" y="151" text-anchor="middle">JobService</text>
+<rect class="card" x="170" y="108" width="160" height="56" rx="12" fill="#EAF7EF" stroke="#58A978"/>
+<text class="smallLabel" x="250" y="132" text-anchor="middle">Scheduled</text>
+<text class="small" x="250" y="151" text-anchor="middle">Trigger</text>
 
-<rect class="card" x="406" y="108" width="168" height="56" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
-<text class="smallLabel" x="490" y="132" text-anchor="middle">LeaderElector</text>
-<text class="small" x="490" y="151" text-anchor="middle">Lettuce</text>
+<rect class="card" x="354" y="108" width="192" height="56" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
+<text class="smallLabel" x="450" y="132" text-anchor="middle">LeaderScheduled</text>
+<text class="small" x="450" y="151" text-anchor="middle">JobService</text>
 
-<rect class="card" x="606" y="108" width="168" height="56" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
-<text class="smallLabel" x="690" y="132" text-anchor="middle">Redis</text>
-<text class="small" x="690" y="151" text-anchor="middle">Testcontainers</text>
+<rect class="card" x="566" y="108" width="188" height="56" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
+<text class="smallLabel" x="660" y="132" text-anchor="middle">LeaderElector</text>
+<text class="small" x="660" y="151" text-anchor="middle">Lettuce</text>
 
-<rect class="card" x="806" y="108" width="168" height="56" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
-<text class="smallLabel" x="890" y="132" text-anchor="middle">Job</text>
-<text class="small" x="890" y="151" text-anchor="middle">LeaderGuardedJob</text>
+<rect class="card" x="778" y="108" width="192" height="56" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
+<text class="smallLabel" x="874" y="132" text-anchor="middle">Redis</text>
+<text class="small" x="874" y="151" text-anchor="middle">Testcontainers</text>
 
 <!-- Lifelines -->
-<line class="lifeline" x1="110" y1="164" x2="110" y2="530"/>
-<line class="lifeline" x1="290" y1="164" x2="290" y2="530"/>
-<line class="lifeline" x1="490" y1="164" x2="490" y2="530"/>
-<line class="lifeline" x1="690" y1="164" x2="690" y2="530"/>
-<line class="lifeline" x1="890" y1="164" x2="890" y2="530"/>
+<line class="lifeline" x1="86" y1="164" x2="86" y2="530"/>
+<line class="lifeline" x1="250" y1="164" x2="250" y2="530"/>
+<line class="lifeline" x1="450" y1="164" x2="450" y2="530"/>
+<line class="lifeline" x1="660" y1="164" x2="660" y2="530"/>
+<line class="lifeline" x1="874" y1="164" x2="874" y2="530"/>
 
 <!-- Message 1: scheduled trigger fires -->
-<text class="msgLabel" x="113" y="202" fill="#5B8DEF">① scheduled trigger fires</text>
-<path class="reqArrow" d="M110 212 L290 212"/>
+<text class="msgLabel" x="89" y="202" fill="#5B8DEF">① scheduled trigger fires</text>
+<path class="reqArrow" d="M86 212 L250 212"/>
 
 <!-- Message 2: runIfLeader(lockName) -->
-<text class="msgLabel" x="293" y="242" fill="#5B8DEF">② runIfLeader(lockName)</text>
-<path class="reqArrow" d="M290 252 L490 252"/>
+<text class="msgLabel" x="253" y="242" fill="#5B8DEF">② runIfLeader(lockName)</text>
+<path class="reqArrow" d="M250 252 L450 252"/>
 
-<!-- Message 3: SETNX leader:{lockName} -->
-<text class="msgLabel" x="493" y="282" fill="#5B8DEF">③ SETNX leader:{lockName} (atomic)</text>
-<path class="reqArrow" d="M490 292 L690 292"/>
+<!-- Message 3: acquireLock -->
+<text class="msgLabel" x="453" y="282" fill="#5B8DEF">③ acquireLock(lockName)</text>
+<path class="reqArrow" d="M450 292 L660 292"/>
+
+<!-- Message 3b: SETNX leader:{lockName} -->
+<text class="msgLabel" x="663" y="322" fill="#5B8DEF">④ SETNX leader:{lockName} (atomic)</text>
+<path class="reqArrow" d="M660 332 L874 332"/>
 
 <!-- Message 4: lock acquired true -->
-<text class="msgLabel" x="493" y="322" fill="#45A7A1">④ true → leader wins</text>
-<path class="rspArrow" d="M690 332 L490 332"/>
+<text class="msgLabel" x="663" y="362" fill="#45A7A1">⑤ true → leader wins</text>
+<path class="rspArrow" d="M874 372 L660 372"/>
 
-<!-- Message 5: job.execute() -->
-<text class="msgLabel" x="493" y="362" fill="#5B8DEF">⑤ job.execute()</text>
-<path class="reqArrow" d="M490 372 L890 372"/>
+<text class="msgLabel" x="453" y="402" fill="#45A7A1">⑥ lock acquired</text>
+<path class="rspArrow" d="M660 412 L450 412"/>
 
-<!-- Message 5b: run jobs -->
-<text class="msgLabel" x="750" y="395" fill="#8A72D6">run CacheWarmupJob / StaleWorkflowCleanup</text>
+<!-- Message 5: job.execute() → CacheWarmupJob / StaleWorkflowCleanup -->
+<text class="msgLabel" x="253" y="442" fill="#5B8DEF">⑦ job.execute() → CacheWarmupJob / StaleWorkflowCleanup</text>
+<path class="reqArrow" d="M450 452 L250 452"/>
 
 <!-- Message 6: DEL leader:{lockName} -->
-<text class="msgLabel" x="493" y="422" fill="#5B8DEF">⑥ DEL leader:{lockName} (release)</text>
-<path class="reqArrow" d="M490 432 L690 432"/>
+<text class="msgLabel" x="453" y="482" fill="#5B8DEF">⑧ DEL leader:{lockName} (release)</text>
+<path class="reqArrow" d="M450 492 L660 492"/>
+<path class="reqArrow" d="M660 504 L874 504"/>
 
-<!-- Message 7: next instance SETNX false -->
-<text class="msgLabel" x="113" y="462" fill="#536273">⑦ next instance: SETNX → false (already leader)</text>
-<path class="rspArrow" d="M490 472 L290 472"/>
-<path class="rspArrow" d="M290 484 L110 484"/>
+<!-- Message 7: next instance SETNX false note -->
+<text class="msgLabel" x="89" y="525" fill="#536273">⑨ next instance: SETNX → false (already leader)</text>
 </svg>

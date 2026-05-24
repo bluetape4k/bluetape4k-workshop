@@ -21,7 +21,7 @@
 <rect class="canvas" width="960" height="500"/>
 <rect class="frame" x="24" y="20" width="912" height="456" rx="18"/>
 <text class="title" x="44" y="62">DAO Web Transaction Sequence</text>
-<text class="subtitle" x="44" y="84">HTTP request → begin transaction → DAO insert → commit → response</text>
+<text class="subtitle" x="44" y="84">UserController → UserService → transaction{insert{}} → UserTable (H2) → 201 Created</text>
 
 <!-- Lifeline headers -->
 <rect class="card" x="24" y="96" width="160" height="48" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
@@ -33,8 +33,8 @@
 <line class="lifeline" x1="320" y1="144" x2="320" y2="472"/>
 
 <rect class="card" x="456" y="96" width="160" height="48" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-<text class="smallLabel" x="536" y="120" text-anchor="middle">DAOFacade</text>
-<text class="small" x="536" y="136" text-anchor="middle">(transaction)</text>
+<text class="smallLabel" x="536" y="120" text-anchor="middle">transaction{}</text>
+<text class="small" x="536" y="136" text-anchor="middle">(Exposed TX)</text>
 <line class="lifeline" x1="536" y1="144" x2="536" y2="472"/>
 
 <rect class="card" x="672" y="96" width="160" height="48" rx="14" fill="#FDECEF" stroke="#DC6B82"/>

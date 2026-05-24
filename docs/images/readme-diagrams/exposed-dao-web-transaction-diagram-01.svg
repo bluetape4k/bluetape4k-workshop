@@ -18,7 +18,7 @@
 <rect class="canvas" width="960" height="440"/>
 <rect class="frame" x="24" y="20" width="912" height="396" rx="18"/>
 <text class="title" x="44" y="66">Exposed DAO Web Transaction</text>
-<text class="subtitle" x="44" y="90">DAOFacade → TransactionManager → DAO entities (H2) · CRUD operations</text>
+<text class="subtitle" x="44" y="90">UserService → transaction{} → DAO entities (H2) · CRUD operations</text>
 
 <!-- Row 1: Controllers / Facade layer -->
 <g transform="translate(44,110)">
@@ -28,7 +28,7 @@
 </g>
 <g transform="translate(280,110)">
   <rect class="card" x="0" y="0" width="200" height="72" rx="10" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="100" y="32" text-anchor="middle">DAOFacade</text>
+  <text class="smallLabel" x="100" y="32" text-anchor="middle">UserService</text>
   <text class="small" x="100" y="54" text-anchor="middle">create / findById / update</text>
 </g>
 <g transform="translate(516,110)">

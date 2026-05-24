@@ -1,244 +1,85 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1378 1380" width="1378" height="1380">
-  <defs>
-    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
-      <feDropShadow dx="2" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.12"/>
-    </filter>
-  </defs>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="520" viewBox="0 0 960 520" role="img" aria-label="Workshop Architecture Overview">
+<defs>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.09"/></filter>
+  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
+  </marker>
+  <style>
+    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
+    .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
+    .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
+    .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
+    .card{stroke-width:2.1;filter:url(#shadow)}
+    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
+  </style>
+</defs>
+<rect class="canvas" width="960" height="520"/>
+<rect class="frame" x="24" y="20" width="912" height="476" rx="20"/>
 
-  <!-- Background -->
-  <rect width="1378" height="1380" fill="#f6f9fc"/>
-  <!-- Outer frame -->
-  <rect x="20" y="20" width="1338" height="1340" rx="16" fill="#fff" stroke="#d7e2ec" stroke-width="1.5"/>
+<!-- Title -->
+<text class="title" x="48" y="66">Workshop Overview</text>
+<text class="subtitle" x="48" y="90">All modules · Kotlin 2.3 + Java 25 + Spring Boot 4 + bluetape4k 1.5</text>
 
-  <!-- Title -->
-  <text x="689" y="62" font-family="'Architects Daughter', cursive" font-size="32" fill="#1e293b" text-anchor="middle">Bluetape4k Workshop — Module Overview</text>
-  <text x="689" y="86" font-family="'Comic Sans MS', cursive" font-size="14" fill="#536476" text-anchor="middle">Kotlin 2.3 · Java 25 · Spring Boot 4.0 · bluetape4k 1.5</text>
+<!-- Top: Workshop description band -->
+<rect class="card" x="36" y="104" width="886" height="48" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
+<text class="smallLabel" x="479" y="124" text-anchor="middle">bluetape4k Workshop — Backend Examples using bluetape4k Libraries</text>
+<text class="small" x="479" y="143" text-anchor="middle">aws · exposed · gateway · gatling · messaging · observability · ratelimit · reactive · redis · spring-boot · spring-data · vertx · virtualthreads</text>
 
-  <!-- ============================================================ -->
-  <!-- ROW 1 (y=110) -->
-  <!-- ============================================================ -->
+<!-- Middle 3-col -->
+<!-- Backend Frameworks -->
+<rect class="card" x="36" y="188" width="270" height="172" rx="14" fill="#EAF7EF" stroke="#58A978"/>
+<text class="smallLabel" x="171" y="216" text-anchor="middle">Backend Frameworks</text>
+<text class="small" x="171" y="237" text-anchor="middle">Spring Boot 4 WebFlux</text>
+<text class="small" x="171" y="255" text-anchor="middle">Spring MVC · Coroutines</text>
+<text class="small" x="171" y="273" text-anchor="middle">Resilience4j · Rate Limit</text>
+<text class="small" x="171" y="291" text-anchor="middle">Spring Security MVC/WebFlux</text>
+<text class="small" x="171" y="309" text-anchor="middle">Vert.x · Virtual Threads</text>
+<text class="small" x="171" y="327" text-anchor="middle">Spring Cloud Gateway</text>
+<text class="small" x="171" y="345" text-anchor="middle">Quarkus · Mutiny Reactive</text>
 
-  <!-- Group: Shared foundation (blue) x=78 -->
-  <g transform="translate(78,110)" filter="url(#shadow)">
-    <rect width="380" height="82" rx="14" fill="#E8F3FF" stroke="#75A9E8" stroke-width="2"/>
-    <text x="190" y="34" font-family="'Architects Daughter', cursive" font-size="22" fill="#22344A" text-anchor="middle">Shared foundation</text>
-    <!-- 1 item -->
-    <rect x="20" y="50" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="66" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">shared</text>
-  </g>
+<!-- Data Access -->
+<rect class="card" x="344" y="188" width="270" height="172" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
+<text class="smallLabel" x="479" y="216" text-anchor="middle">Data Access</text>
+<text class="small" x="479" y="237" text-anchor="middle">JetBrains Exposed ORM</text>
+<text class="small" x="479" y="255" text-anchor="middle">Spring Data R2DBC</text>
+<text class="small" x="479" y="273" text-anchor="middle">Spring Data JPA / QueryDSL</text>
+<text class="small" x="479" y="291" text-anchor="middle">Spring Data MongoDB</text>
+<text class="small" x="479" y="309" text-anchor="middle">Spring Data Elasticsearch</text>
+<text class="small" x="479" y="327" text-anchor="middle">Hibernate Reactive Panache</text>
+<text class="small" x="479" y="345" text-anchor="middle">Vert.x SQL Client</text>
 
-  <!-- Group: Exposed modules (green) x=492 -->
-  <g transform="translate(492,110)" filter="url(#shadow)">
-    <rect width="380" height="200" rx="14" fill="#EAF7EF" stroke="#69B888" stroke-width="2"/>
-    <text x="190" y="34" font-family="'Architects Daughter', cursive" font-size="22" fill="#22344A" text-anchor="middle">Exposed modules</text>
-    <!-- 5 items -->
-    <rect x="20" y="50" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="66" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">dao-web-transaction</text>
-    <rect x="20" y="78" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="94" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">domain</text>
-    <rect x="20" y="106" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="122" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">spring-transaction</text>
-    <rect x="20" y="134" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="150" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">sql-web-virtualthread</text>
-    <rect x="20" y="162" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="178" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">sql-webflux-coroutines</text>
-  </g>
+<!-- Infrastructure -->
+<rect class="card" x="652" y="188" width="270" height="172" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
+<text class="smallLabel" x="787" y="216" text-anchor="middle">Infrastructure</text>
+<text class="small" x="787" y="237" text-anchor="middle">Redis (Redisson/Lettuce)</text>
+<text class="small" x="787" y="255" text-anchor="middle">Kafka · Kafka Reply</text>
+<text class="small" x="787" y="273" text-anchor="middle">Micrometer Observation</text>
+<text class="small" x="787" y="291" text-anchor="middle">Distributed Tracing</text>
+<text class="small" x="787" y="309" text-anchor="middle">AWS S3 / Spring Cloud</text>
+<text class="small" x="787" y="327" text-anchor="middle">Leader Election · Locks</text>
+<text class="small" x="787" y="345" text-anchor="middle">Gatling Performance Tests</text>
 
-  <!-- Group: Spring Boot (amber) x=906 -->
-  <g transform="translate(906,110)" filter="url(#shadow)">
-    <rect width="380" height="228" rx="14" fill="#FFF3D9" stroke="#D9AA4D" stroke-width="2"/>
-    <text x="190" y="34" font-family="'Architects Daughter', cursive" font-size="22" fill="#22344A" text-anchor="middle">Spring Boot</text>
-    <!-- 6 items -->
-    <rect x="20" y="50" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="66" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">application-event-demo</text>
-    <rect x="20" y="78" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="94" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">async-logging</text>
-    <rect x="20" y="106" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="122" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">cache-caffeine</text>
-    <rect x="20" y="134" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="150" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">cache-redis</text>
-    <rect x="20" y="162" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="178" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">cbor-mvc</text>
-    <rect x="20" y="190" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="206" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">+7 more modules</text>
-  </g>
+<!-- Arrows from top band to middle cols -->
+<line class="line" x1="200" y1="152" x2="171" y2="188"/>
+<line class="line" x1="480" y1="152" x2="479" y2="188"/>
+<line class="line" x1="760" y1="152" x2="787" y2="188"/>
 
-  <!-- ============================================================ -->
-  <!-- ROW 2 (y=388) -->
-  <!-- ============================================================ -->
+<!-- Bottom: bluetape4k + Testcontainers -->
+<rect class="card" x="36" y="396" width="420" height="80" rx="14" fill="#F1ECFF" stroke="#8A72D6"/>
+<text class="smallLabel" x="246" y="424" text-anchor="middle">bluetape4k Libraries</text>
+<text class="small" x="246" y="444" text-anchor="middle">bluetape4k-logging · bluetape4k-junit5</text>
+<text class="small" x="246" y="462" text-anchor="middle">bluetape4k-coroutines · bluetape4k-exposed</text>
 
-  <!-- Group: Spring Data (pink) x=78 -->
-  <g transform="translate(78,388)" filter="url(#shadow)">
-    <rect width="380" height="228" rx="14" fill="#FDECEF" stroke="#DB7890" stroke-width="2"/>
-    <text x="190" y="34" font-family="'Architects Daughter', cursive" font-size="22" fill="#22344A" text-anchor="middle">Spring Data</text>
-    <!-- 6 items -->
-    <rect x="20" y="50" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="66" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">elasticsearch</text>
-    <rect x="20" y="78" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="94" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">elasticsearch-webflux</text>
-    <rect x="20" y="106" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="122" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">JPA-querydsl</text>
-    <rect x="20" y="134" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="150" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">MongoDB-coroutines</text>
-    <rect x="20" y="162" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="178" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">MongoDB-transactions</text>
-    <rect x="20" y="190" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="206" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">+5 more modules</text>
-  </g>
+<rect class="card" x="502" y="396" width="420" height="80" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
+<text class="smallLabel" x="712" y="424" text-anchor="middle">Testcontainers + Test Stack</text>
+<text class="small" x="712" y="444" text-anchor="middle">PostgreSQL · Redis · Kafka · MongoDB</text>
+<text class="small" x="712" y="462" text-anchor="middle">JUnit 5 · MockK · ZGC · Java 25</text>
 
-  <!-- Group: Spring Security (teal) x=492 -->
-  <g transform="translate(492,388)" filter="url(#shadow)">
-    <rect width="380" height="138" rx="14" fill="#E9F7F6" stroke="#55B5AF" stroke-width="2"/>
-    <text x="190" y="34" font-family="'Architects Daughter', cursive" font-size="22" fill="#22344A" text-anchor="middle">Spring Security</text>
-    <!-- 3 items -->
-    <rect x="20" y="50" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="66" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">hello</text>
-    <rect x="20" y="78" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="94" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">hello-security</text>
-    <rect x="20" y="106" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="122" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">jwt</text>
-  </g>
-
-  <!-- Group: Virtual Threads (lavender) x=906 -->
-  <g transform="translate(906,388)" filter="url(#shadow)">
-    <rect width="380" height="138" rx="14" fill="#F1ECFF" stroke="#A58BE3" stroke-width="2"/>
-    <text x="190" y="34" font-family="'Architects Daughter', cursive" font-size="22" fill="#22344A" text-anchor="middle">Virtual Threads</text>
-    <!-- 3 items -->
-    <rect x="20" y="50" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="66" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">rules</text>
-    <rect x="20" y="78" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="94" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">spring-mvc-tomcat</text>
-    <rect x="20" y="106" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="122" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">spring-webflux</text>
-  </g>
-
-  <!-- ============================================================ -->
-  <!-- ROW 3 (y=666) -->
-  <!-- ============================================================ -->
-
-  <!-- Group: Docker (warm beige) x=78 -->
-  <g transform="translate(78,666)" filter="url(#shadow)">
-    <rect width="380" height="110" rx="14" fill="#F7F1E7" stroke="#B68C55" stroke-width="2"/>
-    <text x="190" y="34" font-family="'Architects Daughter', cursive" font-size="22" fill="#22344A" text-anchor="middle">Docker</text>
-    <!-- 2 items -->
-    <rect x="20" y="50" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="66" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">compose-demo</text>
-    <rect x="20" y="78" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="94" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">compose-plugin-demo</text>
-  </g>
-
-  <!-- Group: Gateway (olive) x=492 -->
-  <g transform="translate(492,666)" filter="url(#shadow)">
-    <rect width="380" height="138" rx="14" fill="#EEF6D9" stroke="#91AA58" stroke-width="2"/>
-    <text x="190" y="34" font-family="'Architects Daughter', cursive" font-size="22" fill="#22344A" text-anchor="middle">Gateway</text>
-    <!-- 3 items -->
-    <rect x="20" y="50" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="66" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">api-gateway</text>
-    <rect x="20" y="78" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="94" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">customers</text>
-    <rect x="20" y="106" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="122" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">orders</text>
-  </g>
-
-  <!-- Group: Kotlin (blue) x=906 -->
-  <g transform="translate(906,666)" filter="url(#shadow)">
-    <rect width="380" height="138" rx="14" fill="#E8F3FF" stroke="#75A9E8" stroke-width="2"/>
-    <text x="190" y="34" font-family="'Architects Daughter', cursive" font-size="22" fill="#22344A" text-anchor="middle">Kotlin</text>
-    <!-- 3 items -->
-    <rect x="20" y="50" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="66" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">coroutines</text>
-    <rect x="20" y="78" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="94" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">design-patterns</text>
-    <rect x="20" y="106" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="122" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">workshop</text>
-  </g>
-
-  <!-- ============================================================ -->
-  <!-- ROW 4 (y=860) -->
-  <!-- ============================================================ -->
-
-  <!-- Group: Messaging (green) x=78 -->
-  <g transform="translate(78,860)" filter="url(#shadow)">
-    <rect width="380" height="110" rx="14" fill="#EAF7EF" stroke="#69B888" stroke-width="2"/>
-    <text x="190" y="34" font-family="'Architects Daughter', cursive" font-size="22" fill="#22344A" text-anchor="middle">Messaging</text>
-    <!-- 2 items -->
-    <rect x="20" y="50" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="66" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">kafka</text>
-    <rect x="20" y="78" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="94" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">kafka-reply</text>
-  </g>
-
-  <!-- Group: Observability (amber) x=492 -->
-  <g transform="translate(492,860)" filter="url(#shadow)">
-    <rect width="380" height="110" rx="14" fill="#FFF3D9" stroke="#D9AA4D" stroke-width="2"/>
-    <text x="190" y="34" font-family="'Architects Daughter', cursive" font-size="22" fill="#22344A" text-anchor="middle">Observability</text>
-    <!-- 2 items -->
-    <rect x="20" y="50" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="66" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">micrometer-observation</text>
-    <rect x="20" y="78" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="94" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">micrometer-tracing-coroutines</text>
-  </g>
-
-  <!-- Group: Rate limiting (pink) x=906 -->
-  <g transform="translate(906,860)" filter="url(#shadow)">
-    <rect width="380" height="138" rx="14" fill="#FDECEF" stroke="#DB7890" stroke-width="2"/>
-    <text x="190" y="34" font-family="'Architects Daughter', cursive" font-size="22" fill="#22344A" text-anchor="middle">Rate limiting</text>
-    <!-- 3 items -->
-    <rect x="20" y="50" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="66" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">bucket4j-webflux</text>
-    <rect x="20" y="78" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="94" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">bucket4j-caffeine-web</text>
-    <rect x="20" y="106" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="122" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">bucket4j-redis</text>
-  </g>
-
-  <!-- ============================================================ -->
-  <!-- ROW 5 (y=1054) -->
-  <!-- ============================================================ -->
-
-  <!-- Group: Redis (teal) x=78 -->
-  <g transform="translate(78,1054)" filter="url(#shadow)">
-    <rect width="380" height="110" rx="14" fill="#E9F7F6" stroke="#55B5AF" stroke-width="2"/>
-    <text x="190" y="34" font-family="'Architects Daughter', cursive" font-size="22" fill="#22344A" text-anchor="middle">Redis</text>
-    <!-- 2 items -->
-    <rect x="20" y="50" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="66" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">cluster-demo</text>
-    <rect x="20" y="78" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="94" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">redisson-examples</text>
-  </g>
-
-  <!-- Group: Vert.x (lavender) x=492 -->
-  <g transform="translate(492,1054)" filter="url(#shadow)">
-    <rect width="380" height="138" rx="14" fill="#F1ECFF" stroke="#A58BE3" stroke-width="2"/>
-    <text x="190" y="34" font-family="'Architects Daughter', cursive" font-size="22" fill="#22344A" text-anchor="middle">Vert.x</text>
-    <!-- 3 items -->
-    <rect x="20" y="50" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="66" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">coroutines</text>
-    <rect x="20" y="78" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="94" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">Vert.x-sqlclient</text>
-    <rect x="20" y="106" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="122" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">Vert.x-webclient</text>
-  </g>
-
-  <!-- Group: Additional examples (warm beige) x=906 -->
-  <g transform="translate(906,1054)" filter="url(#shadow)">
-    <rect width="380" height="228" rx="14" fill="#F7F1E7" stroke="#B68C55" stroke-width="2"/>
-    <text x="190" y="34" font-family="'Architects Daughter', cursive" font-size="22" fill="#22344A" text-anchor="middle">Additional examples</text>
-    <!-- 6 items -->
-    <rect x="20" y="50" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="66" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">gateway-example</text>
-    <rect x="20" y="78" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="94" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">events-deep-dive</text>
-    <rect x="20" y="106" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="122" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">JPA-demo</text>
-    <rect x="20" y="134" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="150" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">s3-spring-cloud</text>
-    <rect x="20" y="162" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="178" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">gradle-plugin-demo</text>
-    <rect x="20" y="190" width="340" height="22" rx="6" fill="#FFFFFF" fill-opacity="0.80" stroke="#D7E2EC"/>
-    <text x="190" y="206" font-family="'Comic Sans MS', cursive" font-size="14" fill="#34465B" text-anchor="middle">+8 more modules</text>
-  </g>
-
-  <!-- Footer note -->
-  <text x="689" y="1358" font-family="'Comic Sans MS', cursive" font-size="12" fill="#627184" text-anchor="middle">Overview labels generated from build modules; image text is English-only.</text>
+<!-- Arrows mid → bottom -->
+<line class="line" x1="171" y1="360" x2="246" y2="396"/>
+<line class="line" x1="479" y1="360" x2="400" y2="396"/>
+<line class="line" x1="600" y1="360" x2="650" y2="396"/>
+<line class="line" x1="787" y1="360" x2="750" y2="396"/>
 </svg>

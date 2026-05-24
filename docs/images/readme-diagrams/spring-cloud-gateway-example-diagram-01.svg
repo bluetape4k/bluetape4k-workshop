@@ -1,109 +1,76 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1378" height="858" viewBox="0 0 1378 858" role="img" aria-label="Spring Cloud Gateway Example Architecture">
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="460" viewBox="0 0 960 460" role="img" aria-label="Spring Cloud Gateway Architecture">
 <defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.09"/></filter>
+  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
+  </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
     .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
     .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
     .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
+    .card{stroke-width:2.1;filter:url(#shadow)}
+    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
   </style>
 </defs>
-<rect class="canvas" width="1378" height="858"/>
-<rect class="frame" x="32" y="28" width="1314" height="802" rx="28"/>
-<text class="title" x="66" y="82">Spring Cloud Gateway Example Architecture</text>
-<text class="subtitle" x="70" y="118">RedisRateLimiter · CircuitBreaker · Resilience4j · UserKeyResolver · route predicates</text>
-<path class="line" d="M1040 552 C1040 635 839 635 839 718"/>
-<path class="line" d="M522 280 C522 469 355 469 355 658"/>
-<path class="line" d="M1040 220 C1040 220 672 220 672 220"/>
-<path class="line" d="M672 220 C672 469 873 469 873 718"/>
-<path class="line" d="M706 552 C706 386 672 386 672 220"/>
-<path class="line" d="M706 220 C706 303 338 303 338 386"/>
-<path class="line" d="M672 552 C672 386 706 386 706 220"/>
-<path class="line" d="M338 552 C338 386 706 386 706 220"/>
-<path class="line" d="M522 446 C522 552 355 552 355 658"/>
-<path class="line" d="M338 220 C338 303 372 303 372 386"/>
-<g transform="translate(48,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">HTTP</text>
-</g>
-<g transform="translate(382,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">RedisRateLimiter</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">RequestRateLimiter</text>
-</g>
-<g transform="translate(716,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">CircuitBreaker</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">Resilience4j slowcmd</text>
-</g>
-<g transform="translate(1050,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">UserKeyResolver</text>
-</g>
-<g transform="translate(48,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="smallLabel" x="140" y="21" text-anchor="middle">FallbackController</text>
-<text class="smallLabel" x="140" y="47" text-anchor="middle">/circuitbreaker/fall</text>
-<text class="smallLabel" x="140" y="73" text-anchor="middle">back</text>
-</g>
-<g transform="translate(382,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">path_route GET /get</text>
-</g>
-<g transform="translate(716,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F7F1E7" stroke="#B88A44"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">host_route</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">*.myhost.org</text>
-</g>
-<g transform="translate(1050,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EEF6D9" stroke="#8BA84D"/>
-  <text class="smallLabel" x="140" y="21" text-anchor="middle">rewrite_route</text>
-<text class="smallLabel" x="140" y="47" text-anchor="middle">*.rewrite.org /foo/*</text>
-<text class="smallLabel" x="140" y="73" text-anchor="middle">→ /*</text>
-</g>
-<g transform="translate(48,502)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">circuitbreaker_route</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">*.circuitbreaker.org</text>
-</g>
-<g transform="translate(382,502)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="140" y="21" text-anchor="middle">circuitbreaker_fallb</text>
-<text class="smallLabel" x="140" y="47" text-anchor="middle">ack_route</text>
-<text class="smallLabel" x="140" y="73" text-anchor="middle">*.circuitbreakerfall</text>
-</g>
-<g transform="translate(716,502)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">limit_route</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">*.limited.org</text>
-</g>
-<g transform="translate(1050,502)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">websocket_route</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">/echo</text>
-</g>
-<g transform="translate(215,668)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">nghttp2.org httpbin</text>
-</g>
-<g transform="translate(549,668)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">WebSocket :9000</text>
-</g>
-<g transform="translate(883,668)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F7F1E7" stroke="#B88A44"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">(Redis )</text>
-</g>
+<rect class="canvas" width="960" height="460"/>
+<rect class="frame" x="24" y="20" width="912" height="416" rx="20"/>
+
+<!-- Title -->
+<text class="title" x="48" y="66">Spring Cloud Gateway Architecture</text>
+<text class="subtitle" x="48" y="90">GatewayApplication · RateLimiter · CircuitBreaker · Redis · Resilience4j</text>
+
+<!-- Row 1: Client HTTP Request -->
+<rect class="card" x="330" y="108" width="300" height="56" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
+<text class="smallLabel" x="480" y="132" text-anchor="middle">Client HTTP Request</text>
+<text class="small" x="480" y="152" text-anchor="middle">GatewayApplication · /api/** routes</text>
+
+<!-- Row 2: 3 filters -->
+<!-- RateLimiter -->
+<rect class="card" x="36" y="208" width="256" height="76" rx="14" fill="#EAF7EF" stroke="#58A978"/>
+<text class="smallLabel" x="164" y="234" text-anchor="middle">RateLimiter Filter</text>
+<text class="small" x="164" y="254" text-anchor="middle">RequestRateLimiter</text>
+<text class="small" x="164" y="271" text-anchor="middle">UserKeyResolver · Redis backend</text>
+
+<!-- CircuitBreaker -->
+<rect class="card" x="352" y="208" width="256" height="76" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
+<text class="smallLabel" x="480" y="234" text-anchor="middle">CircuitBreaker Filter</text>
+<text class="small" x="480" y="254" text-anchor="middle">Resilience4j</text>
+<text class="small" x="480" y="271" text-anchor="middle">CircuitBreakerConfig · fallback</text>
+
+<!-- RouteFilter -->
+<rect class="card" x="668" y="208" width="256" height="76" rx="14" fill="#F1ECFF" stroke="#8A72D6"/>
+<text class="smallLabel" x="796" y="234" text-anchor="middle">Route Filter</text>
+<text class="small" x="796" y="254" text-anchor="middle">NettyConfig</text>
+<text class="small" x="796" y="271" text-anchor="middle">Thread pool · routing rules</text>
+
+<!-- Arrows Row1 → Row2 -->
+<line class="line" x1="380" y1="164" x2="200" y2="208"/>
+<line class="line" x1="480" y1="164" x2="480" y2="208"/>
+<line class="line" x1="580" y1="164" x2="760" y2="208"/>
+
+<!-- Row 3: Controllers -->
+<rect class="card" x="152" y="332" width="256" height="64" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
+<text class="smallLabel" x="280" y="357" text-anchor="middle">IndexController</text>
+<text class="small" x="280" y="377" text-anchor="middle">main request handler</text>
+
+<rect class="card" x="552" y="332" width="256" height="64" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
+<text class="smallLabel" x="680" y="357" text-anchor="middle">FallbackController</text>
+<text class="small" x="680" y="377" text-anchor="middle">circuit breaker fallback</text>
+
+<!-- Arrows Row2 → Row3 -->
+<line class="line" x1="164" y1="284" x2="250" y2="332"/>
+<line class="line" x1="480" y1="284" x2="400" y2="332"/>
+<line class="line" x1="540" y1="284" x2="620" y2="332"/>
+<line class="line" x1="796" y1="284" x2="710" y2="332"/>
+
+<!-- Row 4: Redis full width -->
+<rect class="card" x="36" y="416" width="886" height="48" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
+<text class="smallLabel" x="479" y="436" text-anchor="middle">Redis (rate limit storage)</text>
+<text class="small" x="479" y="454" text-anchor="middle">RequestRateLimiter · sliding window counters · UserKeyResolver key extraction</text>
+
+<!-- Arrow RateLimiter → Redis -->
+<line class="line" x1="164" y1="284" x2="164" y2="416"/>
 </svg>

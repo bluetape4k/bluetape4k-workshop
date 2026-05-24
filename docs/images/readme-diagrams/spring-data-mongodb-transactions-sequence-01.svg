@@ -1,40 +1,88 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="576" viewBox="0 0 1040 576" role="img" aria-label="mongodb transactions Sequence Flow 2">
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="500" viewBox="0 0 960 500" role="img" aria-label="MongoDB Transaction Sequence">
 <defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <marker id="arrowBlue" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth"><path d="M1,1 L8,4.5 L1,8 Z" fill="#5B8DEF"/></marker>
+  <marker id="arrowTeal" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth"><path d="M1,1 L8,4.5 L1,8 Z" fill="#45A7A1"/></marker>
+  <marker id="arrowAmber" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth"><path d="M1,1 L8,4.5 L1,8 Z" fill="#D6A441"/></marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
     .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
-    .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
     .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
+    .card{stroke-width:2.1;filter:url(#shadow)}
+    .lifeline{stroke:#b0bbca;stroke-width:1.5;stroke-dasharray:6 4;fill:none}
+    .reqArrow{stroke:#5B8DEF;stroke-width:2.1;fill:none;marker-end:url(#arrowBlue)}
+    .rspArrow{stroke:#45A7A1;stroke-width:2.1;stroke-dasharray:7 4;fill:none;marker-end:url(#arrowTeal)}
+    .txArrow{stroke:#D6A441;stroke-width:2.1;fill:none;marker-end:url(#arrowAmber)}
   </style>
 </defs>
-<rect class="canvas" width="1040" height="576"/>
-<rect class="frame" x="32" y="28" width="976" height="520" rx="28"/>
-<text class="title" x="66" y="82">MongoDB Transactions Flow</text>
-<text class="subtitle" x="70" y="118">ReactiveManagedTransitionService · MongoDB ReplicaSet · startTransaction / commitTransaction</text>
-<rect class="card" x="-10" y="166" width="300" height="72" rx="20" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="140" y="198.5" text-anchor="middle">Reactive</text>
-<text class="smallLabel" x="140" y="219.5" text-anchor="middle">Transaction Manager</text>
-<line class="lifeline" x1="140" y1="252" x2="140" y2="516" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="750" y="166" width="300" height="72" rx="20" fill="#EAF7EF" stroke="#58A978"/>
-<text class="smallLabel" x="900" y="209" text-anchor="middle">MongoDB ReplicaSet</text>
-<line class="lifeline" x1="900" y1="252" x2="900" y2="516" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect x="360.5" y="286" width="319" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="378.5" y="313" text-anchor="start">2. startTransaction (ClientSession)</text>
-<path class="line" d="M140 344 L900 344"/>
-<rect x="415" y="396" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="433" y="423" text-anchor="start">11. commitTransaction</text>
-<path class="line" d="M140 454 L900 454"/>
+<rect class="canvas" width="960" height="500"/>
+<rect class="frame" x="24" y="20" width="912" height="456" rx="16"/>
+<text class="title" x="48" y="66">MongoDB Transaction Sequence</text>
+<text class="subtitle" x="48" y="90">@Transactional suspend → ReactiveMongoTransactionManager → MongoDB ReplicaSet</text>
+
+<!-- Participants -->
+<rect class="card" x="40" y="108" width="120" height="44" rx="8" fill="#FDECEF" stroke="#DC6B82"/>
+<text class="smallLabel" x="100" y="135" text-anchor="middle">Test</text>
+
+<rect class="card" x="210" y="108" width="160" height="44" rx="8" fill="#EAF7EF" stroke="#58A978"/>
+<text class="smallLabel" x="290" y="135" text-anchor="middle">CoroutineService</text>
+
+<rect class="card" x="430" y="108" width="180" height="44" rx="8" fill="#FFF3D9" stroke="#D6A441"/>
+<text class="smallLabel" x="520" y="135" text-anchor="middle">ReactiveMongoTxMgr</text>
+
+<rect class="card" x="680" y="108" width="170" height="44" rx="8" fill="#E9F7F6" stroke="#45A7A1"/>
+<text class="smallLabel" x="765" y="135" text-anchor="middle">MongoDB ReplicaSet</text>
+
+<!-- Lifelines -->
+<line class="lifeline" x1="100" y1="152" x2="100" y2="460"/>
+<line class="lifeline" x1="290" y1="152" x2="290" y2="460"/>
+<line class="lifeline" x1="520" y1="152" x2="520" y2="460"/>
+<line class="lifeline" x1="765" y1="152" x2="765" y2="460"/>
+
+<!-- 1. run(processId) -->
+<rect fill="#EAF7EF" stroke="#58A978" stroke-width="1.2" x="40" y="172" width="110" height="22" rx="4"/>
+<text class="small" x="95" y="187" text-anchor="middle">1. run(processId)</text>
+<line class="reqArrow" x1="150" y1="183" x2="282" y2="183"/>
+
+<!-- 2. BEGIN TRANSACTION -->
+<rect fill="#FFF3D9" stroke="#D6A441" stroke-width="1.2" x="210" y="204" width="160" height="22" rx="4"/>
+<text class="small" x="290" y="219" text-anchor="middle">2. BEGIN transaction</text>
+<line class="txArrow" x1="290" y1="215" x2="512" y2="215"/>
+
+<!-- 3. startSession -->
+<rect fill="#E9F7F6" stroke="#45A7A1" stroke-width="1.2" x="430" y="236" width="160" height="22" rx="4"/>
+<text class="small" x="510" y="251" text-anchor="middle">3. startSession</text>
+<line class="reqArrow" x1="520" y1="247" x2="757" y2="247"/>
+
+<!-- 4. update state ACTIVE -->
+<rect fill="#EAF7EF" stroke="#58A978" stroke-width="1.2" x="210" y="268" width="160" height="22" rx="4"/>
+<text class="small" x="290" y="283" text-anchor="middle">4. update → ACTIVE</text>
+<line class="reqArrow" x1="290" y1="279" x2="512" y2="279"/>
+
+<!-- 5. UPDATE command -->
+<rect fill="#E9F7F6" stroke="#45A7A1" stroke-width="1.2" x="430" y="300" width="160" height="22" rx="4"/>
+<text class="small" x="510" y="315" text-anchor="middle">5. UPDATE command</text>
+<line class="reqArrow" x1="520" y1="311" x2="757" y2="311"/>
+
+<!-- 6. update state DONE -->
+<rect fill="#EAF7EF" stroke="#58A978" stroke-width="1.2" x="210" y="332" width="160" height="22" rx="4"/>
+<text class="small" x="290" y="347" text-anchor="middle">6. update → DONE</text>
+<line class="reqArrow" x1="290" y1="343" x2="512" y2="343"/>
+
+<!-- 7. COMMIT -->
+<rect fill="#FFF3D9" stroke="#D6A441" stroke-width="1.2" x="210" y="364" width="160" height="22" rx="4"/>
+<text class="small" x="290" y="379" text-anchor="middle">7. COMMIT</text>
+<line class="txArrow" x1="290" y1="375" x2="512" y2="375"/>
+
+<!-- 8. commitTransaction -->
+<rect fill="#E9F7F6" stroke="#45A7A1" stroke-width="1.2" x="430" y="396" width="160" height="22" rx="4"/>
+<text class="small" x="510" y="411" text-anchor="middle">8. commitTransaction</text>
+<line class="reqArrow" x1="520" y1="407" x2="757" y2="407"/>
+
+<!-- 9. DONE -->
+<rect fill="#f0faf8" stroke="#45A7A1" stroke-width="1.2" x="40" y="428" width="110" height="22" rx="4"/>
+<text class="small" x="95" y="443" text-anchor="middle">9. Process DONE</text>
+<line class="rspArrow" x1="757" y1="439" x2="150" y2="439"/>
 </svg>
