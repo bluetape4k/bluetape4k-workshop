@@ -22,8 +22,8 @@
 </defs>
 <rect class="canvas" width="1044" height="692"/>
 <rect class="frame" x="32" y="28" width="980" height="636" rx="28"/>
-<text class="title" x="66" y="82">Gatling Load Testing Tutorial for.</text>
-<text class="subtitle" x="70" y="118">Architecture nodes and edges from the original Mermaid source</text>
+<text class="title" x="66" y="82">Gatling Virtual Thread Load Testing</text>
+<text class="subtitle" x="70" y="118">Virtual Thread · SyncTaskController · AsyncTaskController · Coroutine simulation</text>
 <path class="line" d="M672 386 C672 386 706 386 706 386"/>
 <path class="line" d="M672 220 C672 220 706 220 706 220"/>
 <path class="line" d="M522 492 C522 469 522 469 522 446"/>

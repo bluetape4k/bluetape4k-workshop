@@ -23,7 +23,7 @@
 <rect class="canvas" width="1288" height="686"/>
 <rect class="frame" x="32" y="28" width="1224" height="630" rx="28"/>
 <text class="title" x="66" y="82">Spring Cloud AWS S3 Demo</text>
-<text class="subtitle" x="70" y="118">Sequence messages from the original Mermaid source</text>
+<text class="subtitle" x="70" y="118">S3Client (AWS SDK v2) · S3Template (Spring Cloud AWS) · LocalStack S3</text>
 <rect class="card" x="-10" y="166" width="300" height="72" rx="20" fill="#E8F3FF" stroke="#5B8DEF"/>
 <text class="smallLabel" x="140" y="198.5" text-anchor="middle">S3Client (AWS SDK</text>
 <text class="smallLabel" x="140" y="219.5" text-anchor="middle">v2)</text>

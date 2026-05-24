@@ -23,7 +23,7 @@
 <rect class="canvas" width="998" height="1162"/>
 <rect class="frame" x="32" y="28" width="934" height="1106" rx="28"/>
 <text class="title" x="66" y="82">JsonView in Spring Boot Demo</text>
-<text class="subtitle" x="70" y="118">UML classes from the original Mermaid source</text>
+<text class="subtitle" x="70" y="118">Views · ArticleDTO · Analytics/Public/Internal @JsonView scopes</text>
 <path class="inheritLine" d="M499 830 L499 763 L274 763 L274 680"/>
 <path class="inheritLine" d="M499 830 L499 755 L724 755 L724 680"/>
 <path class="inheritLine" d="M274 568 L274 292"/>

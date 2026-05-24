@@ -22,8 +22,8 @@
 </defs>
 <rect class="canvas" width="842" height="453"/>
 <rect class="frame" x="32" y="28" width="778" height="397" rx="28"/>
-<text class="title" x="66" y="82">coroutines Entity Relation.</text>
-<text class="subtitle" x="70" y="118">ERD tables and relationships from the original Mermaid source</text>
+<text class="title" x="66" y="82">Vert.x Coroutines Entity Diagram</text>
+<text class="subtitle" x="70" y="118">movie · rating entities · Vert.x coroutines</text>
 <path class="line" d="M622 336 L622 401 L220 401 L220 170"/>
 <g transform="translate(60,170)">
   <rect class="card" x="0" y="0" width="320" height="193" rx="5" fill="#E8F3FF" stroke="#5B8DEF"/>

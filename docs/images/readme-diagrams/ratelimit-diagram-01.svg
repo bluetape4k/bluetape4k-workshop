@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1044" height="526" viewBox="0 0 1044 526" role="img" aria-label="ratelimit Architecture">
+<svg xmlns="http://www.w3.org/2000/svg" width="1044" height="526" viewBox="0 0 1044 526" role="img" aria-label="Rate Limit Architecture Overview">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
   <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
@@ -22,8 +22,8 @@
 </defs>
 <rect class="canvas" width="1044" height="526"/>
 <rect class="frame" x="32" y="28" width="980" height="470" rx="28"/>
-<text class="title" x="66" y="82">ratelimit Architecture</text>
-<text class="subtitle" x="70" y="118">Architecture nodes and edges from the original Mermaid source</text>
+<text class="title" x="66" y="82">Rate Limit Architecture Overview</text>
+<text class="subtitle" x="70" y="118">bucket4j-webflux · Redis · WebFlux · Caffeine · rate limiting strategies</text>
 <path class="line" d="M706 220 C706 303 672 303 672 386"/>
 <path class="line" d="M372 220 C372 303 338 303 338 386"/>
 <path class="line" d="M188 280 C188 303 188 303 188 326"/>

@@ -23,7 +23,7 @@
 <rect class="canvas" width="1378" height="526"/>
 <rect class="frame" x="32" y="28" width="1314" height="470" rx="28"/>
 <text class="title" x="66" y="82">JsonView in Spring Boot Demo</text>
-<text class="subtitle" x="70" y="118">Architecture nodes and edges from the original Mermaid source</text>
+<text class="subtitle" x="70" y="118">ArticleController · @JsonView · Public/Analytics/Internal view filtering</text>
 <path class="line" d="M338 220 C338 303 539 303 539 386"/>
 <path class="line" d="M338 220 C338 220 1040 220 1040 220"/>
 <path class="line" d="M338 220 C338 220 706 220 706 220"/>
