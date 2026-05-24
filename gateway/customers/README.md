@@ -27,6 +27,14 @@ Then open:
 - Customer API: `http://localhost:8081/api/v1/customers`
 - Actuator endpoints: `http://localhost:8081/actuator`
 
+## Used Bluetape4k Features
+
+| Module | Feature | Usage |
+|--------|---------|-------|
+| `bluetape4k-logging` | `KLoggingChannel()` | Coroutine-aware structured logging in controllers and services |
+| `bluetape4k-support` | `uninitialized()`, `unsafeLazy` | Deferred field initialization for injected beans |
+| `bluetape4k-junit5` | `runSuspendIO { }` | Suspend-based integration test runner |
+
 ## Source Map
 
 - `CustomerApplication.kt` starts the Spring Boot application.

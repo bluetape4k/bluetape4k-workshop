@@ -29,6 +29,16 @@ Gateway 워크숍의 주문 서비스 예제입니다. 상품과 주문 API를 �
 - Orders API: `http://localhost:8082/api/v1/orders`
 - Actuator endpoints: `http://localhost:8082/actuator`
 
+## 사용된 Bluetape4k 기능
+
+| 모듈 | 기능 | 사용 위치 |
+|------|------|---------|
+| `bluetape4k-logging` | `KLoggingChannel()`, `KLogging()` | 컨트롤러와 설정의 코루틴 안전 구조화 로깅 |
+| `bluetape4k-idgenerators` | `Uuid` (UUID v7) | 상품과 주문 ID 생성 (타입 안전 UUID v7) |
+| `bluetape4k-support` | `uninitialized()`, `unsafeLazy` | 주입 빈의 지연 필드 초기화 |
+| `bluetape4k-assertions` | `shouldBeFalse` | 간결한 테스트 단언문 |
+| `bluetape4k-junit5` | `runSuspendIO { }` | suspend 기반 통합 테스트 실행기 |
+
 ## 소스 맵
 
 - `OrderApplication.kt`는 Spring Boot 애플리케이션을 시작합니다.
