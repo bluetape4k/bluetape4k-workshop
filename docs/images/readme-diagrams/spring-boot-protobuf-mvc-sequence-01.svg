@@ -22,10 +22,10 @@
 </defs>
 <rect class="canvas" width="1480" height="1366"/>
 <rect class="frame" x="32" y="28" width="1416" height="1310" rx="28"/>
-<text class="title" x="66" y="82">Protobuf</text>
-<text class="subtitle" x="70" y="118">Sequence messages from the original Mermaid source</text>
+<text class="title" x="66" y="82">Protobuf Serialization Flow</text>
+<text class="subtitle" x="70" y="118">Spring MVC · ProtobufHttpMessageConverter · Kotlin ↔ .proto encoding</text>
 <rect class="card" x="8" y="166" width="264" height="72" rx="20" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="140" y="209" text-anchor="middle">ConurceConfig</text>
+<text class="smallLabel" x="140" y="209" text-anchor="middle">CourseConfig</text>
 <line class="lifeline" x1="140" y1="252" x2="140" y2="1306" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
 <rect class="card" x="408" y="166" width="264" height="72" rx="20" fill="#EAF7EF" stroke="#58A978"/>
 <text class="smallLabel" x="540" y="209" text-anchor="middle">CourseController</text>

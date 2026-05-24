@@ -22,8 +22,8 @@
 </defs>
 <rect class="canvas" width="1219" height="596"/>
 <rect class="frame" x="32" y="28" width="1155" height="540" rx="28"/>
-<text class="title" x="66" y="82">STOMP</text>
-<text class="subtitle" x="70" y="118">Sequence messages from the original Mermaid source</text>
+<text class="title" x="66" y="82">STOMP WebSocket Flow</text>
+<text class="subtitle" x="70" y="118">Spring WebSocket · SimpleBroker · /topic/greetings subscription</text>
 <rect class="card" x="1.5" y="166" width="277" height="72" rx="20" fill="#E8F3FF" stroke="#5B8DEF"/>
 <text class="smallLabel" x="140" y="209" text-anchor="middle">WebSocketConfig</text>
 <line class="lifeline" x1="140" y1="252" x2="140" y2="536" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
