@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: cache-benchmark
+
+  # H2 in-memory database for benchmarks
+  datasource:
+    url: jdbc:h2:mem:benchmark;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.H2Dialect
+
+  # Redis (overridden by benchmark setup via system properties)
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 5000ms
+
+  # Spring Cache: primary = Caffeine
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=10000,expireAfterWrite=60s
+
+  # Async for write-behind
+  task:
+    execution:
+      pool:
+        core-size: 4
+        max-size: 16
+        queue-capacity: 500
+
+logging:
+  level:
+    io.bluetape4k.workshop.cache.benchmark: DEBUG
+    org.springframework.cache: DEBUG
+    org.hibernate.SQL: WARN
