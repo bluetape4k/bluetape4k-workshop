@@ -5,8 +5,24 @@ and repository interfaces for type-safe, boilerplate-free data access.
 
 ## Architecture
 
-```
-Controller → Service (@Transactional) → Repository → Exposed JDBC → PostgreSQL
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant Ctrl as @RestController
+    participant Svc as @Service<br/>(@Transactional)
+    participant Repo as Repository<br/>(LongAuditableJdbcRepository)
+    participant DB as PostgreSQL
+
+    C->>Ctrl: HTTP Request
+    Ctrl->>Svc: call service method
+    activate Svc
+    Svc->>Repo: CRUD operation
+    Repo->>DB: Exposed JDBC SQL
+    DB-->>Repo: ResultRow
+    Repo-->>Svc: entity / list
+    Svc-->>Ctrl: result
+    deactivate Svc
+    Ctrl-->>C: HTTP Response
 ```
 
 ## Domain Model

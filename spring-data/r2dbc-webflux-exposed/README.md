@@ -1,11 +1,93 @@
 # R2DBC + WebFlux + Exposed ORM
 
+Spring Data R2DBC + Spring WebFlux + JetBrains Exposed ORM, using **bluetape4k `R2dbcRepository`**
+for a coroutine-first data access layer. Exposed table DSL handles schema definition; Spring WebFlux
+(functional + annotation routes) handles HTTP.
+
+## Architecture
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant Ctrl as @RestController<br/>+ coRouter Handler
+    participant Svc as UserService<br/>(suspend fun)
+    participant Repo as UserExposedRepository<br/>(R2dbcRepository)
+    participant DB as H2 (R2DBC + Exposed)
+
+    C->>Ctrl: HTTP Request
+    Ctrl->>Svc: suspend service call
+    activate Svc
+    Svc->>Repo: findById / save / upsert
+    Note over Repo: suspendedTransaction { <br/>Exposed DSL }
+    Repo->>DB: Exposed R2DBC SQL
+    DB-->>Repo: ResultRow
+    Repo-->>Svc: UserRecord
+    Svc-->>Ctrl: UserRecord / Flow<UserRecord>
+    deactivate Svc
+    Ctrl-->>C: HTTP Response
+```
+
 ## 아키텍처 다이어그램
 
 ![r2dbc webflux exposed Architecture diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-exposed-diagram-01.png)
 
 Spring Data R2DBC와 Spring WebFlux, JetBrains Exposed ORM을 함께 사용하는 예제입니다.
 `exposed-r2dbc` 모듈을 활용해 Exposed 테이블 정의를 R2DBC 환경에서 사용합니다.
+
+## Used bluetape4k Features
+
+| Feature | Artifact | Code location | Benefit |
+|---------|----------|---------------|---------|
+| `R2dbcRepository<ID, Entity>` | `bluetape4k-exposed-r2dbc` | `UserExposedRepository.kt` | Abstract base providing `findAll()`, `findById()`, `count()`, `deleteById()` via Exposed DSL |
+| `KLoggingChannel` | `bluetape4k-logging` | `ExposedR2dbcConfig.kt`, `UserService.kt` | Coroutine-aware structured logging |
+| `bluetape4k-coroutines` | `bluetape4k-coroutines` | Service layer | Coroutine scope helpers |
+| `Runtimex.availableProcessors` | `bluetape4k-core` | `ExposedR2dbcConfig.kt` | CPU-aware connection pool sizing |
+
+## bluetape4k Before / After
+
+### Exposed R2DBC repository with `R2dbcRepository`
+
+```kotlin
+// Before — manual Exposed R2DBC CRUD (repeated per entity)
+class UserRepository {
+    suspend fun findAll(): List<UserRecord> = suspendedTransaction {
+        UserTable.selectAll().map { it.toUserRecord() }
+    }
+    suspend fun findById(id: Int): UserRecord? = suspendedTransaction {
+        UserTable.selectAll().where { UserTable.id eq id }.singleOrNull()?.toUserRecord()
+    }
+    suspend fun deleteById(id: Int): Int = suspendedTransaction {
+        UserTable.deleteWhere { UserTable.id eq id }
+    }
+    // count(), existsById(), findPage()... each written manually
+}
+
+// After — bluetape4k R2dbcRepository: inherit CRUD, implement only what's custom
+@Repository
+class UserExposedRepository : R2dbcRepository<Int, UserRecord> {
+    override val table: UserTable = UserTable
+    override fun extractId(entity: UserRecord): Int = entity.id
+    override suspend fun ResultRow.toEntity(): UserRecord = toUserRecord()
+
+    // Custom operations only — all standard CRUD is inherited
+    suspend fun upsert(user: UserRecord) {
+        table.upsert(where = { table.id eq user.id }) {
+            it[table.name] = user.name
+            it[table.email] = user.email
+        }
+    }
+}
+```
+
+### R2DBC connection pool with `Runtimex`
+
+```kotlin
+// Before — hardcoded pool size
+.maxSize(50)
+
+// After — bluetape4k Runtimex: CPU-adaptive sizing
+.maxSize(max(Runtimex.availableProcessors * 8, 100))
+```
 
 ## 구성
 
