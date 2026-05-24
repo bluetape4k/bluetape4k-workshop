@@ -523,6 +523,13 @@ fun teardown() {
 > - `AbuserDetectionNeo4jTest`: `graphName = "abuser_neo4j"`
 > - `AbuserDetectionMemgraphTest`: `graphName = "abuser_memgraph"`
 > This prevents `dropGraph` in one class from racing with graph setup in another class.
+>
+> **⚠️ [P0-Impl-1] `graphName` is NOT the Bolt database name** — `Neo4jGraphOperations(driver, database)` and
+> `MemgraphGraphOperations(driver, database)` accept a `database: String` (Bolt database selector,
+> default `"neo4j"` / `"memgraph"`). Passing `"abuser_neo4j"` as the `database` argument will fail at
+> runtime with `ClientException: Database does not exist` on Community Edition containers.
+> The correct wiring: `Neo4jGraphOperations(driver)` (drop the second arg); `graphName` flows only to
+> `AbuserDetectionService(ops, graphName)` and then into `createGraph(graphName)` / `dropGraph(graphName)`.
 
 > **`AbstractAbuserDetectionSuspendTest`**: The `@TestInstance(TestInstance.Lifecycle.PER_CLASS)` requirement applies equally. Declare the annotation on the suspend abstract base class for the same reason.
 
@@ -668,3 +675,5 @@ the expected format (e.g., `@param phone E.164 SHA-256 hex hash, not plaintext`)
 | **Step 3-R Pre-Round 2 fixes** | inline advisor | 0 | 3 | 0 | 0 | spec v6 (§13 DoD 12→15/16) + plan v3 (T5-1 Flow.forEach→direct pipeline; T10-1~4 graphName init order; API class names verified) |
 | **Step 3-R Round 2** | 4-perspective (implementer/tester/architect/delivery) + 6-tier advisor | 0 | 7 | 5 | 2 | — |
 | **Step 3-R Round 2 applied** | inline triage | 0 | 7→0 | 1 MEDIUM | 0 | spec v7 + plan v4: §8 contradictory testImpl line fixed; §5.1 findOrCreate "first-create wins" contract; §5.1 linkDevice param rename (userVertexId/deviceVertexId); T2-1 security KDoc; T8-1 Flow cancel pattern (async+deferred/backgroundScope); T10-2/T10-4 @Tag("integration"); T10-3/T10-4 @AfterAll driver.close(); T7-1 test7 sub-assertion |
+| **Step 3-R Round 3** | implementer(Opus) P0=2,P1=3; tester(Opus) P0=0,P1=4; architect(Sonnet) P0=0,P1=3; delivery(Sonnet) P0=0,P1=3 | raw P0=2, P1=13 | strict triage P0=2, P1=7 | 8 | 0 | — |
+| **Step 3-R Round 3 applied** | inline triage (strict: compile error / runtime crash / silent test bypass) | P0=2→0, P1=7→0 | 0 | 8 | 0 | spec v8 + plan v5: [P0-1] ops constructor database≠graphName (§9 + T10-1~4); [P0-2] suspend findAbuseCluster Flow.toList (T5-1); [P1-1] explainSuspicion Flow composition (T5-1); [P1-3] T10-3/4 suspend ops constructor fix; [P1-Arch-3] configurations{}.get() T1-3; [P1-Deliv-1] seedIsolatedUser creates cluster+isolated (T6-1+T7-1); [P1-Test-1] @BeforeEach cleanGraph() runTest+try/catch pattern (T8-1); [P1-Test-2] test16 seed+delay (T8-1); [P1-Test-4] tests 3/4/5/14 concrete assertions (T7-1) |

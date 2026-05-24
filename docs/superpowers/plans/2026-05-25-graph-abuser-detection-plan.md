@@ -32,6 +32,13 @@
 18. **seed 전략**: `AbuserDetectionSeed` 는 composable helpers (`seedSharedIdentifiers()`, `seedReferralCycle()`, `seedIsolatedUser()`) 로 분리. 각 test 는 `@BeforeEach cleanGraph` 후 필요한 helper 만 호출.
 19. **suspend seeder**: T6-1 이 `suspend fun seedAll(service: AbuserDetectionSuspendService): SeedResult` 도 제공.
 20. **version resolution**: `bluetape4k-graph 0.4.2` 는 Maven Central 미발행. T1-2 에서 mavenLocal 발행 여부 확인 후 버전 결정.
+21. **[P0-Impl-1/P1-Impl-3] Neo4j/Memgraph ops 생성자 database ≠ graphName**: `Neo4jGraphOperations(driver)` — 2번째 인자에 graphName 전달 금지. 생성자 2번째 인자는 Bolt database 이름 (`"neo4j"` / `"memgraph"`). graphName 은 서비스 생성자(`AbuserDetectionService(ops, graphName)`)에만 전달. 모든 4개 integration 테스트(T10-1~T10-4) 동일.
+22. **[P0-Impl-2] suspend `findAbuseCluster` + `explainSuspicion` — Flow API 차이**: `ops.neighbors()` / `ops.findEdgesByStartId()` suspend 변형은 `Flow` 반환. `flatMap { Flow }` 는 compile error. `neighbors().toList()` 로 collect 후 flatMap; `explainSuspicion` 는 `flow { ... .collect { emit(...) } }` 로 작성.
+23. **[P1-Test-1] suspend `@BeforeEach cleanGraph()` 패턴**: `runCatching {}` 안에 suspend 호출 금지. `@BeforeEach fun cleanGraph() = runTest { try { ... } catch (e: CancellationException) { throw e } catch (e: Exception) { log.warn } }` 형식.
+24. **[P1-Test-2] test 16 Flow cancellation**: seed data 필수 + slow consumer (`.onEach { delay(10) }`) 필수. empty graph 에서는 Flow 즉시 완료 → silent pass.
+25. **[P1-Test-4] tests 3/4/5/14 구체 assertion**: paths 에 USES_DEVICE/USES_IP edgeLabel 포함; loops 에 cycle 멤버 IDs 포함; ranks.first() 가 seed user1; sharedIdentifiers 에 PhoneNumber + PaymentMethod labels 포함.
+26. **[P1-Arch-3] `configurations {}` `.get()` 필수**: `testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())`. 없으면 Kotlin DSL compile error.
+27. **[P1-Deliv-1] `seedIsolatedUser` 는 cluster + isolated user 모두 생성**: user1/user2/user3 공유 deviceA + unrelatedUser 고립. user1.id NPE 방지.
 
 ---
 
@@ -74,6 +81,24 @@
 - **파일**: `graph/abuser-detection/build.gradle.kts`
 - **작업**: spec §8 의 build.gradle.kts — BOM platform, core/tinkerpop impl, neo4j/memgraph `compileOnly` (NOT testImplementation — extendsFrom 이 테스트 classpath 로 전파), integrationTest task, `excludeTags("integration")` on default test task
 - **⚠️ 중복 의존성 금지**: `compileOnly(libs.bluetape4k.graph.neo4j)` + `testImplementation(libs.bluetape4k.graph.neo4j)` 동시 선언 금지. `compileOnly` + `extendsFrom` 으로 충분.
+- **⚠️ [P1-Arch-3] BOM platform import 가 반드시 첫 번째 dependency 여야 함** — version-less alias 들은 BOM 에서 버전을 받으므로 BOM import 가 먼저 선언되어야 한다:
+  ```kotlin
+  dependencies {
+      implementation(platform(libs.bluetape4k.graph.bom))  // ← 반드시 첫 번째
+      implementation(libs.bluetape4k.graph.core)
+      implementation(libs.bluetape4k.graph.tinkerpop)
+      compileOnly(libs.bluetape4k.graph.neo4j)
+      compileOnly(libs.bluetape4k.graph.memgraph)
+      // ...
+  }
+  ```
+- **⚠️ [P1-Arch-3] Kotlin DSL `configurations {}` 에서 `.get()` 필수** — `NamedDomainObjectProvider<Configuration>` 는 `.extendsFrom()` 메서드가 없으므로 `.get()` 없이는 **compile error**. 반드시 아래 형식 사용:
+  ```kotlin
+  configurations {
+      testImplementation.get().extendsFrom(compileOnly.get(), runtimeOnly.get())
+  }
+  ```
+  참조: `redis/redisson-examples/build.gradle.kts:6`, `kotlin/coroutines/build.gradle.kts:6` — 동일 패턴.
 
 ### T1-4: 테스트 리소스 생성
 - **complexity**: low
@@ -81,7 +106,17 @@
   - `graph/abuser-detection/src/test/resources/junit-platform.properties`
   - `graph/abuser-detection/src/test/resources/logback-test.xml`
 - **작업**:
-  - `junit-platform.properties`: `junit.jupiter.execution.parallel.enabled=false` 만 — **`junit.jupiter.tags.exclude=integration` 절대 포함 금지** (JUnit 엔진 레벨 제외가 Gradle `integrationTest` 태스크도 막음; tag exclusion 은 `build.gradle.kts tasks.test { excludeTags }` 에서만)
+  - `junit-platform.properties`: **⚠️ [P2-Arch-4] workshop 표준 6줄 전체 복사** — `junit.jupiter.execution.parallel.enabled=false` 만으로는 부족; 아래 전체 사용:
+    ```properties
+    junit.jupiter.extensions.autodetection.enabled=true
+    junit.jupiter.testinstance.lifecycle.default=per_class
+
+    junit.jupiter.execution.parallel.enabled=false
+    junit.jupiter.execution.parallel.mode.default=same_thread
+    junit.jupiter.execution.parallel.mode.classes.default=concurrent
+    ```
+    참조: `redis/redisson-examples/src/test/resources/junit-platform.properties`, `kotlin/coroutines` — 동일 6줄.  
+    **`junit.jupiter.tags.exclude=integration` 절대 포함 금지** (JUnit 엔진 레벨 제외가 Gradle `integrationTest` 태스크도 막음; tag exclusion 은 `build.gradle.kts tasks.test { excludeTags }` 에서만)
   - `logback-test.xml`: 기존 workshop 모듈 logback-test.xml 복사
 
 ---
@@ -223,6 +258,33 @@
     }
     ```
   - `VERTEX_LABEL_TO_EDGE_LABEL` — companion object 에 선언 (T4-1b 동일)
+  - **⚠️ [P0-Impl-2] `findAbuseCluster` suspend — `ops.neighbors()` 는 `Flow<GraphVertex>` 반환 (List 아님)**:
+    `List.flatMap { Flow }` 는 compile error. `.toList()` 로 수집 후 flatMap 해야 함:
+    ```kotlin
+    suspend fun findAbuseCluster(seedUserId: GraphElementId): AbuseCluster {
+        if (ops.findVertexById(seedUserId) == null) return AbuseCluster(seedUserId, emptyList(), emptyList())
+        val seedIdentifiers: List<GraphVertex> = IdentifierEdgeLabel.all.flatMap { edgeLabel ->
+            ops.neighbors(seedUserId, NeighborOptions(edgeLabel.value, OUTGOING, 1))
+                .toList()   // import kotlinx.coroutines.flow.toList ← REQUIRED
+        }
+        // 이하 blocking 버전과 동일한 label-dispatch BFS 로직
+    }
+    ```
+    **필수 imports**: `kotlinx.coroutines.flow.firstOrNull`, `kotlinx.coroutines.flow.toList`
+  - **⚠️ [P1-Impl-1] `explainSuspicion` suspend — `ops.findEdgesByStartId()` 는 `Flow<GraphEdge>` 반환 (List 아님)**:
+    `List` 방식 iteration 은 compile error. `flow { }` 빌더로 작성:
+    ```kotlin
+    fun explainSuspicion(userId: GraphElementId): Flow<AbusePath> = flow {
+        userId.requireNotBlank("userId")    // ← validation inside flow{} — runs at collection time
+        IdentifierEdgeLabel.all.forEach { lbl ->
+            ops.findEdgesByStartId(userId, lbl.value).collect { edge ->
+                emit(AbusePath(edge.endVertexId, lbl))
+            }
+        }
+    }
+    ```
+    이 함수는 `suspend` 가 아닌 Flow-반환 함수. validation 은 collect 시 발생.
+    테스트 패턴: `assertFailsWith<IllegalArgumentException> { service.explainSuspicion("").toList() }`
   - `rankSuspiciousUsers` — **`Flow.mapIndexed` 없음** — `.withIndex().map { (idx, s) -> SuspiciousUserScore(s.vertex, s.score, idx + 1) }` 사용.
     **`flow { }` 빌더 + `Flow.forEach` 패턴 금지 — `Flow.forEach` 는 존재하지 않음 (compile error).**
     Direct pipeline 으로 작성:
@@ -246,9 +308,14 @@
 - **파일**: `graph/abuser-detection/src/main/kotlin/io/bluetape4k/workshop/graph/abuser/seed/AbuserDetectionSeed.kt`
 - **선행**: T4-1a, T4-1b, T5-1 완료
 - **설계 전략**: `seedAll` 대신 **composable helpers** — 각 테스트가 `@BeforeEach cleanGraph` 후 필요한 helper 만 호출
-  - `seedSharedIdentifiers(service): SeedResult` — 3 users × shared device+IP (test 2, 3, 5, 14)
+  - `seedSharedIdentifiers(service): SeedResult` — 3 users × shared device+IP (test 2, 3, 5, 14); `unrelatedUser` 포함 (cluster 와 무관한 4번째 user 생성)
   - `seedReferralCycle(service): SeedResult` — A→B→C→A cycle (test 4)
-  - `seedIsolatedUser(service): SeedResult` — 독립 사용자 (test 7)
+  - `seedIsolatedUser(service): SeedResult` — **⚠️ [P1-Deliv-1] 반드시 cluster + isolated user 모두 생성해야 함**:
+    - `user1`, `user2`, `user3` 는 `deviceA` 를 공유 (cluster 형성)
+    - `unrelatedUser` 는 graph edge 없음 (완전 고립)
+    - 이 구조가 없으면 test 7 에서 `seed.user1.id` NPE 발생
+    - `phoneA`, `paymentA`, `referralUser*` = null
+    - Test 7 assertions: `findAbuseCluster(seed.user1.id).users` 에 user2/user3 포함, `unrelatedUser` 미포함; `findAbuseCluster(seed.unrelatedUser.id).users.isEmpty()`
   - `seedAll(service): SeedResult` — 모두 포함 (backward compat, test 5)
 - **suspend variant 필수**: blocking 버전과 동일한 suspend helpers:
   - `suspend fun seedSharedIdentifiers(service: AbuserDetectionSuspendService): SeedResult`
@@ -288,9 +355,20 @@
   - **15개 테스트 케이스** (happy 7 + failure 5 + additional 3):
     1. `creates user and links device` — `service.initialize()` 후 직접 addUser/addDevice/linkDevice (seed 없음)
     2. `finds shared-device abuse cluster — returns 2 other users (seed excluded)` — `seedSharedIdentifiers(service)` 호출; assert `findAbuseCluster(seed.user1.id).users shouldContainExactlyInAnyOrder listOf(seed.user2, seed.user3)`
-    3. `explains suspicion by shared device and IP` — `seedSharedIdentifiers(service)` 사용
-    4. `detects referral loops (A→B→C→A)` — `seedReferralCycle(service)` 호출
-    5. `ranks user at center of identifier sharing as most suspicious` — `seedSharedIdentifiers(service)` 사용
+    3. `explains suspicion by shared device and IP` — `seedSharedIdentifiers(service)` 사용:
+       - **⚠️ [P1-Test-4] 구체 assertion 필수**: `service.explainSuspicion(seed.user1.id)` 결과에 대해:
+         - `paths.shouldNotBeEmpty()`
+         - `paths.map { it.edgeLabel }.toSet() shouldContainAll setOf(IdentifierEdgeLabel.USES_DEVICE, IdentifierEdgeLabel.USES_IP)`
+    4. `detects referral loops (A→B→C→A)` — `seedReferralCycle(service)` 호출:
+       - **⚠️ [P1-Test-4] 구체 assertion 필수**:
+         - `val loops = service.detectReferralLoops()`
+         - `loops.shouldNotBeEmpty()`
+         - `loops.any { cycle -> cycle.vertices.map { it.id }.containsAll(listOf(seed.referralUserA!!.id, seed.referralUserB!!.id, seed.referralUserC!!.id)) } shouldBe true`
+    5. `ranks user at center of identifier sharing as most suspicious` — `seedSharedIdentifiers(service)` 사용:
+       - **⚠️ [P1-Test-4] 구체 assertion 필수**:
+         - `val ranks = service.rankSuspiciousUsers()`
+         - `ranks.shouldNotBeEmpty()`
+         - `ranks.first().user.id shouldBeEqualTo seed.user1.id` — user1 이 device+IP 를 2명과 공유하므로 최고 score
     6. `empty graph returns empty cluster` — seed 없음; `findAbuseCluster(nonExistentId).users.isEmpty()`
     7. `cluster excludes unrelated users` — `seedIsolatedUser(service)` 호출 후:
        - `findAbuseCluster(seed.user1.id).users` 에 `seed.unrelatedUser` 포함 안 됨 확인
@@ -301,7 +379,12 @@
     11. `rankSuspiciousUsers returns empty list on empty graph`
     12. `detectReferralLoops returns empty list when no REFERRED_BY edges exist`
     13. `addDevice called twice with same deviceId returns the same vertex id` — `service.addDevice("device-X", "ios").id == service.addDevice("device-X", "ios").id`; `ops.findVerticesByLabel(DeviceLabel.label).count { it.properties["deviceId"] == "device-X" } == 1`
-    14. `shared phone and payment method detection` — seed two users sharing phone + payment; assert `findAbuseCluster` returns both with PhoneNumber + PaymentMethod in sharedIdentifiers
+    14. `shared phone and payment method detection` — seed two users sharing phone + payment:
+        - **⚠️ [P1-Test-4] 구체 assertion 필수**:
+          - `val cluster = service.findAbuseCluster(seed.user1.id)`
+          - `cluster.users.size shouldBeGreaterThanOrEqual 1`
+          - `cluster.sharedIdentifiers.map { it.label } shouldContainAll listOf(PhoneNumberLabel.label, PaymentMethodLabel.label)`
+          - PhoneNumber + PaymentMethod 양쪽 label 이 모두 포함되어야 `HAS_PHONE`/`USES_PAYMENT` dispatch 분기 검증 완료
     15. `cluster excludes REFERRED_BY-only reachable users` — link userA→userB via USES_DEVICE + REFERRED_BY; link userC→userA via REFERRED_BY only; assert userB in cluster, userC NOT in cluster
   - Exception tests: `assertFailsWith<IllegalArgumentException> { }`
   - Assertion: `shouldBe`, `shouldContainExactlyInAnyOrder` (bluetape4k-assertions)
@@ -317,6 +400,23 @@
 - **선행**: T7-1 완료 (동일 15개 테스트 구조 참조)
 - **작업**:
   - `@TestInstance(TestInstance.Lifecycle.PER_CLASS)` 필수
+  - **⚠️ [P1-Test-1] `@BeforeEach cleanGraph()` — suspend call 은 `runCatching {}` 금지**:
+    `runCatching {}` 안에서 suspend 함수 호출 시 `CancellationException` 삼킴 (CLAUDE.md 규칙 위반).
+    올바른 패턴:
+    ```kotlin
+    @BeforeEach
+    fun cleanGraph() = runTest {
+        try {
+            if (ops.graphExists(graphName)) ops.dropGraph(graphName)
+        } catch (e: CancellationException) {
+            throw e   // ← 반드시 재throw
+        } catch (e: Exception) {
+            log.warn(e) { "dropGraph failed; continuing with initialize()" }
+        }
+        suspendService.initialize()
+    }
+    ```
+    `@BeforeEach fun cleanGraph() = runTest { ... }` 형식 사용 — JUnit 5 가 `runTest` 의 반환값 무시함으로 정상 동작.
   - 동일 15개 테스트를 `runTest { }` 로 래핑
   - **suspend seeder 사용**: `seedSharedIdentifiers(suspendService)`, `seedReferralCycle(suspendService)`, `seedIsolatedUser(suspendService)` (T6-1 suspend 버전)
   - Flow 테스트: `explainSuspicion(...).toList()`, `rankSuspiciousUsers(...).toList()`
@@ -333,11 +433,16 @@
     ```
   - **suspend `fun` exception 테스트**: `coInvoking { service.addDevice("", "ios") } shouldThrow IllegalArgumentException::class`
   - **Flow 취소 검증 테스트** (test 16): `rankSuspiciousUsers` Flow 를 collect 중인 Job 을 cancel 하고 취소 전파 확인
+    - **⚠️ [P1-Test-2] empty graph 에서는 Flow 가 즉시 완료 → cancel 이 도달하기 전에 정상 종료 → silent pass**
+      반드시 seed data 를 넣고 slow consumer 사용해야 cancellation 이 in-flight 중에 도달함:
     ```kotlin
-    // ✅ Option A — async + deferred.await() (CancellationException 전파 검증)
+    // ✅ Option A — seed data 필수 + slow consumer + async/deferred.await()
     runTest {
+        seedSharedIdentifiers(suspendService)   // graph data 필수 — PageRank 가 실제 emit 해야 함
         val deferred = async {
-            service.rankSuspiciousUsers().collect { }
+            service.rankSuspiciousUsers()
+                .onEach { delay(10) }           // slow consumer — cancel 이 in-flight 중에 도달하도록
+                .collect { }
         }
         deferred.cancel()
         assertFailsWith<CancellationException> { deferred.await() }
@@ -345,8 +450,9 @@
 
     // ✅ Option B — backgroundScope (isCancelled 상태 검증)
     runTest {
+        seedSharedIdentifiers(suspendService)
         val job = backgroundScope.launch {
-            service.rankSuspiciousUsers().collect { }
+            service.rankSuspiciousUsers().onEach { delay(10) }.collect { }
         }
         job.cancel()
         job.join()
@@ -398,7 +504,11 @@
     // ⚠️ graphName MUST be declared before ops — Kotlin initializes properties in declaration order.
     // Declaring ops first would read graphName before it is initialized (null → NPE or wrong value).
     override val graphName = "abuser_neo4j"
-    override val ops: GraphOperations = Neo4jGraphOperations(driver, graphName)
+    // ⚠️ [P0-Impl-1] Neo4jGraphOperations 생성자 2번째 인자는 `database: String = "neo4j"` (Bolt database 이름).
+    // graphName ("abuser_neo4j") 를 여기 전달하면 존재하지 않는 database 에 연결 → ClientException: Database does not exist.
+    // graphName 은 서비스 생성자 (abstract base 에서 AbuserDetectionService(ops, graphName)) 에 전달되어
+    // createGraph(graphName) / dropGraph(graphName) 에서만 사용됨 — 생성자에는 전달하지 않음.
+    override val ops: GraphOperations = Neo4jGraphOperations(driver)   // default database = "neo4j"
     ```
   - `@AfterAll fun teardown()`: `runCatching { if (ops.graphExists(graphName)) ops.dropGraph(graphName) }.onFailure { log.warn }` + `driver.close()`
 
@@ -419,7 +529,9 @@
         }
         // ⚠️ graphName MUST be declared before ops (same initialization order rule as T10-1)
         override val graphName = "abuser_memgraph"
-        override val ops: GraphOperations = MemgraphGraphOperations(driver, graphName)
+        // ⚠️ [P0-Impl-1] MemgraphGraphOperations 생성자 2번째 인자는 `database: String = "memgraph"`.
+        // graphName 전달 금지 — default database "memgraph" 사용.
+        override val ops: GraphOperations = MemgraphGraphOperations(driver)   // default database = "memgraph"
 
         @AfterAll
         fun teardown() {
@@ -456,7 +568,9 @@
             val driver: Driver = GraphDatabase.driver(neo4j.boltUrl, AuthTokens.none())
         }
         override val graphName = "abuser_suspend_neo4j"
-        override val ops: GraphSuspendOperations = Neo4jGraphSuspendOperations(driver, graphName)
+        // ⚠️ [P1-Impl-3] Neo4jGraphSuspendOperations 생성자 2번째 인자는 `database: String = "neo4j"`.
+        // graphName 전달 금지 — default database "neo4j" 사용.
+        override val ops: GraphSuspendOperations = Neo4jGraphSuspendOperations(driver)   // default database = "neo4j"
 
         @AfterAll
         fun teardown() {
@@ -484,7 +598,9 @@
             val driver: Driver = GraphDatabase.driver(memgraph.boltUrl, AuthTokens.none())
         }
         override val graphName = "abuser_suspend_memgraph"
-        override val ops: GraphSuspendOperations = MemgraphGraphSuspendOperations(driver, graphName)
+        // ⚠️ [P1-Impl-3] MemgraphGraphSuspendOperations 생성자 2번째 인자는 `database: String = "memgraph"`.
+        // graphName 전달 금지 — default database "memgraph" 사용.
+        override val ops: GraphSuspendOperations = MemgraphGraphSuspendOperations(driver)   // default database = "memgraph"
 
         @AfterAll
         fun teardown() {
