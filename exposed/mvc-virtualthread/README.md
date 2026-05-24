@@ -4,22 +4,86 @@ Spring MVC + Virtual Threads + Exposed JDBC — **no `@Transactional`**.
 
 ## Architecture
 
-```
-Controller → Service (virtualFuture) → Repository (virtualFuture) → transaction(db) → PostgreSQL
-             └─ VT executor (TomcatConfig)
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant Ctrl as @RestController
+    participant Svc as @Service<br/>(VT executor)
+    participant Repo as Repository<br/>(VT executor)
+    participant DB as PostgreSQL
+
+    C->>Ctrl: HTTP Request
+    Ctrl->>Svc: call service method
+    activate Svc
+    Note over Svc: virtualFuture(executor) { }
+    Svc->>Repo: submit to VT executor
+    Note over Repo: transaction(db) { }
+    Repo->>DB: Exposed JDBC SQL
+    DB-->>Repo: ResultRow
+    Repo-->>Svc: entity / list
+    Svc-->>Ctrl: Future.get()
+    deactivate Svc
+    Ctrl-->>C: HTTP Response
 ```
 
-## Used Bluetape4k Features
+## Used bluetape4k Features
 
-| Feature | Module | Usage |
-|---------|--------|-------|
-| `KLogging` | `bluetape4k-logging` | Companion object logging |
-| `virtualFuture(executor) { }` | `bluetape4k-virtualthread-api` | Submits DB work to VT executor |
-| `ShutdownQueue.register(executor)` | `bluetape4k-virtualthread-api` | Graceful shutdown of VT executor |
-| `bluetape4k-virtualthread-jdk21` | `bluetape4k-virtualthread-jdk21` | JDK 21 VT runtime |
-| `bluetape4k-junit5` | `bluetape4k-junit5` | `Fakers.faker` in tests |
-| `bluetape4k-assertions` | `bluetape4k-assertions` | `shouldBeEqualTo`, comparison matchers |
-| `bluetape4k-testcontainers` | `bluetape4k-testcontainers` | `PostgreSQLServer.Launcher.postgres` singleton |
+| Feature | Artifact | Code location | Benefit |
+|---------|----------|---------------|---------|
+| `KLogging` | `bluetape4k-logging` | Every service class | Lazy lambda logging |
+| `virtualFuture(executor) { }` | `bluetape4k-virtualthread-api` | `AuthorService.kt`, `OrderService.kt` | Submits blocking JDBC work to VT executor — no coroutine/reactor needed |
+| `ShutdownQueue.register(executor)` | `bluetape4k-virtualthread-api` | `TomcatConfig.kt` | Graceful shutdown of VT executor without manual lifecycle management |
+| `bluetape4k-virtualthread-jdk21` | `bluetape4k-virtualthread-jdk21` | runtime classpath | JDK 21 virtual thread provider |
+| `Fakers.faker` | `bluetape4k-junit5` | Test base classes | Deterministic fake data generation |
+| `shouldBeEqualTo` matchers | `bluetape4k-assertions` | All test classes | Readable Kotlin-idiomatic assertions |
+| `PostgreSQLServer.Launcher.postgres` | `bluetape4k-testcontainers` | `AbstractMvcVirtualthreadTest` | Singleton Testcontainers PostgreSQL — no `@Testcontainers` boilerplate |
+
+## bluetape4k Before / After
+
+### Virtual Thread DB execution
+
+```kotlin
+// Before — @Transactional with potential pinning risk under virtual threads
+@Service
+class AuthorService(private val repo: AuthorRepository) {
+    @Transactional
+    fun save(dto: AuthorDTO): AuthorDTO {
+        return repo.insert(dto)      // synchronized monitor → pins the carrier thread
+    }
+}
+
+// After — bluetape4k virtualFuture: explicit VT submission, no @Transactional
+@Service
+class AuthorService(
+    private val repo: AuthorRepository,
+    private val executor: ExecutorService,
+) {
+    fun save(dto: AuthorDTO): AuthorDTO =
+        virtualFuture(executor) {
+            transaction(db) { repo.insert(dto) }
+        }.get()
+}
+```
+
+### Executor lifecycle management
+
+```kotlin
+// Before — manual PreDestroy or ApplicationListener
+@Bean
+fun virtualThreadExecutor(): ExecutorService {
+    val exec = Executors.newVirtualThreadPerTaskExecutor()
+    // Remember to shut it down somewhere...
+    return exec
+}
+
+// After — bluetape4k ShutdownQueue: zero-boilerplate graceful shutdown
+@Bean
+fun virtualThreadExecutor(): ExecutorService {
+    val exec = Executors.newVirtualThreadPerTaskExecutor()
+    ShutdownQueue.register(exec)   // automatically called on JVM shutdown
+    return exec
+}
+```
 
 ## Key Patterns
 

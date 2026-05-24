@@ -1,4 +1,28 @@
-# Spring Data R2DBC Demo
+# Spring Data R2DBC + Coroutines
+
+Spring Data R2DBC with Kotlin coroutines using **bluetape4k `*Suspending` extension functions**
+for zero-boilerplate reactive data access.
+
+## Architecture
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant Ctrl as @RestController<br/>(suspend fun)
+    participant Repo as PostRepository<br/>(*Suspending extensions)
+    participant Ops as R2dbcEntityOperations
+    participant DB as PostgreSQL (R2DBC)
+
+    C->>Ctrl: HTTP Request
+    Ctrl->>Repo: suspend fun (e.g. findOneById)
+    Repo->>Ops: findOneByIdSuspending(id)
+    Note over Ops: bluetape4k coroutine wrapper
+    Ops->>DB: R2DBC SQL query
+    DB-->>Ops: row(s)
+    Ops-->>Repo: Post entity
+    Repo-->>Ctrl: Post
+    Ctrl-->>C: HTTP Response
+```
 
 ## 아키텍처 다이어그램
 
