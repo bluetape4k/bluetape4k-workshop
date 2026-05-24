@@ -1,0 +1,50 @@
+spring:
+    application:
+        name: bucket4j-advanced
+
+    profiles:
+        active: dev
+        default: dev
+
+    jackson:
+        serialization:
+            indent-output: true
+    codec:
+        max-in-memory-size: 10MB
+
+    data:
+        redis:
+            host: ${testcontainers.redis.host}
+            port: ${testcontainers.redis.port}
+            url: ${testcontainers.redis.url}
+            lettuce:
+                pool:
+                    enabled: true
+
+server:
+    port: 8080
+
+# Rate limit settings
+ratelimit:
+    # When true, the X-Forwarded-For and X-Real-IP headers are trusted for IP extraction.
+    # Enable only when the application is behind a trusted, controlled reverse proxy.
+    # WARNING: enabling this without a trusted proxy allows clients to spoof their IP address.
+    trust-proxy: false
+
+info:
+    name: ${spring.application.name}
+    description: Bucket4j advanced rate limit demo — IP / userId / combined strategies
+    environment: ${spring.profiles.active}
+    version: 1.0.0
+
+management:
+    endpoints:
+        web:
+            exposure:
+                include: "*"
+    endpoint:
+        health:
+            show-details: always
+    metrics:
+        tags:
+            application: ${spring.application.name}
