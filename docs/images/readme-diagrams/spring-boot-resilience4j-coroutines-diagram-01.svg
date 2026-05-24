@@ -1,96 +1,147 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1378" height="858" viewBox="0 0 1378 858" role="img" aria-label="Circuit Breaker">
-<defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
-  <style>
-    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
-    .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
-    .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
-    .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
-  </style>
-</defs>
-<rect class="canvas" width="1378" height="858"/>
-<rect class="frame" x="32" y="28" width="1314" height="802" rx="28"/>
-<text class="title" x="66" y="82">Circuit Breaker</text>
-<text class="subtitle" x="70" y="118">Architecture nodes and edges from the original Mermaid source</text>
-<path class="line" d="M338 552 C338 552 706 552 706 552"/>
-<path class="line" d="M672 386 C672 469 706 469 706 552"/>
-<path class="line" d="M839 718 C839 635 1040 635 1040 552"/>
-<path class="line" d="M839 718 C839 635 706 635 706 552"/>
-<path class="line" d="M1040 552 C1040 635 839 635 839 718"/>
-<path class="line" d="M1006 552 C1006 552 1040 552 1040 552"/>
-<path class="line" d="M338 386 C338 469 372 469 372 552"/>
-<path class="line" d="M1040 220 C1040 386 338 386 338 552"/>
-<path class="line" d="M1006 220 C1006 303 1040 303 1040 386"/>
-<path class="line" d="M672 220 C672 303 706 303 706 386"/>
-<path class="line" d="M338 220 C338 303 372 303 372 386"/>
-<g transform="translate(48,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">BackendAController</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">@CircuitBreaker</text>
-</g>
-<g transform="translate(382,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">BackendBController</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">@RateLimiter</text>
-</g>
-<g transform="translate(716,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">BackendCController</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">@Retry</text>
-</g>
-<g transform="translate(1050,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="140" y="21" text-anchor="middle">Suspend Backend</text>
-<text class="smallLabel" x="140" y="47" text-anchor="middle">AController +</text>
-<text class="smallLabel" x="140" y="73" text-anchor="middle">@CircuitBreaker</text>
-</g>
-<g transform="translate(48,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">Suspend Backend</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">BController + @Retry</text>
-</g>
-<g transform="translate(382,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">BackendAService</text>
-</g>
-<g transform="translate(716,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F7F1E7" stroke="#B88A44"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">BackendBService</text>
-</g>
-<g transform="translate(1050,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EEF6D9" stroke="#8BA84D"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">BackendCService</text>
-</g>
-<g transform="translate(48,502)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">BackendACoService</text>
-</g>
-<g transform="translate(382,502)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">BackendBCoService</text>
-</g>
-<g transform="translate(716,502)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">CLOSED</text>
-</g>
-<g transform="translate(1050,502)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">OPEN</text>
-</g>
-<g transform="translate(549,668)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">HALF-OPEN</text>
-</g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1378 920" width="1378" height="920">
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="2" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.12"/>
+    </filter>
+    <marker id="arrow-gray" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <polygon points="1,1 8,4.5 1,8" fill="#6b7280"/>
+    </marker>
+    <marker id="arrow-red" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <polygon points="1,1 8,4.5 1,8" fill="#ef4444"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <polygon points="1,1 8,4.5 1,8" fill="#16a34a"/>
+    </marker>
+    <marker id="arrow-slate" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <polygon points="1,1 8,4.5 1,8" fill="#6b7280"/>
+    </marker>
+    <marker id="arrow-reopen" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <polygon points="1,1 8,4.5 1,8" fill="#ef4444"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1378" height="920" fill="#f6f9fc"/>
+  <!-- Outer frame -->
+  <rect x="20" y="20" width="1338" height="880" rx="16" fill="#fff" stroke="#d7e2ec" stroke-width="1.5"/>
+
+  <!-- Title -->
+  <text x="689" y="50" font-family="'Architects Daughter', cursive" font-size="28" fill="#1e293b" text-anchor="middle">Spring Boot Resilience4j &#8212; Circuit Breaker Patterns</text>
+  <text x="689" y="70" font-family="'Comic Sans MS', cursive" font-size="13" fill="#536476" text-anchor="middle">Synchronous and coroutine REST endpoints with CircuitBreaker, RateLimiter, and Retry</text>
+
+  <!-- ============================================================ -->
+  <!-- TOP-LEFT PANEL: Synchronous REST API -->
+  <!-- ============================================================ -->
+  <rect x="32" y="80" width="640" height="340" rx="14" fill="#f8faff" stroke="#c7d2fe" stroke-width="1.5"/>
+  <text x="352" y="108" font-family="'Architects Daughter', cursive" font-size="18" fill="#3730a3" text-anchor="middle">Synchronous REST API</text>
+
+  <!-- Column A: BackendA -->
+  <!-- BackendAController -->
+  <rect x="56" y="124" width="176" height="88" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="144" y="148" font-family="'Architects Daughter', cursive" font-size="14" fill="#1e3a5f" text-anchor="middle">BackendAController</text>
+  <rect x="80" y="155" width="128" height="22" rx="11" fill="#7c3aed"/>
+  <text x="144" y="170" font-family="'Comic Sans MS', cursive" font-size="12" fill="#fff" text-anchor="middle">@CircuitBreaker</text>
+  <!-- Arrow A down -->
+  <line x1="144" y1="212" x2="144" y2="248" stroke="#6b7280" stroke-width="2" marker-end="url(#arrow-gray)"/>
+  <!-- BackendAService -->
+  <rect x="56" y="252" width="176" height="72" rx="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="144" y="292" font-family="'Architects Daughter', cursive" font-size="14" fill="#3b0764" text-anchor="middle">BackendAService</text>
+
+  <!-- Column B: BackendB -->
+  <!-- BackendBController -->
+  <rect x="252" y="124" width="176" height="88" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="340" y="148" font-family="'Architects Daughter', cursive" font-size="14" fill="#064e3b" text-anchor="middle">BackendBController</text>
+  <rect x="284" y="155" width="112" height="22" rx="11" fill="#059669"/>
+  <text x="340" y="170" font-family="'Comic Sans MS', cursive" font-size="12" fill="#fff" text-anchor="middle">@RateLimiter</text>
+  <!-- Arrow B down -->
+  <line x1="340" y1="212" x2="340" y2="248" stroke="#6b7280" stroke-width="2" marker-end="url(#arrow-gray)"/>
+  <!-- BackendBService -->
+  <rect x="252" y="252" width="176" height="72" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="340" y="292" font-family="'Architects Daughter', cursive" font-size="14" fill="#064e3b" text-anchor="middle">BackendBService</text>
+
+  <!-- Column C: BackendC -->
+  <!-- BackendCController -->
+  <rect x="448" y="124" width="176" height="88" rx="10" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="536" y="148" font-family="'Architects Daughter', cursive" font-size="14" fill="#7c2d12" text-anchor="middle">BackendCController</text>
+  <rect x="512" y="155" width="80" height="22" rx="11" fill="#ea580c"/>
+  <text x="552" y="170" font-family="'Comic Sans MS', cursive" font-size="12" fill="#fff" text-anchor="middle">@Retry</text>
+  <!-- Arrow C down -->
+  <line x1="536" y1="212" x2="536" y2="248" stroke="#6b7280" stroke-width="2" marker-end="url(#arrow-gray)"/>
+  <!-- BackendCService -->
+  <rect x="448" y="252" width="176" height="72" rx="10" fill="#ffedd5" stroke="#ea580c" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="536" y="292" font-family="'Architects Daughter', cursive" font-size="14" fill="#7c2d12" text-anchor="middle">BackendCService</text>
+
+  <!-- ============================================================ -->
+  <!-- TOP-RIGHT PANEL: Coroutine REST API (suspend) -->
+  <!-- ============================================================ -->
+  <rect x="700" y="80" width="646" height="340" rx="14" fill="#fdf4ff" stroke="#e9d5ff" stroke-width="1.5"/>
+  <text x="1023" y="108" font-family="'Architects Daughter', cursive" font-size="18" fill="#6b21a8" text-anchor="middle">Coroutine REST API (suspend)</text>
+
+  <!-- Column A: SuspendBackendA -->
+  <!-- SuspendBackendAController -->
+  <rect x="724" y="124" width="196" height="88" rx="10" fill="#fce7f3" stroke="#db2777" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="822" y="148" font-family="'Architects Daughter', cursive" font-size="14" fill="#831843" text-anchor="middle">SuspendBackend</text>
+  <text x="822" y="166" font-family="'Architects Daughter', cursive" font-size="14" fill="#831843" text-anchor="middle">AController</text>
+  <rect x="736" y="175" width="128" height="22" rx="11" fill="#7c3aed"/>
+  <text x="800" y="190" font-family="'Comic Sans MS', cursive" font-size="12" fill="#fff" text-anchor="middle">@CircuitBreaker</text>
+  <!-- Arrow A-suspend down -->
+  <line x1="822" y1="216" x2="822" y2="248" stroke="#6b7280" stroke-width="2" marker-end="url(#arrow-gray)"/>
+  <!-- BackendACoService -->
+  <rect x="724" y="252" width="196" height="72" rx="10" fill="#fce7f3" stroke="#db2777" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="822" y="295" font-family="'Architects Daughter', cursive" font-size="14" fill="#831843" text-anchor="middle">BackendACoService</text>
+
+  <!-- Column B: SuspendBackendB -->
+  <!-- SuspendBackendBController -->
+  <rect x="952" y="124" width="196" height="88" rx="10" fill="#ccfbf1" stroke="#0d9488" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="1050" y="148" font-family="'Architects Daughter', cursive" font-size="14" fill="#134e4a" text-anchor="middle">SuspendBackend</text>
+  <text x="1050" y="166" font-family="'Architects Daughter', cursive" font-size="14" fill="#134e4a" text-anchor="middle">BController</text>
+  <rect x="1008" y="175" width="80" height="22" rx="11" fill="#0d9488"/>
+  <text x="1048" y="190" font-family="'Comic Sans MS', cursive" font-size="12" fill="#fff" text-anchor="middle">@Retry</text>
+  <!-- Arrow B-suspend down -->
+  <line x1="1050" y1="216" x2="1050" y2="248" stroke="#6b7280" stroke-width="2" marker-end="url(#arrow-gray)"/>
+  <!-- BackendBCoService -->
+  <rect x="952" y="252" width="196" height="72" rx="10" fill="#ccfbf1" stroke="#0d9488" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="1050" y="295" font-family="'Architects Daughter', cursive" font-size="14" fill="#134e4a" text-anchor="middle">BackendBCoService</text>
+
+  <!-- ============================================================ -->
+  <!-- BOTTOM PANEL: CircuitBreaker State Machine -->
+  <!-- ============================================================ -->
+  <rect x="32" y="444" width="1314" height="420" rx="14" fill="#f8f8ff" stroke="#c7d2fe" stroke-width="1.5"/>
+  <text x="689" y="476" font-family="'Architects Daughter', cursive" font-size="18" fill="#3730a3" text-anchor="middle">CircuitBreaker State Machine</text>
+
+  <!-- CLOSED circle -->
+  <circle cx="240" cy="590" r="72" fill="#16a34a" filter="url(#shadow)"/>
+  <text x="240" y="585" font-family="'Architects Daughter', cursive" font-size="18" fill="#fff" text-anchor="middle">CLOSED</text>
+  <text x="240" y="605" font-family="'Comic Sans MS', cursive" font-size="12" fill="#fff" text-anchor="middle">Redis &#10003;</text>
+
+  <!-- OPEN circle -->
+  <circle cx="689" cy="590" r="72" fill="#dc2626" filter="url(#shadow)"/>
+  <text x="689" y="585" font-family="'Architects Daughter', cursive" font-size="18" fill="#fff" text-anchor="middle">OPEN</text>
+  <text x="689" y="605" font-family="'Comic Sans MS', cursive" font-size="12" fill="#fff" text-anchor="middle">Caffeine fallback</text>
+
+  <!-- HALF-OPEN circle -->
+  <circle cx="1138" cy="590" r="72" fill="#d97706" filter="url(#shadow)"/>
+  <text x="1138" y="585" font-family="'Architects Daughter', cursive" font-size="18" fill="#fff" text-anchor="middle">HALF-OPEN</text>
+  <text x="1138" y="605" font-family="'Comic Sans MS', cursive" font-size="12" fill="#fff" text-anchor="middle">probe Redis</text>
+
+  <!-- Transition: CLOSED → OPEN (failures) -->
+  <path d="M308,570 Q460,510 616,570" stroke="#ef4444" stroke-width="2" fill="none" marker-end="url(#arrow-red)"/>
+  <text x="460" y="525" font-family="'Comic Sans MS', cursive" font-size="11" fill="#ef4444" text-anchor="middle">failures &#8805; threshold</text>
+
+  <!-- Transition: OPEN → HALF-OPEN (wait) -->
+  <path d="M762,570 Q940,510 1066,570" stroke="#6b7280" stroke-width="2" fill="none" marker-end="url(#arrow-slate)"/>
+  <text x="920" y="525" font-family="'Comic Sans MS', cursive" font-size="11" fill="#6b7280" text-anchor="middle">waitDuration elapsed</text>
+  <text x="920" y="540" font-family="'Comic Sans MS', cursive" font-size="11" fill="#94a3b8" text-anchor="middle">auto-transition</text>
+
+  <!-- Transition: HALF-OPEN → CLOSED (probe succeeded) -->
+  <path d="M1102,658 Q689,730 278,658" stroke="#16a34a" stroke-width="2" fill="none" marker-end="url(#arrow-green)"/>
+  <text x="689" y="748" font-family="'Comic Sans MS', cursive" font-size="11" fill="#16a34a" text-anchor="middle">probe succeeded</text>
+
+  <!-- Transition: HALF-OPEN → OPEN (probe failed) -->
+  <path d="M1070,634 Q920,680 762,634" stroke="#ef4444" stroke-width="1.8" fill="none" marker-end="url(#arrow-reopen)"/>
+  <text x="920" y="670" font-family="'Comic Sans MS', cursive" font-size="11" fill="#ef4444" text-anchor="middle">probe failed &#8594; re-open</text>
+
+  <!-- Config footer inside panel -->
+  <rect x="60" y="788" width="1258" height="32" rx="8" fill="#e0e7ff" fill-opacity="0.6"/>
+  <text x="689" y="808" font-family="'Comic Sans MS', cursive" font-size="12" fill="#3730a3" text-anchor="middle">slidingWindowSize=5 &#183; minimumCalls=3 &#183; failureRate&#8805;60% &#183; waitOpen=5s &#183; halfOpenPermitted=2</text>
 </svg>

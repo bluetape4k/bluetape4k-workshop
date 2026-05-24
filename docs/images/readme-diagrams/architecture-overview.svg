@@ -1,127 +1,125 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600" viewBox="0 0 1200 600" role="img" aria-label="Leader Election Architecture Overview">
-<defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%">
-    <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#1f2937" flood-opacity="0.10"/>
-  </filter>
-  <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
-    <path d="M 1 1 L 9 4 L 1 7" fill="none" stroke="#6B7280" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-  </marker>
-  <marker id="arrowRed" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth">
-    <path d="M 1 1 L 9 4 L 1 7" fill="none" stroke="#EF4444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-  </marker>
-  <style>
-    * { font-family: -apple-system, "Segoe UI", Roboto, Inter, Arial, sans-serif; }
-    .canvas { fill: #f8fafc; }
-    .frame { fill: #ffffff; stroke: #e2e8f0; stroke-width: 1.5; }
-    .title { font-size: 22px; font-weight: 700; fill: #0f172a; }
-    .subtitle { font-size: 13px; fill: #64748b; }
-    .section-label { font-size: 11px; font-weight: 600; fill: #94a3b8; letter-spacing: 0.08em; text-transform: uppercase; }
-    .box-label { font-size: 14px; font-weight: 600; fill: #1e293b; }
-    .box-sub { font-size: 11px; fill: #64748b; }
-    .box-mono { font-size: 11px; font-family: "SF Mono", "Fira Code", "Cascadia Code", monospace; fill: #374151; }
-    .badge-text { font-size: 11px; font-weight: 700; fill: #ffffff; }
-    .footer-text { font-size: 13px; font-weight: 600; fill: #475569; }
-    .edge-label { font-size: 11px; fill: #6B7280; }
-  </style>
-</defs>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1378 620" width="1378" height="620">
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="2" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.12"/>
+    </filter>
+    <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <polygon points="1,1 8,4.5 1,8" fill="#6b7280"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <polygon points="1,1 8,4.5 1,8" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrow-blue-light" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <polygon points="1,1 8,4.5 1,8" fill="#93c5fd"/>
+    </marker>
+    <marker id="arrow-purple" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <polygon points="1,1 8,4.5 1,8" fill="#7c3aed"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <polygon points="1,1 8,4.5 1,8" fill="#059669"/>
+    </marker>
+    <marker id="arrow-amber" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <polygon points="1,1 8,4.5 1,8" fill="#d97706"/>
+    </marker>
+    <marker id="arrow-emerald" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <polygon points="1,1 8,4.5 1,8" fill="#10b981"/>
+    </marker>
+  </defs>
 
-<!-- Background -->
-<rect class="canvas" width="1200" height="600"/>
-<rect class="frame" x="20" y="20" width="1160" height="560" rx="16"/>
+  <!-- Background -->
+  <rect width="1378" height="620" fill="#f6f9fc"/>
+  <!-- Outer frame -->
+  <rect x="20" y="20" width="1338" height="580" rx="16" fill="#fff" stroke="#d7e2ec" stroke-width="1.5"/>
 
-<!-- Title -->
-<text class="title" x="44" y="58">Leader Election — Architecture Overview</text>
-<text class="subtitle" x="44" y="76">Multiple instances compete for a Redis lock; only the elected leader runs each scheduled job.</text>
+  <!-- Title -->
+  <text x="48" y="58" font-family="'Architects Daughter', cursive" font-size="28" fill="#1e293b">Leader Election Architecture</text>
+  <text x="48" y="78" font-family="'Comic Sans MS', cursive" font-size="13" fill="#536476">Distributed leader election with Redis · bluetape4k-leader library</text>
 
-<!-- ══════════════════════ LEFT: Multiple Instances ══════════════════════ -->
-<text class="section-label" x="60" y="108" text-anchor="middle">Multiple Instances</text>
-<!-- Section background -->
-<rect x="28" y="116" width="226" height="328" rx="12" fill="#F1F5F9" stroke="#CBD5E1" stroke-width="1.2"/>
+  <!-- Left panel background -->
+  <rect x="36" y="100" width="240" height="368" rx="12" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.2"/>
+  <!-- Section label centered over panel -->
+  <text x="156" y="97" font-family="'Architects Daughter', cursive" font-size="11" fill="#94a3b8" text-anchor="middle" letter-spacing="0.1em">MULTIPLE INSTANCES</text>
 
-<!-- Instance 1 — LEADER -->
-<rect x="44" y="128" width="194" height="80" rx="10" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.8" filter="url(#shadow)"/>
-<text class="box-label" x="141" y="153" text-anchor="middle">Instance 1</text>
-<text class="box-sub" x="141" y="170" text-anchor="middle">Pod / Process</text>
-<!-- LEADER badge -->
-<rect x="76" y="183" width="64" height="20" rx="10" fill="#10B981"/>
-<text class="badge-text" x="108" y="197" text-anchor="middle">LEADER</text>
+  <!-- Instance 1 (LEADER) -->
+  <rect x="52" y="112" width="208" height="84" rx="10" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.8" filter="url(#shadow)"/>
+  <text x="156" y="148" font-family="'Architects Daughter', cursive" font-size="16" fill="#1e3a5f" text-anchor="middle">Instance 1</text>
+  <text x="156" y="165" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">app-pod-1</text>
+  <rect x="108" y="176" width="64" height="20" rx="10" fill="#10b981"/>
+  <text x="140" y="190" font-family="'Comic Sans MS', cursive" font-size="12" fill="#fff" text-anchor="middle" font-weight="bold">LEADER</text>
 
-<!-- Instance 2 — FOLLOWER -->
-<rect x="44" y="226" width="194" height="80" rx="10" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1.5" filter="url(#shadow)"/>
-<text class="box-label" x="141" y="251" text-anchor="middle">Instance 2</text>
-<text class="box-sub" x="141" y="268" text-anchor="middle">Pod / Process</text>
-<rect x="70" y="281" width="80" height="20" rx="10" fill="#94A3B8"/>
-<text class="badge-text" x="110" y="295" text-anchor="middle">FOLLOWER</text>
+  <!-- Instance 2 (FOLLOWER) -->
+  <rect x="52" y="212" width="208" height="84" rx="10" fill="#e0f2fe" stroke="#7dd3fc" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="156" y="248" font-family="'Architects Daughter', cursive" font-size="16" fill="#1e3a5f" text-anchor="middle">Instance 2</text>
+  <text x="156" y="265" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">app-pod-2</text>
+  <rect x="98" y="276" width="80" height="20" rx="10" fill="#94a3b8"/>
+  <text x="138" y="290" font-family="'Comic Sans MS', cursive" font-size="12" fill="#fff" text-anchor="middle">FOLLOWER</text>
 
-<!-- Instance 3 — FOLLOWER -->
-<rect x="44" y="324" width="194" height="80" rx="10" fill="#DBEAFE" stroke="#93C5FD" stroke-width="1.5" filter="url(#shadow)"/>
-<text class="box-label" x="141" y="349" text-anchor="middle">Instance 3</text>
-<text class="box-sub" x="141" y="366" text-anchor="middle">Pod / Process</text>
-<rect x="70" y="379" width="80" height="20" rx="10" fill="#94A3B8"/>
-<text class="badge-text" x="110" y="393" text-anchor="middle">FOLLOWER</text>
+  <!-- Instance 3 (FOLLOWER) -->
+  <rect x="52" y="312" width="208" height="84" rx="10" fill="#e0f2fe" stroke="#7dd3fc" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="156" y="348" font-family="'Architects Daughter', cursive" font-size="16" fill="#1e3a5f" text-anchor="middle">Instance 3</text>
+  <text x="156" y="365" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">app-pod-3</text>
+  <rect x="98" y="376" width="80" height="20" rx="10" fill="#94a3b8"/>
+  <text x="138" y="390" font-family="'Comic Sans MS', cursive" font-size="12" fill="#fff" text-anchor="middle">FOLLOWER</text>
 
-<!-- ══════════════════════ CENTER: Service + Elector ══════════════════════ -->
-<!-- LeaderScheduledJobService -->
-<rect x="312" y="128" width="280" height="100" rx="12" fill="#EDE9FE" stroke="#7C3AED" stroke-width="1.8" filter="url(#shadow)"/>
-<text class="box-sub" x="452" y="151" text-anchor="middle">@Scheduled  @Service</text>
-<text class="box-label" x="452" y="172" text-anchor="middle">LeaderScheduled</text>
-<text class="box-label" x="452" y="191" text-anchor="middle">JobService</text>
-<text class="box-sub" x="452" y="213" text-anchor="middle">fixed-delay: PT10S</text>
+  <!-- Arrow: Instance 1 → JobService -->
+  <path d="M256,154 C295,154 315,165 338,165" stroke="#3b82f6" stroke-width="2.2" fill="none" marker-end="url(#arrow-blue)"/>
+  <!-- Arrow: Instance 2 → JobService (dashed) -->
+  <path d="M256,254 C295,254 312,195 338,185" stroke="#93c5fd" stroke-width="1.5" fill="none" stroke-dasharray="5 4" marker-end="url(#arrow-blue-light)"/>
+  <!-- Arrow: Instance 3 → JobService (dashed) -->
+  <path d="M256,354 C295,354 312,215 338,200" stroke="#93c5fd" stroke-width="1.5" fill="none" stroke-dasharray="5 4" marker-end="url(#arrow-blue-light)"/>
 
-<!-- LettuceLeaderElector -->
-<rect x="312" y="268" width="280" height="80" rx="12" fill="#EDE9FE" stroke="#7C3AED" stroke-width="1.8" filter="url(#shadow)"/>
-<text class="box-label" x="452" y="298" text-anchor="middle">LettuceLeaderElector</text>
-<text class="box-mono" x="452" y="318" text-anchor="middle">runIfLeader(lockName) { ... }</text>
-<text class="box-sub" x="452" y="337" text-anchor="middle">bluetape4k-leader</text>
+  <!-- LeaderScheduledJobService -->
+  <rect x="340" y="112" width="272" height="104" rx="12" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.8" filter="url(#shadow)"/>
+  <text x="476" y="136" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">@Scheduled @SERVICE</text>
+  <text x="476" y="158" font-family="'Architects Daughter', cursive" font-size="18" fill="#3b0764" text-anchor="middle">LeaderScheduled</text>
+  <text x="476" y="178" font-family="'Architects Daughter', cursive" font-size="18" fill="#3b0764" text-anchor="middle">JobService</text>
+  <text x="476" y="200" font-family="'Comic Sans MS', cursive" font-size="12" fill="#7c3aed" text-anchor="middle">fixed-delay: PT10S</text>
 
-<!-- Arrow: JobService → Elector -->
-<line x1="452" y1="228" x2="452" y2="265" stroke="#7C3AED" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <!-- Arrow: JobService → Elector -->
+  <line x1="476" y1="216" x2="476" y2="260" stroke="#7c3aed" stroke-width="1.8" marker-end="url(#arrow-purple)"/>
 
-<!-- Jobs -->
-<rect x="244" y="398" width="196" height="72" rx="10" fill="#D1FAE5" stroke="#059669" stroke-width="1.8" filter="url(#shadow)"/>
-<text class="box-label" x="342" y="426" text-anchor="middle">CacheWarmupJob</text>
-<text class="box-mono" x="342" y="445" text-anchor="middle">lock: cache-warmup</text>
-<text class="box-sub" x="342" y="462" text-anchor="middle">LeaderGuardedJob</text>
+  <!-- LettuceLeaderElector -->
+  <rect x="340" y="262" width="272" height="84" rx="12" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.8" filter="url(#shadow)"/>
+  <text x="476" y="290" font-family="'Architects Daughter', cursive" font-size="17" fill="#3b0764" text-anchor="middle">LettuceLeaderElector</text>
+  <text x="476" y="312" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">runIfLeader(lockName) { ... }</text>
+  <text x="476" y="330" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">bluetape4k-leader</text>
 
-<rect x="460" y="398" width="212" height="72" rx="10" fill="#D1FAE5" stroke="#059669" stroke-width="1.8" filter="url(#shadow)"/>
-<text class="box-label" x="566" y="422" text-anchor="middle">StaleWorkflow</text>
-<text class="box-label" x="566" y="440" text-anchor="middle">CleanupJob</text>
-<text class="box-mono" x="566" y="458" text-anchor="middle">lock: stale-cleanup</text>
+  <!-- Arrow: Elector → CacheWarmup -->
+  <path d="M420,346 Q370,380 356,394" stroke="#059669" stroke-width="1.5" fill="none" stroke-dasharray="5 4" marker-end="url(#arrow-green)"/>
+  <!-- Arrow: Elector → StaleCleanup -->
+  <path d="M532,346 Q570,380 588,394" stroke="#059669" stroke-width="1.5" fill="none" stroke-dasharray="5 4" marker-end="url(#arrow-green)"/>
 
-<!-- Arrows: Elector → Jobs -->
-<line x1="390" y1="348" x2="342" y2="395" stroke="#059669" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
-<line x1="514" y1="348" x2="566" y2="395" stroke="#059669" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+  <!-- CacheWarmupJob -->
+  <rect x="268" y="396" width="192" height="76" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="364" y="420" font-family="'Architects Daughter', cursive" font-size="15" fill="#064e3b" text-anchor="middle">CacheWarmupJob</text>
+  <text x="364" y="439" font-family="'Comic Sans MS', cursive" font-size="11" fill="#536476" text-anchor="middle">lock: cache-warmup</text>
+  <text x="364" y="455" font-family="'Comic Sans MS', cursive" font-size="11" fill="#536476" text-anchor="middle">LeaderGuardedJob</text>
 
-<!-- ══════════════════════ RIGHT: Redis ══════════════════════ -->
-<rect x="748" y="220" width="220" height="130" rx="14" fill="#FED7AA" stroke="#D97706" stroke-width="1.8" filter="url(#shadow)"/>
-<!-- Redis icon circle -->
-<circle cx="858" cy="254" r="18" fill="#D97706" opacity="0.25"/>
-<text font-size="20" x="858" y="261" text-anchor="middle" fill="#92400E">⚙</text>
-<text class="box-label" x="858" y="291" text-anchor="middle">Redis</text>
-<text class="box-sub" x="858" y="309" text-anchor="middle">Single-Key Distributed Lock</text>
-<text class="box-mono" x="858" y="328" text-anchor="middle">SET {lockName} NX EX {ttl}</text>
+  <!-- StaleWorkflowCleanupJob -->
+  <rect x="476" y="396" width="216" height="76" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="584" y="418" font-family="'Architects Daughter', cursive" font-size="15" fill="#064e3b" text-anchor="middle">StaleWorkflow</text>
+  <text x="584" y="436" font-family="'Architects Daughter', cursive" font-size="15" fill="#064e3b" text-anchor="middle">CleanupJob</text>
+  <text x="584" y="455" font-family="'Comic Sans MS', cursive" font-size="11" fill="#536476" text-anchor="middle">lock: stale-cleanup</text>
 
-<!-- ══════════════════════ ARROWS: Instances → Elector ══════════════════════ -->
-<!-- Instance 1 → JobService (bold, leader) -->
-<path d="M 238 167 C 275 167 295 177 312 177" fill="none" stroke="#3B82F6" stroke-width="2.2" marker-end="url(#arrow)"/>
+  <!-- Arrow: Elector right → Redis left -->
+  <path d="M612,304 C700,304 760,292 828,286" stroke="#d97706" stroke-width="2" fill="none" marker-end="url(#arrow-amber)"/>
+  <text x="716" y="297" font-family="'Comic Sans MS', cursive" font-size="11" fill="#d97706" text-anchor="middle">SET NX EX</text>
 
-<!-- Instance 2 → JobService -->
-<path d="M 238 265 C 275 265 295 205 312 197" fill="none" stroke="#93C5FD" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+  <!-- Arrow: Redis → Elector (return, dashed) -->
+  <path d="M828,300 C760,308 700,316 614,318" stroke="#10b981" stroke-width="1.5" fill="none" stroke-dasharray="4 4" marker-end="url(#arrow-emerald)"/>
+  <text x="710" y="332" font-family="'Comic Sans MS', cursive" font-size="11" fill="#10b981" text-anchor="middle">OK (Instance 1)</text>
+  <text x="710" y="347" font-family="'Comic Sans MS', cursive" font-size="11" fill="#ef4444" text-anchor="middle">FAIL (others)</text>
 
-<!-- Instance 3 → JobService -->
-<path d="M 238 363 C 275 363 295 233 312 217" fill="none" stroke="#93C5FD" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+  <!-- Redis -->
+  <rect x="830" y="240" width="228" height="132" rx="14" fill="#fed7aa" stroke="#d97706" stroke-width="1.8" filter="url(#shadow)"/>
+  <circle cx="944" cy="274" r="18" fill="#d97706" opacity="0.2"/>
+  <text x="944" y="280" font-size="18" fill="#92400e" text-anchor="middle">&#9881;</text>
+  <text x="944" y="308" font-family="'Architects Daughter', cursive" font-size="18" fill="#92400e" text-anchor="middle">Redis</text>
+  <text x="944" y="326" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">Single-Key Distributed Lock</text>
+  <text x="944" y="344" font-family="'Comic Sans MS', cursive" font-size="12" fill="#374151" text-anchor="middle">SET {lockName} NX EX {ttl}</text>
 
-<!-- ══════════════════════ ARROW: Elector → Redis ══════════════════════ -->
-<path d="M 592 308 C 660 308 700 290 748 285" fill="none" stroke="#D97706" stroke-width="2" marker-end="url(#arrow)"/>
-<text class="edge-label" x="670" y="298">SET NX EX</text>
-
-<!-- Redis result arrows -->
-<path d="M 748 295 C 710 295 680 305 592 318" fill="none" stroke="#10B981" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arrow)"/>
-<text class="edge-label" x="652" y="330" fill="#10B981">OK (Instance 1)</text>
-<text class="edge-label" x="652" y="344" fill="#EF4444">FAIL (others)</text>
-
-<!-- ══════════════════════ FOOTER ══════════════════════ -->
-<rect x="28" y="504" width="1144" height="56" rx="10" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1.2"/>
-<text class="footer-text" x="600" y="530" text-anchor="middle" fill="#166534">Exactly ONE instance executes each job at any time</text>
-<text class="box-sub" x="600" y="549" text-anchor="middle">All instances run the scheduler; only the leader wins the Redis lock and calls execute()</text>
+  <!-- Footer -->
+  <rect x="36" y="510" width="1306" height="56" rx="10" fill="#f0fdf4" stroke="#86efac" stroke-width="1.2"/>
+  <text x="689" y="534" font-family="'Architects Daughter', cursive" font-size="15" fill="#166534" text-anchor="middle">Exactly ONE instance executes each job at any time</text>
+  <text x="689" y="552" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">All instances run the scheduler; only the leader wins the Redis lock and calls execute()</text>
 </svg>
