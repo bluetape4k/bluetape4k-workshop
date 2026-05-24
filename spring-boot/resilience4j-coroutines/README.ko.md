@@ -4,43 +4,11 @@
 
 ## 아키텍처
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  HTTP 클라이언트 (WebTestClient / curl)                          │
-└──────────────────────┬──────────────────────────────────────────┘
-                       │
-          ┌────────────▼────────────┐
-          │    REST 컨트롤러         │
-          │  BackendAController     │  ← 동기 / Mono / Flux / Future
-          │  BackendACoController   │  ← suspend + Flow
-          │  BackendBController     │  ← 동기 (RateLimiter)
-          │  BackendBCoController   │  ← suspend (Bulkhead + Retry)
-          └────────────┬────────────┘
-                       │ Resilience4j AOP 프록시
-          ┌────────────▼────────────┐
-          │       서비스             │
-          │  BackendAService        │  ← Mono / Flux / Future
-          │  BackendACoService      │  ← suspend + Flow
-          │  BackendBService        │  ← 동기
-          │  BackendBCoService      │  ← suspend
-          └─────────────────────────┘
-```
+![Resilience4j Coroutines 아키텍처](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-diagram-02.png)
 
 ### Circuit Breaker 상태 전이
 
 ![Circuit Breaker diagram](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-diagram-01.png)
-
-```
-  ┌────────┐  실패율 > 임계값  ┌────────┐
-  │ CLOSED │ ───────────────▶│  OPEN  │
-  │        │◀───────────────│        │
-  └────────┘  모든 프로브 성공  └───┬────┘
-                                   │ 대기 시간
-                              ┌────▼────┐
-                              │HALF-OPEN│
-                              │ (프로브) │
-                              └─────────┘
-```
 
 ## 개요
 
@@ -54,7 +22,7 @@ CircuitBreaker, Bulkhead, Retry, TimeLimiter, RateLimiter를 블로킹 및 논�
 |---|---|---|
 | `bluetape4k-logging` | `KLogging()` / `KLoggingChannel()` | 서비스 및 테스트의 구조화된 로깅 |
 | `bluetape4k-junit5` | `runSuspendIO { }` | 실제 I/O를 포함한 suspend 테스트 블록 실행 |
-| `bluetape4k-coroutines` | `CoDecorators` | suspend 함수를 위한 프로그래밍 방식의 내결함성 데코레이터 |
+| `bluetape4k-resilience4j` | `SuspendDecorators` | suspend 함수용 프로그래밍 방식 내결함성 데코레이터 체인 |
 | `bluetape4k-assertions` | `shouldBeEqualTo`, `shouldBeTrue` 등 | 타입 안전한 테스트 단언문 |
 
 ## Resilience4j 패턴 설명

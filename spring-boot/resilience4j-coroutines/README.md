@@ -4,43 +4,11 @@ Based on: [resilience4j-spring-boot3-demo](https://github.com/resilience4j/resil
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  HTTP Clients (WebTestClient / curl)                            │
-└──────────────────────┬──────────────────────────────────────────┘
-                       │
-          ┌────────────▼────────────┐
-          │    REST Controllers     │
-          │  BackendAController     │  ← Sync / Mono / Flux / Future
-          │  BackendACoController   │  ← suspend + Flow
-          │  BackendBController     │  ← Sync (RateLimiter)
-          │  BackendBCoController   │  ← suspend (Bulkhead + Retry)
-          └────────────┬────────────┘
-                       │ Resilience4j AOP Proxy
-          ┌────────────▼────────────┐
-          │       Services          │
-          │  BackendAService        │  ← Mono / Flux / Future
-          │  BackendACoService      │  ← suspend + Flow
-          │  BackendBService        │  ← Sync
-          │  BackendBCoService      │  ← suspend
-          └─────────────────────────┘
-```
+![Resilience4j Coroutines Architecture](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-diagram-02.png)
 
 ### Circuit Breaker State Machine
 
 ![Circuit Breaker State Machine diagram](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-diagram-01.png)
-
-```
-  ┌────────┐  failure rate > threshold  ┌────────┐
-  │ CLOSED │ ──────────────────────────▶│  OPEN  │
-  │        │◀──────────────────────────│        │
-  └────────┘  all probes succeed        └───┬────┘
-                                             │ wait duration
-                                        ┌────▼────┐
-                                        │HALF-OPEN│
-                                        │(probes) │
-                                        └─────────┘
-```
 
 ## Overview
 
@@ -54,7 +22,7 @@ blocking and non-blocking (suspend / Flow / Mono / Flux / CompletableFuture) cod
 |---|---|---|
 | `bluetape4k-logging` | `KLogging()` / `KLoggingChannel()` | Structured logging in services and tests |
 | `bluetape4k-junit5` | `runSuspendIO { }` | Running suspend test blocks with real I/O |
-| `bluetape4k-coroutines` | `CoDecorators` | Programmatic resilience decorators for suspend functions |
+| `bluetape4k-resilience4j` | `SuspendDecorators` | Programmatic resilience decorator chain for suspend functions |
 | `bluetape4k-testcontainers` | Test infrastructure | (no external infra required for this module) |
 | `bluetape4k-assertions` | `shouldBeEqualTo`, `shouldBeTrue`, etc. | Type-safe test assertions |
 
