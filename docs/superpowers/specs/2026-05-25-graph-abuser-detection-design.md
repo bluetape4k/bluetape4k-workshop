@@ -302,8 +302,14 @@ ops.detectCycles(CycleOptions(
 ops.pageRank(PageRankOptions(vertexLabel = null, edgeLabel = null, topK = Int.MAX_VALUE))
   → filter { it.vertex.label == UserLabel.label }
   → take(limit)
-  → mapIndexed { idx, s -> SuspiciousUserScore(s.vertex, s.score, idx + 1) }
+  → withIndex().map { (idx, s) -> SuspiciousUserScore(s.vertex, s.score, idx + 1) }
 ```
+
+> **`Flow.mapIndexed` does not exist** in `kotlinx.coroutines.flow`. In `AbuserDetectionSuspendService`,
+> the suspend `rankSuspiciousUsers` returns `Flow<SuspiciousUserScore>`. Use `.withIndex().map { (idx, s) -> ... }`
+> (Flow analogue of `mapIndexed`) or accumulate with a `var rank = 1` counter.
+> The blocking `AbuserDetectionService.rankSuspiciousUsers` returns `List<SuspiciousUserScore>` and
+> may use `mapIndexed` directly.
 
 ---
 
@@ -339,7 +345,7 @@ bluetape4k-workshop/
                 │   ├── AbuserDetectionNeo4jTest.kt             (@Tag("integration"))
                 │   └── AbuserDetectionMemgraphTest.kt          (@Tag("integration"))
                 └── resources/
-                    ├── junit-platform.properties               (excludes "integration" tag by default)
+                    ├── junit-platform.properties               (parallelism settings ONLY — do NOT add tags.exclude here)
                     └── logback-test.xml
 ```
 
@@ -374,7 +380,7 @@ neo4j-java-driver          = { module = "org.neo4j.driver:neo4j-java-driver" }
 includeModules("graph", false, true)   // produces project :graph-abuser-detection
 ```
 
-Place alphabetically between `gatling` and `image-processing`.
+Place alphabetically between `graalvm` and `image-processing` (verified: `settings.gradle.kts` order is `gatling → graalvm → image-processing`; `graph` sorts after `graalvm`).
 
 ### `graph/abuser-detection/build.gradle.kts`
 
@@ -421,9 +427,10 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test.lib)
     testImplementation(libs.mockk)
 
-    // Integration backends (testImplementation so drivers resolve at test classpath)
-    testImplementation(libs.bluetape4k.graph.neo4j)
-    testImplementation(libs.bluetape4k.graph.memgraph)
+    // Integration backends — declared as compileOnly above.
+    // `configurations { testImplementation.extendsFrom(compileOnly, runtimeOnly) }` already
+    // pulls them into the test classpath; do NOT add explicit testImplementation entries here
+    // (duplicate-dependency warning + redundant resolution).
     testImplementation(libs.neo4j.java.driver)
 }
 ```
@@ -527,14 +534,33 @@ fun teardown() {
 8. `addDevice with blank deviceId throws IllegalArgumentException` — `assertFailsWith<IllegalArgumentException> { service.addDevice("", "ios") }`
 9. `addUser with blank userId throws IllegalArgumentException` — `assertFailsWith<IllegalArgumentException> { service.addUser("", "KR") }`
 10. `findAbuseCluster with non-existent seedUserId returns empty cluster` — seed ID not in graph; result has `users.isEmpty() && sharedIdentifiers.isEmpty()`
+    Implementation guard: `if (ops.findVertexById(seedUserId) == null) return AbuseCluster(seedUserId, emptyList(), emptyList())`
+    (TinkerGraph returns empty, but Neo4j/Memgraph may throw on unknown vertex ID — guard required for uniform behavior.)
 11. `rankSuspiciousUsers returns empty list on empty graph` — boundary: no vertices
 12. `detectReferralLoops returns empty list when no REFERRED_BY edges exist`
+
+**Additional MANDATORY test cases:**
+13. `addDevice called twice with same deviceId returns the same vertex id` — findOrCreate idempotency: assert `addDevice("device-X", "ios").id == addDevice("device-X", "ios").id`; verify only one Device vertex exists for `"device-X"`.
+14. `shared phone and payment method detection` — seed two users sharing `PhoneNumber` + `PaymentMethod`; assert `findAbuseCluster` returns both via `sharedIdentifiers` containing both vertex types (exercises `HAS_PHONE` and `USES_PAYMENT` dispatch paths).
+15. `cluster excludes REFERRED_BY-only reachable users` — link `userA → userB` via `USES_DEVICE` AND `REFERRED_BY`; link `userC → userA` via `REFERRED_BY` only; assert `findAbuseCluster(userA).users` contains `userB` but NOT `userC`.
+
+> **Test 13–15 are required** to prevent silent failures in findOrCreate idempotency and label-dispatch correctness (the Round 3 regression fix area).
 
 ### Validation rules
 
 - `addUser`, `addDevice`, etc. call `requireNotBlank` per bluetape4k conventions.
-- Suspend tests use `runTest { ... }` and `coInvoking { } shouldThrow T::class` for expected exceptions.
 - Blocking exception tests use `assertFailsWith<T> { }`.
+- Suspend `suspend fun` exception tests: `coInvoking { suspendCall } shouldThrow T::class`.
+- **Flow-returning function exception tests**: `explainSuspicion` and `detectReferralLoops` are NOT `suspend` — they return a cold `Flow`. Validation inside `flow { }` runs at collection time, NOT at call time. Use:
+  ```kotlin
+  runTest {
+      assertFailsWith<IllegalArgumentException> {
+          service.explainSuspicion(GraphElementId("")).toList()
+      }
+  }
+  ```
+  Do NOT use `coInvoking { service.explainSuspicion(GraphElementId("")) } shouldThrow ...` — this does NOT collect the flow and will not trigger the validation.
+- Flow cancellation: add one test that cancels a `Job` collecting `rankSuspiciousUsers(...)` and asserts `CancellationException` propagates cleanly (use `runTest` with `cancel()`).
 - `findAbuseCluster` does NOT validate seedUserId format — a non-existent vertex returns an empty cluster.
 
 ---
@@ -599,8 +625,8 @@ the expected format (e.g., `@param phone E.164 SHA-256 hex hash, not plaintext`)
 - [ ] `settings.gradle.kts` and `gradle/libs.versions.toml` updated
 - [ ] `AbuserDetectionSchema.kt` with all 5 vertex labels and 5 edge labels
 - [ ] `AbuserDetectionService` + `AbuserDetectionSuspendService` implement all methods
-- [ ] `AbstractAbuserDetectionTest` covers all 7 test cases
-- [ ] `AbstractAbuserDetectionSuspendTest` covers same 7 cases with `runTest`
+- [ ] `AbstractAbuserDetectionTest` covers all 12 test cases (7 happy-path + 5 failure-path)
+- [ ] `AbstractAbuserDetectionSuspendTest` covers same 12 test cases with `runTest`
 - [ ] TinkerGraph tests pass without Docker: `./gradlew :graph-abuser-detection:test`
 - [ ] Neo4j and Memgraph integration tests tagged and skipped by default
 - [ ] `README.md` + `README.ko.md` written with architecture diagram
@@ -628,3 +654,4 @@ the expected format (e.g., `@param phone E.164 SHA-256 hex hash, not plaintext`)
 | Round 3 | Developer (Sonnet) | 0 | 1→0 | 2 | 0 | in spec v4: NEW H1 label-dispatch bug (vertex label vs edge label string mismatch → always false) fixed with explicit Map lookup |
 | Round 3 | Ops/SRE (Sonnet) | 0 | 0 | 2 | 0 | in spec v4: M1 @AfterAll .onFailure log added; M2 AbstractAbuserDetectionSuspendTest @TestInstance mention added |
 | **Round 3 final** | **All reviewers** | **0** | **0** | polish | low | **CONVERGED ✅** |
+| **Step 3-R Plan Review** | 3r-delivery, 3r-tester, 3r-implementer, 3r-architect | **0** | **19** | 9 | 3 | v5: §6 mapIndexed→withIndex fix; §13 DoD 7→12 tests; §8 build script duplicate dep removed + positions fixed; test cases 13–15 added; Flow exception test pattern clarified; §9 integrationTest note; spec v5 applied |
