@@ -1,53 +1,167 @@
-# Modulith with Spring Boot Demo Project [![Twitter](https://img.shields.io/twitter/follow/piotr_minkowski.svg?style=social&logo=twitter&label=Follow%20Me)](https://twitter.com/piotr_minkowski)
+# Spring Modulith JPA Demo
 
-원본: [sample-spring-modulith](https://github.com/piomin/sample-spring-modulith )
+Spring Modulith application with four logical modules — `organization`, `department`, `employee`, and `gateway` —
+connected through internal module APIs and Spring application events, verified by Modulith's structural tests.
 
-## 모듈 의존성 구조
+Based on [sample-spring-modulith](https://github.com/piomin/sample-spring-modulith).
+
+## Module Dependency Structure
 
 ![jpa demo Architecture diagram](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-diagram-01.png)
 
-## 참고 자료
-
-- [Spring Modulith 공식 문서](https://docs.spring.io/spring-modulith/reference/index.html)
-- [Understanding Spring Modulith: A Detailed Guide](https://getlearntech.com/spring-modulith/)
-- [Spring Modulith at VLog](https://velog.io/@gehwan96/Spring-Modulith)
-
-## TODO
-
-- [ ] `spring-modulith-events-jdbc`, `spring-modulith-events-jpa` 를 대신해 `spring-modulith-events-exposed`
-  제작하기 ([Spring Modulith 를 Exposed 기반으로 사용하기 위한 모듈 제작 #25](https://github.com/bluetape4k/bluetape4k-projects/issues/25))
-
-[![CircleCI](https://circleci.com/gh/piomin/sample-spring-modulith.svg?style=svg)](https://circleci.com/gh/piomin/sample-spring-modulith)
-
-[![SonarCloud](https://sonarcloud.io/images/project_badges/sonarcloud-black.svg)](https://sonarcloud.io/dashboard?id=piomin_sample-spring-modulith)
-[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=piomin_sample-spring-modulith&metric=bugs)](https://sonarcloud.io/dashboard?id=piomin_sample-spring-modulith)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=piomin_sample-spring-modulith&metric=coverage)](https://sonarcloud.io/dashboard?id=piomin_sample-spring-modulith)
-[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=piomin_sample-spring-modulith&metric=ncloc)](https://sonarcloud.io/dashboard?id=piomin_sample-spring-modulith)
-
-In this project, I'm demonstrating how to implement the modulith app using Spring support. Here are
-the [docs](https://docs.spring.io/spring-modulith) about the project.
-
-1. How to organize the SpringBoot in modular way and use Spring Modulith to simplify and verify the app
-   structure: [Guide to Modulith with Spring Boot](https://piotrminkowski.com/2023/10/13/guide-to-modulith-with-spring-boot/)
-
 ## Architecture
 
-Our sample app is divided into 4 logical modules:
+The application is divided into four logical modules:
 
-- **department** - manage `Department` entity
-- **employee** - manage `Employee` entity
-- **gateway** - expose internal modules over REST API
-- **organization** - manage `Organization` entity
+| Module | Responsibility |
+|---|---|
+| `organization` | Manages `Organization` entity; publishes `OrganizationAddEvent` / `OrganizationRemoveEvent` |
+| `department` | Manages `Department` entity; depends on `organization` via internal API |
+| `employee` | Manages `Employee` entity; depends on `organization` via internal API |
+| `gateway` | Exposes all modules over a single REST API (`/organizations/**`) |
 
-The following picture illustrates the architecture described above.
+```mermaid
+graph TD
+    GW[gateway\nGatewayManagement] --> ORG[organization\nOrganizationExternalAPI]
+    ORG --> DEP[department\nDepartmentInternalAPI]
+    ORG --> EMP[employee\nEmployeeInternalAPI]
+    ORG -->|publishes| EV[OrganizationAddEvent\nOrganizationRemoveEvent]
+    EV -->|@EventListener| DEP
+    EV -->|@EventListener| EMP
+```
 
-<img src="https://i0.wp.com/piotrminkowski.com/wp-content/uploads/2023/10/Screenshot-2023-10-11-at-13.33.13.png" title="Architecture"><br/>
+## Used bluetape4k Features
+
+| Module | Feature | Usage |
+|---|---|---|
+| `bluetape4k-logging` | `KLogging()` | Lazy-lambda structured logging in all management services |
+| `bluetape4k-hibernate` | Hibernate extensions | JPA entity mapping helpers and type converters |
+| `bluetape4k-idgenerators` | ID generation | Snowflake / TSID-based entity ID generation |
+| `bluetape4k-spring-boot4-core` | Spring Boot 4 auto-config | Test utilities and application context helpers |
+| `bluetape4k-testcontainers` | Testcontainers launcher | Infrastructure (Zipkin) container management in integration tests |
+
+## bluetape4k Before / After
+
+### `KLogging()` in service layer
+
+```kotlin
+// Before — SLF4J directly
+private val log = LoggerFactory.getLogger(OrganizationManagement::class.java)
+log.info("Adding organization: " + organizationDTO)
+
+// After — KLogging() companion (lazy, zero-cost when info is disabled)
+companion object : KLogging()
+log.info { "Adding organization: $organizationDTO" }
+```
+
+### Event publishing with bluetape4k ID generators
+
+```kotlin
+// Before — manual UUID or database-sequence ID
+data class OrganizationAddEvent(val id: Long, val source: Any? = null)
+
+@Transactional
+fun add(dto: OrganizationDTO): OrganizationDTO {
+    val saved = repository.save(mapper.toEntity(dto))
+    events.publishEvent(OrganizationAddEvent(saved.id!!, saved))
+    return mapper.toDTO(saved)
+}
+
+// After — same pattern, but entity ID generated by bluetape4k-idgenerators (Snowflake)
+// No manual sequence management; IDs are time-sortable and unique across nodes
+```
+
+### Module API boundary — External vs Internal
+
+```kotlin
+// Before — direct service injection across module boundary (tightly coupled)
+@Service
+class GatewayManagement(
+    private val organizationManagement: OrganizationManagement,  // internal class
+)
+
+// After — inject only the ExternalAPI interface (module contract)
+@Service
+class GatewayManagement(
+    private val organizationAPI: OrganizationExternalAPI,  // public contract only
+)
+```
+
+## Event Flow
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant GW as GatewayManagement
+    participant OM as OrganizationManagement
+    participant DB as H2 Database
+    participant EP as ApplicationEventPublisher
+    participant DM as DepartmentManagement
+    participant EM as EmployeeManagement
+
+    Client->>GW: POST /organizations
+    GW->>OM: add(organizationDTO)
+    OM->>DB: save(organization)
+    OM->>EP: publishEvent(OrganizationAddEvent)
+    EP->>DM: @EventListener(OrganizationAddEvent)
+    EP->>EM: @EventListener(OrganizationAddEvent)
+    OM-->>GW: OrganizationDTO
+    GW-->>Client: 201 Created
+```
+
+## Observability
+
+The `jpa-demo` module includes Micrometer tracing with OpenTelemetry and Zipkin export:
+
+```yaml
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+spring:
+  modulith:
+    republish-outstanding-events-on-restart: true
+```
+
+Zipkin is started automatically via Testcontainers in integration tests.
 
 ## Running
 
-You need to have JDK17+ and Maven. Also run Docker on your machine to enable Zipkin container.
-Then just run the app with the following command:
-
-```shell
-$ mvn spring-boot:run
+```bash
+./gradlew :spring-modulith-jpa-demo:bootRun
 ```
+
+REST API is available at `http://localhost:8080/organizations`.
+OpenAPI docs: `http://localhost:8080/swagger-ui.html`
+
+## Tests
+
+```bash
+./gradlew :spring-modulith-jpa-demo:test
+```
+
+Modulith structure verification:
+
+```kotlin
+@Test
+fun `verify module structure`() {
+    ApplicationModules.of(SpringModulith::class.java).verify()
+}
+```
+
+## Operational Notes
+
+- H2 in-memory database is used; swap for a persistent database in production.
+- `blueprints4k-testcontainers` manages Zipkin via `GenericContainer`; ensure Docker is running for tests with tracing enabled.
+- Module boundaries are enforced by `ApplicationModules.verify()`; cross-module internal type access will fail fast in tests.
+
+## References
+
+- [Spring Modulith Reference](https://docs.spring.io/spring-modulith/reference/index.html)
+- [Guide to Modulith with Spring Boot](https://piotrminkowski.com/2023/10/13/guide-to-modulith-with-spring-boot/)
+- [bluetape4k-idgenerators](https://github.com/bluetape4k/bluetape4k-projects)
+
+## TODO
+
+- [ ] Implement `spring-modulith-events-exposed` as an alternative to `spring-modulith-events-jpa`
+  ([Issue #25](https://github.com/bluetape4k/bluetape4k-projects/issues/25))

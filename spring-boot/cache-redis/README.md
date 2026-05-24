@@ -1,5 +1,21 @@
 # Redis Cache Demo
 
+[English overview](#overview) | [한국어 상세 설명](#상세-설명)
+
+Distributed cache example using Spring Data Redis + Lettuce backed by bluetape4k's
+`RedisBinarySerializers` (LZ4 + Kryo) and a Virtual Thread async executor.
+Testcontainers launches a Redis container automatically for integration tests.
+
+## Overview
+
+This module demonstrates replacing JSON serialization with the bluetape4k binary serializer
+(`RedisBinarySerializers.LZ4Kryo`) to reduce Redis storage by 50–70%, and using Virtual Threads
+for Lettuce I/O instead of a fixed thread pool.
+
+---
+
+## 상세-설명
+
 Spring Data Redis와 Lettuce를 이용해 Spring Cache 추상화를 Redis로 구현하는 예제입니다.
 bluetape4k의 `RedisBinarySerializers`(LZ4 + Kryo)와 Virtual Thread 기반 Async Executor를 활용합니다.
 Testcontainers로 Redis 컨테이너를 자동으로 구동하여 통합 테스트를 수행합니다.
