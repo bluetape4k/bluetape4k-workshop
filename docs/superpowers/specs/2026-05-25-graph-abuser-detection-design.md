@@ -625,8 +625,8 @@ the expected format (e.g., `@param phone E.164 SHA-256 hex hash, not plaintext`)
 - [ ] `settings.gradle.kts` and `gradle/libs.versions.toml` updated
 - [ ] `AbuserDetectionSchema.kt` with all 5 vertex labels and 5 edge labels
 - [ ] `AbuserDetectionService` + `AbuserDetectionSuspendService` implement all methods
-- [ ] `AbstractAbuserDetectionTest` covers all 12 test cases (7 happy-path + 5 failure-path)
-- [ ] `AbstractAbuserDetectionSuspendTest` covers same 12 test cases with `runTest`
+- [ ] `AbstractAbuserDetectionTest` covers all 15 test cases (7 happy-path + 5 failure-path + 3 additional: idempotency, phone/payment dispatch, REFERRED_BY exclusion)
+- [ ] `AbstractAbuserDetectionSuspendTest` covers same 15 test cases with `runTest` + 1 Flow cancellation test = 16 total
 - [ ] TinkerGraph tests pass without Docker: `./gradlew :graph-abuser-detection:test`
 - [ ] Neo4j and Memgraph integration tests tagged and skipped by default
 - [ ] `README.md` + `README.ko.md` written with architecture diagram
@@ -655,3 +655,4 @@ the expected format (e.g., `@param phone E.164 SHA-256 hex hash, not plaintext`)
 | Round 3 | Ops/SRE (Sonnet) | 0 | 0 | 2 | 0 | in spec v4: M1 @AfterAll .onFailure log added; M2 AbstractAbuserDetectionSuspendTest @TestInstance mention added |
 | **Round 3 final** | **All reviewers** | **0** | **0** | polish | low | **CONVERGED ✅** |
 | **Step 3-R Plan Review** | 3r-delivery, 3r-tester, 3r-implementer, 3r-architect | **0** | **19** | 9 | 3 | v5: §6 mapIndexed→withIndex fix; §13 DoD 7→12 tests; §8 build script duplicate dep removed + positions fixed; test cases 13–15 added; Flow exception test pattern clarified; §9 integrationTest note; spec v5 applied |
+| **Step 3-R Pre-Round 2 fixes** | inline advisor | 0 | 3 | 0 | 0 | spec v6 (§13 DoD 12→15/16) + plan v3 (T5-1 Flow.forEach→direct pipeline; T10-1~4 graphName init order; API class names verified) |
