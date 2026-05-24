@@ -3,53 +3,124 @@
 Spring Boot 4 WebFlux 환경에서 Micrometer Tracing을 동기(Sync), 리액터(Reactor), 코루틴(Coroutine) 방식으로 적용하는 예제입니다.
 bluetape4k의 `withObservation` / `withObservationSuspending` DSL로 코루틴 context에서 tracing span을 안전하게 전파합니다.
 
-## 아키텍처 다이어그램
+## Architecture
+
+```mermaid
+flowchart TD
+    Client -->|HTTP| Router["WebFlux Router"]
+    Router -->|/sync| SyncController
+    Router -->|/coroutine| CoroutineController
+    Router -->|/reactor| ReactorController
+
+    SyncController -->|withObservation| SyncService
+    CoroutineController -->|withObservationSuspending| CoroutineService
+    ReactorController -->|@Observed| ReactorService
+
+    SyncService -->|nested spans| ObservationRegistry
+    CoroutineService -->|nested suspend spans| ObservationRegistry
+    ReactorService -->|class-level span| ObservationRegistry
+
+    ObservationRegistry -->|OTel Bridge| OTelExporter["OTel Exporter"]
+    OTelExporter -->|HTTP POST| Zipkin["Zipkin Server\n(Testcontainers)"]
+
+    subgraph "bluetape4k-micrometer"
+        withObservation["withObservation {}"]
+        withObservationSuspending["withObservationSuspending {}"]
+    end
+
+    subgraph "bluetape4k-testcontainers"
+        ZipkinLauncher["ZipkinServer.Launcher.zipkin"]
+    end
+```
 
 ![micrometer tracing coroutines Sequence Flow diagram](../../docs/images/readme-diagrams/observability-micrometer-tracing-coroutines-sequence-01.png)
 
 ![micrometer tracing coroutines Architecture 2 diagram](../../docs/images/readme-diagrams/observability-micrometer-tracing-coroutines-diagram-01.png)
 
-## 주요 구성
+## Key Components
 
-| 클래스 | 역할 |
+| Class | Role |
 |---|---|
-| `ObservationConfig` | `ObservedAspect` 빈 등록 — `@Observed` AOP 활성화, Controller 제외 필터 |
-| `NettyConfig` | Reactor Netty 서버 튜닝 (keepalive, backlog, event-loop 크기) |
-| `SyncService` | 동기 방식 서비스 — `@Observed` + `withObservation {}` 중첩 span |
-| `CoroutineService` | 코루틴 서비스 — `withObservationSuspending {}` 으로 suspend 함수 내 span 생성 |
-| `ReactorService` | Reactor 서비스 — `@Observed` 클래스 레벨 적용 |
-| `SyncController` | 동기 REST 엔드포인트 (`/sync`) |
-| `CoroutineController` | 코루틴 REST 엔드포인트 (`/coroutine`) |
-| `ReactorController` | Reactor REST 엔드포인트 (`/reactor`) |
-| `TracingApplication` | `ZipkinServer.Launcher.zipkin` 으로 Zipkin 컨테이너 자동 시작 |
+| `ObservationConfig` | Registers `ObservedAspect` bean — enables `@Observed` AOP, excludes Controller layer |
+| `NettyConfig` | Reactor Netty server tuning (keepalive, backlog, event-loop size) |
+| `SyncService` | Synchronous service — `@Observed` + `withObservation {}` nested spans |
+| `CoroutineService` | Coroutine service — `withObservationSuspending {}` for spans in suspend functions |
+| `ReactorService` | Reactor service — `@Observed` applied at class level |
+| `SyncController` | Synchronous REST endpoint (`/sync`) |
+| `CoroutineController` | Coroutine REST endpoint (`/coroutine`) |
+| `ReactorController` | Reactor REST endpoint (`/reactor`) |
+| `TracingApplication` | Starts Zipkin container via `ZipkinServer.Launcher.zipkin` |
 
-## Tracing 전달 방식
-
-이 예제는 두 가지 tracing 파이프라인을 모두 지원합니다.
+## Tracing Pipeline
 
 ```
-Micrometer Tracing → OTel Bridge → OTel Exporter → Zipkin Server (활성)
-Micrometer Tracing → Brave Bridge → Zipkin Reporter → Zipkin Server (비활성/주석)
+Micrometer Tracing → OTel Bridge → OTel Exporter → Zipkin Server  (active)
+Micrometer Tracing → Brave Bridge → Zipkin Reporter → Zipkin Server (commented out)
 ```
 
-## bluetape4k 활용 기능
+## Span Propagation Across Coroutine Boundaries
 
-| 기능 | 아티팩트 | 코드 위치 | 이점 |
+A key challenge in coroutine environments is maintaining span context across suspension points.
+`withObservationSuspending` handles this correctly by:
+
+1. Starting the observation before the suspension point
+2. Storing the span in the coroutine context (not a thread-local)
+3. Restoring the span on coroutine resumption — even on a different thread
+4. Automatically rethrowing `CancellationException` without marking the span as error
+
+```
+suspend fun getTodo(id: Int): Todo? {
+    preProcessing()          // span: pre-processing (suspends, resumes on different thread)
+        └── getTodoById(id)  // span: get-todo-by-id (WebClient call, async I/O)
+    postProcessing()         // span: post-processing (correct parent span restored)
+}
+```
+
+The above call chain produces a properly nested trace in Zipkin, regardless of which thread each coroutine resumes on.
+
+### Trace Propagation Sequence
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant CoroutineController
+    participant CoroutineService
+    participant ObservationRegistry
+    participant Zipkin
+
+    Client->>CoroutineController: GET /coroutine/todo/1
+    CoroutineController->>ObservationRegistry: create root span (HTTP server)
+    CoroutineController->>CoroutineService: getTodo(1)
+    CoroutineService->>ObservationRegistry: withObservationSuspending("pre-processing")
+    Note over CoroutineService: delay(200) — suspension point
+    Note over CoroutineService: resumes (may be different thread)
+    ObservationRegistry-->>CoroutineService: pre-processing span closed
+    CoroutineService->>ObservationRegistry: withObservationSuspending("get-todo-by-id")
+    CoroutineService->>Zipkin: (exported after span close)
+    ObservationRegistry-->>CoroutineService: get-todo-by-id span closed
+    CoroutineService->>ObservationRegistry: withObservationSuspending("post-processing")
+    ObservationRegistry-->>CoroutineController: all child spans closed
+    CoroutineController-->>Client: 200 OK + Todo JSON
+```
+
+## Used bluetape4k Features
+
+| Feature | Artifact | Code Location | Benefit |
 |---|---|---|---|
-| `withObservation {}` DSL | `bluetape4k-micrometer` | `SyncService` | `Observation.createNotStarted().start().stop()` 보일러플레이트 제거 |
-| `withObservationSuspending {}` DSL | `bluetape4k-micrometer` | `CoroutineService` | suspend 함수 안에서 span 생성·전파; `CancellationException` 안전 처리 |
-| `KLoggingChannel` (코루틴 로거) | `bluetape4k-logging` | `CoroutineService`, `CoroutineController` | 코루틴 context-aware 로깅, MDC 자동 전파 |
-| `KLogging` | `bluetape4k-logging` | `SyncService`, `SyncController` | SLF4J companion object 로거 |
-| `ZipkinServer.Launcher.zipkin` | `bluetape4k-testcontainers` | `TracingApplication` | Zipkin 컨테이너 싱글턴 자동 시작·URL 제공 |
-| `bluetape4k-junit5` assertion (`shouldNotBeNull` 등) | `bluetape4k-junit5` | 테스트 파일 전반 | `assertNotNull(x)` 대신 Kotlin 스타일 체인 |
-| `kotlinx.coroutines.test.runTest` | `bluetape4k-coroutines` (전이 의존성) | `CoroutineServiceTest` | suspend 테스트를 가상 시간으로 실행 |
+| `withObservation {}` DSL | `bluetape4k-micrometer` | `SyncService` | Eliminates `Observation.createNotStarted().start().stop()` boilerplate |
+| `withObservationSuspending {}` DSL | `bluetape4k-micrometer` | `CoroutineService` | Creates and propagates spans inside suspend functions; handles `CancellationException` safely |
+| `KLoggingChannel` (coroutine logger) | `bluetape4k-logging` | `CoroutineService`, `CoroutineController` | Coroutine context-aware logging; MDC auto-propagation |
+| `KLogging` | `bluetape4k-logging` | `SyncService`, `SyncController` | SLF4J companion object logger |
+| `ZipkinServer.Launcher.zipkin` | `bluetape4k-testcontainers` | `TracingApplication` | Zipkin container singleton — starts once, shared across tests and app startup |
+| `bluetape4k-junit5` assertions (`shouldNotBeNull`, etc.) | `bluetape4k-junit5` | Test files | Kotlin-style assertion chains instead of `assertNotNull(x)` |
+| `runTest` for suspend tests | `bluetape4k-coroutines` (transitive) | `CoroutineServiceTest` | Execute suspend tests with virtual time |
 
-## bluetape4k Before / After
+## Before / After
 
-### 동기 함수에서 중첩 span 생성
+### Synchronous Nested Span Creation
 
 ```kotlin
-// Before — 표준 Micrometer (수동 start/stop)
+// Before — standard Micrometer (manual start/stop)
 fun preProcessing() {
     val obs = Observation.createNotStarted("pre-processing", observationRegistry)
     obs.start()
@@ -71,16 +142,16 @@ private fun preProcessing() {
 }
 ```
 
-### 코루틴 suspend 함수 안에서 span 생성
+### Suspend Function Span Creation
 
 ```kotlin
-// Before — 코루틴에서 Observation 수동 처리 (CancellationException 누락 위험)
+// Before — manual Observation in coroutine (CancellationException can be missed)
 private suspend fun preProcessing() {
     val obs = Observation.createNotStarted("pre-processing", observationRegistry)
     obs.start()
     try {
         delay(200)
-    } catch (e: Exception) {
+    } catch (e: Exception) {   // catches CancellationException — WRONG
         obs.error(e)
         throw e
     } finally {
@@ -94,26 +165,26 @@ import io.bluetape4k.micrometer.observation.coroutines.withObservationSuspending
 private suspend fun preProcessing() {
     withObservationSuspending("pre-processing", observationRegistry) {
         log.debug { "Pre processing ..." }
-        delay(200)  // CancellationException 자동 처리·전파
+        delay(200)  // CancellationException is automatically rethrown (not treated as error)
     }
 }
 ```
 
-### Zipkin 서버 자동 시작 (Testcontainers 싱글턴)
+### Zipkin Server Auto-Start (Testcontainers Singleton)
 
 ```kotlin
-// Before — Zipkin URL을 application.yml에 하드코딩 또는 직접 GenericContainer 관리
+// Before — Zipkin URL hardcoded in application.yml or manual GenericContainer management
 @SpringBootApplication
 class TracingApplication
 
-// After — bluetape4k ZipkinServer.Launcher 싱글턴
+// After — bluetape4k ZipkinServer.Launcher singleton
 import io.bluetape4k.testcontainers.infra.ZipkinServer
 
 @SpringBootApplication(proxyBeanMethods = false)
 class TracingApplication {
     companion object: KLogging() {
         @JvmStatic
-        val zipkinServer = ZipkinServer.Launcher.zipkin   // 공유 싱글턴, 한 번만 시작
+        val zipkinServer = ZipkinServer.Launcher.zipkin   // shared singleton, started once
 
         @JvmStatic
         val zipkinUrl: String get() = zipkinServer.url
@@ -121,17 +192,57 @@ class TracingApplication {
 }
 ```
 
-## 테스트
+## CancellationException Safety
 
-- `CoroutineServiceTest` — `withObservationSuspending` 적용 코루틴 서비스 검증 (`runTest`)
-- `SyncServiceTest` — `withObservation` 적용 동기 서비스 검증
-- `CoroutineControllerTest` — WebFlux `WebTestClient` 기반 통합 테스트
-- `SyncControllerTest` — 동기 Controller 통합 테스트
-- `ZipkinServerLaunchTest` — Zipkin 컨테이너 시작 확인
+When using coroutines with Micrometer, `CancellationException` must never be recorded as a tracing error.
+`withObservationSuspending` handles this automatically:
 
-## 참고
+```kotlin
+// withObservationSuspending internal behavior (simplified)
+suspend fun <T> withObservationSuspending(name: String, registry: ObservationRegistry, block: suspend () -> T): T {
+    val obs = Observation.createNotStarted(name, registry).start()
+    return try {
+        block()
+    } catch (e: CancellationException) {
+        throw e                   // rethrow — not an error, just coroutine cancellation
+    } catch (e: Exception) {
+        obs.error(e)              // record as span error only for real exceptions
+        throw e
+    } finally {
+        obs.stop()
+    }
+}
+```
 
-- [Micrometer Observation 공식 문서](https://micrometer.io/docs/observation)
-- [Micrometer Tracing 공식 문서](https://micrometer.io/docs/tracing)
+## Tests
+
+- `CoroutineServiceTest` — validates `withObservationSuspending` coroutine service with `runTest`
+- `SyncServiceTest` — validates `withObservation` synchronous service
+- `CoroutineControllerTest` — WebFlux `WebTestClient`-based integration test
+- `SyncControllerTest` — synchronous controller integration test
+- `ZipkinServerLaunchTest` — confirms Zipkin container starts correctly
+
+## Running
+
+```bash
+# Start the application (Zipkin starts automatically via Testcontainers)
+./gradlew :observability-micrometer-tracing-coroutines:bootRun
+
+# Run all tests
+./gradlew :observability-micrometer-tracing-coroutines:test
+
+# View traces: open http://localhost:9411 in a browser
+```
+
+## Prerequisites
+
+- Docker (required for Zipkin Testcontainers)
+- JDK 25 (configured via `.java-version`)
+- No external Zipkin server needed — `ZipkinServer.Launcher` starts one automatically
+
+## References
+
+- [Micrometer Observation official docs](https://micrometer.io/docs/observation)
+- [Micrometer Tracing official docs](https://micrometer.io/docs/tracing)
 - [Spring Boot Actuator + Micrometer](https://docs.spring.io/spring-boot/reference/actuator/metrics.html)
-- [`micrometer-observation`](../micrometer-observation) — Spring MVC + `@Observed` 기본 예제
+- [`micrometer-observation`](../micrometer-observation) — Spring MVC + `@Observed` basic example
