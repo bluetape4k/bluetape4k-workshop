@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: storage-abstraction
+  # Disable bluetape4k-aws S3 auto-configuration — we manage S3 beans ourselves via S3Config
+  autoconfigure:
+    exclude:
+      - io.bluetape4k.aws.spring.s3.S3AutoConfiguration
+      - io.bluetape4k.aws.spring.s3.S3TransferAutoConfiguration
+
+storage:
+  local:
+    base-path: /tmp/bluetape4k-workshop-storage
+  s3:
+    bucket-name: bluetape4k-workshop-bucket
+    presign-duration-minutes: 15

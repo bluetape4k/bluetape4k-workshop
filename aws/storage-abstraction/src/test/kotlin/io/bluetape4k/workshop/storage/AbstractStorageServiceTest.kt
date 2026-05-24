@@ -1,0 +1,69 @@
+package io.bluetape4k.workshop.storage
+
+import io.bluetape4k.logging.KLogging
+import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.MethodOrderer
+import org.junit.jupiter.api.Order
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestMethodOrder
+import org.springframework.beans.factory.annotation.Autowired
+import kotlin.test.assertContentEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
+
+/**
+ * Base test class for all [StorageService] implementations.
+ *
+ * Subclasses activate the appropriate Spring profile via `@ActiveProfiles`.
+ */
+@TestMethodOrder(MethodOrderer.OrderAnnotation::class)
+abstract class AbstractStorageServiceTest {
+
+    companion object : KLogging() {
+        const val TEST_KEY = "test/hello.txt"
+        val TEST_CONTENT = "Hello, Storage Abstraction!".toByteArray(Charsets.UTF_8)
+        const val TEST_CONTENT_TYPE = "text/plain"
+    }
+
+    @Autowired
+    lateinit var storageService: StorageService
+
+    @Test
+    @Order(1)
+    fun `upload returns a non-blank URL`() = runTest {
+        val url = storageService.upload(TEST_KEY, TEST_CONTENT, TEST_CONTENT_TYPE)
+        assertNotNull(url)
+        assertTrue(url.isNotBlank(), "URL must not be blank, got: $url")
+    }
+
+    @Test
+    @Order(2)
+    fun `download returns the same bytes that were uploaded`() = runTest {
+        storageService.upload(TEST_KEY, TEST_CONTENT, TEST_CONTENT_TYPE)
+        val downloaded = storageService.download(TEST_KEY)
+        assertContentEquals(TEST_CONTENT, downloaded)
+    }
+
+    @Test
+    @Order(3)
+    fun `getUrl returns a non-blank URL for an existing key`() = runTest {
+        storageService.upload(TEST_KEY, TEST_CONTENT, TEST_CONTENT_TYPE)
+        val url = storageService.getUrl(TEST_KEY)
+        assertTrue(url.isNotBlank(), "URL must not be blank, got: $url")
+    }
+
+    @Test
+    @Order(4)
+    fun `delete removes the object without error`() = runTest {
+        storageService.upload(TEST_KEY, TEST_CONTENT, TEST_CONTENT_TYPE)
+        // Should not throw
+        storageService.delete(TEST_KEY)
+    }
+
+    @Test
+    @Order(5)
+    fun `delete is idempotent for missing key`() = runTest {
+        // Delete a key that was never uploaded — must not throw
+        storageService.delete("non-existent/key.txt")
+    }
+}
