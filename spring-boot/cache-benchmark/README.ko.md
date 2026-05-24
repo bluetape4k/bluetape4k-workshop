@@ -23,13 +23,7 @@ Spring Boot 서비스에서 7가지 캐시 전략을 비교하는 성능 벤치�
 
 ### 읽기 처리량 — `findById` (캐시 워밍 후, ops/s)
 
-```mermaid
-xychart-beta
-    title "읽기 처리량 — findById (ops/s, 높을수록 좋음)"
-    x-axis ["NoCache", "Caffeine", "Redis", "NearCache", "ReadThru", "WriteThru", "WriteBehind"]
-    y-axis "처리량 (ops/s)" 0 --> 550000
-    bar [8200, 490000, 43000, 465000, 42000, 41000, 42000]
-```
+![읽기 처리량 차트](../../docs/images/readme-charts/cache-benchmark-read-throughput-chart-01.png)
 
 | 프로파일 | 읽기 ops/s | 기준 대비 |
 |---------|-----------|----------|
@@ -43,13 +37,7 @@ xychart-beta
 
 ### 쓰기 처리량 — `save` (ops/s)
 
-```mermaid
-xychart-beta
-    title "쓰기 처리량 — save (ops/s, 높을수록 좋음)"
-    x-axis ["NoCache", "Caffeine", "Redis", "NearCache", "WriteThru", "WriteBehind"]
-    y-axis "처리량 (ops/s)" 0 --> 30000
-    bar [8200, 8100, 7300, 7200, 5600, 24000]
-```
+![쓰기 처리량 차트](../../docs/images/readme-charts/cache-benchmark-write-throughput-chart-01.png)
 
 | 프로파일 | 쓰기 ops/s | 비고 |
 |---------|-----------|------|

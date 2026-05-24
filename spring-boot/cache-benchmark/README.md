@@ -43,13 +43,7 @@ flowchart TD
 
 ### Read Throughput — `findById` (warmed cache, ops/s)
 
-```mermaid
-xychart-beta
-    title "Read Throughput — findById (ops/s, higher is better)"
-    x-axis ["NoCache", "Caffeine", "Redis", "NearCache", "ReadThru", "WriteThru", "WriteBehind"]
-    y-axis "Throughput (ops/s)" 0 --> 550000
-    bar [8200, 490000, 43000, 465000, 42000, 41000, 42000]
-```
+![Read Throughput chart](../../docs/images/readme-charts/cache-benchmark-read-throughput-chart-01.png)
 
 | Profile | Read ops/s | vs Baseline |
 |---------|-----------|-------------|
@@ -63,13 +57,7 @@ xychart-beta
 
 ### Write Throughput — `save` (ops/s)
 
-```mermaid
-xychart-beta
-    title "Write Throughput — save (ops/s, higher is better)"
-    x-axis ["NoCache", "Caffeine", "Redis", "NearCache", "WriteThru", "WriteBehind"]
-    y-axis "Throughput (ops/s)" 0 --> 30000
-    bar [8200, 8100, 7300, 7200, 5600, 24000]
-```
+![Write Throughput chart](../../docs/images/readme-charts/cache-benchmark-write-throughput-chart-01.png)
 
 | Profile | Write ops/s | Notes |
 |---------|------------|-------|
