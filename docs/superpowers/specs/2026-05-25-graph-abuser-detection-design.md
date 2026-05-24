@@ -249,11 +249,19 @@ val seedIdentifiers = IdentifierEdgeLabel.all.flatMap { edgeLabel ->
 }
 identifierVertices += seedIdentifiers
 
-// Step 2: for each identifier, find users connected via the SAME identifier edge label.
-// We dispatch by the vertex's own label to avoid querying a DeviceVertex for USES_IP edges.
+// Vertex-label → edge-label mapping (vertex labels are NOT the same strings as edge labels)
+val vertexLabelToEdgeLabel: Map<String, IdentifierEdgeLabel> = mapOf(
+    "Device"        to IdentifierEdgeLabel.USES_DEVICE,
+    "IpAddress"     to IdentifierEdgeLabel.USES_IP,
+    "PhoneNumber"   to IdentifierEdgeLabel.HAS_PHONE,
+    "PaymentMethod" to IdentifierEdgeLabel.USES_PAYMENT,
+)
+
+// Step 2: for each identifier vertex, find users connected via its corresponding edge label.
+// Do NOT compare identifierVertex.label.uppercase() to edge label strings — they differ
+// (e.g. "Device" vs "USES_DEVICE"). Use the explicit map above.
 seedIdentifiers.forEach { identifierVertex ->
-    // Determine the matching outgoing edge label for this identifier type
-    val matchingLabel = IdentifierEdgeLabel.all.firstOrNull { it.value == identifierVertex.label.uppercase() }
+    val matchingLabel = vertexLabelToEdgeLabel[identifierVertex.label]
         ?: return@forEach  // skip unrecognized vertex types
 
     val connectedUsers = ops.neighbors(
@@ -483,6 +491,7 @@ fun teardown() {
     // driver is owned by this test class (created in companion object / @BeforeAll).
     // Call driver.close() exactly once; do not delegate to a parent teardown that also closes it.
     runCatching { if (ops.graphExists(graphName)) ops.dropGraph(graphName) }
+        .onFailure { log.warn(it) { "dropGraph failed in @AfterAll; container may be in dirty state" } }
     driver.close()
 }
 ```
@@ -497,6 +506,8 @@ fun teardown() {
 > - `AbuserDetectionNeo4jTest`: `graphName = "abuser_neo4j"`
 > - `AbuserDetectionMemgraphTest`: `graphName = "abuser_memgraph"`
 > This prevents `dropGraph` in one class from racing with graph setup in another class.
+
+> **`AbstractAbuserDetectionSuspendTest`**: The `@TestInstance(TestInstance.Lifecycle.PER_CLASS)` requirement applies equally. Declare the annotation on the suspend abstract base class for the same reason.
 
 > **Stale container note**: If containers use `withReuse(true)`, graph data may persist across JVM sessions.
 > On unexpected test failures, verify with `docker ps | grep neo4j` and remove stale containers before retrying.
@@ -614,3 +625,6 @@ the expected format (e.g., `@param phone E.164 SHA-256 hex hash, not plaintext`)
 | Round 2 | 6-tier advisor (Sonnet) | 0 | 9 | 2 | 0 | in spec v3 (T1-H1 hash validation note, T2-H1/H2 driver+graphName isolation, T3-H1 version governance TODO, T4-H1 timestamp guidance, T4-H2 Flow cancellation contract, T5-H1 failure-path tests, T5-H2 backend fallback, T6-H1 label-dispatch optimization) |
 | Round 2 | Developer (Sonnet) | 0 | 2 | 2 | 0 | in spec v3 (H1 maxDepth removed, H2 ALL_IDENTIFIER_EDGE_LABELS → IdentifierEdgeLabel.all, M1 .value unwrap note, M2 findOrCreate lookup) |
 | Round 2 | Ops/SRE (Sonnet) | 0 | 2 | 1 | 0 | in spec v3 (H1 @TestInstance(PER_CLASS), H2 integrationTest Gradle task, M asymmetric runCatching) |
+| Round 3 | Developer (Sonnet) | 0 | 1→0 | 2 | 0 | in spec v4: NEW H1 label-dispatch bug (vertex label vs edge label string mismatch → always false) fixed with explicit Map lookup |
+| Round 3 | Ops/SRE (Sonnet) | 0 | 0 | 2 | 0 | in spec v4: M1 @AfterAll .onFailure log added; M2 AbstractAbuserDetectionSuspendTest @TestInstance mention added |
+| **Round 3 final** | **All reviewers** | **0** | **0** | polish | low | **CONVERGED ✅** |
