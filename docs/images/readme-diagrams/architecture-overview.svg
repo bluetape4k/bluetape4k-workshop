@@ -35,9 +35,8 @@
   <text x="48" y="58" font-family="'Architects Daughter', cursive" font-size="28" fill="#1e293b">Leader Election Architecture</text>
   <text x="48" y="78" font-family="'Comic Sans MS', cursive" font-size="13" fill="#536476">Distributed leader election with Redis · bluetape4k-leader library</text>
 
-  <!-- Left panel background -->
+  <!-- ── Left panel: Multiple Instances ── -->
   <rect x="36" y="100" width="240" height="368" rx="12" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.2"/>
-  <!-- Section label centered over panel -->
   <text x="156" y="97" font-family="'Architects Daughter', cursive" font-size="11" fill="#94a3b8" text-anchor="middle" letter-spacing="0.1em">MULTIPLE INSTANCES</text>
 
   <!-- Instance 1 (LEADER) -->
@@ -61,56 +60,53 @@
   <rect x="98" y="376" width="80" height="20" rx="10" fill="#94a3b8"/>
   <text x="138" y="390" font-family="'Comic Sans MS', cursive" font-size="12" fill="#fff" text-anchor="middle">FOLLOWER</text>
 
-  <!-- Arrow: Instance 1 → JobService -->
-  <path d="M256,154 C295,154 315,165 338,165" stroke="#3b82f6" stroke-width="2.2" fill="none" marker-end="url(#arrow-blue)"/>
-  <!-- Arrow: Instance 2 → JobService (dashed) -->
-  <path d="M256,254 C295,254 312,195 338,185" stroke="#93c5fd" stroke-width="1.5" fill="none" stroke-dasharray="5 4" marker-end="url(#arrow-blue-light)"/>
-  <!-- Arrow: Instance 3 → JobService (dashed) -->
-  <path d="M256,354 C295,354 312,215 338,200" stroke="#93c5fd" stroke-width="1.5" fill="none" stroke-dasharray="5 4" marker-end="url(#arrow-blue-light)"/>
+  <!-- ── Arrows: Instances → JobService (shifted +70) ── -->
+  <path d="M260,154 C300,154 385,165 408,165" stroke="#3b82f6" stroke-width="2.2" fill="none" marker-end="url(#arrow-blue)"/>
+  <path d="M260,254 C300,254 385,195 408,185" stroke="#93c5fd" stroke-width="1.5" fill="none" stroke-dasharray="5 4" marker-end="url(#arrow-blue-light)"/>
+  <path d="M260,354 C300,354 385,215 408,200" stroke="#93c5fd" stroke-width="1.5" fill="none" stroke-dasharray="5 4" marker-end="url(#arrow-blue-light)"/>
 
-  <!-- LeaderScheduledJobService -->
-  <rect x="340" y="112" width="272" height="104" rx="12" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.8" filter="url(#shadow)"/>
-  <text x="476" y="136" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">@Scheduled @SERVICE</text>
-  <text x="476" y="158" font-family="'Architects Daughter', cursive" font-size="18" fill="#3b0764" text-anchor="middle">LeaderScheduled</text>
-  <text x="476" y="178" font-family="'Architects Daughter', cursive" font-size="18" fill="#3b0764" text-anchor="middle">JobService</text>
-  <text x="476" y="200" font-family="'Comic Sans MS', cursive" font-size="12" fill="#7c3aed" text-anchor="middle">fixed-delay: PT10S</text>
+  <!-- ── Center: LeaderScheduledJobService (x shifted +70 → x=410) ── -->
+  <rect x="410" y="112" width="272" height="104" rx="12" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.8" filter="url(#shadow)"/>
+  <text x="546" y="136" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">@Scheduled  @Service</text>
+  <text x="546" y="158" font-family="'Architects Daughter', cursive" font-size="18" fill="#3b0764" text-anchor="middle">LeaderScheduled</text>
+  <text x="546" y="178" font-family="'Architects Daughter', cursive" font-size="18" fill="#3b0764" text-anchor="middle">JobService</text>
+  <text x="546" y="200" font-family="'Comic Sans MS', cursive" font-size="12" fill="#7c3aed" text-anchor="middle">fixed-delay: PT10S</text>
 
   <!-- Arrow: JobService → Elector -->
-  <line x1="476" y1="216" x2="476" y2="260" stroke="#7c3aed" stroke-width="1.8" marker-end="url(#arrow-purple)"/>
+  <line x1="546" y1="216" x2="546" y2="260" stroke="#7c3aed" stroke-width="1.8" marker-end="url(#arrow-purple)"/>
 
-  <!-- LettuceLeaderElector -->
-  <rect x="340" y="262" width="272" height="84" rx="12" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.8" filter="url(#shadow)"/>
-  <text x="476" y="290" font-family="'Architects Daughter', cursive" font-size="17" fill="#3b0764" text-anchor="middle">LettuceLeaderElector</text>
-  <text x="476" y="312" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">runIfLeader(lockName) { ... }</text>
-  <text x="476" y="330" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">bluetape4k-leader</text>
+  <!-- LettuceLeaderElector (x=410) -->
+  <rect x="410" y="262" width="272" height="84" rx="12" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.8" filter="url(#shadow)"/>
+  <text x="546" y="290" font-family="'Architects Daughter', cursive" font-size="17" fill="#3b0764" text-anchor="middle">LettuceLeaderElector</text>
+  <text x="546" y="312" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">runIfLeader(lockName) { ... }</text>
+  <text x="546" y="330" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">bluetape4k-leader</text>
 
-  <!-- Arrow: Elector → CacheWarmup -->
-  <path d="M420,346 Q370,380 356,394" stroke="#059669" stroke-width="1.5" fill="none" stroke-dasharray="5 4" marker-end="url(#arrow-green)"/>
-  <!-- Arrow: Elector → StaleCleanup -->
-  <path d="M532,346 Q570,380 588,394" stroke="#059669" stroke-width="1.5" fill="none" stroke-dasharray="5 4" marker-end="url(#arrow-green)"/>
+  <!-- ── Arrows: Elector → Jobs ── -->
+  <path d="M492,346 Q450,380 438,394" stroke="#059669" stroke-width="1.5" fill="none" stroke-dasharray="5 4" marker-end="url(#arrow-green)"/>
+  <path d="M600,346 Q645,380 656,394" stroke="#059669" stroke-width="1.5" fill="none" stroke-dasharray="5 4" marker-end="url(#arrow-green)"/>
 
-  <!-- CacheWarmupJob -->
-  <rect x="268" y="396" width="192" height="76" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="364" y="420" font-family="'Architects Daughter', cursive" font-size="15" fill="#064e3b" text-anchor="middle">CacheWarmupJob</text>
-  <text x="364" y="439" font-family="'Comic Sans MS', cursive" font-size="11" fill="#536476" text-anchor="middle">lock: cache-warmup</text>
-  <text x="364" y="455" font-family="'Comic Sans MS', cursive" font-size="11" fill="#536476" text-anchor="middle">LeaderGuardedJob</text>
+  <!-- CacheWarmupJob (x=340, clear of left panel right edge 276) -->
+  <rect x="340" y="396" width="192" height="76" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="436" y="420" font-family="'Architects Daughter', cursive" font-size="15" fill="#064e3b" text-anchor="middle">CacheWarmupJob</text>
+  <text x="436" y="439" font-family="'Comic Sans MS', cursive" font-size="11" fill="#536476" text-anchor="middle">lock: cache-warmup</text>
+  <text x="436" y="455" font-family="'Comic Sans MS', cursive" font-size="11" fill="#536476" text-anchor="middle">LeaderGuardedJob</text>
 
-  <!-- StaleWorkflowCleanupJob -->
-  <rect x="476" y="396" width="216" height="76" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="1.5" filter="url(#shadow)"/>
-  <text x="584" y="418" font-family="'Architects Daughter', cursive" font-size="15" fill="#064e3b" text-anchor="middle">StaleWorkflow</text>
-  <text x="584" y="436" font-family="'Architects Daughter', cursive" font-size="15" fill="#064e3b" text-anchor="middle">CleanupJob</text>
-  <text x="584" y="455" font-family="'Comic Sans MS', cursive" font-size="11" fill="#536476" text-anchor="middle">lock: stale-cleanup</text>
+  <!-- StaleWorkflowCleanupJob (x=548) -->
+  <rect x="548" y="396" width="216" height="76" rx="10" fill="#d1fae5" stroke="#059669" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="656" y="418" font-family="'Architects Daughter', cursive" font-size="15" fill="#064e3b" text-anchor="middle">StaleWorkflow</text>
+  <text x="656" y="436" font-family="'Architects Daughter', cursive" font-size="15" fill="#064e3b" text-anchor="middle">CleanupJob</text>
+  <text x="656" y="455" font-family="'Comic Sans MS', cursive" font-size="11" fill="#536476" text-anchor="middle">lock: stale-cleanup</text>
 
-  <!-- Arrow: Elector right → Redis left -->
-  <path d="M612,304 C700,304 760,292 828,286" stroke="#d97706" stroke-width="2" fill="none" marker-end="url(#arrow-amber)"/>
-  <text x="716" y="297" font-family="'Comic Sans MS', cursive" font-size="11" fill="#d97706" text-anchor="middle">SET NX EX</text>
+  <!-- ── Arrow: Elector → Redis ── -->
+  <path d="M682,304 C750,304 790,292 828,286" stroke="#d97706" stroke-width="2" fill="none" marker-end="url(#arrow-amber)"/>
+  <text x="752" y="297" font-family="'Comic Sans MS', cursive" font-size="11" fill="#d97706" text-anchor="middle">SET NX EX</text>
 
-  <!-- Arrow: Redis → Elector (return, dashed) -->
-  <path d="M828,300 C760,308 700,316 614,318" stroke="#10b981" stroke-width="1.5" fill="none" stroke-dasharray="4 4" marker-end="url(#arrow-emerald)"/>
-  <text x="710" y="332" font-family="'Comic Sans MS', cursive" font-size="11" fill="#10b981" text-anchor="middle">OK (Instance 1)</text>
-  <text x="710" y="347" font-family="'Comic Sans MS', cursive" font-size="11" fill="#ef4444" text-anchor="middle">FAIL (others)</text>
+  <!-- Arrow: Redis → Elector (return) -->
+  <path d="M828,300 C790,308 750,316 684,318" stroke="#10b981" stroke-width="1.5" fill="none" stroke-dasharray="4 4" marker-end="url(#arrow-emerald)"/>
+  <text x="754" y="332" font-family="'Comic Sans MS', cursive" font-size="11" fill="#10b981" text-anchor="middle">OK (Instance 1)</text>
+  <text x="754" y="347" font-family="'Comic Sans MS', cursive" font-size="11" fill="#ef4444" text-anchor="middle">FAIL (others)</text>
 
-  <!-- Redis -->
+  <!-- ── Redis ── -->
   <rect x="830" y="240" width="228" height="132" rx="14" fill="#fed7aa" stroke="#d97706" stroke-width="1.8" filter="url(#shadow)"/>
   <circle cx="944" cy="274" r="18" fill="#d97706" opacity="0.2"/>
   <text x="944" y="280" font-size="18" fill="#92400e" text-anchor="middle">&#9881;</text>
@@ -118,7 +114,7 @@
   <text x="944" y="326" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">Single-Key Distributed Lock</text>
   <text x="944" y="344" font-family="'Comic Sans MS', cursive" font-size="12" fill="#374151" text-anchor="middle">SET {lockName} NX EX {ttl}</text>
 
-  <!-- Footer -->
+  <!-- ── Footer ── -->
   <rect x="36" y="510" width="1306" height="56" rx="10" fill="#f0fdf4" stroke="#86efac" stroke-width="1.2"/>
   <text x="689" y="534" font-family="'Architects Daughter', cursive" font-size="15" fill="#166534" text-anchor="middle">Exactly ONE instance executes each job at any time</text>
   <text x="689" y="552" font-family="'Comic Sans MS', cursive" font-size="12" fill="#536476" text-anchor="middle">All instances run the scheduler; only the leader wins the Redis lock and calls execute()</text>
