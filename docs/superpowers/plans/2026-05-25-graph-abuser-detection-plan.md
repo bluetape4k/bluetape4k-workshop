@@ -97,6 +97,26 @@
   - Edge labels: `UsesDeviceLabel`, `UsesIpLabel`, `HasPhoneLabel`, `UsesPaymentLabel`, `ReferredByLabel`
   - 각 object 는 `VertexLabel` / `EdgeLabel` interface 구현 (bluetape4k-graph-core API 확인 후)
   - 영문 KDoc 필수
+  - **⚠️ Security KDoc 필수** — 민감 속성에 반드시 보안 주석 명기:
+    ```kotlin
+    /**
+     * Vertex label for phone number identifiers.
+     *
+     * **Security**: `phone` property stores an **E.164-format hash** (SHA-256 hex or equivalent).
+     * Raw phone numbers MUST NOT be persisted in the graph. Callers are responsible for hashing
+     * before calling [AbuserDetectionService.addPhoneNumber].
+     */
+    object PhoneNumberLabel : VertexLabel { ... }
+
+    /**
+     * Vertex label for payment method identifiers.
+     *
+     * **Security**: `paymentToken` stores a **PCI-safe processor token** (e.g., Stripe/Braintree token),
+     * never a raw PAN or CVV. Callers must obtain a tokenised reference from the payment processor
+     * before calling [AbuserDetectionService.addPaymentMethod].
+     */
+    object PaymentMethodLabel : VertexLabel { ... }
+    ```
 
 ---
 
@@ -272,7 +292,9 @@
     4. `detects referral loops (A→B→C→A)` — `seedReferralCycle(service)` 호출
     5. `ranks user at center of identifier sharing as most suspicious` — `seedSharedIdentifiers(service)` 사용
     6. `empty graph returns empty cluster` — seed 없음; `findAbuseCluster(nonExistentId).users.isEmpty()`
-    7. `cluster excludes unrelated users` — `seedIsolatedUser(service)` 호출 후 `findAbuseCluster` 결과에 unrelatedUser 없음 확인
+    7. `cluster excludes unrelated users` — `seedIsolatedUser(service)` 호출 후:
+       - `findAbuseCluster(seed.user1.id).users` 에 `seed.unrelatedUser` 포함 안 됨 확인
+       - `findAbuseCluster(seed.unrelatedUser.id).users.isEmpty()` 확인 (isolated user 시드 시 cluster 비어 있어야 함)
     8. `addDevice with blank deviceId throws IllegalArgumentException`
     9. `addUser with blank userId throws IllegalArgumentException`
     10. `findAbuseCluster with non-existent seedUserId returns empty cluster`
@@ -310,16 +332,35 @@
     // coInvoking { service.explainSuspicion(GraphElementId("")) } shouldThrow IllegalArgumentException::class
     ```
   - **suspend `fun` exception 테스트**: `coInvoking { service.addDevice("", "ios") } shouldThrow IllegalArgumentException::class`
-  - **Flow 취소 검증 테스트** (test 16): `rankSuspiciousUsers` Flow 를 collect 중인 Job 을 cancel 하고 `CancellationException` 전파 확인
+  - **Flow 취소 검증 테스트** (test 16): `rankSuspiciousUsers` Flow 를 collect 중인 Job 을 cancel 하고 취소 전파 확인
     ```kotlin
+    // ✅ Option A — async + deferred.await() (CancellationException 전파 검증)
     runTest {
-        val scope = CoroutineScope(Job())
-        val job = scope.launch {
+        val deferred = async {
+            service.rankSuspiciousUsers().collect { }
+        }
+        deferred.cancel()
+        assertFailsWith<CancellationException> { deferred.await() }
+    }
+
+    // ✅ Option B — backgroundScope (isCancelled 상태 검증)
+    runTest {
+        val job = backgroundScope.launch {
             service.rankSuspiciousUsers().collect { }
         }
         job.cancel()
-        assertFailsWith<CancellationException> { job.join() }
+        job.join()
+        job.isCancelled shouldBe true
     }
+    ```
+    **⚠️ 금지 패턴 — compile 통과하나 런타임 오류**:
+    ```kotlin
+    // ❌ WRONG — job.join() 은 취소된 Job 에서 CancellationException 를 throw 하지 않음
+    assertFailsWith<CancellationException> { job.join() }
+
+    // ❌ WRONG — CoroutineScope(Job()) 은 runTest dispatcher 외부 scope; 테스트 종료 후에도 살아있는 coroutine leak
+    val scope = CoroutineScope(Job())
+    scope.launch { ... }
     ```
   - `CancellationException` 재throw 필수 (runCatching 내 suspend 호출 금지)
 
@@ -365,17 +406,27 @@
 - **complexity**: medium
 - **파일**: `.../AbuserDetectionMemgraphTest.kt`
 - **작업**:
+  - **`@Tag("integration")` 필수** — default `test` task 에서 제외, `integrationTest` task 에서만 실행
   - T10-1 과 동일 패턴, `MemgraphServer.Launcher.memgraph`
   - `graphName = "abuser_memgraph"`
   - **Driver wiring skeleton**:
     ```kotlin
-    companion object : KLogging() {
-        val memgraph = MemgraphServer.Launcher.memgraph
-        val driver: Driver = GraphDatabase.driver(memgraph.boltUrl, AuthTokens.none())
+    @Tag("integration")
+    class AbuserDetectionMemgraphTest : AbstractAbuserDetectionTest() {
+        companion object : KLogging() {
+            val memgraph = MemgraphServer.Launcher.memgraph
+            val driver: Driver = GraphDatabase.driver(memgraph.boltUrl, AuthTokens.none())
+        }
+        // ⚠️ graphName MUST be declared before ops (same initialization order rule as T10-1)
+        override val graphName = "abuser_memgraph"
+        override val ops: GraphOperations = MemgraphGraphOperations(driver, graphName)
+
+        @AfterAll
+        fun teardown() {
+            runCatching { if (ops.graphExists(graphName)) ops.dropGraph(graphName) }.onFailure { log.warn(it) { "dropGraph failed" } }
+            driver.close()
+        }
     }
-    // ⚠️ graphName MUST be declared before ops (same initialization order rule as T10-1)
-    override val graphName = "abuser_memgraph"
-    override val ops: GraphOperations = MemgraphGraphOperations(driver, graphName)
     ```
 
 ### T10-3: `AbuserDetectionSuspendNeo4jTest.kt`
@@ -388,14 +439,60 @@
   - `override val ops: GraphSuspendOperations = Neo4jGraphSuspendOperations(driver, graphName)`
   - `graphName = "abuser_suspend_neo4j"` (T10-1 와 다른 unique name — DB 충돌 방지)
   - `AbstractAbuserDetectionSuspendTest` 확장
+  - **`@AfterAll fun teardown()` 필수** — driver 반납:
+    ```kotlin
+    @AfterAll
+    fun teardown() {
+        runCatching { if (ops.graphExists(graphName)) ops.dropGraph(graphName) }.onFailure { log.warn(it) { "dropGraph failed" } }
+        driver.close()
+    }
+    ```
+  - **Driver wiring skeleton**:
+    ```kotlin
+    @Tag("integration")
+    class AbuserDetectionSuspendNeo4jTest : AbstractAbuserDetectionSuspendTest() {
+        companion object : KLogging() {
+            val neo4j = Neo4jServer.Launcher.neo4j
+            val driver: Driver = GraphDatabase.driver(neo4j.boltUrl, AuthTokens.none())
+        }
+        override val graphName = "abuser_suspend_neo4j"
+        override val ops: GraphSuspendOperations = Neo4jGraphSuspendOperations(driver, graphName)
+
+        @AfterAll
+        fun teardown() {
+            runCatching { if (ops.graphExists(graphName)) ops.dropGraph(graphName) }.onFailure { log.warn(it) { "dropGraph failed" } }
+            driver.close()
+        }
+    }
+    ```
 
 ### T10-4: `AbuserDetectionSuspendMemgraphTest.kt`
 - **complexity**: medium
 - **파일**: `.../AbuserDetectionSuspendMemgraphTest.kt`
 - **작업**:
+  - **`@Tag("integration")` 필수** — default `test` task 에서 제외, `integrationTest` task 에서만 실행
   - T10-3 패턴, `MemgraphServer.Launcher.memgraph`
   - **⚠️ 초기화 순서**: `override val graphName = "abuser_suspend_memgraph"` 를 `override val ops` **앞에** 선언
   - `graphName = "abuser_suspend_memgraph"`
+  - **`@AfterAll fun teardown()` 필수** — driver 반납:
+  - **Driver wiring skeleton**:
+    ```kotlin
+    @Tag("integration")
+    class AbuserDetectionSuspendMemgraphTest : AbstractAbuserDetectionSuspendTest() {
+        companion object : KLogging() {
+            val memgraph = MemgraphServer.Launcher.memgraph
+            val driver: Driver = GraphDatabase.driver(memgraph.boltUrl, AuthTokens.none())
+        }
+        override val graphName = "abuser_suspend_memgraph"
+        override val ops: GraphSuspendOperations = MemgraphGraphSuspendOperations(driver, graphName)
+
+        @AfterAll
+        fun teardown() {
+            runCatching { if (ops.graphExists(graphName)) ops.dropGraph(graphName) }.onFailure { log.warn(it) { "dropGraph failed" } }
+            driver.close()
+        }
+    }
+    ```
 
 ---
 
