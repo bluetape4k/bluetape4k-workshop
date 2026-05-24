@@ -7,6 +7,23 @@ Spring의 WebClient와 비슷한 기능을 제공하지만, Reactor 를 사용�
 
 ![HTTP Request Processing diagram](../../docs/images/readme-diagrams/vertx-vertx-webclient-sequence-01.png)
 
+```mermaid
+sequenceDiagram
+    participant Caller as suspend caller
+    participant Client as WebClient
+    participant Future as Vert.x Future<HttpResponse>
+    participant Server as HTTP Server (CoroutineVerticle)
+
+    Caller->>Client: client.get(port, host, path).send()
+    Note over Client,Future: Returns Future<HttpResponse>
+    Client->>Future: Future (non-blocking)
+    Caller->>Future: .coAwait() — suspend (no thread blocked)
+    Future->>Server: HTTP GET request
+    Server-->>Future: HTTP response
+    Future-->>Caller: HttpResponse (resumed)
+    Caller->>Caller: response.body() — direct access
+```
+
 ## 주요 기능
 
 | 기능 | 설명 |
@@ -141,4 +158,69 @@ import io.bluetape4k.jackson3.Jackson
 
 val json = Jackson.defaultJsonMapper.writeValueAsString(user)
 val user = Jackson.defaultJsonMapper.readValue(json, User::class.java)
+```
+
+## 취소·구조적 동시성·컨텍스트 전파
+
+### `coAwait()` 취소와 HTTP 요청 중단
+
+`Future<T>.coAwait()` 는 코루틴 취소 신호를 수신하면 진행 중인 HTTP 요청을 중단합니다.
+클라이언트가 타임아웃으로 취소되거나 부모 스코프가 취소될 때 소켓 리소스가 즉시 반환됩니다.
+
+```kotlin
+// withTimeout으로 HTTP 요청에 타임아웃 적용
+withTimeout(500) {
+    val response = client
+        .get(port, "localhost", "/slow-endpoint")
+        .send()
+        .coAwait()   // 500ms 초과 시 CancellationException
+                     // → HTTP 요청 중단, 소켓 반환
+    response.body()
+}
+```
+
+### `CoroutineVerticle` 언디플로이와 WebClient 정리
+
+`CoroutineVerticle` 을 언디플로이하면 `CoroutineScope` 가 취소됩니다.
+`start()` 에서 시작된 자식 코루틴 (예: `launch { ... }`) 이 모두 취소되므로
+WebClient 요청이 진행 중이어도 스코프 취소 시 정상적으로 중단됩니다.
+
+```kotlin
+class CoroutineServer: CoroutineVerticle() {
+    private lateinit var client: WebClient
+
+    override suspend fun start() {
+        client = WebClient.create(vertx)
+        vertx.createHttpServer()
+            .requestHandler { ... }
+            .listen(9988)
+            .coAwait()
+    }
+
+    override suspend fun stop() {
+        client.close()   // 언디플로이 시 WebClient 명시적 정리
+    }
+}
+```
+
+### `suspendHandler` 내 컨텍스트 전파
+
+`suspendHandler { ctx -> }` 블록 내에서 `coroutineContext` 는 Vert.x 이벤트 루프의
+`vertx.dispatcher()` 를 포함합니다. 이를 통해 Vert.x API 호출 (예: `EventBus`, `FileSystem`) 이
+올바른 스레드에서 수행됨을 보장합니다.
+
+```kotlin
+router.get("/proxy").suspendHandler { ctx ->
+    // Vert.x dispatcher 컨텍스트에서 실행
+    val upstream = client.get(8081, "backend", "/data")
+        .send()
+        .coAwait()
+    ctx.response().end(upstream.body())   // 동일 이벤트 루프 스레드에서 응답
+}
+```
+
+## 빌드 및 테스트
+
+```bash
+./gradlew :vertx-vertx-webclient:test
 ```

@@ -6,6 +6,25 @@ Vert.x 를 Kotlin Coroutines 와 함께 사용하는 예제입니다.
 
 ![coroutines Sequence Flow diagram](../../docs/images/readme-diagrams/vertx-coroutines-sequence-01.png)
 
+```mermaid
+sequenceDiagram
+    participant Client as HTTP Client
+    participant Router as Vert.x Router
+    participant Handler as suspendHandler { }
+    participant Pool as JDBCPool
+    participant DB as H2 In-Memory
+
+    Client->>Router: GET /movie/:id
+    Router->>Handler: RoutingContext (suspend lambda)
+    Handler->>Pool: preparedQuery(...).execute(tuple).coAwait()
+    Note over Handler,Pool: Future<RowSet> → suspend (non-blocking)
+    Pool->>DB: SQL query
+    DB-->>Pool: RowSet
+    Pool-->>Handler: RowSet (resumed)
+    Handler-->>Router: ctx.response().end(json)
+    Router-->>Client: 200 OK + JSON
+```
+
 ## Vert.x 코루틴 통합 설명
 
 `CoroutineVerticle`을 상속하면 Vert.x 이벤트 루프 위에서 `suspend` 함수를 직접 사용할 수 있습니다.
@@ -104,6 +123,66 @@ fun `test route`(vertx: Vertx, testContext: VertxTestContext) = runSuspendTest {
     vertx.withSuspendTestContext(testContext) {
         vertx.deployVerticle(MainVerticle()).coAwait()
         // 순차 코드로 테스트 작성 — 예외 시 testContext.failNow() 자동 호출
+    }
+}
+```
+
+## 취소·구조적 동시성·컨텍스트 전파
+
+### `CoroutineVerticle` 스코프와 언디플로이
+
+`CoroutineVerticle` 은 `CoroutineScope` 를 구현합니다.
+`Verticle`이 언디플로이되면 해당 스코프가 취소되어, `start()` 내부에서 시작된
+모든 자식 코루틴이 즉시 취소됩니다. 이를 통해 구조적 동시성 (structured concurrency) 이 보장됩니다.
+
+```kotlin
+class MainVerticle: CoroutineVerticle() {
+    override suspend fun start() {
+        // 이 스코프(CoroutineVerticle)가 취소되면
+        // launch { ... } 자식 코루틴도 모두 취소됨
+        launch {
+            // 백그라운드 작업 (예: 주기적 캐시 갱신)
+        }
+        // Router 등록 ...
+    }
+}
+// vertx.undeploy(deploymentId) → MainVerticle 스코프 취소 → launch 블록 취소
+```
+
+### `coAwait()` 취소 동작
+
+`Future<T>.coAwait()` 는 코루틴이 취소되면 Vert.x `Future` 를 즉시 취소합니다.
+DB 쿼리 대기 중 HTTP 연결이 끊어져도 커넥션 풀에 커넥션이 정상 반환됩니다.
+
+```kotlin
+router.get("/movie/:id").suspendHandler { ctx ->
+    // 이 suspend 블록 실행 중 ctx.request()가 abort되면
+    // pool.preparedQuery(...).execute(...).coAwait() 가 CancellationException 발생
+    // → JDBCPool 커넥션 자동 반환
+    val rows = pool.preparedQuery("SELECT TITLE FROM MOVIE WHERE ID=?")
+        .execute(Tuple.of(ctx.pathParam("id")))
+        .coAwait()
+    ctx.response().end(Json.obj { }.encode())
+}
+```
+
+### `vertx.dispatcher()` 컨텍스트 전파
+
+`CoroutineVerticle` 내부에서는 `coroutineContext` 에 `vertx.dispatcher()` 가 포함되어
+Vert.x 이벤트 루프 스레드에서 코루틴이 실행됩니다.
+`withContext(vertx.dispatcher())` 를 명시적으로 사용하면 이벤트 루프를 벗어난 컨텍스트에서
+Vert.x API를 안전하게 호출할 수 있습니다.
+
+```kotlin
+// 다른 디스패처에서 Vert.x API 호출이 필요할 때
+suspend fun queryAndRespond(ctx: RoutingContext) {
+    val result = withContext(Dispatchers.IO) {
+        // 블로킹 I/O 처리
+        blockingComputation()
+    }
+    // Vert.x 이벤트 루프로 복귀하여 응답
+    withContext(vertx.dispatcher()) {
+        ctx.response().end(result)
     }
 }
 ```

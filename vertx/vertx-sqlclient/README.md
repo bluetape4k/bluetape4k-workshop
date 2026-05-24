@@ -4,6 +4,36 @@
 
 ![Reactive SQL diagram](../../docs/images/readme-diagrams/vertx-vertx-sqlclient-sequence-01.png)
 
+```mermaid
+sequenceDiagram
+    participant Test
+    participant Helper as withSuspendTransaction { }
+    participant Pool as JDBCPool / MySQLPool
+    participant Conn as SqlConnection
+    participant DB as MySQL (Testcontainers)
+
+    Test->>Helper: pool.withSuspendTransaction { conn -> }
+    Helper->>Pool: begin transaction
+    Pool->>DB: START TRANSACTION
+    DB-->>Pool: OK
+    Pool-->>Helper: SqlConnection
+
+    Helper->>Conn: conn.query(...).execute().coAwait()
+    Conn->>DB: SQL (within transaction)
+    DB-->>Conn: RowSet
+    Conn-->>Helper: RowSet (suspended resume)
+
+    alt 정상 완료
+        Helper->>Pool: commit
+        Pool->>DB: COMMIT
+        DB-->>Test: success
+    else 예외 발생
+        Helper->>Pool: rollback
+        Pool->>DB: ROLLBACK
+        DB-->>Test: exception re-thrown
+    end
+```
+
 [Vert.x Sql Client](https://vertx.io/docs/vertx-sql-client/java/) 와
 [MyBatis Dynamic SQL](https://mybatis.org/mybatis-dynamic-sql/docs/introduction.html) 을
 사용하여 Async/Non-Blocking 방식으로 데이터베이스를 사용하는 예제입니다.
@@ -118,4 +148,54 @@ abstract class AbstractSqlClientTest {
         val mysql = MySQL8Server.Launcher.mysql  // 이미 기동된 인스턴스 반환
     }
 }
+```
+
+## 취소·구조적 동시성·컨텍스트 전파
+
+### `withSuspendTransaction { }` 취소와 자동 롤백
+
+트랜잭션 블록 실행 중 코루틴이 취소되면 `withSuspendTransaction` 은 롤백을 수행합니다.
+예를 들어 부모 스코프가 타임아웃으로 취소되거나 HTTP 클라이언트가 연결을 끊어도
+DB 커넥션이 정상적으로 트랜잭션 롤백 후 풀에 반환됩니다.
+
+```kotlin
+// 타임아웃으로 인한 취소 → 자동 롤백
+withTimeout(200) {
+    pool.withSuspendTransaction { conn ->
+        conn.query("INSERT INTO items VALUES (...)").execute().coAwait()
+        delay(500)  // 타임아웃 초과 → CancellationException
+        // 블록 종료 전 예외 발생 → 자동 ROLLBACK
+    }
+}
+// INSERT가 DB에 남지 않음
+```
+
+### `testWithSuspendTransaction` 테스트 격리 보장
+
+테스트 간 상태 오염을 방지하기 위해 `testWithSuspendTransaction` 은
+블록 완료 여부와 무관하게 항상 롤백합니다. 이로써 각 테스트는 독립적인 초기 상태를 보장받습니다.
+
+```kotlin
+@Test
+fun `데이터 삽입 테스트`(vertx: Vertx, testContext: VertxTestContext) = runSuspendIO {
+    vertx.testWithSuspendTransaction(testContext, pool) {
+        val rows = pool.preparedQuery("INSERT INTO users VALUES (?, ?)")
+            .execute(Tuple.of(1, "Alice"))
+            .coAwait()
+        rows.rowCount() shouldBeEqualTo 1
+        // 블록 완료 후 자동 롤백 → 다음 테스트에 영향 없음
+    }
+}
+```
+
+### Vert.x `Pool` 백프레셔
+
+`MySQLPool` / `JDBCPool` 은 최대 커넥션 수를 제한합니다.
+코루틴의 `coAwait()` 는 풀에 커넥션이 없을 때 비블로킹 대기 (backpressure) 를 수행합니다.
+스레드를 블로킹하지 않으므로 단일 이벤트 루프 스레드에서 수백 개의 동시 요청을 처리할 수 있습니다.
+
+## 빌드 및 테스트
+
+```bash
+./gradlew :vertx-vertx-sqlclient:test
 ```
