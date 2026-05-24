@@ -27,6 +27,14 @@ Gateway 워크숍의 고객 서비스 예제입니다. 작은 WebFlux API를 제
 - Customer API: `http://localhost:8081/api/v1/customers`
 - Actuator endpoints: `http://localhost:8081/actuator`
 
+## 사용된 Bluetape4k 기능
+
+| 모듈 | 기능 | 사용 위치 |
+|------|------|---------|
+| `bluetape4k-logging` | `KLoggingChannel()` | 컨트롤러와 서비스의 코루틴 안전 구조화 로깅 |
+| `bluetape4k-support` | `uninitialized()`, `unsafeLazy` | 주입 빈의 지연 필드 초기화 |
+| `bluetape4k-junit5` | `runSuspendIO { }` | suspend 기반 통합 테스트 실행기 |
+
 ## 소스 맵
 
 - `CustomerApplication.kt`는 Spring Boot 애플리케이션을 시작합니다.

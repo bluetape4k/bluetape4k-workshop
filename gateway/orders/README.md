@@ -29,6 +29,16 @@ Then open:
 - Orders API: `http://localhost:8082/api/v1/orders`
 - Actuator endpoints: `http://localhost:8082/actuator`
 
+## Used Bluetape4k Features
+
+| Module | Feature | Usage |
+|--------|---------|-------|
+| `bluetape4k-logging` | `KLoggingChannel()`, `KLogging()` | Coroutine-aware structured logging in controllers and config |
+| `bluetape4k-idgenerators` | `Uuid` (UUID v7) | Type-safe UUID v7 generation for product and order IDs |
+| `bluetape4k-support` | `uninitialized()`, `unsafeLazy` | Deferred field initialization for injected beans |
+| `bluetape4k-assertions` | `shouldBeFalse` | Concise test assertions |
+| `bluetape4k-junit5` | `runSuspendIO { }` | Suspend-based integration test runner |
+
 ## Source Map
 
 - `OrderApplication.kt` starts the Spring Boot application.
