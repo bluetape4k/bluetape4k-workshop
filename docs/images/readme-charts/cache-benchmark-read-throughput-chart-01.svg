@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="600" viewBox="0 0 1280 600" role="img" aria-label="Cache Benchmark Read Throughput">
+<style>
+  .title{font-family:'Architects Daughter','Comic Sans MS',cursive;font-size:34px;font-weight:400;fill:#273043}
+  .subtitle{font-family:'Comic Sans MS','Comic Neue',cursive;font-size:17px;font-weight:400;fill:#6b7280}
+  .label{font-family:'Comic Sans MS','Comic Neue',cursive;font-size:18px;font-weight:400;fill:#273043}
+  .value{font-family:'Comic Sans MS','Comic Neue',cursive;font-size:17px;font-weight:400;fill:#273043}
+  .note{font-family:'Comic Sans MS','Comic Neue',cursive;font-size:16px;font-weight:400;fill:#6b7280}
+</style>
+<rect width="1280" height="600" fill="#f6f8fb"/>
+<rect x="24" y="24" width="1232" height="552" rx="18" fill="#fff" stroke="#d7e3ee" stroke-width="2"/>
+
+<text class="title" x="56" y="74">Read Throughput — findById (ops/s)</text>
+<text class="subtitle" x="58" y="106">Warmed cache. Higher is better. Apple M4 Pro, JDK 25, H2 in-memory, Redis via Testcontainers.</text>
+
+<!-- NoCache -->
+<text class="label" x="56" y="160" dominant-baseline="middle">NoCache</text>
+<rect x="290" y="138" width="13" height="40" rx="6" fill="#d1d5db"/>
+<text class="value" x="308" y="160" dominant-baseline="middle">~8,200</text>
+
+<!-- Caffeine -->
+<text class="label" x="56" y="216" dominant-baseline="middle">Caffeine</text>
+<rect x="290" y="194" width="790" height="40" rx="6" fill="#86efac"/>
+<text class="value" x="1086" y="216" dominant-baseline="middle">~490,000  ★</text>
+
+<!-- Redis Cache -->
+<text class="label" x="56" y="272" dominant-baseline="middle">Redis Cache</text>
+<rect x="290" y="250" width="69" height="40" rx="6" fill="#93c5fd"/>
+<text class="value" x="364" y="272" dominant-baseline="middle">~43,000</text>
+
+<!-- Near Cache -->
+<text class="label" x="56" y="328" dominant-baseline="middle">Near Cache</text>
+<rect x="290" y="306" width="750" height="40" rx="6" fill="#6ee7b7"/>
+<text class="value" x="1046" y="328" dominant-baseline="middle">~465,000  ★</text>
+
+<!-- Read-Through -->
+<text class="label" x="56" y="384" dominant-baseline="middle">Read-Through</text>
+<rect x="290" y="362" width="68" height="40" rx="6" fill="#a5b4fc"/>
+<text class="value" x="364" y="384" dominant-baseline="middle">~42,000</text>
+
+<!-- Write-Through -->
+<text class="label" x="56" y="440" dominant-baseline="middle">Write-Through</text>
+<rect x="290" y="418" width="66" height="40" rx="6" fill="#fca5a5"/>
+<text class="value" x="362" y="440" dominant-baseline="middle">~41,000</text>
+
+<!-- Write-Behind -->
+<text class="label" x="56" y="496" dominant-baseline="middle">Write-Behind</text>
+<rect x="290" y="474" width="68" height="40" rx="6" fill="#fed7aa"/>
+<text class="value" x="364" y="496" dominant-baseline="middle">~42,000</text>
+
+<text class="note" x="56" y="552">★ Caffeine and Near Cache deliver 57–60× higher read throughput than direct DB access.</text>
+</svg>
