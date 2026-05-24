@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1754" height="855" viewBox="0 0 1754 855" role="img" aria-label="dao web transaction Class Structure 2">
+<svg xmlns="http://www.w3.org/2000/svg" width="1754" height="855" viewBox="0 0 1754 855" role="img" aria-label="Exposed DAO Web Transaction Class Structure">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
   <marker id="openArrow" markerWidth="10" markerHeight="8" refX="8.5" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 8.5 4 L 1 7" fill="none" stroke="#758297" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></marker>
@@ -22,8 +22,8 @@
 </defs>
 <rect class="canvas" width="1754" height="855"/>
 <rect class="frame" x="32" y="28" width="1690" height="799" rx="28"/>
-<text class="title" x="66" y="82">dao web transaction Class Structure 2</text>
-<text class="subtitle" x="70" y="118">UML classes from the original Mermaid source</text>
+<text class="title" x="66" y="82">Exposed DAO Web Transaction Class Structure</text>
+<text class="subtitle" x="70" y="118">User · UserDTO · UserCreateRequest · UserCreateResponse · UserUpdateRequest</text>
 <path class="dashed" d="M877 481 L877 426 L672 426 L672 355"/>
 <path class="dashed" d="M672 180 L672 122 L262 122 L262 313"/>
 <path class="dashed" d="M672 355 L672 132 L1492 132 L1492 180"/>
