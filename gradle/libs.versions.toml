@@ -110,6 +110,7 @@ mockk = "1.14.9"  # https://mvnrepository.com/artifact/io.mockk/mockk
 springmockk = "5.0.1"  # https://mvnrepository.com/artifact/com.ninja-squad/springmockk
 awaitility = "4.3.0"  # https://mvnrepository.com/artifact/org.awaitility/awaitility-kotlin
 jmh = "1.37"  # https://mvnrepository.com/artifact/org.openjdk.jmh/jmh-core
+kotlinx-benchmark = "0.4.13"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-benchmark-runtime
 testcontainers = "2.0.5"  # https://mvnrepository.com/artifact/org.testcontainers/testcontainers-bom
 jna = "5.18.1"  # https://mvnrepository.com/artifact/net.java.dev.jna/jna
 archunit = "1.4.2"  # https://mvnrepository.com/artifact/com.tngtech.archunit/archunit
@@ -145,6 +146,7 @@ kotlin-jpa = { id = "org.jetbrains.kotlin.plugin.jpa", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 kotlinx-atomicfu = { id = "org.jetbrains.kotlinx.atomicfu", version.ref = "kotlinx-atomicfu" }
+kotlinx-benchmark = { id = "org.jetbrains.kotlinx.benchmark", version.ref = "kotlinx-benchmark" }
 
 detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt" }
 dependency-management = { id = "io.spring.dependency-management", version.ref = "dependency-management" }
@@ -645,8 +647,9 @@ aws2-aws-crt-client = { module = "software.amazon.awssdk:aws-crt-client" }
 # Kubernetes
 fabric8-kubernetes-client-bom = { module = "io.fabric8:kubernetes-client-bom", version = "7.7.0" }  # https://mvnrepository.com/artifact/io.fabric8/kubernetes-client-bom
 
-# JMH
+# JMH / Benchmark
 jmh-core = { module = "org.openjdk.jmh:jmh-core", version.ref = "jmh" }
+kotlinx-benchmark-runtime = { module = "org.jetbrains.kotlinx:kotlinx-benchmark-runtime", version.ref = "kotlinx-benchmark" }
 
 # Test
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junit-jupiter" }
