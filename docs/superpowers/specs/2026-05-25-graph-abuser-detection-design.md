@@ -90,8 +90,18 @@ class AbuserDetectionService(
     // This is critical for shared-identifier detection: two users sharing "device-X"
     // must link to the SAME Device vertex, not two separate vertices.
     //
-    // findOrCreate lookup: ops.findVerticesByLabel(DeviceLabel.label).firstOrNull { it.properties["deviceId"] == deviceId }
+    // findOrCreate lookup: ops.findVerticesByLabel(DeviceLabel.label, mapOf("deviceId" to deviceId)).firstOrNull()
     // before creating; if found, return existing vertex.
+    //
+    // findOrCreate contract — "first-create wins":
+    //   • The KEY property (deviceId / ip / phone / paymentToken) identifies uniqueness.
+    //   • If the vertex already exists (matched by key), the EXISTING vertex is returned as-is.
+    //   • Secondary/mutable properties (platform, asn, brand) from the second call are IGNORED —
+    //     they are NOT merged into the existing vertex.
+    //   • Callers must not assume that repeated calls with different secondary props update the vertex.
+    //   • This is NOT atomic (TOCTOU race under parallel invocation); concurrent callers may
+    //     create duplicate vertices. The service is designed for sequential use (PER_CLASS test instances,
+    //     `junit.jupiter.execution.parallel.enabled=false`).
     //
     // Timestamp defaults: passing "" for createdAt/firstSeenAt/verifiedAt/firstChargedAt/occurredAt
     // stores an empty string in the graph. Callers MUST pass a valid ISO-8601 timestamp string
@@ -107,11 +117,11 @@ class AbuserDetectionService(
     fun addPhoneNumber(phone: String): GraphVertex                          // findOrCreate by phone
     fun addPaymentMethod(paymentToken: String, brand: String): GraphVertex  // findOrCreate by paymentToken
 
-    fun linkDevice(userId: GraphElementId, deviceId: GraphElementId, firstSeenAt: String = "")
-    fun linkIp(userId: GraphElementId, ipId: GraphElementId, firstSeenAt: String = "")
-    fun linkPhone(userId: GraphElementId, phoneId: GraphElementId, verifiedAt: String = "")
-    fun linkPayment(userId: GraphElementId, paymentId: GraphElementId, firstChargedAt: String = "")
-    fun linkReferral(referrerId: GraphElementId, referredId: GraphElementId, occurredAt: String = "")
+    fun linkDevice(userVertexId: GraphElementId, deviceVertexId: GraphElementId, firstSeenAt: String = "")
+    fun linkIp(userVertexId: GraphElementId, ipVertexId: GraphElementId, firstSeenAt: String = "")
+    fun linkPhone(userVertexId: GraphElementId, phoneVertexId: GraphElementId, verifiedAt: String = "")
+    fun linkPayment(userVertexId: GraphElementId, paymentVertexId: GraphElementId, firstChargedAt: String = "")
+    fun linkReferral(referrerVertexId: GraphElementId, referredVertexId: GraphElementId, occurredAt: String = "")
 
     // Queries
     // findAbuseCluster: fixed 1-hop identifier traversal (User→Identifier→User).
@@ -431,7 +441,7 @@ dependencies {
     // `configurations { testImplementation.extendsFrom(compileOnly, runtimeOnly) }` already
     // pulls them into the test classpath; do NOT add explicit testImplementation entries here
     // (duplicate-dependency warning + redundant resolution).
-    testImplementation(libs.neo4j.java.driver)
+    // ❌ DO NOT add: testImplementation(libs.neo4j.java.driver)  — extendsFrom already covers it
 }
 ```
 
@@ -656,3 +666,5 @@ the expected format (e.g., `@param phone E.164 SHA-256 hex hash, not plaintext`)
 | **Round 3 final** | **All reviewers** | **0** | **0** | polish | low | **CONVERGED ✅** |
 | **Step 3-R Plan Review** | 3r-delivery, 3r-tester, 3r-implementer, 3r-architect | **0** | **19** | 9 | 3 | v5: §6 mapIndexed→withIndex fix; §13 DoD 7→12 tests; §8 build script duplicate dep removed + positions fixed; test cases 13–15 added; Flow exception test pattern clarified; §9 integrationTest note; spec v5 applied |
 | **Step 3-R Pre-Round 2 fixes** | inline advisor | 0 | 3 | 0 | 0 | spec v6 (§13 DoD 12→15/16) + plan v3 (T5-1 Flow.forEach→direct pipeline; T10-1~4 graphName init order; API class names verified) |
+| **Step 3-R Round 2** | 4-perspective (implementer/tester/architect/delivery) + 6-tier advisor | 0 | 7 | 5 | 2 | — |
+| **Step 3-R Round 2 applied** | inline triage | 0 | 7→0 | 1 MEDIUM | 0 | spec v7 + plan v4: §8 contradictory testImpl line fixed; §5.1 findOrCreate "first-create wins" contract; §5.1 linkDevice param rename (userVertexId/deviceVertexId); T2-1 security KDoc; T8-1 Flow cancel pattern (async+deferred/backgroundScope); T10-2/T10-4 @Tag("integration"); T10-3/T10-4 @AfterAll driver.close(); T7-1 test7 sub-assertion |
