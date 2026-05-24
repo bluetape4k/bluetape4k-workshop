@@ -22,8 +22,8 @@
 </defs>
 <rect class="canvas" width="1258" height="796"/>
 <rect class="frame" x="32" y="28" width="1194" height="740" rx="28"/>
-<text class="title" x="66" y="82">webflux coroutines Sequence Flow 2</text>
-<text class="subtitle" x="70" y="118">Sequence messages from the original Mermaid source</text>
+<text class="title" x="66" y="82">WebFlux Coroutines Sequence Flow</text>
+<text class="subtitle" x="70" y="118">Netty → CoroutineController → suspend fun → withContext(Dispatchers.IO)</text>
 <rect class="card" x="-5" y="166" width="290" height="72" rx="20" fill="#E8F3FF" stroke="#5B8DEF"/>
 <text class="smallLabel" x="140" y="209" text-anchor="middle">NettyServer</text>
 <line class="lifeline" x1="140" y1="252" x2="140" y2="736" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>

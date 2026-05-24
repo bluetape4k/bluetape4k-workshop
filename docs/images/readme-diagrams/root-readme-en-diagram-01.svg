@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1730" height="926" viewBox="0 0 1730 926" role="img" aria-label="workshop Architecture">
+<svg xmlns="http://www.w3.org/2000/svg" width="1730" height="926" viewBox="0 0 1730 926" role="img" aria-label="bluetape4k Workshop Architecture">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
   <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
@@ -22,8 +22,8 @@
 </defs>
 <rect class="canvas" width="1730" height="926"/>
 <rect class="frame" x="32" y="28" width="1666" height="870" rx="28"/>
-<text class="title" x="66" y="82">workshop Architecture</text>
-<text class="subtitle" x="70" y="118">Grouped architecture from the original Mermaid source</text>
+<text class="title" x="66" y="82">bluetape4k Workshop Architecture</text>
+<text class="subtitle" x="70" y="118">exposed · spring-data · messaging · redis · gateway · observability · ratelimit · virtualthreads</text>
 <path class="plainLine" d="M865 284 C865 321 235 321 235 358"/>
 <g transform="translate(715,160)">
   <rect class="card" x="0" y="0" width="300" height="112" rx="16" fill="#E8F3FF" stroke="#5B8DEF"/>

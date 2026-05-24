@@ -1,8 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1378" height="692" viewBox="0 0 1378 692" role="img" aria-label="Redis Cluster">
+<svg xmlns="http://www.w3.org/2000/svg" width="890" height="1304" viewBox="0 0 890 1304" role="img" aria-label="Redis Cluster Demo Architecture">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="10" markerHeight="8" refX="8.5" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 8.5 4 L 1 7" fill="none" stroke="#758297" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="11" markerHeight="10" refX="9.5" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 0.5 1 L 9.5 5 L 0.5 9 Z" fill="#ffffff" stroke="#758297" stroke-width="1.7"/></marker>
+  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
     .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
@@ -20,76 +20,56 @@
     .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
   </style>
 </defs>
-<rect class="canvas" width="1378" height="692"/>
-<rect class="frame" x="32" y="28" width="1314" height="636" rx="28"/>
-<text class="title" x="66" y="82">Redis Cluster</text>
-<text class="subtitle" x="70" y="118">Architecture nodes and edges from the original Mermaid source</text>
-<path class="line" d="M1040 220 C1040 386 338 386 338 552"/>
-<path class="line" d="M1190 280 C1190 303 1190 303 1190 326"/>
-<path class="line" d="M1040 220 C1040 303 1006 303 1006 386"/>
-<path class="line" d="M372 220 C372 386 338 386 338 552"/>
-<path class="line" d="M672 220 C672 303 1040 303 1040 386"/>
-<path class="line" d="M672 220 C672 303 706 303 706 386"/>
-<path class="line" d="M706 220 C706 220 338 220 338 220"/>
-<path class="line" d="M188 280 C188 303 188 303 188 326"/>
-<path class="line" d="M338 220 C338 220 1040 220 1040 220"/>
-<path class="line" d="M1040 552 C1040 552 338 552 338 552"/>
-<path class="line" d="M1006 552 C1006 469 1040 469 1040 386"/>
-<path class="line" d="M672 552 C672 469 706 469 706 386"/>
-<g transform="translate(48,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">Redis Cluster</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">Application</text>
+<rect class="canvas" width="890" height="1304"/>
+<rect class="frame" x="32" y="28" width="826" height="1248" rx="28"/>
+<text class="title" x="66" y="82">Redis Cluster Demo Architecture</text>
+<text class="subtitle" x="70" y="118">StringRedisTemplate · NumberService · ClusterConnection · Redis Cluster (Testcontainers)</text>
+<g transform="translate(60,160)">
+  <rect x="0" y="0" width="350" height="506" rx="18" fill="#ffffff" stroke="#d8e0ea" stroke-width="1.5"/>
+  <text class="smallLabel" x="175" y="44" text-anchor="middle">Data Redis</text>
 </g>
-<g transform="translate(382,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">NumberService</text>
+<g transform="translate(105,236)">
+  <rect class="card" x="0" y="0" width="260" height="112" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="smallLabel" x="130" y="63" text-anchor="middle">StringRedisTemplate</text>
 </g>
-<g transform="translate(716,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">Abstract Redis</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">Cluster Test</text>
+<g transform="translate(105,378)">
+  <rect class="card" x="0" y="0" width="260" height="112" rx="14" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="smallLabel" x="130" y="63" text-anchor="middle">NumberService</text>
 </g>
-<g transform="translate(1050,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="140" y="21" text-anchor="middle">Redis Cluster</text>
-<text class="smallLabel" x="140" y="47" text-anchor="middle">Server.Launcher.redi</text>
-<text class="smallLabel" x="140" y="73" text-anchor="middle">s Cluster</text>
+<g transform="translate(105,520)">
+  <rect class="card" x="0" y="0" width="260" height="112" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="smallLabel" x="130" y="63" text-anchor="middle">ClusterConnection</text>
 </g>
-<g transform="translate(48,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">Launcher.Lettuce</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">Lib.client Resources</text>
+<g transform="translate(480,160)">
+  <rect x="0" y="0" width="350" height="1074" rx="18" fill="#ffffff" stroke="#d8e0ea" stroke-width="1.5"/>
+  <text class="smallLabel" x="175" y="44" text-anchor="middle">Cluster - Testcontainers</text>
 </g>
-<g transform="translate(382,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">Testcontainers</text>
+<g transform="translate(525,236)">
+  <rect class="card" x="0" y="0" width="260" height="112" rx="14" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="smallLabel" x="130" y="63" text-anchor="middle">1 0-5460</text>
 </g>
-<g transform="translate(716,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F7F1E7" stroke="#B88A44"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">Master 1 slots</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">0–5460</text>
+<g transform="translate(525,378)">
+  <rect class="card" x="0" y="0" width="260" height="112" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="smallLabel" x="130" y="63" text-anchor="middle">ClusterConnection</text>
 </g>
-<g transform="translate(1050,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EEF6D9" stroke="#8BA84D"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">Master 2 slots</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">5461–10922</text>
+<g transform="translate(525,520)">
+  <rect class="card" x="0" y="0" width="260" height="112" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
+  <text class="smallLabel" x="130" y="63" text-anchor="middle">2 5461-10922</text>
 </g>
-<g transform="translate(48,502)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">Master 3 slots</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">10923–16383</text>
+<g transform="translate(525,662)">
+  <rect class="card" x="0" y="0" width="260" height="112" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
+  <text class="smallLabel" x="130" y="63" text-anchor="middle">3 10923-16383</text>
 </g>
-<g transform="translate(382,502)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">Slave 1</text>
+<g transform="translate(525,804)">
+  <rect class="card" x="0" y="0" width="260" height="112" rx="14" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="smallLabel" x="130" y="63" text-anchor="middle">1</text>
 </g>
-<g transform="translate(716,502)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">Slave 2</text>
+<g transform="translate(525,946)">
+  <rect class="card" x="0" y="0" width="260" height="112" rx="14" fill="#F7F1E7" stroke="#B88A44"/>
+  <text class="smallLabel" x="130" y="63" text-anchor="middle">2</text>
 </g>
-<g transform="translate(1050,502)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">Slave 3</text>
+<g transform="translate(525,1088)">
+  <rect class="card" x="0" y="0" width="260" height="112" rx="14" fill="#EEF6D9" stroke="#8BA84D"/>
+  <text class="smallLabel" x="130" y="63" text-anchor="middle">3</text>
 </g>
 </svg>

@@ -1,64 +1,79 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1044" height="692" viewBox="0 0 1044 692" role="img" aria-label="r2dbc webflux Architecture">
+<svg xmlns="http://www.w3.org/2000/svg" width="1378" height="660" viewBox="0 0 1378 660" role="img" aria-label="R2DBC WebFlux Architecture">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="10" markerHeight="8" refX="8.5" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 8.5 4 L 1 7" fill="none" stroke="#758297" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="11" markerHeight="10" refX="9.5" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 0.5 1 L 9.5 5 L 0.5 9 Z" fill="#ffffff" stroke="#758297" stroke-width="1.7"/></marker>
+  <marker id="arrowGray" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#6b7280" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  <marker id="arrowBlue" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#3b82f6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
     .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
     .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
     .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
-    .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
     .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
+    .zoneLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:16px;font-weight:400;fill:#4b5563}
+    .lineBlue{stroke:#3b82f6;stroke-width:2.1;fill:none;marker-end:url(#arrowBlue)}
+    .lineGray{stroke:#6b7280;stroke-width:2.1;fill:none;marker-end:url(#arrowGray)}
+    .dashedGray{stroke:#6b7280;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#arrowGray)}
   </style>
 </defs>
-<rect class="canvas" width="1044" height="692"/>
-<rect class="frame" x="32" y="28" width="980" height="636" rx="28"/>
-<text class="title" x="66" y="82">r2dbc webflux Architecture</text>
-<text class="subtitle" x="70" y="118">Architecture nodes and edges from the original Mermaid source</text>
-<path class="line" d="M706 386 C706 469 672 469 672 552"/>
-<path class="line" d="M672 386 C672 386 706 386 706 386"/>
-<path class="line" d="M338 386 C338 386 372 386 372 386"/>
-<path class="line" d="M706 220 C706 303 672 303 672 386"/>
-<path class="line" d="M672 220 C672 220 706 220 706 220"/>
-<path class="line" d="M338 220 C338 220 372 220 372 220"/>
-<g transform="translate(48,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">HTTP</text>
-</g>
-<g transform="translate(382,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">Router coRouter</text>
-</g>
-<g transform="translate(716,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">UserHandler suspend</text>
-</g>
-<g transform="translate(48,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">UserController</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">@RestController</text>
-</g>
-<g transform="translate(382,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">UserService</text>
-</g>
-<g transform="translate(716,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="smallLabel" x="140" y="21" text-anchor="middle">UserRepository</text>
-<text class="smallLabel" x="140" y="47" text-anchor="middle">Reactive Crud</text>
-<text class="smallLabel" x="140" y="73" text-anchor="middle">Repository</text>
-</g>
-<g transform="translate(382,502)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F7F1E7" stroke="#B88A44"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">(H2 R2DBC)</text>
-</g>
+<rect class="canvas" width="1378" height="660"/>
+<rect class="frame" x="32" y="28" width="1314" height="604" rx="28"/>
+<text class="title" x="66" y="82">R2DBC WebFlux Architecture</text>
+<text class="subtitle" x="70" y="118">WebFlux · coRouter DSL (functional) + @RestController (annotation) · ReactiveCrudRepository · H2 R2DBC</text>
+
+<!-- HTTP Client (top center entry point) -->
+<rect x="539" y="140" width="300" height="56" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="2.1" filter="url(#shadow)"/>
+<text class="smallLabel" x="689" y="175" text-anchor="middle">HTTP Client</text>
+
+<!-- Functional path zone -->
+<rect x="54" y="224" width="556" height="228" rx="16" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5"/>
+<text class="zoneLabel" x="332" y="247" text-anchor="middle">Functional Style (coRouter)</text>
+
+<!-- Annotation path zone -->
+<rect x="768" y="224" width="556" height="228" rx="16" fill="#f0fdf4" stroke="#86efac" stroke-width="1.5"/>
+<text class="zoneLabel" x="1046" y="247" text-anchor="middle">Annotation Style (@RestController)</text>
+
+<!-- coRouter DSL -->
+<rect x="104" y="260" width="250" height="56" rx="14" fill="#d1fae5" stroke="#059669" stroke-width="2.1" filter="url(#shadow)"/>
+<text class="smallLabel" x="229" y="295" text-anchor="middle">coRouter DSL</text>
+
+<!-- UserHandler -->
+<rect x="104" y="368" width="250" height="64" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="2.1" filter="url(#shadow)"/>
+<text class="smallLabel" x="229" y="393" text-anchor="middle">UserHandler</text>
+<text class="small" x="229" y="412" text-anchor="middle">suspend fun handle()</text>
+
+<!-- UserController -->
+<rect x="818" y="260" width="256" height="56" rx="14" fill="#fce7f3" stroke="#db2777" stroke-width="2.1" filter="url(#shadow)"/>
+<text class="smallLabel" x="946" y="281" text-anchor="middle">UserController</text>
+<text class="small" x="946" y="300" text-anchor="middle">@RestController</text>
+
+<!-- UserService -->
+<rect x="818" y="368" width="256" height="64" rx="14" fill="#e0f2fe" stroke="#0284c7" stroke-width="2.1" filter="url(#shadow)"/>
+<text class="smallLabel" x="946" y="393" text-anchor="middle">UserService</text>
+<text class="small" x="946" y="412" text-anchor="middle">suspend fun</text>
+
+<!-- UserRepository (shared, bottom center) -->
+<rect x="559" y="486" width="260" height="64" rx="14" fill="#ede9fe" stroke="#7c3aed" stroke-width="2.1" filter="url(#shadow)"/>
+<text class="smallLabel" x="689" y="507" text-anchor="middle">UserRepository</text>
+<text class="small" x="689" y="527" text-anchor="middle">ReactiveCrudRepository</text>
+
+<!-- H2 R2DBC cylinder -->
+<rect x="624" y="582" width="130" height="40" fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+<ellipse cx="689" cy="622" rx="65" ry="12" fill="#fde68a" stroke="#ca8a04" stroke-width="2"/>
+<ellipse cx="689" cy="582" rx="65" ry="12" fill="#fef9c3" stroke="#ca8a04" stroke-width="2"/>
+<text class="small" x="689" y="607" text-anchor="middle">H2 R2DBC</text>
+
+<!-- Arrows: HTTP → coRouter (blue, functional) -->
+<path class="lineBlue" d="M 689 196 C 689 230 229 230 229 260"/>
+<!-- HTTP → UserController (gray dashed, annotation) -->
+<path class="dashedGray" d="M 689 196 C 689 230 946 230 946 260"/>
+<!-- coRouter → UserHandler -->
+<path class="lineBlue" d="M 229 316 L 229 368"/>
+<!-- UserController → UserService -->
+<path class="lineGray" d="M 946 316 L 946 368"/>
+<!-- UserHandler → UserRepository -->
+<path class="lineBlue" d="M 229 432 C 229 460 689 460 689 486"/>
+<!-- UserService → UserRepository -->
+<path class="lineGray" d="M 946 432 C 946 460 689 460 689 486"/>
+<!-- UserRepository → H2 -->
+<path class="lineGray" d="M 689 550 L 689 582"/>
 </svg>

@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="998" height="1216" viewBox="0 0 998 1216" role="img" aria-label="mongodb transactions Class Structure">
+<svg xmlns="http://www.w3.org/2000/svg" width="1754" height="918" viewBox="0 0 1754 918" role="img" aria-label="MongoDB Transactions Class Structure">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
   <marker id="openArrow" markerWidth="10" markerHeight="8" refX="8.5" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 8.5 4 L 1 7" fill="none" stroke="#758297" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></marker>
@@ -20,66 +20,67 @@
     .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
   </style>
 </defs>
-<rect class="canvas" width="998" height="1216"/>
-<rect class="frame" x="32" y="28" width="934" height="1160" rx="28"/>
-<text class="title" x="66" y="82">mongodb transactions Class Struct.</text>
-<text class="subtitle" x="70" y="118">UML classes from the original Mermaid source</text>
-<path class="line" d="M274 672 L274 468 L724 468 L724 523"/>
-<path class="line" d="M724 824 L724 698"/>
-<path class="line" d="M724 313 L724 523"/>
-<path class="line" d="M274 397 L274 444 L724 444 L724 523"/>
-<path class="line" d="M724 698 L724 737 L274 737 L274 824"/>
-<g transform="translate(84,180)">
-  <rect class="card" x="0" y="0" width="380" height="217" rx="5" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <line class="compartment" x1="0" y1="78" x2="380" y2="78" stroke="#5B8DEF"/>
-  <text class="small" x="190" y="26" text-anchor="middle"></text>
-  <text class="label" x="190" y="61" text-anchor="middle">TransitionService</text>
-  <text class="mono" x="18" y="108">+run(id) void</text>
-<text class="mono" x="18" y="129">-lookup(id) Process</text>
-<text class="mono" x="18" y="150">-start(process) Process</text>
-<text class="mono" x="18" y="171">-verify(process) Process</text>
-<text class="mono" x="18" y="192">-finish(process) Process</text>
+<rect class="canvas" width="1754" height="918"/>
+<rect class="frame" x="32" y="28" width="1690" height="862" rx="28"/>
+<text class="title" x="66" y="82">MongoDB Transactions Class Structure</text>
+<text class="subtitle" x="70" y="118">TransitionService · State · ReactiveManagedTransitionService · ProcessCoroutineManagedTransitionService</text>
+<path class="line" d="M1082 329 L1082 102 L672 102 L672 180"/>
+<path class="line" d="M262 329 L262 112 L672 112 L672 180"/>
+<path class="line" d="M1492 329 L1492 122 L672 122 L672 180"/>
+<path class="line" d="M1082 481 L1082 410 L672 410 L672 355"/>
+<path class="line" d="M672 355 L672 481"/>
+<g transform="translate(92,180)">
+  <rect class="card" x="0" y="0" width="340" height="149" rx="5" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <line class="compartment" x1="0" y1="94" x2="340" y2="94" stroke="#5B8DEF"/>
+  <text class="small" x="170" y="26" text-anchor="middle"></text>
+  <text class="label" x="170" y="56.5" text-anchor="middle">Reactive Managed</text>
+<text class="label" x="170" y="81.5" text-anchor="middle">Transition Service</text>
+  <text class="mono" x="18" y="124">+run(id) Mono~Int~</text>
 </g>
-<g transform="translate(534,180)">
-  <rect class="card" x="0" y="0" width="380" height="133" rx="5" fill="#EAF7EF" stroke="#58A978"/>
-  <line class="compartment" x1="0" y1="78" x2="380" y2="78" stroke="#58A978"/>
-  <text class="small" x="190" y="26" text-anchor="middle"></text>
-  <text class="label" x="190" y="61" text-anchor="middle">ReactiveTransitionService</text>
-  <text class="mono" x="18" y="108">+run(id) Mono~Int~</text>
-</g>
-<g transform="translate(84,523)">
-  <rect class="card" x="0" y="0" width="380" height="149" rx="5" fill="#FFF3D9" stroke="#D6A441"/>
-  <line class="compartment" x1="0" y1="94" x2="380" y2="94" stroke="#D6A441"/>
-  <text class="small" x="190" y="26" text-anchor="middle"></text>
-  <text class="label" x="190" y="56.5" text-anchor="middle">Coroutine Managed</text>
-<text class="label" x="190" y="81.5" text-anchor="middle">Transition Service</text>
-  <text class="mono" x="18" y="124">+run(id) Int</text>
-</g>
-<g transform="translate(534,523)">
-  <rect class="card" x="0" y="0" width="380" height="175" rx="5" fill="#FDECEF" stroke="#DC6B82"/>
-  <line class="compartment" x1="0" y1="78" x2="380" y2="78" stroke="#DC6B82"/>
-  <text class="small" x="190" y="26" text-anchor="middle"></text>
-  <text class="label" x="190" y="61" text-anchor="middle">Process</text>
+<g transform="translate(502,180)">
+  <rect class="card" x="0" y="0" width="340" height="175" rx="5" fill="#EAF7EF" stroke="#58A978"/>
+  <line class="compartment" x1="0" y1="78" x2="340" y2="78" stroke="#58A978"/>
+  <text class="small" x="170" y="26" text-anchor="middle"></text>
+  <text class="label" x="170" y="61" text-anchor="middle">Process</text>
   <text class="mono" x="18" y="108">+Int id</text>
 <text class="mono" x="18" y="129">+State state</text>
 <text class="mono" x="18" y="150">+Int transitionCount</text>
 </g>
-<g transform="translate(84,824)">
-  <rect class="card" x="0" y="0" width="380" height="196" rx="5" fill="#E9F7F6" stroke="#45A7A1"/>
-  <line class="compartment" x1="0" y1="78" x2="380" y2="78" stroke="#45A7A1"/>
-  <text class="small" x="190" y="26" text-anchor="middle">«enumeration»</text>
-  <text class="label" x="190" y="61" text-anchor="middle">State</text>
+<g transform="translate(912,180)">
+  <rect class="card" x="0" y="0" width="340" height="149" rx="5" fill="#FFF3D9" stroke="#D6A441"/>
+  <line class="compartment" x1="0" y1="94" x2="340" y2="94" stroke="#D6A441"/>
+  <text class="small" x="170" y="26" text-anchor="middle"></text>
+  <text class="label" x="170" y="56.5" text-anchor="middle">Coroutine Managed</text>
+<text class="label" x="170" y="81.5" text-anchor="middle">Transition Service</text>
+  <text class="mono" x="18" y="124">+run(id) Int</text>
+</g>
+<g transform="translate(1322,180)">
+  <rect class="card" x="0" y="0" width="340" height="149" rx="5" fill="#FDECEF" stroke="#DC6B82"/>
+  <line class="compartment" x1="0" y1="94" x2="340" y2="94" stroke="#DC6B82"/>
+  <text class="small" x="170" y="26" text-anchor="middle"></text>
+  <text class="label" x="170" y="56.5" text-anchor="middle">Reactive Transition</text>
+<text class="label" x="170" y="81.5" text-anchor="middle">Service</text>
+  <text class="mono" x="18" y="124">+run(id) Mono~Int~</text>
+</g>
+<g transform="translate(502,481)">
+  <rect class="card" x="0" y="0" width="340" height="196" rx="5" fill="#E9F7F6" stroke="#45A7A1"/>
+  <line class="compartment" x1="0" y1="78" x2="340" y2="78" stroke="#45A7A1"/>
+  <text class="small" x="170" y="26" text-anchor="middle">«enumeration»</text>
+  <text class="label" x="170" y="61" text-anchor="middle">State</text>
   <text class="mono" x="18" y="108">UNKNOWN</text>
 <text class="mono" x="18" y="129">CREATED</text>
 <text class="mono" x="18" y="150">ACTIVE</text>
 <text class="mono" x="18" y="171">DONE</text>
 </g>
-<g transform="translate(534,824)">
-  <rect class="card" x="0" y="0" width="380" height="149" rx="5" fill="#F1ECFF" stroke="#8A72D6"/>
-  <line class="compartment" x1="0" y1="94" x2="380" y2="94" stroke="#8A72D6"/>
-  <text class="small" x="190" y="26" text-anchor="middle"></text>
-  <text class="label" x="190" y="56.5" text-anchor="middle">Reactive Managed Transition</text>
-<text class="label" x="190" y="81.5" text-anchor="middle">Service</text>
-  <text class="mono" x="18" y="124">+run(id) Mono~Int~</text>
+<g transform="translate(912,481)">
+  <rect class="card" x="0" y="0" width="340" height="217" rx="5" fill="#F1ECFF" stroke="#8A72D6"/>
+  <line class="compartment" x1="0" y1="78" x2="340" y2="78" stroke="#8A72D6"/>
+  <text class="small" x="170" y="26" text-anchor="middle"></text>
+  <text class="label" x="170" y="61" text-anchor="middle">TransitionService</text>
+  <text class="mono" x="18" y="108">+run(id) void</text>
+<text class="mono" x="18" y="129">-lookup(id) Process</text>
+<text class="mono" x="18" y="150">-start(process) Process</text>
+<text class="mono" x="18" y="171">-verify(process) Process</text>
+<text class="mono" x="18" y="192">-finish(process) Process</text>
 </g>
 </svg>
