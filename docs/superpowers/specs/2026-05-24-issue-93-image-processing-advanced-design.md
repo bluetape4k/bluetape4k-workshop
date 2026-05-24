@@ -22,13 +22,13 @@ The example must be Bluetape4k-first, not a generic Spring or AWS sample.
 ## Current Evidence
 
 - `bluetape4k-image` provides `bluetape4k-images-vips-java25` with `FfmVipsRuntime`, `ffmVipsImageOf`, `suspendFfmVipsImageOf`, `VipsImage.thumbnail()`, `VipsImage.resize()`, and `VipsImage.toBytes()`.
-- `bluetape4k-images-vips-java25` requires Java 25 and `--enable-native-access=ALL-UNNAMED`; tests in the image repo skip explicitly when `-Dvips.enabled=false` or runtime initialization fails.
+- `bluetape4k-images-vips-java25` requires Java 25 and `--enable-native-access=ALL-UNNAMED`; this workshop keeps VIPS integration tests opt-in with `-Dvips.enabled=true` because native initialization can terminate the JVM on misconfigured hosts.
 - `bluetape4k-images-spring-boot` provides Spring Boot 4 auto-configuration for `ImageStorage`.
   - `ImagesStorageAutoConfiguration` creates `S3ImageStorage` when `bluetape4k.images.storage.backend=s3` and `S3Operations` is present.
   - It falls back to `LocalImageStorage` when no `ImageStorage` bean exists.
   - `MetricImageStorage` wraps storage beans when Micrometer is present.
 - `ImageObjectKey` validates keys and prevents `..` segments.
-- `UploadOptions` rejects unsafe image content types such as SVG.
+- `UploadImageValidator` limits workshop uploads to JPEG, PNG, and WebP, checks matching magic bytes, and still uses `UploadOptions` for Bluetape4k upload metadata validation.
 - `S3PreSignedUrlSigner` and `CloudFrontUrlSigner` exist for private/signed URL alternatives, but issue #93 requires the main path to return unsigned public URLs.
 - The workshop root currently defaults to Java 21, while Java 25-only modules can override module toolchains and test JVM launchers.
 
@@ -118,7 +118,7 @@ The module uses Bluetape4k libraries for the heavy parts:
 |---|---|
 | `ImageDerivativesController` | Multipart API boundary and HTTP status mapping |
 | `ImageDerivativeWorkflowService` | Orchestrates validation, processing, storage, metrics, and response assembly |
-| `UploadImageValidator` | Checks MIME type, empty input, byte limits, and delegates pixel validation to VIPS decode |
+| `UploadImageValidator` | Checks MIME type, magic bytes, empty input, byte limits, and delegates pixel validation to VIPS decode |
 | `FfmVipsDerivativeProcessor` | Initializes `FfmVipsRuntime`, inspects dimensions, generates WebP variants with concurrency limit |
 | `ImageStorage` | Bluetape4k storage abstraction; S3 in configured deployments, local fallback in dev/test |
 | `PublicImageUrlResolver` | Workshop glue for unsigned public URL composition from `ImageObjectKey.fullKey` |
@@ -202,7 +202,7 @@ Filename sanitizing rules:
 
 | Failure | Handling |
 |---|---|
-| Unsupported content type | reject before storage using `UploadOptions` allowed types |
+| Unsupported content type | reject before storage using the workshop JPEG/PNG/WebP allowlist, magic-byte checks, and `UploadOptions` |
 | Empty or too-large upload | reject before decode/storage |
 | Pixel limit exceeded | `FfmVipsRuntime`/decode validation raises a validation error |
 | libvips unavailable | runtime init failure surfaces in app startup/use; VIPS-dependent tests skip explicitly |
@@ -219,9 +219,9 @@ Filename sanitizing rules:
 - Private or user-sensitive images should use `S3PreSignedUrlSigner` or `CloudFrontUrlSigner`; this remains documented as an alternate path.
 - SVG uploads remain unsupported because `UploadOptions` excludes SVG for XSS risk.
 - `publicBaseUrl` must be HTTPS by default, with an exception only for loopback local development (`localhost`, `127.0.0.1`, `[::1]`) or an explicit `allowInsecurePublicBaseUrl=true`.
-- `publicBaseUrl` must not contain `..`, query strings, or fragments.
+- `publicBaseUrl` must not contain userinfo, `..`, query strings, or fragments.
 - When the active storage backend is local, non-loopback public base URLs require `allowLocalStorageRemotePublicBaseUrl=true` so accidental fake CDN responses are visible during configuration.
-- Header content type is checked with `UploadOptions`; VIPS magic-byte/decode validation remains the final content gate.
+- Header content type is normalized to a bounded image allowlist, magic bytes must match that content type, and VIPS decode/maxPixels validation remains the final content gate.
 
 ## Observability Contract
 
@@ -229,24 +229,24 @@ Workflow metrics use low-cardinality tags only. They never include `imageId`, fi
 
 | Metric | Type | Tags |
 |---|---|---|
-| `workshop.images.upload.accepted` | Counter | `contentType` |
-| `workshop.images.processing.duration` | Timer | `result=success|failure` |
-| `workshop.images.processing.failures` | Counter | `stage=validation|vips|storage|unknown` |
+| `workshop.images.upload.accepted` | Counter | normalized allowlisted `contentType` |
+| `workshop.images.processing.duration` | Timer | `result=success|timeout|cancelled|validation|failure` |
+| `workshop.images.processing.failures` | Counter | `stage=timeout|cancelled|validation|vips|storage|unknown` |
 | `workshop.images.variant.generated` | Counter | `variant` |
 
 ## Test Strategy
 
 - Unit tests use a recording `ImageStorage` implementation to verify key naming, URL composition, and variant storage without external S3.
-- Controller tests verify invalid MIME type and too-large input errors.
-- VIPS integration tests run on Java 25 with `--enable-native-access=ALL-UNNAMED`; they call a `vipsAvailable()` guard and skip with `Assumptions.assumeTrue(vipsAvailable, reason)` when `-Dvips.enabled=false` or libvips cannot initialize.
+- Controller/service tests verify invalid MIME type, MIME/magic-byte mismatch, unsafe public URL settings, and too-large input errors.
+- VIPS integration tests run on Java 25 with `--enable-native-access=ALL-UNNAMED`; they skip by default and require explicit opt-in with `-Dvips.enabled=true`.
 - Test images are generated with `ImageIO` to avoid depending on unpublished test fixtures.
 - Tests assert multipart and service byte limits both use the 25 MiB default.
 - Tests assert best-effort cleanup is attempted after partial storage failure.
 - Tests assert metric names and tags are low-cardinality.
 - Targeted verification:
   - `./gradlew projects`
-  - `./gradlew :image-processing-advanced-workflow:test -Dvips.enabled=false`
-  - `./gradlew :image-processing-advanced-workflow:test` when libvips is available
+  - `./gradlew :image-processing-advanced-workflow:test`
+  - `./gradlew :image-processing-advanced-workflow:test -Dvips.enabled=true` when Java 25 and libvips are available
   - `./gradlew :image-processing-advanced-workflow:build`
   - `./gradlew build -x test --parallel --continue` if local toolchain allows
 

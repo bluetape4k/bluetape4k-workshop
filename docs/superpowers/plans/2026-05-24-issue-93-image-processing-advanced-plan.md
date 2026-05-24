@@ -32,6 +32,7 @@
   - Configure Java/Kotlin toolchain 25 only in the module.
   - Disable AtomicFU transform unconditionally in the module. This follows the `bluetape4k-images-vips-java25` module evidence: Java 25 bytecode plus AtomicFU transform can be incompatible when the build JVM is Java 21.
   - Configure tests with `--enable-native-access=ALL-UNNAMED`, Java 25 launcher, `forkEvery = 1`, and `-Dvips.enabled` propagation.
+  - VIPS integration tests skip by default and run only with explicit `-Dvips.enabled=true` opt-in.
   - Record CI toolchain behavior: root CI installs Java 21, and the Gradle Foojay resolver is already configured in `settings.gradle.kts` to provision the module's Java 25 toolchain.
 - **expected files**:
   - `settings.gradle.kts`
@@ -76,7 +77,7 @@
 - **patterns**: apply `bluetape4k-patterns`, `ecc-kotlin-testing`.
 - **scope**:
   - Implement `UploadImageValidator`.
-  - Use `UploadOptions` for content-type validation so Bluetape4k image rules apply.
+  - Use a workshop JPEG/PNG/WebP allowlist, magic-byte checks, and `UploadOptions` for upload metadata validation so Bluetape4k image rules apply.
   - Implement deterministic key factory:
     - `images/{imageId}/original/{safeFilename}`
     - `images/{imageId}/variants/{variantName}.webp`
@@ -96,7 +97,7 @@
   - `publicBaseUrl` validation rejects unsafe remote/local mismatches
   - multipart and service max-byte defaults match
 - **verification**:
-  - `./gradlew :image-processing-advanced-workflow:test -Dvips.enabled=false --tests "*Url*"`
+  - `./gradlew :image-processing-advanced-workflow:test --tests "*Url*"`
   - exact test names may be adjusted after implementation
 
 ### T4 — VIPS Derivative Processor
@@ -109,7 +110,7 @@
     - `FfmVipsRuntime.init(concurrency, maxPixels)`
     - `suspendFfmVipsImageOf(bytes)`
     - `VipsImage.thumbnail(maxDimension)`
-    - `VipsImage.toBytes(VipsImageFormat.WEBP, VipsEncodeOptions.WebpOptions(quality = 82, effort = 4))`
+    - `VipsImage.toBytes(VipsImageFormat.WEBP, VipsEncodeOptions(quality = 82, effort = 4))`
   - Use lazy runtime initialization. `FfmVipsRuntime.init(concurrency, maxPixels)` is idempotent after the first successful init; tests run with `forkEvery = 1` to avoid cross-context parameter conflicts.
   - Wrap blocking/native decode and encode behind explicit `Dispatchers.IO` boundaries.
   - Use `Semaphore.withPermit` for variant concurrency.
@@ -118,12 +119,12 @@
   - Do not call `FfmVipsRuntime.shutdown()` from Spring destroy hooks; library docs warn shutdown is terminal.
 - **tests**:
   - VIPS integration test checks generated dimensions and WebP content markers.
-  - VIPS test class skips explicitly when `-Dvips.enabled=false` or libvips init fails.
+  - VIPS test class skips explicitly unless `-Dvips.enabled=true` is provided.
   - coroutine cancellation test verifies cancellation is not swallowed.
-  - runtime guard test verifies `-Dvips.enabled=false` aborts VIPS tests explicitly.
+  - runtime guard test verifies missing `-Dvips.enabled=true` aborts VIPS tests explicitly.
 - **verification**:
-  - `./gradlew :image-processing-advanced-workflow:test -Dvips.enabled=false`
-  - `./gradlew :image-processing-advanced-workflow:test --tests "*Vips*"` when libvips is available
+  - `./gradlew :image-processing-advanced-workflow:test`
+  - `./gradlew :image-processing-advanced-workflow:test --tests "*Vips*" -Dvips.enabled=true` when libvips is available
 
 ### T5 — Workflow Service, Storage, Metrics, and API
 
@@ -140,18 +141,18 @@
     - processing success/failure
     - processing duration
     - variant generated
-  - Use low-cardinality metric tags only: `contentType`, `result`, `stage`, and `variant`; never `imageId`, filename, or key.
+  - Use low-cardinality metric tags only: normalized allowlisted `contentType`, `result`, `stage`, and `variant`; never raw header values, `imageId`, filename, or key.
   - Add `ImageDerivativesController` with `POST /api/images/derivatives`.
   - Add consistent error response mapping for validation and storage failures.
 - **tests**:
   - recording storage verifies original + all variants uploaded
   - response contains `originalUrl`, `thumbnailUrl`, `variants[].url`, and keys
-  - controller rejects invalid content type and too-large input
+  - controller rejects invalid content type, content-type/magic-byte mismatch, and too-large input
   - storage failure increments failure metric or returns expected error
   - partial variant failure attempts cleanup for original and prior variants
   - metric assertions verify low-cardinality tag names
 - **verification**:
-  - `./gradlew :image-processing-advanced-workflow:test -Dvips.enabled=false`
+  - `./gradlew :image-processing-advanced-workflow:test`
 
 ### T6 — README and Examples
 
@@ -186,7 +187,7 @@
     - Java 25 toolchain is provisioned by the existing Foojay resolver; no workflow YAML edit is expected unless verification proves otherwise.
 - **verification**:
   - `./gradlew projects`
-  - `./gradlew :image-processing-advanced-workflow:build -Dvips.enabled=false`
+  - `./gradlew :image-processing-advanced-workflow:build`
   - `./gradlew build -x test --parallel --continue`
 
 ### T8 — Review Gate, Lesson, Commit, PR
@@ -247,7 +248,7 @@ Rerun artifact after P0/P1 fixes: `.omx/artifacts/claude-issue-93-plan-rerun-202
 | P1 | Public URL security validation incomplete | Accepted | T3 now defines HTTPS, path, query, local/remote mismatch rules |
 | P1 | Partial storage failure leaves orphans | Accepted | T5 now requires best-effort delete compensation |
 | P2 | Multipart heap pressure | Accepted | Execution rules and T2/T5 bound request concurrency and byte limits |
-| P2 | WebP encode options unspecified | Accepted | T4 pins quality 82 and effort 4 |
+| P2 | WebP encode options unspecified | Accepted | T4 pins `VipsEncodeOptions(quality = 82, effort = 4)` |
 | P2 | CI Java 25 availability unclear | Accepted | T1/T7 now record existing Foojay toolchain resolver check |
 | P2 | Dispatcher and metric-cardinality details | Accepted | T4/T5 now specify `Dispatchers.IO` and low-cardinality tags |
 

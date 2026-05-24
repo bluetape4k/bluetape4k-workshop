@@ -170,6 +170,7 @@ Redis, Kafka, Observability 스택, 가상 스레드, Vert.x, 클라우드 네�
 | Advanced | [`redis-cluster-demo`](redis/cluster-demo/) | `redis`, `redisson` | Redis Cluster (TC) | Redis 클러스터 토폴로지 및 장애 조치 |
 | Basic | [`redis-redisson-examples`](redis/redisson-examples/) | `redis`, `redisson` | Redis (TC) | Redisson 데이터 구조와 Pub/Sub |
 | Advanced | [`aws-s3-spring-cloud`](aws/s3-spring-cloud/) | `aws`, `testcontainers` | LocalStack (TC) | Spring Cloud AWS + LocalStack으로 AWS S3 사용 |
+| Advanced | [`image-processing-advanced-workflow`](image-processing/advanced-workflow/) | `images-vips-java25`, `images-spring-boot`, `micrometer` | S3 또는 local storage | 업로드 → 원본 저장 → WebP 파생 이미지 → unsigned public URL |
 | Advanced | [`leader-leader-election`](leader/) | `coroutines`, `redis`, `testcontainers` | Redis (TC) | 분산 리더 선출: 블로킹, 코루틴, 가상 스레드 |
 
 ```bash
@@ -200,6 +201,7 @@ bluetape4k-workshop/
 ├── exposed/                # JetBrains Exposed ORM
 ├── gateway/                # API Gateway + 마이크로서비스
 ├── gatling/                # 부하/성능 테스트
+├── image-processing/       # 이미지 업로드, VIPS 파생 이미지, 저장소
 ├── io/                     # Okio I/O 예제
 ├── json/                   # Jackson 3 직렬화
 ├── kotlin/                 # 코루틴, 디자인 패턴
