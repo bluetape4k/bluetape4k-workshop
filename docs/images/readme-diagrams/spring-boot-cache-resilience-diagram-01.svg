@@ -115,8 +115,8 @@
   <text x="1195" y="122" class="label-sm" text-anchor="middle">bluetape4k-testcontainers</text>
 
   <rect x="1070" y="135" width="250" height="42" rx="6" fill="#fed7aa"/>
-  <text x="1195" y="155" class="label-sm" text-anchor="middle" fill="#7b341e">limitData(0) toxic</text>
-  <text x="1195" y="169" class="label-sm" text-anchor="middle" fill="#7b341e">→ cuts Redis connection</text>
+  <text x="1195" y="155" class="label-sm" text-anchor="middle" fill="#7b341e">timeout(1ms) toxic</text>
+  <text x="1195" y="169" class="label-sm" text-anchor="middle" fill="#7b341e">→ drops Redis connection</text>
 
   <rect x="1070" y="187" width="250" height="42" rx="6" fill="#c6f6d5"/>
   <text x="1195" y="207" class="label-sm" text-anchor="middle" fill="#276749">toxic.remove()</text>
