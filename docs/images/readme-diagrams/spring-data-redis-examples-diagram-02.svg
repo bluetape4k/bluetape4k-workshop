@@ -1,71 +1,89 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1044" height="692" viewBox="0 0 1044 692" role="img" aria-label="redis examples Architecture 2">
+<svg xmlns="http://www.w3.org/2000/svg" width="1378" height="570" viewBox="0 0 1378 570" role="img" aria-label="Spring Data Redis Data Structures">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
+  <marker id="arrowGray" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#6b7280" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  <marker id="arrowRed" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#dc2626" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
     .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
     .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
     .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
-    .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
     .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
+    .zoneLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:15px;font-weight:400;fill:#6b7280}
+    .lineGray{stroke:#6b7280;stroke-width:2.0;fill:none;marker-end:url(#arrowGray)}
+    .lineRed{stroke:#dc2626;stroke-width:2.0;fill:none;marker-end:url(#arrowRed)}
   </style>
 </defs>
-<rect class="canvas" width="1044" height="692"/>
-<rect class="frame" x="32" y="28" width="980" height="636" rx="28"/>
-<text class="title" x="66" y="82">redis examples Architecture 2</text>
-<text class="subtitle" x="70" y="118">Architecture nodes and edges from the original Mermaid source</text>
-<path class="line" d="M706 552 C706 469 338 469 338 386"/>
-<path class="line" d="M372 552 C372 469 338 469 338 386"/>
-<path class="line" d="M338 552 C338 386 372 386 372 220"/>
-<path class="line" d="M856 326 C856 303 856 303 856 280"/>
-<path class="line" d="M706 386 C706 386 338 386 338 386"/>
-<path class="line" d="M372 386 C372 303 338 303 338 220"/>
-<g transform="translate(48,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">Hash Movie, Actor,</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">Person</text>
-</g>
-<g transform="translate(382,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">Stream SensorData</text>
-</g>
-<g transform="translate(716,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">Pub/Sub</text>
-</g>
-<g transform="translate(48,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">String/List/Set/ZSet</text>
-</g>
-<g transform="translate(382,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">Spring Data Redis</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">Repository</text>
-</g>
-<g transform="translate(716,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">RedisTemplate</text>
-</g>
-<g transform="translate(48,502)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F7F1E7" stroke="#B88A44"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">StreamListener</text>
-</g>
-<g transform="translate(382,502)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EEF6D9" stroke="#8BA84D"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">RedisScript Lua</text>
-</g>
-<g transform="translate(716,502)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">MULTI/EXEC</text>
-</g>
+<rect class="canvas" width="1378" height="570"/>
+<rect class="frame" x="32" y="28" width="1314" height="514" rx="28"/>
+<text class="title" x="66" y="82">Spring Data Redis — Data Structures</text>
+<text class="subtitle" x="70" y="118">Redis data types · Repository · RedisTemplate · Lua scripting · MULTI/EXEC transactions</text>
+
+<!-- Data Structures zone (top) -->
+<rect x="54" y="134" width="1270" height="96" rx="12" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.5"/>
+<text class="zoneLabel" x="84" y="155">Data Structures</text>
+
+<!-- @RedisHash/Hash -->
+<rect x="104" y="148" width="240" height="64" rx="14" fill="#dbeafe" stroke="#3b82f6" stroke-width="2.1" filter="url(#shadow)"/>
+<text class="smallLabel" x="224" y="173" text-anchor="middle">@RedisHash</text>
+<text class="small" x="224" y="193" text-anchor="middle">Hash (Movie, Actor, Person)</text>
+
+<!-- Stream -->
+<rect x="414" y="148" width="240" height="64" rx="14" fill="#d1fae5" stroke="#059669" stroke-width="2.1" filter="url(#shadow)"/>
+<text class="smallLabel" x="534" y="173" text-anchor="middle">Stream</text>
+<text class="small" x="534" y="193" text-anchor="middle">SensorData · @StreamListener</text>
+
+<!-- Pub/Sub -->
+<rect x="724" y="148" width="240" height="64" rx="14" fill="#fef3c7" stroke="#d97706" stroke-width="2.1" filter="url(#shadow)"/>
+<text class="smallLabel" x="844" y="173" text-anchor="middle">Pub/Sub</text>
+<text class="small" x="844" y="193" text-anchor="middle">Message Channel</text>
+
+<!-- String/List/Set/ZSet -->
+<rect x="1034" y="148" width="240" height="64" rx="14" fill="#fce7f3" stroke="#db2777" stroke-width="2.1" filter="url(#shadow)"/>
+<text class="smallLabel" x="1154" y="173" text-anchor="middle">String/List</text>
+<text class="small" x="1154" y="193" text-anchor="middle">Set/ZSet (Collections)</text>
+
+<!-- Redis Server (center hub) -->
+<rect x="539" y="278" width="300" height="68" rx="16" fill="#fee2e2" stroke="#dc2626" stroke-width="2.4" filter="url(#shadow)"/>
+<text class="smallLabel" x="689" y="304" text-anchor="middle">&#9881; Redis Server</text>
+<text class="small" x="689" y="324" text-anchor="middle">Spring Data Redis</text>
+
+<!-- Access Patterns zone (bottom) -->
+<rect x="54" y="366" width="1270" height="96" rx="12" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1.5"/>
+<text class="zoneLabel" x="84" y="387">Access APIs</text>
+
+<!-- Spring Data Redis Repository -->
+<rect x="104" y="380" width="240" height="64" rx="14" fill="#ede9fe" stroke="#7c3aed" stroke-width="2.1" filter="url(#shadow)"/>
+<text class="smallLabel" x="224" y="405" text-anchor="middle">Repository</text>
+<text class="small" x="224" y="425" text-anchor="middle">CrudRepository</text>
+
+<!-- RedisTemplate -->
+<rect x="414" y="380" width="240" height="64" rx="14" fill="#e0f2fe" stroke="#0284c7" stroke-width="2.1" filter="url(#shadow)"/>
+<text class="smallLabel" x="534" y="405" text-anchor="middle">RedisTemplate</text>
+<text class="small" x="534" y="425" text-anchor="middle">Low-level API</text>
+
+<!-- RedisScript Lua -->
+<rect x="724" y="380" width="240" height="64" rx="14" fill="#ecfccb" stroke="#65a30d" stroke-width="2.1" filter="url(#shadow)"/>
+<text class="smallLabel" x="844" y="405" text-anchor="middle">RedisScript</text>
+<text class="small" x="844" y="425" text-anchor="middle">Lua Scripting</text>
+
+<!-- MULTI/EXEC -->
+<rect x="1034" y="380" width="240" height="64" rx="14" fill="#ffedd5" stroke="#ea580c" stroke-width="2.1" filter="url(#shadow)"/>
+<text class="smallLabel" x="1154" y="405" text-anchor="middle">MULTI/EXEC</text>
+<text class="small" x="1154" y="425" text-anchor="middle">Transactions</text>
+
+<!-- Arrows: data structures → Redis (fan-in) -->
+<path class="lineGray" d="M 224 212 C 224 244 565 244 565 278"/>
+<path class="lineGray" d="M 534 212 C 534 244 619 244 619 278"/>
+<path class="lineGray" d="M 844 212 C 844 244 759 244 759 278"/>
+<path class="lineGray" d="M 1154 212 C 1154 244 813 244 813 278"/>
+
+<!-- Arrows: Redis → access APIs (fan-out) -->
+<path class="lineRed" d="M 565 346 C 565 362 224 362 224 380"/>
+<path class="lineRed" d="M 619 346 C 619 362 534 362 534 380"/>
+<path class="lineRed" d="M 759 346 C 759 362 844 362 844 380"/>
+<path class="lineRed" d="M 813 346 C 813 362 1154 362 1154 380"/>
+
+<!-- Footer -->
+<text class="small" x="689" y="544" text-anchor="middle">Data types stored in Redis (top) · Access APIs for reading and writing (bottom)</text>
 </svg>

@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1754" height="960" viewBox="0 0 1754 960" role="img" aria-label="redis examples Class Structure">
+<svg xmlns="http://www.w3.org/2000/svg" width="1754" height="960" viewBox="0 0 1754 960" role="img" aria-label="Redis Examples Class Structure">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
   <marker id="openArrow" markerWidth="10" markerHeight="8" refX="8.5" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 8.5 4 L 1 7" fill="none" stroke="#758297" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></marker>
@@ -22,8 +22,8 @@
 </defs>
 <rect class="canvas" width="1754" height="960"/>
 <rect class="frame" x="32" y="28" width="1690" height="904" rx="28"/>
-<text class="title" x="66" y="82">redis examples Class Structure</text>
-<text class="subtitle" x="70" y="118">UML classes from the original Mermaid source</text>
+<text class="title" x="66" y="82">Redis Examples Class Structure</text>
+<text class="subtitle" x="70" y="118">Actor · Movie · MovieActor · Address · Person · SensorData · @RedisHash entities</text>
 <path class="line" d="M467 523 L467 468 L1492 468 L1492 334"/>
 <path class="line" d="M672 397 L672 460 L877 460 L877 523"/>
 <path class="line" d="M262 180 L262 132 L1082 132 L1082 355"/>

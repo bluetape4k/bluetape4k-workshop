@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1754" height="1201" viewBox="0 0 1754 1201" role="img" aria-label="elasticsearch webflux Class Structure">
+<svg xmlns="http://www.w3.org/2000/svg" width="1754" height="1201" viewBox="0 0 1754 1201" role="img" aria-label="Elasticsearch WebFlux Class Structure">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
   <marker id="openArrow" markerWidth="10" markerHeight="8" refX="8.5" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 8.5 4 L 1 7" fill="none" stroke="#758297" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></marker>
@@ -22,8 +22,8 @@
 </defs>
 <rect class="canvas" width="1754" height="1201"/>
 <rect class="frame" x="32" y="28" width="1690" height="1145" rx="28"/>
-<text class="title" x="66" y="82">elasticsearch webflux Class Structure</text>
-<text class="subtitle" x="70" y="118">UML classes from the original Mermaid source</text>
+<text class="title" x="66" y="82">Elasticsearch WebFlux Class Structure</text>
+<text class="subtitle" x="70" y="118">Book · BookService · BookRepository · BookController · DefaultBookService · PublicationYearValidator</text>
 <path class="line" d="M672 397 L672 518 L877 518 L877 565"/>
 <path class="line" d="M1082 355 L1082 112 L672 112 L672 180"/>
 <path class="line" d="M1492 397 L1492 122 L262 122 L262 180"/>

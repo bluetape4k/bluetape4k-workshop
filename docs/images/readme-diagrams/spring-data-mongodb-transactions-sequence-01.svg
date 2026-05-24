@@ -22,8 +22,8 @@
 </defs>
 <rect class="canvas" width="1040" height="576"/>
 <rect class="frame" x="32" y="28" width="976" height="520" rx="28"/>
-<text class="title" x="66" y="82">mongodb transactions Sequence Flow.</text>
-<text class="subtitle" x="70" y="118">Sequence messages from the original Mermaid source</text>
+<text class="title" x="66" y="82">MongoDB Transactions Flow</text>
+<text class="subtitle" x="70" y="118">ReactiveManagedTransitionService · MongoDB ReplicaSet · startTransaction / commitTransaction</text>
 <rect class="card" x="-10" y="166" width="300" height="72" rx="20" fill="#E8F3FF" stroke="#5B8DEF"/>
 <text class="smallLabel" x="140" y="198.5" text-anchor="middle">Reactive</text>
 <text class="smallLabel" x="140" y="219.5" text-anchor="middle">Transaction Manager</text>

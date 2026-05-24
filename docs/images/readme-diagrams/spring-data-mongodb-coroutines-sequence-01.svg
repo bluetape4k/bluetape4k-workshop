@@ -22,8 +22,8 @@
 </defs>
 <rect class="canvas" width="1040" height="560"/>
 <rect class="frame" x="32" y="28" width="976" height="504" rx="28"/>
-<text class="title" x="66" y="82">mongodb coroutines Sequence Flow 2</text>
-<text class="subtitle" x="70" y="118">Sequence messages from the original Mermaid source</text>
+<text class="title" x="66" y="82">MongoDB Coroutines Query Flow</text>
+<text class="subtitle" x="70" y="118">PersonCoroutineRepository · Flow&lt;Person&gt; · suspendedTransaction</text>
 <rect class="card" x="405" y="166" width="230" height="72" rx="20" fill="#E8F3FF" stroke="#5B8DEF"/>
 <text class="smallLabel" x="520" y="209" text-anchor="middle">MongoDB</text>
 <line class="lifeline" x1="520" y1="252" x2="520" y2="500" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
