@@ -83,10 +83,12 @@ Each domain lists **Basic** (self-contained, minimal infra) and **Advanced** (mu
 | Advanced | [`spring-boot-chaos-monkey`](spring-boot/chaos-monkey/) | `logging` | In-memory | Chaos Monkey for Spring Boot — latency/exception injection |
 | Basic | [`spring-boot-problem`](spring-boot/problem/) | `logging` | In-memory | RFC 9457 Problem Details error responses |
 | Advanced | [`spring-boot-application-event-demo`](spring-boot/application-event-demo/) | `coroutines` | In-memory | Spring application events with coroutine listeners |
+| Advanced | [`spring-boot-multi-tenant-data-isolation`](spring-boot/multi-tenant-data-isolation/) | `exposed-jdbc`, `spring-boot4-core`, `micrometer` | H2 | Tenant-scoped repository, cache key, lock key, rate-limit, and metrics isolation |
 
 ```bash
 ./gradlew :spring-boot-cache-redis:test
 ./gradlew :spring-boot-resilience4j-coroutines:test
+./gradlew :spring-boot-multi-tenant-data-isolation:test
 ```
 
 ---
