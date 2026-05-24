@@ -1,64 +1,89 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1376" height="1262" viewBox="0 0 1376 1262" role="img" aria-label="Bucket4j Caffeine Web Rate Limit Sequence Flow">
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="500" viewBox="0 0 960 500" role="img" aria-label="Bucket4j Caffeine Web Rate Limit Sequence">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
+  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
+  </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
-    .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
-    .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
-    .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
+    .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:18px;font-weight:400;fill:#102033}
+    .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:11px;font-weight:400;fill:#102033}
+    .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:11px;font-weight:400;fill:#536273}
+    .card{stroke-width:2.1;filter:url(#shadow)}
+    .lifeline{stroke:#b0bbca;stroke-width:1.5;stroke-dasharray:6 4;fill:none}
+    .reqArrow{stroke:#5B8DEF;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
+    .rspArrow{stroke:#45A7A1;stroke-width:2.1;stroke-dasharray:7 4;fill:none;marker-end:url(#arrow)}
   </style>
 </defs>
-<rect class="canvas" width="1376" height="1262"/>
-<rect class="frame" x="32" y="28" width="1312" height="1206" rx="28"/>
-<text class="title" x="66" y="82">Bucket4j Caffeine Web Rate Limit Sequence Flow</text>
-<text class="subtitle" x="70" y="118">HTTP · Bucket4j · Caffeine JCache · IndexController</text>
-<rect class="card" x="21" y="166" width="238" height="72" rx="20" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="140" y="209" text-anchor="middle">HTTP</text>
-<line class="lifeline" x1="140" y1="252" x2="140" y2="1202" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="386.3333333333333" y="166" width="238" height="72" rx="20" fill="#EAF7EF" stroke="#58A978"/>
-<text class="smallLabel" x="505.3333333333333" y="209" text-anchor="middle">Bucket4j</text>
-<line class="lifeline" x1="505.3333333333333" y1="252" x2="505.3333333333333" y2="1202" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="751.6666666666666" y="166" width="238" height="72" rx="20" fill="#FFF3D9" stroke="#D6A441"/>
-<text class="smallLabel" x="870.6666666666666" y="209" text-anchor="middle">Caffeine JCache</text>
-<line class="lifeline" x1="870.6666666666666" y1="252" x2="870.6666666666666" y2="1202" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect class="card" x="1117" y="166" width="238" height="72" rx="20" fill="#FDECEF" stroke="#DC6B82"/>
-<text class="smallLabel" x="1236" y="209" text-anchor="middle">IndexController</text>
-<line class="lifeline" x1="1236" y1="252" x2="1236" y2="1202" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
-<rect x="211.66666666666663" y="286" width="222" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="229.66666666666663" y="313" text-anchor="start">1. GET /hello ( /world)</text>
-<path class="line" d="M140 344 L505.3333333333333 344"/>
-<rect x="583" y="396" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="601" y="423" text-anchor="start">2. (IP )</text>
-<path class="line" d="M505.3333333333333 454 L870.6666666666666 454"/>
-<rect x="583" y="506" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="601" y="533" text-anchor="start">3. CAF to F</text>
-<path class="dashed" d="M870.6666666666666 564 L505.3333333333333 564"/>
-<rect x="70" y="616" width="1236" height="40" rx="16" fill="#F7F1E7" stroke="#B88A44" stroke-width="1.6" opacity="0.96"/>
-<text class="strong" x="92" y="643" text-anchor="start">ALT: alt</text>
-<rect x="583" y="684" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="601" y="711" text-anchor="start">5. tryConsume(1) →</text>
-<path class="line" d="M505.3333333333333 742 L870.6666666666666 742"/>
-<rect x="765.6666666666666" y="794" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="783.6666666666666" y="821" text-anchor="start">6. F to IC</text>
-<path class="line" d="M505.3333333333333 852 L1236 852"/>
-<rect x="583" y="904" width="210" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="601" y="931" text-anchor="start">7. 200 OK +</text>
-<path class="dashed" d="M1236 962 L140 962"/>
-<rect x="70" y="1014" width="1236" height="40" rx="16" fill="#F7F1E7" stroke="#B88A44" stroke-width="1.6" opacity="0.96"/>
-<text class="strong" x="92" y="1041" text-anchor="start">ELSE: ()</text>
-<rect x="207.66666666666663" y="1082" width="230" height="40" rx="12" fill="#ffffff" opacity="0.97"/>
-<text class="strong" x="225.66666666666663" y="1109" text-anchor="start">9. 429 Too Many Requests</text>
-<path class="dashed" d="M505.3333333333333 1140 L140 1140"/>
+<!-- 4 Participants:
+     Client cx=100   (x=24 w=152)
+     Bucket4j Filter cx=300  (x=224 w=152)
+     IndexController cx=520  (x=444 w=152)
+     Caffeine Bucket cx=740  (x=664 w=256)
+-->
+<rect class="canvas" width="960" height="500"/>
+<rect class="frame" x="24" y="20" width="912" height="456" rx="28"/>
+<text class="title" x="58" y="64">Caffeine Rate Limit Sequence</text>
+<text class="subtitle" x="58" y="88">Bucket4j Filter · tryConsume · IndexController · Caffeine Bucket · 200 OK / 429</text>
+
+<!-- Participant headers (y=100, h=40) -->
+<g transform="translate(24,100)">
+  <rect class="card" x="0" y="0" width="152" height="40" rx="8" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="smallLabel" x="76" y="26" text-anchor="middle">Client</text>
+</g>
+<g transform="translate(224,100)">
+  <rect class="card" x="0" y="0" width="152" height="40" rx="8" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="smallLabel" x="76" y="26" text-anchor="middle">Bucket4j Filter</text>
+</g>
+<g transform="translate(444,100)">
+  <rect class="card" x="0" y="0" width="152" height="40" rx="8" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="smallLabel" x="76" y="26" text-anchor="middle">IndexController</text>
+</g>
+<g transform="translate(664,100)">
+  <rect class="card" x="0" y="0" width="256" height="40" rx="8" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="smallLabel" x="128" y="26" text-anchor="middle">Caffeine Bucket</text>
+</g>
+
+<!-- Lifelines -->
+<line class="lifeline" x1="100" y1="140" x2="100" y2="460"/>
+<line class="lifeline" x1="300" y1="140" x2="300" y2="460"/>
+<line class="lifeline" x1="520" y1="140" x2="520" y2="460"/>
+<line class="lifeline" x1="740" y1="140" x2="740" y2="460"/>
+
+<!-- ① GET /hello: Client → Filter -->
+<rect x="100" y="156" width="200" height="24" rx="4" fill="#dbeafe" opacity="0.7"/>
+<text class="mono" x="200" y="172" text-anchor="middle">① GET /hello (IP-keyed request)</text>
+<path class="reqArrow" d="M100 168 L292 168"/>
+
+<!-- ② extractKey(IP): Filter (self-check) -->
+<rect x="302" y="200" width="180" height="24" rx="4" fill="#dbeafe" opacity="0.7"/>
+<text class="mono" x="392" y="216" text-anchor="middle">② extractKey(IP address)</text>
+<path class="reqArrow" d="M300 212 L330 212 L330 232 L308 232"/>
+
+<!-- ③ tryConsume(key, 1): Filter → Caffeine -->
+<rect x="300" y="244" width="220" height="24" rx="4" fill="#dbeafe" opacity="0.7"/>
+<text class="mono" x="410" y="260" text-anchor="middle">③ tryConsume(ipKey, 1)</text>
+<path class="reqArrow" d="M300 256 L732 256"/>
+
+<!-- ④ tokens available: Caffeine → Filter -->
+<rect x="300" y="288" width="220" height="24" rx="4" fill="#d1fae5" opacity="0.7"/>
+<text class="mono" x="410" y="304" text-anchor="middle">④ remaining=9 (allowed)</text>
+<path class="rspArrow" d="M740 300 L308 300"/>
+
+<!-- ⑤ chain.filter(): Filter → Controller -->
+<rect x="300" y="332" width="220" height="24" rx="4" fill="#dbeafe" opacity="0.7"/>
+<text class="mono" x="410" y="348" text-anchor="middle">⑤ chain.filter() → controller</text>
+<path class="reqArrow" d="M300 344 L512 344"/>
+
+<!-- ⑥ "Hello World": Controller → Filter (dashed) -->
+<rect x="300" y="376" width="220" height="24" rx="4" fill="#d1fae5" opacity="0.7"/>
+<text class="mono" x="410" y="392" text-anchor="middle">⑥ "Hello World" response</text>
+<path class="rspArrow" d="M520 388 L308 388"/>
+
+<!-- ⑦ 200 + X-RateLimit-Remaining: Filter → Client (dashed) -->
+<rect x="100" y="420" width="200" height="24" rx="4" fill="#d1fae5" opacity="0.7"/>
+<text class="mono" x="200" y="436" text-anchor="middle">⑦ 200 OK + X-RateLimit-Remaining: 9</text>
+<path class="rspArrow" d="M300 432 L108 432"/>
 </svg>

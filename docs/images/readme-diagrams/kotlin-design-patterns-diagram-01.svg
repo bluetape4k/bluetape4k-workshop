@@ -1,115 +1,94 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="2222" height="1370" viewBox="0 0 2222 1370" role="img" aria-label="Kotlin Design Patterns Class Structure">
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="440" viewBox="0 0 920 440" role="img" aria-label="Kotlin Design Patterns">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="10" markerHeight="8" refX="8.5" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 8.5 4 L 1 7" fill="none" stroke="#758297" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="11" markerHeight="10" refX="9.5" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 0.5 1 L 9.5 5 L 0.5 9 Z" fill="#ffffff" stroke="#758297" stroke-width="1.7"/></marker>
+  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
+  </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
     .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
     .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
     .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
+    .card{stroke-width:2.1;filter:url(#shadow)}
+    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
   </style>
 </defs>
-<rect class="canvas" width="2222" height="1370"/>
-<rect class="frame" x="32" y="28" width="2158" height="1314" rx="28"/>
-<text class="title" x="66" y="82">Kotlin Design Patterns Class Structure</text>
-<text class="subtitle" x="70" y="118">Hero · EnumIvoryTower · KingdomFactory · IvoryTower · HolderKotlinLazy · HeavyDeferred</text>
-<path class="implLine" d="M1322 901 L1322 781 L1111 781 L1111 355"/>
-<path class="implLine" d="M900 901 L900 773 L1111 773 L1111 355"/>
-<g transform="translate(112,180)">
-  <rect class="card" x="0" y="0" width="310" height="196" rx="5" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <line class="compartment" x1="0" y1="78" x2="310" y2="78" stroke="#5B8DEF"/>
-  <text class="small" x="155" y="26" text-anchor="middle"></text>
-  <text class="label" x="155" y="61" text-anchor="middle">Hero</text>
-  <text class="mono" x="18" y="108">+name: String</text>
-<text class="mono" x="18" y="129">+armor: Armor</text>
-<text class="mono" x="18" y="150">+weapon: Weapon</text>
-<text class="mono" x="18" y="171">+hairType: HairType</text>
-</g>
-<g transform="translate(534,180)">
-  <rect class="card" x="0" y="0" width="310" height="112" rx="5" fill="#EAF7EF" stroke="#58A978"/>
-  <line class="compartment" x1="0" y1="78" x2="310" y2="78" stroke="#58A978"/>
-  <text class="small" x="155" y="26" text-anchor="middle">«enum - Singleton»</text>
-  <text class="label" x="155" y="61" text-anchor="middle">EnumIvoryTower</text>
+<!-- Layout:
+     Canvas: 920×440  Frame: x=24 y=20 w=872 h=396
+     Row1  y=98  h=54  title card (center x=220 w=480)
+     Row2  y=212 h=100 4 pattern cols
+       Col1: x=24  w=196 cx=122  right=220
+       Col2: x=236 w=196 cx=334  right=432  (gap=16px → merge spacing OK since no connectors)
+       Col3: x=448 w=196 cx=546  right=644
+       Col4: x=660 w=196 cx=758  right=856
+     Row3  y=362 h=54  Kotlin idioms (full width)
+     No overlap: 220<236 ✓ 432<448 ✓ 644<660 ✓
+-->
+<rect class="canvas" width="920" height="440"/>
+<rect class="frame" x="24" y="20" width="872" height="396" rx="28"/>
+<text class="title" x="58" y="66">Kotlin Design Patterns</text>
+<text class="subtitle" x="58" y="92">Singleton · Builder · Abstract Factory · Lazy Loading — Kotlin idiomatic implementations</text>
 
-</g>
-<g transform="translate(956,180)">
-  <rect class="card" x="0" y="0" width="310" height="175" rx="5" fill="#FFF3D9" stroke="#D6A441"/>
-  <line class="compartment" x1="0" y1="78" x2="310" y2="78" stroke="#D6A441"/>
-  <text class="small" x="155" y="26" text-anchor="middle">«interface»</text>
-  <text class="label" x="155" y="61" text-anchor="middle">KingdomFactory</text>
-  <text class="mono" x="18" y="108">+makeKing() King</text>
-<text class="mono" x="18" y="129">+makeCastle() Castle</text>
-<text class="mono" x="18" y="150">+makeArmy() Army</text>
-</g>
-<g transform="translate(1378,180)">
-  <rect class="card" x="0" y="0" width="310" height="112" rx="5" fill="#FDECEF" stroke="#DC6B82"/>
-  <line class="compartment" x1="0" y1="78" x2="310" y2="78" stroke="#DC6B82"/>
-  <text class="small" x="155" y="26" text-anchor="middle">«coroutines - Deferred»</text>
-  <text class="label" x="155" y="61" text-anchor="middle">HeavyDeferred</text>
+<!-- Arrows from overview to patterns -->
+<path class="line" d="M480 152 L480 177 L122 177 L122 212"/>
+<path class="line" d="M480 152 L480 177 L334 177 L334 212"/>
+<path class="line" d="M480 152 L480 177 L546 177 L546 212"/>
+<path class="line" d="M480 152 L480 177 L758 177 L758 212"/>
+<!-- Pattern cards → Kotlin Idioms -->
+<path class="line" d="M122 312 L122 340 L480 340 L480 362"/>
+<path class="line" d="M334 312 L334 340 L480 340 L480 362"/>
+<path class="line" d="M546 312 L546 340 L480 340 L480 362"/>
+<path class="line" d="M758 312 L758 340 L480 340 L480 362"/>
 
+<!-- Overview -->
+<g transform="translate(220,98)">
+  <rect class="card" x="0" y="0" width="480" height="54" rx="12" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="smallLabel" x="240" y="22" text-anchor="middle">Design Patterns — Kotlin Style</text>
+  <text class="small" x="240" y="42" text-anchor="middle">Java Design Patterns → idiomatic Kotlin: object, data class, by lazy, companion</text>
 </g>
-<g transform="translate(1800,180)">
-  <rect class="card" x="0" y="0" width="310" height="112" rx="5" fill="#E9F7F6" stroke="#45A7A1"/>
-  <line class="compartment" x1="0" y1="78" x2="310" y2="78" stroke="#45A7A1"/>
-  <text class="small" x="155" y="26" text-anchor="middle">«data class - Builder»</text>
-  <text class="label" x="155" y="61" text-anchor="middle">HeroDataClass</text>
 
+<!-- Singleton  col1 -->
+<g transform="translate(24,212)">
+  <rect class="card" x="0" y="0" width="196" height="100" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="smallLabel" x="98" y="22" text-anchor="middle">Singleton</text>
+  <text class="mono" x="98" y="44" text-anchor="middle">object IvoryTower</text>
+  <text class="small" x="98" y="64" text-anchor="middle">KotlinSingleton</text>
+  <text class="small" x="98" y="84" text-anchor="middle">HolderKotlinLazy</text>
 </g>
-<g transform="translate(323,544)">
-  <rect class="card" x="0" y="0" width="310" height="112" rx="5" fill="#F1ECFF" stroke="#8A72D6"/>
-  <line class="compartment" x1="0" y1="78" x2="310" y2="78" stroke="#8A72D6"/>
-  <text class="small" x="155" y="26" text-anchor="middle">«object - Kotlin Singl.»</text>
-  <text class="label" x="155" y="61" text-anchor="middle">IvoryTower</text>
 
+<!-- Builder  col2 -->
+<g transform="translate(236,212)">
+  <rect class="card" x="0" y="0" width="196" height="100" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="smallLabel" x="98" y="22" text-anchor="middle">Builder</text>
+  <text class="mono" x="98" y="44" text-anchor="middle">data class + copy()</text>
+  <text class="small" x="98" y="64" text-anchor="middle">HeroDataClass</text>
+  <text class="small" x="98" y="84" text-anchor="middle">named params + defaults</text>
 </g>
-<g transform="translate(745,544)">
-  <rect class="card" x="0" y="0" width="310" height="133" rx="5" fill="#F7F1E7" stroke="#B88A44"/>
-  <line class="compartment" x1="0" y1="78" x2="310" y2="78" stroke="#B88A44"/>
-  <text class="small" x="155" y="26" text-anchor="middle"></text>
-  <text class="label" x="155" y="61" text-anchor="middle">HolderKotlinLazy</text>
-  <text class="mono" x="18" y="108">+heavy: Heavy by lazy</text>
-</g>
-<g transform="translate(1167,544)">
-  <rect class="card" x="0" y="0" width="310" height="133" rx="5" fill="#EEF6D9" stroke="#8BA84D"/>
-  <line class="compartment" x1="0" y1="78" x2="310" y2="78" stroke="#8BA84D"/>
-  <text class="small" x="155" y="26" text-anchor="middle"></text>
-  <text class="label" x="155" y="61" text-anchor="middle">HolderNative</text>
-  <text class="mono" x="18" y="108">+heavy: Heavy</text>
-</g>
-<g transform="translate(1589,544)">
-  <rect class="card" x="0" y="0" width="310" height="112" rx="5" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <line class="compartment" x1="0" y1="78" x2="310" y2="78" stroke="#5B8DEF"/>
-  <text class="small" x="155" y="26" text-anchor="middle">«companion object»</text>
-  <text class="label" x="155" y="61" text-anchor="middle">KotlinSingleton</text>
 
+<!-- Abstract Factory  col3 -->
+<g transform="translate(448,212)">
+  <rect class="card" x="0" y="0" width="196" height="100" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="smallLabel" x="98" y="22" text-anchor="middle">Abstract Factory</text>
+  <text class="mono" x="98" y="44" text-anchor="middle">interface KingdomFactory</text>
+  <text class="small" x="98" y="64" text-anchor="middle">ElfKingdomFactory</text>
+  <text class="small" x="98" y="84" text-anchor="middle">OrcKingdomFactory</text>
 </g>
-<g transform="translate(745,901)">
-  <rect class="card" x="0" y="0" width="310" height="175" rx="5" fill="#EAF7EF" stroke="#58A978"/>
-  <line class="compartment" x1="0" y1="78" x2="310" y2="78" stroke="#58A978"/>
-  <text class="small" x="155" y="26" text-anchor="middle"></text>
-  <text class="label" x="155" y="61" text-anchor="middle">ElfKingdomFactory</text>
-  <text class="mono" x="18" y="108">+makeKing() ElfKing</text>
-<text class="mono" x="18" y="129">+makeCastle() ElfCastle</text>
-<text class="mono" x="18" y="150">+makeArmy() ElfArmy</text>
+
+<!-- Lazy Loading  col4 -->
+<g transform="translate(660,212)">
+  <rect class="card" x="0" y="0" width="196" height="100" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
+  <text class="smallLabel" x="98" y="22" text-anchor="middle">Lazy Loading</text>
+  <text class="mono" x="98" y="44" text-anchor="middle">val heavy by lazy { }</text>
+  <text class="small" x="98" y="64" text-anchor="middle">HeavyDeferred</text>
+  <text class="small" x="98" y="84" text-anchor="middle">async + Deferred</text>
 </g>
-<g transform="translate(1167,901)">
-  <rect class="card" x="0" y="0" width="310" height="175" rx="5" fill="#FFF3D9" stroke="#D6A441"/>
-  <line class="compartment" x1="0" y1="78" x2="310" y2="78" stroke="#D6A441"/>
-  <text class="small" x="155" y="26" text-anchor="middle"></text>
-  <text class="label" x="155" y="61" text-anchor="middle">OrcKingdomFactory</text>
-  <text class="mono" x="18" y="108">+makeKing() OrcKing</text>
-<text class="mono" x="18" y="129">+makeCastle() OrcCastle</text>
-<text class="mono" x="18" y="150">+makeArmy() OrcArmy</text>
+
+<!-- Kotlin Idioms (full width) -->
+<g transform="translate(24,362)">
+  <rect class="card" x="0" y="0" width="872" height="54" rx="12" fill="#E9F7F6" stroke="#45A7A1"/>
+  <text class="smallLabel" x="436" y="20" text-anchor="middle">Kotlin Idioms Applied</text>
+  <text class="small" x="436" y="40" text-anchor="middle">object · data class · by lazy · companion object · sealed class · enum class · operator fun invoke</text>
 </g>
 </svg>

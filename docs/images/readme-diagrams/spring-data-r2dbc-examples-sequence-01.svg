@@ -1,30 +1,83 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="560" viewBox="0 0 1040 560" role="img" aria-label="r2dbc examples Sequence Flow 2">
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="480" viewBox="0 0 960 480" role="img" aria-label="R2DBC Examples CRUD Sequence">
 <defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth"><path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/></marker>
+  <marker id="arrowBlue" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth"><path d="M1,1 L8,4.5 L1,8 Z" fill="#5B8DEF"/></marker>
+  <marker id="arrowTeal" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth"><path d="M1,1 L8,4.5 L1,8 Z" fill="#45A7A1"/></marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
     .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
     .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
     .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
+    .card{stroke-width:2.1;filter:url(#shadow)}
+    .lifeline{stroke:#b0bbca;stroke-width:1.5;stroke-dasharray:6 4;fill:none}
+    .reqArrow{stroke:#5B8DEF;stroke-width:2.1;fill:none;marker-end:url(#arrowBlue)}
+    .rspArrow{stroke:#45A7A1;stroke-width:2.1;stroke-dasharray:7 4;fill:none;marker-end:url(#arrowTeal)}
   </style>
 </defs>
-<rect class="canvas" width="1040" height="560"/>
-<rect class="frame" x="32" y="28" width="976" height="504" rx="28"/>
-<text class="title" x="66" y="82">R2DBC Examples Query Flow</text>
-<text class="subtitle" x="70" y="118">PersonRepository · CustomerRepository · H2 R2DBC in-memory</text>
-<rect class="card" x="405" y="166" width="230" height="72" rx="20" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="520" y="209" text-anchor="middle">H2 (R2DBC)</text>
-<line class="lifeline" x1="520" y1="252" x2="520" y2="500" stroke="#b7c2d1" stroke-width="2" stroke-dasharray="10 10"/>
+<rect class="canvas" width="960" height="480"/>
+<rect class="frame" x="24" y="20" width="912" height="436" rx="16"/>
+<text class="title" x="48" y="66">R2DBC Examples CRUD Sequence</text>
+<text class="subtitle" x="48" y="90">CustomerRepository · PersonRepository → H2 R2DBC in-memory</text>
+
+<!-- Participants -->
+<rect class="card" x="60" y="108" width="140" height="44" rx="8" fill="#FDECEF" stroke="#DC6B82"/>
+<text class="smallLabel" x="130" y="135" text-anchor="middle">Client</text>
+
+<rect class="card" x="270" y="108" width="180" height="44" rx="8" fill="#E8F3FF" stroke="#5B8DEF"/>
+<text class="smallLabel" x="360" y="135" text-anchor="middle">CustomerRepo</text>
+
+<rect class="card" x="510" y="108" width="180" height="44" rx="8" fill="#FFF3D9" stroke="#D6A441"/>
+<text class="smallLabel" x="600" y="135" text-anchor="middle">TransactionalService</text>
+
+<rect class="card" x="750" y="108" width="150" height="44" rx="8" fill="#E9F7F6" stroke="#45A7A1"/>
+<text class="smallLabel" x="825" y="135" text-anchor="middle">H2 R2DBC</text>
+
+<!-- Lifelines -->
+<line class="lifeline" x1="130" y1="152" x2="130" y2="440"/>
+<line class="lifeline" x1="360" y1="152" x2="360" y2="440"/>
+<line class="lifeline" x1="600" y1="152" x2="600" y2="440"/>
+<line class="lifeline" x1="825" y1="152" x2="825" y2="440"/>
+
+<!-- Step 1: save(customer) -->
+<rect fill="#EAF7EF" stroke="#58A978" stroke-width="1.2" x="60" y="175" width="120" height="24" rx="4"/>
+<text class="small" x="120" y="191" text-anchor="middle">1. save(customer)</text>
+<line class="reqArrow" x1="180" y1="187" x2="352" y2="187"/>
+
+<!-- Step 2: @Transactional insert -->
+<rect fill="#EAF7EF" stroke="#58A978" stroke-width="1.2" x="270" y="210" width="120" height="24" rx="4"/>
+<text class="small" x="330" y="226" text-anchor="middle">2. @Transactional</text>
+<line class="reqArrow" x1="360" y1="222" x2="592" y2="222"/>
+
+<!-- Step 3: INSERT SQL -->
+<rect fill="#E9F7F6" stroke="#45A7A1" stroke-width="1.2" x="510" y="245" width="120" height="24" rx="4"/>
+<text class="small" x="570" y="261" text-anchor="middle">3. INSERT SQL</text>
+<line class="reqArrow" x1="600" y1="257" x2="817" y2="257"/>
+
+<!-- Step 4: result rows -->
+<rect fill="#f1f9f1" stroke="#58A978" stroke-width="1.2" x="510" y="282" width="120" height="24" rx="4"/>
+<text class="small" x="570" y="298" text-anchor="middle">4. result rows</text>
+<line class="rspArrow" x1="817" y1="294" x2="608" y2="294"/>
+
+<!-- Step 5: Customer saved -->
+<rect fill="#f1f9f1" stroke="#58A978" stroke-width="1.2" x="270" y="317" width="120" height="24" rx="4"/>
+<text class="small" x="330" y="333" text-anchor="middle">5. Customer saved</text>
+<line class="rspArrow" x1="592" y1="329" x2="368" y2="329"/>
+
+<!-- Step 6: findByLastname() -->
+<rect fill="#E8F3FF" stroke="#5B8DEF" stroke-width="1.2" x="60" y="352" width="130" height="24" rx="4"/>
+<text class="small" x="125" y="368" text-anchor="middle">6. findByLastname()</text>
+<line class="reqArrow" x1="190" y1="364" x2="352" y2="364"/>
+
+<!-- Step 7: SELECT query -->
+<rect fill="#E9F7F6" stroke="#45A7A1" stroke-width="1.2" x="270" y="387" width="120" height="24" rx="4"/>
+<text class="small" x="330" y="403" text-anchor="middle">7. SELECT query</text>
+<line class="reqArrow" x1="360" y1="399" x2="817" y2="399"/>
+
+<!-- Step 8: Flow~Customer~ -->
+<rect fill="#f7f2ff" stroke="#8A72D6" stroke-width="1.2" x="60" y="415" width="130" height="24" rx="4"/>
+<text class="small" x="125" y="431" text-anchor="middle">8. Flow~Customer~</text>
+<line class="rspArrow" x1="817" y1="427" x2="188" y2="427"/>
 </svg>

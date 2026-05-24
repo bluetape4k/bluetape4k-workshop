@@ -1,49 +1,49 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1378" height="526" viewBox="0 0 1378 526" role="img" aria-label="Gateway Customers Architecture">
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="440" viewBox="0 0 820 440" role="img" aria-label="Gateway Customers Architecture">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
+  </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
     .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
-    .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#536273}
-    .card{stroke-width:2.1;filter:url(#shadow)}.line{fill:none;stroke:#758297;stroke-width:2.1;marker-end:url(#openArrow)}
+    .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
+    .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
+    .card{stroke-width:2.1;filter:url(#shadow)}
+    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
   </style>
 </defs>
-<rect class="canvas" width="1378" height="526"/>
-<rect class="frame" x="32" y="28" width="1314" height="470" rx="28"/>
-<text class="title" x="66" y="82">Gateway Customers</text>
-<text class="subtitle" x="70" y="118">Reactive customer API, Swagger redirect, and local observability</text>
-<path class="line" d="M318 258 C398 258 418 258 498 258"/>
-<path class="line" d="M778 258 C858 258 878 258 958 258"/>
-<path class="line" d="M638 308 C638 356 638 366 638 414"/>
-<path class="line" d="M1098 308 C1098 356 1098 366 1098 414"/>
-<g transform="translate(66,208)">
-  <rect class="card" x="0" y="0" width="252" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="126" y="38" text-anchor="middle">Workshop Client</text>
-  <text class="small" x="126" y="66" text-anchor="middle">HTTP requests</text>
+<rect class="canvas" width="820" height="440"/>
+<rect class="frame" x="24" y="20" width="772" height="396" rx="28"/>
+<text class="title" x="58" y="66">Gateway Customers Service</text>
+<text class="subtitle" x="58" y="92">Spring Cloud Gateway · CustomerController · WebFlux · Coroutines</text>
+
+<!-- Arrows -->
+<path class="line" d="M410 152 L410 202"/>
+<path class="line" d="M410 256 L410 306"/>
+
+<!-- API Gateway route -->
+<g transform="translate(178,98)">
+  <rect class="card" x="0" y="0" width="464" height="54" rx="12" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="smallLabel" x="232" y="22" text-anchor="middle">API Gateway :8080</text>
+  <text class="small" x="232" y="42" text-anchor="middle">/customer-service/** → RewritePath → :8081</text>
 </g>
-<g transform="translate(498,208)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="140" y="32" text-anchor="middle">Customer Service</text>
-  <text class="small" x="140" y="58" text-anchor="middle">Spring WebFlux on :8081</text>
-  <text class="small" x="140" y="78" text-anchor="middle">AOT enabled</text>
+
+<!-- CustomerController -->
+<g transform="translate(178,202)">
+  <rect class="card" x="0" y="0" width="464" height="54" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="smallLabel" x="232" y="22" text-anchor="middle">CustomerController :8081</text>
+  <text class="mono" x="232" y="42" text-anchor="middle">@RestController · @RequestMapping("/api/v1/customers")</text>
 </g>
-<g transform="translate(958,208)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="140" y="32" text-anchor="middle">CustomerContoller</text>
-  <text class="small" x="140" y="58" text-anchor="middle">GET /api/v1/customers</text>
-  <text class="small" x="140" y="78" text-anchor="middle">Winter, Spring</text>
-</g>
-<g transform="translate(498,414)">
-  <rect class="card" x="0" y="0" width="280" height="66" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="140" y="28" text-anchor="middle">RedirectWebFilter</text>
-  <text class="small" x="140" y="50" text-anchor="middle">/ to /swagger-ui.html</text>
-</g>
-<g transform="translate(958,414)">
-  <rect class="card" x="0" y="0" width="280" height="66" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="smallLabel" x="140" y="28" text-anchor="middle">Actuator</text>
-  <text class="small" x="140" y="50" text-anchor="middle">management exposure *</text>
+
+<!-- Response -->
+<g transform="translate(178,306)">
+  <rect class="card" x="0" y="0" width="464" height="86" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="smallLabel" x="232" y="26" text-anchor="middle">GET /api/v1/customers</text>
+  <text class="small" x="232" y="50" text-anchor="middle">suspend fun getAll(): List&lt;Customer&gt;</text>
+  <text class="mono" x="232" y="70" text-anchor="middle">Customer(name: String)</text>
+  <text class="small" x="232" y="86" text-anchor="middle" dy="-2">examples: "Winter", "Spring"</text>
 </g>
 </svg>

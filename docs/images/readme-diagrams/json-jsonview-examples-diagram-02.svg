@@ -1,53 +1,78 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1378" height="526" viewBox="0 0 1378 526" role="img" aria-label="JsonView in Spring Boot Demo">
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="420" viewBox="0 0 900 420" role="img" aria-label="JsonView ArticleController Architecture">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
+  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
+  </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
     .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
     .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
     .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
+    .card{stroke-width:2.1;filter:url(#shadow)}
+    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
   </style>
 </defs>
-<rect class="canvas" width="1378" height="526"/>
-<rect class="frame" x="32" y="28" width="1314" height="470" rx="28"/>
-<text class="title" x="66" y="82">JsonView in Spring Boot Demo</text>
-<text class="subtitle" x="70" y="118">ArticleController · @JsonView · Public/Analytics/Internal view filtering</text>
-<path class="line" d="M338 220 C338 303 539 303 539 386"/>
-<path class="line" d="M338 220 C338 220 1040 220 1040 220"/>
-<path class="line" d="M338 220 C338 220 706 220 706 220"/>
-<g transform="translate(48,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">ArticleController</text>
+<!-- Layout:
+     Canvas: 900×420  Frame: x=24 y=20 w=852 h=376
+     Row1  y=98  h=54   ArticleController (center x=186 w=528 cx=450)
+     Row2  y=212 h=80   3 cols (col1=x24 w=250, col2=x322 w=250, col3=x620 w=256)
+     Row3  y=352 h=44   JacksonConfig (full width)
+     Gap check: 188→212=24px... too small. Adjust row2 to y=220.
+     Actually: gap=32px, arrowhead~19px, stem=13px — borderline. Let's use y=232.
+     Row1 bottom=152, Row2 y=220, gap=68px ✓
+-->
+<rect class="canvas" width="900" height="420"/>
+<rect class="frame" x="24" y="20" width="852" height="376" rx="28"/>
+<text class="title" x="58" y="66">JsonView ArticleController</text>
+<text class="subtitle" x="58" y="92">@JsonView · Spring WebFlux · Coroutines · Jackson.defaultJsonMapper</text>
+
+<!-- Arrows: ArticleController → 3 endpoint groups -->
+<path class="line" d="M450 152 L450 177 L152 177 L152 220"/>
+<path class="line" d="M450 152 L450 177 L450 220"/>
+<path class="line" d="M450 152 L450 177 L748 177 L748 220"/>
+<!-- All endpoint groups → JacksonConfig -->
+<path class="line" d="M152 300 L152 330 L450 330 L450 352"/>
+<path class="line" d="M450 300 L450 352"/>
+<path class="line" d="M748 300 L748 330 L450 330 L450 352"/>
+
+<!-- ArticleController -->
+<g transform="translate(186,98)">
+  <rect class="card" x="0" y="0" width="528" height="54" rx="12" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="smallLabel" x="264" y="22" text-anchor="middle">ArticleController</text>
+  <text class="small" x="264" y="42" text-anchor="middle">@RestController · suspend fun · Spring WebFlux</text>
 </g>
-<g transform="translate(382,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">Public</text>
+
+<!-- Public endpoints col1 -->
+<g transform="translate(24,220)">
+  <rect class="card" x="0" y="0" width="250" height="80" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="smallLabel" x="125" y="22" text-anchor="middle">Public View</text>
+  <text class="mono" x="125" y="42" text-anchor="middle">GET /articles</text>
+  <text class="small" x="125" y="62" text-anchor="middle">@JsonView(Views.Public)</text>
 </g>
-<g transform="translate(716,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">: id, title,</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">category</text>
+
+<!-- Analytics + Internal col2 -->
+<g transform="translate(322,220)">
+  <rect class="card" x="0" y="0" width="256" height="80" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="smallLabel" x="128" y="22" text-anchor="middle">Analytics / Internal</text>
+  <text class="mono" x="128" y="42" text-anchor="middle">GET /articles/{id}/analytics</text>
+  <text class="small" x="128" y="62" text-anchor="middle">GET /articles/{id}/internal</text>
 </g>
-<g transform="translate(1050,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">: views, likes</text>
+
+<!-- No View col3 -->
+<g transform="translate(620,220)">
+  <rect class="card" x="0" y="0" width="256" height="80" rx="12" fill="#E9F7F6" stroke="#45A7A1"/>
+  <text class="smallLabel" x="128" y="22" text-anchor="middle">No View</text>
+  <text class="mono" x="128" y="42" text-anchor="middle">GET /articles/{id}</text>
+  <text class="small" x="128" y="62" text-anchor="middle">all fields including content</text>
 </g>
-<g transform="translate(549,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="smallLabel" x="140" y="21" text-anchor="middle">: id, title,</text>
-<text class="smallLabel" x="140" y="47" text-anchor="middle">category, views,</text>
-<text class="smallLabel" x="140" y="73" text-anchor="middle">likes</text>
+
+<!-- JacksonConfig (bottom full width) -->
+<g transform="translate(24,352)">
+  <rect class="card" x="0" y="0" width="852" height="44" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="smallLabel" x="426" y="18" text-anchor="middle">JacksonConfig</text>
+  <text class="small" x="426" y="36" text-anchor="middle">@Bean Jackson.defaultJsonMapper → KotlinModule + JavaTimeModule + Blackbird pre-registered</text>
 </g>
 </svg>

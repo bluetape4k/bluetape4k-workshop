@@ -1,92 +1,80 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1378" height="720" viewBox="0 0 1378 720" role="img" aria-label="Resilience4j Coroutines Architecture">
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="480" viewBox="0 0 960 480" role="img" aria-label="Resilience4j Coroutines Architecture">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
+  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
+  </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:22px;font-weight:400;fill:#102033}
-    .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
-    .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
+    .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
+    .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
+    .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
     .card{stroke-width:2.1;filter:url(#shadow)}
-    .line{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#openArrow)}
-    .dashed{stroke:#758297;stroke-width:2.2;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
+    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
+    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 5;fill:none;marker-end:url(#arrow)}
   </style>
 </defs>
-<rect class="canvas" width="1378" height="720"/>
-<rect class="frame" x="32" y="28" width="1314" height="664" rx="28"/>
-<text class="title" x="66" y="82">Resilience4j + Coroutines Architecture</text>
-<text class="subtitle" x="70" y="112">HTTP Clients → AOP Proxy → Services — blocking, reactive, and suspend paths</text>
+<rect class="canvas" width="960" height="480"/>
+<rect class="frame" x="24" y="20" width="912" height="440" rx="22"/>
 
-<!-- HTTP Clients -->
-<g transform="translate(464,134)">
-  <rect class="card" x="0" y="0" width="450" height="76" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="label" x="225" y="35" text-anchor="middle">HTTP Clients</text>
-  <text class="small" x="225" y="57" text-anchor="middle">WebTestClient · curl · httpie</text>
+<!-- Title -->
+<text class="title" x="48" y="68">Resilience4j + Coroutines</text>
+<text class="subtitle" x="52" y="92">HTTP Clients → AOP Proxy → Controllers → Services (suspend / reactive)</text>
+
+<!-- HTTP Clients (top center) -->
+<g transform="translate(330,116)">
+  <rect class="card" x="0" y="0" width="300" height="68" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="smallLabel" x="150" y="30" text-anchor="middle">HTTP Clients</text>
+  <text class="small" x="150" y="52" text-anchor="middle">WebTestClient · curl · httpie</text>
 </g>
 
-<!-- Arrow: HTTP → Controllers -->
-<path class="line" d="M689 210 L689 250"/>
+<!-- Arrow down from HTTP clients -->
+<path class="line" d="M480,184 L480,216"/>
 
-<!-- Controllers — left (sync/reactive) -->
-<g transform="translate(72,258)">
-  <rect class="card" x="0" y="0" width="560" height="160" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="label" x="280" y="36" text-anchor="middle">Sync / Reactive Controllers</text>
-  <text class="mono" x="280" y="64" text-anchor="middle">BackendAController</text>
-  <text class="small" x="280" y="86" text-anchor="middle">Mono · Flux · CompletableFuture</text>
-  <text class="mono" x="280" y="114" text-anchor="middle">BackendBController</text>
-  <text class="small" x="280" y="136" text-anchor="middle">Sync · RateLimiter</text>
+<!-- Controllers - left (sync/reactive) -->
+<g transform="translate(48,224)">
+  <rect class="card" x="0" y="0" width="380" height="92" rx="12" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="smallLabel" x="190" y="26" text-anchor="middle">Sync / Reactive Controllers</text>
+  <text class="mono" x="190" y="50" text-anchor="middle">BackendA/B/CController</text>
+  <text class="small" x="190" y="72" text-anchor="middle">Mono · Flux · CompletableFuture · RateLimiter</text>
 </g>
 
-<!-- Controllers — right (coroutine) -->
-<g transform="translate(746,258)">
-  <rect class="card" x="0" y="0" width="560" height="160" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="label" x="280" y="36" text-anchor="middle">Coroutine Controllers</text>
-  <text class="mono" x="280" y="64" text-anchor="middle">SuspendBackendAController</text>
-  <text class="small" x="280" y="86" text-anchor="middle">suspend · Flow</text>
-  <text class="mono" x="280" y="114" text-anchor="middle">SuspendBackendBController</text>
-  <text class="small" x="280" y="136" text-anchor="middle">suspend · Bulkhead · Retry</text>
+<!-- Controllers - right (coroutine) -->
+<g transform="translate(532,224)">
+  <rect class="card" x="0" y="0" width="380" height="92" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="smallLabel" x="190" y="26" text-anchor="middle">Coroutine Controllers</text>
+  <text class="mono" x="190" y="50" text-anchor="middle">SuspendBackendA/BController</text>
+  <text class="small" x="190" y="72" text-anchor="middle">suspend · Flow · Bulkhead · Retry</text>
 </g>
 
-<!-- Resilience4j AOP Proxy label — center badge -->
-<g transform="translate(524,440)">
-  <rect x="0" y="0" width="330" height="46" rx="22" fill="#F3E5F5" stroke="#CE93D8" stroke-width="2"/>
-  <text class="label" x="165" y="29" text-anchor="middle" font-size="18px" fill="#6A1B9A">⚙ Resilience4j AOP Proxy</text>
+<!-- AOP Proxy badge (center) -->
+<g transform="translate(310,336)">
+  <rect x="0" y="0" width="340" height="44" rx="20" fill="#F3E5F5" stroke="#CE93D8" stroke-width="2"/>
+  <text class="smallLabel" x="170" y="27" text-anchor="middle" fill="#6A1B9A">Resilience4j AOP Proxy</text>
 </g>
 
-<!-- Arrow: left controller → AOP proxy -->
-<path class="dashed" d="M352 418 L580 440"/>
-<!-- Arrow: right controller → AOP proxy -->
-<path class="dashed" d="M1026 418 L798 440"/>
+<!-- Dashed arrows from controllers to AOP -->
+<path class="dashed" d="M238,316 L380,336"/>
+<path class="dashed" d="M722,316 L610,336"/>
 
-<!-- Arrow: AOP proxy → services -->
-<path class="line" d="M689 486 L689 516"/>
+<!-- Arrow down from AOP -->
+<path class="line" d="M480,380 L480,400"/>
 
-<!-- Services — left (sync/reactive) -->
-<g transform="translate(72,524)">
-  <rect class="card" x="0" y="0" width="560" height="148" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="label" x="280" y="36" text-anchor="middle">Sync / Reactive Services</text>
-  <text class="mono" x="280" y="64" text-anchor="middle">BackendAService</text>
-  <text class="small" x="280" y="86" text-anchor="middle">Mono · Flux · CompletableFuture</text>
-  <text class="mono" x="280" y="114" text-anchor="middle">BackendBService</text>
-  <text class="small" x="280" y="136" text-anchor="middle">Sync</text>
+<!-- Services -->
+<g transform="translate(48,400)">
+  <rect class="card" x="0" y="0" width="380" height="52" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="smallLabel" x="190" y="28" text-anchor="middle">Sync / Reactive Services</text>
+  <text class="small" x="190" y="46" text-anchor="middle">BackendA/B/CService · Mono · Flux</text>
+</g>
+<g transform="translate(532,400)">
+  <rect class="card" x="0" y="0" width="380" height="52" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="smallLabel" x="190" y="28" text-anchor="middle">Coroutine Services</text>
+  <text class="small" x="190" y="46" text-anchor="middle">BackendACoService · suspend · Flow</text>
 </g>
 
-<!-- Services — right (coroutine) -->
-<g transform="translate(746,524)">
-  <rect class="card" x="0" y="0" width="560" height="148" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="label" x="280" y="36" text-anchor="middle">Coroutine Services</text>
-  <text class="mono" x="280" y="64" text-anchor="middle">BackendACoService</text>
-  <text class="small" x="280" y="86" text-anchor="middle">suspend · Flow</text>
-  <text class="mono" x="280" y="114" text-anchor="middle">BackendBCoService</text>
-  <text class="small" x="280" y="136" text-anchor="middle">suspend · Bulkhead · Retry</text>
-</g>
-
-<!-- Arrows: AOP proxy → each service group -->
-<path class="line" d="M580 486 L352 524"/>
-<path class="line" d="M798 486 L1026 524"/>
-
-<!-- Bottom note -->
-<text class="small" x="70" y="692" font-size="14px">SuspendDecorators (bluetape4k-resilience4j) enables programmatic chaining without AOP annotations.</text>
+<!-- Arrows from AOP to each service group -->
+<path class="line" d="M400,380 L238,400"/>
+<path class="line" d="M560,380 L722,400"/>
 </svg>

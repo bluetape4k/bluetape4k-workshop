@@ -1,69 +1,77 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1044" height="692" viewBox="0 0 1044 692" role="img" aria-label="Docker Compose Demo Architecture">
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="460" viewBox="0 0 1000 460" role="img" aria-label="Docker Compose Demo Architecture">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
+  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
+  </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:40px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
     .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
     .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
     .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
     .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
+    .dimLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#9ea7b2}
+    .card{stroke-width:2.1;filter:url(#shadow)}
+    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
+    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#arrow)}
   </style>
 </defs>
-<rect class="canvas" width="1044" height="692"/>
-<rect class="frame" x="32" y="28" width="980" height="636" rx="28"/>
-<text class="title" x="66" y="82">Docker Compose Demo Architecture</text>
-<text class="subtitle" x="70" y="118">Testcontainers · Docker Compose · PostgreSQL · Redis · lifecycle management</text>
-<path class="line" d="M338 386 C338 469 372 469 372 552"/>
-<path class="line" d="M338 386 C338 386 372 386 372 386"/>
-<path class="line" d="M856 280 C856 303 856 303 856 326"/>
-<path class="line" d="M522 280 C522 303 522 303 522 326"/>
-<path class="line" d="M188 280 C188 303 188 303 188 326"/>
-<path class="line" d="M338 220 C338 220 706 220 706 220"/>
-<path class="line" d="M338 220 C338 220 372 220 372 220"/>
-<g transform="translate(48,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="140" y="21" text-anchor="middle">Testcontainers</text>
-<text class="smallLabel" x="140" y="47" text-anchor="middle">Docker Compose</text>
-<text class="smallLabel" x="140" y="73" text-anchor="middle">Container</text>
+<rect class="canvas" width="1000" height="460"/>
+<rect class="frame" x="24" y="20" width="952" height="416" rx="28"/>
+<text class="title" x="58" y="66">Docker Compose Demo Architecture</text>
+<text class="subtitle" x="58" y="94">Testcontainers · DockerComposeContainer · Multi-Service Orchestration</text>
+
+<!-- Arrows first -->
+<!-- DockerComposePostgresTest → DockerComposeContainer (routes right) -->
+<path class="line" d="M246 168 L246 193 L486 193 L486 222"/>
+<!-- MultipleServiceTest → DockerComposeContainer (routes left) -->
+<path class="line" d="M704 168 L704 193 L534 193 L534 222"/>
+<!-- DockerComposeContainer → PostgreSQL (routes left) -->
+<path class="line" d="M510 276 L510 300 L208 300 L208 326"/>
+<!-- DockerComposeContainer → Elasticsearch (straight) -->
+<path class="line" d="M510 276 L510 326"/>
+<!-- DockerComposeContainer → Redis (routes right, dashed = disabled) -->
+<path class="dashed" d="M510 276 L510 300 L812 300 L812 326"/>
+
+<!-- Test cards -->
+<g transform="translate(52,114)">
+  <rect class="card" x="0" y="0" width="388" height="54" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="smallLabel" x="194" y="22" text-anchor="middle">DockerComposePostgres</text>
+  <text class="smallLabel" x="194" y="42" text-anchor="middle">Test</text>
 </g>
-<g transform="translate(382,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">docker-compose-postg</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">res.yml</text>
+<g transform="translate(510,114)">
+  <rect class="card" x="0" y="0" width="388" height="54" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="smallLabel" x="194" y="34" text-anchor="middle">MultipleServiceTest</text>
 </g>
-<g transform="translate(716,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">docker-compose-redis</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">.yml</text>
+
+<!-- DockerComposeContainer -->
+<g transform="translate(290,222)">
+  <rect class="card" x="0" y="0" width="440" height="54" rx="12" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="smallLabel" x="220" y="22" text-anchor="middle">DockerComposeContainer</text>
+  <text class="small" x="220" y="42" text-anchor="middle">Testcontainers · docker-compose-{name}.yml</text>
 </g>
-<g transform="translate(48,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">docker-compose-multi</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">ple.yml</text>
+
+<!-- PostgreSQL service -->
+<g transform="translate(70,326)">
+  <rect class="card" x="0" y="0" width="276" height="64" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="smallLabel" x="138" y="22" text-anchor="middle">PostgreSQL 18</text>
+  <text class="small" x="138" y="44" text-anchor="middle">postgres:18-alpine · port 5432</text>
 </g>
-<g transform="translate(382,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">PostgreSQL 18 (</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">5432)</text>
+
+<!-- Elasticsearch service -->
+<g transform="translate(372,326)">
+  <rect class="card" x="0" y="0" width="276" height="64" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
+  <text class="smallLabel" x="138" y="22" text-anchor="middle">Elasticsearch 8</text>
+  <text class="small" x="138" y="44" text-anchor="middle">elasticsearch:8.11.1 · port 9200</text>
 </g>
-<g transform="translate(716,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">Redis 7 ( 6379)</text>
-</g>
-<g transform="translate(382,502)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F7F1E7" stroke="#B88A44"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">Elasticsearch 8 (</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">9200)</text>
+
+<!-- Redis service (commented out in yml) -->
+<g transform="translate(674,326)">
+  <rect class="card" x="0" y="0" width="276" height="64" rx="12" fill="#f3f4f6" stroke="#b0b8c4"/>
+  <text class="dimLabel" x="138" y="22" text-anchor="middle">Redis 7</text>
+  <text class="small" x="138" y="40" text-anchor="middle">redis:7 · port 6379</text>
+  <text class="small" x="138" y="56" text-anchor="middle">⚠ commented out in yml</text>
 </g>
 </svg>

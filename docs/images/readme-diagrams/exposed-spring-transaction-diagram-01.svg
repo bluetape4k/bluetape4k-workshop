@@ -1,69 +1,91 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1378" height="526" viewBox="0 0 1378 526" role="img" aria-label="Exposed Spring Transaction Architecture">
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="440" viewBox="0 0 960 440" role="img" aria-label="Exposed Spring Transaction Architecture">
 <defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="openArrow" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M 1 1 L 10 5 L 1 9" fill="none" stroke="#758297" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></marker>
-  <marker id="inherit" markerWidth="14" markerHeight="12" refX="12" refY="6" orient="auto" markerUnits="strokeWidth"><path d="M 0 1 L 12 6 L 0 11 Z" fill="#ffffff" stroke="#758297" stroke-width="1.8"/></marker>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
+    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
+  </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:43px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
+    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
     .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
     .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
     .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .strong{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;font-weight:400;fill:#102033}
-    .card{stroke-width:2.1;filter:url(#shadow)}.compartment{stroke-width:1.5;fill:none}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#openArrow)}
-    .plainLine{stroke:#758297;stroke-width:2.1;fill:none}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#openArrow)}
-    .inheritLine{stroke:#758297;stroke-width:2.2;fill:none;marker-end:url(#inherit)}
-    .implLine{stroke:#758297;stroke-width:2.2;stroke-dasharray:8 7;fill:none;marker-end:url(#inherit)}
+    .card{stroke-width:2.1;filter:url(#shadow)}
+    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
   </style>
 </defs>
-<rect class="canvas" width="1378" height="526"/>
-<rect class="frame" x="32" y="28" width="1314" height="470" rx="28"/>
-<text class="title" x="66" y="82">Exposed Spring Transaction Architecture</text>
-<text class="subtitle" x="70" y="118">Spring @Transactional · TransactionManager · TransactionTemplate · HikariCP · H2/RDBMS</text>
-<path class="line" d="M1006 386 C1006 386 1040 386 1040 386"/>
-<path class="line" d="M672 386 C672 386 706 386 706 386"/>
-<path class="line" d="M338 386 C338 386 372 386 372 386"/>
-<path class="line" d="M1040 220 C1040 303 338 303 338 386"/>
-<path class="line" d="M1006 220 C1006 220 1040 220 1040 220"/>
-<path class="line" d="M672 220 C672 220 706 220 706 220"/>
-<path class="line" d="M338 220 C338 220 372 220 372 220"/>
-<g transform="translate(48,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">Spring Application</text>
+<rect class="canvas" width="960" height="440"/>
+<rect class="frame" x="24" y="20" width="912" height="396" rx="18"/>
+<text class="title" x="44" y="66">Spring @Transactional + Exposed</text>
+<text class="subtitle" x="44" y="90">@Transactional service → ExposedTransactionManager → HikariCP → H2/RDBMS</text>
+
+<!-- Row 1 -->
+<g transform="translate(44,110)">
+  <rect class="card" x="0" y="0" width="190" height="80" rx="10" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="smallLabel" x="95" y="32" text-anchor="middle">Spring Service</text>
+  <text class="small" x="95" y="56" text-anchor="middle">@Transactional</text>
+  <text class="small" x="95" y="72" text-anchor="middle">fun create(dto)</text>
 </g>
-<g transform="translate(382,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">@Transactional</text>
+
+<g transform="translate(270,110)">
+  <rect class="card" x="0" y="0" width="190" height="80" rx="10" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="smallLabel" x="95" y="32" text-anchor="middle">Spring TX AOP</text>
+  <text class="small" x="95" y="54" text-anchor="middle">TransactionInterceptor</text>
+  <text class="small" x="95" y="70" text-anchor="middle">proxy wraps calls</text>
 </g>
-<g transform="translate(716,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">Spring Transaction</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">Manager</text>
+
+<g transform="translate(496,110)">
+  <rect class="card" x="0" y="0" width="190" height="80" rx="10" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="smallLabel" x="95" y="28" text-anchor="middle">Exposed TX</text>
+  <text class="small" x="95" y="50" text-anchor="middle">SpringTransactionManager</text>
+  <text class="small" x="95" y="68" text-anchor="middle">ExposedTransactionManager</text>
 </g>
-<g transform="translate(1050,170)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">TransactionTemplate</text>
+
+<g transform="translate(722,110)">
+  <rect class="card" x="0" y="0" width="190" height="80" rx="10" fill="#FDECEF" stroke="#DC6B82"/>
+  <text class="smallLabel" x="95" y="32" text-anchor="middle">HikariCP</text>
+  <text class="small" x="95" y="54" text-anchor="middle">DataSource</text>
+  <text class="small" x="95" y="70" text-anchor="middle">connection pool</text>
 </g>
-<g transform="translate(48,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">Exposed</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">TransactionManager</text>
+
+<!-- Row 2 -->
+<g transform="translate(44,260)">
+  <rect class="card" x="0" y="0" width="190" height="80" rx="10" fill="#E9F7F6" stroke="#45A7A1"/>
+  <text class="smallLabel" x="95" y="28" text-anchor="middle">Database</text>
+  <text class="small" x="95" y="50" text-anchor="middle">Database.connect(ds,</text>
+  <text class="small" x="95" y="66" text-anchor="middle">manager = springTxMgr)</text>
 </g>
-<g transform="translate(382,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="smallLabel" x="140" y="33" text-anchor="middle">Database /</text>
-<text class="smallLabel" x="140" y="59" text-anchor="middle">DatabaseConfig</text>
+
+<g transform="translate(270,260)">
+  <rect class="card" x="0" y="0" width="190" height="80" rx="10" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="smallLabel" x="95" y="28" text-anchor="middle">DAO/SQL DSL</text>
+  <text class="small" x="95" y="50" text-anchor="middle">Table.insert { }</text>
+  <text class="small" x="95" y="66" text-anchor="middle">Entity.findById(id)</text>
 </g>
-<g transform="translate(716,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#F7F1E7" stroke="#B88A44"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">HikariCP DataSource</text>
+
+<g transform="translate(496,260)">
+  <rect class="card" x="0" y="0" width="190" height="80" rx="10" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="smallLabel" x="95" y="32" text-anchor="middle">Savepoint</text>
+  <text class="small" x="95" y="54" text-anchor="middle">NESTED propagation</text>
+  <text class="small" x="95" y="70" text-anchor="middle">partial rollback</text>
 </g>
-<g transform="translate(1050,336)">
-  <rect class="card" x="0" y="0" width="280" height="100" rx="14" fill="#EEF6D9" stroke="#8BA84D"/>
-  <text class="smallLabel" x="140" y="45" text-anchor="middle">(H2 / RDBMS)</text>
+
+<g transform="translate(722,260)">
+  <rect class="card" x="0" y="0" width="190" height="80" rx="10" fill="#EEF6D9" stroke="#8BA84D"/>
+  <text class="smallLabel" x="95" y="32" text-anchor="middle">H2 / RDBMS</text>
+  <text class="small" x="95" y="54" text-anchor="middle">JDBC connection</text>
+  <text class="small" x="95" y="70" text-anchor="middle">commit / rollback</text>
 </g>
+
+<!-- Arrows row 1 -->
+<path class="line" d="M234,150 L268,150"/>
+<path class="line" d="M460,150 L494,150"/>
+<path class="line" d="M686,150 L720,150"/>
+
+<!-- Vertical connections -->
+<path class="line" d="M139,190 L139,258"/>
+<path class="line" d="M365,190 L365,258"/>
+<path class="line" d="M591,190 L591,258"/>
+<path class="line" d="M817,190 L817,258"/>
 </svg>
