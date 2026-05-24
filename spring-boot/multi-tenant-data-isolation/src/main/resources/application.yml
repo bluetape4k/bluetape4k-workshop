@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: multi-tenant-data-isolation
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:tenant-isolation;MODE=PostgreSQL;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics
+
+logging:
+  level:
+    io.bluetape4k.workshop.multitenant: DEBUG
