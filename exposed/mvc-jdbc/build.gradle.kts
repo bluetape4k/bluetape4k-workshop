@@ -19,9 +19,11 @@ dependencies {
     // Logging
     implementation(libs.bluetape4k.logging)
 
-    // Exposed JDBC
+    // bluetape4k Exposed — core helpers (AuditableLongIdTable, etc.) + JDBC repository
     implementation(libs.exposed.core)
     implementation(libs.exposed.jdbc)
+    // exposed-java-time required by AuditableIdTable (timestamp columns)
+    implementation(libs.jetbrains.exposed.java.time)
     implementation(libs.jetbrains.exposed.spring.boot4.starter)
     implementation(libs.jetbrains.exposed.spring7.transaction)
 

@@ -1,37 +1,50 @@
 package io.bluetape4k.workshop.exposed.mvc.jdbc.author.repository
 
+import io.bluetape4k.exposed.jdbc.repository.LongJdbcRepository
 import io.bluetape4k.workshop.exposed.mvc.jdbc.author.dto.BookDTO
 import io.bluetape4k.workshop.exposed.mvc.jdbc.author.dto.CreateBookRequest
 import io.bluetape4k.workshop.exposed.mvc.jdbc.author.mapper.toBookDTO
+import io.bluetape4k.workshop.exposed.mvc.jdbc.author.schema.AuthorTable
 import io.bluetape4k.workshop.exposed.mvc.jdbc.author.schema.BookTable
+import org.jetbrains.exposed.v1.core.ResultRow
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.insert
-import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.springframework.stereotype.Repository
 
+/**
+ * Book CRUD repository backed by bluetape4k [LongJdbcRepository].
+ *
+ * Inherits standard CRUD (findAll, findById, count, existsById, deleteById, findPage, batchInsert)
+ * from [LongJdbcRepository]. Only [table], [extractId], and [ResultRow.toEntity] are defined here.
+ */
 @Repository
-class BookRepository {
+class BookRepository : LongJdbcRepository<BookDTO> {
 
-    fun findAll(): List<BookDTO> =
-        BookTable.selectAll().map { it.toBookDTO() }
+    override val table = BookTable
 
-    fun findById(id: Long): BookDTO? =
-        BookTable.selectAll()
-            .where { BookTable.id eq id }
-            .singleOrNull()
-            ?.toBookDTO()
+    override fun extractId(entity: BookDTO) = entity.id
 
+    override fun ResultRow.toEntity() = toBookDTO()
+
+    /**
+     * Returns all books written by the given author.
+     *
+     * Uses [findBy] from [LongJdbcRepository] — no manual selectAll boilerplate.
+     */
     fun findByAuthorId(authorId: Long): List<BookDTO> =
-        BookTable.selectAll()
-            .where { BookTable.authorId eq authorId }
-            .map { it.toBookDTO() }
+        // vararg findBy requires explicit parentheses around the lambda
+        findBy({ BookTable.authorId eq EntityID(authorId, AuthorTable) })
 
-    fun insert(req: CreateBookRequest): BookDTO {
-        val id = BookTable.insert {
+    /**
+     * Inserts a new book and returns the persisted [BookDTO].
+     */
+    fun save(req: CreateBookRequest): BookDTO {
+        val id = BookTable.insertAndGetId {
             it[title] = req.title
             it[publishDate] = req.publishDate
-            it[this.authorId] = req.authorId
-        }[BookTable.id]
-        return findById(id) ?: throw NoSuchElementException("Book $id not found after insert")
+            it[this.authorId] = EntityID(req.authorId, AuthorTable)
+        }.value
+        return findById(id)
     }
 }

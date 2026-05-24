@@ -9,6 +9,7 @@ import io.bluetape4k.workshop.exposed.mvc.jdbc.order.schema.OrderTable
 import io.bluetape4k.workshop.exposed.mvc.jdbc.order.schema.ProductTable
 import org.jetbrains.exposed.v1.jdbc.SchemaUtils
 import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
@@ -56,24 +57,27 @@ class DatabaseInitializer : ApplicationRunner {
     }
 
     private fun seedAuthors() {
-        val authorId1 = AuthorTable.insert {
+        // AuthorTable extends AuditableLongIdTable — use insertAndGetId to get EntityID<Long>
+        val authorId1 = AuthorTable.insertAndGetId {
             it[firstName] = "Joshua"
             it[lastName] = "Bloch"
             it[email] = "joshua.bloch@example.com"
-        }[AuthorTable.id]
+        }
 
-        val authorId2 = AuthorTable.insert {
+        val authorId2 = AuthorTable.insertAndGetId {
             it[firstName] = "Martin"
             it[lastName] = "Odersky"
             it[email] = "martin.odersky@example.com"
-        }[AuthorTable.id]
+        }
 
-        val authorId3 = AuthorTable.insert {
+        val authorId3 = AuthorTable.insertAndGetId {
             it[firstName] = "Venkat"
             it[lastName] = "Subramaniam"
             it[email] = "venkat@example.com"
-        }[AuthorTable.id]
+        }
 
+        // BookTable.authorId is reference("author_id", AuthorTable): Column<EntityID<Long>>
+        // Pass EntityID<Long> directly — no manual EntityID wrapping needed here
         listOf(
             Triple("Effective Java", "2018-01-01", authorId1),
             Triple("Programming in Scala", "2021-01-01", authorId2),
