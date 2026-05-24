@@ -56,10 +56,12 @@ The existing `bluetape4k-graph/examples/fraud-detection-examples/` models financ
 
 ### 4.3 Abuse Detection Logic
 
-- **Abuse Cluster**: Set of users reachable from a seed user via `BOTH`-direction BFS of depth ≤ 4, crossing shared-identifier vertices as intermediate hops.
+- **Abuse Cluster**: Set of users reachable from a seed user via a **direct shared-identifier hop** (User → Identifier → User, exactly 1 identifier level). `REFERRED_BY` edges are excluded from cluster traversal.
 - **Suspicion Explanation**: For each identifier edge label, find identifiers connected to a user and return other users sharing those identifiers.
 - **Referral Loops**: Cycle detection on `REFERRED_BY` edges (reward farming detection).
 - **Suspicious Ranking**: PageRank over full graph; post-filter to User vertices (identifier-bridge topology amplifies scores of users in dense sharing clusters).
+
+> **Note**: `findAbuseCluster` intentionally implements a fixed 1-hop identifier traversal (User→Identifier→User = 2 edge hops). This is sufficient for direct-sharing detection and avoids unbounded traversal in a workshop setting.
 
 ---
 
@@ -87,6 +89,18 @@ class AbuserDetectionService(
     // If a vertex with the same key property already exists, return the existing vertex.
     // This is critical for shared-identifier detection: two users sharing "device-X"
     // must link to the SAME Device vertex, not two separate vertices.
+    //
+    // findOrCreate lookup: ops.findVerticesByLabel(DeviceLabel.label).firstOrNull { it.properties["deviceId"] == deviceId }
+    // before creating; if found, return existing vertex.
+    //
+    // Timestamp defaults: passing "" for createdAt/firstSeenAt/verifiedAt/firstChargedAt/occurredAt
+    // stores an empty string in the graph. Callers MUST pass a valid ISO-8601 timestamp string
+    // (e.g. Instant.now().toString()) when the field is meaningful.
+    // In tests, use a fixed string like "2026-01-01T00:00:00Z" for determinism.
+    //
+    // Hash validation: deviceId, ip, phone, paymentToken parameters MUST be non-blank.
+    // Callers are responsible for passing hashed/tokenized values (see §10).
+    // Implementation calls requireNotBlank("deviceId") etc. before vertex lookup.
     fun addUser(userId: String, country: String, createdAt: String = ""): GraphVertex
     fun addDevice(deviceId: String, platform: String): GraphVertex          // findOrCreate by deviceId
     fun addIpAddress(ip: String, asn: String = ""): GraphVertex             // findOrCreate by ip
@@ -100,12 +114,20 @@ class AbuserDetectionService(
     fun linkReferral(referrerId: GraphElementId, referredId: GraphElementId, occurredAt: String = "")
 
     // Queries
-    fun findAbuseCluster(seedUserId: GraphElementId, maxDepth: Int = 4): AbuseCluster
+    // findAbuseCluster: fixed 1-hop identifier traversal (User→Identifier→User).
+    // Returns AbuseCluster(users = emptyList(), sharedIdentifiers = emptyList()) when
+    // seedUserId has no identifier links. Never throws for a valid (even non-existent) seedUserId.
+    fun findAbuseCluster(seedUserId: GraphElementId): AbuseCluster
     fun explainSuspicion(userId: GraphElementId): List<AbusePath>
     fun detectReferralLoops(maxDepth: Int = 6, maxCycles: Int = 20): List<GraphCycle>
     fun rankSuspiciousUsers(limit: Int = 10): List<SuspiciousUserScore>
 }
 ```
+
+> **Per-backend graph name isolation**: Each concrete integration test class must supply a unique
+> `graphName` to `AbuserDetectionService` (e.g., `"abuser_neo4j"`, `"abuser_memgraph"`) to
+> prevent `dropGraph` in one class from racing with graph setup in another class running
+> concurrently in the same JVM.
 
 ### 5.2 AbuserDetectionSuspendService (coroutine)
 
@@ -121,8 +143,13 @@ class AbuserDetectionSuspendService(
     suspend fun addUser(userId: String, country: String, createdAt: String = ""): GraphVertex
     // ... same mutator shape as blocking
 
-    // Streaming queries
-    suspend fun findAbuseCluster(seedUserId: GraphElementId, maxDepth: Int = 4): AbuseCluster
+    // Streaming queries — Flow-returning methods produce cold flows.
+    // The caller is responsible for collecting them within an appropriate coroutine scope.
+    // Cancellation: Flow collection honours structured concurrency; cancelling the collecting
+    // coroutine causes the flow to terminate cleanly at the next suspension point.
+    // Callers must NOT use GlobalScope for collection; use viewModelScope, lifecycleScope, or
+    // a test-scoped coroutineScope / runTest block.
+    suspend fun findAbuseCluster(seedUserId: GraphElementId): AbuseCluster
     fun explainSuspicion(userId: GraphElementId): Flow<AbusePath>
     fun detectReferralLoops(maxDepth: Int = 6, maxCycles: Int = 20): Flow<GraphCycle>
     fun rankSuspiciousUsers(limit: Int = 10): Flow<SuspiciousUserScore>
@@ -199,45 +226,57 @@ data class SuspiciousUserScore(
 
 ## 6. Algorithm Implementation Notes
 
-### `findAbuseCluster(seedUserId, maxDepth)`
+### `findAbuseCluster(seedUserId)`
 
 > **Important**: Do NOT use `edgeLabel = null` — this would traverse `REFERRED_BY` edges
 > and pull unrelated users into the cluster. Use identifier edge labels only.
+>
+> **`IdentifierEdgeLabel` vs `String`**: The `ops` API (`NeighborOptions`, `findEdgesByStartId`)
+> expects a raw `String` for `edgeLabel`. Pass `edgeLabel.value` (not the `IdentifierEdgeLabel`
+> object directly) at every call site.
 
-Multi-hop BFS restricted to identifier edges (enforces `User → Identifier → User` pattern):
+Fixed 1-hop identifier traversal (`User → Identifier → User`):
 
 ```kotlin
 val visited = mutableSetOf<GraphElementId>()
 val identifierVertices = mutableListOf<GraphVertex>()
 val clusterUsers = mutableListOf<GraphVertex>()
 
-// Step 1: hop out from seed user to identifier vertices
-val seedIdentifiers = ALL_IDENTIFIER_EDGE_LABELS.flatMap { edgeLabel ->
-    ops.neighbors(seedUserId, NeighborOptions(edgeLabel = edgeLabel, direction = OUTGOING, maxDepth = 1))
+// Step 1: hop out from seed user to identifier vertices (label-dispatched — each label
+// queries only the edges relevant to that identifier type)
+val seedIdentifiers = IdentifierEdgeLabel.all.flatMap { edgeLabel ->
+    ops.neighbors(seedUserId, NeighborOptions(edgeLabel = edgeLabel.value, direction = OUTGOING, maxDepth = 1))
 }
 identifierVertices += seedIdentifiers
 
-// Step 2: for each identifier, find all connected users
+// Step 2: for each identifier, find users connected via the SAME identifier edge label.
+// We dispatch by the vertex's own label to avoid querying a DeviceVertex for USES_IP edges.
 seedIdentifiers.forEach { identifierVertex ->
-    ALL_IDENTIFIER_EDGE_LABELS.forEach { edgeLabel ->
-        val connectedUsers = ops.neighbors(
-            identifierVertex.id,
-            NeighborOptions(edgeLabel = edgeLabel, direction = INCOMING, maxDepth = 1)
-        ).filter { it.id != seedUserId && it.id !in visited && it.label == UserLabel.label }
-        clusterUsers += connectedUsers
-        visited += connectedUsers.map { it.id }
-    }
+    // Determine the matching outgoing edge label for this identifier type
+    val matchingLabel = IdentifierEdgeLabel.all.firstOrNull { it.value == identifierVertex.label.uppercase() }
+        ?: return@forEach  // skip unrecognized vertex types
+
+    val connectedUsers = ops.neighbors(
+        identifierVertex.id,
+        NeighborOptions(edgeLabel = matchingLabel.value, direction = INCOMING, maxDepth = 1)
+    ).filter { it.id != seedUserId && it.id !in visited && it.label == UserLabel.label }
+    clusterUsers += connectedUsers
+    visited += connectedUsers.map { it.id }
 }
 
 → AbuseCluster(seedUserId, users = clusterUsers.distinct(), sharedIdentifiers = identifierVertices.distinct())
 ```
 
-Returns `AbuseCluster(users = emptyList(), sharedIdentifiers = emptyList())` when seed has no identifier links — no exception.
+> **Label-dispatch optimization**: Instead of querying all 4 edge labels per identifier vertex
+> (O(4N) round trips), the algorithm dispatches exactly 1 query per identifier vertex by
+> matching the vertex's own label to its corresponding edge label. This reduces to O(N) queries.
+
+Returns `AbuseCluster(users = emptyList(), sharedIdentifiers = emptyList())` when seed has no identifier links or seedUserId does not exist — no exception.
 
 ### `explainSuspicion(userId)`
-For each `edgeLabel` in `ALL_IDENTIFIER_EDGE_LABELS` (`USES_DEVICE`, `USES_IP`, `HAS_PHONE`, `USES_PAYMENT`):
-1. `ops.findEdgesByStartId(userId, edgeLabel)` → edges to identifier vertices
-2. For each identifier edge: `ops.neighbors(identifierId, NeighborOptions(edgeLabel, INCOMING, maxDepth=1))`
+For each `edgeLabel` in `IdentifierEdgeLabel.all` (`USES_DEVICE`, `USES_IP`, `HAS_PHONE`, `USES_PAYMENT`):
+1. `ops.findEdgesByStartId(userId, edgeLabel.value)` → edges to identifier vertices
+2. For each identifier edge: `ops.neighbors(identifierId, NeighborOptions(edgeLabel.value, INCOMING, maxDepth=1))`
 3. Filter out `userId` itself; emit `AbusePath(userId, otherUserId, identifierVertex, edgeLabel)` per other user found
 
 ### `detectReferralLoops(maxDepth, maxCycles)`
@@ -304,6 +343,9 @@ bluetape4k-workshop/
 
 ```toml
 [versions]
+# bluetape4k-graph version is pinned here until bluetape4k-dependencies BOM includes it.
+# TODO: Once bluetape4k-dependencies governs bluetape4k-graph-bom, remove this pin and
+#       reference the centrally governed alias instead. Track: bluetape4k-dependencies#<issue>.
 bluetape4k-graph = "0.4.2"   # https://mvnrepository.com/artifact/io.github.bluetape4k.graph/bluetape4k-graph-bom
 
 [libraries]
@@ -334,7 +376,19 @@ configurations {
 }
 
 tasks.test {
-    useJUnitPlatform { }
+    useJUnitPlatform {
+        excludeTags("integration")   // default run: TinkerGraph only
+    }
+}
+
+// Dedicated task for integration tests (requires Docker)
+tasks.register<Test>("integrationTest") {
+    group = "verification"
+    description = "Runs Neo4j and Memgraph integration tests (requires Docker)"
+    useJUnitPlatform {
+        includeTags("integration")
+    }
+    shouldRunAfter(tasks.test)
 }
 
 dependencies {
@@ -381,47 +435,75 @@ Exercises: `AbuserDetectionTinkerGraphTest` + `AbuserDetectionSuspendTinkerGraph
 ### Integration run (Neo4j + Memgraph via Testcontainers)
 
 ```bash
-# Run integration-tagged tests only (Docker required)
-./gradlew :graph-abuser-detection:test -Djunit.jupiter.tags="integration"
+# Run integration-tagged tests only (Docker required) via dedicated Gradle task
+./gradlew :graph-abuser-detection:integrationTest
 
-# Run ALL tests including integration (unfiltered)
-./gradlew :graph-abuser-detection:test -Djunit.jupiter.execution.exclude.tags=""
+# Run ALL tests including integration (both tasks)
+./gradlew :graph-abuser-detection:test :graph-abuser-detection:integrationTest
 ```
 
 > ⚠️ **Docker required** for integration tests. Integration test classes must use
-> `org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable` or `Assumptions.assumeTrue(DockerClientFactory.instance().isDockerAvailable)`
-> in `@BeforeAll` to produce a readable skip instead of an initialization error on machines without Docker.
+> **`bluetape4k-testcontainers` singleton launcher patterns** — do NOT instantiate `GenericContainer` directly
+> or call `DockerClientFactory.instance().isDockerAvailable`. Use `Neo4jServer.Launcher.neo4j` and
+> `MemgraphServer.Launcher.memgraph` (or equivalent launchers from `bluetape4k-testcontainers`).
+> The launcher singleton handles Docker availability checks and container lifecycle automatically.
+> See `bluetape4k-patterns` skill for the authoritative Testcontainers usage pattern.
 
 > ⚠️ **testMutex impact**: Integration tests hold the global workshop test mutex while Neo4j/Memgraph containers start
 > (30–90s on cold pull). Do NOT add integration tests to the default CI matrix. Run them only in a dedicated nightly job.
 
 ### Test isolation (MANDATORY)
 
-`AbstractAbuserDetectionTest` **must** include:
+`AbstractAbuserDetectionTest` **must** have `@TestInstance(TestInstance.Lifecycle.PER_CLASS)` so that
+`@BeforeEach` and `@AfterAll` can be declared as instance methods (required by JUnit 5 for Kotlin):
 
 ```kotlin
-@BeforeEach
-fun cleanGraph() {
-    if (ops.graphExists(graphName)) ops.dropGraph(graphName)
-    service.initialize()
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+abstract class AbstractAbuserDetectionTest {
+
+    @BeforeEach
+    fun cleanGraph() {
+        runCatching {
+            if (ops.graphExists(graphName)) ops.dropGraph(graphName)
+        }.onFailure { log.warn(it) { "dropGraph failed before test; continuing with initialize()" } }
+        service.initialize()
+    }
 }
 ```
+
+> Symmetric error handling: `@BeforeEach cleanGraph` wraps `dropGraph` in `runCatching` for the same
+> reason as `@AfterAll` — a backend error on drop must not cascade all tests in the class with the
+> same infrastructure exception.
 
 Integration-backend concrete classes (`AbuserDetectionNeo4jTest`, `AbuserDetectionMemgraphTest`) **must** include:
 
 ```kotlin
 @AfterAll
 fun teardown() {
+    // driver is owned by this test class (created in companion object / @BeforeAll).
+    // Call driver.close() exactly once; do not delegate to a parent teardown that also closes it.
     runCatching { if (ops.graphExists(graphName)) ops.dropGraph(graphName) }
     driver.close()
 }
 ```
 
-> Stale container note: If containers use `withReuse(true)`, graph data may persist across JVM sessions.
+> **Driver ownership**: The `Driver` (Neo4j) / `BoltDriver` (Memgraph) instance is created in the
+> concrete class's companion object or `@BeforeAll`. The `@AfterAll teardown` in the **concrete** class
+> is the sole owner that calls `driver.close()`. The abstract base class must NOT call `close()`.
+> This prevents double-close across the class hierarchy.
+
+> **Unique graph names**: Each concrete integration test class must pass a unique `graphName` when
+> constructing `AbuserDetectionService`:
+> - `AbuserDetectionNeo4jTest`: `graphName = "abuser_neo4j"`
+> - `AbuserDetectionMemgraphTest`: `graphName = "abuser_memgraph"`
+> This prevents `dropGraph` in one class from racing with graph setup in another class.
+
+> **Stale container note**: If containers use `withReuse(true)`, graph data may persist across JVM sessions.
 > On unexpected test failures, verify with `docker ps | grep neo4j` and remove stale containers before retrying.
 
 ### Test cases in `AbstractAbuserDetectionTest`
 
+**Happy-path tests:**
 1. `creates user and links device` — vertex + edge CRUD
 2. `finds shared-device abuse cluster — returns 2 other users (seed excluded)` — seed user1 + 2 others share device; `findAbuseCluster(user1)` returns `[user2, user3]` (NOT user1)
 3. `explains suspicion by shared device and IP` — `explainSuspicion` returns 2 `AbusePath` rows
@@ -430,12 +512,19 @@ fun teardown() {
 6. `empty graph returns empty cluster` — boundary: zero neighbors
 7. `cluster excludes unrelated users` — negative: isolated user absent from cluster
 
+**Failure-path tests (MANDATORY):**
+8. `addDevice with blank deviceId throws IllegalArgumentException` — `assertFailsWith<IllegalArgumentException> { service.addDevice("", "ios") }`
+9. `addUser with blank userId throws IllegalArgumentException` — `assertFailsWith<IllegalArgumentException> { service.addUser("", "KR") }`
+10. `findAbuseCluster with non-existent seedUserId returns empty cluster` — seed ID not in graph; result has `users.isEmpty() && sharedIdentifiers.isEmpty()`
+11. `rankSuspiciousUsers returns empty list on empty graph` — boundary: no vertices
+12. `detectReferralLoops returns empty list when no REFERRED_BY edges exist`
+
 ### Validation rules
 
 - `addUser`, `addDevice`, etc. call `requireNotBlank` per bluetape4k conventions.
-- `findAbuseCluster` validates `maxDepth in 1..10` with `require`.
 - Suspend tests use `runTest { ... }` and `coInvoking { } shouldThrow T::class` for expected exceptions.
 - Blocking exception tests use `assertFailsWith<T> { }`.
+- `findAbuseCluster` does NOT validate seedUserId format — a non-existent vertex returns an empty cluster.
 
 ---
 
@@ -444,7 +533,15 @@ fun teardown() {
 - `PhoneNumberLabel.phone`: store E.164 **hash** only (e.g. SHA-256 hex). KDoc must say "hashed phone number; never store plaintext".
 - `PaymentMethodLabel.paymentToken`: PCI-safe token from payment processor. KDoc must say "payment processor token; never store PAN or CVV".
 - `DeviceLabel.deviceId`: hashed device fingerprint. KDoc must say so.
+- `IpAddressLabel.ip`: may be stored as-is (non-PII in most jurisdictions) but hash if GDPR applies.
 - Seed data uses placeholder values (`"device-hash-a1b2c3"`, not real fingerprints).
+
+**Runtime input validation** (T1-H1): The service must call `requireNotBlank("deviceId")` (and similar)
+for all identifier parameters before calling `findOrCreate`. This prevents accidentally creating
+`""` or whitespace-only vertices that would corrupt the graph's shared-identifier detection.
+The spec does NOT validate hash format (SHA-256 length, base64 encoding, etc.) — that is the
+caller's responsibility and out of scope for a workshop example. KDoc on each mutator must state
+the expected format (e.g., `@param phone E.164 SHA-256 hex hash, not plaintext`).
 
 ---
 
@@ -456,8 +553,17 @@ fun teardown() {
 | `neighbors(BOTH, multi-hop)` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `findEdgesByStartId` | ✅ | ✅ | ✅ | ✅ | ✅ |
 | `detectCycles(single label)` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `pageRank(null labels)` | ✅ (in-memory) | ✅ | ✅ | partial | partial |
+| `pageRank(null labels)` | ✅ (in-memory) | ✅ | ✅ | partial ⚠️ | partial ⚠️ |
 | Tested in CI | ✅ | integration | integration | not exercised | not exercised |
+
+> ⚠️ **AGE / FalkorDB partial `pageRank`**: When `GraphAlgorithmRepository.pageRank()` is invoked on
+> an AGE or FalkorDB backend that does not support null vertex/edge label filters, the implementation
+> must either:
+> - Throw `UnsupportedOperationException("pageRank with null labels not supported by this backend")`, OR
+> - Log a `WARN` and return an empty list (fail-open, not silently corrupt).
+>
+> This module does NOT exercise AGE/FalkorDB backends. The behavior above is informational for
+> future integrators. TinkerGraph, Neo4j, and Memgraph all support the required `pageRank` variant.
 
 ---
 
@@ -465,11 +571,14 @@ fun teardown() {
 
 | Risk | Mitigation |
 |------|-----------|
-| testMutex serializes all workshop tests | Tag integration tests `@Tag("integration")`; default run is TinkerGraph-only (< 5s) |
+| testMutex serializes all workshop tests | Tag integration tests `@Tag("integration")`; default `test` task excludes them; use `integrationTest` task for Docker run |
 | TinkerGraph ID quirk (Long internally) | Never fabricate IDs; always reuse from `createVertex` return value |
-| `explainSuspicion` N×M calls per identifier type | Bounded by `ALL_IDENTIFIER_EDGE_LABELS.size = 4`; acceptable for example scope |
+| `explainSuspicion` N×M calls per identifier type | Bounded by `IdentifierEdgeLabel.all.size = 4`; acceptable for example scope |
 | PageRank iterates over all vertex types | Service-layer post-filter to `User`; identifier vertices don't dominate because they have low fan-in |
 | Blueprint neo4j-java-driver version needs pin | Managed by `bluetape4k-graph-bom` platform; no explicit version needed |
+| `bluetape4k-graph` version pin in libs.versions.toml | Temporary until `bluetape4k-dependencies` BOM governs it; TODO comment added |
+| Duplicate identifier vertices (findOrCreate failure) | See §5.1 findOrCreate lookup spec — vertex lookup by key property before create |
+| AGE/FalkorDB partial pageRank | Throw `UnsupportedOperationException` or return empty list with WARN log; see §11 |
 
 ---
 
@@ -501,4 +610,7 @@ fun teardown() {
 | Round 1 | User/Caller (Haiku) | 0 | 3 | 4 | 0 | in spec v2 (U2/U3 downgraded impl phase) |
 | Round 1 | Critic (Opus) | — | — | — | — | C1–C6 HIGH fixed; C7–C15 impl phase |
 | Round 1 | Codex CLI | 0 | 2 | 6 | 2 | HIGH-Codex1 (traversal fix) + HIGH-Codex2 (findOrCreate) fixed in spec v2 |
-| **Round 1 final** | **All reviewers** | **0** | **0** | impl-phase | low | **PROCEED** |
+| **Round 1 final** | **All reviewers** | **0** | **0** | impl-phase | low | spec v2 committed |
+| Round 2 | 6-tier advisor (Sonnet) | 0 | 9 | 2 | 0 | in spec v3 (T1-H1 hash validation note, T2-H1/H2 driver+graphName isolation, T3-H1 version governance TODO, T4-H1 timestamp guidance, T4-H2 Flow cancellation contract, T5-H1 failure-path tests, T5-H2 backend fallback, T6-H1 label-dispatch optimization) |
+| Round 2 | Developer (Sonnet) | 0 | 2 | 2 | 0 | in spec v3 (H1 maxDepth removed, H2 ALL_IDENTIFIER_EDGE_LABELS → IdentifierEdgeLabel.all, M1 .value unwrap note, M2 findOrCreate lookup) |
+| Round 2 | Ops/SRE (Sonnet) | 0 | 2 | 1 | 0 | in spec v3 (H1 @TestInstance(PER_CLASS), H2 integrationTest Gradle task, M asymmetric runCatching) |
