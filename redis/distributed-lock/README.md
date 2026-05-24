@@ -218,10 +218,107 @@ For a stock-100/qty-10 test:
 
 ---
 
+## Used bluetape4k Features
+
+| Feature | Artifact | Code Location | Benefit |
+|---|---|---|---|
+| `RedisServer.Launcher.redis` | `bluetape4k-testcontainers` | `AbstractDistributedLockTest` companion | Testcontainers Redis singleton — one-line setup, no `@DynamicPropertySource` |
+| `redissonClient {}` DSL | `bluetape4k-redisson` | `AbstractDistributedLockTest.redisson` | Kotlin DSL for `RedissonClient` — eliminates `Config()` boilerplate |
+| `getLockId(lockName)` | `bluetape4k-redis` (`coroutines` package) | `SuspendingFencedInventoryService.deduct()` | Coroutine-safe Snowflake ID for `RFencedLock` identity — required for two-step async acquire |
+| `KLoggingChannel` | `bluetape4k-logging` | All companion objects | Coroutine-context-aware structured logging |
+| `requirePositiveNumber` | `bluetape4k-core` | `SuspendingFencedInventoryService.deduct()` | Inline argument validation — throws `IllegalArgumentException` with a clear message |
+| `SuspendedJobTester` | `bluetape4k-junit5` | `SuspendFencedLockTest` | Reproducible coroutine concurrency harness — deterministic race verification |
+| `MultithreadingTester` | `bluetape4k-junit5` | `DistributedLockTest` | Fixed-thread-pool concurrency verification for OS-thread lock scenarios |
+
+---
+
+## bluetape4k Before / After
+
+### `RedisServer.Launcher` vs Manual Testcontainers Redis
+
+```kotlin
+// Before — manual container + @DynamicPropertySource
+@SpringBootTest
+class LockTest {
+    companion object {
+        @Container
+        val redis = GenericContainer("redis:7").withExposedPorts(6379)
+
+        @JvmStatic
+        @DynamicPropertySource
+        fun props(registry: DynamicPropertyRegistry) {
+            registry.add("spring.redis.url") { "redis://${redis.host}:${redis.getMappedPort(6379)}" }
+        }
+    }
+}
+
+// After — bluetape4k singleton (one line in AbstractDistributedLockTest)
+abstract class AbstractDistributedLockTest {
+    companion object : KLoggingChannel() {
+        val redis = RedisServer.Launcher.redis          // auto-started, auto-cleaned up
+        val redisUrl: String get() = redis.url
+    }
+
+    protected val redisson: RedissonClient by lazy {
+        redissonClient {                                // bluetape4k DSL
+            useSingleServer().setAddress(redisUrl)
+        }
+    }
+}
+```
+
+### Coroutine-Native Fenced Lock — Two-Step Acquire + `NonCancellable` Unlock
+
+```kotlin
+// Before — blocking tryLockAndGetToken (blocks the calling thread)
+val token: Long = fLock.tryLockAndGetToken(waitMs, leaseMs, MILLISECONDS)
+try {
+    // work
+} finally {
+    fLock.unlock()  // may throw if coroutine was cancelled before this line
+}
+
+// After — suspend-friendly two-step acquire with NonCancellable unlock guard
+val lockId = redisson.getLockId(lockName)           // bluetape4k: Snowflake ID for coroutine identity
+val acquired = fLock.tryLockAsync(waitMs, leaseMs, MILLISECONDS, lockId).await()
+if (!acquired) return LockNotAcquired(lockName)
+val token: Long = fLock.tokenAsync.await()          // separate token step (no combined overload in Redisson 4.x)
+try {
+    /* work */
+} finally {
+    // CRITICAL: without NonCancellable, a cancelled coroutine never completes unlockAsync
+    // and the lock leaks until lease expiry
+    withContext(NonCancellable) {
+        fLock.unlockAsync(lockId).await()
+    }
+}
+```
+
+### `SuspendedJobTester` — Reproducible Coroutine Race Verification
+
+```kotlin
+// Before — manual coroutine launch (non-deterministic, hard to tune worker count)
+val results = (1..20).map {
+    async { suspendingService.deduct(inventoryId, qty = 10) }
+}.awaitAll()
+
+// After — bluetape4k SuspendedJobTester (fixed workers × rounds = total attempts)
+SuspendedJobTester()
+    .workers(20)    // 20 coroutine workers
+    .rounds(1)      // 1 round each → 20 total attempts, exactly 10 succeed (stock=100, qty=10)
+    .add {
+        suspendingService.deduct(inventoryId, qty = 10, waitMs = 3000L, leaseMs = 5000L)
+    }
+    .run()
+```
+
+---
+
 ## Dependencies
 
 - **Redisson** — `RLock`, `RFencedLock`, async API
 - **bluetape4k-redisson** — `getLockId()` (Snowflake ID), `redissonClient {}` DSL
+- **bluetape4k-redis** — `getLockId()` coroutines extension (`io.bluetape4k.redis.redisson.coroutines`)
 - **bluetape4k-coroutines** — `awaitSuspending()`, `io.bluetape4k.logging.coroutines`
 - **bluetape4k-testcontainers** — `RedisServer.Launcher.redis` Testcontainers singleton
 - **kotlinx.atomicfu** — `atomic(0L)` for `FencedResource.lastSeenToken`
