@@ -69,7 +69,7 @@
 <text class="small" x="672" y="360" fill="#536273">EmployeeService</text>
 
 <!-- Bottom band -->
-<rect class="card" x="48" y="382" width="864" height="48" rx="10" fill="#0d2435" stroke="#0d2435" filter="url(#shadow)"/>
-<text class="small" x="480" y="402" text-anchor="middle" fill="#dbeafe">Module boundaries enforced by Spring Modulith — cross-module access via @NamedInterface only</text>
-<text class="small" x="480" y="420" text-anchor="middle" fill="#dbeafe">JPA Testcontainers — H2 in-process for tests · spring-modulith-jpa-demo module</text>
+<rect class="card" x="48" y="382" width="864" height="48" rx="10" fill="#E9F7F6" stroke="#45A7A1" filter="url(#shadow)"/>
+<text class="small" x="480" y="402" text-anchor="middle" fill="#536273">Module boundaries enforced by Spring Modulith — cross-module access via @NamedInterface only</text>
+<text class="small" x="480" y="420" text-anchor="middle" fill="#536273">JPA Testcontainers — H2 in-process for tests · spring-modulith-jpa-demo module</text>
 </svg>

@@ -29,35 +29,35 @@
 <!-- Client -->
 <g transform="translate(34,104)">
   <rect class="card" x="0" y="0" width="112" height="68" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="56" y="28" text-anchor="middle">HTTP</text>
-  <text class="smallLabel" x="56" y="52" text-anchor="middle">Client</text>
+  <text class="smallLabel" style="font-size:17px" x="56" y="28" text-anchor="middle">HTTP</text>
+  <text class="smallLabel" style="font-size:17px" x="56" y="52" text-anchor="middle">Client</text>
   <text class="small" x="56" y="66" text-anchor="middle">protobuf accept</text>
 </g>
 <!-- CourseController -->
 <g transform="translate(200,104)">
   <rect class="card" x="0" y="0" width="120" height="68" rx="12" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="60" y="28" text-anchor="middle">Course</text>
-  <text class="smallLabel" x="60" y="52" text-anchor="middle">Controller</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="28" text-anchor="middle">Course</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="52" text-anchor="middle">Controller</text>
 </g>
 <!-- ProtobufConverter -->
 <g transform="translate(400,104)">
   <rect class="card" x="0" y="0" width="140" height="68" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="70" y="26" text-anchor="middle">Protobuf</text>
-  <text class="smallLabel" x="70" y="50" text-anchor="middle">Converter</text>
+  <text class="smallLabel" style="font-size:17px" x="70" y="26" text-anchor="middle">Protobuf</text>
+  <text class="smallLabel" style="font-size:17px" x="70" y="50" text-anchor="middle">Converter</text>
   <text class="small" x="70" y="66" text-anchor="middle">Kotlin ↔ .proto</text>
 </g>
 <!-- ProtobufHttpMessageConverter -->
 <g transform="translate(606,104)">
   <rect class="card" x="0" y="0" width="140" height="68" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="smallLabel" x="70" y="26" text-anchor="middle">Protobuf</text>
-  <text class="smallLabel" x="70" y="50" text-anchor="middle">MsgConverter</text>
+  <text class="smallLabel" style="font-size:17px" x="70" y="26" text-anchor="middle">Protobuf</text>
+  <text class="smallLabel" style="font-size:17px" x="70" y="50" text-anchor="middle">MsgConverter</text>
   <text class="small" x="70" y="66" text-anchor="middle">Spring</text>
 </g>
 <!-- CourseRepository -->
 <g transform="translate(808,104)">
   <rect class="card" x="0" y="0" width="128" height="68" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="64" y="26" text-anchor="middle">Course</text>
-  <text class="smallLabel" x="64" y="50" text-anchor="middle">Repository</text>
+  <text class="smallLabel" style="font-size:17px" x="64" y="26" text-anchor="middle">Course</text>
+  <text class="smallLabel" style="font-size:17px" x="64" y="50" text-anchor="middle">Repository</text>
 </g>
 
 <!-- Lifelines cx: 90, 260, 470, 676, 872 -->

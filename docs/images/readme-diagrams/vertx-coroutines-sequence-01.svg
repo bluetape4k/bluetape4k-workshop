@@ -26,16 +26,16 @@
 
 <!-- Participant headers -->
 <rect class="card" x="60" y="108" width="120" height="44" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="120" y="136" text-anchor="middle">Client</text>
+<text class="smallLabel" style="font-size:17px" x="120" y="136" text-anchor="middle">Client</text>
 
 <rect class="card" x="272" y="108" width="120" height="44" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-<text class="smallLabel" x="332" y="136" text-anchor="middle">Router</text>
+<text class="smallLabel" style="font-size:17px" x="332" y="136" text-anchor="middle">Router</text>
 
 <rect class="card" x="484" y="108" width="140" height="44" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-<text class="smallLabel" x="554" y="136" text-anchor="middle">suspendHandler</text>
+<text class="smallLabel" style="font-size:17px" x="554" y="136" text-anchor="middle">suspendHandler</text>
 
 <rect class="card" x="708" y="108" width="120" height="44" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-<text class="smallLabel" x="768" y="136" text-anchor="middle">JDBCPool</text>
+<text class="smallLabel" style="font-size:17px" x="768" y="136" text-anchor="middle">JDBCPool</text>
 
 <!-- Lifelines -->
 <line class="lifeline" x1="120" y1="152" x2="120" y2="428"/>

@@ -26,16 +26,16 @@
 
 <!-- Participant headers -->
 <rect class="card" x="60" y="108" width="120" height="44" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="120" y="136" text-anchor="middle">Test</text>
+<text class="smallLabel" style="font-size:17px" x="120" y="136" text-anchor="middle">Test</text>
 
 <rect class="card" x="248" y="108" width="150" height="44" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-<text class="smallLabel" x="323" y="136" text-anchor="middle">WebClient</text>
+<text class="smallLabel" style="font-size:17px" x="323" y="136" text-anchor="middle">WebClient</text>
 
 <rect class="card" x="476" y="108" width="150" height="44" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-<text class="smallLabel" x="551" y="136" text-anchor="middle">HttpRequest</text>
+<text class="smallLabel" style="font-size:17px" x="551" y="136" text-anchor="middle">HttpRequest</text>
 
 <rect class="card" x="704" y="108" width="160" height="44" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-<text class="smallLabel" x="784" y="136" text-anchor="middle">CoroutineServer</text>
+<text class="smallLabel" style="font-size:17px" x="784" y="136" text-anchor="middle">CoroutineServer</text>
 
 <!-- Lifelines -->
 <line class="lifeline" x1="120" y1="152" x2="120" y2="428"/>

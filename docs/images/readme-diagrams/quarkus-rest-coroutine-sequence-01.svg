@@ -28,18 +28,18 @@
 
 <!-- Participants: Client=110, CoroutineResource=310, Service=530, Database=770 -->
 <rect class="card" x="26" y="108" width="168" height="56" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="110" y="139" text-anchor="middle">Client</text>
+<text class="smallLabel" style="font-size:17px" x="110" y="139" text-anchor="middle">Client</text>
 
 <rect class="card" x="226" y="108" width="168" height="56" rx="12" fill="#EAF7EF" stroke="#58A978"/>
-<text class="smallLabel" x="310" y="132" text-anchor="middle">Coroutine</text>
+<text class="smallLabel" style="font-size:17px" x="310" y="132" text-anchor="middle">Coroutine</text>
 <text class="small" x="310" y="151" text-anchor="middle">Resource</text>
 
 <rect class="card" x="446" y="108" width="168" height="56" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
-<text class="smallLabel" x="530" y="132" text-anchor="middle">Service</text>
+<text class="smallLabel" style="font-size:17px" x="530" y="132" text-anchor="middle">Service</text>
 <text class="small" x="530" y="151" text-anchor="middle">suspend fun</text>
 
 <rect class="card" x="686" y="108" width="168" height="56" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
-<text class="smallLabel" x="770" y="132" text-anchor="middle">Database</text>
+<text class="smallLabel" style="font-size:17px" x="770" y="132" text-anchor="middle">Database</text>
 <text class="small" x="770" y="151" text-anchor="middle">Reactive driver</text>
 
 <!-- Lifelines -->

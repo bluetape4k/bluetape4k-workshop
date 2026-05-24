@@ -25,7 +25,7 @@
 
 <!-- Lifeline headers -->
 <rect class="card" x="24" y="96" width="160" height="48" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="104" y="126" text-anchor="middle">UserController</text>
+<text class="smallLabel" style="font-size:17px" x="104" y="126" text-anchor="middle">UserController</text>
 <line class="lifeline" x1="104" y1="144" x2="104" y2="472"/>
 
 <rect class="card" x="240" y="96" width="160" height="48" rx="14" fill="#EAF7EF" stroke="#58A978"/>

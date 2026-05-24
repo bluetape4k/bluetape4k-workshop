@@ -31,19 +31,19 @@
 <!-- Participant headers (y=100, h=40) -->
 <g transform="translate(24,100)">
   <rect class="card" x="0" y="0" width="152" height="40" rx="8" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="76" y="26" text-anchor="middle">Client</text>
+  <text class="smallLabel" style="font-size:17px" x="76" y="26" text-anchor="middle">Client</text>
 </g>
 <g transform="translate(224,100)">
   <rect class="card" x="0" y="0" width="152" height="40" rx="8" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="76" y="26" text-anchor="middle">Bucket4j Filter</text>
+  <text class="smallLabel" style="font-size:17px" x="76" y="26" text-anchor="middle">Bucket4j Filter</text>
 </g>
 <g transform="translate(444,100)">
   <rect class="card" x="0" y="0" width="152" height="40" rx="8" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="76" y="26" text-anchor="middle">IndexController</text>
+  <text class="smallLabel" style="font-size:17px" x="76" y="26" text-anchor="middle">IndexController</text>
 </g>
 <g transform="translate(664,100)">
   <rect class="card" x="0" y="0" width="256" height="40" rx="8" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="smallLabel" x="128" y="26" text-anchor="middle">Caffeine Bucket</text>
+  <text class="smallLabel" style="font-size:17px" x="128" y="26" text-anchor="middle">Caffeine Bucket</text>
 </g>
 
 <!-- Lifelines -->

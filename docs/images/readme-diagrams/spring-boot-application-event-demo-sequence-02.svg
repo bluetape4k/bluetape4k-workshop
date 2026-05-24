@@ -30,36 +30,36 @@
 <!-- MyEventService -->
 <g transform="translate(50,104)">
   <rect class="card" x="0" y="0" width="120" height="72" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="60" y="26" text-anchor="middle">MyEvent</text>
-  <text class="smallLabel" x="60" y="50" text-anchor="middle">Service</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="26" text-anchor="middle">MyEvent</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="50" text-anchor="middle">Service</text>
   <text class="small" x="60" y="68" text-anchor="middle">@AspectEmitter</text>
 </g>
 <!-- AspectEventPublisherAspect -->
 <g transform="translate(210,104)">
   <rect class="card" x="0" y="0" width="130" height="72" rx="12" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="65" y="24" text-anchor="middle">Aspect</text>
-  <text class="smallLabel" x="65" y="46" text-anchor="middle">Publisher</text>
+  <text class="smallLabel" style="font-size:17px" x="65" y="24" text-anchor="middle">Aspect</text>
+  <text class="smallLabel" style="font-size:17px" x="65" y="46" text-anchor="middle">Publisher</text>
   <text class="small" x="65" y="66" text-anchor="middle">@Around advice</text>
 </g>
 <!-- ApplicationEventPublisher -->
 <g transform="translate(400,104)">
   <rect class="card" x="0" y="0" width="120" height="72" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="60" y="26" text-anchor="middle">AppEvent</text>
-  <text class="smallLabel" x="60" y="50" text-anchor="middle">Publisher</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="26" text-anchor="middle">AppEvent</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="50" text-anchor="middle">Publisher</text>
   <text class="small" x="60" y="68" text-anchor="middle">Spring</text>
 </g>
 <!-- AspectEventListener -->
 <g transform="translate(580,104)">
   <rect class="card" x="0" y="0" width="130" height="72" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="65" y="26" text-anchor="middle">Aspect</text>
-  <text class="smallLabel" x="65" y="50" text-anchor="middle">Event</text>
+  <text class="smallLabel" style="font-size:17px" x="65" y="26" text-anchor="middle">Aspect</text>
+  <text class="smallLabel" style="font-size:17px" x="65" y="50" text-anchor="middle">Event</text>
   <text class="small" x="65" y="68" text-anchor="middle">Listener</text>
 </g>
 <!-- CoroutineAspectEventListener -->
 <g transform="translate(770,104)">
   <rect class="card" x="0" y="0" width="130" height="72" rx="12" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="smallLabel" x="65" y="24" text-anchor="middle">Coroutine</text>
-  <text class="smallLabel" x="65" y="46" text-anchor="middle">Aspect</text>
+  <text class="smallLabel" style="font-size:17px" x="65" y="24" text-anchor="middle">Coroutine</text>
+  <text class="smallLabel" style="font-size:17px" x="65" y="46" text-anchor="middle">Aspect</text>
   <text class="small" x="65" y="66" text-anchor="middle">EventListener</text>
 </g>
 

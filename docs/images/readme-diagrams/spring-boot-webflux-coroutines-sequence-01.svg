@@ -29,34 +29,34 @@
 <!-- HTTP Client -->
 <g transform="translate(34,104)">
   <rect class="card" x="0" y="0" width="112" height="68" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="56" y="30" text-anchor="middle">HTTP</text>
-  <text class="smallLabel" x="56" y="54" text-anchor="middle">Client</text>
+  <text class="smallLabel" style="font-size:17px" x="56" y="30" text-anchor="middle">HTTP</text>
+  <text class="smallLabel" style="font-size:17px" x="56" y="54" text-anchor="middle">Client</text>
 </g>
 <!-- Netty Server -->
 <g transform="translate(200,104)">
   <rect class="card" x="0" y="0" width="120" height="68" rx="12" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="60" y="26" text-anchor="middle">Netty</text>
-  <text class="smallLabel" x="60" y="50" text-anchor="middle">Server</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="26" text-anchor="middle">Netty</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="50" text-anchor="middle">Server</text>
   <text class="small" x="60" y="66" text-anchor="middle">non-blocking I/O</text>
 </g>
 <!-- CoroutineController -->
 <g transform="translate(416,104)">
   <rect class="card" x="0" y="0" width="150" height="68" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="75" y="26" text-anchor="middle">Coroutine</text>
-  <text class="smallLabel" x="75" y="50" text-anchor="middle">Controller</text>
+  <text class="smallLabel" style="font-size:17px" x="75" y="26" text-anchor="middle">Coroutine</text>
+  <text class="smallLabel" style="font-size:17px" x="75" y="50" text-anchor="middle">Controller</text>
   <text class="small" x="75" y="66" text-anchor="middle">suspend fun</text>
 </g>
 <!-- Dispatchers.IO -->
 <g transform="translate(630,104)">
   <rect class="card" x="0" y="0" width="140" height="68" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="smallLabel" x="70" y="26" text-anchor="middle">Dispatchers</text>
-  <text class="smallLabel" x="70" y="50" text-anchor="middle">.IO</text>
+  <text class="smallLabel" style="font-size:17px" x="70" y="26" text-anchor="middle">Dispatchers</text>
+  <text class="smallLabel" style="font-size:17px" x="70" y="50" text-anchor="middle">.IO</text>
   <text class="small" x="70" y="66" text-anchor="middle">or VT</text>
 </g>
 <!-- Service -->
 <g transform="translate(810,104)">
   <rect class="card" x="0" y="0" width="126" height="68" rx="12" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="smallLabel" x="63" y="30" text-anchor="middle">Service</text>
+  <text class="smallLabel" style="font-size:17px" x="63" y="30" text-anchor="middle">Service</text>
   <text class="small" x="63" y="52" text-anchor="middle">suspend fun</text>
   <text class="small" x="63" y="68" text-anchor="middle">external call</text>
 </g>

@@ -22,19 +22,19 @@
 
 <!-- Participants -->
 <rect class="card" x="40" y="108" width="110" height="44" rx="8" fill="#FDECEF" stroke="#DC6B82"/>
-<text class="smallLabel" x="95" y="135" text-anchor="middle">Client</text>
+<text class="smallLabel" style="font-size:17px" x="95" y="135" text-anchor="middle">Client</text>
 
 <rect class="card" x="200" y="108" width="150" height="44" rx="8" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="275" y="135" text-anchor="middle">UserHandler</text>
+<text class="smallLabel" style="font-size:17px" x="275" y="135" text-anchor="middle">UserHandler</text>
 
 <rect class="card" x="410" y="108" width="150" height="44" rx="8" fill="#FFF3D9" stroke="#D6A441"/>
-<text class="smallLabel" x="485" y="135" text-anchor="middle">UserService</text>
+<text class="smallLabel" style="font-size:17px" x="485" y="135" text-anchor="middle">UserService</text>
 
 <rect class="card" x="620" y="108" width="150" height="44" rx="8" fill="#F1ECFF" stroke="#8A72D6"/>
-<text class="smallLabel" x="695" y="135" text-anchor="middle">UserRepository</text>
+<text class="smallLabel" style="font-size:17px" x="695" y="135" text-anchor="middle">UserRepository</text>
 
 <rect class="card" x="820" y="108" width="110" height="44" rx="8" fill="#E9F7F6" stroke="#45A7A1"/>
-<text class="smallLabel" x="875" y="135" text-anchor="middle">H2 R2DBC</text>
+<text class="smallLabel" style="font-size:17px" x="875" y="135" text-anchor="middle">H2 R2DBC</text>
 
 <!-- Lifelines -->
 <line class="lifeline" x1="95" y1="152" x2="95" y2="440"/>

@@ -29,23 +29,23 @@
 <!-- Participant headers (y=100, h=40) -->
 <g transform="translate(40,100)">
   <rect class="card" x="0" y="0" width="140" height="40" rx="8" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="70" y="26" text-anchor="middle">Client</text>
+  <text class="smallLabel" style="font-size:17px" x="70" y="26" text-anchor="middle">Client</text>
 </g>
 <g transform="translate(210,100)">
   <rect class="card" x="0" y="0" width="140" height="40" rx="8" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="70" y="26" text-anchor="middle">PingController</text>
+  <text class="smallLabel" style="font-size:17px" x="70" y="26" text-anchor="middle">PingController</text>
 </g>
 <g transform="translate(400,100)">
   <rect class="card" x="0" y="0" width="160" height="40" rx="8" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="80" y="26" text-anchor="middle">ReplyingKafkaTemplate</text>
+  <text class="smallLabel" style="font-size:17px" x="80" y="26" text-anchor="middle">ReplyingKafkaTemplate</text>
 </g>
 <g transform="translate(600,100)">
   <rect class="card" x="0" y="0" width="140" height="40" rx="8" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="smallLabel" x="70" y="26" text-anchor="middle">Kafka Broker</text>
+  <text class="smallLabel" style="font-size:17px" x="70" y="26" text-anchor="middle">Kafka Broker</text>
 </g>
 <g transform="translate(790,100)">
   <rect class="card" x="0" y="0" width="140" height="40" rx="8" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="70" y="26" text-anchor="middle">PongHandler</text>
+  <text class="smallLabel" style="font-size:17px" x="70" y="26" text-anchor="middle">PongHandler</text>
 </g>
 
 <!-- Lifelines (from y=140 to y=520) -->

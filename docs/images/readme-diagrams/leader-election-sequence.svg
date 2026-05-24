@@ -29,22 +29,22 @@
 <!-- 5 Participants: Client, ScheduledTrigger, LeaderScheduledJobService, LeaderElector, Redis -->
 <!-- x positions: Client=86, ScheduledTrigger=250, LeaderScheduledJobService=450, LeaderElector=660, Redis=874 -->
 <rect class="card" x="26" y="108" width="120" height="56" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="86" y="139" text-anchor="middle">Client</text>
+<text class="smallLabel" style="font-size:17px" x="86" y="139" text-anchor="middle">Client</text>
 
 <rect class="card" x="170" y="108" width="160" height="56" rx="12" fill="#EAF7EF" stroke="#58A978"/>
-<text class="smallLabel" x="250" y="132" text-anchor="middle">Scheduled</text>
+<text class="smallLabel" style="font-size:17px" x="250" y="132" text-anchor="middle">Scheduled</text>
 <text class="small" x="250" y="151" text-anchor="middle">Trigger</text>
 
 <rect class="card" x="354" y="108" width="192" height="56" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
-<text class="smallLabel" x="450" y="132" text-anchor="middle">LeaderScheduled</text>
+<text class="smallLabel" style="font-size:17px" x="450" y="132" text-anchor="middle">LeaderScheduled</text>
 <text class="small" x="450" y="151" text-anchor="middle">JobService</text>
 
 <rect class="card" x="566" y="108" width="188" height="56" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
-<text class="smallLabel" x="660" y="132" text-anchor="middle">LeaderElector</text>
+<text class="smallLabel" style="font-size:17px" x="660" y="132" text-anchor="middle">LeaderElector</text>
 <text class="small" x="660" y="151" text-anchor="middle">Lettuce</text>
 
 <rect class="card" x="778" y="108" width="192" height="56" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
-<text class="smallLabel" x="874" y="132" text-anchor="middle">Redis</text>
+<text class="smallLabel" style="font-size:17px" x="874" y="132" text-anchor="middle">Redis</text>
 <text class="small" x="874" y="151" text-anchor="middle">Testcontainers</text>
 
 <!-- Lifelines -->

@@ -29,36 +29,36 @@
 <!-- Client -->
 <g transform="translate(40,104)">
   <rect class="card" x="0" y="0" width="120" height="68" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="60" y="28" text-anchor="middle">HTTP</text>
-  <text class="smallLabel" x="60" y="52" text-anchor="middle">Client</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="28" text-anchor="middle">HTTP</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="52" text-anchor="middle">Client</text>
   <text class="small" x="60" y="66" text-anchor="middle">Accept: CBOR</text>
 </g>
 <!-- CborConfig -->
 <g transform="translate(220,104)">
   <rect class="card" x="0" y="0" width="120" height="68" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="smallLabel" x="60" y="28" text-anchor="middle">Cbor</text>
-  <text class="smallLabel" x="60" y="52" text-anchor="middle">Config</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="28" text-anchor="middle">Cbor</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="52" text-anchor="middle">Config</text>
   <text class="small" x="60" y="66" text-anchor="middle">CBORMapper</text>
 </g>
 <!-- CourseController -->
 <g transform="translate(420,104)">
   <rect class="card" x="0" y="0" width="130" height="68" rx="12" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="65" y="28" text-anchor="middle">Course</text>
-  <text class="smallLabel" x="65" y="52" text-anchor="middle">Controller</text>
+  <text class="smallLabel" style="font-size:17px" x="65" y="28" text-anchor="middle">Course</text>
+  <text class="smallLabel" style="font-size:17px" x="65" y="52" text-anchor="middle">Controller</text>
   <text class="small" x="65" y="66" text-anchor="middle">@RestController</text>
 </g>
 <!-- HttpMessageConverter -->
 <g transform="translate(620,104)">
   <rect class="card" x="0" y="0" width="140" height="68" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="70" y="26" text-anchor="middle">HttpMsg</text>
-  <text class="smallLabel" x="70" y="48" text-anchor="middle">Converter</text>
+  <text class="smallLabel" style="font-size:17px" x="70" y="26" text-anchor="middle">HttpMsg</text>
+  <text class="smallLabel" style="font-size:17px" x="70" y="48" text-anchor="middle">Converter</text>
   <text class="small" x="70" y="66" text-anchor="middle">CBOR-aware</text>
 </g>
 <!-- CourseRepository -->
 <g transform="translate(800,104)">
   <rect class="card" x="0" y="0" width="136" height="68" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="68" y="26" text-anchor="middle">Course</text>
-  <text class="smallLabel" x="68" y="50" text-anchor="middle">Repository</text>
+  <text class="smallLabel" style="font-size:17px" x="68" y="26" text-anchor="middle">Course</text>
+  <text class="smallLabel" style="font-size:17px" x="68" y="50" text-anchor="middle">Repository</text>
   <text class="small" x="68" y="66" text-anchor="middle">in-memory</text>
 </g>
 

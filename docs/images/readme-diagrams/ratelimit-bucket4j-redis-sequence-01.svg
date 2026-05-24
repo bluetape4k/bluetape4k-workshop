@@ -32,23 +32,23 @@
 <!-- Participant headers (y=100, h=40) -->
 <g transform="translate(24,100)">
   <rect class="card" x="0" y="0" width="132" height="40" rx="8" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="66" y="26" text-anchor="middle">Client</text>
+  <text class="smallLabel" style="font-size:17px" x="66" y="26" text-anchor="middle">Client</text>
 </g>
 <g transform="translate(196,100)">
   <rect class="card" x="0" y="0" width="168" height="40" rx="8" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="84" y="26" text-anchor="middle">UserRateLimit Filter</text>
+  <text class="smallLabel" style="font-size:17px" x="84" y="26" text-anchor="middle">UserRateLimit Filter</text>
 </g>
 <g transform="translate(424,100)">
   <rect class="card" x="0" y="0" width="200" height="40" rx="8" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="smallLabel" x="100" y="26" text-anchor="middle">DistributedRateLimiter</text>
+  <text class="smallLabel" style="font-size:17px" x="100" y="26" text-anchor="middle">DistributedRateLimiter</text>
 </g>
 <g transform="translate(700,100)">
   <rect class="card" x="0" y="0" width="150" height="40" rx="8" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="75" y="26" text-anchor="middle">Redis</text>
+  <text class="smallLabel" style="font-size:17px" x="75" y="26" text-anchor="middle">Redis</text>
 </g>
 <g transform="translate(920,100)">
   <rect class="card" x="0" y="0" width="96" height="40" rx="8" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="48" y="26" text-anchor="middle">Controller</text>
+  <text class="smallLabel" style="font-size:17px" x="48" y="26" text-anchor="middle">Controller</text>
 </g>
 
 <!-- Lifelines: cx = 90, 280, 524, 775, 968 -->

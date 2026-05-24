@@ -30,22 +30,22 @@
 <!-- Participants at y=108 -->
 <!-- x: Client=100, Resource=260, PanacheEntity=460, SessionFactory=660, PostgreSQL=860 -->
 <rect class="card" x="26" y="108" width="148" height="56" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="100" y="139" text-anchor="middle">Client</text>
+<text class="smallLabel" style="font-size:17px" x="100" y="139" text-anchor="middle">Client</text>
 
 <rect class="card" x="186" y="108" width="148" height="56" rx="12" fill="#EAF7EF" stroke="#58A978"/>
-<text class="smallLabel" x="260" y="132" text-anchor="middle">Resource</text>
+<text class="smallLabel" style="font-size:17px" x="260" y="132" text-anchor="middle">Resource</text>
 <text class="small" x="260" y="152" text-anchor="middle">RESTEasy</text>
 
 <rect class="card" x="386" y="108" width="148" height="56" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
-<text class="smallLabel" x="460" y="132" text-anchor="middle">PanacheEntity</text>
+<text class="smallLabel" style="font-size:17px" x="460" y="132" text-anchor="middle">PanacheEntity</text>
 <text class="small" x="460" y="152" text-anchor="middle">Reactive ORM</text>
 
 <rect class="card" x="586" y="108" width="148" height="56" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
-<text class="smallLabel" x="660" y="132" text-anchor="middle">SessionFactory</text>
+<text class="smallLabel" style="font-size:17px" x="660" y="132" text-anchor="middle">SessionFactory</text>
 <text class="small" x="660" y="152" text-anchor="middle">Hibernate</text>
 
 <rect class="card" x="786" y="108" width="148" height="56" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
-<text class="smallLabel" x="860" y="132" text-anchor="middle">PostgreSQL</text>
+<text class="smallLabel" style="font-size:17px" x="860" y="132" text-anchor="middle">PostgreSQL</text>
 <text class="small" x="860" y="152" text-anchor="middle">Testcontainers</text>
 
 <!-- Lifelines -->

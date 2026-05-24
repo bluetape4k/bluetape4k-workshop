@@ -36,23 +36,23 @@
 <!-- Participant headers (y=100, h=40) -->
 <g transform="translate(24,100)">
   <rect class="card" x="0" y="0" width="120" height="40" rx="8" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="60" y="26" text-anchor="middle">Client</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="26" text-anchor="middle">Client</text>
 </g>
 <g transform="translate(204,100)">
   <rect class="card" x="0" y="0" width="160" height="40" rx="8" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="80" y="26" text-anchor="middle">CoroutineController</text>
+  <text class="smallLabel" style="font-size:17px" x="80" y="26" text-anchor="middle">CoroutineController</text>
 </g>
 <g transform="translate(424,100)">
   <rect class="card" x="0" y="0" width="160" height="40" rx="8" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="80" y="26" text-anchor="middle">CoroutineService</text>
+  <text class="smallLabel" style="font-size:17px" x="80" y="26" text-anchor="middle">CoroutineService</text>
 </g>
 <g transform="translate(644,100)">
   <rect class="card" x="0" y="0" width="160" height="40" rx="8" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="smallLabel" x="80" y="26" text-anchor="middle">ObservationRegistry</text>
+  <text class="smallLabel" style="font-size:17px" x="80" y="26" text-anchor="middle">ObservationRegistry</text>
 </g>
 <g transform="translate(864,100)">
   <rect class="card" x="0" y="0" width="120" height="40" rx="8" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="60" y="26" text-anchor="middle">Zipkin</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="26" text-anchor="middle">Zipkin</text>
 </g>
 
 <!-- Lifelines (y=140 to y=520) -->

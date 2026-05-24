@@ -30,32 +30,32 @@
 <!-- Client -->
 <g transform="translate(44,104)">
   <rect class="card" x="0" y="0" width="112" height="68" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="56" y="30" text-anchor="middle">Client</text>
+  <text class="smallLabel" style="font-size:17px" x="56" y="30" text-anchor="middle">Client</text>
   <text class="small" x="56" y="52" text-anchor="middle">HTTP</text>
 </g>
 <!-- OrderController -->
 <g transform="translate(212,104)">
   <rect class="card" x="0" y="0" width="120" height="68" rx="12" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="60" y="28" text-anchor="middle">Order</text>
-  <text class="smallLabel" x="60" y="52" text-anchor="middle">Controller</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="28" text-anchor="middle">Order</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="52" text-anchor="middle">Controller</text>
 </g>
 <!-- IdempotencyService -->
 <g transform="translate(412,104)">
   <rect class="card" x="0" y="0" width="140" height="68" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="70" y="26" text-anchor="middle">Idempotency</text>
-  <text class="smallLabel" x="70" y="50" text-anchor="middle">Service</text>
+  <text class="smallLabel" style="font-size:17px" x="70" y="26" text-anchor="middle">Idempotency</text>
+  <text class="smallLabel" style="font-size:17px" x="70" y="50" text-anchor="middle">Service</text>
 </g>
 <!-- Redis -->
 <g transform="translate(622,104)">
   <rect class="card" x="0" y="0" width="120" height="68" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="60" y="30" text-anchor="middle">Redis</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="30" text-anchor="middle">Redis</text>
   <text class="small" x="60" y="52" text-anchor="middle">RMapCache</text>
 </g>
 <!-- OrderService -->
 <g transform="translate(808,104)">
   <rect class="card" x="0" y="0" width="140" height="68" rx="12" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="smallLabel" x="70" y="30" text-anchor="middle">Order</text>
-  <text class="smallLabel" x="70" y="54" text-anchor="middle">Service</text>
+  <text class="smallLabel" style="font-size:17px" x="70" y="30" text-anchor="middle">Order</text>
+  <text class="smallLabel" style="font-size:17px" x="70" y="54" text-anchor="middle">Service</text>
 </g>
 
 <!-- Lifelines cx: 100, 272, 482, 682, 878 -->

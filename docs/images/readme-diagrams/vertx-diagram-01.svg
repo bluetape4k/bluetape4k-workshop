@@ -71,6 +71,6 @@
 <text class="small" x="780" y="323" text-anchor="middle">.coAwait() → RowSet</text>
 
 <!-- Bottom band -->
-<rect class="card" x="48" y="350" width="864" height="44" rx="10" fill="#0d2435" stroke="#0d2435" filter="url(#shadow)"/>
-<text class="smallLabel" x="480" y="378" text-anchor="middle" fill="#ffffff">Testcontainers — MySQL8Server.Launcher.mysql singleton</text>
+<rect class="card" x="48" y="350" width="864" height="44" rx="10" fill="#E9F7F6" stroke="#45A7A1" filter="url(#shadow)"/>
+<text class="smallLabel" x="480" y="378" text-anchor="middle" fill="#102033">Testcontainers — MySQL8Server.Launcher.mysql singleton</text>
 </svg>

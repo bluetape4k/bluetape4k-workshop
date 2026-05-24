@@ -29,36 +29,36 @@
 <!-- Browser/Client -->
 <g transform="translate(40,104)">
   <rect class="card" x="0" y="0" width="120" height="68" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="60" y="28" text-anchor="middle">Browser</text>
-  <text class="smallLabel" x="60" y="52" text-anchor="middle">Client</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="28" text-anchor="middle">Browser</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="52" text-anchor="middle">Client</text>
   <text class="small" x="60" y="66" text-anchor="middle">SockJS</text>
 </g>
 <!-- WebSocketConfig -->
 <g transform="translate(210,104)">
   <rect class="card" x="0" y="0" width="130" height="68" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="smallLabel" x="65" y="24" text-anchor="middle">WebSocket</text>
-  <text class="smallLabel" x="65" y="48" text-anchor="middle">Config</text>
+  <text class="smallLabel" style="font-size:17px" x="65" y="24" text-anchor="middle">WebSocket</text>
+  <text class="smallLabel" style="font-size:17px" x="65" y="48" text-anchor="middle">Config</text>
   <text class="small" x="65" y="66" text-anchor="middle">/gs-guide-ws</text>
 </g>
 <!-- SimpleBroker -->
 <g transform="translate(416,104)">
   <rect class="card" x="0" y="0" width="130" height="68" rx="12" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="65" y="28" text-anchor="middle">Simple</text>
-  <text class="smallLabel" x="65" y="52" text-anchor="middle">Broker</text>
+  <text class="smallLabel" style="font-size:17px" x="65" y="28" text-anchor="middle">Simple</text>
+  <text class="smallLabel" style="font-size:17px" x="65" y="52" text-anchor="middle">Broker</text>
   <text class="small" x="65" y="66" text-anchor="middle">/topic</text>
 </g>
 <!-- GreetingController -->
 <g transform="translate(626,104)">
   <rect class="card" x="0" y="0" width="140" height="68" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="70" y="26" text-anchor="middle">Greeting</text>
-  <text class="smallLabel" x="70" y="50" text-anchor="middle">Controller</text>
+  <text class="smallLabel" style="font-size:17px" x="70" y="26" text-anchor="middle">Greeting</text>
+  <text class="smallLabel" style="font-size:17px" x="70" y="50" text-anchor="middle">Controller</text>
   <text class="small" x="70" y="66" text-anchor="middle">@MessageMapping</text>
 </g>
 <!-- Subscriber -->
 <g transform="translate(812,104)">
   <rect class="card" x="0" y="0" width="120" height="68" rx="12" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="smallLabel" x="60" y="28" text-anchor="middle">Subscriber</text>
-  <text class="smallLabel" x="60" y="52" text-anchor="middle">Browser</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="28" text-anchor="middle">Subscriber</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="52" text-anchor="middle">Browser</text>
 </g>
 
 <!-- Lifelines cx: 100, 275, 481, 696, 872 -->

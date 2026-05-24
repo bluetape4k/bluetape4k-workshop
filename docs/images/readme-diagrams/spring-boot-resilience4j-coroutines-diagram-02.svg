@@ -30,8 +30,10 @@
   <text class="small" x="150" y="52" text-anchor="middle">WebTestClient · curl · httpie</text>
 </g>
 
-<!-- Arrow down from HTTP clients -->
-<path class="line" d="M480,184 L480,216"/>
+<!-- Arrows: HTTP Clients → fork bus → Controllers (orthogonal L-shape) -->
+<!-- HTTP Clients bottom center = (480, 184); bus at y=206; controllers top at y=224 -->
+<path class="line" d="M480,184 L480,206 L238,206 L238,224"/>
+<path class="line" d="M480,184 L480,206 L722,206 L722,224"/>
 
 <!-- Controllers - left (sync/reactive) -->
 <g transform="translate(48,224)">
@@ -49,18 +51,24 @@
   <text class="small" x="190" y="72" text-anchor="middle">suspend · Flow · Bulkhead · Retry</text>
 </g>
 
+<!-- Dashed arrows from controller bottoms to AOP badge top -->
+<!-- Sync Controller bottom center = (238, 316); Coroutine Controller bottom center = (722, 316) -->
+<!-- AOP badge top: y=336, left edge x=310, right entry x=400, left entry x=560 -->
+<path class="dashed" d="M238,316 L238,326 L380,326 L380,336"/>
+<path class="dashed" d="M722,316 L722,326 L580,326 L580,336"/>
+
 <!-- AOP Proxy badge (center) -->
+<!-- translate(310,336), width=340, height=44 → x=310–650, y=336–380 -->
 <g transform="translate(310,336)">
   <rect x="0" y="0" width="340" height="44" rx="20" fill="#F3E5F5" stroke="#CE93D8" stroke-width="2"/>
   <text class="smallLabel" x="170" y="27" text-anchor="middle" fill="#6A1B9A">Resilience4j AOP Proxy</text>
 </g>
 
-<!-- Dashed arrows from controllers to AOP -->
-<path class="dashed" d="M238,316 L380,336"/>
-<path class="dashed" d="M722,316 L610,336"/>
-
-<!-- Arrow down from AOP -->
-<path class="line" d="M480,380 L480,400"/>
+<!-- Arrows: AOP → Services (orthogonal, via bottom bus at y=392) -->
+<!-- AOP badge bottom = y=380; left exit x=338 (310+28), right exit x=622 (650-28) -->
+<!-- Sync Services top center = (238, 400); Coroutine Services top center = (722, 400) -->
+<path class="line" d="M338,380 L338,392 L238,392 L238,400"/>
+<path class="line" d="M622,380 L622,392 L722,392 L722,400"/>
 
 <!-- Services -->
 <g transform="translate(48,400)">
@@ -73,8 +81,4 @@
   <text class="smallLabel" x="190" y="28" text-anchor="middle">Coroutine Services</text>
   <text class="small" x="190" y="46" text-anchor="middle">BackendACoService · suspend · Flow</text>
 </g>
-
-<!-- Arrows from AOP to each service group -->
-<path class="line" d="M400,380 L238,400"/>
-<path class="line" d="M560,380 L722,400"/>
 </svg>

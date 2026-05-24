@@ -22,19 +22,19 @@
 
 <!-- Participants -->
 <rect class="card" x="40" y="108" width="110" height="44" rx="8" fill="#FDECEF" stroke="#DC6B82"/>
-<text class="smallLabel" x="95" y="135" text-anchor="middle">Client</text>
+<text class="smallLabel" style="font-size:17px" x="95" y="135" text-anchor="middle">Client</text>
 
 <rect class="card" x="200" y="108" width="150" height="44" rx="8" fill="#FDECEF" stroke="#DC6B82"/>
-<text class="smallLabel" x="275" y="135" text-anchor="middle">BookController</text>
+<text class="smallLabel" style="font-size:17px" x="275" y="135" text-anchor="middle">BookController</text>
 
 <rect class="card" x="415" y="108" width="150" height="44" rx="8" fill="#FFF3D9" stroke="#D6A441"/>
-<text class="smallLabel" x="490" y="135" text-anchor="middle">BookService</text>
+<text class="smallLabel" style="font-size:17px" x="490" y="135" text-anchor="middle">BookService</text>
 
 <rect class="card" x="630" y="108" width="150" height="44" rx="8" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="705" y="135" text-anchor="middle">BookRepository</text>
+<text class="smallLabel" style="font-size:17px" x="705" y="135" text-anchor="middle">BookRepository</text>
 
 <rect class="card" x="830" y="108" width="90" height="44" rx="8" fill="#E9F7F6" stroke="#45A7A1"/>
-<text class="smallLabel" x="875" y="135" text-anchor="middle">ES</text>
+<text class="smallLabel" style="font-size:17px" x="875" y="135" text-anchor="middle">ES</text>
 
 <!-- Lifelines -->
 <line class="lifeline" x1="95" y1="152" x2="95" y2="440"/>

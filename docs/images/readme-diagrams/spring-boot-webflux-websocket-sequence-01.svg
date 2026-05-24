@@ -29,35 +29,35 @@
 <!-- Browser/Client -->
 <g transform="translate(34,104)">
   <rect class="card" x="0" y="0" width="112" height="68" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="56" y="28" text-anchor="middle">Browser</text>
-  <text class="smallLabel" x="56" y="52" text-anchor="middle">Client</text>
+  <text class="smallLabel" style="font-size:17px" x="56" y="28" text-anchor="middle">Browser</text>
+  <text class="smallLabel" style="font-size:17px" x="56" y="52" text-anchor="middle">Client</text>
 </g>
 <!-- Netty (via Router) -->
 <g transform="translate(200,104)">
   <rect class="card" x="0" y="0" width="120" height="68" rx="12" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="60" y="24" text-anchor="middle">Netty +</text>
-  <text class="smallLabel" x="60" y="48" text-anchor="middle">Router</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="24" text-anchor="middle">Netty +</text>
+  <text class="smallLabel" style="font-size:17px" x="60" y="48" text-anchor="middle">Router</text>
   <text class="small" x="60" y="66" text-anchor="middle">/websocket</text>
 </g>
 <!-- ReactiveWebSocketConfig -->
 <g transform="translate(396,104)">
   <rect class="card" x="0" y="0" width="140" height="68" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="smallLabel" x="70" y="24" text-anchor="middle">Reactive</text>
-  <text class="smallLabel" x="70" y="48" text-anchor="middle">WS Config</text>
+  <text class="smallLabel" style="font-size:17px" x="70" y="24" text-anchor="middle">Reactive</text>
+  <text class="smallLabel" style="font-size:17px" x="70" y="48" text-anchor="middle">WS Config</text>
   <text class="small" x="70" y="66" text-anchor="middle">HandlerMapping</text>
 </g>
 <!-- ReactiveWebSocketHandler -->
 <g transform="translate(610,104)">
   <rect class="card" x="0" y="0" width="140" height="68" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="70" y="24" text-anchor="middle">Reactive WS</text>
-  <text class="smallLabel" x="70" y="48" text-anchor="middle">Handler</text>
+  <text class="smallLabel" style="font-size:17px" x="70" y="24" text-anchor="middle">Reactive WS</text>
+  <text class="smallLabel" style="font-size:17px" x="70" y="48" text-anchor="middle">Handler</text>
   <text class="small" x="70" y="66" text-anchor="middle">handle(session)</text>
 </g>
 <!-- QuoteGenerator -->
 <g transform="translate(808,104)">
   <rect class="card" x="0" y="0" width="128" height="68" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" x="64" y="28" text-anchor="middle">Quote</text>
-  <text class="smallLabel" x="64" y="52" text-anchor="middle">Generator</text>
+  <text class="smallLabel" style="font-size:17px" x="64" y="28" text-anchor="middle">Quote</text>
+  <text class="smallLabel" style="font-size:17px" x="64" y="52" text-anchor="middle">Generator</text>
   <text class="small" x="64" y="68" text-anchor="middle">Flux&lt;Quote&gt;</text>
 </g>
 

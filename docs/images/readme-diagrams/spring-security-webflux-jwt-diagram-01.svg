@@ -78,7 +78,7 @@
 <text class="small" x="786" y="328" text-anchor="middle">JwtAuthenticationToken</text>
 
 <!-- Bottom note -->
-<rect class="card" x="48" y="362" width="864" height="52" rx="10" fill="#0d2435" stroke="#0d2435" filter="url(#shadow)"/>
-<text class="small" x="480" y="386" text-anchor="middle" fill="#dbeafe">Flow: POST /token (httpBasic) → JWT → GET /hello (Bearer token) → JwtAuthenticationToken</text>
-<text class="small" x="480" y="404" text-anchor="middle" fill="#dbeafe">RSA key pair loaded from classpath PEM files via @Value injection</text>
+<rect class="card" x="48" y="362" width="864" height="52" rx="10" fill="#E9F7F6" stroke="#45A7A1" filter="url(#shadow)"/>
+<text class="small" x="480" y="386" text-anchor="middle" fill="#536273">Flow: POST /token (httpBasic) → JWT → GET /hello (Bearer token) → JwtAuthenticationToken</text>
+<text class="small" x="480" y="404" text-anchor="middle" fill="#536273">RSA key pair loaded from classpath PEM files via @Value injection</text>
 </svg>

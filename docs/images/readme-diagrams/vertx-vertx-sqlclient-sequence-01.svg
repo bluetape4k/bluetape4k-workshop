@@ -26,16 +26,16 @@
 
 <!-- Participant headers -->
 <rect class="card" x="60" y="108" width="120" height="44" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="120" y="136" text-anchor="middle">Test</text>
+<text class="smallLabel" style="font-size:17px" x="120" y="136" text-anchor="middle">Test</text>
 
 <rect class="card" x="252" y="108" width="140" height="44" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-<text class="smallLabel" x="322" y="136" text-anchor="middle">Pool (MySQL)</text>
+<text class="smallLabel" style="font-size:17px" x="322" y="136" text-anchor="middle">Pool (MySQL)</text>
 
 <rect class="card" x="472" y="108" width="140" height="44" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-<text class="smallLabel" x="542" y="136" text-anchor="middle">SqlClient</text>
+<text class="smallLabel" style="font-size:17px" x="542" y="136" text-anchor="middle">SqlClient</text>
 
 <rect class="card" x="692" y="108" width="140" height="44" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-<text class="smallLabel" x="762" y="136" text-anchor="middle">MySQL8 (TC)</text>
+<text class="smallLabel" style="font-size:17px" x="762" y="136" text-anchor="middle">MySQL8 (TC)</text>
 
 <!-- Lifelines -->
 <line class="lifeline" x1="120" y1="152" x2="120" y2="448"/>

@@ -24,16 +24,16 @@
 
 <!-- Participants -->
 <rect class="card" x="60" y="108" width="140" height="44" rx="8" fill="#FDECEF" stroke="#DC6B82"/>
-<text class="smallLabel" x="130" y="135" text-anchor="middle">Client</text>
+<text class="smallLabel" style="font-size:17px" x="130" y="135" text-anchor="middle">Client</text>
 
 <rect class="card" x="270" y="108" width="180" height="44" rx="8" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="360" y="135" text-anchor="middle">CustomerRepo</text>
+<text class="smallLabel" style="font-size:17px" x="360" y="135" text-anchor="middle">CustomerRepo</text>
 
 <rect class="card" x="510" y="108" width="180" height="44" rx="8" fill="#FFF3D9" stroke="#D6A441"/>
-<text class="smallLabel" x="600" y="135" text-anchor="middle">TransactionalService</text>
+<text class="smallLabel" style="font-size:17px" x="600" y="135" text-anchor="middle">TransactionalService</text>
 
 <rect class="card" x="750" y="108" width="150" height="44" rx="8" fill="#E9F7F6" stroke="#45A7A1"/>
-<text class="smallLabel" x="825" y="135" text-anchor="middle">H2 R2DBC</text>
+<text class="smallLabel" style="font-size:17px" x="825" y="135" text-anchor="middle">H2 R2DBC</text>
 
 <!-- Lifelines -->
 <line class="lifeline" x1="130" y1="152" x2="130" y2="440"/>

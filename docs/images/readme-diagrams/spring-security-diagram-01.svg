@@ -71,6 +71,6 @@
 <text class="small" x="780" y="332" text-anchor="middle">POST /token → JWT</text>
 
 <!-- Bottom band -->
-<rect class="card" x="48" y="360" width="864" height="42" rx="10" fill="#0d2435" stroke="#0d2435" filter="url(#shadow)"/>
-<text class="small" x="480" y="386" text-anchor="middle" fill="#dbeafe">spring-security-mvc · spring-security-webflux-hello · spring-security-webflux-jwt modules</text>
+<rect class="card" x="48" y="360" width="864" height="42" rx="10" fill="#E9F7F6" stroke="#45A7A1" filter="url(#shadow)"/>
+<text class="small" x="480" y="386" text-anchor="middle" fill="#536273">spring-security-mvc · spring-security-webflux-hello · spring-security-webflux-jwt modules</text>
 </svg>
