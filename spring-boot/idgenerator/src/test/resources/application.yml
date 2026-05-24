@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: idgenerator-test
+
+server:
+  port: 0  # random port for tests
