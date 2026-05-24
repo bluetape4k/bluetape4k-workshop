@@ -1,7 +1,9 @@
 package io.bluetape4k.workshop.idempotency.controller
 
 import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeEmpty
+import io.bluetape4k.assertions.shouldNotBeEqualTo
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.idempotency.AbstractIdempotencyTest
 import io.bluetape4k.workshop.idempotency.model.OrderRequest
@@ -108,9 +110,7 @@ class OrderControllerTest : AbstractIdempotencyTest() {
             .responseBody.toMono().block()!!
 
         // Different keys → different order IDs
-        assert(responseA.orderId != responseB.orderId) {
-            "Different idempotency keys should produce different order IDs"
-        }
+        responseA.orderId shouldNotBeEqualTo responseB.orderId
     }
 
     @Test
@@ -151,8 +151,6 @@ class OrderControllerTest : AbstractIdempotencyTest() {
 
         // All responses must carry the same orderId
         val distinctOrderIds = responses.map { it.orderId }.toSet()
-        assert(distinctOrderIds.size == 1) {
-            "All replays must return the same orderId, got: $distinctOrderIds"
-        }
+        distinctOrderIds shouldHaveSize 1
     }
 }
