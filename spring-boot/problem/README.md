@@ -1,23 +1,24 @@
 # Problem Web Demo
 
+Spring Boot 4 (RFC 9457 Problem Details 기본 지원)와 Zalando Problem Spring Web을 조합한 에러 처리 예제입니다.
+bluetape4k의 `KLogging`과 `bluetape4k-resilience4j`를 통해 Circuit Breaker 관련 예외를 RFC 9457 형식으로 변환합니다.
+
 ## 에러 처리 흐름
 
-![problem Architecture diagram](../../docs/images/readme-diagrams/spring-boot-problem-diagram-01.png)
-
-## 참고
-
-- [Problem Spring Web](https://github.com/zalando/problem-spring-web)
-- [A Guide to the Problem Spring Web Library](https://www.baeldung.com/problem-spring-web)
-- [Handling API errors with Problem JSON](https://engineering.celonis.com/blog/handling-api-errors-with-problem-json/)
-
-Spring Boot 4 에서는 Problem Details (RFC 9457)가 기본 지원됩니다.
-
-- [Building Standardized API Error Responses in Spring Boot With The Problem Details Specification](https://betterprogramming.pub/building-standardized-api-error-responses-in-spring-boot-3-with-the-problem-details-specification-226ca2626620)
-- [Spring Boot - Error Responses](https://docs.spring.io/spring-boot/reference/web/servlet.html#web.servlet.spring-mvc.error-handling)
+```mermaid
+graph TD
+    Client -->|HTTP Request| Controller
+    Controller -->|throws| Exception
+    Exception -->|@ControllerAdvice| RestApiExceptionHandler
+    RestApiExceptionHandler -->|ProblemHandling| ProblemJSON[application/problem+json]
+    RestApiExceptionHandler -->|TaskAdviceTrait| ProblemJSON
+    RestApiExceptionHandler -->|Resilience4jTrait| ProblemJSON
+    ProblemJSON -->|HTTP Response| Client
+```
 
 ## RFC 9457 Problem Details 개념
 
-Problem Details(`application/problem+json`)는 API 에러 응답을 표준화하기 위한 스펙입니다. 기존 서비스마다 다르던 에러 응답 형식을 통일하여, 클라이언트가 에러를 일관되게 처리할 수 있도록 합니다.
+Problem Details(`application/problem+json`)는 API 에러 응답을 표준화하기 위한 스펙입니다.
 
 ### 표준 에러 응답 구조
 
@@ -45,7 +46,7 @@ Problem Details(`application/problem+json`)는 API 에러 응답을 표준화하
 |---|---|
 | `RestApiExceptionHandler` | `@ControllerAdvice` — `ProblemHandling` + `TaskAdviceTrait` + `Resilience4jTrait` 조합 |
 | `TaskAdviceTrait` | `TaskNotFoundException` → 404, `InvalidTaskIdException` → 400 변환 |
-| `Resilience4jTrait` | `BusinessException` → Circuit Breaker 관련 Problem 응답 변환 |
+| `Resilience4jTrait` | Resilience4j 예외 → Circuit Breaker/Bulkhead/RateLimit Problem 응답 변환 |
 | `RestControllerLoggingFilter` | 요청/응답 로깅 WebFilter |
 | `TaskController` | `/tasks` CRUD, 코루틴 `suspend` 함수로 구현 |
 | `Resilience4jController` | Circuit Breaker 연동 예제 컨트롤러 |
@@ -56,19 +57,59 @@ Problem Details(`application/problem+json`)는 API 에러 응답을 표준화하
 ExampleException (기반 예외)
 ├── TaskNotFoundException     → 404 Not Found
 └── InvalidTaskIdException    → 400 Bad Request
-BusinessException             → Circuit Breaker 관련 에러
+BulkheadFullException         → 429 Too Many Requests
+CallNotPermittedException     → 503 Service Unavailable
+RequestNotPermitted           → 509 Bandwidth Limit Exceeded
+MaxRetriesExceededException   → 500 Internal Server Error
+```
+
+## 사용된 bluetape4k 기능
+
+| 기능 | 아티팩트 | 코드 위치 | 이점 |
+|---|---|---|---|
+| `KLogging` | `bluetape4k-logging` | 모든 companion object | Lazy 람다 로깅, 구조적 예외 로깅 |
+| `bluetape4k-resilience4j` | `bluetape4k-resilience4j` | `Resilience4jTrait` | Resilience4j 예외 → Problem JSON 변환 trait 제공 |
+
+## bluetape4k Before / After
+
+### `KLogging` vs 기존 로거
+
+```kotlin
+// Before — SLF4J LoggerFactory 직접 사용
+private val logger = LoggerFactory.getLogger(TaskController::class.java)
+logger.info("Task requested: {}", taskId)  // 항상 문자열 보간
+
+// After — KLogging (lazy 람다, 예외 로깅 단순화)
+companion object: KLogging()
+
+log.info { "Task requested: $taskId" }         // DISABLED 시 람다 미실행
+log.warn(e) { "Task not found: $taskId" }      // 예외 + 메시지 조합
+```
+
+### Resilience4j 예외 처리 — AdviceTrait 믹스인
+
+```kotlin
+// Before — 각 예외마다 @ExceptionHandler 반복 작성
+@ControllerAdvice
+class GlobalExceptionHandler {
+    @ExceptionHandler(CallNotPermittedException::class)
+    fun handleCircuitBreaker(ex: CallNotPermittedException): ResponseEntity<ErrorDto> {
+        return ResponseEntity.status(503).body(ErrorDto("SERVICE_UNAVAILABLE", ex.message))
+    }
+    // ... 반복 ...
+}
+
+// After — bluetape4k Resilience4jTrait 믹스인으로 자동 처리
+@ControllerAdvice
+class RestApiExceptionHandler : ProblemHandling, TaskAdviceTrait, Resilience4jTrait {
+    override fun isCausalChainsEnabled(): Boolean = true
+    // Resilience4j 예외 → RFC 9457 Problem JSON 자동 변환
+}
 ```
 
 ## AdviceTrait 패턴
 
-Zalando Problem Spring Web 라이브러리는 `AdviceTrait` 인터페이스를 통해 예외 처리 로직을 믹스인 방식으로 조합할 수 있습니다.
-
 ```kotlin
-@ControllerAdvice
-class RestApiExceptionHandler : ProblemHandling, TaskAdviceTrait, Resilience4jTrait {
-    override fun isCausalChainsEnabled(): Boolean = true
-}
-
 // TaskAdviceTrait — 예외별 Problem 응답 생성
 interface TaskAdviceTrait : AdviceTrait {
     @ExceptionHandler
@@ -82,14 +123,35 @@ interface TaskAdviceTrait : AdviceTrait {
         return create(ex, problem, request)
     }
 }
+
+// Resilience4jTrait — BT가 제공하는 Circuit Breaker/Bulkhead/RateLimit 처리
+interface Resilience4jTrait : AdviceTrait {
+    @ExceptionHandler
+    fun handleCircuitBreakerCallNotPermitted(
+        ex: CallNotPermittedException, request: ServerWebExchange
+    ): Mono<ResponseEntity<Problem>> {
+        val headers = HttpHeaders().apply { add(HttpHeaders.RETRY_AFTER, "10") }
+        return create(Status.SERVICE_UNAVAILABLE, ex, request, headers)
+    }
+    // ...
+}
 ```
 
 ## 실행 방법
 
 ```bash
 ./gradlew :problem:bootRun
+
 # 존재하지 않는 Task 조회 → 404 Problem JSON 응답
 curl http://localhost:8080/tasks/999
+
 # 잘못된 ID → 400 Bad Request
 curl http://localhost:8080/tasks/-1
 ```
+
+## 참고
+
+- [Problem Spring Web](https://github.com/zalando/problem-spring-web)
+- [RFC 9457 Problem Details](https://www.rfc-editor.org/rfc/rfc9457)
+- [Spring Boot - Error Responses](https://docs.spring.io/spring-boot/reference/web/servlet.html#web.servlet.spring-mvc.error-handling)
+- [bluetape4k-resilience4j](https://github.com/bluetape4k/bluetape4k-projects)
