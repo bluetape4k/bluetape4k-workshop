@@ -203,6 +203,14 @@ bluetape4k-kafka = { module = "io.github.bluetape4k:bluetape4k-kafka" }
 bluetape4k-lettuce = { module = "io.github.bluetape4k:bluetape4k-lettuce" }
 bluetape4k-leader-core = { module = "io.github.bluetape4k.leader:bluetape4k-leader-core" }
 bluetape4k-leader-redis-lettuce = { module = "io.github.bluetape4k.leader:bluetape4k-leader-redis-lettuce" }
+bluetape4k-javers-core = { module = "io.github.bluetape4k.javers:javers-core" }
+bluetape4k-javers-persistence-redis = { module = "io.github.bluetape4k.javers:javers-persistence-redis" }
+bluetape4k-javers-persistence-kafka = { module = "io.github.bluetape4k.javers:javers-persistence-kafka" }
+bluetape4k-text-core = { module = "io.github.bluetape4k.text:tokenizer-core" }
+bluetape4k-text-korean = { module = "io.github.bluetape4k.text:tokenizer-korean" }
+bluetape4k-text-japanese = { module = "io.github.bluetape4k.text:tokenizer-japanese" }
+bluetape4k-text-lingua = { module = "io.github.bluetape4k.text:lingua" }
+bluetape4k-text-search = { module = "io.github.bluetape4k.text:text-search" }
 bluetape4k-micrometer = { module = "io.github.bluetape4k:bluetape4k-micrometer" }
 bluetape4k-redis = { module = "io.github.bluetape4k:bluetape4k-redis" }
 bluetape4k-redisson = { module = "io.github.bluetape4k:bluetape4k-redisson" }
