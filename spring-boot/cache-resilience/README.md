@@ -8,21 +8,11 @@ driven by real network failures injected via Toxiproxy.
 
 ## Architecture
 
+The diagram shows the request flow, CircuitBreaker state machine
+(CLOSED → OPEN → HALF-OPEN → CLOSED), and the ToxiproxyServer chaos injection
+used in integration tests.
+
 ![Cache Resilience architecture](../../docs/images/readme-diagrams/spring-boot-cache-resilience-diagram-01.png)
-
-## Failure Flow
-
-```
-          CLOSED                OPEN              HALF-OPEN
-  Redis ──────────► [failures ≥ threshold] ──────────────► [wait elapsed]
-    ↑                               │                              │
-    │                               │ fallback to Caffeine         │ probe Redis
-    │                               ▼                              │
-    │                          Local Cache               ┌─────────┴─────────┐
-    │                                                     │  probe succeeded  │ probe failed
-    │                                                     ▼                   ▼
-    └───────────────────────────── CLOSED ◄──────────────┘           OPEN (re-open)
-```
 
 ## What This Module Shows
 

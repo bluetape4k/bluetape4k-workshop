@@ -7,21 +7,10 @@ Toxiproxy로 실제 네트워크 장애를 주입해 CircuitBreaker 상태 머�
 
 ## 아키텍처
 
+요청 흐름, CircuitBreaker 상태 머신(CLOSED → OPEN → HALF-OPEN → CLOSED),
+통합 테스트에서 사용하는 ToxiproxyServer 카오스 주입을 다이어그램으로 확인할 수 있습니다.
+
 ![Cache Resilience 아키텍처](../../docs/images/readme-diagrams/spring-boot-cache-resilience-diagram-01.png)
-
-## 장애 흐름
-
-```
-          CLOSED                OPEN              HALF-OPEN
-  Redis ──────────► [실패 ≥ 임계값] ──────────────► [대기 시간 경과]
-    ↑                               │                              │
-    │                               │ Caffeine으로 폴백           │ Redis 프로브
-    │                               ▼                              │
-    │                          로컬 캐시               ┌─────────┴─────────┐
-    │                                                  │  프로브 성공      │ 프로브 실패
-    │                                                  ▼                   ▼
-    └──────────────────────────── CLOSED ◄─────────────┘           OPEN (재오픈)
-```
 
 ## 이 모듈에서 확인할 내용
 
