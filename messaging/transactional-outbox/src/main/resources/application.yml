@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: transactional-outbox
+  datasource:
+    url: jdbc:postgresql://localhost:5432/outbox_db
+    username: outbox_user
+    password: outbox_pass
+    driver-class-name: org.postgresql.Driver
+  exposed:
+    generate-ddl: true
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 3
+    consumer:
+      group-id: outbox-consumer
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    io.bluetape4k.workshop: DEBUG
+    org.jetbrains.exposed: INFO
+    org.springframework.kafka: INFO
+    org.springframework: WARN
