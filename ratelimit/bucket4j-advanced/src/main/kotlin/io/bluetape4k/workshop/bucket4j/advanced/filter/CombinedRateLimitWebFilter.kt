@@ -71,6 +71,9 @@ class CombinedRateLimitWebFilter(
                             HeaderConstants.X_RATELIMIT_REMAINING,
                             result.availableTokens.toString()
                         )
+                        val resetSecs =
+                            TimeUnit.NANOSECONDS.toSeconds(result.diagnostics.nanosToWaitForReset).coerceAtLeast(0)
+                        exchange.response.headers.set(HeaderConstants.X_RATELIMIT_RESET, resetSecs.toString())
                         if (result.isConsumed) {
                             log.trace { "Combined bucket[$key] consumed, remaining=${result.availableTokens}" }
                             chain.filter(exchange).awaitSingleOrNull()

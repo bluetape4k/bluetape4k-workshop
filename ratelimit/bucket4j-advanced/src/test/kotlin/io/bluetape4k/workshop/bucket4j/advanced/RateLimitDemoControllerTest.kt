@@ -44,6 +44,7 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
             .exchange()
             .expectStatus().isOk
             .expectHeader().exists(HeaderConstants.X_RATELIMIT_REMAINING)
+            .expectHeader().exists(HeaderConstants.X_RATELIMIT_RESET)
             .expectBody(Map::class.java)
             .returnResult()
 
