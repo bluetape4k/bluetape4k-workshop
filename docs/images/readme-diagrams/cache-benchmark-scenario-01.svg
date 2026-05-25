@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="500" viewBox="0 0 1200 500" role="img" aria-label="Cache Benchmark 7 Profiles Scenario">
+<defs>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <marker id="arrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+    <path d="M2,2 L12,7 L2,12 Z" fill="#758297"/>
+  </marker>
+  <style>
+    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
+    .title{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:32px;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:14px;fill:#536273}
+    .label{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:16px;fill:#102033}
+    .mono{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:11px;fill:#536273}
+    .num{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:14px;fill:#fff}
+    .card{stroke-width:2;filter:url(#shadow)}
+    .line{stroke:#758297;stroke-width:2;fill:none;marker-end:url(#arrow)}
+  </style>
+</defs>
+<rect class="canvas" width="1200" height="500"/>
+<rect class="frame" x="28" y="24" width="1144" height="452" rx="20"/>
+
+<text class="title" x="52" y="68">7 Cache Strategy Comparison</text>
+<text class="subtitle" x="52" y="90">Benchmark → Service → 7 cache profiles → H2 / Redis backends</text>
+
+<!-- Service layer center -->
+<g transform="translate(52,120)">
+  <rect class="card" x="0" y="0" width="200" height="68" rx="12" fill="#E0ECFF" stroke="#4A7ADB"/>
+  <text class="label" x="100" y="28" text-anchor="middle">Benchmark / Test</text>
+  <text class="mono" x="100" y="48" text-anchor="middle">kotlinx-benchmark (JMH)</text>
+</g>
+<g transform="translate(52,230)">
+  <rect class="card" x="0" y="0" width="200" height="68" rx="12" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="label" x="100" y="28" text-anchor="middle">Service Layer</text>
+  <text class="mono" x="100" y="48" text-anchor="middle">findById / save</text>
+</g>
+
+<!-- 7 Cache profile cards in a grid (3+4) -->
+<!-- Row 1 -->
+<g transform="translate(320,110)">
+  <circle cx="12" cy="12" r="12" fill="#758297"/><text class="num" x="12" y="17" text-anchor="middle">1</text>
+  <rect class="card" x="0" y="28" width="140" height="60" rx="8" fill="#f8f8f8" stroke="#aaa"/>
+  <text class="label" x="70" y="52" text-anchor="middle">No Cache</text>
+  <text class="mono" x="70" y="72" text-anchor="middle">direct DB</text>
+</g>
+<g transform="translate(490,110)">
+  <circle cx="12" cy="12" r="12" fill="#58A978"/><text class="num" x="12" y="17" text-anchor="middle">2</text>
+  <rect class="card" x="0" y="28" width="140" height="60" rx="8" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="label" x="70" y="52" text-anchor="middle">Caffeine</text>
+  <text class="mono" x="70" y="72" text-anchor="middle">local · 60x read</text>
+</g>
+<g transform="translate(660,110)">
+  <circle cx="12" cy="12" r="12" fill="#DC6B82"/><text class="num" x="12" y="17" text-anchor="middle">3</text>
+  <rect class="card" x="0" y="28" width="140" height="60" rx="8" fill="#FDECEF" stroke="#DC6B82"/>
+  <text class="label" x="70" y="52" text-anchor="middle">Redis Cache</text>
+  <text class="mono" x="70" y="72" text-anchor="middle">shared · 5x read</text>
+</g>
+<g transform="translate(830,110)">
+  <circle cx="12" cy="12" r="12" fill="#8A72D6"/><text class="num" x="12" y="17" text-anchor="middle">4</text>
+  <rect class="card" x="0" y="28" width="160" height="60" rx="8" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="label" x="80" y="52" text-anchor="middle">Near Cache</text>
+  <text class="mono" x="80" y="72" text-anchor="middle">local+Redis · 57x</text>
+</g>
+<!-- Row 2 -->
+<g transform="translate(390,230)">
+  <circle cx="12" cy="12" r="12" fill="#D6A441"/><text class="num" x="12" y="17" text-anchor="middle">5</text>
+  <rect class="card" x="0" y="28" width="150" height="60" rx="8" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="label" x="75" y="52" text-anchor="middle">Read-Through</text>
+  <text class="mono" x="75" y="72" text-anchor="middle">manual Redis RT</text>
+</g>
+<g transform="translate(580,230)">
+  <circle cx="12" cy="12" r="12" fill="#45A7A1"/><text class="num" x="12" y="17" text-anchor="middle">6</text>
+  <rect class="card" x="0" y="28" width="160" height="60" rx="8" fill="#E9F7F6" stroke="#45A7A1"/>
+  <text class="label" x="80" y="52" text-anchor="middle">Write-Through</text>
+  <text class="mono" x="80" y="72" text-anchor="middle">sync Redis + DB</text>
+</g>
+<g transform="translate(780,230)">
+  <circle cx="12" cy="12" r="12" fill="#5B8DEF"/><text class="num" x="12" y="17" text-anchor="middle">7</text>
+  <rect class="card" x="0" y="28" width="160" height="60" rx="8" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="label" x="80" y="52" text-anchor="middle">Write-Behind</text>
+  <text class="mono" x="80" y="72" text-anchor="middle">async DB flush</text>
+</g>
+
+<!-- Backends at bottom -->
+<g transform="translate(400,380)">
+  <ellipse cx="80" cy="8" rx="80" ry="12" fill="#FFF3D9" stroke="#D6A441" stroke-width="2"/>
+  <rect x="0" y="8" width="160" height="28" fill="#FFF3D9" stroke="#D6A441" stroke-width="2"/>
+  <line x1="0" y1="8" x2="0" y2="36" stroke="#D6A441" stroke-width="2"/>
+  <line x1="160" y1="8" x2="160" y2="36" stroke="#D6A441" stroke-width="2"/>
+  <ellipse cx="80" cy="36" rx="80" ry="12" fill="#FFF3D9" stroke="#D6A441" stroke-width="2"/>
+  <text class="label" x="80" y="32" text-anchor="middle" style="font-size:16px">H2 DB</text>
+</g>
+<g transform="translate(700,380)">
+  <ellipse cx="80" cy="8" rx="80" ry="12" fill="#FDECEF" stroke="#DC6B82" stroke-width="2"/>
+  <rect x="0" y="8" width="160" height="28" fill="#FDECEF" stroke="#DC6B82" stroke-width="2"/>
+  <line x1="0" y1="8" x2="0" y2="36" stroke="#DC6B82" stroke-width="2"/>
+  <line x1="160" y1="8" x2="160" y2="36" stroke="#DC6B82" stroke-width="2"/>
+  <ellipse cx="80" cy="36" rx="80" ry="12" fill="#FDECEF" stroke="#DC6B82" stroke-width="2"/>
+  <text class="label" x="80" y="32" text-anchor="middle" style="font-size:16px">Redis</text>
+</g>
+
+<!-- ARROWS -->
+<path class="line" d="M152,188 L152,228"/>
+<path class="line" d="M252,264 L318,264 L318,190 L390,178"/>
+</svg>

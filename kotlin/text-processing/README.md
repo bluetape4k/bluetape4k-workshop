@@ -12,17 +12,9 @@ Demonstrates three practical text-processing scenarios:
 
 ---
 
-## Architecture
+## Scenario
 
-```
-kotlin/text-processing/
-└── src/
-    ├── main/kotlin/io/bluetape4k/workshop/text/
-    │   ├── filter/          AbuseWordFilter
-    │   ├── detection/       LanguageDetectionService
-    │   └── normalize/       TextNormalizer
-    └── test/kotlin/         (mirrors main structure)
-```
+![3 Text Processing Scenarios](../../docs/images/readme-diagrams/kotlin-text-processing-scenario-01.png)
 
 ---
 

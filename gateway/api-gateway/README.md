@@ -5,18 +5,9 @@ and Bucket4j token-bucket rate limiting for downstream Customer and Order micros
 
 [한국어](README.ko.md)
 
-## Architecture
+## Scenario
 
-```mermaid
-graph TD
-    Client["HTTP Client"] --> GW["API Gateway\n(Spring Cloud Gateway)"]
-    GW -->|"/customers/**"| CS["Customer Service"]
-    GW -->|"/orders/**"| OS["Order Service"]
-    GW -->|Rate Limit (Bucket4j)| RL["Rate Limit Filter\nBucket4j + Lettuce"]
-    GW -->|Circuit Breaker| CB["Resilience4j\nCircuit Breaker"]
-    GW --> SW["Swagger UI\n(Aggregated)"]
-    RL --> Redis[(Redis)]
-```
+![API Gateway Routing](../../docs/images/readme-diagrams/gateway-api-gateway-scenario-01.png)
 
 ## What This Module Shows
 

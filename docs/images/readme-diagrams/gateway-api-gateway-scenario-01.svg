@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="460" viewBox="0 0 1200 460" role="img" aria-label="API Gateway Routing Scenario">
+<defs>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <marker id="arrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+    <path d="M2,2 L12,7 L2,12 Z" fill="#758297"/>
+  </marker>
+  <style>
+    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
+    .title{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:32px;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:14px;fill:#536273}
+    .label{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:20px;fill:#102033}
+    .mono{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:12px;fill:#536273}
+    .card{stroke-width:2;filter:url(#shadow)}
+    .line{stroke:#758297;stroke-width:2;fill:none;marker-end:url(#arrow)}
+  </style>
+</defs>
+<rect class="canvas" width="1200" height="460"/>
+<rect class="frame" x="28" y="24" width="1144" height="412" rx="20"/>
+
+<text class="title" x="52" y="68">API Gateway Routing</text>
+<text class="subtitle" x="52" y="90">Client → Gateway (rate limit + circuit breaker) → Downstream Services</text>
+
+<!-- Client -->
+<g transform="translate(80,130)">
+  <rect class="card" x="0" y="0" width="180" height="180" rx="12" fill="#E0ECFF" stroke="#4A7ADB"/>
+  <text class="label" x="90" y="60" text-anchor="middle">HTTP Client</text>
+  <text class="mono" x="90" y="90" text-anchor="middle">/customers/**</text>
+  <text class="mono" x="90" y="110" text-anchor="middle">/orders/**</text>
+  <text class="mono" x="90" y="130" text-anchor="middle">/swagger-ui</text>
+</g>
+
+<!-- Gateway center -->
+<g transform="translate(380,120)">
+  <rect class="card" x="0" y="0" width="280" height="200" rx="14" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="label" x="140" y="32" text-anchor="middle">API Gateway</text>
+  <text class="mono" x="140" y="56" text-anchor="middle">Spring Cloud Gateway (WebFlux)</text>
+
+  <!-- Internal features -->
+  <rect x="20" y="72" width="240" height="36" rx="8" fill="#FFF3D9" stroke="#D6A441" stroke-width="1.5"/>
+  <text class="mono" x="140" y="96" text-anchor="middle" style="fill:#102033">Rate Limit (Bucket4j + Redis)</text>
+
+  <rect x="20" y="118" width="240" height="36" rx="8" fill="#FDECEF" stroke="#DC6B82" stroke-width="1.5"/>
+  <text class="mono" x="140" y="142" text-anchor="middle" style="fill:#102033">Circuit Breaker (Resilience4j)</text>
+
+  <rect x="20" y="154" width="240" height="36" rx="8" fill="#E8F3FF" stroke="#5B8DEF" stroke-width="1.5"/>
+  <text class="mono" x="140" y="178" text-anchor="middle" style="fill:#102033">Swagger Aggregation</text>
+</g>
+
+<!-- Downstream services -->
+<g transform="translate(780,130)">
+  <rect class="card" x="0" y="0" width="280" height="72" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="label" x="140" y="28" text-anchor="middle">Customer Service</text>
+  <text class="mono" x="140" y="50" text-anchor="middle">/customers/** → port 8081</text>
+</g>
+<g transform="translate(780,240)">
+  <rect class="card" x="0" y="0" width="280" height="72" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="label" x="140" y="28" text-anchor="middle">Order Service</text>
+  <text class="mono" x="140" y="50" text-anchor="middle">/orders/** → port 8082</text>
+</g>
+
+<!-- Redis -->
+<g transform="translate(420,370)">
+  <ellipse cx="60" cy="8" rx="60" ry="12" fill="#FFF3D9" stroke="#D6A441" stroke-width="2"/>
+  <rect x="0" y="8" width="120" height="28" fill="#FFF3D9" stroke="#D6A441" stroke-width="2"/>
+  <line x1="0" y1="8" x2="0" y2="36" stroke="#D6A441" stroke-width="2"/>
+  <line x1="120" y1="8" x2="120" y2="36" stroke="#D6A441" stroke-width="2"/>
+  <ellipse cx="60" cy="36" rx="60" ry="12" fill="#FFF3D9" stroke="#D6A441" stroke-width="2"/>
+  <text class="label" x="60" y="32" text-anchor="middle" style="font-size:16px">Redis</text>
+</g>
+
+<!-- ARROWS -->
+<path class="line" d="M260,220 L378,220"/>
+<path class="line" d="M660,180 L660,160 L778,166"/>
+<path class="line" d="M660,250 L660,270 L778,276"/>
+<path class="line" d="M520,320 L520,368"/>
+</svg>

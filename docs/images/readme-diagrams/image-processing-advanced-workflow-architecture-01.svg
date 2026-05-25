@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="680" viewBox="0 0 1200 680" role="img" aria-label="Image Processing Architecture">
+<defs>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <marker id="arrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+    <path d="M2,2 L12,7 L2,12 Z" fill="#758297"/>
+  </marker>
+  <style>
+    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
+    .title{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:34px;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:14px;fill:#536273}
+    .label{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:18px;fill:#102033}
+    .mono{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:12px;fill:#536273}
+    .bandlabel{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:15px;fill:#758297}
+    .card{stroke-width:2;filter:url(#shadow)}
+    .line{stroke:#758297;stroke-width:2;fill:none;marker-end:url(#arrow)}
+  </style>
+</defs>
+<rect class="canvas" width="1200" height="680"/>
+<rect class="frame" x="28" y="24" width="1144" height="632" rx="20"/>
+
+<text class="title" x="52" y="68">Image Processing Architecture</text>
+<text class="subtitle" x="52" y="90">Spring Boot 4 + bluetape4k-images + Java 25 libvips + ImageStorage</text>
+
+<!-- Layer: HTTP Edge -->
+<rect x="52" y="112" width="1092" height="108" rx="8" fill="#E8F3FF" stroke="#B8D4F0" stroke-width="1"/>
+<text class="bandlabel" x="66" y="132">HTTP Edge</text>
+
+<g transform="translate(80,142)">
+  <rect class="card" x="0" y="0" width="200" height="68" rx="12" fill="#E0ECFF" stroke="#4A7ADB"/>
+  <text class="label" x="100" y="28" text-anchor="middle">HTTP Client</text>
+  <text class="mono" x="100" y="48" text-anchor="middle">multipart file upload</text>
+</g>
+<g transform="translate(340,142)">
+  <rect class="card" x="0" y="0" width="300" height="68" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="label" x="150" y="28" text-anchor="middle">ImageDerivativesController</text>
+  <text class="mono" x="150" y="48" text-anchor="middle">POST /api/images/derivatives</text>
+</g>
+
+<!-- Layer: Workflow -->
+<rect x="52" y="252" width="1092" height="108" rx="8" fill="#EAF7EF" stroke="#B0DAC0" stroke-width="1"/>
+<text class="bandlabel" x="66" y="272">Application Workflow</text>
+
+<g transform="translate(80,282)">
+  <rect class="card" x="0" y="0" width="280" height="68" rx="12" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="label" x="140" y="28" text-anchor="middle">WorkflowService</text>
+  <text class="mono" x="140" y="48" text-anchor="middle">orchestrates full pipeline</text>
+</g>
+<g transform="translate(400,282)">
+  <rect class="card" x="0" y="0" width="200" height="68" rx="12" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="label" x="100" y="28" text-anchor="middle">Validator</text>
+  <text class="mono" x="100" y="48" text-anchor="middle">content-type · magic bytes</text>
+</g>
+<g transform="translate(640,282)">
+  <rect class="card" x="0" y="0" width="200" height="68" rx="12" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="label" x="100" y="28" text-anchor="middle">ImageKeyFactory</text>
+  <text class="mono" x="100" y="48" text-anchor="middle">sanitized object keys</text>
+</g>
+<g transform="translate(880,282)">
+  <rect class="card" x="0" y="0" width="230" height="68" rx="12" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="label" x="115" y="28" text-anchor="middle">PublicImageUrlResolver</text>
+  <text class="mono" x="115" y="48" text-anchor="middle">unsigned URLs</text>
+</g>
+
+<!-- Layer: Bluetape4k Stack -->
+<rect x="52" y="392" width="700" height="108" rx="8" fill="#F1ECFF" stroke="#C8B8E8" stroke-width="1"/>
+<text class="bandlabel" x="66" y="412">Bluetape4k Image Stack</text>
+
+<g transform="translate(80,422)">
+  <rect class="card" x="0" y="0" width="280" height="68" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="label" x="140" y="28" text-anchor="middle">FfmVipsDerivativeProcessor</text>
+  <text class="mono" x="140" y="48" text-anchor="middle">Java 25 FFM + libvips</text>
+</g>
+<g transform="translate(400,422)">
+  <rect class="card" x="0" y="0" width="310" height="68" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="label" x="155" y="28" text-anchor="middle">ImageStorage</text>
+  <text class="mono" x="155" y="48" text-anchor="middle">abstraction (S3 / Local backends)</text>
+</g>
+
+<!-- Layer: Backends -->
+<rect x="52" y="532" width="700" height="108" rx="8" fill="#FFF3D9" stroke="#E8D5A0" stroke-width="1"/>
+<text class="bandlabel" x="66" y="552">Storage Backends</text>
+
+<g transform="translate(80,562)">
+  <rect class="card" x="0" y="0" width="200" height="68" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="label" x="100" y="28" text-anchor="middle">S3ImageStorage</text>
+  <text class="mono" x="100" y="48" text-anchor="middle">production</text>
+</g>
+<g transform="translate(320,562)">
+  <rect class="card" x="0" y="0" width="200" height="68" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="label" x="100" y="28" text-anchor="middle">LocalImageStorage</text>
+  <text class="mono" x="100" y="48" text-anchor="middle">dev / test</text>
+</g>
+
+<!-- Metrics panel (right side) -->
+<rect x="800" y="392" width="340" height="248" rx="14" fill="#FDECEF" stroke="#DC6B82" stroke-width="1.2"/>
+<text class="bandlabel" x="816" y="412" style="fill:#DC6B82">Observability</text>
+
+<g transform="translate(820,422)">
+  <rect class="card" x="0" y="0" width="300" height="68" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
+  <text class="label" x="150" y="28" text-anchor="middle">Micrometer Metrics</text>
+  <text class="mono" x="150" y="48" text-anchor="middle">upload · duration · failure counters</text>
+</g>
+<g transform="translate(820,520)">
+  <rect class="card" x="0" y="0" width="300" height="68" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
+  <text class="label" x="150" y="28" text-anchor="middle">HealthIndicator</text>
+  <text class="mono" x="150" y="48" text-anchor="middle">storage reachability check</text>
+</g>
+
+<!-- ARROWS -->
+<path class="line" d="M280,176 L338,176"/>
+<path class="line" d="M490,210 L490,240 L220,240 L220,280"/>
+<path class="line" d="M360,350 L500,350 L500,350 L500,280"/>
+<path class="line" d="M360,330 L660,330 L740,330 L740,280"/>
+<path class="line" d="M360,340 L860,340 L995,340 L995,280"/>
+
+<path class="line" d="M220,350 L220,420"/>
+<path class="line" d="M220,350 L220,380 L555,380 L555,420"/>
+
+<path class="line" d="M180,490 L180,560"/>
+<path class="line" d="M420,490 L420,560"/>
+</svg>

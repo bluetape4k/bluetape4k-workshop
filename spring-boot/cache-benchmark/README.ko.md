@@ -50,24 +50,6 @@ Spring Boot 서비스에서 7가지 캐시 전략을 비교하는 성능 벤치�
 
 ### 핵심 인사이트
 
-```mermaid
-quadrantChart
-    title 캐시 전략 트레이드오프
-    x-axis "낮은 읽기 지연" --> "높은 읽기 지연"
-    y-axis "낮은 쓰기 지연" --> "높은 쓰기 지연"
-    quadrant-1 피할 것 (읽기/쓰기 모두 느림)
-    quadrant-2 읽기 집중 워크로드
-    quadrant-3 쓰기 집중 워크로드
-    quadrant-4 균형
-    NoCache: [0.9, 0.5]
-    Caffeine: [0.05, 0.5]
-    Redis: [0.35, 0.52]
-    NearCache: [0.07, 0.53]
-    ReadThrough: [0.36, 0.52]
-    WriteThrough: [0.37, 0.85]
-    WriteBehind: [0.36, 0.15]
-```
-
 - **Caffeine**, **NearCache**: 읽기 처리량 최고 (~60×) — hot key 읽기 집중 워크로드에 최적
 - **NearCache**: 멀티 인스턴스 환경에서 순수 Caffeine보다 선호 (Redis 기반 캐시 무효화)
 - **Write-Behind**: 쓰기 처리량 최고 (~3×) — 최종 일관성 허용하는 쓰기 집중 워크로드에 최적

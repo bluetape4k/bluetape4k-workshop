@@ -4,25 +4,9 @@ Performance benchmark comparing 7 cache strategies for a Spring Boot service bac
 
 Built with **kotlinx-benchmark** (JMH-based) so benchmarks reflect real JVM steady-state throughput.
 
-## Architecture
+## Scenario
 
-```mermaid
-flowchart TD
-    BM[Benchmark / Test] --> SVC[Service Layer]
-    SVC --> |Profile 1| DB[(H2 DB)]
-    SVC --> |Profile 2| CAF[Caffeine\nLocal Cache]
-    SVC --> |Profile 3| RDS[Redis\nDistributed Cache]
-    SVC --> |Profile 4| NC[Redisson Near Cache\nLocal + Redis]
-    SVC --> |Profile 5| RT[Read-Through\nRedis]
-    SVC --> |Profile 6| WT[Write-Through\nRedis + DB]
-    SVC --> |Profile 7| WB[Write-Behind\nRedis → async DB]
-    CAF --> DB
-    RDS --> DB
-    NC --> RDS
-    RT --> DB
-    WT --> DB
-    WB --> |async| DB
-```
+![7 Cache Strategy Comparison](../../docs/images/readme-diagrams/cache-benchmark-scenario-01.png)
 
 ## 7 Cache Profiles
 
@@ -69,24 +53,6 @@ flowchart TD
 | **Write-Behind** | **~24,000** | Cache only (async DB flush) — **3× faster** |
 
 ### Key Takeaways
-
-```mermaid
-quadrantChart
-    title Cache Profile Trade-offs
-    x-axis "Low Read Latency" --> "High Read Latency"
-    y-axis "Low Write Latency" --> "High Write Latency"
-    quadrant-1 Avoid (slow both)
-    quadrant-2 Read-Heavy Workloads
-    quadrant-3 Write-Heavy Workloads
-    quadrant-4 Balanced
-    NoCache: [0.9, 0.5]
-    Caffeine: [0.05, 0.5]
-    Redis: [0.35, 0.52]
-    NearCache: [0.07, 0.53]
-    ReadThrough: [0.36, 0.52]
-    WriteThrough: [0.37, 0.85]
-    WriteBehind: [0.36, 0.15]
-```
 
 - **Caffeine** and **NearCache** win on read throughput (~60×) — best for read-heavy workloads with hot keys
 - **NearCache** adds cross-instance invalidation vs pure Caffeine — preferred in multi-instance deployments

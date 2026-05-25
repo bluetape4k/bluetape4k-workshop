@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="500" viewBox="0 0 1200 500" role="img" aria-label="Multi-Tenant Data Isolation Scenario">
+<defs>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <marker id="arrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+    <path d="M2,2 L12,7 L2,12 Z" fill="#758297"/>
+  </marker>
+  <style>
+    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
+    .title{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:32px;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:14px;fill:#536273}
+    .label{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:18px;fill:#102033}
+    .mono{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:12px;fill:#536273}
+    .card{stroke-width:2;filter:url(#shadow)}
+    .line{stroke:#758297;stroke-width:2;fill:none;marker-end:url(#arrow)}
+    .safe{stroke:#58A978;stroke-width:2;fill:none;marker-end:url(#arrow)}
+    .unsafe{stroke:#DC6B82;stroke-width:2;fill:none;stroke-dasharray:6,3}
+  </style>
+</defs>
+<rect class="canvas" width="1200" height="500"/>
+<rect class="frame" x="28" y="24" width="1144" height="452" rx="20"/>
+
+<text class="title" x="52" y="68">Tenant Data Isolation</text>
+<text class="subtitle" x="52" y="90">Every resource key is tenant-prefixed: data query, cache, lock, rate-limit, metrics</text>
+
+<!-- Tenant callers -->
+<g transform="translate(80,120)">
+  <rect class="card" x="0" y="0" width="160" height="68" rx="12" fill="#E0ECFF" stroke="#4A7ADB"/>
+  <text class="label" x="80" y="28" text-anchor="middle">Tenant A</text>
+  <text class="mono" x="80" y="50" text-anchor="middle">TenantId("acme")</text>
+</g>
+<g transform="translate(80,220)">
+  <rect class="card" x="0" y="0" width="160" height="68" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="label" x="80" y="28" text-anchor="middle">Tenant B</text>
+  <text class="mono" x="80" y="50" text-anchor="middle">TenantId("globex")</text>
+</g>
+
+<!-- TenantInvoiceService -->
+<g transform="translate(340,140)">
+  <rect class="card" x="0" y="0" width="260" height="140" rx="14" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="label" x="130" y="28" text-anchor="middle">TenantInvoiceService</text>
+  <text class="mono" x="130" y="50" text-anchor="middle">composes all isolation boundaries</text>
+
+  <rect x="16" y="62" width="228" height="28" rx="6" fill="#E9F7F6" stroke="#45A7A1" stroke-width="1"/>
+  <text class="mono" x="130" y="82" text-anchor="middle" style="fill:#102033">TenantKeyFactory → prefixed keys</text>
+  <rect x="16" y="96" width="228" height="28" rx="6" fill="#E9F7F6" stroke="#45A7A1" stroke-width="1"/>
+  <text class="mono" x="130" y="116" text-anchor="middle" style="fill:#102033">tenant_id predicate on every query</text>
+</g>
+
+<!-- Isolation boundaries -->
+<g transform="translate(700,110)">
+  <rect class="card" x="0" y="0" width="200" height="60" rx="10" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="label" x="100" y="24" text-anchor="middle">Repository</text>
+  <text class="mono" x="100" y="44" text-anchor="middle">tenant-scoped queries</text>
+</g>
+<g transform="translate(940,110)">
+  <rect class="card" x="0" y="0" width="200" height="60" rx="10" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="label" x="100" y="24" text-anchor="middle">Cache</text>
+  <text class="mono" x="100" y="44" text-anchor="middle">acme:invoice:123</text>
+</g>
+<g transform="translate(700,200)">
+  <rect class="card" x="0" y="0" width="200" height="60" rx="10" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="label" x="100" y="24" text-anchor="middle">Lock</text>
+  <text class="mono" x="100" y="44" text-anchor="middle">acme:lock:invoice:123</text>
+</g>
+<g transform="translate(940,200)">
+  <rect class="card" x="0" y="0" width="200" height="60" rx="10" fill="#FDECEF" stroke="#DC6B82"/>
+  <text class="label" x="100" y="24" text-anchor="middle">Rate Limiter</text>
+  <text class="mono" x="100" y="44" text-anchor="middle">acme:rate:invoices</text>
+</g>
+<g transform="translate(820,290)">
+  <rect class="card" x="0" y="0" width="200" height="60" rx="10" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="label" x="100" y="24" text-anchor="middle">Metrics</text>
+  <text class="mono" x="100" y="44" text-anchor="middle">tag: tenant=acme</text>
+</g>
+
+<!-- Database -->
+<g transform="translate(400,380)">
+  <ellipse cx="80" cy="8" rx="80" ry="12" fill="#FFF3D9" stroke="#D6A441" stroke-width="2"/>
+  <rect x="0" y="8" width="160" height="28" fill="#FFF3D9" stroke="#D6A441" stroke-width="2"/>
+  <line x1="0" y1="8" x2="0" y2="36" stroke="#D6A441" stroke-width="2"/>
+  <line x1="160" y1="8" x2="160" y2="36" stroke="#D6A441" stroke-width="2"/>
+  <ellipse cx="80" cy="36" rx="80" ry="12" fill="#FFF3D9" stroke="#D6A441" stroke-width="2"/>
+  <text class="label" x="80" y="32" text-anchor="middle" style="font-size:16px">H2 + Exposed</text>
+</g>
+
+<!-- ARROWS -->
+<path class="line" d="M240,154 L338,200"/>
+<path class="line" d="M240,254 L338,240"/>
+
+<path class="line" d="M600,180 L600,140 L698,140"/>
+<path class="line" d="M600,200 L650,200 L650,140 L938,140"/>
+<path class="line" d="M600,230 L698,230"/>
+<path class="line" d="M600,240 L650,240 L650,230 L938,230"/>
+<path class="line" d="M600,260 L660,260 L660,310 L818,320"/>
+
+<path class="line" d="M470,280 L480,280 L480,378"/>
+</svg>
