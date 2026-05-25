@@ -16,13 +16,20 @@ Knowledge-graph 패턴 그대로 복사 후 모듈명만 변경. 핵심:
 - `integrationTest` task 등록
 - `libs.testcontainers.neo4j` — Neo4jContainer supertype 필요
 
-**Acceptance**: `./gradlew :graph-recommendation:compileKotlin` 성공.
+**Acceptance**:
+- `./gradlew :graph-recommendation:compileKotlin` 성공
+- `./gradlew :graph-recommendation:tasks` 목록에 `:graph-recommendation` 확인 (settings.gradle.kts 자동 등록 검증)
+- `graph/recommendation/build.gradle.kts` 존재
+
+> **Note**: `settings.gradle.kts`의 `includeModules("graph", ...)` 가 `graph/` 하위 디렉토리를 자동 등록. 디렉토리명이 `recommendation`이면 `:graph-recommendation`으로 등록됨. 명시적 등록 불필요하나 위 acceptance로 검증.
 
 ---
 
-### T2 — RecommendationSchema.kt
+### T2 — RecommendationSchema.kt + RecommendationConstants.kt
 **complexity: low**
-**File**: `src/main/kotlin/io/bluetape4k/workshop/graph/recommendation/schema/RecommendationSchema.kt`
+**Files**:
+- `src/main/kotlin/io/bluetape4k/workshop/graph/recommendation/schema/RecommendationSchema.kt`
+- `src/main/kotlin/io/bluetape4k/workshop/graph/recommendation/RecommendationConstants.kt`
 
 ```kotlin
 package io.bluetape4k.workshop.graph.recommendation.schema
@@ -55,7 +62,17 @@ object FollowsLabel : EdgeLabel("FOLLOWS", UserLabel, UserLabel)
 
 English KDoc on each object.
 
-**Acceptance**: 컴파일 성공, object 이름/label 문자열 스펙과 일치.
+```kotlin
+// RecommendationConstants.kt
+package io.bluetape4k.workshop.graph.recommendation
+
+/** Maximum number of recommendations returned by any recommend* function. */
+const val MAX_RECOMMENDATION_LIMIT: Int = 100
+```
+
+> **Rationale**: 단일 패키지 수준 상수 — `RecommendationService`와 `RecommendationSuspendService` 양쪽에서 import해 사용. 두 클래스 내 companion에 중복 선언 시 drift 위험.
+
+**Acceptance**: 컴파일 성공, object 이름/label 문자열 스펙과 일치. `MAX_RECOMMENDATION_LIMIT` 패키지 상수로 존재.
 
 ---
 
@@ -95,13 +112,24 @@ data class FollowRecommendation(
 }
 ```
 
-**Acceptance**: 컴파일, data class equality, Serializable 검증.
+**Acceptance**: 컴파일, data class equality, Serializable 검증. English KDoc on all public API members (class, all public constructor parameters).
+
+---
+
+### 🔴 Pre-Implementation Gate — bluetape4k-patterns (T4/T8 전 필수)
+
+T4와 T8 구현 시작 전 `Skill("bluetape4k-patterns")` 명시 호출 필수.
+점검 항목: KLogging/KLoggingChannel, requireNotBlank/requirePositiveNumber, Serializable+serialVersionUID, `close()` 독립 runCatching, suspend에서 CancellationException 재throw, 테스트 assertFailsWith/coInvoking/runTest.
 
 ---
 
 ### T4 — RecommendationService.kt (Blocking)
 **complexity: high**
 **File**: `src/main/kotlin/.../recommendation/service/RecommendationService.kt`
+
+> **Edge 중복 계약**: `purchase()`와 `follow()`는 중복 edge를 허용 (멱등성 없음). addUser/addProduct의 find-or-create 패턴과 다름 — 동일 쌍에 대해 여러 번 호출 시 edge가 누적됨. 추천 점수에 영향 없음 (co-buyer Set으로 dedup).
+>
+> **Non-existent vertex 계약**: `recommendProducts()`/`recommendFollows()` 에서 존재하지 않는 `userVertexId`를 넘기면 `ops.neighbors()`가 emptyList를 반환하므로 early return → `emptyList()` 반환. 별도 pre-check 불필요.
 
 구현 상세:
 
@@ -244,7 +272,7 @@ fun recommendFollows(userVertexId: GraphElementId, limit: Int = 10): List<Follow
 }
 ```
 
-**Acceptance**: 단위 테스트에서 알고리즘 정확도 검증 (spec Section 6 예상값과 일치).
+**Acceptance**: 단위 테스트에서 알고리즘 정확도 검증 (spec Section 6 예상값과 일치). English KDoc on all public API members (`initialize`, `addUser`, `addProduct`, `purchase`, `follow`, `recommendProducts`, `recommendFollows`).
 
 ---
 
@@ -261,7 +289,9 @@ fun recommendFollows(userVertexId: GraphElementId, limit: Int = 10): List<Follow
 
 블로킹 서비스와 동일한 알고리즘 구조. `neighbors()`는 `Flow<GraphVertex>` 반환 → `.toList()` 수집 후 처리.
 
-**Acceptance**: suspend 서비스로 blocking 서비스와 동일한 추천 결과 생성.
+> **시퀀싱 노트**: T5는 T4의 blocking 구현을 diff 기준으로 작성. T4가 커밋된 이후 T5를 시작해야 안전 (Build Order 참조). 모든 `ops.neighbors(...)` 호출에 `suspend` 추가 + `Flow<GraphVertex>.toList()` 수집이 핵심 변경점.
+
+**Acceptance**: suspend 서비스로 blocking 서비스와 동일한 추천 결과 생성. English KDoc on all public API members (동일 7개 함수).
 
 ---
 
@@ -295,6 +325,29 @@ fun seedRecommendation(service: RecommendationService): RecommendationSeed { ...
 suspend fun seedRecommendation(service: RecommendationSuspendService): RecommendationSeed { ... }
 ```
 
+도메인 키 정확한 string 값 (정렬 tie-break 테스트 결정요소):
+
+```kotlin
+// userId 값 — 알파벳 순서: alice < bob < carol < dave < eve < frank
+const val USER_ALICE   = "alice"
+const val USER_BOB     = "bob"
+const val USER_CAROL   = "carol"
+const val USER_DAVE    = "dave"
+const val USER_EVE     = "eve"
+const val USER_FRANK   = "frank"
+
+// productId 값 — 알파벳 순서: headphones < keyboard < laptop < mouse < phone < tablet
+const val PROD_HEADPHONES = "headphones"
+const val PROD_KEYBOARD   = "keyboard"
+const val PROD_LAPTOP     = "laptop"
+const val PROD_MOUSE      = "mouse"
+const val PROD_PHONE      = "phone"
+const val PROD_TABLET     = "tablet"
+```
+
+이 정확한 값들이 `addUser(userId=...)` / `addProduct(productId=...)` 호출에 사용됨.
+tie-break 정렬: keyboard < mouse (알파벳), dave < eve (알파벳) → 테스트 어설션 기준.
+
 Seed topology (spec Section 6):
 - 6 users, 6 products
 - 18 PURCHASED edges (as per spec table)
@@ -327,9 +380,11 @@ knowledge-graph 모듈에서 복사. `logback-test.xml`은 패키지명 `recomme
 abstract class AbstractRecommendationTest {
     protected abstract val graphName: String
     protected abstract val ops: GraphOperations
-    protected abstract val service: RecommendationService
 
-    private lateinit var seed: RecommendationSeed
+    /** Concrete classes may override; default is lazy-initialized from [ops] and [graphName]. */
+    protected open val service: RecommendationService by lazy { RecommendationService(ops, graphName) }
+
+    protected lateinit var seed: RecommendationSeed
 
     @BeforeEach
     fun cleanGraph() {
@@ -371,7 +426,7 @@ abstract class AbstractRecommendationTest {
 class TinkerGraphRecommendationTest : AbstractRecommendationTest() {
     override val graphName = "recommendation"
     override val ops = TinkerGraphOperations()
-    override val service = RecommendationService(ops, graphName)
+    // service는 AbstractRecommendationTest.service (by lazy) 상속 — 재정의 불필요
 }
 ```
 
@@ -393,7 +448,7 @@ class Neo4jRecommendationTest : AbstractRecommendationTest() {
     }
     override val graphName = "neo4j_recommendation"
     override val ops get() = graphOps
-    override val service get() = RecommendationService(ops, graphName)
+    // service는 AbstractRecommendationTest.service (by lazy) 상속 — 재정의 불필요
 
     @AfterAll
     fun tearDown() {
@@ -422,7 +477,7 @@ class MemgraphRecommendationTest : AbstractRecommendationTest() {
     }
     override val graphName = "memgraph_recommendation"
     override val ops get() = graphOps
-    override val service get() = RecommendationService(ops, graphName)
+    // service는 AbstractRecommendationTest.service (by lazy) 상속 — 재정의 불필요
 
     @AfterAll
     fun tearDown() {
@@ -446,7 +501,13 @@ T8과 동일한 테스트 구조, 모든 `@Test`는 `runTest { }` 사용.
 abstract class AbstractRecommendationSuspendTest {
     protected abstract val graphName: String
     protected abstract val ops: GraphSuspendOperations
-    protected abstract val service: RecommendationSuspendService
+
+    /** Concrete classes may override; default is lazy-initialized from [ops] and [graphName]. */
+    protected open val service: RecommendationSuspendService by lazy {
+        RecommendationSuspendService(ops, graphName)
+    }
+
+    protected lateinit var seed: RecommendationSeed
 
     @BeforeEach
     fun cleanGraph() = runTest {
@@ -455,16 +516,33 @@ abstract class AbstractRecommendationSuspendTest {
         seed = seedRecommendation(service)
     }
 
+    // Test groups — 동일 케이스 수 as T8:
+    // 1. Vertex mutators: suspend addUser, addProduct (create + idempotent)
+    // 2. Input validation: blank fields, rating > 5, limit = 0, limit = 101, self-follow
+    // 3. Edge mutators: suspend purchase, follow
+    // 4. recommendProducts (suspend):
+    //    - alice→headphones(3)/keyboard(1)/mouse(1) with correct ordering
+    //    - user with no purchases → emptyList
+    //    - self-exclusion (alice not in results)
+    //    - limit=1 returns only top result
+    //    - non-existent userVertexId → emptyList
+    // 5. recommendFollows (suspend):
+    //    - alice→dave(1)/eve(1) with tie-break ordering
+    //    - user with no follows → emptyList
+    //    - self-exclusion
+    //    - limit=1 returns only top result
+    //    - non-existent userVertexId → emptyList
+
     @Test
     fun `recommendProducts returns correct results for alice`() = runTest {
         val results = service.recommendProducts(seed.alice.id)
         // assert headphones=3 is first
     }
-    // ... (T8와 동일한 케이스 수)
+    // ... (T8와 동일한 케이스 수 — 위 test group 목록 기준)
 }
 ```
 
-**Acceptance**: T8과 동일한 케이스 수, TinkerGraph 기준 통과.
+**Acceptance**: TinkerGraph 기준 모든 suspend 테스트 통과 (`runTest { }`). 케이스 수 `AbstractRecommendationTest`와 동일 (group 1-5 각 항목 모두 포함).
 
 ---
 
@@ -476,9 +554,11 @@ abstract class AbstractRecommendationSuspendTest {
 class TinkerGraphRecommendationSuspendTest : AbstractRecommendationSuspendTest() {
     override val graphName = "recommendation_suspend"
     override val ops = TinkerGraphSuspendOperations()
-    override val service = RecommendationSuspendService(ops, graphName)
+    // service는 AbstractRecommendationSuspendTest.service (by lazy) 상속
 }
 ```
+
+**Acceptance**: `./gradlew :graph-recommendation:test` 성공 (TinkerGraph suspend 포함).
 
 ---
 
@@ -496,12 +576,14 @@ class Neo4jRecommendationSuspendTest : AbstractRecommendationSuspendTest() {
     }
     override val graphName = "neo4j_recommendation_suspend"
     override val ops get() = graphOps
-    override val service get() = RecommendationSuspendService(ops, graphName)
+    // service는 AbstractRecommendationSuspendTest.service (by lazy) 상속
 
     @AfterAll
     fun tearDown() { runCatching { driver.close() } }
 }
 ```
+
+**Acceptance**: `./gradlew :graph-recommendation:integrationTest` 성공 (Neo4j suspend).
 
 ---
 
@@ -521,12 +603,14 @@ class MemgraphRecommendationSuspendTest : AbstractRecommendationSuspendTest() {
     }
     override val graphName = "memgraph_recommendation_suspend"
     override val ops get() = graphOps
-    override val service get() = RecommendationSuspendService(ops, graphName)
+    // service는 AbstractRecommendationSuspendTest.service (by lazy) 상속
 
     @AfterAll
     fun tearDown() { runCatching { driver.close() } }
 }
 ```
+
+**Acceptance**: `./gradlew :graph-recommendation:integrationTest` 성공 (Memgraph suspend).
 
 ---
 
@@ -535,7 +619,7 @@ class MemgraphRecommendationSuspendTest : AbstractRecommendationSuspendTest() {
 **Files**: `graph/recommendation/README.md`, `graph/recommendation/README.ko.md`
 
 구조:
-1. Architecture diagram (ASCII)
+1. Architecture diagram — **SVG+PNG** (`docs/images/readme-diagrams/recommendation-architecture.{svg,png}`); `bluetape4k-diagram` skill 호출 후 생성; ASCII fence 최종 README 사용 금지
 2. Domain model (User/Product/PURCHASED/FOLLOWS)
 3. Algorithm overview (Collaborative Filtering + FOAF)
 4. Seed topology + expected results
@@ -547,12 +631,28 @@ English README + Korean README 동시 작성.
 
 ---
 
+### T17 — CLAUDE.md 모듈 테이블 업데이트
+**complexity: low**
+**File**: `CLAUDE.md` (worktree 루트)
+
+현재 CLAUDE.md 모듈 테이블에 `graph/` 도메인 행이 없음. `graph/recommendation` 신규 서브모듈 추가에 맞춰 업데이트.
+
+```
+| `graph/` | 그래프 DB 예제: social-network, abuser-detection, knowledge-graph, recommendation |
+```
+
+(기존 `social-network`, `abuser-detection`, `knowledge-graph` 포함 통합 행 또는 `recommendation` 서브항목 추가.)
+
+**Acceptance**: CLAUDE.md 모듈 테이블에 `graph/` 또는 `graph/recommendation` 참조 존재.
+
+---
+
 ## 복잡도 요약
 
 | Task | Subject | Complexity |
 |------|---------|-----------|
 | T1 | build.gradle.kts | low |
-| T2 | RecommendationSchema.kt | low |
+| T2 | RecommendationSchema.kt + Constants | low |
 | T3 | Model classes | low |
 | T4 | RecommendationService.kt | **high** |
 | T5 | RecommendationSuspendService.kt | **high** |
@@ -567,27 +667,38 @@ English README + Korean README 동시 작성.
 | T14 | Neo4jRecommendationSuspendTest.kt | medium |
 | T15 | MemgraphRecommendationSuspendTest.kt | medium |
 | T16 | README.md + README.ko.md | medium |
+| T17 | CLAUDE.md 모듈 테이블 업데이트 | low |
 
 ## Build Order
 
 병렬 실행 가능 그룹:
 - **Group 1** (독립): T1, T2, T3, T7
-- **Group 2** (T2, T3 이후): T4, T5, T6
-- **Group 3** (T4+T6 이후): T8, T12
+- **Group 2** (T2, T3 이후): T4, T6 병렬; T5는 **T4 커밋 이후** 시작 (T5는 T4의 diff 기준 구현)
+- **Group 3a** (T4+T6 이후): T8
+- **Group 3b** (T5+T6 이후): T12 (T5 의존 — T4가 아님)
 - **Group 4** (T8 이후): T9, T10, T11
 - **Group 5** (T12 이후): T13, T14, T15
-- **Group 6** (모두 완료 후): T16
+- **Group 6** (모두 완료 후): T16, T17
+
+> **T12 의존성 주의**: T12(`AbstractRecommendationSuspendTest`)는 T5(`RecommendationSuspendService`)에 의존. T4(blocking) 완료 전 T12 시작 시 compile 실패.
 
 ## DoD
 
 - [ ] `./gradlew :graph-recommendation:test` — TinkerGraph 통과
 - [ ] `./gradlew :graph-recommendation:integrationTest` — Neo4j + Memgraph 통과
 - [ ] blocking/suspend 각 3개 backend concrete 클래스 존재
-- [ ] 입력 검증 + self-follow + non-existent vertex 테스트 포함
+- [ ] 입력 검증 + self-follow + non-existent vertex 테스트 포함 (blocking + suspend 양쪽)
+- [ ] **non-existent vertex → emptyList() 계약 테스트 포함** (blocking AbstractRecommendationTest + suspend AbstractRecommendationSuspendTest 양쪽)
+- [ ] **AbstractRecommendationSuspendTest 테스트 케이스 수 = AbstractRecommendationTest 테스트 케이스 수** (group 1-5 동일 항목 포함)
 - [ ] English KDoc on all public APIs
+- [ ] CLAUDE.md 모듈 테이블에 `graph/` 행 추가 또는 `graph/recommendation` 주석 추가 (T17)
 
 ## Appendix: Step 3-R 리뷰 이력
 
-| Round | P0/P1 수 | 적용 내용 | commit |
-|-------|---------|----------|--------|
-| (초기) | TBD | - | - |
+| Round | Perspective | P0 | P1 | P2 | 적용 내용 | commit |
+|-------|------------|----|----|----|---------| -------|
+| Round 1 | Delivery | 0 | 6 | 0 | D1(T17), D2(pre-gate), D3(DoD), D4(KDoc acceptance), D5(SVG+PNG), D6(T1 acceptance) | TBD |
+| Round 1 | Test Engineer | 0 | 2 | 1 | TE1(T12-T15 acceptance), TE2(DoD parity), TE3(T12 test list) | TBD |
+| Round 1 | Implementer | 0 | 5 | 4 | I1(seed keys), I2(protected seed), I3(T12 seed), I4(Group 3b), I5(service by lazy) | TBD |
+| Round 1 | Architect | 0 | 2 | 1 | A1(SVG+PNG=D5), A2(MAX_RECOMMENDATION_LIMIT 상수) | TBD |
+| Round 1 | **합계** | **0** | **14** | **6** | 14 HIGH 모두 반영, plan 수정 | TBD |
