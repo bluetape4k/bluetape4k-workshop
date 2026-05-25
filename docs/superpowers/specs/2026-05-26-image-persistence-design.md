@@ -50,8 +50,11 @@ All saga transactions are `REQUIRES_NEW` — no implicit enlistment in a possibl
 // In ImageDerivativeWorkflowService catch block
 withContext(NonCancellable + Dispatchers.IO) {
     try {
-        persistence.recordJobFailure(jobId, assetId, errorCode, sanitizedMessage)
-    } catch (t3Ex: Exception) {
+        persistence.recordJobFailure(
+            identity = JobIdentity(jobId, assetId),
+            reason = JobFailureReason(errorCode, sanitizedMessage),
+        )
+    } catch (t3Ex: Throwable) {  // Throwable (not Exception) to catch Error subclasses
         // T3 failure must NOT swallow the original exception
         originalException.addSuppressed(t3Ex)
         log.error(t3Ex) { "Failed to record job failure: assetId=$assetId jobId=$jobId" }
@@ -94,6 +97,7 @@ try {
      - If `status=FAILED`: **retry recovery** — update status→PROCESSING, create new job row.
      - If no row: insert new asset.
    - If `DataIntegrityViolationException` on insert (lost insert race): catch **OUTSIDE the `@Transactional` method** (the transaction has already rolled back before the exception propagates to the caller), re-read by checksum, branch on status.
+   - **Null branch after re-read** (concurrent delete): If the re-read returns null (asset deleted between insert-fail and re-read), throw `ImageAssetNotFoundException(checksum)` — do NOT return null, do NOT swallow the original `DataIntegrityViolationException`, and do NOT proceed with the saga. Null here is a distinct non-recoverable condition.
 
    > **FAILED-retry concurrent race**: If two retries on the same FAILED asset run concurrently, both read `status=FAILED`, both update→PROCESSING, and both insert a new job row, resulting in two `RUNNING` jobs on the same asset. This is an accepted race condition for the workshop scope. In production, mitigate with a `SELECT … FOR UPDATE` lock on the `image_assets` row before updating status. The duplicate-job scenario is detected by the stale-job monitoring query (§3.6) and resolved via manual remediation or an idempotency window.
 
@@ -117,8 +121,13 @@ try {
 | `JOB_COMPLETED` | After T2 commits | `COMPLETED` | `{assetId, jobId, objectCount}` |
 | `JOB_FAILED` | After T3 commits (in catch block) | `FAILED` | `{errorCode, errorMessage}` |
 
-> **Note**: `JOB_STARTED` has been merged into T1 metadata; the first event in the job's event log is `VALIDATION`, emitted immediately after T1 so that `jobId` is always available.  
-> **READY short-circuit**: when `recordJobStart()` returns `alreadyExists=true`, no new job is created and no events are emitted.
+> **Note**: `JOB_STARTED` has been merged into T1 metadata; the first event in the job's event log is `VALIDATION`, emitted immediately after T1 so that `jobId` is always available.
+>
+> **READY short-circuit** (`JobStartResult.AlreadyReady`): no new job is created and no events are emitted.
+>
+> **FAILED-retry path** (`JobStartResult.RecoveredFromFailed`): a `VALIDATION` step event is emitted with `status=COMPLETED` (same as a fresh upload) after the new job is created.
+>
+> **S3_UPLOAD FAILED is terminal**: if any S3 `putObject` fails, the caller must NOT upload remaining variants. Emit a `S3_UPLOAD` event with `status=FAILED` for the failed variant, then immediately invoke T3. Partial-success paths (some variants uploaded, job marked SUCCEEDED) are prohibited.
 
 **Event write rules**:
 - Each step event is written in its own `REQUIRES_NEW` mini-transaction (from §3.1).
@@ -272,16 +281,16 @@ src/test/kotlin/.../advanced/           ← NoopImagePersistenceService HERE (no
 ```kotlin
 interface ImagePersistenceService {
     /**
-     * T1: Record job start (REQUIRES_NEW).
+     * T1: Record job start (NOT @Transactional at interface level — implementation uses a
+     * private inner @Transactional(REQUIRES_NEW) method internally, so that
+     * DataIntegrityViolationException can be caught by the public method OUTSIDE the transaction).
      * Creates or recovers image_assets row + new image_processing_jobs row.
+     *
+     * May throw DataIntegrityViolationException if lost-insert race is not recoverable
+     * (asset deleted between insert-fail and re-read → throws ImageAssetNotFoundException).
      */
     fun recordJobStart(
-        checksum: String,
-        originalFilename: String,
-        contentType: String,
-        byteSize: Long,
-        width: Int?,
-        height: Int?,
+        assetMetadata: AssetMetadataInput,
         requestedVariants: List<String>,
     ): JobStartResult
 
@@ -290,8 +299,7 @@ interface ImagePersistenceService {
      * Upserts image_objects rows, updates asset→READY, job→SUCCEEDED.
      */
     fun recordJobSuccess(
-        jobId: Long,
-        assetId: Long,
+        identity: JobIdentity,
         objects: List<ImageObjectInput>,
     ): Unit
 
@@ -300,15 +308,15 @@ interface ImagePersistenceService {
      * Updates job→FAILED + asset→FAILED.
      */
     fun recordJobFailure(
-        jobId: Long,
-        assetId: Long,
-        errorCode: String,
-        errorMessage: String,
+        identity: JobIdentity,
+        reason: JobFailureReason,
     ): Unit
 
     /**
      * Event mini-tx: Append one event row (REQUIRES_NEW).
-     * Failure suppressed by caller (see §3.7).
+     * PROPAGATION CONTRACT: this method propagates exceptions to the caller.
+     * The CALLER (ImageDerivativeWorkflowService) is responsible for suppressing,
+     * logging, and metering the failure (see §3.7). Do NOT swallow inside the implementation.
      */
     fun appendEvent(
         jobId: Long,
@@ -325,27 +333,85 @@ interface ImagePersistenceService {
     fun findAssetHistory(externalId: String): ImageAssetHistoryResponse?
 }
 
-data class JobStartResult(
-    val assetId: Long,
-    val jobId: Long,
-    val alreadyExists: Boolean,  // true → READY short-circuit; caller skips processing
+/**
+ * Input to T1 (recordJobStart). Wraps 3 adjacent String fields + nullable dimensions
+ * to prevent positional mistakes at call sites.
+ */
+data class AssetMetadataInput(
+    val checksum: String,
+    val originalFilename: String,
+    val contentType: String,
+    val byteSize: Long,
+    val dimensions: ImageDimensions?,   // null = dimensions unknown at upload time
 ) : Serializable {
     companion object { const val serialVersionUID = 1L }
 }
 
+/**
+ * Atomic image dimensions. Invariant: if width is known, height must also be known.
+ * Use `ImageDimensions?` instead of `width: Int?, height: Int?` independently.
+ */
+data class ImageDimensions(val width: Int, val height: Int) : Serializable {
+    companion object { const val serialVersionUID = 1L }
+}
+
+/**
+ * Identifies a (job, asset) pair for T2/T3 operations. Wraps adjacent Long params
+ * to prevent transposition at call sites.
+ */
+data class JobIdentity(val jobId: Long, val assetId: Long) : Serializable {
+    companion object { const val serialVersionUID = 1L }
+}
+
+/**
+ * Wraps failure reason strings to prevent adjacent String transposition at T3 call sites.
+ */
+data class JobFailureReason(val errorCode: String, val errorMessage: String) : Serializable {
+    companion object { const val serialVersionUID = 1L }
+}
+
+/**
+ * Sealed result of recordJobStart. Expresses all 4 saga branch outcomes explicitly.
+ * Callers use exhaustive `when` or `is` checks; the Boolean `alreadyExists` flag is avoided.
+ */
+sealed interface JobStartResult : Serializable {
+    val assetId: Long
+    val jobId: Long
+
+    /** Brand-new asset inserted; normal processing. */
+    data class NewAsset(override val assetId: Long, override val jobId: Long) : JobStartResult {
+        companion object { const val serialVersionUID = 1L }
+    }
+    /** Asset with READY status found; caller should skip processing. */
+    data class AlreadyReady(override val assetId: Long, override val jobId: Long = -1L) : JobStartResult {
+        companion object { const val serialVersionUID = 1L }
+    }
+    /** A concurrent or stale PROCESSING run exists; new job created on same asset. */
+    data class ConcurrentProcessing(override val assetId: Long, override val jobId: Long) : JobStartResult {
+        companion object { const val serialVersionUID = 1L }
+    }
+    /** Previous FAILED asset recovered; status reset to PROCESSING, new job created. */
+    data class RecoveredFromFailed(override val assetId: Long, override val jobId: Long) : JobStartResult {
+        companion object { const val serialVersionUID = 1L }
+    }
+}
+
 data class ImageObjectInput(
-    val kind: ImageObjectKind,        // ORIGINAL | VARIANT
+    val kind: ImageObjectKind,        // defined in existing schema (ORIGINAL | VARIANT) — not a new type
     val variantName: String?,         // null for ORIGINAL
     val s3Key: String,
     val publicUrl: String,
-    val width: Int?,
-    val height: Int?,
+    val dimensions: ImageDimensions?, // null = dimensions not computed for this object
     val byteSize: Long,
     val format: String?,
 ) : Serializable {
     companion object { const val serialVersionUID = 1L }
 }
 ```
+
+**`ImageObjectKind` source**: defined in the existing `advanced-workflow` codebase (from issue #93). New code reuses it directly; no duplicate definition.
+
+**`AuditorAware<String>` configuration**: A `@Bean fun auditorAware(): AuditorAware<String> = AuditorAware { Optional.of("image-processing-service") }` must be declared in `ImagePersistenceAutoConfiguration` (or a dedicated `@Configuration` class within the persistence package). Without this bean, `LongAuditableJdbcRepository` cannot populate `created_by`/`updated_by`.
 
 **Status enum clarification** (by design — intentional separation):
 - `ImageAssetStatus` (`image_assets.status`): `PROCESSING | READY | FAILED`
@@ -404,18 +470,6 @@ This module is a **workshop/demo** running in a trusted local context. The follo
 ## 8. Configuration
 
 ### application.yml additions
-```yaml
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/image_processing
-    username: postgres
-    password: postgres
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      connection-init-sql: "SET statement_timeout='10000'"  # 10s per statement
-      maximum-pool-size: 10
-      connection-timeout: 30000
-```
 
 **Pool sizing analysis**:
 - Each upload request uses at most: T1 (1 connection) + up to 6 event mini-tx (1 each, sequential) + T2 (1 connection) = serial usage, max 1 connection held at any time per request.
@@ -467,18 +521,22 @@ Each DoD criterion must have at least one named integration test.
 | T2 | Successful upload: T2 writes READY + SUCCEEDED + image_objects | `ImagePersistenceServiceImplTest` | After `recordJobSuccess()`: asset=READY, job=SUCCEEDED, `image_objects` count = variants+1 |
 | T3-status | Failed upload: T3 writes FAILED status | `ImagePersistenceServiceImplTest` | After `recordJobFailure()`: job=FAILED, asset=FAILED |
 | T3-fields | Failed upload: error_code + error_message are non-null | `ImagePersistenceServiceImplTest` | `job.errorCode` and `job.errorMessage` are not null or blank |
-| T3-propagate | T3 DB failure: original exception still propagates | `ImagePersistenceServiceImplTest` | Disconnect DB before T3 → verify original exception (not T3 DB exception) is thrown |
+| T3-propagate | T3 DB failure: original exception still propagates | `ImageDerivativeWorkflowServiceTest` | Spy `ImagePersistenceService.recordJobFailure()` to throw; trigger upload with failing VIPS mock → assert caught exception is the original VIPS exception; `suppressed[0]` is the T3 exception |
 | Idempotency-checksum | Retry same checksum → no duplicate image_objects | `ImagePersistenceServiceImplTest` | Upload same bytes twice → `COUNT(image_objects WHERE image_asset_id=X)` = expected variants+1 |
-| Idempotency-short-circuit | Same checksum + READY → no re-processing | `ImagePersistenceServiceImplTest` | `recordJobStart()` returns `alreadyExists=true` on second call |
+| Idempotency-short-circuit | Same checksum + READY → no re-processing | `ImagePersistenceServiceImplTest` | `recordJobStart()` returns `JobStartResult.AlreadyReady` on second call |
 | FAILED-retry | FAILED asset + same checksum → retry succeeds | `ImagePersistenceServiceImplTest` | Seed a FAILED asset → call `recordJobStart()` → asset status=PROCESSING, new job created |
 | GET-asset | GET /images/{id} returns data from DB | `ImageAssetEndpointTest` | Seed data via persistence service → call endpoint → verify URLs match DB rows |
 | GET-404 | GET /images/{unknown-id} → 404 ProblemDetail | `ImageAssetEndpointTest` | Response status 404, Content-Type `application/problem+json` |
 | GET-history | GET /history returns job + events | `ImageAssetEndpointTest` | Response jobs list non-empty; first job has events with step names |
 | DB-init | DatabaseInitializer creates all 4 tables | `ImagePersistenceServiceImplTest` | On Spring context start, all 4 tables queryable via `SELECT COUNT(*) FROM ...` |
-| Event-success-path | Successful upload emits all 5 step events in order | `ImagePersistenceServiceImplTest` | After full saga: `image_processing_events` rows for `VALIDATION→VIPS_PROCESSING→S3_UPLOAD(×N)→JOB_COMPLETED`, ordered by `created_at`; each has non-null `step`, `status=COMPLETED`; total row count = 3 + N (where N = variant count + 1 for original) |
+| GET-asset-failed | GET /images/{id} when asset has status=FAILED and no image_objects | `ImageAssetEndpointTest` | Seed asset with status=FAILED, call endpoint → 200 with `original=null`, `variants=[]` (or documented 4xx) — must not throw NPE |
+| Idempotency-null-original | ORIGINAL row deduplicated by NULLS NOT DISTINCT constraint | `ImagePersistenceServiceImplTest` | Call `recordJobSuccess()` twice with same `assetId` and an ORIGINAL object; assert exactly 1 row with `kind=ORIGINAL` and `variant_name IS NULL` in `image_objects` |
+| T3-sanitization | error_message contains no stack traces | `ImagePersistenceServiceImplTest` | After `recordJobFailure()` with an exception-derived message: `job.errorMessage` does not contain newline (`\n`), `"at io."`, or `"Exception"` |
+| Event-success-path | Successful upload emits all 4 step events in order | `ImagePersistenceServiceImplTest` | After full saga: `image_processing_events` rows for `VALIDATION→VIPS_PROCESSING→S3_UPLOAD(×N)→JOB_COMPLETED`, ordered by `created_at`; each has non-null `step`, `status=COMPLETED`; total row count = 3 + N (where N = variant count + 1 for original) |
 | Event-failure-path | Failed upload emits `JOB_FAILED` event | `ImagePersistenceServiceImplTest` | After T3: one `image_processing_events` row with `step=JOB_FAILED`, `status=FAILED`, non-null `message` |
-| Event-mini-tx-suppression | Event mini-tx throws → main flow unaffected | `ImagePersistenceServiceImplTest` | Spy/mock `appendEvent` to throw; call `recordJobStart()` → no exception propagated; main saga result is valid |
-| Concurrent-checksum-race | Two simultaneous uploads of same checksum → graceful | `ImagePersistenceServiceImplTest` | Launch 2 coroutines calling `recordJobStart()` with same checksum concurrently; one gets `alreadyExists=true` or same `assetId`; no unhandled DB exception; `image_assets` count = 1 |
+| Event-mini-tx-suppression | Event mini-tx throws → main flow unaffected | `ImageDerivativeWorkflowServiceTest` | `@MockkBean` `ImagePersistenceService` stub `appendEvent` to throw; call full `processUpload()` → no exception propagated; upload response valid; Micrometer counter `image.processing.event.append.failed` incremented |
+| Concurrent-checksum-race-deterministic | DIVE catch-and-re-read path correct | `ImagePersistenceServiceImplTest` | Mock first INSERT to throw `DataIntegrityViolationException`; verify `recordJobStart()` re-reads by checksum and returns valid result without propagating the DIVE |
+| Concurrent-checksum-race-probabilistic | Two simultaneous uploads → graceful (probabilistic) | `ImagePersistenceServiceImplTest` | Use `MultithreadingTester` (bluetape4k-junit5) with 2 threads calling `recordJobStart()` with same checksum; assert no exception escapes; `SELECT COUNT(*) FROM image_assets WHERE checksum=X` = 1. **Note**: probabilistic; documents workshop-scale confidence only |
 
 ---
 
@@ -492,7 +550,7 @@ Each DoD criterion must have at least one named integration test.
 - [ ] FAILED asset + same checksum retry succeeds (no `DataIntegrityViolationException`)
 - [ ] Concurrent same-checksum uploads handled gracefully (no unhandled DB exception)
 - [ ] All existing tests (`ImageDerivativeWorkflowServiceTest`, unit tests) pass without PostgreSQL
-- [ ] Integration tests cover all 16 scenarios in §10 (including 4 new event lifecycle + race scenarios)
+- [ ] Integration tests cover all 20 scenarios in §10 (including event lifecycle, race, sanitization, and GET-failed scenarios)
 - [ ] `README.md` and `README.ko.md` include ERD + updated persistence sequence diagram
 - [ ] `README.md` includes "Used Bluetape4k features" table
 - [ ] `README.md` includes stale-job monitoring query in Operations section
@@ -520,7 +578,9 @@ Each DoD criterion must have at least one named integration test.
 
 ## Appendix: Review Iteration Log
 
-| Round | Phase 1 P0/P1 | Silent Failure P0/P1 | Security P0/P1 | Test P0/P1 | 6-Tier Advisor P1 | P0/P1 applied | Commit |
-|-------|--------------|---------------------|---------------|-----------|------------------|---------------|--------|
-| 1 | 3 HIGH / 4 MEDIUM | 4 HIGH / 4 MEDIUM | 0 HIGH / 3 MEDIUM | 8 HIGH / 6 MEDIUM | — | All HIGH addressed in spec rev | committed |
-| 2 (advisor) | (pending) | (pending) | (pending) | (pending) | P0=0, P1=5 (Tier3+5+6) | §3.7 event lifecycle, interface sigs, pool analysis, 4 new §10 scenarios | committed |
+| Round | Architect P0/P1 | Silent Failure P0/P1 | Test P0/P1 | Type Design P0/P1 | Codex P0/P2 | 6-Tier Advisor P0/P1 | P0/P1 applied | Commit |
+|-------|----------------|---------------------|-----------|-------------------|-------------|----------------------|---------------|--------|
+| 1 | 3 HIGH / 4 MED | 4 HIGH / 4 MED | 8 HIGH / 6 MED | — | — | — | All HIGH addressed in spec rev | committed |
+| 2 (advisor) | — | — | — | — | — | P0=0, P1=5 (Tier3+5+6) | §3.7 event lifecycle, interface sigs, pool analysis, 4 new §10 scenarios | committed |
+| 2 (Codex) | — | — | — | — | P0=0, P2=2 | — | VALIDATION after T1 (jobId avail), remove STARTED enum, fix success-path assertion | committed |
+| 2 (Round 2) | 0/3 | 0/2 (null-branch fixed) | 0/6 | **P0=1**/3 | — | — | AssetMetadataInput, JobIdentity, JobFailureReason, sealed JobStartResult, ImageDimensions, AuditorAware config, T3 Throwable, S3_UPLOAD FAILED terminal, 4 new scenarios, 2 test class relocations, dedup YAML | committed |
