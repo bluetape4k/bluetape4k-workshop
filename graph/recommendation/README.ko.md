@@ -23,11 +23,7 @@ TinkerGraph, Neo4j, Memgraph 백엔드를 지원합니다.
 
 ## 도메인 모델
 
-```
-User ──PURCHASED──► Product
- │                   (rating: Int, purchasedAt: Instant)
- └──FOLLOWS──► User
-```
+![Domain Model](docs/images/readme-diagrams/recommendation-domain-model.png)
 
 * `User` 버텍스: `userId`, `name` 속성
 * `Product` 버텍스: `productId`, `name`, `category` 속성
