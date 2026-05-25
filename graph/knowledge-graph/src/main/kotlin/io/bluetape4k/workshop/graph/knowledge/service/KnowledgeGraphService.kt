@@ -47,7 +47,10 @@ class KnowledgeGraphService(
     private val ops: GraphOperations,
     private val graphName: String = "knowledge_graph",
 ) {
-    companion object : KLogging()
+    companion object : KLogging() {
+        /** Maximum traversal depth for neighbor and path queries. */
+        const val MAX_TRAVERSAL_DEPTH: Int = 10
+    }
 
     /**
      * Creates the backing graph when it does not already exist.
@@ -172,12 +175,16 @@ class KnowledgeGraphService(
 
     /**
      * Returns entities reachable from [entityId] via RELATED_TO edges within [depth] hops.
+     *
+     * @param depth traversal depth; must be in 1..[MAX_TRAVERSAL_DEPTH]
      */
-    fun findRelatedEntities(entityId: GraphElementId, depth: Int = 1): List<GraphVertex> =
-        ops.neighbors(
+    fun findRelatedEntities(entityId: GraphElementId, depth: Int = 1): List<GraphVertex> {
+        depth.requireInRange(1, MAX_TRAVERSAL_DEPTH, "depth")
+        return ops.neighbors(
             entityId,
             NeighborOptions(edgeLabel = RelatedToLabel.label, direction = Direction.OUTGOING, maxDepth = depth),
         )
+    }
 
     /**
      * Returns concepts that [entityId] is classified under (follows IS_A edges outward).
@@ -200,6 +207,7 @@ class KnowledgeGraphService(
         maxDepth: Int = 3,
         maxPaths: Int = 10,
     ): List<GraphPath> {
+        maxDepth.requireInRange(1, MAX_TRAVERSAL_DEPTH, "maxDepth")
         maxPaths.requireInRange(1, Int.MAX_VALUE, "maxPaths")
         return ops.allPaths(
             fromEntityId,

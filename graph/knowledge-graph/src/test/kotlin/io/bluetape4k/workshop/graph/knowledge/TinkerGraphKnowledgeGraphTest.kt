@@ -1,9 +1,9 @@
 package io.bluetape4k.workshop.graph.knowledge
 
-import io.bluetape4k.graph.tinkerpop.TinkerGraphOperations
-import io.bluetape4k.graph.tinkerpop.TinkerGraphSuspendOperations
 import io.bluetape4k.graph.repository.GraphOperations
 import io.bluetape4k.graph.repository.GraphSuspendOperations
+import io.bluetape4k.graph.tinkerpop.TinkerGraphOperations
+import io.bluetape4k.graph.tinkerpop.TinkerGraphSuspendOperations
 import io.bluetape4k.logging.KLogging
 
 /**
