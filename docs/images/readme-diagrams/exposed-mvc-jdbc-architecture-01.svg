@@ -1,146 +1,180 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="860" viewBox="0 0 1200 860" role="img" aria-label="Exposed MVC JDBC Architecture">
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="920" viewBox="0 0 1400 920" role="img" aria-label="Exposed MVC JDBC Architecture">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
   <marker id="arrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
     <path d="M2,2 L12,7 L2,12 Z" fill="#758297"/>
   </marker>
+  <marker id="arrowFK" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+    <path d="M2,2 L12,7 L2,12 Z" fill="#45A7A1"/>
+  </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:36px;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:15px;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:21px;fill:#102033}
-    .mono{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:13px;fill:#536273}
-    .bandlabel{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:15px;fill:#758297}
+    .title{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:34px;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:14px;fill:#536273}
+    .label{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:18px;fill:#102033}
+    .mono{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:11px;fill:#536273}
+    .bandlabel{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:14px;fill:#758297}
     .card{stroke-width:2;filter:url(#shadow)}
     .line{stroke:#758297;stroke-width:2;fill:none;marker-end:url(#arrow)}
+    .fkline{stroke:#45A7A1;stroke-width:1.8;fill:none;marker-end:url(#arrowFK);stroke-dasharray:6,3}
   </style>
 </defs>
-<rect class="canvas" width="1200" height="860"/>
-<rect class="frame" x="28" y="24" width="1144" height="812" rx="20"/>
+<rect class="canvas" width="1400" height="920"/>
+<rect class="frame" x="28" y="24" width="1344" height="872" rx="20"/>
 
 <text class="title" x="52" y="68">Exposed MVC JDBC</text>
-<text class="subtitle" x="52" y="92">Spring MVC + Exposed JDBC + bluetape4k Repository · @Transactional</text>
+<text class="subtitle" x="52" y="90">Spring MVC + Exposed JDBC + bluetape4k Repository · @Transactional · PostgreSQL</text>
 
-<!-- Client (below subtitle) -->
-<g transform="translate(480,108)">
-  <rect class="card" x="0" y="0" width="160" height="52" rx="12" fill="#E0ECFF" stroke="#4A7ADB"/>
-  <text class="label" x="80" y="34" text-anchor="middle">HTTP Client</text>
+<!-- ===== Domain group labels ===== -->
+<rect x="52" y="108" width="640" height="18" rx="4" fill="#E8F3FF" stroke="none"/>
+<text class="bandlabel" x="370" y="122" text-anchor="middle" style="fill:#5B8DEF">Author / Book Domain</text>
+<rect x="708" y="108" width="640" height="18" rx="4" fill="#EAF7EF" stroke="none"/>
+<text class="bandlabel" x="1028" y="122" text-anchor="middle" style="fill:#58A978">Order / Product Domain</text>
+
+<!-- ===== Layer 1: Presentation (108px band, cards at +30) ===== -->
+<rect x="52" y="132" width="1292" height="108" rx="8" fill="#E8F3FF" stroke="#B8D4F0" stroke-width="1"/>
+<text class="bandlabel" x="66" y="152">Presentation</text>
+
+<g transform="translate(72,162)">
+  <rect class="card" x="0" y="0" width="290" height="68" rx="10" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="label" x="145" y="26" text-anchor="middle">AuthorController</text>
+  <text class="mono" x="145" y="46" text-anchor="middle">@RestController /api/v1/authors</text>
+</g>
+<g transform="translate(382,162)">
+  <rect class="card" x="0" y="0" width="290" height="68" rx="10" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="label" x="145" y="26" text-anchor="middle">BookController</text>
+  <text class="mono" x="145" y="46" text-anchor="middle">@RestController /api/v1/books</text>
+</g>
+<g transform="translate(728,162)">
+  <rect class="card" x="0" y="0" width="290" height="68" rx="10" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="label" x="145" y="26" text-anchor="middle">OrderController</text>
+  <text class="mono" x="145" y="46" text-anchor="middle">@RestController /api/v1/orders</text>
+</g>
+<g transform="translate(1038,162)">
+  <rect class="card" x="0" y="0" width="290" height="68" rx="10" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="label" x="145" y="26" text-anchor="middle">ProductController</text>
+  <text class="mono" x="145" y="46" text-anchor="middle">@RestController /api/v1/products</text>
 </g>
 
-<!-- Layer bands: height=108, label at top, cards at +30 -->
-<rect x="52" y="192" width="1092" height="108" rx="8" fill="#E8F3FF" stroke="#B8D4F0" stroke-width="1"/>
-<text class="bandlabel" x="66" y="212">Presentation</text>
+<!-- ===== Layer 2: Service (108px band) ===== -->
+<rect x="52" y="272" width="1292" height="108" rx="8" fill="#EAF7EF" stroke="#B0DAC0" stroke-width="1"/>
+<text class="bandlabel" x="66" y="292">Service</text>
 
-<rect x="52" y="332" width="1092" height="108" rx="8" fill="#EAF7EF" stroke="#B0DAC0" stroke-width="1"/>
-<text class="bandlabel" x="66" y="352">Service</text>
-
-<rect x="52" y="472" width="1092" height="108" rx="8" fill="#F1ECFF" stroke="#C8B8E8" stroke-width="1"/>
-<text class="bandlabel" x="66" y="492">Repository</text>
-
-<rect x="52" y="612" width="1092" height="108" rx="8" fill="#FFF3D9" stroke="#E8D5A0" stroke-width="1"/>
-<text class="bandlabel" x="66" y="632">Schema</text>
-
-<!-- Controllers (inside Presentation band, y=192+30=222) -->
-<g transform="translate(80,222)">
-  <rect class="card" x="0" y="0" width="300" height="72" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="label" x="150" y="30" text-anchor="middle">AuthorController</text>
-  <text class="mono" x="150" y="52" text-anchor="middle">@RestController /api/authors</text>
+<g transform="translate(160,302)">
+  <rect class="card" x="0" y="0" width="380" height="68" rx="10" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="label" x="190" y="26" text-anchor="middle">AuthorService</text>
+  <text class="mono" x="190" y="46" text-anchor="middle">@Transactional · readOnly on reads</text>
 </g>
-<g transform="translate(420,222)">
-  <rect class="card" x="0" y="0" width="300" height="72" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="label" x="150" y="30" text-anchor="middle">OrderController</text>
-  <text class="mono" x="150" y="52" text-anchor="middle">@RestController /api/orders</text>
-</g>
-<g transform="translate(760,222)">
-  <rect class="card" x="0" y="0" width="300" height="72" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="label" x="150" y="30" text-anchor="middle">ProductController</text>
-  <text class="mono" x="150" y="52" text-anchor="middle">@RestController /api/products</text>
+<g transform="translate(800,302)">
+  <rect class="card" x="0" y="0" width="420" height="68" rx="10" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="label" x="210" y="26" text-anchor="middle">OrderService</text>
+  <text class="mono" x="210" y="46" text-anchor="middle">@Transactional · lock ordering · FOR UPDATE</text>
 </g>
 
-<!-- Services (inside Service band, y=332+30=362) -->
-<g transform="translate(80,362)">
-  <rect class="card" x="0" y="0" width="300" height="72" rx="12" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="label" x="150" y="30" text-anchor="middle">AuthorService</text>
-  <text class="mono" x="150" y="52" text-anchor="middle">@Transactional</text>
+<!-- ===== Layer 3: Repository (108px band, 5 repos in 1 row) ===== -->
+<rect x="52" y="412" width="1292" height="108" rx="8" fill="#F1ECFF" stroke="#C8B8E8" stroke-width="1"/>
+<text class="bandlabel" x="66" y="432">Repository</text>
+
+<g transform="translate(72,442)">
+  <rect class="card" x="0" y="0" width="240" height="68" rx="10" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="label" x="120" y="26" text-anchor="middle">AuthorRepository</text>
+  <text class="mono" x="120" y="46" text-anchor="middle">: LongAuditableJdbcRepository</text>
 </g>
-<g transform="translate(420,362)">
-  <rect class="card" x="0" y="0" width="300" height="72" rx="12" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="label" x="150" y="30" text-anchor="middle">OrderService</text>
-  <text class="mono" x="150" y="52" text-anchor="middle">@Transactional · lock ordering</text>
+<g transform="translate(332,442)">
+  <rect class="card" x="0" y="0" width="240" height="68" rx="10" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="label" x="120" y="26" text-anchor="middle">BookRepository</text>
+  <text class="mono" x="120" y="46" text-anchor="middle">: LongJdbcRepository</text>
 </g>
-<g transform="translate(760,362)">
-  <rect class="card" x="0" y="0" width="300" height="72" rx="12" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="label" x="150" y="30" text-anchor="middle">ProductService</text>
-  <text class="mono" x="150" y="52" text-anchor="middle">@Transactional · FOR UPDATE</text>
+<g transform="translate(618,442)">
+  <rect class="card" x="0" y="0" width="240" height="68" rx="10" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="label" x="120" y="26" text-anchor="middle">OrderRepository</text>
+  <text class="mono" x="120" y="46" text-anchor="middle">plain Exposed</text>
+</g>
+<g transform="translate(878,442)">
+  <rect class="card" x="0" y="0" width="240" height="68" rx="10" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="label" x="120" y="26" text-anchor="middle">OrderLineRepository</text>
+  <text class="mono" x="120" y="46" text-anchor="middle">plain Exposed</text>
+</g>
+<g transform="translate(1138,442)">
+  <rect class="card" x="0" y="0" width="200" height="68" rx="10" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="label" x="100" y="26" text-anchor="middle">ProductRepository</text>
+  <text class="mono" x="100" y="46" text-anchor="middle">plain Exposed · forUpdate</text>
 </g>
 
-<!-- Repositories (inside Repository band, y=472+30=502) -->
-<g transform="translate(80,502)">
-  <rect class="card" x="0" y="0" width="300" height="72" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="label" x="150" y="30" text-anchor="middle">AuthorRepository</text>
-  <text class="mono" x="150" y="52" text-anchor="middle">LongAuditableJdbcRepository</text>
-</g>
-<g transform="translate(420,502)">
-  <rect class="card" x="0" y="0" width="300" height="72" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="label" x="150" y="30" text-anchor="middle">OrderRepository</text>
-  <text class="mono" x="150" y="52" text-anchor="middle">LongJdbcRepository</text>
-</g>
-<g transform="translate(760,502)">
-  <rect class="card" x="0" y="0" width="300" height="72" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="label" x="150" y="30" text-anchor="middle">BookRepository</text>
-  <text class="mono" x="150" y="52" text-anchor="middle">LongJdbcRepository</text>
-</g>
+<!-- ===== Layer 4: Schema (108px band) ===== -->
+<rect x="52" y="552" width="1292" height="108" rx="8" fill="#FFF3D9" stroke="#E8D5A0" stroke-width="1"/>
+<text class="bandlabel" x="66" y="572">Schema</text>
 
-<!-- Tables (inside Schema band, y=612+30=642) -->
-<g transform="translate(80,642)">
-  <rect class="card" x="0" y="0" width="300" height="72" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="label" x="150" y="30" text-anchor="middle">AuthorTable</text>
-  <text class="mono" x="150" y="52" text-anchor="middle">AuditableLongIdTable · audit cols</text>
+<g transform="translate(72,582)">
+  <rect class="card" x="0" y="0" width="240" height="68" rx="10" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="label" x="120" y="22" text-anchor="middle">AuthorTable</text>
+  <text class="mono" x="120" y="42" text-anchor="middle">AuditableLongIdTable</text>
+  <text class="mono" x="120" y="58" text-anchor="middle">audit cols auto-wired</text>
 </g>
-<g transform="translate(420,642)">
-  <rect class="card" x="0" y="0" width="300" height="72" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="label" x="150" y="30" text-anchor="middle">OrderTable</text>
-  <text class="mono" x="150" y="52" text-anchor="middle">LongIdTable</text>
+<g transform="translate(332,582)">
+  <rect class="card" x="0" y="0" width="240" height="68" rx="10" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="label" x="120" y="22" text-anchor="middle">BookTable</text>
+  <text class="mono" x="120" y="42" text-anchor="middle">LongIdTable</text>
+  <text class="mono" x="120" y="58" text-anchor="middle">FK → Author</text>
 </g>
-<g transform="translate(760,642)">
-  <rect class="card" x="0" y="0" width="300" height="72" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="label" x="150" y="30" text-anchor="middle">BookTable</text>
-  <text class="mono" x="150" y="52" text-anchor="middle">LongIdTable · FK → Author</text>
+<g transform="translate(618,582)">
+  <rect class="card" x="0" y="0" width="240" height="68" rx="10" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="label" x="120" y="22" text-anchor="middle">OrderTable</text>
+  <text class="mono" x="120" y="42" text-anchor="middle">Table</text>
+  <text class="mono" x="120" y="58" text-anchor="middle">status enum</text>
 </g>
-
-<!-- Database -->
-<g transform="translate(420,748)">
-  <ellipse cx="140" cy="10" rx="140" ry="16" fill="#FDECEF" stroke="#DC6B82" stroke-width="2"/>
-  <rect x="0" y="10" width="280" height="30" fill="#FDECEF" stroke="#DC6B82" stroke-width="2"/>
-  <line x1="0" y1="10" x2="0" y2="40" stroke="#DC6B82" stroke-width="2"/>
-  <line x1="280" y1="10" x2="280" y2="40" stroke="#DC6B82" stroke-width="2"/>
-  <ellipse cx="140" cy="40" rx="140" ry="16" fill="#FDECEF" stroke="#DC6B82" stroke-width="2"/>
-  <text class="label" x="140" y="36" text-anchor="middle">PostgreSQL</text>
+<g transform="translate(878,582)">
+  <rect class="card" x="0" y="0" width="240" height="68" rx="10" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="label" x="120" y="22" text-anchor="middle">OrderLineTable</text>
+  <text class="mono" x="120" y="42" text-anchor="middle">Table</text>
+  <text class="mono" x="120" y="58" text-anchor="middle">FK → Order, Product</text>
+</g>
+<g transform="translate(1138,582)">
+  <rect class="card" x="0" y="0" width="200" height="68" rx="10" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="label" x="100" y="22" text-anchor="middle">ProductTable</text>
+  <text class="mono" x="100" y="42" text-anchor="middle">Table</text>
+  <text class="mono" x="100" y="58" text-anchor="middle">stock + price</text>
 </g>
 
-<!-- ARROWS (all orthogonal) -->
-<!-- Client → Controllers -->
-<path class="line" d="M510,160 L510,180 L230,180 L230,220"/>
-<path class="line" d="M560,160 L560,180 L570,180 L570,220"/>
-<path class="line" d="M610,160 L610,180 L910,180 L910,220"/>
+<!-- ===== Database ===== -->
+<g transform="translate(520,700)">
+  <ellipse cx="160" cy="10" rx="160" ry="18" fill="#FDECEF" stroke="#DC6B82" stroke-width="2"/>
+  <rect x="0" y="10" width="320" height="40" fill="#FDECEF" stroke="#DC6B82" stroke-width="2"/>
+  <line x1="0" y1="10" x2="0" y2="50" stroke="#DC6B82" stroke-width="2"/>
+  <line x1="320" y1="10" x2="320" y2="50" stroke="#DC6B82" stroke-width="2"/>
+  <ellipse cx="160" cy="50" rx="160" ry="18" fill="#FDECEF" stroke="#DC6B82" stroke-width="2"/>
+  <text class="label" x="160" y="46" text-anchor="middle">PostgreSQL</text>
+</g>
 
-<!-- Controller → Service -->
-<path class="line" d="M230,294 L230,360"/>
-<path class="line" d="M570,294 L570,360"/>
-<path class="line" d="M910,294 L910,360"/>
+<!-- ===== ARROWS (all orthogonal, Graphviz-verified structure) ===== -->
 
-<!-- Service → Repository -->
-<path class="line" d="M230,434 L230,500"/>
-<path class="line" d="M570,434 L570,500"/>
-<path class="line" d="M910,434 L910,500"/>
+<!-- Controller → Service (each column center → service center) -->
+<path class="line" d="M217,230 L217,254 L350,254 L350,300"/>
+<path class="line" d="M527,230 L527,254 L350,254 L350,300"/>
+<path class="line" d="M873,230 L873,260 L1010,260 L1010,300"/>
+<path class="line" d="M1183,230 L1183,260 L1010,260 L1010,300"/>
 
-<!-- Repository → Schema -->
-<path class="line" d="M230,574 L230,640"/>
-<path class="line" d="M570,574 L570,640"/>
-<path class="line" d="M910,574 L910,640"/>
+<!-- Service → Repository (vertical per column) -->
+<path class="line" d="M260,370 L260,400 L192,400 L192,440"/>
+<path class="line" d="M440,370 L440,400 L452,400 L452,440"/>
+<path class="line" d="M900,370 L900,400 L738,400 L738,440"/>
+<path class="line" d="M1060,370 L1060,400 L998,400 L998,440"/>
+<path class="line" d="M1120,370 L1120,400 L1238,400 L1238,440"/>
 
-<!-- Schema → DB -->
-<path class="line" d="M230,714 L230,734 L490,734 L490,746"/>
-<path class="line" d="M570,714 L570,746"/>
-<path class="line" d="M910,714 L910,734 L650,734 L650,746"/>
+<!-- Repository → Schema/Table (vertical) -->
+<path class="line" d="M192,510 L192,580"/>
+<path class="line" d="M452,510 L452,580"/>
+<path class="line" d="M738,510 L738,580"/>
+<path class="line" d="M998,510 L998,580"/>
+<path class="line" d="M1238,510 L1238,580"/>
+
+<!-- FK relationships (dashed teal, horizontal between tables) -->
+<path class="fkline" d="M332,616 L314,616"/>
+<path class="fkline" d="M878,616 L860,616"/>
+<path class="fkline" d="M1118,616 L1138,616"/>
+
+<!-- Schema → DB (orthogonal, converge) -->
+<path class="line" d="M192,650 L192,680 L610,680 L610,698"/>
+<path class="line" d="M738,650 L738,680 L680,680 L680,698"/>
+<path class="line" d="M1238,650 L1238,680 L760,680 L760,698"/>
 </svg>
