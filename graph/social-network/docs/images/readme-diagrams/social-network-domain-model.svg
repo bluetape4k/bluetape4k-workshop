@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="470" viewBox="0 0 820 470">
+  <defs>
+    <marker id="arrow-knows" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M1,1 L8,4.5 L1,8 Z" fill="#4a80d0"/>
+    </marker>
+    <marker id="arrow-knows-back" markerWidth="9" markerHeight="9" refX="1" refY="4.5" orient="auto-start-reverse">
+      <path d="M8,1 L1,4.5 L8,8 Z" fill="#4a80d0"/>
+    </marker>
+    <marker id="arrow-follows" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M1,1 L8,4.5 L1,8 Z" fill="#e0784a"/>
+    </marker>
+    <marker id="arrow-works" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M1,1 L8,4.5 L1,8 Z" fill="#52a872"/>
+    </marker>
+  </defs>
+
+  <!-- Canvas background -->
+  <rect width="820" height="470" rx="14" fill="#f8fafc" stroke="#c8d4e8" stroke-width="1.5"/>
+
+  <!-- Title -->
+  <text x="410" y="36" text-anchor="middle"
+        font-family="'Architects Daughter', Georgia, serif"
+        font-size="19" fill="#1e2d4e" font-weight="bold">Graph Domain Model</text>
+  <text x="410" y="56" text-anchor="middle"
+        font-family="'Comic Mono', 'Courier New', monospace"
+        font-size="11" fill="#64748b">social-network vertex &amp; edge schema</text>
+
+  <!-- ── PersonA node (left) ── -->
+  <!-- header -->
+  <rect x="30" y="95" width="220" height="185" rx="10" fill="#dde8ff" stroke="#8aaade" stroke-width="1.5"/>
+  <rect x="30" y="95" width="220" height="42" rx="10" fill="#b4caef" stroke="#8aaade" stroke-width="1.5"/>
+  <rect x="30" y="124" width="220" height="13" fill="#b4caef"/>
+  <text x="140" y="121" text-anchor="middle"
+        font-family="'Architects Daughter', Georgia, serif"
+        font-size="15" fill="#1a2d6a" font-weight="bold">Person</text>
+  <!-- divider -->
+  <line x1="30" y1="137" x2="250" y2="137" stroke="#8aaade" stroke-width="1"/>
+  <!-- fields -->
+  <text x="50" y="157" font-family="'Comic Mono', 'Courier New', monospace" font-size="11" fill="#2a3a60">personId  : String</text>
+  <text x="50" y="174" font-family="'Comic Mono', 'Courier New', monospace" font-size="11" fill="#2a3a60">name      : String</text>
+  <text x="50" y="191" font-family="'Comic Mono', 'Courier New', monospace" font-size="11" fill="#2a3a60">title     : String?</text>
+  <text x="50" y="208" font-family="'Comic Mono', 'Courier New', monospace" font-size="11" fill="#2a3a60">location  : String?</text>
+  <text x="50" y="265" font-family="'Comic Mono', 'Courier New', monospace" font-size="10" fill="#607090" font-style="italic">VertexLabel("Person")</text>
+
+  <!-- ── PersonB node (right) ── -->
+  <rect x="570" y="95" width="220" height="185" rx="10" fill="#dde8ff" stroke="#8aaade" stroke-width="1.5"/>
+  <rect x="570" y="95" width="220" height="42" rx="10" fill="#b4caef" stroke="#8aaade" stroke-width="1.5"/>
+  <rect x="570" y="124" width="220" height="13" fill="#b4caef"/>
+  <text x="680" y="121" text-anchor="middle"
+        font-family="'Architects Daughter', Georgia, serif"
+        font-size="15" fill="#1a2d6a" font-weight="bold">Person</text>
+  <line x1="570" y1="137" x2="790" y2="137" stroke="#8aaade" stroke-width="1"/>
+  <text x="590" y="157" font-family="'Comic Mono', 'Courier New', monospace" font-size="11" fill="#2a3a60">personId  : String</text>
+  <text x="590" y="174" font-family="'Comic Mono', 'Courier New', monospace" font-size="11" fill="#2a3a60">name      : String</text>
+  <text x="590" y="191" font-family="'Comic Mono', 'Courier New', monospace" font-size="11" fill="#2a3a60">title     : String?</text>
+  <text x="590" y="208" font-family="'Comic Mono', 'Courier New', monospace" font-size="11" fill="#2a3a60">location  : String?</text>
+  <text x="590" y="265" font-family="'Comic Mono', 'Courier New', monospace" font-size="10" fill="#607090" font-style="italic">VertexLabel("Person")</text>
+
+  <!-- ── Company node (bottom center) ── -->
+  <rect x="270" y="345" width="280" height="108" rx="10" fill="#d0f0d8" stroke="#6ab87a" stroke-width="1.5"/>
+  <rect x="270" y="345" width="280" height="42" rx="10" fill="#a4d8b4" stroke="#6ab87a" stroke-width="1.5"/>
+  <rect x="270" y="374" width="280" height="13" fill="#a4d8b4"/>
+  <text x="410" y="371" text-anchor="middle"
+        font-family="'Architects Daughter', Georgia, serif"
+        font-size="15" fill="#1a3a2a" font-weight="bold">Company</text>
+  <line x1="270" y1="387" x2="550" y2="387" stroke="#6ab87a" stroke-width="1"/>
+  <text x="290" y="406" font-family="'Comic Mono', 'Courier New', monospace" font-size="11" fill="#1a3a2a">companyId : String</text>
+  <text x="290" y="423" font-family="'Comic Mono', 'Courier New', monospace" font-size="11" fill="#1a3a2a">name      : String</text>
+  <text x="290" y="440" font-family="'Comic Mono', 'Courier New', monospace" font-size="10" fill="#3a6040" font-style="italic">VertexLabel("Company")</text>
+
+  <!-- ══ KNOWS edge (bidirectional arc above both Person nodes) ══ -->
+  <!-- from PersonA right-top (250,138) arc over to PersonB left-top (570,138) -->
+  <path d="M 250,138 C 350,64 470,64 570,138"
+        fill="none" stroke="#4a80d0" stroke-width="2.5"
+        marker-start="url(#arrow-knows-back)" marker-end="url(#arrow-knows)"/>
+  <!-- label pill -->
+  <rect x="311" y="58" width="198" height="52" rx="8"
+        fill="white" fill-opacity="0.92" stroke="#4a80d0" stroke-width="1.2"/>
+  <text x="410" y="78" text-anchor="middle"
+        font-family="'Architects Daughter', Georgia, serif"
+        font-size="14" fill="#1a3080" font-weight="bold">KNOWS</text>
+  <text x="410" y="93" text-anchor="middle"
+        font-family="'Comic Mono', 'Courier New', monospace"
+        font-size="10" fill="#3a50a0">since · strength (1-10)</text>
+  <text x="410" y="107" text-anchor="middle"
+        font-family="'Comic Mono', 'Courier New', monospace"
+        font-size="10" fill="#4a80d0">bidirectional (A→B and B→A)</text>
+
+  <!-- ══ FOLLOWS edge (one-way, below KNOWS, dashed) ══ -->
+  <!-- from PersonA right-mid (250,200) → PersonB left-mid (570,200) -->
+  <line x1="250" y1="215" x2="570" y2="215"
+        stroke="#e0784a" stroke-width="2" stroke-dasharray="7,4"
+        marker-end="url(#arrow-follows)"/>
+  <!-- label pill -->
+  <rect x="335" y="221" width="150" height="28" rx="14"
+        fill="white" fill-opacity="0.92" stroke="#e0784a" stroke-width="1.2"/>
+  <text x="410" y="239" text-anchor="middle"
+        font-family="'Architects Daughter', Georgia, serif"
+        font-size="13" fill="#a03010">FOLLOWS  (one-way)</text>
+
+  <!-- ══ WORKS_AT edges (both Person→Company, orthogonal) ══ -->
+  <!-- PersonA bottom-center (140,280) → down to 345 → right to Company.left (270,395) -->
+  <path d="M 140,280 L 140,395 L 270,395"
+        fill="none" stroke="#52a872" stroke-width="2"
+        marker-end="url(#arrow-works)"/>
+  <!-- PersonB bottom-center (680,280) → down to 345 → left to Company.right (550,395) -->
+  <path d="M 680,280 L 680,395 L 550,395"
+        fill="none" stroke="#52a872" stroke-width="2"
+        marker-end="url(#arrow-works)"/>
+  <!-- WORKS_AT label -->
+  <rect x="574" y="293" width="162" height="60" rx="8"
+        fill="white" fill-opacity="0.92" stroke="#52a872" stroke-width="1.2"/>
+  <text x="655" y="314" text-anchor="middle"
+        font-family="'Architects Daughter', Georgia, serif"
+        font-size="13" fill="#1a4a2a" font-weight="bold">WORKS_AT</text>
+  <text x="655" y="330" text-anchor="middle"
+        font-family="'Comic Mono', 'Courier New', monospace"
+        font-size="10" fill="#2a5a30">role · startDate</text>
+  <text x="655" y="345" text-anchor="middle"
+        font-family="'Comic Mono', 'Courier New', monospace"
+        font-size="10" fill="#2a5a30">isCurrent</text>
+</svg>

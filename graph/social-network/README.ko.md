@@ -10,6 +10,8 @@
 
 ## 아키텍처
 
+![모듈 아키텍처](docs/images/readme-diagrams/social-network-architecture.png)
+
 ```
 graph/social-network/
 ├── src/main/kotlin/
@@ -34,6 +36,8 @@ graph/social-network/
 ```
 
 ## 그래프 스키마
+
+![그래프 도메인 모델](docs/images/readme-diagrams/social-network-domain-model.png)
 
 ### Vertex 레이블
 

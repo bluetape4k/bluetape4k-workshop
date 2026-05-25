@@ -1,0 +1,7 @@
+graph 1 4.2361 3.1806
+node Person 0.90972 0.77778 1.1597 1.1111 "Person\n──────\npersonId\nname\ntitle\nlocation" rounded,filled box black #d0e8ff
+node Company 3.434 0.77778 1.1597 1.1111 "Company\n──────\ncompanyId\nname\nindustry\nlocation" rounded,filled box black #d0ffe8
+edge Person Person 16 0.32425 0.96296 0.23216 0.96296 0.16667 0.96296 0.16667 0.96296 0.16667 0.96296 0.16667 1.5 0.16667 1.5 0.16667 1.5 1.9444 1.5 1.9444 1.5 1.9444 1.5 1.9444 1.0556 1.9444 1.0556 1.9444 1.0556 1.6535 1.0556 1.6535 1.0556 "KNOWS\n(bidirectional)\nsince, strength" 4.125 0 bold #4a90d9
+edge Person Person 16 0.3233 0.59259 0.14727 0.59259 0 0.59259 0 0.59259 0 0.59259 0 1.6667 0 1.6667 0 1.6667 2.4028 1.6667 2.4028 1.6667 2.4028 1.6667 2.4028 0.77778 2.4028 0.77778 2.4028 0.77778 1.6554 0.77778 1.6554 0.77778 "FOLLOWS\n(one-way)" 4.125 0 dashed #e9854a
+edge Person Company 4 1.4952 0.5 1.4952 0.5 2.6875 0.5 2.6875 0.5 "WORKS_AT\nrole, startDate\nisCurrent" 2.1719 1.0122 solid #7ac27a
+stop
