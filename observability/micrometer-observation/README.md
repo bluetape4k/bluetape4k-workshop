@@ -5,25 +5,6 @@ Micrometer Observation API를 Spring MVC와 연동하는 예제입니다.
 
 ## Architecture
 
-```mermaid
-flowchart TD
-    Client -->|HTTP GET /greeting| GreetingController
-    GreetingController -->|calls| GreetingService
-    GreetingService -->|@Observed AOP| ObservedAspect
-    ObservedAspect -->|creates span| ObservationRegistry
-    ObservationRegistry -->|fires events| ObservationHandler
-    ObservationHandler -->|logs| ObservationTextPublisher
-
-    subgraph "bluetape4k-micrometer"
-        ObservationTextPublisher
-    end
-
-    subgraph "bluetape4k-logging"
-        KLogging
-        debug_ext["debug { } / info { }"]
-    end
-```
-
 ![micrometer observation Architecture diagram](../../docs/images/readme-diagrams/observability-micrometer-observation-diagram-01.png)
 
 ## Key Components

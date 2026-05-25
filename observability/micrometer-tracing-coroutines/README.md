@@ -5,34 +5,6 @@ bluetape4k의 `withObservation` / `withObservationSuspending` DSL로 코루틴 c
 
 ## Architecture
 
-```mermaid
-flowchart TD
-    Client -->|HTTP| Router["WebFlux Router"]
-    Router -->|/sync| SyncController
-    Router -->|/coroutine| CoroutineController
-    Router -->|/reactor| ReactorController
-
-    SyncController -->|withObservation| SyncService
-    CoroutineController -->|withObservationSuspending| CoroutineService
-    ReactorController -->|@Observed| ReactorService
-
-    SyncService -->|nested spans| ObservationRegistry
-    CoroutineService -->|nested suspend spans| ObservationRegistry
-    ReactorService -->|class-level span| ObservationRegistry
-
-    ObservationRegistry -->|OTel Bridge| OTelExporter["OTel Exporter"]
-    OTelExporter -->|HTTP POST| Zipkin["Zipkin Server\n(Testcontainers)"]
-
-    subgraph "bluetape4k-micrometer"
-        withObservation["withObservation {}"]
-        withObservationSuspending["withObservationSuspending {}"]
-    end
-
-    subgraph "bluetape4k-testcontainers"
-        ZipkinLauncher["ZipkinServer.Launcher.zipkin"]
-    end
-```
-
 ![micrometer tracing coroutines Architecture diagram](../../docs/images/readme-diagrams/observability-micrometer-tracing-coroutines-sequence-01.png)
 
 ![micrometer tracing coroutines Sequence Flow 2 diagram](../../docs/images/readme-diagrams/observability-micrometer-tracing-coroutines-diagram-01.png)
