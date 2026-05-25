@@ -68,6 +68,9 @@ data class LeaderZookeeperProperties(
 
         init {
             connectString.requireNotBlank("connectString")
+            sessionTimeoutMs.requirePositiveNumber("sessionTimeoutMs")
+            connectionTimeoutMs.requirePositiveNumber("connectionTimeoutMs")
+            blockUntilConnectedSeconds.requirePositiveNumber("blockUntilConnectedSeconds")
         }
     }
 }

@@ -60,7 +60,7 @@ class ExtensionFunctionTest : AbstractLeaderZookeeperTest() {
     }
 
     @Test
-    fun `suspendRunIfLeader extension returns the suspending action result`() = runTest {
+    fun `suspendRunIfLeader extension returns the suspending action result`(): Unit = runTest {
         val result = curator.suspendRunIfLeader(
             lockName = randomLockName("t6-suspend"),
             basePath = "/test/ext-suspend",
