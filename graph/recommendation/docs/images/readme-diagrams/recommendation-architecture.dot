@@ -1,5 +1,5 @@
 digraph recommendation_architecture {
-    graph [rankdir=TB, splines=ortho, nodesep=0.8, ranksep=1.0, fontname="Helvetica"]
+    graph [rankdir=TB, splines=ortho, nodesep=1.0, ranksep=1.4, fontname="Helvetica", compound=true]
     node [fontname="Helvetica", fontsize=11, shape=box, style="filled,rounded"]
     edge [fontname="Helvetica", fontsize=9]
 
@@ -21,7 +21,7 @@ digraph recommendation_architecture {
         style=filled; color="#fef9e7"; fontsize=12;
 
         RecService [label="RecommendationService\n(blocking)", fillcolor="#f9e79f"]
-        RecSuspend [label="RecommendationSuspendService\n(coroutine)", fillcolor="#fad7a0"]
+        RecSuspend [label="RecommendationSuspendService\n(coroutine / suspend)", fillcolor="#fad7a0"]
     }
 
     // Algorithm Layer
@@ -43,20 +43,25 @@ digraph recommendation_architecture {
         Memgraph [label="Memgraph\n(Testcontainer)", fillcolor="#f1948a", shape=cylinder]
     }
 
-    // Connections
+    // Domain → Service
+    User -> RecService [label="userVertexId", style=dotted]
+    Product -> RecService [label="productVertexId", style=dotted]
+
+    // Service → Algorithms
     RecService -> CF [label="calls"]
     RecService -> FOAF [label="calls"]
     RecSuspend -> CF [label="suspend calls", style=dashed]
     RecSuspend -> FOAF [label="suspend calls", style=dashed]
 
-    CF -> TinkerGraph [label="GraphOperations"]
-    CF -> Neo4j [label="GraphOperations"]
-    CF -> Memgraph [label="GraphOperations"]
-
-    FOAF -> TinkerGraph [style=dashed]
-    FOAF -> Neo4j [style=dashed]
-    FOAF -> Memgraph [style=dashed]
-
-    User -> RecService [label="userVertexId", style=dotted]
-    Product -> RecService [label="productVertexId", style=dotted]
+    // Algorithm cluster → Backend cluster: one blocking, one suspend
+    CF -> TinkerGraph [
+        label="GraphOperations (blocking)",
+        ltail=cluster_algorithm, lhead=cluster_backends,
+        style=solid, color="#2471a3", fontcolor="#2471a3"
+    ]
+    FOAF -> Neo4j [
+        label="GraphSuspendOperations (suspend)",
+        ltail=cluster_algorithm, lhead=cluster_backends,
+        style=dashed, color="#7d3c98", fontcolor="#7d3c98"
+    ]
 }

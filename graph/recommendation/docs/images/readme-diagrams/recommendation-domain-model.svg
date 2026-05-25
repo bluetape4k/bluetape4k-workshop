@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- hand-authored from Graphviz plain layout (recommendation-domain-model.dot) -->
+<!-- Domain model: User vertex, Product vertex, PURCHASED edge, FOLLOWS self-loop -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 270" width="700" height="270">
+  <defs>
+    <marker id="arr-orange" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M1,1 L8,4.5 L1,8 Z" fill="#e67e22"/>
+    </marker>
+    <marker id="arr-purple" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+      <path d="M1,1 L8,4.5 L1,8 Z" fill="#7d3c98"/>
+    </marker>
+  </defs>
+
+  <!-- ─── Outer frame ──────────────────────────────────────────────────── -->
+  <rect width="700" height="270" rx="12" fill="#f8f9fa" stroke="#b0c4d8" stroke-width="2"/>
+
+  <!-- ─── Title bar ────────────────────────────────────────────────────── -->
+  <rect x="0" y="0" width="700" height="42" rx="12" fill="#2c3e50"/>
+  <rect x="0" y="30" width="700" height="12" fill="#2c3e50"/>
+  <text x="350" y="22" text-anchor="middle" font-family="'Architects Daughter',sans-serif"
+        font-size="16" font-weight="bold" fill="#ffffff">graph/recommendation · Domain Model</text>
+  <text x="350" y="37" text-anchor="middle" font-family="'Comic Mono',monospace"
+        font-size="9" fill="#aed6f1">Property Graph (TinkerPop) — vertices and directed edges</text>
+
+  <!-- ─── FOLLOWS self-loop on User ───────────────────────────────────── -->
+  <!-- User: cx=155, cy=155, rx=108, ry=52 → top at y=103 -->
+  <!-- Arc from left-top ≈(127,106) up through apex (155,50) to right-top (183,106) -->
+  <path d="M 127,106 C 82,46 228,46 183,106"
+        stroke="#7d3c98" stroke-width="2" stroke-dasharray="5,3"
+        fill="none" marker-end="url(#arr-purple)"/>
+  <!-- FOLLOWS label -->
+  <rect x="114" y="42" width="82" height="18" rx="5" fill="white" opacity="0.92"/>
+  <text x="155" y="55" text-anchor="middle"
+        font-family="'Comic Mono',monospace" font-size="10" font-weight="bold" fill="#7d3c98">FOLLOWS</text>
+
+  <!-- ─── User vertex ──────────────────────────────────────────────────── -->
+  <ellipse cx="155" cy="155" rx="108" ry="52" fill="#aed6f1" stroke="#2471a3" stroke-width="2"/>
+  <text x="155" y="149" text-anchor="middle"
+        font-family="'Architects Daughter',sans-serif" font-size="16" font-weight="bold" fill="#154360">User</text>
+  <text x="155" y="167" text-anchor="middle"
+        font-family="'Comic Mono',monospace" font-size="10" fill="#1a5276">userId · name</text>
+
+  <!-- ─── PURCHASED label (above arrow, between the two ellipses) ─────── -->
+  <!-- User right edge: 155+108=263, Product left edge: 535-140=395, midpoint=329 -->
+  <rect x="266" y="120" width="126" height="30" rx="5" fill="white" opacity="0.92"/>
+  <text x="329" y="132" text-anchor="middle"
+        font-family="'Comic Mono',monospace" font-size="10" font-weight="bold" fill="#e67e22">PURCHASED</text>
+  <text x="329" y="145" text-anchor="middle"
+        font-family="'Comic Mono',monospace" font-size="9" fill="#d35400">(rating, purchasedAt)</text>
+
+  <!-- ─── PURCHASED edge User→Product ─────────────────────────────────── -->
+  <!-- User right: x=263, Product left: x=395 -->
+  <line x1="263" y1="152" x2="393" y2="152"
+        stroke="#e67e22" stroke-width="2.5" marker-end="url(#arr-orange)"/>
+
+  <!-- ─── Product vertex ──────────────────────────────────────────────── -->
+  <ellipse cx="535" cy="155" rx="140" ry="52" fill="#a9dfbf" stroke="#1e8449" stroke-width="2"/>
+  <text x="535" y="149" text-anchor="middle"
+        font-family="'Architects Daughter',sans-serif" font-size="16" font-weight="bold" fill="#145a32">Product</text>
+  <text x="535" y="167" text-anchor="middle"
+        font-family="'Comic Mono',monospace" font-size="10" fill="#196f3d">productId · name · category</text>
+
+  <!-- ─── Legend strip ─────────────────────────────────────────────────── -->
+  <rect x="12" y="228" width="676" height="28" rx="6" fill="#ecf0f1" stroke="#bdc3c7" stroke-width="1"/>
+  <!-- PURCHASED legend -->
+  <line x1="28" y1="242" x2="55" y2="242" stroke="#e67e22" stroke-width="2.5" marker-end="url(#arr-orange)"/>
+  <text x="60" y="246" font-family="'Comic Mono',monospace" font-size="9" fill="#e67e22">PURCHASED — weighted directed edge</text>
+  <text x="60" y="258" font-family="'Comic Mono',monospace" font-size="9" fill="#d35400">properties: rating (Int), purchasedAt (Instant)</text>
+  <!-- FOLLOWS legend -->
+  <path d="M 388,242 C 400,233 416,233 404,242"
+        stroke="#7d3c98" stroke-width="2" stroke-dasharray="5,3"
+        fill="none" marker-end="url(#arr-purple)"/>
+  <text x="422" y="246" font-family="'Comic Mono',monospace" font-size="9" fill="#7d3c98">FOLLOWS — directed social link</text>
+  <text x="422" y="258" font-family="'Comic Mono',monospace" font-size="9" fill="#6c3483">2-hop traversal for FOAF recommendations</text>
+</svg>

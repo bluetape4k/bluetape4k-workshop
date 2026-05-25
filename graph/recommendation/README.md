@@ -24,11 +24,7 @@ Neo4j, and Memgraph backends.
 
 ## Domain Model
 
-```
-User ──PURCHASED──► Product
- │                   (rating: Int, purchasedAt: Instant)
- └──FOLLOWS──► User
-```
+![Domain Model](docs/images/readme-diagrams/recommendation-domain-model.png)
 
 * A `User` vertex carries `userId` and `name`.
 * A `Product` vertex carries `productId`, `name`, and `category`.
