@@ -308,7 +308,9 @@ abstract class AbstractLeaderZookeeperTest {
         val curator: CuratorFramework by lazy {
             ZooKeeperServer.Launcher.getCuratorFramework(zookeeper).also {
                 it.start()
-                it.blockUntilConnected(10, TimeUnit.SECONDS)
+                check(it.blockUntilConnected(10, TimeUnit.SECONDS)) {
+                    "Test curator could not connect to ZooKeeper within 10s (url=${zookeeper.url})"
+                }
                 ShutdownQueue.register { it.close() }
             }
         }
@@ -331,24 +333,45 @@ abstract class AbstractLeaderZookeeperTest {
 }
 ```
 
-**T8 `SessionLossFailoverTest` 격리 전략**: 세션 만료 시나리오(T8)는 ZK 컨테이너를 중단하므로
-싱글턴 `ZooKeeperServer.Launcher.zookeeper`를 절대 사용하면 안 됨.
-T8는 자체 격리된 컨테이너를 사용:
+**T8 `SessionLossFailoverTest` 격리 전략**:
+
+**설계 결정**: 컨테이너 재시작 방식은 사용하지 않는다.
+- `ZooKeeperServer(reuse=true)` 기본값으로 `stop()`/`start()` 시 포트가 변경되어 기존 curator 클라이언트가 stale 상태가 됨 (deterministic failure).
+- 대신 **클라이언트 측 세션 강제 종료** (`clientA.zookeeperClient.zooKeeper.close()`)를 사용하여 ZK 서버에서 세션 만료를 트리거함.
+
+T8는 `AbstractLeaderZookeeperTest`를 상속하지 않는 standalone 클래스:
 ```kotlin
-// T8 uses its own ZK container — NEVER use Launcher singleton (would break other tests)
+/**
+ * Demonstrates R16: ZooKeeper session expiry triggers ephemeral node removal and re-election.
+ *
+ * ## Isolation Strategy
+ * This test does NOT extend AbstractLeaderZookeeperTest — inheriting it would expose
+ * the shared Launcher singleton curator through companion object methods.
+ *
+ * Uses client-side session close (NOT container restart) to simulate session expiry:
+ * `clientA.zookeeperClient.zooKeeper.close()` forces ZK server to expire the session
+ * and remove ephemeral nodes, mimicking a network partition or process crash.
+ */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class SessionLossFailoverTest : AbstractLeaderZookeeperTest() {
+class SessionLossFailoverTest {
+    companion object : KLogging()
+    
     private lateinit var isolatedZk: ZooKeeperServer
     private lateinit var clientA: CuratorFramework
     private lateinit var clientB: CuratorFramework
 
+    fun randomLockName(prefix: String = "t8") = "$prefix:${UUID.randomUUID()}"
+
     @BeforeAll fun startIsolatedZk() {
-        isolatedZk = ZooKeeperServer().also { it.start() }
-        clientA = ZooKeeperServer.Launcher.getCuratorFramework(isolatedZk).also { 
-            it.start(); it.blockUntilConnected(10, TimeUnit.SECONDS) 
+        // reuse=false: ensures stop()/start() actually restarts the container if needed
+        isolatedZk = ZooKeeperServer(reuse = false).also { it.start() }
+        clientA = ZooKeeperServer.Launcher.getCuratorFramework(isolatedZk).also {
+            it.start()
+            check(it.blockUntilConnected(10, TimeUnit.SECONDS)) { "clientA connection timeout" }
         }
-        clientB = ZooKeeperServer.Launcher.getCuratorFramework(isolatedZk).also { 
-            it.start(); it.blockUntilConnected(10, TimeUnit.SECONDS) 
+        clientB = ZooKeeperServer.Launcher.getCuratorFramework(isolatedZk).also {
+            it.start()
+            check(it.blockUntilConnected(10, TimeUnit.SECONDS)) { "clientB connection timeout" }
         }
     }
 
@@ -357,7 +380,41 @@ class SessionLossFailoverTest : AbstractLeaderZookeeperTest() {
         runCatching { clientB.close() }
         runCatching { isolatedZk.stop() }
     }
-    // Test: workerA acquires → isolatedZk.stop() → session expires → isolatedZk.start() → workerB acquires
+
+    @Test fun `session loss causes leadership failover`() {
+        val lockName = randomLockName()
+        val workerAHoldingLatch = CountDownLatch(1)  // synchronize: workerA holds lock before session close
+        val workerADoneLatch = CountDownLatch(1)
+
+        // workerA acquires in background thread
+        val workerAThread = Thread {
+            clientA.runIfLeader(lockName, basePath = "/test/t8") {
+                workerAHoldingLatch.countDown()  // signal: "I am now leader"
+                Thread.sleep(60_000)              // hold until session closes
+                "A-done"
+            }
+            workerADoneLatch.countDown()
+        }
+        workerAThread.start()
+
+        // Wait for workerA to actually hold the lock
+        check(workerAHoldingLatch.await(10, TimeUnit.SECONDS)) {
+            "workerA did not acquire leadership within 10s"
+        }
+
+        // Simulate session expiry — no container restart needed
+        clientA.zookeeperClient.zooKeeper.close()
+
+        // workerB should acquire leadership after ephemeral node is removed
+        var workerBResult: String? = null
+        await().atMost(Duration.ofSeconds(30)).untilAsserted {
+            workerBResult = clientB.runIfLeader(lockName, basePath = "/test/t8") { "B-acquired" }
+            workerBResult shouldBeEqualTo "B-acquired"
+        }
+
+        workerAThread.interrupt()
+        workerADoneLatch.await(5, TimeUnit.SECONDS)
+    }
 }
 ```
 
@@ -371,7 +428,7 @@ class SessionLossFailoverTest : AbstractLeaderZookeeperTest() {
 | T3 | SuspendSingleLeaderTest | `SuspendedJobTester` 8-coroutine 경쟁, shared curator | exactly 1 winner per lock round; `peakConcurrent ≤ 1` |
 | T4 | GroupLeaderTest | `maxLeaders=2`, `MultithreadingTester` 4-worker, shared curator | action body calls `Thread.sleep(600ms)` (> waitTime=500ms) to hold slot; `CountDownLatch(maxLeaders)` entered before sampling; `peakConcurrent.get() shouldBeEqualTo 2` |
 | T5 | SuspendGroupLeaderTest | `SuspendedJobTester` 4-coroutine group | same as T4 with `delay(600.milliseconds)`; `CountDownLatch` + `peakConcurrent == 2` |
-| T6 | ExtensionFunctionTest | `CuratorFramework` extension functions: `leaderElector(basePath)`, `suspendLeaderElector(basePath)`, `leaderGroupElector(basePath, options)`, `suspendLeaderGroupElector(basePath, options)` | each extension returns non-null elector; `runIfLeader` / `suspend runIfLeader` returns result successfully |
+| T6 | ExtensionFunctionTest | `CuratorFramework` extension functions: `runIfLeader`, `runAsyncIfLeader`, `suspendRunIfLeader`, `runIfLeaderGroup(lockName, options=..., basePath=...)`, `suspendRunIfLeaderGroup(lockName, options=..., basePath=...)` | Each extension returns expected result. **NOTE**: `runIfLeaderGroup` param is named `options` (NOT `groupOptions`) — confirmed from `ZooKeeperLeaderGroupElector.kt:181` |
 | T7 | R16AutoExtendIgnoredTest | `LeaderElectionOptions(autoExtend=true)` 전달 시 WARN 발생 + action 정상 실행 | Logback `ListAppender<ILoggingEvent>` attached to `io.bluetape4k.leader.zookeeper` logger; assert `appender.list.any { it.level == Level.WARN && "autoExtend" in it.message }`; action result == "r16-done" |
 | T8 | SessionLossFailoverTest | R16 세션 만료 시 Ephemeral Node 소멸 + 경쟁자 자동 선출 | **독립 ZK 컨테이너 사용** (싱글턴 파괴 방지): `ZooKeeperServer()` 인스턴스를 `@BeforeAll`에서 직접 시작; workerA acquires leadership; container stopped → workerB acquires after session expires; `@AfterAll`에서 컨테이너 정리 |
 
@@ -412,7 +469,11 @@ fun setupLogCapture() {
     appender = ListAppender<ILoggingEvent>().also { it.start() }
     logger.addAppender(appender)
 }
-@AfterEach fun teardownLogCapture() { appender.stop() }
+@AfterEach fun teardownLogCapture() {
+    // MUST detachAppender BEFORE stop() — stop() alone does NOT remove the appender from the logger
+    (LoggerFactory.getLogger("io.bluetape4k.leader.zookeeper") as Logger).detachAppender(appender)
+    appender.stop()
+}
 
 @Test fun `autoExtend option is silently ignored with WARN log`() {
     val elector = ZooKeeperLeaderElector(
@@ -491,3 +552,18 @@ bluetape4k-leader-zookeeper = { module = "io.github.bluetape4k.leader:bluetape4k
 | U4/T1 | HIGH | `runAsyncIfLeader` 미커버 | §5.5 T1: `runAsyncIfLeader` CompletableFuture 검증 추가 |
 | 6T6 | HIGH | T6 extension 함수 범위 미정의 | §5.5 T6: 4개 extension 함수 명시적 열거 |
 | U2 | HIGH | README side-by-side 예제 미정의 | §7 DoD: README 요구사항에 명시 |
+
+**Round 2 (Step 3-R):**
+
+| ID | 심각도 | 내용 | 해결 방법 |
+|---|---|---|---|
+| T2-2/T6-2 | CRITICAL | T8 컨테이너 `stop()`/`start()`으로 포트 변경 → curator stale | §5.4 T8: 클라이언트 측 세션 강제 종료로 교체; standalone 클래스로 분리 |
+| T5-1 | CRITICAL (escalated) | T4/T5 CountDownLatch 오케스트레이터 순서 미명시 → deadlock 위험 | §5.5 T4: 오케스트레이터를 `MultithreadingTester.run()` 이전에 시작 명시 |
+| T3-1 | CRITICAL | ZooKeeperLeaderGroupElector 생성자 파라미터 순서 오류 (plan prose) | Plan T-CFG-1: `(client, options, basePath)` 순서 명시적 코드로 교체 |
+| T3-2/C2 | CRITICAL | T-T6 `groupOptions` 파라미터명 오류 (compile error) | Plan T-T6 + §5.5 T6: `options=` 으로 수정; source-confirmed |
+| T2-1 | HIGH | test base `blockUntilConnected` return value 미확인 | §5.4: `check(it.blockUntilConnected(...))` 추가 |
+| T5-4/H3 | HIGH | T7 `@AfterEach` `detachAppender` 누락 | §5.5 T7: `detachAppender` 추가 |
+| H1 | HIGH | T8 `AbstractLeaderZookeeperTest` 상속 → singleton 접근 위험 | §5.4 T8: standalone 클래스로 교체 |
+| H5 | HIGH | PropertiesValidationTest 누락 | Plan: T-T9 추가 (blanks/zero 검증) |
+| H7 | HIGH | lessons 문서 task 누락 | Plan: T-DOC-3 추가 |
+| H8 | HIGH | README Spring Boot 4.x compat 미명시 | Plan T-DOC-1: compat statement 추가 |
