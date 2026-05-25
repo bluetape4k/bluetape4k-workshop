@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img" aria-label="Transactional Outbox Architecture">
+<defs>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <marker id="arrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+    <path d="M2,2 L12,7 L2,12 Z" fill="#758297"/>
+  </marker>
+  <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+    <path d="M2,2 L12,7 L2,12 Z" fill="#58A978"/>
+  </marker>
+  <style>
+    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
+    .title{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:36px;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:15px;fill:#536273}
+    .label{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:20px;fill:#102033}
+    .mono{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:13px;fill:#536273}
+    .bandlabel{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:15px;fill:#758297}
+    .card{stroke-width:2;filter:url(#shadow)}
+    .line{stroke:#758297;stroke-width:2;fill:none;marker-end:url(#arrow)}
+    .txline{stroke:#8A72D6;stroke-width:2.5;fill:none;stroke-dasharray:8,4}
+    .publine{stroke:#58A978;stroke-width:2;fill:none;marker-end:url(#arrowGreen)}
+  </style>
+</defs>
+<rect class="canvas" width="1200" height="800"/>
+<rect class="frame" x="28" y="24" width="1144" height="752" rx="20"/>
+
+<text class="title" x="52" y="68">Transactional Outbox Pattern</text>
+<text class="subtitle" x="52" y="92">Spring Boot 4 + Exposed + Kafka · Atomic dual-write with at-least-once delivery</text>
+
+<!-- LEFT: Write Path -->
+<rect x="52" y="118" width="540" height="530" rx="14" fill="#F8FAFD" stroke="#D8E0EA" stroke-width="1"/>
+<text class="bandlabel" x="68" y="140">Write Path (HTTP request)</text>
+
+<g transform="translate(210,156)">
+  <rect class="card" x="0" y="0" width="180" height="52" rx="12" fill="#E0ECFF" stroke="#4A7ADB"/>
+  <text class="label" x="90" y="34" text-anchor="middle">HTTP Client</text>
+</g>
+
+<g transform="translate(170,256)">
+  <rect class="card" x="0" y="0" width="260" height="68" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="label" x="130" y="28" text-anchor="middle">OrderController</text>
+  <text class="mono" x="130" y="50" text-anchor="middle">POST /api/orders</text>
+</g>
+
+<g transform="translate(170,372)">
+  <rect class="card" x="0" y="0" width="260" height="68" rx="12" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="label" x="130" y="28" text-anchor="middle">OrderService</text>
+  <text class="mono" x="130" y="50" text-anchor="middle">@Transactional · placeOrder()</text>
+</g>
+
+<!-- TX bracket -->
+<rect class="txline" x="80" y="478" width="480" height="148" rx="10"/>
+<text class="mono" x="96" y="500" style="fill:#8A72D6;font-size:14px">BEGIN TRANSACTION</text>
+
+<g transform="translate(96,512)">
+  <rect class="card" x="0" y="0" width="210" height="62" rx="10" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="label" x="105" y="26" text-anchor="middle">OrderTable</text>
+  <text class="mono" x="105" y="48" text-anchor="middle">INSERT (PENDING)</text>
+</g>
+<g transform="translate(326,512)">
+  <rect class="card" x="0" y="0" width="220" height="62" rx="10" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="label" x="110" y="26" text-anchor="middle">OutboxEventTable</text>
+  <text class="mono" x="110" y="48" text-anchor="middle">INSERT (PENDING)</text>
+</g>
+
+<!-- RIGHT: Publish Path -->
+<rect x="628" y="118" width="500" height="530" rx="14" fill="#F0FAF0" stroke="#B0DAC0" stroke-width="1"/>
+<text class="bandlabel" x="644" y="140">Publish Path (Scheduler · every 2s)</text>
+
+<g transform="translate(700,162)">
+  <rect class="card" x="0" y="0" width="340" height="72" rx="12" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="label" x="170" y="30" text-anchor="middle">OutboxPublisher</text>
+  <text class="mono" x="170" y="52" text-anchor="middle">@Scheduled · polls PENDING/FAILED</text>
+</g>
+
+<g transform="translate(700,290)">
+  <rect class="card" x="0" y="0" width="340" height="66" rx="10" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="label" x="170" y="26" text-anchor="middle">outbox_events</text>
+  <text class="mono" x="170" y="48" text-anchor="middle">SELECT PENDING/FAILED rows</text>
+</g>
+
+<g transform="translate(750,412)">
+  <rect class="card" x="0" y="0" width="240" height="66" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
+  <text class="label" x="120" y="26" text-anchor="middle">Kafka</text>
+  <text class="mono" x="120" y="48" text-anchor="middle">topic: order-events</text>
+</g>
+
+<g transform="translate(700,534)">
+  <rect class="card" x="0" y="0" width="340" height="72" rx="10" fill="#E9F7F6" stroke="#45A7A1"/>
+  <text class="label" x="170" y="30" text-anchor="middle">Status Lifecycle</text>
+  <text class="mono" x="170" y="52" text-anchor="middle">PENDING → PUBLISHED | FAILED → DEAD_LETTER</text>
+</g>
+
+<!-- Database -->
+<g transform="translate(350,690)">
+  <ellipse cx="150" cy="10" rx="150" ry="16" fill="#FDECEF" stroke="#DC6B82" stroke-width="2"/>
+  <rect x="0" y="10" width="300" height="36" fill="#FDECEF" stroke="#DC6B82" stroke-width="2"/>
+  <line x1="0" y1="10" x2="0" y2="46" stroke="#DC6B82" stroke-width="2"/>
+  <line x1="300" y1="10" x2="300" y2="46" stroke="#DC6B82" stroke-width="2"/>
+  <ellipse cx="150" cy="46" rx="150" ry="16" fill="#FDECEF" stroke="#DC6B82" stroke-width="2"/>
+  <text class="label" x="150" y="42" text-anchor="middle">PostgreSQL</text>
+</g>
+
+<!-- Write path arrows (all orthogonal) -->
+<path class="line" d="M300,208 L300,254"/>
+<path class="line" d="M300,324 L300,370"/>
+<!-- OrderService → Tables (orthogonal) -->
+<path class="line" d="M240,440 L240,466 L201,466 L201,510"/>
+<path class="line" d="M360,440 L360,466 L436,466 L436,510"/>
+
+<!-- Tables → DB (orthogonal) -->
+<path class="line" d="M201,574 L201,668 L440,668 L440,688"/>
+<path class="line" d="M436,574 L436,668 L530,668 L530,688"/>
+
+<!-- Publish path arrows -->
+<path class="publine" d="M870,234 L870,288"/>
+<path class="publine" d="M870,356 L870,410"/>
+<path class="publine" d="M870,478 L870,532"/>
+
+<!-- outbox_events → DB (left of panel, orthogonal) -->
+<path class="publine" d="M700,326 L660,326 L660,668 L580,668 L580,688"/>
+</svg>

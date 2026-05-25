@@ -9,29 +9,7 @@ Demonstrates idiomatic coroutine-first HTTP, SSE streaming, and NDJSON export wi
 
 ## Architecture
 
-```
-HTTP client
-     │
-     ▼
-┌─────────────────────────────────────────────────────────┐
-│  Ktor Application (Netty engine)                        │
-│                                                         │
-│  Plugins: CallLogging → ContentNegotiation → SSE        │
-│           → StatusPages                                 │
-│                                                         │
-│  Routes                                                 │
-│  ├─ GET/POST/PUT/DELETE /books  (CRUD)                  │
-│  ├─ GET /books/export           (NDJSON via Jackson 3)  │
-│  ├─ GET /books/stream           (SSE hot stream)        │
-│  └─ GET /health                 (liveness probe)        │
-│                                                         │
-│  BookService ──► BookRepository (InMemory)              │
-│                      │                                  │
-│                      └── MutableSharedFlow<Book>        │
-│                           extraBufferCapacity=64        │
-│                           onBufferOverflow=SUSPEND      │
-└─────────────────────────────────────────────────────────┘
-```
+![Ktor REST Coroutines Architecture](../../docs/images/readme-diagrams/ktor-rest-coroutines-architecture-01.png)
 
 ---
 

@@ -1,0 +1,48 @@
+digraph KtorRestCoroutines {
+  rankdir=TB;
+  node [shape=box, style=rounded, fontname="Arial"];
+  edge [fontname="Arial", fontsize=10];
+
+  // External
+  client [label="HTTP Client"];
+
+  // Ktor Application layer
+  subgraph cluster_ktor {
+    label="Ktor Application (Netty)";
+    style=rounded;
+
+    subgraph cluster_plugins {
+      label="Plugins";
+      calllog [label="CallLogging"];
+      content_neg [label="ContentNegotiation\n(kotlinx.serialization)"];
+      sse_plugin [label="SSE"];
+      status_pages [label="StatusPages"];
+    }
+
+    subgraph cluster_routes {
+      label="Routes";
+      book_routes [label="BookRoutes\n/books CRUD\n/books/export NDJSON\n/books/stream SSE"];
+      health_routes [label="HealthRoutes\n/health"];
+    }
+  }
+
+  // Service layer
+  service [label="BookService\n(validation)"];
+
+  // Repository layer
+  repo_if [label="BookRepository\n(interface)"];
+  repo_impl [label="InMemoryBookRepository\nConcurrentHashMap\n+ MutableSharedFlow"];
+
+  // Support
+  jackson3 [label="Jackson3Support\n(NDJSON export)"];
+  domain [label="Book / DomainError\n(domain model)"];
+
+  // Edges
+  client -> book_routes;
+  client -> health_routes;
+  book_routes -> service;
+  book_routes -> jackson3;
+  service -> repo_if;
+  repo_if -> repo_impl;
+  service -> domain;
+}

@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="860" viewBox="0 0 1200 860" role="img" aria-label="Exposed WebFlux R2DBC Architecture">
+<defs>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <marker id="arrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+    <path d="M2,2 L12,7 L2,12 Z" fill="#758297"/>
+  </marker>
+  <marker id="arrowTeal" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+    <path d="M2,2 L12,7 L2,12 Z" fill="#45A7A1"/>
+  </marker>
+  <style>
+    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
+    .title{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:36px;fill:#102033}
+    .subtitle{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:15px;fill:#536273}
+    .label{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:20px;fill:#102033}
+    .mono{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:13px;fill:#536273}
+    .bandlabel{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:15px;fill:#758297}
+    .card{stroke-width:2;filter:url(#shadow)}
+    .line{stroke:#758297;stroke-width:2;fill:none;marker-end:url(#arrow)}
+    .flowline{stroke:#45A7A1;stroke-width:2;fill:none;marker-end:url(#arrowTeal);stroke-dasharray:6,3}
+  </style>
+</defs>
+<rect class="canvas" width="1200" height="860"/>
+<rect class="frame" x="28" y="24" width="1144" height="812" rx="20"/>
+
+<text class="title" x="52" y="68">Exposed WebFlux R2DBC</text>
+<text class="subtitle" x="52" y="92">WebFlux + Coroutines + Exposed R2DBC · Fully Reactive Data Access</text>
+
+<!-- Client -->
+<g transform="translate(280,108)">
+  <rect class="card" x="0" y="0" width="150" height="48" rx="12" fill="#E0ECFF" stroke="#4A7ADB"/>
+  <text class="label" x="75" y="32" text-anchor="middle">HTTP Client</text>
+</g>
+
+<!-- Layer bands -->
+<rect x="52" y="192" width="700" height="108" rx="8" fill="#E8F3FF" stroke="#B8D4F0" stroke-width="1"/>
+<text class="bandlabel" x="66" y="212">Controller (suspend fun)</text>
+<rect x="52" y="332" width="700" height="108" rx="8" fill="#EAF7EF" stroke="#B0DAC0" stroke-width="1"/>
+<text class="bandlabel" x="66" y="352">Service (suspendTransaction)</text>
+<rect x="52" y="472" width="700" height="108" rx="8" fill="#F1ECFF" stroke="#C8B8E8" stroke-width="1"/>
+<text class="bandlabel" x="66" y="492">Repository (Flow&lt;T&gt;)</text>
+<rect x="52" y="612" width="700" height="108" rx="8" fill="#FFF3D9" stroke="#E8D5A0" stroke-width="1"/>
+<text class="bandlabel" x="66" y="632">Schema</text>
+
+<!-- R2DBC Config -->
+<g transform="translate(820,222)">
+  <rect class="card" x="0" y="0" width="300" height="72" rx="12" fill="#E9F7F6" stroke="#45A7A1"/>
+  <text class="label" x="150" y="28" text-anchor="middle">ExposedR2dbcConfig</text>
+  <text class="mono" x="150" y="50" text-anchor="middle">R2DBC Database bean</text>
+</g>
+
+<!-- Controllers -->
+<g transform="translate(80,222)">
+  <rect class="card" x="0" y="0" width="280" height="72" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="label" x="140" y="28" text-anchor="middle">AuthorController</text>
+  <text class="mono" x="140" y="50" text-anchor="middle">suspend fun · /api/authors</text>
+</g>
+<g transform="translate(400,222)">
+  <rect class="card" x="0" y="0" width="280" height="72" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="label" x="140" y="28" text-anchor="middle">OrderController</text>
+  <text class="mono" x="140" y="50" text-anchor="middle">suspend fun · /api/orders</text>
+</g>
+
+<!-- Services -->
+<g transform="translate(80,362)">
+  <rect class="card" x="0" y="0" width="280" height="72" rx="12" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="label" x="140" y="28" text-anchor="middle">AuthorService</text>
+  <text class="mono" x="140" y="50" text-anchor="middle">suspendTransaction(db) {}</text>
+</g>
+<g transform="translate(400,362)">
+  <rect class="card" x="0" y="0" width="280" height="72" rx="12" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="label" x="140" y="28" text-anchor="middle">OrderService</text>
+  <text class="mono" x="140" y="50" text-anchor="middle">suspendTransaction(db) {}</text>
+</g>
+
+<!-- Repositories -->
+<g transform="translate(80,502)">
+  <rect class="card" x="0" y="0" width="280" height="72" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="label" x="140" y="28" text-anchor="middle">AuthorRepository</text>
+  <text class="mono" x="140" y="50" text-anchor="middle">Flow&lt;AuthorDTO&gt;</text>
+</g>
+<g transform="translate(400,502)">
+  <rect class="card" x="0" y="0" width="280" height="72" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="label" x="140" y="28" text-anchor="middle">OrderRepository</text>
+  <text class="mono" x="140" y="50" text-anchor="middle">Flow&lt;OrderDTO&gt;</text>
+</g>
+
+<!-- Schema -->
+<g transform="translate(80,642)">
+  <rect class="card" x="0" y="0" width="280" height="72" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="label" x="140" y="28" text-anchor="middle">AuthorTable / BookTable</text>
+  <text class="mono" x="140" y="50" text-anchor="middle">Exposed Table DSL</text>
+</g>
+<g transform="translate(400,642)">
+  <rect class="card" x="0" y="0" width="280" height="72" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="label" x="140" y="28" text-anchor="middle">OrderTable / ProductTable</text>
+  <text class="mono" x="140" y="50" text-anchor="middle">Exposed Table DSL</text>
+</g>
+
+<!-- Database -->
+<g transform="translate(240,758)">
+  <ellipse cx="140" cy="10" rx="140" ry="16" fill="#FDECEF" stroke="#DC6B82" stroke-width="2"/>
+  <rect x="0" y="10" width="280" height="36" fill="#FDECEF" stroke="#DC6B82" stroke-width="2"/>
+  <line x1="0" y1="10" x2="0" y2="46" stroke="#DC6B82" stroke-width="2"/>
+  <line x1="280" y1="10" x2="280" y2="46" stroke="#DC6B82" stroke-width="2"/>
+  <ellipse cx="140" cy="46" rx="140" ry="16" fill="#FDECEF" stroke="#DC6B82" stroke-width="2"/>
+  <text class="label" x="140" y="42" text-anchor="middle">PostgreSQL (R2DBC)</text>
+</g>
+
+<!-- ARROWS -->
+<path class="line" d="M325,156 L325,178 L220,178 L220,220"/>
+<path class="line" d="M385,156 L385,178 L540,178 L540,220"/>
+
+<path class="line" d="M220,294 L220,360"/>
+<path class="line" d="M540,294 L540,360"/>
+
+<path class="line" d="M220,434 L220,500"/>
+<path class="line" d="M540,434 L540,500"/>
+
+<path class="line" d="M220,574 L220,640"/>
+<path class="line" d="M540,574 L540,640"/>
+
+<path class="line" d="M220,714 L220,740 L340,740 L340,756"/>
+<path class="line" d="M540,714 L540,740 L440,740 L440,756"/>
+
+<!-- Config → Services (below services, enter from bottom) -->
+<path class="flowline" d="M970,294 L970,452 L220,452 L220,436"/>
+<path class="flowline" d="M970,294 L970,452 L540,452 L540,436"/>
+</svg>

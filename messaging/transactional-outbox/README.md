@@ -7,33 +7,7 @@ The pattern guarantees that domain state changes and the corresponding Kafka eve
 
 ## Architecture
 
-```mermaid
-sequenceDiagram
-    participant C  as Client
-    participant CT as OrderController
-    participant OS as OrderService
-    participant DB as PostgreSQL
-    participant SC as OutboxPublisher (Scheduler)
-    participant K  as Kafka
-
-    C->>CT: POST /api/orders
-    CT->>OS: placeOrder(customerId, product, qty)
-    OS->>DB: BEGIN TRANSACTION
-    OS->>DB: INSERT INTO orders (status=PENDING)
-    OS->>DB: INSERT INTO outbox_events (status=PENDING, payload=JSON)
-    OS->>DB: COMMIT
-    OS-->>CT: OrderResponse
-    CT-->>C: 201 Created
-
-    loop every 2 s
-        SC->>DB: SELECT id FROM outbox_events WHERE status IN (PENDING, FAILED)
-        SC->>SC: publishEvent(id) per row
-        SC->>DB: BEGIN TRANSACTION (REQUIRES_NEW)
-        SC->>K: KafkaTemplate.send("order-events", aggregateId, payload).get()
-        SC->>DB: UPDATE outbox_events SET status=PUBLISHED, processed_at=NOW()
-        SC->>DB: COMMIT
-    end
-```
+![Transactional Outbox Architecture](../../docs/images/readme-diagrams/messaging-transactional-outbox-architecture-01.png)
 
 ---
 
