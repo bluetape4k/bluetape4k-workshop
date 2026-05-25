@@ -1,7 +1,6 @@
 package io.bluetape4k.workshop.graph.recommendation.model
 
 import io.bluetape4k.graph.model.GraphVertex
-import io.bluetape4k.logging.KLogging
 import java.io.Serializable
 
 /**
@@ -35,7 +34,7 @@ data class FollowRecommendation(
     /** The intermediary vertices (seed's follows who also follow [person]). */
     val mutualFollows: List<GraphVertex>,
 ) : Serializable {
-    companion object : KLogging() {
+    companion object {
         private const val serialVersionUID: Long = 1L
     }
 }
