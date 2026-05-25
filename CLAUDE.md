@@ -52,3 +52,25 @@ Bluetape4k 라이브러리 활용 백엔드 예제 모음.
 ## 주요 bluetape4k 모듈
 
 `bluetape4k-logging`, `bluetape4k-junit5`, `bluetape4k-coroutines`, `bluetape4k-exposed`, `bluetape4k-testcontainers`
+
+## Dependency Version Management (MANDATORY)
+
+Workshop and example modules (non-library projects) must use **only** `bluetape4k-dependencies` BOM for version management.
+
+**Rules:**
+- ✅ DO: Import `platform(libs.bluetape4k.dependencies)` in the root `build.gradle.kts`
+- ✅ DO: Declare individual module aliases without version (e.g., `libs.bluetape4k.graph.core`)
+- ❌ DON'T: Import individual library BOMs (e.g., `platform(libs.bluetape4k.graph.bom)`)
+- ❌ DON'T: Declare explicit versions for bluetape4k module aliases in `libs.versions.toml`
+
+**Rationale:** `bluetape4k-dependencies` is the single source of truth for all bluetape4k ecosystem versions. Individual library BOMs (like `bluetape4k-graph-bom`) may conflict with or be overridden by `bluetape4k-dependencies`. Adding them creates version confusion and redundancy without benefit.
+
+**Version catalog pattern:**
+```toml
+# libs.versions.toml — correct: no version on individual modules
+bluetape4k-graph-core      = { module = "io.github.bluetape4k.graph:bluetape4k-graph-core" }
+bluetape4k-graph-tinkerpop = { module = "io.github.bluetape4k.graph:bluetape4k-graph-tinkerpop" }
+
+# WRONG: do not pin individual library BOM
+# bluetape4k-graph-bom = { module = "...", version.ref = "bluetape4k-graph" }
+```
