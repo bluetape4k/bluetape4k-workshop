@@ -9,29 +9,7 @@ Spring이나 리액티브 스트림 없이 관용적인 코루틴 HTTP, SSE 스�
 
 ## 아키텍처
 
-```
-HTTP 클라이언트
-     │
-     ▼
-┌─────────────────────────────────────────────────────────┐
-│  Ktor Application (Netty 엔진)                          │
-│                                                         │
-│  플러그인: CallLogging → ContentNegotiation → SSE       │
-│            → StatusPages                                │
-│                                                         │
-│  라우트                                                  │
-│  ├─ GET/POST/PUT/DELETE /books  (CRUD)                  │
-│  ├─ GET /books/export           (Jackson 3 NDJSON)      │
-│  ├─ GET /books/stream           (SSE 핫 스트림)          │
-│  └─ GET /health                 (활성 프로브)            │
-│                                                         │
-│  BookService ──► BookRepository (인메모리)               │
-│                      │                                  │
-│                      └── MutableSharedFlow<Book>        │
-│                           extraBufferCapacity=64        │
-│                           onBufferOverflow=SUSPEND      │
-└─────────────────────────────────────────────────────────┘
-```
+![Ktor REST Coroutines Architecture](../../docs/images/readme-diagrams/ktor-rest-coroutines-architecture-01.png)
 
 ---
 

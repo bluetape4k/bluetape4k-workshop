@@ -4,27 +4,7 @@ Spring MVC + Virtual Threads + Exposed JDBC — **no `@Transactional`**.
 
 ## Architecture
 
-```mermaid
-sequenceDiagram
-    participant C as Client
-    participant Ctrl as @RestController
-    participant Svc as @Service<br/>(VT executor)
-    participant Repo as Repository<br/>(VT executor)
-    participant DB as PostgreSQL
-
-    C->>Ctrl: HTTP Request
-    Ctrl->>Svc: call service method
-    activate Svc
-    Note over Svc: virtualFuture(executor) { }
-    Svc->>Repo: submit to VT executor
-    Note over Repo: transaction(db) { }
-    Repo->>DB: Exposed JDBC SQL
-    DB-->>Repo: ResultRow
-    Repo-->>Svc: entity / list
-    Svc-->>Ctrl: Future.get()
-    deactivate Svc
-    Ctrl-->>C: HTTP Response
-```
+![Exposed MVC Virtual Thread Architecture](../../docs/images/readme-diagrams/exposed-mvc-virtualthread-architecture-01.png)
 
 ## Used bluetape4k Features
 

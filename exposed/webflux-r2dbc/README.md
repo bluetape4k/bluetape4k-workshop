@@ -4,27 +4,7 @@ WebFlux + Coroutines + Exposed R2DBC — fully reactive/coroutine data access.
 
 ## Architecture
 
-```mermaid
-sequenceDiagram
-    participant C as Client
-    participant Ctrl as WebFlux Controller<br/>(suspend fun)
-    participant Svc as @Service<br/>(suspendTransaction)
-    participant Repo as Repository<br/>(Flow<T>)
-    participant DB as PostgreSQL (R2DBC)
-
-    C->>Ctrl: HTTP Request
-    Ctrl->>Svc: suspend call
-    activate Svc
-    Note over Svc: suspendTransaction(db) { }
-    Svc->>Repo: findAll() / findById()
-    Note over Repo: Flow<T> (cold stream)
-    Repo->>DB: Exposed R2DBC SQL
-    DB-->>Repo: rows
-    Repo-->>Svc: Flow<T>.toList()
-    Svc-->>Ctrl: List<T>
-    deactivate Svc
-    Ctrl-->>C: HTTP Response
-```
+![Exposed WebFlux R2DBC Architecture](../../docs/images/readme-diagrams/exposed-webflux-r2dbc-architecture-01.png)
 
 ## Used bluetape4k Features
 
