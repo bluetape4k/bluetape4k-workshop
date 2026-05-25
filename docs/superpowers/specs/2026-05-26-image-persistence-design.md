@@ -265,6 +265,93 @@ src/test/kotlin/.../advanced/           ← NoopImagePersistenceService HERE (no
     ImageAssetEndpointTest.kt                 -- GET /images/{id} and /history integration tests
 ```
 
+### `ImagePersistenceService` Interface Signatures
+
+```kotlin
+interface ImagePersistenceService {
+    /**
+     * T1: Record job start (REQUIRES_NEW).
+     * Creates or recovers image_assets row + new image_processing_jobs row.
+     */
+    fun recordJobStart(
+        checksum: String,
+        originalFilename: String,
+        contentType: String,
+        byteSize: Long,
+        width: Int?,
+        height: Int?,
+        requestedVariants: List<String>,
+    ): JobStartResult
+
+    /**
+     * T2: Record job success (REQUIRES_NEW).
+     * Upserts image_objects rows, updates asset→READY, job→SUCCEEDED.
+     */
+    fun recordJobSuccess(
+        jobId: Long,
+        assetId: Long,
+        objects: List<ImageObjectInput>,
+    ): Unit
+
+    /**
+     * T3: Record job failure (REQUIRES_NEW + NonCancellable context in caller).
+     * Updates job→FAILED + asset→FAILED.
+     */
+    fun recordJobFailure(
+        jobId: Long,
+        assetId: Long,
+        errorCode: String,
+        errorMessage: String,
+    ): Unit
+
+    /**
+     * Event mini-tx: Append one event row (REQUIRES_NEW).
+     * Failure suppressed by caller (see §3.7).
+     */
+    fun appendEvent(
+        jobId: Long,
+        step: ImageProcessingStep,
+        status: ImageProcessingEventStatus,
+        message: String,
+        payload: Map<String, Any?> = emptyMap(),
+    ): Unit
+
+    /** Query — returns null when not found (caller maps to 404). */
+    fun findAssetByExternalId(externalId: String): ImageAssetDetailResponse?
+
+    /** Query — returns null when not found (caller maps to 404). */
+    fun findAssetHistory(externalId: String): ImageAssetHistoryResponse?
+}
+
+data class JobStartResult(
+    val assetId: Long,
+    val jobId: Long,
+    val alreadyExists: Boolean,  // true → READY short-circuit; caller skips processing
+) : Serializable {
+    companion object { const val serialVersionUID = 1L }
+}
+
+data class ImageObjectInput(
+    val kind: ImageObjectKind,        // ORIGINAL | VARIANT
+    val variantName: String?,         // null for ORIGINAL
+    val s3Key: String,
+    val publicUrl: String,
+    val width: Int?,
+    val height: Int?,
+    val byteSize: Long,
+    val format: String?,
+) : Serializable {
+    companion object { const val serialVersionUID = 1L }
+}
+```
+
+**Status enum clarification** (by design — intentional separation):
+- `ImageAssetStatus` (`image_assets.status`): `PROCESSING | READY | FAILED`
+- `ImageJobStatus` (`image_processing_jobs.status`): `RUNNING | SUCCEEDED | FAILED`
+- `ImageProcessingEventStatus` (`image_processing_events.status`): `STARTED | COMPLETED | FAILED | SKIPPED`
+
+The `event.status` enum is distinct because events are progress markers (they can be `STARTED`, `COMPLETED`, or `FAILED` for the *step*), whereas asset/job status tracks the overall lifecycle state.
+
 ### Modified Files
 
 - `build.gradle.kts` — add Exposed + PostgreSQL + Testcontainers dependencies
@@ -328,6 +415,25 @@ spring:
       connection-timeout: 30000
 ```
 
+**Pool sizing analysis**:
+- Each upload request uses at most: T1 (1 connection) + up to 6 event mini-tx (1 each, sequential) + T2 (1 connection) = serial usage, max 1 connection held at any time per request.
+- Concurrent test forks: `forkEvery=1` spawns isolated JVMs; the Testcontainers container is shared via reuse but each fork gets its own HikariCP pool (`maximum-pool-size: 10`). Single-fork concurrent test parallelism is bounded by `junit.jupiter.execution.parallel.config.fixed.parallelism` (typically 1 for serial test mode per `TestMutexService`).
+- **Workshop conclusion**: `maximum-pool-size: 10` is sufficient for single-user serial tests. Documented assumption. `leak-detection-threshold: 30000` added for connection leak detection.
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/image_processing
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-init-sql: "SET statement_timeout='10000'"  # 10s per statement
+      maximum-pool-size: 10
+      connection-timeout: 30000
+      leak-detection-threshold: 30000  # log connection leak if held > 30s
+```
+
 ### DatabaseInitializer requirement
 `ImagePersistenceDatabaseInitializer.run()` must **NOT** catch exceptions from `SchemaUtils.create()`. If DDL initialization fails, the application must not start. Wrapping in a no-op `try/catch` is prohibited.
 
@@ -367,6 +473,10 @@ Each DoD criterion must have at least one named integration test.
 | GET-404 | GET /images/{unknown-id} → 404 ProblemDetail | `ImageAssetEndpointTest` | Response status 404, Content-Type `application/problem+json` |
 | GET-history | GET /history returns job + events | `ImageAssetEndpointTest` | Response jobs list non-empty; first job has events with step names |
 | DB-init | DatabaseInitializer creates all 4 tables | `ImagePersistenceServiceImplTest` | On Spring context start, all 4 tables queryable via `SELECT COUNT(*) FROM ...` |
+| Event-success-path | Successful upload emits all 6 step events in order | `ImagePersistenceServiceImplTest` | After full saga: `image_processing_events` rows for `VALIDATION→JOB_STARTED→VIPS_PROCESSING→S3_UPLOAD(×N)→JOB_COMPLETED`, ordered by `created_at`; each has non-null `step`, `status=COMPLETED` |
+| Event-failure-path | Failed upload emits `JOB_FAILED` event | `ImagePersistenceServiceImplTest` | After T3: one `image_processing_events` row with `step=JOB_FAILED`, `status=FAILED`, non-null `message` |
+| Event-mini-tx-suppression | Event mini-tx throws → main flow unaffected | `ImagePersistenceServiceImplTest` | Spy/mock `appendEvent` to throw; call `recordJobStart()` → no exception propagated; main saga result is valid |
+| Concurrent-checksum-race | Two simultaneous uploads of same checksum → graceful | `ImagePersistenceServiceImplTest` | Launch 2 coroutines calling `recordJobStart()` with same checksum concurrently; one gets `alreadyExists=true` or same `assetId`; no unhandled DB exception; `image_assets` count = 1 |
 
 ---
 
@@ -380,7 +490,7 @@ Each DoD criterion must have at least one named integration test.
 - [ ] FAILED asset + same checksum retry succeeds (no `DataIntegrityViolationException`)
 - [ ] Concurrent same-checksum uploads handled gracefully (no unhandled DB exception)
 - [ ] All existing tests (`ImageDerivativeWorkflowServiceTest`, unit tests) pass without PostgreSQL
-- [ ] Integration tests cover all 12 scenarios in §10
+- [ ] Integration tests cover all 16 scenarios in §10 (including 4 new event lifecycle + race scenarios)
 - [ ] `README.md` and `README.ko.md` include ERD + updated persistence sequence diagram
 - [ ] `README.md` includes "Used Bluetape4k features" table
 - [ ] `README.md` includes stale-job monitoring query in Operations section
@@ -408,6 +518,7 @@ Each DoD criterion must have at least one named integration test.
 
 ## Appendix: Review Iteration Log
 
-| Round | Phase 1 P0/P1 | Silent Failure P0/P1 | Security P0/P1 | Test P0/P1 | P0/P1 applied | Commit |
-|-------|--------------|---------------------|---------------|-----------|---------------|--------|
-| 1 | 3 HIGH / 4 MEDIUM | 4 HIGH / 4 MEDIUM | 0 HIGH / 3 MEDIUM | 8 HIGH / 6 MEDIUM | All HIGH addressed in spec rev | (pending commit) |
+| Round | Phase 1 P0/P1 | Silent Failure P0/P1 | Security P0/P1 | Test P0/P1 | 6-Tier Advisor P1 | P0/P1 applied | Commit |
+|-------|--------------|---------------------|---------------|-----------|------------------|---------------|--------|
+| 1 | 3 HIGH / 4 MEDIUM | 4 HIGH / 4 MEDIUM | 0 HIGH / 3 MEDIUM | 8 HIGH / 6 MEDIUM | — | All HIGH addressed in spec rev | committed |
+| 2 (advisor) | (pending) | (pending) | (pending) | (pending) | P0=0, P1=5 (Tier3+5+6) | §3.7 event lifecycle, interface sigs, pool analysis, 4 new §10 scenarios | committed |
