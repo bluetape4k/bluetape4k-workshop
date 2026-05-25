@@ -1,0 +1,24 @@
+digraph TextProcessing {
+  rankdir=LR;
+  node [shape=box, style="rounded,filled", fontname="Arial", fontsize=11];
+  nodesep=1.0; ranksep=1.5;
+
+  Input [label="Input Text\nuser content\nmulti-language\nraw whitespace", fillcolor="#E0ECFF"];
+
+  AbuseWordFilter [label="AbuseWordFilter\nAhoCorasick\nO(text + matches)", fillcolor="#FDECEF"];
+  FilteredContent [label="Filtered Content\nmasked text\nAhoCorasickMatch", fillcolor="#FDECEF"];
+
+  LanguageDetection [label="LanguageDetectionService\nLingua\nKR / EN / JP", fillcolor="#EAF7EF"];
+  LanguageResult [label="Language Result\nKOREAN (0.98)\nper-paragraph", fillcolor="#EAF7EF"];
+
+  TextNormalizer [label="TextNormalizer\nobject singleton\nnormalize · extract", fillcolor="#FFF3D9"];
+  NormalizedText [label="Normalized Text\ntrimmed · collapsed\nkeywords list", fillcolor="#FFF3D9"];
+
+  Input -> AbuseWordFilter;
+  Input -> LanguageDetection;
+  Input -> TextNormalizer;
+
+  AbuseWordFilter -> FilteredContent;
+  LanguageDetection -> LanguageResult;
+  TextNormalizer -> NormalizedText;
+}
