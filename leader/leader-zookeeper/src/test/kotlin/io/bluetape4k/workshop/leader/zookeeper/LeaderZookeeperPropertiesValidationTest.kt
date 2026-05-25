@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.leader.zookeeper
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.workshop.leader.zookeeper.config.LeaderZookeeperProperties
 import org.junit.jupiter.api.Test
-import kotlin.test.assertFailsWith
 
 /**
  * T9: [LeaderZookeeperProperties] `init {}` validation tests.
