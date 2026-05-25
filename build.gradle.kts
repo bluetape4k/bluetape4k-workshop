@@ -35,6 +35,7 @@ val rootLibs = libs
 
 allprojects {
     repositories {
+        mavenLocal()   // required for bluetape4k-graph until published to Maven Central
         mavenCentral()
         maven {
             name = "central-snapshots"
