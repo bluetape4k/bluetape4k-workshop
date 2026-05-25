@@ -187,10 +187,44 @@ ZooKeeperLeaderGroupElector(curator, "/test/group", options)  // 컴파일 오�
 
 ---
 
-## 8. 검증 결과
+## 8. Step 6-R 코드 리뷰 발견 사항
+
+### 8-1. `kotlin.test.assertFailsWith` 는 CLAUDE.md에서 금지
+
+- **문제**: `LeaderZookeeperPropertiesValidationTest`가 `import kotlin.test.assertFailsWith` 를 사용
+- **수정**: `import io.bluetape4k.assertions.assertFailsWith` 로 대체
+- **규칙**: CLAUDE.md 명시 금지 목록: "Do not use JUnit assertThrows, invoking { } shouldThrow, or kotlin.test.assertFailsWith in new tests"
+
+### 8-2. `runTest {}` 표현식 바디도 `: Unit` 추가 권장
+
+`runTest` 자체가 `Unit`을 반환하므로 기술적으로는 불필요하지만,
+`runBlocking + assertion` 패턴과의 일관성을 위해 `: Unit` 명시 권장.
+
+규칙:
+- `fun test() = runBlocking { ... }` → **반드시** `: Unit`
+- `fun test() = runTest { ... }` → `runTest`가 `Unit` 반환이므로 선택적, 일관성을 위해 추가 권장
+
+### 8-3. 서비스 레이어 행동 테스트 부재
+
+컨텍스트 테스트(T0)는 Spring 빈 와이어링만 확인. `runLeaderWork()`, `inspectState()` 등 실제
+서비스 메서드의 반환값/부수효과 테스트가 없었음.
+
+- **수정**: `LeaderServiceBehaviorTest` 추가 (4개 테스트: BlockingLeaderService 2개, GroupLeaderService 2개)
+- **패턴**: AbstractLeaderZookeeperTest의 공유 `curator` 를 사용하여 Spring 컨텍스트 없이 서비스 직접 생성
+
+### 8-4. 숫자 타임아웃 필드 검증 누락
+
+`ZooKeeperConfig` 의 `sessionTimeoutMs`, `connectionTimeoutMs`, `blockUntilConnectedSeconds` 가
+음수 또는 0이어도 통과됨.
+
+- **수정**: `ZooKeeperConfig.init {}` 에 `requirePositiveNumber` 추가
+
+---
+
+## 9. 최종 검증 결과
 
 - **빌드**: `./gradlew :leader-leader-zookeeper:compileKotlin` → BUILD SUCCESSFUL
-- **테스트**: `./gradlew :leader-leader-zookeeper:test --rerun-tasks` → **18 tests, 0 failures**
+- **테스트**: `./gradlew :leader-leader-zookeeper:test --rerun-tasks` → **22 tests, 0 failures**
 
 | 테스트 | 결과 |
 |--------|------|
@@ -204,4 +238,5 @@ ZooKeeperLeaderGroupElector(curator, "/test/group", options)  // 컴파일 오�
 | T7 R16AutoExtendIgnoredTest | ✅ 1 pass |
 | T8 SessionLossFailoverTest | ✅ 1 pass |
 | T9 LeaderZookeeperPropertiesValidationTest | ✅ 3 pass |
-| **합계** | **18 pass / 0 fail** |
+| LeaderServiceBehaviorTest | ✅ 4 pass (신규) |
+| **합계** | **22 pass / 0 fail** |
