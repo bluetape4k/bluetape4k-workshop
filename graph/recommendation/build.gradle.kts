@@ -19,6 +19,9 @@ tasks.test {
 tasks.register<Test>("integrationTest") {
     description = "Runs Neo4j and Memgraph integration tests (requires Docker)."
     group = "verification"
+    // Must reference the same test source set; without this the task produces NO-SOURCE.
+    testClassesDirs = sourceSets["test"].output.classesDirs
+    classpath = sourceSets["test"].runtimeClasspath
     useJUnitPlatform {
         includeTags("integration")
     }
