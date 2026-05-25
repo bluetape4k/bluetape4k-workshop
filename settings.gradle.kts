@@ -24,6 +24,7 @@ includeModules("exposed", false, true)
 includeModules("gateway", false, false)
 includeModules("gatling", false, true)
 includeModules("graalvm", false, false)
+includeModules("graph", false, true)        // graph/abuser-detection — Issue #12
 includeModules("image-processing", false, true)
 includeModules("io", false, false)
 includeModules("json", false, false)
