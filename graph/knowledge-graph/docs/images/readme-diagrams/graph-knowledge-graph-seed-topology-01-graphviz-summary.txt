@@ -1,0 +1,10 @@
+diagram: graph-knowledge-graph-seed-topology-01
+node_count: 10
+edge_count: 12
+missing_final_nodes: []
+missing_graphviz_nodes: []
+missing_final_edges: []
+missing_graphviz_edges: []
+rank_order_mismatches: []
+route_side_mismatches: []
+manual_exceptions: final SVG uses Graphviz node/edge inventory, then manual spacing for typography and README scale; seed topology uses direct diagonal mention lines where they reduce bus crossings

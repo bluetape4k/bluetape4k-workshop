@@ -1,0 +1,24 @@
+graph 1 15.292 3.9792
+node doc_kotlin_guide 2.0642 3.4375 1.5347 0.5 doc_kotlin_guide rounded,filled box #90a4c8 #eef4ff
+node doc_spring_guide 2.0642 1.8125 1.566 0.5 doc_spring_guide rounded,filled box #90a4c8 #eef4ff
+node entity_kotlin 4.4375 2.6319 1.1806 0.5 entity_kotlin rounded,filled box #90a4c8 #eef4ff
+node entity_coroutines 6.816 1.5347 1.5243 0.5 entity_coroutines rounded,filled box #90a4c8 #eef4ff
+node entity_spring 9.3038 0.47917 1.2118 0.5 entity_spring rounded,filled box #90a4c8 #eef4ff
+node entity_jvm 11.87 2.6319 1.0451 0.5 entity_jvm rounded,filled box #90a4c8 #eef4ff
+node concept_language 6.816 3.7292 1.5764 0.5 concept_language rounded,filled box #90a4c8 #eef4ff
+node concept_library 9.3038 1.5347 1.3993 0.5 concept_library rounded,filled box #90a4c8 #eef4ff
+node concept_framework 11.87 0.47917 1.7326 0.5 concept_framework rounded,filled box #90a4c8 #eef4ff
+node concept_platform 14.514 2.6319 1.5556 0.5 concept_platform rounded,filled box #90a4c8 #eef4ff
+edge doc_kotlin_guide entity_kotlin 7 2.8361 3.2847 3.4603 3.2847 4.2361 3.2847 4.2361 3.2847 4.2361 3.2847 4.2361 3.0461 4.2361 3.0461 solid black
+edge doc_kotlin_guide entity_jvm 7 2.8382 3.3819 5.1548 3.3819 11.875 3.3819 11.875 3.3819 11.875 3.3819 11.875 3.0458 11.875 3.0458 solid black
+edge doc_spring_guide entity_kotlin 7 2.8483 1.9236 3.4704 1.9236 4.2361 1.9236 4.2361 1.9236 4.2361 1.9236 4.2361 2.2163 4.2361 2.2163 solid black
+edge doc_spring_guide entity_spring 7 2.0694 1.5592 2.0694 1.1517 2.0694 0.39583 2.0694 0.39583 2.0694 0.39583 8.5333 0.39583 8.5333 0.39583 solid black
+edge entity_kotlin entity_coroutines 7 4.6389 2.3751 4.6389 2.0913 4.6389 1.6736 4.6389 1.6736 4.6389 1.6736 5.8885 1.6736 5.8885 1.6736 solid black
+edge entity_kotlin entity_jvm 4 5.0332 2.7153 5.0332 2.7153 11.182 2.7153 11.182 2.7153 solid black
+edge entity_kotlin concept_language 7 4.6389 2.8869 4.6389 3.1687 4.6389 3.5833 4.6389 3.5833 4.6389 3.5833 5.8639 3.5833 5.8639 3.5833 solid black
+edge entity_coroutines entity_spring 7 6.8194 1.2793 6.8194 0.99123 6.8194 0.5625 6.8194 0.5625 6.8194 0.5625 8.5362 0.5625 8.5362 0.5625 solid black
+edge entity_coroutines concept_library 4 7.5827 1.5347 7.5827 1.5347 8.439 1.5347 8.439 1.5347 solid black
+edge entity_spring entity_jvm 10 9.9159 0.5625 10.21 0.5625 10.5 0.5625 10.5 0.5625 10.5 0.5625 10.5 2.5486 10.5 2.5486 10.5 2.5486 11.184 2.5486 11.184 2.5486 solid black
+edge entity_spring concept_framework 4 9.9119 0.39583 9.9119 0.39583 10.839 0.39583 10.839 0.39583 solid black
+edge entity_jvm concept_platform 4 12.399 2.6319 12.399 2.6319 13.57 2.6319 13.57 2.6319 solid black
+stop

@@ -22,40 +22,13 @@
 
 ## 아키텍처
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                   graph-knowledge-graph                  │
-│                                                          │
-│  ┌─────────────┐    ┌─────────────────────────────────┐ │
-│  │   Schema    │    │           Services               │ │
-│  │─────────────│    │─────────────────────────────────│ │
-│  │ EntityLabel │    │ KnowledgeGraphService (동기)     │ │
-│  │ ConceptLabel│    │ KnowledgeGraphSuspendService     │ │
-│  │ DocumentLbl │    │           (코루틴)               │ │
-│  │ MentionsLbl │    └─────────────────────────────────┘ │
-│  │ RelatedToLbl│              │                          │
-│  │ IsALabel    │    ┌─────────▼─────────────────────┐   │
-│  └─────────────┘    │      GraphOperations           │   │
-│                     │  (bluetape4k-graph-core)       │   │
-│                     └────────────────────────────────┘   │
-│                                  │                        │
-│          ┌───────────────────────┼───────────────────┐   │
-│          ▼                       ▼                    ▼   │
-│   TinkerGraph               Neo4j               Memgraph  │
-│   (인메모리)            (Testcontainer)      (Testcontainer)│
-└─────────────────────────────────────────────────────────┘
-```
+![Knowledge Graph Architecture](docs/images/readme-diagrams/graph-knowledge-graph-architecture-01.png)
 
 ## 도메인 모델
 
 시드 그래프는 **기술 도메인** 시나리오를 사용합니다:
 
-```
-Documents ──MENTIONS──► Entities ──RELATED_TO──► Entities
-                              │
-                           IS_A ▼
-                           Concepts
-```
+![Knowledge Graph Domain Model](docs/images/readme-diagrams/graph-knowledge-graph-domain-model-01.png)
 
 ### 버텍스 타입
 
@@ -75,22 +48,7 @@ Documents ──MENTIONS──► Entities ──RELATED_TO──► Entities
 
 ### 시드 토폴로지
 
-```
-doc-kotlin-guide  ──MENTIONS──► entity-kotlin   (confidence=95)
-doc-kotlin-guide  ──MENTIONS──► entity-jvm       (confidence=80)
-doc-spring-guide  ──MENTIONS──► entity-spring    (confidence=98)
-doc-spring-guide  ──MENTIONS──► entity-kotlin    (confidence=75)
-
-entity-kotlin     ──has-feature──►    entity-coroutines
-entity-coroutines ──integrates-with──► entity-spring
-entity-spring     ──runs-on──►        entity-jvm
-entity-kotlin     ──runs-on──►        entity-jvm
-
-entity-kotlin     ──IS_A──► concept-language
-entity-spring     ──IS_A──► concept-framework
-entity-coroutines ──IS_A──► concept-library
-entity-jvm        ──IS_A──► concept-platform
-```
+![Knowledge Graph Seed Topology](docs/images/readme-diagrams/graph-knowledge-graph-seed-topology-01.png)
 
 ## 핵심 기능
 

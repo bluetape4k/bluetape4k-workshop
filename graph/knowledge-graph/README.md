@@ -22,40 +22,13 @@ It shows how to:
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                   graph-knowledge-graph                  │
-│                                                          │
-│  ┌─────────────┐    ┌─────────────────────────────────┐ │
-│  │   Schema    │    │           Services               │ │
-│  │─────────────│    │─────────────────────────────────│ │
-│  │ EntityLabel │    │ KnowledgeGraphService (blocking) │ │
-│  │ ConceptLabel│    │ KnowledgeGraphSuspendService     │ │
-│  │ DocumentLbl │    │           (coroutine)            │ │
-│  │ MentionsLbl │    └─────────────────────────────────┘ │
-│  │ RelatedToLbl│              │                          │
-│  │ IsALabel    │    ┌─────────▼─────────────────────┐   │
-│  └─────────────┘    │      GraphOperations           │   │
-│                     │  (bluetape4k-graph-core)       │   │
-│                     └────────────────────────────────┘   │
-│                                  │                        │
-│          ┌───────────────────────┼───────────────────┐   │
-│          ▼                       ▼                    ▼   │
-│   TinkerGraph               Neo4j               Memgraph  │
-│   (in-memory)          (Testcontainer)      (Testcontainer)│
-└─────────────────────────────────────────────────────────┘
-```
+![Knowledge Graph Architecture](docs/images/readme-diagrams/graph-knowledge-graph-architecture-01.png)
 
 ## Domain Model
 
 The seed graph uses a **technology domain** scenario:
 
-```
-Documents ──MENTIONS──► Entities ──RELATED_TO──► Entities
-                              │
-                           IS_A ▼
-                           Concepts
-```
+![Knowledge Graph Domain Model](docs/images/readme-diagrams/graph-knowledge-graph-domain-model-01.png)
 
 ### Vertex types
 
@@ -75,22 +48,7 @@ Documents ──MENTIONS──► Entities ──RELATED_TO──► Entities
 
 ### Seed topology
 
-```
-doc-kotlin-guide  ──MENTIONS──► entity-kotlin   (confidence=95)
-doc-kotlin-guide  ──MENTIONS──► entity-jvm       (confidence=80)
-doc-spring-guide  ──MENTIONS──► entity-spring    (confidence=98)
-doc-spring-guide  ──MENTIONS──► entity-kotlin    (confidence=75)
-
-entity-kotlin     ──has-feature──►    entity-coroutines
-entity-coroutines ──integrates-with──► entity-spring
-entity-spring     ──runs-on──►        entity-jvm
-entity-kotlin     ──runs-on──►        entity-jvm
-
-entity-kotlin     ──IS_A──► concept-language
-entity-spring     ──IS_A──► concept-framework
-entity-coroutines ──IS_A──► concept-library
-entity-jvm        ──IS_A──► concept-platform
-```
+![Knowledge Graph Seed Topology](docs/images/readme-diagrams/graph-knowledge-graph-seed-topology-01.png)
 
 ## Core Features
 

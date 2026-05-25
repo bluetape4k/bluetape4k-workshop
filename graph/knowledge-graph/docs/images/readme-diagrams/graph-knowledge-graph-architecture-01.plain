@@ -1,0 +1,18 @@
+graph 1 5.8646 4.6458
+node schema 3.7309 4.1667 0.79514 0.5 schema rounded,filled box #90a4c8 #eef4ff
+node blocking_service 2.6476 2.8611 1.5035 0.5 blocking_service rounded,filled box #90a4c8 #eef4ff
+node suspend_service 4.8142 2.8611 1.4514 0.5 suspend_service rounded,filled box #90a4c8 #eef4ff
+node graph_ops 2.6476 1.5556 1.0035 0.5 graph_ops rounded,filled box #90a4c8 #eef4ff
+node graph_suspend_ops 4.8142 1.5556 1.7014 0.5 graph_suspend_ops rounded,filled box #90a4c8 #eef4ff
+node tinkergraph 2.1337 0.25 1.0868 0.5 tinkergraph rounded,filled box #90a4c8 #eef4ff
+node neo4j 3.7448 0.25 0.75 0.5 neo4j rounded,filled box #90a4c8 #eef4ff
+node memgraph 5.342 0.25 1.0451 0.5 memgraph rounded,filled box #90a4c8 #eef4ff
+edge schema blocking_service 7 3.6814 3.9134 3.6814 3.5554 3.6814 2.9444 3.6814 2.9444 3.6814 2.9444 3.5643 2.9444 3.5643 2.9444 solid black
+edge schema suspend_service 7 4.026 3.9119 4.026 3.511 4.026 2.7778 4.026 2.7778 4.026 2.7778 4.0317 2.7778 4.0317 2.7778 solid black
+edge blocking_service graph_ops 4 2.6476 2.6094 2.6476 2.6094 2.6476 1.9709 2.6476 1.9709 solid black
+edge suspend_service graph_suspend_ops 4 4.8142 2.6094 4.8142 2.6094 4.8142 1.9709 4.8142 1.9709 solid black
+edge graph_ops tinkergraph 4 2.4115 1.3038 2.4115 1.3038 2.4115 0.66532 2.4115 0.66532 solid black
+edge graph_ops neo4j 7 2.9132 1.3038 2.9132 0.92445 2.9132 0.25 2.9132 0.25 2.9132 0.25 3.2032 0.25 3.2032 0.25 solid black
+edge graph_suspend_ops neo4j 4 4.0417 1.3038 4.0417 1.3038 4.0417 0.66532 4.0417 0.66532 solid black
+edge graph_suspend_ops memgraph 4 5.2422 1.3038 5.2422 1.3038 5.2422 0.66532 5.2422 0.66532 solid black
+stop

@@ -1,0 +1,11 @@
+digraph G {
+  graph [rankdir=LR, splines=ortho, nodesep=0.8, ranksep=1.0];
+  node [shape=record, style="rounded,filled", fillcolor="#eef4ff", color="#90a4c8"];
+  document [xlabel="Document"];
+  entity [xlabel="Entity"];
+  entity_target [xlabel="Entity"];
+  concept [xlabel="Concept"];
+  document -> entity [xlabel="MENTIONS"];
+  entity -> entity_target [xlabel="RELATED_TO"];
+  entity -> concept [xlabel="IS_A"];
+}
