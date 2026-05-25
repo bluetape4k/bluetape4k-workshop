@@ -6,6 +6,19 @@ bluetape4k 워크샵 모듈로, 그래프 기반 어뷰저(abuser) 탐지를 시
 
 블로킹 서비스(`AbuserDetectionService`)와 코루틴 서비스(`AbuserDetectionSuspendService`) 두 가지가 제공됩니다. 기본 테스트는 Docker 없이 인-프로세스 TinkerGraph를 사용하며, Neo4j와 Memgraph 통합 테스트는 선택적으로 실행할 수 있습니다.
 
+## 예제 시나리오
+
+![사기 탐지 예제 그래프](docs/images/readme-diagrams/abuser-detection-example-graph.png)
+
+동일한 디바이스, 결제 토큰, IP 주소를 공유하는 사용자는 잠재적 어뷰저 클러스터로 탐지됩니다.
+위 다이어그램은 User A(사기 행위자)와 User B(공범)가 `Device-1`과 결제 토큰을 공유하는 상황을 보여줍니다.
+`findAbuseCluster("userA")` 호출 시 두 사용자를 하나의 클러스터로 반환합니다.
+User C는 IP 주소만 공유하며(예: VPN 출구 노드), 클러스터 포함 여부는 별도 판단이 필요합니다.
+
+## 모듈 아키텍처
+
+![모듈 아키텍처](docs/images/readme-diagrams/abuser-detection-architecture.png)
+
 ## 그래프 스키마
 
 ### 정점(Vertex)

@@ -11,6 +11,19 @@ Both a blocking service (`AbuserDetectionService`) and a coroutine-friendly serv
 (`AbuserDetectionSuspendService`) are provided. Tests run against TinkerGraph (in-process,
 no Docker) by default, with optional Neo4j and Memgraph integration tests.
 
+## Example Scenario
+
+![Fraud Detection Example Graph](docs/images/readme-diagrams/abuser-detection-example-graph.png)
+
+Users sharing the same device, payment token, or IP address are flagged as a potential abuse
+cluster. The diagram above shows User A (fraudster) and User B (accomplice) sharing `Device-1`
+and a payment token — `findAbuseCluster("userA")` returns both as a cluster.
+User C shares only an IP address (e.g. a VPN exit node) and may or may not belong to the cluster.
+
+## Module Architecture
+
+![Module Architecture](docs/images/readme-diagrams/abuser-detection-architecture.png)
+
 ## Graph Schema
 
 ### Vertices
