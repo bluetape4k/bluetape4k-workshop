@@ -31,8 +31,8 @@ ZooKeeper는 세션 기반 Ephemeral Node를 사용한다. TTL 개념이 없으�
 | 항목 | 값 |
 |---|---|
 | Kotlin | 2.3.21 |
-| Java | 25 (ZGC, `--enable-preview`) |
-| Spring Boot | 4.0.x |
+| Java | 21 (JVM toolchain: `JavaLanguageVersion.of(21)`, `jvmToolchain(21)`) |
+| Spring Boot | 4.0.6 |
 | bluetape4k-leader-zookeeper | 0.2.1 (BOM 관리) |
 | Apache Curator | 5.9.0 (transitive via leader-zookeeper) |
 | ZooKeeper Docker image | zookeeper:3.9 |
@@ -189,8 +189,7 @@ fun curatorFramework(props: LeaderZookeeperProperties): CuratorFramework {
         cfg.connectionTimeoutMs,
         ExponentialBackoffRetry(1000, 3)
     )
-    client.start()
-    // Add a ConnectionStateListener to observe SUSPENDED / LOST for operational awareness
+    // Register listener BEFORE start() to avoid missing early transitions
     client.connectionStateListenable.addListener { _, newState ->
         when (newState) {
             ConnectionState.SUSPENDED -> log.warn { "ZooKeeper connection SUSPENDED — leadership uncertain" }
@@ -199,6 +198,7 @@ fun curatorFramework(props: LeaderZookeeperProperties): CuratorFramework {
             else -> log.debug { "ZooKeeper connection state: $newState" }
         }
     }
+    client.start()
     if (!client.blockUntilConnected(cfg.blockUntilConnectedSeconds, TimeUnit.SECONDS)) {
         client.close()  // explicit close to prevent background thread leak
         error("ZooKeeper connection timeout after ${cfg.blockUntilConnectedSeconds}s (connectString=${cfg.connectString}). " +
@@ -331,16 +331,34 @@ abstract class AbstractLeaderZookeeperTest {
 }
 ```
 
-**T8 `SessionLossFailoverTest`용 독립 curator**: 세션 만료 시나리오(T8)에서는 ZK 컨테이너를 일시 중단하므로
-별도의 독립 `CuratorFramework` 인스턴스를 사용해야 한다. T8 테스트 클래스에서 `newIndependentCurator()` 헬퍼 제공:
+**T8 `SessionLossFailoverTest` 격리 전략**: 세션 만료 시나리오(T8)는 ZK 컨테이너를 중단하므로
+싱글턴 `ZooKeeperServer.Launcher.zookeeper`를 절대 사용하면 안 됨.
+T8는 자체 격리된 컨테이너를 사용:
 ```kotlin
-// Used only in T8 — T8 needs an isolated session to simulate expiry
-fun newIndependentCurator(): CuratorFramework =
-    ZooKeeperServer.Launcher.getCuratorFramework(zookeeper).also {
-        it.start()
-        it.blockUntilConnected(10, TimeUnit.SECONDS)
-        // Caller is responsible for close() in @AfterEach
+// T8 uses its own ZK container — NEVER use Launcher singleton (would break other tests)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class SessionLossFailoverTest : AbstractLeaderZookeeperTest() {
+    private lateinit var isolatedZk: ZooKeeperServer
+    private lateinit var clientA: CuratorFramework
+    private lateinit var clientB: CuratorFramework
+
+    @BeforeAll fun startIsolatedZk() {
+        isolatedZk = ZooKeeperServer().also { it.start() }
+        clientA = ZooKeeperServer.Launcher.getCuratorFramework(isolatedZk).also { 
+            it.start(); it.blockUntilConnected(10, TimeUnit.SECONDS) 
+        }
+        clientB = ZooKeeperServer.Launcher.getCuratorFramework(isolatedZk).also { 
+            it.start(); it.blockUntilConnected(10, TimeUnit.SECONDS) 
+        }
     }
+
+    @AfterAll fun stopIsolatedZk() {
+        runCatching { clientA.close() }
+        runCatching { clientB.close() }
+        runCatching { isolatedZk.stop() }
+    }
+    // Test: workerA acquires → isolatedZk.stop() → session expires → isolatedZk.start() → workerB acquires
+}
 ```
 
 ### 5.5 테스트 커버리지 매트릭스
@@ -355,7 +373,7 @@ fun newIndependentCurator(): CuratorFramework =
 | T5 | SuspendGroupLeaderTest | `SuspendedJobTester` 4-coroutine group | same as T4 with `delay(600.milliseconds)`; `CountDownLatch` + `peakConcurrent == 2` |
 | T6 | ExtensionFunctionTest | `CuratorFramework` extension functions: `leaderElector(basePath)`, `suspendLeaderElector(basePath)`, `leaderGroupElector(basePath, options)`, `suspendLeaderGroupElector(basePath, options)` | each extension returns non-null elector; `runIfLeader` / `suspend runIfLeader` returns result successfully |
 | T7 | R16AutoExtendIgnoredTest | `LeaderElectionOptions(autoExtend=true)` 전달 시 WARN 발생 + action 정상 실행 | Logback `ListAppender<ILoggingEvent>` attached to `io.bluetape4k.leader.zookeeper` logger; assert `appender.list.any { it.level == Level.WARN && "autoExtend" in it.message }`; action result == "r16-done" |
-| T8 | SessionLossFailoverTest | R16 세션 만료 시 Ephemeral Node 소멸 + 경쟁자 자동 선출 | workerA acquires leadership via `newIndependentCurator()`; ZK Testcontainer restarted (or session forcibly closed); workerB (separate curator) acquires within `sessionTimeoutMs + waitTime`; assert workerB result non-null |
+| T8 | SessionLossFailoverTest | R16 세션 만료 시 Ephemeral Node 소멸 + 경쟁자 자동 선출 | **독립 ZK 컨테이너 사용** (싱글턴 파괴 방지): `ZooKeeperServer()` 인스턴스를 `@BeforeAll`에서 직접 시작; workerA acquires leadership; container stopped → workerB acquires after session expires; `@AfterAll`에서 컨테이너 정리 |
 
 **T4/T5 CountDownLatch 패턴 (6T1 해결)**:
 ```kotlin
@@ -369,11 +387,18 @@ MultithreadingTester().workers(4).add {
     groupElector.runIfLeader(lockName) {
         val c = current.incrementAndGet()
         peakConcurrent.updateAndGet { max(it, c) }
-        enteredLatch.countDown()
-        releaseLatch.await(3, TimeUnit.SECONDS)  // hold slot while sampling
-        current.decrementAndGet()
+        try {
+            enteredLatch.countDown()
+            // Wait up to 3s for all maxLeaders to enter simultaneously
+            check(releaseLatch.await(3, TimeUnit.SECONDS)) { "releaseLatch timeout — CI may be too slow" }
+        } finally {
+            current.decrementAndGet()
+        }
     }
 }
+// IMPORTANT: releaseLatch.countDown() must be called AFTER enteredLatch fires
+// in the test setup to avoid deadlock when fewer than maxLeaders acquire.
+// Pattern: awaitility/assertSoon that enteredLatch.count == 0, then releaseLatch.countDown()
 // Sampling happens INSIDE the action, not after MultithreadingTester.run() completes.
 // Assert: peakConcurrent.get() shouldBeEqualTo maxLeaders
 ```
@@ -397,7 +422,7 @@ fun setupLogCapture() {
     val result = elector.runIfLeader(randomLockName()) { "r16-done" }
     result shouldBeEqualTo "r16-done"
     val warnEvents = appender.list.filter { it.level == Level.WARN && "autoExtend" in it.formattedMessage }
-    warnEvents shouldHaveSize 1  // exactly 1 WARN emitted on construction/first use
+    warnEvents.shouldNotBeEmpty()  // at least 1 WARN emitted (exact count may vary by version)
 }
 ```
 
@@ -446,7 +471,8 @@ bluetape4k-leader-zookeeper = { module = "io.github.bluetape4k.leader:bluetape4k
 | 1 | Security perspective | 0/0/2/1 | - |
 | 1 | Ops/SRE perspective | 0/3/3/0 | - |
 | 1 | Phase-2 Opus Critic | 통합: 0/10/8/1 → disposition 후 0/9/8/1 | - |
-| 1 | 통합 적용 후 최종 | D1 reject(라이브러리 증거), 나머지 HIGH 모두 spec에 반영 | (pending commit) |
+| 1 | 통합 적용 후 최종 | D1 reject(라이브러리 증거), 나머지 HIGH 모두 spec에 반영 | e3d360e3 |
+| 1 | Codex Phase-3 (독립) | 0/3/6/2 → Java 21 fix, T8 isolation, ConnectionStateListener before start() | (pending commit) |
 
 **Round 1 주요 발견 및 해결:**
 
