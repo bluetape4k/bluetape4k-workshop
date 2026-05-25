@@ -369,7 +369,7 @@ abstract class AbstractSocialNetworkSuspendTest {
 
         path.shouldNotBeNull()
         // vertices.size works for both vertex-only and vertex+edge paths (vertices.size = hops + 1)
-        path!!.vertices.size shouldBeEqualTo 2
+        requireNotNull(path).vertices.size shouldBeEqualTo 2
     }
 
     @Test
@@ -379,7 +379,7 @@ abstract class AbstractSocialNetworkSuspendTest {
         val path = service.findConnectionPath(seed.alice.id, seed.dave.id)
 
         path.shouldNotBeNull()
-        path!!.vertices.size shouldBeEqualTo 3
+        requireNotNull(path).vertices.size shouldBeEqualTo 3
     }
 
     @Test
