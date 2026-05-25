@@ -217,6 +217,7 @@ bluetape4k-kafka = { module = "io.github.bluetape4k:bluetape4k-kafka" }
 bluetape4k-lettuce = { module = "io.github.bluetape4k:bluetape4k-lettuce" }
 bluetape4k-leader-core = { module = "io.github.bluetape4k.leader:bluetape4k-leader-core" }
 bluetape4k-leader-redis-lettuce = { module = "io.github.bluetape4k.leader:bluetape4k-leader-redis-lettuce" }
+bluetape4k-leader-zookeeper = { module = "io.github.bluetape4k.leader:bluetape4k-leader-zookeeper" }
 bluetape4k-javers-core = { module = "io.github.bluetape4k.javers:javers-core" }
 bluetape4k-javers-persistence-redis = { module = "io.github.bluetape4k.javers:javers-persistence-redis" }
 bluetape4k-javers-persistence-kafka = { module = "io.github.bluetape4k.javers:javers-persistence-kafka" }
