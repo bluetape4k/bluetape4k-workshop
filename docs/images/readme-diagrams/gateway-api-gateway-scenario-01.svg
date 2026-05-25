@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="460" viewBox="0 0 1200 460" role="img" aria-label="API Gateway Routing Scenario">
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="560" viewBox="0 0 1400 560" role="img" aria-label="API Gateway Routing Scenario">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
   <marker id="arrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
@@ -6,71 +6,110 @@
   </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:32px;fill:#102033}
+    .title{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:34px;fill:#102033}
     .subtitle{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:14px;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:20px;fill:#102033}
+    .label{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:18px;fill:#102033}
     .mono{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:12px;fill:#536273}
     .card{stroke-width:2;filter:url(#shadow)}
     .line{stroke:#758297;stroke-width:2;fill:none;marker-end:url(#arrow)}
   </style>
 </defs>
-<rect class="canvas" width="1200" height="460"/>
-<rect class="frame" x="28" y="24" width="1144" height="412" rx="20"/>
+<rect class="canvas" width="1400" height="560"/>
+<rect class="frame" x="28" y="24" width="1344" height="512" rx="20"/>
 
 <text class="title" x="52" y="68">API Gateway Routing</text>
-<text class="subtitle" x="52" y="90">Client → Gateway (rate limit + circuit breaker) → Downstream Services</text>
+<text class="subtitle" x="52" y="92">Spring Cloud Gateway · YAML-driven routes · Bucket4j rate limit · Swagger aggregation</text>
 
-<!-- Client -->
-<g transform="translate(80,130)">
-  <rect class="card" x="0" y="0" width="180" height="180" rx="12" fill="#E0ECFF" stroke="#4A7ADB"/>
-  <text class="label" x="90" y="60" text-anchor="middle">HTTP Client</text>
-  <text class="mono" x="90" y="90" text-anchor="middle">/customers/**</text>
-  <text class="mono" x="90" y="110" text-anchor="middle">/orders/**</text>
-  <text class="mono" x="90" y="130" text-anchor="middle">/swagger-ui</text>
+<!--
+  GRAPHVIZ-DERIVED LAYOUT (LR, 4 columns):
+  Col 1 (x=52): Client y=220
+  Col 2 (x=340): Gateway panel y=120-420, containing Routing y=200, RateLimit y=290, Swagger y=380, Redirect y=380
+  Col 3 (x=820): CustomerService y=160, OrderService y=280, Swagger detail y=380
+  Col 4 (x=1120): Redis y=290
+
+  BOUNDING BOXES:
+  Client: x=52-252, y=210-278.
+  GW panel: x=320-620, y=120-430.
+  Routing: x=340-600, y=160-228. RateLimit: x=340-600, y=250-328.
+  Swagger: x=340-600, y=350-408.
+  CustomerSvc: x=740-1020, y=140-208.
+  OrderSvc: x=740-1020, y=240-308.
+  Redis: x=1100-1320, y=260-328.
+  Gap col2→col3: x=620-740 (120px routing column).
+-->
+
+<!-- Col 1: Client -->
+<g transform="translate(52,210)"><rect class="card" x="0" y="0" width="200" height="68" rx="12" fill="#E0ECFF" stroke="#4A7ADB"/><text class="label" x="100" y="28" text-anchor="middle">HTTP Client</text><text class="mono" x="100" y="48" text-anchor="middle">/customers/** /orders/**</text></g>
+
+<!-- Col 2: Gateway panel -->
+<rect x="320" y="120" width="280" height="310" rx="14" fill="#EAF7EF" stroke="#58A978" stroke-width="1.5"/>
+<text class="mono" x="336" y="142" style="fill:#58A978;font-size:14px">API Gateway (Spring Cloud Gateway)</text>
+
+<g transform="translate(340,160)"><rect class="card" x="0" y="0" width="240" height="68" rx="10" fill="#EAF7EF" stroke="#58A978"/><text class="label" x="120" y="26" text-anchor="middle">Route Rules</text><text class="mono" x="120" y="46" text-anchor="middle">YAML-driven · /customers /orders</text></g>
+<g transform="translate(340,250)"><rect class="card" x="0" y="0" width="240" height="68" rx="10" fill="#FFF3D9" stroke="#D6A441"/><text class="label" x="120" y="26" text-anchor="middle">Rate Limit</text><text class="mono" x="120" y="46" text-anchor="middle">Bucket4j + Lettuce · 50/10s</text></g>
+<g transform="translate(340,340)"><rect class="card" x="0" y="0" width="240" height="68" rx="10" fill="#E8F3FF" stroke="#5B8DEF"/><text class="label" x="120" y="26" text-anchor="middle">Swagger UI</text><text class="mono" x="120" y="46" text-anchor="middle">aggregated · 3 service docs</text></g>
+
+<!-- Col 3: Downstream services -->
+<g transform="translate(740,140)"><rect class="card" x="0" y="0" width="280" height="68" rx="10" fill="#E8F3FF" stroke="#5B8DEF"/><text class="label" x="140" y="26" text-anchor="middle">Customer Service</text><text class="mono" x="140" y="46" text-anchor="middle">port 8081 · CRUD customers</text></g>
+<g transform="translate(740,240)"><rect class="card" x="0" y="0" width="280" height="68" rx="10" fill="#F1ECFF" stroke="#8A72D6"/><text class="label" x="140" y="26" text-anchor="middle">Order Service</text><text class="mono" x="140" y="46" text-anchor="middle">port 8082 · orders + products</text></g>
+
+<!-- Col 4: Redis -->
+<g transform="translate(1100,260)">
+  <ellipse cx="110" cy="10" rx="110" ry="14" fill="#FFF3D9" stroke="#D6A441" stroke-width="2"/>
+  <rect x="0" y="10" width="220" height="30" fill="#FFF3D9" stroke="#D6A441" stroke-width="2"/>
+  <line x1="0" y1="10" x2="0" y2="40" stroke="#D6A441" stroke-width="2"/>
+  <line x1="220" y1="10" x2="220" y2="40" stroke="#D6A441" stroke-width="2"/>
+  <ellipse cx="110" cy="40" rx="110" ry="14" fill="#FFF3D9" stroke="#D6A441" stroke-width="2"/>
+  <text class="label" x="110" y="36" text-anchor="middle" style="font-size:16px">Redis</text>
 </g>
 
-<!-- Gateway center -->
-<g transform="translate(380,120)">
-  <rect class="card" x="0" y="0" width="280" height="200" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="label" x="140" y="32" text-anchor="middle">API Gateway</text>
-  <text class="mono" x="140" y="56" text-anchor="middle">Spring Cloud Gateway (WebFlux)</text>
+<!--
+  ARROW VERIFICATION:
+  Client(252,244) → Routing(340,194): horizontal. 244 is inside Routing y? Routing=160-228, 244>228. Exit Client at y=194(Routing center).
+  Actually Client center=244, Routing center=194. Route: right from Client, up in gap, right to Routing.
+  Client right=252. Routing left=340. Gap=252-340.
+  Path: M252,244 L290,244 L290,194 L338,194. At x=290 no component. ✓
 
-  <!-- Internal features -->
-  <rect x="20" y="72" width="240" height="36" rx="8" fill="#FFF3D9" stroke="#D6A441" stroke-width="1.5"/>
-  <text class="mono" x="140" y="96" text-anchor="middle" style="fill:#102033">Rate Limit (Bucket4j + Redis)</text>
+  Routing(580,194) → CustomerSvc(740,174): Routing right=580. Gap=580-740.
+  Route: M580,184 L700,184 L700,174 L738,174. ✓
+  Routing(580,194) → OrderSvc(740,274): M580,200 L700,200 L700,274 L738,274.
+  At x=700, y=200→274. No component in gap. ✓
 
-  <rect x="20" y="118" width="240" height="36" rx="8" fill="#FDECEF" stroke="#DC6B82" stroke-width="1.5"/>
-  <text class="mono" x="140" y="142" text-anchor="middle" style="fill:#102033">Circuit Breaker (Resilience4j)</text>
+  Routing → RateLimit: vertical inside panel, M460,228 L460,248. ✓
+  RateLimit(580,284) → Redis(1100,290): M580,284 L1098,284. Crosses OrderSvc? OrderSvc x=740-1020, y=240-308. y=284 IS inside OrderSvc! ✗
 
-  <rect x="20" y="154" width="240" height="36" rx="8" fill="#E8F3FF" stroke="#5B8DEF" stroke-width="1.5"/>
-  <text class="mono" x="140" y="178" text-anchor="middle" style="fill:#102033">Swagger Aggregation</text>
-</g>
+  Fix: Route RateLimit→Redis below OrderSvc. M580,310 L700,310 L700,320 L1098,320.
+  At y=320, OrderSvc ends at y=308. Clear. But check Redis: y=260-328. 320 is inside Redis y range but x=1098 is the left edge. OK endpoint. ✓
 
-<!-- Downstream services -->
-<g transform="translate(780,130)">
-  <rect class="card" x="0" y="0" width="280" height="72" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="label" x="140" y="28" text-anchor="middle">Customer Service</text>
-  <text class="mono" x="140" y="50" text-anchor="middle">/customers/** → port 8081</text>
-</g>
-<g transform="translate(780,240)">
-  <rect class="card" x="0" y="0" width="280" height="72" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="label" x="140" y="28" text-anchor="middle">Order Service</text>
-  <text class="mono" x="140" y="50" text-anchor="middle">/orders/** → port 8082</text>
-</g>
+  Actually simpler: RateLimit→Redis goes below the downstream services panel.
+  OrderSvc bottom=308. Route at y=320: M580,310 L680,310 L680,320 L1098,290.
+  No wait, that's diagonal at the end. Keep orthogonal.
+  M580,310 L680,310 L680,330 L1060,330 L1060,290 L1098,290.
+  At y=330, OrderSvc(240-308) has ended. ✓. At x=1060, going up from 330 to 290, Redis at x=1100. ✓
 
-<!-- Redis -->
-<g transform="translate(420,370)">
-  <ellipse cx="60" cy="8" rx="60" ry="12" fill="#FFF3D9" stroke="#D6A441" stroke-width="2"/>
-  <rect x="0" y="8" width="120" height="28" fill="#FFF3D9" stroke="#D6A441" stroke-width="2"/>
-  <line x1="0" y1="8" x2="0" y2="36" stroke="#D6A441" stroke-width="2"/>
-  <line x1="120" y1="8" x2="120" y2="36" stroke="#D6A441" stroke-width="2"/>
-  <ellipse cx="60" cy="36" rx="60" ry="12" fill="#FFF3D9" stroke="#D6A441" stroke-width="2"/>
-  <text class="label" x="60" y="32" text-anchor="middle" style="font-size:16px">Redis</text>
-</g>
+  Hmm this gets complex. Simpler: put Redis BELOW the services, not to the right.
+  Or: route the RateLimit→Redis arrow ABOVE CustomerSvc.
+  RateLimit center y=284. CustomerSvc y=140-208. Route at y=124 (above CustomerSvc):
+  M580,270 L680,270 L680,124 L1060,124 L1060,280 L1098,280.
+  This goes up above everything then down to Redis. Clean but long.
+
+  Simplest: just route BELOW at y=330.
+-->
 
 <!-- ARROWS -->
-<path class="line" d="M260,220 L378,220"/>
-<path class="line" d="M660,180 L660,160 L778,166"/>
-<path class="line" d="M660,250 L660,270 L778,276"/>
-<path class="line" d="M520,320 L520,368"/>
+<!-- Client → Gateway/Routing -->
+<path class="line" d="M252,244 L290,244 L290,194 L338,194"/>
+
+<!-- Routing → Services (through gap x=620-740) -->
+<path class="line" d="M580,184 L700,184 L700,174 L738,174"/>
+<path class="line" d="M580,204 L700,204 L700,274 L738,274"/>
+
+<!-- Routing → RateLimit (vertical inside panel) -->
+<path class="line" d="M460,228 L460,248"/>
+
+<!-- RateLimit → Redis (below OrderSvc at y=330, no crossing) -->
+<path class="line" d="M580,300 L680,300 L680,330 L1060,330 L1060,290 L1098,290"/>
+
+<!-- Routing → Swagger (vertical inside panel) -->
+<path class="line" d="M460,228 L460,338"/>
 </svg>
