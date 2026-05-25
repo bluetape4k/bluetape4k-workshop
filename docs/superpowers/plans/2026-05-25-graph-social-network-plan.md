@@ -233,9 +233,30 @@ class SocialNetworkService(
             )
     }
 
+    // addCompany — find-or-create by companyId domain key
+    fun addCompany(companyId: String, name: String, industry: String = "", location: String = ""): GraphVertex {
+        companyId.requireNotBlank("companyId")
+        return ops.findVerticesByLabel(CompanyLabel.label, mapOf(CompanyLabel.companyId.name to companyId))
+            .firstOrNull()
+            ?: ops.createVertex(
+                CompanyLabel.label,
+                mapOf(
+                    CompanyLabel.companyId.name to companyId,
+                    CompanyLabel.name.name to name,
+                    CompanyLabel.industry.name to industry,
+                    CompanyLabel.location.name to location,
+                )
+            )
+    }
+
+    fun getDirectConnections(personVertexId: GraphElementId): List<GraphVertex> {
+        return ops.neighbors(personVertexId, NeighborOptions(KnowsLabel.label, Direction.OUTGOING, 1))
+    }
+
     // connect() — TWO directed edges, SAME properties on both
+    // Note: requireInRange is available in bluetape4k-core (io.bluetape4k.support.requireInRange)
     fun connect(personVertexId1: GraphElementId, personVertexId2: GraphElementId, since: String = "", strength: Int = 5) {
-        require(strength in 1..10) { "strength must be in 1..10, got $strength" }
+        strength.requireInRange(1, 10, "strength")  // bluetape4k extension: inclusive range check
         val props = mapOf(
             KnowsLabel.since.name to since,
             KnowsLabel.strength.name to strength.toString(),
@@ -245,22 +266,89 @@ class SocialNetworkService(
     }
 
     fun getConnectionsWithinDegree(personVertexId: GraphElementId, degree: Int): List<GraphVertex> {
-        require(degree in 1..MAX_TRAVERSAL_DEPTH) { "degree must be in 1..$MAX_TRAVERSAL_DEPTH, got $degree" }
+        degree.requireInRange(1, MAX_TRAVERSAL_DEPTH, "degree")
         return ops.neighbors(personVertexId, NeighborOptions(KnowsLabel.label, Direction.OUTGOING, degree))
             .filter { it.id != personVertexId }  // explicit seed exclusion — neighbors() does not guarantee this
     }
 
     fun getNthDegreeConnections(personVertexId: GraphElementId, degree: Int): List<GraphVertex> {
-        require(degree in 1..MAX_TRAVERSAL_DEPTH) { "degree must be in 1..$MAX_TRAVERSAL_DEPTH, got $degree" }
+        degree.requireInRange(1, MAX_TRAVERSAL_DEPTH, "degree")
         val allWithin = ops.neighbors(personVertexId, NeighborOptions(KnowsLabel.label, Direction.OUTGOING, degree))
             .filter { it.id != personVertexId }
         val closerIds = if (degree > 1) {
             ops.neighbors(personVertexId, NeighborOptions(KnowsLabel.label, Direction.OUTGOING, degree - 1))
+                .filter { it.id != personVertexId }  // spec formula: closer set also excludes seed
                 .map { it.id }.toSet()
         } else emptySet()
         return allWithin.filter { it.id !in closerIds }
     }
 
+    fun follow(personVertexId1: GraphElementId, personVertexId2: GraphElementId) {
+        ops.createEdge(personVertexId1, personVertexId2, FollowsLabel.label, emptyMap())
+        // FOLLOWS is unidirectional — do NOT create reverse edge
+    }
+
+    fun addWorkExperience(
+        personVertexId: GraphElementId,
+        companyVertexId: GraphElementId,
+        role: String,
+        startDate: String = "",
+        isCurrent: Boolean = true,
+    ) {
+        role.requireNotBlank("role")
+        ops.createEdge(
+            personVertexId, companyVertexId, WorksAtLabel.label,
+            mapOf(
+                WorksAtLabel.role.name to role,
+                WorksAtLabel.startDate.name to startDate,
+                WorksAtLabel.isCurrent.name to isCurrent.toString(),
+            )
+        )
+    }
+
+    /**
+     * Finds the shortest KNOWS path between two persons.
+     *
+     * @param fromVertexId start vertex ID
+     * @param toVertexId end vertex ID
+     * @return shortest path, or null if no path exists
+     */
+    fun findConnectionPath(fromVertexId: GraphElementId, toVertexId: GraphElementId): GraphPath? {
+        return ops.shortestPath(fromVertexId, toVertexId, PathOptions(KnowsLabel.label, Direction.OUTGOING))
+    }
+
+    /**
+     * Finds all KNOWS paths between two persons up to maxDepth hops.
+     *
+     * **WARNING**: Path enumeration is exponential in dense graphs. Keep maxDepth ≤ 6.
+     *
+     * @param fromVertexId start vertex ID
+     * @param toVertexId end vertex ID
+     * @param maxDepth maximum hop count (default 5, max MAX_TRAVERSAL_DEPTH)
+     */
+    fun findAllConnectionPaths(
+        fromVertexId: GraphElementId,
+        toVertexId: GraphElementId,
+        maxDepth: Int = 5,
+    ): List<GraphPath> {
+        maxDepth.requireInRange(1, MAX_TRAVERSAL_DEPTH, "maxDepth")
+        return ops.allPaths(fromVertexId, toVertexId, PathOptions(KnowsLabel.label, Direction.OUTGOING, maxDepth))
+    }
+
+    fun findMutualConnections(personVertexId1: GraphElementId, personVertexId2: GraphElementId): List<GraphVertex> {
+        val friends1 = ops.neighbors(personVertexId1, NeighborOptions(KnowsLabel.label, Direction.OUTGOING, 1))
+            .map { it.id }.toSet()
+        val friends2 = ops.neighbors(personVertexId2, NeighborOptions(KnowsLabel.label, Direction.OUTGOING, 1))
+        return friends2.filter { it.id in friends1 }
+    }
+
+    /**
+     * Recommends FOAF (Friend-of-a-Friend) connections sorted by mutual connection count descending,
+     * then personId ascending for stable tie-breaking across backends.
+     *
+     * **N+1 Warning**: Executes M+2 round-trips (M = FOAF candidate count, +2 for direct friends + per-candidate friends).
+     * Acceptable for workshop; production should use a single Cypher/Gremlin query. See spec Risk #8.
+     */
     // FOAF — spec section 6.1
     fun recommendConnections(personVertexId: GraphElementId, limit: Int = 10): List<ConnectionRecommendation> {
         limit.requirePositiveNumber("limit")
@@ -269,6 +357,7 @@ class SocialNetworkService(
         val foafCandidates = ops.neighbors(personVertexId, NeighborOptions(KnowsLabel.label, Direction.OUTGOING, 2))
             .filter { it.id != personVertexId && it.id !in directFriendIds }
             .distinctBy { it.id }  // depth=2 traversal may return duplicates via different paths
+        // mutualCount=0 filter omitted — depth=2 FOAF candidates always have ≥1 mutual connection by definition
         val recommendations = foafCandidates.map { candidate ->
             val candidateFriendIds = ops.neighbors(candidate.id, NeighborOptions(KnowsLabel.label, Direction.OUTGOING, 1))
                 .map { it.id }.toSet()
@@ -304,7 +393,7 @@ class SocialNetworkService(
 
 ### T6: SocialNetworkSuspendService (Suspend)
 
-- **Complexity**: high
+- **Complexity**: medium
 - **File**: `graph/social-network/src/main/kotlin/io/bluetape4k/workshop/graph/social/service/SocialNetworkSuspendService.kt`
 - **Dependencies**: T5
 
@@ -343,13 +432,15 @@ class SocialNetworkSuspendService(
 
 ## Phase 4 — Test Infrastructure
 
-### T7: SocialNetworkSeed
+### T7a: SocialNetworkSeed (blocking overload)
 
 - **Complexity**: medium
 - **File**: `graph/social-network/src/test/kotlin/io/bluetape4k/workshop/graph/social/seed/SocialNetworkSeed.kt`
-- **Dependencies**: T5, T6
+- **Dependencies**: T5 only (T8 can start as soon as T5 + T7a are done, without waiting for T6)
 
 ```kotlin
+import java.io.Serializable
+
 data class SocialNetworkSeed(
     val alice: GraphVertex,
     val bob: GraphVertex,
@@ -360,7 +451,11 @@ data class SocialNetworkSeed(
     val grace: GraphVertex,
     val bluetape4k: GraphVertex,
     val acme: GraphVertex,
-)
+) : Serializable {
+    companion object {
+        private const val serialVersionUID: Long = 1L
+    }
+}
 
 fun seedSocialNetwork(service: SocialNetworkService): SocialNetworkSeed {
     // 7 persons with personId domain keys
@@ -395,8 +490,44 @@ fun seedSocialNetwork(service: SocialNetworkService): SocialNetworkSeed {
     return SocialNetworkSeed(alice, bob, carol, dave, eve, frank, grace, bluetape4k, acme)
 }
 
-// Suspend overload — identical logic
-suspend fun seedSocialNetwork(service: SocialNetworkSuspendService): SocialNetworkSeed { ... }
+---
+
+### T7b: SocialNetworkSeed (suspend overload)
+
+- **Complexity**: low
+- **File**: Same file as T7a (`seed/SocialNetworkSeed.kt`) — add suspend overload
+- **Dependencies**: T6 only (T9 can start as soon as T6 + T7b are done)
+- **Note**: Use `runSuspendIO` in tests (not `runTest`) — IO-bound Testcontainers operations. `runSuspendIO` is `withContext(Dispatchers.IO)` equivalent from bluetape4k-junit5.
+
+```kotlin
+// Suspend overload — identical topology, each call is suspend
+suspend fun seedSocialNetwork(service: SocialNetworkSuspendService): SocialNetworkSeed {
+    val alice = service.addPerson("alice", "Alice", "Engineer", "Seoul")
+    val bob   = service.addPerson("bob", "Bob", "Manager", "Seoul")
+    val carol = service.addPerson("carol", "Carol", "Designer", "Busan")
+    val dave  = service.addPerson("dave", "Dave", "Engineer", "Incheon")
+    val eve   = service.addPerson("eve", "Eve", "Analyst", "Seoul")
+    val frank = service.addPerson("frank", "Frank", "Engineer", "Daejeon")
+    val grace = service.addPerson("grace", "Grace", "PM", "Seoul")
+
+    val bluetape4k = service.addCompany("bluetape4k", "Bluetape4k", "Technology", "Seoul")
+    val acme       = service.addCompany("acme", "Acme", "Manufacturing", "Incheon")
+
+    service.connect(alice.id, bob.id,   since = "2020-01-01", strength = 8)
+    service.connect(bob.id, carol.id,   since = "2021-03-15", strength = 6)
+    service.connect(alice.id, frank.id, since = "2019-06-01", strength = 7)
+    service.connect(bob.id, dave.id,    since = "2022-02-01", strength = 5)
+    service.connect(dave.id, grace.id,  since = "2023-01-01", strength = 4)
+
+    service.follow(carol.id, eve.id)
+
+    service.addWorkExperience(alice.id, bluetape4k.id, "Senior Engineer", "2020-01-01", isCurrent = true)
+    service.addWorkExperience(bob.id,   bluetape4k.id, "Manager",        "2019-06-01", isCurrent = true)
+    service.addWorkExperience(carol.id, bluetape4k.id, "Designer",       "2021-01-01", isCurrent = false)
+    service.addWorkExperience(dave.id,  acme.id,       "Engineer",       "2022-01-01", isCurrent = true)
+
+    return SocialNetworkSeed(alice, bob, carol, dave, eve, frank, grace, bluetape4k, acme)
+}
 ```
 
 **Topology verification**:
@@ -412,7 +543,7 @@ suspend fun seedSocialNetwork(service: SocialNetworkSuspendService): SocialNetwo
 
 - **Complexity**: high
 - **File**: `graph/social-network/src/test/kotlin/io/bluetape4k/workshop/graph/social/AbstractSocialNetworkTest.kt`
-- **Dependencies**: T5, T7
+- **Dependencies**: T5, T7a
 
 ```kotlin
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -425,7 +556,7 @@ abstract class AbstractSocialNetworkTest {
 
     @BeforeEach
     fun setUp() {
-        runCatching { ops.dropGraph(graphName) }  // first run: no graph to drop
+        ops.dropGraph(graphName)  // canonical pattern: call directly, no runCatching
         service.initialize()
         seed = seedSocialNetwork(service)
     }
@@ -443,12 +574,16 @@ abstract class AbstractSocialNetworkTest {
 | 6 | Edge | `follow creates unidirectional FOLLOWS edge` | Carol→Eve edge exists |
 | 7 | Edge | `follow does not create reverse FOLLOWS edge` | Eve→Carol FOLLOWS does NOT exist |
 | 8 | Validation | `addPerson throws on blank personId` | `assertFailsWith<IllegalArgumentException>` |
+| 8b | Validation | `addCompany throws on blank companyId` | `assertFailsWith<IllegalArgumentException>` |
+| 8c | Validation | `addWorkExperience throws on blank role` | `assertFailsWith<IllegalArgumentException>` |
+| 8d | Validation | `connect throws on strength outside 1..10` | strength=0, strength=11 both throw |
 | 9 | Validation | `getConnectionsWithinDegree throws on degree out of range` | degree=0 and degree=7 throw |
+| 9b | Validation | `findAllConnectionPaths throws on maxDepth exceeding MAX_TRAVERSAL_DEPTH` | maxDepth=7 throws |
 | 10 | Validation | `recommendConnections throws on non-positive limit` | limit=0 throws |
 | 11 | Query | `getDirectConnections returns 1st degree connections` | Alice → names contain "Bob", "Frank" |
 | 12 | Query | `getDirectConnections does not include FOLLOWS targets` | Carol's result does NOT contain Eve |
-| 13 | Query | `getConnectionsWithinDegree returns up to Nth degree` | Alice degree=2 → {Bob, Frank, Carol, Dave} |
-| 14 | Query | `getNthDegreeConnections returns exactly Nth degree` | Alice N=2 → {Carol, Dave} (not Bob, Frank) |
+| 13 | Query | `getConnectionsWithinDegree returns up to Nth degree` | Alice degree=2 → {Bob, Frank, Carol, Dave}; also assert `result.map { it.id } shouldNotContain seed.alice.id` |
+| 14 | Query | `getNthDegreeConnections returns exactly Nth degree` | Alice N=2 → {Carol, Dave} (not Bob, Frank); also assert `result.map { it.id } shouldNotContain seed.alice.id` |
 | 15 | Query | `getNthDegreeConnections with degree 1 matches direct connections` | same as `getDirectConnections` |
 | 16 | Path | `findConnectionPath returns shortest path` | Alice→Carol path length=2 |
 | 17 | Path | `findConnectionPath returns null for disconnected vertices` | Frank→Eve returns null |
@@ -467,7 +602,14 @@ abstract class AbstractSocialNetworkTest {
 
 **Key assertion patterns**:
 - Use `shouldContainAll` / `shouldNotContain` for set-like checks.
-- FOAF #21: use `containsExactlyInAnyOrder` (both Carol+Dave have mutualCount=1, order may vary).
+- FOAF #21: use `shouldContainExactly(listOf("carol", "dave"))` by personId — service guarantees deterministic order (personId ascending tiebreak). Test #13/#14 must also add `shouldNotContain(seed.alice)` to verify seed exclusion.
+  ```kotlin
+  // #21 exact order assertion:
+  val personIds = result.map { it.person.properties[PersonLabel.personId.name] }
+  personIds shouldContainExactly listOf("carol", "dave")
+  // #13/#14 exclusion regression guard:
+  result.map { it.id } shouldNotContain seed.alice.id
+  ```
 - Names: `results.map { it.properties[PersonLabel.name.name] }`.
 - `assertFailsWith<IllegalArgumentException>` for validation (NOT `assertThrows`, NOT `invoking/shouldThrow`).
 
@@ -477,13 +619,14 @@ abstract class AbstractSocialNetworkTest {
 
 - **Complexity**: high
 - **File**: `graph/social-network/src/test/kotlin/io/bluetape4k/workshop/graph/social/AbstractSocialNetworkSuspendTest.kt`
-- **Dependencies**: T6, T7
-- **Notes**: Mirror of T8 with `runSuspendIO { }` wrapping every test body. Same 29 test cases.
+- **Dependencies**: T6, T7b
+- **Notes**: Mirror of T8 with `runSuspendIO { }` wrapping every test body. Same 34 test cases (see updated table).
+  `runSuspendIO` preferred over `runTest` here because tests invoke real IO-bound backend operations (TinkerGraph, Neo4j, Memgraph). `runSuspendIO` = `withContext(Dispatchers.IO)` from bluetape4k-junit5; `runTest` uses `TestCoroutineScheduler` (virtual time) which is inappropriate for real I/O.
 
 ```kotlin
 @BeforeEach
 fun setUp() = runSuspendIO {
-    runCatching { ops.dropGraph(graphName) }
+    ops.dropGraph(graphName)  // canonical pattern: call directly; suspend inside runSuspendIO is fine
     service.initialize()
     seed = seedSocialNetwork(service)  // suspend overload
 }
@@ -600,12 +743,13 @@ class Neo4jSocialNetworkTest : AbstractSocialNetworkTest() {
 
 ## Phase 6 — Verification
 
-### T13: TinkerGraph Test Execution
+### T13: TinkerGraph Test Execution + Coverage
 
 - **Complexity**: low
 - **Dependencies**: T10
 - **Command**: `./gradlew :graph-social-network:test`
-- **Expected**: 58 tests pass (29 blocking + 29 suspend)
+- **Expected**: 68 tests pass (34 blocking + 34 suspend — 29 original + 5 new validation cases)
+- **Coverage**: Run `./gradlew :graph-social-network:koverHtmlReport` after test; verify ≥ 80% line coverage on `SocialNetworkService` and `SocialNetworkSuspendService`.
 - **Common failures**:
   - `neighbors()` returns seed at depth >= 2 — ensure all algorithms filter `{ it.id != personVertexId }`
   - Graph property values are always String — comparison must account for this
@@ -616,7 +760,7 @@ class Neo4jSocialNetworkTest : AbstractSocialNetworkTest() {
 - **Complexity**: medium
 - **Dependencies**: T11, T12
 - **Command**: `./gradlew :graph-social-network:integrationTest`
-- **Expected**: 116 tests pass (29 × 4 backends × 2 service styles)
+- **Expected**: 136 tests pass (34 × 2 integration backends (Neo4j + Memgraph) × 2 service styles)
 - **Notes**: Requires Docker. Container startup ~30-60s on first run.
 
 ---
@@ -627,8 +771,12 @@ class Neo4jSocialNetworkTest : AbstractSocialNetworkTest() {
 
 - **Complexity**: medium
 - **Files**: `graph/social-network/README.md`, `graph/social-network/README.ko.md`
-- **Dependencies**: T13
+- **Dependencies**: T14 (depend on integration test completion to verify cross-backend behavior before documenting)
 - **Structure**: Module title → Architecture → Core Features → Graph Topology → Usage → Build commands → Stack
+- **Cross-language navigation (REQUIRED)**:
+  - Top of `README.md`: `> [한국어 버전](./README.ko.md)`
+  - Top of `README.ko.md`: `> [English version](./README.md)`
+- **Diagram**: Embed `docs/images/readme-diagrams/social-network-architecture.png` (generated in T16). Write prose in T15 first; add diagram embed after T16 produces the PNG.
 
 ### T16: Architecture Diagram
 
@@ -638,6 +786,27 @@ class Neo4jSocialNetworkTest : AbstractSocialNetworkTest() {
   - `graph/social-network/docs/images/readme-diagrams/social-network-architecture.png`
 - **Dependencies**: T15
 - **Notes**: Invoke `bluetape4k-diagram` skill before generating. Embed only PNG in README.
+  After T16 completes, add the diagram embed to README.md and README.ko.md (T15 prose written before T16, diagram embed added after).
+
+---
+
+### T17: Pre-PR Verification (bluetape4k-patterns Checklist)
+
+- **Complexity**: low
+- **Dependencies**: T13, T14
+- **Commands**:
+  ```bash
+  ./gradlew :graph-social-network:detekt
+  ```
+- **Manual checks** (bluetape4k-patterns checklist):
+  - [ ] `requireNotBlank` / `requireInRange` / `requirePositiveNumber` used (NOT stdlib `require()`)
+  - [ ] `companion object : KLogging()` in blocking services, `KLoggingChannel()` in suspend services
+  - [ ] All `data class` declarations implement `Serializable` + `serialVersionUID`
+  - [ ] No `runCatching {}` around suspend calls in suspend service
+  - [ ] Single companion object per class (logging merged with constants)
+  - [ ] `ide_diagnostics` returns zero errors and no unresolved deprecations
+  - [ ] `rg "RequireNotBlank\|require(.*isNotBlank" src/` returns 0 hits
+  - [ ] English KDoc on all public classes, objects, methods in service and schema files
 
 ---
 

@@ -594,7 +594,7 @@ src/test/kotlin/io/bluetape4k/workshop/graph/social/
 
 ### 10.3 테스트 DoD
 
-- [ ] `AbstractSocialNetworkTest`: 26개 이상 테스트 케이스 (섹션 8.5 기준)
+- [ ] `AbstractSocialNetworkTest`: 34개 테스트 케이스 (섹션 8.5 원본 29개 + validation 5개: 8b addCompany, 8c addWorkExperience role, 8d connect strength, 9b findAllConnectionPaths maxDepth, + seed exclusion assertions on #13/#14)
 - [ ] `AbstractSocialNetworkSuspendTest`: blocking mirror + Flow 수집 검증
 - [ ] TinkerGraph 테스트: `./gradlew :graph-social-network:test` 통과
 - [ ] Neo4j + Memgraph 테스트: `./gradlew :graph-social-network:integrationTest` 통과
@@ -637,9 +637,10 @@ src/test/kotlin/io/bluetape4k/workshop/graph/social/
 | T4 | `ConnectionRecommendation.kt` — data class | T3 | 작음 |
 | T5 | `SocialNetworkService.kt` — blocking 서비스 전체 구현 | T3, T4 | 중간 |
 | T6 | `SocialNetworkSuspendService.kt` — suspend 서비스 전체 구현 | T5 | 중간 |
-| T7 | `SocialNetworkSeed.kt` — 테스트 시드 유틸 | T5 | 작음 |
-| T8 | `AbstractSocialNetworkTest.kt` — blocking 테스트 스위트 (27개+ 케이스, unique graphName 필수) | T5, T7 | 중간 |
-| T9 | `AbstractSocialNetworkSuspendTest.kt` — suspend 테스트 스위트 (Flow→List 수집 검증) | T6, T7 | 중간 |
+| T7a | `SocialNetworkSeed.kt` — blocking 시드 함수 | T5 | 작음 |
+| T7b | `SocialNetworkSeed.kt` — suspend 시드 함수 추가 | T6 | 작음 |
+| T8 | `AbstractSocialNetworkTest.kt` — blocking 테스트 스위트 (34개 케이스, unique graphName 필수) | T5, T7a | 중간 |
+| T9 | `AbstractSocialNetworkSuspendTest.kt` — suspend 테스트 스위트 (Flow→List 수집 검증) | T6, T7b | 중간 |
 | T10 | `SocialNetworkTinkerGraphTest.kt` + suspend 버전 | T8, T9 | 작음 |
 | T11 | `Neo4jSocialNetworkTest.kt` + suspend 버전 | T8, T9 | 작음 |
 | T12 | `MemgraphSocialNetworkTest.kt` + suspend 버전 | T8, T9 | 작음 |
