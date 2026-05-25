@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="860" viewBox="0 0 1200 860" role="img" aria-label="Exposed MVC Virtual Thread Architecture">
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="880" viewBox="0 0 1400 880" role="img" aria-label="Exposed MVC Virtual Thread Architecture">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
   <marker id="arrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
@@ -7,132 +7,225 @@
   <marker id="arrowOrange" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
     <path d="M2,2 L12,7 L2,12 Z" fill="#E67E22"/>
   </marker>
+  <marker id="arrowFK" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+    <path d="M2,2 L12,7 L2,12 Z" fill="#45A7A1"/>
+  </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
     .title{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:34px;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:15px;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:20px;fill:#102033}
-    .mono{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:13px;fill:#536273}
-    .bandlabel{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:15px;fill:#758297}
+    .subtitle{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:14px;fill:#536273}
+    .label{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:18px;fill:#102033}
+    .mono{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:11px;fill:#536273}
+    .bandlabel{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:14px;fill:#758297}
     .card{stroke-width:2;filter:url(#shadow)}
     .line{stroke:#758297;stroke-width:2;fill:none;marker-end:url(#arrow)}
     .vtline{stroke:#E67E22;stroke-width:2;fill:none;marker-end:url(#arrowOrange);stroke-dasharray:6,3}
+    .fkline{stroke:#45A7A1;stroke-width:1.8;fill:none;marker-end:url(#arrowFK);stroke-dasharray:6,3}
   </style>
 </defs>
-<rect class="canvas" width="1200" height="860"/>
-<rect class="frame" x="28" y="24" width="1144" height="812" rx="20"/>
+<rect class="canvas" width="1400" height="880"/>
+<rect class="frame" x="28" y="24" width="1344" height="832" rx="20"/>
 
 <text class="title" x="52" y="68">Exposed MVC Virtual Thread</text>
-<text class="subtitle" x="52" y="92">Spring MVC + Virtual Threads + Exposed JDBC · No @Transactional</text>
+<text class="subtitle" x="52" y="92">Spring MVC + Virtual Threads + Exposed JDBC · No @Transactional · virtualFuture { transaction {} }</text>
+
+<!-- Domain group labels -->
+<rect x="52" y="108" width="550" height="18" rx="4" fill="#E8F3FF" stroke="none"/>
+<text class="bandlabel" x="327" y="122" text-anchor="middle" style="fill:#5B8DEF">Author / Book Domain</text>
+<rect x="618" y="108" width="480" height="18" rx="4" fill="#EAF7EF" stroke="none"/>
+<text class="bandlabel" x="858" y="122" text-anchor="middle" style="fill:#58A978">Order / Product Domain</text>
 
 <!-- Client -->
-<g transform="translate(280,108)">
-  <rect class="card" x="0" y="0" width="150" height="48" rx="12" fill="#E0ECFF" stroke="#4A7ADB"/>
-  <text class="label" x="75" y="32" text-anchor="middle">HTTP Client</text>
+<g transform="translate(380,112)">
+  <rect class="card" x="0" y="0" width="160" height="48" rx="12" fill="#E0ECFF" stroke="#4A7ADB"/>
+  <text class="label" x="80" y="32" text-anchor="middle">HTTP Client</text>
 </g>
 
-<!-- Layer bands -->
-<rect x="52" y="192" width="700" height="108" rx="8" fill="#E8F3FF" stroke="#B8D4F0" stroke-width="1"/>
+<!--
+  BOUNDING BOXES for crossing verification:
+  Ctrl: AuthorCtrl x=72-312 y=222-290, BookCtrl x=332-572 y=222-290,
+        OrderCtrl x=592-832 y=222-290, ProductCtrl x=852-1092 y=222-290
+  Svc:  AuthorSvc x=72-552 y=362-430, OrderSvc x=592-1092 y=362-430
+  Repo: AuthorRepo x=72-262 y=502-570, BookRepo x=278-468 y=502-570,
+        OrderRepo x=484-674 y=502-570, OrderLineRepo x=690-880 y=502-570,
+        ProductRepo x=896-1086 y=502-570
+  Table: same x as repo, y=642-710
+  VT panel: x=1110-1340, y=192-400
+  Gaps: y=300-332 (Pres→Svc), y=440-472 (Svc→Repo), y=580-612 (Repo→Schema)
+-->
+
+<!-- ===== Layer 1: Presentation ===== -->
+<rect x="52" y="192" width="1048" height="108" rx="8" fill="#E8F3FF" stroke="#B8D4F0" stroke-width="1"/>
 <text class="bandlabel" x="66" y="212">Presentation</text>
-<rect x="52" y="332" width="700" height="108" rx="8" fill="#EAF7EF" stroke="#B0DAC0" stroke-width="1"/>
+
+<g transform="translate(72,222)">
+  <rect class="card" x="0" y="0" width="240" height="68" rx="10" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="label" x="120" y="26" text-anchor="middle">AuthorController</text>
+  <text class="mono" x="120" y="46" text-anchor="middle">@RestController /api/v1/authors</text>
+</g>
+<g transform="translate(332,222)">
+  <rect class="card" x="0" y="0" width="240" height="68" rx="10" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="label" x="120" y="26" text-anchor="middle">BookController</text>
+  <text class="mono" x="120" y="46" text-anchor="middle">@RestController /api/v1/books</text>
+</g>
+<g transform="translate(592,222)">
+  <rect class="card" x="0" y="0" width="240" height="68" rx="10" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="label" x="120" y="26" text-anchor="middle">OrderController</text>
+  <text class="mono" x="120" y="46" text-anchor="middle">@RestController /api/v1/orders</text>
+</g>
+<g transform="translate(852,222)">
+  <rect class="card" x="0" y="0" width="240" height="68" rx="10" fill="#E8F3FF" stroke="#5B8DEF"/>
+  <text class="label" x="120" y="26" text-anchor="middle">ProductController</text>
+  <text class="mono" x="120" y="46" text-anchor="middle">@RestController /api/v1/products</text>
+</g>
+
+<!-- ===== Layer 2: Service ===== -->
+<rect x="52" y="332" width="1048" height="108" rx="8" fill="#EAF7EF" stroke="#B0DAC0" stroke-width="1"/>
 <text class="bandlabel" x="66" y="352">Service</text>
-<rect x="52" y="472" width="700" height="108" rx="8" fill="#F1ECFF" stroke="#C8B8E8" stroke-width="1"/>
+
+<g transform="translate(72,362)">
+  <rect class="card" x="0" y="0" width="480" height="68" rx="10" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="label" x="240" y="26" text-anchor="middle">AuthorService</text>
+  <text class="mono" x="240" y="46" text-anchor="middle">virtualFuture(executor) { transaction(db) {} }</text>
+</g>
+<g transform="translate(592,362)">
+  <rect class="card" x="0" y="0" width="500" height="68" rx="10" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="label" x="250" y="26" text-anchor="middle">OrderService</text>
+  <text class="mono" x="250" y="46" text-anchor="middle">virtualFuture { transaction {} } · lock ordering · forUpdate</text>
+</g>
+
+<!-- ===== VT Infrastructure panel (right side) ===== -->
+<rect x="1120" y="192" width="230" height="208" rx="14" fill="#FFF5EB" stroke="#E8C5A0" stroke-width="1.2"/>
+<text class="bandlabel" x="1136" y="212" style="fill:#E67E22">Virtual Thread Infra</text>
+
+<g transform="translate(1130,222)">
+  <rect class="card" x="0" y="0" width="210" height="68" rx="10" fill="#FFF0E0" stroke="#E67E22"/>
+  <text class="label" x="105" y="26" text-anchor="middle">TomcatConfig</text>
+  <text class="mono" x="105" y="46" text-anchor="middle">ProtocolHandlerCustomizer</text>
+</g>
+<g transform="translate(1130,312)">
+  <rect class="card" x="0" y="0" width="210" height="68" rx="10" fill="#FFF0E0" stroke="#E67E22"/>
+  <text class="label" x="105" y="26" text-anchor="middle">VT Executor</text>
+  <text class="mono" x="105" y="46" text-anchor="middle">newVirtualThreadPerTask</text>
+</g>
+
+<!-- ===== Layer 3: Repository ===== -->
+<rect x="52" y="472" width="1048" height="108" rx="8" fill="#F1ECFF" stroke="#C8B8E8" stroke-width="1"/>
 <text class="bandlabel" x="66" y="492">Repository</text>
-<rect x="52" y="612" width="700" height="108" rx="8" fill="#FFF3D9" stroke="#E8D5A0" stroke-width="1"/>
+
+<g transform="translate(72,502)">
+  <rect class="card" x="0" y="0" width="190" height="68" rx="10" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="label" x="95" y="26" text-anchor="middle">AuthorRepository</text>
+  <text class="mono" x="95" y="46" text-anchor="middle">VirtualFuture&lt;T&gt;</text>
+</g>
+<g transform="translate(278,502)">
+  <rect class="card" x="0" y="0" width="190" height="68" rx="10" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="label" x="95" y="26" text-anchor="middle">BookRepository</text>
+  <text class="mono" x="95" y="46" text-anchor="middle">VirtualFuture&lt;T&gt;</text>
+</g>
+<g transform="translate(484,502)">
+  <rect class="card" x="0" y="0" width="190" height="68" rx="10" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="label" x="95" y="26" text-anchor="middle">OrderRepository</text>
+  <text class="mono" x="95" y="46" text-anchor="middle">VirtualFuture&lt;T&gt;</text>
+</g>
+<g transform="translate(690,502)">
+  <rect class="card" x="0" y="0" width="190" height="68" rx="10" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="label" x="95" y="26" text-anchor="middle">OrderLineRepo</text>
+  <text class="mono" x="95" y="46" text-anchor="middle">VirtualFuture&lt;T&gt;</text>
+</g>
+<g transform="translate(896,502)">
+  <rect class="card" x="0" y="0" width="190" height="68" rx="10" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="label" x="95" y="26" text-anchor="middle">ProductRepository</text>
+  <text class="mono" x="95" y="46" text-anchor="middle">VirtualFuture&lt;T&gt; · forUpdate</text>
+</g>
+
+<!-- ===== Layer 4: Schema ===== -->
+<rect x="52" y="612" width="1048" height="108" rx="8" fill="#FFF3D9" stroke="#E8D5A0" stroke-width="1"/>
 <text class="bandlabel" x="66" y="632">Schema</text>
 
-<!-- VT Infrastructure panel -->
-<rect x="800" y="192" width="340" height="248" rx="14" fill="#FFF5EB" stroke="#E8C5A0" stroke-width="1.2"/>
-<text class="bandlabel" x="816" y="212" style="fill:#E67E22">Virtual Thread Infrastructure</text>
-
-<g transform="translate(820,222)">
-  <rect class="card" x="0" y="0" width="300" height="72" rx="12" fill="#FFF0E0" stroke="#E67E22"/>
-  <text class="label" x="150" y="28" text-anchor="middle">TomcatConfig</text>
-  <text class="mono" x="150" y="50" text-anchor="middle">ProtocolHandlerCustomizer</text>
+<g transform="translate(72,642)">
+  <rect class="card" x="0" y="0" width="190" height="68" rx="10" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="label" x="95" y="22" text-anchor="middle">AuthorTable</text>
+  <text class="mono" x="95" y="42" text-anchor="middle">Table("authors")</text>
+  <text class="mono" x="95" y="58" text-anchor="middle">id · name · email</text>
 </g>
-<g transform="translate(820,332)">
-  <rect class="card" x="0" y="0" width="300" height="72" rx="12" fill="#FFF0E0" stroke="#E67E22"/>
-  <text class="label" x="150" y="28" text-anchor="middle">VT Executor</text>
-  <text class="mono" x="150" y="50" text-anchor="middle">newVirtualThreadPerTaskExecutor</text>
+<g transform="translate(278,642)">
+  <rect class="card" x="0" y="0" width="190" height="68" rx="10" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="label" x="95" y="22" text-anchor="middle">BookTable</text>
+  <text class="mono" x="95" y="42" text-anchor="middle">Table("books")</text>
+  <text class="mono" x="95" y="58" text-anchor="middle">FK → Author</text>
 </g>
-
-<!-- Controllers -->
-<g transform="translate(80,222)">
-  <rect class="card" x="0" y="0" width="300" height="72" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="label" x="150" y="28" text-anchor="middle">AuthorController</text>
-  <text class="mono" x="150" y="50" text-anchor="middle">@RestController</text>
+<g transform="translate(484,642)">
+  <rect class="card" x="0" y="0" width="190" height="68" rx="10" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="label" x="95" y="22" text-anchor="middle">OrderTable</text>
+  <text class="mono" x="95" y="42" text-anchor="middle">Table("orders")</text>
+  <text class="mono" x="95" y="58" text-anchor="middle">status enum</text>
 </g>
-<g transform="translate(420,222)">
-  <rect class="card" x="0" y="0" width="300" height="72" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="label" x="150" y="28" text-anchor="middle">OrderController</text>
-  <text class="mono" x="150" y="50" text-anchor="middle">@RestController</text>
+<g transform="translate(690,642)">
+  <rect class="card" x="0" y="0" width="190" height="68" rx="10" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="label" x="95" y="22" text-anchor="middle">OrderLineTable</text>
+  <text class="mono" x="95" y="42" text-anchor="middle">Table("order_lines")</text>
+  <text class="mono" x="95" y="58" text-anchor="middle">FK → Order, Product</text>
 </g>
-
-<!-- Services -->
-<g transform="translate(80,362)">
-  <rect class="card" x="0" y="0" width="300" height="72" rx="12" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="label" x="150" y="28" text-anchor="middle">AuthorService</text>
-  <text class="mono" x="150" y="50" text-anchor="middle">virtualFuture { transaction {} }</text>
-</g>
-<g transform="translate(420,362)">
-  <rect class="card" x="0" y="0" width="300" height="72" rx="12" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="label" x="150" y="28" text-anchor="middle">OrderService</text>
-  <text class="mono" x="150" y="50" text-anchor="middle">virtualFuture { transaction {} }</text>
+<g transform="translate(896,642)">
+  <rect class="card" x="0" y="0" width="190" height="68" rx="10" fill="#FFF3D9" stroke="#D6A441"/>
+  <text class="label" x="95" y="22" text-anchor="middle">ProductTable</text>
+  <text class="mono" x="95" y="42" text-anchor="middle">Table("products")</text>
+  <text class="mono" x="95" y="58" text-anchor="middle">stock + price</text>
 </g>
 
-<!-- Repositories -->
-<g transform="translate(80,502)">
-  <rect class="card" x="0" y="0" width="300" height="72" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="label" x="150" y="28" text-anchor="middle">AuthorRepository</text>
-  <text class="mono" x="150" y="50" text-anchor="middle">LongAuditableJdbcRepository</text>
-</g>
-<g transform="translate(420,502)">
-  <rect class="card" x="0" y="0" width="300" height="72" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="label" x="150" y="28" text-anchor="middle">OrderRepository</text>
-  <text class="mono" x="150" y="50" text-anchor="middle">LongJdbcRepository</text>
-</g>
-
-<!-- Schema -->
-<g transform="translate(80,642)">
-  <rect class="card" x="0" y="0" width="300" height="72" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="label" x="150" y="28" text-anchor="middle">AuthorTable / BookTable</text>
-  <text class="mono" x="150" y="50" text-anchor="middle">AuditableLongIdTable + LongIdTable</text>
-</g>
-<g transform="translate(420,642)">
-  <rect class="card" x="0" y="0" width="300" height="72" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="label" x="150" y="28" text-anchor="middle">OrderTable / ProductTable</text>
-  <text class="mono" x="150" y="50" text-anchor="middle">LongIdTable · FOR UPDATE</text>
-</g>
-
-<!-- Database -->
-<g transform="translate(260,758)">
-  <ellipse cx="130" cy="10" rx="130" ry="16" fill="#FDECEF" stroke="#DC6B82" stroke-width="2"/>
-  <rect x="0" y="10" width="260" height="36" fill="#FDECEF" stroke="#DC6B82" stroke-width="2"/>
+<!-- ===== Database ===== -->
+<g transform="translate(420,760)">
+  <ellipse cx="140" cy="10" rx="140" ry="16" fill="#FDECEF" stroke="#DC6B82" stroke-width="2"/>
+  <rect x="0" y="10" width="280" height="36" fill="#FDECEF" stroke="#DC6B82" stroke-width="2"/>
   <line x1="0" y1="10" x2="0" y2="46" stroke="#DC6B82" stroke-width="2"/>
-  <line x1="260" y1="10" x2="260" y2="46" stroke="#DC6B82" stroke-width="2"/>
-  <ellipse cx="130" cy="46" rx="130" ry="16" fill="#FDECEF" stroke="#DC6B82" stroke-width="2"/>
-  <text class="label" x="130" y="42" text-anchor="middle">PostgreSQL</text>
+  <line x1="280" y1="10" x2="280" y2="46" stroke="#DC6B82" stroke-width="2"/>
+  <ellipse cx="140" cy="46" rx="140" ry="16" fill="#FDECEF" stroke="#DC6B82" stroke-width="2"/>
+  <text class="label" x="140" y="42" text-anchor="middle">PostgreSQL</text>
 </g>
 
-<!-- ARROWS -->
-<path class="line" d="M325,156 L325,178 L230,178 L230,220"/>
-<path class="line" d="M385,156 L385,178 L570,178 L570,220"/>
+<!-- ===== ARROWS (all verified against bounding boxes) ===== -->
 
-<path class="line" d="M230,294 L230,360"/>
-<path class="line" d="M570,294 L570,360"/>
+<!-- Client → Controllers (y=170 gap, no components) -->
+<path class="line" d="M420,160 L420,178 L192,178 L192,220"/>
+<path class="line" d="M460,160 L460,178 L452,178 L452,220"/>
+<path class="line" d="M500,160 L500,178 L712,178 L712,220"/>
+<path class="line" d="M520,160 L520,178 L972,178 L972,220"/>
 
-<path class="line" d="M230,434 L230,500"/>
-<path class="line" d="M570,434 L570,500"/>
+<!-- Controller → Service (y=316 gap between Pres/Svc bands, clear) -->
+<path class="line" d="M192,290 L192,316 L260,316 L260,360"/>
+<path class="line" d="M452,290 L452,316 L360,316 L360,360"/>
+<path class="line" d="M712,290 L712,316 L760,316 L760,360"/>
+<path class="line" d="M972,290 L972,316 L920,316 L920,360"/>
 
-<path class="line" d="M230,574 L230,640"/>
-<path class="line" d="M570,574 L570,640"/>
+<!-- Service → Repository (y=456 gap between Svc/Repo bands, clear) -->
+<path class="line" d="M200,430 L200,456 L167,456 L167,500"/>
+<path class="line" d="M400,430 L400,456 L373,456 L373,500"/>
+<path class="line" d="M700,430 L700,456 L579,456 L579,500"/>
+<path class="line" d="M800,430 L800,456 L785,456 L785,500"/>
+<path class="line" d="M950,430 L950,456 L991,456 L991,500"/>
 
-<path class="line" d="M230,714 L230,740 L340,740 L340,756"/>
-<path class="line" d="M570,714 L570,740 L440,740 L440,756"/>
+<!-- Repository → Table (y=596 gap between Repo/Schema bands, clear) -->
+<path class="line" d="M167,570 L167,640"/>
+<path class="line" d="M373,570 L373,640"/>
+<path class="line" d="M579,570 L579,640"/>
+<path class="line" d="M785,570 L785,640"/>
+<path class="line" d="M991,570 L991,640"/>
 
-<!-- VT Executor → Services (below services, enter from bottom) -->
-<path class="vtline" d="M970,404 L970,452 L230,452 L230,436"/>
-<path class="vtline" d="M970,404 L970,452 L570,452 L570,436"/>
-<!-- TomcatConfig → VT Executor -->
-<path class="vtline" d="M970,294 L970,330"/>
+<!-- FK (horizontal between adjacent tables) -->
+<path class="fkline" d="M278,676 L264,676"/>
+<path class="fkline" d="M690,676 L676,676"/>
+<path class="fkline" d="M880,676 L898,676"/>
+
+<!-- Schema → DB (y=730 gap, clear) -->
+<path class="line" d="M167,710 L167,740 L500,740 L500,758"/>
+<path class="line" d="M579,710 L579,740 L560,740 L560,758"/>
+<path class="line" d="M991,710 L991,740 L640,740 L640,758"/>
+
+<!-- TomcatConfig → VTExecutor (vertical inside panel, clear) -->
+<path class="vtline" d="M1235,290 L1235,310"/>
+
+<!-- VTExecutor → Services (y=450 gap, below all services and panel, clear) -->
+<path class="vtline" d="M1215,380 L1215,450 L312,450 L312,432"/>
+<path class="vtline" d="M1245,380 L1245,456 L842,456 L842,432"/>
 </svg>
