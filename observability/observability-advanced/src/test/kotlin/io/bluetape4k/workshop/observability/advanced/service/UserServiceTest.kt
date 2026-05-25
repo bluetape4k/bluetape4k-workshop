@@ -6,6 +6,7 @@ import io.bluetape4k.workshop.observability.advanced.TestObservationConfig
 import io.bluetape4k.workshop.observability.advanced.model.User
 import io.bluetape4k.workshop.observability.advanced.repository.UserCacheRepository
 import io.bluetape4k.workshop.observability.advanced.repository.UserRepository
+import io.micrometer.observation.tck.ObservationContextAssert
 import io.micrometer.observation.tck.TestObservationRegistry
 import io.micrometer.observation.tck.TestObservationRegistryAssert
 import org.junit.jupiter.api.AfterEach
@@ -66,6 +67,9 @@ class UserServiceTest : AbstractAdvancedTest() {
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("user.cache.put")
             .that().hasBeenStarted().hasBeenStopped()
+        assertParentObservation("user.cache.get", "user.service.get")
+        assertParentObservation("user.db.find", "user.service.get")
+        assertParentObservation("user.cache.put", "user.service.get")
     }
 
     @Test
@@ -82,6 +86,7 @@ class UserServiceTest : AbstractAdvancedTest() {
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("user.cache.get")
             .that().hasBeenStarted().hasBeenStopped()
+        assertParentObservation("user.cache.get", "user.service.get")
         // DB span must NOT be present on cache hit
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasNumberOfObservationsWithNameEqualTo("user.db.find", 0)
@@ -108,6 +113,7 @@ class UserServiceTest : AbstractAdvancedTest() {
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("user.db.save")
             .that().hasBeenStarted().hasBeenStopped()
+        assertParentObservation("user.db.save", "user.service.create")
     }
 
     @Test
@@ -131,5 +137,14 @@ class UserServiceTest : AbstractAdvancedTest() {
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("user.cache.put")
             .that().hasBeenStarted().hasBeenStopped()
+    }
+
+    private fun assertParentObservation(childName: String, parentName: String) {
+        TestObservationRegistryAssert.assertThat(testRegistry)
+            .hasObservationWithNameEqualTo(childName)
+            .that()
+            .hasParentObservationContextSatisfying { parent ->
+                ObservationContextAssert.assertThat(parent).hasNameEqualTo(parentName)
+            }
     }
 }
