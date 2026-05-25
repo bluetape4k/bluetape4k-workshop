@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="560" viewBox="0 0 1400 560" role="img" aria-label="API Gateway Routing Scenario">
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="500" viewBox="0 0 1100 500" role="img" aria-label="API Gateway Routing Scenario">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
   <marker id="arrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
@@ -14,8 +14,8 @@
     .line{stroke:#758297;stroke-width:2;fill:none;marker-end:url(#arrow)}
   </style>
 </defs>
-<rect class="canvas" width="1400" height="560"/>
-<rect class="frame" x="28" y="24" width="1344" height="512" rx="20"/>
+<rect class="canvas" width="1100" height="500"/>
+<rect class="frame" x="28" y="24" width="1044" height="452" rx="20"/>
 
 <text class="title" x="52" y="68">API Gateway Routing</text>
 <text class="subtitle" x="52" y="92">Spring Cloud Gateway · YAML-driven routes · Bucket4j rate limit · Swagger aggregation</text>
@@ -53,14 +53,14 @@
 <g transform="translate(740,140)"><rect class="card" x="0" y="0" width="280" height="68" rx="10" fill="#E8F3FF" stroke="#5B8DEF"/><text class="label" x="140" y="26" text-anchor="middle">Customer Service</text><text class="mono" x="140" y="46" text-anchor="middle">port 8081 · CRUD customers</text></g>
 <g transform="translate(740,240)"><rect class="card" x="0" y="0" width="280" height="68" rx="10" fill="#F1ECFF" stroke="#8A72D6"/><text class="label" x="140" y="26" text-anchor="middle">Order Service</text><text class="mono" x="140" y="46" text-anchor="middle">port 8082 · orders + products</text></g>
 
-<!-- Col 4: Redis -->
-<g transform="translate(1100,260)">
-  <ellipse cx="110" cy="10" rx="110" ry="14" fill="#FFF3D9" stroke="#D6A441" stroke-width="2"/>
-  <rect x="0" y="10" width="220" height="30" fill="#FFF3D9" stroke="#D6A441" stroke-width="2"/>
+<!-- Redis (below Order Service) -->
+<g transform="translate(790,360)">
+  <ellipse cx="90" cy="10" rx="90" ry="14" fill="#FFF3D9" stroke="#D6A441" stroke-width="2"/>
+  <rect x="0" y="10" width="180" height="30" fill="#FFF3D9" stroke="#D6A441" stroke-width="2"/>
   <line x1="0" y1="10" x2="0" y2="40" stroke="#D6A441" stroke-width="2"/>
-  <line x1="220" y1="10" x2="220" y2="40" stroke="#D6A441" stroke-width="2"/>
-  <ellipse cx="110" cy="40" rx="110" ry="14" fill="#FFF3D9" stroke="#D6A441" stroke-width="2"/>
-  <text class="label" x="110" y="36" text-anchor="middle" style="font-size:16px">Redis</text>
+  <line x1="180" y1="10" x2="180" y2="40" stroke="#D6A441" stroke-width="2"/>
+  <ellipse cx="90" cy="40" rx="90" ry="14" fill="#FFF3D9" stroke="#D6A441" stroke-width="2"/>
+  <text class="label" x="90" y="36" text-anchor="middle" style="font-size:16px">Redis</text>
 </g>
 
 <!--
@@ -107,7 +107,7 @@
 <!-- Routing → RateLimit (vertical inside panel) -->
 <path class="line" d="M460,228 L460,248"/>
 
-<!-- RateLimit → Redis (below OrderSvc at y=330, no crossing) -->
-<path class="line" d="M580,300 L680,300 L680,330 L1060,330 L1060,290 L1098,290"/>
+<!-- RateLimit → Redis (right then down, no crossing) -->
+<path class="line" d="M580,290 L680,290 L680,330 L880,330 L880,358"/>
 
 </svg>
