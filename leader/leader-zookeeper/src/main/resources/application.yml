@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: leader-zookeeper
+
+leader:
+  zookeeper:
+    zookeeper:
+      connect-string: localhost:2181
+      session-timeout-ms: 60000
+      connection-timeout-ms: 15000
+      block-until-connected-seconds: 10
+    base-path: /workshop/leader-zookeeper
+    wait-time: 2s
+    group-max-leaders: 2
+    job-fixed-delay: PT10S
+    suspend-job-fixed-delay: PT12S
+    group-job-fixed-delay: PT15S
+    suspend-group-job-fixed-delay: PT18S
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+logging:
+  level:
+    io.bluetape4k.workshop.leader.zookeeper: INFO
+    io.bluetape4k.leader.zookeeper: DEBUG
