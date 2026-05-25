@@ -171,7 +171,15 @@ Apache Curator 기반 `bluetape4k-leader-zookeeper:0.2.1` 라이브러리를 워
     }
     ```
 - **English KDoc**: CancellationException 재throw 정책, `runBlocking` 사용 위치 (스케줄러 경계만)
-- **검증**: 컴파일 + T3 통과
+- **검증**: 컴파일 + T3 통과 + **CancellationException rethrow 단위 테스트 (H6)**:
+  ```kotlin
+  @Test fun `runScheduled rethrows CancellationException`() {
+      val service = SuspendLeaderZkService(mockk { coEvery { runIfLeader(any()) { any() } } throws CancellationException("test") })
+      assertFailsWith<CancellationException> { service.runScheduled() }
+  }
+  ```
+  단위 테스트는 Spring 컨텍스트 불필요 — MockK로 `SuspendLeaderElector` stub. `SuspendLeaderZkService`의 `runScheduled()` 직접 호출 → `CancellationException` 전파 확인.
+  동일 패턴을 `SuspendGroupLeaderService`에도 적용 (T-SVC-4).
 - **의존**: T-CFG-1
 
 #### T-SVC-3: GroupLeaderService — complexity: medium
@@ -196,7 +204,7 @@ Apache Curator 기반 `bluetape4k-leader-zookeeper:0.2.1` 라이브러리를 워
   - `suspend fun runLeaderWork(lockName): String?`
   - `@Scheduled` wrapper — **CancellationException 재throw 포함** (SuspendLeaderZkService와 동일 패턴)
 - **English KDoc**: SuspendLeaderZkService 패턴 cross-link
-- **검증**: 컴파일 + T5 통과
+- **검증**: 컴파일 + T5 통과 + CancellationException rethrow 단위 테스트 (T-SVC-2와 동일 패턴, `SuspendGroupLeaderElector` stub 사용)
 - **의존**: T-CFG-1
 
 #### T-RES-1: application.yml — complexity: low
