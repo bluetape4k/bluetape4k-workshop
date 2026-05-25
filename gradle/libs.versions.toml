@@ -6,7 +6,7 @@ bluetape4k-dependencies-version = "1.1.3"  # https://mvnrepository.com/artifact/
 # TODO: Move to bluetape4k-dependencies BOM governance once bluetape4k-graph is published to Maven Central.
 # Version resolution: 0.4.0 is available in mavenLocal; 0.4.2 is the current baseVersion (not yet published).
 # Use mavenLocal() in settings.gradle.kts repositoriesMode + root build.gradle.kts when consuming 0.4.0.
-bluetape4k-graph = "0.4.0"  # mavenLocal — run: ./gradlew -p bluetape4k-graph publishBluetapeGraphPublicationToMavenLocalRepository
+bluetape4k-graph = "0.4.2"  # mavenLocal — run: ./gradlew -p bluetape4k-graph publishBluetapeGraphPublicationToMavenLocalRepository
 
 kotlin = "2.3.21"  # https://mvnrepository.com/artifact/org.jetbrains.kotlin/kotlin-bom
 kotlinx-coroutines = "1.11.0"  # https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-bom
