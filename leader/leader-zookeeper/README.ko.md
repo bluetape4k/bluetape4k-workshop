@@ -19,14 +19,7 @@ ZooKeeper 에페메랄 노드 기반으로 정확한 동시 실행을 보장하�
 `InterProcessMutex`(단일 리더) / `InterProcessSemaphoreV2`(그룹 리더)로 ZooKeeper 잠금을 경쟁합니다.
 **선출된 리더**만 각 스케줄 작업을 실행합니다.
 
-```
-인스턴스-1  ──┐
-인스턴스-2  ──┼──►  CuratorFramework  ──►  ZooKeeper 앙상블
-인스턴스-3  ──┘           (에페메랄 znode)
-                │
-                └──  InterProcessMutex / InterProcessSemaphoreV2
-                       (단일 리더 / 그룹 리더)
-```
+![Architecture](docs/images/readme-diagrams/leader-zookeeper-architecture.png)
 
 ## ⚠️ R16 — ZooKeeper는 TTL이 없습니다 (Redis와의 핵심 차이점)
 

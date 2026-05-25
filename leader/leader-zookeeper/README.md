@@ -19,14 +19,7 @@ Multiple app instances compete for ZooKeeper locks backed by
 `InterProcessSemaphoreV2` (group-leader). Only the **elected leader(s)** execute each
 scheduled job.
 
-```
-Instance-1  ──┐
-Instance-2  ──┼──►  CuratorFramework  ──►  ZooKeeper Ensemble
-Instance-3  ──┘           (Ephemeral znodes)
-                │
-                └──  InterProcessMutex / InterProcessSemaphoreV2
-                       (single-leader / group-leader)
-```
+![Architecture](docs/images/readme-diagrams/leader-zookeeper-architecture.png)
 
 ## ⚠️ R16 — ZooKeeper Has No TTL (Critical Difference from Redis)
 
