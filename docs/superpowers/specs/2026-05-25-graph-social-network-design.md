@@ -72,8 +72,8 @@ abstract test hierarchy를 그대로 따르되,
 
 | Object | Label | From -> To | Key Properties | 방향성 |
 |--------|-------|-----------|----------------|--------|
-| `KnowsLabel` | `"KNOWS"` | Person -> Person | `since` (ISO date), `strength` (1-10) | **양방향** (A->B, B->A 두 edge 생성) |
-| `WorksAtLabel` | `"WORKS_AT"` | Person -> Company | `role`, `startDate`, `isCurrent` | 단방향 |
+| `KnowsLabel` | `"KNOWS"` | Person -> Person | `since` (ISO date string, optional), `strength` (Int, 1–10) | **양방향** (A->B, B->A 두 edge 생성) |
+| `WorksAtLabel` | `"WORKS_AT"` | Person -> Company | `role` (required), `startDate` (ISO date string, optional), `isCurrent` (Boolean) | 단방향 |
 | `FollowsLabel` | `"FOLLOWS"` | Person -> Person | (없음) | 단방향 |
 
 ---
@@ -97,23 +97,71 @@ class SocialNetworkService(
     fun addCompany(companyId: String, name: String, industry: String = "", location: String = ""): GraphVertex
 
     // ── Edge mutators ──
-    fun connect(personId1: GraphElementId, personId2: GraphElementId, since: String = "", strength: Int = 5)
-    fun follow(followerId: GraphElementId, targetId: GraphElementId)
-    fun addWorkExperience(personId: GraphElementId, companyId: GraphElementId, role: String, isCurrent: Boolean = false)
+    /**
+     * Creates a bidirectional KNOWS relationship between two persons.
+     *
+     * **IMPORTANT**: This method creates TWO directed edges (personVertexId1→personVertexId2
+     * AND personVertexId2→personVertexId1). Do NOT call connect(B,A) after connect(A,B) —
+     * both directions are already created. Duplicate calls produce 4 edges (double-counting).
+     *
+     * Both edges carry identical `since` and `strength` property values.
+     *
+     * **Non-atomic**: if the second edge creation fails, the graph is left in an asymmetric
+     * state (one-directional KNOWS). Workshop scope accepts this risk; re-seeding is idempotent
+     * at vertex level.
+     */
+    fun connect(personVertexId1: GraphElementId, personVertexId2: GraphElementId, since: String = "", strength: Int = 5)
+    fun follow(followerVertexId: GraphElementId, targetVertexId: GraphElementId)
+
+    /**
+     * Creates a WORKS_AT edge from a person to a company.
+     * Non-idempotent: duplicate calls create duplicate WORKS_AT edges.
+     * `findColleagues` deduplicates by vertex ID, so duplicates are safe for queries.
+     */
+    fun addWorkExperience(personVertexId: GraphElementId, companyVertexId: GraphElementId, role: String, startDate: String = "", isCurrent: Boolean = false)
 
     // ── Query: 인맥 탐색 ──
-    fun getDirectConnections(personId: GraphElementId): List<GraphVertex>
-    fun getConnectionsWithinDegree(personId: GraphElementId, degree: Int): List<GraphVertex>
-    fun getNthDegreeConnections(personId: GraphElementId, degree: Int): List<GraphVertex>
-    fun findConnectionPath(fromId: GraphElementId, toId: GraphElementId): GraphPath?
-    fun findAllConnectionPaths(fromId: GraphElementId, toId: GraphElementId): List<GraphPath>
+    fun getDirectConnections(personVertexId: GraphElementId): List<GraphVertex>
+
+    /**
+     * Returns all persons reachable via KNOWS edges within [degree] hops.
+     * @param degree must be in 1..[MAX_TRAVERSAL_DEPTH] (enforced via require())
+     */
+    fun getConnectionsWithinDegree(personVertexId: GraphElementId, degree: Int): List<GraphVertex>
+
+    /**
+     * Returns persons reachable at exactly [degree] hops (not closer).
+     * @param degree must be in 1..[MAX_TRAVERSAL_DEPTH] (enforced via require())
+     */
+    fun getNthDegreeConnections(personVertexId: GraphElementId, degree: Int): List<GraphVertex>
+    fun findConnectionPath(fromVertexId: GraphElementId, toVertexId: GraphElementId): GraphPath?
+
+    /**
+     * Returns all paths between two vertices up to [maxDepth] hops.
+     * **WARNING**: Path enumeration is exponential. Keep maxDepth ≤ 6 to avoid combinatorial explosion.
+     * @param maxDepth maximum path length, default 5, capped at MAX_TRAVERSAL_DEPTH
+     */
+    fun findAllConnectionPaths(fromVertexId: GraphElementId, toVertexId: GraphElementId, maxDepth: Int = 5): List<GraphPath>
 
     // ── Query: 공통 인맥 & 추천 ──
-    fun findMutualConnections(personId1: GraphElementId, personId2: GraphElementId): List<GraphVertex>
-    fun recommendConnections(personId: GraphElementId, limit: Int = 10): List<ConnectionRecommendation>
+    fun findMutualConnections(personVertexId1: GraphElementId, personVertexId2: GraphElementId): List<GraphVertex>
+
+    /**
+     * Recommends connections using FOAF (Friend-of-a-Friend) algorithm.
+     * Returns candidates sorted by mutual connection count descending.
+     * Ties are broken by vertex ID ascending for deterministic ordering.
+     * @see findMutualConnections for retrieving shared connections between two specific persons
+     */
+    fun recommendConnections(personVertexId: GraphElementId, limit: Int = 10): List<ConnectionRecommendation>
 
     // ── Query: 직장 관련 ──
-    fun findColleagues(personId: GraphElementId): List<GraphVertex>
+    /** Returns current and past colleagues at the same company. Deduplicated by vertex ID. */
+    fun findColleagues(personVertexId: GraphElementId): List<GraphVertex>
+
+    companion object {
+        /** Maximum allowed traversal depth for degree-based queries. */
+        const val MAX_TRAVERSAL_DEPTH: Int = 6
+    }
 }
 ```
 
@@ -134,23 +182,37 @@ class SocialNetworkSuspendService(
     suspend fun addCompany(companyId: String, name: String, industry: String = "", location: String = ""): GraphVertex
 
     // ── Edge mutators ──
-    suspend fun connect(personId1: GraphElementId, personId2: GraphElementId, since: String = "", strength: Int = 5)
-    suspend fun follow(followerId: GraphElementId, targetId: GraphElementId)
-    suspend fun addWorkExperience(personId: GraphElementId, companyId: GraphElementId, role: String, isCurrent: Boolean = false)
+    /**
+     * Creates a bidirectional KNOWS relationship. Identical contract to [SocialNetworkService.connect].
+     * Both directed edges carry identical `since` and `strength` values.
+     * Non-atomic: second edge creation failure leaves asymmetric state.
+     */
+    suspend fun connect(personVertexId1: GraphElementId, personVertexId2: GraphElementId, since: String = "", strength: Int = 5)
+    suspend fun follow(followerVertexId: GraphElementId, targetVertexId: GraphElementId)
+
+    /**
+     * Non-idempotent: duplicate calls create duplicate WORKS_AT edges.
+     * [findColleagues] deduplicates by vertex ID.
+     */
+    suspend fun addWorkExperience(personVertexId: GraphElementId, companyVertexId: GraphElementId, role: String, startDate: String = "", isCurrent: Boolean = false)
 
     // ── Query: 인맥 탐색 ──
-    suspend fun getDirectConnections(personId: GraphElementId): List<GraphVertex>
-    suspend fun getConnectionsWithinDegree(personId: GraphElementId, degree: Int): List<GraphVertex>
-    suspend fun getNthDegreeConnections(personId: GraphElementId, degree: Int): List<GraphVertex>
-    suspend fun findConnectionPath(fromId: GraphElementId, toId: GraphElementId): GraphPath?
-    suspend fun findAllConnectionPaths(fromId: GraphElementId, toId: GraphElementId): List<GraphPath>
+    // Note: GraphSuspendOperations.neighbors() returns Flow<GraphVertex>;
+    // all List-returning methods below collect the Flow via .toList() internally.
+    suspend fun getDirectConnections(personVertexId: GraphElementId): List<GraphVertex>
+    suspend fun getConnectionsWithinDegree(personVertexId: GraphElementId, degree: Int): List<GraphVertex>
+    suspend fun getNthDegreeConnections(personVertexId: GraphElementId, degree: Int): List<GraphVertex>
+    suspend fun findConnectionPath(fromVertexId: GraphElementId, toVertexId: GraphElementId): GraphPath?
+    suspend fun findAllConnectionPaths(fromVertexId: GraphElementId, toVertexId: GraphElementId, maxDepth: Int = 5): List<GraphPath>
 
     // ── Query: 공통 인맥 & 추천 ──
-    suspend fun findMutualConnections(personId1: GraphElementId, personId2: GraphElementId): List<GraphVertex>
-    suspend fun recommendConnections(personId: GraphElementId, limit: Int = 10): List<ConnectionRecommendation>
+    suspend fun findMutualConnections(personVertexId1: GraphElementId, personVertexId2: GraphElementId): List<GraphVertex>
+    /** Ties broken by vertex ID ascending for deterministic ordering. */
+    suspend fun recommendConnections(personVertexId: GraphElementId, limit: Int = 10): List<ConnectionRecommendation>
 
     // ── Query: 직장 관련 ──
-    suspend fun findColleagues(personId: GraphElementId): List<GraphVertex>
+    /** Returns current and past colleagues. Deduplicated by vertex ID. */
+    suspend fun findColleagues(personVertexId: GraphElementId): List<GraphVertex>
 }
 ```
 
@@ -181,48 +243,63 @@ data class ConnectionRecommendation(
 
 ### 6.1 FOAF 추천 알고리즘
 
+> **Set operation semantics**: 이 섹션의 모든 집합 연산(∩, -, union)은 **vertex ID 기준**으로 수행한다.
+
 **목적**: 공통 인맥이 많은 2촌 인맥을 추천한다.
 
 **알고리즘**:
 ```
-1. directFriends = neighbors(seed, KNOWS, OUTGOING, depth=1)
-2. friendsOfFriends = neighbors(seed, KNOWS, OUTGOING, depth=2)
-3. foafCandidates = friendsOfFriends - directFriends - {seed}
-4. 각 candidate에 대해:
+1. directFriends = neighbors(seed, KNOWS, OUTGOING, depth=1)         // 1 round-trip
+2. friendsOfFriends = neighbors(seed, KNOWS, OUTGOING, depth=2)      // 1 round-trip
+3. foafCandidates = friendsOfFriends - directFriends - {seed}        // ID 기준 집합 차
+   ⚠️ {seed} explicit 제거 필수:
+      neighbors()는 seed 제외를 보장하지 않는다.
+      양방향 KNOWS에서 depth=2 탐색 시 A→B→A 경로를 통해 seed가 반환될 수 있다.
+4. 각 candidate에 대해:                                              // M round-trips (N+1 패턴)
    a. candidateFriends = neighbors(candidate, KNOWS, OUTGOING, depth=1)
-   b. mutualConnections = directFriends ∩ candidateFriends
+   b. mutualConnections = directFriends ∩ candidateFriends (ID 기준 교집합)
    c. mutualCount = |mutualConnections|
-5. mutualCount 내림차순 정렬
-6. 상위 limit개 반환
+5. mutualCount 기준 내림차순 정렬; 동점 시 vertex ID 오름차순 (결정적 정렬)
+6. mutualCount = 0인 후보 제외 (공통 인맥 없는 2촌은 추천 가치 낮음)
+7. 상위 limit개 반환
 ```
 
 **핵심 결정**:
-- Step 3에서 directFriends를 명시적으로 제외해야 이미 연결된 사람을 추천하지 않는다.
+- Step 3: `{seed}` 명시적 제거는 필수. `neighbors()` 계약이 seed를 제외한다고 명시하지 않으며,
+  양방향 KNOWS + depth=2 조합에서 seed vertex가 반환될 수 있다 (A→B→A traversal).
 - Step 4b에서 실제 mutual vertex 목록을 수집해 `ConnectionRecommendation.mutualConnections`에
   저장한다. count만 반환하는 것보다 UI 표시에 유용하다.
-- `mutualCount = 0`인 후보는 결과에서 제외한다 (공통 인맥 없는 2촌은 추천 가치 낮음).
+- Step 5 동점 처리: vertex ID 오름차순을 secondary sort로 사용해 테스트 결과가 결정적이 되게 한다.
+- **성능**: M+2 round-trip (M = FOAF 후보 수). 워크샵 규모에서는 허용 가능.
+  프로덕션이라면 단일 Cypher/Gremlin 쿼리로 구현해야 한다 (Section 11 리스크 6 참조).
 - **반환 타입**: blocking/suspend 모두 `List<ConnectionRecommendation>`을 반환한다.
-  정렬(Step 5)이 전체 후보 수집 후에만 가능하므로 `Flow`는 의미적으로 부적합하다
-  (내부 버퍼링 후 정렬하는 Flow는 lazy streaming의 이점이 없다).
+  정렬(Step 5)이 전체 후보 수집 후에만 가능하므로 `Flow`는 의미적으로 부적합하다.
 
 ### 6.2 N차 연결 탐색
 
-**`getConnectionsWithinDegree(personId, degree)`**:
+> **Set operation semantics**: 모든 집합 연산은 **vertex ID 기준**으로 수행한다.
+> **`degree` validation**: `require(degree in 1..MAX_TRAVERSAL_DEPTH)` — MAX_TRAVERSAL_DEPTH = 6.
+
+**`getConnectionsWithinDegree(personVertexId, degree)`**:
 ```
-neighbors(personId, KNOWS, OUTGOING, maxDepth=degree)
+neighbors(personVertexId, KNOWS, OUTGOING, maxDepth=degree)
 ```
 - `NeighborOptions.maxDepth`가 depth > 1을 지원함을 확인 완료 (모든 3개 백엔드).
-- 반환값에 seed 자신은 포함되지 않음 (`neighbors()` 계약).
+- ⚠️ `neighbors()` 구현은 seed vertex 제외를 보장하지 않는다.
+  depth=1에서는 seed가 반환되지 않지만, depth ≥ 2에서는 양방향 KNOWS 사이클(A→B→A)로
+  seed가 반환될 가능성이 있다. **`- {seed}` 명시적 제거를 구현 시 적용해야 한다.**
 
-**`getNthDegreeConnections(personId, degree)`**:
+**`getNthDegreeConnections(personVertexId, degree)`**:
 ```
-allWithin = neighbors(personId, KNOWS, OUTGOING, maxDepth=degree)
-closer    = if (degree > 1) neighbors(personId, KNOWS, OUTGOING, maxDepth=degree-1) else emptyList()
-result    = allWithin - closer - {seed}  // ID 기준 집합 차
+allWithin = neighbors(personVertexId, KNOWS, OUTGOING, maxDepth=degree)   - {seed}
+closer    = if (degree > 1) neighbors(personVertexId, KNOWS, OUTGOING, maxDepth=degree-1) - {seed}
+            else emptyList()
+result    = allWithin - closer  // ID 기준 집합 차 (정확히 N촌만)
 ```
 - 정확히 N촌에 해당하는 사람만 추출.
 - `degree=1`이면 `closer`는 빈 리스트이므로 `getDirectConnections`와 동일 결과.
 - 양방향 KNOWS이므로 `Direction.OUTGOING`만으로 전체 인맥 탐색 가능.
+- 이중 traversal (2× neighbors 호출): 워크샵 규모에서 허용 가능. 프로덕션은 BFS level-tracking 권장.
 
 ### 6.3 공통 인맥 (Mutual Connections)
 
@@ -267,7 +344,20 @@ result = colleagues - {seed}  // 자기 자신 제외
 
 **`connect()` 멱등성**: 비멱등(non-idempotent). 중복 호출 시 중복 edge가 생성된다.
 이는 `abuser-detection`의 edge mutator 계약과 일치한다.
-KDoc에 "callers must avoid duplicate calls" 명시.
+KDoc에 양방향 경고 + 중복 호출 금지 명시 (Sections 5.1/5.2 참조).
+
+**edge 속성 대칭성**: `connect(A, B, since="2024-01-01", strength=8)` 호출 시
+`A→B`와 `B→A` 두 edge 모두 동일한 `since`와 `strength` 값을 갖는다.
+구현은 두 번째 `createEdge` 호출에 첫 번째와 동일한 properties를 전달해야 한다.
+테스트: "connect creates bidirectional KNOWS edges with identical properties"로 양방향 속성 대칭성 검증.
+
+**부분 실패 (Partial Failure)**:
+- `createEdge(A→B)` 성공 후 `createEdge(B→A)` 실패 시 그래프는 비대칭 상태 (A는 B를 알지만 B는 A를 모름).
+- `GraphOperations`는 transaction wrapping을 보장하지 않으며, 백엔드별 트랜잭션 지원 여부도 다르다.
+- **워크샵 범위**: 부분 실패 보상 전략 없이 Known Limitation으로 문서화한다.
+  테스트 시드는 항상 `initialize()` 후 시드 데이터를 새로 생성하므로, 부분 실패는 다음 테스트 시작 시 
+  `dropGraph()`로 초기화된다.
+- KDoc 주석에 이 제약을 명시해야 한다.
 
 ### 7.2 find-or-create 멱등성
 
@@ -282,6 +372,16 @@ fun addPerson(personId: String, ...): GraphVertex {
         ?: ops.createVertex(PersonLabel.label, mapOf(...))
 }
 ```
+
+**검색 기준**: domain key (`personId`, `companyId`)만으로 find-or-create 일치 판정.
+`name`, `title`, `location` 등 optional metadata는 find-or-create 일치 기준에 포함되지 않는다.
+따라서 두 번째 `addPerson(sameId, differentName)` 호출은 기존 vertex를 반환하며 properties를 갱신하지 않는다.
+
+**파라미터 validation 정책**:
+- **domain key** (required, `requireNotBlank`): `personId`, `companyId`, `role`
+- **optional metadata** (빈 문자열 허용, validation 없음): `name`, `title`, `location`, `industry`, `since`, `startDate`
+- **numeric** (required in range): `strength: Int` — `require(strength in 1..10)`; `degree: Int` — `require(degree in 1..MAX_TRAVERSAL_DEPTH)`; `limit: Int` — `requirePositiveNumber()`
+- ⚠️ `requireNotBlank()`을 optional metadata에 적용하면 빈 문자열 기본값과 충돌한다. domain key 전용으로 한정.
 
 ### 7.3 Memgraph 제약사항
 
@@ -305,12 +405,12 @@ fun addPerson(personId: String, ...): GraphVertex {
                     │     WORKS_AT                 │
                     │         │                    │
 [Person: Alice] ─KNOWS─ [Person: Bob] ─KNOWS─ [Person: Carol]
-       │                      │                    │
-       │                 KNOWS│               FOLLOWS
-       │                      │                    │
-       KNOWS             [Person: Dave]            ▼
-       │                      │           [Person: Eve]
-       ▼                 WORKS_AT
+       │                      │
+       │                 KNOWS│
+       │                      │
+       KNOWS             [Person: Dave] ──KNOWS──[Person: Grace]
+       │                      │
+       ▼                 WORKS_AT        Carol──FOLLOWS──▶[Person: Eve]
 [Person: Frank]               │
                               ▼
                     [Company: Acme]
@@ -319,13 +419,26 @@ fun addPerson(personId: String, ...): GraphVertex {
 **토폴로지 의도**:
 - Alice-Bob: 1촌 (KNOWS 양방향)
 - Bob-Carol: 1촌 (KNOWS 양방향)
-- Alice-Carol: 2촌 (Alice → Bob → Carol)
+- Alice-Carol: 2촌 (Alice → Bob → Carol), mutual = {Bob}
 - Alice-Frank: 1촌 (KNOWS 양방향)
 - Bob-Dave: 1촌 (KNOWS 양방향)
-- Carol → Eve: FOLLOWS (단방향, KNOWS 아님)
-- Alice, Bob: Bluetape4k 재직 → 동료
-- Carol: Bluetape4k 재직 → Alice/Bob과 동료
+- Dave-Grace: 1촌 (KNOWS 양방향)
+- Alice-Dave: 2촌 via Bob, mutual = {Bob}
+- Alice-Grace: 3촌 (Alice→Bob→Dave→Grace)
+- Carol → Eve: FOLLOWS (단방향, KNOWS 아님 — `getDirectConnections(Carol)` 결과에 Eve 미포함)
+- Alice, Bob, Carol: Bluetape4k 재직 → 동료
 - Dave: Acme 재직 → Alice/Bob/Carol과 비동료
+
+**FOAF 추천 결과 (Alice 기준)**:
+- 1촌 (직접 인맥): {Bob, Frank} — 추천 제외
+- FOAF 후보: Carol (via Bob, mutual=1), Dave (via Bob, mutual=1)
+- ⚠️ Carol과 Dave의 mutual count가 동일(1)하여 정렬 순서 테스트에 불충분.
+  **추가 KNOWS 엣지**: Alice-Carol을 직접 연결하면 Carol이 1촌이 되어 Dave만 FOAF 후보로 남아
+  단일 후보 케이스가 된다. 대신 **Grace를 추가**해 Dave와 Grace 간 mutual count 차별화:
+  - Dave: mutual with Alice = {Bob} (count=1)
+  - Grace: mutual with Alice = {} (count=0, Bob을 모름) → `mutualCount=0` 제외 규칙으로 필터
+  따라서 Alice FOAF 추천 결과 = [Carol(1), Dave(1)] — 동점. 동점 시 vertex ID 오름차순.
+  테스트 assertion: `recommendConnections(alice).map { it.person.name }` ⊇ {"Carol", "Dave"} (순서는 allowAnyOrder)
 
 ### 8.2 TinkerGraph (단위 테스트)
 
@@ -345,6 +458,18 @@ fun addPerson(personId: String, ...): GraphVertex {
 **패키지 루트**: `io.bluetape4k.workshop.graph.social`
 (abuser-detection의 `io.bluetape4k.workshop.graph.abuser`와 병렬 구조)
 
+**Graph name 정책 (⚠️ 필수)**: 각 concrete test class는 **고유한 `graphName`**을 사용해야 한다.
+동일한 container에서 실행되는 여러 test class가 같은 graphName을 공유하면 상태가 충돌한다.
+
+| Concrete class | graphName |
+|---|---|
+| SocialNetworkTinkerGraphTest | `"test_social_tinkergraph"` |
+| SocialNetworkSuspendTinkerGraphTest | `"test_social_tinkergraph_suspend"` |
+| Neo4jSocialNetworkTest | `"test_social_neo4j"` |
+| Neo4jSocialNetworkSuspendTest | `"test_social_neo4j_suspend"` |
+| MemgraphSocialNetworkTest | `"test_social_memgraph"` |
+| MemgraphSocialNetworkSuspendTest | `"test_social_memgraph_suspend"` |
+
 ```
 src/main/kotlin/io/bluetape4k/workshop/graph/social/
 ├── model/
@@ -358,8 +483,8 @@ src/main/kotlin/io/bluetape4k/workshop/graph/social/
 src/test/kotlin/io/bluetape4k/workshop/graph/social/
 ├── seed/
 │   └── SocialNetworkSeed.kt           # 시드 데이터 헬퍼 함수
-├── AbstractSocialNetworkTest.kt       # blocking 서비스 테스트 스위트
-├── AbstractSocialNetworkSuspendTest.kt # suspend 서비스 테스트 스위트
+├── AbstractSocialNetworkTest.kt       # blocking 서비스 테스트 스위트 (abstract)
+├── AbstractSocialNetworkSuspendTest.kt # suspend 서비스 테스트 스위트 (abstract)
 ├── SocialNetworkTinkerGraphTest.kt    # TinkerGraph blocking
 ├── SocialNetworkSuspendTinkerGraphTest.kt # TinkerGraph suspend
 ├── Neo4jSocialNetworkTest.kt          # Neo4j blocking (@Tag("integration"))
@@ -376,21 +501,31 @@ src/test/kotlin/io/bluetape4k/workshop/graph/social/
 | Vertex | `addPerson returns existing vertex on second call (idempotent)` | ID 동일성 |
 | Vertex | `addCompany creates a new Company vertex` | label, properties 확인 |
 | Edge | `connect creates bidirectional KNOWS edges` | A→B, B→A 양방향 확인 |
+| Edge | `connect creates edges with identical properties on both directions` | since, strength 속성 대칭성 |
 | Edge | `follow creates unidirectional FOLLOWS edge` | 단방향 확인 |
+| Edge | `follow does not create reverse FOLLOWS edge` | Carol→Eve만, Eve→Carol은 없음 |
+| Validation | `addPerson throws on blank personId` | `assertFailsWith<IllegalArgumentException>` |
+| Validation | `getConnectionsWithinDegree throws on degree out of range` | degree=0, degree=7 모두 IllegalArgumentException |
+| Validation | `recommendConnections throws on non-positive limit` | limit=0 → IllegalArgumentException |
 | Query | `getDirectConnections returns 1st degree connections` | Alice → {Bob, Frank} |
+| Query | `getDirectConnections does not include FOLLOWS targets` | Carol getDirectConnections: Eve 미포함 |
 | Query | `getConnectionsWithinDegree returns up to Nth degree` | degree=2: {Bob, Frank, Carol, Dave} |
 | Query | `getNthDegreeConnections returns exactly Nth degree` | N=2: {Carol, Dave} (Bob, Frank 제외) |
 | Query | `getNthDegreeConnections with degree 1 matches direct connections` | degree=1 결과 = getDirectConnections 결과 |
 | Path | `findConnectionPath returns shortest path` | Alice→Carol: length=2 |
+| Path | `findConnectionPath returns null for disconnected vertices` | Frank→Eve: null (KNOWS 경로 없음) |
 | Path | `findAllConnectionPaths returns all paths within depth` | Alice→Carol: 경로 수 >= 1 |
 | Mutual | `findMutualConnections returns shared connections` | Alice-Carol mutual = {Bob} |
 | Mutual | `findMutualConnections returns empty for no shared connections` | Alice-Eve = {} |
-| FOAF | `recommendConnections returns FOAF by mutual count descending` | Alice 추천: Carol(mutual=Bob) |
+| FOAF | `recommendConnections returns FOAF candidates` | Alice 추천: Carol, Dave 포함 |
 | FOAF | `recommendConnections excludes direct connections` | Alice 추천에 Bob, Frank 미포함 |
 | FOAF | `recommendConnections excludes self` | Alice 추천에 Alice 미포함 |
+| FOAF | `recommendConnections excludes candidates with zero mutual connections` | Grace(mutual=0) 미포함 |
 | Colleague | `findColleagues returns coworkers at same company` | Alice 동료: {Bob, Carol} (자신 제외) |
 | Colleague | `findColleagues excludes self` | 결과에 Alice 미포함 |
+| Colleague | `findColleagues includes past employees (isCurrent=false)` | 현재 + 과거 동료 모두 포함 검증 |
 | Lifecycle | `initialize is idempotent` | 2회 호출 예외 없음 |
+| Error | `query methods with nonexistent vertexId return empty result or null` | 빈 List 또는 null (예외 아님) |
 
 ---
 
@@ -437,7 +572,7 @@ src/test/kotlin/io/bluetape4k/workshop/graph/social/
 - [ ] `ConnectionRecommendation.kt`: data class 정의 + `Serializable` + `serialVersionUID`
 - [ ] `SocialNetworkService.kt`: 모든 public method 구현
   - [ ] `initialize`, `addPerson`, `addCompany` (find-or-create)
-  - [ ] `connect` (양방향 KNOWS), `follow` (단방향), `addWorkExperience`
+  - [ ] `connect` (양방향 KNOWS, identical properties on both edges), `follow` (단방향), `addWorkExperience` (with `startDate`)
   - [ ] `getDirectConnections`, `getConnectionsWithinDegree`, `getNthDegreeConnections`
   - [ ] `findConnectionPath`, `findAllConnectionPaths`
   - [ ] `findMutualConnections`, `recommendConnections`
@@ -447,7 +582,9 @@ src/test/kotlin/io/bluetape4k/workshop/graph/social/
 ### 10.2 품질 DoD
 
 - [ ] 모든 public method에 English KDoc (one-line summary + `@param` + code example)
-- [ ] 모든 입력 파라미터에 `requireNotBlank()` / `requirePositiveNumber()` 검증
+- [ ] domain key 파라미터 (`personId`, `companyId`, `role`) 에 `requireNotBlank()` 검증
+- [ ] numeric 파라미터: `strength` → `require(it in 1..10)`, `degree` → `require(it in 1..MAX_TRAVERSAL_DEPTH)`, `limit` → `requirePositiveNumber()`
+- [ ] optional metadata (`title`, `location`, `since`, `startDate`, `industry`) 는 validation 없음 (빈 문자열 허용)
 - [ ] `companion object : KLogging()` (blocking) / `KLoggingChannel()` (suspend)
 - [ ] `data class`에 `Serializable` + `serialVersionUID` 구현
 - [ ] `build.gradle.kts` — abuser-detection과 동일 의존성 구조
@@ -455,13 +592,13 @@ src/test/kotlin/io/bluetape4k/workshop/graph/social/
 
 ### 10.3 테스트 DoD
 
-- [ ] `AbstractSocialNetworkTest`: 19개 이상 테스트 케이스 (섹션 8.5 기준)
+- [ ] `AbstractSocialNetworkTest`: 27개 이상 테스트 케이스 (섹션 8.5 기준)
 - [ ] `AbstractSocialNetworkSuspendTest`: blocking mirror + Flow 수집 검증
 - [ ] TinkerGraph 테스트: `./gradlew :graph-social-network:test` 통과
 - [ ] Neo4j + Memgraph 테스트: `./gradlew :graph-social-network:integrationTest` 통과
 - [ ] `src/test/resources/junit-platform.properties` 존재
 - [ ] `src/test/resources/logback-test.xml` 존재
-- [ ] `SocialNetworkSeed.kt`: 섹션 8.1 토폴로지 구현
+- [ ] `SocialNetworkSeed.kt`: 섹션 8.1 토폴로지 구현 (7인: Alice, Bob, Carol, Dave, Eve, Frank, Grace + 2개 회사)
 
 ### 10.4 문서 DoD
 
@@ -477,9 +614,14 @@ src/test/kotlin/io/bluetape4k/workshop/graph/social/
 |---|--------|------|------|
 | 1 | KNOWS 양방향 double-counting | 중복 edge → 잘못된 neighbor count | KDoc 경고 + 테스트 시드 단방향 호출 |
 | 2 | getNthDegree 집합 차 성능 | N 증가 시 2x traversal | 워크샵 규모 한정; 프로덕션은 BFS level-tracking |
-| 3 | FOAF 소규모 그래프 불안정 | 추천 결과 빈약 | 6인 테스트 시드; 빈 리스트 허용 문서화 |
+| 3 | FOAF 소규모 그래프 불안정 | 추천 결과 빈약 | 7인 테스트 시드(Grace 추가); 빈 리스트 허용 문서화 |
 | 4 | Memgraph weighted path 미지원 | `PathOptions.weightProperty` 사용 불가 | 비가중치 경로만 사용 → 3-backend 동일 테스트 |
 | 5 | `connect()` 비멱등 | 중복 호출 시 edge 4개 | KDoc 명시; 향후 upsert/merge 확장 가능 |
+| 6 | `connect()` 부분 실패 | 비대칭 KNOWS 상태 | Known Limitation; `@BeforeEach dropGraph()`로 초기화 |
+| 7 | `findAllConnectionPaths` 경로 폭발 | 조합 폭발 → 타임아웃 | `maxDepth` 파라미터(기본 5) + require(maxDepth ≤ MAX_TRAVERSAL_DEPTH) |
+| 8 | FOAF N+1 쿼리 | M+2 round-trip | 워크샵 허용; 프로덕션은 단일 Cypher/Gremlin 쿼리 |
+| 9 | `degree` 무제한 | 전체 그래프 traversal → 타임아웃 | `require(degree in 1..MAX_TRAVERSAL_DEPTH)` (MAX=6) |
+| 10 | neighbors() seed 반환 | FOAF/N-degree 결과에 자기 자신 포함 | 모든 알고리즘에서 `- {seed}` 명시적 제거 |
 
 ---
 
@@ -494,8 +636,8 @@ src/test/kotlin/io/bluetape4k/workshop/graph/social/
 | T5 | `SocialNetworkService.kt` — blocking 서비스 전체 구현 | T3, T4 | 중간 |
 | T6 | `SocialNetworkSuspendService.kt` — suspend 서비스 전체 구현 | T5 | 중간 |
 | T7 | `SocialNetworkSeed.kt` — 테스트 시드 유틸 | T5 | 작음 |
-| T8 | `AbstractSocialNetworkTest.kt` — blocking 테스트 스위트 | T5, T7 | 중간 |
-| T9 | `AbstractSocialNetworkSuspendTest.kt` — suspend 테스트 스위트 | T6, T7 | 중간 |
+| T8 | `AbstractSocialNetworkTest.kt` — blocking 테스트 스위트 (27개+ 케이스, unique graphName 필수) | T5, T7 | 중간 |
+| T9 | `AbstractSocialNetworkSuspendTest.kt` — suspend 테스트 스위트 (Flow→List 수집 검증) | T6, T7 | 중간 |
 | T10 | `SocialNetworkTinkerGraphTest.kt` + suspend 버전 | T8, T9 | 작음 |
 | T11 | `Neo4jSocialNetworkTest.kt` + suspend 버전 | T8, T9 | 작음 |
 | T12 | `MemgraphSocialNetworkTest.kt` + suspend 버전 | T8, T9 | 작음 |
@@ -503,3 +645,12 @@ src/test/kotlin/io/bluetape4k/workshop/graph/social/
 | T14 | 통합 테스트 실행 및 통과 확인 | T11, T12 | 중간 |
 | T15 | README.md + README.ko.md 작성 | T13 | 중간 |
 | T16 | Architecture diagram (SVG+PNG) 생성 | T15 | 작음 |
+
+---
+
+## Appendix A. Step 2-R 이터레이션 로그
+
+| Round | Phase 1 (4×sonnet/haiku) | 6-tier (opus) | Phase 2 Critic (opus) | Phase 3 Codex | Spec 반영 |
+|-------|--------------------------|---------------|-----------------------|---------------|-----------|
+| 1 | HIGH: 9건 (Developer 4, User/caller 2, Ops/SRE 3, Security 2) | P0: 1, P1: 9, P2: 7, P3: 2 | HIGH: 6건 (H1-H6) | 진행 중 (background) | addWorkExperience startDate, connect KDoc+partial failure+symmetry, findAllConnectionPaths maxDepth, degree bound, validation 정책, parameter rename, neighbors() contract fix, seed topology(Grace 추가), test cases 19→27개, graphName uniqueness, findColleagues dedup |
+| 2 (pending) | — | — | — | — | Phase 3 Codex 결과 반영 후 재검토 필요 |
