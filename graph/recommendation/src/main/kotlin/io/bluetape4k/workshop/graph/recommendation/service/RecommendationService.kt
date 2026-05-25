@@ -10,6 +10,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.workshop.graph.recommendation.DEFAULT_RECOMMENDATION_LIMIT
 import io.bluetape4k.workshop.graph.recommendation.MAX_RECOMMENDATION_LIMIT
 import io.bluetape4k.workshop.graph.recommendation.model.FollowRecommendation
 import io.bluetape4k.workshop.graph.recommendation.model.ProductRecommendation
@@ -172,11 +173,14 @@ class RecommendationService(
      * @param limit 1..[MAX_RECOMMENDATION_LIMIT]
      * @return ranked list of [ProductRecommendation]; `emptyList()` when user not found or has no purchases
      */
-    fun recommendProducts(userVertexId: GraphElementId, limit: Int = 10): List<ProductRecommendation> {
+    fun recommendProducts(userVertexId: GraphElementId, limit: Int = DEFAULT_RECOMMENDATION_LIMIT): List<ProductRecommendation> {
         limit.requireInRange(1, MAX_RECOMMENDATION_LIMIT, "limit")
 
         val myProducts = ops.neighbors(userVertexId, NeighborOptions(PurchasedLabel.label, Direction.OUTGOING, 1))
-        if (myProducts.isEmpty()) return emptyList()
+        if (myProducts.isEmpty()) {
+            log.debug { "recommendProducts: userVertexId=$userVertexId has no PURCHASED products (user may not exist or has no purchases)" }
+            return emptyList()
+        }
         val myProductIds = myProducts.map { it.id }.toSet()
 
         // candidateMap: candidateProductId → (candidateVertex, Set<coBuyerVertex>)
@@ -228,11 +232,14 @@ class RecommendationService(
      * @param limit 1..[MAX_RECOMMENDATION_LIMIT]
      * @return ranked list of [FollowRecommendation]; `emptyList()` when user not found or has no follows
      */
-    fun recommendFollows(userVertexId: GraphElementId, limit: Int = 10): List<FollowRecommendation> {
+    fun recommendFollows(userVertexId: GraphElementId, limit: Int = DEFAULT_RECOMMENDATION_LIMIT): List<FollowRecommendation> {
         limit.requireInRange(1, MAX_RECOMMENDATION_LIMIT, "limit")
 
         val myFollows = ops.neighbors(userVertexId, NeighborOptions(FollowsLabel.label, Direction.OUTGOING, 1))
-        if (myFollows.isEmpty()) return emptyList()
+        if (myFollows.isEmpty()) {
+            log.debug { "recommendFollows: userVertexId=$userVertexId has no FOLLOWS edges (user may not exist or follows nobody)" }
+            return emptyList()
+        }
         val myFollowIds = myFollows.map { it.id }.toSet()
 
         val candidates = ops.neighbors(userVertexId, NeighborOptions(FollowsLabel.label, Direction.OUTGOING, 2))

@@ -15,7 +15,6 @@ import io.bluetape4k.workshop.graph.recommendation.seed.PROD_KEYBOARD
 import io.bluetape4k.workshop.graph.recommendation.seed.PROD_MOUSE
 import io.bluetape4k.workshop.graph.recommendation.seed.USER_ALICE
 import io.bluetape4k.workshop.graph.recommendation.seed.USER_BOB
-import io.bluetape4k.workshop.graph.recommendation.seed.USER_CAROL
 import io.bluetape4k.workshop.graph.recommendation.seed.USER_DAVE
 import io.bluetape4k.workshop.graph.recommendation.seed.USER_EVE
 import io.bluetape4k.workshop.graph.recommendation.seed.seedRecommendation
@@ -267,7 +266,7 @@ abstract class AbstractRecommendationTest {
         val seed = seedRecommendation(service)
 
         val results = service.recommendProducts(seed.alice.id)
-        val productIds = results.map { it.product.properties["productId"] as? String }
+        val productIds = results.map { it.product.properties["productId"]?.toString() }
 
         // headphones(3) > keyboard(1) = mouse(1); tie-break: keyboard < mouse alphabetically
         productIds shouldBeEqualTo listOf(PROD_HEADPHONES, PROD_KEYBOARD, PROD_MOUSE)
@@ -287,7 +286,6 @@ abstract class AbstractRecommendationTest {
 
     @Test
     fun `recommendProducts user with no purchases returns empty`() {
-        // frank has no connections to alice — but actually we need a user with truly no purchases
         val isolated = service.addUser("isolated", "Isolated User")
 
         val results = service.recommendProducts(isolated.id)
@@ -378,6 +376,7 @@ abstract class AbstractRecommendationTest {
 
         val results = service.recommendFollows(seed.alice.id)
 
+        results shouldHaveSize 2
         results.forEach { rec ->
             rec.mutualFollowCount shouldBeEqualTo 1
         }

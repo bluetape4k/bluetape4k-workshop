@@ -10,6 +10,7 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
+import io.bluetape4k.workshop.graph.recommendation.DEFAULT_RECOMMENDATION_LIMIT
 import io.bluetape4k.workshop.graph.recommendation.MAX_RECOMMENDATION_LIMIT
 import io.bluetape4k.workshop.graph.recommendation.model.FollowRecommendation
 import io.bluetape4k.workshop.graph.recommendation.model.ProductRecommendation
@@ -167,7 +168,7 @@ class RecommendationSuspendService(
      * @param limit 1..[MAX_RECOMMENDATION_LIMIT]
      * @return ranked list of [ProductRecommendation]; `emptyList()` when user not found or has no purchases
      */
-    suspend fun recommendProducts(userVertexId: GraphElementId, limit: Int = 10): List<ProductRecommendation> {
+    suspend fun recommendProducts(userVertexId: GraphElementId, limit: Int = DEFAULT_RECOMMENDATION_LIMIT): List<ProductRecommendation> {
         limit.requireInRange(1, MAX_RECOMMENDATION_LIMIT, "limit")
 
         val myProducts = ops.neighbors(userVertexId, NeighborOptions(PurchasedLabel.label, Direction.OUTGOING, 1))
@@ -219,7 +220,7 @@ class RecommendationSuspendService(
      * @param limit 1..[MAX_RECOMMENDATION_LIMIT]
      * @return ranked list of [FollowRecommendation]; `emptyList()` when user not found or has no follows
      */
-    suspend fun recommendFollows(userVertexId: GraphElementId, limit: Int = 10): List<FollowRecommendation> {
+    suspend fun recommendFollows(userVertexId: GraphElementId, limit: Int = DEFAULT_RECOMMENDATION_LIMIT): List<FollowRecommendation> {
         limit.requireInRange(1, MAX_RECOMMENDATION_LIMIT, "limit")
 
         val myFollows = ops.neighbors(userVertexId, NeighborOptions(FollowsLabel.label, Direction.OUTGOING, 1))
