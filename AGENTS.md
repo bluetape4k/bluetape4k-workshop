@@ -58,3 +58,16 @@ Root README visual assets live under `docs/assets/`.
   dependencies from `compileOnly`/`runtimeOnly` where the repo already does so.
 - Common bluetape4k modules include logging, JUnit5, coroutines, Exposed, and
   Testcontainers.
+
+## Dependency Version Management (MANDATORY)
+
+Workshop modules are **consumer projects**, not bluetape4k library modules.
+Use only `bluetape4k-dependencies` BOM for version management.
+
+- **DO**: `platform(libs.bluetape4k.dependencies)` at root — this governs all `io.github.bluetape4k.*` versions
+- **DO**: Declare module aliases without version in `libs.versions.toml` (resolved via BOM)
+- **DON'T**: Import individual library BOMs (e.g., `platform(libs.bluetape4k.graph.bom)`)
+- **DON'T**: Pin explicit bluetape4k module versions in `libs.versions.toml`
+
+Reason: `bluetape4k-dependencies` overrides individual library BOMs in Gradle's version resolution.
+Importing both creates redundancy and version confusion — the individual BOM may silently lose.

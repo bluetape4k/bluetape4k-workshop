@@ -27,10 +27,8 @@ tasks.register<Test>("integrationTest") {
 }
 
 dependencies {
-    // Graph BOM — must be first so version-less aliases resolve correctly.
-    implementation(platform(libs.bluetape4k.graph.bom))
-
     // Graph core + TinkerGraph (in-memory, no Docker needed for default tests)
+    // Version managed by bluetape4k-dependencies BOM (currently 0.4.1)
     implementation(libs.bluetape4k.graph.core)
     implementation(libs.bluetape4k.graph.tinkerpop)
 
