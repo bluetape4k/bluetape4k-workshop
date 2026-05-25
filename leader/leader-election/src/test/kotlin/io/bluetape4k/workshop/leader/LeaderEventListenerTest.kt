@@ -85,6 +85,10 @@ class LeaderEventListenerTest : AbstractLeaderElectionTest() {
             }
         }
 
+        // Allow the SharedFlow collector to subscribe before emitting.
+        // SharedFlow has replay=0; events emitted before subscription are lost.
+        Thread.sleep(100)
+
         listeningElector.runIfLeader(lockName) { "work" }
 
         // Allow the shared flow emission to propagate to the collector.

@@ -102,7 +102,7 @@ class LeaderElectionConfig {
      */
     @Bean
     fun suspendLeaderElector(
-        lettuceSuspendConnection: StatefulRedisConnection<String, String>,
+        @Qualifier("lettuceSuspendConnection") lettuceSuspendConnection: StatefulRedisConnection<String, String>,
         props: LeaderElectionProperties,
     ): LettuceSuspendLeaderElector = LettuceSuspendLeaderElector(
         connection = lettuceSuspendConnection,

@@ -5,8 +5,8 @@ import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.leader.LockAssert
 import io.bluetape4k.workshop.leader.job.LockAssertJob
+import kotlin.test.assertFailsWith
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import java.util.UUID
 
 /**
@@ -36,7 +36,7 @@ class LockAssertTest : AbstractLeaderElectionTest() {
 
     @Test
     fun `assertLocked throws IllegalStateException outside runIfLeader`() {
-        assertThrows<IllegalStateException> {
+        assertFailsWith<IllegalStateException> {
             LockAssert.assertLocked()
         }
     }
