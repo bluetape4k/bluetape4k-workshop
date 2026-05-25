@@ -4,85 +4,13 @@
 
 업로드된 이미지를 검증하고, 원본을 저장하고, Java 25 libvips로 WebP 파생 이미지를 생성한 뒤, 모든 객체를 Bluetape4k `ImageStorage`로 저장하고 unsigned public URL을 반환하는 Spring Boot 4 고급 예제입니다.
 
-## Architecture Diagram
+## 워크플로우
 
-```mermaid
-flowchart LR
-    subgraph Edge["HTTP edge"]
-        Client[HTTP client]
-        Controller[ImageDerivativesController]
-    end
+![Image Upload Workflow](../../docs/images/readme-diagrams/image-processing-advanced-workflow-scenario-01.png)
 
-    subgraph Workflow["Application workflow"]
-        Service[ImageDerivativeWorkflowService]
-        Validator[UploadImageValidator]
-        Keys[ImageKeyFactory]
-        Urls[PublicImageUrlResolver]
-        Metrics[Micrometer metrics]
-    end
+## 아키텍처
 
-    subgraph Bluetape4k["Bluetape4k image stack"]
-        Processor[FfmVipsDerivativeProcessor]
-        Runtime[FfmVipsRuntime<br/>Java 25 + libvips]
-        Vips[VipsImage<br/>thumbnail + WebP encode]
-        Storage[ImageStorage abstraction]
-        Health[ImageStorageHealthIndicator]
-    end
-
-    subgraph Backends["Storage backends"]
-        S3[S3ImageStorage<br/>public bucket or CDN]
-        Local[LocalImageStorage<br/>temp directory]
-        PublicUrl[Unsigned public URLs]
-        Actuator[Actuator /actuator/metrics]
-    end
-
-    Client -->|multipart file| Controller --> Service
-    Service --> Validator
-    Service --> Keys
-    Service --> Processor
-    Service --> Storage
-    Service --> Urls
-    Service --> Metrics
-    Processor --> Runtime --> Vips
-    Storage -->|prod| S3
-    Storage -->|dev/test| Local
-    Storage --> Health
-    Urls --> PublicUrl
-    Metrics --> Actuator
-```
-
-## Sequence Diagram
-
-```mermaid
-sequenceDiagram
-    participant C as Client
-    participant API as ImageDerivativesController
-    participant S as WorkflowService
-    participant V as UploadImageValidator
-    participant P as FfmVipsDerivativeProcessor
-    participant ST as ImageStorage
-    participant U as PublicImageUrlResolver
-
-    C->>API: POST /api/images/derivatives (multipart file)
-    API->>S: processUpload(file)
-    S->>V: validate content-type, magic bytes, and size
-    V-->>S: UploadOptions
-    S->>P: process(bytes, imageId)
-    P->>P: init FfmVipsRuntime lazily
-    P->>P: decode original with maxPixels guard
-    par bounded variant workers
-        P->>P: generate thumb/card/detail WebP variants
-    end
-    P-->>S: dimensions + variant bytes
-    S->>ST: upload original
-    loop configured variants
-        S->>ST: upload variant
-    end
-    S->>U: resolve object keys
-    U-->>S: unsigned public URLs
-    S-->>API: response metadata
-    API-->>C: 201 JSON
-```
+![Image Processing Architecture](../../docs/images/readme-diagrams/image-processing-advanced-workflow-architecture-01.png)
 
 ## Used Bluetape4k Features
 

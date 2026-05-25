@@ -8,20 +8,9 @@
 
 Repository 쿼리, 캐시 키, 락 키, rate-limit 버킷이 공용 리소스 ID만 사용하면 테넌트 간 데이터가 새어 나갈 수 있습니다. 이 모듈은 H2, 인메모리 lock, fixed-window rate-limit bucket으로 실행 환경을 가볍게 유지하고, 테스트로 격리 경계를 증명합니다.
 
-## 아키텍처
+## 시나리오
 
-```mermaid
-flowchart LR
-    Client["Tenant caller"] --> Service["TenantInvoiceService"]
-    Service --> Repo["TenantInvoiceRepository"]
-    Service --> Unsafe["UnsafeInvoiceRepository baseline"]
-    Service --> Cache["TenantInvoiceCache"]
-    Service --> Lock["TenantLockRegistry"]
-    Service --> Rate["TenantRateLimiter"]
-    Service --> Metrics["TenantMetrics"]
-    Repo --> H2[("H2 + Exposed")]
-    Unsafe --> H2
-```
+![Tenant Data Isolation](../../docs/images/readme-diagrams/multi-tenant-data-isolation-scenario-01.png)
 
 ## 주요 구성
 

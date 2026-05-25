@@ -8,20 +8,9 @@ Advanced Spring Boot workshop for tenant-safe data access, cache keys, lock keys
 
 Tenant isolation fails when a repository query, cache key, lock key, or rate-limit bucket uses only a shared resource ID. This module keeps the infrastructure lightweight with H2, in-memory locks, and fixed-window rate-limit buckets, then proves the isolation boundary with executable tests.
 
-## Architecture
+## Scenario
 
-```mermaid
-flowchart LR
-    Client["Tenant caller"] --> Service["TenantInvoiceService"]
-    Service --> Repo["TenantInvoiceRepository"]
-    Service --> Unsafe["UnsafeInvoiceRepository baseline"]
-    Service --> Cache["TenantInvoiceCache"]
-    Service --> Lock["TenantLockRegistry"]
-    Service --> Rate["TenantRateLimiter"]
-    Service --> Metrics["TenantMetrics"]
-    Repo --> H2[("H2 + Exposed")]
-    Unsafe --> H2
-```
+![Tenant Data Isolation](../../docs/images/readme-diagrams/multi-tenant-data-isolation-scenario-01.png)
 
 ## Main Components
 
