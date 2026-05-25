@@ -111,19 +111,21 @@ try {
 
 | Step value | When emitted | Status | Payload |
 |---|---|---|---|
-| `VALIDATION` | After checksum computed, before T1 | `STARTED` or `SKIPPED` | `{checksum, byteSize}` |
-| `JOB_STARTED` | After T1 commits | `COMPLETED` | `{assetId, jobId, assetStatus}` |
+| `VALIDATION` | Immediately after T1 commits (jobId is now known) | `COMPLETED` | `{checksum, byteSize, originalFilename}` |
 | `VIPS_PROCESSING` | After VIPS returns (derivative list computed) | `COMPLETED` | `{variantCount, durationMs}` |
 | `S3_UPLOAD` | After each S3 `putObject` returns | `COMPLETED` or `FAILED` | `{s3Key, variantName, byteSize}` |
 | `JOB_COMPLETED` | After T2 commits | `COMPLETED` | `{assetId, jobId, objectCount}` |
 | `JOB_FAILED` | After T3 commits (in catch block) | `FAILED` | `{errorCode, errorMessage}` |
 
+> **Note**: `JOB_STARTED` has been merged into T1 metadata; the first event in the job's event log is `VALIDATION`, emitted immediately after T1 so that `jobId` is always available.  
+> **READY short-circuit**: when `recordJobStart()` returns `alreadyExists=true`, no new job is created and no events are emitted.
+
 **Event write rules**:
-- Each step event is written in its own `REQUIRES_NEW` transaction (mini-tx from §3.1).
-- Event write failure (mini-tx throws) is logged and suppressed; it must not prevent the main flow from continuing or the original exception from propagating.
+- Each step event is written in its own `REQUIRES_NEW` mini-transaction (from §3.1).
+- Event write failure (mini-tx throws) is **suppressed**: log the throwable via `log.warn(e) { "Event append failed: step=$step jobId=$jobId" }`, increment Micrometer counter `image.processing.event.append.failed`. The main saga flow must continue and the original exception (if any) must still propagate unchanged.
 - `payload_json` uses `jacksonb<Map<String, Any?>>()` Exposed column type.
 - `message` is a free-text human-readable summary (≤255 chars, no stack traces).
-- `VALIDATION` event is emitted as `SKIPPED` when `status=READY` short-circuit fires (no new job created).
+- `ImageProcessingEventStatus` enum values: `COMPLETED | FAILED | SKIPPED`. (`STARTED` removed — no step uses it; `SKIPPED` reserved for future deduplication of already-existing S3 objects on retry.)
 
 ### 3.4 NoopImagePersistenceService (test fake — test source only)
 
@@ -348,7 +350,7 @@ data class ImageObjectInput(
 **Status enum clarification** (by design — intentional separation):
 - `ImageAssetStatus` (`image_assets.status`): `PROCESSING | READY | FAILED`
 - `ImageJobStatus` (`image_processing_jobs.status`): `RUNNING | SUCCEEDED | FAILED`
-- `ImageProcessingEventStatus` (`image_processing_events.status`): `STARTED | COMPLETED | FAILED | SKIPPED`
+- `ImageProcessingEventStatus` (`image_processing_events.status`): `COMPLETED | FAILED | SKIPPED` (`STARTED` removed — no step uses it)
 
 The `event.status` enum is distinct because events are progress markers (they can be `STARTED`, `COMPLETED`, or `FAILED` for the *step*), whereas asset/job status tracks the overall lifecycle state.
 
@@ -473,7 +475,7 @@ Each DoD criterion must have at least one named integration test.
 | GET-404 | GET /images/{unknown-id} → 404 ProblemDetail | `ImageAssetEndpointTest` | Response status 404, Content-Type `application/problem+json` |
 | GET-history | GET /history returns job + events | `ImageAssetEndpointTest` | Response jobs list non-empty; first job has events with step names |
 | DB-init | DatabaseInitializer creates all 4 tables | `ImagePersistenceServiceImplTest` | On Spring context start, all 4 tables queryable via `SELECT COUNT(*) FROM ...` |
-| Event-success-path | Successful upload emits all 6 step events in order | `ImagePersistenceServiceImplTest` | After full saga: `image_processing_events` rows for `VALIDATION→JOB_STARTED→VIPS_PROCESSING→S3_UPLOAD(×N)→JOB_COMPLETED`, ordered by `created_at`; each has non-null `step`, `status=COMPLETED` |
+| Event-success-path | Successful upload emits all 5 step events in order | `ImagePersistenceServiceImplTest` | After full saga: `image_processing_events` rows for `VALIDATION→VIPS_PROCESSING→S3_UPLOAD(×N)→JOB_COMPLETED`, ordered by `created_at`; each has non-null `step`, `status=COMPLETED`; total row count = 3 + N (where N = variant count + 1 for original) |
 | Event-failure-path | Failed upload emits `JOB_FAILED` event | `ImagePersistenceServiceImplTest` | After T3: one `image_processing_events` row with `step=JOB_FAILED`, `status=FAILED`, non-null `message` |
 | Event-mini-tx-suppression | Event mini-tx throws → main flow unaffected | `ImagePersistenceServiceImplTest` | Spy/mock `appendEvent` to throw; call `recordJobStart()` → no exception propagated; main saga result is valid |
 | Concurrent-checksum-race | Two simultaneous uploads of same checksum → graceful | `ImagePersistenceServiceImplTest` | Launch 2 coroutines calling `recordJobStart()` with same checksum concurrently; one gets `alreadyExists=true` or same `assetId`; no unhandled DB exception; `image_assets` count = 1 |
