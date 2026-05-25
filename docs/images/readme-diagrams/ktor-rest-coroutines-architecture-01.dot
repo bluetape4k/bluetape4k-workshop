@@ -1,48 +1,56 @@
 digraph KtorRestCoroutines {
   rankdir=TB;
-  node [shape=box, style=rounded, fontname="Arial"];
-  edge [fontname="Arial", fontsize=10];
+  node [shape=box, style="rounded,filled", fontname="Arial", fontsize=11];
+  edge [fontname="Arial", fontsize=9];
+  newrank=true;
+  nodesep=0.8;
+  ranksep=1.2;
 
-  // External
-  client [label="HTTP Client"];
-
-  // Ktor Application layer
-  subgraph cluster_ktor {
-    label="Ktor Application (Netty)";
-    style=rounded;
+  // Ktor Application
+  subgraph cluster_app {
+    label="Ktor Application (Netty)"; style=rounded; color="#C8D4E4"; fillcolor="#F0F4FA";
 
     subgraph cluster_plugins {
-      label="Plugins";
-      calllog [label="CallLogging"];
-      content_neg [label="ContentNegotiation\n(kotlinx.serialization)"];
-      sse_plugin [label="SSE"];
-      status_pages [label="StatusPages"];
+      label="Plugins"; style=rounded; color="#E8D5A0"; fillcolor="#FFF8E1";
+      CallLogging [label="CallLogging", fillcolor="#FFF3D9"];
+      ContentNegotiation [label="ContentNegotiation\nkotlinx.serialization", fillcolor="#FFF3D9"];
+      SSE [label="SSE", fillcolor="#FFF3D9"];
+      StatusPages [label="StatusPages", fillcolor="#FFF3D9"];
     }
 
     subgraph cluster_routes {
-      label="Routes";
-      book_routes [label="BookRoutes\n/books CRUD\n/books/export NDJSON\n/books/stream SSE"];
-      health_routes [label="HealthRoutes\n/health"];
+      label="Routes"; style=rounded; color="#B0DAC0"; fillcolor="#EAF7EF";
+      BookRoutes [label="BookRoutes\nCRUD · export · stream", fillcolor="#EAF7EF"];
+      HealthRoutes [label="HealthRoutes\n/health", fillcolor="#EAF7EF"];
     }
   }
 
-  // Service layer
-  service [label="BookService\n(validation)"];
+  // External
+  HTTPClient [label="HTTP Client", fillcolor="#E0ECFF", color="#4A7ADB"];
 
-  // Repository layer
-  repo_if [label="BookRepository\n(interface)"];
-  repo_impl [label="InMemoryBookRepository\nConcurrentHashMap\n+ MutableSharedFlow"];
+  // Service
+  BookService [label="BookService\nvalidation · CRUD · stream()", fillcolor="#E9F7F6", color="#45A7A1"];
 
   // Support
-  jackson3 [label="Jackson3Support\n(NDJSON export)"];
-  domain [label="Book / DomainError\n(domain model)"];
+  Jackson3Support [label="Jackson3Support\nNDJSON /books/export", fillcolor="#FFF8E1", color="#EAB308"];
+
+  // Repository
+  BookRepository [label="BookRepository\ninterface", fillcolor="#F1ECFF", color="#8A72D6"];
+  InMemoryBookRepository [label="InMemoryBookRepository\nConcurrentHashMap\n+ MutableSharedFlow<Book>", fillcolor="#F1ECFF", color="#8A72D6"];
+
+  // Domain
+  DomainModel [label="Domain Model\nBook · DomainError", fillcolor="#FDECEF", color="#DC6B82"];
+
+  // SharedFlow detail
+  SharedFlow [label="MutableSharedFlow<Book>\nbuffer=64 · overflow=SUSPEND\ntimeout=5s", fillcolor="#E8F3FF", color="#5B8DEF"];
 
   // Edges
-  client -> book_routes;
-  client -> health_routes;
-  book_routes -> service;
-  book_routes -> jackson3;
-  service -> repo_if;
-  repo_if -> repo_impl;
-  service -> domain;
+  HTTPClient -> BookRoutes;
+  HTTPClient -> HealthRoutes;
+  BookRoutes -> BookService;
+  BookRoutes -> Jackson3Support;
+  BookService -> BookRepository;
+  BookRepository -> InMemoryBookRepository;
+  InMemoryBookRepository -> SharedFlow;
+  BookService -> DomainModel [style=dashed];
 }

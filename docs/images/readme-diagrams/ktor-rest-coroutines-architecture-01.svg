@@ -1,114 +1,115 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="820" viewBox="0 0 1200 820" role="img" aria-label="Ktor REST Coroutines Architecture">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="880" viewBox="0 0 1200 880" role="img" aria-label="Ktor REST Coroutines Architecture">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
   <marker id="arrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
     <path d="M2,2 L12,7 L2,12 Z" fill="#758297"/>
   </marker>
+  <marker id="arrowDashed" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+    <path d="M2,2 L12,7 L2,12 Z" fill="#DC6B82"/>
+  </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
     .title{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:36px;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:15px;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:21px;fill:#102033}
-    .mono{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:13px;fill:#536273}
-    .bandlabel{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:16px;fill:#536273}
+    .subtitle{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:14px;fill:#536273}
+    .label{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:20px;fill:#102033}
+    .mono{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:12px;fill:#536273}
+    .bandlabel{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:15px;fill:#536273}
     .card{stroke-width:2;filter:url(#shadow)}
     .line{stroke:#758297;stroke-width:2;fill:none;marker-end:url(#arrow)}
+    .useline{stroke:#DC6B82;stroke-width:1.8;fill:none;marker-end:url(#arrowDashed);stroke-dasharray:6,3}
   </style>
 </defs>
-<rect class="canvas" width="1200" height="820"/>
-<rect class="frame" x="28" y="24" width="1144" height="772" rx="20"/>
+<rect class="canvas" width="1200" height="880"/>
+<rect class="frame" x="28" y="24" width="1144" height="832" rx="20"/>
 
 <text class="title" x="52" y="68">Ktor REST Coroutines</text>
 <text class="subtitle" x="52" y="92">Ktor 3 + Netty + kotlinx.serialization · Book Catalog REST API with SSE + NDJSON</text>
 
 <!-- HTTP Client -->
-<g transform="translate(240,112)">
-  <rect class="card" x="0" y="0" width="160" height="52" rx="12" fill="#E0ECFF" stroke="#4A7ADB"/>
-  <text class="label" x="80" y="34" text-anchor="middle">HTTP Client</text>
+<g transform="translate(380,112)">
+  <rect class="card" x="0" y="0" width="180" height="52" rx="12" fill="#E0ECFF" stroke="#4A7ADB"/>
+  <text class="label" x="90" y="34" text-anchor="middle">HTTP Client</text>
 </g>
 
 <!-- Ktor Application frame -->
-<rect x="52" y="200" width="580" height="168" rx="14" fill="#F0F4FA" stroke="#C8D4E4" stroke-width="1.2"/>
-<text class="bandlabel" x="68" y="224">Ktor Application (Netty)</text>
+<rect x="52" y="200" width="700" height="200" rx="14" fill="#F0F4FA" stroke="#C8D4E4" stroke-width="1.2"/>
+<text class="bandlabel" x="70" y="224">Ktor Application (Netty)</text>
 
 <!-- Plugin band -->
-<rect x="68" y="234" width="548" height="40" rx="8" fill="#FFF8E1" stroke="#E8D5A0" stroke-width="1"/>
-<text class="mono" x="82" y="260">Plugins:</text>
-<g transform="translate(150,238)"><rect x="0" y="0" width="110" height="32" rx="6" fill="#FFF3D9" stroke="#D6A441" stroke-width="1.5"/><text class="mono" x="55" y="21" text-anchor="middle" style="fill:#102033">CallLogging</text></g>
-<g transform="translate(270,238)"><rect x="0" y="0" width="130" height="32" rx="6" fill="#FFF3D9" stroke="#D6A441" stroke-width="1.5"/><text class="mono" x="65" y="21" text-anchor="middle" style="fill:#102033">ContentNeg</text></g>
-<g transform="translate(410,238)"><rect x="0" y="0" width="56" height="32" rx="6" fill="#FFF3D9" stroke="#D6A441" stroke-width="1.5"/><text class="mono" x="28" y="21" text-anchor="middle" style="fill:#102033">SSE</text></g>
-<g transform="translate(476,238)"><rect x="0" y="0" width="120" height="32" rx="6" fill="#FFF3D9" stroke="#D6A441" stroke-width="1.5"/><text class="mono" x="60" y="21" text-anchor="middle" style="fill:#102033">StatusPages</text></g>
+<rect x="68" y="234" width="668" height="48" rx="8" fill="#FFF8E1" stroke="#E8D5A0" stroke-width="1"/>
+<text class="mono" x="82" y="264">Plugins:</text>
+<g transform="translate(150,240)"><rect x="0" y="0" width="130" height="36" rx="6" fill="#FFF3D9" stroke="#D6A441" stroke-width="1.5"/><text class="mono" x="65" y="23" text-anchor="middle" style="fill:#102033">CallLogging</text></g>
+<g transform="translate(296,240)"><rect x="0" y="0" width="160" height="36" rx="6" fill="#FFF3D9" stroke="#D6A441" stroke-width="1.5"/><text class="mono" x="80" y="23" text-anchor="middle" style="fill:#102033">ContentNegotiation</text></g>
+<g transform="translate(472,240)"><rect x="0" y="0" width="60" height="36" rx="6" fill="#FFF3D9" stroke="#D6A441" stroke-width="1.5"/><text class="mono" x="30" y="23" text-anchor="middle" style="fill:#102033">SSE</text></g>
+<g transform="translate(548,240)"><rect x="0" y="0" width="120" height="36" rx="6" fill="#FFF3D9" stroke="#D6A441" stroke-width="1.5"/><text class="mono" x="60" y="23" text-anchor="middle" style="fill:#102033">StatusPages</text></g>
 
 <!-- Route cards -->
-<g transform="translate(68,290)">
-  <rect class="card" x="0" y="0" width="280" height="64" rx="10" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="label" x="20" y="36">BookRoutes</text>
-  <text class="mono" x="190" y="36">CRUD · export · stream</text>
+<g transform="translate(68,300)">
+  <rect class="card" x="0" y="0" width="320" height="72" rx="12" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="label" x="160" y="28" text-anchor="middle">BookRoutes</text>
+  <text class="mono" x="160" y="50" text-anchor="middle">CRUD · /books/export · /books/stream</text>
 </g>
-<g transform="translate(368,290)">
-  <rect class="card" x="0" y="0" width="200" height="64" rx="10" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="label" x="20" y="36">HealthRoutes</text>
-</g>
-
-<!-- BookService -->
-<g transform="translate(68,420)">
-  <rect class="card" x="0" y="0" width="280" height="72" rx="12" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="label" x="140" y="30" text-anchor="middle">BookService</text>
-  <text class="mono" x="140" y="52" text-anchor="middle">validation · CRUD · stream</text>
+<g transform="translate(420,300)">
+  <rect class="card" x="0" y="0" width="240" height="72" rx="12" fill="#EAF7EF" stroke="#58A978"/>
+  <text class="label" x="120" y="28" text-anchor="middle">HealthRoutes</text>
+  <text class="mono" x="120" y="50" text-anchor="middle">/health liveness probe</text>
 </g>
 
-<!-- Jackson3Support -->
-<g transform="translate(680,420)">
-  <rect class="card" x="0" y="0" width="280" height="72" rx="12" fill="#FFF8E1" stroke="#EAB308"/>
-  <text class="label" x="140" y="30" text-anchor="middle">Jackson3Support</text>
-  <text class="mono" x="140" y="52" text-anchor="middle">NDJSON /books/export</text>
+<!-- Service layer -->
+<g transform="translate(68,446)">
+  <rect class="card" x="0" y="0" width="320" height="72" rx="12" fill="#E9F7F6" stroke="#45A7A1"/>
+  <text class="label" x="160" y="28" text-anchor="middle">BookService</text>
+  <text class="mono" x="160" y="50" text-anchor="middle">validation · CRUD · stream()</text>
+</g>
+<g transform="translate(680,446)">
+  <rect class="card" x="0" y="0" width="320" height="72" rx="12" fill="#FFF8E1" stroke="#EAB308"/>
+  <text class="label" x="160" y="28" text-anchor="middle">Jackson3Support</text>
+  <text class="mono" x="160" y="50" text-anchor="middle">NDJSON export via respondBytesWriter</text>
 </g>
 
-<!-- BookRepository -->
-<g transform="translate(68,548)">
-  <rect class="card" x="0" y="0" width="280" height="66" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="label" x="140" y="28" text-anchor="middle">BookRepository</text>
-  <text class="mono" x="140" y="48" text-anchor="middle">interface</text>
+<!-- Repository row 1: BookRepository + Domain Model -->
+<g transform="translate(68,568)">
+  <rect class="card" x="0" y="0" width="320" height="72" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="label" x="160" y="28" text-anchor="middle">BookRepository</text>
+  <text class="mono" x="160" y="50" text-anchor="middle">interface</text>
+</g>
+<g transform="translate(680,568)">
+  <rect class="card" x="0" y="0" width="300" height="72" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
+  <text class="label" x="150" y="28" text-anchor="middle">Domain Model</text>
+  <text class="mono" x="150" y="50" text-anchor="middle">Book · DomainError (sealed)</text>
 </g>
 
-<!-- InMemoryBookRepository -->
-<g transform="translate(400,548)">
-  <rect class="card" x="0" y="0" width="340" height="66" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="label" x="170" y="28" text-anchor="middle">InMemoryBookRepository</text>
-  <text class="mono" x="170" y="48" text-anchor="middle">ConcurrentHashMap + SharedFlow</text>
+<!-- Repository row 2: InMemoryBookRepository -->
+<g transform="translate(68,680)">
+  <rect class="card" x="0" y="0" width="400" height="72" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
+  <text class="label" x="200" y="28" text-anchor="middle">InMemoryBookRepository</text>
+  <text class="mono" x="200" y="50" text-anchor="middle">ConcurrentHashMap + MutableSharedFlow&lt;Book&gt;</text>
 </g>
 
-<!-- Domain model -->
-<g transform="translate(800,548)">
-  <rect class="card" x="0" y="0" width="260" height="66" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="label" x="130" y="28" text-anchor="middle">Domain Model</text>
-  <text class="mono" x="130" y="48" text-anchor="middle">Book · DomainError</text>
+<!-- SharedFlow detail -->
+<g transform="translate(68,792)">
+  <rect x="0" y="0" width="400" height="56" rx="12" fill="#E8F3FF" stroke="#5B8DEF" stroke-width="1.5"/>
+  <text class="mono" x="200" y="20" text-anchor="middle" style="fill:#102033;font-size:14px">MutableSharedFlow&lt;Book&gt;</text>
+  <text class="mono" x="200" y="40" text-anchor="middle">buffer=64 · overflow=SUSPEND · emit timeout=5s</text>
 </g>
 
-<!-- SSE SharedFlow -->
-<g transform="translate(400,660)">
-  <rect x="0" y="0" width="340" height="52" rx="10" fill="#E8F3FF" stroke="#5B8DEF" stroke-width="1.5"/>
-  <text class="mono" x="170" y="20" text-anchor="middle" style="fill:#102033;font-size:14px">MutableSharedFlow&lt;Book&gt;</text>
-  <text class="mono" x="170" y="40" text-anchor="middle">buffer=64 · overflow=SUSPEND · timeout=5s</text>
-</g>
-
-<!-- ARROWS -->
+<!-- ===== ARROWS ===== -->
 <!-- Client → Routes -->
-<path class="line" d="M280,164 L280,186 L208,186 L208,288"/>
-<path class="line" d="M360,164 L360,186 L468,186 L468,288"/>
+<path class="line" d="M430,164 L430,186 L228,186 L228,298"/>
+<path class="line" d="M500,164 L500,186 L540,186 L540,298"/>
 
 <!-- BookRoutes → BookService -->
-<path class="line" d="M208,354 L208,418"/>
-<!-- BookRoutes → Jackson3Support (below app frame, right) -->
-<path class="line" d="M300,354 L300,390 L640,390 L640,450 L678,450"/>
+<path class="line" d="M228,372 L228,444"/>
+<!-- BookRoutes → Jackson3Support (below app frame at y=410, avoids HealthRoutes) -->
+<path class="line" d="M228,372 L228,410 L640,410 L640,466 L678,466"/>
 
 <!-- BookService → BookRepository -->
-<path class="line" d="M208,492 L208,546"/>
-<!-- BookRepository → InMemoryBookRepository -->
-<path class="line" d="M348,581 L398,581"/>
-<!-- InMemoryBookRepository → SharedFlow -->
-<path class="line" d="M570,614 L570,658"/>
+<path class="line" d="M228,518 L228,566"/>
+<!-- BookService → Domain (dashed uses, horizontal) -->
+<path class="useline" d="M388,482 L640,482 L640,528 L830,528 L830,566"/>
 
-<!-- BookService → Domain (right from service, down to domain row) -->
-<path class="line" d="M348,456 L380,456 L380,530 L930,530 L930,546"/>
+<!-- BookRepository → InMemoryBookRepository (vertical) -->
+<path class="line" d="M228,640 L228,678"/>
+<!-- InMemoryBookRepository → SharedFlow -->
+<path class="line" d="M268,752 L268,790"/>
 </svg>
