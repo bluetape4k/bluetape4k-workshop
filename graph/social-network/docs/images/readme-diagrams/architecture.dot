@@ -1,0 +1,57 @@
+digraph architecture {
+    rankdir=TB;
+    splines=ortho;
+    node [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=11];
+    edge [fontname="Helvetica", fontsize=10];
+
+    subgraph cluster_schema {
+        label="Schema Layer";
+        style=dashed;
+        color="#8888aa";
+        PersonLabel [label="PersonLabel\n(VertexLabel)", fillcolor="#dce8ff"];
+        CompanyLabel [label="CompanyLabel\n(VertexLabel)", fillcolor="#dce8ff"];
+        KnowsLabel [label="KnowsLabel\n(EdgeLabel)", fillcolor="#ffe8dc"];
+        FollowsLabel [label="FollowsLabel\n(EdgeLabel)", fillcolor="#ffe8dc"];
+        WorksAtLabel [label="WorksAtLabel\n(EdgeLabel)", fillcolor="#ffe8dc"];
+    }
+
+    subgraph cluster_service {
+        label="Service Layer";
+        style=dashed;
+        color="#88aa88";
+        Service [label="SocialNetworkService\n(Blocking)", fillcolor="#d0f0d0"];
+        SuspendService [label="SocialNetworkSuspendService\n(Coroutine / Flow)", fillcolor="#c8f8d0"];
+    }
+
+    subgraph cluster_ops {
+        label="Graph Operations (bluetape4k-graph)";
+        style=dashed;
+        color="#aa8888";
+        GraphOps [label="GraphBlockingOperations", fillcolor="#f8e8d0"];
+        GraphSuspend [label="GraphSuspendOperations", fillcolor="#f8e8d0"];
+    }
+
+    subgraph cluster_backends {
+        label="Backends";
+        style=dashed;
+        color="#888888";
+        TinkerGraph [label="TinkerGraph\n(in-memory)", fillcolor="#f0f0f0"];
+        Neo4j [label="Neo4j\n(Testcontainers)", fillcolor="#f0f0f0"];
+        Memgraph [label="Memgraph\n(Testcontainers)", fillcolor="#f0f0f0"];
+    }
+
+    PersonLabel -> Service [style=invis];
+    CompanyLabel -> Service [style=invis];
+    KnowsLabel -> Service [style=invis];
+    FollowsLabel -> SuspendService [style=invis];
+    WorksAtLabel -> SuspendService [style=invis];
+
+    Service -> GraphOps;
+    SuspendService -> GraphSuspend;
+    GraphOps -> TinkerGraph;
+    GraphOps -> Neo4j;
+    GraphOps -> Memgraph;
+    GraphSuspend -> TinkerGraph;
+    GraphSuspend -> Neo4j;
+    GraphSuspend -> Memgraph;
+}

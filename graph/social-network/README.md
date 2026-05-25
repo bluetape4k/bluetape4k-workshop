@@ -10,6 +10,8 @@ Demonstrates **Person–Company relationship modelling**, **multi-hop BFS traver
 
 ## Architecture
 
+![Module Architecture](docs/images/readme-diagrams/social-network-architecture.png)
+
 ```
 graph/social-network/
 ├── src/main/kotlin/
@@ -34,6 +36,8 @@ graph/social-network/
 ```
 
 ## Graph Schema
+
+![Graph Domain Model](docs/images/readme-diagrams/social-network-domain-model.png)
 
 ### Vertex Labels
 
