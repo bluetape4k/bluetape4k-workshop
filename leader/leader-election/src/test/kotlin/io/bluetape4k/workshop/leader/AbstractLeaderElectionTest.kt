@@ -1,7 +1,9 @@
 package io.bluetape4k.workshop.leader
 
-import io.bluetape4k.leader.lettuce.LettuceLeaderElector
 import io.bluetape4k.leader.LeaderElectionOptions
+import io.bluetape4k.leader.ListeningLeaderElector
+import io.bluetape4k.leader.lettuce.LettuceLeaderElector
+import io.bluetape4k.leader.lettuce.LettuceSuspendLeaderElector
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.testcontainers.storage.RedisServer
 import io.lettuce.core.RedisClient
@@ -48,4 +50,14 @@ abstract class AbstractLeaderElectionTest {
     protected fun newElector(
         options: LeaderElectionOptions = defaultOptions,
     ): LettuceLeaderElector = LettuceLeaderElector(newConnection(), options)
+
+    /** Creates a new [LettuceSuspendLeaderElector] with its own connection and the given options. */
+    protected fun newSuspendElector(
+        options: LeaderElectionOptions = defaultOptions,
+    ): LettuceSuspendLeaderElector = LettuceSuspendLeaderElector(newConnection(), options)
+
+    /** Creates a new [ListeningLeaderElector] wrapping a [LettuceLeaderElector]. */
+    protected fun newListeningElector(
+        options: LeaderElectionOptions = defaultOptions,
+    ): ListeningLeaderElector = ListeningLeaderElector(newElector(options))
 }

@@ -38,7 +38,9 @@ dependencies {
 
     // Test
     testImplementation(project(":shared"))
+    testImplementation(libs.bluetape4k.coroutines)
     testImplementation(libs.bluetape4k.junit5)
+    testImplementation(libs.kotlinx.coroutines.test.lib)
     testImplementation(libs.bluetape4k.testcontainers)
     testImplementation(libs.bluetape4k.assertions)
     testImplementation(libs.spring.boot.starter.test) {
