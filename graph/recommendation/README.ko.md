@@ -197,6 +197,19 @@ val followRecs  = service.recommendFollows(alice.id, limit = 5)
 
 ---
 
+## 알려진 제한사항
+
+이 모듈은 **워크샵 데모** 용도로, 프로덕션 수준의 추천 엔진이 아닙니다. 다음 제한사항은 의도적인 설계 결정으로 투명하게 문서화합니다.
+
+| 제한사항 | 설명 | 프로덕션 대안 |
+|---------|------|------------|
+| **N+1 탐색** | `recommendProducts`는 시드 상품마다, 공동구매자마다 쿼리를 1회씩 발행; `recommendFollows`는 2-hop 후보마다 1회. `limit`은 출력 건수를 제한하지 I/O 호출 횟수를 제한하지 않음 | 전체 탐색을 단일 Cypher / Gremlin 쿼리로 대체 |
+| **`initialize()` TOCTOU** | `graphExists → createGraph` 가 원자적이지 않아, 동시 호출 시 그래프 중복 생성 시도 가능 | 어드바이저리 락 또는 서버 측 upsert 시맨틱 |
+| **런타임 버텍스 타입 검증 없음** | `purchase()`/`follow()`는 전달받은 버텍스 ID가 User/Product 타입인지 런타임에 검증하지 않음. 호출자가 `addUser()`/`addProduct()` 반환 ID를 사용해야 함 | 그래프 백엔드 스키마 제약 |
+| **`CancellationException` 전파** | suspend 서비스 자체는 취소 예외를 올바르게 전파하지만, 하위 `GraphSuspendOperations` 구현이 구조적 동시성을 지원해야 함 | 각 백엔드의 코루틴 계약 확인 |
+
+---
+
 ## 백엔드 지원
 
 | 백엔드 | 클래스 | 비고 |

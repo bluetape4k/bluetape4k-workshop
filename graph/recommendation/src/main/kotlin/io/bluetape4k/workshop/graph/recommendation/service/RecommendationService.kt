@@ -33,6 +33,17 @@ import io.bluetape4k.workshop.graph.recommendation.schema.UserLabel
  * - [recommendFollows] returns `emptyList()` when [userVertexId] is not found or has no follows.
  * - [follow] throws [IllegalArgumentException] when follower equals followee.
  *
+ * ## Known Limitations (workshop demo scope)
+ * - **N+1 traversal**: [recommendProducts] issues one neighbor query per seed product and one per
+ *   co-buyer; [recommendFollows] issues one per depth-2 candidate. The `limit` parameter bounds
+ *   output count, not I/O calls. For large graphs, replace with native Cypher/Gremlin queries.
+ * - **TOCTOU in [initialize]**: The `graphExists → createGraph` check is not atomic and assumes
+ *   a single-instance deployment. Concurrent callers may attempt duplicate creation — acceptable
+ *   for this demo; production code should use advisory locking or server-side upsert semantics.
+ * - **No vertex-type enforcement at runtime**: [purchase] and [follow] accept any
+ *   [io.bluetape4k.graph.model.GraphElementId] without verifying that it belongs to a User or
+ *   Product vertex. Callers are responsible for passing IDs returned by [addUser] / [addProduct].
+ *
  * ## Usage
  * ```kotlin
  * val service = RecommendationService(ops, "recommendation")

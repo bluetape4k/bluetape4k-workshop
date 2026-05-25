@@ -199,6 +199,20 @@ val followRecs  = service.recommendFollows(alice.id, limit = 5)
 
 ---
 
+## Known Limitations
+
+This module is a **workshop demo**, not a production-ready recommendation engine. The following
+constraints are intentional trade-offs documented here for transparency:
+
+| Limitation | Detail | Production alternative |
+|-----------|--------|----------------------|
+| **N+1 traversal** | `recommendProducts` issues one neighbor query per seed product and one per co-buyer; `recommendFollows` issues one per depth-2 candidate. `limit` bounds output, not I/O calls. | Native Cypher / Gremlin query for the full traversal |
+| **TOCTOU in `initialize()`** | `graphExists → createGraph` is not atomic; concurrent callers on a shared backend may attempt duplicate graph creation. | Advisory lock or server-side upsert semantics |
+| **No vertex-type enforcement** | `purchase()` and `follow()` accept any vertex ID without verifying it is a User or Product vertex at runtime. | Schema constraints on the graph backend |
+| **`CancellationException` propagation** | The suspend service propagates `CancellationException` correctly, but underlying `GraphSuspendOperations` implementations must also honor structured concurrency. | Verify each backend's coroutine contract |
+
+---
+
 ## Backend Support
 
 | Backend | Class | Notes |
