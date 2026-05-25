@@ -394,20 +394,26 @@ abstract class AbstractRecommendationTest {
     }
 
     // Test groups (spec Section 9):
-    // 1. Vertex mutators: addUser, addProduct (create + idempotent)
-    // 2. Input validation: blank fields, rating > 5, limit = 0, limit = 101, self-follow
-    // 3. Edge mutators: purchase, follow
+    // 1. Vertex mutators: addUser, addProduct (create + idempotent find-or-create)
+    // 2. Input validation:
+    //    - blank userId, name, productId → IllegalArgumentException
+    //    - rating = -1 → IllegalArgumentException (lower bound)
+    //    - rating = 6 → IllegalArgumentException (upper bound > 5)
+    //    - limit = 0 → IllegalArgumentException
+    //    - limit = 101 → IllegalArgumentException (> MAX_RECOMMENDATION_LIMIT)
+    //    - self-follow (follower == followee) → IllegalArgumentException
+    // 3. Edge mutators: purchase (with/without rating/purchasedAt), follow
     // 4. recommendProducts:
-    //    - alice→headphones(3)/keyboard(1)/mouse(1) with correct ordering
+    //    - alice→headphones(3)/keyboard(1)/mouse(1) with correct descending score ordering
+    //    - alice's own products (laptop/phone/tablet) must NOT appear in results
     //    - user with no purchases → emptyList
-    //    - self-exclusion (alice not in results)
-    //    - limit=1 returns only top result
+    //    - limit=1 returns only headphones (top result)
     //    - non-existent userVertexId → emptyList
     // 5. recommendFollows:
-    //    - alice→dave(1)/eve(1) with tie-break ordering
+    //    - alice→dave(1)/eve(1) with tie-break alphabetical ordering (dave < eve)
+    //    - alice herself and already-followed users must NOT appear in results
     //    - user with no follows → emptyList
-    //    - self-exclusion
-    //    - limit=1 returns only top result
+    //    - limit=1 returns only dave (top tie-break result)
     //    - non-existent userVertexId → emptyList
 }
 ```
@@ -443,7 +449,7 @@ class TinkerGraphRecommendationTest : AbstractRecommendationTest() {
 class Neo4jRecommendationTest : AbstractRecommendationTest() {
     companion object : KLogging() {
         val neo4j = Neo4jServer.Launcher.neo4j
-        val driver by lazy { GraphDatabase.driver(neo4j.boltUrl, neo4j.authToken) }
+        val driver by lazy { GraphDatabase.driver(neo4j.url) }  // no auth — Neo4j test uses no-auth
         val graphOps by lazy { Neo4jGraphOperations(driver) }
     }
     override val graphName = "neo4j_recommendation"
@@ -517,9 +523,9 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     // Test groups — 동일 케이스 수 as T8:
-    // 1. Vertex mutators: suspend addUser, addProduct (create + idempotent)
-    // 2. Input validation: blank fields, rating > 5, limit = 0, limit = 101, self-follow
-    // 3. Edge mutators: suspend purchase, follow
+    // 1. Vertex mutators: suspend addUser, addProduct (create + idempotent find-or-create)
+    // 2. Input validation: blank fields, rating = -1, rating = 6, limit = 0, limit = 101, self-follow
+    // 3. Edge mutators: suspend purchase (with/without rating/purchasedAt), suspend follow
     // 4. recommendProducts (suspend):
     //    - alice→headphones(3)/keyboard(1)/mouse(1) with correct ordering
     //    - user with no purchases → emptyList
@@ -571,7 +577,7 @@ class TinkerGraphRecommendationSuspendTest : AbstractRecommendationSuspendTest()
 class Neo4jRecommendationSuspendTest : AbstractRecommendationSuspendTest() {
     companion object : KLogging() {
         val neo4j = Neo4jServer.Launcher.neo4j
-        val driver by lazy { GraphDatabase.driver(neo4j.boltUrl, neo4j.authToken) }
+        val driver by lazy { GraphDatabase.driver(neo4j.url) }  // no auth — Neo4j test uses no-auth
         val graphOps by lazy { Neo4jGraphSuspendOperations(driver) }
     }
     override val graphName = "neo4j_recommendation_suspend"
@@ -702,3 +708,5 @@ English README + Korean README 동시 작성.
 | Round 1 | Implementer | 0 | 5 | 4 | I1(seed keys), I2(protected seed), I3(T12 seed), I4(Group 3b), I5(service by lazy) | TBD |
 | Round 1 | Architect | 0 | 2 | 1 | A1(SVG+PNG=D5), A2(MAX_RECOMMENDATION_LIMIT 상수) | TBD |
 | Round 1 | **합계** | **0** | **14** | **6** | 14 HIGH 모두 반영, plan 수정 | TBD |
+| Round 1 | Codex (Phase 3) | 0 | 2 | 2 | C1(`neo4j.authToken`→`neo4j.url` P1), C2(purchased exclusion명확화 P2), C3(`rating=-1` 하한 P2) + C-dup(seed/buildorder — already fixed) | TBD |
+| Round 1 | **종합** | **0** | **15 (→1 new)** | **8** | 모든 P0/P1 반영 완료 | TBD |
