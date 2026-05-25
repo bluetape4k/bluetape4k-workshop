@@ -69,7 +69,9 @@ throw originalException
 
 ### 3.2 JDBC Pattern (not R2DBC)
 
-Use blocking `@Transactional` methods on `ImagePersistenceServiceImpl`, bridged from suspend callers via `withContext(Dispatchers.IO)`. R2DBC is excluded because it requires a separate JDBC-based DDL initializer, uses a different transaction model, and conflicts with the existing coroutine + VIPS + S3 design.
+Use blocking JDBC methods via `TransactionTemplate(REQUIRES_NEW)` programmatically on `ImagePersistenceServiceImpl`, bridged from suspend callers via `withContext(Dispatchers.IO)`. R2DBC is excluded because it requires a separate JDBC-based DDL initializer, uses a different transaction model, and conflicts with the existing coroutine + VIPS + S3 design.
+
+> **Implementation rule**: `ImagePersistenceServiceImpl` must NOT use `@Transactional` annotation on the class or its methods. Declare a single field `private val txTemplate = TransactionTemplate(transactionManager).apply { propagationBehavior = TransactionDefinition.PROPAGATION_REQUIRES_NEW }` (with injected `PlatformTransactionManager`). This allows `DataIntegrityViolationException` to be caught OUTSIDE `txTemplate.execute { }` where the transaction is already rolled back.
 
 `CancellationException` handling in service layer:
 ```kotlin
@@ -92,11 +94,11 @@ try {
    - `image_assets.checksum` has a UNIQUE constraint (SHA-256 of raw bytes).
    - T1 `recordJobStart` logic:
      - Query `image_assets` by checksum.
-     - If `status=READY`: short-circuit → return `JobStartResult.AlreadyReady(assetId=existing.id, jobId=-1L)`.
+     - If `status=READY`: short-circuit → return `JobStartResult.AlreadyReady(assetId=existing.id, jobId=-1L, externalId=existing.externalId)`.
      - If `status=PROCESSING`: a concurrent or stale run exists → log + create new job on same asset.
      - If `status=FAILED`: **retry recovery** — update status→PROCESSING, create new job row.
      - If no row: insert new asset.
-   - If `DataIntegrityViolationException` on insert (lost insert race): catch **OUTSIDE the `@Transactional` method** (the transaction has already rolled back before the exception propagates to the caller), re-read by checksum, branch on status.
+   - If `DataIntegrityViolationException` on insert (lost insert race): catch **OUTSIDE the `TransactionTemplate.execute { }` block** (the transaction has already rolled back before the exception propagates to the caller), re-read by checksum, branch on status.
    - **Null branch after re-read** (concurrent delete): If the re-read returns null (asset deleted between insert-fail and re-read), throw `ImageAssetNotFoundException(checksum)` — do NOT return null, do NOT swallow the original `DataIntegrityViolationException`, and do NOT proceed with the saga. Null here is a distinct non-recoverable condition.
 
    > **FAILED-retry concurrent race**: If two retries on the same FAILED asset run concurrently, both read `status=FAILED`, both update→PROCESSING, and both insert a new job row, resulting in two `RUNNING` jobs on the same asset. This is an accepted race condition for the workshop scope. In production, mitigate with a `SELECT … FOR UPDATE` lock on the `image_assets` row before updating status. The duplicate-job scenario is detected by the stale-job monitoring query (§3.6) and resolved via manual remediation or an idempotency window.
@@ -139,7 +141,8 @@ try {
 ### 3.4 NoopImagePersistenceService (test fake — test source only)
 
 `NoopImagePersistenceService` lives in `src/test/kotlin/` — **NOT in `src/main/kotlin/`**. A no-op fake in production source is a Spring bean scanner hazard. The fake must:
-- Return `JobStartResult.NewAsset(assetId=0L, jobId=0L)` from `recordJobStart()`.
+- Return `JobStartResult.NewAsset(assetId=0L, jobId=0L, externalId=UUID.randomUUID().toString())` from `recordJobStart()`.
+  (externalId is non-deterministic per call — acceptable for test fakes; document this if T30 saga tests call it twice.)
 - All other methods are no-ops (no state stored).
 
 Existing tests inject it by name; existing mocked-S3 / mocked-VIPS tests are unaffected.
@@ -265,13 +268,15 @@ src/main/kotlin/.../advanced/
       ImageProcessingJobTable.kt              -- Table (plain, explicit timestamps)
       ImageProcessingEventTable.kt            -- Table (plain, append-only, index)
     ImagePersistenceService.kt                -- interface
-    ImagePersistenceServiceImpl.kt            -- @Service, @Transactional(REQUIRES_NEW) methods
+    ImagePersistenceServiceImpl.kt            -- @Service, TransactionTemplate(REQUIRES_NEW) for write paths (NO @Transactional)
 
 src/test/kotlin/.../advanced/           ← NoopImagePersistenceService HERE (not main)
   persistence/
-    AbstractImagePersistenceTest.kt           -- @SpringBootTest + PostgreSQLServer.Launcher
+    AbstractImagePersistenceTest.kt           -- @SpringBootTest + PostgreSQLServer.Launcher + withTestUser helper
     ImagePersistenceServiceImplTest.kt        -- all saga/idempotency/recovery integration tests
     NoopImagePersistenceService.kt            -- test fake (src/test only)
+  service/
+    ImageDerivativeWorkflowSagaTest.kt        -- T3-propagate + event-suppression saga scenarios (T30)
   web/
     ImageAssetEndpointTest.kt                 -- GET /images/{id} and /history integration tests
 ```
@@ -281,13 +286,16 @@ src/test/kotlin/.../advanced/           ← NoopImagePersistenceService HERE (no
 ```kotlin
 interface ImagePersistenceService {
     /**
-     * T1: Record job start (NOT @Transactional at interface level — implementation uses a
-     * private inner @Transactional(REQUIRES_NEW) method internally, so that
-     * DataIntegrityViolationException can be caught by the public method OUTSIDE the transaction).
+     * T1: Record job start (NOT @Transactional — implementation uses TransactionTemplate(REQUIRES_NEW)
+     * programmatically, so DataIntegrityViolationException can be caught OUTSIDE the
+     * TransactionTemplate.execute { } block after the transaction is already rolled back).
      * Creates or recovers image_assets row + new image_processing_jobs row.
      *
-     * May throw DataIntegrityViolationException if lost-insert race is not recoverable
-     * (asset deleted between insert-fail and re-read → throws ImageAssetNotFoundException).
+     * May throw ImageAssetNotFoundException if lost-insert race is not recoverable
+     * (asset deleted between insert-fail and re-read — do not return null in this case).
+     *
+     * Note: UserContext.withUser("image-processing-service") { ... } MUST wrap the entire method body,
+     * including all TransactionTemplate.execute { } calls and recovery branches.
      */
     fun recordJobStart(
         assetMetadata: AssetMetadataInput,
@@ -377,27 +385,48 @@ data class JobFailureReason(val errorCode: String, val errorMessage: String) : S
 sealed interface JobStartResult : Serializable {
     val assetId: Long
     val jobId: Long
+    val externalId: String  // UUID v4 string; used as POST response imageId (R10)
 
     /** Brand-new asset inserted; normal processing. */
-    data class NewAsset(override val assetId: Long, override val jobId: Long) : JobStartResult {
+    data class NewAsset(
+        override val assetId: Long,
+        override val jobId: Long,
+        override val externalId: String,
+    ) : JobStartResult {
         companion object { const val serialVersionUID = 1L }
     }
-    /** Asset with READY status found; caller should skip processing. */
-    data class AlreadyReady(override val assetId: Long, override val jobId: Long = -1L) : JobStartResult {
+    /**
+     * Asset with READY status found; caller must skip processing and return cached response.
+     * jobId = -1L (no new job created). externalId = existing asset's external_id.
+     * NO events are emitted in this short-circuit path.
+     */
+    data class AlreadyReady(
+        override val assetId: Long,
+        override val jobId: Long = -1L,
+        override val externalId: String,
+    ) : JobStartResult {
         companion object { const val serialVersionUID = 1L }
     }
     /** A concurrent or stale PROCESSING run exists; new job created on same asset. */
-    data class ConcurrentProcessing(override val assetId: Long, override val jobId: Long) : JobStartResult {
+    data class ConcurrentProcessing(
+        override val assetId: Long,
+        override val jobId: Long,
+        override val externalId: String,
+    ) : JobStartResult {
         companion object { const val serialVersionUID = 1L }
     }
-    /** Previous FAILED asset recovered; status reset to PROCESSING, new job created. */
-    data class RecoveredFromFailed(override val assetId: Long, override val jobId: Long) : JobStartResult {
+    /** Previous FAILED asset recovered; status reset to PROCESSING, new job created. Emits VALIDATION event. */
+    data class RecoveredFromFailed(
+        override val assetId: Long,
+        override val jobId: Long,
+        override val externalId: String,
+    ) : JobStartResult {
         companion object { const val serialVersionUID = 1L }
     }
 }
 
 data class ImageObjectInput(
-    val kind: ImageObjectKind,        // defined in existing schema (ORIGINAL | VARIANT) — not a new type
+    val kind: ImageObjectKind,        // NEW type created in T7 (not found in issue #93 codebase — grep-verified)
     val variantName: String?,         // null for ORIGINAL
     val s3Key: String,
     val publicUrl: String,
@@ -409,9 +438,9 @@ data class ImageObjectInput(
 }
 ```
 
-**`ImageObjectKind` source**: defined in the existing `advanced-workflow` codebase (from issue #93). New code reuses it directly; no duplicate definition.
+**`ImageObjectKind` source**: NOT found in the existing `advanced-workflow` codebase (grep-verified against issue #93 code). Must be created as a new type in T7. Plan R1 documents this discrepancy.
 
-**`AuditorAware<String>` configuration**: A `@Bean fun auditorAware(): AuditorAware<String> = AuditorAware { Optional.of("image-processing-service") }` must be declared in `ImagePersistenceAutoConfiguration` (or a dedicated `@Configuration` class within the persistence package). Without this bean, `LongAuditableJdbcRepository` cannot populate `created_by`/`updated_by`.
+**`UserContext` for audit columns**: `AuditableIdTable` (and its derivatives `AuditableLongIdTable`) populates `created_by`/`updated_by` columns via `UserContext.getCurrentUser()` called in a `clientDefault` expression — NOT via Spring Data's `AuditorAware` mechanism. All write operations that touch `image_assets` or `image_objects` MUST be wrapped in `UserContext.withUser("image-processing-service") { ... }`. The wrapper scope MUST cover the entire method body (including `TransactionTemplate.execute {}` blocks and recovery branches). Do NOT declare an `AuditorAware<String>` Spring bean.
 
 **Status enum clarification** (by design — intentional separation):
 - `ImageAssetStatus` (`image_assets.status`): `PROCESSING | READY | FAILED`
