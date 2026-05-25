@@ -87,7 +87,10 @@ class SocialNetworkService(
     private val ops: GraphOperations,
     private val graphName: String = "social_network",
 ) {
-    companion object : KLogging()
+    companion object : KLogging() {
+        /** Maximum allowed traversal depth for degree-based and path-based queries. */
+        const val MAX_TRAVERSAL_DEPTH: Int = 6
+    }
 
     // ── Lifecycle ──
     fun initialize()
@@ -157,11 +160,6 @@ class SocialNetworkService(
     // ── Query: 직장 관련 ──
     /** Returns current and past colleagues at the same company. Deduplicated by vertex ID. */
     fun findColleagues(personVertexId: GraphElementId): List<GraphVertex>
-
-    companion object {
-        /** Maximum allowed traversal depth for degree-based queries. */
-        const val MAX_TRAVERSAL_DEPTH: Int = 6
-    }
 }
 ```
 
@@ -259,9 +257,10 @@ data class ConnectionRecommendation(
    a. candidateFriends = neighbors(candidate, KNOWS, OUTGOING, depth=1)
    b. mutualConnections = directFriends ∩ candidateFriends (ID 기준 교집합)
    c. mutualCount = |mutualConnections|
-5. mutualCount 기준 내림차순 정렬; 동점 시 vertex ID 오름차순 (결정적 정렬)
-6. mutualCount = 0인 후보 제외 (공통 인맥 없는 2촌은 추천 가치 낮음)
-7. 상위 limit개 반환
+5. mutualCount 기준 내림차순 정렬; 동점 시 personId (domain key) 오름차순 (결정적 정렬)
+   ⚠️ 백엔드 내부 GraphElementId 사용 금지 — Neo4j/Memgraph/TinkerGraph 간 일관성 없음
+6. 상위 limit개 반환
+   (mutualCount=0 필터 없음 — depth=2 FOAF 후보는 정의상 최소 1개의 mutual connection을 가짐)
 ```
 
 **핵심 결정**:
@@ -431,14 +430,17 @@ fun addPerson(personId: String, ...): GraphVertex {
 
 **FOAF 추천 결과 (Alice 기준)**:
 - 1촌 (직접 인맥): {Bob, Frank} — 추천 제외
-- FOAF 후보: Carol (via Bob, mutual=1), Dave (via Bob, mutual=1)
-- ⚠️ Carol과 Dave의 mutual count가 동일(1)하여 정렬 순서 테스트에 불충분.
-  **추가 KNOWS 엣지**: Alice-Carol을 직접 연결하면 Carol이 1촌이 되어 Dave만 FOAF 후보로 남아
-  단일 후보 케이스가 된다. 대신 **Grace를 추가**해 Dave와 Grace 간 mutual count 차별화:
-  - Dave: mutual with Alice = {Bob} (count=1)
-  - Grace: mutual with Alice = {} (count=0, Bob을 모름) → `mutualCount=0` 제외 규칙으로 필터
-  따라서 Alice FOAF 추천 결과 = [Carol(1), Dave(1)] — 동점. 동점 시 vertex ID 오름차순.
-  테스트 assertion: `recommendConnections(alice).map { it.person.name }` ⊇ {"Carol", "Dave"} (순서는 allowAnyOrder)
+- FOAF 후보 (depth=2): Carol (via Bob, mutual={Bob}), Dave (via Bob, mutual={Bob})
+- Grace는 depth=3 (Alice→Bob→Dave→Grace) — FOAF 후보에 포함되지 않음 (depth=2 이내 아님)
+
+⚠️ **FOAF 알고리즘의 "zero mutual" 필터는 사실상 dead code**:
+depth=2 이내의 KNOWS 연결은 정의상 최소 1개의 공통 직접 인맥(경로 상의 중간 노드)을 가진다.
+따라서 `mutualCount=0` 후보는 이 알고리즘에서 존재할 수 없다.
+`mutualCount=0` 필터는 스펙에서 제거하고, 테스트도 삭제한다.
+
+**동점 처리**: 동점 시 `personId` domain key 오름차순 (백엔드 내부 ID는 Neo4j/Memgraph/TinkerGraph 간 일관성이 없음).
+Alice FOAF 추천 결과 = [Carol(1), Dave(1)] — 동점, personId 오름차순으로 정렬.
+테스트 assertion: `recommendConnections(alice).map { it.person.name }` ⊇ {"Carol", "Dave"} (순서는 allowAnyOrder, 동점이므로)
 
 ### 8.2 TinkerGraph (단위 테스트)
 
@@ -517,10 +519,10 @@ src/test/kotlin/io/bluetape4k/workshop/graph/social/
 | Path | `findAllConnectionPaths returns all paths within depth` | Alice→Carol: 경로 수 >= 1 |
 | Mutual | `findMutualConnections returns shared connections` | Alice-Carol mutual = {Bob} |
 | Mutual | `findMutualConnections returns empty for no shared connections` | Alice-Eve = {} |
-| FOAF | `recommendConnections returns FOAF candidates` | Alice 추천: Carol, Dave 포함 |
+| FOAF | `recommendConnections returns FOAF candidates with mutual connections` | Alice 추천: Carol({Bob}), Dave({Bob}) 포함 |
 | FOAF | `recommendConnections excludes direct connections` | Alice 추천에 Bob, Frank 미포함 |
 | FOAF | `recommendConnections excludes self` | Alice 추천에 Alice 미포함 |
-| FOAF | `recommendConnections excludes candidates with zero mutual connections` | Grace(mutual=0) 미포함 |
+| FOAF | `recommendConnections excludes depth-3+ connections` | Alice 추천에 Grace(depth=3) 미포함 |
 | Colleague | `findColleagues returns coworkers at same company` | Alice 동료: {Bob, Carol} (자신 제외) |
 | Colleague | `findColleagues excludes self` | 결과에 Alice 미포함 |
 | Colleague | `findColleagues includes past employees (isCurrent=false)` | 현재 + 과거 동료 모두 포함 검증 |
@@ -592,7 +594,7 @@ src/test/kotlin/io/bluetape4k/workshop/graph/social/
 
 ### 10.3 테스트 DoD
 
-- [ ] `AbstractSocialNetworkTest`: 27개 이상 테스트 케이스 (섹션 8.5 기준)
+- [ ] `AbstractSocialNetworkTest`: 26개 이상 테스트 케이스 (섹션 8.5 기준)
 - [ ] `AbstractSocialNetworkSuspendTest`: blocking mirror + Flow 수집 검증
 - [ ] TinkerGraph 테스트: `./gradlew :graph-social-network:test` 통과
 - [ ] Neo4j + Memgraph 테스트: `./gradlew :graph-social-network:integrationTest` 통과
@@ -652,5 +654,5 @@ src/test/kotlin/io/bluetape4k/workshop/graph/social/
 
 | Round | Phase 1 (4×sonnet/haiku) | 6-tier (opus) | Phase 2 Critic (opus) | Phase 3 Codex | Spec 반영 |
 |-------|--------------------------|---------------|-----------------------|---------------|-----------|
-| 1 | HIGH: 9건 (Developer 4, User/caller 2, Ops/SRE 3, Security 2) | P0: 1, P1: 9, P2: 7, P3: 2 | HIGH: 6건 (H1-H6) | 진행 중 (background) | addWorkExperience startDate, connect KDoc+partial failure+symmetry, findAllConnectionPaths maxDepth, degree bound, validation 정책, parameter rename, neighbors() contract fix, seed topology(Grace 추가), test cases 19→27개, graphName uniqueness, findColleagues dedup |
-| 2 (pending) | — | — | — | — | Phase 3 Codex 결과 반영 후 재검토 필요 |
+| 1 | HIGH: 9건 (Developer 4, User/caller 2, Ops/SRE 3, Security 2) | P0: 1, P1: 9, P2: 7, P3: 2 | HIGH: 6건 (H1-H6) | HIGH: 1, MEDIUM: 6, LOW: 3 | addWorkExperience startDate, connect KDoc+partial failure+symmetry, findAllConnectionPaths maxDepth, degree bound, validation 정책, parameter rename, neighbors() contract fix, seed topology(Grace 추가), test cases 19→27개, graphName uniqueness, findColleagues dedup, companion object 통합, FOAF zero-mutual 필터 제거(vacuous), tie-breaking personId으로 변경 |
+| **P0/P1 잔여** | **0** | **0** | **0** | **0** | **수렴 — 진행 가능** |
