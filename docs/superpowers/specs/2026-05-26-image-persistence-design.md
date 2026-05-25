@@ -92,7 +92,7 @@ try {
    - `image_assets.checksum` has a UNIQUE constraint (SHA-256 of raw bytes).
    - T1 `recordJobStart` logic:
      - Query `image_assets` by checksum.
-     - If `status=READY`: short-circuit → return existing `JobStartResult(alreadyExists=true)`.
+     - If `status=READY`: short-circuit → return `JobStartResult.AlreadyReady(assetId=existing.id, jobId=-1L)`.
      - If `status=PROCESSING`: a concurrent or stale run exists → log + create new job on same asset.
      - If `status=FAILED`: **retry recovery** — update status→PROCESSING, create new job row.
      - If no row: insert new asset.
@@ -139,7 +139,7 @@ try {
 ### 3.4 NoopImagePersistenceService (test fake — test source only)
 
 `NoopImagePersistenceService` lives in `src/test/kotlin/` — **NOT in `src/main/kotlin/`**. A no-op fake in production source is a Spring bean scanner hazard. The fake must:
-- Return a valid `JobStartResult(assetId=0L, jobId=0L, alreadyExists=false)` from `recordJobStart()`.
+- Return `JobStartResult.NewAsset(assetId=0L, jobId=0L)` from `recordJobStart()`.
 - All other methods are no-ops (no state stored).
 
 Existing tests inject it by name; existing mocked-S3 / mocked-VIPS tests are unaffected.
