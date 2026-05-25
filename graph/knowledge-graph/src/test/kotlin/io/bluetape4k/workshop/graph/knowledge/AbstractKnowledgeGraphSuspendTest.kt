@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.graph.knowledge
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeEmpty
@@ -166,5 +167,80 @@ abstract class AbstractKnowledgeGraphSuspendTest {
             .map { it.properties["entityId"] }
 
         entityIds shouldContain "entity-gradle"
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Round-trip (H-4 fix)
+    // ─────────────────────────────────────────────────────────────────────
+
+    @Test
+    fun `addEntity and retrieve via findRelatedEntities`() = runTest {
+        val gradle = service.addEntity("entity-gradle", "Gradle", "BuildTool")
+        service.relateEntities(seed.entityKotlin.id, gradle.id, relationType = "uses")
+
+        val entityIds = service.findRelatedEntities(seed.entityKotlin.id).toList()
+            .map { it.properties["entityId"] }
+
+        entityIds shouldContain "entity-gradle"
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Input validation
+    // ─────────────────────────────────────────────────────────────────────
+
+    @Test
+    fun `addEntity with blank entityId throws IllegalArgumentException`() = runTest {
+        assertFailsWith<IllegalArgumentException> {
+            service.addEntity("", "Name", "Type")
+        }
+    }
+
+    @Test
+    fun `addConcept with blank conceptId throws IllegalArgumentException`() = runTest {
+        assertFailsWith<IllegalArgumentException> {
+            service.addConcept("", "Name")
+        }
+    }
+
+    @Test
+    fun `addDocument with blank documentId throws IllegalArgumentException`() = runTest {
+        assertFailsWith<IllegalArgumentException> {
+            service.addDocument("", "Title")
+        }
+    }
+
+    @Test
+    fun `mention with confidence above 100 throws IllegalArgumentException`() = runTest {
+        assertFailsWith<IllegalArgumentException> {
+            service.mention(seed.docKotlinGuide.id, seed.entityKotlin.id, confidence = 101)
+        }
+    }
+
+    @Test
+    fun `mention with negative confidence throws IllegalArgumentException`() = runTest {
+        assertFailsWith<IllegalArgumentException> {
+            service.mention(seed.docKotlinGuide.id, seed.entityKotlin.id, confidence = -1)
+        }
+    }
+
+    @Test
+    fun `findRelatedEntities with zero depth throws IllegalArgumentException`() = runTest {
+        assertFailsWith<IllegalArgumentException> {
+            service.findRelatedEntities(seed.entityKotlin.id, depth = 0)
+        }
+    }
+
+    @Test
+    fun `inferRelationshipPaths with zero maxDepth throws IllegalArgumentException`() = runTest {
+        assertFailsWith<IllegalArgumentException> {
+            service.inferRelationshipPaths(seed.entityKotlin.id, seed.entitySpring.id, maxDepth = 0)
+        }
+    }
+
+    @Test
+    fun `inferRelationshipPaths with zero maxPaths throws IllegalArgumentException`() = runTest {
+        assertFailsWith<IllegalArgumentException> {
+            service.inferRelationshipPaths(seed.entityKotlin.id, seed.entitySpring.id, maxPaths = 0)
+        }
     }
 }

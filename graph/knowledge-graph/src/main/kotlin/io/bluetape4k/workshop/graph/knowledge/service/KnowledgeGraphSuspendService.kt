@@ -49,7 +49,10 @@ class KnowledgeGraphSuspendService(
     private val ops: GraphSuspendOperations,
     private val graphName: String = "knowledge_graph",
 ) {
-    companion object : KLoggingChannel()
+    companion object : KLoggingChannel() {
+        /** Maximum traversal depth for neighbor and path queries. */
+        const val MAX_TRAVERSAL_DEPTH: Int = 10
+    }
 
     /** Creates the backing graph when it does not already exist. */
     suspend fun initialize() {
@@ -140,12 +143,18 @@ class KnowledgeGraphSuspendService(
             NeighborOptions(edgeLabel = MentionsLabel.label, direction = Direction.OUTGOING, maxDepth = 1),
         )
 
-    /** Returns entities reachable from [entityId] via RELATED_TO edges within [depth] hops. */
-    fun findRelatedEntities(entityId: GraphElementId, depth: Int = 1): Flow<GraphVertex> =
-        ops.neighbors(
+    /**
+     * Returns entities reachable from [entityId] via RELATED_TO edges within [depth] hops.
+     *
+     * @param depth traversal depth; must be in 1..[MAX_TRAVERSAL_DEPTH]
+     */
+    fun findRelatedEntities(entityId: GraphElementId, depth: Int = 1): Flow<GraphVertex> {
+        depth.requireInRange(1, MAX_TRAVERSAL_DEPTH, "depth")
+        return ops.neighbors(
             entityId,
             NeighborOptions(edgeLabel = RelatedToLabel.label, direction = Direction.OUTGOING, maxDepth = depth),
         )
+    }
 
     /** Returns concepts that [entityId] is classified under (IS_A edges). */
     fun findConceptsForEntity(entityId: GraphElementId): Flow<GraphVertex> =
@@ -166,6 +175,7 @@ class KnowledgeGraphSuspendService(
         maxDepth: Int = 3,
         maxPaths: Int = 10,
     ): Flow<GraphPath> {
+        maxDepth.requireInRange(1, MAX_TRAVERSAL_DEPTH, "maxDepth")
         maxPaths.requireInRange(1, Int.MAX_VALUE, "maxPaths")
         return ops.allPaths(
             fromEntityId,
