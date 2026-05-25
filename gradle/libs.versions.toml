@@ -95,6 +95,7 @@ kafka = "4.2.0"  # https://mvnrepository.com/artifact/org.apache.kafka/kafka-cli
 spring-kafka4 = "4.0.5"  # https://mvnrepository.com/artifact/org.springframework.kafka/spring-kafka
 
 bucket4j = "8.19.0"  # https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17-caffeine
+ktor = "3.4.3"  # https://mvnrepository.com/artifact/io.ktor/ktor-server-core
 vertx = "5.0.12"  # https://mvnrepository.com/artifact/io.vertx/vertx-core
 
 timefold-solver = "2.1.0"   # https://mvnrepository.com/artifact/ai.timefold.solver/timefold-solver-bom
@@ -416,6 +417,19 @@ vertx-pg-client = { module = "io.vertx:vertx-pg-client", version.ref = "vertx" }
 vertx-web-lib = { module = "io.vertx:vertx-web", version.ref = "vertx" }
 vertx-web-client = { module = "io.vertx:vertx-web-client", version.ref = "vertx" }
 vertx-junit5 = { module = "io.vertx:vertx-junit5", version.ref = "vertx" }
+
+# Ktor 3
+ktor-bom                        = { module = "io.ktor:ktor-bom", version.ref = "ktor" }
+ktor-server-core                = { module = "io.ktor:ktor-server-core" }
+ktor-server-netty               = { module = "io.ktor:ktor-server-netty" }
+ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation" }
+ktor-server-call-logging        = { module = "io.ktor:ktor-server-call-logging" }
+ktor-server-status-pages        = { module = "io.ktor:ktor-server-status-pages" }
+ktor-server-sse                 = { module = "io.ktor:ktor-server-sse" }
+ktor-server-test-host           = { module = "io.ktor:ktor-server-test-host" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json" }
+ktor-client-core                = { module = "io.ktor:ktor-client-core" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation" }
 
 # Resilience4j
 resilience4j-bom = { module = "io.github.resilience4j:resilience4j-bom", version.ref = "resilience4j" }

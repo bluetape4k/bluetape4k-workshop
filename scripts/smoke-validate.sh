@@ -50,6 +50,7 @@ case "${1:-help}" in
       :spring-security-mvc-hello:test \
       :spring-security-webflux-hello-security:test \
       :spring-security-webflux-jwt:test \
+      :ktor-rest-coroutines:test \
       :vertx-coroutines:test \
       :virtualthreads-rules:test \
       --continue"
@@ -147,7 +148,7 @@ case "${1:-help}" in
   stale-check)
     echo "=== Gradle project count ==="
     count=$("$GRADLEW" projects --console=plain 2>/dev/null | grep -Ec "Project ':" || true)
-    expected=69
+    expected=76
     echo "Active modules: $count (expected: $expected)"
     [ "$count" -eq "$expected" ] || echo "WARNING: Gradle project count drifted."
 
