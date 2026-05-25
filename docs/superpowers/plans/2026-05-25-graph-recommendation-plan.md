@@ -290,6 +290,17 @@ fun recommendFollows(userVertexId: GraphElementId, limit: Int = 10): List<Follow
 블로킹 서비스와 동일한 알고리즘 구조. `neighbors()`는 `Flow<GraphVertex>` 반환 → `.toList()` 수집 후 처리.
 
 > **시퀀싱 노트**: T5는 T4의 blocking 구현을 diff 기준으로 작성. T4가 커밋된 이후 T5를 시작해야 안전 (Build Order 참조). 모든 `ops.neighbors(...)` 호출에 `suspend` 추가 + `Flow<GraphVertex>.toList()` 수집이 핵심 변경점.
+>
+> **⛔ CancellationException 패턴 (bluetape4k 필수 규칙)**: `suspend fun` body 내에서 **`runCatching { }` 절대 사용 금지** (CancellationException 삼킴). error handling 필요 시 명시적 try/catch 사용:
+> ```kotlin
+> try {
+>     ops.suspendCall()
+> } catch (e: CancellationException) {
+>     throw e  // MUST rethrow
+> } catch (e: Exception) {
+>     log.warn(e) { "..." }
+> }
+> ```
 
 **Acceptance**: suspend 서비스로 blocking 서비스와 동일한 추천 결과 생성. English KDoc on all public API members (동일 7개 함수).
 
