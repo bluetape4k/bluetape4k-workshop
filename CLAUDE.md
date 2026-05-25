@@ -23,6 +23,7 @@ Bluetape4k 라이브러리 활용 백엔드 예제 모음.
 | `aws/` | S3 Spring Cloud 연동 |
 | `exposed/` | JetBrains Exposed ORM 예제 (DAO/SQL DSL, 연관관계, 커스텀 컬럼, Spring Transaction 통합) |
 | `gateway/` | API Gateway + Customers/Orders 마이크로서비스 |
+| `graph/` | 그래프 DB 예제: `social-network` (LinkedIn-style FOAF), `abuser-detection`, `knowledge-graph`, `recommendation` (collaborative filtering + FOAF on TinkerGraph/Neo4j/Memgraph) |
 | `gatling/` | Gatling 성능 테스트 (Gradle 플러그인, Virtual Thread 시뮬레이션) |
 | `io/` | Okio 예제 |
 | `json/` | Jackson 3.x, JsonView 예제 |
