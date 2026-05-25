@@ -1,7 +1,6 @@
 package io.bluetape4k.workshop.graph.recommendation.model
 
 import io.bluetape4k.graph.model.GraphVertex
-import io.bluetape4k.logging.KLogging
 import java.io.Serializable
 
 /**
@@ -31,7 +30,7 @@ data class ProductRecommendation(
     /** Distinct co-buyer vertices that drove the [score]. */
     val sharedBuyers: List<GraphVertex>,
 ) : Serializable {
-    companion object : KLogging() {
+    companion object {
         private const val serialVersionUID: Long = 1L
     }
 }

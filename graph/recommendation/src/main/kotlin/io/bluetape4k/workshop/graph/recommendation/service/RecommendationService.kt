@@ -96,11 +96,11 @@ class RecommendationService(
             .firstOrNull()
             ?: ops.createVertex(
                 ProductLabel.label,
-                buildMap {
-                    put(ProductLabel.productId.name, productId)
-                    put(ProductLabel.name.name, name)
-                    put(ProductLabel.category.name, category)
-                }
+                mapOf(
+                    ProductLabel.productId.name to productId,
+                    ProductLabel.name.name to name,
+                    ProductLabel.category.name to category,
+                )
             )
     }
 
@@ -179,8 +179,8 @@ class RecommendationService(
         if (myProducts.isEmpty()) return emptyList()
         val myProductIds = myProducts.map { it.id }.toSet()
 
-        // candidateMap: candidateProductId → (candidateVertex, Set<coBuyerId>)
-        val candidateMap = mutableMapOf<GraphElementId, Pair<GraphVertex, MutableSet<GraphElementId>>>()
+        // candidateMap: candidateProductId → (candidateVertex, Set<coBuyerVertex>)
+        val candidateMap = mutableMapOf<GraphElementId, Pair<GraphVertex, MutableSet<GraphVertex>>>()
 
         for (product in myProducts) {
             val coBuyers = ops.neighbors(product.id, NeighborOptions(PurchasedLabel.label, Direction.INCOMING, 1))
@@ -194,14 +194,14 @@ class RecommendationService(
 
                 for (candidate in theirProducts) {
                     candidateMap.getOrPut(candidate.id) { candidate to mutableSetOf() }
-                        .second += coBuyer.id
+                        .second += coBuyer
                 }
             }
         }
 
         return candidateMap.values
-            .map { (product, buyerIds) ->
-                ProductRecommendation(product, buyerIds.size, emptyList())
+            .map { (product, coBuyers) ->
+                ProductRecommendation(product, coBuyers.size, coBuyers.toList())
             }
             .sortedWith(
                 compareByDescending<ProductRecommendation> { it.score }
