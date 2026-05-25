@@ -110,6 +110,4 @@
 <!-- RateLimit → Redis (below OrderSvc at y=330, no crossing) -->
 <path class="line" d="M580,300 L680,300 L680,330 L1060,330 L1060,290 L1098,290"/>
 
-<!-- Routing → Swagger (vertical inside panel) -->
-<path class="line" d="M460,228 L460,338"/>
 </svg>
