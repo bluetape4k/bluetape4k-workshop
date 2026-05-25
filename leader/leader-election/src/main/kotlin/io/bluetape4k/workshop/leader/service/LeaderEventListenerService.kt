@@ -8,6 +8,7 @@ import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
 import jakarta.annotation.PostConstruct
 import jakarta.annotation.PreDestroy
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -83,6 +84,8 @@ class LeaderEventListenerService(
                             log.info { "[EventFlow] Skipped '${event.lockName}'" }
                     }
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 log.warn(e) { "[EventFlow] Event flow collection stopped unexpectedly" }
             }
