@@ -12,6 +12,7 @@ dependencies {
 
     // Redis
     implementation(libs.bluetape4k.redis)
+    implementation(libs.bluetape4k.redisson)
     testImplementation(libs.bluetape4k.testcontainers)
 
     // Redisson

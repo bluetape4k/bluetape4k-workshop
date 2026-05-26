@@ -76,6 +76,7 @@ spring:
 |---|---|---|---|
 | `RedisClusterServer.Launcher.redisCluster` | `bluetape4k-testcontainers` | `RedisClusterApplication` companion | Testcontainers Redis Cluster 싱글톤 — 6노드(3마스터+3슬레이브) 자동 구동·종료 |
 | `Launcher.LettuceLib.clientResources(redisCluster)` | `bluetape4k-testcontainers` | `RedisClusterApplication.lettuceClientResource()` | 컨테이너 포트에 맞춘 Lettuce `ClientResources` 원스텝 생성 |
+| `LettuceClients` / `LettuceLongCodec` / `awaitSuspending()` | `bluetape4k-lettuce` | `Bluetape4kLettuceUsageTest` | 저수준 Redis 경로에서 타입 codec과 coroutine-friendly async 대기를 검증 |
 | `KLoggingChannel` | `bluetape4k-logging` | `RedisClusterApplication` companion, `NumberService` companion, `AbstractRedisClusterTest` companion | 코루틴 MDC 컨텍스트 포함 구조적 로깅 |
 | `Fakers.faker` / `Fakers.fixedString` | `bluetape4k-junit5` | `AbstractRedisClusterTest` | 재현 가능한 랜덤 키·값 생성 |
 | `bluetape4k-core` — `toByteArray()` / `toInt()` | `bluetape4k-core` | `NumberService` | Int ↔ ByteArray 변환 유틸리티 — 바이너리 클러스터 커맨드에서 활용 |
@@ -148,6 +149,11 @@ fun multiplyAndSave(number: Int) {
     }
 }
 ```
+
+## Lettuce boundary
+
+Redis Cluster 동작 증명은 Spring Data Redis `clusterConnection` 경로가 담당합니다.
+`bluetape4k-lettuce`는 별도 저수준 테스트에서 `LettuceClients`, `LettuceLongCodec`, `awaitSuspending()`을 사용해 typed codec과 coroutine-friendly async bridge를 검증합니다.
 
 ## 클러스터 슬롯 분배
 

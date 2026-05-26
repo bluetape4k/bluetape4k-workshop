@@ -21,7 +21,7 @@ dependencies {
     implementation(libs.spring.kafka.test)
     implementation(libs.spring.data.commons)
 
-    // implementation(libs.bluetape4k.kafka)
+    implementation(libs.bluetape4k.kafka4)
     implementation(libs.bluetape4k.testcontainers)
     implementation(libs.testcontainers.kafka)
 

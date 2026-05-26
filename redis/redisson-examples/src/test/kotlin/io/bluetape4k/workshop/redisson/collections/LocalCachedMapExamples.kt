@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.redisson.collections
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.redis.redisson.cache.localCachedMap
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.test.runTest
@@ -30,12 +31,12 @@ class LocalCachedMapExamples: AbstractRedissonTest() {
     fun `simple local cached map`() = runTest {
         // Local cache 설정
         val cachedMapName = "local:" + UUID.randomUUID().toString()
-        val options = LocalCachedMapOptions.name<String, Int>(cachedMapName)
-            .cacheSize(10000)
-            .evictionPolicy(LocalCachedMapOptions.EvictionPolicy.LRU)
-            .maxIdle(10.seconds.toJavaDuration())
-            .timeToLive(60.seconds.toJavaDuration())
-        val cachedMap: RLocalCachedMap<String, Int> = redisson.getLocalCachedMap(options)
+        val cachedMap: RLocalCachedMap<String, Int> = localCachedMap(cachedMapName, redisson) {
+            cacheSize(10000)
+            evictionPolicy(LocalCachedMapOptions.EvictionPolicy.LRU)
+            maxIdle(10.seconds.toJavaDuration())
+            timeToLive(60.seconds.toJavaDuration())
+        }
 
         // NOTE: fastPutAsync 의 결과는 new insert 인 경우는 true, update 는 false 를 반환한다.
         cachedMap.fastPutAsync("a", 1).await().shouldBeTrue()

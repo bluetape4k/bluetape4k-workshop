@@ -17,7 +17,7 @@ dependencies {
     implementation(platform(libs.spring.boot4.dependencies))
     
     // Kafka
-    // implementation(libs.bluetape4k.kafka)
+    implementation(libs.bluetape4k.kafka4)
     implementation(libs.kafka.clients)
     implementation(libs.spring.kafka.lib)
     testImplementation(libs.spring.kafka.test)

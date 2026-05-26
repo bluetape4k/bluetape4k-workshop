@@ -210,6 +210,7 @@ bluetape4k-r2dbc = { module = "io.github.bluetape4k:bluetape4k-r2dbc" }
 bluetape4k-bucket4j = { module = "io.github.bluetape4k:bluetape4k-bucket4j" }
 bluetape4k-cache-core = { module = "io.github.bluetape4k:bluetape4k-cache-core" }
 bluetape4k-kafka = { module = "io.github.bluetape4k:bluetape4k-kafka" }
+bluetape4k-kafka4 = { module = "io.github.bluetape4k:bluetape4k-kafka4" }
 bluetape4k-lettuce = { module = "io.github.bluetape4k:bluetape4k-lettuce" }
 bluetape4k-leader-core = { module = "io.github.bluetape4k.leader:bluetape4k-leader-core" }
 bluetape4k-leader-redis-lettuce = { module = "io.github.bluetape4k.leader:bluetape4k-leader-redis-lettuce" }

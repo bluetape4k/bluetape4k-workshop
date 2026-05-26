@@ -2,6 +2,7 @@
 
 `ReplyingKafkaTemplate`을 이용한 Kafka 요청-응답(Request-Reply) 패턴 예제입니다.
 bluetape4k의 `CompletableFuture.onSuccess/onFailure`, `uninitialized()`, `KLoggingChannel`을 활용합니다.
+Spring Kafka 4 호환 Bluetape4k 모듈은 `bluetape4k-kafka4`를 사용합니다.
 
 ## 아키텍처
 
@@ -21,8 +22,14 @@ bluetape4k의 `CompletableFuture.onSuccess/onFailure`, `uninitialized()`, `KLogg
 | 기능 | 아티팩트 | 코드 위치 | 이점 |
 |---|---|---|---|
 | `CompletableFuture.onSuccess/onFailure` | `bluetape4k-coroutines` | `PingController.ping()` | Java Future에 Kotlin 스타일 콜백 확장 |
+| `bluetape4k-kafka4` dependency | `bluetape4k-kafka4` | `build.gradle.kts` | Spring Kafka 4 예제에서 Bluetape4k Kafka 확장을 사용할 수 있는 호환 아티팩트 |
 | `uninitialized()` | `bluetape4k-core` | `PingController` | 타입 안전 lateinit 초기화 대체 |
 | `KLoggingChannel` | `bluetape4k-logging` | companion object | 코루틴 컨텍스트 포함 구조적 로깅 |
+
+## Bluetape4k boundary
+
+`messaging/kafka-reply`는 실제 요청-응답 프로토콜을 Spring Kafka의 `ReplyingKafkaTemplate.sendAndReceive()`로 유지합니다.
+현재 검증된 `bluetape4k-kafka4` API에는 `ReplyingKafkaTemplate`을 대체하는 request/reply 전용 추상화가 없으므로, 이 예제는 Spring Kafka의 프로토콜 primitive와 Bluetape4k의 Future/coroutine ergonomics를 함께 사용합니다.
 
 ## bluetape4k Before / After
 

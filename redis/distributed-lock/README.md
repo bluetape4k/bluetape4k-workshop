@@ -160,8 +160,8 @@ Client A resumes → FencedResource rejects write (1 < 2) ✅
 
 ### SuspendedJobTester Semantics
 
-`SuspendedJobTester.workers(N).rounds(R)` launches `N` workers each running `R` rounds
-of the `add { }` block. `totalUnits = R × blockCount`.
+`SuspendedJobTester.workers(N).rounds(R)` spawns `N` concurrent workers that
+cooperatively execute `R` rounds of each `add { }` block. `totalUnits = R × blockCount`.
 
 For a stock-100/qty-10 test:
 - `workers(20).rounds(20)` → 20 total attempts → exactly 10 succeed
@@ -259,10 +259,10 @@ val results = (1..20).map {
     async { suspendingService.deduct(inventoryId, qty = 10) }
 }.awaitAll()
 
-// After — bluetape4k SuspendedJobTester (fixed workers × rounds = total attempts)
+// After — bluetape4k SuspendedJobTester (fixed rounds × blockCount = total attempts)
 SuspendedJobTester()
     .workers(20)    // 20 coroutine workers
-    .rounds(1)      // 1 round each → 20 total attempts, exactly 10 succeed (stock=100, qty=10)
+    .rounds(20)     // 20 total attempts, exactly 10 succeed (stock=100, qty=10)
     .add {
         suspendingService.deduct(inventoryId, qty = 10, waitMs = 3000L, leaseMs = 5000L)
     }
@@ -274,8 +274,9 @@ SuspendedJobTester()
 ## Dependencies
 
 - **Redisson** — `RLock`, `RFencedLock`, async API
-- **bluetape4k-redisson** — `getLockId()` (Snowflake ID), `redissonClient {}` DSL
+- **bluetape4k-redisson** — `redissonClient {}` DSL
 - **bluetape4k-redis** — `getLockId()` coroutines extension (`io.bluetape4k.redis.redisson.coroutines`)
 - **bluetape4k-coroutines** — `awaitSuspending()`, `io.bluetape4k.logging.coroutines`
 - **bluetape4k-testcontainers** — `RedisServer.Launcher.redis` Testcontainers singleton
+- **bluetape4k-junit5** — `SuspendedJobTester`, `MultithreadingTester`
 - **kotlinx.atomicfu** — `atomic(0L)` for `FencedResource.lastSeenToken`

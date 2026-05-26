@@ -19,6 +19,7 @@ dependencies {
     implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.jackson3)
     implementation(libs.bluetape4k.idgenerators)
+    implementation(libs.bluetape4k.lettuce)
     testImplementation(libs.bluetape4k.junit5)
     implementation(libs.bluetape4k.testcontainers)
 
