@@ -81,10 +81,11 @@
   - Columns: `externalId` (varchar 36, uniqueIndex), `originalFilename` (varchar 255, nullable),
     `contentType` (varchar 100, nullable), `byteSize` (long, nullable),
     `width` (integer, nullable), `height` (integer, nullable),
-    `checksum` (varchar 64, uniqueIndex), `status` (varchar 20, default "PROCESSING")
+    `checksum` (varchar 64, uniqueIndex),
+    `status` (`enumerationByName<ImageAssetStatus>("status", 20)`, default `ImageAssetStatus.PROCESSING`)
   - Inherits `createdBy`, `createdAt`, `updatedBy`, `updatedAt` from `AuditableIdTable`
   - Use top-level Exposed 1.2+ operators only — NEVER `SqlExpressionBuilder.eq`
-- **Acceptance criteria**: Object compiles; column types match spec §4 DDL
+- **Acceptance criteria**: Object compiles; column types match spec §4 DDL; `status` is type-safe enum column (not raw varchar)
 
 ### T9 — Create ImageObjectTable (Exposed AuditableLongIdTable)
 - **File(s)**: `src/main/kotlin/.../advanced/persistence/schema/ImageObjectTable.kt`

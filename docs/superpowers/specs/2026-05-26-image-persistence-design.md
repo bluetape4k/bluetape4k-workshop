@@ -566,6 +566,12 @@ Each DoD criterion must have at least one named integration test.
 | Event-mini-tx-suppression | Event mini-tx throws → main flow unaffected | `ImageDerivativeWorkflowServiceTest` | `@MockkBean` `ImagePersistenceService` stub `appendEvent` to throw; call full `processUpload()` → no exception propagated; upload response valid; Micrometer counter `image.processing.event.append.failed` incremented |
 | Concurrent-checksum-race-deterministic | DIVE catch-and-re-read path correct | `ImagePersistenceServiceImplTest` | Mock first INSERT to throw `DataIntegrityViolationException`; verify `recordJobStart()` re-reads by checksum and returns valid result without propagating the DIVE |
 | Concurrent-checksum-race-probabilistic | Two simultaneous uploads → graceful (probabilistic) | `ImagePersistenceServiceImplTest` | Use `MultithreadingTester` (bluetape4k-junit5) with 2 threads calling `recordJobStart()` with same checksum; assert no exception escapes; `SELECT COUNT(*) FROM image_assets WHERE checksum=X` = 1. **Note**: probabilistic; documents workshop-scale confidence only |
+| Concurrent-checksum-DIVE-null-branch | DIVE on insert + findByChecksum returns null → ImageAssetNotFoundException | `ImagePersistenceServiceImplTest` | MockK `spyk` on `ImageAssetRepository`; first `insertAsset` throws `DataIntegrityViolationException`; `findByChecksum` returns null; assert `assertFailsWith<ImageAssetNotFoundException>` with checksum value |
+| cascade-delete | ON DELETE CASCADE propagates from image_assets to all child tables | `ImagePersistenceServiceImplTest` | After full T1+T2 cycle: `DELETE FROM image_assets WHERE id=?`; assert `COUNT(*) FROM image_objects WHERE image_asset_id=?` = 0; `COUNT(*) FROM image_processing_jobs WHERE image_asset_id=?` = 0 |
+| POST-imageId-equals-externalId | POST response imageId equals persisted external_id | `ImagePersistenceServiceImplTest` | After `recordJobStart()`, assert `result.externalId == SELECT external_id FROM image_assets WHERE checksum=?`; after full endpoint cycle, HTTP response `imageId` field equals same `external_id` |
+| UserContext-audit | created_by/updated_by populated from UserContext | `ImagePersistenceServiceImplTest` | `recordJobStart()` wrapped in `UserContext.withUser("test-user") { }` → assert `created_by="test-user"` on both `image_assets` and `image_processing_jobs` rows |
+| S3-upload-FAILED-terminality | S3 upload failure terminates saga immediately | `ImageDerivativeWorkflowSagaTest` | Mock S3 `putObject` to fail on first call; assert T3 called immediately; remaining variant uploads NOT attempted; assert job status=FAILED; S3_UPLOAD event with status=FAILED exists |
+| Error-is-Error-subclass | T3 catch block catches Error (not just Exception) | `ImageDerivativeWorkflowSagaTest` | Throw `OutOfMemoryError` in VIPS step; assert T3 `catch(Throwable)` catches it; job recorded as FAILED; original `OutOfMemoryError` is rethrown from saga |
 
 ---
 
@@ -579,7 +585,8 @@ Each DoD criterion must have at least one named integration test.
 - [ ] FAILED asset + same checksum retry succeeds (no `DataIntegrityViolationException`)
 - [ ] Concurrent same-checksum uploads handled gracefully (no unhandled DB exception)
 - [ ] All existing tests (`ImageDerivativeWorkflowServiceTest`, unit tests) pass without PostgreSQL
-- [ ] Integration tests cover all 20 scenarios in §10 (including event lifecycle, race, sanitization, and GET-failed scenarios)
+- [ ] Integration tests cover all 27 scenarios in §10 (including event lifecycle, race, sanitization, DIVE null-branch, cascade-delete, UserContext audit, and GET-failed scenarios)
+- [ ] `POST /api/images/derivatives` response `imageId` equals the `external_id` persisted in `image_assets` (not a freshly generated UUID)
 - [ ] `README.md` and `README.ko.md` include ERD + updated persistence sequence diagram
 - [ ] `README.md` includes "Used Bluetape4k features" table
 - [ ] `README.md` includes stale-job monitoring query in Operations section
@@ -613,3 +620,4 @@ Each DoD criterion must have at least one named integration test.
 | 2 (advisor) | — | — | — | — | — | P0=0, P1=5 (Tier3+5+6) | §3.7 event lifecycle, interface sigs, pool analysis, 4 new §10 scenarios | committed |
 | 2 (Codex) | — | — | — | — | P0=0, P2=2 | — | VALIDATION after T1 (jobId avail), remove STARTED enum, fix success-path assertion | committed |
 | 2 (Round 2) | 0/3 | 0/2 (null-branch fixed) | 0/6 | **P0=1**/3 | — | — | AssetMetadataInput, JobIdentity, JobFailureReason, sealed JobStartResult, ImageDimensions, AuditorAware config, T3 Throwable, S3_UPLOAD FAILED terminal, 4 new scenarios, 2 test class relocations, dedup YAML | committed |
+| 3 (pre-Round-3 fixes) | — | — | — | — | — | — | T8 status→enumerationByName, §10 +7 scenarios (27 total), §11 DoD POST imageId criterion, plan T25 dependency+T21 confirmed, T28→T2 dep confirmed | 7b92c310 |
