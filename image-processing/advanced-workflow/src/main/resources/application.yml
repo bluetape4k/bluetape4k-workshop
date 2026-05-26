@@ -3,6 +3,16 @@ spring:
     multipart:
       max-file-size: 25MB
       max-request-size: 25MB
+  datasource:
+    url: jdbc:postgresql://localhost:5432/image_processing
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-init-sql: "SET statement_timeout='10000'"
+      maximum-pool-size: 10
+      connection-timeout: 30000
+      leak-detection-threshold: 30000
 
 management:
   endpoints:
