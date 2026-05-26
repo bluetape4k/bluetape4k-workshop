@@ -1,6 +1,16 @@
 plugins {
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.spring.boot)
+    alias(libs.plugins.exposed)
+}
+
+exposed {
+    migrations {
+        tablesPackage = "io.bluetape4k.workshop.exposed.mvc.vt"
+        databaseUrl = "jdbc:h2:mem:workshop-exposed-mvc-virtualthread-migrations;DB_CLOSE_DELAY=-1;MODE=PostgreSQL"
+        databaseUser = "sa"
+        databasePassword = ""
+    }
 }
 
 springBoot {

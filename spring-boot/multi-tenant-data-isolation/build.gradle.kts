@@ -1,6 +1,16 @@
 plugins {
+    alias(libs.plugins.exposed)
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.spring.boot)
+}
+
+exposed {
+    migrations {
+        tablesPackage = "io.bluetape4k.workshop.multitenant"
+        databaseUrl = "jdbc:h2:mem:spring-boot-multi-tenant-data-isolation-migrations;DB_CLOSE_DELAY=-1;MODE=PostgreSQL"
+        databaseUser = "sa"
+        databasePassword = ""
+    }
 }
 springBoot {
     mainClass.set("io.bluetape4k.workshop.multitenant.MultiTenantDataIsolationApplicationKt")

@@ -1,5 +1,15 @@
 plugins {
     alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.exposed)
+}
+
+exposed {
+    migrations {
+        tablesPackage = "io.bluetape4k.workshop.exposed.javers"
+        databaseUrl = "jdbc:h2:mem:workshop-exposed-javers-audit-migrations;DB_CLOSE_DELAY=-1;MODE=PostgreSQL"
+        databaseUser = "sa"
+        databasePassword = ""
+    }
 }
 
 dependencies {
