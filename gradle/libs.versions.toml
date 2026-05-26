@@ -204,6 +204,7 @@ exposed-jdbc = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-jdbc"
 exposed-jackson3 = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-jackson3" }
 exposed-jdbc-tests = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-jdbc-tests" }
 exposed-r2dbc = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-r2dbc" }
+exposed-r2dbc-tests = { module = "io.github.bluetape4k.exposed:bluetape4k-exposed-r2dbc-tests" }
 bluetape4k-hibernate = { module = "io.github.bluetape4k:bluetape4k-hibernate" }
 bluetape4k-jdbc = { module = "io.github.bluetape4k:bluetape4k-jdbc" }
 bluetape4k-mongodb = { module = "io.github.bluetape4k:bluetape4k-mongodb" }

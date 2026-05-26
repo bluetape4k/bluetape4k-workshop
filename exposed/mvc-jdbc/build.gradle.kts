@@ -25,6 +25,7 @@ dependencies {
     testImplementation(project(":shared"))
     testImplementation(libs.bluetape4k.junit5)
     testImplementation(libs.bluetape4k.assertions)
+    testImplementation(libs.exposed.jdbc.tests)
 
     // Logging
     implementation(libs.bluetape4k.logging)
