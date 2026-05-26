@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.multitenant.service
 
+import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.multitenant.domain.TenantId
 import org.springframework.stereotype.Component
 import java.io.Serializable
@@ -25,7 +26,7 @@ class TenantRateLimiter(
         limit: Int = DEFAULT_LIMIT,
         window: Duration = DEFAULT_WINDOW,
     ): RateLimitDecision {
-        require(limit > 0) { "limit must be positive" }
+        limit.requirePositiveNumber("limit")
         require(!window.isZero && !window.isNegative) { "window must be positive" }
 
         val key = keyFactory.rateLimitKey(tenantId, principal)

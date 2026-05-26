@@ -51,6 +51,7 @@ tasks.withType<Test>().configureEach {
 dependencies {
     implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.coroutines)
+    implementation(libs.bluetape4k.idgenerators)
     implementation(libs.bluetape4k.logging)
     implementation(libs.bluetape4k.micrometer)
     implementation(libs.bluetape4k.jackson3)

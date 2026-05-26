@@ -11,7 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
-import java.util.UUID
+import io.bluetape4k.codec.Base58
 
 /**
  * Abstract base class for image persistence integration tests.
@@ -37,7 +37,7 @@ abstract class AbstractImagePersistenceTest {
         @JvmStatic
         @DynamicPropertySource
         fun postgresProperties(registry: DynamicPropertyRegistry) {
-            registry.add("spring.datasource.url") { postgres.jdbcUrl!! }
+            registry.add("spring.datasource.url") { postgres.jdbcUrl }
             registry.add("spring.datasource.username") { postgres.username!! }
             registry.add("spring.datasource.password") { postgres.password!! }
         }
@@ -50,7 +50,7 @@ abstract class AbstractImagePersistenceTest {
      * one get test isolation for free.
      */
     protected fun buildMetadata(
-        checksum: String = "sha256-${UUID.randomUUID()}",
+        checksum: String = "sha256-${Base58.randomString(12)}",
         filename: String? = "test.jpg",
         contentType: String? = "image/jpeg",
         byteSize: Long? = 12_345L,

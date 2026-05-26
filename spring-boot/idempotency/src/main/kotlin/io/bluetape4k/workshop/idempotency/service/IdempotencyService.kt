@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.idempotency.service
 
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.info
@@ -11,7 +12,6 @@ import kotlinx.coroutines.withContext
 import org.redisson.api.RedissonClient
 import org.springframework.stereotype.Service
 import java.time.Instant
-import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 /**
@@ -53,7 +53,7 @@ class IdempotencyService(private val redisson: RedissonClient) {
 
             // Create a new order response
             val newResponse = OrderResponse(
-                orderId = UUID.randomUUID().toString(),
+                orderId = Uuid.V7.nextIdAsString(),
                 status = "CREATED",
                 processedAt = Instant.now(),
             )

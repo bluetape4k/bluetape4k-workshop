@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.idempotency.controller
 
+import io.bluetape4k.codec.Base58
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeEmpty
@@ -14,7 +15,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.reactive.server.returnResult
 import reactor.kotlin.core.publisher.toMono
-import java.util.UUID
 
 class OrderControllerTest : AbstractIdempotencyTest() {
 
@@ -23,7 +23,7 @@ class OrderControllerTest : AbstractIdempotencyTest() {
         private const val IDEMPOTENCY_KEY_HEADER = "Idempotency-Key"
     }
 
-    private fun newIdempotencyKey(): String = UUID.randomUUID().toString()
+    private fun newIdempotencyKey(): String = Base58.randomString(16)
 
     private val sampleRequest = OrderRequest(
         productId = "prod-001",

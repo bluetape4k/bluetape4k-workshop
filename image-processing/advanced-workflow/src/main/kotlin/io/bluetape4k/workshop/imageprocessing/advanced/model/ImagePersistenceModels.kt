@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.imageprocessing.advanced.model
 
+import io.bluetape4k.support.requireInRange
 import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.support.requirePositiveNumber
 import io.bluetape4k.workshop.imageprocessing.advanced.persistence.schema.ImageAssetStatus
@@ -79,7 +80,7 @@ data class JobFailureReason(
 ) : Serializable {
     init {
         errorCode.requireNotBlank("errorCode")
-        require(errorCode.length <= 100) { "errorCode must be ≤ 100 chars, was ${errorCode.length}" }
+        errorCode.length.requireInRange(1, 100, "errorCode.length")
         errorMessage.requireNotBlank("errorMessage")
     }
 

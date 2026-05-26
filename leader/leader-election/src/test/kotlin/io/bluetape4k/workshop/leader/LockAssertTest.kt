@@ -5,7 +5,7 @@ import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.leader.LockAssert
 import io.bluetape4k.workshop.leader.job.LockAssertJob
-import kotlin.test.assertFailsWith
+import io.bluetape4k.assertions.assertFailsWith
 import org.junit.jupiter.api.Test
 import java.util.UUID
 

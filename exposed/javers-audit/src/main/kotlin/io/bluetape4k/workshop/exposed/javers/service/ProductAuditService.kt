@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.exposed.javers.service
 import io.bluetape4k.javers.latestSnapshotOrNull
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.debug
+import io.bluetape4k.support.requireNotBlank
 import io.bluetape4k.workshop.exposed.javers.model.Product
 import io.bluetape4k.workshop.exposed.javers.model.ProductTable
 import org.javers.core.Javers
@@ -45,7 +46,7 @@ class ProductAuditService(
      * @param product The product to persist and audit.
      */
     fun save(author: String, product: Product) {
-        require(author.isNotBlank()) { "author must not be blank" }
+        author.requireNotBlank("author")
         javers.commit(author, product)
         transaction {
             ProductTable.upsert {
@@ -89,7 +90,7 @@ class ProductAuditService(
      * @param product The product to delete.
      */
     fun delete(author: String, product: Product) {
-        require(author.isNotBlank()) { "author must not be blank" }
+        author.requireNotBlank("author")
         javers.commitShallowDelete(author, product)
         transaction {
             ProductTable.deleteWhere { ProductTable.id eq product.id }

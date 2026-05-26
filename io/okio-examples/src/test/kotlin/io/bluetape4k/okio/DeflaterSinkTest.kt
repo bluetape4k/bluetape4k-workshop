@@ -12,7 +12,7 @@ import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import java.util.zip.InflaterInputStream
 import kotlin.random.Random
-import kotlin.test.assertFailsWith
+import io.bluetape4k.assertions.assertFailsWith
 
 class DeflaterSinkTest: AbstractOkioTest() {
 

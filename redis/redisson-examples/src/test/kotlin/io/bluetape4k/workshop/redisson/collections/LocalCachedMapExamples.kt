@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.redisson.collections
 
+import io.bluetape4k.codec.Base58
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.redis.redisson.cache.localCachedMap
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
@@ -13,7 +14,6 @@ import io.bluetape4k.assertions.shouldContainSame
 import org.junit.jupiter.api.Test
 import org.redisson.api.RLocalCachedMap
 import org.redisson.api.options.LocalCachedMapOptions
-import java.util.*
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
@@ -30,7 +30,7 @@ class LocalCachedMapExamples: AbstractRedissonTest() {
     @Test
     fun `simple local cached map`() = runTest {
         // Local cache 설정
-        val cachedMapName = "local:" + UUID.randomUUID().toString()
+        val cachedMapName = "local:${Base58.randomString(8)}"
         val cachedMap: RLocalCachedMap<String, Int> = localCachedMap(cachedMapName, redisson) {
             cacheSize(10000)
             evictionPolicy(LocalCachedMapOptions.EvictionPolicy.LRU)

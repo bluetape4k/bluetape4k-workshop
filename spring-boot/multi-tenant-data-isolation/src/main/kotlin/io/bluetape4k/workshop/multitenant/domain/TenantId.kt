@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.multitenant.domain
 
+import io.bluetape4k.support.requireNotBlank
 import java.io.Serializable
 
 /**
@@ -9,8 +10,8 @@ import java.io.Serializable
 value class TenantId(val value: String) : Serializable {
 
     init {
-        require(value.isNotBlank()) { "tenantId must not be blank" }
-        require(value.matches(Regex("[a-z0-9][a-z0-9-]{1,62}"))) {
+        value.requireNotBlank("tenantId")
+        require(value.matches(TENANT_ID_PATTERN)) {
             "tenantId must use lowercase letters, digits, or hyphens"
         }
     }
@@ -24,6 +25,7 @@ value class TenantId(val value: String) : Serializable {
 
     companion object {
         private const val serialVersionUID: Long = 104L
+        private val TENANT_ID_PATTERN = Regex("[a-z0-9][a-z0-9-]{1,62}")
 
         val ALPHA: TenantId = TenantId("tenant-alpha")
         val BETA: TenantId = TenantId("tenant-beta")

@@ -10,7 +10,7 @@ import io.bluetape4k.workshop.imageprocessing.advanced.model.JobStartResult
 import io.bluetape4k.workshop.imageprocessing.advanced.persistence.schema.ImageAssetStatus
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.UUID
+import io.bluetape4k.codec.Base58
 
 /**
  * Integration tests for [ImageAssetRepository] low-level operations.
@@ -26,13 +26,13 @@ class ImageAssetRepositoryTest : AbstractImagePersistenceTest() {
 
     @Test
     fun `findByExternalId - returns null when asset does not exist`() {
-        val result = service.findAssetByExternalId(UUID.randomUUID().toString())
+        val result = service.findAssetByExternalId(Base58.randomString(12))
         result.shouldBeNull()
     }
 
     @Test
     fun `findByExternalId - returns asset after creation via recordJobStart`() {
-        val checksum = "sha256-${UUID.randomUUID()}"
+        val checksum = "sha256-${Base58.randomString(12)}"
         val metadata = buildMetadata(checksum = checksum)
 
         val startResult = service.recordJobStart(metadata)
@@ -46,7 +46,7 @@ class ImageAssetRepositoryTest : AbstractImagePersistenceTest() {
 
     @Test
     fun `updateStatus - changes asset status to READY via recordJobSuccess`() {
-        val checksum = "sha256-${UUID.randomUUID()}"
+        val checksum = "sha256-${Base58.randomString(12)}"
         val metadata = buildMetadata(checksum = checksum)
 
         val startResult = service.recordJobStart(metadata)

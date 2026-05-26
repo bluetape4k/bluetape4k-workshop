@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.imageprocessing.advanced.persistence
 
 import io.bluetape4k.exposed.core.auditable.UserContext
+import io.bluetape4k.idgenerators.uuid.Uuid
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
 import io.bluetape4k.logging.warn
@@ -31,7 +32,6 @@ import org.springframework.transaction.support.TransactionTemplate
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
-import java.util.UUID
 
 /**
  * Programmatic-transaction implementation of [ImagePersistenceService].
@@ -115,7 +115,7 @@ class ImagePersistenceServiceImpl(
 
                             null -> {
                                 // New asset — insert and create first job
-                                val externalId = UUID.randomUUID().toString()
+                                val externalId = Uuid.V7.nextIdAsString()
                                 val assetId = ImageAssetTable.insertAndGetId {
                                     it[ImageAssetTable.externalId] = externalId
                                     it[ImageAssetTable.originalFilename] = metadata.originalFilename

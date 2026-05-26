@@ -16,7 +16,6 @@ import org.junit.jupiter.api.condition.JRE
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import java.util.concurrent.CopyOnWriteArrayList
-import kotlin.test.assertTrue
 
 /**
  * Singleton Instance를 생성하는 테스트를 제공합니다.
@@ -35,9 +34,9 @@ abstract class AbstractSingletonTest<T>(private val singletonInstanceMethod: () 
         val instance2 = singletonInstanceMethod()
         val instance3 = singletonInstanceMethod()
 
-        assertTrue { instance1 === instance2 }
-        assertTrue { instance2 === instance3 }
-        assertTrue { instance1 === instance3 }
+        (instance1 === instance2).shouldBeTrue()
+        (instance2 === instance3).shouldBeTrue()
+        (instance1 === instance3).shouldBeTrue()
     }
 
     @Test
