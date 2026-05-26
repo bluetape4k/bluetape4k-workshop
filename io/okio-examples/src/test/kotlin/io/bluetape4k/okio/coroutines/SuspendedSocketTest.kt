@@ -19,7 +19,7 @@ import java.nio.channels.SelectionKey
 import java.nio.channels.ServerSocketChannel
 import java.nio.channels.SocketChannel
 import java.util.concurrent.TimeUnit
-import kotlin.test.assertFailsWith
+import io.bluetape4k.assertions.assertFailsWith
 import kotlin.test.junit5.JUnit5Asserter.fail
 
 class SuspendedSocketTest: AbstractOkioTest() {

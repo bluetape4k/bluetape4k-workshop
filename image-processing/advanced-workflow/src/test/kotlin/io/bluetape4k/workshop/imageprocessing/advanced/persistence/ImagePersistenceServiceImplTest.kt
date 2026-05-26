@@ -16,7 +16,7 @@ import io.bluetape4k.workshop.imageprocessing.advanced.persistence.schema.ImageP
 import io.bluetape4k.workshop.imageprocessing.advanced.persistence.schema.ImageProcessingStep
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.UUID
+import io.bluetape4k.codec.Base58
 
 /**
  * Integration tests for [ImagePersistenceService] — covers all saga steps and query paths.
@@ -37,7 +37,7 @@ class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
 
     @Test
     fun `recordJobStart - new asset creates NewAsset result`() {
-        val checksum = "sha256-${UUID.randomUUID()}"
+        val checksum = "sha256-${Base58.randomString(12)}"
         val metadata = buildMetadata(checksum = checksum)
 
         val result = service.recordJobStart(metadata)
@@ -51,7 +51,7 @@ class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
 
     @Test
     fun `recordJobStart - duplicate checksum READY returns AlreadyReady`() {
-        val checksum = "sha256-${UUID.randomUUID()}"
+        val checksum = "sha256-${Base58.randomString(12)}"
         val metadata = buildMetadata(checksum = checksum)
 
         val firstResult = service.recordJobStart(metadata)
@@ -69,7 +69,7 @@ class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
 
     @Test
     fun `recordJobStart - duplicate checksum PROCESSING returns ConcurrentProcessing`() {
-        val checksum = "sha256-${UUID.randomUUID()}"
+        val checksum = "sha256-${Base58.randomString(12)}"
         val metadata = buildMetadata(checksum = checksum)
 
         val firstResult = service.recordJobStart(metadata)
@@ -85,7 +85,7 @@ class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
 
     @Test
     fun `recordJobStart - duplicate checksum FAILED returns RecoveredFromFailed`() {
-        val checksum = "sha256-${UUID.randomUUID()}"
+        val checksum = "sha256-${Base58.randomString(12)}"
         val metadata = buildMetadata(checksum = checksum)
 
         val firstResult = service.recordJobStart(metadata)
@@ -112,7 +112,7 @@ class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
 
     @Test
     fun `recordJobSuccess - updates asset READY and persists image objects`() {
-        val checksum = "sha256-${UUID.randomUUID()}"
+        val checksum = "sha256-${Base58.randomString(12)}"
         val startResult = service.recordJobStart(buildMetadata(checksum = checksum))
         (startResult is JobStartResult.NewAsset).shouldBeTrue()
 
@@ -133,7 +133,7 @@ class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
 
     @Test
     fun `recordJobFailure - updates asset FAILED`() {
-        val checksum = "sha256-${UUID.randomUUID()}"
+        val checksum = "sha256-${Base58.randomString(12)}"
         val startResult = service.recordJobStart(buildMetadata(checksum = checksum))
         (startResult is JobStartResult.NewAsset).shouldBeTrue()
 
@@ -155,7 +155,7 @@ class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
 
     @Test
     fun `appendEvent - stores event row`() {
-        val checksum = "sha256-${UUID.randomUUID()}"
+        val checksum = "sha256-${Base58.randomString(12)}"
         val startResult = service.recordJobStart(buildMetadata(checksum = checksum))
         (startResult is JobStartResult.NewAsset).shouldBeTrue()
 
@@ -178,7 +178,7 @@ class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
 
     @Test
     fun `findAssetByExternalId - returns null for unknown externalId`() {
-        service.findAssetByExternalId(UUID.randomUUID().toString()).shouldBeNull()
+        service.findAssetByExternalId(Base58.randomString(12)).shouldBeNull()
     }
 
     // -------------------------------------------------------------------------
@@ -187,7 +187,7 @@ class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
 
     @Test
     fun `findAssetHistory - returns null for unknown externalId`() {
-        service.findAssetHistory(UUID.randomUUID().toString()).shouldBeNull()
+        service.findAssetHistory(Base58.randomString(12)).shouldBeNull()
     }
 
     // -------------------------------------------------------------------------
@@ -196,7 +196,7 @@ class ImagePersistenceServiceImplTest : AbstractImagePersistenceTest() {
 
     @Test
     fun `findAssetHistory - returns full job and event history`() {
-        val checksum = "sha256-${UUID.randomUUID()}"
+        val checksum = "sha256-${Base58.randomString(12)}"
         val startResult = service.recordJobStart(buildMetadata(checksum = checksum))
         (startResult is JobStartResult.NewAsset).shouldBeTrue()
         val identity = JobIdentity(jobId = startResult.jobId, assetId = startResult.assetId)

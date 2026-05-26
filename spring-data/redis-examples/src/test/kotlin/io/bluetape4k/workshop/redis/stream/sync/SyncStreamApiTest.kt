@@ -19,7 +19,7 @@ import org.springframework.data.redis.connection.stream.StreamOffset
 import org.springframework.data.redis.core.StreamOperations
 import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.data.redis.stream.StreamMessageListenerContainer
-import kotlin.test.assertFailsWith
+import io.bluetape4k.assertions.assertFailsWith
 
 @SpringBootTest(classes = [RedisStreamConfiguration::class])
 class SyncStreamApiTest @Autowired constructor(

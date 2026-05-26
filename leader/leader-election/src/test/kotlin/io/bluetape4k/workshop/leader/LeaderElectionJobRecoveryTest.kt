@@ -4,7 +4,7 @@ import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
 import java.util.UUID
-import kotlin.test.assertFailsWith
+import io.bluetape4k.assertions.assertFailsWith
 
 /**
  * T3: Leader re-election after job failure.

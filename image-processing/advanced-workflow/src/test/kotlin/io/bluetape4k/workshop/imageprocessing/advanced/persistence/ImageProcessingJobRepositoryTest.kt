@@ -11,7 +11,7 @@ import io.bluetape4k.workshop.imageprocessing.advanced.model.JobStartResult
 import io.bluetape4k.workshop.imageprocessing.advanced.persistence.schema.ImageJobStatus
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.UUID
+import io.bluetape4k.codec.Base58
 
 /**
  * Integration tests for the processing-job history path exposed through [ImagePersistenceService].
@@ -30,14 +30,14 @@ class ImageProcessingJobRepositoryTest : AbstractImagePersistenceTest() {
 
     @Test
     fun `findAssetHistory - returns null for unknown externalId`() {
-        val history = service.findAssetHistory(UUID.randomUUID().toString())
+        val history = service.findAssetHistory(Base58.randomString(12))
         // Soft assert: result is null — history is absent for unknown asset
         (history == null).shouldBeTrue()
     }
 
     @Test
     fun `findAssetHistory - contains one RUNNING job after recordJobStart`() {
-        val checksum = "sha256-${UUID.randomUUID()}"
+        val checksum = "sha256-${Base58.randomString(12)}"
         val startResult = service.recordJobStart(buildMetadata(checksum = checksum))
         (startResult is JobStartResult.NewAsset).shouldBeTrue()
 
@@ -50,7 +50,7 @@ class ImageProcessingJobRepositoryTest : AbstractImagePersistenceTest() {
 
     @Test
     fun `findAssetHistory - job status is SUCCEEDED after recordJobSuccess`() {
-        val checksum = "sha256-${UUID.randomUUID()}"
+        val checksum = "sha256-${Base58.randomString(12)}"
         val startResult = service.recordJobStart(buildMetadata(checksum = checksum))
         (startResult is JobStartResult.NewAsset).shouldBeTrue()
 
@@ -66,7 +66,7 @@ class ImageProcessingJobRepositoryTest : AbstractImagePersistenceTest() {
 
     @Test
     fun `findAssetHistory - job status is FAILED after recordJobFailure`() {
-        val checksum = "sha256-${UUID.randomUUID()}"
+        val checksum = "sha256-${Base58.randomString(12)}"
         val startResult = service.recordJobStart(buildMetadata(checksum = checksum))
         (startResult is JobStartResult.NewAsset).shouldBeTrue()
 

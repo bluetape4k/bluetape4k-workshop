@@ -1,15 +1,16 @@
 package io.bluetape4k.workshop.storage
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeBlank
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.toUtf8Bytes
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
 import org.springframework.beans.factory.annotation.Autowired
-import kotlin.test.assertContentEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 /**
  * Base test class for all [StorageService] implementations.
@@ -21,7 +22,7 @@ abstract class AbstractStorageServiceTest {
 
     companion object : KLogging() {
         const val TEST_KEY = "test/hello.txt"
-        val TEST_CONTENT = "Hello, Storage Abstraction!".toByteArray(Charsets.UTF_8)
+        val TEST_CONTENT = "Hello, Storage Abstraction!".toUtf8Bytes()
         const val TEST_CONTENT_TYPE = "text/plain"
     }
 
@@ -32,8 +33,7 @@ abstract class AbstractStorageServiceTest {
     @Order(1)
     fun `upload returns a non-blank URL`() = runTest {
         val url = storageService.upload(TEST_KEY, TEST_CONTENT, TEST_CONTENT_TYPE)
-        assertNotNull(url)
-        assertTrue(url.isNotBlank(), "URL must not be blank, got: $url")
+        url.shouldNotBeNull().shouldNotBeBlank()
     }
 
     @Test
@@ -41,7 +41,7 @@ abstract class AbstractStorageServiceTest {
     fun `download returns the same bytes that were uploaded`() = runTest {
         storageService.upload(TEST_KEY, TEST_CONTENT, TEST_CONTENT_TYPE)
         val downloaded = storageService.download(TEST_KEY)
-        assertContentEquals(TEST_CONTENT, downloaded)
+        downloaded shouldBeEqualTo TEST_CONTENT
     }
 
     @Test
@@ -49,7 +49,7 @@ abstract class AbstractStorageServiceTest {
     fun `getUrl returns a non-blank URL for an existing key`() = runTest {
         storageService.upload(TEST_KEY, TEST_CONTENT, TEST_CONTENT_TYPE)
         val url = storageService.getUrl(TEST_KEY)
-        assertTrue(url.isNotBlank(), "URL must not be blank, got: $url")
+        url.shouldNotBeBlank()
     }
 
     @Test

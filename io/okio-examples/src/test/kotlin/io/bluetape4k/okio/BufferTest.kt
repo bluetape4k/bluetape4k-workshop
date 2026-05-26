@@ -15,7 +15,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import java.util.*
-import kotlin.test.assertFailsWith
+import io.bluetape4k.assertions.assertFailsWith
 
 class BufferTest: AbstractOkioTest() {
 

@@ -14,7 +14,9 @@ configurations {
 dependencies {
     // bluetape4k
     implementation(libs.bluetape4k.jackson3)
+    implementation(libs.bluetape4k.core)
     implementation(libs.bluetape4k.coroutines)
+    implementation(libs.bluetape4k.idgenerators)
     implementation(libs.bluetape4k.redis)
     implementation(libs.bluetape4k.redisson)
     implementation(libs.bluetape4k.testcontainers)

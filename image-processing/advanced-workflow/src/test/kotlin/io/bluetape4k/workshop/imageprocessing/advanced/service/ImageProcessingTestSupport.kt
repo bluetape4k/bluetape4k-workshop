@@ -25,7 +25,7 @@ import kotlinx.coroutines.flow.emptyFlow
 import java.nio.file.Path
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import io.bluetape4k.codec.Base58
 
 internal fun testProperties(
     publicBaseUrl: String = "http://localhost:8080/public-images",
@@ -119,7 +119,7 @@ internal class StubImagePersistenceService(
         startResultFn?.invoke() ?: JobStartResult.NewAsset(
             assetId = 1L,
             jobId = 1L,
-            externalId = UUID.randomUUID().toString(),
+            externalId = Base58.randomString(12),
         )
 
     override fun recordJobSuccess(identity: JobIdentity, objects: List<ImageObjectInput>) {}
