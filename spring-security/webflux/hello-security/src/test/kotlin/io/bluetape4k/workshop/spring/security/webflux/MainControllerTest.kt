@@ -1,11 +1,11 @@
 package io.bluetape4k.workshop.spring.security.webflux
 
+import io.bluetape4k.assertions.shouldContain
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.shared.web.httpGet
-import kotlinx.coroutines.test.runTest
-import io.bluetape4k.assertions.shouldContain
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.web.reactive.server.expectBody
@@ -15,7 +15,7 @@ class MainControllerTest: AbstractSecurityApplicationTest() {
     companion object: KLoggingChannel()
 
     @Test
-    fun `index page is not protected`() = runTest {
+    fun `index page is not protected`() = runSuspendIO {
         val response = client
             .httpGet("/")
             .expectStatus().is2xxSuccessful
@@ -28,7 +28,7 @@ class MainControllerTest: AbstractSecurityApplicationTest() {
     }
 
     @Test
-    fun `protected page when unauthenticated then redirects to login`() = runTest {
+    fun `protected page when unauthenticated then redirects to login`() = runSuspendIO {
         client
             .httpGet("/user/index")
             .expectStatus().is3xxRedirection
@@ -37,7 +37,7 @@ class MainControllerTest: AbstractSecurityApplicationTest() {
 
     @Test
     @WithMockUser
-    fun `protected page can be accessed when authenticated`() = runTest {
+    fun `protected page can be accessed when authenticated`() = runSuspendIO {
         val response = client
             .httpGet("/user/index")
             .expectStatus().is2xxSuccessful

@@ -6,6 +6,7 @@ import io.bluetape4k.support.asIntOrNull
 import io.bluetape4k.workshop.exposed.r2dbc.domain.ErrorMessage
 import io.bluetape4k.workshop.exposed.r2dbc.domain.model.UserRecord
 import io.bluetape4k.workshop.exposed.r2dbc.service.UserService
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
@@ -59,11 +60,7 @@ class UserHandler(private val service: UserService) {
     }
 
     suspend fun addUser(request: ServerRequest): ServerResponse {
-        val newUser: UserRecord = runCatching {
-            request.bodyToMono<UserRecord>().awaitSingleOrNull()
-        }.onFailure {
-            log.error(it) { "Fail to decode body" }
-        }.getOrNull()
+        val newUser = request.decodeBodyOrNull<UserRecord>()
             ?: return errorResponse(HttpStatus.BAD_REQUEST, "Invalid body")
 
         return service.addUser(newUser)?.let { user ->
@@ -77,9 +74,7 @@ class UserHandler(private val service: UserService) {
             "`id` must be numeric"
         )
 
-        val userToUpdate: UserRecord = runCatching {
-            request.bodyToMono<UserRecord>().awaitSingleOrNull()
-        }.onFailure { log.error(it) { "Fail to decode body" } }.getOrNull()
+        val userToUpdate = request.decodeBodyOrNull<UserRecord>()
             ?: return errorResponse(HttpStatus.BAD_REQUEST, "Invalid body")
 
         return service.updateUser(id, userToUpdate)?.let { user ->
@@ -102,5 +97,16 @@ class UserHandler(private val service: UserService) {
         message: String,
     ): ServerResponse {
         return ServerResponse.status(status).json().bodyValueAndAwait(ErrorMessage(message))
+    }
+
+    private suspend inline fun <reified T: Any> ServerRequest.decodeBodyOrNull(): T? {
+        return try {
+            bodyToMono<T>().awaitSingleOrNull()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            log.error(e) { "Fail to decode body" }
+            null
+        }
     }
 }

@@ -3,6 +3,7 @@ package io.bluetape4k.okio.coroutines
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.okio.SEGMENT_SIZE
 import kotlinx.atomicfu.atomic
+import kotlinx.coroutines.CancellationException
 import okio.Buffer
 import okio.ByteString
 import okio.Timeout
@@ -149,11 +150,15 @@ internal class RealBufferedSuspendedSink(private val sink: SuspendedSink): Buffe
             if (buffer.size > 0L) {
                 sink.write(buffer, buffer.size)
             }
+        } catch (e: CancellationException) {
+            thrown = e
         } catch (e: Throwable) {
             thrown = e
         }
         try {
             sink.close()
+        } catch (e: CancellationException) {
+            thrown = thrown ?: e
         } catch (e: Throwable) {
             thrown = thrown ?: e
         }

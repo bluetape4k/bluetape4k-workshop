@@ -1,13 +1,13 @@
 package io.bluetape4k.workshop.spring.security.webflux.jwt.controller
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.shared.web.httpPost
 import io.bluetape4k.workshop.spring.security.webflux.jwt.AbstractJwtApplicationTest
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.test.runTest
-import io.bluetape4k.assertions.shouldBeEqualTo
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Test
 import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.web.reactive.server.returnResult
@@ -18,7 +18,7 @@ class HelloControllerTest: AbstractJwtApplicationTest() {
 
     // NOTE: "이렇게 plain password 를 전달하면, password encoder 설정을 막아야 하기 때문에 @WithMockUser 를 사용하는 것을 추천합니다"
     @Test
-    fun `인증된 user가 새로운 토큰 발급을 요청하면 발급되고 인증되어야 한다`() = runTest {
+    fun `인증된 user가 새로운 토큰 발급을 요청하면 발급되고 인증되어야 한다`() = runSuspendIO {
         // 인증 정보로 토큰을 발급 받는다 
         val token = webTestClient
             .post()
@@ -51,7 +51,7 @@ class HelloControllerTest: AbstractJwtApplicationTest() {
 
     @Test
     @WithMockUser
-    fun `MockUser로 인증된 사용자는 서버 접근이 되어야 합니다`() = runTest {
+    fun `MockUser로 인증된 사용자는 서버 접근이 되어야 합니다`() = runSuspendIO {
         // 인증 정보로 토큰을 발급 받는다
         val token = webTestClient
             .post()
@@ -87,7 +87,7 @@ class HelloControllerTest: AbstractJwtApplicationTest() {
     }
 
     @Test
-    fun `인증 안된 사용자는 서버 접근이 안되어야 합니다`() = runTest {
+    fun `인증 안된 사용자는 서버 접근이 안되어야 합니다`() = runSuspendIO {
         webTestClient
             .httpPost("/")
             .expectStatus().isUnauthorized

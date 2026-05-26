@@ -3,9 +3,9 @@ package io.bluetape4k.workshop.storage
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeBlank
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.support.toUtf8Bytes
-import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
@@ -31,14 +31,14 @@ abstract class AbstractStorageServiceTest {
 
     @Test
     @Order(1)
-    fun `upload returns a non-blank URL`() = runTest {
+    fun `upload returns a non-blank URL`() = runSuspendIO {
         val url = storageService.upload(TEST_KEY, TEST_CONTENT, TEST_CONTENT_TYPE)
         url.shouldNotBeNull().shouldNotBeBlank()
     }
 
     @Test
     @Order(2)
-    fun `download returns the same bytes that were uploaded`() = runTest {
+    fun `download returns the same bytes that were uploaded`() = runSuspendIO {
         storageService.upload(TEST_KEY, TEST_CONTENT, TEST_CONTENT_TYPE)
         val downloaded = storageService.download(TEST_KEY)
         downloaded shouldBeEqualTo TEST_CONTENT
@@ -46,7 +46,7 @@ abstract class AbstractStorageServiceTest {
 
     @Test
     @Order(3)
-    fun `getUrl returns a non-blank URL for an existing key`() = runTest {
+    fun `getUrl returns a non-blank URL for an existing key`() = runSuspendIO {
         storageService.upload(TEST_KEY, TEST_CONTENT, TEST_CONTENT_TYPE)
         val url = storageService.getUrl(TEST_KEY)
         url.shouldNotBeBlank()
@@ -54,7 +54,7 @@ abstract class AbstractStorageServiceTest {
 
     @Test
     @Order(4)
-    fun `delete removes the object without error`() = runTest {
+    fun `delete removes the object without error`() = runSuspendIO {
         storageService.upload(TEST_KEY, TEST_CONTENT, TEST_CONTENT_TYPE)
         // Should not throw
         storageService.delete(TEST_KEY)
@@ -62,7 +62,7 @@ abstract class AbstractStorageServiceTest {
 
     @Test
     @Order(5)
-    fun `delete is idempotent for missing key`() = runTest {
+    fun `delete is idempotent for missing key`() = runSuspendIO {
         // Delete a key that was never uploaded — must not throw
         storageService.delete("non-existent/key.txt")
     }

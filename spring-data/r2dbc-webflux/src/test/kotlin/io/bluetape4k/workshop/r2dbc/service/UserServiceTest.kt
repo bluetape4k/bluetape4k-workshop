@@ -9,7 +9,7 @@ import io.r2dbc.spi.ConnectionFactory
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
@@ -43,7 +43,7 @@ class UserServiceTest(
 
     @Test
     @Order(2)
-    fun `find all users`() = runTest {
+    fun `find all users`() = runSuspendIO {
         val users = service.findAll().toList()
         users.forEach {
             log.debug { it }
@@ -53,7 +53,7 @@ class UserServiceTest(
 
     @Test
     @Order(3)
-    fun `find user by id`() = runTest {
+    fun `find user by id`() = runSuspendIO {
         val expected = service.findAll().toList().random()
 
         val actual = service.findById(expected.id!!)
@@ -63,14 +63,14 @@ class UserServiceTest(
 
     @Test
     @Order(4)
-    fun `find user by invalid id`() = runTest {
+    fun `find user by invalid id`() = runSuspendIO {
         val actual = service.findById(-1)
         actual.shouldBeNull()
     }
 
     @Test
     @Order(5)
-    fun `find user by email`() = runTest {
+    fun `find user by email`() = runSuspendIO {
         val expected = service.findAll().toList().random()
 
         val actual = service.findByEmail(expected.email).single()
@@ -80,14 +80,14 @@ class UserServiceTest(
 
     @Test
     @Order(6)
-    fun `find user by invalid email`() = runTest {
+    fun `find user by invalid email`() = runSuspendIO {
         val notFounds = service.findByEmail("not-exists@example.com").toList()
         notFounds.shouldBeEmpty()
     }
 
     @Test
     @Order(7)
-    fun `add new user`() = runTest {
+    fun `add new user`() = runSuspendIO {
         val newUser = createUserDTO()
         val savedUser = service.addUser(newUser)
 
@@ -98,7 +98,7 @@ class UserServiceTest(
 
     @Test
     @Order(8)
-    fun `update existing user`() = runTest {
+    fun `update existing user`() = runSuspendIO {
         val user = service.findAll().toList().random()
 
         val updated = service.updateUser(user.id!!, user.copy(avatar = "updated-avatar.jpg").toDto())
@@ -114,7 +114,7 @@ class UserServiceTest(
 
     @Test
     @Order(9)
-    fun `update non existing user`() = runTest {
+    fun `update non existing user`() = runSuspendIO {
         val nonExists = createUserDTO()
         val actual = service.updateUser(-1, nonExists)
         actual.shouldBeNull()
@@ -122,7 +122,7 @@ class UserServiceTest(
 
     @Test
     @Order(10)
-    fun `delete existing user`() = runTest {
+    fun `delete existing user`() = runSuspendIO {
         val user = createUserDTO()
         val saved = service.addUser(user)
 
@@ -135,7 +135,7 @@ class UserServiceTest(
 
     @Test
     @Order(11)
-    fun `delete non-existing user`() = runTest {
+    fun `delete non-existing user`() = runSuspendIO {
         service.deleteUser(-1).shouldBeFalse()
     }
 }

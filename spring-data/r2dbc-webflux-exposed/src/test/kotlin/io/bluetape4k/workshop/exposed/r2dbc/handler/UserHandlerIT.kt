@@ -12,7 +12,7 @@ import io.bluetape4k.workshop.shared.web.httpPut
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldHaveSize
@@ -37,7 +37,7 @@ class UserHandlerIT(
     @Nested
     inner class Find {
         @Test
-        fun `find all users`() = runTest {
+        fun `find all users`() = runSuspendIO {
             val users = webTestClient
                 .httpGet("/users")
                 .expectStatus().is2xxSuccessful
@@ -51,7 +51,7 @@ class UserHandlerIT(
         }
 
         @Test
-        fun `find by id - exsting user`() = runTest {
+        fun `find by id - exsting user`() = runSuspendIO {
             val user = webTestClient
                 .httpGet("/users/1")
                 .expectStatus().is2xxSuccessful
@@ -63,14 +63,14 @@ class UserHandlerIT(
         }
 
         @Test
-        fun `find by id - non-exsting user`() = runTest {
+        fun `find by id - non-exsting user`() = runSuspendIO {
             webTestClient
                 .httpGet("/users/9999")
                 .expectStatus().isNotFound
         }
 
         @Test
-        fun `find by id - invalid user id`() = runTest {
+        fun `find by id - invalid user id`() = runSuspendIO {
             webTestClient
                 .httpGet("/users/user_id")
                 .expectStatus().isBadRequest
@@ -82,7 +82,7 @@ class UserHandlerIT(
     @Nested
     inner class Search {
         @Test
-        fun `search by email`() = runTest {
+        fun `search by email`() = runSuspendIO {
             val searchEmail = "user2@users.com"
 
             val searchedUsers = webTestClient
@@ -96,7 +96,7 @@ class UserHandlerIT(
         }
 
         @Test
-        fun `search by empty email returns BadReqeust`() = runTest {
+        fun `search by empty email returns BadReqeust`() = runSuspendIO {
             val searchEmail = ""
             webTestClient
                 .httpGet("/users/search?email=$searchEmail")
@@ -106,7 +106,7 @@ class UserHandlerIT(
         }
 
         @Test
-        fun `search without params return BadRequest`() = runTest {
+        fun `search without params return BadRequest`() = runSuspendIO {
             webTestClient
                 .httpGet("/users/search")
                 .expectStatus().isBadRequest
@@ -118,7 +118,7 @@ class UserHandlerIT(
     @Nested
     inner class Add {
         @Test
-        fun `add new user`() = runTest {
+        fun `add new user`() = runSuspendIO {
             val newUser = createUserRecord()
 
             val savedUser = webTestClient
@@ -132,7 +132,7 @@ class UserHandlerIT(
         }
 
         @Test
-        fun `add new user with bad format`() = runTest {
+        fun `add new user with bad format`() = runSuspendIO {
             val newUser = "bad format"
 
             webTestClient
@@ -146,7 +146,7 @@ class UserHandlerIT(
     @Nested
     inner class Update {
         @Test
-        fun `update existing user`() = runTest {
+        fun `update existing user`() = runSuspendIO {
             val newUser = createUserRecord()
             val savedUser = service.addUser(newUser)!!
 
@@ -162,7 +162,7 @@ class UserHandlerIT(
         }
 
         @Test
-        fun `update with non-numeric id`() = runTest {
+        fun `update with non-numeric id`() = runSuspendIO {
             val userToUpdate = createUserRecord()
 
             webTestClient
@@ -173,7 +173,7 @@ class UserHandlerIT(
         }
 
         @Test
-        fun `update with invalid userDTO`() = runTest {
+        fun `update with invalid userDTO`() = runSuspendIO {
             val userToUpdate = "bad format"
 
             webTestClient
@@ -185,7 +185,7 @@ class UserHandlerIT(
 
 
         @Test
-        fun `update non-existing user`() = runTest {
+        fun `update non-existing user`() = runSuspendIO {
             val userToUpdate = createUserRecord()
 
             webTestClient
@@ -199,7 +199,7 @@ class UserHandlerIT(
     @Nested
     inner class Delete {
         @Test
-        fun `delete existing user`() = runTest {
+        fun `delete existing user`() = runSuspendIO {
             val newUser = createUserRecord()
             val savedUser = service.addUser(newUser)!!
 
@@ -212,7 +212,7 @@ class UserHandlerIT(
         }
 
         @Test
-        fun `delete non-existing user`() = runTest {
+        fun `delete non-existing user`() = runSuspendIO {
             webTestClient
                 .httpDelete("/users/9999")
                 .expectStatus().isNotFound
@@ -221,7 +221,7 @@ class UserHandlerIT(
         }
 
         @Test
-        fun `delete user with non-numeric id`() = runTest {
+        fun `delete user with non-numeric id`() = runSuspendIO {
             webTestClient
                 .httpDelete("/users/abc")
                 .expectStatus().isBadRequest

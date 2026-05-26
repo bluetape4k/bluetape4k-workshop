@@ -12,7 +12,7 @@ import io.bluetape4k.workshop.shared.web.httpPut
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldContain
@@ -34,7 +34,7 @@ class UserControllerTest(
     @Nested
     inner class Find {
         @Test
-        fun `find all users as Flow`() = runTest {
+        fun `find all users as Flow`() = runSuspendIO {
             val users = webTestClient
                 .httpGet("/api/users")
                 .expectStatus().is2xxSuccessful
@@ -47,7 +47,7 @@ class UserControllerTest(
         }
 
         @Test
-        fun `find by id - existing user`() = runTest {
+        fun `find by id - existing user`() = runSuspendIO {
             val user = webTestClient
                 .httpGet("/api/users/1")
                 .expectStatus().is2xxSuccessful
@@ -59,7 +59,7 @@ class UserControllerTest(
         }
 
         @Test
-        fun `find by id - non-existing user`() = runTest {
+        fun `find by id - non-existing user`() = runSuspendIO {
             val message = webTestClient
                 .httpGet("/api/users/9999")
                 .expectStatus().isNotFound
@@ -71,7 +71,7 @@ class UserControllerTest(
         }
 
         @Test
-        fun `find by id - non-numeric id`() = runTest {
+        fun `find by id - non-numeric id`() = runSuspendIO {
             val message = webTestClient
                 .httpGet("/api/users/abc")
                 .expectStatus().isBadRequest
@@ -86,7 +86,7 @@ class UserControllerTest(
     @Nested
     inner class Search {
         @Test
-        fun `search by valid email returns Users`() = runTest {
+        fun `search by valid email returns Users`() = runSuspendIO {
             val searchEmail = "user2@users.com"
 
             val searchedUsers = webTestClient
@@ -101,7 +101,7 @@ class UserControllerTest(
         }
 
         @Test
-        fun `search by empty email returns Users`() = runTest {
+        fun `search by empty email returns Users`() = runSuspendIO {
             val searchEmail = ""
 
             webTestClient
@@ -112,7 +112,7 @@ class UserControllerTest(
         }
 
         @Test
-        fun `search without email returns Users`() = runTest {
+        fun `search without email returns Users`() = runSuspendIO {
             webTestClient
                 .get()
                 .uri("/api/users/search")
@@ -124,7 +124,7 @@ class UserControllerTest(
     @Nested
     inner class Add {
         @Test
-        fun `add new user`() = runTest {
+        fun `add new user`() = runSuspendIO {
             val newUser = createUserRecord()
 
             val savedUser = webTestClient
@@ -138,7 +138,7 @@ class UserControllerTest(
         }
 
         @Test
-        fun `add new user with invalid format`() = runTest {
+        fun `add new user with invalid format`() = runSuspendIO {
             val newUser = "new user"
 
             webTestClient
@@ -150,7 +150,7 @@ class UserControllerTest(
     @Nested
     inner class Update {
         @Test
-        fun `update existing user`() = runTest {
+        fun `update existing user`() = runSuspendIO {
             val newUser = createUserRecord()
             val savedUser = service.addUser(newUser)!!
 
@@ -167,7 +167,7 @@ class UserControllerTest(
         }
 
         @Test
-        fun `update non-existing user`() = runTest {
+        fun `update non-existing user`() = runSuspendIO {
             val userToUpdate = createUserRecord()
 
             webTestClient
@@ -176,7 +176,7 @@ class UserControllerTest(
         }
 
         @Test
-        fun `update user with invalid format`() = runTest {
+        fun `update user with invalid format`() = runSuspendIO {
             val userToUpdate = "new user"
             webTestClient
                 .httpPut("/api/users/2", userToUpdate)
@@ -184,7 +184,7 @@ class UserControllerTest(
         }
 
         @Test
-        fun `update user with invalid id`() = runTest {
+        fun `update user with invalid id`() = runSuspendIO {
             val userToUpdate = "new user"
             webTestClient
                 .httpPut("/api/users/abc", userToUpdate)
@@ -195,7 +195,7 @@ class UserControllerTest(
     @Nested
     inner class Delete {
         @Test
-        fun `delete existing user`() = runTest {
+        fun `delete existing user`() = runSuspendIO {
             val newUser = createUserRecord()
             val savedUser = service.addUser(newUser)!!
 
@@ -208,14 +208,14 @@ class UserControllerTest(
         }
 
         @Test
-        fun `delete non-existing user`() = runTest {
+        fun `delete non-existing user`() = runSuspendIO {
             webTestClient
                 .httpDelete("/api/users/9999")
                 .expectStatus().isNotFound
         }
 
         @Test
-        fun `delete by non-numeric id`() = runTest {
+        fun `delete by non-numeric id`() = runSuspendIO {
             webTestClient
                 .httpDelete("/api/users/abc")
                 .expectStatus().isBadRequest

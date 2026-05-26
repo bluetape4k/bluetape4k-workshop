@@ -1,5 +1,9 @@
 package io.bluetape4k.workshop.exposed.webflux.r2dbc.order
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldHaveSize
+import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.AbstractWebfluxR2dbcTest
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.order.dto.CreateProductRequest
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.order.dto.OrderDTO
@@ -47,17 +51,17 @@ class OrderControllerTest : AbstractWebfluxR2dbcTest() {
             .expectBody(OrderDTO::class.java)
             .returnResult().responseBody!!
 
-        assert(order.id > 0)
-        assert(order.status == OrderStatus.PENDING)
-        assert(order.lines.size == 1)
-        assert(order.lines[0].quantity == 2)
+        order.id shouldBeGreaterThan 0L
+        order.status shouldBeEqualTo OrderStatus.PENDING
+        order.lines shouldHaveSize 1
+        order.lines[0].quantity shouldBeEqualTo 2
 
         val fetched = webTestClient.get().uri("/api/orders/${order.id}")
             .exchange()
             .expectStatus().isOk
             .expectBody(OrderDTO::class.java)
             .returnResult().responseBody!!
-        assert(fetched.lines.isNotEmpty())
+        fetched.lines.shouldNotBeEmpty()
     }
 
     @Test
@@ -80,7 +84,7 @@ class OrderControllerTest : AbstractWebfluxR2dbcTest() {
             .expectStatus().isOk
             .expectBody(OrderDTO::class.java)
             .returnResult().responseBody!!
-        assert(cancelled.status == OrderStatus.CANCELLED)
+        cancelled.status shouldBeEqualTo OrderStatus.CANCELLED
     }
 
     @Test

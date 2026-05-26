@@ -35,9 +35,7 @@ internal class ForwardBlockingSink(
 
     override fun close() = runBlocking(context) {
         withTimeoutOrNull(timeout) {
-            runBlocking(context) {
-                delegate.close()
-            }
+            delegate.close()
         } ?: Unit
     }
 }

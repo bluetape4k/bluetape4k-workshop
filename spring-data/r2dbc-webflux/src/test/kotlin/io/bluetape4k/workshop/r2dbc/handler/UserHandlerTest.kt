@@ -11,7 +11,7 @@ import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -36,7 +36,7 @@ class UserHandlerTest: AbstractWebfluxR2dbcApplicationTest() {
     }
 
     @Test
-    fun `find all users`() = runTest {
+    fun `find all users`() = runSuspendIO {
         coEvery { service.findAll() } returns flowOf(createUser(id = 1), createUser(id = 2))
 
         val response = handler.findAll(request)
@@ -44,7 +44,7 @@ class UserHandlerTest: AbstractWebfluxR2dbcApplicationTest() {
     }
 
     @Test
-    fun `when user is not exists, returns empty flow`() = runTest {
+    fun `when user is not exists, returns empty flow`() = runSuspendIO {
         coEvery { service.findAll() } returns emptyFlow()
 
         val response = handler.findAll(request)
@@ -52,7 +52,7 @@ class UserHandlerTest: AbstractWebfluxR2dbcApplicationTest() {
     }
 
     @Test
-    fun `find by id return OK`() = runTest {
+    fun `find by id return OK`() = runSuspendIO {
         coEvery { request.pathVariable("id") } returns "1"
         coEvery { service.findById(1) } returns createUser(1)
 
@@ -62,7 +62,7 @@ class UserHandlerTest: AbstractWebfluxR2dbcApplicationTest() {
     }
 
     @Test
-    fun `find by id non exists return NotFound`() = runTest {
+    fun `find by id non exists return NotFound`() = runSuspendIO {
         coEvery { request.pathVariable("id") } returns "-1"
         coEvery { service.findById(-1) } returns null
 
@@ -71,7 +71,7 @@ class UserHandlerTest: AbstractWebfluxR2dbcApplicationTest() {
     }
 
     @Test
-    fun `when path variable is not numeric returns BadRequest`() = runTest {
+    fun `when path variable is not numeric returns BadRequest`() = runSuspendIO {
         coEvery { request.pathVariable("id") } returns "id"
         coEvery { service.findById(any()) } returns createUser(id = 1)
 
@@ -81,7 +81,7 @@ class UserHandlerTest: AbstractWebfluxR2dbcApplicationTest() {
     }
 
     @Test
-    fun `add new user returns OK`() = runTest {
+    fun `add new user returns OK`() = runSuspendIO {
         coEvery { request.bodyToMono<UserDTO>() } returns createUserDTO().toMono()
         coEvery { service.addUser(any()) } answers {
             firstArg<UserDTO>().toModel().copy(id = 999)
@@ -92,7 +92,7 @@ class UserHandlerTest: AbstractWebfluxR2dbcApplicationTest() {
     }
 
     @Test
-    fun `when invalid body to addUser returns BadRequest`() = runTest {
+    fun `when invalid body to addUser returns BadRequest`() = runSuspendIO {
         coEvery { request.bodyToMono<UserDTO>() } returns Mono.empty()
 
         val response = handler.addUser(request)
@@ -100,7 +100,7 @@ class UserHandlerTest: AbstractWebfluxR2dbcApplicationTest() {
     }
 
     @Test
-    fun `when error in saveUser returns InternalServerError`() = runTest {
+    fun `when error in saveUser returns InternalServerError`() = runSuspendIO {
         coEvery { service.addUser(any()) } returns null
         coEvery { request.bodyToMono<UserDTO>() } returns createUserDTO().toMono()
 
@@ -109,7 +109,7 @@ class UserHandlerTest: AbstractWebfluxR2dbcApplicationTest() {
     }
 
     @Test
-    fun `when update existing user returns OK`() = runTest {
+    fun `when update existing user returns OK`() = runSuspendIO {
         coEvery { request.pathVariable("id") } returns "2"
         coEvery { request.bodyToMono<UserDTO>() } returns createUserDTO().toMono()
         coEvery { service.updateUser(2, any()) } answers {
@@ -121,7 +121,7 @@ class UserHandlerTest: AbstractWebfluxR2dbcApplicationTest() {
     }
 
     @Test
-    fun `when provide non numeric id to updateUser returns BadRequest`() = runTest {
+    fun `when provide non numeric id to updateUser returns BadRequest`() = runSuspendIO {
         coEvery { request.pathVariable("id") } returns "NOT-NUMERIC"
 
         val response = handler.updateUser(request)
@@ -129,7 +129,7 @@ class UserHandlerTest: AbstractWebfluxR2dbcApplicationTest() {
     }
 
     @Test
-    fun `when empty body to updateUser returns BadRequest`() = runTest {
+    fun `when empty body to updateUser returns BadRequest`() = runSuspendIO {
         coEvery { request.pathVariable("id") } returns "2"
         coEvery { request.bodyToMono<UserDTO>() } returns Mono.empty()
 
@@ -138,7 +138,7 @@ class UserHandlerTest: AbstractWebfluxR2dbcApplicationTest() {
     }
 
     @Test
-    fun `when update non-existing user returns BadRequest`() = runTest {
+    fun `when update non-existing user returns BadRequest`() = runSuspendIO {
         coEvery { request.pathVariable("id") } returns "2"
         coEvery { request.bodyToMono<UserDTO>() } returns createUserDTO().toMono()
         coEvery { service.updateUser(2, any()) } returns null
@@ -148,7 +148,7 @@ class UserHandlerTest: AbstractWebfluxR2dbcApplicationTest() {
     }
 
     @Test
-    fun `when delete user is success returns NoContent`() = runTest {
+    fun `when delete user is success returns NoContent`() = runSuspendIO {
         coEvery { request.pathVariable("id") } returns "2"
         coEvery { service.deleteUser(2) } returns true
 
@@ -157,7 +157,7 @@ class UserHandlerTest: AbstractWebfluxR2dbcApplicationTest() {
     }
 
     @Test
-    fun `when delete non-existing user returns NotFound`() = runTest {
+    fun `when delete non-existing user returns NotFound`() = runSuspendIO {
         coEvery { request.pathVariable("id") } returns "999"
         coEvery { service.deleteUser(999) } returns false
 
@@ -166,7 +166,7 @@ class UserHandlerTest: AbstractWebfluxR2dbcApplicationTest() {
     }
 
     @Test
-    fun `when delete user with invalid id type returns BadRequest`() = runTest {
+    fun `when delete user with invalid id type returns BadRequest`() = runSuspendIO {
         coEvery { request.pathVariable("id") } returns "NON-NUMERIC"
 
         val response = handler.deleteUser(request)

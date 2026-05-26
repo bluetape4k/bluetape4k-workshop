@@ -1,15 +1,18 @@
 package io.bluetape4k.workshop.bucket4j.advanced
 
+import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
+import io.bluetape4k.assertions.shouldBeTrue
+import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.codec.Base58
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.bucket4j.advanced.utils.HeaderConstants
-import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
 import org.springframework.http.HttpStatus
-import org.testcontainers.utility.Base58
 
 /**
  * Integration tests for [RateLimitDemoController] validating all three rate-limit strategies.
@@ -38,7 +41,7 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
 
     @Test
     @Order(10)
-    fun `IP rate limit - anonymous endpoint returns 200 with remaining header`() = runTest {
+    fun `IP rate limit - anonymous endpoint returns 200 with remaining header`() = runSuspendIO {
         val response = client.get()
             .uri(ANONYMOUS_PATH)
             .exchange()
@@ -50,12 +53,12 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
 
         val remaining = response.responseHeaders.getFirst(HeaderConstants.X_RATELIMIT_REMAINING)?.toLongOrNull()
         log.debug { "IP remaining=$remaining" }
-        assert(remaining != null && remaining >= 0) { "X-RateLimit-Remaining must be a non-negative number" }
+        remaining.shouldNotBeNull() shouldBeGreaterOrEqualTo 0L
     }
 
     @Test
     @Order(11)
-    fun `IP rate limit - X-Forwarded-For is ignored when trust-proxy is false (default)`() = runTest {
+    fun `IP rate limit - X-Forwarded-For is ignored when trust-proxy is false (default)`() = runSuspendIO {
         // When trust-proxy=false, the X-Forwarded-For header is ignored.
         // The real TCP remote address (127.0.0.1) is used instead.
         // We verify that the spoofed IP has no effect: response is 200 or 429 (real-IP bucket),
@@ -67,14 +70,12 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
             .returnResult(String::class.java)
 
         val status = result.status
-        assert(status == HttpStatus.OK || status == HttpStatus.TOO_MANY_REQUESTS) {
-            "Expected 200 or 429 (real-IP bucket), but got $status — spoofed XFF must not cause 4xx/5xx errors"
-        }
+        (status == HttpStatus.OK || status == HttpStatus.TOO_MANY_REQUESTS).shouldBeTrue()
     }
 
     @Test
     @Order(99)  // runs last — drains the shared 127.0.0.1 IP bucket
-    fun `IP rate limit - exhausts bucket and returns 429`() = runTest {
+    fun `IP rate limit - exhausts bucket and returns 429`() = runSuspendIO {
         var exhausted = false
         repeat(30) {
             val status = client.get()
@@ -88,12 +89,12 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
                 return@repeat
             }
         }
-        assert(exhausted) { "Expected HTTP 429 after exhausting IP rate limit bucket" }
+        exhausted.shouldBeTrue()
     }
 
     @Test
     @Order(100) // runs after exhaustion — verifies Retry-After is in the 429 response
-    fun `IP rate limit - 429 response includes Retry-After header`() = runTest {
+    fun `IP rate limit - 429 response includes Retry-After header`() = runSuspendIO {
         // Bucket is already exhausted from previous test; any request should return 429.
         repeat(30) {
             val result = client.get()
@@ -102,10 +103,9 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
                 .returnResult(String::class.java)
 
             if (result.status == HttpStatus.TOO_MANY_REQUESTS) {
-                val retryAfter = result.responseHeaders.getFirst(HeaderConstants.RETRY_AFTER)
-                assert(retryAfter != null) { "Retry-After header must be present in 429 response" }
-                assert(retryAfter!!.toLong() >= 1) { "Retry-After must be at least 1 second" }
-                return@runTest
+                val retryAfter = result.responseHeaders.getFirst(HeaderConstants.RETRY_AFTER).shouldNotBeNull()
+                retryAfter.toLong() shouldBeGreaterOrEqualTo 1L
+                return@runSuspendIO
             }
         }
     }
@@ -116,7 +116,7 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
 
     @Test
     @Order(20)
-    fun `user rate limit - authenticated endpoint returns 200 for valid user`() = runTest {
+    fun `user rate limit - authenticated endpoint returns 200 for valid user`() = runSuspendIO {
         val userId = "user-" + Base58.randomString(8)
 
         client.get()
@@ -129,7 +129,7 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
 
     @Test
     @Order(21)
-    fun `user rate limit - missing X-User-ID returns 401`() = runTest {
+    fun `user rate limit - missing X-User-ID returns 401`() = runSuspendIO {
         client.get()
             .uri(AUTHENTICATED_PATH)
             .exchange()
@@ -138,7 +138,7 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
 
     @Test
     @Order(22)
-    fun `user rate limit - different users have independent buckets`() = runTest {
+    fun `user rate limit - different users have independent buckets`() = runSuspendIO {
         val userId1 = "independent-a-" + Base58.randomString(6)
         val userId2 = "independent-b-" + Base58.randomString(6)
 
@@ -157,7 +157,7 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
 
     @Test
     @Order(23)
-    fun `user rate limit - exhausts per-user bucket and returns 429`() = runTest {
+    fun `user rate limit - exhausts per-user bucket and returns 429`() = runSuspendIO {
         val userId = "exhaust-" + Base58.randomString(8)
         var exhausted = false
 
@@ -174,7 +174,7 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
                 return@repeat
             }
         }
-        assert(exhausted) { "Expected HTTP 429 after exhausting user rate limit bucket for userId=$userId" }
+        exhausted.shouldBeTrue()
     }
 
     // ------------------------------------------------------------------
@@ -183,7 +183,7 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
 
     @Test
     @Order(30)
-    fun `combined rate limit - sensitive endpoint returns 200 with both ip and user`() = runTest {
+    fun `combined rate limit - sensitive endpoint returns 200 with both ip and user`() = runSuspendIO {
         val userId = "combined-" + Base58.randomString(8)
 
         client.get()
@@ -196,7 +196,7 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
 
     @Test
     @Order(31)
-    fun `combined rate limit - missing X-User-ID returns 400`() = runTest {
+    fun `combined rate limit - missing X-User-ID returns 400`() = runSuspendIO {
         client.get()
             .uri(SENSITIVE_PATH)
             .exchange()
@@ -205,7 +205,7 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
 
     @Test
     @Order(32)
-    fun `combined rate limit - different user IDs have independent combined buckets`() = runTest {
+    fun `combined rate limit - different user IDs have independent combined buckets`() = runSuspendIO {
         val userId1 = "combo-a-" + Base58.randomString(6)
         val userId2 = "combo-b-" + Base58.randomString(6)
 
@@ -227,7 +227,7 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
 
     @Test
     @Order(33)
-    fun `combined rate limit - exhausts combined bucket and returns 429`() = runTest {
+    fun `combined rate limit - exhausts combined bucket and returns 429`() = runSuspendIO {
         val userId = "combined-exhaust-" + Base58.randomString(8)
         var exhausted = false
 
@@ -244,6 +244,6 @@ class RateLimitDemoControllerTest : AbstractBucket4jAdvancedTest() {
                 return@repeat
             }
         }
-        assert(exhausted) { "Expected HTTP 429 after exhausting combined rate limit bucket for userId=$userId" }
+        exhausted.shouldBeTrue()
     }
 }

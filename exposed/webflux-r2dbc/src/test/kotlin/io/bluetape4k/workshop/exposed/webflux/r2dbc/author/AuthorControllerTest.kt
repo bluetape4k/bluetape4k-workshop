@@ -1,12 +1,14 @@
 package io.bluetape4k.workshop.exposed.webflux.r2dbc.author
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeGreaterThan
+import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.AbstractWebfluxR2dbcTest
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.AuthorDTO
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.author.dto.CreateAuthorRequest
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
 import org.springframework.test.annotation.DirtiesContext
-import org.hamcrest.Matchers
 
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class AuthorControllerTest : AbstractWebfluxR2dbcTest() {
@@ -28,9 +30,9 @@ class AuthorControllerTest : AbstractWebfluxR2dbcTest() {
             .expectBody(AuthorDTO::class.java)
             .returnResult().responseBody!!
 
-        assert(created.id > 0)
-        assert(created.firstName == req.firstName)
-        assert(created.email == req.email)
+        created.id shouldBeGreaterThan 0L
+        created.firstName shouldBeEqualTo req.firstName
+        created.email shouldBeEqualTo req.email
 
         webTestClient.get()
             .uri("/api/authors/${created.id}")
@@ -59,7 +61,7 @@ class AuthorControllerTest : AbstractWebfluxR2dbcTest() {
             .expectStatus().isOk
             .expectBodyList(AuthorDTO::class.java)
             .returnResult().responseBody!!
-        assert(authors.isNotEmpty())
+        authors.shouldNotBeEmpty()
     }
 
     @Test
@@ -92,7 +94,7 @@ class AuthorControllerTest : AbstractWebfluxR2dbcTest() {
             .expectStatus().isOk
             .expectBody(AuthorDTO::class.java)
             .returnResult().responseBody!!
-        assert(updated.firstName == "UpdatedName")
+        updated.firstName shouldBeEqualTo "UpdatedName"
     }
 
     @Test

@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.resilience.service.coroutines
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.resilience.exception.BusinessException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -20,7 +21,13 @@ class BackendBCoService: CoService {
     }
 
     override suspend fun suspendFailureWithFallback(): String {
-        return runCatching { suspendFailure() }.getOrElse { "This is a fallback" }
+        return try {
+            suspendFailure()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            "This is a fallback"
+        }
     }
 
     override suspend fun suspendSuccessWithException(): String {
