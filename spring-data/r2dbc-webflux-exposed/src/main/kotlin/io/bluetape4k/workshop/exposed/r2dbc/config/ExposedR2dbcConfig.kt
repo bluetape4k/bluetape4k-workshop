@@ -7,11 +7,11 @@ import io.r2dbc.pool.ConnectionPool
 import io.r2dbc.pool.ConnectionPoolConfiguration
 import io.r2dbc.spi.ConnectionFactories
 import io.r2dbc.spi.ConnectionFactoryOptions
-import io.r2dbc.spi.Option
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabase
 import org.jetbrains.exposed.v1.r2dbc.R2dbcDatabaseConfig
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
@@ -33,21 +33,23 @@ class ExposedR2dbcConfig {
         // return Executors.newVirtualThreadPerTaskExecutor().asCoroutineDispatcher()
     }
 
-    /**
-     * H2 인메모리 데이터베이스용 ConnectionFactory를 생성합니다.
-     */
     @Bean
-    fun h2ConnectionFactoryOptions(): ConnectionFactoryOptions {
-        val options = ConnectionFactoryOptions.builder()
-            .option(ConnectionFactoryOptions.DRIVER, "h2")
-            .option(ConnectionFactoryOptions.PROTOCOL, "mem")
-            .option(ConnectionFactoryOptions.DATABASE, "test")
-            .option(Option.valueOf("DB_CLOSE_DELAY"), "-1")
-            .option(Option.valueOf("DB_CLOSE_ON_EXIT"), "FALSE")
-            //.option(Option.valueOf("MODE"), "PostgreSQL") // R2DBC 에서는 Mode 옵션이 제대로 동작하지 않음
+    fun connectionFactoryOptions(
+        @Value("\${spring.r2dbc.url:r2dbc:h2:mem:///test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}") r2dbcUrl: String,
+        @Value("\${spring.r2dbc.username:}") username: String,
+        @Value("\${spring.r2dbc.password:}") password: String,
+    ): ConnectionFactoryOptions {
+        val builder = ConnectionFactoryOptions.parse(r2dbcUrl).mutate()
+        if (username.isNotBlank()) {
+            builder.option(ConnectionFactoryOptions.USER, username)
+        }
+        if (password.isNotBlank()) {
+            builder.option(ConnectionFactoryOptions.PASSWORD, password)
+        }
+        val options = builder
             .build()
 
-        log.info { "H2 연결 설정: ${options.toString().replace(Regex("password=.*?,"), "password=****,")}" }
+        log.info { "R2DBC 연결 설정: driver=${options.getValue(ConnectionFactoryOptions.DRIVER)}" }
         return options
     }
 

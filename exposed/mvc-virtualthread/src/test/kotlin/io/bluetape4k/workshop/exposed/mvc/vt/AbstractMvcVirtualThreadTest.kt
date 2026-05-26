@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.exposed.mvc.vt
 
-import io.bluetape4k.exposed.tests.Containers
+import io.bluetape4k.exposed.tests.TestDB
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.exposed.mvc.vt.author.schema.AuthorTable
@@ -16,23 +16,26 @@ import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.WebTestClient
 import java.math.BigDecimal
 
+@ActiveProfiles("postgres")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 abstract class AbstractMvcVirtualThreadTest {
 
     companion object : KLogging() {
-        val postgres = Containers.Postgres
+        private val testDB = TestDB.POSTGRESQL
 
         @JvmStatic
         @DynamicPropertySource
         fun postgresProperties(registry: DynamicPropertyRegistry) {
-            registry.add("spring.datasource.url") { postgres.jdbcUrl as Any }
-            registry.add("spring.datasource.username") { postgres.username as Any }
-            registry.add("spring.datasource.password") { postgres.password as Any }
+            registry.add("spring.datasource.url") { testDB.connection() }
+            registry.add("spring.datasource.driver-class-name") { testDB.driver }
+            registry.add("spring.datasource.username") { testDB.user }
+            registry.add("spring.datasource.password") { testDB.pass }
         }
 
         val faker = Fakers.faker
