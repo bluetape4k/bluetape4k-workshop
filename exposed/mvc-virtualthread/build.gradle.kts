@@ -25,7 +25,9 @@ dependencies {
     testImplementation(project(":shared"))
     testImplementation(libs.bluetape4k.junit5)
     testImplementation(libs.bluetape4k.assertions)
-    testImplementation(libs.exposed.jdbc.tests)
+    testImplementation(libs.exposed.jdbc.tests) {
+        exclude(group = "org.jetbrains.exposed", module = "exposed-spring-boot4-starter")
+    }
 
     // bluetape4k core (provides virtualFuture, ShutdownQueue, KLogging)
     implementation(libs.bluetape4k.core)

@@ -26,4 +26,6 @@ dependencies {
     // Test
     testImplementation(libs.bluetape4k.assertions)
     testImplementation(libs.exposed.jdbc.tests)
+    testRuntimeOnly(libs.mysql.connector.j)
+    testRuntimeOnly(libs.postgresql.driver)
 }

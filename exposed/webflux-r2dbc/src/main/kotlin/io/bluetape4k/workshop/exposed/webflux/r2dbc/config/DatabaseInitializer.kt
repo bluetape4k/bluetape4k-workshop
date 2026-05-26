@@ -32,6 +32,7 @@ class DatabaseInitializer(
         val jdbcUrl = r2dbcUrl
             .replace("r2dbc:pool:postgresql", "jdbc:postgresql")
             .replace("r2dbc:postgresql", "jdbc:postgresql")
+            .replace(Regex("""(jdbc:postgresql://)[^/@]+@"""), "$1")
 
         val hikariConfig = HikariConfig().apply {
             this.jdbcUrl = jdbcUrl

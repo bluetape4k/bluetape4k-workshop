@@ -29,6 +29,8 @@ dependencies {
     testImplementation(project(":shared"))
     testImplementation(libs.bluetape4k.junit5)
     testImplementation(libs.exposed.r2dbc.tests)
+    testRuntimeOnly(libs.mysql.connector.j)
+    testRuntimeOnly(libs.postgresql.driver)
 
     // R2DBC
     implementation(libs.r2dbc.h2)
