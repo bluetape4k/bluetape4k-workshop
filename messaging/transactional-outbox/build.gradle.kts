@@ -1,6 +1,16 @@
 plugins {
+    alias(libs.plugins.exposed)
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.spring.boot)
+}
+
+exposed {
+    migrations {
+        tablesPackage = "io.bluetape4k.workshop.messaging.outbox"
+        databaseUrl = "jdbc:h2:mem:messaging-transactional-outbox-migrations;DB_CLOSE_DELAY=-1;MODE=PostgreSQL"
+        databaseUser = "sa"
+        databasePassword = ""
+    }
 }
 
 springBoot {

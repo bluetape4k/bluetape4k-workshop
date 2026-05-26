@@ -26,6 +26,7 @@ plugins {
     alias(libs.plugins.shadow) apply false
 
     alias(libs.plugins.graalvm.native) apply false
+    alias(libs.plugins.exposed) apply false
 
     // for JMolecules
     id("net.bytebuddy.byte-buddy-gradle-plugin") version "1.18.8" apply false

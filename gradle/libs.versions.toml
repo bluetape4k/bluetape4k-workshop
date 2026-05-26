@@ -160,6 +160,7 @@ graalvm-native = { id = "org.graalvm.buildtools.native", version.ref = "graalvm-
 docker-compose = { id = "com.avast.gradle.docker-compose", version.ref = "docker-compose" }
 protobuf-plugin = { id = "com.google.protobuf", version.ref = "protobuf-plugin" }
 gatling-plugin = { id = "io.gatling.gradle", version.ref = "gatling-plugin" }
+exposed = { id = "org.jetbrains.exposed.plugin", version.ref = "exposed" }
 
 [libraries]
 jetbrains-annotations = { module = "org.jetbrains:annotations", version = "26.1.0" }  # https://mvnrepository.com/artifact/org.jetbrains/annotations

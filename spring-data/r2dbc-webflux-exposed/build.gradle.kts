@@ -2,6 +2,16 @@ plugins {
     alias(libs.plugins.kotlin.spring)
     alias(libs.plugins.spring.boot)
     // alias(libs.plugins.graalvm.native)
+    alias(libs.plugins.exposed)
+}
+
+exposed {
+    migrations {
+        tablesPackage = "io.bluetape4k.workshop.exposed.r2dbc.domain"
+        databaseUrl = "jdbc:h2:mem:workshop-r2dbc-webflux-exposed-migrations;DB_CLOSE_DELAY=-1;MODE=PostgreSQL"
+        databaseUser = "sa"
+        databasePassword = ""
+    }
 }
 
 springBoot {
