@@ -1,8 +1,8 @@
 package io.bluetape4k.workshop.exposed.mvc.vt
 
+import io.bluetape4k.exposed.tests.Containers
 import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.KLogging
-import io.bluetape4k.testcontainers.database.PostgreSQLServer
 import io.bluetape4k.workshop.exposed.mvc.vt.author.schema.AuthorTable
 import io.bluetape4k.workshop.exposed.mvc.vt.author.schema.BookTable
 import io.bluetape4k.workshop.exposed.mvc.vt.order.schema.OrderLineTable
@@ -25,7 +25,7 @@ import java.math.BigDecimal
 abstract class AbstractMvcVirtualThreadTest {
 
     companion object : KLogging() {
-        val postgres = PostgreSQLServer.Launcher.postgres
+        val postgres = Containers.Postgres
 
         @JvmStatic
         @DynamicPropertySource

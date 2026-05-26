@@ -25,4 +25,5 @@ dependencies {
 
     // Test
     testImplementation(libs.bluetape4k.assertions)
+    testImplementation(libs.exposed.jdbc.tests)
 }
