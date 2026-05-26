@@ -48,18 +48,26 @@ All saga transactions are `REQUIRES_NEW` — no implicit enlistment in a possibl
 **T3 exception handling contract** (MANDATORY in implementation):
 ```kotlin
 // In ImageDerivativeWorkflowService catch block
-withContext(NonCancellable + Dispatchers.IO) {
-    try {
-        persistence.recordJobFailure(
-            identity = JobIdentity(jobId, assetId),
-            reason = JobFailureReason(errorCode, sanitizedMessage),
-        )
-    } catch (t3Ex: Throwable) {  // Throwable (not Exception) to catch Error subclasses
-        // T3 failure must NOT swallow the original exception
-        originalException.addSuppressed(t3Ex)
-        log.error(t3Ex) { "Failed to record job failure: assetId=$assetId jobId=$jobId" }
-        meterRegistry.counter(METRIC_FAILURE_RECORD_FAILED).increment()
+// CRITICAL: throw originalException MUST execute unconditionally even if addSuppressed/log/counter throw.
+// Use nested try-catch guards inside the T3 catch block:
+try {
+    withContext(NonCancellable + Dispatchers.IO) {
+        try {
+            persistence.recordJobFailure(
+                identity = JobIdentity(jobId, assetId),
+                reason = JobFailureReason(errorCode, sanitizedMessage),
+            )
+        } catch (t3Ex: Throwable) {  // Throwable (not Exception) to catch Error subclasses
+            // Each subsequent call is guarded individually — during OOM, addSuppressed/log/counter
+            // can themselves throw. Guard each to ensure originalException is always rethrown.
+            try { originalException.addSuppressed(t3Ex) } catch (_: Throwable) {}
+            try { log.error(t3Ex) { "Failed to record job failure: assetId=$assetId jobId=$jobId" } } catch (_: Throwable) {}
+            try { meterRegistry.counter(METRIC_FAILURE_RECORD_FAILED).increment() } catch (_: Throwable) {}
+        }
     }
+} catch (outerEx: Throwable) {
+    // withContext itself threw (e.g., coroutine dispatch failure during OOM)
+    try { originalException.addSuppressed(outerEx) } catch (_: Throwable) {}
 }
 // Always rethrow the original exception after T3 completes or fails
 throw originalException
@@ -550,7 +558,7 @@ Each DoD criterion must have at least one named integration test.
 | T2 | Successful upload: T2 writes READY + SUCCEEDED + image_objects | `ImagePersistenceServiceImplTest` | After `recordJobSuccess()`: asset=READY, job=SUCCEEDED, `image_objects` count = variants+1 |
 | T3-status | Failed upload: T3 writes FAILED status | `ImagePersistenceServiceImplTest` | After `recordJobFailure()`: job=FAILED, asset=FAILED |
 | T3-fields | Failed upload: error_code + error_message are non-null | `ImagePersistenceServiceImplTest` | `job.errorCode` and `job.errorMessage` are not null or blank |
-| T3-propagate | T3 DB failure: original exception still propagates | `ImageDerivativeWorkflowServiceTest` | Spy `ImagePersistenceService.recordJobFailure()` to throw; trigger upload with failing VIPS mock → assert caught exception is the original VIPS exception; `suppressed[0]` is the T3 exception |
+| T3-propagate | T3 DB failure: original exception still propagates | `ImageDerivativeWorkflowSagaTest` | Spy `ImagePersistenceService.recordJobFailure()` to throw; trigger upload with failing VIPS mock → assert caught exception is the original VIPS exception; `suppressed[0]` is the T3 exception |
 | Idempotency-checksum | Retry same checksum → no duplicate image_objects | `ImagePersistenceServiceImplTest` | Upload same bytes twice → `COUNT(image_objects WHERE image_asset_id=X)` = expected variants+1 |
 | Idempotency-short-circuit | Same checksum + READY → no re-processing | `ImagePersistenceServiceImplTest` | `recordJobStart()` returns `JobStartResult.AlreadyReady` on second call |
 | FAILED-retry | FAILED asset + same checksum → retry succeeds | `ImagePersistenceServiceImplTest` | Seed a FAILED asset → call `recordJobStart()` → asset status=PROCESSING, new job created |
@@ -561,9 +569,9 @@ Each DoD criterion must have at least one named integration test.
 | GET-asset-failed | GET /images/{id} when asset has status=FAILED and no image_objects | `ImageAssetEndpointTest` | Seed asset with status=FAILED, call endpoint → 200 with `original=null`, `variants=[]` (or documented 4xx) — must not throw NPE |
 | Idempotency-null-original | ORIGINAL row deduplicated by NULLS NOT DISTINCT constraint | `ImagePersistenceServiceImplTest` | Call `recordJobSuccess()` twice with same `assetId` and an ORIGINAL object; assert exactly 1 row with `kind=ORIGINAL` and `variant_name IS NULL` in `image_objects` |
 | T3-sanitization | error_message contains no stack traces | `ImagePersistenceServiceImplTest` | After `recordJobFailure()` with an exception-derived message: `job.errorMessage` does not contain newline (`\n`), `"at io."`, or `"Exception"` |
-| Event-success-path | Successful upload emits all 4 step events in order | `ImagePersistenceServiceImplTest` | After full saga: `image_processing_events` rows for `VALIDATION→VIPS_PROCESSING→S3_UPLOAD(×N)→JOB_COMPLETED`, ordered by `created_at`; each has non-null `step`, `status=COMPLETED`; total row count = 3 + N (where N = variant count + 1 for original) |
-| Event-failure-path | Failed upload emits `JOB_FAILED` event | `ImagePersistenceServiceImplTest` | After T3: one `image_processing_events` row with `step=JOB_FAILED`, `status=FAILED`, non-null `message` |
-| Event-mini-tx-suppression | Event mini-tx throws → main flow unaffected | `ImageDerivativeWorkflowServiceTest` | `@MockkBean` `ImagePersistenceService` stub `appendEvent` to throw; call full `processUpload()` → no exception propagated; upload response valid; Micrometer counter `image.processing.event.append.failed` incremented |
+| Event-success-path | Successful upload emits all 4 step events in order | `ImageDerivativeWorkflowSagaTest` | After full saga: `image_processing_events` rows for `VALIDATION→VIPS_PROCESSING→S3_UPLOAD(×N)→JOB_COMPLETED`, ordered by `created_at`; each has non-null `step`, `status=COMPLETED`; total row count = 3 + N (where N = variant count + 1 for original). Example: 2 variants → 3+3=6 events. |
+| Event-failure-path | Failed upload emits `JOB_FAILED` event | `ImageDerivativeWorkflowSagaTest` | After T3: one `image_processing_events` row with `step=JOB_FAILED`, `status=FAILED`, non-null `message` |
+| Event-mini-tx-suppression | Event mini-tx throws → main flow unaffected | `ImageDerivativeWorkflowSagaTest` | `@SpykBean` `ImagePersistenceService` stub `appendEvent` to throw; call full `processUpload()` → no exception propagated; upload response valid; Micrometer counter `image.processing.event.append.failed` incremented |
 | Concurrent-checksum-race-deterministic | DIVE catch-and-re-read path correct | `ImagePersistenceServiceImplTest` | Mock first INSERT to throw `DataIntegrityViolationException`; verify `recordJobStart()` re-reads by checksum and returns valid result without propagating the DIVE |
 | Concurrent-checksum-race-probabilistic | Two simultaneous uploads → graceful (probabilistic) | `ImagePersistenceServiceImplTest` | Use `MultithreadingTester` (bluetape4k-junit5) with 2 threads calling `recordJobStart()` with same checksum; assert no exception escapes; `SELECT COUNT(*) FROM image_assets WHERE checksum=X` = 1. **Note**: probabilistic; documents workshop-scale confidence only |
 | Concurrent-checksum-DIVE-null-branch | DIVE on insert + findByChecksum returns null → ImageAssetNotFoundException | `ImagePersistenceServiceImplTest` | MockK `spyk` on `ImageAssetRepository`; first `insertAsset` throws `DataIntegrityViolationException`; `findByChecksum` returns null; assert `assertFailsWith<ImageAssetNotFoundException>` with checksum value |
@@ -572,6 +580,7 @@ Each DoD criterion must have at least one named integration test.
 | UserContext-audit | created_by/updated_by populated from UserContext | `ImagePersistenceServiceImplTest` | `recordJobStart()` wrapped in `UserContext.withUser("test-user") { }` → assert `created_by="test-user"` on both `image_assets` and `image_processing_jobs` rows |
 | S3-upload-FAILED-terminality | S3 upload failure terminates saga immediately | `ImageDerivativeWorkflowSagaTest` | Mock S3 `putObject` to fail on first call; assert T3 called immediately; remaining variant uploads NOT attempted; assert job status=FAILED; S3_UPLOAD event with status=FAILED exists |
 | Error-is-Error-subclass | T3 catch block catches Error (not just Exception) | `ImageDerivativeWorkflowSagaTest` | Throw `OutOfMemoryError` in VIPS step; assert T3 `catch(Throwable)` catches it; job recorded as FAILED; original `OutOfMemoryError` is rethrown from saga |
+| ConcurrentProcessing-path | Existing PROCESSING asset → second upload creates new job on same asset | `ImagePersistenceServiceImplTest` | Seed asset with `status=PROCESSING` via `withTestUser { }`; call `recordJobStart()` with same checksum; `assertIs<JobStartResult.ConcurrentProcessing>`; assert new `RUNNING` job exists on same `assetId`; original PROCESSING asset unchanged |
 
 ---
 
@@ -585,7 +594,7 @@ Each DoD criterion must have at least one named integration test.
 - [ ] FAILED asset + same checksum retry succeeds (no `DataIntegrityViolationException`)
 - [ ] Concurrent same-checksum uploads handled gracefully (no unhandled DB exception)
 - [ ] All existing tests (`ImageDerivativeWorkflowServiceTest`, unit tests) pass without PostgreSQL
-- [ ] Integration tests cover all 27 scenarios in §10 (including event lifecycle, race, sanitization, DIVE null-branch, cascade-delete, UserContext audit, and GET-failed scenarios)
+- [ ] Integration tests cover all 28 scenarios in §10 (including event lifecycle, race, ConcurrentProcessing path, sanitization, DIVE null-branch, cascade-delete, UserContext audit, and GET-failed scenarios)
 - [ ] `POST /api/images/derivatives` response `imageId` equals the `external_id` persisted in `image_assets` (not a freshly generated UUID)
 - [ ] `README.md` and `README.ko.md` include ERD + updated persistence sequence diagram
 - [ ] `README.md` includes "Used Bluetape4k features" table
