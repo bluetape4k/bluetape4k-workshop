@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.messaging.kafka.controller
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
+import io.bluetape4k.kafka.spring.suspendSend
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.messaging.kafka.KafkaTopics
 import io.bluetape4k.workshop.messaging.kafka.listener.LoggerMessageHandler
@@ -35,7 +36,7 @@ class GreetingController {
     suspend fun sendGreetingMessage(
         @RequestParam(name = "message", defaultValue = "Hello world") message: String,
     ): String {
-        kafkaTemplate.send(KafkaTopics.TOPIC_SIMPLE, message)
+        kafkaTemplate.suspendSend(KafkaTopics.TOPIC_SIMPLE, message)
         return message
     }
 
@@ -43,6 +44,6 @@ class GreetingController {
     @ResponseStatus(HttpStatus.ACCEPTED)
     suspend fun sendGreetingRequest(@RequestBody greeting: GreetingRequest) {
         log.debug { "Send greeting: $greeting" }
-        kafkaTemplate.send(KafkaTopics.TOPIC_GREETING, greeting)
+        kafkaTemplate.suspendSend(KafkaTopics.TOPIC_GREETING, greeting)
     }
 }

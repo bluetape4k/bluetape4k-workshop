@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.lock
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeLessThan
@@ -13,7 +14,6 @@ import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.test.assertFailsWith
 
 /**
  * Verifies that [io.bluetape4k.workshop.lock.service.LockedInventoryService]

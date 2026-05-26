@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.lock
 
+import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldNotBeNull
@@ -7,7 +8,6 @@ import io.bluetape4k.workshop.lock.fenced.FencedResource
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.util.concurrent.TimeUnit.MILLISECONDS
-import kotlin.test.assertFailsWith
 
 /**
  * Smoke test — full stale-holder scenario demonstrating fencing token protection.

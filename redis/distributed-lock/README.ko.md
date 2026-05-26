@@ -157,7 +157,7 @@ try {
 
 ### SuspendedJobTester 의미론
 
-`SuspendedJobTester.workers(N).rounds(R)`는 `N`개의 워커가 각각 `R`라운드의 `add { }` 블록을 실행합니다.
+`SuspendedJobTester.workers(N).rounds(R)`는 `N`개의 동시 워커가 협력하여 각 `add { }` 블록을 `R`라운드 실행합니다.
 `totalUnits = R × blockCount`.
 
 stock=100/qty=10 테스트의 경우:
@@ -175,7 +175,20 @@ stock=100/qty=10 테스트의 경우:
 ## 의존성
 
 - **Redisson** — `RLock`, `RFencedLock`, 비동기 API
-- **bluetape4k-redisson** — `getLockId()` (Snowflake ID), `redissonClient {}` DSL
+- **bluetape4k-redisson** — `redissonClient {}` DSL
+- **bluetape4k-redis** — `getLockId()` (Snowflake ID)
 - **bluetape4k-coroutines** — `awaitSuspending()`, `io.bluetape4k.logging.coroutines`
 - **bluetape4k-testcontainers** — `RedisServer.Launcher.redis` Testcontainers 싱글턴
+- **bluetape4k-junit5** — `SuspendedJobTester`, `MultithreadingTester`
 - **kotlinx.atomicfu** — `atomic(0L)` for `FencedResource.lastSeenToken`
+
+## 사용된 bluetape4k 기능
+
+| 기능 | 아티팩트 | 코드 위치 | 이점 |
+|---|---|---|---|
+| `RedisServer.Launcher.redis` | `bluetape4k-testcontainers` | `AbstractDistributedLockTest` companion | Testcontainers Redis 싱글턴으로 `@DynamicPropertySource` 없이 테스트 Redis 구동 |
+| `redissonClient {}` DSL | `bluetape4k-redisson` | `AbstractDistributedLockTest.redisson` | `RedissonClient` 설정을 Kotlin DSL로 구성 |
+| `getLockId(lockName)` | `bluetape4k-redis` | `SuspendingFencedInventoryService.deduct()` | 코루틴 안전 RFencedLock identity 생성 |
+| `requirePositiveNumber` | `bluetape4k-core` | `SuspendingFencedInventoryService.deduct()` | 입력 검증 실패를 명확한 `IllegalArgumentException`으로 표현 |
+| `SuspendedJobTester` | `bluetape4k-junit5` | `SuspendFencedLockTest` | 재현 가능한 코루틴 경쟁 조건 검증 |
+| `MultithreadingTester` | `bluetape4k-junit5` | `DistributedLockTest` | OS thread 기반 분산 락 동시성 검증 |

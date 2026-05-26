@@ -1,7 +1,7 @@
 # Redisson Examples
 
 Redis 클라이언트 라이브러리 [Redisson](https://redisson.org/)의 분산 동기화 객체를 활용하는 예제 모음입니다.
-bluetape4k의 `RedissonCodecs.LZ4ForyComposite`, `VirtualThreadExecutor`, `RedisServer.Launcher`, 테스트 동시성 헬퍼를 활용합니다.
+bluetape4k의 `RedissonCodecs.LZ4ForyComposite`, `localCachedMap()`, `streamAddArgsOf()`, `VirtualThreadExecutor`, `RedisServer.Launcher`, 테스트 동시성 헬퍼를 활용합니다.
 Testcontainers로 Redis 컨테이너를 자동으로 구동하여 통합 테스트를 수행합니다.
 
 ## 아키텍처
@@ -67,7 +67,9 @@ Testcontainers로 Redis 컨테이너를 자동으로 구동하여 통합 테스�
 
 | 기능 | 아티팩트 | 코드 위치 | 이점 |
 |---|---|---|---|
-| `RedissonCodecs.LZ4ForyComposite` | `bluetape4k-redis` | `AbstractRedissonTest` | LZ4 압축 + Fory 직렬화 — JSON 대비 공간·속도 우위 |
+| `RedissonCodecs.LZ4ForyComposite` | `bluetape4k-redisson` | `AbstractRedissonTest` | LZ4 압축 + Fory 직렬화 — JSON 대비 공간·속도 우위 |
+| `localCachedMap()` | `bluetape4k-redisson` | `LocalCachedMapExamples` | `LocalCachedMapOptions` DSL과 map 생성 호출을 한 곳에 묶어 Near Cache 설정 중복 축소 |
+| `streamAddArgsOf()` | `bluetape4k-redisson` | `StreamExamples` | Redis Stream append 인자를 Kotlin-friendly helper로 생성 |
 | `VirtualThreadExecutor` | `bluetape4k-coroutines` | `AbstractRedissonTest` | Redisson I/O를 Virtual Thread로 처리 |
 | `RedisServer.Launcher.redis` | `bluetape4k-testcontainers` | `AbstractRedissonTest` | Testcontainers Redis 싱글톤 — 자동 구동·종료 |
 | `ShutdownQueue.register` | `bluetape4k-core` | `AbstractRedissonTest` | JVM 종료 시 RedissonClient 자동 close |
@@ -156,4 +158,5 @@ SuspendedJobTester()
 - [Redisson 공식 문서](https://redisson.org/docs/)
 - [Redisson GitHub](https://github.com/redisson/redisson)
 - [bluetape4k-redis](https://github.com/bluetape4k/bluetape4k-projects)
+- [bluetape4k-redisson](https://github.com/bluetape4k/bluetape4k-projects)
 - Spring Data Redis 기반 예제는 [`spring-data/redis-examples`](../../spring-data/redis-examples) 참고
