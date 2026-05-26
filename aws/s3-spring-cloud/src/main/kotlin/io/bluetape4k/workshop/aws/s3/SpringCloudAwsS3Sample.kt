@@ -5,7 +5,7 @@ import io.bluetape4k.aws.auth.staticCredentialsProviderOf
 import io.bluetape4k.aws.s3.createBucket
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.logging.info
-import io.bluetape4k.testcontainers.aws.LocalStackServer
+import io.bluetape4k.testcontainers.aws.FlociServer
 import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
@@ -27,7 +27,7 @@ class SpringCloudAwsS3Sample {
     companion object: KLogging() {
         private const val TEST_FILE_URL = "s3://spring-cloud-aws-sample-bucket1/test-file.txt"
 
-        private val s3Server = LocalStackServer.Launcher.localStack.withServices("s3")
+        private val s3Server = FlociServer.Launcher.floci.withServices("s3")
     }
 
 //    @Value(TEST_FILE_URL)
@@ -36,9 +36,9 @@ class SpringCloudAwsS3Sample {
     @Bean
     fun s3Client(): S3Client {
         return S3Client.builder()
-            .endpointOverride(s3Server.endpoint)
-            .region(Region.of(s3Server.region))
-            .credentialsProvider(staticCredentialsProviderOf(s3Server.accessKey, s3Server.secretKey))
+            .endpointOverride(s3Server.awsEndpoint)
+            .region(Region.of(s3Server.regionName))
+            .credentialsProvider(staticCredentialsProviderOf(s3Server.awsAccessKey, s3Server.awsSecretKey))
             .build()
     }
 
