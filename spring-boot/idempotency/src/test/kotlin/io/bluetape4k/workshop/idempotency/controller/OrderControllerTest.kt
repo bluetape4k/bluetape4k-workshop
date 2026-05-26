@@ -1,15 +1,15 @@
 package io.bluetape4k.workshop.idempotency.controller
 
-import io.bluetape4k.codec.Base58
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotBeEqualTo
+import io.bluetape4k.codec.Base58
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.idempotency.AbstractIdempotencyTest
 import io.bluetape4k.workshop.idempotency.model.OrderRequest
 import io.bluetape4k.workshop.idempotency.model.OrderResponse
-import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -32,7 +32,7 @@ class OrderControllerTest : AbstractIdempotencyTest() {
     )
 
     @Test
-    fun `새 요청은 201 Created를 반환한다`() = runTest {
+    fun `새 요청은 201 Created를 반환한다`() = runSuspendIO {
         client.post()
             .uri(ORDERS_PATH)
             .header(IDEMPOTENCY_KEY_HEADER, newIdempotencyKey())
@@ -51,7 +51,7 @@ class OrderControllerTest : AbstractIdempotencyTest() {
     }
 
     @Test
-    fun `동일한 Idempotency-Key로 재전송하면 200 OK와 동일 응답을 반환한다`() = runTest {
+    fun `동일한 Idempotency-Key로 재전송하면 200 OK와 동일 응답을 반환한다`() = runSuspendIO {
         val key = newIdempotencyKey()
 
         // First request → 201 Created
@@ -85,7 +85,7 @@ class OrderControllerTest : AbstractIdempotencyTest() {
     }
 
     @Test
-    fun `다른 Idempotency-Key는 새로운 주문을 생성한다`() = runTest {
+    fun `다른 Idempotency-Key는 새로운 주문을 생성한다`() = runSuspendIO {
         val keyA = newIdempotencyKey()
         val keyB = newIdempotencyKey()
 
@@ -114,7 +114,7 @@ class OrderControllerTest : AbstractIdempotencyTest() {
     }
 
     @Test
-    fun `Idempotency-Key 헤더가 없으면 400 Bad Request를 반환한다`() = runTest {
+    fun `Idempotency-Key 헤더가 없으면 400 Bad Request를 반환한다`() = runSuspendIO {
         client.post()
             .uri(ORDERS_PATH)
             .contentType(MediaType.APPLICATION_JSON)
@@ -124,7 +124,7 @@ class OrderControllerTest : AbstractIdempotencyTest() {
     }
 
     @Test
-    fun `빈 Idempotency-Key 헤더는 400 Bad Request를 반환한다`() = runTest {
+    fun `빈 Idempotency-Key 헤더는 400 Bad Request를 반환한다`() = runSuspendIO {
         client.post()
             .uri(ORDERS_PATH)
             .header(IDEMPOTENCY_KEY_HEADER, "   ")
@@ -135,7 +135,7 @@ class OrderControllerTest : AbstractIdempotencyTest() {
     }
 
     @Test
-    fun `세 번 재전송해도 항상 동일한 응답을 반환한다`() = runTest {
+    fun `세 번 재전송해도 항상 동일한 응답을 반환한다`() = runSuspendIO {
         val key = newIdempotencyKey()
 
         val responses = (1..3).map {

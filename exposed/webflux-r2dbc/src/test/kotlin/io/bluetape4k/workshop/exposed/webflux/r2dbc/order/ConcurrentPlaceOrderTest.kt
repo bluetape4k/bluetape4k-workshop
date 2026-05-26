@@ -1,5 +1,7 @@
 package io.bluetape4k.workshop.exposed.webflux.r2dbc.order
 
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeLessOrEqualTo
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.AbstractWebfluxR2dbcTest
@@ -72,12 +74,8 @@ class ConcurrentPlaceOrderTest : AbstractWebfluxR2dbcTest() {
         log.info { "Concurrent order results: success=$successCount, conflict=$failCount, total=${results.size}" }
 
         // Exactly totalStock orders should succeed, rest should fail with stock error
-        assert(successCount <= totalStock) {
-            "Expected at most $totalStock successful orders but got $successCount"
-        }
-        assert(successCount + failCount == concurrency) {
-            "Total results mismatch: success=$successCount, fail=$failCount, expected=$concurrency"
-        }
+        successCount shouldBeLessOrEqualTo totalStock
+        (successCount + failCount) shouldBeEqualTo concurrency
     }
 
     @Test
@@ -121,8 +119,6 @@ class ConcurrentPlaceOrderTest : AbstractWebfluxR2dbcTest() {
         val successCount = results.count { it == 201 }
         log.info { "Deadlock test results: success=$successCount / $concurrency" }
         // All should succeed (sufficient stock, deadlock prevention via sorted productId)
-        assert(successCount == concurrency) {
-            "Expected all $concurrency orders to succeed but got $successCount. Results: $results"
-        }
+        successCount shouldBeEqualTo concurrency
     }
 }

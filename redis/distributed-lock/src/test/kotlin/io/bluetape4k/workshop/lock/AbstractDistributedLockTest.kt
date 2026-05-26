@@ -1,5 +1,6 @@
 package io.bluetape4k.workshop.lock
 
+import io.bluetape4k.codec.Base58
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.testcontainers.storage.RedisServer
 import io.bluetape4k.workshop.lock.domain.InventoryStore
@@ -13,7 +14,6 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import org.redisson.api.RedissonClient
-import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class AbstractDistributedLockTest {
@@ -52,5 +52,5 @@ abstract class AbstractDistributedLockTest {
         runCatching { redisson.shutdown() }
     }
 
-    protected fun randomName(prefix: String = "test") = "$prefix-${UUID.randomUUID()}"
+    protected fun randomName(prefix: String = "test") = "$prefix-${Base58.randomString(8)}"
 }

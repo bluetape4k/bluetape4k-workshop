@@ -1,6 +1,6 @@
 package io.bluetape4k.workshop.coroutines.channels
 
-import io.bluetape4k.codec.encodeBase62
+import io.bluetape4k.codec.Base58
 import io.bluetape4k.coroutines.support.log
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
@@ -20,7 +20,6 @@ import kotlinx.coroutines.test.runTest
 import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 
 class ChannelExamples {
@@ -332,7 +331,7 @@ class ChannelExamples {
 
             channels.forEachIndexed { index, channel ->
                 launch {
-                    sendString(channel, UUID.randomUUID().encodeBase62(), 200L)
+                    sendString(channel, Base58.randomString(8), 200L)
                 }.log(index)
             }
 

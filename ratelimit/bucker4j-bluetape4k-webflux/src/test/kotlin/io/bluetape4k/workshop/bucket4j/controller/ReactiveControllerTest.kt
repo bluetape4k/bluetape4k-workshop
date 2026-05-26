@@ -1,12 +1,12 @@
 package io.bluetape4k.workshop.bucket4j.controller
 
+import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.codec.Base58
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.bucket4j.AbstractRateLimiterApplicationTest
 import io.bluetape4k.workshop.bucket4j.utils.HeaderUtils
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.test.runTest
-import io.bluetape4k.assertions.shouldContain
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
@@ -21,7 +21,7 @@ class ReactiveControllerTest: AbstractRateLimiterApplicationTest() {
     }
 
     @Test
-    fun `사용자 ID 기분으로 RateLimit이 적용됩니다`() = runTest {
+    fun `사용자 ID 기분으로 RateLimit이 적용됩니다`() = runSuspendIO {
         val userId = "coroutines.debop." + Base58.randomString(6)
 
         // 10초 동안 10번으로 Rate Limit이 걸려 있음
@@ -48,7 +48,7 @@ class ReactiveControllerTest: AbstractRateLimiterApplicationTest() {
 
     @Disabled("IP 로 Rate Limit을 거는 것은 /coroutines/v1, /reactive/v1 둘 다 걸려서 동시에 테스트 할 수 없습니다.")
     @Test
-    fun `사용자 ID가 없으면 IP Address 기준으로 RateLimit이 적용됩니다`() = runTest {
+    fun `사용자 ID가 없으면 IP Address 기준으로 RateLimit이 적용됩니다`() = runSuspendIO {
         // 10초 동안 10번으로 Rate Limit이 걸려 있음
         // WebFilter 2개가 걸려있어서, 5번만 호출해도 10개의 Token이 소비됩니다.
         repeat(LIMIT_COUNT) {
@@ -70,7 +70,7 @@ class ReactiveControllerTest: AbstractRateLimiterApplicationTest() {
     }
 
     @Test
-    fun `RateLimit에 적용되지 않은 경로에는 제한이 없습니다`() = runTest {
+    fun `RateLimit에 적용되지 않은 경로에는 제한이 없습니다`() = runSuspendIO {
         val userId = "coroutines.debop." + Base58.randomString(6)
 
         // 10초 동안 10번으로 Rate Limit이 걸려 있음

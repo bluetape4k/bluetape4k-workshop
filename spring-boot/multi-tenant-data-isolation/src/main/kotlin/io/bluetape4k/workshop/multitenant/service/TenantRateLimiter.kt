@@ -27,10 +27,10 @@ class TenantRateLimiter(
         window: Duration = DEFAULT_WINDOW,
     ): RateLimitDecision {
         limit.requirePositiveNumber("limit")
-        require(!window.isZero && !window.isNegative) { "window must be positive" }
+        val windowMillis = window.toMillis()
+        windowMillis.requirePositiveNumber("windowMillis")
 
         val key = keyFactory.rateLimitKey(tenantId, principal)
-        val windowMillis = window.toMillis()
         val windowStart = (System.currentTimeMillis() / windowMillis) * windowMillis
         val bucket = buckets.compute(key) { _, current ->
             if (current?.windowStartEpochMillis == windowStart) {

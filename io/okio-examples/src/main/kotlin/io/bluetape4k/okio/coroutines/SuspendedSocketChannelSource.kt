@@ -4,6 +4,7 @@ import io.bluetape4k.coroutines.support.awaitSuspending
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.okio.SEGMENT_SIZE
+import io.bluetape4k.support.requireZeroOrPositiveNumber
 import kotlinx.coroutines.coroutineScope
 import okio.Buffer
 import java.nio.ByteBuffer
@@ -21,7 +22,7 @@ class SuspendedSocketChannelSource(
     private val byteBuffer = ByteBuffer.allocateDirect(SEGMENT_SIZE.toInt())
 
     override suspend fun read(sink: Buffer, byteCount: Long): Long {
-        require(byteCount >= 0) { "byteCount must be zero or positive, but was $byteCount" }
+        byteCount.requireZeroOrPositiveNumber("byteCount")
 
         if (!channel.isOpen) return -1L
 
