@@ -109,12 +109,13 @@
 - **Details**:
   - Extends `LongIdTable("image_processing_jobs")` — NOT auditable (explicit timestamps per spec)
   - Columns: `imageAssetId` (reference, `ON DELETE CASCADE`),
-    `status` (varchar 20), `requestedVariants` (`jacksonb<List<String>>()`),
+    `status` (`enumerationByName<ImageJobStatus>("status", 20)`, default `ImageJobStatus.RUNNING`),
+    `requestedVariants` (`jacksonb<List<String>>()`),
     `startedAt` (timestamp, defaultExpression CurrentTimestamp),
     `finishedAt` (timestamp, nullable), `durationMs` (long, nullable),
     `errorCode` (varchar 100, nullable), `errorMessage` (text, nullable)
   - Index on `imageAssetId`
-- **Acceptance criteria**: Object compiles; uses `jacksonb<List<String>>()` from bluetape4k-exposed-jackson3
+- **Acceptance criteria**: Object compiles; uses `jacksonb<List<String>>()` from bluetape4k-exposed-jackson3; `status` is type-safe enum column (not raw varchar)
 
 ### T11 — Create ImageProcessingEventTable (Exposed LongIdTable)
 - **File(s)**: `src/main/kotlin/.../advanced/persistence/schema/ImageProcessingEventTable.kt`
@@ -123,11 +124,13 @@
 - **Details**:
   - Extends `LongIdTable("image_processing_events")`
   - Columns: `jobId` (reference to `ImageProcessingJobTable`, `ON DELETE CASCADE`),
-    `step` (varchar 100), `status` (varchar 20), `message` (text, nullable),
+    `step` (`enumerationByName<ImageProcessingStep>("step", 100)`),
+    `status` (`enumerationByName<ImageProcessingEventStatus>("status", 20)`),
+    `message` (text, nullable),
     `payloadJson` (`jacksonb<Map<String, Any?>>()`, nullable),
     `createdAt` (timestamp, defaultExpression CurrentTimestamp)
   - Index on `jobId`
-- **Acceptance criteria**: Object compiles; `payloadJson` uses `jacksonb` column type
+- **Acceptance criteria**: Object compiles; `payloadJson` uses `jacksonb` column type; `step` and `status` are type-safe enum columns (not raw varchar)
 
 ### T12 — Create ImagePersistenceModels.kt (DTOs + sealed JobStartResult)
 - **File(s)**: `src/main/kotlin/.../advanced/model/ImagePersistenceModels.kt`
@@ -174,7 +177,7 @@
     ```
   - Must NOT wrap `SchemaUtils.create()` in try/catch — startup DDL failure must propagate
   - **UserContext note**: All auditable table writes must use `UserContext.withUser("image-processing-service") { ... }` — NOT Spring `AuditorAware` bean (bluetape4k-exposed uses `UserContext.getCurrentUser()` via `clientDefault` in `AuditableIdTable`)
-- **Acceptance criteria**: All 4 tables created on app startup; `NULLS NOT DISTINCT` index exists; no try/catch around DDL
+- **Acceptance criteria**: All 4 tables created on app startup; `NULLS NOT DISTINCT` index exists; no try/catch around DDL. Spring Boot 4.x exception propagation: `ApplicationRunner.run()` throw causes `SpringApplication.run()` to throw → application fails to start. Note: `@Transactional` on `run()` is acceptable here (unlike the saga service) because DDL initialization does not need to catch `DataIntegrityViolationException` outside the transaction boundary.
 
 ---
 
@@ -269,6 +272,9 @@
     ```
   - **UserContext scope**: `UserContext.withUser("image-processing-service") { ... }` MUST wrap the ENTIRE method body of each write method — including ALL `txTemplate.execute { }` calls AND all recovery branches (DIVE catch, re-read, status update). Wrapping only the inner `execute` block leaves recovery writes without an audit user context.
   - **Error sanitization**: Callers provide pre-sanitized `JobFailureReason`. `recordJobFailure` stores values verbatim. No raw stack traces ever reach the method — T25 must map `Throwable → safe (errorCode, errorMessage)` BEFORE calling this method.
+  - **TransactionTemplate nullable return handling**: `txTemplate.execute { lambda }` returns `T?` in Kotlin.
+    All callers must use `requireNotNull(txTemplate.execute { ... }) { "T1 transaction returned null — unexpected rollback (REQUIRES_NEW should not silently null-return)" }`.
+    Using `!!` is prohibited. Using a wrong default value silently (e.g., returning `NewAsset(0,0,"")`) is also prohibited.
   - **`recordJobStart()` — T1** (highest complexity):
     - Uses `txTemplate.execute { }` internally (NOT `@Transactional`)
     - Query asset by checksum; branch on status:
@@ -357,9 +363,36 @@
   - Add `ImagePersistenceService` as required constructor parameter (not nullable — use `NoopImagePersistenceService` in existing tests via T27)
   - In `processUploadInternal()`:
     1. Compute SHA-256 checksum of `bytes` using `MessageDigest.getInstance("SHA-256")` on raw byte array; encode as lowercase hex string (64 chars). Result maps to `image_assets.checksum VARCHAR(64)`.
+       **Thread safety**: Create a new `MessageDigest` instance per call — NEVER cache as a class-level field or static variable (`MessageDigest` is NOT thread-safe; a shared instance corrupts checksums under concurrency).
+    **Ordering mandate**: Existing validators (`validateDeclaredSize`, `validate`) MUST run BEFORE checksum computation (step 1) and T1 (step 2). Validation failures propagate as `IllegalArgumentException` — they do NOT invoke T1 or T3; they are recorded only via the existing `recordFailure("validation")` metric path. The checksum is computed AFTER validation succeeds.
     2. `withContext(Dispatchers.IO) { persistence.recordJobStart(assetMetadata, requestedVariants) }`
        with explicit `CancellationException` rethrow before broad catch
-    3. `if result is AlreadyReady` → skip processing entirely; call `withContext(Dispatchers.IO) { persistence.findAssetByExternalId(result.externalId) }` to get `ImageAssetDetailResponse`; convert it to `ImageProcessingResponse` (map `original` → thumbnailUrl from primary variant, copy variant list). Return immediately. No new events emitted.
+    3. **Exhaustive `when` on `JobStartResult`** (sealed interface — use `when`, NOT partial `if/is`):
+       ```kotlin
+       when (result) {
+           is JobStartResult.AlreadyReady -> {
+               // EARLY RETURN — must execute BEFORE any event emission (step 7)
+               // NO new events emitted in AlreadyReady path
+               val detail = withContext(Dispatchers.IO) { persistence.findAssetByExternalId(result.externalId) }
+               return@processUploadInternal ImageProcessingResponse(
+                   imageId = result.externalId,
+                   original = detail.original?.let { OriginalImageMetadata(...from it...) },
+                   variants = detail.variants.map { ... },
+                   thumbnailUrl = detail.variants.firstOrNull { it.kind == ImageObjectKind.THUMBNAIL }?.publicUrl,
+                   durationMillis = 0L,  // no new processing; cached response
+               )
+           }
+           is JobStartResult.NewAsset,
+           is JobStartResult.ConcurrentProcessing,
+           is JobStartResult.RecoveredFromFailed -> { /* proceed with normal saga flow */ }
+       }
+       ```
+       **AlreadyReady field mapping** (status=READY guarantees non-null original row):
+       - `original`: from `detail.original` — must be non-null for READY assets (document invariant: `AlreadyReady` only returned when `status=READY`, which implies `image_objects` exist)
+       - `variants`: from `detail.variants` (type `List<ImageObjectDTO>`)
+       - `thumbnailUrl`: from `detail.variants.firstOrNull { it.kind == THUMBNAIL }?.publicUrl`
+       - `durationMillis`: use `0L` (no new processing performed)
+       - `contentType` for `OriginalImageMetadata`: from `detail.asset.contentType` (column on `image_assets`, not `image_objects`)
     4. Use `imageId = result.externalId` from `JobStartResult` (never `UUID.randomUUID()`)
     5. Before calling T3 in catch block: map `cause: Throwable` → safe `(errorCode: String, sanitizedMessage: String)` by exception class (e.g. VipsException → `"VIPS_FAILED"/"VIPS processing failed"`, AmazonS3Exception → `"S3_UPLOAD_FAILED"/"S3 upload failed"`, generic → `"PROCESSING_FAILED"/"Processing failed"`). NEVER pass `exception.message` or stack trace to `JobFailureReason`.
     6. **ALL calls to `ImagePersistenceService` MUST be wrapped in `withContext(Dispatchers.IO)`**:
@@ -376,12 +409,22 @@
        - If any `S3_UPLOAD FAILED`: emit `S3_UPLOAD` event with `FAILED` status, immediately invoke T3. No more variant uploads — terminal.
        - `JOB_COMPLETED` (after T2 commits)
        - `JOB_FAILED` (in catch block, after T3 commits)
-    8. Each `appendEvent` call wrapped in try/catch (around `withContext(Dispatchers.IO) { persistence.appendEvent(...) }`):
-       suppress via `log.warn(e) { "Event append failed: step=$step jobId=$jobId" }` +
-       `meterRegistry.counter(METRIC_EVENT_APPEND_FAILED).increment()`
-    9. T3 in catch block: `withContext(NonCancellable + Dispatchers.IO) { ... }` per spec §3.1.
-       Catch `Throwable` for T3 failure; `originalException.addSuppressed(t3Ex)`.
-       Always rethrow `originalException`.
+    8. Each `appendEvent` call wrapped in explicit exception-type-safe try/catch:
+       ```kotlin
+       try {
+           withContext(Dispatchers.IO) { persistence.appendEvent(...) }
+       } catch (e: CancellationException) {
+           throw e  // NEVER suppress cancellation
+       } catch (e: Exception) {
+           // Suppress non-cancellation exceptions only (NOT Error subclasses)
+           log.warn(e) { "Event append failed: step=$step jobId=$jobId" }
+           meterRegistry.counter(METRIC_EVENT_APPEND_FAILED).increment()
+       }
+       ```
+       `Error` subclasses (OutOfMemoryError, etc.) must NOT be suppressed in event emission.
+    9. T3 in catch block: use the exact pattern from spec §3.1 with nested try-catch guards.
+       `throw originalException` MUST execute unconditionally even when `addSuppressed` / log / counter throw.
+       See spec §3.1 T3 exception handling contract for the full defensive pattern.
   - Metric constants (add to `ImageDerivativeWorkflowService` companion object alongside existing 4):
     `METRIC_EVENT_APPEND_FAILED = "image.processing.event.append.failed"`,
     `METRIC_FAILURE_RECORD_FAILED = "image.processing.failure.record.failed"`
@@ -450,7 +493,7 @@
   4. **T3-fields**: errorCode + errorMessage non-null/non-blank after failure
   5. **T3-sanitization**: errorMessage contains no stack traces (no `\n`, no `"at io."`, no `"Exception"`)
   6. **Idempotency-checksum**: Same checksum twice → no duplicate image_objects
-  7. **Idempotency-short-circuit**: Same checksum + READY → `assertIs<JobStartResult.AlreadyReady>`; then assert `SELECT COUNT(*) FROM image_processing_events WHERE job_id=...` = 0 (no events emitted in AlreadyReady path)
+  7. **Idempotency-short-circuit**: Same checksum + READY → `assertIs<JobStartResult.AlreadyReady>`; then verify no new events emitted via **delta assertion**: snapshot `SELECT COUNT(*) FROM image_processing_events` BEFORE the AlreadyReady `recordJobStart()` call, then assert count is UNCHANGED after — `jobId=-1L` means no event FK exists for this result; delta-based assertion catches any accidental emission under a different jobId
   8. **FAILED-retry**: Seed FAILED asset via `withTestUser { }` → `recordJobStart` → `assertIs<RecoveredFromFailed>`; assert status=PROCESSING; assert new RUNNING job exists; then call `appendEvent(step=VALIDATION)` and verify event exists
   9. **Idempotency-null-original**: `recordJobSuccess` twice with ORIGINAL → exactly 1 ORIGINAL row
   10. **DB-init**: All 4 tables queryable via `SELECT COUNT(*)` on Spring context start
@@ -460,26 +503,28 @@
   14. **cascade-delete**: After full T1+T2 cycle, `DELETE FROM image_assets WHERE id=?`; assert `COUNT(*) FROM image_objects WHERE image_asset_id=?` = 0, `COUNT(*) FROM image_processing_jobs WHERE image_asset_id=?` = 0
   15. **POST-imageId-equals-externalId**: After T1, assert `JobStartResult.externalId == SELECT external_id FROM image_assets WHERE checksum=?`; after full cycle via POST endpoint, assert HTTP response `imageId` field equals same external_id
   16. **T1-creates-with-UserContext**: `recordJobStart` with `UserContext.withUser("test-user")` → assert `created_by="test-user"` on both asset and job rows
-  17. **Concurrent-checksum-race-probabilistic** (MultithreadingTester): 4 threads, same checksum; assert asset count=1; no exceptions
+  17. **ConcurrentProcessing-path**: Seed asset with `status=PROCESSING` (simulating an ongoing run) via `withTestUser { }` → call `recordJobStart()` with same checksum → `assertIs<JobStartResult.ConcurrentProcessing>`; assert a new `RUNNING` job exists on the same `assetId`; assert original PROCESSING asset row is unchanged
   - All tests use AAA pattern with descriptive backtick names
   - `MultithreadingTester` (bluetape4k-junit5) for T29-13/17; raw Thread/Executors/coroutineScope launch prohibited
   - Scenarios 11-12 use MockK `spyk` wrapping the real repository bean
-- **Acceptance criteria**: All 17 scenarios pass; DB state verified via direct queries; `withTestUser` used for all seed operations; no HikariCP leak warnings
+- **Acceptance criteria**: All 17 scenarios pass (scenarios 1-16 from spec §10, scenario 17 = ConcurrentProcessing-path from spec §10); DB state verified via direct queries; `withTestUser` used for all seed operations; no HikariCP leak warnings
 
 ### T30 — Create ImageDerivativeWorkflowSagaTest (6 scenarios)
 - **File(s)**: `src/test/kotlin/.../advanced/service/ImageDerivativeWorkflowSagaTest.kt`
   (Package: `service/` — not `persistence/` — tests `ImageDerivativeWorkflowService` orchestration behavior)
 - **Complexity**: high
-- **Dependencies**: T25, T28, T31
+- **Dependencies**: T25, T28
 - **Details**: Uses `runTest { }` for all suspend calls. ALL seed operations use `withTestUser { }`.
   Covers spec §10 scenarios:
   1. **T3-propagate**: MockK spy on `recordJobFailure()` to throw `RuntimeException("T3 failure")`; trigger upload with failing VIPS mock → `runTest { assertFailsWith<RuntimeException> { service.processUpload(file) } }`; assert `e.suppressed[0].message == "T3 failure"`
   2. **Event-mini-tx-suppression**: MockK spy on `appendEvent` to throw; `processUpload()` succeeds (no exception); Micrometer counter `image.processing.event.append.failed` incremented ≥ 1
-  3. **Event-success-path**: Full saga (real T1+T2+events); assert VALIDATION → VIPS_PROCESSING → S3_UPLOAD(×N) → JOB_COMPLETED event sequence in DB; total = 3+N events
+  3. **Event-success-path**: Full saga (real T1+T2+events); assert VALIDATION → VIPS_PROCESSING → S3_UPLOAD(×N) → JOB_COMPLETED event sequence in DB; total = 3+N events (N = number of image_objects = variant count + 1 for ORIGINAL). Example: 2 variants → N=3 → total 6 events
   4. **Event-failure-path**: Mock VIPS to throw; saga runs T3; assert one event with step=JOB_FAILED, status=FAILED in DB
-  5. **S3-upload-FAILED-terminality**: Mock S3 to fail on first putObject; assert T3 called immediately; remaining variant uploads NOT attempted; assert job status=FAILED; assert S3_UPLOAD event with status=FAILED exists
+  5. **S3-upload-FAILED-terminality**: Mock S3 to fail on first putObject; assert T3 called immediately; remaining variant uploads NOT attempted — verify with `verify(exactly = 1) { s3Client.putObject(any()) }`; assert job status=FAILED; assert S3_UPLOAD event with status=FAILED exists
   6. **Error-is-Error-subclass**: Throw `OutOfMemoryError` (Error subclass) in VIPS step; T3 catch block must catch it (spec requires `catch(Throwable)` not `catch(Exception)`); assert job recorded as FAILED; assert original `OutOfMemoryError` is rethrown
-  - `@SpringBootTest` context with spied/mocked `ImagePersistenceService` or real service + real PostgreSQL
+  - `@SpringBootTest` context extending `AbstractImagePersistenceTest` (real PostgreSQL)
+  - **MockK strategy per scenario**: T30-1 and T30-2 use `@SpykBean ImagePersistenceService` to stub individual methods while keeping rest of service real. T30-3 and T30-4 use real service (no mocking — full saga with real PostgreSQL). T30-5 mocks `S3Client` (or equivalent upload component). T30-6 mocks VIPS processing step to throw `OutOfMemoryError`.
+  - `@SpykBean` applies at class level; isolation per test method via `clearAllMocks()` in `@BeforeEach`
 - **Acceptance criteria**: All 6 scenarios pass; T3 failure propagation verified with `suppressed` check; event suppression verified with Micrometer counter; event order verified via DB query; S3_UPLOAD FAILED terminality verified; `Error` subclass (not just `Exception`) caught by T3 block
 
 ### T31 — Create ImageAssetEndpointTest (4 scenarios)
