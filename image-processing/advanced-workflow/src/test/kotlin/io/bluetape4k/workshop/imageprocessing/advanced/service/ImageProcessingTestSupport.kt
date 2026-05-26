@@ -7,14 +7,25 @@ import io.bluetape4k.images.spring.UploadOptions
 import io.bluetape4k.images.spring.storage.ImageStorage
 import io.bluetape4k.workshop.imageprocessing.advanced.config.ImageProcessingAdvancedProperties
 import io.bluetape4k.workshop.imageprocessing.advanced.config.ImageVariantProperties
+import io.bluetape4k.workshop.imageprocessing.advanced.model.AssetMetadataInput
+import io.bluetape4k.workshop.imageprocessing.advanced.model.ImageAssetDetailResponse
+import io.bluetape4k.workshop.imageprocessing.advanced.model.ImageAssetHistoryResponse
+import io.bluetape4k.workshop.imageprocessing.advanced.model.ImageObjectInput
+import io.bluetape4k.workshop.imageprocessing.advanced.model.JobFailureReason
+import io.bluetape4k.workshop.imageprocessing.advanced.model.JobIdentity
+import io.bluetape4k.workshop.imageprocessing.advanced.model.JobStartResult
 import io.bluetape4k.workshop.imageprocessing.advanced.model.OriginalImageInfo
 import io.bluetape4k.workshop.imageprocessing.advanced.model.ProcessedImageSet
 import io.bluetape4k.workshop.imageprocessing.advanced.model.ProcessedImageVariant
+import io.bluetape4k.workshop.imageprocessing.advanced.persistence.ImagePersistenceService
+import io.bluetape4k.workshop.imageprocessing.advanced.persistence.schema.ImageProcessingEventStatus
+import io.bluetape4k.workshop.imageprocessing.advanced.persistence.schema.ImageProcessingStep
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import java.nio.file.Path
 import java.time.Duration
 import java.time.Instant
+import java.util.UUID
 
 internal fun testProperties(
     publicBaseUrl: String = "http://localhost:8080/public-images",
@@ -91,6 +102,42 @@ internal class RecordingImageStorage(
     override suspend fun exists(key: ImageObjectKey): Boolean = uploads.any { it.key == key }
 
     override fun list(prefix: ImageObjectKey): Flow<ImageObjectKey> = emptyFlow()
+}
+
+/**
+ * No-op [ImagePersistenceService] for unit tests that don't need real persistence.
+ *
+ * [recordJobStart] returns [JobStartResult.NewAsset] by default; override via [startResultFn].
+ * [findAssetByExternalId] returns `null` by default; override via [detailResponseFn].
+ */
+internal class StubImagePersistenceService(
+    private val startResultFn: (() -> JobStartResult)? = null,
+    private val detailResponseFn: ((String) -> ImageAssetDetailResponse?)? = null,
+) : ImagePersistenceService {
+
+    override fun recordJobStart(metadata: AssetMetadataInput): JobStartResult =
+        startResultFn?.invoke() ?: JobStartResult.NewAsset(
+            assetId = 1L,
+            jobId = 1L,
+            externalId = UUID.randomUUID().toString(),
+        )
+
+    override fun recordJobSuccess(identity: JobIdentity, objects: List<ImageObjectInput>) {}
+
+    override fun recordJobFailure(identity: JobIdentity, reason: JobFailureReason, durationMs: Long) {}
+
+    override fun appendEvent(
+        jobId: Long,
+        step: ImageProcessingStep,
+        status: ImageProcessingEventStatus,
+        message: String,
+        payload: Map<String, Any?>,
+    ) {}
+
+    override fun findAssetByExternalId(externalId: String): ImageAssetDetailResponse? =
+        detailResponseFn?.invoke(externalId)
+
+    override fun findAssetHistory(externalId: String): ImageAssetHistoryResponse? = null
 }
 
 internal class StubDerivativeProcessor(

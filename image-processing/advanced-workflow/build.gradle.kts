@@ -55,6 +55,20 @@ dependencies {
     implementation(libs.bluetape4k.micrometer)
     implementation(libs.bluetape4k.jackson3)
 
+    // Exposed ORM (bluetape4k wrappers)
+    implementation(libs.exposed.core)
+    implementation(libs.exposed.jdbc)
+    implementation(libs.exposed.jackson3)
+
+    // JetBrains Exposed
+    implementation(libs.jetbrains.exposed.java.time)
+    implementation(libs.jetbrains.exposed.spring.boot4.starter)
+    implementation(libs.jetbrains.exposed.spring7.transaction)
+
+    // Database
+    implementation(libs.hikaricp)
+    runtimeOnly(libs.postgresql.driver)
+
     implementation(libs.bluetape4k.images)
     implementation(libs.bluetape4k.images.spring.boot)
     implementation(libs.bluetape4k.images.vips.api)
@@ -73,6 +87,9 @@ dependencies {
     implementation(libs.spring.boot.starter.webmvc.lib)
 
     testImplementation(project(":shared"))
+    testImplementation(libs.bluetape4k.testcontainers)
+    testImplementation(libs.testcontainers.postgresql)
+
     testImplementation(libs.bluetape4k.junit5)
     testImplementation(libs.bluetape4k.assertions)
     testImplementation(libs.mockk)
