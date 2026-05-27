@@ -6,6 +6,7 @@ import mockwebserver3.MockWebServer
 import mockwebserver3.QueueDispatcher
 import java.util.concurrent.TimeUnit
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -32,13 +33,25 @@ import org.springframework.test.web.reactive.server.WebTestClient
 abstract class AbstractBasicTest {
 
     companion object : KLogging() {
-        val mockServer: MockWebServer = MockWebServer().also { it.start() }
+        val mockServer: MockWebServer = MockWebServer().also {
+            it.dispatcher = newQueueDispatcher()
+            it.start()
+        }
 
         @JvmStatic
         @DynamicPropertySource
         fun props(registry: DynamicPropertyRegistry) {
             registry.add("workshop.observability.inventory.base-url") { mockServer.url("/").toString() }
         }
+
+        private fun newQueueDispatcher(): QueueDispatcher =
+            QueueDispatcher().apply {
+                setFailFast(
+                    MockResponse.Builder()
+                        .code(503)
+                        .build()
+                )
+            }
     }
 
     @Autowired
@@ -48,13 +61,19 @@ abstract class AbstractBasicTest {
         WebTestClient.bindToApplicationContext(context).build()
     }
 
+    @BeforeEach
+    fun prepareMockServerDispatcher() {
+        resetMockServerDispatcher()
+    }
+
     @AfterEach
     fun resetMockServerDispatcher() {
         // Drain any unconsumed recorded requests so stale entries don't pollute
         // cross-context tests (e.g. TracePropagationTest) that call takeRequest().
         @Suppress("ControlFlowWithEmptyBody")
         while (mockServer.takeRequest(0, TimeUnit.MILLISECONDS) != null) { /* drain */ }
-        mockServer.dispatcher = QueueDispatcher()
+        mockServer.dispatcher.close()
+        mockServer.dispatcher = newQueueDispatcher()
     }
 
     /**
