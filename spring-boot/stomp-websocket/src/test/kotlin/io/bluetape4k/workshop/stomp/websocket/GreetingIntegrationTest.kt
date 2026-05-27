@@ -12,7 +12,7 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.until
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.fail
+import io.bluetape4k.assertions.fail
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
@@ -74,7 +74,7 @@ class GreetingIntegrationTest(
         if (failure.get() == null) {
             received.get()!!.content shouldBeEqualTo "Hello, Spring!"
         } else {
-            fail(failure.get())
+            fail(cause = failure.get())
         }
     }
 
@@ -98,7 +98,7 @@ class GreetingIntegrationTest(
         if (failure.get() == null) {
             received.get()!!.content shouldBeEqualTo "Hello, Spring!"
         } else {
-            fail(failure.get())
+            fail(cause = failure.get())
         }
     }
 

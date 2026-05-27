@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledOnJre
 import org.junit.jupiter.api.condition.JRE
-import org.junit.jupiter.api.fail
+import io.bluetape4k.assertions.fail
 
 
 /**
@@ -72,7 +72,7 @@ class Rule5UseThreadLocalVariablesCarefully: AbstractVirtualThreadTest() {
                         scope.join().throwIfFailed()
                     }
                 } catch (e: InterruptedException) {
-                    fail(e)
+                    fail(cause = e)
                 }
             }
 

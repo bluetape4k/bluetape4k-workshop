@@ -9,7 +9,7 @@ import kotlinx.coroutines.async
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeInRange
 import org.junit.jupiter.api.RepeatedTest
-import org.junit.jupiter.api.fail
+import io.bluetape4k.assertions.fail
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 
@@ -51,7 +51,7 @@ class Rule2WriteBlockingSynchronousCode: AbstractVirtualThreadTest() {
                 if (error == null) {
                     grossAmountInUsd.toInt() shouldBeEqualTo 108
                 } else {
-                    fail(error)
+                    fail(cause = error)
                 }
             }
             .get()  // 어쨌든 여기서 Blocking 된다 (Non-Blocking 이 아니다)
