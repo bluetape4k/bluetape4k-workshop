@@ -7,8 +7,8 @@ import io.bluetape4k.workshop.gatling.AbstractGatlingTest
 import io.bluetape4k.workshop.shared.web.httpGet
 import kotlinx.coroutines.reactive.awaitSingle
 import io.bluetape4k.assertions.shouldNotBeNull
+import org.junit.jupiter.api.Test
 import org.springframework.test.web.reactive.server.returnResult
-import kotlin.test.Test
 
 class AsyncTaskControllerTest: AbstractGatlingTest() {
 

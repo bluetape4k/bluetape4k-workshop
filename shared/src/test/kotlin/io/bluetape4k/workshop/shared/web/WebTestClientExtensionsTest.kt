@@ -14,7 +14,7 @@ import org.junit.jupiter.api.TestMethodOrder
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
-import kotlin.test.Test
+import org.junit.jupiter.api.Test
 
 class WebTestClientExtensionsTest: AbstractSpringTest() {
 
