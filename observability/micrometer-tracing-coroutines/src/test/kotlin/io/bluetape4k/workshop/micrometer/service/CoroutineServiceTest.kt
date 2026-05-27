@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.micrometer.service
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.micrometer.AbstractTracingTest
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotBeNull
@@ -22,12 +22,12 @@ class CoroutineServiceTest(
     }
 
     @Test
-    fun `get name`() = runTest {
+    fun `get name`() = runSuspendIO {
         service.getName().shouldNotBeEmpty()
     }
 
     @Test
-    fun `get todo by id`() = runTest {
+    fun `get todo by id`() = runSuspendIO {
         val id = 42
 
         val todo = service.getTodo(id)

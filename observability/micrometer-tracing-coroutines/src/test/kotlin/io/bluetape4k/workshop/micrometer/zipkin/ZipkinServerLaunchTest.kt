@@ -5,7 +5,7 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.testcontainers.infra.ZipkinServer
 import io.bluetape4k.utils.Systemx
 import kotlinx.coroutines.reactor.awaitSingleOrNull
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
@@ -24,7 +24,7 @@ class ZipkinServerLaunchTest {
 
     @Disabled("Zipkin 서버 접속 시 예외 발생 : not on SSL/TLS record:")
     @Test
-    fun `launch zipkin server`() = runTest(timeout = 30.seconds) {
+    fun `launch zipkin server`() = runSuspendIO(timeout = 30.seconds) {
         zipkin.start()
         zipkin.isRunning.shouldBeTrue()
 

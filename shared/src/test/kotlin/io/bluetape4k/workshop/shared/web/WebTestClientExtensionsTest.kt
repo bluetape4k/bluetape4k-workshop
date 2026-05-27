@@ -4,7 +4,7 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.support.toUtf8String
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.MethodOrderer
@@ -46,7 +46,7 @@ class WebTestClientExtensionsTest: AbstractSpringTest() {
 
         @Test
         @Order(2)
-        fun `httGet httpbin anything`() = runTest {
+        fun `httGet httpbin anything`() = runSuspendIO {
             val response = client
                 .httpGet("/anything")
                 .expectStatus().is2xxSuccessful
