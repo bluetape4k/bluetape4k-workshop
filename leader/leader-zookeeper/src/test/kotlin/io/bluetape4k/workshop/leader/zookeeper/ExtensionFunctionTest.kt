@@ -9,7 +9,7 @@ import io.bluetape4k.leader.zookeeper.runAsyncIfLeader
 import io.bluetape4k.leader.zookeeper.runIfLeader
 import io.bluetape4k.leader.zookeeper.runIfLeaderGroup
 import io.bluetape4k.leader.zookeeper.suspendRunIfLeader
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import org.junit.jupiter.api.Test
 import java.util.concurrent.CompletableFuture
 import kotlin.time.Duration.Companion.milliseconds
@@ -60,7 +60,7 @@ class ExtensionFunctionTest : AbstractLeaderZookeeperTest() {
     }
 
     @Test
-    fun `suspendRunIfLeader extension returns the suspending action result`(): Unit = runTest {
+    fun `suspendRunIfLeader extension returns the suspending action result`(): Unit = runSuspendIO {
         val result = curator.suspendRunIfLeader(
             lockName = randomLockName("t6-suspend"),
             basePath = "/test/ext-suspend",
