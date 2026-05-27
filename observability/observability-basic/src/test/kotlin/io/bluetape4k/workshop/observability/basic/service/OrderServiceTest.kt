@@ -65,6 +65,7 @@ class OrderServiceTest : AbstractBasicTest() {
         mockServer.enqueue(
             MockResponse.Builder()
                 .code(404)
+                .body("")
                 .build()
         )
 
@@ -83,6 +84,7 @@ class OrderServiceTest : AbstractBasicTest() {
         mockServer.enqueue(
             MockResponse.Builder()
                 .code(500)
+                .body("")
                 .build()
         )
 
