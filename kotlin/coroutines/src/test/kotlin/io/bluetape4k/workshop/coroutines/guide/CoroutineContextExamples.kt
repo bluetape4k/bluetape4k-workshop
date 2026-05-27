@@ -15,8 +15,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.random.Random
 
 class CoroutineContextExamples {
@@ -93,26 +95,32 @@ class CoroutineContextExamples {
 
         @Test
         fun `run many coroutines`() = runTest {
+            val completedCounter = AtomicInteger(0)
             val jobs = List(jobSize) {
                 launch(Dispatchers.IO) {
                     delay(1000)
-                    print(".")
+                    completedCounter.incrementAndGet()
                 }
             }
             jobs.joinAll()
+
+            completedCounter.get() shouldBeEqualTo jobSize
         }
 
         @Test
         fun `run many coroutines with coroutineScope`() = runTest {
+            val completedCounter = AtomicInteger(0)
             coroutineScope {
                 val jobs = List(jobSize) {
                     launch(Dispatchers.IO) {
                         delay(1000)
-                        print(".")
+                        completedCounter.incrementAndGet()
                     }
                 }
                 jobs.joinAll()
             }
+
+            completedCounter.get() shouldBeEqualTo jobSize
         }
     }
 }

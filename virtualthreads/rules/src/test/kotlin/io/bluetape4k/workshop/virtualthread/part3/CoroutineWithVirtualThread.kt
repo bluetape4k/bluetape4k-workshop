@@ -8,7 +8,9 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
+import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.RepeatedTest
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * 동기 코드를 Coroutines 환경에서 `Executors.newVirtualThreadPerTaskExecutor()` 를 이용해서 비동기로 실행할 수 있습니다.
@@ -21,23 +23,26 @@ class CoroutineWithVirtualThread: AbstractVirtualThreadTest() {
 
     @RepeatedTest(REPEAT_SIZE)
     fun `동기 코드를 Virtual Thread 를 사용하는 Coroutine Context 에서 실행하기`() = runTest {
+        val executedCounter = AtomicInteger(0)
         val jobs = List(100_000) {
             launch {
-                myAsyncCode()
+                myAsyncCode(executedCounter)
             }
         }
         jobs.joinAll()
+
+        executedCounter.get() shouldBeEqualTo 100_000
     }
 
-    private suspend fun myAsyncCode() {
+    private suspend fun myAsyncCode(executedCounter: AtomicInteger) {
         // 동기 코드를 [Dispatchers.VT]를 이용하여 Coroutines 환경에서 실행하기 
         withContext(Dispatchers.VT) {
-            mySyncCode()
+            mySyncCode(executedCounter)
         }
     }
 
-    private fun mySyncCode() {
+    private fun mySyncCode(executedCounter: AtomicInteger) {
         Thread.sleep(1000)
-        print(".")
+        executedCounter.incrementAndGet()
     }
 }

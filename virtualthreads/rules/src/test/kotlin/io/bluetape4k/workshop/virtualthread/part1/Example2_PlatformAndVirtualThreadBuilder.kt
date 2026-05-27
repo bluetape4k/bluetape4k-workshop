@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.virtualthread.part1
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.error
 import io.bluetape4k.workshop.virtualThreads.AbstractVirtualThreadTest
 import io.bluetape4k.assertions.shouldBeEqualTo
@@ -21,14 +22,14 @@ class Example2_PlatformAndVirtualThreadBuilder: AbstractVirtualThreadTest() {
             .name("platform-thread")
             .inheritInheritableThreadLocals(false)
             .uncaughtExceptionHandler { thread, ex ->
-                print("Thread[$thread] failed with exception: $ex")
+                log.error(ex) { "Thread[$thread] failed with exception." }
             }
 
-        print("Builder class=${builder.javaClass.name}")
+        log.debug { "Builder class=${builder.javaClass.name}" }
         builder.javaClass.name shouldBeEqualTo "java.lang.ThreadBuilders\$PlatformThreadBuilder"
 
         val thread = builder.unstarted {
-            print("Platform Thread")
+            log.debug { "Platform Thread" }
         }
 
         thread.javaClass.name shouldBeEqualTo "java.lang.Thread"
@@ -46,11 +47,11 @@ class Example2_PlatformAndVirtualThreadBuilder: AbstractVirtualThreadTest() {
                 log.error(ex) { "Thread[$thread] failed with exception." }
             }
 
-        println("Builder class=${builder.javaClass.name}")
+        log.debug { "Builder class=${builder.javaClass.name}" }
         builder.javaClass.name shouldBeEqualTo "java.lang.ThreadBuilders\$VirtualThreadBuilder"
 
         val thread = builder.unstarted {
-            println("Unstarted Virtual Thread")
+            log.debug { "Unstarted Virtual Thread" }
         }
         thread.javaClass.name shouldBeEqualTo "java.lang.VirtualThread"
         thread.name shouldBeEqualTo "virtual-thread"

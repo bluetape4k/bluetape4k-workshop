@@ -21,7 +21,7 @@ class Example5_VirtualThreadPerTaskExecutor: AbstractVirtualThreadTest() {
 
             val future = executor.submit {
                 Thread.sleep(100)
-                println("Run in ${Thread.currentThread()}")
+                log.info { "Run in ${Thread.currentThread()}" }
                 Thread.currentThread().name.shouldBeEmpty()
             }
             future.get()

@@ -32,14 +32,12 @@ class TopicExamples: AbstractRedissonTest() {
 
         // topic 예 listener를 등록합니다.
         // listener id 를 반환한다.
-        val listenerId1 = topic.addListenerAsync(String::class.java) { channel, msg ->
-            println("Listener1: channel[$channel] received: $msg")
+        val listenerId1 = topic.addListenerAsync(String::class.java) { _, _ ->
             receivedCounter.incrementAndGet()
         }.await()
 
         // topic 예 listener를 등록합니다.
-        val listenerId2 = topic.addListenerAsync(String::class.java) { channel, msg ->
-            println("Listener2: channel[$channel] received: $msg")
+        val listenerId2 = topic.addListenerAsync(String::class.java) { _, _ ->
             receivedCounter.incrementAndGet()
         }.await()
 
@@ -74,14 +72,12 @@ class TopicExamples: AbstractRedissonTest() {
 
         // topic 예 listener를 등록합니다.
         // listener id 를 반환한다.
-        val listenerId1 = topic1.addListenerAsync(String::class.java) { channel, msg ->
-            println("Listener1: channel[$channel] received: $msg")
+        val listenerId1 = topic1.addListenerAsync(String::class.java) { _, _ ->
             receivedCounter.incrementAndGet()
         }.await()
 
         // topic 예 listener를 등록합니다.
-        val listenerId2 = topic2.addListenerAsync(String::class.java) { channel, msg ->
-            println("Listener2: channel[$channel] received: $msg")
+        val listenerId2 = topic2.addListenerAsync(String::class.java) { _, _ ->
             receivedCounter.incrementAndGet()
         }.await()
 

@@ -1,6 +1,7 @@
 package io.bluetape4k.workshop.virtualthread.part1
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.virtualThreads.AbstractVirtualThreadTest
 import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
@@ -15,7 +16,7 @@ class Example3_CreateStartedAndUnstartedVirtualThread: AbstractVirtualThreadTest
 
         val thread = builder.start {
             Thread.sleep(1000)
-            println("Virtual thread running")
+            log.debug { "Virtual thread running" }
         }
         thread.state shouldBeEqualTo Thread.State.RUNNABLE
         thread.join()
@@ -26,7 +27,7 @@ class Example3_CreateStartedAndUnstartedVirtualThread: AbstractVirtualThreadTest
         val builder = Thread.ofVirtual()
 
         val thread = builder.unstarted {
-            println("Virtual thread running")
+            log.debug { "Virtual thread running" }
         }
         thread.state shouldBeEqualTo Thread.State.NEW
         thread.start()

@@ -17,11 +17,13 @@ import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onEmpty
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.coroutines.coroutineContext
 
 class FlowLifecycleExamples {
@@ -65,14 +67,18 @@ class FlowLifecycleExamples {
 
     @Test
     fun `onEmpty - call on not existing element`() = runTest {
-        flow<List<Int>> { delay(1000) }
+        val emitted = flow<List<Int>> { delay(1000) }
             .onEmpty { emit(emptyList()) }
-            .collect { println(it) }
+            .toList()
+
+        emitted shouldBeEqualTo listOf(emptyList())
 
         // Same action
-        flow<List<Int>> { delay(1000) }
-            .onEmpty { println(emptyList<Int>()) }
-            .collect()
+        val fallback = flow<List<Int>> { delay(1000) }
+            .onEmpty { emit(emptyList()) }
+            .toList()
+
+        fallback shouldBeEqualTo listOf(emptyList())
     }
 
     @Test
@@ -82,9 +88,16 @@ class FlowLifecycleExamples {
             emit(2)
             throw RuntimeException("Boom!")
         }
-        flow.onEach { println("Get $it") }
-            .catch { println("Catch $it") }   // cache는 예외만 받는다. catch 는 flow 가 종료되기 전에 호출된다
+
+        val values = mutableListOf<Int>()
+        val errors = mutableListOf<String?>()
+
+        flow.onEach { values += it }
+            .catch { errors += it.message }   // cache는 예외만 받는다. catch 는 flow 가 종료되기 전에 호출된다
             .collect()
+
+        values shouldBeEqualTo listOf(1, 2)
+        errors shouldBeEqualTo listOf("Boom!")
     }
 
 
@@ -103,44 +116,55 @@ class FlowLifecycleExamples {
             val users = usersFlow()
 
             // collect 작업을 Name1 에서 수행
-            withContext(CoroutineName("Coroutine Name1")) {
-                users.collect { println(it) }
+            val name1Users = withContext(CoroutineName("Coroutine Name1")) {
+                users.toList()
             }
+            name1Users shouldBeEqualTo listOf("User0 in Coroutine Name1", "User1 in Coroutine Name1")
 
             // collect 작업을 Name20 에서 수행
-            withContext(CoroutineName("Coroutine Name2")) {
-                users.collect { println(it) }
+            val name2Users = withContext(CoroutineName("Coroutine Name2")) {
+                users.toList()
             }
+            name2Users shouldBeEqualTo listOf("User0 in Coroutine Name2", "User1 in Coroutine Name2")
 
             // collect 작업을 Name3 에서 수행
-            users
+            val name3Users = users
                 .flowOn(CoroutineName("Coroutine Name3"))
-                .collect { println(it) }
+                .toList()
+
+            name3Users shouldBeEqualTo listOf("User0 in Coroutine Name3", "User1 in Coroutine Name3")
         }
 
-        private suspend fun present(place: String, message: String) {
+        private suspend fun present(place: String, message: String): String {
             val name = coroutineContext[CoroutineName]?.name
-            println("[$name] $message on $place")
+            return "[$name] $message on $place"
         }
 
-        private fun messageFlow(): Flow<String> = flow {
-            present("flow builder", "Message")
+        private fun messageFlow(trace: MutableList<String>): Flow<String> = flow {
+            trace += present("flow builder", "Message")
             emit("Message")
         }
 
         @Test
         fun `flowOn with different context`() = runTest {
-            val messages = messageFlow()
+            val trace = CopyOnWriteArrayList<String>()
+            val messages = messageFlow(trace)
 
             // NOTE: flowOn will work only for the functions upstream the flow.
             //
             withContext(CoroutineName("N1")) {
                 messages
                     .flowOn(CoroutineName("N3"))            // N3 Message on flow builder
-                    .onEach { present("onEach", it) }       // N2 Message on onEach
+                    .onEach { trace += present("onEach", it) }       // N2 Message on onEach
                     .flowOn(CoroutineName("N2"))            //
-                    .collect { present("collect", it) }     // N1 Message on collect
+                    .collect { trace += present("collect", it) }     // N1 Message on collect
             }
+
+            trace.toList() shouldBeEqualTo listOf(
+                "[N3] Message on flow builder",
+                "[N2] Message on onEach",
+                "[N1] Message on collect",
+            )
         }
     }
 
