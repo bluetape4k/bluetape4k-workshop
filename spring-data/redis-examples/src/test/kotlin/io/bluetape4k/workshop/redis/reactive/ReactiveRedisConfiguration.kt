@@ -2,13 +2,13 @@ package io.bluetape4k.workshop.redis.reactive
 
 
 import io.bluetape4k.junit5.faker.Fakers
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.testcontainers.storage.RedisServer
 import io.bluetape4k.workshop.redis.reactive.model.Person
 import jakarta.annotation.PreDestroy
 import kotlinx.coroutines.reactor.awaitSingleOrNull
-import kotlinx.coroutines.runBlocking
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.context.annotation.Bean
@@ -86,7 +86,7 @@ class ReactiveRedisConfiguration {
 
     @PreDestroy
     fun flushTestDb() {
-        runBlocking {
+        runSuspendIO {
             reactiveRedisConnectionFactory.reactiveConnection.serverCommands().flushDb().awaitSingleOrNull()
         }
     }

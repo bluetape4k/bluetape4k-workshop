@@ -5,7 +5,7 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.redis.redisson.cache.localCachedMap
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.future.await
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeGreaterThan
@@ -28,7 +28,7 @@ class LocalCachedMapExamples: AbstractRedissonTest() {
     companion object: KLoggingChannel()
 
     @Test
-    fun `simple local cached map`() = runTest {
+    fun `simple local cached map`() = runSuspendIO {
         // Local cache 설정
         val cachedMapName = "local:${Base58.randomString(8)}"
         val cachedMap: RLocalCachedMap<String, Int> = localCachedMap(cachedMapName, redisson) {

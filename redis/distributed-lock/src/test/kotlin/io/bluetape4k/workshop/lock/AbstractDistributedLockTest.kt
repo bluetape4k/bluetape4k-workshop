@@ -2,15 +2,15 @@ package io.bluetape4k.workshop.lock
 
 import io.bluetape4k.codec.Base58
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.redis.redisson.redissonClient
 import io.bluetape4k.testcontainers.storage.RedisServer
+import io.bluetape4k.utils.ShutdownQueue
 import io.bluetape4k.workshop.lock.domain.InventoryStore
 import io.bluetape4k.workshop.lock.fenced.FencedResources
 import io.bluetape4k.workshop.lock.service.FencedInventoryService
 import io.bluetape4k.workshop.lock.service.LockedInventoryService
 import io.bluetape4k.workshop.lock.service.SuspendingFencedInventoryService
 import io.bluetape4k.workshop.lock.service.UnsafeInventoryService
-import io.bluetape4k.redis.redisson.redissonClient
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.TestInstance
 import org.redisson.api.RedissonClient
@@ -26,6 +26,8 @@ abstract class AbstractDistributedLockTest {
     protected val redisson: RedissonClient by lazy {
         redissonClient {
             useSingleServer().setAddress(redisUrl)
+        }.also {
+            ShutdownQueue.register { runCatching { it.shutdown() } }
         }
     }
 
@@ -45,11 +47,6 @@ abstract class AbstractDistributedLockTest {
     fun resetState() {
         store.resetAll()
         fencedResources.resetAll()
-    }
-
-    @AfterAll
-    fun shutdown() {
-        runCatching { redisson.shutdown() }
     }
 
     protected fun randomName(prefix: String = "test") = "$prefix-${Base58.randomString(8)}"

@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactor.mono
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
 import org.awaitility.kotlin.await
@@ -33,7 +33,7 @@ class PersonCoroutineRepositoryTest @Autowired constructor(
     companion object: KLoggingChannel()
 
     @Test
-    fun `insert and count`() = runTest {
+    fun `insert and count`() = runSuspendIO {
         val prevCount = repository.count()
         println("prevCount=$prevCount")
 
@@ -47,12 +47,12 @@ class PersonCoroutineRepositoryTest @Autowired constructor(
     }
 
     @Test
-    fun `perform conversion before result processing`() = runTest {
+    fun `perform conversion before result processing`() = runSuspendIO {
         repository.findAll().log("#1").count() shouldBeEqualTo 4
     }
 
     @Test
-    fun `stream data with tailable cursor`() = runTest {
+    fun `stream data with tailable cursor`() = runSuspendIO {
         val prevCount = repository.count().toInt()
 
         val queue = ConcurrentLinkedQueue<Person>()
@@ -87,7 +87,7 @@ class PersonCoroutineRepositoryTest @Autowired constructor(
      * NOTE: bluetape4k-coroutines 의 [PublishSubject] 를 이용하여 해결했습니다.
      */
     @Test
-    fun `stream data with tailable cursor with PublishSubject`() = runTest(timeout = 10.seconds) {
+    fun `stream data with tailable cursor with PublishSubject`() = runSuspendIO(timeout = 10.seconds) {
         val prevCount = repository.count().toInt()
 
         val queue = ConcurrentLinkedQueue<Person>()
@@ -127,25 +127,25 @@ class PersonCoroutineRepositoryTest @Autowired constructor(
     }
 
     @Test
-    fun `query data with query derivation`() = runTest {
+    fun `query data with query derivation`() = runSuspendIO {
         val people = repository.findByLastname("White").log("person")
         people.count() shouldBeEqualTo 2
     }
 
     @Test
-    fun `query data with string query`() = runTest {
+    fun `query data with string query`() = runSuspendIO {
         val person = repository.findByFirstnameAndLastname("Walter", "White")
         person.shouldNotBeNull()
     }
 
     @Test
-    fun `query data with deferred query deviation`() = runTest {
+    fun `query data with deferred query deviation`() = runSuspendIO {
         val people = repository.findByLastname(mono { "White" }).log("person")
         people.count() shouldBeEqualTo 2
     }
 
     @Test
-    fun `query data with mixed deferred query deviation`() = runTest {
+    fun `query data with mixed deferred query deviation`() = runSuspendIO {
         val person = repository.findByFirstnameAndLastname(mono { "Walter" }, "White")
         person.shouldNotBeNull()
     }

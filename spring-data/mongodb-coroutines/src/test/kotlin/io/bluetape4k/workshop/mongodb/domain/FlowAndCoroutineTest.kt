@@ -9,7 +9,7 @@ import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -30,7 +30,7 @@ class FlowAndCoroutineTest(
     companion object: KLoggingChannel()
 
     @BeforeEach
-    fun beforeEach() = runTest {
+    fun beforeEach() = runSuspendIO {
         operations.dropCollection<Person>().awaitSingleOrNull()
     }
 

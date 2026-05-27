@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.redisson.collections
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.future.await
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
@@ -46,7 +46,7 @@ class ScoredSortedSetExamples: AbstractRedissonTest() {
     }
 
     @Test
-    fun `RScoredSortedSet 을 이용하여 Score로 정렬된 Set을 사용한다`() = runTest {
+    fun `RScoredSortedSet 을 이용하여 Score로 정렬된 Set을 사용한다`() = runSuspendIO {
         val zset = getSampleScoredSortedSet(randomName())
 
         // ScoredSortedSet의 크기는 6이다
@@ -65,7 +65,7 @@ class ScoredSortedSetExamples: AbstractRedissonTest() {
     }
 
     @Test
-    fun `Score 를 변경하여, 자동으로 정렬되도록 한다`() = runTest {
+    fun `Score 를 변경하여, 자동으로 정렬되도록 한다`() = runSuspendIO {
         val zset = getSampleScoredSortedSet(randomName())
 
         // "B" 요소의 Score를 15.0 증가시킨다 (20.0 -> 35.0)

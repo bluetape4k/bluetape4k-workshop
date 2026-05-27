@@ -5,7 +5,7 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import org.junit.jupiter.api.Test
 import java.util.concurrent.TimeUnit
 
@@ -60,7 +60,7 @@ class PermitExpirableSemaphoreExamples: AbstractRedissonTest() {
     }
 
     @Test
-    fun `basic async usage for PermitExpirableSemaphore`() = runTest {
+    fun `basic async usage for PermitExpirableSemaphore`() = runSuspendIO {
         val semaphoreName = randomName()
         val semaphore = redisson.getPermitExpirableSemaphore(semaphoreName)
 

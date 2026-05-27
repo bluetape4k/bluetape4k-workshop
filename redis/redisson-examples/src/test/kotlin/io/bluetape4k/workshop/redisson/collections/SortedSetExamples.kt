@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.redisson.collections
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.future.await
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
@@ -27,7 +27,7 @@ class SortedSetExamples: AbstractRedissonTest() {
     }
 
     @Test
-    fun `정렬된 SET 사용 예`() = runTest {
+    fun `정렬된 SET 사용 예`() = runSuspendIO {
         val zset = getSortedSet(randomName())
 
         // 오름차순으로 정렬됨

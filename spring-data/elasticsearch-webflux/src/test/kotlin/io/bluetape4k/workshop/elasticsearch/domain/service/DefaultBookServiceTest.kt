@@ -9,7 +9,7 @@ import io.bluetape4k.workshop.elasticsearch.domain.exception.BookNotFoundExcepti
 import io.bluetape4k.workshop.elasticsearch.domain.exception.DuplicatedIsbnException
 import io.bluetape4k.workshop.elasticsearch.domain.model.Book
 import io.bluetape4k.workshop.elasticsearch.domain.repository.BookRepository
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
@@ -100,7 +100,7 @@ class DefaultBookServiceTest(
     }
 
     @Test
-    fun `create book with duplicate isbnm, throw exception`() = runTest {
+    fun `create book with duplicate isbnm, throw exception`() = runSuspendIO {
         val saved = service.create(createBook())
         saved.id.shouldNotBeNull()
         refreshBookIndex()

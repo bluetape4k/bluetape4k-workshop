@@ -5,7 +5,7 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.elasticsearch.AbstractElasticsearchTest
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
@@ -22,7 +22,7 @@ class ReactiveElasticsearchRepositoryTest(
     companion object: KLogging()
 
     @Test
-    fun `search all conference`() = runTest {
+    fun `search all conference`() = runSuspendIO {
         val conferences = repository.findAll().asFlow().toList()
 
         conferences.size shouldBeGreaterOrEqualTo 5
@@ -32,7 +32,7 @@ class ReactiveElasticsearchRepositoryTest(
     }
 
     @Test
-    fun `search by expected keywoard and date by repository`() = runTest {
+    fun `search by expected keywoard and date by repository`() = runSuspendIO {
         val expectedDate = "2014-10-29"
         val expectedWord = "java"
 
@@ -50,7 +50,7 @@ class ReactiveElasticsearchRepositoryTest(
     }
 
     @Test
-    fun `search by geo spatial`() = runTest {
+    fun `search by geo spatial`() = runSuspendIO {
         val startLocation = GeoPoint(50.0646501, 19.9449799)
         val range = "530km" // 300mi
 

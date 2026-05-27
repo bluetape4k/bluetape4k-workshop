@@ -6,7 +6,7 @@ import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.Test
@@ -22,7 +22,7 @@ class QueueExamples: AbstractRedissonTest() {
     companion object: KLoggingChannel()
 
     @Test
-    fun `queue usage`() = runTest {
+    fun `queue usage`() = runSuspendIO {
         val queue = redisson.getQueue<Int>(randomName())
         val queue2 = redisson.getQueue<Int>(randomName())
 

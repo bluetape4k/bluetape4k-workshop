@@ -9,7 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeGreaterThan
@@ -40,7 +40,7 @@ class BucketExamples: AbstractRedissonTest() {
     companion object: KLoggingChannel()
 
     @Test
-    fun `use bucket`() = runTest {
+    fun `use bucket`() = runSuspendIO {
         val bucket: RBucket<String> = redisson.getBucket(randomName(), RedissonCodecs.String)
 
         // bucket에 object를 설정한다
@@ -74,7 +74,7 @@ class BucketExamples: AbstractRedissonTest() {
     }
 
     @Test
-    fun `use bucket in coroutines`() = runTest {
+    fun `use bucket in coroutines`() = runSuspendIO {
         val bucket: RBucket<String> = redisson.getBucket(randomName())
 
         // bucket에 object를 설정한다
@@ -94,7 +94,7 @@ class BucketExamples: AbstractRedissonTest() {
     }
 
     @Test
-    fun `multiple buckets example`() = runTest {
+    fun `multiple buckets example`() = runSuspendIO {
         val buckets = redisson.buckets
 
         val bucketName1 = randomName()
@@ -173,7 +173,7 @@ class BucketExamples: AbstractRedissonTest() {
      * - `A`: Alias for g$lshzxe, so that the "AKE" string means all the events.
      */
     @Test
-    fun `RBucket에 Listener 추가하기`() = runTest {
+    fun `RBucket에 Listener 추가하기`() = runSuspendIO {
         // NOTE: BeforeAll 함수에서 `CONFIG SET notify-keyspace-events AKE` 를 실행합니다.
 
         val bucket = redisson.getBucket<String>(randomName())

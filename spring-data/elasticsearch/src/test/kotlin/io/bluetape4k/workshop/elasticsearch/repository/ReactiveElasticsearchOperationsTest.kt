@@ -6,7 +6,7 @@ import io.bluetape4k.workshop.elasticsearch.AbstractElasticsearchTest
 import io.bluetape4k.workshop.elasticsearch.model.Conference
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
 import io.bluetape4k.assertions.shouldContain
 import io.bluetape4k.assertions.shouldHaveSize
@@ -27,7 +27,7 @@ class ReactiveElasticsearchOperationsTest(
     companion object: KLogging()
 
     @Test
-    fun `search by expected date and keyword`() = runTest {
+    fun `search by expected date and keyword`() = runSuspendIO {
         val expectedDate = "2014-10-29"
         val expectedWord = "java"
 
@@ -50,7 +50,7 @@ class ReactiveElasticsearchOperationsTest(
     }
 
     @Test
-    fun `search by geo spatial`() = runTest {
+    fun `search by geo spatial`() = runSuspendIO {
         val startLocation = GeoPoint(50.0646501, 19.9449799)
         val range = "530km" // 300mi
         val query = CriteriaQuery(Criteria(Conference::location.name).within(startLocation, range))

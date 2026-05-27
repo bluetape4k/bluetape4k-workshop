@@ -14,7 +14,7 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.io.InterruptedIOException
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
-import kotlin.test.DefaultAsserter.fail
+import io.bluetape4k.assertions.fail
 
 class WaitUntilNotifiedTest: AbstractOkioTest() {
 

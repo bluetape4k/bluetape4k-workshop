@@ -1,7 +1,7 @@
 package io.bluetape4k.workshop.r2dbc.entitycallback
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
@@ -24,7 +24,7 @@ class CustomerRepositoryIntegrationTest(
     }
 
     @Test
-    fun `generates id on insert`() = runTest {
+    fun `generates id on insert`() = runSuspendIO {
         val dave = Customer("Dave", "Matthews")
 
         val saved = repository.save(dave)

@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.r2dbc.domain
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.r2dbc.AbstractR2dbcApplicationTest
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.Disabled
@@ -22,7 +22,7 @@ class MemberRepositoryTest(
     }
 
     @Test
-    fun `save and get member`() = runTest {
+    fun `save and get member`() = runSuspendIO {
         val member = Member(name = "John Doe", age = 30, email = "john@example.com")
 
         val savedMember = memberRepository.save(member)
