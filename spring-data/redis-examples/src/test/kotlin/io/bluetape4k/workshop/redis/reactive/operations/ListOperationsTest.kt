@@ -7,7 +7,6 @@ import io.bluetape4k.workshop.redis.reactive.AbstractReactiveRedisTest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
-import kotlinx.coroutines.runBlocking
 import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -25,12 +24,10 @@ class ListOperationsTest(
     }
 
     @BeforeEach
-    fun beforeEach() {
-        runBlocking {
-            operations.execute { conn ->
-                conn.serverCommands().flushDb()
-            }.awaitSingle() shouldBeEqualTo "OK"
-        }
+    fun beforeEach() = runSuspendIO {
+        operations.execute { conn ->
+            conn.serverCommands().flushDb()
+        }.awaitSingle() shouldBeEqualTo "OK"
     }
 
     /**

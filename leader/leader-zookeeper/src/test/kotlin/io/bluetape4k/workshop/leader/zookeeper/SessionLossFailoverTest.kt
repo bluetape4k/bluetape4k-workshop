@@ -14,7 +14,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.time.Duration
-import java.util.UUID
+import io.bluetape4k.codec.Base58
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.milliseconds
@@ -47,7 +47,7 @@ class SessionLossFailoverTest {
     private lateinit var clientA: CuratorFramework
     private lateinit var clientB: CuratorFramework
 
-    fun randomLockName(prefix: String = "t8") = "$prefix:${UUID.randomUUID()}"
+    fun randomLockName(prefix: String = "t8") = "$prefix:${Base58.randomString(8)}"
 
     @BeforeAll
     fun startIsolatedZk() {

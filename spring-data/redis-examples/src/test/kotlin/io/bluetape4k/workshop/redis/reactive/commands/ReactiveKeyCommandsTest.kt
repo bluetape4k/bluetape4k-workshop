@@ -21,7 +21,6 @@ import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitLast
 import kotlinx.coroutines.reactor.asFlux
 import kotlinx.coroutines.reactor.awaitSingle
-import kotlinx.coroutines.runBlocking
 import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
@@ -66,10 +65,8 @@ class ReactiveKeyCommandsTest(
     }
 
     @BeforeEach
-    fun beforeEach() {
-        runBlocking {
-            connection.serverCommands().flushAll().awaitSingle()
-        }
+    fun beforeEach() = runSuspendIO {
+        connection.serverCommands().flushAll().awaitSingle()
     }
 
     @Disabled("Lettuce 7.x 에서는 keys 를 패턴으로 찾기가 안된다")

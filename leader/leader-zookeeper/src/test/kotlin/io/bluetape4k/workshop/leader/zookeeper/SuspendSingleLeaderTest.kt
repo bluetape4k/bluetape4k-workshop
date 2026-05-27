@@ -4,10 +4,9 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterThan
 import io.bluetape4k.assertions.shouldBeLessOrEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.max
@@ -22,13 +21,13 @@ import kotlin.math.max
  *   `peakConcurrent` never exceeds 1 (strict mutual exclusion) and at least 3
  *   coroutines eventually execute the action body.
  *
- * NOTE: The concurrent test uses `runBlocking` (NOT `runTest`) because real ZooKeeper
+ * NOTE: The concurrent test uses `runSuspendIO` (NOT `runTest`) because real ZooKeeper
  * network I/O does not cooperate with the test virtual-time scheduler used by `runTest`.
  */
 class SuspendSingleLeaderTest : AbstractLeaderZookeeperTest() {
 
     @Test
-    fun `runIfLeader returns done for a single suspending caller`() = runTest {
+    fun `runIfLeader returns done for a single suspending caller`() = runSuspendIO {
         val elector = newSuspendElector()
 
         val result = elector.runIfLeader(randomLockName("t3-single")) { "done" }
@@ -37,7 +36,7 @@ class SuspendSingleLeaderTest : AbstractLeaderZookeeperTest() {
     }
 
     @Test
-    fun `peakConcurrent never exceeds 1 across 8 concurrent coroutines`(): Unit = runBlocking {
+    fun `peakConcurrent never exceeds 1 across 8 concurrent coroutines`(): Unit = runSuspendIO {
         val lockName = randomLockName("t3-concurrent")
         // Shared single suspend elector created ONCE outside the worker block.
         val elector = newSuspendElector()

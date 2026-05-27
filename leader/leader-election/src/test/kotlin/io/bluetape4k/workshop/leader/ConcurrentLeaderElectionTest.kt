@@ -4,7 +4,7 @@ import io.bluetape4k.junit5.concurrency.MultithreadingTester
 import io.bluetape4k.leader.LeaderElectionOptions
 import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
-import java.util.UUID
+import io.bluetape4k.codec.Base58
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -23,7 +23,7 @@ class ConcurrentLeaderElectionTest : AbstractLeaderElectionTest() {
 
     @Test
     fun `exactly one instance wins the lock among 3 concurrent attempts`() {
-        val lockName = "test:t2:${UUID.randomUUID()}"
+        val lockName = "test:t2:${Base58.randomString(8)}"
         val executions = AtomicInteger(0)   // java.util.concurrent.atomic — local variable
         val attemptCount = AtomicInteger(0)
 

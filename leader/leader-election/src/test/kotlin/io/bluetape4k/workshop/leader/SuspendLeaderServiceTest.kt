@@ -7,10 +7,9 @@ import io.bluetape4k.junit5.coroutines.SuspendedJobTester
 import io.bluetape4k.leader.LeaderElectionOptions
 import io.bluetape4k.workshop.leader.service.SuspendLeaderService
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import org.junit.jupiter.api.Test
-import java.util.UUID
+import io.bluetape4k.codec.Base58
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -26,7 +25,7 @@ import kotlin.time.Duration.Companion.seconds
 class SuspendLeaderServiceTest : AbstractLeaderElectionTest() {
 
     @Test
-    fun `single coroutine acquires leadership and executes action`() = runTest {
+    fun `single coroutine acquires leadership and executes action`() = runSuspendIO {
         val elector = newSuspendElector()
         val service = SuspendLeaderService(elector)
 
@@ -37,8 +36,8 @@ class SuspendLeaderServiceTest : AbstractLeaderElectionTest() {
     }
 
     @Test
-    fun `second elector receives null while first holds the lock`() = runBlocking {
-        val lockName = "test:suspend:contention:${UUID.randomUUID()}"
+    fun `second elector receives null while first holds the lock`() = runSuspendIO {
+        val lockName = "test:suspend:contention:${Base58.randomString(8)}"
         val shortWait = LeaderElectionOptions(waitTime = 50.milliseconds, leaseTime = 5.seconds)
         val elector1 = newSuspendElector(shortWait)
         val elector2 = newSuspendElector(shortWait)
@@ -55,8 +54,8 @@ class SuspendLeaderServiceTest : AbstractLeaderElectionTest() {
     }
 
     @Test
-    fun `exactly one coroutine wins among concurrent suspend attempts`() = runBlocking {
-        val lockName = "test:suspend:concurrent:${UUID.randomUUID()}"
+    fun `exactly one coroutine wins among concurrent suspend attempts`() = runSuspendIO {
+        val lockName = "test:suspend:concurrent:${Base58.randomString(8)}"
         val winCount = AtomicInteger(0)
 
         // SuspendedJobTester — coroutine concurrency harness from bluetape4k-junit5.

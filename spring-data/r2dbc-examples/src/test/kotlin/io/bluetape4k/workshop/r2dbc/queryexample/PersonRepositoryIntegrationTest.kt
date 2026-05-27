@@ -7,8 +7,7 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldContainSame
 import io.bluetape4k.assertions.shouldNotBeNull
@@ -36,31 +35,29 @@ class PersonRepositoryIntegrationTest @Autowired constructor(
     private lateinit var hank: Person
 
     @BeforeEach
-    fun beforeEach() {
-        runBlocking {
-            val statements = listOf(
-                "DROP TABLE IF EXISTS person;",
-                """
-                CREATE TABLE person (
-                    id SERIAL PRIMARY KEY, 
-                    firstname VARCHAR(100) NOT NULL, 
-                    lastname VARCHAR(100) NOT NULL, 
-                    age INTEGER NOT NULL
-                );""".trimIndent()
-            )
+    fun beforeEach() = runSuspendIO {
+        val statements = listOf(
+            "DROP TABLE IF EXISTS person;",
+            """
+            CREATE TABLE person (
+                id SERIAL PRIMARY KEY,
+                firstname VARCHAR(100) NOT NULL,
+                lastname VARCHAR(100) NOT NULL,
+                age INTEGER NOT NULL
+            );""".trimIndent()
+        )
 
-            skyler = Person("Skyler", "White", 45)
-            walter = Person("Walter", "White", 50)
-            flynn = Person("Walter Jr. (Flynn)", "White", 17)
-            marie = Person("Marie", "Schrader", 38)
-            hank = Person("Hank", "Schrader", 43)
+        skyler = Person("Skyler", "White", 45)
+        walter = Person("Walter", "White", 50)
+        flynn = Person("Walter Jr. (Flynn)", "White", 17)
+        marie = Person("Marie", "Schrader", 38)
+        hank = Person("Hank", "Schrader", 43)
 
-            statements.forEach { stmt ->
-                client.sql(stmt).fetch().rowsUpdated().awaitSingleOrNull()
-            }
-
-            repository.saveAll(listOf(skyler, walter, flynn, marie, hank)).asFlow().collect()
+        statements.forEach { stmt ->
+            client.sql(stmt).fetch().rowsUpdated().awaitSingleOrNull()
         }
+
+        repository.saveAll(listOf(skyler, walter, flynn, marie, hank)).asFlow().collect()
     }
 
     @Test
@@ -70,7 +67,7 @@ class PersonRepositoryIntegrationTest @Autowired constructor(
     }
 
     @Test
-    fun `count by simple example`() = runTest {
+    fun `count by simple example`() = runSuspendIO {
 
         // Kotlin 클래스에 대해서 non-null 때문에 Example 만드는 것은 이렇게 Example에 지정할 속성명을 특정해주는 [ExampleMatcher]를 사용해야 한다!!!
         val matcher = Person::class
@@ -85,7 +82,7 @@ class PersonRepositoryIntegrationTest @Autowired constructor(
     }
 
     @Test
-    fun `ignore properties and match by age`() = runTest {
+    fun `ignore properties and match by age`() = runSuspendIO {
         // Kotlin 클래스에 대해서 non-null 때문에 Example 만드는 것은 이렇게 Example에 지정할 속성명을 특정해주는 [ExampleMatcher]를 사용해야 한다!!!
         val matcher = Person::class
             .buildExampleMatcher(Person::age.name)
@@ -98,7 +95,7 @@ class PersonRepositoryIntegrationTest @Autowired constructor(
     }
 
     @Test
-    fun `match starting strings ignore case`() = runTest {
+    fun `match starting strings ignore case`() = runSuspendIO {
         // Kotlin 클래스에 대해서 non-null 때문에 Example 만드는 것은 이렇게 Example에 지정할 속성명을 특정해주는 [ExampleMatcher]를 사용해야 한다!!!
         val matcher = Person::class
             .buildExampleMatcher(Person::firstname.name, Person::lastname.name)
@@ -112,7 +109,7 @@ class PersonRepositoryIntegrationTest @Autowired constructor(
     }
 
     @Test
-    fun `configuring matchers using lambdas`() = runTest {
+    fun `configuring matchers using lambdas`() = runSuspendIO {
         // Kotlin 클래스에 대해서 non-null 때문에 Example 만드는 것은 이렇게 Example에 지정할 속성명을 특정해주는 [ExampleMatcher]를 사용해야 한다!!!
         val matcher = ExampleMatcher.matching()
             .withIgnorePaths(Person::age.name)
@@ -126,7 +123,7 @@ class PersonRepositoryIntegrationTest @Autowired constructor(
     }
 
     @Test
-    fun `value transformer`() = runTest {
+    fun `value transformer`() = runSuspendIO {
         // Kotlin 클래스에 대해서 non-null 때문에 Example 만드는 것은 이렇게 Example에 지정할 속성명을 특정해주는 [ExampleMatcher]를 사용해야 한다!!!
         val matcher = Person::class
             .buildExampleMatcher(Person::lastname.name, Person::age.name)

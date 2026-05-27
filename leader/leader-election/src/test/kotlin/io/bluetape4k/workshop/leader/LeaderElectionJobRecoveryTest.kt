@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.leader
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
-import java.util.UUID
+import io.bluetape4k.codec.Base58
 import io.bluetape4k.assertions.assertFailsWith
 
 /**
@@ -17,7 +17,7 @@ class LeaderElectionJobRecoveryTest : AbstractLeaderElectionTest() {
 
     @Test
     fun `lock is released after job throws exception, allowing re-election`() {
-        val lockName = "test:t3:${UUID.randomUUID()}"
+        val lockName = "test:t3:${Base58.randomString(8)}"
         val elector1 = newElector()
         val elector2 = newElector()
 

@@ -6,7 +6,7 @@ import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.leader.LockExtender
 import io.bluetape4k.workshop.leader.job.LockExtenderJob
 import org.junit.jupiter.api.Test
-import java.util.UUID
+import io.bluetape4k.codec.Base58
 
 /**
  * Tests for [LockExtenderJob] and the [LockExtender] API.
@@ -20,7 +20,7 @@ class LockExtenderTest : AbstractLeaderElectionTest() {
 
     @Test
     fun `extendActiveLock returns true inside runIfLeader`() {
-        val lockName = "test:extend:${UUID.randomUUID()}"
+        val lockName = "test:extend:${Base58.randomString(8)}"
         val elector = newElector()
 
         val extended = elector.runIfLeader(lockName) {

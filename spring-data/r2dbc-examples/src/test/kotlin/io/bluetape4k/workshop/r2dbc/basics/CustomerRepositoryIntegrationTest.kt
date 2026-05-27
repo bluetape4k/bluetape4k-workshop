@@ -1,12 +1,11 @@
 package io.bluetape4k.workshop.r2dbc.basics
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactor.awaitSingle
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.runTest
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
@@ -23,19 +22,17 @@ class CustomerRepositoryIntegrationTest(
     companion object: KLoggingChannel()
 
     @BeforeEach
-    fun beforeEach() {
-        runBlocking {
-            val statements = listOf(
-                "DROP TABLE IF EXISTS customer;",
-                "CREATE TABLE customer (id SERIAL PRIMARY KEY, firstname VARCHAR(100) NOT NULL, lastname VARCHAR(100) NOT NULL);",
-            )
+    fun beforeEach() = runSuspendIO {
+        val statements = listOf(
+            "DROP TABLE IF EXISTS customer;",
+            "CREATE TABLE customer (id SERIAL PRIMARY KEY, firstname VARCHAR(100) NOT NULL, lastname VARCHAR(100) NOT NULL);",
+        )
 
-            statements.forEach {
-                database.sql(it)
-                    .fetch()
-                    .rowsUpdated()
-                    .awaitSingle()
-            }
+        statements.forEach {
+            database.sql(it)
+                .fetch()
+                .rowsUpdated()
+                .awaitSingle()
         }
     }
 
@@ -45,7 +42,7 @@ class CustomerRepositoryIntegrationTest(
     }
 
     @Test
-    fun `execute find all`() = runTest {
+    fun `execute find all`() = runSuspendIO {
         val dave = Customer("Dave", "Matthews")
         val carter = Customer("Carter", "Beauford")
 
@@ -57,7 +54,7 @@ class CustomerRepositoryIntegrationTest(
     }
 
     @Test
-    fun `execute annotated query`() = runTest {
+    fun `execute annotated query`() = runSuspendIO {
         val dave = Customer("Dave", "Matthews")
         val carter = Customer("Carter", "Beauford")
 
