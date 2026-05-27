@@ -296,6 +296,7 @@ subprojects {
 
         // JUnit 5
         testImplementation(rootLibs.bluetape4k.junit5)
+        testImplementation(rootLibs.bluetape4k.assertions)
         testImplementation(rootLibs.junit.jupiter.lib)
         testRuntimeOnly(rootLibs.junit.platform.engine)
 
