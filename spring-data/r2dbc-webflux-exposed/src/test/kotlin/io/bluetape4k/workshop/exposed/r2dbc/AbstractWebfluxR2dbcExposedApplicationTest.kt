@@ -5,6 +5,8 @@ import io.bluetape4k.junit5.faker.Fakers
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.support.uninitialized
 import io.bluetape4k.workshop.exposed.r2dbc.domain.model.UserRecord
+import io.bluetape4k.workshop.exposed.r2dbc.domain.schema.SchemaInitializer
+import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.ApplicationContext
@@ -35,8 +37,16 @@ abstract class AbstractWebfluxR2dbcExposedApplicationTest {
     @Autowired
     protected val context: ApplicationContext = uninitialized()
 
+    @Autowired
+    private val schemaInitializer: SchemaInitializer = uninitialized()
+
     protected val webTestClient: WebTestClient by lazy {
         WebTestClient.bindToApplicationContext(context).build()
+    }
+
+    @BeforeEach
+    fun ensureSchema() {
+        schemaInitializer.initializeSchema()
     }
 
     protected fun createUser(id: Int? = null): UserRecord =
