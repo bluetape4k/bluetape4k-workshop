@@ -11,7 +11,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import org.springframework.web.reactive.function.client.awaitBody
 import org.springframework.web.reactive.function.client.awaitBodyOrNull
-import kotlin.test.Test
+import org.junit.jupiter.api.Test
 import io.bluetape4k.assertions.assertFailsWith
 
 class WebClientExtensionsTest: AbstractSpringTest() {

@@ -4,7 +4,7 @@ import io.bluetape4k.logging.KLogging
 import io.bluetape4k.workshop.spring.modulith.events.util.IntegrationTest
 import io.bluetape4k.assertions.shouldBeTrue
 import org.springframework.beans.factory.annotation.Autowired
-import kotlin.test.Test
+import org.junit.jupiter.api.Test
 import io.bluetape4k.assertions.assertFailsWith
 
 @IntegrationTest

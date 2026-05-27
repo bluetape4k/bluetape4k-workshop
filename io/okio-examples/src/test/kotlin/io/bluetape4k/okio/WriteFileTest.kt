@@ -9,7 +9,7 @@ import okio.buffer
 import okio.sink
 import okio.source
 import org.junit.jupiter.api.BeforeAll
-import kotlin.test.Test
+import org.junit.jupiter.api.Test
 
 @TempFolderTest
 class WriteFileTest {
