@@ -27,7 +27,6 @@ class ReactiveMongoTemplateTest(
     @Test
     fun `insert and count data`() = runSuspendIO {
         val prevCount = operations.count<Person>(Query())
-            .doOnNext { println(it) }
             .awaitSingle()
 
         prevCount shouldBeEqualTo 4L
