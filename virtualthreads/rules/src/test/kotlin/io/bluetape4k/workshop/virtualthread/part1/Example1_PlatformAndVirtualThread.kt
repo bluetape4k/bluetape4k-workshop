@@ -20,7 +20,7 @@ class Example1_PlatformAndVirtualThread: AbstractVirtualThreadTest() {
     @Test
     fun `Platform thread를 생성자로 생성하기`() {
         val thread = Thread {
-            println("Platform Thread")
+            log.debug { "Platform Thread" }
         }
         thread.start()
         thread.join()

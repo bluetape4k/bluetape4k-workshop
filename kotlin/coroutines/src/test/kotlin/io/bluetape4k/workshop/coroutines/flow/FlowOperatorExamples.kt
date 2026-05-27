@@ -175,13 +175,11 @@ class FlowOperatorExamples {
         fun flowFrom(elem: String) = flowOf(1, 2, 3)
             .onEach {
                 delay(10)
-                println("delay 10, $it")
             }
             .map { "${it}_${elem}" }
 
         val result = flowOf("A", "B", "C")
             .flatMapMerge(concurrency = 2) { flowFrom(it) }
-            .onEach { print("$it, ") }
             .toList()
 
         result shouldBeEqualTo listOf("1_A", "1_B", "2_A", "2_B", "3_A", "3_B", "1_C", "2_C", "3_C")
@@ -201,7 +199,6 @@ class FlowOperatorExamples {
          */
         val result = flowOf("A", "B", "C").log("chars")
             .flatMapLatest { flowFrom(it) }         // 각 flow의 마지막 요소들만 선택
-            .onEach { println(it) }
             .toList()
 
         result shouldBeEqualTo listOf("1_C", "2_C", "3_C")

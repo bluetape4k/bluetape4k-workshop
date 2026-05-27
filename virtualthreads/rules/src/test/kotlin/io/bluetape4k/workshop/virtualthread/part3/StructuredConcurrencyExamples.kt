@@ -4,6 +4,7 @@ import io.bluetape4k.concurrent.virtualthread.StructuredSubtask
 import io.bluetape4k.concurrent.virtualthread.structuredTaskScopeAll
 import io.bluetape4k.concurrent.virtualthread.structuredTaskScopeAny
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.virtualThreads.AbstractVirtualThreadTest
 import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
@@ -18,24 +19,24 @@ class StructuredConcurrencyExamples: AbstractVirtualThreadTest() {
     data class Dish(val pasta: Pasta, val sauce: Sauce)
 
     fun preparePasta(): Pasta {
-        println("prepare Pasta")
+        log.debug { "prepare Pasta" }
         return Pasta()
     }
 
     fun makeSaurce(): Sauce {
-        println("make Sauce")
+        log.debug { "make Sauce" }
         return Sauce()
     }
 
     fun serveDish(dish: Dish) {
-        println("😍 hear you are, $dish")
+        log.debug { "hear you are, $dish" }
     }
 
     /**
      * 비동기 코드를 병렬로 실행하고, 모든 작업이 성공적으로 완료되면 결과를 반환합니다.
      */
     fun prepareDish(): Dish = structuredTaskScopeAll { scope ->
-        println("prepare Dish ...")
+        log.debug { "prepare Dish ..." }
         val pasta: StructuredSubtask<Pasta> = scope.fork {
             Thread.sleep(100)
             preparePasta()
@@ -51,18 +52,19 @@ class StructuredConcurrencyExamples: AbstractVirtualThreadTest() {
         pasta.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.SUCCESS
         sauce.state() shouldBeEqualTo StructuredTaskScope.Subtask.State.SUCCESS
 
-        println("complete Dish")
+        log.debug { "complete Dish" }
         Dish(pasta.get(), sauce.get())
     }
 
-    fun cookPasta() {
+    fun cookPasta(): Dish {
         val dish = prepareDish()
         serveDish(dish)
+        return dish
     }
 
     @Test
     fun `Structured Task Scope 안에서 병렬 작업`() {
-        cookPasta()
+        cookPasta() shouldBeEqualTo Dish(Pasta(), Sauce())
     }
 
 
@@ -94,6 +96,6 @@ class StructuredConcurrencyExamples: AbstractVirtualThreadTest() {
 
             scope.result { RuntimeException(it) }
         }
-        println("pasta: $pasta")
+        pasta shouldBeEqualTo Pasta()
     }
 }
