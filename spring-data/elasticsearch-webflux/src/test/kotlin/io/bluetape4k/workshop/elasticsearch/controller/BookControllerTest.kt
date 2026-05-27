@@ -13,7 +13,7 @@ import io.bluetape4k.workshop.shared.web.httpGet
 import io.bluetape4k.workshop.shared.web.httpPost
 import io.bluetape4k.workshop.shared.web.httpPut
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
 import io.bluetape4k.assertions.shouldHaveSize
@@ -69,7 +69,7 @@ class BookControllerTest(
     }
 
     @Test
-    fun `find book with not exists isbn`() = runTest {
+    fun `find book with not exists isbn`() = runSuspendIO {
         insertRandomBooks(3)
 
         client.httpGet("$BOOK_PATH/not-exists")

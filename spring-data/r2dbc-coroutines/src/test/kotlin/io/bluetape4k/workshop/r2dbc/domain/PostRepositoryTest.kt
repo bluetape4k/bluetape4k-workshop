@@ -4,7 +4,7 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.r2dbc.AbstractR2dbcApplicationTest
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldNotBeEmpty
@@ -26,7 +26,7 @@ class PostRepositoryTest(
     }
 
     @Test
-    fun `find all posts`() = runTest {
+    fun `find all posts`() = runSuspendIO {
         val posts = postRepository.findAll().toList()
         posts.forEach { post ->
             log.debug { "post=$post" }
@@ -35,30 +35,30 @@ class PostRepositoryTest(
     }
 
     @Test
-    fun `find one post by id`() = runTest {
+    fun `find one post by id`() = runSuspendIO {
         val post = postRepository.findOneById(1L)
         post.id shouldBeEqualTo 1L
         log.debug { "post=$post" }
     }
 
     @Test
-    fun `find one post by id - not exists`() = runTest {
+    fun `find one post by id - not exists`() = runSuspendIO {
         postRepository.findOneByIdOrNull(-1L).shouldBeNull()
     }
 
     @Test
-    fun `find first by id`() = runTest {
+    fun `find first by id`() = runSuspendIO {
         val post = postRepository.findFirstById(1L)
         post.id shouldBeEqualTo 1L
     }
 
     @Test
-    fun `find first by id - not exists`() = runTest {
+    fun `find first by id - not exists`() = runSuspendIO {
         postRepository.findFirstByIdOrNull(-1L).shouldBeNull()
     }
 
     @Test
-    fun `insert new post`() = runTest {
+    fun `insert new post`() = runSuspendIO {
         val oldCount = postRepository.count()
 
         val newPost = createPost()

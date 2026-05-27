@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.r2dbc.domain
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.r2dbc.AbstractR2dbcApplicationTest
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEmpty
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
@@ -21,31 +21,31 @@ class CommentRepositoryTest(
     companion object: KLoggingChannel()
 
     @Test
-    fun `find comments by post id`() = runTest {
+    fun `find comments by post id`() = runSuspendIO {
         val comments = commentRepository.findAllByPostId(1L).toList()
         comments.shouldNotBeEmpty()
         comments.size shouldBeGreaterOrEqualTo 2
     }
 
     @Test
-    fun `find comments by non-existing post id`() = runTest {
+    fun `find comments by non-existing post id`() = runSuspendIO {
         val comments = commentRepository.findAllByPostId(-1L).toList()
         comments.shouldBeEmpty()
     }
 
     @Test
-    fun `count of comments by post id`() = runTest {
+    fun `count of comments by post id`() = runSuspendIO {
         val count = commentRepository.countByPostId(1L)
         count shouldBeGreaterOrEqualTo 2L
     }
 
     @Test
-    fun `count of comments by non-existing post id`() = runTest {
+    fun `count of comments by non-existing post id`() = runSuspendIO {
         commentRepository.countByPostId(-1L) shouldBeEqualTo 0L
     }
 
     @Test
-    fun `insert new comment`() = runTest {
+    fun `insert new comment`() = runSuspendIO {
         val oldCommentSize = commentRepository.countByPostId(2L)
 
         val newComment = createComment(2L)

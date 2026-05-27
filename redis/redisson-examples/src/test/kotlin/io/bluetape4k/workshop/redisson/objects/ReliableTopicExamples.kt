@@ -5,7 +5,7 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import kotlinx.coroutines.yield
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.until
@@ -33,7 +33,7 @@ class ReliableTopicExamples: AbstractRedissonTest() {
     companion object: KLoggingChannel()
 
     @Test
-    fun `자동 재구독이 되는 Topic`() = runTest {
+    fun `자동 재구독이 되는 Topic`() = runSuspendIO {
         val topicName = randomName()
         val topic = redisson.getReliableTopic(topicName)
         val listenCounter = AtomicInteger(0)

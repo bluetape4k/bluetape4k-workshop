@@ -6,7 +6,7 @@ import io.bluetape4k.logging.debug
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeNull
@@ -90,7 +90,7 @@ class LocalCachedMapTest: AbstractRedissonTest() {
     }
 
     @Test
-    fun `frontCache1 에 cache item을 추가하면 frontCache2에 추가됩니다`() = runTest {
+    fun `frontCache1 에 cache item을 추가하면 frontCache2에 추가됩니다`() = runSuspendIO {
         val keyToAdd = randomName()
 
         log.debug { "front cache1: put key=$keyToAdd" }
@@ -103,7 +103,7 @@ class LocalCachedMapTest: AbstractRedissonTest() {
     }
 
     @Test
-    fun `frontCache1의 cache item을 삭제하면 frontCache2에서도 삭제됩니다`() = runTest {
+    fun `frontCache1의 cache item을 삭제하면 frontCache2에서도 삭제됩니다`() = runSuspendIO {
         val keyToRemove = randomName()
 
         log.debug { "front cache1: put $keyToRemove" }
@@ -122,7 +122,7 @@ class LocalCachedMapTest: AbstractRedissonTest() {
     }
 
     @Test
-    fun `backCache에 cache item을 추가하면 frontCache 에 반영된다`() = runTest {
+    fun `backCache에 cache item을 추가하면 frontCache 에 반영된다`() = runSuspendIO {
         val key = randomName()
 
         // 초기에 frontCache에 존재하지 않는다.
@@ -155,7 +155,7 @@ class LocalCachedMapTest: AbstractRedissonTest() {
      */
     @Disabled("PRO 버전에서만 지원합니다.")
     @Test
-    fun `frontCache1의 cache item을 expire 되면 frontCache2에서도 삭제됩니다`() = runTest(timeout = 30.seconds) {
+    fun `frontCache1의 cache item을 expire 되면 frontCache2에서도 삭제됩니다`() = runSuspendIO(timeout = 30.seconds) {
         val keyToEvict = randomName()
 
         log.debug { "front cache1: put $keyToEvict" }

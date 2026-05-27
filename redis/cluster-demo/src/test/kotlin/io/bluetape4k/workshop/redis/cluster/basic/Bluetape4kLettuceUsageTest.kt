@@ -6,13 +6,13 @@ import io.bluetape4k.redis.lettuce.awaitSuspending
 import io.bluetape4k.redis.lettuce.codec.LettuceLongCodec
 import io.bluetape4k.testcontainers.storage.RedisServer
 import io.bluetape4k.workshop.redis.cluster.AbstractRedisClusterTest
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import org.junit.jupiter.api.Test
 
 class Bluetape4kLettuceUsageTest: AbstractRedisClusterTest() {
 
     @Test
-    fun `bluetape4k lettuce client supports typed async round trip`() = runTest {
+    fun `bluetape4k lettuce client supports typed async round trip`() = runSuspendIO {
         val redis = RedisServer.Launcher.redis
         val client = LettuceClients.clientOf(redis.url)
 

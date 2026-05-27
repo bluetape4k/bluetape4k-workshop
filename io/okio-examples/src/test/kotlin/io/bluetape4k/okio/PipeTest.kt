@@ -22,7 +22,7 @@ import io.bluetape4k.assertions.shouldBeTrue
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.fail
+import io.bluetape4k.assertions.fail
 import java.io.InterruptedIOException
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit

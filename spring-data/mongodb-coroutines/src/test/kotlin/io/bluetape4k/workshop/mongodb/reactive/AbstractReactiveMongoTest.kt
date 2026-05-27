@@ -3,12 +3,11 @@ package io.bluetape4k.workshop.mongodb.reactive
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.mongodb.AbstractMongodbTest
 import io.bluetape4k.workshop.mongodb.domain.Person
-import kotlinx.coroutines.Dispatchers
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingle
-import kotlinx.coroutines.runBlocking
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldHaveSize
 import org.junit.jupiter.api.BeforeEach
@@ -28,7 +27,7 @@ abstract class AbstractReactiveMongoTest(
 
     @BeforeEach
     fun beforeEach() {
-        runBlocking(Dispatchers.IO) {
+        runSuspendIO {
             // NOTE: [@Tailable] 을 지원하려면 Collection이 capped 인 놈만 가능합니다.
             //
             val collectionOptions = CollectionOptions.empty()

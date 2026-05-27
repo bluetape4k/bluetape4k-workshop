@@ -5,7 +5,7 @@ import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import kotlinx.coroutines.yield
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
@@ -27,7 +27,7 @@ class BoundedBlockingQueueExamples: AbstractRedissonTest() {
     }
 
     @Test
-    fun `크기 제한이 있는 Queue 사용`() = runTest {
+    fun `크기 제한이 있는 Queue 사용`() = runSuspendIO {
         val queue = redisson.getBoundedBlockingQueue<Int>(randomName())
         queue.trySetCapacity(ITEM_SIZE).shouldBeTrue()
 

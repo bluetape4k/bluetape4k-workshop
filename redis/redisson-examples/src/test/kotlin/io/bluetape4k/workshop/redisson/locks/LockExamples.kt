@@ -11,7 +11,7 @@ import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeFalse
 import io.bluetape4k.assertions.shouldBeGreaterOrEqualTo
@@ -171,7 +171,7 @@ class LockExamples: AbstractRedissonTest() {
     }
 
     @RepeatedTest(REPEAT_SIZE)
-    fun `Multi Job 환경에서 락 획득 및 해제`() = runTest {
+    fun `Multi Job 환경에서 락 획득 및 해제`() = runSuspendIO {
         val lock = redisson.getLock(randomName())
         val lockCounter = AtomicInteger(0)
 

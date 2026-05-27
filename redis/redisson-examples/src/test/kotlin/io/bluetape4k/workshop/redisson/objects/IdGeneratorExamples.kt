@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.redisson.objects
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.future.await
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldHaveSize
 import org.junit.jupiter.api.Test
 
@@ -34,7 +34,7 @@ class IdGeneratorExamples: AbstractRedissonTest() {
 
 
     @Test
-    fun `generate identifier asynchronous`() = runTest {
+    fun `generate identifier asynchronous`() = runSuspendIO {
         val generator = redisson.getIdGenerator(randomName())
 
         // 초기값=42, 할당 갯수 5,000개를 미리 할당합니다. (이미 초기화 되어 있다면, False를 반환하고 무시됨)

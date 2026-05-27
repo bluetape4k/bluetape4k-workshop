@@ -6,7 +6,7 @@ import io.bluetape4k.workshop.redisson.AbstractRedissonTest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import org.junit.jupiter.api.Test
 import kotlin.random.Random
 
@@ -25,7 +25,7 @@ class CountDownLatchExamples: AbstractRedissonTest() {
     companion object: KLoggingChannel()
 
     @Test
-    fun `분산 CountDownLatch 사용`() = runTest {
+    fun `분산 CountDownLatch 사용`() = runSuspendIO {
         val latchName = randomName()
 
         val latch = redisson.getCountDownLatch(latchName)
