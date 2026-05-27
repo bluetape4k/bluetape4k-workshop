@@ -49,6 +49,7 @@ abstract class AbstractBasicTest {
                 setFailFast(
                     MockResponse.Builder()
                         .code(503)
+                        .body("")
                         .build()
                 )
             }
