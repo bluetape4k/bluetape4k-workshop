@@ -7,7 +7,6 @@ import io.bluetape4k.workshop.redis.reactive.AbstractReactiveRedisTest
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.time.delay
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeLessOrEqualTo
@@ -31,13 +30,11 @@ class ValueOperationsTest(
     private var valueCreationCount by valueCreationCounter
 
     @BeforeEach
-    fun beforeEach() {
-        runBlocking {
-            // TODO: ReactiveRedisOperations 에 대해 `executeSuspending` 함수를 만들자 
-            operations.execute { connection ->
-                connection.serverCommands().flushAll()
-            }.awaitSingle() shouldBeEqualTo "OK"
-        }
+    fun beforeEach() = runSuspendIO {
+        // TODO: ReactiveRedisOperations 에 대해 `executeSuspending` 함수를 만들자
+        operations.execute { connection ->
+            connection.serverCommands().flushAll()
+        }.awaitSingle() shouldBeEqualTo "OK"
         valueCreationCount = 0
     }
 

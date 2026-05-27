@@ -11,7 +11,7 @@ import io.bluetape4k.testcontainers.infra.ZooKeeperServer
 import io.bluetape4k.utils.ShutdownQueue
 import org.apache.curator.framework.CuratorFramework
 import org.junit.jupiter.api.TestInstance
-import java.util.UUID
+import io.bluetape4k.codec.Base58
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -63,5 +63,5 @@ abstract class AbstractLeaderZookeeperTest {
             basePath = basePath
         )
 
-    fun randomLockName(prefix: String = "t") = "$prefix:${UUID.randomUUID()}"
+    fun randomLockName(prefix: String = "t") = "$prefix:${Base58.randomString(8)}"
 }

@@ -1,10 +1,9 @@
 package io.bluetape4k.workshop.r2dbc.basics
 
 import io.bluetape4k.logging.coroutines.KLoggingChannel
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.reactor.awaitSingle
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.runTest
 import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.assertions.shouldBeTrue
 import io.bluetape4k.assertions.shouldNotBeNull
@@ -24,25 +23,23 @@ class TransactionalServiceIntegrationTest @Autowired constructor(
     companion object: KLoggingChannel()
 
     @BeforeEach
-    fun beforeEach() {
-        runBlocking {
-            val statements = listOf(
-                "DROP TABLE IF EXISTS customer;",
-                """
-                CREATE TABLE customer (
-                    id SERIAL PRIMARY KEY, 
-                    firstname VARCHAR(100) NOT NULL, 
-                    lastname VARCHAR(100) NOT NULL
-                );
-                """.trimIndent(),
-            )
+    fun beforeEach() = runSuspendIO {
+        val statements = listOf(
+            "DROP TABLE IF EXISTS customer;",
+            """
+            CREATE TABLE customer (
+                id SERIAL PRIMARY KEY,
+                firstname VARCHAR(100) NOT NULL,
+                lastname VARCHAR(100) NOT NULL
+            );
+            """.trimIndent(),
+        )
 
-            statements.forEach {
-                database.sql(it)
-                    .fetch()
-                    .rowsUpdated()
-                    .awaitSingle()
-            }
+        statements.forEach {
+            database.sql(it)
+                .fetch()
+                .rowsUpdated()
+                .awaitSingle()
         }
     }
 
@@ -52,7 +49,7 @@ class TransactionalServiceIntegrationTest @Autowired constructor(
     }
 
     @Test
-    fun `exception triggers rollback`() = runTest {
+    fun `exception triggers rollback`() = runSuspendIO {
 
         // Dave 저장 시 예외가 발생하여 Rollback 하게 된다.
         assertFailsWith<IllegalStateException> {
@@ -63,7 +60,7 @@ class TransactionalServiceIntegrationTest @Autowired constructor(
     }
 
     @Test
-    fun `insert data transactionally`() = runTest {
+    fun `insert data transactionally`() = runSuspendIO {
         // 저장된다.
         service.save(Customer("Carter", "Beauford")).hasId.shouldBeTrue()
 

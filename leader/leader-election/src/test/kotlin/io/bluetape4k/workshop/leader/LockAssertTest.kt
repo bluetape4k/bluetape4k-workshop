@@ -7,7 +7,7 @@ import io.bluetape4k.leader.LockAssert
 import io.bluetape4k.workshop.leader.job.LockAssertJob
 import io.bluetape4k.assertions.assertFailsWith
 import org.junit.jupiter.api.Test
-import java.util.UUID
+import io.bluetape4k.codec.Base58
 
 /**
  * Tests for [LockAssertJob] and the [LockAssert] API.
@@ -22,7 +22,7 @@ class LockAssertTest : AbstractLeaderElectionTest() {
 
     @Test
     fun `assertLocked passes silently inside runIfLeader`() {
-        val lockName = "test:assert:${UUID.randomUUID()}"
+        val lockName = "test:assert:${Base58.randomString(8)}"
         val elector = newElector()
 
         val result = elector.runIfLeader(lockName) {
@@ -43,7 +43,7 @@ class LockAssertTest : AbstractLeaderElectionTest() {
 
     @Test
     fun `isLocked returns true inside runIfLeader`() {
-        val lockName = "test:assert:locked:${UUID.randomUUID()}"
+        val lockName = "test:assert:locked:${Base58.randomString(8)}"
         val elector = newElector()
 
         val isLocked = elector.runIfLeader(lockName) {

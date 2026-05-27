@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.reactor.awaitSingleOrNull
-import kotlinx.coroutines.runBlocking
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldHaveSize
 import io.bluetape4k.assertions.shouldNotBeNull
@@ -26,10 +25,8 @@ class CoroutineRepositoryTest @Autowired constructor(
     companion object: KLoggingChannel()
 
     @BeforeEach
-    fun beforeEach() {
-        runBlocking {
-            operations.dropCollection<Person>().awaitSingleOrNull()
-        }
+    fun beforeEach() = runSuspendIO {
+        operations.dropCollection<Person>().awaitSingleOrNull()
     }
 
     @Test

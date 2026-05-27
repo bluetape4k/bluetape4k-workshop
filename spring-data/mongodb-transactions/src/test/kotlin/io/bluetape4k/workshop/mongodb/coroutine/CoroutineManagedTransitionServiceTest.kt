@@ -3,6 +3,7 @@ package io.bluetape4k.workshop.mongodb.coroutine
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Projections
 import com.mongodb.reactivestreams.client.MongoClient
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.debug
 import io.bluetape4k.logging.warn
@@ -14,8 +15,6 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitFirst
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.runTest
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
 import org.bson.Document
@@ -70,10 +69,8 @@ class CoroutineManagedTransitionServiceTest: AbstractMongodbTest() {
     private val repository: CoroutineProcessRepository = uninitialized()
 
     @BeforeEach
-    fun beforeEach() {
-        runBlocking {
-            repository.deleteAll()
-        }
+    fun beforeEach() = runSuspendIO {
+        repository.deleteAll()
     }
 
     @Test
@@ -84,7 +81,7 @@ class CoroutineManagedTransitionServiceTest: AbstractMongodbTest() {
     }
 
     @Test
-    fun `coroutine transaction commit and rollback`() = runTest {
+    fun `coroutine transaction commit and rollback`() = runSuspendIO {
         repeat(10) {
             val process = managedTransitionService.newProcess()
             try {

@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactor.awaitSingle
-import kotlinx.coroutines.runBlocking
 import io.bluetape4k.assertions.assertFailsWith
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeTrue
@@ -42,10 +41,8 @@ class ReactiveStreamApiTest(
     private val streamOps: ReactiveStreamOperations<String, String, String> = template.opsForStream()
 
     @BeforeEach
-    fun beforeEach() {
-        runBlocking {
-            template.connectionFactory.reactiveConnection.serverCommands().flushAll().awaitSingle()
-        }
+    fun beforeEach() = runSuspendIO {
+        template.connectionFactory.reactiveConnection.serverCommands().flushAll().awaitSingle()
     }
 
     @Test

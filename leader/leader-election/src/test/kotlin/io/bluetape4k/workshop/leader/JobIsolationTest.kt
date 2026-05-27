@@ -4,7 +4,7 @@ import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.workshop.leader.job.LeaderGuardedJob
 import io.bluetape4k.workshop.leader.job.LeaderScheduledJobService
 import org.junit.jupiter.api.Test
-import java.util.UUID
+import io.bluetape4k.codec.Base58
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -23,13 +23,13 @@ class JobIsolationTest : AbstractLeaderElectionTest() {
         val successCount = AtomicInteger(0)
 
         val failingJob = object : LeaderGuardedJob {
-            override val lockName = "test:isolate:fail:${UUID.randomUUID()}"
+            override val lockName = "test:isolate:fail:${Base58.randomString(8)}"
             override fun execute() {
                 throw RuntimeException("intentional failure in failingJob")
             }
         }
         val successJob = object : LeaderGuardedJob {
-            override val lockName = "test:isolate:success:${UUID.randomUUID()}"
+            override val lockName = "test:isolate:success:${Base58.randomString(8)}"
             override fun execute() {
                 successCount.incrementAndGet()
             }

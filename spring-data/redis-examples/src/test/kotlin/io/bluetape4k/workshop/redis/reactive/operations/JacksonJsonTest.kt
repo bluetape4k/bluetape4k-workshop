@@ -10,7 +10,7 @@ import io.bluetape4k.workshop.redis.reactive.model.EmailAddress
 import io.bluetape4k.workshop.redis.reactive.model.Person
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingle
-import kotlinx.coroutines.runBlocking
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeInstanceOf
 import io.bluetape4k.assertions.shouldBeTrue
@@ -28,13 +28,11 @@ class JacksonJsonTest @Autowired constructor(
     companion object: KLoggingChannel()
 
     @BeforeEach
-    fun beforeEach() {
-        runBlocking {
-            // TODO: ReactiveRedisOperations 에 대해 `executeSuspending` 함수를 만들자
-            genericOperations.execute { connection ->
-                connection.serverCommands().flushAll()
-            }.awaitSingle() shouldBeEqualTo "OK"
-        }
+    fun beforeEach() = runSuspendIO {
+        // TODO: ReactiveRedisOperations 에 대해 `executeSuspending` 함수를 만들자
+        genericOperations.execute { connection ->
+            connection.serverCommands().flushAll()
+        }.awaitSingle() shouldBeEqualTo "OK"
     }
 
     @Test

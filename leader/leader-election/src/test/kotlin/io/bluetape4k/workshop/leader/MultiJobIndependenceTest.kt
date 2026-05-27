@@ -3,7 +3,7 @@ package io.bluetape4k.workshop.leader
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
-import java.util.UUID
+import io.bluetape4k.codec.Base58
 
 /**
  * T4: Multiple jobs with independent lock names.
@@ -15,8 +15,8 @@ class MultiJobIndependenceTest : AbstractLeaderElectionTest() {
 
     @Test
     fun `two jobs with different lockNames are both executed by the same elector`() {
-        val lockA = "test:t4:job-a:${UUID.randomUUID()}"
-        val lockB = "test:t4:job-b:${UUID.randomUUID()}"
+        val lockA = "test:t4:job-a:${Base58.randomString(8)}"
+        val lockB = "test:t4:job-b:${Base58.randomString(8)}"
         val elector = newElector()
 
         val resultA = elector.runIfLeader(lockA) { "A" }

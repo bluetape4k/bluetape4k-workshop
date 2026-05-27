@@ -14,9 +14,9 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlinx.coroutines.runBlocking
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import org.junit.jupiter.api.Test
-import java.util.UUID
+import io.bluetape4k.codec.Base58
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -41,7 +41,7 @@ class LeaderEventListenerTest : AbstractLeaderElectionTest() {
             }
         })
 
-        val lockName = "test:event:elected:${UUID.randomUUID()}"
+        val lockName = "test:event:elected:${Base58.randomString(8)}"
         repeat(3) {
             listeningElector.runIfLeader(lockName) { "work" }
         }
@@ -53,7 +53,7 @@ class LeaderEventListenerTest : AbstractLeaderElectionTest() {
 
     @Test
     fun `onSkipped callback is called when lock is held by another elector`() {
-        val lockName = "test:event:skipped:${UUID.randomUUID()}"
+        val lockName = "test:event:skipped:${Base58.randomString(8)}"
         val followerElector = newListeningElector()
         val skippedCount = AtomicInteger(0)
 
@@ -73,9 +73,9 @@ class LeaderEventListenerTest : AbstractLeaderElectionTest() {
     }
 
     @Test
-    fun `events Flow emits Elected event when lock is acquired`() {
+    fun `events Flow emits Elected event when lock is acquired`() = runSuspendIO {
         val listeningElector = newListeningElector()
-        val lockName = "test:event:flow:${UUID.randomUUID()}"
+        val lockName = "test:event:flow:${Base58.randomString(8)}"
         val receivedEvents = Channel<LeaderElectionEvent>(Channel.BUFFERED)
         val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
@@ -92,9 +92,7 @@ class LeaderEventListenerTest : AbstractLeaderElectionTest() {
         listeningElector.runIfLeader(lockName) { "work" }
 
         // Allow the shared flow emission to propagate to the collector.
-        val received = runBlocking {
-            withTimeoutOrNull(2_000) { receivedEvents.receive() }
-        }
+        val received = withTimeoutOrNull(2_000) { receivedEvents.receive() }
 
         received.shouldNotBeNull()
         (received is LeaderElectionEvent.Elected) shouldBeEqualTo true
@@ -109,7 +107,7 @@ class LeaderEventListenerTest : AbstractLeaderElectionTest() {
         val service = LeaderEventListenerService(listeningElector)
         service.init()
 
-        val lockName = "test:event:service:${UUID.randomUUID()}"
+        val lockName = "test:event:service:${Base58.randomString(8)}"
         repeat(3) {
             listeningElector.runIfLeader(lockName) { "work" }
         }

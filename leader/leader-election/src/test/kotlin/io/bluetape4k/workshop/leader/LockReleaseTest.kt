@@ -4,7 +4,7 @@ import io.bluetape4k.leader.LeaderElectionOptions
 import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.assertions.shouldBeEqualTo
 import org.junit.jupiter.api.Test
-import java.util.UUID
+import io.bluetape4k.codec.Base58
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -23,7 +23,7 @@ class LockReleaseTest : AbstractLeaderElectionTest() {
 
     @Test
     fun `lock is released immediately after action completes, enabling instant re-acquisition`() {
-        val lockName = "test:t7:${UUID.randomUUID()}"
+        val lockName = "test:t7:${Base58.randomString(8)}"
         // Long leaseTime — if finally-unlock does NOT run, elector2 would wait 30s
         val longLeaseOptions = LeaderElectionOptions(
             waitTime = 100.milliseconds,

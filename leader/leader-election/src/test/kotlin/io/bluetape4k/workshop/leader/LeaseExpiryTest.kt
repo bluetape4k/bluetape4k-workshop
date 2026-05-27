@@ -4,7 +4,7 @@ import io.bluetape4k.leader.LeaderElectionOptions
 import io.bluetape4k.logging.*
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import java.util.UUID
+import io.bluetape4k.codec.Base58
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -22,7 +22,7 @@ class LeaseExpiryTest : AbstractLeaderElectionTest() {
 
     @Test
     fun `leader holding lock beyond leaseTime allows second elector to attempt acquisition`() {
-        val lockName = "test:t5:${UUID.randomUUID()}"
+        val lockName = "test:t5:${Base58.randomString(8)}"
         val shortLeaseOptions = LeaderElectionOptions(
             waitTime = 50.milliseconds,
             leaseTime = 200.milliseconds,

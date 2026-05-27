@@ -2,6 +2,7 @@ package io.bluetape4k.workshop.exposed.webflux.r2dbc.order
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeLessOrEqualTo
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.logging.info
 import io.bluetape4k.workshop.exposed.webflux.r2dbc.AbstractWebfluxR2dbcTest
@@ -14,7 +15,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
 import org.springframework.test.annotation.DirtiesContext
@@ -41,32 +41,30 @@ class ConcurrentPlaceOrderTest : AbstractWebfluxR2dbcTest() {
     }
 
     @Test
-    fun `concurrent orders deplete stock correctly without overselling`() {
+    fun `concurrent orders deplete stock correctly without overselling`() = runSuspendIO {
         val totalStock = 10
         val concurrency = 20  // more requests than stock
         val product = createProduct(stock = totalStock)
 
-        val results = runBlocking {
-            coroutineScope {
-                List(concurrency) { i ->
-                    async(Dispatchers.IO) {
-                        val req = PlaceOrderRequest(
-                            customerId = (i + 1).toLong(),
-                            lines = listOf(OrderLineRequest(productId = product.id, quantity = 1)),
-                        )
-                        runCatching {
-                            webTestClient.post().uri("/api/orders")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .bodyValue(req)
-                                .exchange()
-                                .expectBody(OrderDTO::class.java)
-                                .returnResult()
-                                .status
-                                .value()
-                        }.getOrDefault(409)
-                    }
-                }.awaitAll()
-            }
+        val results = coroutineScope {
+            List(concurrency) { i ->
+                async(Dispatchers.IO) {
+                    val req = PlaceOrderRequest(
+                        customerId = (i + 1).toLong(),
+                        lines = listOf(OrderLineRequest(productId = product.id, quantity = 1)),
+                    )
+                    runCatching {
+                        webTestClient.post().uri("/api/orders")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(req)
+                            .exchange()
+                            .expectBody(OrderDTO::class.java)
+                            .returnResult()
+                            .status
+                            .value()
+                    }.getOrDefault(409)
+                }
+            }.awaitAll()
         }
 
         val successCount = results.count { it == 201 }
@@ -79,41 +77,39 @@ class ConcurrentPlaceOrderTest : AbstractWebfluxR2dbcTest() {
     }
 
     @Test
-    fun `concurrent orders on multiple products do not deadlock`() {
+    fun `concurrent orders on multiple products do not deadlock`() = runSuspendIO {
         val productA = createProduct(stock = 50)
         val productB = createProduct(stock = 50)
         val concurrency = 10
 
-        val results = runBlocking {
-            coroutineScope {
-                List(concurrency) { i ->
-                    async(Dispatchers.IO) {
-                        // Alternate between (A then B) and (B then A) orders to stress deadlock prevention
-                        val lines = if (i % 2 == 0) {
-                            listOf(
-                                OrderLineRequest(productId = productA.id, quantity = 1),
-                                OrderLineRequest(productId = productB.id, quantity = 1),
-                            )
-                        } else {
-                            listOf(
-                                OrderLineRequest(productId = productB.id, quantity = 1),
-                                OrderLineRequest(productId = productA.id, quantity = 1),
-                            )
-                        }
-                        val req = PlaceOrderRequest(customerId = (i + 1).toLong(), lines = lines)
-                        runCatching {
-                            webTestClient.post().uri("/api/orders")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .bodyValue(req)
-                                .exchange()
-                                .expectBody(OrderDTO::class.java)
-                                .returnResult()
-                                .status
-                                .value()
-                        }.getOrDefault(500)
+        val results = coroutineScope {
+            List(concurrency) { i ->
+                async(Dispatchers.IO) {
+                    // Alternate between (A then B) and (B then A) orders to stress deadlock prevention
+                    val lines = if (i % 2 == 0) {
+                        listOf(
+                            OrderLineRequest(productId = productA.id, quantity = 1),
+                            OrderLineRequest(productId = productB.id, quantity = 1),
+                        )
+                    } else {
+                        listOf(
+                            OrderLineRequest(productId = productB.id, quantity = 1),
+                            OrderLineRequest(productId = productA.id, quantity = 1),
+                        )
                     }
-                }.awaitAll()
-            }
+                    val req = PlaceOrderRequest(customerId = (i + 1).toLong(), lines = lines)
+                    runCatching {
+                        webTestClient.post().uri("/api/orders")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(req)
+                            .exchange()
+                            .expectBody(OrderDTO::class.java)
+                            .returnResult()
+                            .status
+                            .value()
+                    }.getOrDefault(500)
+                }
+            }.awaitAll()
         }
 
         val successCount = results.count { it == 201 }
