@@ -19,7 +19,7 @@ import io.bluetape4k.workshop.graph.recommendation.seed.USER_DAVE
 import io.bluetape4k.workshop.graph.recommendation.seed.USER_EVE
 import io.bluetape4k.workshop.graph.recommendation.seed.seedRecommendation
 import io.bluetape4k.workshop.graph.recommendation.service.RecommendationSuspendService
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -61,7 +61,7 @@ abstract class AbstractRecommendationSuspendTest {
     protected abstract val service: RecommendationSuspendService
 
     @BeforeEach
-    fun cleanGraph() = runTest {
+    fun cleanGraph() = runSuspendIO {
         ops.dropGraph(graphName)
         service.initialize()
     }
@@ -71,7 +71,7 @@ abstract class AbstractRecommendationSuspendTest {
     // ─────────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `addUser creates User vertex with correct properties`() = runTest {
+    fun `addUser creates User vertex with correct properties`() = runSuspendIO {
         val alice = service.addUser(USER_ALICE, "Alice")
 
         alice.label shouldBeEqualTo "User"
@@ -80,7 +80,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     @Test
-    fun `addUser returns existing vertex on second call (idempotent)`() = runTest {
+    fun `addUser returns existing vertex on second call (idempotent)`() = runSuspendIO {
         val first = service.addUser(USER_ALICE, "Alice")
         val second = service.addUser(USER_ALICE, "Alice")
 
@@ -88,7 +88,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     @Test
-    fun `addProduct creates Product vertex with correct properties`() = runTest {
+    fun `addProduct creates Product vertex with correct properties`() = runSuspendIO {
         val laptop = service.addProduct("laptop", "Laptop", category = "Electronics")
 
         laptop.label shouldBeEqualTo "Product"
@@ -98,7 +98,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     @Test
-    fun `addProduct returns existing vertex on second call (idempotent)`() = runTest {
+    fun `addProduct returns existing vertex on second call (idempotent)`() = runSuspendIO {
         val first = service.addProduct("laptop", "Laptop")
         val second = service.addProduct("laptop", "Laptop")
 
@@ -110,28 +110,28 @@ abstract class AbstractRecommendationSuspendTest {
     // ─────────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `addUser with blank userId throws IllegalArgumentException`() = runTest {
+    fun `addUser with blank userId throws IllegalArgumentException`() = runSuspendIO {
         assertFailsWith<IllegalArgumentException> {
             service.addUser("", "Alice")
         }
     }
 
     @Test
-    fun `addUser with blank name throws IllegalArgumentException`() = runTest {
+    fun `addUser with blank name throws IllegalArgumentException`() = runSuspendIO {
         assertFailsWith<IllegalArgumentException> {
             service.addUser(USER_ALICE, "")
         }
     }
 
     @Test
-    fun `addProduct with blank productId throws IllegalArgumentException`() = runTest {
+    fun `addProduct with blank productId throws IllegalArgumentException`() = runSuspendIO {
         assertFailsWith<IllegalArgumentException> {
             service.addProduct("", "Laptop")
         }
     }
 
     @Test
-    fun `purchase with rating below 0 throws IllegalArgumentException`() = runTest {
+    fun `purchase with rating below 0 throws IllegalArgumentException`() = runSuspendIO {
         val alice = service.addUser(USER_ALICE, "Alice")
         val laptop = service.addProduct("laptop", "Laptop")
 
@@ -141,7 +141,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     @Test
-    fun `purchase with rating above 5 throws IllegalArgumentException`() = runTest {
+    fun `purchase with rating above 5 throws IllegalArgumentException`() = runSuspendIO {
         val alice = service.addUser(USER_ALICE, "Alice")
         val laptop = service.addProduct("laptop", "Laptop")
 
@@ -151,7 +151,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     @Test
-    fun `recommendProducts with limit 0 throws IllegalArgumentException`() = runTest {
+    fun `recommendProducts with limit 0 throws IllegalArgumentException`() = runSuspendIO {
         val alice = service.addUser(USER_ALICE, "Alice")
 
         assertFailsWith<IllegalArgumentException> {
@@ -160,7 +160,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     @Test
-    fun `recommendProducts with limit above MAX throws IllegalArgumentException`() = runTest {
+    fun `recommendProducts with limit above MAX throws IllegalArgumentException`() = runSuspendIO {
         val alice = service.addUser(USER_ALICE, "Alice")
 
         assertFailsWith<IllegalArgumentException> {
@@ -169,7 +169,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     @Test
-    fun `recommendFollows with limit 0 throws IllegalArgumentException`() = runTest {
+    fun `recommendFollows with limit 0 throws IllegalArgumentException`() = runSuspendIO {
         val alice = service.addUser(USER_ALICE, "Alice")
 
         assertFailsWith<IllegalArgumentException> {
@@ -178,7 +178,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     @Test
-    fun `recommendFollows with limit above MAX throws IllegalArgumentException`() = runTest {
+    fun `recommendFollows with limit above MAX throws IllegalArgumentException`() = runSuspendIO {
         val alice = service.addUser(USER_ALICE, "Alice")
 
         assertFailsWith<IllegalArgumentException> {
@@ -187,7 +187,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     @Test
-    fun `follow with same follower and followee throws IllegalArgumentException`() = runTest {
+    fun `follow with same follower and followee throws IllegalArgumentException`() = runSuspendIO {
         val alice = service.addUser(USER_ALICE, "Alice")
 
         assertFailsWith<IllegalArgumentException> {
@@ -200,7 +200,7 @@ abstract class AbstractRecommendationSuspendTest {
     // ─────────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `purchase creates PURCHASED edge without rating`() = runTest {
+    fun `purchase creates PURCHASED edge without rating`() = runSuspendIO {
         val alice = service.addUser(USER_ALICE, "Alice")
         val laptop = service.addProduct("laptop", "Laptop")
         val edge = service.purchase(alice.id, laptop.id)
@@ -211,7 +211,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     @Test
-    fun `purchase creates PURCHASED edge with rating stored as String`() = runTest {
+    fun `purchase creates PURCHASED edge with rating stored as String`() = runSuspendIO {
         val alice = service.addUser(USER_ALICE, "Alice")
         val laptop = service.addProduct("laptop", "Laptop")
         val edge = service.purchase(alice.id, laptop.id, rating = 5)
@@ -220,7 +220,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     @Test
-    fun `purchase creates PURCHASED edge with purchasedAt stored`() = runTest {
+    fun `purchase creates PURCHASED edge with purchasedAt stored`() = runSuspendIO {
         val alice = service.addUser(USER_ALICE, "Alice")
         val laptop = service.addProduct("laptop", "Laptop")
         val edge = service.purchase(alice.id, laptop.id, purchasedAt = "2024-01-15")
@@ -229,7 +229,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     @Test
-    fun `follow creates FOLLOWS edge between two users`() = runTest {
+    fun `follow creates FOLLOWS edge between two users`() = runSuspendIO {
         val alice = service.addUser(USER_ALICE, "Alice")
         val bob = service.addUser(USER_BOB, "Bob")
         val edge = service.follow(alice.id, bob.id)
@@ -243,7 +243,7 @@ abstract class AbstractRecommendationSuspendTest {
     // ─────────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `recommendProducts returns headphones with score 3`() = runTest {
+    fun `recommendProducts returns headphones with score 3`() = runSuspendIO {
         val seed = seedRecommendation(service)
 
         val results = service.recommendProducts(seed.alice.id)
@@ -254,7 +254,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     @Test
-    fun `recommendProducts top result is headphones`() = runTest {
+    fun `recommendProducts top result is headphones`() = runSuspendIO {
         val seed = seedRecommendation(service)
 
         val results = service.recommendProducts(seed.alice.id)
@@ -263,7 +263,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     @Test
-    fun `recommendProducts returns correct descending score ordering`() = runTest {
+    fun `recommendProducts returns correct descending score ordering`() = runSuspendIO {
         val seed = seedRecommendation(service)
 
         val results = service.recommendProducts(seed.alice.id)
@@ -274,7 +274,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     @Test
-    fun `recommendProducts alice own products not in results`() = runTest {
+    fun `recommendProducts alice own products not in results`() = runSuspendIO {
         val seed = seedRecommendation(service)
 
         val results = service.recommendProducts(seed.alice.id)
@@ -286,7 +286,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     @Test
-    fun `recommendProducts user with no purchases returns empty`() = runTest {
+    fun `recommendProducts user with no purchases returns empty`() = runSuspendIO {
         val isolated = service.addUser("isolated", "Isolated User")
 
         val results = service.recommendProducts(isolated.id)
@@ -295,7 +295,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     @Test
-    fun `recommendProducts limit 1 returns only top result`() = runTest {
+    fun `recommendProducts limit 1 returns only top result`() = runSuspendIO {
         val seed = seedRecommendation(service)
 
         val results = service.recommendProducts(seed.alice.id, limit = 1)
@@ -309,7 +309,7 @@ abstract class AbstractRecommendationSuspendTest {
     // ─────────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `recommendFollows returns dave and eve for alice`() = runTest {
+    fun `recommendFollows returns dave and eve for alice`() = runSuspendIO {
         val seed = seedRecommendation(service)
 
         val results = service.recommendFollows(seed.alice.id)
@@ -320,7 +320,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     @Test
-    fun `recommendFollows result is sorted by mutualFollowCount desc then userId asc`() = runTest {
+    fun `recommendFollows result is sorted by mutualFollowCount desc then userId asc`() = runSuspendIO {
         val seed = seedRecommendation(service)
 
         val results = service.recommendFollows(seed.alice.id)
@@ -331,7 +331,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     @Test
-    fun `recommendFollows alice herself not in results`() = runTest {
+    fun `recommendFollows alice herself not in results`() = runSuspendIO {
         val seed = seedRecommendation(service)
 
         val results = service.recommendFollows(seed.alice.id)
@@ -341,7 +341,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     @Test
-    fun `recommendFollows already-followed users not in results`() = runTest {
+    fun `recommendFollows already-followed users not in results`() = runSuspendIO {
         val seed = seedRecommendation(service)
 
         val results = service.recommendFollows(seed.alice.id)
@@ -353,7 +353,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     @Test
-    fun `recommendFollows user with no follows returns empty`() = runTest {
+    fun `recommendFollows user with no follows returns empty`() = runSuspendIO {
         val isolated = service.addUser("isolated", "Isolated User")
 
         val results = service.recommendFollows(isolated.id)
@@ -362,7 +362,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     @Test
-    fun `recommendFollows limit 1 returns only top result`() = runTest {
+    fun `recommendFollows limit 1 returns only top result`() = runSuspendIO {
         val seed = seedRecommendation(service)
 
         val results = service.recommendFollows(seed.alice.id, limit = 1)
@@ -372,7 +372,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     @Test
-    fun `recommendFollows mutual follow count is correct`() = runTest {
+    fun `recommendFollows mutual follow count is correct`() = runSuspendIO {
         val seed = seedRecommendation(service)
 
         val results = service.recommendFollows(seed.alice.id)
@@ -384,7 +384,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     @Test
-    fun `recommendFollows dave intermediary is bob`() = runTest {
+    fun `recommendFollows dave intermediary is bob`() = runSuspendIO {
         val seed = seedRecommendation(service)
 
         val results = service.recommendFollows(seed.alice.id)
@@ -394,7 +394,7 @@ abstract class AbstractRecommendationSuspendTest {
     }
 
     @Test
-    fun `recommendFollows eve intermediary is carol`() = runTest {
+    fun `recommendFollows eve intermediary is carol`() = runSuspendIO {
         val seed = seedRecommendation(service)
 
         val results = service.recommendFollows(seed.alice.id)

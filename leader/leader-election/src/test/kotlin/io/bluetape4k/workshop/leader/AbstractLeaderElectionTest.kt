@@ -5,7 +5,9 @@ import io.bluetape4k.leader.ListeningLeaderElector
 import io.bluetape4k.leader.lettuce.LettuceLeaderElector
 import io.bluetape4k.leader.lettuce.LettuceSuspendLeaderElector
 import io.bluetape4k.logging.KLogging
+import io.bluetape4k.support.closeSafe
 import io.bluetape4k.testcontainers.storage.RedisServer
+import io.bluetape4k.utils.ShutdownQueue
 import io.lettuce.core.RedisClient
 import io.lettuce.core.api.StatefulRedisConnection
 import io.lettuce.core.codec.StringCodec
@@ -35,6 +37,13 @@ abstract class AbstractLeaderElectionTest {
         /** Redis URL from the running container. */
         val redisUrl: String get() = redis.url
 
+        /** Shared Redis client; individual tests still receive isolated connections. */
+        val client: RedisClient by lazy {
+            RedisClient.create(redisUrl).also {
+                ShutdownQueue.register { runCatching { it.shutdown() } }
+            }
+        }
+
         /** Default options for deterministic testing: fast wait, short lease. */
         val defaultOptions = LeaderElectionOptions(
             waitTime = 100.milliseconds,
@@ -42,9 +51,11 @@ abstract class AbstractLeaderElectionTest {
         )
     }
 
-    /** Opens a fresh [StatefulRedisConnection]. Caller is responsible for closing it. */
+    /** Opens a fresh [StatefulRedisConnection] and registers it for test-suite shutdown. */
     protected fun newConnection(): StatefulRedisConnection<String, String> =
-        RedisClient.create(redisUrl).connect(StringCodec.UTF8)
+        client.connect(StringCodec.UTF8).also {
+            ShutdownQueue.register { it.closeSafe() }
+        }
 
     /** Creates a new [LettuceLeaderElector] with its own connection and the given options. */
     protected fun newElector(
