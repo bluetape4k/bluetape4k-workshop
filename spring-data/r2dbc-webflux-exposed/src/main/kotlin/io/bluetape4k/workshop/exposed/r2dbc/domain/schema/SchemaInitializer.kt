@@ -23,6 +23,10 @@ class SchemaInitializer(private val database: R2dbcDatabase): ApplicationListene
     override fun onApplicationEvent(event: ApplicationReadyEvent) {
         log.info { "샘플 데이터 추가" }
 
+        initializeSchema()
+    }
+
+    fun initializeSchema() {
         runBlocking(Dispatchers.IO) {
             suspendTransaction(db = database) {
                 createSchema()
