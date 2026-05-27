@@ -7,7 +7,7 @@ import io.bluetape4k.workshop.virtualthread.tomcat.domain.dto.TeamDTO
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import org.junit.jupiter.api.Test
@@ -18,7 +18,7 @@ class TeamControllerTest: AbstractVirtualThreadMvcTest() {
     companion object: KLoggingChannel()
 
     @Test
-    fun `get all teams`() = runTest {
+    fun `get all teams`() = runSuspendIO {
         val teams = webTestClient
             .get()
             .uri("/team")
@@ -34,7 +34,7 @@ class TeamControllerTest: AbstractVirtualThreadMvcTest() {
     }
 
     @Test
-    fun `get team by id`() = runTest {
+    fun `get team by id`() = runSuspendIO {
         val team = webTestClient
             .get()
             .uri("/team/1")
@@ -47,7 +47,7 @@ class TeamControllerTest: AbstractVirtualThreadMvcTest() {
     }
 
     @Test
-    fun `get team by name`() = runTest {
+    fun `get team by name`() = runSuspendIO {
         val team = webTestClient
             .get()
             .uri("/team/name/teamA")

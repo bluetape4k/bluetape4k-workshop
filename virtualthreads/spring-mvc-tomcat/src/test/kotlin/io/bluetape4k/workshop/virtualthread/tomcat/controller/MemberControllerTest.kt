@@ -9,7 +9,7 @@ import io.bluetape4k.workshop.virtualthread.tomcat.domain.dto.MemberWithTeamDTO
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeEmpty
 import io.bluetape4k.assertions.shouldNotBeNull
@@ -21,7 +21,7 @@ class MemberControllerTest: AbstractVirtualThreadMvcTest() {
     companion object: KLoggingChannel()
 
     @Test
-    fun `get all members`() = runTest {
+    fun `get all members`() = runSuspendIO {
         val members = webTestClient
             .get()
             .uri("/member")
@@ -38,7 +38,7 @@ class MemberControllerTest: AbstractVirtualThreadMvcTest() {
     }
 
     @Test
-    fun `get member by id`() = runTest {
+    fun `get member by id`() = runSuspendIO {
         val member = webTestClient
             .get()
             .uri("/member/1")
@@ -51,7 +51,7 @@ class MemberControllerTest: AbstractVirtualThreadMvcTest() {
     }
 
     @Test
-    fun `search member`() = runTest {
+    fun `search member`() = runSuspendIO {
         val condition = MemberSearchCondition(teamName = "teamA", ageGoe = 60)
 
         val members = webTestClient
