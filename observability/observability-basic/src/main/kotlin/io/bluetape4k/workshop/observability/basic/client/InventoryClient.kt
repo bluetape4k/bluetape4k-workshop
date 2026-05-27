@@ -5,8 +5,9 @@ import io.bluetape4k.workshop.observability.basic.model.Inventory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitExchangeOrNull
 import org.springframework.web.reactive.function.client.awaitBodyOrNull
-import reactor.core.publisher.Mono
+import org.springframework.web.reactive.function.client.createExceptionAndAwait
 
 /**
  * HTTP client for the downstream inventory service.
@@ -37,10 +38,13 @@ class InventoryClient(
     suspend fun fetchInventory(itemId: Long): Inventory? {
         val result = client.get()
             .uri("/inventory/{id}", itemId)
-            .retrieve()
-            .onStatus({ it.is4xxClientError }) { Mono.empty() }
-            .onStatus({ it.is5xxServerError }) { resp -> resp.createException().flatMap { Mono.error(it) } }
-            .awaitBodyOrNull<Inventory>()
+            .awaitExchangeOrNull { response ->
+                when {
+                    response.statusCode().is4xxClientError -> null
+                    response.statusCode().is5xxServerError -> throw response.createExceptionAndAwait()
+                    else -> response.awaitBodyOrNull<Inventory>()
+                }
+            }
         if (result == null) warn { "fetchInventory returned null for itemId=$itemId" }
         return result
     }
