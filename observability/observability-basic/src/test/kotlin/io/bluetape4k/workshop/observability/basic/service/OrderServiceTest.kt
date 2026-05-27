@@ -1,8 +1,11 @@
 package io.bluetape4k.workshop.observability.basic.service
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.workshop.observability.basic.AbstractBasicTest
 import io.bluetape4k.workshop.observability.basic.TestObservationConfig
+import io.bluetape4k.workshop.observability.basic.model.Order
 import io.micrometer.observation.tck.TestObservationRegistry
 import io.micrometer.observation.tck.TestObservationRegistryAssert
 import kotlinx.coroutines.CancellationException
@@ -10,8 +13,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
 import mockwebserver3.MockResponse
-import io.bluetape4k.assertions.shouldBeNull
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -46,7 +47,12 @@ class OrderServiceTest : AbstractBasicTest() {
 
         val result = orderService.getOrder(42L)
 
-        result.shouldNotBeNull()
+        result shouldBeEqualTo Order(
+            id = 42L,
+            itemId = 42L,
+            quantity = 1,
+            inventoryAvailable = 10,
+        )
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("order.service.fetch")
             .that()
