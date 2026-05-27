@@ -24,20 +24,18 @@ class PersonReactiveRepositoryTest @Autowired constructor(
         val prevCount = repository.count().block()!!
 
         val saveAndCount = repository.count()
-            .doOnNext(System.out::println)
             .thenMany(
                 repository.saveAll(Flux.just(newPerson(), newPerson()))
             )
             .last()
             .flatMap { repository.count() }
-            .doOnNext(System.out::println)
 
         StepVerifier.create(saveAndCount).expectNext(prevCount + 2).verifyComplete()
     }
 
     @Test
     fun `perform conversion before result processing`() {
-        StepVerifier.create(repository.findAll().doOnNext(System.out::println))
+        StepVerifier.create(repository.findAll())
             .expectNextCount(4L)
             .verifyComplete()
     }
@@ -49,10 +47,7 @@ class PersonReactiveRepositoryTest @Autowired constructor(
         val queue = ConcurrentLinkedQueue<Person>()
 
         val disposable = repository.findWithTailableCursorBy()
-            .doOnNext { println(it) }
             .doOnNext(queue::add)
-            .doOnComplete { println("Complete") }
-            .doOnTerminate { println("Terminated") }
             .subscribe()
 
         Thread.sleep(100)

@@ -7,13 +7,14 @@ import io.bluetape4k.logging.coroutines.KLoggingChannel
 import io.bluetape4k.workshop.mongodb.domain.Person
 import io.bluetape4k.workshop.mongodb.domain.PersonCoroutineRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactor.mono
-import kotlinx.coroutines.runBlocking
 import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldNotBeNull
@@ -35,13 +36,11 @@ class PersonCoroutineRepositoryTest @Autowired constructor(
     @Test
     fun `insert and count`() = runSuspendIO {
         val prevCount = repository.count()
-        println("prevCount=$prevCount")
 
         // 신규 Person 2명 추가 
         repository.saveAll(flowOf(newPerson(), newPerson())).log("save").collect()
 
         val saveAndCount = repository.count()
-        println(saveAndCount)
 
         saveAndCount shouldBeEqualTo prevCount + 2
     }
@@ -59,10 +58,7 @@ class PersonCoroutineRepositoryTest @Autowired constructor(
 
         // tailable cursor 를 이용하여 새로 추가되는 Person 을 subject 에 emit 합니다.
         val flux = repository.findWithTailableCursorBy()
-            .doOnNext { println("new added person: $it") }
             .doOnNext(queue::add)                      // Person Collection에 새로 추가될 때마다 queue에 추가한다  
-            .doOnComplete { println("Complete") }
-            .doOnTerminate { println("Terminated") }
             .subscribe()
 
         // await coUntil { queue.size >= prevCount }
@@ -103,11 +99,11 @@ class PersonCoroutineRepositoryTest @Autowired constructor(
         }.log("job")
 
         // tailable cursor 를 이용하여 새로 추가되는 Person 을 subject 에 emit 합니다.
-        repository.findWithTailableCursorBy()
-            .doOnNext { runBlocking { subject.emit(it) } }
-            .doOnComplete { println("Complete") }
-            .doOnTerminate { println("Terminated") }
-            .subscribe()
+        val tailableJob = launch(Dispatchers.IO) {
+            repository.findWithTailableCursorBy()
+                .asFlow()
+                .collect { subject.emit(it) }
+        }.log("tailableJob")
 
         repository.save(newPerson())
         await until { queue.size > prevCount }
@@ -118,6 +114,7 @@ class PersonCoroutineRepositoryTest @Autowired constructor(
         // subject 의 complete 가 호출되면 collect 가 종료됩니다.
         subject.complete()
         job.join()
+        tailableJob.cancelAndJoin()
 
         repository.save(newPerson())
         delay(10)
