@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.observability.advanced.controller
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldNotBeNull
 import io.bluetape4k.workshop.observability.advanced.AbstractAdvancedTest
 import io.bluetape4k.workshop.observability.advanced.TestObservationConfig
 import io.bluetape4k.workshop.observability.advanced.model.User
@@ -9,7 +11,6 @@ import io.bluetape4k.workshop.observability.advanced.repository.UserRepository
 import io.micrometer.observation.tck.TestObservationRegistry
 import io.micrometer.observation.tck.TestObservationRegistryAssert
 import org.junit.jupiter.api.AfterEach
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -79,7 +80,7 @@ class UserControllerTest : AbstractAdvancedTest() {
             .returnResult()
             .responseBody
 
-        body.shouldNotBeNull()
+        body.shouldNotBeNull() shouldBeEqualTo newUser
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("user.db.find")
             .that().hasBeenStarted().hasBeenStopped()

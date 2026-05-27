@@ -1,6 +1,8 @@
 package io.bluetape4k.workshop.observability.advanced.service
 
 import io.bluetape4k.junit5.coroutines.runSuspendIO
+import io.bluetape4k.assertions.shouldBeEqualTo
+import io.bluetape4k.assertions.shouldBeNull
 import io.bluetape4k.workshop.observability.advanced.AbstractAdvancedTest
 import io.bluetape4k.workshop.observability.advanced.TestObservationConfig
 import io.bluetape4k.workshop.observability.advanced.model.User
@@ -10,8 +12,6 @@ import io.micrometer.observation.tck.ObservationContextAssert
 import io.micrometer.observation.tck.TestObservationRegistry
 import io.micrometer.observation.tck.TestObservationRegistryAssert
 import org.junit.jupiter.api.AfterEach
-import io.bluetape4k.assertions.shouldBeNull
-import io.bluetape4k.assertions.shouldNotBeNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -54,7 +54,7 @@ class UserServiceTest : AbstractAdvancedTest() {
 
         val result = userService.getById(testUser.id)
 
-        result.shouldNotBeNull()
+        result shouldBeEqualTo testUser
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("user.service.get")
             .that().hasBeenStarted().hasBeenStopped()
@@ -79,7 +79,7 @@ class UserServiceTest : AbstractAdvancedTest() {
 
         val result = userService.getById(testUser.id)
 
-        result.shouldNotBeNull()
+        result shouldBeEqualTo testUser
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("user.service.get")
             .that().hasBeenStarted().hasBeenStopped()
@@ -106,7 +106,7 @@ class UserServiceTest : AbstractAdvancedTest() {
     fun `create - produces user service create and user db save observations`() = runSuspendIO {
         val result = userService.create(testUser)
 
-        result.shouldNotBeNull()
+        result shouldBeEqualTo testUser
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("user.service.create")
             .that().hasBeenStarted().hasBeenStopped()
@@ -126,7 +126,7 @@ class UserServiceTest : AbstractAdvancedTest() {
         val result = userService.getById(testUser.id)
 
         // DB fallback succeeds and result is non-null
-        result.shouldNotBeNull()
+        result shouldBeEqualTo testUser
         TestObservationRegistryAssert.assertThat(testRegistry)
             .hasObservationWithNameEqualTo("user.service.get")
             .that().hasBeenStarted().hasBeenStopped()
