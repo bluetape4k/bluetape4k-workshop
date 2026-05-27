@@ -12,7 +12,7 @@ import org.junit.jupiter.api.TestMethodOrder
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.toEntity
-import kotlin.test.Test
+import org.junit.jupiter.api.Test
 import io.bluetape4k.assertions.assertFailsWith
 
 class RestClientExtensionsTest: AbstractSpringTest() {
