@@ -71,3 +71,14 @@ Use only `bluetape4k-dependencies` BOM for version management.
 
 Reason: `bluetape4k-dependencies` overrides individual library BOMs in Gradle's version resolution.
 Importing both creates redundancy and version confusion — the individual BOM may silently lose.
+
+## Cross-Repo Lesson Guards
+
+- Before issue, PR, workflow, dependency, or module-registration work, query GNO
+  for this repo in both `bluetape4k-github` and `bluetape4k-docs`.
+- For added, converted, archived, or moved workshop modules, update
+  `settings.gradle.kts`, README locale sets, validation matrix, smoke/full
+  workflow groups, stale-check scripts, and lessons in the same branch.
+- Consumer examples must use the `bluetape4k-dependencies` BOM only. Run
+  Testcontainers-backed validation sequentially and keep smoke modules separate
+  from full container-backed modules.
