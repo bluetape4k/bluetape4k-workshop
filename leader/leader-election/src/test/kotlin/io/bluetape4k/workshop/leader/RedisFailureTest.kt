@@ -6,6 +6,7 @@ import io.bluetape4k.junit5.coroutines.runSuspendIO
 import io.bluetape4k.leader.LeaderElectionOptions
 import io.bluetape4k.leader.lettuce.LettuceLeaderElector
 import io.bluetape4k.logging.*
+import io.bluetape4k.support.closeSafe
 import io.bluetape4k.testcontainers.storage.RedisServer
 import io.lettuce.core.RedisClient
 import io.lettuce.core.codec.StringCodec
@@ -32,21 +33,31 @@ class RedisFailureTest {
     fun `runIfLeader throws exception when Redis is unavailable`() = runSuspendIO(timeout = 10.seconds) {
         // Use a dedicated container — NOT the shared singleton
         val redisContainer = RedisServer(image = RedisServer.IMAGE, tag = "7-alpine").apply { start() }
+        val client = RedisClient.create(redisContainer.url)
 
-        val connection = RedisClient.create(redisContainer.url).connect(StringCodec.UTF8)
-        val options = LeaderElectionOptions(waitTime = 100.milliseconds, leaseTime = 5.seconds)
-        val elector = LettuceLeaderElector(connection, options)
-        val lockName = "test:t6:${Base58.randomString(8)}"
+        try {
+            val connection = client.connect(StringCodec.UTF8)
+            val options = LeaderElectionOptions(waitTime = 100.milliseconds, leaseTime = 5.seconds)
+            val elector = LettuceLeaderElector(connection, options)
+            val lockName = "test:t6:${Base58.randomString(8)}"
 
-        // Stop Redis before attempting lock acquisition
-        redisContainer.stop()
+            try {
+                // Stop Redis before attempting lock acquisition
+                redisContainer.stop()
 
-        // runSuspendIO timeout guards against infinite hang; assertFailsWith verifies Redis failure propagation.
-        assertFailsWith<Exception> {
-            elector.runIfLeader(lockName) { "should-not-execute" }
+                // runSuspendIO timeout guards against infinite hang; assertFailsWith verifies Redis failure propagation.
+                assertFailsWith<Exception> {
+                    elector.runIfLeader(lockName) { "should-not-execute" }
+                }
+
+                log.info { "[T6] Redis failure correctly propagated as exception — no silent hang" }
+            } finally {
+                connection.closeSafe()
+            }
+        } finally {
+            runCatching { client.shutdown() }
+            runCatching { redisContainer.stop() }
         }
-
-        log.info { "[T6] Redis failure correctly propagated as exception — no silent hang" }
     }
 
     companion object : KLogging()

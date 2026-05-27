@@ -2,7 +2,7 @@ package io.bluetape4k.workshop.imageprocessing.advanced.service
 
 import io.bluetape4k.assertions.shouldBeEqualTo
 import io.bluetape4k.assertions.shouldBeLessOrEqualTo
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import org.junit.jupiter.api.Test
 import java.awt.Color
 import java.awt.image.BufferedImage
@@ -12,7 +12,7 @@ import javax.imageio.ImageIO
 class FfmVipsDerivativeProcessorTest : AbstractFfmVipsWorkshopTest() {
 
     @Test
-    fun `processor generates webp variants with bounded dimensions`() = runTest {
+    fun `processor generates webp variants with bounded dimensions`() = runSuspendIO {
         val processor = FfmVipsDerivativeProcessor(
             properties = testProperties(maxInputBytes = 1024 * 1024),
             keyFactory = ImageKeyFactory(),

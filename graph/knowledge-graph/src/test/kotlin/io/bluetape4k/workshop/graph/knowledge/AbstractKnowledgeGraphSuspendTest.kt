@@ -10,7 +10,7 @@ import io.bluetape4k.workshop.graph.knowledge.seed.KnowledgeGraphSeed
 import io.bluetape4k.workshop.graph.knowledge.seed.seedKnowledgeGraph
 import io.bluetape4k.workshop.graph.knowledge.service.KnowledgeGraphSuspendService
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.test.runTest
+import io.bluetape4k.junit5.coroutines.runSuspendIO
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -35,7 +35,7 @@ abstract class AbstractKnowledgeGraphSuspendTest {
     protected lateinit var seed: KnowledgeGraphSeed
 
     @BeforeEach
-    fun cleanGraph() = runTest {
+    fun cleanGraph() = runSuspendIO {
         ops.dropGraph(graphName)
         service.initialize()
         seed = seedKnowledgeGraph(service)
@@ -46,7 +46,7 @@ abstract class AbstractKnowledgeGraphSuspendTest {
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `findMentionedEntities returns entities mentioned by a document`() = runTest {
+    fun `findMentionedEntities returns entities mentioned by a document`() = runSuspendIO {
         val entityIds = service.findMentionedEntities(seed.docKotlinGuide.id).toList()
             .map { it.properties["entityId"] }
 
@@ -55,7 +55,7 @@ abstract class AbstractKnowledgeGraphSuspendTest {
     }
 
     @Test
-    fun `findMentionedEntities for spring guide returns spring and kotlin`() = runTest {
+    fun `findMentionedEntities for spring guide returns spring and kotlin`() = runSuspendIO {
         val entityIds = service.findMentionedEntities(seed.docSpringGuide.id).toList()
             .map { it.properties["entityId"] }
 
@@ -68,7 +68,7 @@ abstract class AbstractKnowledgeGraphSuspendTest {
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `findRelatedEntities returns direct neighbours at depth 1`() = runTest {
+    fun `findRelatedEntities returns direct neighbours at depth 1`() = runSuspendIO {
         val entityIds = service.findRelatedEntities(seed.entityKotlin.id, depth = 1).toList()
             .map { it.properties["entityId"] }
 
@@ -78,7 +78,7 @@ abstract class AbstractKnowledgeGraphSuspendTest {
     }
 
     @Test
-    fun `findRelatedEntities at depth 2 includes transitively reachable entities`() = runTest {
+    fun `findRelatedEntities at depth 2 includes transitively reachable entities`() = runSuspendIO {
         val entityIds = service.findRelatedEntities(seed.entityKotlin.id, depth = 2).toList()
             .map { it.properties["entityId"] }
 
@@ -93,7 +93,7 @@ abstract class AbstractKnowledgeGraphSuspendTest {
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `findConceptsForEntity returns concept for kotlin entity`() = runTest {
+    fun `findConceptsForEntity returns concept for kotlin entity`() = runSuspendIO {
         val conceptIds = service.findConceptsForEntity(seed.entityKotlin.id).toList()
             .map { it.properties["conceptId"] }
 
@@ -102,7 +102,7 @@ abstract class AbstractKnowledgeGraphSuspendTest {
     }
 
     @Test
-    fun `findConceptsForEntity returns framework concept for spring entity`() = runTest {
+    fun `findConceptsForEntity returns framework concept for spring entity`() = runSuspendIO {
         val conceptIds = service.findConceptsForEntity(seed.entitySpring.id).toList()
             .map { it.properties["conceptId"] }
 
@@ -115,7 +115,7 @@ abstract class AbstractKnowledgeGraphSuspendTest {
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `inferRelationshipPaths finds path from kotlin to spring`() = runTest {
+    fun `inferRelationshipPaths finds path from kotlin to spring`() = runSuspendIO {
         val paths = service.inferRelationshipPaths(
             seed.entityKotlin.id,
             seed.entitySpring.id,
@@ -130,7 +130,7 @@ abstract class AbstractKnowledgeGraphSuspendTest {
     }
 
     @Test
-    fun `inferRelationshipPaths respects maxPaths bound`() = runTest {
+    fun `inferRelationshipPaths respects maxPaths bound`() = runSuspendIO {
         val paths = service.inferRelationshipPaths(
             seed.entityKotlin.id,
             seed.entityJvm.id,
@@ -146,7 +146,7 @@ abstract class AbstractKnowledgeGraphSuspendTest {
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `classify and findConceptsForEntity round-trip`() = runTest {
+    fun `classify and findConceptsForEntity round-trip`() = runSuspendIO {
         val buildTool = service.addConcept("concept-build-tool", "Build Tool", "infrastructure")
         val gradle = service.addEntity("entity-gradle", "Gradle", "BuildTool")
         service.classify(gradle.id, buildTool.id)
@@ -158,7 +158,7 @@ abstract class AbstractKnowledgeGraphSuspendTest {
     }
 
     @Test
-    fun `mention creates findMentionedEntities link`() = runTest {
+    fun `mention creates findMentionedEntities link`() = runSuspendIO {
         val doc = service.addDocument("doc-gradle-guide", "Gradle User Manual", "docs")
         val gradle = service.addEntity("entity-gradle", "Gradle", "BuildTool")
         service.mention(doc.id, gradle.id, confidence = 90)
@@ -174,7 +174,7 @@ abstract class AbstractKnowledgeGraphSuspendTest {
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `addEntity and retrieve via findRelatedEntities`() = runTest {
+    fun `addEntity and retrieve via findRelatedEntities`() = runSuspendIO {
         val gradle = service.addEntity("entity-gradle", "Gradle", "BuildTool")
         service.relateEntities(seed.entityKotlin.id, gradle.id, relationType = "uses")
 
@@ -189,56 +189,56 @@ abstract class AbstractKnowledgeGraphSuspendTest {
     // ─────────────────────────────────────────────────────────────────────
 
     @Test
-    fun `addEntity with blank entityId throws IllegalArgumentException`() = runTest {
+    fun `addEntity with blank entityId throws IllegalArgumentException`() = runSuspendIO {
         assertFailsWith<IllegalArgumentException> {
             service.addEntity("", "Name", "Type")
         }
     }
 
     @Test
-    fun `addConcept with blank conceptId throws IllegalArgumentException`() = runTest {
+    fun `addConcept with blank conceptId throws IllegalArgumentException`() = runSuspendIO {
         assertFailsWith<IllegalArgumentException> {
             service.addConcept("", "Name")
         }
     }
 
     @Test
-    fun `addDocument with blank documentId throws IllegalArgumentException`() = runTest {
+    fun `addDocument with blank documentId throws IllegalArgumentException`() = runSuspendIO {
         assertFailsWith<IllegalArgumentException> {
             service.addDocument("", "Title")
         }
     }
 
     @Test
-    fun `mention with confidence above 100 throws IllegalArgumentException`() = runTest {
+    fun `mention with confidence above 100 throws IllegalArgumentException`() = runSuspendIO {
         assertFailsWith<IllegalArgumentException> {
             service.mention(seed.docKotlinGuide.id, seed.entityKotlin.id, confidence = 101)
         }
     }
 
     @Test
-    fun `mention with negative confidence throws IllegalArgumentException`() = runTest {
+    fun `mention with negative confidence throws IllegalArgumentException`() = runSuspendIO {
         assertFailsWith<IllegalArgumentException> {
             service.mention(seed.docKotlinGuide.id, seed.entityKotlin.id, confidence = -1)
         }
     }
 
     @Test
-    fun `findRelatedEntities with zero depth throws IllegalArgumentException`() = runTest {
+    fun `findRelatedEntities with zero depth throws IllegalArgumentException`() = runSuspendIO {
         assertFailsWith<IllegalArgumentException> {
             service.findRelatedEntities(seed.entityKotlin.id, depth = 0)
         }
     }
 
     @Test
-    fun `inferRelationshipPaths with zero maxDepth throws IllegalArgumentException`() = runTest {
+    fun `inferRelationshipPaths with zero maxDepth throws IllegalArgumentException`() = runSuspendIO {
         assertFailsWith<IllegalArgumentException> {
             service.inferRelationshipPaths(seed.entityKotlin.id, seed.entitySpring.id, maxDepth = 0)
         }
     }
 
     @Test
-    fun `inferRelationshipPaths with zero maxPaths throws IllegalArgumentException`() = runTest {
+    fun `inferRelationshipPaths with zero maxPaths throws IllegalArgumentException`() = runSuspendIO {
         assertFailsWith<IllegalArgumentException> {
             service.inferRelationshipPaths(seed.entityKotlin.id, seed.entitySpring.id, maxPaths = 0)
         }
