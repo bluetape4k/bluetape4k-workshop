@@ -15,6 +15,9 @@ on:
           - smoke
           - full
 
+permissions:
+  contents: read
+
 env:
   JAVA_VERSION: '21'
   JAVA_DISTRIBUTION: 'temurin'
