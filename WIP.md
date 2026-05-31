@@ -9,7 +9,7 @@ Open count: 7 issues.
 - CI/Nightly, Spring Boot 4.0.x alignment, Gradle 9.5.0/version-catalog migration, local OMX ignore rules, and assertion migration are merged.
 - JDBC helper dependency fixes for Exposed workshop modules are merged by PR #60 and PR #61.
 - Dependency governance, compatibility guards, and dependency bumps are merged through PR #33 through PR #59.
-- QMD-backed audit registered `#120` for disabled R2DBC WebFlux integration tests.
+- GNO-backed audit registered `#120` for disabled R2DBC WebFlux integration tests.
 
 ## Current Direction
 

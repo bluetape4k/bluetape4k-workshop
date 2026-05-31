@@ -2,7 +2,7 @@
 
 ## Context
 
-The 2026-05-18 qmd-backed workshop audit checked prior compile-drift lessons,
+The 2026-05-18 GNO-backed workshop audit checked prior compile-drift lessons,
 live GitHub issues, and current source markers before refreshing `WIP.md`.
 
 ## Decision or Finding
@@ -20,7 +20,7 @@ repo-local WIP queue.
 
 ## Verification
 
-- `qmd query ... --no-rerank -c bluetape4k-docs` surfaced the prior workshop
+- `gno query ... --no-rerank -c bluetape4k-docs` surfaced the prior workshop
   compile-drift lesson.
 - `gh issue list --assignee debop` confirmed the existing open assigned queue.
 - `gh issue list --search "r2dbc schema disabled tests"` found no duplicate.

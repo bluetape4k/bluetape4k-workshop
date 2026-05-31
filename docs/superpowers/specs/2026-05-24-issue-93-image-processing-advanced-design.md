@@ -289,7 +289,7 @@ Workflow metrics use low-cardinality tags only. They never include `imageId`, fi
 | Item | Status | Notes |
 |---|---|---|
 | Target repository confirmed | Done | `bluetape4k-workshop`, branch `feat/issue-93-image-processing-advanced` |
-| Memory/qmd searched | Done | Found `images-vips` design/plan and issue #77 classification references |
+| Memory/GNO searched | Done | Found `images-vips` design/plan and issue #77 classification references |
 | Current repo and ecosystem reuse searched | Done | CodeGraph and source inspection for VIPS and image storage |
 | External/current API evidence checked | Done | Local source for `FfmVipsRuntime`, `ffmVipsImageOf`, `ImageStorage`, `S3ImageStorage`, `LocalImageStorage` |
 | Technical constraints identified | Done | Java 25 module, libvips native dependency, unsigned public URL security |
