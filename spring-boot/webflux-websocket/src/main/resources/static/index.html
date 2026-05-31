@@ -42,38 +42,42 @@
 
         function processEvent(event) {
             if (event.data && event.data.length) {
-                var htmlStr = '';
+                var stockTicker = $('.stockTicker').empty();
                 event.data.forEach(function (quote) {
                     var stockCode = quote.ticker;
                     var newStockPrice = quote.price;
                     var currentStockPrice = STOCK_CODES_UPDATES[stockCode];
-                    htmlStr += '<div class="stockWrapper">';
-                    htmlStr += '<span class="stockSymbol">' + stockCode + ': $' + newStockPrice + ' </span>';
+                    var stockWrapper = $('<div>').addClass('stockWrapper');
+                    $('<span>')
+                        .addClass('stockSymbol')
+                        .text(stockCode + ': $' + newStockPrice + ' ')
+                        .appendTo(stockWrapper);
                     if (currentStockPrice) {
                         if (newStockPrice > currentStockPrice) {
-                            htmlStr += '<span style="font-size:1em; color:Green;"><i class="fas fa-arrow-up"></i></span>';
+                            $('<span style="font-size:1em; color:Green;"><i class="fas fa-arrow-up"></i></span>')
+                                .appendTo(stockWrapper);
                         } else {
-                            htmlStr += '<span style="font-size:1em; color:Red;"><i class="fas fa-arrow-down"></i></span>';
+                            $('<span style="font-size:1em; color:Red;"><i class="fas fa-arrow-down"></i></span>')
+                                .appendTo(stockWrapper);
                         }
                     }
                     STOCK_CODES_UPDATES[stockCode] = newStockPrice;
-                    htmlStr += '</div>';
+                    stockWrapper.appendTo(stockTicker);
                 });
-                $('.stockTicker').html(htmlStr);
             }
-            $('.traceId').html(event.id);
+            $('.traceId').text(event.id);
         }
 
         function subscribeToEvents() {
             var webSocket = new WebSocket("ws://localhost:8080/event-emitter");
             webSocket.onopen = function () {
                 //console.log(event);
-                $('.socketMsg').html("Connected (WebSocket open)");
+                $('.socketMsg').text("Connected (WebSocket open)");
                 $('.socketStatus').css("color", "green");
             };
             webSocket.onclose = function () {
                 //console.log(event);
-                $('.socketMsg').html("Disconnected (WebSocket closed), Reconnect will be attempted in 1 second");
+                $('.socketMsg').text("Disconnected (WebSocket closed), Reconnect will be attempted in 1 second");
                 $('.socketStatus').css("color", "red");
                 setTimeout(function () {
                     subscribeToEvents();
@@ -85,7 +89,7 @@
             };
             webSocket.onerror = function (error) {
                 //console.log(event);
-                $('.socketMsg').html("WebSocket Error: " + error.message)
+                $('.socketMsg').text("WebSocket Error: " + error.message)
                 webSocket.close();
             };
         }
