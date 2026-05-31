@@ -539,8 +539,8 @@ reactor-kotlin-extensions = { module = "io.projectreactor.kotlin:reactor-kotlin-
 reactor-kafka = { module = "io.projectreactor.kafka:reactor-kafka", version = "1.3.25" }  # https://mvnrepository.com/artifact/io.projectreactor.kafka/reactor-kafka
 
 # Smallrye Mutiny
-mutiny-lib = { module = "io.smallrye.reactive:mutiny", version = "3.2.0" }  # https://mvnrepository.com/artifact/io.smallrye.reactive/mutiny
-mutiny-kotlin = { module = "io.smallrye.reactive:mutiny-kotlin", version = "3.2.0" }  # https://mvnrepository.com/artifact/io.smallrye.reactive/mutiny-kotlin
+mutiny-lib = { module = "io.smallrye.reactive:mutiny", version = "3.2.1" }  # https://mvnrepository.com/artifact/io.smallrye.reactive/mutiny
+mutiny-kotlin = { module = "io.smallrye.reactive:mutiny-kotlin", version = "3.2.1" }  # https://mvnrepository.com/artifact/io.smallrye.reactive/mutiny-kotlin
 
 # Micrometer
 micrometer-bom = { module = "io.micrometer:micrometer-bom", version.ref = "micrometer" }
