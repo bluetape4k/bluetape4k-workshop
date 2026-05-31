@@ -97,7 +97,7 @@ spring-kafka4 = "4.0.5"  # https://mvnrepository.com/artifact/org.springframewor
 
 bucket4j = "8.19.0"  # https://mvnrepository.com/artifact/com.bucket4j/bucket4j_jdk17-caffeine
 ktor = "3.4.3"  # https://mvnrepository.com/artifact/io.ktor/ktor-server-core
-vertx = "5.0.12"  # https://mvnrepository.com/artifact/io.vertx/vertx-core
+vertx = "5.1.0"  # https://mvnrepository.com/artifact/io.vertx/vertx-core
 
 timefold-solver = "2.1.0"   # https://mvnrepository.com/artifact/ai.timefold.solver/timefold-solver-bom
 
