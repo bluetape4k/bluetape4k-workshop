@@ -58,3 +58,8 @@
 `build.gradle.kts`, 리소스를 evidence로 삼아 entry/API/service/domain/repository/runtime
 관계를 구성한다. Graphviz는 layout/routing evidence로만 사용하고, 최종 SVG/PNG는
 별도 generator가 작성한다.
+
+Architecture 섹션을 보강할 때 첫 overview 이미지만 새 자산으로 바꾸면 기존 상세
+architecture 이미지가 예전 font stack을 계속 노출할 수 있다. README 이미지 링크
+검증은 섹션의 모든 architecture 이미지가 `Architects Daughter`/`Comic Mono` 기반
+SVG/PNG 쌍을 참조하는지까지 확인해야 한다.

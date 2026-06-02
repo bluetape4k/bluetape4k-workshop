@@ -12,7 +12,7 @@ This example exercises **AWS Demo** as a runnable AWS integration workshop slice
 
 The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.aws` as the source of truth when comparing this README with the code.
 
-![AWS Demo architecture diagram](../docs/images/readme-diagrams/aws-storage-abstraction-architecture-01.png)
+![AWS Demo architecture diagram](../docs/images/readme-diagrams/aws-storage-abstraction-readme-architecture-01.png)
 
 ## Flow Diagram
 
