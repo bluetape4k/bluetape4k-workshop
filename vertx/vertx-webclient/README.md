@@ -32,22 +32,7 @@ Spring의 WebClient와 비슷한 기능을 제공하지만, Reactor 를 사용�
 
 ![HTTP diagram](../../docs/images/readme-diagrams/vertx-vertx-webclient-sequence-01.png)
 
-```mermaid
-sequenceDiagram
-    participant Caller as suspend caller
-    participant Client as WebClient
-    participant Future as Vert.x Future<HttpResponse>
-    participant Server as HTTP Server (CoroutineVerticle)
-
-    Caller->>Client: client.get(port, host, path).send()
-    Note over Client,Future: Returns Future<HttpResponse>
-    Client->>Future: Future (non-blocking)
-    Caller->>Future: .coAwait() — suspend (no thread blocked)
-    Future->>Server: HTTP GET request
-    Server-->>Future: HTTP response
-    Future-->>Caller: HttpResponse (resumed)
-    Caller->>Caller: response.body() — direct access
-```
+![Vert.x WebClient Examples Diagram 1](../../docs/images/readme-diagrams/vertx-vertx-webclient-readme-sequence-01.png)
 
 ## 주요 기능
 

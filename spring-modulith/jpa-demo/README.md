@@ -32,15 +32,7 @@ The application is divided into four logical modules:
 | `employee` | Manages `Employee` entity; depends on `organization` via internal API |
 | `gateway` | Exposes all modules over a single REST API (`/organizations/**`) |
 
-```mermaid
-graph TD
-    GW[gateway\nGatewayManagement] --> ORG[organization\nOrganizationExternalAPI]
-    ORG --> DEP[department\nDepartmentInternalAPI]
-    ORG --> EMP[employee\nEmployeeInternalAPI]
-    ORG -->|publishes| EV[OrganizationAddEvent\nOrganizationRemoveEvent]
-    EV -->|@EventListener| DEP
-    EV -->|@EventListener| EMP
-```
+![Spring Modulith JPA Demo Diagram 1](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-flow-01.png)
 
 ## Used bluetape4k Features
 
@@ -101,25 +93,7 @@ class GatewayManagement(
 
 ## Event Flow
 
-```mermaid
-sequenceDiagram
-    participant Client
-    participant GW as GatewayManagement
-    participant OM as OrganizationManagement
-    participant DB as H2 Database
-    participant EP as ApplicationEventPublisher
-    participant DM as DepartmentManagement
-    participant EM as EmployeeManagement
-
-    Client->>GW: POST /organizations
-    GW->>OM: add(organizationDTO)
-    OM->>DB: save(organization)
-    OM->>EP: publishEvent(OrganizationAddEvent)
-    EP->>DM: @EventListener(OrganizationAddEvent)
-    EP->>EM: @EventListener(OrganizationAddEvent)
-    OM-->>GW: OrganizationDTO
-    GW-->>Client: 201 Created
-```
+![Spring Modulith JPA Demo Diagram 2](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-sequence-02.png)
 
 ## Observability
 

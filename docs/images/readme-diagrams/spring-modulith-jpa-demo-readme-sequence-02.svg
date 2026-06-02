@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1690" height="722" viewBox="0 0 1690 722" role="img" aria-label="Spring Modulith JPA Demo Diagram 2">
+<defs>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <marker id="arrowBlue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M1 1 L7 4 L1 7 Z" fill="#5b8def"/></marker>
+  <marker id="arrowTeal" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M1 1 L7 4 L1 7 Z" fill="#45a7a1"/></marker>
+  <style>
+    .canvas{fill:#f7f9fc}
+    .frame{fill:#ffffff;stroke:#d8e0ea;stroke-width:1.5}
+    .title{font-family:"Architects Daughter";font-size:34px;fill:#102033}
+    .subtitle{font-family:"Comic Mono";font-size:13px;fill:#536273}
+    .actor{font-family:"Architects Daughter";font-size:17px;fill:#102033}
+    .detail{font-family:"Comic Mono";font-size:11px;fill:#536273}
+    .message{font-family:"Comic Mono";font-size:12px;fill:#263445;paint-order:stroke;stroke:#ffffff;stroke-width:4px;stroke-linejoin:round}
+    .branch{font-family:"Architects Daughter";font-size:15px;fill:#1f3b57}
+    .lifeline{stroke:#b8c4d3;stroke-width:1.4;stroke-dasharray:7 6}
+    .call{stroke:#5b8def;stroke-width:2.1;fill:none;marker-end:url(#arrowBlue)}
+    .return{stroke:#45a7a1;stroke-width:2;stroke-dasharray:7 5;fill:none;marker-end:url(#arrowTeal)}
+    .box{stroke-width:1.8;filter:url(#shadow)}
+  </style>
+</defs>
+<rect class="canvas" width="1690" height="722"/>
+<rect class="frame" x="24" y="20" width="1642" height="682" rx="18"/>
+<text class="title" x="48" y="58">Spring Modulith JPA Demo Diagram 2</text>
+<text class="subtitle" x="50" y="84">sequenceDiagram rendered from the current README model; labels are separated from connector lanes</text>
+<rect class="box" x="46" y="116" width="152" height="58" rx="10" fill="#e8f3ff" stroke="#7aa0c4"/>
+<text class="actor" x="122" y="145" text-anchor="middle" dominant-baseline="middle">Client</text>
+<line class="lifeline" x1="122" y1="174" x2="122" y2="664"/>
+<rect class="box" x="287" y="116" width="152" height="58" rx="10" fill="#eaf7ef" stroke="#7aa0c4"/>
+<text class="actor" x="363" y="145" text-anchor="middle" dominant-baseline="middle">GatewayManagement</text>
+<line class="lifeline" x1="363" y1="174" x2="363" y2="664"/>
+<rect class="box" x="528" y="116" width="152" height="58" rx="10" fill="#fff3d9" stroke="#7aa0c4"/>
+<text class="actor" x="604" y="145" text-anchor="middle" dominant-baseline="middle">OrganizationManagement</text>
+<line class="lifeline" x1="604" y1="174" x2="604" y2="664"/>
+<rect class="box" x="769" y="116" width="152" height="58" rx="10" fill="#f1ecff" stroke="#7aa0c4"/>
+<text class="actor" x="845" y="145" text-anchor="middle" dominant-baseline="middle">H2 Database</text>
+<line class="lifeline" x1="845" y1="174" x2="845" y2="664"/>
+<rect class="box" x="1010" y="116" width="152" height="58" rx="10" fill="#fdecef" stroke="#7aa0c4"/>
+<text class="actor" x="1086" y="145" text-anchor="middle" dominant-baseline="middle">ApplicationEventPublisher</text>
+<line class="lifeline" x1="1086" y1="174" x2="1086" y2="664"/>
+<rect class="box" x="1251" y="116" width="152" height="58" rx="10" fill="#e9f7f6" stroke="#7aa0c4"/>
+<text class="actor" x="1327" y="145" text-anchor="middle" dominant-baseline="middle">DepartmentManagement</text>
+<line class="lifeline" x1="1327" y1="174" x2="1327" y2="664"/>
+<rect class="box" x="1492" y="116" width="152" height="58" rx="10" fill="#e8f3ff" stroke="#7aa0c4"/>
+<text class="actor" x="1568" y="145" text-anchor="middle" dominant-baseline="middle">EmployeeManagement</text>
+<line class="lifeline" x1="1568" y1="174" x2="1568" y2="664"/>
+<rect x="78" y="188" width="329" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
+<text class="message" x="242.5" y="201" text-anchor="middle" dominant-baseline="middle">1. POST /organizations</text>
+<path class="call" d="M122 218 L363 218"/>
+<rect x="319" y="242" width="329" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
+<text class="message" x="483.5" y="255" text-anchor="middle" dominant-baseline="middle">2. add(organizationDTO)</text>
+<path class="call" d="M363 272 L604 272"/>
+<rect x="560" y="296" width="329" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
+<text class="message" x="724.5" y="309" text-anchor="middle" dominant-baseline="middle">3. save(organization)</text>
+<path class="call" d="M604 326 L845 326"/>
+<rect x="635" y="350" width="420" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
+<text class="message" x="845" y="363" text-anchor="middle" dominant-baseline="middle">4. publishEvent(OrganizationAddEvent)</text>
+<path class="call" d="M604 380 L1086 380"/>
+<rect x="1042" y="404" width="329" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
+<text class="message" x="1206.5" y="410" text-anchor="middle" dominant-baseline="middle">5.</text>
+<text class="message" x="1206.5" y="424" text-anchor="middle" dominant-baseline="middle">@EventListener(OrganizationAddEvent)</text>
+<path class="call" d="M1086 434 L1327 434"/>
+<rect x="1117" y="458" width="420" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
+<text class="message" x="1327" y="471" text-anchor="middle" dominant-baseline="middle">6. @EventListener(OrganizationAddEvent)</text>
+<path class="call" d="M1086 488 L1568 488"/>
+<rect x="319" y="512" width="329" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
+<text class="message" x="483.5" y="525" text-anchor="middle" dominant-baseline="middle">7. OrganizationDTO</text>
+<path class="return" d="M604 542 L363 542"/>
+<rect x="78" y="566" width="329" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
+<text class="message" x="242.5" y="579" text-anchor="middle" dominant-baseline="middle">8. 201 Created</text>
+<path class="return" d="M363 596 L122 596"/>
+</svg>

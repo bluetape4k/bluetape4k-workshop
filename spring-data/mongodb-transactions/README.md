@@ -41,38 +41,7 @@ MongoDB 관련 작업을 `Spring Data Mongo` 와 Kotlin Coroutines 으로 수행
 
 ## 처리 흐름
 
-```mermaid
-sequenceDiagram
-    participant Test
-    participant Service as CoroutineManagedTransitionService
-    participant Repo as CoroutineProcessRepository
-    participant ReactiveOps as ReactiveMongoOperations
-    participant TxMgr as ReactiveMongoTransactionManager
-    participant DB as MongoDB (Testcontainers Replica Set)
-
-    Test->>Service: run(id) — @Transactional suspend
-    Service->>TxMgr: begin transaction (ClientSession)
-    TxMgr-->>Service: Reactor Context (session bound)
-
-    Service->>Repo: findById(id) — suspend
-    Repo->>DB: query (within session)
-    DB-->>Repo: Process document
-    Repo-->>Service: Process
-
-    Service->>ReactiveOps: update state → ACTIVE
-    ReactiveOps->>DB: update (within session)
-
-    alt verify() 성공 (id % 3 != 0)
-        Service->>ReactiveOps: update state → DONE
-        ReactiveOps->>DB: update (within session)
-        Service->>TxMgr: commit
-        TxMgr-->>Test: State.DONE
-    else verify() 실패 (id % 3 == 0)
-        Service->>TxMgr: rollback (IllegalStateException)
-        TxMgr->>DB: rollback → State remains CREATED
-        TxMgr-->>Test: IllegalStateException
-    end
-```
+![mongo-transactions demo Diagram 1](../../docs/images/readme-diagrams/spring-data-mongodb-transactions-readme-sequence-01.png)
 
 ## 설명
 

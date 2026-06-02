@@ -32,38 +32,7 @@ Spring Data Redis의 Cluster Operations를 검증하는 예제입니다.
 
 ![Redis Cluster diagram](../../docs/images/readme-diagrams/redis-cluster-demo-diagram-01.png)
 
-```mermaid
-graph LR
-    subgraph "App / Test JVM"
-        App[RedisClusterApplication]
-        NS[NumberService]
-        BT[AbstractRedisClusterTest]
-    end
-
-    subgraph "bluetape4k-testcontainers"
-        Launcher[RedisClusterServer.Launcher.redisCluster]
-        LettuceLib[Launcher.LettuceLib.clientResources]
-    end
-
-    subgraph "Redis Cluster (Testcontainers)"
-        M1[Master 1\nslots 0–5460]
-        M2[Master 2\nslots 5461–10922]
-        M3[Master 3\nslots 10923–16383]
-        S1[Slave 1] --- M1
-        S2[Slave 2] --- M2
-        S3[Slave 3] --- M3
-    end
-
-    App --> Launcher
-    App --> LettuceLib
-    BT  --> App
-    NS  --> M1
-    NS  --> M2
-    NS  --> M3
-    Launcher -->|singleton autostart| M1
-    Launcher -->|singleton autostart| M2
-    Launcher -->|singleton autostart| M3
-```
+![Redis Cluster Demo Diagram 1](../../docs/images/readme-diagrams/redis-cluster-demo-readme-flow-01.png)
 
 ## 주요 구성 요소
 

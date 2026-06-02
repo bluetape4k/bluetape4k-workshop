@@ -43,28 +43,7 @@ MongoDB 관련 작업을 `Spring Data Mongo` 와 Kotlin Coroutines 으로 수행
 
 ## 처리 흐름
 
-```mermaid
-sequenceDiagram
-    participant Test
-    participant Repo as CoroutineCrudRepository
-    participant ReactiveOps as ReactiveMongoOperations
-    participant Mongo as MongoDB (Testcontainers)
-
-    Test->>Repo: findPersonByFirstname(name): Person? (suspend)
-    Repo->>ReactiveOps: Mono publisher (findOne)
-    ReactiveOps->>Mongo: query
-    Mongo-->>ReactiveOps: document
-    ReactiveOps-->>Repo: Mono<Person>
-    Repo-->>Test: Person? (awaitSingleOrNull — suspend)
-
-    Test->>Repo: findAllByFirstname(name): Flow<Person>
-    Repo->>ReactiveOps: Flux publisher (find)
-    ReactiveOps->>Mongo: query (tailable / regular)
-    Mongo-->>ReactiveOps: documents (backpressure)
-    ReactiveOps-->>Repo: Flux<Person>
-    Repo-->>Test: Flow<Person> (asFlow — backpressure-aware)
-    Test->>Test: flow.toList() — collected under coroutine scope
-```
+![mongodb-coroutine demo Diagram 1](../../docs/images/readme-diagrams/spring-data-mongodb-coroutines-readme-sequence-01.png)
 
 ## 설명
 

@@ -71,40 +71,11 @@ fun on(event: Order.OrderCompleted) {
 
 ## Event Publication Flow
 
-```mermaid
-sequenceDiagram
-    participant Client
-    participant OM as OrderManagement (@Transactional)
-    participant EP as ApplicationEventPublisher
-    participant DB as Database
-    participant EL as EventListener
-
-    Client->>OM: completeOrder(order)
-    OM->>DB: save(order.complete())
-    OM->>EP: publish(OrderCompleted)
-    Note over EP,EL: @EventListener fires within TX
-    EP->>EL: on(OrderCompleted) — immediate
-    alt @TransactionalEventListener
-        Note over EP,EL: fires AFTER commit
-        DB-->>EP: TX commit
-        EP->>EL: on(OrderCompleted) — after commit
-    end
-    OM-->>Client: done
-```
+![Spring Modulith Events Deep Dive Diagram 1](../../docs/images/readme-diagrams/spring-modulith-events-deep-dive-readme-sequence-01.png)
 
 ## Architecture: Before vs After Module Boundary
 
-```mermaid
-graph TD
-    subgraph Before [c/architecture/before — tight coupling]
-        OM1[OrderManagement] -->|direct call| IS1[InventoryService]
-    end
-
-    subgraph After [d/architecture/after — module boundary]
-        OM2[OrderManagement] -->|publish event| EP2[ApplicationEventPublisher]
-        EP2 -->|@ApplicationModuleListener| IS2[InventoryService]
-    end
-```
+![Spring Modulith Events Deep Dive Diagram 2](../../docs/images/readme-diagrams/spring-modulith-events-deep-dive-readme-flow-02.png)
 
 ## Operational Notes
 

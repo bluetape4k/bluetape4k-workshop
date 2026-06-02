@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="1316" viewBox="0 0 1480 1316" role="img" aria-label="mongo-transactions demo Diagram 1">
+<defs>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <marker id="arrowBlue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M1 1 L7 4 L1 7 Z" fill="#5b8def"/></marker>
+  <marker id="arrowTeal" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M1 1 L7 4 L1 7 Z" fill="#45a7a1"/></marker>
+  <style>
+    .canvas{fill:#f7f9fc}
+    .frame{fill:#ffffff;stroke:#d8e0ea;stroke-width:1.5}
+    .title{font-family:"Architects Daughter";font-size:34px;fill:#102033}
+    .subtitle{font-family:"Comic Mono";font-size:13px;fill:#536273}
+    .actor{font-family:"Architects Daughter";font-size:17px;fill:#102033}
+    .detail{font-family:"Comic Mono";font-size:11px;fill:#536273}
+    .message{font-family:"Comic Mono";font-size:12px;fill:#263445;paint-order:stroke;stroke:#ffffff;stroke-width:4px;stroke-linejoin:round}
+    .branch{font-family:"Architects Daughter";font-size:15px;fill:#1f3b57}
+    .lifeline{stroke:#b8c4d3;stroke-width:1.4;stroke-dasharray:7 6}
+    .call{stroke:#5b8def;stroke-width:2.1;fill:none;marker-end:url(#arrowBlue)}
+    .return{stroke:#45a7a1;stroke-width:2;stroke-dasharray:7 5;fill:none;marker-end:url(#arrowTeal)}
+    .box{stroke-width:1.8;filter:url(#shadow)}
+  </style>
+</defs>
+<rect class="canvas" width="1480" height="1316"/>
+<rect class="frame" x="24" y="20" width="1432" height="1276" rx="18"/>
+<text class="title" x="48" y="58">mongo-transactions demo Diagram 1</text>
+<text class="subtitle" x="50" y="84">sequenceDiagram rendered from the current README model; labels are separated from connector lanes</text>
+<rect class="box" x="46" y="116" width="152" height="58" rx="10" fill="#e8f3ff" stroke="#7aa0c4"/>
+<text class="actor" x="122" y="145" text-anchor="middle" dominant-baseline="middle">Test</text>
+<line class="lifeline" x1="122" y1="174" x2="122" y2="1258"/>
+<rect class="box" x="293.2" y="116" width="152" height="58" rx="10" fill="#eaf7ef" stroke="#7aa0c4"/>
+<text class="actor" x="369.2" y="145" text-anchor="middle" dominant-baseline="middle">CoroutineManagedTransitionService</text>
+<line class="lifeline" x1="369.2" y1="174" x2="369.2" y2="1258"/>
+<rect class="box" x="540.4" y="116" width="152" height="58" rx="10" fill="#fff3d9" stroke="#7aa0c4"/>
+<text class="actor" x="616.4" y="145" text-anchor="middle" dominant-baseline="middle">CoroutineProcessRepository</text>
+<line class="lifeline" x1="616.4" y1="174" x2="616.4" y2="1258"/>
+<rect class="box" x="787.5999999999999" y="116" width="152" height="58" rx="10" fill="#f1ecff" stroke="#7aa0c4"/>
+<text class="actor" x="863.5999999999999" y="145" text-anchor="middle" dominant-baseline="middle">ReactiveMongoOperations</text>
+<line class="lifeline" x1="863.5999999999999" y1="174" x2="863.5999999999999" y2="1258"/>
+<rect class="box" x="1034.8" y="116" width="152" height="58" rx="10" fill="#fdecef" stroke="#7aa0c4"/>
+<text class="actor" x="1110.8" y="145" text-anchor="middle" dominant-baseline="middle">ReactiveMongoTransactionManager</text>
+<line class="lifeline" x1="1110.8" y1="174" x2="1110.8" y2="1258"/>
+<rect class="box" x="1282" y="116" width="152" height="58" rx="10" fill="#e9f7f6" stroke="#7aa0c4"/>
+<text class="actor" x="1358" y="129" text-anchor="middle" dominant-baseline="middle">MongoDB</text>
+<text class="actor" x="1358" y="145" text-anchor="middle" dominant-baseline="middle">(Testcontainers</text>
+<text class="actor" x="1358" y="161" text-anchor="middle" dominant-baseline="middle">Replica Set)</text>
+<line class="lifeline" x1="1358" y1="174" x2="1358" y2="1258"/>
+<rect x="78" y="188" width="335.2" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
+<text class="message" x="245.6" y="201" text-anchor="middle" dominant-baseline="middle">1. run(id) - @Transactional suspend</text>
+<path class="call" d="M122 218 L369.2 218"/>
+<rect x="530" y="242" width="420" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
+<text class="message" x="740" y="255" text-anchor="middle" dominant-baseline="middle">2. begin transaction (ClientSession)</text>
+<path class="call" d="M369.2 272 L1110.8 272"/>
+<rect x="530" y="296" width="420" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
+<text class="message" x="740" y="309" text-anchor="middle" dominant-baseline="middle">3. Reactor Context (session bound)</text>
+<path class="return" d="M1110.8 326 L369.2 326"/>
+<rect x="325.19999999999993" y="350" width="335.2" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
+<text class="message" x="492.79999999999995" y="363" text-anchor="middle" dominant-baseline="middle">4. findById(id) - suspend</text>
+<path class="call" d="M369.2 380 L616.4 380"/>
+<rect x="777.2" y="404" width="420" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
+<text class="message" x="987.2" y="417" text-anchor="middle" dominant-baseline="middle">5. query (within session)</text>
+<path class="call" d="M616.4 434 L1358 434"/>
+<rect x="777.2" y="458" width="420" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
+<text class="message" x="987.2" y="471" text-anchor="middle" dominant-baseline="middle">6. Process document</text>
+<path class="return" d="M1358 488 L616.4 488"/>
+<rect x="325.19999999999993" y="512" width="335.2" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
+<text class="message" x="492.79999999999995" y="525" text-anchor="middle" dominant-baseline="middle">7. Process</text>
+<path class="return" d="M616.4 542 L369.2 542"/>
+<rect x="406.4" y="566" width="420" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
+<text class="message" x="616.4" y="579" text-anchor="middle" dominant-baseline="middle">8. update state -&gt; ACTIVE</text>
+<path class="call" d="M369.2 596 L863.5999999999999 596"/>
+<rect x="900.8" y="620" width="420" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
+<text class="message" x="1110.8" y="633" text-anchor="middle" dominant-baseline="middle">9. update (within session)</text>
+<path class="call" d="M863.5999999999999 650 L1358 650"/>
+<rect x="50" y="686" width="1380" height="34" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-dasharray="6 4"/>
+<text class="branch" x="68" y="705" dominant-baseline="middle">alt: verify() success (id % 3 != 0)</text>
+<rect x="406.4" y="728" width="420" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
+<text class="message" x="616.4" y="741" text-anchor="middle" dominant-baseline="middle">11. update state -&gt; DONE</text>
+<path class="call" d="M369.2 758 L863.5999999999999 758"/>
+<rect x="900.8" y="782" width="420" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
+<text class="message" x="1110.8" y="795" text-anchor="middle" dominant-baseline="middle">12. update (within session)</text>
+<path class="call" d="M863.5999999999999 812 L1358 812"/>
+<rect x="530" y="836" width="420" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
+<text class="message" x="740" y="849" text-anchor="middle" dominant-baseline="middle">13. commit</text>
+<path class="call" d="M369.2 866 L1110.8 866"/>
+<rect x="406.4" y="890" width="420" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
+<text class="message" x="616.4" y="903" text-anchor="middle" dominant-baseline="middle">14. State.DONE</text>
+<path class="return" d="M1110.8 920 L122 920"/>
+<rect x="50" y="956" width="1380" height="34" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-dasharray="6 4"/>
+<text class="branch" x="68" y="975" dominant-baseline="middle">else: verify() failure (id % 3 == 0)</text>
+<rect x="530" y="998" width="420" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
+<text class="message" x="740" y="1011" text-anchor="middle" dominant-baseline="middle">16. rollback (IllegalStateException)</text>
+<path class="call" d="M369.2 1028 L1110.8 1028"/>
+<rect x="1066.8000000000002" y="1052" width="335.20000000000005" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
+<text class="message" x="1234.4" y="1065" text-anchor="middle" dominant-baseline="middle">17. rollback -&gt; State remains CREATED</text>
+<path class="call" d="M1110.8 1082 L1358 1082"/>
+<rect x="406.4" y="1106" width="420" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
+<text class="message" x="616.4" y="1119" text-anchor="middle" dominant-baseline="middle">18. IllegalStateException</text>
+<path class="return" d="M1110.8 1136 L122 1136"/>
+<line x1="52" y1="1190" x2="1428" y2="1190" stroke="#d8e0ea" stroke-width="1.2" stroke-dasharray="5 5"/>
+</svg>

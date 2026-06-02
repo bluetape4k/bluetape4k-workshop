@@ -26,27 +26,7 @@ Uses H2 in-memory database.
 
 ![R2DBC + Spring WebFlux (Functional Router) Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-readme-architecture-01.png)
 
-```mermaid
-sequenceDiagram
-    participant C as Client
-    participant Router as coRouter<br/>(functional routes)
-    participant Handler as UserHandler<br/>(suspend fun)
-    participant Svc as UserService<br/>(@Transactional)
-    participant Repo as CoroutineCrudRepository
-    participant DB as H2 (R2DBC)
-
-    C->>Router: HTTP Request
-    Router->>Handler: route to handler method
-    activate Handler
-    Handler->>Svc: suspend service call
-    Svc->>Repo: findAll() / save() / deleteById()
-    Repo->>DB: R2DBC SQL
-    DB-->>Repo: rows
-    Repo-->>Svc: entity / Flow<T>
-    Svc-->>Handler: result
-    deactivate Handler
-    Handler-->>C: ServerResponse
-```
+![R2DBC + Spring WebFlux (Functional Router) Diagram 1](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-readme-sequence-01.png)
 
 ## 아키텍처 다이어그램
 

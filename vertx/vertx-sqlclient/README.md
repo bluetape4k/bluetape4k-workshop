@@ -29,35 +29,7 @@ The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k h
 
 ![Reactive SQL diagram](../../docs/images/readme-diagrams/vertx-vertx-sqlclient-sequence-01.png)
 
-```mermaid
-sequenceDiagram
-    participant Test
-    participant Helper as withSuspendTransaction { }
-    participant Pool as JDBCPool / MySQLPool
-    participant Conn as SqlConnection
-    participant DB as MySQL (Testcontainers)
-
-    Test->>Helper: pool.withSuspendTransaction { conn -> }
-    Helper->>Pool: begin transaction
-    Pool->>DB: START TRANSACTION
-    DB-->>Pool: OK
-    Pool-->>Helper: SqlConnection
-
-    Helper->>Conn: conn.query(...).execute().coAwait()
-    Conn->>DB: SQL (within transaction)
-    DB-->>Conn: RowSet
-    Conn-->>Helper: RowSet (suspended resume)
-
-    alt 정상 완료
-        Helper->>Pool: commit
-        Pool->>DB: COMMIT
-        DB-->>Test: success
-    else 예외 발생
-        Helper->>Pool: rollback
-        Pool->>DB: ROLLBACK
-        DB-->>Test: exception re-thrown
-    end
-```
+![Vert.x Sql Client Example Diagram 1](../../docs/images/readme-diagrams/vertx-vertx-sqlclient-readme-sequence-01.png)
 
 [Vert.x Sql Client](https://vertx.io/docs/vertx-sql-client/java/) 와
 [MyBatis Dynamic SQL](https://mybatis.org/mybatis-dynamic-sql/docs/introduction.html) 을
