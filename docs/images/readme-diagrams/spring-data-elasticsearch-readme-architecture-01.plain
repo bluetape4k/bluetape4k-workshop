@@ -1,14 +1,12 @@
-graph 1 15.201 1.3361
-node reader 0.56708 0.45833 1.1342 0.61667 "Developer\nReader" rounded,filled box #88A3B5 #FFF8E7
-node readme 3.3262 0.45833 2.0717 0.825 "Spring Data\nElasticsearch - Demo\nREADME" rounded,filled box #88A3B5 #EEF7FF
-node module 6.5021 0.45833 1.6967 0.61667 "Spring Data\nExample Module" rounded,filled box #88A3B5 #F1F8E9
-node source 9.3602 0.45833 1.4571 0.825 "spring data\nelasticsearch\nsource + tests" rounded,filled box #88A3B5 #F5F0FF
-node bt 11.875 1.0278 1.4467 0.61667 "bluetape4k\nhelpers / APIs" rounded,filled box #88A3B5 #EAF7F0
-node runtime 14.498 0.45833 1.405 0.61667 "Runtime or\nTest Backend" rounded,filled box #88A3B5 #FFF1F1
-edge reader readme 4 1.1388 0.45833 1.1388 0.45833 2.1387 0.45833 2.1387 0.45833 opens 1.7123 0.54167 solid #637383
-edge readme module 4 4.3705 0.45833 4.3705 0.45833 5.5051 0.45833 5.5051 0.45833 explains 5.0079 0.54167 solid #637383
-edge module source 4 7.3596 0.45833 7.3596 0.45833 8.4815 0.45833 8.4815 0.45833 "maps to" 7.991 0.54167 solid #637383
-edge source bt 4 10.094 0.79514 10.094 0.79514 11.001 0.79514 11.001 0.79514 uses 10.62 1.0556 solid #637383
-edge source runtime 4 10.096 0.43472 10.096 0.43472 13.646 0.43472 13.646 0.43472 exercises 11.875 0.083333 solid #637383
-edge bt runtime 7 12.607 1.0514 13.382 1.0514 14.492 1.0514 14.492 1.0514 14.492 1.0514 14.492 0.91834 14.492 0.91834 adapts 13.197 1.0556 solid #637383
+graph 1 17.171 1.325
+node entry 1.3431 0.6625 2.6862 1.0438 "Entry / Tests\nElasticsearchApplication /\nAbstractElasticsearchTest" rounded,filled box #88A3B5 #FFF8E7
+node api 4.6075 0.6625 1.5092 0.7625 "API / Adapter\nNettyConfig" rounded,filled box #88A3B5 #EEF7FF
+node infra 7.7937 0.6625 2.6967 1.325 "Repository / Infra\nElasticsearchClientConfig /\nConference /\nConferenceRepository /" rounded,filled box #88A3B5 #F5F0FF
+node bt 11.829 0.6625 2.7071 1.0438 "bluetape4k APIs\nworkshop / testcontainers\n/ spring" rounded,filled box #88A3B5 #EAF7F0
+node runtime 15.802 0.6625 2.7383 1.0438 "Runtime\nElasticsearch / AWS / S3 /\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 2.6944 0.6625 2.6944 0.6625 3.7029 0.6625 3.7029 0.6625 calls 3.2696 0.75104 solid #637383
+edge api infra 4 5.3707 0.6625 5.3707 0.6625 6.2962 0.6625 6.2962 0.6625 uses 5.9037 0.75104 solid #637383
+edge infra bt 4 9.1486 0.48854 9.1486 0.48854 10.328 0.48854 10.328 0.48854 uses 9.8087 1.1538 solid #637383
+edge infra bt 4 9.1486 0.83646 9.1486 0.83646 10.328 0.83646 10.328 0.83646 extends 9.8087 0.34826 solid #637383
+edge bt runtime 4 13.191 0.6625 13.191 0.6625 14.286 0.6625 14.286 0.6625 adapts 13.807 0.75104 solid #637383
 stop

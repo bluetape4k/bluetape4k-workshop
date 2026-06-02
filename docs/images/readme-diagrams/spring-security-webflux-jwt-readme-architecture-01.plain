@@ -1,14 +1,12 @@
-graph 1 16.19 1.3361
-node reader 0.56708 0.45833 1.1342 0.61667 "Developer\nReader" rounded,filled box #88A3B5 #FFF8E7
-node readme 3.4617 0.45833 2.3425 0.825 "Spring Security WebFlux\nJWT\nREADME" rounded,filled box #88A3B5 #EEF7FF
-node module 6.7729 0.45833 1.6967 0.61667 "Security\nExample Module" rounded,filled box #88A3B5 #F1F8E9
-node source 9.9904 0.45833 2.1758 0.825 "spring security webflux\njwt\nsource + tests" rounded,filled box #88A3B5 #F5F0FF
-node bt 12.864 1.0278 1.4467 0.61667 "bluetape4k\nhelpers / APIs" rounded,filled box #88A3B5 #EAF7F0
-node runtime 15.488 0.45833 1.405 0.61667 "Runtime or\nTest Backend" rounded,filled box #88A3B5 #FFF1F1
-edge reader readme 4 1.139 0.45833 1.139 0.45833 2.1438 0.45833 2.1438 0.45833 opens 1.7123 0.54167 solid #637383
-edge readme module 4 4.6384 0.45833 4.6384 0.45833 5.7747 0.45833 5.7747 0.45833 explains 5.2787 0.54167 solid #637383
-edge module source 4 7.6309 0.45833 7.6309 0.45833 8.7556 0.45833 8.7556 0.45833 "maps to" 8.2619 0.54167 solid #637383
-edge source bt 4 11.085 0.79514 11.085 0.79514 11.99 0.79514 11.99 0.79514 uses 11.61 1.0556 solid #637383
-edge source runtime 4 11.083 0.43472 11.083 0.43472 14.635 0.43472 14.635 0.43472 exercises 12.864 0.083333 solid #637383
-edge bt runtime 7 13.597 1.0514 14.371 1.0514 15.482 1.0514 15.482 1.0514 15.482 1.0514 15.482 0.91834 15.482 0.91834 adapts 14.186 1.0556 solid #637383
+graph 1 17.462 1.325
+node entry 1.39 0.6625 2.78 1.0438 "Entry / Tests\nJwtApplication /\nAbstractJwtApplicationTest" rounded,filled box #88A3B5 #FFF8E7
+node api 4.821 0.6625 1.7488 1.325 "API / Adapter\nJwtConfig /\nHelloController /\nTokenController" rounded,filled box #88A3B5 #EEF7FF
+node infra 8.2104 0.6625 2.8633 0.7625 "Library Layer\nworkshop / jackson3 / junit5" rounded,filled box #88A3B5 #F5F0FF
+node bt 12.136 0.6625 2.3217 1.0438 "bluetape4k APIs\nworkshop / jackson3 /\njunit5" rounded,filled box #88A3B5 #EAF7F0
+node runtime 16.005 0.6625 2.9154 1.0438 "Runtime\nSQL / R2DBC / Redis / AWS\n/ S3" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 2.7855 0.6625 2.7855 0.6625 3.7959 0.6625 3.7959 0.6625 calls 3.3633 0.75104 solid #637383
+edge api infra 4 5.7027 0.6625 5.7027 0.6625 6.6326 0.6625 6.6326 0.6625 uses 6.2371 0.75104 solid #637383
+edge infra bt 4 9.65 0.53542 9.65 0.53542 10.824 0.53542 10.824 0.53542 uses 10.309 1.1538 solid #637383
+edge infra bt 4 9.65 0.78958 9.65 0.78958 10.824 0.78958 10.824 0.78958 extends 10.309 0.34826 solid #637383
+edge bt runtime 4 13.302 0.6625 13.302 0.6625 14.397 0.6625 14.397 0.6625 adapts 13.922 0.75104 solid #637383
 stop

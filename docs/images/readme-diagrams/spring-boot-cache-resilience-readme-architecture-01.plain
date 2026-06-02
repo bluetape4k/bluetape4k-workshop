@@ -1,14 +1,12 @@
-graph 1 15.284 1.3361
-node reader 0.56708 0.45833 1.1342 0.61667 "Developer\nReader" rounded,filled box #88A3B5 #FFF8E7
-node readme 3.2169 0.45833 1.8529 0.825 "Spring Boot Cache\nResilience\nREADME" rounded,filled box #88A3B5 #EEF7FF
-node module 6.2833 0.45833 1.6967 0.61667 "Spring Boot\nExample Module" rounded,filled box #88A3B5 #F1F8E9
-node source 9.2925 0.45833 1.7592 0.825 "spring boot cache\nresilience\nsource + tests" rounded,filled box #88A3B5 #F5F0FF
-node bt 11.958 1.0278 1.4467 0.61667 "bluetape4k\nhelpers / APIs" rounded,filled box #88A3B5 #EAF7F0
-node runtime 14.582 0.45833 1.405 0.61667 "Runtime or\nTest Backend" rounded,filled box #88A3B5 #FFF1F1
-edge reader readme 4 1.142 0.45833 1.142 0.45833 2.141 0.45833 2.141 0.45833 opens 1.7123 0.54167 solid #637383
-edge readme module 4 4.1494 0.45833 4.1494 0.45833 5.2857 0.45833 5.2857 0.45833 explains 4.7892 0.54167 solid #637383
-edge module source 4 7.1376 0.45833 7.1376 0.45833 8.262 0.45833 8.262 0.45833 "maps to" 7.7723 0.54167 solid #637383
-edge source bt 4 10.18 0.79514 10.18 0.79514 11.083 0.79514 11.083 0.79514 uses 10.703 1.0556 solid #637383
-edge source runtime 4 10.178 0.43472 10.178 0.43472 13.729 0.43472 13.729 0.43472 exercises 11.958 0.083333 solid #637383
-edge bt runtime 7 12.691 1.0514 13.465 1.0514 14.576 1.0514 14.576 1.0514 14.576 1.0514 14.576 0.91834 14.576 0.91834 adapts 13.28 1.0556 solid #637383
+graph 1 16.4 1.325
+node entry 1.3223 0.6625 2.6446 1.325 "Entry / Tests\nCacheResilienceApplication\n/\nResilientCacheServiceTest" rounded,filled box #88A3B5 #FFF8E7
+node service 5.0294 0.6625 2.4362 0.7625 "Service / Domain\nResilientProductService" rounded,filled box #88A3B5 #F1F8E9
+node infra 8.3979 0.6625 2.1342 0.7625 "Repository / Infra\nResilientCacheConfig" rounded,filled box #88A3B5 #F5F0FF
+node bt 11.813 0.6625 2.03 1.0438 "bluetape4k APIs\nworkshop / junit5 /\ntestcontainers" rounded,filled box #88A3B5 #EAF7F0
+node runtime 15.239 0.6625 2.3217 0.7625 "Runtime\nRedis / Testcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry service 4 2.6502 0.6625 2.6502 0.6625 3.6608 0.6625 3.6608 0.6625 calls 3.2279 0.75104 solid #637383
+edge service infra 4 6.255 0.6625 6.255 0.6625 7.1809 0.6625 7.1809 0.6625 uses 6.7892 0.75104 solid #637383
+edge infra bt 4 9.4739 0.53542 9.4739 0.53542 10.647 0.53542 10.647 0.53542 uses 10.132 1.1538 solid #637383
+edge infra bt 4 9.4739 0.78958 9.4739 0.78958 10.647 0.78958 10.647 0.78958 extends 10.132 0.34826 solid #637383
+edge bt runtime 4 12.837 0.6625 12.837 0.6625 13.928 0.6625 13.928 0.6625 adapts 13.453 0.75104 solid #637383
 stop

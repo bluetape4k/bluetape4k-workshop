@@ -1,14 +1,7 @@
-graph 1 14.722 1.3361
-node reader 0.56708 0.45833 1.1342 0.61667 "Developer\nReader" rounded,filled box #88A3B5 #FFF8E7
-node readme 3.0867 0.45833 1.5925 0.61667 "Gateway Demo\nREADME" rounded,filled box #88A3B5 #EEF7FF
-node module 6.0229 0.45833 1.6967 0.61667 "Gateway\nExample Module" rounded,filled box #88A3B5 #F1F8E9
-node source 8.881 0.45833 1.4571 0.61667 "gateway\nsource + tests" rounded,filled box #88A3B5 #F5F0FF
-node bt 11.395 1.0278 1.4467 0.61667 "bluetape4k\nhelpers / APIs" rounded,filled box #88A3B5 #EAF7F0
-node runtime 14.019 0.45833 1.405 0.61667 "Runtime or\nTest Backend" rounded,filled box #88A3B5 #FFF1F1
-edge reader readme 4 1.1388 0.45833 1.1388 0.45833 2.1406 0.45833 2.1406 0.45833 opens 1.7123 0.54167 solid #637383
-edge readme module 4 3.889 0.45833 3.889 0.45833 5.0224 0.45833 5.0224 0.45833 explains 4.5288 0.54167 solid #637383
-edge module source 4 6.8804 0.45833 6.8804 0.45833 8.0023 0.45833 8.0023 0.45833 "maps to" 7.5119 0.54167 solid #637383
-edge source bt 7 8.8744 0.7757 8.8744 0.9167 8.8744 1.0514 8.8744 1.0514 8.8744 1.0514 10.524 1.0514 10.524 1.0514 uses 10.141 1.0556 solid #637383
-edge source runtime 4 9.6172 0.43472 9.6172 0.43472 13.167 0.43472 13.167 0.43472 exercises 11.395 0.083333 solid #637383
-edge bt runtime 7 12.128 1.0514 12.903 1.0514 14.013 1.0514 14.013 1.0514 14.013 1.0514 14.013 0.91834 14.013 0.91834 adapts 12.718 1.0556 solid #637383
+graph 1 8.84 1.325
+node entry 1.3744 0.6625 2.7487 1.325 "Entry / Tests\nApiGatewayDemoApplication\n/ CustomerApplication /\nAbstractGatewayTest" rounded,filled box #88A3B5 #FFF8E7
+node api 4.8262 0.6625 1.8217 1.325 "API / Adapter\nGatewayConfig /\nSwaggerConfig /\nIndexController" rounded,filled box #88A3B5 #EEF7FF
+node runtime 7.8302 0.6625 2.0196 1.0438 "Runtime\nRedis / AWS / S3 /\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 2.7535 0.6625 2.7535 0.6625 3.7672 0.6625 3.7672 0.6625 calls 3.3321 0.75104 solid #637383
+edge api runtime 4 5.7439 0.6625 5.7439 0.6625 6.6708 0.6625 6.6708 0.6625 uses 6.2788 0.75104 solid #637383
 stop

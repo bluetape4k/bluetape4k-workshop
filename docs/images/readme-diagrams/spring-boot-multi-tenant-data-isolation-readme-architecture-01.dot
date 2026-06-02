@@ -14,7 +14,7 @@ digraph G {
     penwidth=1.4,
     color="#88A3B5",
     fillcolor="#F6FAFF",
-    fontname="Helvetica",
+    fontname="Architects Daughter",
     fontsize=14,
     margin="0.14,0.10"
   ];
@@ -22,21 +22,19 @@ digraph G {
     color="#637383",
     arrowsize=0.8,
     penwidth=1.5,
-    fontname="Helvetica",
+    fontname="Comic Mono",
     fontsize=11
   ];
 
-  reader [label="Developer\nReader", fillcolor="#FFF8E7"];
-  readme [label="Multi-Tenant Data\nIsolation\nREADME", fillcolor="#EEF7FF"];
-  module [label="Spring Boot\nExample Module", fillcolor="#F1F8E9"];
-  source [label="spring boot multi tenant\ndata isolation\nsource + tests", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k\nhelpers / APIs", fillcolor="#EAF7F0"];
-  runtime [label="Runtime or\nTest Backend", fillcolor="#FFF1F1"];
+  entry [label="Entry / Tests\nMultiTenantDataIsolationApplication\n/ TenantIsolationTest", fillcolor="#FFF8E7"];
+  service [label="Service / Domain\nExposedSchemaInitializer /\nTenantInvoiceCache /\nTenantInvoiceService /", fillcolor="#F1F8E9"];
+  infra [label="Repository / Infra\nInvoiceRecord / InvoiceTable\n/ TenantId /\nTenantInvoiceRepository", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k APIs\nworkshop / junit5 /\nassertions", fillcolor="#EAF7F0"];
+  runtime [label="Runtime\nSQL / R2DBC / Redis", fillcolor="#FFF1F1"];
 
-  reader -> readme [label="opens"];
-  readme -> module [label="explains"];
-  module -> source [label="maps to"];
-  source -> bt [label="uses"];
-  source -> runtime [label="exercises"];
+  entry -> service [label="calls"];
+  service -> infra [label="uses"];
+  infra -> bt [label="uses"];
+  infra -> bt [label="extends"];
   bt -> runtime [label="adapts"];
 }

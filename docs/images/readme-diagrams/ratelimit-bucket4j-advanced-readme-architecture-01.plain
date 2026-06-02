@@ -1,14 +1,14 @@
-graph 1 15.472 1.3944
-node reader 0.56708 0.51667 1.1342 0.61667 "Developer\nReader" rounded,filled box #88A3B5 #FFF8E7
-node readme 3.3419 0.51667 2.1029 1.0333 "bucket4j-advanced —\nAdvanced Rate Limit\nStrategies\nREADME" rounded,filled box #88A3B5 #EEF7FF
-node module 6.5333 0.51667 1.6967 0.61667 "Ratelimit\nExample Module" rounded,filled box #88A3B5 #F1F8E9
-node source 9.5113 0.51667 1.6967 0.825 "ratelimit bucket4j\nadvanced\nsource + tests" rounded,filled box #88A3B5 #F5F0FF
-node bt 12.145 1.0861 1.4467 0.61667 "bluetape4k\nhelpers / APIs" rounded,filled box #88A3B5 #EAF7F0
-node runtime 14.769 0.51667 1.405 0.61667 "Runtime or\nTest Backend" rounded,filled box #88A3B5 #FFF1F1
-edge reader readme 4 1.142 0.51667 1.142 0.51667 2.1428 0.51667 2.1428 0.51667 opens 1.7123 0.6 solid #637383
-edge readme module 4 4.4002 0.51667 4.4002 0.51667 5.5368 0.51667 5.5368 0.51667 explains 5.0392 0.6 solid #637383
-edge module source 4 7.3907 0.51667 7.3907 0.51667 8.5122 0.51667 8.5122 0.51667 "maps to" 8.0223 0.6 solid #637383
-edge source bt 4 10.366 0.85347 10.366 0.85347 11.271 0.85347 11.271 0.85347 uses 10.891 1.1139 solid #637383
-edge source runtime 4 10.368 0.49306 10.368 0.49306 13.918 0.49306 13.918 0.49306 exercises 12.145 0.14167 solid #637383
-edge bt runtime 7 12.878 1.1097 13.653 1.1097 14.763 1.1097 14.763 1.1097 14.763 1.1097 14.763 0.97667 14.763 0.97667 adapts 13.468 1.1139 solid #637383
+graph 1 20.42 1.325
+node entry 1.5879 0.6625 3.1758 1.325 "Entry / Tests\nBucket4jAdvancedApplication\n/\nAbstractBucket4jAdvancedTest" rounded,filled box #88A3B5 #FFF8E7
+node api 5.7742 0.6625 2.8633 1.325 "API / Adapter\nRateLimitDemoController /\nCombinedRateLimitWebFilter\n/ IpRateLimitWebFilter" rounded,filled box #88A3B5 #EEF7FF
+node service 9.2312 0.6625 1.8842 1.0438 "Service / Domain\nRateLimitConfig /\nHeaderConstants" rounded,filled box #88A3B5 #F1F8E9
+node infra 12.225 0.6625 1.9363 1.325 "Repository / Infra\nLettuceConfig /\nTestRedisConfig /\nRequestUtils" rounded,filled box #88A3B5 #F5F0FF
+node bt 15.687 0.6625 2.3217 1.0438 "bluetape4k APIs\nworkshop / jackson3 /\nbucket4j" rounded,filled box #88A3B5 #EAF7F0
+node runtime 19.259 0.6625 2.3217 0.7625 "Runtime\nRedis / Testcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.1825 0.6625 3.1825 0.6625 4.1924 0.6625 4.1924 0.6625 calls 3.7592 0.75104 solid #637383
+edge api service 4 7.2152 0.6625 7.2152 0.6625 8.1375 0.6625 8.1375 0.6625 uses 7.7475 0.75104 solid #637383
+edge service infra 4 10.183 0.6625 10.183 0.6625 11.108 0.6625 11.108 0.6625 uses 10.715 0.75104 solid #637383
+edge infra bt 4 13.198 0.48854 13.198 0.48854 14.375 0.48854 14.375 0.48854 uses 13.86 1.1538 solid #637383
+edge infra bt 4 13.198 0.83646 13.198 0.83646 14.375 0.83646 14.375 0.83646 extends 13.86 0.34826 solid #637383
+edge bt runtime 4 16.857 0.6625 16.857 0.6625 17.95 0.6625 17.95 0.6625 adapts 17.473 0.75104 solid #637383
 stop

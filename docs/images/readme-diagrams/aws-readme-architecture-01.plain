@@ -1,14 +1,9 @@
-graph 1 14.399 1.3361
-node reader 0.56708 0.45833 1.1342 0.61667 "Developer\nReader" rounded,filled box #88A3B5 #FFF8E7
-node readme 2.9252 0.45833 1.2696 0.61667 "AWS Demo\nREADME" rounded,filled box #88A3B5 #EEF7FF
-node module 5.7 0.45833 1.6967 0.61667 "Aws\nExample Module" rounded,filled box #88A3B5 #F1F8E9
-node source 8.5581 0.45833 1.4571 0.61667 "aws\nsource + tests" rounded,filled box #88A3B5 #F5F0FF
-node bt 11.073 1.0278 1.4467 0.61667 "bluetape4k\nhelpers / APIs" rounded,filled box #88A3B5 #EAF7F0
-node runtime 13.696 0.45833 1.405 0.61667 "Runtime or\nTest Backend" rounded,filled box #88A3B5 #FFF1F1
-edge reader readme 4 1.1379 0.45833 1.1379 0.45833 2.1422 0.45833 2.1422 0.45833 opens 1.7123 0.54167 solid #637383
-edge readme module 4 3.5688 0.45833 3.5688 0.45833 4.7017 0.45833 4.7017 0.45833 explains 4.2058 0.54167 solid #637383
-edge module source 4 6.5575 0.45833 6.5575 0.45833 7.6794 0.45833 7.6794 0.45833 "maps to" 7.189 0.54167 solid #637383
-edge source bt 7 8.5515 0.7757 8.5515 0.9167 8.5515 1.0514 8.5515 1.0514 8.5515 1.0514 10.201 1.0514 10.201 1.0514 uses 9.8179 1.0556 solid #637383
-edge source runtime 4 9.2943 0.43472 9.2943 0.43472 12.844 0.43472 12.844 0.43472 exercises 11.073 0.083333 solid #637383
-edge bt runtime 7 11.805 1.0514 12.58 1.0514 13.69 1.0514 13.69 1.0514 13.69 1.0514 13.69 0.91834 13.69 0.91834 adapts 12.395 1.0556 solid #637383
+graph 1 15.307 1.325
+node entry 1.8744 0.6625 3.7488 1.325 "Entry / Tests\nSpringCloudAwsS3Sample /\nStorageApplication /\nAbstractSpringCloudAwsS3SampleTest" rounded,filled box #88A3B5 #FFF8E7
+node api 6.1856 0.6625 2.5404 1.0438 "Child Examples\ns3 spring cloud / storage\nabstraction" rounded,filled box #88A3B5 #EEF7FF
+node service 10.012 0.6625 2.9467 1.325 "Service / Domain\nLocalStorageService /\nS3Config /\nS3PresignedStorageService /" rounded,filled box #88A3B5 #F1F8E9
+node runtime 13.938 0.6625 2.7383 0.7625 "Runtime\nAWS / S3 / Testcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.7528 0.6625 3.7528 0.6625 4.7657 0.6625 4.7657 0.6625 calls 4.3321 0.75104 solid #637383
+edge api service 4 7.4652 0.6625 7.4652 0.6625 8.393 0.6625 8.393 0.6625 uses 7.9975 0.75104 solid #637383
+edge service runtime 4 11.491 0.6625 11.491 0.6625 12.422 0.6625 12.422 0.6625 uses 12.027 0.75104 solid #637383
 stop

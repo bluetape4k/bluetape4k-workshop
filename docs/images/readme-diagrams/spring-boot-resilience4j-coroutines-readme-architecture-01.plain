@@ -1,14 +1,14 @@
-graph 1 15.951 1.3944
-node reader 0.56708 0.51667 1.1342 0.61667 "Developer\nReader" rounded,filled box #88A3B5 #FFF8E7
-node readme 3.3315 0.51667 2.0821 1.0333 "Spring Boot 4 +\nResilience4j +\nCoroutines Workshop\nREADME" rounded,filled box #88A3B5 #EEF7FF
-node module 6.5125 0.51667 1.6967 0.61667 "Spring Boot\nExample Module" rounded,filled box #88A3B5 #F1F8E9
-node source 9.7404 0.51667 2.1967 0.825 "spring boot resilience4j\ncoroutines\nsource + tests" rounded,filled box #88A3B5 #F5F0FF
-node bt 12.625 1.0861 1.4467 0.61667 "bluetape4k\nhelpers / APIs" rounded,filled box #88A3B5 #EAF7F0
-node runtime 15.248 0.51667 1.405 0.61667 "Runtime or\nTest Backend" rounded,filled box #88A3B5 #FFF1F1
-edge reader readme 4 1.1399 0.51667 1.1399 0.51667 2.1419 0.51667 2.1419 0.51667 opens 1.7123 0.6 solid #637383
-edge readme module 4 4.3819 0.51667 4.3819 0.51667 5.5165 0.51667 5.5165 0.51667 explains 5.0183 0.6 solid #637383
-edge module source 4 7.369 0.51667 7.369 0.51667 8.4934 0.51667 8.4934 0.51667 "maps to" 8.0015 0.6 solid #637383
-edge source bt 4 10.847 0.85347 10.847 0.85347 11.752 0.85347 11.752 0.85347 uses 11.37 1.1139 solid #637383
-edge source runtime 4 10.848 0.49306 10.848 0.49306 14.397 0.49306 14.397 0.49306 exercises 12.625 0.14167 solid #637383
-edge bt runtime 7 13.357 1.1097 14.132 1.1097 15.242 1.1097 15.242 1.1097 15.242 1.1097 15.242 0.97667 15.242 0.97667 adapts 13.947 1.1139 solid #637383
+graph 1 19.638 1.325
+node entry 1.1765 0.6625 2.3529 1.0438 "Entry / Tests\nResilienceApplication /\nAbstractResilienceTest" rounded,filled box #88A3B5 #FFF8E7
+node api 4.5658 0.6625 2.0925 1.325 "API / Adapter\nNettyConfig /\nResilience4jConfig /\nBackendAController" rounded,filled box #88A3B5 #EEF7FF
+node service 8.101 0.6625 2.8112 1.325 "Service / Domain\nRecordFailurePredicate /\nBackendAService /\nBackendCService / Service" rounded,filled box #88A3B5 #F1F8E9
+node infra 11.605 0.6625 2.03 1.0438 "Library Layer\nworkshop / junit5 /\nresilience4j" rounded,filled box #88A3B5 #F5F0FF
+node bt 14.968 0.6625 2.03 1.0438 "bluetape4k APIs\nworkshop / junit5 /\nresilience4j" rounded,filled box #88A3B5 #EAF7F0
+node runtime 18.436 0.6625 2.405 1.0438 "Runtime\nSQL / R2DBC / Redis /\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 2.3619 0.6625 2.3619 0.6625 3.3685 0.6625 3.3685 0.6625 calls 2.9362 0.75104 solid #637383
+edge api service 4 5.6217 0.6625 5.6217 0.6625 6.5482 0.6625 6.5482 0.6625 uses 6.1537 0.75104 solid #637383
+edge service infra 4 9.5161 0.6625 9.5161 0.6625 10.441 0.6625 10.441 0.6625 uses 10.048 0.75104 solid #637383
+edge infra bt 4 12.628 0.48854 12.628 0.48854 13.802 0.48854 13.802 0.48854 uses 13.287 1.1538 solid #637383
+edge infra bt 4 12.628 0.83646 12.628 0.83646 13.802 0.83646 13.802 0.83646 extends 13.287 0.34826 solid #637383
+edge bt runtime 4 15.99 0.6625 15.99 0.6625 17.083 0.6625 17.083 0.6625 adapts 16.608 0.75104 solid #637383
 stop

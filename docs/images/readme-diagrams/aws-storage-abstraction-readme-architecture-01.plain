@@ -1,14 +1,12 @@
-graph 1 15.857 1.3361
-node reader 0.56708 0.45833 1.1342 0.61667 "Developer\nReader" rounded,filled box #88A3B5 #FFF8E7
-node readme 3.2533 0.45833 1.9258 0.825 "Storage Abstraction\nWorkshop\nREADME" rounded,filled box #88A3B5 #EEF7FF
-node module 6.3562 0.45833 1.6967 0.61667 "Aws\nExample Module" rounded,filled box #88A3B5 #F1F8E9
-node source 9.6154 0.45833 2.2592 0.61667 "aws storage abstraction\nsource + tests" rounded,filled box #88A3B5 #F5F0FF
-node bt 12.531 1.0278 1.4467 0.61667 "bluetape4k\nhelpers / APIs" rounded,filled box #88A3B5 #EAF7F0
-node runtime 15.155 0.45833 1.405 0.61667 "Runtime or\nTest Backend" rounded,filled box #88A3B5 #FFF1F1
-edge reader readme 4 1.1434 0.45833 1.1434 0.45833 2.139 0.45833 2.139 0.45833 opens 1.7123 0.54167 solid #637383
-edge readme module 4 4.2224 0.45833 4.2224 0.45833 5.3569 0.45833 5.3569 0.45833 explains 4.8621 0.54167 solid #637383
-edge module source 4 7.2126 0.45833 7.2126 0.45833 8.3341 0.45833 8.3341 0.45833 "maps to" 7.8452 0.54167 solid #637383
-edge source bt 7 10.754 0.52963 11.574 0.52963 12.538 0.52963 12.538 0.52963 12.538 0.52963 12.538 0.57248 12.538 0.57248 uses 11.276 1.0556 solid #637383
-edge source runtime 4 10.75 0.33981 10.75 0.33981 14.301 0.33981 14.301 0.33981 exercises 12.531 0.083333 solid #637383
-edge bt runtime 7 13.264 1.0514 14.038 1.0514 15.149 1.0514 15.149 1.0514 15.149 1.0514 15.149 0.91834 15.149 0.91834 adapts 13.853 1.0556 solid #637383
+graph 1 18.494 1.325
+node entry 1.4629 0.6625 2.9258 1.0438 "Entry / Tests\nStorageApplication /\nAbstractStorageServiceTest" rounded,filled box #88A3B5 #FFF8E7
+node service 5.5658 0.6625 2.9467 1.325 "Service / Domain\nLocalStorageService /\nS3Config /\nS3PresignedStorageService /" rounded,filled box #88A3B5 #F1F8E9
+node infra 9.6427 0.6625 3.0404 0.7625 "Library Layer\nworkshop / core / coroutines" rounded,filled box #88A3B5 #F5F0FF
+node bt 13.501 0.6625 2.0092 1.0438 "bluetape4k APIs\nworkshop / core /\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
+node runtime 17.125 0.6625 2.7383 0.7625 "Runtime\nAWS / S3 / Testcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry service 4 2.9326 0.6625 2.9326 0.6625 3.9431 0.6625 3.9431 0.6625 calls 3.5092 0.75104 solid #637383
+edge service infra 4 7.0434 0.6625 7.0434 0.6625 7.9726 0.6625 7.9726 0.6625 uses 7.5808 0.75104 solid #637383
+edge infra bt 4 11.168 0.53542 11.168 0.53542 12.348 0.53542 12.348 0.53542 uses 11.83 1.1538 solid #637383
+edge infra bt 4 11.168 0.78958 11.168 0.78958 12.348 0.78958 12.348 0.78958 extends 11.83 0.34826 solid #637383
+edge bt runtime 4 14.515 0.6625 14.515 0.6625 15.609 0.6625 15.609 0.6625 adapts 15.13 0.75104 solid #637383
 stop

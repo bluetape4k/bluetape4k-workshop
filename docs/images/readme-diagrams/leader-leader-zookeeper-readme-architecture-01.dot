@@ -14,7 +14,7 @@ digraph G {
     penwidth=1.4,
     color="#88A3B5",
     fillcolor="#F6FAFF",
-    fontname="Helvetica",
+    fontname="Architects Daughter",
     fontsize=14,
     margin="0.14,0.10"
   ];
@@ -22,21 +22,21 @@ digraph G {
     color="#637383",
     arrowsize=0.8,
     penwidth=1.5,
-    fontname="Helvetica",
+    fontname="Comic Mono",
     fontsize=11
   ];
 
-  reader [label="Developer\nReader", fillcolor="#FFF8E7"];
-  readme [label="Leader ZooKeeper\nWorkshop\nREADME", fillcolor="#EEF7FF"];
-  module [label="Leader\nExample Module", fillcolor="#F1F8E9"];
-  source [label="leader leader zookeeper\nsource + tests", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k\nhelpers / APIs", fillcolor="#EAF7F0"];
-  runtime [label="Runtime or\nTest Backend", fillcolor="#FFF1F1"];
+  entry [label="Entry / Tests\nLeaderZookeeperApp /\nAbstractLeaderZookeeperTest", fillcolor="#FFF8E7"];
+  api [label="API / Adapter\nLeaderZookeeperConfig /\nBlockingLeaderService /\nGroupLeaderService", fillcolor="#EEF7FF"];
+  service [label="Service / Domain\nLeaderZookeeperProperties", fillcolor="#F1F8E9"];
+  infra [label="Library Layer\nworkshop / leader zookeeper\n/ leader", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k APIs\nworkshop / leader\nzookeeper / leader", fillcolor="#EAF7F0"];
+  runtime [label="Runtime\nSQL / R2DBC / Redis /\nZooKeeper", fillcolor="#FFF1F1"];
 
-  reader -> readme [label="opens"];
-  readme -> module [label="explains"];
-  module -> source [label="maps to"];
-  source -> bt [label="uses"];
-  source -> runtime [label="exercises"];
+  entry -> api [label="calls"];
+  api -> service [label="uses"];
+  service -> infra [label="uses"];
+  infra -> bt [label="uses"];
+  infra -> bt [label="extends"];
   bt -> runtime [label="adapts"];
 }

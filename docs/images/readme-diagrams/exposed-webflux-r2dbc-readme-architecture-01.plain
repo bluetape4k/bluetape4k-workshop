@@ -1,14 +1,14 @@
-graph 1 16.076 1.3361
-node reader 0.56708 0.45833 1.1342 0.61667 "Developer\nReader" rounded,filled box #88A3B5 #FFF8E7
-node readme 3.394 0.45833 2.2071 0.61667 "exposed/webflux-r2dbc\nREADME" rounded,filled box #88A3B5 #EEF7FF
-node module 6.6375 0.45833 1.6967 0.61667 "Exposed\nExample Module" rounded,filled box #88A3B5 #F1F8E9
-node source 9.8654 0.45833 2.1967 0.61667 "exposed webflux r2dbc\nsource + tests" rounded,filled box #88A3B5 #F5F0FF
-node bt 12.75 1.0278 1.4467 0.61667 "bluetape4k\nhelpers / APIs" rounded,filled box #88A3B5 #EAF7F0
-node runtime 15.373 0.45833 1.405 0.61667 "Runtime or\nTest Backend" rounded,filled box #88A3B5 #FFF1F1
-edge reader readme 4 1.1391 0.45833 1.1391 0.45833 2.1424 0.45833 2.1424 0.45833 opens 1.7123 0.54167 solid #637383
-edge readme module 4 4.5057 0.45833 4.5057 0.45833 5.6407 0.45833 5.6407 0.45833 explains 5.1433 0.54167 solid #637383
-edge module source 4 7.494 0.45833 7.494 0.45833 8.6184 0.45833 8.6184 0.45833 "maps to" 8.1265 0.54167 solid #637383
-edge source bt 7 10.971 0.52963 11.787 0.52963 12.756 0.52963 12.756 0.52963 12.756 0.52963 12.756 0.57248 12.756 0.57248 uses 11.495 1.0556 solid #637383
-edge source runtime 4 10.973 0.33981 10.973 0.33981 14.522 0.33981 14.522 0.33981 exercises 12.75 0.083333 solid #637383
-edge bt runtime 7 13.482 1.0514 14.257 1.0514 15.367 1.0514 15.367 1.0514 15.367 1.0514 15.367 0.91834 15.367 0.91834 adapts 14.072 1.0556 solid #637383
+graph 1 19.961 1.325
+node entry 1.4056 0.6625 2.8112 1.0438 "Entry / Tests\nExposedWebfluxR2dbcApp /\nAbstractWebfluxR2dbcTest" rounded,filled box #88A3B5 #FFF8E7
+node api 4.9617 0.6625 1.9675 1.325 "API / Adapter\nAuthorController /\nBookController /\nDatabaseInitializer" rounded,filled box #88A3B5 #EEF7FF
+node service 8.5281 0.6625 2.9987 1.0438 "Service / Domain\nAuthorService / BookService\n/ OrderService" rounded,filled box #88A3B5 #F1F8E9
+node infra 12.376 0.6625 2.53 1.325 "Repository / Infra\nAuthorDTO / BookDTO /\nAuthorRepository /\nBookRepository" rounded,filled box #88A3B5 #F5F0FF
+node bt 15.989 0.6625 2.03 1.0438 "bluetape4k APIs\nworkshop / junit5 /\nassertions" rounded,filled box #88A3B5 #EAF7F0
+node runtime 19.108 0.6625 1.7071 1.325 "Runtime\nSQL / R2DBC /\nElasticsearch /\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 2.8162 0.6625 2.8162 0.6625 3.8266 0.6625 3.8266 0.6625 calls 3.3946 0.75104 solid #637383
+edge api service 4 5.9551 0.6625 5.9551 0.6625 6.8769 0.6625 6.8769 0.6625 uses 6.4871 0.75104 solid #637383
+edge service infra 4 10.032 0.6625 10.032 0.6625 10.961 0.6625 10.961 0.6625 uses 10.569 0.75104 solid #637383
+edge infra bt 4 13.65 0.48854 13.65 0.48854 14.822 0.48854 14.822 0.48854 uses 14.307 1.1538 solid #637383
+edge infra bt 4 13.65 0.83646 13.65 0.83646 14.822 0.83646 14.822 0.83646 extends 14.307 0.34826 solid #637383
+edge bt runtime 4 17.01 0.6625 17.01 0.6625 18.104 0.6625 18.104 0.6625 adapts 17.629 0.75104 solid #637383
 stop

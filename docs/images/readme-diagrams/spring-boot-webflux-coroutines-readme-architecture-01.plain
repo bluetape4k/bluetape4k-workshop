@@ -1,14 +1,14 @@
-graph 1 15.347 1.3361
-node reader 0.56708 0.45833 1.1342 0.61667 "Developer\nReader" rounded,filled box #88A3B5 #FFF8E7
-node readme 3.1804 0.45833 1.78 0.825 "Spring WebFlux +\nCoroutines\nREADME" rounded,filled box #88A3B5 #EEF7FF
-node module 6.2104 0.45833 1.6967 0.61667 "Spring Boot\nExample Module" rounded,filled box #88A3B5 #F1F8E9
-node source 9.2873 0.45833 1.8946 0.825 "spring boot webflux\ncoroutines\nsource + tests" rounded,filled box #88A3B5 #F5F0FF
-node bt 12.02 1.0278 1.4467 0.61667 "bluetape4k\nhelpers / APIs" rounded,filled box #88A3B5 #EAF7F0
-node runtime 14.644 0.45833 1.405 0.61667 "Runtime or\nTest Backend" rounded,filled box #88A3B5 #FFF1F1
-edge reader readme 4 1.1406 0.45833 1.1406 0.45833 2.142 0.45833 2.142 0.45833 opens 1.7123 0.54167 solid #637383
-edge readme module 4 4.0772 0.45833 4.0772 0.45833 5.2149 0.45833 5.2149 0.45833 explains 4.7162 0.54167 solid #637383
-edge module source 4 7.0675 0.45833 7.0675 0.45833 8.1894 0.45833 8.1894 0.45833 "maps to" 7.6994 0.54167 solid #637383
-edge source bt 4 10.243 0.79514 10.243 0.79514 11.146 0.79514 11.146 0.79514 uses 10.766 1.0556 solid #637383
-edge source runtime 4 10.239 0.43472 10.239 0.43472 13.79 0.43472 13.79 0.43472 exercises 12.02 0.083333 solid #637383
-edge bt runtime 7 12.753 1.0514 13.528 1.0514 14.638 1.0514 14.638 1.0514 14.638 1.0514 14.638 0.91834 14.638 0.91834 adapts 13.343 1.0556 solid #637383
+graph 1 20.065 1.325
+node entry 1.6556 0.6625 3.3112 1.0438 "Entry / Tests\nCoroutineApplication /\nAbstractCoroutineApplicationTest" rounded,filled box #88A3B5 #FFF8E7
+node api 5.8367 0.6625 2.7175 1.325 "API / Adapter\nNettyConfig /\nDefaultCoroutineController\n/ IOCoroutineController" rounded,filled box #88A3B5 #EEF7FF
+node service 9.1896 0.6625 1.8217 0.7625 "Service / Domain\nBanner" rounded,filled box #88A3B5 #F1F8E9
+node infra 12.152 0.6625 1.9363 0.7625 "Repository / Infra\nWebClientConfig" rounded,filled box #88A3B5 #F5F0FF
+node bt 15.724 0.6625 2.5404 0.7625 "bluetape4k APIs\nworkshop / io / jackson3" rounded,filled box #88A3B5 #EAF7F0
+node runtime 19.155 0.6625 1.8217 0.7625 "Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.3201 0.6625 3.3201 0.6625 4.3306 0.6625 4.3306 0.6625 calls 3.8946 0.75104 solid #637383
+edge api service 4 7.2004 0.6625 7.2004 0.6625 8.1302 0.6625 8.1302 0.6625 uses 7.7371 0.75104 solid #637383
+edge service infra 4 10.107 0.6625 10.107 0.6625 11.035 0.6625 11.035 0.6625 uses 10.642 0.75104 solid #637383
+edge infra bt 4 13.128 0.53542 13.128 0.53542 14.304 0.53542 14.304 0.53542 uses 13.787 1.1538 solid #637383
+edge infra bt 4 13.128 0.78958 13.128 0.78958 14.304 0.78958 14.304 0.78958 extends 13.787 0.34826 solid #637383
+edge bt runtime 4 17.001 0.6625 17.001 0.6625 18.092 0.6625 18.092 0.6625 adapts 17.619 0.75104 solid #637383
 stop

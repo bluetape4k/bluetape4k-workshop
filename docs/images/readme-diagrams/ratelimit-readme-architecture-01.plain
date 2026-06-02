@@ -1,14 +1,11 @@
-graph 1 14.815 1.3361
-node reader 0.56708 0.45833 1.1342 0.61667 "Developer\nReader" rounded,filled box #88A3B5 #FFF8E7
-node readme 3.1335 0.45833 1.6863 0.64792 "Rate Limiter 예제\nREADME" rounded,filled box #88A3B5 #EEF7FF
-node module 6.1167 0.45833 1.6967 0.61667 "Ratelimit\nExample Module" rounded,filled box #88A3B5 #F1F8E9
-node source 8.9748 0.45833 1.4571 0.61667 "ratelimit\nsource + tests" rounded,filled box #88A3B5 #F5F0FF
-node bt 11.489 1.0278 1.4467 0.61667 "bluetape4k\nhelpers / APIs" rounded,filled box #88A3B5 #EAF7F0
-node runtime 14.113 0.45833 1.405 0.61667 "Runtime or\nTest Backend" rounded,filled box #88A3B5 #FFF1F1
-edge reader readme 4 1.143 0.45833 1.143 0.45833 2.1391 0.45833 2.1391 0.45833 opens 1.7123 0.54167 solid #637383
-edge readme module 4 3.9844 0.45833 3.9844 0.45833 5.1169 0.45833 5.1169 0.45833 explains 4.6225 0.54167 solid #637383
-edge module source 4 6.9742 0.45833 6.9742 0.45833 8.0961 0.45833 8.0961 0.45833 "maps to" 7.6056 0.54167 solid #637383
-edge source bt 7 9.7108 0.52963 10.455 0.52963 11.496 0.52963 11.496 0.52963 11.496 0.52963 11.496 0.57248 11.496 0.57248 uses 10.235 1.0556 solid #637383
-edge source runtime 4 9.711 0.33981 9.711 0.33981 13.26 0.33981 13.26 0.33981 exercises 11.489 0.083333 solid #637383
-edge bt runtime 7 12.222 1.0514 12.996 1.0514 14.107 1.0514 14.107 1.0514 14.107 1.0514 14.107 0.91834 14.107 0.91834 adapts 12.811 1.0556 solid #637383
+graph 1 17.348 1.325
+node entry 1.5046 0.6625 3.0092 1.325 "Entry / Tests\nRateLimiterWebfluxApplication\n/\nBucket4jAdvancedApplication" rounded,filled box #88A3B5 #FFF8E7
+node api 5.6596 0.6625 2.9675 1.325 "API / Adapter\nCoroutineController /\nReactiveController /\nAsyncUserRateLimitWebFilter" rounded,filled box #88A3B5 #EEF7FF
+node service 9.575 0.6625 2.6967 1.325 "Service / Domain\nKeyResolver /\nRateLimitTargetProvider /\nUserKeyResolver /" rounded,filled box #88A3B5 #F1F8E9
+node infra 12.975 0.6625 1.9363 1.325 "Repository / Infra\nLettuceConfig /\nTestRedisConfig /\nRequestUtils /" rounded,filled box #88A3B5 #F5F0FF
+node runtime 16.187 0.6625 2.3217 0.7625 "Runtime\nRedis / Testcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.0164 0.6625 3.0164 0.6625 4.0236 0.6625 4.0236 0.6625 calls 3.5925 0.75104 solid #637383
+edge api service 4 7.151 0.6625 7.151 0.6625 8.08 0.6625 8.08 0.6625 uses 7.685 0.75104 solid #637383
+edge service infra 4 10.928 0.6625 10.928 0.6625 11.855 0.6625 11.855 0.6625 uses 11.465 0.75104 solid #637383
+edge infra runtime 4 13.952 0.6625 13.952 0.6625 14.874 0.6625 14.874 0.6625 uses 14.485 0.75104 solid #637383
 stop

@@ -1,14 +1,14 @@
-graph 1 15.888 1.4101
-node reader 0.56708 0.53229 1.1342 0.61667 "Developer\nReader" rounded,filled box #88A3B5 #FFF8E7
-node readme 3.4148 0.53229 2.2487 1.0646 "Spring Boot MVC +\nVirtual Thread +\nEmbedded Tomcat 예제\nREADME" rounded,filled box #88A3B5 #EEF7FF
-node module 6.6792 0.53229 1.6967 0.61667 "Virtualthreads\nExample Module" rounded,filled box #88A3B5 #F1F8E9
-node source 9.7925 0.53229 1.9675 0.825 "virtualthreads spring\nmvc tomcat\nsource + tests" rounded,filled box #88A3B5 #F5F0FF
-node bt 12.562 1.1017 1.4467 0.61667 "bluetape4k\nhelpers / APIs" rounded,filled box #88A3B5 #EAF7F0
-node runtime 15.186 0.53229 1.405 0.61667 "Runtime or\nTest Backend" rounded,filled box #88A3B5 #FFF1F1
-edge reader readme 4 1.1434 0.53229 1.1434 0.53229 2.1435 0.53229 2.1435 0.53229 opens 1.7123 0.61563 solid #637383
-edge readme module 4 4.5474 0.53229 4.5474 0.53229 5.6788 0.53229 5.6788 0.53229 explains 5.185 0.61563 solid #637383
-edge module source 4 7.534 0.53229 7.534 0.53229 8.6592 0.53229 8.6592 0.53229 "maps to" 8.1681 0.61563 solid #637383
-edge source bt 4 10.785 0.8691 10.785 0.8691 11.691 0.8691 11.691 0.8691 uses 11.308 1.1295 solid #637383
-edge source runtime 4 10.782 0.50868 10.782 0.50868 14.331 0.50868 14.331 0.50868 exercises 12.562 0.15729 solid #637383
-edge bt runtime 7 13.295 1.1253 14.069 1.1253 15.18 1.1253 15.18 1.1253 15.18 1.1253 15.18 0.9923 15.18 0.9923 adapts 13.884 1.1295 solid #637383
+graph 1 20.951 1.325
+node entry 1.5358 0.6625 3.0717 1.0438 "Entry / Tests\nVirtualThreadMvcApp /\nAbstractVirtualThreadMvcTest" rounded,filled box #88A3B5 #FFF8E7
+node api 5.2065 0.6625 1.9363 1.325 "API / Adapter\nSchedulingConfig /\nTomcatConfig /\nHttpbinController" rounded,filled box #88A3B5 #EEF7FF
+node service 8.3667 0.6625 2.2175 1.325 "Service / Domain\nAsyncConfig /\nVirtualThreadConfig /\nDatabaseInitializer /" rounded,filled box #88A3B5 #F1F8E9
+node infra 12.167 0.6625 3.2175 1.0438 "Repository / Infra\nMemberDTO / Member / Team /\nTeamRepository" rounded,filled box #88A3B5 #F5F0FF
+node bt 16.114 0.6625 2.0092 1.0438 "bluetape4k APIs\nworkshop / core /\nvirtualthread" rounded,filled box #88A3B5 #EAF7F0
+node runtime 19.66 0.6625 2.5821 1.0438 "Runtime\nSQL / R2DBC /\nElasticsearch / AWS / S3" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.0766 0.6625 3.0766 0.6625 4.0868 0.6625 4.0868 0.6625 calls 3.655 0.75104 solid #637383
+edge api service 4 6.1804 0.6625 6.1804 0.6625 7.1096 0.6625 7.1096 0.6625 uses 6.7162 0.75104 solid #637383
+edge service infra 4 9.4814 0.6625 9.4814 0.6625 10.409 0.6625 10.409 0.6625 uses 10.017 0.75104 solid #637383
+edge infra bt 4 13.784 0.48854 13.784 0.48854 14.962 0.48854 14.962 0.48854 uses 14.443 1.1538 solid #637383
+edge infra bt 4 13.784 0.83646 13.784 0.83646 14.962 0.83646 14.962 0.83646 extends 14.443 0.34826 solid #637383
+edge bt runtime 4 17.125 0.6625 17.125 0.6625 18.219 0.6625 18.219 0.6625 adapts 17.744 0.75104 solid #637383
 stop
