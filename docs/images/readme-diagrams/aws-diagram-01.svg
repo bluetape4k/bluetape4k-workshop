@@ -8,11 +8,11 @@
   <style>
     .canvas{fill:#f7f9fc}
     .frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:36px;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:13px;fill:#536273}
-    .zoneLabel{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:12px;fill:#6b7280}
-    .cardLabel{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:17px;fill:#102033}
-    .cardSub{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:11px;fill:#536273}
+    .title{font-family:"Architects Daughter";font-size:36px;fill:#102033}
+    .subtitle{font-family:"Comic Mono";font-size:13px;fill:#536273}
+    .zoneLabel{font-family:"Architects Daughter";font-size:12px;fill:#6b7280}
+    .cardLabel{font-family:"Architects Daughter";font-size:17px;fill:#102033}
+    .cardSub{font-family:"Comic Mono";font-size:11px;fill:#536273}
     .lineBlue{stroke:#3b82f6;stroke-width:2;fill:none;marker-end:url(#arrBlue)}
     .lineGreen{stroke:#059669;stroke-width:2;fill:none;marker-end:url(#arrGreen)}
     .lineAmber{stroke:#d97706;stroke-width:1.5;fill:none;marker-end:url(#arrAmber)}

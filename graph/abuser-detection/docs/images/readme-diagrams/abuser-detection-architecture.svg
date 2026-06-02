@@ -13,130 +13,130 @@
 
   <!-- Title -->
   <text x="440" y="36" text-anchor="middle"
-        font-family="'Architects Daughter',Georgia,serif"
+        font-family="Architects Daughter"
         font-size="19" fill="#1e2d4e" font-weight="bold">Module Architecture</text>
   <text x="440" y="56" text-anchor="middle"
-        font-family="'Comic Mono','Courier New',monospace"
+        font-family="Comic Mono"
         font-size="11" fill="#64748b">graph/abuser-detection — layer view</text>
 
   <!-- ══════ Layer 1: Schema ══════ -->
   <rect x="20" y="70" width="840" height="105" rx="8" fill="#edf2ff" stroke="#aabce0" stroke-width="1.2"/>
-  <text x="34" y="88" font-family="'Architects Daughter',Georgia,serif" font-size="12" fill="#3050a0">Schema Layer</text>
+  <text x="34" y="88" font-family="Architects Daughter" font-size="12" fill="#3050a0">Schema Layer</text>
 
   <!-- UserLabel -->
   <rect x="30"  y="92" width="136" height="68" rx="6" fill="#dde8ff" stroke="#8aaade" stroke-width="1.2"/>
-  <text x="98"  y="114" text-anchor="middle" font-family="'Architects Daughter',Georgia,serif" font-size="12" fill="#1a2d6a" font-weight="bold">UserLabel</text>
-  <text x="98"  y="129" text-anchor="middle" font-family="'Comic Mono','Courier New',monospace" font-size="9" fill="#607090">VertexLabel</text>
-  <text x="98"  y="143" text-anchor="middle" font-family="'Comic Mono','Courier New',monospace" font-size="9" fill="#607090">userId · country</text>
-  <text x="98"  y="154" text-anchor="middle" font-family="'Comic Mono','Courier New',monospace" font-size="9" fill="#888">+ 4 edge labels</text>
+  <text x="98"  y="114" text-anchor="middle" font-family="Architects Daughter" font-size="12" fill="#1a2d6a" font-weight="bold">UserLabel</text>
+  <text x="98"  y="129" text-anchor="middle" font-family="Comic Mono" font-size="9" fill="#607090">VertexLabel</text>
+  <text x="98"  y="143" text-anchor="middle" font-family="Comic Mono" font-size="9" fill="#607090">userId · country</text>
+  <text x="98"  y="154" text-anchor="middle" font-family="Comic Mono" font-size="9" fill="#888">+ 4 edge labels</text>
 
   <!-- DeviceLabel -->
   <rect x="178" y="92" width="136" height="68" rx="6" fill="#dde8ff" stroke="#8aaade" stroke-width="1.2"/>
-  <text x="246" y="114" text-anchor="middle" font-family="'Architects Daughter',Georgia,serif" font-size="12" fill="#1a2d6a" font-weight="bold">DeviceLabel</text>
-  <text x="246" y="129" text-anchor="middle" font-family="'Comic Mono','Courier New',monospace" font-size="9" fill="#607090">VertexLabel</text>
-  <text x="246" y="143" text-anchor="middle" font-family="'Comic Mono','Courier New',monospace" font-size="9" fill="#607090">deviceId · platform</text>
+  <text x="246" y="114" text-anchor="middle" font-family="Architects Daughter" font-size="12" fill="#1a2d6a" font-weight="bold">DeviceLabel</text>
+  <text x="246" y="129" text-anchor="middle" font-family="Comic Mono" font-size="9" fill="#607090">VertexLabel</text>
+  <text x="246" y="143" text-anchor="middle" font-family="Comic Mono" font-size="9" fill="#607090">deviceId · platform</text>
 
   <!-- IpAddressLabel -->
   <rect x="326" y="92" width="150" height="68" rx="6" fill="#dde8ff" stroke="#8aaade" stroke-width="1.2"/>
-  <text x="401" y="114" text-anchor="middle" font-family="'Architects Daughter',Georgia,serif" font-size="12" fill="#1a2d6a" font-weight="bold">IpAddressLabel</text>
-  <text x="401" y="129" text-anchor="middle" font-family="'Comic Mono','Courier New',monospace" font-size="9" fill="#607090">VertexLabel</text>
-  <text x="401" y="143" text-anchor="middle" font-family="'Comic Mono','Courier New',monospace" font-size="9" fill="#607090">ip (IPv4/IPv6)</text>
+  <text x="401" y="114" text-anchor="middle" font-family="Architects Daughter" font-size="12" fill="#1a2d6a" font-weight="bold">IpAddressLabel</text>
+  <text x="401" y="129" text-anchor="middle" font-family="Comic Mono" font-size="9" fill="#607090">VertexLabel</text>
+  <text x="401" y="143" text-anchor="middle" font-family="Comic Mono" font-size="9" fill="#607090">ip (IPv4/IPv6)</text>
 
   <!-- PhoneNumberLabel -->
   <rect x="488" y="92" width="160" height="68" rx="6" fill="#fde8d8" stroke="#d89060" stroke-width="1.2"/>
-  <text x="568" y="114" text-anchor="middle" font-family="'Architects Daughter',Georgia,serif" font-size="12" fill="#6a1a00" font-weight="bold">PhoneNumberLabel</text>
-  <text x="568" y="129" text-anchor="middle" font-family="'Comic Mono','Courier New',monospace" font-size="9" fill="#804020">VertexLabel</text>
-  <text x="568" y="143" text-anchor="middle" font-family="'Comic Mono','Courier New',monospace" font-size="9" fill="#804020">phone (E.164 hash)</text>
-  <text x="568" y="154" text-anchor="middle" font-family="'Comic Mono','Courier New',monospace" font-size="9" fill="#c02020">🔒 no raw PAN</text>
+  <text x="568" y="114" text-anchor="middle" font-family="Architects Daughter" font-size="12" fill="#6a1a00" font-weight="bold">PhoneNumberLabel</text>
+  <text x="568" y="129" text-anchor="middle" font-family="Comic Mono" font-size="9" fill="#804020">VertexLabel</text>
+  <text x="568" y="143" text-anchor="middle" font-family="Comic Mono" font-size="9" fill="#804020">phone (E.164 hash)</text>
+  <text x="568" y="154" text-anchor="middle" font-family="Comic Mono" font-size="9" fill="#c02020">🔒 no raw PAN</text>
 
   <!-- PaymentMethodLabel -->
   <rect x="660" y="92" width="180" height="68" rx="6" fill="#fde8d8" stroke="#d89060" stroke-width="1.2"/>
-  <text x="750" y="114" text-anchor="middle" font-family="'Architects Daughter',Georgia,serif" font-size="12" fill="#6a1a00" font-weight="bold">PaymentMethodLabel</text>
-  <text x="750" y="129" text-anchor="middle" font-family="'Comic Mono','Courier New',monospace" font-size="9" fill="#804020">VertexLabel</text>
-  <text x="750" y="143" text-anchor="middle" font-family="'Comic Mono','Courier New',monospace" font-size="9" fill="#804020">paymentToken</text>
-  <text x="750" y="154" text-anchor="middle" font-family="'Comic Mono','Courier New',monospace" font-size="9" fill="#c02020">🔒 PCI-safe token</text>
+  <text x="750" y="114" text-anchor="middle" font-family="Architects Daughter" font-size="12" fill="#6a1a00" font-weight="bold">PaymentMethodLabel</text>
+  <text x="750" y="129" text-anchor="middle" font-family="Comic Mono" font-size="9" fill="#804020">VertexLabel</text>
+  <text x="750" y="143" text-anchor="middle" font-family="Comic Mono" font-size="9" fill="#804020">paymentToken</text>
+  <text x="750" y="154" text-anchor="middle" font-family="Comic Mono" font-size="9" fill="#c02020">🔒 PCI-safe token</text>
 
   <!-- ══════ Layer 2: Service ══════ -->
   <rect x="20" y="200" width="840" height="108" rx="8" fill="#edfaf0" stroke="#90c8a0" stroke-width="1.2"/>
-  <text x="34" y="218" font-family="'Architects Daughter',Georgia,serif" font-size="12" fill="#1a6a30">Service Layer</text>
+  <text x="34" y="218" font-family="Architects Daughter" font-size="12" fill="#1a6a30">Service Layer</text>
 
   <!-- AbuserDetectionService -->
   <rect x="50" y="220" width="360" height="74" rx="6" fill="#c8f0d0" stroke="#60b070" stroke-width="1.5"/>
   <text x="230" y="244" text-anchor="middle"
-        font-family="'Architects Daughter',Georgia,serif" font-size="14" fill="#0a3a18" font-weight="bold">AbuserDetectionService</text>
+        font-family="Architects Daughter" font-size="14" fill="#0a3a18" font-weight="bold">AbuserDetectionService</text>
   <text x="230" y="260" text-anchor="middle"
-        font-family="'Comic Mono','Courier New',monospace" font-size="10" fill="#2a5a30">Blocking — addUser · linkDevice · findAbuseCluster</text>
+        font-family="Comic Mono" font-size="10" fill="#2a5a30">Blocking — addUser · linkDevice · findAbuseCluster</text>
   <text x="230" y="274" text-anchor="middle"
-        font-family="'Comic Mono','Courier New',monospace" font-size="10" fill="#2a5a30">detectCycles · rankSuspiciousUsers</text>
+        font-family="Comic Mono" font-size="10" fill="#2a5a30">detectCycles · rankSuspiciousUsers</text>
   <text x="230" y="286" text-anchor="middle"
-        font-family="'Comic Mono','Courier New',monospace" font-size="9" fill="#888">returns AbuseCluster · AbusePath · SuspiciousUserScore</text>
+        font-family="Comic Mono" font-size="9" fill="#888">returns AbuseCluster · AbusePath · SuspiciousUserScore</text>
 
   <!-- AbuserDetectionSuspendService -->
   <rect x="468" y="220" width="372" height="74" rx="6" fill="#b0f0c8" stroke="#40a860" stroke-width="1.5"/>
   <text x="654" y="244" text-anchor="middle"
-        font-family="'Architects Daughter',Georgia,serif" font-size="14" fill="#0a3a18" font-weight="bold">AbuserDetectionSuspendService</text>
+        font-family="Architects Daughter" font-size="14" fill="#0a3a18" font-weight="bold">AbuserDetectionSuspendService</text>
   <text x="654" y="260" text-anchor="middle"
-        font-family="'Comic Mono','Courier New',monospace" font-size="10" fill="#1a4a28">Coroutine — suspend + Flow&lt;T&gt;</text>
+        font-family="Comic Mono" font-size="10" fill="#1a4a28">Coroutine — suspend + Flow&lt;T&gt;</text>
   <text x="654" y="274" text-anchor="middle"
-        font-family="'Comic Mono','Courier New',monospace" font-size="10" fill="#1a4a28">suspend findAbuseCluster · suspend detectCycles</text>
+        font-family="Comic Mono" font-size="10" fill="#1a4a28">suspend findAbuseCluster · suspend detectCycles</text>
   <text x="654" y="286" text-anchor="middle"
-        font-family="'Comic Mono','Courier New',monospace" font-size="9" fill="#888">Flow&lt;SuspiciousUserScore&gt; rankSuspiciousUsers</text>
+        font-family="Comic Mono" font-size="9" fill="#888">Flow&lt;SuspiciousUserScore&gt; rankSuspiciousUsers</text>
 
   <!-- ══════ Layer 3: Algorithms ══════ -->
   <rect x="20" y="333" width="840" height="108" rx="8" fill="#fff8ee" stroke="#d0a040" stroke-width="1.2"/>
-  <text x="34" y="351" font-family="'Architects Daughter',Georgia,serif" font-size="12" fill="#806010">Key Algorithms</text>
+  <text x="34" y="351" font-family="Architects Daughter" font-size="12" fill="#806010">Key Algorithms</text>
 
   <!-- findAbuseCluster -->
   <rect x="38" y="356" width="240" height="72" rx="6" fill="#fde8b0" stroke="#c8901a" stroke-width="1.5"/>
   <text x="158" y="377" text-anchor="middle"
-        font-family="'Architects Daughter',Georgia,serif" font-size="12" fill="#4a3000" font-weight="bold">findAbuseCluster</text>
+        font-family="Architects Daughter" font-size="12" fill="#4a3000" font-weight="bold">findAbuseCluster</text>
   <text x="158" y="393" text-anchor="middle"
-        font-family="'Comic Mono','Courier New',monospace" font-size="10" fill="#6a4010">BFS over shared identifiers</text>
+        font-family="Comic Mono" font-size="10" fill="#6a4010">BFS over shared identifiers</text>
   <text x="158" y="407" text-anchor="middle"
-        font-family="'Comic Mono','Courier New',monospace" font-size="10" fill="#6a4010">→ AbuseCluster</text>
+        font-family="Comic Mono" font-size="10" fill="#6a4010">→ AbuseCluster</text>
   <text x="158" y="420" text-anchor="middle"
-        font-family="'Comic Mono','Courier New',monospace" font-size="9" fill="#888">(Device · IP · Phone · Payment)</text>
+        font-family="Comic Mono" font-size="9" fill="#888">(Device · IP · Phone · Payment)</text>
 
   <!-- detectCycles -->
   <rect x="298" y="356" width="240" height="72" rx="6" fill="#fce8a0" stroke="#b88010" stroke-width="1.5"/>
   <text x="418" y="377" text-anchor="middle"
-        font-family="'Architects Daughter',Georgia,serif" font-size="12" fill="#4a3000" font-weight="bold">detectCycles</text>
+        font-family="Architects Daughter" font-size="12" fill="#4a3000" font-weight="bold">detectCycles</text>
   <text x="418" y="393" text-anchor="middle"
-        font-family="'Comic Mono','Courier New',monospace" font-size="10" fill="#5a3808">DFS cycle detection</text>
+        font-family="Comic Mono" font-size="10" fill="#5a3808">DFS cycle detection</text>
   <text x="418" y="407" text-anchor="middle"
-        font-family="'Comic Mono','Courier New',monospace" font-size="10" fill="#5a3808">→ List&lt;GraphCycle&gt;</text>
+        font-family="Comic Mono" font-size="10" fill="#5a3808">→ List&lt;GraphCycle&gt;</text>
   <text x="418" y="420" text-anchor="middle"
-        font-family="'Comic Mono','Courier New',monospace" font-size="9" fill="#888">(referral ring abuse)</text>
+        font-family="Comic Mono" font-size="9" fill="#888">(referral ring abuse)</text>
 
   <!-- rankSuspiciousUsers -->
   <rect x="558" y="356" width="282" height="72" rx="6" fill="#ffd8a8" stroke="#c07010" stroke-width="1.5"/>
   <text x="699" y="377" text-anchor="middle"
-        font-family="'Architects Daughter',Georgia,serif" font-size="12" fill="#4a2000" font-weight="bold">rankSuspiciousUsers</text>
+        font-family="Architects Daughter" font-size="12" fill="#4a2000" font-weight="bold">rankSuspiciousUsers</text>
   <text x="699" y="393" text-anchor="middle"
-        font-family="'Comic Mono','Courier New',monospace" font-size="10" fill="#6a3000">PageRank on identifier graph</text>
+        font-family="Comic Mono" font-size="10" fill="#6a3000">PageRank on identifier graph</text>
   <text x="699" y="407" text-anchor="middle"
-        font-family="'Comic Mono','Courier New',monospace" font-size="10" fill="#6a3000">→ List&lt;SuspiciousUserScore&gt;</text>
+        font-family="Comic Mono" font-size="10" fill="#6a3000">→ List&lt;SuspiciousUserScore&gt;</text>
   <text x="699" y="420" text-anchor="middle"
-        font-family="'Comic Mono','Courier New',monospace" font-size="9" fill="#888">(rank · score · user)</text>
+        font-family="Comic Mono" font-size="9" fill="#888">(rank · score · user)</text>
 
   <!-- ══════ Layer 4: GraphOps ══════ -->
   <rect x="20" y="466" width="840" height="66" rx="8" fill="#f5f0ff" stroke="#9888c8" stroke-width="1.2"/>
-  <text x="34" y="483" font-family="'Architects Daughter',Georgia,serif" font-size="12" fill="#4a3080">Graph Operations  (bluetape4k-graph)</text>
+  <text x="34" y="483" font-family="Architects Daughter" font-size="12" fill="#4a3080">Graph Operations  (bluetape4k-graph)</text>
   <rect x="50"  y="488" width="348" height="34" rx="6" fill="#e0d8ff" stroke="#8878c0" stroke-width="1.2"/>
-  <text x="224" y="510" text-anchor="middle" font-family="'Comic Mono','Courier New',monospace" font-size="11" fill="#2a1860">GraphBlockingOperations</text>
+  <text x="224" y="510" text-anchor="middle" font-family="Comic Mono" font-size="11" fill="#2a1860">GraphBlockingOperations</text>
   <rect x="468" y="488" width="372" height="34" rx="6" fill="#d8d0ff" stroke="#7868b8" stroke-width="1.2"/>
-  <text x="654" y="510" text-anchor="middle" font-family="'Comic Mono','Courier New',monospace" font-size="11" fill="#1a1050">GraphSuspendOperations</text>
+  <text x="654" y="510" text-anchor="middle" font-family="Comic Mono" font-size="11" fill="#1a1050">GraphSuspendOperations</text>
 
   <!-- ══════ Layer 5: Backends ══════ -->
   <rect x="20" y="548" width="840" height="38" rx="8" fill="#f0f0f4" stroke="#a0a8c0" stroke-width="1.2"/>
-  <text x="180" y="572" text-anchor="middle" font-family="'Architects Daughter',Georgia,serif" font-size="13" fill="#2a2a50">TinkerGraph</text>
-  <text x="183" y="582" text-anchor="middle" font-family="'Comic Mono','Courier New',monospace" font-size="9" fill="#404870">(in-memory)</text>
+  <text x="180" y="572" text-anchor="middle" font-family="Architects Daughter" font-size="13" fill="#2a2a50">TinkerGraph</text>
+  <text x="183" y="582" text-anchor="middle" font-family="Comic Mono" font-size="9" fill="#404870">(in-memory)</text>
   <line x1="310" y1="550" x2="310" y2="585" stroke="#c0c8d8" stroke-width="1"/>
-  <text x="440" y="572" text-anchor="middle" font-family="'Architects Daughter',Georgia,serif" font-size="13" fill="#1a2a60">Neo4j</text>
-  <text x="440" y="582" text-anchor="middle" font-family="'Comic Mono','Courier New',monospace" font-size="9" fill="#304070">Testcontainers</text>
+  <text x="440" y="572" text-anchor="middle" font-family="Architects Daughter" font-size="13" fill="#1a2a60">Neo4j</text>
+  <text x="440" y="582" text-anchor="middle" font-family="Comic Mono" font-size="9" fill="#304070">Testcontainers</text>
   <line x1="570" y1="550" x2="570" y2="585" stroke="#c0c8d8" stroke-width="1"/>
-  <text x="700" y="572" text-anchor="middle" font-family="'Architects Daughter',Georgia,serif" font-size="13" fill="#1a3a28">Memgraph</text>
-  <text x="700" y="582" text-anchor="middle" font-family="'Comic Mono','Courier New',monospace" font-size="9" fill="#2a5040">Testcontainers</text>
+  <text x="700" y="572" text-anchor="middle" font-family="Architects Daughter" font-size="13" fill="#1a3a28">Memgraph</text>
+  <text x="700" y="582" text-anchor="middle" font-family="Comic Mono" font-size="9" fill="#2a5040">Testcontainers</text>
 
   <!-- ══ Arrows: Service → Algorithms ══ -->
   <line x1="230" y1="294" x2="230" y2="333" stroke="#6080a8" stroke-width="2" marker-end="url(#arr)"/>

@@ -9,11 +9,11 @@
   </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:34px;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:14px;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:18px;fill:#102033}
-    .mono{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:11px;fill:#536273}
-    .bandlabel{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:14px;fill:#758297}
+    .title{font-family:"Architects Daughter";font-size:34px;fill:#102033}
+    .subtitle{font-family:"Comic Mono";font-size:14px;fill:#536273}
+    .label{font-family:"Architects Daughter";font-size:18px;fill:#102033}
+    .mono{font-family:"Comic Mono";font-size:11px;fill:#536273}
+    .bandlabel{font-family:"Architects Daughter";font-size:14px;fill:#758297}
     .card{stroke-width:2;filter:url(#shadow)}
     .line{stroke:#758297;stroke-width:2;fill:none;marker-end:url(#arrow)}
     .txline{stroke:#8A72D6;stroke-width:2.5;fill:none;stroke-dasharray:8,4}

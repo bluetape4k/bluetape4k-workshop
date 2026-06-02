@@ -9,11 +9,11 @@
     <style>
       .canvas{fill:#f7f9fc}
       .frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-      .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
-      .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
-      .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
-      .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
-      .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
+      .title{font-family:"Architects Daughter";font-size:38px;font-weight:400;fill:#102033}
+      .subtitle{font-family:"Comic Mono";font-size:14px;font-weight:400;fill:#536273}
+      .smallLabel{font-family:"Architects Daughter";font-size:21px;font-weight:400;fill:#102033}
+      .mono{font-family:"Comic Mono";font-size:12px;font-weight:400;fill:#102033}
+      .small{font-family:"Comic Mono";font-size:12px;font-weight:400;fill:#536273}
       .card{stroke-width:2.1;filter:url(#shadow)}
       .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
     </style>
@@ -106,6 +106,6 @@
 
   <!-- ── Footer (teal) ── -->
   <rect x="36" y="494" width="888" height="54" rx="12" fill="#E9F7F6" stroke="#45A7A1" stroke-width="1.5"/>
-  <text x="480" y="516" font-family="'Architects Daughter','Comic Sans MS',cursive" font-size="14" fill="#102033" text-anchor="middle">Cache-Aside: check Redis → HIT return instantly · MISS query H2 → populate Redis</text>
+  <text x="480" y="516" font-family="Architects Daughter" font-size="14" fill="#102033" text-anchor="middle">Cache-Aside: check Redis → HIT return instantly · MISS query H2 → populate Redis</text>
   <text x="480" y="534" class="small" text-anchor="middle">CountryPrefetcher pre-loads all entries on startup · Redis TTL expires stale data</text>
 </svg>

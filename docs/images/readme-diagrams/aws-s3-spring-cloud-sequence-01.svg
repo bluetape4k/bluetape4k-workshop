@@ -6,13 +6,13 @@
   <marker id="arrGray" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth"><path d="M1,1 L8,4.5 L1,8 Z" fill="#9ca3af"/></marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:36px;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:13px;fill:#536273}
-    .actorLabel{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:18px;fill:#102033}
-    .actorSub{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:10px;fill:#536273}
-    .bandLabel{font-family:"Architects Daughter","Comic Sans MS",cursive;font-size:14px;fill:#1e3a5f}
-    .msgLabel{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:11px;fill:#374151}
-    .retLabel{font-family:"Comic Sans MS","Comic Neue",Arial,sans-serif;font-size:10px;fill:#536273;font-style:italic}
+    .title{font-family:"Architects Daughter";font-size:36px;fill:#102033}
+    .subtitle{font-family:"Comic Mono";font-size:13px;fill:#536273}
+    .actorLabel{font-family:"Architects Daughter";font-size:18px;fill:#102033}
+    .actorSub{font-family:"Comic Mono";font-size:10px;fill:#536273}
+    .bandLabel{font-family:"Architects Daughter";font-size:14px;fill:#1e3a5f}
+    .msgLabel{font-family:"Comic Mono";font-size:11px;fill:#374151}
+    .retLabel{font-family:"Comic Mono";font-size:10px;fill:#536273;font-style:italic}
     .lineBlue{stroke:#3b82f6;stroke-width:2;fill:none;marker-end:url(#arrBlue)}
     .lineGreen{stroke:#059669;stroke-width:2;fill:none;marker-end:url(#arrGreen)}
     .dashGray{stroke:#9ca3af;stroke-width:1.5;stroke-dasharray:6 5;fill:none;marker-end:url(#arrGray)}
