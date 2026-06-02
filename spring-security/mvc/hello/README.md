@@ -89,25 +89,7 @@ http {
 
 ## Security Filter Chain
 
-```mermaid
-sequenceDiagram
-    participant Browser
-    participant FC as SecurityFilterChain
-    participant AC as AuthenticationManager
-    participant Ctrl as MainController
-
-    Browser->>FC: GET /user/index
-    FC->>FC: check authorization
-    alt not authenticated
-        FC-->>Browser: redirect /log-in
-        Browser->>FC: POST /log-in (username/password)
-        FC->>AC: authenticate (BCrypt)
-        AC-->>FC: Authentication
-        FC-->>Browser: redirect /user/index
-    end
-    FC->>Ctrl: authorized request
-    Ctrl-->>Browser: 200 user page
-```
+![Spring Security MVC Hello Diagram 1](../../../docs/images/readme-diagrams/spring-security-mvc-hello-readme-sequence-01.png)
 
 ## Operational Notes
 

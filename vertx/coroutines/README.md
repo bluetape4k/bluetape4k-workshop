@@ -33,24 +33,7 @@ Vert.x 를 Kotlin Coroutines 와 함께 사용하는 예제입니다.
 
 ![coroutines Sequence Flow diagram](../../docs/images/readme-diagrams/vertx-coroutines-sequence-01.png)
 
-```mermaid
-sequenceDiagram
-    participant Client as HTTP Client
-    participant Router as Vert.x Router
-    participant Handler as suspendHandler { }
-    participant Pool as JDBCPool
-    participant DB as H2 In-Memory
-
-    Client->>Router: GET /movie/:id
-    Router->>Handler: RoutingContext (suspend lambda)
-    Handler->>Pool: preparedQuery(...).execute(tuple).coAwait()
-    Note over Handler,Pool: Future<RowSet> → suspend (non-blocking)
-    Pool->>DB: SQL query
-    DB-->>Pool: RowSet
-    Pool-->>Handler: RowSet (resumed)
-    Handler-->>Router: ctx.response().end(json)
-    Router-->>Client: 200 OK + JSON
-```
+![Example for Vert.x with Kotlin Coroutines Diagram 1](../../docs/images/readme-diagrams/vertx-coroutines-readme-sequence-01.png)
 
 ## Vert.x 코루틴 통합 설명
 

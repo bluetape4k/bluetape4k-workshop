@@ -83,26 +83,7 @@ repository.count(example)
 
 ## 처리 흐름
 
-```mermaid
-sequenceDiagram
-    participant Test
-    participant CoroutineRepo as CoroutineCrudRepository
-    participant R2DBC as R2DBC Driver (H2)
-    participant DB as In-Memory H2
-
-    Test->>CoroutineRepo: findAll() : Flow<Customer>
-    CoroutineRepo->>R2DBC: SELECT (reactive publisher)
-    R2DBC-->>CoroutineRepo: Flux<Row>
-    CoroutineRepo-->>Test: Flow<Customer> (backpressure-aware)
-    Test->>Test: flow.toList() — collect under coroutine scope
-
-    Test->>CoroutineRepo: save(customer) — suspend
-    CoroutineRepo->>R2DBC: INSERT (Mono publisher)
-    R2DBC->>DB: execute SQL
-    DB-->>R2DBC: rows updated
-    R2DBC-->>CoroutineRepo: Mono<Customer>
-    CoroutineRepo-->>Test: Customer (suspend, no callback)
-```
+![Spring Data R2DBC Demo Diagram 1](../../docs/images/readme-diagrams/spring-data-r2dbc-examples-readme-sequence-01.png)
 
 ## 사용된 bluetape4k 기능
 

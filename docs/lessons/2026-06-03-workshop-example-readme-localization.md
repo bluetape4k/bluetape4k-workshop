@@ -69,3 +69,12 @@ SVG/PNG 쌍을 참조하는지까지 확인해야 한다.
 검증은 전체 SVG 텍스트가 아니라 font-family 선언값만 검사해야 한다. 예를 들어
 `Views.Internal`, `InterProcessMutex`, `refillIntervally` 같은 도메인 텍스트를
 `Inter` font fallback으로 오탐하면 안 된다.
+
+README에 남아 있는 Mermaid block은 GitHub 렌더러에 맡기지 말고, 현재 README 모델을
+SVG/PNG diagram asset으로 변환한다. 이번 보정에서는 20개 README의 Mermaid 22개를
+`docs/images/readme-diagrams/*-readme-{sequence,flow}-NN.{svg,png}`로 전환했다.
+sequence diagram은 participant 좌우 여백, note, branch, return arrow, call label box를
+명시적으로 렌더링하고, flow/graph diagram은 Graphviz `dot -Tplain` layout을 evidence로
+사용해 노드 배치와 connector label 겹침을 줄였다. 검증은 README Mermaid 잔여 0건,
+SVG XML 통과, PNG 짝 누락 0건, README image link missing 0건, README의 SVG 직접 참조
+0건, font-family 선언 위반 0건, 22개 PNG 전수 contact sheet 확인으로 마무리했다.

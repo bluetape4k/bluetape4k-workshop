@@ -25,25 +25,7 @@ Spring WebFlux 환경에서 다양한 Coroutine Dispatcher 의 성능을 비교�
 
 ## Dispatcher Processing Model
 
-```mermaid
-flowchart TD
-    Client -->|HTTP Request| Netty["Reactor Netty\n(event loop)"]
-    Netty -->|route by path| Router
-
-    Router -->|"/default/*"| DefaultCtrl["DefaultDispatcherController\n(Dispatchers.Default)"]
-    Router -->|"/io/*"| IOCtrl["IODispatcherController\n(Dispatchers.IO)"]
-    Router -->|"/custom/*"| CustomCtrl["CustomDispatcherController\n(Fixed 16-thread pool)"]
-    Router -->|"/virtual-thread/*"| VTCtrl["VirtualThreadDispatcherController\n(Dispatchers.VT)"]
-
-    subgraph "bluetape4k-virtualthread-api"
-        VT["Dispatchers.VT\n(newVirtualThreadPerTaskExecutor)"]
-    end
-
-    VTCtrl -->|coroutineScope| VT
-    DefaultCtrl -->|coroutineScope| Default["Dispatchers.Default\n(CPU cores x 2)"]
-    IOCtrl -->|coroutineScope| IO["Dispatchers.IO\n(elastic, up to 64)"]
-    CustomCtrl -->|coroutineScope| Custom["Fixed 16-thread pool"]
-```
+![Spring WebFlux with Coroutines and Virtual Thread Diagram 1](../../docs/images/readme-diagrams/virtualthreads-spring-webflux-readme-flow-01.png)
 
 ![Dispatcher diagram](../../docs/images/readme-diagrams/virtualthreads-spring-webflux-diagram-01.png)
 

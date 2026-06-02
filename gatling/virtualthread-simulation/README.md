@@ -29,31 +29,7 @@ which provides an introduction to Gatling, a popular open-source load testing to
 
 ![Gatling Load Testing Tutorial for Kotlin Graphviz architecture diagram](../../docs/images/readme-diagrams/gatling-virtualthread-simulation-readme-architecture-01.png)
 
-```mermaid
-flowchart TD
-    subgraph "Gatling Load Generator"
-        SyncSim["SyncTaskSimulation\n(ramp 10→20 users, 10s)"]
-        AsyncSim["AsyncTaskSimulation\n(ramp 10→20 users, 10s)"]
-    end
-
-    subgraph "Spring Boot App (Tomcat + Virtual Threads)"
-        SyncCtrl["/sync/{id}\nSyncTaskController"]
-        AsyncCtrl["/async/{id}\nAsyncTaskController"]
-        SyncSvc["SyncTaskService\n(blocking I/O on VT)"]
-        AsyncSvc["AsyncTaskService\n(async I/O)"]
-    end
-
-    subgraph "Testcontainers"
-        MongoDB["MongoDB\n(singleton)"]
-    end
-
-    SyncSim -->|HTTP GET| SyncCtrl
-    AsyncSim -->|HTTP GET| AsyncCtrl
-    SyncCtrl --> SyncSvc
-    AsyncCtrl --> AsyncSvc
-    SyncSvc --> MongoDB
-    AsyncSvc --> MongoDB
-```
+![Gatling Load Testing Tutorial for Kotlin Diagram 1](../../docs/images/readme-diagrams/gatling-virtualthread-simulation-readme-flow-01.png)
 
 ![Gatling Load Testing Tutorial for Kotlin diagram](../../docs/images/readme-diagrams/gatling-virtualthread-simulation-diagram-01.png)
 

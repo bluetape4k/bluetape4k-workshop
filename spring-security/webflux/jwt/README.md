@@ -90,24 +90,7 @@ return http.invoke {
 
 ## JWT Token Flow
 
-```mermaid
-sequenceDiagram
-    participant Client
-    participant TC as TokenController (POST /token)
-    participant HC as HelloController (GET /)
-    participant JE as JwtEncoder (RSA)
-    participant JD as NimbusReactiveJwtDecoder
-
-    Client->>TC: POST /token (HTTP Basic: user/password)
-    TC->>JE: sign JWT (issuer=self, 10h expiry)
-    JE-->>TC: signed JWT string
-    TC-->>Client: Bearer token
-
-    Client->>HC: GET / (Authorization: Bearer <token>)
-    HC->>JD: validate & decode token
-    JD-->>HC: principal name
-    HC-->>Client: "Hello, user!"
-```
+![Spring Security WebFlux JWT Diagram 1](../../../docs/images/readme-diagrams/spring-security-webflux-jwt-readme-sequence-01.png)
 
 ## Key Pairs
 

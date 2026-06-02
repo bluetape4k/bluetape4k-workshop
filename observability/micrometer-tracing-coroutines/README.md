@@ -73,28 +73,7 @@ The above call chain produces a properly nested trace in Zipkin, regardless of w
 
 ### Trace Propagation Sequence
 
-```mermaid
-sequenceDiagram
-    participant Client
-    participant CoroutineController
-    participant CoroutineService
-    participant ObservationRegistry
-    participant Zipkin
-
-    Client->>CoroutineController: GET /coroutine/todo/1
-    CoroutineController->>ObservationRegistry: create root span (HTTP server)
-    CoroutineController->>CoroutineService: getTodo(1)
-    CoroutineService->>ObservationRegistry: withObservationSuspending("pre-processing")
-    Note over CoroutineService: delay(200) — suspension point
-    Note over CoroutineService: resumes (may be different thread)
-    ObservationRegistry-->>CoroutineService: pre-processing span closed
-    CoroutineService->>ObservationRegistry: withObservationSuspending("get-todo-by-id")
-    CoroutineService->>Zipkin: (exported after span close)
-    ObservationRegistry-->>CoroutineService: get-todo-by-id span closed
-    CoroutineService->>ObservationRegistry: withObservationSuspending("post-processing")
-    ObservationRegistry-->>CoroutineController: all child spans closed
-    CoroutineController-->>Client: 200 OK + Todo JSON
-```
+![Micrometer Observation for Spring Boot 4 WebFlux & Coroutines Diagram 1](../../docs/images/readme-diagrams/observability-micrometer-tracing-coroutines-readme-sequence-01.png)
 
 ## Used bluetape4k Features
 

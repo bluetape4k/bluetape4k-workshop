@@ -76,26 +76,7 @@ val bucket = bucket4j {
 
 ## Rate Limit Flow
 
-```mermaid
-sequenceDiagram
-    participant Client
-    participant GW as API Gateway
-    participant RL as RateLimitFilter (Bucket4j)
-    participant Redis
-    participant DS as Downstream Service
-
-    Client->>GW: HTTP Request
-    GW->>RL: apply filter
-    RL->>Redis: check & consume token
-    alt token available
-        Redis-->>RL: OK
-        RL->>DS: forward request
-        DS-->>Client: 200 Response
-    else no token
-        Redis-->>RL: exhausted
-        RL-->>Client: 429 Too Many Requests
-    end
-```
+![Spring Cloud API Gateway Demo Diagram 1](../../docs/images/readme-diagrams/gateway-api-gateway-readme-sequence-01.png)
 
 ## Configuration
 

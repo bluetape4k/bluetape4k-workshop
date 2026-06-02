@@ -29,22 +29,7 @@ Spring Boot MVC 에서 Virtual Thread 를 사용하는 예제입니다.
 
 ## Virtual Thread Processing Model
 
-```mermaid
-flowchart TD
-    Client -->|HTTP Request| Tomcat
-    Tomcat -->|"Virtual Thread\n(per request)"| Controller["Spring MVC Controller"]
-    Controller -->|@Async| AsyncExecutor["AsyncTaskExecutor\n(Virtual Thread per task)"]
-    Controller -->|structuredTaskScopeAll| VT_Pool["StructuredTaskScope\n(Virtual Threads)"]
-    Controller -->|virtualFutureAll| CF_Pool["CompletableFuture\n(Virtual Threads)"]
-    VT_Pool --> DB[(MySQL / JPA)]
-    CF_Pool --> DB
-    AsyncExecutor --> DB
-
-    subgraph "bluetape4k-virtualthread-api"
-        structuredTaskScopeAll["structuredTaskScopeAll {}"]
-        virtualFutureAll["virtualFutureAll {}"]
-    end
-```
+![Spring Boot MVC + Virtual Thread + Embedded Tomcat 예제 Diagram 1](../../docs/images/readme-diagrams/virtualthreads-spring-mvc-tomcat-readme-flow-01.png)
 
 ![Virtual Thread diagram](../../docs/images/readme-diagrams/virtualthreads-spring-mvc-tomcat-diagram-01.png)
 

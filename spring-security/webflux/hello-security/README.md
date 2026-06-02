@@ -93,25 +93,7 @@ return http {
 
 ## Security Filter Chain (WebFlux)
 
-```mermaid
-sequenceDiagram
-    participant Browser
-    participant SWFC as SecurityWebFilterChain
-    participant RUDS as MapReactiveUserDetailsService
-    participant Ctrl as MainController
-
-    Browser->>SWFC: GET /user/index
-    SWFC->>SWFC: check authorization (Reactor)
-    alt not authenticated
-        SWFC-->>Browser: redirect /log-in
-        Browser->>SWFC: POST /log-in (form)
-        SWFC->>RUDS: authenticate (BCrypt, reactive)
-        RUDS-->>SWFC: Mono<Authentication>
-        SWFC-->>Browser: redirect /user/index
-    end
-    SWFC->>Ctrl: authorized Mono request
-    Ctrl-->>Browser: 200 user page
-```
+![Spring Security WebFlux Hello Diagram 1](../../../docs/images/readme-diagrams/spring-security-webflux-hello-security-readme-sequence-01.png)
 
 ## Operational Notes
 

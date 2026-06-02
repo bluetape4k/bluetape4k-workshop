@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1704" height="1102" viewBox="0 0 1704 1102" role="img" aria-label="Spring WebFlux with Coroutines and Virtual Thread Diagram 1">
+<defs>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <marker id="arrowBlue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M1 1 L7 4 L1 7 Z" fill="#5b8def"/></marker>
+  <marker id="arrowTeal" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M1 1 L7 4 L1 7 Z" fill="#45a7a1"/></marker>
+  <style>
+    .canvas{fill:#f7f9fc}
+    .frame{fill:#ffffff;stroke:#d8e0ea;stroke-width:1.5}
+    .title{font-family:"Architects Daughter";font-size:34px;fill:#102033}
+    .subtitle{font-family:"Comic Mono";font-size:13px;fill:#536273}
+    .actor{font-family:"Architects Daughter";font-size:17px;fill:#102033}
+    .detail{font-family:"Comic Mono";font-size:11px;fill:#536273}
+    .message{font-family:"Comic Mono";font-size:12px;fill:#263445;paint-order:stroke;stroke:#ffffff;stroke-width:4px;stroke-linejoin:round}
+    .branch{font-family:"Architects Daughter";font-size:15px;fill:#1f3b57}
+    .lifeline{stroke:#b8c4d3;stroke-width:1.4;stroke-dasharray:7 6}
+    .call{stroke:#5b8def;stroke-width:2.1;fill:none;marker-end:url(#arrowBlue)}
+    .return{stroke:#45a7a1;stroke-width:2;stroke-dasharray:7 5;fill:none;marker-end:url(#arrowTeal)}
+    .box{stroke-width:1.8;filter:url(#shadow)}
+  </style>
+</defs>
+<rect class="canvas" width="1704" height="1102"/>
+<rect class="frame" x="24" y="20" width="1656" height="1062" rx="18"/>
+<text class="title" x="48" y="58">Spring WebFlux with Coroutines and Virtual Thread Diagram 1</text>
+<text class="subtitle" x="50" y="84">flowchart TD rendered from the current README model; labels are separated from connector lanes</text>
+<path class="call" d="M940.5 236.7 L940.5 236.7 L940.5 313.6 L940.5 313.6"/>
+<rect x="881.5459999999999" y="281.63280000000003" width="118" height="24" rx="6" fill="#ffffff" opacity="0.95" stroke="#dbe3ee"/>
+<text class="message" x="940.5459999999999" y="293.63280000000003" text-anchor="middle" dominant-baseline="middle">HTTP Request</text>
+<path class="call" d="M940.5 434.5 L940.5 434.5 L940.5 511.5 L940.5 511.5"/>
+<rect x="878.0459999999999" y="479.4708" width="125" height="24" rx="6" fill="#ffffff" opacity="0.95" stroke="#dbe3ee"/>
+<text class="message" x="940.5459999999999" y="491.4708" text-anchor="middle" dominant-baseline="middle">route by path</text>
+<path class="call" d="M812.6 579.9 L643.5 579.9 L367.0 579.9 L367.0 579.9 L367.0 579.9 L367.0 709.6 L367.0 709.6"/>
+<rect x="314.99559999999997" y="547.8876" width="104" height="24" rx="6" fill="#ffffff" opacity="0.95" stroke="#dbe3ee"/>
+<text class="message" x="366.99559999999997" y="559.8876" text-anchor="middle" dominant-baseline="middle">/default/*</text>
+<path class="call" d="M856.8 632.4 L856.8 632.4 L856.8 709.3 L856.8 709.3"/>
+<rect x="810.7708" y="677.3204000000001" width="92" height="24" rx="6" fill="#ffffff" opacity="0.95" stroke="#dbe3ee"/>
+<text class="message" x="856.7708" y="689.3204000000001" text-anchor="middle" dominant-baseline="middle">/io/*</text>
+<path class="call" d="M1039.6 632.4 L1039.6 632.4 L1039.6 709.3 L1039.6 709.3"/>
+<rect x="991.1332" y="677.3204000000001" width="97" height="24" rx="6" fill="#ffffff" opacity="0.95" stroke="#dbe3ee"/>
+<text class="message" x="1039.6332" y="689.3204000000001" text-anchor="middle" dominant-baseline="middle">/custom/*</text>
+<path class="call" d="M1068.3 579.9 L1230.2 579.9 L1488.4 579.9 L1488.4 579.9 L1488.4 579.9 L1488.4 709.6 L1488.4 709.6"/>
+<rect x="1411.856" y="547.8876" width="153" height="24" rx="6" fill="#ffffff" opacity="0.95" stroke="#dbe3ee"/>
+<text class="message" x="1488.356" y="559.8876" text-anchor="middle" dominant-baseline="middle">/virtual-thread/*</text>
+<path class="call" d="M367.0 830.2 L367.0 830.2 L367.0 907.2 L367.0 907.2"/>
+<rect x="300.99559999999997" y="875.1583999999999" width="132" height="24" rx="6" fill="#ffffff" opacity="0.95" stroke="#dbe3ee"/>
+<text class="message" x="366.99559999999997" y="887.1583999999999" text-anchor="middle" dominant-baseline="middle">coroutineScope</text>
+<path class="call" d="M773.0 830.2 L773.0 830.2 L773.0 907.2 L773.0 907.2"/>
+<rect x="706.9956" y="875.1583999999999" width="132" height="24" rx="6" fill="#ffffff" opacity="0.95" stroke="#dbe3ee"/>
+<text class="message" x="772.9956" y="887.1583999999999" text-anchor="middle" dominant-baseline="middle">coroutineScope</text>
+<path class="call" d="M1150.0 830.2 L1150.0 830.2 L1150.0 907.2 L1150.0 907.2"/>
+<rect x="1083.9956" y="875.1583999999999" width="132" height="24" rx="6" fill="#ffffff" opacity="0.95" stroke="#dbe3ee"/>
+<text class="message" x="1149.9956" y="887.1583999999999" text-anchor="middle" dominant-baseline="middle">coroutineScope</text>
+<path class="call" d="M1492.3 830.2 L1492.3 830.2 L1492.3 907.2 L1492.3 907.2"/>
+<rect x="1426.3000000000002" y="875.1583999999999" width="132" height="24" rx="6" fill="#ffffff" opacity="0.95" stroke="#dbe3ee"/>
+<text class="message" x="1492.3000000000002" y="887.1583999999999" text-anchor="middle" dominant-baseline="middle">coroutineScope</text>
+<rect class="box" x="812.9459999999999" y="132" width="255.20000000000002" height="104.4" rx="10" fill="#e8f3ff" stroke="#7aa0c4"/>
+<text class="actor" x="940.5459999999999" y="184.20000000000002" text-anchor="middle" dominant-baseline="middle">Client</text>
+<rect class="box" x="812.9459999999999" y="329.838" width="255.20000000000002" height="104.4" rx="10" fill="#eaf7ef" stroke="#7aa0c4"/>
+<text class="actor" x="940.5459999999999" y="382.038" text-anchor="middle" dominant-baseline="middle">Netty</text>
+<rect class="box" x="812.9459999999999" y="527.6876" width="255.20000000000002" height="104.4" rx="10" fill="#fff3d9" stroke="#7aa0c4"/>
+<text class="actor" x="940.5459999999999" y="579.8876" text-anchor="middle" dominant-baseline="middle">Router</text>
+<rect class="box" x="239.39559999999994" y="725.5255999999998" width="255.20000000000002" height="104.4" rx="10" fill="#f1ecff" stroke="#7aa0c4"/>
+<text class="actor" x="366.99559999999997" y="777.7255999999999" text-anchor="middle" dominant-baseline="middle">DefaultCtrl</text>
+<rect class="box" x="645.3956" y="725.5255999999998" width="255.20000000000002" height="104.4" rx="10" fill="#fdecef" stroke="#7aa0c4"/>
+<text class="actor" x="772.9956" y="777.7255999999999" text-anchor="middle" dominant-baseline="middle">IOCtrl</text>
+<rect class="box" x="1011.1203999999999" y="725.5255999999998" width="255.20000000000002" height="104.4" rx="10" fill="#e9f7f6" stroke="#7aa0c4"/>
+<text class="actor" x="1138.7204" y="777.7255999999999" text-anchor="middle" dominant-baseline="middle">CustomCtrl</text>
+<rect class="box" x="1360.756" y="725.5255999999998" width="255.20000000000002" height="104.4" rx="10" fill="#e8f3ff" stroke="#7aa0c4"/>
+<text class="actor" x="1488.356" y="777.7255999999999" text-anchor="middle" dominant-baseline="middle">VTCtrl</text>
+<rect class="box" x="1368.7600000000002" y="923.3752" width="255.20000000000002" height="104.4" rx="10" fill="#eaf7ef" stroke="#7aa0c4"/>
+<text class="actor" x="1496.3600000000001" y="965.5752" text-anchor="middle" dominant-baseline="middle">VT</text>
+<text class="detail" x="1496.3600000000001" y="1001.5752" text-anchor="middle" dominant-baseline="middle">bluetape4k-virtualthread-api</text>
+<rect class="box" x="79.99420000000006" y="923.3752" width="416.1036" height="104.4" rx="10" fill="#fff3d9" stroke="#7aa0c4"/>
+<text class="actor" x="288.04600000000005" y="967.5752" text-anchor="middle" dominant-baseline="middle">Dispatchers.Default /</text>
+<text class="actor" x="288.04600000000005" y="983.5752" text-anchor="middle" dominant-baseline="middle">(CPU cores x 2)</text>
+<rect class="box" x="576.8338" y="923.3752" width="376.2228" height="104.4" rx="10" fill="#f1ecff" stroke="#7aa0c4"/>
+<text class="actor" x="764.9452" y="967.5752" text-anchor="middle" dominant-baseline="middle">Dispatchers.IO /</text>
+<text class="actor" x="764.9452" y="983.5752" text-anchor="middle" dominant-baseline="middle">(elastic, up to 64)</text>
+<rect class="box" x="1033.6708" y="923.3752" width="255.20000000000002" height="104.4" rx="10" fill="#fdecef" stroke="#7aa0c4"/>
+<text class="actor" x="1161.2708" y="975.5752" text-anchor="middle" dominant-baseline="middle">Fixed 16-thread pool</text>
+</svg>

@@ -25,26 +25,7 @@ for a coroutine-first data access layer. Exposed table DSL handles schema defini
 
 ![R2DBC + WebFlux + Exposed ORM Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-exposed-readme-architecture-01.png)
 
-```mermaid
-sequenceDiagram
-    participant C as Client
-    participant Ctrl as @RestController<br/>+ coRouter Handler
-    participant Svc as UserService<br/>(suspend fun)
-    participant Repo as UserExposedRepository<br/>(R2dbcRepository)
-    participant DB as H2 (R2DBC + Exposed)
-
-    C->>Ctrl: HTTP Request
-    Ctrl->>Svc: suspend service call
-    activate Svc
-    Svc->>Repo: findById / save / upsert
-    Note over Repo: suspendedTransaction { <br/>Exposed DSL }
-    Repo->>DB: Exposed R2DBC SQL
-    DB-->>Repo: ResultRow
-    Repo-->>Svc: UserRecord
-    Svc-->>Ctrl: UserRecord / Flow<UserRecord>
-    deactivate Svc
-    Ctrl-->>C: HTTP Response
-```
+![R2DBC + WebFlux + Exposed ORM Diagram 1](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-exposed-readme-sequence-01.png)
 
 ## 아키텍처 다이어그램
 
