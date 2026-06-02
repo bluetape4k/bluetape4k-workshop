@@ -1,5 +1,22 @@
 # graph-knowledge-graph
 
+[한국어](README.ko.md) | English
+
+## Example Scenario
+
+This example exercises **graph-knowledge-graph** as a runnable graph-domain modeling workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+
+## Flow Diagram
+
+1. Prepare the local runtime required by `graph-knowledge-graph`.
+2. Execute the application, controller, service, or test fixture that owns the example scenario.
+3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
+4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
+
+## Sequence Diagram
+
+The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
+
 A workshop example demonstrating knowledge graph construction and traversal using
 the [bluetape4k-graph](https://github.com/bluetape4k/bluetape4k-graph) library.
 

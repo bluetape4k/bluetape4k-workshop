@@ -1,5 +1,15 @@
 # Spring Modulith JPA Demo
 
+[한국어](README.ko.md) | English
+
+## Example Scenario
+
+This example exercises **Spring Modulith JPA Demo** as a runnable Spring Modulith event boundary workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+
+## Sequence Diagram
+
+The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
+
 Spring Modulith application with four logical modules — `organization`, `department`, `employee`, and `gateway` —
 connected through internal module APIs and Spring application events, verified by Modulith's structural tests.
 

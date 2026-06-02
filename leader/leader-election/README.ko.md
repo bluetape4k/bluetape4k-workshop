@@ -1,5 +1,18 @@
 # Leader Election Workshop
 
+[English](README.md) | 한국어
+
+## 예제 시나리오
+
+이 예제는 **Leader Election Workshop** 모듈을 실행 가능한 리더 선출 조정 예제로 보여줍니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 사용 방식을 중심으로 설명합니다.
+
+## 흐름 다이어그램
+
+1. `leader-leader-election` 예제에 필요한 로컬 런타임을 준비합니다.
+2. 예제 시나리오를 담당하는 애플리케이션, 컨트롤러, 서비스 또는 테스트 픽스처를 실행합니다.
+3. 반복적인 인프라 처리는 bluetape4k 유틸리티 또는 Spring/Kotlin 통합 기능에 위임합니다.
+4. 샘플 출력, HTTP 응답, 저장소 상태, metric, trace 또는 테스트 기대값으로 결과를 검증합니다.
+
 Spring Boot 기반의 **분산 리더 선출(distributed leader election)** 예제 모듈입니다.
 다중 인스턴스 환경에서 스케줄 잡이 단 하나의 인스턴스에서만 실행되도록 `bluetape4k-leader` 라이브러리를 활용합니다.
 

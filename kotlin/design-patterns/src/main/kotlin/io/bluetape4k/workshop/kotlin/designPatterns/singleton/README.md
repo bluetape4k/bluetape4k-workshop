@@ -1,3 +1,22 @@
+# singleton
+
+[한국어](README.ko.md) | English
+
+## Example Scenario
+
+This example exercises **singleton** as a runnable Kotlin language and coroutine patterns workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+
+## Architecture Diagram
+
+The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.kotlin` as the source of truth when comparing this README with the code.
+
+## Flow Diagram
+
+1. Prepare the local runtime required by `singleton`.
+2. Execute the application, controller, service, or test fixture that owns the example scenario.
+3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
+4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
+
 ---
 layout: pattern
 title: Singleton

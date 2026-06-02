@@ -1,5 +1,30 @@
 # Redisson Examples
 
+[한국어](README.ko.md) | English
+
+## Example Scenario
+
+This example exercises **Redisson Examples** as a runnable Redis-backed coordination workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+
+## Architecture Diagram
+
+The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.redis` as the source of truth when comparing this README with the code.
+
+![Redisson Examples architecture diagram](../../docs/images/readme-diagrams/redis-redisson-examples-architecture-01.png)
+
+## Flow Diagram
+
+1. Prepare the local runtime required by `redis-redisson-examples`.
+2. Execute the application, controller, service, or test fixture that owns the example scenario.
+3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
+4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
+
+![Redisson Examples flow diagram](../../docs/images/readme-diagrams/redis-redisson-examples-diagram-01.png)
+
+## Sequence Diagram
+
+The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
+
 Redis 클라이언트 라이브러리 [Redisson](https://redisson.org/)의 분산 동기화 객체를 활용하는 예제 모음입니다.
 bluetape4k의 `RedissonCodecs.LZ4ForyComposite`, `localCachedMap()`, `streamAddArgsOf()`, `VirtualThreadExecutor`, `RedisServer.Launcher`, 테스트 동시성 헬퍼를 활용합니다.
 Testcontainers로 Redis 컨테이너를 자동으로 구동하여 통합 테스트를 수행합니다.

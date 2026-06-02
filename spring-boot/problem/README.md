@@ -1,5 +1,30 @@
 # Problem Web Demo
 
+[한국어](README.ko.md) | English
+
+## Example Scenario
+
+This example exercises **Problem Web Demo** as a runnable Spring Boot application feature workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+
+## Architecture Diagram
+
+The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.springboot` as the source of truth when comparing this README with the code.
+
+![Problem Web Demo architecture diagram](../../docs/images/readme-diagrams/spring-boot-problem-architecture-01.png)
+
+## Flow Diagram
+
+1. Prepare the local runtime required by `spring-boot-problem`.
+2. Execute the application, controller, service, or test fixture that owns the example scenario.
+3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
+4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
+
+![Problem Web Demo flow diagram](../../docs/images/readme-diagrams/spring-boot-problem-diagram-01.png)
+
+## Sequence Diagram
+
+The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
+
 Spring Boot 4 (RFC 9457 Problem Details 기본 지원)와 Zalando Problem Spring Web을 조합한 에러 처리 예제입니다.
 bluetape4k의 `KLogging`과 `bluetape4k-resilience4j`를 통해 Circuit Breaker 관련 예외를 RFC 9457 형식으로 변환합니다.
 

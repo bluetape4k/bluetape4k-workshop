@@ -1,9 +1,19 @@
 # Spring Cloud API Gateway Demo
 
+[한국어](README.ko.md) | English
+
+## Architecture Diagram
+
+The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.gateway` as the source of truth when comparing this README with the code.
+
+![Spring Cloud API Gateway Demo architecture diagram](../../docs/images/readme-diagrams/gateway-api-gateway-diagram-01.png)
+
+## Sequence Diagram
+
+The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
+
 Spring Cloud Gateway (WebFlux-based) demo that provides routing, Swagger UI aggregation,
 and Bucket4j token-bucket rate limiting for downstream Customer and Order microservices.
-
-[한국어](README.ko.md)
 
 ## Scenario
 

@@ -1,6 +1,17 @@
 # graph-recommendation
 
-> **Language**: English | [한국어](README.ko.md)
+[한국어](README.ko.md) | English
+
+## Flow Diagram
+
+1. Prepare the local runtime required by `graph-recommendation`.
+2. Execute the application, controller, service, or test fixture that owns the example scenario.
+3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
+4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
+
+## Sequence Diagram
+
+The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 Graph-based product and follow recommendations for a social commerce domain, built on
 [bluetape4k-graph](https://github.com/bluetape4k/bluetape4k-graph) with TinkerGraph,
