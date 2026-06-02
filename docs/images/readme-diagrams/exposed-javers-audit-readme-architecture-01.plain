@@ -1,14 +1,12 @@
-graph 1 15.68 1.3361
-node reader 0.56708 0.45833 1.1342 0.61667 "Developer\nReader" rounded,filled box #88A3B5 #FFF8E7
-node readme 3.295 0.45833 2.0092 0.61667 "exposed/javers-audit\nREADME" rounded,filled box #88A3B5 #EEF7FF
-node module 6.4396 0.45833 1.6967 0.61667 "Exposed\nExample Module" rounded,filled box #88A3B5 #F1F8E9
-node source 9.5685 0.45833 1.9988 0.61667 "exposed javers audit\nsource + tests" rounded,filled box #88A3B5 #F5F0FF
-node bt 12.354 1.0278 1.4467 0.61667 "bluetape4k\nhelpers / APIs" rounded,filled box #88A3B5 #EAF7F0
-node runtime 14.978 0.45833 1.405 0.61667 "Runtime or\nTest Backend" rounded,filled box #88A3B5 #FFF1F1
-edge reader readme 4 1.1389 0.45833 1.1389 0.45833 2.1403 0.45833 2.1403 0.45833 opens 1.7123 0.54167 solid #637383
-edge readme module 4 4.3073 0.45833 4.3073 0.45833 5.4396 0.45833 5.4396 0.45833 explains 4.9454 0.54167 solid #637383
-edge module source 4 7.2946 0.45833 7.2946 0.45833 8.4222 0.45833 8.4222 0.45833 "maps to" 7.9285 0.54167 solid #637383
-edge source bt 7 10.577 0.52963 11.376 0.52963 12.361 0.52963 12.361 0.52963 12.361 0.52963 12.361 0.57248 12.361 0.57248 uses 11.099 1.0556 solid #637383
-edge source runtime 4 10.573 0.33981 10.573 0.33981 14.124 0.33981 14.124 0.33981 exercises 12.354 0.083333 solid #637383
-edge bt runtime 7 13.086 1.0514 13.861 1.0514 14.972 1.0514 14.972 1.0514 14.972 1.0514 14.972 0.91834 14.972 0.91834 adapts 13.676 1.0556 solid #637383
+graph 1 16.379 1.1017
+node entry 1.2858 0.52188 2.5717 0.7625 "Entry / Tests\nProductAuditServiceTest" rounded,filled box #88A3B5 #FFF8E7
+node service 4.821 0.52188 2.1654 0.7625 "Service / Domain\nProductAuditService" rounded,filled box #88A3B5 #F1F8E9
+node infra 8.2208 0.52188 2.4675 0.7625 "Repository / Infra\nProduct / ProductTable" rounded,filled box #88A3B5 #F5F0FF
+node bt 11.834 0.52188 2.0925 1.0438 "bluetape4k APIs\nworkshop / javers /\nassertions" rounded,filled box #88A3B5 #EAF7F0
+node runtime 15.255 0.52188 2.2487 0.7625 "Runtime\nSQL / R2DBC / Redis" rounded,filled box #88A3B5 #FFF1F1
+edge entry service 4 2.5771 0.52188 2.5771 0.52188 3.5883 0.52188 3.5883 0.52188 calls 3.155 0.61042 solid #637383
+edge service infra 4 5.9108 0.52188 5.9108 0.52188 6.835 0.52188 6.835 0.52188 uses 6.4454 0.61042 solid #637383
+edge infra bt 4 9.4593 0.39479 9.4593 0.39479 10.641 0.39479 10.641 0.39479 uses 10.121 1.0132 solid #637383
+edge infra bt 4 9.4593 0.64896 9.4593 0.64896 10.641 0.64896 10.641 0.64896 extends 10.121 0.20764 solid #637383
+edge bt runtime 4 12.888 0.52188 12.888 0.52188 13.978 0.52188 13.978 0.52188 adapts 13.505 0.61042 solid #637383
 stop

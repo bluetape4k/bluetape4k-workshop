@@ -14,7 +14,7 @@ digraph G {
     penwidth=1.4,
     color="#88A3B5",
     fillcolor="#F6FAFF",
-    fontname="Helvetica",
+    fontname="Architects Daughter",
     fontsize=14,
     margin="0.14,0.10"
   ];
@@ -22,21 +22,14 @@ digraph G {
     color="#637383",
     arrowsize=0.8,
     penwidth=1.5,
-    fontname="Helvetica",
+    fontname="Comic Mono",
     fontsize=11
   ];
 
-  reader [label="Developer\nReader", fillcolor="#FFF8E7"];
-  readme [label="Gateway Demo\nREADME", fillcolor="#EEF7FF"];
-  module [label="Gateway\nExample Module", fillcolor="#F1F8E9"];
-  source [label="gateway\nsource + tests", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k\nhelpers / APIs", fillcolor="#EAF7F0"];
-  runtime [label="Runtime or\nTest Backend", fillcolor="#FFF1F1"];
+  entry [label="Entry / Tests\nApiGatewayDemoApplication\n/ CustomerApplication /\nAbstractGatewayTest", fillcolor="#FFF8E7"];
+  api [label="API / Adapter\nGatewayConfig /\nSwaggerConfig /\nIndexController", fillcolor="#EEF7FF"];
+  runtime [label="Runtime\nRedis / AWS / S3 /\nTestcontainers", fillcolor="#FFF1F1"];
 
-  reader -> readme [label="opens"];
-  readme -> module [label="explains"];
-  module -> source [label="maps to"];
-  source -> bt [label="uses"];
-  source -> runtime [label="exercises"];
-  bt -> runtime [label="adapts"];
+  entry -> api [label="calls"];
+  api -> runtime [label="uses"];
 }

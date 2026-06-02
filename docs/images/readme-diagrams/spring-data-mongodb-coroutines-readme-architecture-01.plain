@@ -1,14 +1,14 @@
-graph 1 16.159 1.3361
-node reader 0.56708 0.45833 1.1342 0.61667 "Developer\nReader" rounded,filled box #88A3B5 #FFF8E7
-node readme 3.5085 0.45833 2.4362 0.61667 "mongodb-coroutine demo\nREADME" rounded,filled box #88A3B5 #EEF7FF
-node module 6.8667 0.45833 1.6967 0.61667 "Spring Data\nExample Module" rounded,filled box #88A3B5 #F1F8E9
-node source 10.022 0.45833 2.0508 0.825 "spring data mongodb\ncoroutines\nsource + tests" rounded,filled box #88A3B5 #F5F0FF
-node bt 12.833 1.0278 1.4467 0.61667 "bluetape4k\nhelpers / APIs" rounded,filled box #88A3B5 #EAF7F0
-node runtime 15.457 0.45833 1.405 0.61667 "Runtime or\nTest Backend" rounded,filled box #88A3B5 #FFF1F1
-edge reader readme 4 1.1412 0.45833 1.1412 0.45833 2.1421 0.45833 2.1421 0.45833 opens 1.7123 0.54167 solid #637383
-edge readme module 4 4.7352 0.45833 4.7352 0.45833 5.8682 0.45833 5.8682 0.45833 explains 5.3725 0.54167 solid #637383
-edge module source 4 7.7246 0.45833 7.7246 0.45833 8.8472 0.45833 8.8472 0.45833 "maps to" 8.3556 0.54167 solid #637383
-edge source bt 4 11.056 0.79514 11.056 0.79514 11.961 0.79514 11.961 0.79514 uses 11.578 1.0556 solid #637383
-edge source runtime 4 11.057 0.43472 11.057 0.43472 14.603 0.43472 14.603 0.43472 exercises 12.833 0.083333 solid #637383
-edge bt runtime 7 13.566 1.0514 14.34 1.0514 15.451 1.0514 15.451 1.0514 15.451 1.0514 15.451 0.91834 15.451 0.91834 adapts 14.155 1.0556 solid #637383
+graph 1 22.826 1.325
+node entry 1.1452 0.6625 2.2904 1.0438 "Entry / Tests\nMongodbApplication /\nAbstractMongodbTest" rounded,filled box #88A3B5 #FFF8E7
+node api 5.045 0.6625 3.1758 1.0438 "API / Adapter\nNettyConfig /\nRepositoryMetricsConfiguration" rounded,filled box #88A3B5 #EEF7FF
+node service 9.1844 0.6625 2.9362 1.0438 "Service / Domain\nPersonCoroutineRepository /\nPersonReactiveRepository" rounded,filled box #88A3B5 #F1F8E9
+node infra 13.287 0.6625 3.1029 1.325 "Repository / Infra\nMongoClientConfig /\nReactiveMongoConfig / Person\n/ PersonRepository" rounded,filled box #88A3B5 #F5F0FF
+node bt 17.526 0.6625 2.7071 1.0438 "bluetape4k APIs\nworkshop / testcontainers\n/ coroutines" rounded,filled box #88A3B5 #EAF7F0
+node runtime 21.477 0.6625 2.6967 0.7625 "Runtime\nMongoDB / Testcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 2.2994 0.6625 2.2994 0.6625 3.3068 0.6625 3.3068 0.6625 calls 2.8737 0.75104 solid #637383
+edge api service 4 6.6395 0.6625 6.6395 0.6625 7.5702 0.6625 7.5702 0.6625 uses 7.1746 0.75104 solid #637383
+edge service infra 4 10.66 0.6625 10.66 0.6625 11.585 0.6625 11.585 0.6625 uses 11.194 0.75104 solid #637383
+edge infra bt 4 14.847 0.48854 14.847 0.48854 16.022 0.48854 16.022 0.48854 uses 15.505 1.1538 solid #637383
+edge infra bt 4 14.847 0.83646 14.847 0.83646 16.022 0.83646 16.022 0.83646 extends 15.505 0.34826 solid #637383
+edge bt runtime 4 18.886 0.6625 18.886 0.6625 19.979 0.6625 19.979 0.6625 adapts 19.504 0.75104 solid #637383
 stop

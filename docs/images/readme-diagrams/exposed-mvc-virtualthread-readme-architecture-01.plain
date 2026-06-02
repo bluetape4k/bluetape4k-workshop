@@ -1,14 +1,14 @@
-graph 1 15.617 1.3361
-node reader 0.56708 0.45833 1.1342 0.61667 "Developer\nReader" rounded,filled box #88A3B5 #FFF8E7
-node readme 3.5346 0.45833 2.4883 0.61667 "exposed/mvc-virtualthread\nREADME" rounded,filled box #88A3B5 #EEF7FF
-node module 6.9187 0.45833 1.6967 0.61667 "Exposed\nExample Module" rounded,filled box #88A3B5 #F1F8E9
-node source 9.7769 0.45833 1.4571 0.825 "exposed mvc\nvirtualthread\nsource + tests" rounded,filled box #88A3B5 #F5F0FF
-node bt 12.291 1.0278 1.4467 0.61667 "bluetape4k\nhelpers / APIs" rounded,filled box #88A3B5 #EAF7F0
-node runtime 14.915 0.45833 1.405 0.61667 "Runtime or\nTest Backend" rounded,filled box #88A3B5 #FFF1F1
-edge reader readme 4 1.1428 0.45833 1.1428 0.45833 2.1423 0.45833 2.1423 0.45833 opens 1.7123 0.54167 solid #637383
-edge readme module 4 4.7851 0.45833 4.7851 0.45833 5.9209 0.45833 5.9209 0.45833 explains 5.4246 0.54167 solid #637383
-edge module source 4 7.7763 0.45833 7.7763 0.45833 8.8982 0.45833 8.8982 0.45833 "maps to" 8.4077 0.54167 solid #637383
-edge source bt 4 10.511 0.79514 10.511 0.79514 11.418 0.79514 11.418 0.79514 uses 11.037 1.0556 solid #637383
-edge source runtime 4 10.513 0.43472 10.513 0.43472 14.062 0.43472 14.062 0.43472 exercises 12.291 0.083333 solid #637383
-edge bt runtime 7 13.024 1.0514 13.798 1.0514 14.909 1.0514 14.909 1.0514 14.909 1.0514 14.909 0.91834 14.909 0.91834 adapts 13.614 1.0556 solid #637383
+graph 1 20.107 1.325
+node entry 1.5358 0.6625 3.0717 1.325 "Entry / Tests\nExposedMvcVirtualThreadApp\n/\nAbstractMvcVirtualThreadTest" rounded,filled box #88A3B5 #FFF8E7
+node api 5.3887 0.6625 2.3008 1.325 "API / Adapter\nAuthorController /\nBookController /\nGlobalExceptionHandler" rounded,filled box #88A3B5 #EEF7FF
+node service 8.6427 0.6625 2.0404 1.325 "Service / Domain\nAuthorRepository /\nBookRepository /\nAuthorService /" rounded,filled box #88A3B5 #F1F8E9
+node infra 12.266 0.6625 3.0404 1.0438 "Repository / Infra\nAuthorDTO / AuthorMappers /\nAuthorTable / BookTable" rounded,filled box #88A3B5 #F5F0FF
+node bt 16.135 0.6625 2.03 1.0438 "bluetape4k APIs\nworkshop / junit5 /\nassertions" rounded,filled box #88A3B5 #EAF7F0
+node runtime 19.254 0.6625 1.7071 1.0438 "Runtime\nSQL / R2DBC /\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.0808 0.6625 3.0808 0.6625 4.0865 0.6625 4.0865 0.6625 calls 3.655 0.75104 solid #637383
+edge api service 4 6.5451 0.6625 6.5451 0.6625 7.4719 0.6625 7.4719 0.6625 uses 7.0808 0.75104 solid #637383
+edge service infra 4 9.6714 0.6625 9.6714 0.6625 10.599 0.6625 10.599 0.6625 uses 10.205 0.75104 solid #637383
+edge infra bt 4 13.795 0.48854 13.795 0.48854 14.968 0.48854 14.968 0.48854 uses 14.453 1.1538 solid #637383
+edge infra bt 4 13.795 0.83646 13.795 0.83646 14.968 0.83646 14.968 0.83646 extends 14.453 0.34826 solid #637383
+edge bt runtime 4 17.156 0.6625 17.156 0.6625 18.249 0.6625 18.249 0.6625 adapts 17.775 0.75104 solid #637383
 stop

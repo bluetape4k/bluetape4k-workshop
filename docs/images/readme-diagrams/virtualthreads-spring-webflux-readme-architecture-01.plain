@@ -1,14 +1,14 @@
-graph 1 15.774 1.3944
-node reader 0.56708 0.51667 1.1342 0.61667 "Developer\nReader" rounded,filled box #88A3B5 #FFF8E7
-node readme 3.3575 0.51667 2.1342 1.0333 "Spring WebFlux with\nCoroutines and Virtual\nThread\nREADME" rounded,filled box #88A3B5 #EEF7FF
-node module 6.5646 0.51667 1.6967 0.61667 "Virtualthreads\nExample Module" rounded,filled box #88A3B5 #F1F8E9
-node source 9.6779 0.51667 1.9675 0.825 "virtualthreads spring\nwebflux\nsource + tests" rounded,filled box #88A3B5 #F5F0FF
-node bt 12.447 1.0861 1.4467 0.61667 "bluetape4k\nhelpers / APIs" rounded,filled box #88A3B5 #EAF7F0
-node runtime 15.071 0.51667 1.405 0.61667 "Runtime or\nTest Backend" rounded,filled box #88A3B5 #FFF1F1
-edge reader readme 4 1.1385 0.51667 1.1385 0.51667 2.1421 0.51667 2.1421 0.51667 opens 1.7123 0.6 solid #637383
-edge readme module 4 4.4299 0.51667 4.4299 0.51667 5.5685 0.51667 5.5685 0.51667 explains 5.0704 0.6 solid #637383
-edge module source 4 7.4194 0.51667 7.4194 0.51667 8.5446 0.51667 8.5446 0.51667 "maps to" 8.0535 0.6 solid #637383
-edge source bt 4 10.67 0.85347 10.67 0.85347 11.576 0.85347 11.576 0.85347 uses 11.193 1.1139 solid #637383
-edge source runtime 4 10.667 0.49306 10.667 0.49306 14.217 0.49306 14.217 0.49306 exercises 12.447 0.14167 solid #637383
-edge bt runtime 7 13.18 1.1097 13.955 1.1097 15.065 1.1097 15.065 1.1097 15.065 1.1097 15.065 0.97667 15.065 0.97667 adapts 13.77 1.1139 solid #637383
+graph 1 20.482 1.325
+node entry 1.7077 0.6625 3.4154 1.0438 "Entry / Tests\nWebfluxVirtualThreadApp /\nAbstractWebfluxVirtualThreadTest" rounded,filled box #88A3B5 #FFF8E7
+node api 6.0658 0.6625 2.9675 1.325 "API / Adapter\nNettyConfig /\nSchedulingConfig /\nAbstractDispatcherController" rounded,filled box #88A3B5 #EEF7FF
+node service 9.8979 0.6625 2.53 0.7625 "Service / Domain\nBanner / DispatcherType" rounded,filled box #88A3B5 #F1F8E9
+node infra 13.214 0.6625 1.9363 0.7625 "Repository / Infra\nAsyncConfig" rounded,filled box #88A3B5 #F5F0FF
+node bt 16.52 0.6625 2.0092 1.0438 "bluetape4k APIs\nworkshop / core /\nvirtualthread" rounded,filled box #88A3B5 #EAF7F0
+node runtime 19.629 0.6625 1.7071 1.325 "Runtime\nSQL / R2DBC /\nElasticsearch /\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.4239 0.6625 3.4239 0.6625 4.4309 0.6625 4.4309 0.6625 calls 3.9987 0.75104 solid #637383
+edge api service 4 7.5584 0.6625 7.5584 0.6625 8.4842 0.6625 8.4842 0.6625 uses 8.0912 0.75104 solid #637383
+edge service infra 4 11.171 0.6625 11.171 0.6625 12.096 0.6625 12.096 0.6625 uses 11.705 0.75104 solid #637383
+edge infra bt 4 14.188 0.53542 14.188 0.53542 15.365 0.53542 15.365 0.53542 uses 14.849 1.1538 solid #637383
+edge infra bt 4 14.188 0.78958 14.188 0.78958 15.365 0.78958 15.365 0.78958 extends 14.849 0.34826 solid #637383
+edge bt runtime 4 17.534 0.6625 17.534 0.6625 18.625 0.6625 18.625 0.6625 adapts 18.15 0.75104 solid #637383
 stop
