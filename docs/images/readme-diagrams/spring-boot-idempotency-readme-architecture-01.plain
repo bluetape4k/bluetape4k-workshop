@@ -1,0 +1,14 @@
+graph 1 16.347 1.3361
+node reader 0.56708 0.45833 1.1342 0.61667 "Developer\nReader" rounded,filled box #88A3B5 #FFF8E7
+node readme 3.4617 0.45833 2.3425 0.61667 "spring-boot/idempotency\nREADME" rounded,filled box #88A3B5 #EEF7FF
+node module 6.7729 0.45833 1.6967 0.61667 "Spring Boot\nExample Module" rounded,filled box #88A3B5 #F1F8E9
+node source 10.069 0.45833 2.3321 0.61667 "spring boot idempotency\nsource + tests" rounded,filled box #88A3B5 #F5F0FF
+node bt 13.02 1.0278 1.4467 0.61667 "bluetape4k\nhelpers / APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime 15.644 0.45833 1.405 0.61667 "Runtime or\nTest Backend" rounded,filled box #88A3B5 #FFF1F1
+edge reader readme 4 1.139 0.45833 1.139 0.45833 2.1438 0.45833 2.1438 0.45833 opens 1.7123 0.54167 solid #637383
+edge readme module 4 4.6384 0.45833 4.6384 0.45833 5.7747 0.45833 5.7747 0.45833 explains 5.2787 0.54167 solid #637383
+edge module source 4 7.6302 0.45833 7.6302 0.45833 8.7504 0.45833 8.7504 0.45833 "maps to" 8.2619 0.54167 solid #637383
+edge source bt 7 11.242 0.52963 12.068 0.52963 13.027 0.52963 13.027 0.52963 13.027 0.52963 13.027 0.57248 13.027 0.57248 uses 11.766 1.0556 solid #637383
+edge source runtime 4 11.244 0.33981 11.244 0.33981 14.791 0.33981 14.791 0.33981 exercises 13.02 0.083333 solid #637383
+edge bt runtime 7 13.753 1.0514 14.528 1.0514 15.638 1.0514 15.638 1.0514 15.638 1.0514 15.638 0.91834 15.638 0.91834 adapts 14.343 1.0556 solid #637383
+stop

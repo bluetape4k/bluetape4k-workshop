@@ -39,6 +39,8 @@ It shows how to:
 
 ## Architecture
 
+![graph-knowledge-graph Graphviz architecture diagram](../../docs/images/readme-diagrams/graph-knowledge-graph-readme-architecture-01.png)
+
 ![Knowledge Graph Architecture](docs/images/readme-diagrams/graph-knowledge-graph-architecture-01.png)
 
 ## Domain Model

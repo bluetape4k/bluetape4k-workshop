@@ -21,6 +21,8 @@ Neo4j, and Memgraph backends.
 
 ## Architecture
 
+![graph-recommendation Graphviz architecture diagram](../../docs/images/readme-diagrams/graph-recommendation-readme-architecture-01.png)
+
 ![Architecture](docs/images/readme-diagrams/recommendation-architecture.png)
 
 | Layer | Components |

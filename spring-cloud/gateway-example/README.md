@@ -8,6 +8,8 @@ This example exercises **Spring Cloud Gateway Sample** as a runnable Spring Clou
 
 ## Architecture Diagram
 
+![Spring Cloud Gateway Sample Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-cloud-gateway-example-readme-architecture-01.png)
+
 The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.springcloud` as the source of truth when comparing this README with the code.
 
 ![Spring Cloud Gateway Sample architecture diagram](../../docs/images/readme-diagrams/spring-cloud-gateway-example-diagram-01.png)

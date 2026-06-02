@@ -21,6 +21,8 @@ Based on: [resilience4j-spring-boot3-demo](https://github.com/resilience4j/resil
 
 ## Architecture
 
+![Spring Boot 4 + Resilience4j + Coroutines Workshop Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-readme-architecture-01.png)
+
 ![Resilience4j Coroutines Architecture](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-diagram-02.png)
 
 ### Circuit Breaker State Machine

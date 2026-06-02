@@ -8,6 +8,8 @@ This example exercises **Example for Vert.x with Kotlin Coroutines** as a runnab
 
 ## Architecture Diagram
 
+![Example for Vert.x with Kotlin Coroutines Graphviz architecture diagram](../../docs/images/readme-diagrams/vertx-coroutines-readme-architecture-01.png)
+
 The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.vertx` as the source of truth when comparing this README with the code.
 
 ![Example for Vert.x with Kotlin Coroutines architecture diagram](../../docs/images/readme-diagrams/vertx-coroutines-diagram-01.png)

@@ -21,6 +21,8 @@ WebFlux + Coroutines + Exposed R2DBC — fully reactive/coroutine data access.
 
 ## Architecture
 
+![exposed/webflux-r2dbc Graphviz architecture diagram](../../docs/images/readme-diagrams/exposed-webflux-r2dbc-readme-architecture-01.png)
+
 ![Exposed WebFlux R2DBC Architecture](../../docs/images/readme-diagrams/exposed-webflux-r2dbc-architecture-01.png)
 
 ## Used bluetape4k Features

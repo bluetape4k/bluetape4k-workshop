@@ -21,6 +21,8 @@ Customer service example for the Gateway workshop. It exposes a small WebFlux AP
 
 ## Architecture
 
+![Gateway Customers Service Graphviz architecture diagram](../../docs/images/readme-diagrams/gateway-customers-readme-architecture-01.png)
+
 ![Gateway Customers architecture](../../docs/images/readme-diagrams/gateway-customers-diagram-01.png)
 
 ## What This Module Shows

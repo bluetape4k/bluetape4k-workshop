@@ -24,6 +24,8 @@ Redisson을 사용한 분산 락 전략을 단계별로 시연합니다.
 
 ## 아키텍처
 
+![redis-distributed-lock Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/redis-distributed-lock-readme-architecture-01.png)
+
 ![distributed lock Architecture diagram](../../docs/images/readme-diagrams/redis-distributed-lock-architecture-01.png)
 
 ---

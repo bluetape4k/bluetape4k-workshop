@@ -66,6 +66,14 @@ function moduleName(rel) {
   return rel.replaceAll("/", "-");
 }
 
+function diagramSlug(rel) {
+  return rel
+    .replace(/^\.$/, "root-readme")
+    .replace(/[^A-Za-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .toLowerCase();
+}
+
 function removeTopLanguageSwitch(text) {
   const lines = stripBom(text).split(/\r?\n/);
   const kept = [];
@@ -88,12 +96,14 @@ function ensureTitleAndSwitch(text, title, lang) {
 
 function imagesFor(rel) {
   const slug = moduleName(rel);
+  const graphvizSlug = diagramSlug(rel);
   const files = fs.readdirSync(path.join(root, imageDir)).filter((file) => file.endsWith(".png"));
   const matching = files.filter((file) => file.startsWith(`${slug}-`));
   const exact = (needle) => matching.find((file) => file.includes(needle));
+  const readmeArchitecture = `${graphvizSlug}-readme-architecture-01.png`;
   return {
     scenario: exact("scenario"),
-    architecture: exact("architecture") || exact("diagram"),
+    architecture: files.includes(readmeArchitecture) ? readmeArchitecture : exact("architecture") || exact("diagram"),
     flow: exact("flow") || exact("diagram"),
     sequence: exact("sequence"),
   };
@@ -187,6 +197,18 @@ function insertMissingSections(text, sections, lang) {
   return lines.join("\n").replace(/\n{3,}/g, "\n\n").trimEnd() + "\n";
 }
 
+function ensureArchitectureImage(text, rel, title, images, lang) {
+  const image = images.architecture;
+  if (!image || !image.includes("readme-architecture-01")) return text;
+  if (text.includes(image)) return text;
+  const heading = lang === "en"
+    ? /^(##\s+.*Architecture.*)$/im
+    : /^(##\s+.*아키텍처.*)$/im;
+  const alt = lang === "en" ? `${title} Graphviz architecture diagram` : `${title} Graphviz 아키텍처 다이어그램`;
+  const markdown = imageMarkdown(rel, image, alt).trimEnd();
+  return text.replace(heading, `$1\n\n${markdown}`);
+}
+
 function summarizeExistingEn(enText) {
   const headings = [...enText.matchAll(/^##\s+(.+?)\s*$/gm)].map((m) => m[1]).slice(0, 8);
   if (headings.length === 0) return "";
@@ -220,6 +242,7 @@ for (const dir of modules) {
   const title = titleFrom(originalEn, rel);
   let en = ensureTitleAndSwitch(originalEn, title, "en");
   en = insertMissingSections(en, enSections(rel, title, images), "en");
+  en = ensureArchitectureImage(en, rel, title, images, "en");
   if (writeIfChanged(enFile, en)) changed++;
 
   const koTitle = fs.existsSync(koFile) ? titleFrom(readIfExists(koFile), rel) : title;
@@ -230,6 +253,7 @@ for (const dir of modules) {
     ko = `# ${koTitle}\n\n[English](README.md) | 한국어\n\n`;
   }
   ko = insertMissingSections(ko, koSections(rel, koTitle, images), "ko");
+  ko = ensureArchitectureImage(ko, rel, koTitle, images, "ko");
   if (!fs.existsSync(koFile)) {
     ko += summarizeExistingEn(originalEn);
     if (buildDirs.has(rel)) {

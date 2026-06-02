@@ -27,6 +27,8 @@ which provides an introduction to Gatling, a popular open-source load testing to
 
 ## Architecture
 
+![Gatling Load Testing Tutorial for Kotlin Graphviz architecture diagram](../../docs/images/readme-diagrams/gatling-virtualthread-simulation-readme-architecture-01.png)
+
 ```mermaid
 flowchart TD
     subgraph "Gatling Load Generator"

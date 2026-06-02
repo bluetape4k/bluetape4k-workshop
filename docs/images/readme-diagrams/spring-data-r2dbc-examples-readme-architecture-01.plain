@@ -1,0 +1,14 @@
+graph 1 15.92 1.3361
+node reader 0.56708 0.45833 1.1342 0.61667 "Developer\nReader" rounded,filled box #88A3B5 #FFF8E7
+node readme 3.5502 0.45833 2.5196 0.61667 "Spring Data R2DBC Demo\nREADME" rounded,filled box #88A3B5 #EEF7FF
+node module 6.95 0.45833 1.6967 0.61667 "Spring Data\nExample Module" rounded,filled box #88A3B5 #F1F8E9
+node source 9.9435 0.45833 1.7279 0.825 "spring data r2dbc\nexamples\nsource + tests" rounded,filled box #88A3B5 #F5F0FF
+node bt 12.593 1.0278 1.4467 0.61667 "bluetape4k\nhelpers / APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime 15.217 0.45833 1.405 0.61667 "Runtime or\nTest Backend" rounded,filled box #88A3B5 #FFF1F1
+edge reader readme 4 1.1423 0.45833 1.1423 0.45833 2.1425 0.45833 2.1425 0.45833 opens 1.7123 0.54167 solid #637383
+edge readme module 4 4.8162 0.45833 4.8162 0.45833 5.9531 0.45833 5.9531 0.45833 explains 5.4558 0.54167 solid #637383
+edge module source 4 7.8078 0.45833 7.8078 0.45833 8.9274 0.45833 8.9274 0.45833 "maps to" 8.439 0.54167 solid #637383
+edge source bt 4 10.815 0.79514 10.815 0.79514 11.721 0.79514 11.721 0.79514 uses 11.339 1.0556 solid #637383
+edge source runtime 4 10.814 0.43472 10.814 0.43472 14.363 0.43472 14.363 0.43472 exercises 12.593 0.083333 solid #637383
+edge bt runtime 7 13.326 1.0514 14.101 1.0514 15.211 1.0514 15.211 1.0514 15.211 1.0514 15.211 0.91834 15.211 0.91834 adapts 13.916 1.0556 solid #637383
+stop

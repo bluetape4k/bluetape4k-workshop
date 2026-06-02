@@ -20,6 +20,8 @@ Advanced Spring Boot 4 workflow for uploaded images: validate, store the origina
 
 ## Architecture
 
+![image-processing-advanced-workflow Graphviz architecture diagram](../../docs/images/readme-diagrams/image-processing-advanced-workflow-readme-architecture-01.png)
+
 ![Image Processing Architecture](../../docs/images/readme-diagrams/image-processing-advanced-workflow-architecture-01.png)
 
 ## Used Bluetape4k Features

@@ -1,0 +1,14 @@
+graph 1 15.336 1.3361
+node reader 0.56708 0.45833 1.1342 0.61667 "Developer\nReader" rounded,filled box #88A3B5 #FFF8E7
+node readme 3.1335 0.45833 1.6863 0.825 "Vert.x WebClient\nExamples\nREADME" rounded,filled box #88A3B5 #EEF7FF
+node module 6.1167 0.45833 1.6967 0.61667 "Vertx\nExample Module" rounded,filled box #88A3B5 #F1F8E9
+node source 9.2352 0.45833 1.9779 0.61667 "vertx vertx webclient\nsource + tests" rounded,filled box #88A3B5 #F5F0FF
+node bt 12.01 1.0278 1.4467 0.61667 "bluetape4k\nhelpers / APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime 14.634 0.45833 1.405 0.61667 "Runtime or\nTest Backend" rounded,filled box #88A3B5 #FFF1F1
+edge reader readme 4 1.143 0.45833 1.143 0.45833 2.1391 0.45833 2.1391 0.45833 opens 1.7123 0.54167 solid #637383
+edge readme module 4 3.9844 0.45833 3.9844 0.45833 5.1169 0.45833 5.1169 0.45833 explains 4.6225 0.54167 solid #637383
+edge module source 4 6.9729 0.45833 6.9729 0.45833 8.0946 0.45833 8.0946 0.45833 "maps to" 7.6056 0.54167 solid #637383
+edge source bt 7 10.232 0.52963 11.03 0.52963 12.017 0.52963 12.017 0.52963 12.017 0.52963 12.017 0.57248 12.017 0.57248 uses 10.755 1.0556 solid #637383
+edge source runtime 4 10.232 0.33981 10.232 0.33981 13.78 0.33981 13.78 0.33981 exercises 12.01 0.083333 solid #637383
+edge bt runtime 7 12.743 1.0514 13.517 1.0514 14.628 1.0514 14.628 1.0514 14.628 1.0514 14.628 0.91834 14.628 0.91834 adapts 13.332 1.0556 solid #637383
+stop

@@ -21,6 +21,8 @@ Based on [sample-spring-modulith](https://github.com/piomin/sample-spring-moduli
 
 ## Architecture
 
+![Spring Modulith JPA Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-architecture-01.png)
+
 The application is divided into four logical modules:
 
 | Module | Responsibility |

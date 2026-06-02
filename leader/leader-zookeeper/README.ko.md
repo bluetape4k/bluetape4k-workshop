@@ -30,6 +30,8 @@ ZooKeeper 에페메랄 노드 기반으로 정확한 동시 실행을 보장하�
 
 ## 아키텍처
 
+![Leader ZooKeeper 워크숍 Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/leader-leader-zookeeper-readme-architecture-01.png)
+
 여러 앱 인스턴스가 [Apache Curator](https://curator.apache.org/)의
 `InterProcessMutex`(단일 리더) / `InterProcessSemaphoreV2`(그룹 리더)로 ZooKeeper 잠금을 경쟁합니다.
 **선출된 리더**만 각 스케줄 작업을 실행합니다.

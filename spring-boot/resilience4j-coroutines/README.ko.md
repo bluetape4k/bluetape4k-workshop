@@ -21,6 +21,8 @@
 
 ## 아키텍처
 
+![Spring Boot 4 + Resilience4j + Coroutines 워크샵 Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-readme-architecture-01.png)
+
 ![Resilience4j Coroutines 아키텍처](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-diagram-02.png)
 
 ### Circuit Breaker 상태 전이

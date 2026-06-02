@@ -21,6 +21,8 @@ WebFlux 컨트롤러, 커스텀 로그인 페이지, reactive in-memory user를 
 
 ## 아키텍처
 
+![Spring Security WebFlux Hello Graphviz 아키텍처 다이어그램](../../../docs/images/readme-diagrams/spring-security-webflux-hello-security-readme-architecture-01.png)
+
 ![hello security Sequence Flow diagram](../../../docs/images/readme-diagrams/spring-security-webflux-hello-security-diagram-01.png)
 
 ## 이 모듈에서 확인할 내용

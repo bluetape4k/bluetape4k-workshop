@@ -27,6 +27,8 @@
 
 ## 아키텍처
 
+![image-processing-advanced-workflow Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/image-processing-advanced-workflow-readme-architecture-01.png)
+
 ![Image Processing Architecture](../../docs/images/readme-diagrams/image-processing-advanced-workflow-architecture-01.png)
 
 ## Used Bluetape4k Features

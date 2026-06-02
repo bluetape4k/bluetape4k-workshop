@@ -14,6 +14,8 @@ Reactive JWT resource server example. It issues RSA-signed JWTs from `/token` an
 
 ## Architecture
 
+![Spring Security WebFlux JWT Graphviz architecture diagram](../../../docs/images/readme-diagrams/spring-security-webflux-jwt-readme-architecture-01.png)
+
 ![jwt Sequence Flow diagram](../../../docs/images/readme-diagrams/spring-security-webflux-jwt-diagram-01.png)
 
 ## What This Module Shows

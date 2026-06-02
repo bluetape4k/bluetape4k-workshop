@@ -1,0 +1,14 @@
+graph 1 15.597 1.3361
+node reader 0.56708 0.45833 1.1342 0.61667 "Developer\nReader" rounded,filled box #88A3B5 #FFF8E7
+node readme 3.3054 0.45833 2.03 0.825 "Spring Security MVC\nHello\nREADME" rounded,filled box #88A3B5 #EEF7FF
+node module 6.4604 0.45833 1.6967 0.61667 "Security\nExample Module" rounded,filled box #88A3B5 #F1F8E9
+node source 9.5373 0.45833 1.8946 0.825 "spring security mvc\nhello\nsource + tests" rounded,filled box #88A3B5 #F5F0FF
+node bt 12.27 1.0278 1.4467 0.61667 "bluetape4k\nhelpers / APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime 14.894 0.45833 1.405 0.61667 "Runtime or\nTest Backend" rounded,filled box #88A3B5 #FFF1F1
+edge reader readme 4 1.1411 0.45833 1.1411 0.45833 2.1413 0.45833 2.1413 0.45833 opens 1.7123 0.54167 solid #637383
+edge readme module 4 4.3298 0.45833 4.3298 0.45833 5.4622 0.45833 5.4622 0.45833 explains 4.9662 0.54167 solid #637383
+edge module source 4 7.3175 0.45833 7.3175 0.45833 8.4394 0.45833 8.4394 0.45833 "maps to" 7.9494 0.54167 solid #637383
+edge source bt 4 10.493 0.79514 10.493 0.79514 11.396 0.79514 11.396 0.79514 uses 11.016 1.0556 solid #637383
+edge source runtime 4 10.489 0.43472 10.489 0.43472 14.04 0.43472 14.04 0.43472 exercises 12.27 0.083333 solid #637383
+edge bt runtime 7 13.003 1.0514 13.778 1.0514 14.888 1.0514 14.888 1.0514 14.888 1.0514 14.888 0.91834 14.888 0.91834 adapts 13.593 1.0556 solid #637383
+stop
