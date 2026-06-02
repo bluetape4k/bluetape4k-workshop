@@ -63,3 +63,9 @@ Architecture 섹션을 보강할 때 첫 overview 이미지만 새 자산으로 
 architecture 이미지가 예전 font stack을 계속 노출할 수 있다. README 이미지 링크
 검증은 섹션의 모든 architecture 이미지가 `Architects Daughter`/`Comic Mono` 기반
 SVG/PNG 쌍을 참조하는지까지 확인해야 한다.
+
+후속 전수 보정에서는 README가 실제로 참조하는 `readme-diagrams/*.png` 212개를
+대상으로 SVG font-family 선언을 정규화하고 PNG를 다시 렌더링했다. 향후 diagram
+검증은 전체 SVG 텍스트가 아니라 font-family 선언값만 검사해야 한다. 예를 들어
+`Views.Internal`, `InterProcessMutex`, `refillIntervally` 같은 도메인 텍스트를
+`Inter` font fallback으로 오탐하면 안 된다.

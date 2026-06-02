@@ -12,11 +12,11 @@
   </marker>
   <style>
     .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
-    .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
-    .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
-    .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
+    .title{font-family:"Architects Daughter";font-size:38px;font-weight:400;fill:#102033}
+    .subtitle{font-family:"Comic Mono";font-size:14px;font-weight:400;fill:#536273}
+    .smallLabel{font-family:"Architects Daughter";font-size:21px;font-weight:400;fill:#102033}
+    .mono{font-family:"Comic Mono";font-size:12px;font-weight:400;fill:#102033}
+    .small{font-family:"Comic Mono";font-size:12px;font-weight:400;fill:#536273}
     .card{stroke-width:2.1;filter:url(#shadow)}
     .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
     .lineGreen{stroke:#58A978;stroke-width:2.1;fill:none;marker-end:url(#arrowGreen)}
@@ -87,33 +87,33 @@
 
   <!-- CLOSED state -->
   <circle cx="120" cy="100" r="54" fill="#58A978" filter="url(#shadow)"/>
-  <text x="120" y="96" text-anchor="middle" font-family="Comic Sans MS,cursive" font-size="14" fill="#fff" font-weight="bold">CLOSED</text>
-  <text x="120" y="114" text-anchor="middle" font-family="Comic Sans MS,cursive" font-size="11" fill="#fff">Redis OK</text>
+  <text x="120" y="96" text-anchor="middle" font-family="Comic Mono" font-size="14" fill="#fff" font-weight="bold">CLOSED</text>
+  <text x="120" y="114" text-anchor="middle" font-family="Comic Mono" font-size="11" fill="#fff">Redis OK</text>
 
   <!-- OPEN state -->
   <circle cx="431" cy="100" r="54" fill="#DC6B82" filter="url(#shadow)"/>
-  <text x="431" y="96" text-anchor="middle" font-family="Comic Sans MS,cursive" font-size="14" fill="#fff" font-weight="bold">OPEN</text>
-  <text x="431" y="114" text-anchor="middle" font-family="Comic Sans MS,cursive" font-size="11" fill="#fff">Caffeine</text>
+  <text x="431" y="96" text-anchor="middle" font-family="Comic Mono" font-size="14" fill="#fff" font-weight="bold">OPEN</text>
+  <text x="431" y="114" text-anchor="middle" font-family="Comic Mono" font-size="11" fill="#fff">Caffeine</text>
 
   <!-- HALF-OPEN state -->
   <circle cx="742" cy="100" r="54" fill="#D6A441" filter="url(#shadow)"/>
-  <text x="742" y="96" text-anchor="middle" font-family="Comic Sans MS,cursive" font-size="14" fill="#fff" font-weight="bold">HALF-OPEN</text>
-  <text x="742" y="114" text-anchor="middle" font-family="Comic Sans MS,cursive" font-size="11" fill="#fff">probe Redis</text>
+  <text x="742" y="96" text-anchor="middle" font-family="Comic Mono" font-size="14" fill="#fff" font-weight="bold">HALF-OPEN</text>
+  <text x="742" y="114" text-anchor="middle" font-family="Comic Mono" font-size="11" fill="#fff">probe Redis</text>
 
   <!-- CLOSED → OPEN -->
   <path d="M172 80 Q301 50 378 80" stroke="#DC6B82" stroke-width="2" fill="none" marker-end="url(#arrowRed)"/>
-  <text x="274" y="48" text-anchor="middle" font-family="Comic Sans MS,cursive" font-size="11" fill="#DC6B82">failures &gt;= 60%</text>
+  <text x="274" y="48" text-anchor="middle" font-family="Comic Mono" font-size="11" fill="#DC6B82">failures &gt;= 60%</text>
 
   <!-- OPEN → HALF-OPEN -->
   <path d="M483 80 Q612 50 689 80" stroke="#758297" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
-  <text x="586" y="48" text-anchor="middle" font-family="Comic Sans MS,cursive" font-size="11" fill="#536273">wait 5s</text>
+  <text x="586" y="48" text-anchor="middle" font-family="Comic Mono" font-size="11" fill="#536273">wait 5s</text>
 
   <!-- HALF-OPEN → CLOSED (success) -->
   <path d="M720 155 Q431 185 142 155" stroke="#58A978" stroke-width="2" fill="none" marker-end="url(#arrowGreen)"/>
-  <text x="431" y="155" text-anchor="middle" font-family="Comic Sans MS,cursive" font-size="11" fill="#58A978">probe success</text>
+  <text x="431" y="155" text-anchor="middle" font-family="Comic Mono" font-size="11" fill="#58A978">probe success</text>
 
   <!-- HALF-OPEN → OPEN (failure) -->
   <path d="M700 125 Q565 150 480 125" stroke="#DC6B82" stroke-width="2" fill="none" marker-end="url(#arrowRed)"/>
-  <text x="591" y="150" text-anchor="middle" font-family="Comic Sans MS,cursive" font-size="11" fill="#DC6B82">probe failed</text>
+  <text x="591" y="150" text-anchor="middle" font-family="Comic Mono" font-size="11" fill="#DC6B82">probe failed</text>
 </g>
 </svg>
