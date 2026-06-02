@@ -37,6 +37,8 @@
 
 ## 아키텍처
 
+![graph-knowledge-graph Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/graph-knowledge-graph-readme-architecture-01.png)
+
 ![Knowledge Graph Architecture](docs/images/readme-diagrams/graph-knowledge-graph-architecture-01.png)
 
 ## 도메인 모델

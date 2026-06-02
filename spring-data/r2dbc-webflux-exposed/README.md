@@ -23,6 +23,8 @@ for a coroutine-first data access layer. Exposed table DSL handles schema defini
 
 ## Architecture
 
+![R2DBC + WebFlux + Exposed ORM Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-exposed-readme-architecture-01.png)
+
 ```mermaid
 sequenceDiagram
     participant C as Client

@@ -24,6 +24,8 @@ Uses H2 in-memory database.
 
 ## Architecture
 
+![R2DBC + Spring WebFlux (Functional Router) Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-readme-architecture-01.png)
+
 ```mermaid
 sequenceDiagram
     participant C as Client

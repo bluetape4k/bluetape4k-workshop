@@ -21,6 +21,8 @@
 
 ## 아키텍처
 
+![Spring Modulith Events Deep Dive Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/spring-modulith-events-deep-dive-readme-architecture-01.png)
+
 ![events deep dive Sequence Flow diagram](../../docs/images/readme-diagrams/spring-modulith-events-deep-dive-diagram-01.png)
 
 ## 이 모듈에서 확인할 내용

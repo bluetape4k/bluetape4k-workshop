@@ -24,6 +24,8 @@ No infrastructure (DB, Redis, Kafka) required. MockWebServer is used for downstr
 
 ## Architecture
 
+![observability-basic Graphviz architecture diagram](../../docs/images/readme-diagrams/observability-observability-basic-readme-architecture-01.png)
+
 ![observability basic Architecture diagram](../../docs/images/readme-diagrams/observability-observability-basic-architecture-01.png)
 
 ## Span Tree

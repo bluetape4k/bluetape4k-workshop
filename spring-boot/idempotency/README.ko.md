@@ -23,6 +23,8 @@
 
 ## 아키텍처
 
+![spring-boot/idempotency Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/spring-boot-idempotency-readme-architecture-01.png)
+
 ![idempotency Sequence Flow diagram](../../docs/images/readme-diagrams/spring-boot-idempotency-sequence-01.png)
 
 ## 주요 기능

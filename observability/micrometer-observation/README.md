@@ -22,6 +22,8 @@ Micrometer Observation API를 Spring MVC와 연동하는 예제입니다.
 
 ## Architecture
 
+![Micrometer Observation with Spring MVC Graphviz architecture diagram](../../docs/images/readme-diagrams/observability-micrometer-observation-readme-architecture-01.png)
+
 ![micrometer observation Architecture diagram](../../docs/images/readme-diagrams/observability-micrometer-observation-diagram-01.png)
 
 ## Key Components

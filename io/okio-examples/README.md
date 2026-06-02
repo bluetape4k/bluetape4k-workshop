@@ -8,6 +8,8 @@ This example exercises **Okio Examples** as a runnable I/O utility workflow work
 
 ## Architecture Diagram
 
+![Okio Examples Graphviz architecture diagram](../../docs/images/readme-diagrams/io-okio-examples-readme-architecture-01.png)
+
 The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.io` as the source of truth when comparing this README with the code.
 
 ![Okio Examples architecture diagram](../../docs/images/readme-diagrams/io-okio-examples-diagram-01.png)

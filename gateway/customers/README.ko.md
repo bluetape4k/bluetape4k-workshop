@@ -21,6 +21,8 @@ Gateway 워크숍의 고객 서비스 예제입니다. 작은 WebFlux API를 제
 
 ## 아키텍처
 
+![Gateway Customers Service Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/gateway-customers-readme-architecture-01.png)
+
 ![Gateway Customers architecture](../../docs/images/readme-diagrams/gateway-customers-diagram-01.png)
 
 ## 이 모듈에서 확인할 내용

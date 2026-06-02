@@ -1,0 +1,14 @@
+graph 1 15.242 1.3361
+node reader 0.56708 0.45833 1.1342 0.61667 "Developer\nReader" rounded,filled box #88A3B5 #FFF8E7
+node readme 3.3471 0.45833 2.1133 0.825 "Bluetape4k Workshop\nShared\nREADME" rounded,filled box #88A3B5 #EEF7FF
+node module 6.5437 0.45833 1.6967 0.61667 "Shared\nExample Module" rounded,filled box #88A3B5 #F1F8E9
+node source 9.4019 0.45833 1.4571 0.61667 "shared\nsource + tests" rounded,filled box #88A3B5 #F5F0FF
+node bt 11.916 1.0278 1.4467 0.61667 "bluetape4k\nhelpers / APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime 14.54 0.45833 1.405 0.61667 "Runtime or\nTest Backend" rounded,filled box #88A3B5 #FFF1F1
+edge reader readme 4 1.1431 0.45833 1.1431 0.45833 2.1404 0.45833 2.1404 0.45833 opens 1.7123 0.54167 solid #637383
+edge readme module 4 4.4115 0.45833 4.4115 0.45833 5.5482 0.45833 5.5482 0.45833 explains 5.0496 0.54167 solid #637383
+edge module source 4 7.4013 0.45833 7.4013 0.45833 8.5232 0.45833 8.5232 0.45833 "maps to" 8.0327 0.54167 solid #637383
+edge source bt 7 9.3953 0.77456 9.3953 0.8015 9.3953 0.81875 9.3953 0.81875 9.3953 0.81875 11.044 0.81875 11.044 0.81875 uses 10.662 1.0556 solid #637383
+edge source runtime 4 10.138 0.43472 10.138 0.43472 13.687 0.43472 13.687 0.43472 exercises 11.916 0.083333 solid #637383
+edge bt runtime 7 12.649 1.0514 13.423 1.0514 14.534 1.0514 14.534 1.0514 14.534 1.0514 14.534 0.91834 14.534 0.91834 adapts 13.239 1.0556 solid #637383
+stop

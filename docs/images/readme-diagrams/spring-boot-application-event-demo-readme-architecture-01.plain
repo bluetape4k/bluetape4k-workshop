@@ -1,0 +1,14 @@
+graph 1 16.149 1.3361
+node reader 0.56708 0.45833 1.1342 0.61667 "Developer\nReader" rounded,filled box #88A3B5 #FFF8E7
+node readme 3.4512 0.45833 2.3217 0.825 "Spring Application Event\nDemo\nREADME" rounded,filled box #88A3B5 #EEF7FF
+node module 6.7521 0.45833 1.6967 0.61667 "Spring Boot\nExample Module" rounded,filled box #88A3B5 #F1F8E9
+node source 9.9592 0.45833 2.155 0.825 "spring boot application\nevent demo\nsource + tests" rounded,filled box #88A3B5 #F5F0FF
+node bt 12.822 1.0278 1.4467 0.61667 "bluetape4k\nhelpers / APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime 15.446 0.45833 1.405 0.61667 "Runtime or\nTest Backend" rounded,filled box #88A3B5 #FFF1F1
+edge reader readme 4 1.1438 0.45833 1.1438 0.45833 2.1427 0.45833 2.1427 0.45833 opens 1.7123 0.54167 solid #637383
+edge readme module 4 4.6196 0.45833 4.6196 0.45833 5.7542 0.45833 5.7542 0.45833 explains 5.2579 0.54167 solid #637383
+edge module source 4 7.6073 0.45833 7.6073 0.45833 8.7338 0.45833 8.7338 0.45833 "maps to" 8.241 0.54167 solid #637383
+edge source bt 4 11.046 0.79514 11.046 0.79514 11.949 0.79514 11.949 0.79514 uses 11.568 1.0556 solid #637383
+edge source runtime 4 11.043 0.43472 11.043 0.43472 14.592 0.43472 14.592 0.43472 exercises 12.822 0.083333 solid #637383
+edge bt runtime 7 13.555 1.0514 14.33 1.0514 15.44 1.0514 15.44 1.0514 15.44 1.0514 15.44 0.91834 15.44 0.91834 adapts 14.145 1.0556 solid #637383
+stop

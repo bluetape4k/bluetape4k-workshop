@@ -21,6 +21,8 @@
 
 ## 아키텍처
 
+![Spring Security MVC Hello Graphviz 아키텍처 다이어그램](../../../docs/images/readme-diagrams/spring-security-mvc-hello-readme-architecture-01.png)
+
 ![hello Sequence Flow diagram](../../../docs/images/readme-diagrams/spring-security-mvc-hello-diagram-01.png)
 
 ## 이 모듈에서 확인할 내용

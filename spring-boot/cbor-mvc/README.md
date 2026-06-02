@@ -8,6 +8,8 @@ This example exercises **CBOR in Spring Boot MVC** as a runnable Spring Boot app
 
 ## Architecture Diagram
 
+![CBOR in Spring Boot MVC Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-cbor-mvc-readme-architecture-01.png)
+
 The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.springboot` as the source of truth when comparing this README with the code.
 
 ## Flow Diagram

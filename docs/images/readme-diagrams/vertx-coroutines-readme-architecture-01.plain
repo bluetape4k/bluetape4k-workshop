@@ -1,0 +1,14 @@
+graph 1 15.492 1.3361
+node reader 0.56708 0.45833 1.1342 0.61667 "Developer\nReader" rounded,filled box #88A3B5 #FFF8E7
+node readme 3.3992 0.45833 2.2175 0.825 "Example for Vert.x with\nKotlin Coroutines\nREADME" rounded,filled box #88A3B5 #EEF7FF
+node module 6.6479 0.45833 1.6967 0.61667 "Vertx\nExample Module" rounded,filled box #88A3B5 #F1F8E9
+node source 9.579 0.45833 1.6029 0.61667 "vertx coroutines\nsource + tests" rounded,filled box #88A3B5 #F5F0FF
+node bt 12.166 1.0278 1.4467 0.61667 "bluetape4k\nhelpers / APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime 14.79 0.45833 1.405 0.61667 "Runtime or\nTest Backend" rounded,filled box #88A3B5 #FFF1F1
+edge reader readme 4 1.1402 0.45833 1.1402 0.45833 2.1398 0.45833 2.1398 0.45833 opens 1.7123 0.54167 solid #637383
+edge readme module 4 4.5172 0.45833 4.5172 0.45833 5.6521 0.45833 5.6521 0.45833 explains 5.1537 0.54167 solid #637383
+edge module source 4 7.5036 0.45833 7.5036 0.45833 8.6299 0.45833 8.6299 0.45833 "maps to" 8.1369 0.54167 solid #637383
+edge source bt 7 9.5758 0.77456 9.5758 0.8015 9.5758 0.81875 9.5758 0.81875 9.5758 0.81875 11.295 0.81875 11.295 0.81875 uses 10.912 1.0556 solid #637383
+edge source runtime 4 10.387 0.43472 10.387 0.43472 13.937 0.43472 13.937 0.43472 exercises 12.166 0.083333 solid #637383
+edge bt runtime 7 12.899 1.0514 13.673 1.0514 14.784 1.0514 14.784 1.0514 14.784 1.0514 14.784 0.91834 14.784 0.91834 adapts 13.489 1.0556 solid #637383
+stop

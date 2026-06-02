@@ -24,6 +24,8 @@ for zero-boilerplate reactive data access.
 
 ## Architecture
 
+![Spring Data R2DBC + Coroutines Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-coroutines-readme-architecture-01.png)
+
 ```mermaid
 sequenceDiagram
     participant C as Client

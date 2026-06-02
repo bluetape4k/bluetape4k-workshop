@@ -21,6 +21,8 @@ Spring MVC security example with a custom login page, an in-memory user, and rol
 
 ## Architecture
 
+![Spring Security MVC Hello Graphviz architecture diagram](../../../docs/images/readme-diagrams/spring-security-mvc-hello-readme-architecture-01.png)
+
 ![hello Sequence Flow diagram](../../../docs/images/readme-diagrams/spring-security-mvc-hello-diagram-01.png)
 
 ## What This Module Shows

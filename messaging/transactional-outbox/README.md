@@ -24,6 +24,8 @@ The pattern guarantees that domain state changes and the corresponding Kafka eve
 
 ## Architecture
 
+![Transactional Outbox Pattern — bluetape4k Workshop Graphviz architecture diagram](../../docs/images/readme-diagrams/messaging-transactional-outbox-readme-architecture-01.png)
+
 ![Transactional Outbox Architecture](../../docs/images/readme-diagrams/messaging-transactional-outbox-architecture-01.png)
 
 ---

@@ -22,6 +22,8 @@ Toxiproxy로 실제 네트워크 장애를 주입해 CircuitBreaker 상태 머�
 
 ## 아키텍처
 
+![Spring Boot Cache Resilience Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/spring-boot-cache-resilience-readme-architecture-01.png)
+
 요청 흐름, CircuitBreaker 상태 머신(CLOSED → OPEN → HALF-OPEN → CLOSED),
 통합 테스트에서 사용하는 ToxiproxyServer 카오스 주입을 다이어그램으로 확인할 수 있습니다.
 

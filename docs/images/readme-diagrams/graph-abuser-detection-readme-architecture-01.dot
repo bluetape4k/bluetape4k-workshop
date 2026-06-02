@@ -1,0 +1,42 @@
+digraph G {
+  graph [
+    rankdir=LR,
+    bgcolor="white",
+    pad="0.35",
+    nodesep="0.55",
+    ranksep="0.75",
+    splines=ortho,
+    outputorder=edgesfirst
+  ];
+  node [
+    shape=box,
+    style="rounded,filled",
+    penwidth=1.4,
+    color="#88A3B5",
+    fillcolor="#F6FAFF",
+    fontname="Helvetica",
+    fontsize=14,
+    margin="0.14,0.10"
+  ];
+  edge [
+    color="#637383",
+    arrowsize=0.8,
+    penwidth=1.5,
+    fontname="Helvetica",
+    fontsize=11
+  ];
+
+  reader [label="Developer\nReader", fillcolor="#FFF8E7"];
+  readme [label="graph-abuser-detection\nREADME", fillcolor="#EEF7FF"];
+  module [label="Graph\nExample Module", fillcolor="#F1F8E9"];
+  source [label="graph abuser detection\nsource + tests", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k\nhelpers / APIs", fillcolor="#EAF7F0"];
+  runtime [label="Runtime or\nTest Backend", fillcolor="#FFF1F1"];
+
+  reader -> readme [label="opens"];
+  readme -> module [label="explains"];
+  module -> source [label="maps to"];
+  source -> bt [label="uses"];
+  source -> runtime [label="exercises"];
+  bt -> runtime [label="adapts"];
+}

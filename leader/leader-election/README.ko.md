@@ -25,6 +25,8 @@ Spring Boot 기반의 **분산 리더 선출(distributed leader election)** 예�
 
 ## 아키텍처
 
+![Leader Election Workshop Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/leader-leader-election-readme-architecture-01.png)
+
 ![아키텍처 개요](../../docs/images/readme-diagrams/architecture-overview.png)
 
 여러 앱 인스턴스가 Redis `SET NX EX`로 분산 락을 경쟁합니다.  

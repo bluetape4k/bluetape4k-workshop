@@ -29,6 +29,8 @@ guarantee correct concurrent execution via ZooKeeper ephemeral nodes.
 
 ## Architecture
 
+![Leader ZooKeeper Workshop Graphviz architecture diagram](../../docs/images/readme-diagrams/leader-leader-zookeeper-readme-architecture-01.png)
+
 Multiple app instances compete for ZooKeeper locks backed by
 [Apache Curator](https://curator.apache.org/) `InterProcessMutex` (single-leader) and
 `InterProcessSemaphoreV2` (group-leader). Only the **elected leader(s)** execute each

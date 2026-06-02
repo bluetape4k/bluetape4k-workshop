@@ -1,0 +1,14 @@
+graph 1 15.565 1.3361
+node reader 0.56708 0.45833 1.1342 0.61667 "Developer\nReader" rounded,filled box #88A3B5 #FFF8E7
+node readme 3.3575 0.45833 2.1342 0.61667 "Cache Caffeine Demo\nREADME" rounded,filled box #88A3B5 #EEF7FF
+node module 6.5646 0.45833 1.6967 0.61667 "Spring Boot\nExample Module" rounded,filled box #88A3B5 #F1F8E9
+node source 9.5738 0.45833 1.7592 0.825 "spring boot cache\ncaffeine\nsource + tests" rounded,filled box #88A3B5 #F5F0FF
+node bt 12.239 1.0278 1.4467 0.61667 "bluetape4k\nhelpers / APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime 14.863 0.45833 1.405 0.61667 "Runtime or\nTest Backend" rounded,filled box #88A3B5 #FFF1F1
+edge reader readme 4 1.1385 0.45833 1.1385 0.45833 2.1421 0.45833 2.1421 0.45833 opens 1.7123 0.54167 solid #637383
+edge readme module 4 4.4299 0.45833 4.4299 0.45833 5.5685 0.45833 5.5685 0.45833 explains 5.0704 0.54167 solid #637383
+edge module source 4 7.4188 0.45833 7.4188 0.45833 8.5433 0.45833 8.5433 0.45833 "maps to" 8.0535 0.54167 solid #637383
+edge source bt 4 10.461 0.79514 10.461 0.79514 11.364 0.79514 11.364 0.79514 uses 10.985 1.0556 solid #637383
+edge source runtime 4 10.459 0.43472 10.459 0.43472 14.01 0.43472 14.01 0.43472 exercises 12.239 0.083333 solid #637383
+edge bt runtime 7 12.972 1.0514 13.746 1.0514 14.857 1.0514 14.857 1.0514 14.857 1.0514 14.857 0.91834 14.857 0.91834 adapts 13.561 1.0556 solid #637383
+stop

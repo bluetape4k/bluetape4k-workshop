@@ -8,6 +8,8 @@ This example exercises **STOMP WebSocket 예제** as a runnable Spring Boot appl
 
 ## Architecture Diagram
 
+![STOMP WebSocket 예제 Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-stomp-websocket-readme-architecture-01.png)
+
 The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.springboot` as the source of truth when comparing this README with the code.
 
 ## Flow Diagram

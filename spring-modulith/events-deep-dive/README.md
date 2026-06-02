@@ -14,6 +14,8 @@ Spring Modulith event publication examples that move from basic application even
 
 ## Architecture
 
+![Spring Modulith Events Deep Dive Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-modulith-events-deep-dive-readme-architecture-01.png)
+
 ![events deep dive Sequence Flow diagram](../../docs/images/readme-diagrams/spring-modulith-events-deep-dive-diagram-01.png)
 
 ## What This Module Shows

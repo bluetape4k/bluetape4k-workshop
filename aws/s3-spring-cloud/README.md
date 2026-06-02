@@ -8,6 +8,8 @@ This example exercises **Spring Cloud AWS S3 Demo** as a runnable AWS integratio
 
 ## Architecture Diagram
 
+![Spring Cloud AWS S3 Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/aws-s3-spring-cloud-readme-architecture-01.png)
+
 The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.aws` as the source of truth when comparing this README with the code.
 
 ## Flow Diagram

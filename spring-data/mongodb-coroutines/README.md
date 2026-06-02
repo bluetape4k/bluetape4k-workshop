@@ -8,6 +8,8 @@ This example exercises **mongodb-coroutine demo** as a runnable Spring Data pers
 
 ## Architecture Diagram
 
+![mongodb-coroutine demo Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-data-mongodb-coroutines-readme-architecture-01.png)
+
 The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.springdata` as the source of truth when comparing this README with the code.
 
 ![mongodb-coroutine demo architecture diagram](../../docs/images/readme-diagrams/spring-data-mongodb-coroutines-diagram-01.png)

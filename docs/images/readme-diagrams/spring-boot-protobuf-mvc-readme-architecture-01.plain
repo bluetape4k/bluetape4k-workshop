@@ -1,0 +1,14 @@
+graph 1 15.888 1.3361
+node reader 0.56708 0.45833 1.1342 0.61667 "Developer\nReader" rounded,filled box #88A3B5 #FFF8E7
+node readme 3.2221 0.45833 1.8633 0.825 "Module Protobuf in\nSpring Boot MVC\nREADME" rounded,filled box #88A3B5 #EEF7FF
+node module 6.2937 0.45833 1.6967 0.61667 "Spring Boot\nExample Module" rounded,filled box #88A3B5 #F1F8E9
+node source 9.5998 0.45833 2.3529 0.61667 "spring boot protobuf mvc\nsource + tests" rounded,filled box #88A3B5 #F5F0FF
+node bt 12.562 1.0278 1.4467 0.61667 "bluetape4k\nhelpers / APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime 15.186 0.45833 1.405 0.61667 "Runtime or\nTest Backend" rounded,filled box #88A3B5 #FFF1F1
+edge reader readme 4 1.1432 0.45833 1.1432 0.45833 2.1391 0.45833 2.1391 0.45833 opens 1.7123 0.54167 solid #637383
+edge readme module 4 4.1604 0.45833 4.1604 0.45833 5.2969 0.45833 5.2969 0.45833 explains 4.7996 0.54167 solid #637383
+edge module source 4 7.1494 0.45833 7.1494 0.45833 8.2751 0.45833 8.2751 0.45833 "maps to" 7.7827 0.54167 solid #637383
+edge source bt 7 10.782 0.52963 11.61 0.52963 12.569 0.52963 12.569 0.52963 12.569 0.52963 12.569 0.57248 12.569 0.57248 uses 11.308 1.0556 solid #637383
+edge source runtime 4 10.784 0.33981 10.784 0.33981 14.333 0.33981 14.333 0.33981 exercises 12.562 0.083333 solid #637383
+edge bt runtime 7 13.295 1.0514 14.069 1.0514 15.18 1.0514 15.18 1.0514 15.18 1.0514 15.18 0.91834 15.18 0.91834 adapts 13.884 1.0556 solid #637383
+stop

@@ -22,6 +22,8 @@ AWS S3, and S3 pre-signed URL backends via Spring Profile — without changing a
 
 ## Architecture
 
+![Storage Abstraction Workshop Graphviz architecture diagram](../../docs/images/readme-diagrams/aws-storage-abstraction-readme-architecture-01.png)
+
 ![storage abstraction Architecture diagram](../../docs/images/readme-diagrams/aws-storage-abstraction-architecture-01.png)
 
 ## Key Features
