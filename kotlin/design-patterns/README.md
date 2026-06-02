@@ -1,8 +1,27 @@
 # Kotlin Design Patterns
 
-Kotlin 언어로 구현하는 디자인 패턴 예제 모음입니다.
+[한국어](README.ko.md) | English
 
-[Java Design Patterns](https://github.com/iluwatar/java-design-patterns) 를 참고하여, Kotlin 언어로 Design Patterns 예제를 설명합니다.
+## Example Scenario
+
+This example exercises **Kotlin Design Patterns** as a runnable Kotlin language and coroutine patterns workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+
+## Architecture Diagram
+
+The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.kotlin` as the source of truth when comparing this README with the code.
+
+![Kotlin Design Patterns architecture diagram](../../docs/images/readme-diagrams/kotlin-design-patterns-diagram-01.png)
+
+## Flow Diagram
+
+1. Prepare the local runtime required by `kotlin-design-patterns`.
+2. Execute the application, controller, service, or test fixture that owns the example scenario.
+3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
+4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
+
+## Sequence Diagram
+
+The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 ## 구현된 패턴
 

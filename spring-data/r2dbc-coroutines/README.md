@@ -1,5 +1,24 @@
 # Spring Data R2DBC + Coroutines
 
+[한국어](README.ko.md) | English
+
+## Example Scenario
+
+This example exercises **Spring Data R2DBC + Coroutines** as a runnable Spring Data persistence workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+
+## Flow Diagram
+
+1. Prepare the local runtime required by `spring-data-r2dbc-coroutines`.
+2. Execute the application, controller, service, or test fixture that owns the example scenario.
+3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
+4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
+
+## Sequence Diagram
+
+The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
+
+![Spring Data R2DBC + Coroutines sequence diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-coroutines-sequence-01.png)
+
 Spring Data R2DBC with Kotlin coroutines using **bluetape4k `*Suspending` extension functions**
 for zero-boilerplate reactive data access.
 
@@ -140,7 +159,6 @@ Example<Person> example = Example.of(new Person("Jon", "Snow"));
         repo.
 
 findAll(example);
-
 
 ExampleMatcher matcher = ExampleMatcher.matching().
         .

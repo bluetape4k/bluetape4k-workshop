@@ -1,5 +1,28 @@
 # Spring Cloud Gateway Sample
 
+[한국어](README.ko.md) | English
+
+## Example Scenario
+
+This example exercises **Spring Cloud Gateway Sample** as a runnable Spring Cloud integration workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+
+## Architecture Diagram
+
+The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.springcloud` as the source of truth when comparing this README with the code.
+
+![Spring Cloud Gateway Sample architecture diagram](../../docs/images/readme-diagrams/spring-cloud-gateway-example-diagram-01.png)
+
+## Flow Diagram
+
+1. Prepare the local runtime required by `spring-cloud-gateway-example`.
+2. Execute the application, controller, service, or test fixture that owns the example scenario.
+3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
+4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
+
+## Sequence Diagram
+
+The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
+
 ## 아키텍처 다이어그램
 
 ![gateway example Architecture diagram](../../docs/images/readme-diagrams/spring-cloud-gateway-example-diagram-01.png)
@@ -52,7 +75,6 @@ X-XSS-Protection: 1 ; mode=block
     "origin": "207.107.158.66", 
     "url": "http://httpbin.org/get"
 }
-
 
 $ http :8080/headers Host:www.myhost.org
 HTTP/1.1 200 OK
@@ -124,7 +146,6 @@ X-Content-Type-Options: nosniff
 X-Frame-Options: DENY
 X-XSS-Protection: 1 ; mode=block
 content-length: 0
-
 
 ```
 

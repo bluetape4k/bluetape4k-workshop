@@ -1,5 +1,18 @@
 # Leader Election Workshop
 
+[한국어](README.ko.md) | English
+
+## Example Scenario
+
+This example exercises **Leader Election Workshop** as a runnable leader-election coordination workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+
+## Flow Diagram
+
+1. Prepare the local runtime required by `leader-leader-election`.
+2. Execute the application, controller, service, or test fixture that owns the example scenario.
+3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
+4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
+
 A Spring Boot workshop example demonstrating **distributed leader election** for scheduled jobs
 in multi-instance deployments, using the `bluetape4k-leader` library.
 

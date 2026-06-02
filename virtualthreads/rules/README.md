@@ -1,5 +1,30 @@
 # Concurrent programming in Java with virtual threads
 
+[한국어](README.ko.md) | English
+
+## Example Scenario
+
+This example exercises **Concurrent programming in Java with virtual threads** as a runnable virtual-thread execution workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+
+## Architecture Diagram
+
+The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.virtualthreads` as the source of truth when comparing this README with the code.
+
+![Concurrent programming in Java with virtual threads architecture diagram](../../docs/images/readme-diagrams/virtualthreads-rules-readme-ko-md-architecture-01.png)
+
+## Flow Diagram
+
+1. Prepare the local runtime required by `virtualthreads-rules`.
+2. Execute the application, controller, service, or test fixture that owns the example scenario.
+3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
+4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
+
+![Concurrent programming in Java with virtual threads flow diagram](../../docs/images/readme-diagrams/virtualthreads-rules-diagram-01.png)
+
+## Sequence Diagram
+
+The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
+
 ## Virtual Thread 개념 구조
 
 ![Virtual Thread diagram](../../docs/images/readme-diagrams/virtualthreads-rules-diagram-01.png)
@@ -121,7 +146,6 @@ does not depend on the limitations of the OS.
 
 A summary of the quantitative differences between platform and virtual streams:
 
-
 <table>
   <tr>
    <td>Parameter
@@ -164,7 +188,6 @@ A summary of the quantitative differences between platform and virtual streams:
    </td>
   </tr>
 </table>
-
 
 The implementation of virtual threads consists of two parts: continuation and scheduler.
 
@@ -217,7 +240,6 @@ threads is to use a builder. (A similar builder exists for creating platform thr
 
 The `Thread` class has new methods to handle virtual threads:
 
-
 <table>
   <tr>
    <td>Modifier and type
@@ -252,7 +274,6 @@ The `Thread` class has new methods to handle virtual threads:
    </td>
   </tr>
 </table>
-
 
 There are four ways to use virtual threads:
 

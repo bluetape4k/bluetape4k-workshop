@@ -1,5 +1,24 @@
 # spring-boot/idempotency
 
+[한국어](README.ko.md) | English
+
+## Example Scenario
+
+This example exercises **spring-boot/idempotency** as a runnable Spring Boot application feature workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+
+## Flow Diagram
+
+1. Prepare the local runtime required by `spring-boot-idempotency`.
+2. Execute the application, controller, service, or test fixture that owns the example scenario.
+3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
+4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
+
+## Sequence Diagram
+
+The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
+
+![spring-boot/idempotency sequence diagram](../../docs/images/readme-diagrams/spring-boot-idempotency-sequence-01.png)
+
 Duplicate-safe command handling with **Idempotency Key** pattern using Redis (Redisson) and Spring Boot WebFlux + Kotlin Coroutines.
 
 ## Architecture

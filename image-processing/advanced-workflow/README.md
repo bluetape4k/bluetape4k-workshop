@@ -1,6 +1,16 @@
 # image-processing-advanced-workflow
 
-English | [한국어](./README.ko.md)
+[한국어](README.ko.md) | English
+
+## Example Scenario
+
+This example exercises **image-processing-advanced-workflow** as a runnable image-processing workflow workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+
+![image-processing-advanced-workflow scenario diagram](../../docs/images/readme-diagrams/image-processing-advanced-workflow-scenario-01.png)
+
+## Sequence Diagram
+
+The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 Advanced Spring Boot 4 workflow for uploaded images: validate, store the original, generate WebP derivatives with Java 25 libvips, store every object through Bluetape4k `ImageStorage`, and return unsigned public URLs.
 

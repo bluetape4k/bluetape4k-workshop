@@ -1,5 +1,24 @@
 # R2DBC + Spring WebFlux (Functional Router)
 
+[한국어](README.ko.md) | English
+
+## Example Scenario
+
+This example exercises **R2DBC + Spring WebFlux (Functional Router)** as a runnable Spring Data persistence workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+
+## Flow Diagram
+
+1. Prepare the local runtime required by `spring-data-r2dbc-webflux`.
+2. Execute the application, controller, service, or test fixture that owns the example scenario.
+3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
+4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
+
+## Sequence Diagram
+
+The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
+
+![R2DBC + Spring WebFlux (Functional Router) sequence diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-sequence-01.png)
+
 Spring Data R2DBC with WebFlux functional endpoints (Handler + Router) and Kotlin coroutines.
 Uses H2 in-memory database.
 

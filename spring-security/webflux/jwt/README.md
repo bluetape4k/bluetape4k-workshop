@@ -1,6 +1,14 @@
 # Spring Security WebFlux JWT
 
-[English](README.md) | [한국어](README.ko.md)
+[한국어](README.ko.md) | English
+
+## Example Scenario
+
+This example exercises **Spring Security WebFlux JWT** as a runnable Spring Security request protection workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+
+## Sequence Diagram
+
+The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 Reactive JWT resource server example. It issues RSA-signed JWTs from `/token` and protects the greeting endpoint with bearer-token authentication.
 
