@@ -1,9 +1,9 @@
-graph 1 13.027 1.7263
-node entry 1.4396 0.86313 2.8792 1.445 "Entry & Verification\nAbstractFactoryTest\nHeroDataClassTest\nKotlin Design Patterns tests" rounded,filled box #88A3B5 #FFF8E7
-node service 5.5705 0.86313 1.9938 1.7263 "Service & Domain\nArmy\nCastle\nFactoryMaker\nKing" rounded,filled box #88A3B5 #F1F8E9
-node bt 9.0035 0.86313 1.8167 1.445 "bluetape4k APIs\nio\njunit5\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
-node runtime 12.192 0.86313 1.6708 1.1637 "Runtime\nSQL / R2DBC\nAWS / S3" rounded,filled box #88A3B5 #FFF1F1
-edge entry service 4 2.8844 0.86313 2.8844 0.86313 4.4255 0.86313 4.4255 0.86313 delegates 3.7264 0.95167 solid #637383
-edge service bt 4 6.5727 0.86313 6.5727 0.86313 7.9454 0.86313 7.9454 0.86313 extends 7.3312 0.95167 solid #637383
-edge bt runtime 4 9.9214 0.86313 9.9214 0.86313 11.208 0.86313 11.208 0.86313 adapts 10.634 0.95167 solid #637383
+graph 1 13.923 1.7263
+node entry 1.4396 0.86313 2.8792 1.445 "Example Entrypoints\nAbstractFactoryTest\nHeroDataClassTest\nKotlin Design Patterns tests" rounded,filled box #88A3B5 #FFF8E7
+node service 5.6747 0.86313 2.2021 1.7263 "Application Services\nArmy\nCastle\nFactoryMaker\nKing" rounded,filled box #88A3B5 #F1F8E9
+node bt 9.2118 0.86313 1.8167 1.445 "bluetape4k APIs\nio\njunit5\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
+node runtime 12.744 0.86313 2.3583 1.1637 "Runtime Dependencies\nSQL / R2DBC\nAWS / S3" rounded,filled box #88A3B5 #FFF1F1
+edge entry service 4 2.8852 0.86313 2.8852 0.86313 4.4271 0.86313 4.4271 0.86313 delegates 3.7264 0.95167 solid #637383
+edge service bt 4 6.7841 0.86313 6.7841 0.86313 8.1534 0.86313 8.1534 0.86313 extends 7.5396 0.95167 solid #637383
+edge bt runtime 4 10.126 0.86313 10.126 0.86313 11.418 0.86313 11.418 0.86313 adapts 10.842 0.95167 solid #637383
 stop

@@ -26,12 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nImageProcessingAdvancedApplication\nImageProcessingAdvancedPropertiesTest\nAbstractImagePersistenceTest\nImage Processing Advanced", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nImagePersistenceServiceImpl\nImageDerivativesController\nImageProcessingExceptionHandler", fillcolor="#EEF7FF"];
-  service [label="Service & Domain\nImageProcessingAdvancedProperties\nImagePersistenceModels\nImagePersistenceService\nImagePersistenceDatabaseInitializer", fillcolor="#F1F8E9"];
-  infra [label="Repository & Infra\nImageObjectKind\nImagePersistenceMappers\nImageProcessingEventRepository\nImageProcessingJobRepository", fillcolor="#F5F0FF"];
+  entry [label="Example Entrypoints\nImageProcessingAdvancedApplication\nImageProcessingAdvancedPropertiesTest\nAbstractImagePersistenceTest\nImage Processing Advanced", fillcolor="#FFF8E7"];
+  api [label="API / Adapter Layer\nImagePersistenceServiceImpl\nImageDerivativesController\nImageProcessingExceptionHandler", fillcolor="#EEF7FF"];
+  service [label="Application Services\nImageProcessingAdvancedProperties\nImagePersistenceModels\nImagePersistenceService\nImagePersistenceDatabaseInitializer", fillcolor="#F1F8E9"];
+  infra [label="Infrastructure Layer\nImageObjectKind\nImagePersistenceMappers\nImageProcessingEventRepository\nImageProcessingJobRepository", fillcolor="#F5F0FF"];
   bt [label="bluetape4k APIs\nworkshop\ncore\ncoroutines", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC\nAWS / S3\nTestcontainers", fillcolor="#FFF1F1"];
+  runtime [label="Runtime Dependencies\nSQL / R2DBC\nAWS / S3\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];

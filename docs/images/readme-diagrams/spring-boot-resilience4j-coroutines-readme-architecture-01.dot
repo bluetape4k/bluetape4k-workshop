@@ -26,12 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nResilienceApplication\nAbstractResilienceTest\nPrometheusMetricsTest\nSpring Boot Resilience4j", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nNettyConfig\nResilience4jConfig\nBackendAController\nBackendBController", fillcolor="#EEF7FF"];
-  service [label="Service & Domain\nRecordFailurePredicate\nBackendAService\nBackendCService\nService", fillcolor="#F1F8E9"];
-  infra [label="Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\njunit5\nresilience4j", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
+  entry [label="Boot App/Test Surface\nResilienceApplication\nAbstractResilienceTest\nPrometheusMetricsTest\nSpring Boot Resilience4j", fillcolor="#FFF8E7"];
+  api [label="Spring Web Adapters\nNettyConfig\nResilience4jConfig\nBackendAController\nBackendBController", fillcolor="#EEF7FF"];
+  service [label="Application Feature\nRecordFailurePredicate\nBackendAService\nBackendCService\nService", fillcolor="#F1F8E9"];
+  infra [label="Spring Boot Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Boot APIs\nworkshop\njunit5\nresilience4j", fillcolor="#EAF7F0"];
+  runtime [label="Boot Runtime\nSQL / R2DBC\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];

@@ -26,11 +26,11 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nRedisApplication\nAbstractRedisTest\nGeoOperationsTest\nSpring Data Redis Examples tests", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nCapturingStreamListener", fillcolor="#EEF7FF"];
-  infra [label="Repository & Infra\nActor\nMovie\nMovieActor\nMovieActorReference", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\nredis\nspring", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC\nRedis\nKafka", fillcolor="#FFF1F1"];
+  entry [label="Data Demo Surface\nRedisApplication\nAbstractRedisTest\nGeoOperationsTest\nSpring Data Redis Examples tests", fillcolor="#FFF8E7"];
+  api [label="Web/Data Adapters\nCapturingStreamListener", fillcolor="#EEF7FF"];
+  infra [label="Repository Layer\nActor\nMovie\nMovieActor\nMovieActorReference", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Data APIs\nworkshop\nredis\nspring", fillcolor="#EAF7F0"];
+  runtime [label="Database Runtime\nSQL / R2DBC\nRedis\nKafka", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> infra [label="persists / publishes"];

@@ -1,13 +1,13 @@
-graph 1 22.706 1.7263
-node entry 1.6219 0.86313 3.2438 1.7263 "Entry & Verification\nStompWebSocketApplication\nGreetingIntegrationTest\nTestSessionHandler\nSpring Boot Stomp Websocket" rounded,filled box #88A3B5 #FFF8E7
-node api 5.8101 0.86313 2.0771 1.1637 "API & Adapters\nTomcatConfig\nGreetingController" rounded,filled box #88A3B5 #EEF7FF
-node service 9.5712 0.86313 2.0563 1.445 "Service & Domain\nWebSocketConfig\nGreeting\nHelloMessage" rounded,filled box #88A3B5 #F1F8E9
-node infra 14.728 0.86313 3.0354 1.7263 "Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration" rounded,filled box #88A3B5 #F5F0FF
-node bt 18.682 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\ncore\njunit5" rounded,filled box #88A3B5 #EAF7F0
-node runtime 21.87 0.86313 1.6708 0.8825 "Runtime\nSQL / R2DBC" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.2531 0.86313 3.2531 0.86313 4.6203 0.86313 4.6203 0.86313 invokes 4.0076 0.95167 solid #637383
-edge api service 4 6.8577 0.86313 6.8577 0.86313 8.393 0.86313 8.393 0.86313 delegates 7.6958 0.95167 solid #637383
-edge service infra 4 10.609 0.86313 10.609 0.86313 13.061 0.86313 13.061 0.86313 "persists / publishes" 11.905 0.95167 solid #637383
-edge infra bt 4 16.251 0.86313 16.251 0.86313 17.624 0.86313 17.624 0.86313 extends 17.01 0.95167 solid #637383
-edge bt runtime 4 19.6 0.86313 19.6 0.86313 20.887 0.86313 20.887 0.86313 adapts 20.313 0.95167 solid #637383
+graph 1 23.539 1.7263
+node entry 1.6219 0.86313 3.2438 1.7263 "Boot App/Test Surface\nStompWebSocketApplication\nGreetingIntegrationTest\nTestSessionHandler\nSpring Boot Stomp Websocket" rounded,filled box #88A3B5 #FFF8E7
+node api 5.9299 0.86313 2.3167 1.1637 "Spring Web Adapters\nTomcatConfig\nGreetingController" rounded,filled box #88A3B5 #EEF7FF
+node service 9.8472 0.86313 2.1292 1.445 "Application Feature\nWebSocketConfig\nGreeting\nHelloMessage" rounded,filled box #88A3B5 #F1F8E9
+node infra 15.041 0.86313 3.0354 1.7263 "Spring Boot Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration" rounded,filled box #88A3B5 #F5F0FF
+node bt 19.255 0.86313 2.3375 1.445 "bluetape4k Boot APIs\nworkshop\ncore\njunit5" rounded,filled box #88A3B5 #EAF7F0
+node runtime 22.703 0.86313 1.6708 0.8825 "Boot Runtime\nSQL / R2DBC" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.2505 0.86313 3.2505 0.86313 4.6192 0.86313 4.6192 0.86313 invokes 4.0076 0.95167 solid #637383
+edge api service 4 7.0946 0.86313 7.0946 0.86313 8.6313 0.86313 8.6313 0.86313 delegates 7.9354 0.95167 solid #637383
+edge service infra 4 10.917 0.86313 10.917 0.86313 13.372 0.86313 13.372 0.86313 "persists / publishes" 12.217 0.95167 solid #637383
+edge infra bt 4 16.568 0.86313 16.568 0.86313 17.94 0.86313 17.94 0.86313 extends 17.322 0.95167 solid #637383
+edge bt runtime 4 20.432 0.86313 20.432 0.86313 21.721 0.86313 21.721 0.86313 adapts 21.146 0.95167 solid #637383
 stop

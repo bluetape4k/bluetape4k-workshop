@@ -27,9 +27,9 @@ digraph G {
   ];
 
   entry [label="Example Family\nRedisson Examples", fillcolor="#FFF8E7"];
-  infra [label="Framework Layer\nSpring boot starter jdbc lib\nSpring boot starter data redis\nlib\nSpring boot starter data redis", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nredis\nredisson\ntestcontainers", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC\nRedis\nAWS / S3", fillcolor="#FFF1F1"];
+  infra [label="Redis Client Layer\nSpring boot starter jdbc lib\nSpring boot starter data redis\nlib\nSpring boot starter data redis", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Redis APIs\nredis\nredisson\ntestcontainers", fillcolor="#EAF7F0"];
+  runtime [label="Redis Runtime\nSQL / R2DBC\nRedis\nAWS / S3", fillcolor="#FFF1F1"];
 
   entry -> infra [label="persists / publishes"];
   infra -> bt [label="extends"];

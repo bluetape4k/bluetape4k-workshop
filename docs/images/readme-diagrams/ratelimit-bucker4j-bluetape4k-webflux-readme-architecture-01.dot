@@ -26,12 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nRateLimiterWebfluxApplication\nAbstractRateLimiterApplicationTest\nCoroutineControllerTest\nRatelimit Bucker4j Bluetape4k", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nCoroutineController\nReactiveController\nAsyncUserRateLimitWebFilter\nUserRateLimitWebFilter", fillcolor="#EEF7FF"];
-  service [label="Service & Domain\nKeyResolver\nRateLimitTargetProvider\nUserKeyResolver\nBucket4jConfig", fillcolor="#F1F8E9"];
-  infra [label="Repository & Infra\nLettuceConfig\nTestRedisConfig", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\njackson3\nspring", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
+  entry [label="Rate-limit Surface\nRateLimiterWebfluxApplication\nAbstractRateLimiterApplicationTest\nCoroutineControllerTest\nRatelimit Bucker4j Bluetape4k", fillcolor="#FFF8E7"];
+  api [label="Web Filter / Controller\nCoroutineController\nReactiveController\nAsyncUserRateLimitWebFilter\nUserRateLimitWebFilter", fillcolor="#EEF7FF"];
+  service [label="Policy Enforcement\nKeyResolver\nRateLimitTargetProvider\nUserKeyResolver\nBucket4jConfig", fillcolor="#F1F8E9"];
+  infra [label="Bucket Storage Layer\nLettuceConfig\nTestRedisConfig", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k RateLimit APIs\nworkshop\njackson3\nspring", fillcolor="#EAF7F0"];
+  runtime [label="Bucket Runtime\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];

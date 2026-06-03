@@ -1,11 +1,11 @@
-graph 1 17.851 1.445
-node entry 1.5958 0.7225 3.1917 1.445 "Entry & Verification\nLanguageDetectionServiceTest\nAbuseWordFilterTest\nKotlin Text Processing tests" rounded,filled box #88A3B5 #FFF8E7
-node api 5.6799 0.7225 1.9208 1.1637 "API & Adapters\nAbuseWordFilter\nTextNormalizer" rounded,filled box #88A3B5 #EEF7FF
-node service 9.7274 0.7225 2.7854 0.8825 "Service & Domain\nLanguageDetectionService" rounded,filled box #88A3B5 #F1F8E9
-node bt 13.556 0.7225 1.8167 1.445 "bluetape4k APIs\ntext\nlogging\njunit5" rounded,filled box #88A3B5 #EAF7F0
-node runtime 16.88 0.7225 1.9417 0.8825 "Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.1982 0.7225 3.1982 0.7225 4.5699 0.7225 4.5699 0.7225 invokes 3.9556 0.81104 solid #637383
-edge api service 4 6.6494 0.7225 6.6494 0.7225 8.1829 0.7225 8.1829 0.7225 delegates 7.4875 0.81104 solid #637383
-edge service bt 4 11.126 0.7225 11.126 0.7225 12.496 0.7225 12.496 0.7225 extends 11.884 0.81104 solid #637383
-edge bt runtime 4 14.473 0.7225 14.473 0.7225 15.759 0.7225 15.759 0.7225 adapts 15.187 0.81104 solid #637383
+graph 1 18.59 1.445
+node entry 1.5958 0.7225 3.1917 1.445 "Example Entrypoints\nLanguageDetectionServiceTest\nAbuseWordFilterTest\nKotlin Text Processing tests" rounded,filled box #88A3B5 #FFF8E7
+node api 5.8413 0.7225 2.2438 1.1637 "API / Adapter Layer\nAbuseWordFilter\nTextNormalizer" rounded,filled box #88A3B5 #EEF7FF
+node service 10.05 0.7225 2.7854 0.8825 "Application Services\nLanguageDetectionService" rounded,filled box #88A3B5 #F1F8E9
+node bt 13.879 0.7225 1.8167 1.445 "bluetape4k APIs\ntext\nlogging\njunit5" rounded,filled box #88A3B5 #EAF7F0
+node runtime 17.411 0.7225 2.3583 0.8825 "Runtime Dependencies\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.2009 0.7225 3.2009 0.7225 4.5672 0.7225 4.5672 0.7225 invokes 3.9556 0.81104 solid #637383
+edge api service 4 6.9693 0.7225 6.9693 0.7225 8.5056 0.7225 8.5056 0.7225 delegates 7.8104 0.81104 solid #637383
+edge service bt 4 11.449 0.7225 11.449 0.7225 12.819 0.7225 12.819 0.7225 extends 12.207 0.81104 solid #637383
+edge bt runtime 4 14.793 0.7225 14.793 0.7225 16.085 0.7225 16.085 0.7225 adapts 15.51 0.81104 solid #637383
 stop

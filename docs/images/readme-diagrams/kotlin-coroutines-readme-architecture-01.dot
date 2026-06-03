@@ -29,7 +29,7 @@ digraph G {
   entry [label="Example Family\nCoroutines Examples", fillcolor="#FFF8E7"];
   infra [label="Framework Layer\nSpring context\nSpring boot starter test\nTestcontainers lib\nTestcontainers junit jupiter", fillcolor="#F5F0FF"];
   bt [label="bluetape4k APIs\ncoroutines\nidgenerators\ntestcontainers", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nKafka\nTestcontainers", fillcolor="#FFF1F1"];
+  runtime [label="Runtime Dependencies\nKafka\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> infra [label="persists / publishes"];
   infra -> bt [label="extends"];

@@ -26,12 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nOutboxApplication\nAbstractOutboxTest\nOutboxTransactionTest\nMessaging Transactional Outbox", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nOrderController\nOrderService\nOutboxEventTable", fillcolor="#EEF7FF"];
-  service [label="Service & Domain\nOrderResponse\nExposedConfig\nKafkaConfig\nOrderTable", fillcolor="#F1F8E9"];
-  infra [label="Repository & Infra\nOutboxEvent\nOutboxStatus", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\njunit5\nassertions", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC\nKafka\nTestcontainers", fillcolor="#FFF1F1"];
+  entry [label="Messaging App/Test Surface\nOutboxApplication\nAbstractOutboxTest\nOutboxTransactionTest\nMessaging Transactional Outbox", fillcolor="#FFF8E7"];
+  api [label="Producer / Consumer Adapters\nOrderController\nOrderService\nOutboxEventTable", fillcolor="#EEF7FF"];
+  service [label="Message Workflow\nOrderResponse\nExposedConfig\nKafkaConfig\nOrderTable", fillcolor="#F1F8E9"];
+  infra [label="Kafka Topic Layer\nOutboxEvent\nOutboxStatus", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Kafka APIs\nworkshop\njunit5\nassertions", fillcolor="#EAF7F0"];
+  runtime [label="Kafka Broker Runtime\nSQL / R2DBC\nKafka\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];

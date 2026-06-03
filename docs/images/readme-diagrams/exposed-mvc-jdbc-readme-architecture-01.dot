@@ -26,12 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nExposedMvcJdbcApp\nAbstractMvcJdbcTest\nAuthorControllerTest\nExposed Mvc Jdbc tests", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nAuthorController\nBookController\nGlobalExceptionHandler\nOrderController", fillcolor="#EEF7FF"];
-  service [label="Service & Domain\nAuthorService\nDatabaseInitializer\nOrderService", fillcolor="#F1F8E9"];
-  infra [label="Repository & Infra\nAuthorDTO\nAuthorMappers\nAuthorRepository\nBookRepository", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\njunit5\nassertions", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC\nTestcontainers", fillcolor="#FFF1F1"];
+  entry [label="Web/Test Entrypoints\nExposedMvcJdbcApp\nAbstractMvcJdbcTest\nAuthorControllerTest\nExposed Mvc Jdbc tests", fillcolor="#FFF8E7"];
+  api [label="MVC/WebFlux Controllers\nAuthorController\nBookController\nGlobalExceptionHandler\nOrderController", fillcolor="#EEF7FF"];
+  service [label="Application Services\nAuthorService\nDatabaseInitializer\nOrderService", fillcolor="#F1F8E9"];
+  infra [label="Exposed Persistence\nAuthorDTO\nAuthorMappers\nAuthorRepository\nBookRepository", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Data APIs\nworkshop\njunit5\nassertions", fillcolor="#EAF7F0"];
+  runtime [label="SQL Test Runtime\nSQL / R2DBC\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];

@@ -16,6 +16,10 @@ README SVG/PNG with a layered layout instead of the raw Graphviz horizontal pipe
 ## Outcome
 
 - Regenerated 91 README architecture SVG/PNG assets with layered band structure.
+- Widened architecture canvases to 1320px so same-layer connectors have enough route space.
+- Added domain-specific layer and card labels for AWS, Exposed, messaging, graph, observability,
+  Redis, rate limit, Spring Data, Spring Boot, security, and virtual-thread examples.
+- Removed visible architecture edge labels; semantic labels remain as SVG `data-label` metadata.
 - Removed generated Flow sections from README files.
 - Removed duplicate Architecture sections and duplicate image targets.
 - Kept README parity between `README.md` and `README.ko.md`.
@@ -25,16 +29,24 @@ README SVG/PNG with a layered layout instead of the raw Graphviz horizontal pipe
 - `node scripts/validate-readme-language.mjs`
 - `node scripts/validate-readme-parity.mjs`
 - `node scripts/validate-sequence-diagrams.mjs`
+- `node scripts/validate-readme-architecture-diagrams.mjs`
 - architecture asset gate: 91 SVGs, missing pairs 0, bad font families 0
+- architecture route gate: orthogonal paths, boundary endpoints, endpoint angles, and non-endpoint
+  node-interior/clearance checks for all 91 SVGs
 - README image link gate: duplicate targets 0, SVG links 0, missing files 0
 - `xmllint --noout` for all `*-readme-architecture-01.svg`
 - `git diff --check`
-- visual contact sheet: `.omx/diagram-review/readme-architecture-contact-sheet-layered.png`
+- visual contact sheet: `.omx/diagram-review/readme-architecture-contact-sheet-domain-specific.png`
 - individual PNG checks: `aws`, `messaging/kafka`, `messaging/kafka-reply`,
   `observability/micrometer-tracing-coroutines`
+- individual PNG rechecks after route fix: `exposed-mvc-jdbc`, `aws`, `messaging/kafka`
 
 ## Future Rule
 
 Do not add generic README Flow sections unless there is a domain-specific flow asset. Architecture
 diagrams should default to layered structure and must be visually checked in rendered PNG form,
 especially when same-layer connector labels are present.
+
+Repeated connector complaints must be promoted into generator validation immediately. Same-layer
+card pairs need enough canvas width, enough horizontal gap, side-to-side routing when their centers
+align, and no visible edge-label boxes over connector paths.

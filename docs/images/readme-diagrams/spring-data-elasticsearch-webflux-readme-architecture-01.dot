@@ -26,12 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nElasticsearchApplication\nAbstractElasticsearchApplicationTest\nElasticsearchClientConfigTest\nSpring Data Elasticsearch", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nNettyConfig\nBookController\nDefaultBookService\nBookExceptionHandler", fillcolor="#EEF7FF"];
-  service [label="Service & Domain\nBookService", fillcolor="#F1F8E9"];
-  infra [label="Repository & Infra\nElasticsearchClientConfig\nJacksonConfig\nSwaggerConfig\nModifyBookRequest", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\ntestcontainers\njackson3", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nElasticsearch\nTestcontainers", fillcolor="#FFF1F1"];
+  entry [label="Data Demo Surface\nElasticsearchApplication\nAbstractElasticsearchApplicationTest\nElasticsearchClientConfigTest\nSpring Data Elasticsearch", fillcolor="#FFF8E7"];
+  api [label="Web/Data Adapters\nNettyConfig\nBookController\nDefaultBookService\nBookExceptionHandler", fillcolor="#EEF7FF"];
+  service [label="Data Service Layer\nBookService", fillcolor="#F1F8E9"];
+  infra [label="Repository Layer\nElasticsearchClientConfig\nJacksonConfig\nSwaggerConfig\nModifyBookRequest", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Data APIs\nworkshop\ntestcontainers\njackson3", fillcolor="#EAF7F0"];
+  runtime [label="Database Runtime\nElasticsearch\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];

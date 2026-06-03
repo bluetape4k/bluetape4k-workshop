@@ -1,11 +1,11 @@
-graph 1 19.319 1.7263
-node entry 1.7052 0.86313 3.4104 1.7263 "Entry & Verification\nMultiTenantDataIsolationApplication\nTenantIsolationTest\nSpring Boot Multi Tenant Data\nIsolation tests" rounded,filled box #88A3B5 #FFF8E7
-node service 6.383 0.86313 2.5563 1.7263 "Service & Domain\nExposedSchemaInitializer\nTenantInvoiceCache\nTenantInvoiceService\nTenantKeyFactory" rounded,filled box #88A3B5 #F1F8E9
-node infra 11.566 0.86313 2.5875 1.7263 "Repository & Infra\nInvoiceRecord\nInvoiceTable\nTenantId\nTenantInvoiceRepository" rounded,filled box #88A3B5 #F5F0FF
-node bt 15.296 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\njunit5\nassertions" rounded,filled box #88A3B5 #EAF7F0
-node runtime 18.484 0.86313 1.6708 1.1637 "Runtime\nSQL / R2DBC\nRedis" rounded,filled box #88A3B5 #FFF1F1
+graph 1 19.84 1.7263
+node entry 1.7052 0.86313 3.4104 1.7263 "Boot App/Test Surface\nMultiTenantDataIsolationApplication\nTenantIsolationTest\nSpring Boot Multi Tenant Data\nIsolation tests" rounded,filled box #88A3B5 #FFF8E7
+node service 6.383 0.86313 2.5563 1.7263 "Application Feature\nExposedSchemaInitializer\nTenantInvoiceCache\nTenantInvoiceService\nTenantKeyFactory" rounded,filled box #88A3B5 #F1F8E9
+node infra 11.566 0.86313 2.5875 1.7263 "Infrastructure Config\nInvoiceRecord\nInvoiceTable\nTenantId\nTenantInvoiceRepository" rounded,filled box #88A3B5 #F5F0FF
+node bt 15.556 0.86313 2.3375 1.445 "bluetape4k Boot APIs\nworkshop\njunit5\nassertions" rounded,filled box #88A3B5 #EAF7F0
+node runtime 19.005 0.86313 1.6708 1.1637 "Boot Runtime\nSQL / R2DBC\nRedis" rounded,filled box #88A3B5 #FFF1F1
 edge entry service 4 3.4138 0.86313 3.4138 0.86313 4.954 0.86313 4.954 0.86313 delegates 4.2576 0.95167 solid #637383
 edge service infra 4 7.6708 0.86313 7.6708 0.86313 10.124 0.86313 10.124 0.86313 "persists / publishes" 8.9667 0.95167 solid #637383
-edge infra bt 4 12.865 0.86313 12.865 0.86313 14.24 0.86313 14.24 0.86313 extends 13.624 0.95167 solid #637383
-edge bt runtime 4 16.214 0.86313 16.214 0.86313 17.501 0.86313 17.501 0.86313 adapts 16.926 0.95167 solid #637383
+edge infra bt 4 12.867 0.86313 12.867 0.86313 14.236 0.86313 14.236 0.86313 extends 13.624 0.95167 solid #637383
+edge bt runtime 4 16.733 0.86313 16.733 0.86313 18.022 0.86313 18.022 0.86313 adapts 17.447 0.95167 solid #637383
 stop

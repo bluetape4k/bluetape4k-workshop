@@ -26,12 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nBucket4jAdvancedApplication\nAbstractBucket4jAdvancedTest\nRateLimitDemoControllerTest\nRatelimit Bucket4j Advanced", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nRateLimitDemoController\nCombinedRateLimitWebFilter\nIpRateLimitWebFilter\nUserRateLimitWebFilter", fillcolor="#EEF7FF"];
-  service [label="Service & Domain\nRateLimitConfig\nHeaderConstants", fillcolor="#F1F8E9"];
-  infra [label="Repository & Infra\nLettuceConfig\nTestRedisConfig\nRequestUtils", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\njackson3\nbucket4j", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
+  entry [label="Rate-limit Surface\nBucket4jAdvancedApplication\nAbstractBucket4jAdvancedTest\nRateLimitDemoControllerTest\nRatelimit Bucket4j Advanced", fillcolor="#FFF8E7"];
+  api [label="Web Filter / Controller\nRateLimitDemoController\nCombinedRateLimitWebFilter\nIpRateLimitWebFilter\nUserRateLimitWebFilter", fillcolor="#EEF7FF"];
+  service [label="Policy Enforcement\nRateLimitConfig\nHeaderConstants", fillcolor="#F1F8E9"];
+  infra [label="Bucket Storage Layer\nLettuceConfig\nTestRedisConfig\nRequestUtils", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k RateLimit APIs\nworkshop\njackson3\nbucket4j", fillcolor="#EAF7F0"];
+  runtime [label="Bucket Runtime\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];

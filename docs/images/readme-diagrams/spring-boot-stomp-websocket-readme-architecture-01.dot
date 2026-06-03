@@ -26,12 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nStompWebSocketApplication\nGreetingIntegrationTest\nTestSessionHandler\nSpring Boot Stomp Websocket", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nTomcatConfig\nGreetingController", fillcolor="#EEF7FF"];
-  service [label="Service & Domain\nWebSocketConfig\nGreeting\nHelloMessage", fillcolor="#F1F8E9"];
-  infra [label="Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\ncore\njunit5", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC", fillcolor="#FFF1F1"];
+  entry [label="Boot App/Test Surface\nStompWebSocketApplication\nGreetingIntegrationTest\nTestSessionHandler\nSpring Boot Stomp Websocket", fillcolor="#FFF8E7"];
+  api [label="Spring Web Adapters\nTomcatConfig\nGreetingController", fillcolor="#EEF7FF"];
+  service [label="Application Feature\nWebSocketConfig\nGreeting\nHelloMessage", fillcolor="#F1F8E9"];
+  infra [label="Spring Boot Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Boot APIs\nworkshop\ncore\njunit5", fillcolor="#EAF7F0"];
+  runtime [label="Boot Runtime\nSQL / R2DBC", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];

@@ -26,9 +26,9 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nKotlinApplication\nKotlinWebfluxApplication\nJwtApplication\nAbstractSecurityApplicationTest", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nSecurityConfig\nMainController\nSecurityConfiguration\nJwtConfig", fillcolor="#EEF7FF"];
-  runtime [label="Runtime\nSQL / R2DBC\nRedis\nAWS / S3", fillcolor="#FFF1F1"];
+  entry [label="Example Entrypoints\nKotlinApplication\nKotlinWebfluxApplication\nJwtApplication\nAbstractSecurityApplicationTest", fillcolor="#FFF8E7"];
+  api [label="API / Adapter Layer\nSecurityConfig\nMainController\nSecurityConfiguration\nJwtConfig", fillcolor="#EEF7FF"];
+  runtime [label="Runtime Dependencies\nSQL / R2DBC\nRedis\nAWS / S3", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> runtime [label="backs"];

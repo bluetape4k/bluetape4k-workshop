@@ -26,12 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nWebfluxVirtualThreadApp\nAbstractWebfluxVirtualThreadTest\nAbstractDispatcherControllerTest\nVirtualthreads Spring Webflux", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nNettyConfig\nSchedulingConfig\nAbstractDispatcherController\nCustomDispatcherController", fillcolor="#EEF7FF"];
-  service [label="Service & Domain\nBanner\nDispatcherType", fillcolor="#F1F8E9"];
-  infra [label="Repository & Infra\nAsyncConfig", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\ncore\nvirtualthread", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC\nElasticsearch\nTestcontainers", fillcolor="#FFF1F1"];
+  entry [label="Virtual Thread Surface\nWebfluxVirtualThreadApp\nAbstractWebfluxVirtualThreadTest\nAbstractDispatcherControllerTest\nVirtualthreads Spring Webflux", fillcolor="#FFF8E7"];
+  api [label="Threaded Web Adapters\nNettyConfig\nSchedulingConfig\nAbstractDispatcherController\nCustomDispatcherController", fillcolor="#EEF7FF"];
+  service [label="Execution Model\nBanner\nDispatcherType", fillcolor="#F1F8E9"];
+  infra [label="Blocking Boundary\nAsyncConfig", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Coroutine APIs\nworkshop\ncore\nvirtualthread", fillcolor="#EAF7F0"];
+  runtime [label="JVM Thread Runtime\nSQL / R2DBC\nElasticsearch\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];

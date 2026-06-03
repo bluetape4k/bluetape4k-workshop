@@ -26,11 +26,11 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nStorageApplication\nAbstractStorageServiceTest\nLocalStorageServiceTest\nAws Storage Abstraction tests", fillcolor="#FFF8E7"];
-  service [label="Service & Domain\nLocalStorageService\nS3Config\nS3PresignedStorageService\nS3StorageService", fillcolor="#F1F8E9"];
-  infra [label="Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\ncore\ncoroutines", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nAWS / S3\nTestcontainers", fillcolor="#FFF1F1"];
+  entry [label="Sample Bootstraps\nStorageApplication\nAbstractStorageServiceTest\nLocalStorageServiceTest\nAws Storage Abstraction tests", fillcolor="#FFF8E7"];
+  service [label="Storage Workflow\nLocalStorageService\nS3Config\nS3PresignedStorageService\nS3StorageService", fillcolor="#F1F8E9"];
+  infra [label="Spring Cloud AWS\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k AWS APIs\nworkshop\ncore\ncoroutines", fillcolor="#EAF7F0"];
+  runtime [label="LocalStack / S3\nAWS / S3\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> service [label="delegates"];
   service -> infra [label="persists / publishes"];

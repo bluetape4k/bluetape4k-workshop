@@ -1,13 +1,13 @@
-graph 1 24.945 1.7263
-node entry 1.6948 0.86313 3.3896 1.7263 "Entry & Verification\nLeaderZookeeperApp\nAbstractLeaderZookeeperTest\nBlockingSingleLeaderTest\nLeader Leader Zookeeper tests" rounded,filled box #88A3B5 #FFF8E7
-node api 6.4247 0.86313 3.0146 1.7263 "API & Adapters\nLeaderZookeeperConfig\nBlockingLeaderService\nGroupLeaderService\nSuspendGroupLeaderService" rounded,filled box #88A3B5 #EEF7FF
-node service 11.144 0.86313 3.0354 0.8825 "Service & Domain\nLeaderZookeeperProperties" rounded,filled box #88A3B5 #F1F8E9
+graph 1 25.633 1.7263
+node entry 1.6948 0.86313 3.3896 1.7263 "Example Entrypoints\nLeaderZookeeperApp\nAbstractLeaderZookeeperTest\nBlockingSingleLeaderTest\nLeader Leader Zookeeper tests" rounded,filled box #88A3B5 #FFF8E7
+node api 6.4247 0.86313 3.0146 1.7263 "API / Adapter Layer\nLeaderZookeeperConfig\nBlockingLeaderService\nGroupLeaderService\nSuspendGroupLeaderService" rounded,filled box #88A3B5 #EEF7FF
+node service 11.144 0.86313 3.0354 0.8825 "Application Services\nLeaderZookeeperProperties" rounded,filled box #88A3B5 #F1F8E9
 node infra 16.801 0.86313 3.0563 1.7263 "Framework Layer\nSpring boot autoconfigure lib\nSpring boot starter actuator\nSpring boot autoconfigure\nprocessor" rounded,filled box #88A3B5 #F5F0FF
 node bt 20.843 0.86313 1.9729 1.445 "bluetape4k APIs\nworkshop\nleader zookeeper\nleader" rounded,filled box #88A3B5 #EAF7F0
-node runtime 24.11 0.86313 1.6708 1.445 "Runtime\nSQL / R2DBC\nRedis\nZooKeeper" rounded,filled box #88A3B5 #FFF1F1
+node runtime 24.453 0.86313 2.3583 1.445 "Runtime Dependencies\nSQL / R2DBC\nRedis\nZooKeeper" rounded,filled box #88A3B5 #FFF1F1
 edge entry api 4 3.3957 0.86313 3.3957 0.86313 4.7687 0.86313 4.7687 0.86313 invokes 4.1535 0.95167 solid #637383
 edge api service 4 7.9374 0.86313 7.9374 0.86313 9.477 0.86313 9.477 0.86313 delegates 8.7792 0.95167 solid #637383
 edge service infra 4 12.671 0.86313 12.671 0.86313 15.124 0.86313 15.124 0.86313 "persists / publishes" 13.967 0.95167 solid #637383
 edge infra bt 4 18.335 0.86313 18.335 0.86313 19.706 0.86313 19.706 0.86313 extends 19.093 0.95167 solid #637383
-edge bt runtime 4 21.837 0.86313 21.837 0.86313 23.127 0.86313 23.127 0.86313 adapts 22.552 0.95167 solid #637383
+edge bt runtime 4 21.839 0.86313 21.839 0.86313 23.126 0.86313 23.126 0.86313 adapts 22.552 0.95167 solid #637383
 stop

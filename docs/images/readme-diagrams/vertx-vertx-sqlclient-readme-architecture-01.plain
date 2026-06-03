@@ -1,9 +1,9 @@
-graph 1 14.048 1.445
+graph 1 14.663 1.445
 node entry 1.299 0.7225 2.5979 0.8825 "Example Family\nVert.x Sql Client Example" rounded,filled box #88A3B5 #FFF8E7
 node infra 6.3622 0.7225 2.3063 1.1637 "Framework Layer\nTestcontainers lib\nTestcontainers mysql" rounded,filled box #88A3B5 #F5F0FF
 node bt 9.9514 0.7225 1.8167 1.445 "bluetape4k APIs\nio\njdbc\njunit5" rounded,filled box #88A3B5 #EAF7F0
-node runtime 13.176 0.7225 1.7437 1.1637 "Runtime\nSQL / R2DBC\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+node runtime 13.483 0.7225 2.3583 1.1637 "Runtime Dependencies\nSQL / R2DBC\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
 edge entry infra 4 2.6029 0.7225 2.6029 0.7225 5.0582 0.7225 5.0582 0.7225 "persists / publishes" 3.9035 0.81104 solid #637383
 edge infra bt 4 7.5225 0.7225 7.5225 0.7225 8.891 0.7225 8.891 0.7225 extends 8.2792 0.81104 solid #637383
-edge bt runtime 4 10.867 0.7225 10.867 0.7225 12.155 0.7225 12.155 0.7225 adapts 11.582 0.81104 solid #637383
+edge bt runtime 4 10.866 0.7225 10.866 0.7225 12.157 0.7225 12.157 0.7225 adapts 11.582 0.81104 solid #637383
 stop

@@ -1,14 +1,14 @@
-graph 1 23.185 1.7263
-node entry 1.9344 0.86313 3.8688 1.7263 "Entry & Verification\nWebfluxR2dbcApplication\nAbstractWebfluxR2dbcApplicationTest\nWebfluxR2dbcConfigurationTest\nSpring Data R2dbc \
+graph 1 24.028 1.7263
+node entry 1.9344 0.86313 3.8688 1.7263 "Data Demo Surface\nWebfluxR2dbcApplication\nAbstractWebfluxR2dbcApplicationTest\nWebfluxR2dbcConfigurationTest\nSpring Data R2dbc \
 Webflux tests" rounded,filled box #88A3B5 #FFF8E7
-node api 6.8569 0.86313 2.9208 1.7263 "API & Adapters\nNettyConfig\nWebfluxR2dbcConfiguration\nUserController\nUserHandler" rounded,filled box #88A3B5 #EEF7FF
-node service 11.009 0.86313 1.9938 0.8825 "Service & Domain\nUserService" rounded,filled box #88A3B5 #F1F8E9
-node infra 15.671 0.86313 2.1083 1.7263 "Repository & Infra\nErrorMessage\nUser\nUserDTO\nUserRepository" rounded,filled box #88A3B5 #F5F0FF
-node bt 19.161 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\njunit5\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
-node runtime 22.349 0.86313 1.6708 0.8825 "Runtime\nSQL / R2DBC" rounded,filled box #88A3B5 #FFF1F1
+node api 6.8569 0.86313 2.9208 1.7263 "Web/Data Adapters\nNettyConfig\nWebfluxR2dbcConfiguration\nUserController\nUserHandler" rounded,filled box #88A3B5 #EEF7FF
+node service 11.102 0.86313 2.1813 0.8825 "Data Service Layer\nUserService" rounded,filled box #88A3B5 #F1F8E9
+node infra 15.806 0.86313 2.0042 1.7263 "Repository Layer\nErrorMessage\nUser\nUserDTO\nUserRepository" rounded,filled box #88A3B5 #F5F0FF
+node bt 19.479 0.86313 2.2854 1.445 "bluetape4k Data APIs\nworkshop\njunit5\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
+node runtime 23.047 0.86313 1.9625 0.8825 "Database Runtime\nSQL / R2DBC" rounded,filled box #88A3B5 #FFF1F1
 edge entry api 4 3.8764 0.86313 3.8764 0.86313 5.2477 0.86313 5.2477 0.86313 invokes 4.6326 0.95167 solid #637383
-edge api service 4 8.3265 0.86313 8.3265 0.86313 9.8607 0.86313 9.8607 0.86313 delegates 9.1646 0.95167 solid #637383
-edge service infra 4 12.015 0.86313 12.015 0.86313 14.467 0.86313 14.467 0.86313 "persists / publishes" 13.311 0.95167 solid #637383
-edge infra bt 4 16.732 0.86313 16.732 0.86313 18.104 0.86313 18.104 0.86313 extends 17.489 0.95167 solid #637383
-edge bt runtime 4 20.079 0.86313 20.079 0.86313 21.366 0.86313 21.366 0.86313 adapts 20.792 0.95167 solid #637383
+edge api service 4 8.3239 0.86313 8.3239 0.86313 9.8613 0.86313 9.8613 0.86313 delegates 9.1646 0.95167 solid #637383
+edge service infra 4 12.199 0.86313 12.199 0.86313 14.653 0.86313 14.653 0.86313 "persists / publishes" 13.499 0.95167 solid #637383
+edge infra bt 4 16.815 0.86313 16.815 0.86313 18.187 0.86313 18.187 0.86313 extends 17.572 0.95167 solid #637383
+edge bt runtime 4 20.628 0.86313 20.628 0.86313 21.914 0.86313 21.914 0.86313 adapts 21.344 0.95167 solid #637383
 stop

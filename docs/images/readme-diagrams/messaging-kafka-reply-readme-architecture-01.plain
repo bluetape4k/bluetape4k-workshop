@@ -1,11 +1,11 @@
-graph 1 18.017 1.7263
-node entry 1.2677 0.86313 2.5354 1.7263 "Entry & Verification\nKafkaApplication\nPingApplication\nPongApplication\nPingPongApplicationTest" rounded,filled box #88A3B5 #FFF8E7
-node api 4.9507 0.86313 1.775 1.1637 "API & Adapters\nPingController\nPongHandler" rounded,filled box #88A3B5 #EEF7FF
-node infra 9.967 0.86313 3.0354 1.7263 "Framework Layer\nSpring kafka lib\nSpring kafka test\nSpring data commons\nSpring boot autoconfigure lib" rounded,filled box #88A3B5 #F5F0FF
-node bt 13.921 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\nkafka4\ntestcontainers" rounded,filled box #88A3B5 #EAF7F0
-node runtime 17.145 0.86313 1.7437 1.1637 "Runtime\nKafka\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 2.5403 0.86313 2.5403 0.86313 3.9125 0.86313 3.9125 0.86313 invokes 3.2993 0.95167 solid #637383
-edge api infra 4 5.8475 0.86313 5.8475 0.86313 8.3007 0.86313 8.3007 0.86313 "persists / publishes" 7.1438 0.95167 solid #637383
-edge infra bt 4 11.49 0.86313 11.49 0.86313 12.862 0.86313 12.862 0.86313 extends 12.249 0.95167 solid #637383
-edge bt runtime 4 14.836 0.86313 14.836 0.86313 16.124 0.86313 16.124 0.86313 adapts 15.551 0.95167 solid #637383
+graph 1 21.309 1.7263
+node entry 1.5021 0.86313 3.0042 1.7263 "Messaging App/Test Surface\nKafkaApplication\nPingApplication\nPongApplication\nPingPongApplicationTest" rounded,filled box #88A3B5 #FFF8E7
+node api 6.1747 0.86313 3.2854 1.1637 "Producer / Consumer Adapters\nPingController\nPongHandler" rounded,filled box #88A3B5 #EEF7FF
+node infra 11.946 0.86313 3.0354 1.7263 "Spring Kafka Layer\nSpring kafka lib\nSpring kafka test\nSpring data commons\nSpring boot autoconfigure lib" rounded,filled box #88A3B5 #F5F0FF
+node bt 16.202 0.86313 2.4208 1.445 "bluetape4k Kafka APIs\nworkshop\nkafka4\ntestcontainers" rounded,filled box #88A3B5 #EAF7F0
+node runtime 20.083 0.86313 2.4521 1.1637 "Kafka Broker Runtime\nKafka\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.0127 0.86313 3.0127 0.86313 4.3812 0.86313 4.3812 0.86313 invokes 3.7681 0.95167 solid #637383
+edge api infra 4 7.8247 0.86313 7.8247 0.86313 10.281 0.86313 10.281 0.86313 "persists / publishes" 9.1229 0.95167 solid #637383
+edge infra bt 4 13.471 0.86313 13.471 0.86313 14.846 0.86313 14.846 0.86313 extends 14.228 0.95167 solid #637383
+edge bt runtime 4 17.419 0.86313 17.419 0.86313 18.707 0.86313 18.707 0.86313 adapts 18.135 0.95167 solid #637383
 stop

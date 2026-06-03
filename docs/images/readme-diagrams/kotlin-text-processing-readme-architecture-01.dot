@@ -26,11 +26,11 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nLanguageDetectionServiceTest\nAbuseWordFilterTest\nKotlin Text Processing tests", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nAbuseWordFilter\nTextNormalizer", fillcolor="#EEF7FF"];
-  service [label="Service & Domain\nLanguageDetectionService", fillcolor="#F1F8E9"];
+  entry [label="Example Entrypoints\nLanguageDetectionServiceTest\nAbuseWordFilterTest\nKotlin Text Processing tests", fillcolor="#FFF8E7"];
+  api [label="API / Adapter Layer\nAbuseWordFilter\nTextNormalizer", fillcolor="#EEF7FF"];
+  service [label="Application Services\nLanguageDetectionService", fillcolor="#F1F8E9"];
   bt [label="bluetape4k APIs\ntext\nlogging\njunit5", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nIn-memory / JVM", fillcolor="#FFF1F1"];
+  runtime [label="Runtime Dependencies\nIn-memory / JVM", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];

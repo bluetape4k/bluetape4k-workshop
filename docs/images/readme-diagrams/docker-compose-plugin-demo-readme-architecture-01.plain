@@ -1,8 +1,8 @@
-graph 1 9.6826 2.5943
+graph 1 10.37 2.5943
 node entry 1.6115 0.44125 3.2229 0.8825 "Example Family\ndocker-compose-plugin example" rounded,filled box #88A3B5 #FFF8E7
 node bt 5.659 1.8718 1.8167 1.1637 "bluetape4k APIs\nio\njunit5" rounded,filled box #88A3B5 #EAF7F0
-node runtime 8.8472 1.8718 1.6708 1.445 "Runtime\nSQL / R2DBC\nRedis\nElasticsearch" rounded,filled box #88A3B5 #FFF1F1
+node runtime 9.191 1.8718 2.3583 1.445 "Runtime Dependencies\nSQL / R2DBC\nRedis\nElasticsearch" rounded,filled box #88A3B5 #FFF1F1
 node api 1.6115 1.8718 0.75 0.60125 api rounded,filled box #88A3B5 #F6FAFF
-edge bt runtime 4 6.5769 1.8718 6.5769 1.8718 7.864 1.8718 7.864 1.8718 adapts 7.2896 1.9603 solid #637383
+edge bt runtime 4 6.5732 1.8718 6.5732 1.8718 7.8647 1.8718 7.8647 1.8718 adapts 7.2896 1.9603 solid #637383
 edge api bt 4 1.9959 1.8718 1.9959 1.8718 4.5993 1.8718 4.5993 1.8718 extends 3.9868 1.9603 solid #637383
 stop

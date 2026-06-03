@@ -1,14 +1,14 @@
-graph 1 26.935 1.7263
-node entry 2.0542 0.86313 4.1083 1.7263 "Entry & Verification\nImageProcessingAdvancedApplication\nImageProcessingAdvancedPropertiesTest\nAbstractImagePersistenceTest\nImage \
+graph 1 27.549 1.7263
+node entry 2.0542 0.86313 4.1083 1.7263 "Example Entrypoints\nImageProcessingAdvancedApplication\nImageProcessingAdvancedPropertiesTest\nAbstractImagePersistenceTest\nImage \
 Processing Advanced" rounded,filled box #88A3B5 #FFF8E7
-node api 7.3309 0.86313 3.3896 1.445 "API & Adapters\nImagePersistenceServiceImpl\nImageDerivativesController\nImageProcessingExceptionHandler" rounded,filled box #88A3B5 #EEF7FF
-node service 12.571 0.86313 3.7021 1.7263 "Service & Domain\nImageProcessingAdvancedProperties\nImagePersistenceModels\nImagePersistenceService\nImagePersistenceDatabaseInitializer" rounded,filled box #88A3B5 #F1F8E9
-node infra 18.718 0.86313 3.3688 1.7263 "Repository & Infra\nImageObjectKind\nImagePersistenceMappers\nImageProcessingEventRepository\nImageProcessingJobRepository" rounded,filled box #88A3B5 #F5F0FF
+node api 7.3309 0.86313 3.3896 1.445 "API / Adapter Layer\nImagePersistenceServiceImpl\nImageDerivativesController\nImageProcessingExceptionHandler" rounded,filled box #88A3B5 #EEF7FF
+node service 12.571 0.86313 3.7021 1.7263 "Application Services\nImageProcessingAdvancedProperties\nImagePersistenceModels\nImagePersistenceService\nImagePersistenceDatabaseInitializer" rounded,filled box #88A3B5 #F1F8E9
+node infra 18.718 0.86313 3.3688 1.7263 "Infrastructure Layer\nImageObjectKind\nImagePersistenceMappers\nImageProcessingEventRepository\nImageProcessingJobRepository" rounded,filled box #88A3B5 #F5F0FF
 node bt 22.838 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\ncore\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
-node runtime 26.063 0.86313 1.7437 1.445 "Runtime\nSQL / R2DBC\nAWS / S3\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+node runtime 26.37 0.86313 2.3583 1.445 "Runtime Dependencies\nSQL / R2DBC\nAWS / S3\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
 edge entry api 4 4.117 0.86313 4.117 0.86313 5.4848 0.86313 5.4848 0.86313 invokes 4.8722 0.95167 solid #637383
 edge api service 4 9.0323 0.86313 9.0323 0.86313 10.568 0.86313 10.568 0.86313 delegates 9.8729 0.95167 solid #637383
 edge service infra 4 14.428 0.86313 14.428 0.86313 16.886 0.86313 16.886 0.86313 "persists / publishes" 15.728 0.95167 solid #637383
 edge infra bt 4 20.412 0.86313 20.412 0.86313 21.78 0.86313 21.78 0.86313 extends 21.166 0.95167 solid #637383
-edge bt runtime 4 23.754 0.86313 23.754 0.86313 25.041 0.86313 25.041 0.86313 adapts 24.469 0.95167 solid #637383
+edge bt runtime 4 23.752 0.86313 23.752 0.86313 25.044 0.86313 25.044 0.86313 adapts 24.469 0.95167 solid #637383
 stop

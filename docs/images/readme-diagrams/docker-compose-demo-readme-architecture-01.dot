@@ -29,7 +29,7 @@ digraph G {
   entry [label="Example Family\ndocker compose-demo", fillcolor="#FFF8E7"];
   infra [label="Framework Layer\nTestcontainers lib\nTestcontainers junit jupiter", fillcolor="#F5F0FF"];
   bt [label="bluetape4k APIs\ncore", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC\nRedis\nElasticsearch", fillcolor="#FFF1F1"];
+  runtime [label="Runtime Dependencies\nSQL / R2DBC\nRedis\nElasticsearch", fillcolor="#FFF1F1"];
 
   entry -> infra [label="persists / publishes"];
   infra -> bt [label="extends"];

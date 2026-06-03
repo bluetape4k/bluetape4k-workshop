@@ -26,12 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nChaosApplication\nAbstractChaosApplicationTest\nStudentControllerTest\nSpring Boot Chaos Monkey tests", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nStudentController", fillcolor="#EEF7FF"];
-  service [label="Service & Domain\nStudentService\nStudent", fillcolor="#F1F8E9"];
-  infra [label="Repository & Infra\nStudentJdbcRepository", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\ncore\njunit5", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC\nAWS / S3", fillcolor="#FFF1F1"];
+  entry [label="Boot App/Test Surface\nChaosApplication\nAbstractChaosApplicationTest\nStudentControllerTest\nSpring Boot Chaos Monkey tests", fillcolor="#FFF8E7"];
+  api [label="Spring Web Adapters\nStudentController", fillcolor="#EEF7FF"];
+  service [label="Application Feature\nStudentService\nStudent", fillcolor="#F1F8E9"];
+  infra [label="Infrastructure Config\nStudentJdbcRepository", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Boot APIs\nworkshop\ncore\njunit5", fillcolor="#EAF7F0"];
+  runtime [label="Boot Runtime\nSQL / R2DBC\nAWS / S3", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];

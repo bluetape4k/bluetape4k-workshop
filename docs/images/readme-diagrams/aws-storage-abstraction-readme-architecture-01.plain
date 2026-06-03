@@ -1,11 +1,11 @@
-graph 1 20.017 1.7263
-node entry 1.6167 0.86313 3.2333 1.7263 "Entry & Verification\nStorageApplication\nAbstractStorageServiceTest\nLocalStorageServiceTest\nAws Storage Abstraction tests" rounded,filled box #88A3B5 #FFF8E7
-node service 6.383 0.86313 2.9104 1.7263 "Service & Domain\nLocalStorageService\nS3Config\nS3PresignedStorageService\nS3StorageService" rounded,filled box #88A3B5 #F1F8E9
-node infra 11.967 0.86313 3.0354 1.7263 "Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration" rounded,filled box #88A3B5 #F5F0FF
-node bt 15.921 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\ncore\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
-node runtime 19.145 0.86313 1.7437 1.1637 "Runtime\nAWS / S3\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+graph 1 20.674 1.7263
+node entry 1.6167 0.86313 3.2333 1.7263 "Sample Bootstraps\nStorageApplication\nAbstractStorageServiceTest\nLocalStorageServiceTest\nAws Storage Abstraction tests" rounded,filled box #88A3B5 #FFF8E7
+node service 6.383 0.86313 2.9104 1.7263 "Storage Workflow\nLocalStorageService\nS3Config\nS3PresignedStorageService\nS3StorageService" rounded,filled box #88A3B5 #F1F8E9
+node infra 11.967 0.86313 3.0354 1.7263 "Spring Cloud AWS\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration" rounded,filled box #88A3B5 #F5F0FF
+node bt 16.176 0.86313 2.3271 1.445 "bluetape4k AWS APIs\nworkshop\ncore\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
+node runtime 19.729 0.86313 1.8896 1.1637 "LocalStack / S3\nAWS / S3\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
 edge entry service 4 3.237 0.86313 3.237 0.86313 4.7766 0.86313 4.7766 0.86313 delegates 4.0806 0.95167 solid #637383
 edge service infra 4 7.8465 0.86313 7.8465 0.86313 10.297 0.86313 10.297 0.86313 "persists / publishes" 9.1438 0.95167 solid #637383
-edge infra bt 4 13.49 0.86313 13.49 0.86313 14.862 0.86313 14.862 0.86313 extends 14.249 0.95167 solid #637383
-edge bt runtime 4 16.836 0.86313 16.836 0.86313 18.124 0.86313 18.124 0.86313 adapts 17.551 0.95167 solid #637383
+edge infra bt 4 13.493 0.86313 13.493 0.86313 14.863 0.86313 14.863 0.86313 extends 14.249 0.95167 solid #637383
+edge bt runtime 4 17.349 0.86313 17.349 0.86313 18.633 0.86313 18.633 0.86313 adapts 18.062 0.95167 solid #637383
 stop

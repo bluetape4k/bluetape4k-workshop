@@ -1,7 +1,7 @@
-graph 1 10.203 1.7263
-node entry 1.7208 0.86313 3.4417 1.1637 "Entry & Verification\nKotlin Design Patterns Kotlin\nDesignPatterns LazyLoading tests" rounded,filled box #88A3B5 #FFF8E7
-node service 6.1538 0.86313 2.0354 1.7263 "Service & Domain\nHeavy\nHolderKotlinLazy\nHolderNative\nHolderThreadSafe" rounded,filled box #88A3B5 #F1F8E9
-node runtime 9.3681 0.86313 1.6708 0.8825 "Runtime\nSQL / R2DBC" rounded,filled box #88A3B5 #FFF1F1
-edge entry service 4 3.4474 0.86313 3.4474 0.86313 4.9871 0.86313 4.9871 0.86313 delegates 4.2889 0.95167 solid #637383
-edge service runtime 4 7.1797 0.86313 7.1797 0.86313 8.3812 0.86313 8.3812 0.86313 backs 7.8521 0.95167 solid #637383
+graph 1 11.058 1.7263
+node entry 1.7208 0.86313 3.4417 1.1637 "Example Entrypoints\nKotlin Design Patterns Kotlin\nDesignPatterns LazyLoading tests" rounded,filled box #88A3B5 #FFF8E7
+node service 6.2372 0.86313 2.2021 1.7263 "Application Services\nHeavy\nHolderKotlinLazy\nHolderNative\nHolderThreadSafe" rounded,filled box #88A3B5 #F1F8E9
+node runtime 9.8785 0.86313 2.3583 0.8825 "Runtime Dependencies\nSQL / R2DBC" rounded,filled box #88A3B5 #FFF1F1
+edge entry service 4 3.4476 0.86313 3.4476 0.86313 4.9892 0.86313 4.9892 0.86313 delegates 4.2889 0.95167 solid #637383
+edge service runtime 4 7.3445 0.86313 7.3445 0.86313 8.5515 0.86313 8.5515 0.86313 backs 8.0187 0.95167 solid #637383
 stop

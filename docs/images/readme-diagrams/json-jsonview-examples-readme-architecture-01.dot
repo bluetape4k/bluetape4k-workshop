@@ -26,12 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nJsonViewApplication\nAbstractJsonViewApplicationTest\nArticleControllerTest\nJson Jsonview Examples tests", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nArticleController", fillcolor="#EEF7FF"];
-  service [label="Service & Domain\nJacksonConfig\nArticleDTO\nViews", fillcolor="#F1F8E9"];
+  entry [label="Example Entrypoints\nJsonViewApplication\nAbstractJsonViewApplicationTest\nArticleControllerTest\nJson Jsonview Examples tests", fillcolor="#FFF8E7"];
+  api [label="API / Adapter Layer\nArticleController", fillcolor="#EEF7FF"];
+  service [label="Application Services\nJacksonConfig\nArticleDTO\nViews", fillcolor="#F1F8E9"];
   infra [label="Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration", fillcolor="#F5F0FF"];
   bt [label="bluetape4k APIs\nworkshop\njackson3\ncore", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC", fillcolor="#FFF1F1"];
+  runtime [label="Runtime Dependencies\nSQL / R2DBC", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];

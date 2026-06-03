@@ -26,12 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nProblemApplication\nAbstractProblemTest\nResilience4jControllerTest\nSpring Boot Problem tests", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nResilience4jController\nTaskController\nRestControllerLoggingFilter\nResilience4jTrait", fillcolor="#EEF7FF"];
-  service [label="Service & Domain\nInvalidTaskIdException\nTaskNotFoundException\nExampleException", fillcolor="#F1F8E9"];
-  infra [label="Repository & Infra\nProblemConfig", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\njunit5\nresilience4j", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nIn-memory / JVM", fillcolor="#FFF1F1"];
+  entry [label="Boot App/Test Surface\nProblemApplication\nAbstractProblemTest\nResilience4jControllerTest\nSpring Boot Problem tests", fillcolor="#FFF8E7"];
+  api [label="Spring Web Adapters\nResilience4jController\nTaskController\nRestControllerLoggingFilter\nResilience4jTrait", fillcolor="#EEF7FF"];
+  service [label="Application Feature\nInvalidTaskIdException\nTaskNotFoundException\nExampleException", fillcolor="#F1F8E9"];
+  infra [label="Infrastructure Config\nProblemConfig", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Boot APIs\nworkshop\njunit5\nresilience4j", fillcolor="#EAF7F0"];
+  runtime [label="Boot Runtime\nIn-memory / JVM", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];

@@ -1,11 +1,11 @@
-graph 1 18.382 1.7263
-node entry 1.601 0.86313 3.2021 1.7263 "Entry & Verification\nCacheBenchmarkApplication\nAbstractCacheBenchmarkTest\nCaffeineServiceTest\nSpring Boot Cache Benchmark" rounded,filled box #88A3B5 #FFF8E7
-node service 5.9351 0.86313 2.0771 1.7263 "Service & Domain\nCacheConfig\nCaffeineService\nNearCacheService\nNoCacheService" rounded,filled box #88A3B5 #F1F8E9
-node infra 10.717 0.86313 2.2646 1.7263 "Repository & Infra\nDataInitConfig\nRedisTemplateConfig\nRedissonConfig\nProduct" rounded,filled box #88A3B5 #F5F0FF
-node bt 14.285 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\nredisson\ncache" rounded,filled box #88A3B5 #EAF7F0
-node runtime 17.51 0.86313 1.7437 1.445 "Runtime\nSQL / R2DBC\nRedis\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry service 4 3.2087 0.86313 3.2087 0.86313 4.7461 0.86313 4.7461 0.86313 delegates 4.0493 0.95167 solid #637383
-edge service infra 4 6.9786 0.86313 6.9786 0.86313 9.4327 0.86313 9.4327 0.86313 "persists / publishes" 8.2792 0.95167 solid #637383
-edge infra bt 4 11.856 0.86313 11.856 0.86313 13.229 0.86313 13.229 0.86313 extends 12.613 0.95167 solid #637383
-edge bt runtime 4 15.201 0.86313 15.201 0.86313 16.489 0.86313 16.489 0.86313 adapts 15.916 0.95167 solid #637383
+graph 1 19.08 1.7263
+node entry 1.601 0.86313 3.2021 1.7263 "Boot App/Test Surface\nCacheBenchmarkApplication\nAbstractCacheBenchmarkTest\nCaffeineServiceTest\nSpring Boot Cache Benchmark" rounded,filled box #88A3B5 #FFF8E7
+node service 5.9611 0.86313 2.1292 1.7263 "Application Feature\nCacheConfig\nCaffeineService\nNearCacheService\nNoCacheService" rounded,filled box #88A3B5 #F1F8E9
+node infra 10.832 0.86313 2.3896 1.7263 "Infrastructure Config\nDataInitConfig\nRedisTemplateConfig\nRedissonConfig\nProduct" rounded,filled box #88A3B5 #F5F0FF
+node bt 14.723 0.86313 2.3375 1.445 "bluetape4k Boot APIs\nworkshop\nredisson\ncache" rounded,filled box #88A3B5 #EAF7F0
+node runtime 18.208 0.86313 1.7437 1.445 "Boot Runtime\nSQL / R2DBC\nRedis\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry service 4 3.206 0.86313 3.206 0.86313 4.7466 0.86313 4.7466 0.86313 delegates 4.0493 0.95167 solid #637383
+edge service infra 4 7.03 0.86313 7.03 0.86313 9.4856 0.86313 9.4856 0.86313 "persists / publishes" 8.3313 0.95167 solid #637383
+edge infra bt 4 12.031 0.86313 12.031 0.86313 13.405 0.86313 13.405 0.86313 extends 12.79 0.95167 solid #637383
+edge bt runtime 4 15.898 0.86313 15.898 0.86313 17.187 0.86313 17.187 0.86313 adapts 16.614 0.95167 solid #637383
 stop

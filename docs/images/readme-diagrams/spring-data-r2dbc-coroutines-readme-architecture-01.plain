@@ -1,11 +1,11 @@
-graph 1 18.767 1.7263
-node entry 1.5698 0.86313 3.1396 1.7263 "Entry & Verification\nR2dbcApplication\nAbstractR2dbcApplicationTest\nPostControllerTest\nSpring Data R2dbc Coroutines" rounded,filled box #88A3B5 #FFF8E7
-node api 6.0288 0.86313 2.7229 1.445 "API & Adapters\nDatabaseInitializer\nPostController\nRestWebExceptionHandler" rounded,filled box #88A3B5 #EEF7FF
-node infra 11.118 0.86313 2.2333 1.7263 "Repository & Infra\nComment\nCommentRepository\nMember\nMemberRepository" rounded,filled box #88A3B5 #F5F0FF
-node bt 14.671 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\nio\njunit5" rounded,filled box #88A3B5 #EAF7F0
-node runtime 17.895 0.86313 1.7437 1.1637 "Runtime\nSQL / R2DBC\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+graph 1 19.455 1.7263
+node entry 1.5698 0.86313 3.1396 1.7263 "Data Demo Surface\nR2dbcApplication\nAbstractR2dbcApplicationTest\nPostControllerTest\nSpring Data R2dbc Coroutines" rounded,filled box #88A3B5 #FFF8E7
+node api 6.0288 0.86313 2.7229 1.445 "Web/Data Adapters\nDatabaseInitializer\nPostController\nRestWebExceptionHandler" rounded,filled box #88A3B5 #EEF7FF
+node infra 11.118 0.86313 2.2333 1.7263 "Repository Layer\nComment\nCommentRepository\nMember\nMemberRepository" rounded,filled box #88A3B5 #F5F0FF
+node bt 14.905 0.86313 2.2854 1.445 "bluetape4k Data APIs\nworkshop\nio\njunit5" rounded,filled box #88A3B5 #EAF7F0
+node runtime 18.474 0.86313 1.9625 1.1637 "Database Runtime\nSQL / R2DBC\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
 edge entry api 4 3.1482 0.86313 3.1482 0.86313 4.5172 0.86313 4.5172 0.86313 invokes 3.9035 0.95167 solid #637383
 edge api infra 4 7.3993 0.86313 7.3993 0.86313 9.8514 0.86313 9.8514 0.86313 "persists / publishes" 8.6958 0.95167 solid #637383
-edge infra bt 4 12.242 0.86313 12.242 0.86313 13.613 0.86313 13.613 0.86313 extends 12.999 0.95167 solid #637383
-edge bt runtime 4 15.586 0.86313 15.586 0.86313 16.874 0.86313 16.874 0.86313 adapts 16.301 0.95167 solid #637383
+edge infra bt 4 12.244 0.86313 12.244 0.86313 13.615 0.86313 13.615 0.86313 extends 12.999 0.95167 solid #637383
+edge bt runtime 4 16.054 0.86313 16.054 0.86313 17.34 0.86313 17.34 0.86313 adapts 16.77 0.95167 solid #637383
 stop

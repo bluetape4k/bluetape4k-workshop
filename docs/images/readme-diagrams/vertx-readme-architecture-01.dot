@@ -26,9 +26,9 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nMain\nMovieRatingVerticeTest\nAbstractSqlClientTest\nVertx tests", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nMovieRatingVerticle", fillcolor="#EEF7FF"];
-  runtime [label="Runtime\nSQL / R2DBC\nTestcontainers", fillcolor="#FFF1F1"];
+  entry [label="Example Entrypoints\nMain\nMovieRatingVerticeTest\nAbstractSqlClientTest\nVertx tests", fillcolor="#FFF8E7"];
+  api [label="API / Adapter Layer\nMovieRatingVerticle", fillcolor="#EEF7FF"];
+  runtime [label="Runtime Dependencies\nSQL / R2DBC\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> runtime [label="backs"];

@@ -1,13 +1,13 @@
-graph 1 22.185 1.7263
-node entry 1.6896 0.86313 3.3792 1.7263 "Entry & Verification\nChaosApplication\nAbstractChaosApplicationTest\nStudentControllerTest\nSpring Boot Chaos Monkey tests" rounded,filled box #88A3B5 #FFF8E7
-node api 5.909 0.86313 2.0042 0.8825 "API & Adapters\nStudentController" rounded,filled box #88A3B5 #EEF7FF
-node service 9.6024 0.86313 1.9938 1.1637 "Service & Domain\nStudentService\nStudent" rounded,filled box #88A3B5 #F1F8E9
-node infra 14.468 0.86313 2.5146 0.8825 "Repository & Infra\nStudentJdbcRepository" rounded,filled box #88A3B5 #F5F0FF
-node bt 18.161 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\ncore\njunit5" rounded,filled box #88A3B5 #EAF7F0
-node runtime 21.349 0.86313 1.6708 1.1637 "Runtime\nSQL / R2DBC\nAWS / S3" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.3876 0.86313 3.3876 0.86313 4.7574 0.86313 4.7574 0.86313 invokes 4.1431 0.95167 solid #637383
-edge api service 4 6.9183 0.86313 6.9183 0.86313 8.4582 0.86313 8.4582 0.86313 delegates 7.7583 0.95167 solid #637383
-edge service infra 4 10.605 0.86313 10.605 0.86313 13.06 0.86313 13.06 0.86313 "persists / publishes" 11.905 0.95167 solid #637383
-edge infra bt 4 15.734 0.86313 15.734 0.86313 17.104 0.86313 17.104 0.86313 extends 16.489 0.95167 solid #637383
-edge bt runtime 4 19.079 0.86313 19.079 0.86313 20.366 0.86313 20.366 0.86313 adapts 19.792 0.95167 solid #637383
+graph 1 23.153 1.7263
+node entry 1.6896 0.86313 3.3792 1.7263 "Boot App/Test Surface\nChaosApplication\nAbstractChaosApplicationTest\nStudentControllerTest\nSpring Boot Chaos Monkey tests" rounded,filled box #88A3B5 #FFF8E7
+node api 6.0653 0.86313 2.3167 0.8825 "Spring Web Adapters\nStudentController" rounded,filled box #88A3B5 #EEF7FF
+node service 9.9826 0.86313 2.1292 1.1637 "Application Feature\nStudentService\nStudent" rounded,filled box #88A3B5 #F1F8E9
+node infra 14.916 0.86313 2.5146 0.8825 "Infrastructure Config\nStudentJdbcRepository" rounded,filled box #88A3B5 #F5F0FF
+node bt 18.869 0.86313 2.3375 1.445 "bluetape4k Boot APIs\nworkshop\ncore\njunit5" rounded,filled box #88A3B5 #EAF7F0
+node runtime 22.318 0.86313 1.6708 1.1637 "Boot Runtime\nSQL / R2DBC\nAWS / S3" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.3876 0.86313 3.3876 0.86313 4.76 0.86313 4.76 0.86313 invokes 4.1431 0.95167 solid #637383
+edge api service 4 7.23 0.86313 7.23 0.86313 8.7667 0.86313 8.7667 0.86313 delegates 8.0708 0.95167 solid #637383
+edge service infra 4 11.053 0.86313 11.053 0.86313 13.508 0.86313 13.508 0.86313 "persists / publishes" 12.353 0.95167 solid #637383
+edge infra bt 4 16.178 0.86313 16.178 0.86313 17.551 0.86313 17.551 0.86313 extends 16.937 0.95167 solid #637383
+edge bt runtime 4 20.047 0.86313 20.047 0.86313 21.335 0.86313 21.335 0.86313 adapts 20.76 0.95167 solid #637383
 stop

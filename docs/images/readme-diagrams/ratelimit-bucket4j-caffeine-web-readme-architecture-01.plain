@@ -1,11 +1,11 @@
-graph 1 18.215 1.7263
-node entry 1.6896 0.86313 3.3792 1.7263 "Entry & Verification\nCaffeineApplication\nServletRateLimitTest\nRatelimit Bucket4j Caffeine Web\ntests" rounded,filled box #88A3B5 #FFF8E7
-node api 5.7944 0.86313 1.775 0.8825 "API & Adapters\nIndexController" rounded,filled box #88A3B5 #EEF7FF
-node infra 10.811 0.86313 3.0354 1.7263 "Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration" rounded,filled box #88A3B5 #F5F0FF
-node bt 14.765 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\njackson3\njunit5" rounded,filled box #88A3B5 #EAF7F0
-node runtime 17.666 0.86313 1.0979 0.8825 "Runtime\nRedis" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.3888 0.86313 3.3888 0.86313 4.7565 0.86313 4.7565 0.86313 invokes 4.1431 0.95167 solid #637383
-edge api infra 4 6.6913 0.86313 6.6913 0.86313 9.1445 0.86313 9.1445 0.86313 "persists / publishes" 7.9875 0.95167 solid #637383
-edge infra bt 4 12.334 0.86313 12.334 0.86313 13.706 0.86313 13.706 0.86313 extends 13.092 0.95167 solid #637383
-edge bt runtime 4 15.679 0.86313 15.679 0.86313 16.969 0.86313 16.969 0.86313 adapts 16.395 0.95167 solid #637383
+graph 1 20.601 1.7263
+node entry 1.6896 0.86313 3.3792 1.7263 "Rate-limit Surface\nCaffeineApplication\nServletRateLimitTest\nRatelimit Bucket4j Caffeine Web\ntests" rounded,filled box #88A3B5 #FFF8E7
+node api 6.159 0.86313 2.5042 0.8825 "Web Filter / Controller\nIndexController" rounded,filled box #88A3B5 #EEF7FF
+node infra 11.54 0.86313 3.0354 1.7263 "Bucket4j Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration" rounded,filled box #88A3B5 #F5F0FF
+node bt 15.957 0.86313 2.7438 1.445 "bluetape4k RateLimit APIs\nworkshop\njackson3\njunit5" rounded,filled box #88A3B5 #EAF7F0
+node runtime 19.687 0.86313 1.8271 0.8825 "Bucket Runtime\nRedis" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.3857 0.86313 3.3857 0.86313 4.7599 0.86313 4.7599 0.86313 invokes 4.1431 0.95167 solid #637383
+edge api infra 4 7.4206 0.86313 7.4206 0.86313 9.8704 0.86313 9.8704 0.86313 "persists / publishes" 8.7167 0.95167 solid #637383
+edge infra bt 4 13.066 0.86313 13.066 0.86313 14.436 0.86313 14.436 0.86313 extends 13.822 0.95167 solid #637383
+edge bt runtime 4 17.336 0.86313 17.336 0.86313 18.625 0.86313 18.625 0.86313 adapts 18.051 0.95167 solid #637383
 stop

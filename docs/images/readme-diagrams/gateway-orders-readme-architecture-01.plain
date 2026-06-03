@@ -1,11 +1,11 @@
-graph 1 19.007 1.7263
-node entry 1.5229 0.86313 3.0458 1.445 "Entry & Verification\nOrderApplication\nProductControllerScopeTest\nGateway Orders tests" rounded,filled box #88A3B5 #FFF8E7
-node api 5.6017 0.86313 2.0563 1.7263 "API & Adapters\nOrderConfig\nObservationConfig\nSwaggerConfig\nOrderController" rounded,filled box #88A3B5 #EEF7FF
-node infra 10.759 0.86313 3.0354 1.7263 "Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration" rounded,filled box #88A3B5 #F5F0FF
-node bt 14.713 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\njackson3\nidgenerators" rounded,filled box #88A3B5 #EAF7F0
-node runtime 18.036 0.86313 1.9417 0.8825 "Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.0533 0.86313 3.0533 0.86313 4.4217 0.86313 4.4217 0.86313 invokes 3.8097 0.95167 solid #637383
-edge api infra 4 6.6391 0.86313 6.6391 0.86313 9.0913 0.86313 9.0913 0.86313 "persists / publishes" 7.9354 0.95167 solid #637383
-edge infra bt 4 12.282 0.86313 12.282 0.86313 13.654 0.86313 13.654 0.86313 extends 13.04 0.95167 solid #637383
-edge bt runtime 4 15.629 0.86313 15.629 0.86313 16.916 0.86313 16.916 0.86313 adapts 16.343 0.95167 solid #637383
+graph 1 19.611 1.7263
+node entry 1.5229 0.86313 3.0458 1.445 "Example Entrypoints\nOrderApplication\nProductControllerScopeTest\nGateway Orders tests" rounded,filled box #88A3B5 #FFF8E7
+node api 5.6955 0.86313 2.2438 1.7263 "API / Adapter Layer\nOrderConfig\nObservationConfig\nSwaggerConfig\nOrderController" rounded,filled box #88A3B5 #EEF7FF
+node infra 10.946 0.86313 3.0354 1.7263 "Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration" rounded,filled box #88A3B5 #F5F0FF
+node bt 14.9 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\njackson3\nidgenerators" rounded,filled box #88A3B5 #EAF7F0
+node runtime 18.432 0.86313 2.3583 0.8825 "Runtime Dependencies\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.0529 0.86313 3.0529 0.86313 4.4217 0.86313 4.4217 0.86313 invokes 3.8097 0.95167 solid #637383
+edge api infra 4 6.8219 0.86313 6.8219 0.86313 9.2805 0.86313 9.2805 0.86313 "persists / publishes" 8.1229 0.95167 solid #637383
+edge infra bt 4 12.469 0.86313 12.469 0.86313 13.842 0.86313 13.842 0.86313 extends 13.228 0.95167 solid #637383
+edge bt runtime 4 15.814 0.86313 15.814 0.86313 17.106 0.86313 17.106 0.86313 adapts 16.531 0.95167 solid #637383
 stop

@@ -26,12 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nAdvancedObservabilityApp\nAbstractAdvancedTest\nTestObservationConfig\nObservability Observability", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nUserController", fillcolor="#EEF7FF"];
-  service [label="Service & Domain\nSchemaInitializer\nObservationSupport\nUserRepository\nUserService", fillcolor="#F1F8E9"];
-  infra [label="Repository & Infra\nRedissonConfig\nUser\nUsers\nUserCacheRepository", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\nlogging\ncoroutines", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
+  entry [label="Observed App/Test Surface\nAdvancedObservabilityApp\nAbstractAdvancedTest\nTestObservationConfig\nObservability Observability", fillcolor="#FFF8E7"];
+  api [label="Observed Web Adapters\nUserController", fillcolor="#EEF7FF"];
+  service [label="Instrumented Services\nSchemaInitializer\nObservationSupport\nUserRepository\nUserService", fillcolor="#F1F8E9"];
+  infra [label="Telemetry Configuration\nRedissonConfig\nUser\nUsers\nUserCacheRepository", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Observability APIs\nworkshop\nlogging\ncoroutines", fillcolor="#EAF7F0"];
+  runtime [label="Metrics / Trace Runtime\nSQL / R2DBC\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];

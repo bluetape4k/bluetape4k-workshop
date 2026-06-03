@@ -26,11 +26,11 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nBucket4jRedisApplication\nAbstractRateLimitTest\nCoroutineRateLimitTest\nRatelimit Bucket4j Redis tests", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nCoroutineController\nDebugMetricHandler\nReactiveController", fillcolor="#EEF7FF"];
-  infra [label="Repository & Infra\nLettuceConfiguration", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\njackson3\njunit5", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
+  entry [label="Rate-limit Surface\nBucket4jRedisApplication\nAbstractRateLimitTest\nCoroutineRateLimitTest\nRatelimit Bucket4j Redis tests", fillcolor="#FFF8E7"];
+  api [label="Web Filter / Controller\nCoroutineController\nDebugMetricHandler\nReactiveController", fillcolor="#EEF7FF"];
+  infra [label="Bucket Storage Layer\nLettuceConfiguration", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k RateLimit APIs\nworkshop\njackson3\njunit5", fillcolor="#EAF7F0"];
+  runtime [label="Bucket Runtime\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> infra [label="persists / publishes"];

@@ -26,11 +26,11 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nKafkaApplication\nEmbeddedKafkaTest\nGreetingControllerScopeTest\nMessaging Kafka tests", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nKafkaConfig\nGreetingController\nRedirectWebFilter\nCoroutineSimpleMessageHandler", fillcolor="#EEF7FF"];
-  infra [label="Repository & Infra\nKafkaTopics\nGreetingRequest\nGreetingResult", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\nkafka4\ntestcontainers", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nKafka\nTestcontainers", fillcolor="#FFF1F1"];
+  entry [label="Messaging App/Test Surface\nKafkaApplication\nEmbeddedKafkaTest\nGreetingControllerScopeTest\nMessaging Kafka tests", fillcolor="#FFF8E7"];
+  api [label="Producer / Consumer Adapters\nKafkaConfig\nGreetingController\nRedirectWebFilter\nCoroutineSimpleMessageHandler", fillcolor="#EEF7FF"];
+  infra [label="Kafka Topic Layer\nKafkaTopics\nGreetingRequest\nGreetingResult", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Kafka APIs\nworkshop\nkafka4\ntestcontainers", fillcolor="#EAF7F0"];
+  runtime [label="Kafka Broker Runtime\nKafka\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> infra [label="persists / publishes"];

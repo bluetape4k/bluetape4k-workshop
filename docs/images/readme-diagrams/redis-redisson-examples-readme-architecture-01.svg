@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="660" viewBox="0 0 1120 660" role="img" aria-label="Redisson Examples architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="660" viewBox="0 0 1320 660" role="img" aria-label="Redisson Examples architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/AbstractRedissonTest.kt&quot;,&quot;redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/RedissonClientConfigTest.kt&quot;,&quot;redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/collections/BlockingDequeExamples.kt&quot;,&quot;redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/collections/BoundedBlockingQueueExamples.kt&quot;,&quot;redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/collections/ListMultimapCacheExamples.kt&quot;,&quot;redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/collections/LocalCachedMapExamples.kt&quot;,&quot;redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/collections/LocalCachedMapTest.kt&quot;,&quot;redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/collections/PriorityDequeExamples.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
   <defs>
     <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
@@ -30,63 +30,55 @@
       .node rect { stroke-width: 1.5; }
       .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
       .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
-      .edge-label-bg { fill: #FFFFFF; stroke: #CAD6E0; stroke-width: 1; opacity: 0.96; }
-      .edge-label { font-family: "Comic Mono"; font-size: 12px; fill: #102033; dominant-baseline: middle; }
     </style>
   </defs>
-  <rect class="canvas" width="1120" height="660"/>
-  <rect class="frame" x="16" y="16" width="1088" height="628" rx="22"/>
-  <text class="diagram-title" x="560.0" y="58" text-anchor="middle">Redisson Examples</text>
-  <text class="diagram-subtitle" x="560.0" y="84" text-anchor="middle">Redis example architecture, generated from README module sources</text>
+  <rect class="canvas" width="1320" height="660"/>
+  <rect class="frame" x="16" y="16" width="1288" height="628" rx="22"/>
+  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Redisson Examples</text>
+  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Redis-backed coordination, cache, and stream examples</text>
   <g>
     <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1028.0" height="132.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
+      <rect x="46.0" y="114.0" width="1228.0" height="132.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
       <rect x="64.0" y="134.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="152.5">Domain / Entry</tspan><tspan class="layer-title" x="151.0" y="175.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="194.0">Entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="210.0">adapters, child</tspan><tspan class="layer-detail" x="151.0" y="226.0">examples</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="152.5">Redis Example</tspan><tspan class="layer-title" x="151.0" y="175.5">Surface</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="202.0">apps, tests, HTTP</tspan><tspan class="layer-detail" x="151.0" y="218.0">endpoints</tspan></text>
     </g>
     <g class="layer" data-layer="integration">
-      <rect x="46.0" y="264.0" width="1028.0" height="168.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
+      <rect x="46.0" y="264.0" width="1228.0" height="168.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
       <rect x="64.0" y="284.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="332.0">Integration Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="362.0">Repositories,</tspan><tspan class="layer-detail" x="151.0" y="378.0">adapters, helpers,</tspan><tspan class="layer-detail" x="151.0" y="394.0">clients</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="320.5">Redis Integration</tspan><tspan class="layer-title" x="151.0" y="343.5">Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="362.0">Lettuce, Redisson,</tspan><tspan class="layer-detail" x="151.0" y="378.0">serializers,</tspan><tspan class="layer-detail" x="151.0" y="394.0">helpers</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="450.0" width="1028.0" height="150.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="46.0" y="450.0" width="1228.0" height="150.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
       <rect x="64.0" y="470.0" width="174" height="110.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="509.0">Runtime Backends</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="539.0">External systems,</tspan><tspan class="layer-detail" x="151.0" y="555.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="571.0">JVM</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="509.0">Redis Runtime</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="547.0">standalone,</tspan><tspan class="layer-detail" x="151.0" y="563.0">cluster, containers</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;infra">
-      <path d="M 674.0 226.0 L 674.0 255.0 L 474.5 255.0 L 474.5 284.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-      <rect class="edge-label-bg" x="490.3" y="228.0" width="168.0" height="23" rx="11"/>
-      <text class="edge-label" x="574.3" y="243.0" text-anchor="middle">persists / publishes</text>
+    <g class="edge" data-edge="entry-&gt;infra" data-label="persists / publishes">
+      <path d="M 774.0 226.0 L 774.0 255.0 L 509.0 255.0 L 509.0 284.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
     </g>
-    <g class="edge" data-edge="infra-&gt;bt">
-      <path d="M 474.5 284.0 L 474.5 292.0 L 873.5 292.0 L 873.5 293.0" fill="none" stroke="#3E927D" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-bt)"/>
-      <rect class="edge-label-bg" x="632.0" y="265.0" width="84.0" height="23" rx="11"/>
-      <text class="edge-label" x="674.0" y="280.0" text-anchor="middle">extends</text>
+    <g class="edge" data-edge="infra-&gt;bt" data-label="extends">
+      <path d="M 704.0 348.0 L 774.0 348.0 L 844.0 348.0" fill="none" stroke="#3E927D" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-bt)"/>
     </g>
-    <g class="edge" data-edge="bt-&gt;runtime">
-      <path d="M 873.5 403.0 L 873.5 436.5 L 674.0 436.5 L 674.0 470.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-      <rect class="edge-label-bg" x="735.8" y="409.5" width="76.0" height="23" rx="11"/>
-      <text class="edge-label" x="773.8" y="424.5" text-anchor="middle">adapts</text>
+    <g class="edge" data-edge="bt-&gt;runtime" data-label="adapts">
+      <path d="M 1039.0 403.0 L 1039.0 436.5 L 774.0 436.5 L 774.0 470.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
     </g>
     <g class="node" data-node="entry" data-lines="Example Family | Redisson Examples">
-      <rect x="414.0" y="134.0" width="520.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="674.0" y="176.5">Example Family</tspan><tspan class="node-detail" x="674.0" y="200.5">Redisson Examples</tspan></text>
+      <rect x="474.0" y="134.0" width="600.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="176.5">Example Family</tspan><tspan class="node-detail" x="774.0" y="200.5">Redisson Examples</tspan></text>
     </g>
-    <g class="node" data-node="infra" data-lines="Framework Layer | Spring boot starter jdbc lib | Spring boot starter data redis | lib | Spring boot starter data redis">
-      <rect x="286.0" y="284.0" width="377.0" height="128.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="474.5" y="319.0">Framework Layer</tspan><tspan class="node-detail" x="474.5" y="343.0">Spring boot starter jdbc lib</tspan><tspan class="node-detail" x="474.5" y="360.0">Spring boot starter data redis</tspan><tspan class="node-detail" x="474.5" y="377.0">lib</tspan><tspan class="node-detail" x="474.5" y="394.0">Spring boot starter data redis</tspan></text>
+    <g class="node" data-node="infra" data-lines="Redis Client Layer | Spring boot starter jdbc lib | Spring boot starter data redis | lib | Spring boot starter data redis">
+      <rect x="314.0" y="284.0" width="390.0" height="128.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="319.0">Redis Client Layer</tspan><tspan class="node-detail" x="509.0" y="343.0">Spring boot starter jdbc lib</tspan><tspan class="node-detail" x="509.0" y="360.0">Spring boot starter data redis</tspan><tspan class="node-detail" x="509.0" y="377.0">lib</tspan><tspan class="node-detail" x="509.0" y="394.0">Spring boot starter data redis</tspan></text>
     </g>
-    <g class="node" data-node="bt" data-lines="bluetape4k APIs | redis | redisson | testcontainers">
-      <rect x="685.0" y="293.0" width="377.0" height="110.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="873.5" y="327.5">bluetape4k APIs</tspan><tspan class="node-detail" x="873.5" y="351.5">redis</tspan><tspan class="node-detail" x="873.5" y="368.5">redisson</tspan><tspan class="node-detail" x="873.5" y="385.5">testcontainers</tspan></text>
+    <g class="node" data-node="bt" data-lines="bluetape4k Redis APIs | redis | redisson | testcontainers">
+      <rect x="844.0" y="293.0" width="390.0" height="110.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="327.5">bluetape4k Redis APIs</tspan><tspan class="node-detail" x="1039.0" y="351.5">redis</tspan><tspan class="node-detail" x="1039.0" y="368.5">redisson</tspan><tspan class="node-detail" x="1039.0" y="385.5">testcontainers</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="Runtime | SQL / R2DBC | Redis | AWS / S3">
-      <rect x="414.0" y="470.0" width="520.0" height="110.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="674.0" y="504.5">Runtime</tspan><tspan class="node-detail" x="674.0" y="528.5">SQL / R2DBC</tspan><tspan class="node-detail" x="674.0" y="545.5">Redis</tspan><tspan class="node-detail" x="674.0" y="562.5">AWS / S3</tspan></text>
+    <g class="node" data-node="runtime" data-lines="Redis Runtime | SQL / R2DBC | Redis | AWS / S3">
+      <rect x="474.0" y="470.0" width="600.0" height="110.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="504.5">Redis Runtime</tspan><tspan class="node-detail" x="774.0" y="528.5">SQL / R2DBC</tspan><tspan class="node-detail" x="774.0" y="545.5">Redis</tspan><tspan class="node-detail" x="774.0" y="562.5">AWS / S3</tspan></text>
     </g>
   </g>
 </svg>

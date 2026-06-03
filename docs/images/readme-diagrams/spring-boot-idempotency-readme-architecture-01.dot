@@ -26,11 +26,11 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nIdempotencyApplication\nAbstractIdempotencyTest\nOrderControllerTest\nSpring Boot Idempotency tests", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nOrderController\nIdempotencyService", fillcolor="#EEF7FF"];
-  infra [label="Repository & Infra\nRedissonConfig\nOrderModels", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\njackson3\ncore", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
+  entry [label="Boot App/Test Surface\nIdempotencyApplication\nAbstractIdempotencyTest\nOrderControllerTest\nSpring Boot Idempotency tests", fillcolor="#FFF8E7"];
+  api [label="Spring Web Adapters\nOrderController\nIdempotencyService", fillcolor="#EEF7FF"];
+  infra [label="Infrastructure Config\nRedissonConfig\nOrderModels", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Boot APIs\nworkshop\njackson3\ncore", fillcolor="#EAF7F0"];
+  runtime [label="Boot Runtime\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> infra [label="persists / publishes"];

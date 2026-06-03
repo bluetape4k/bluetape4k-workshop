@@ -26,10 +26,10 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nSpringCloudAwsS3Sample\nStorageApplication\nAbstractSpringCloudAwsS3SampleTest\nSpringCloudAwsS3Test", fillcolor="#FFF8E7"];
-  api [label="Child Examples\ns3 spring cloud\nstorage abstraction", fillcolor="#EEF7FF"];
-  service [label="Service & Domain\nLocalStorageService\nS3Config\nS3PresignedStorageService\nS3StorageService", fillcolor="#F1F8E9"];
-  runtime [label="Runtime\nAWS / S3\nTestcontainers", fillcolor="#FFF1F1"];
+  entry [label="Sample Bootstraps\nSpringCloudAwsS3Sample\nStorageApplication\nAbstractSpringCloudAwsS3SampleTest\nSpringCloudAwsS3Test", fillcolor="#FFF8E7"];
+  api [label="S3 Example Modules\ns3 spring cloud\nstorage abstraction", fillcolor="#EEF7FF"];
+  service [label="Storage Workflow\nLocalStorageService\nS3Config\nS3PresignedStorageService\nS3StorageService", fillcolor="#F1F8E9"];
+  runtime [label="LocalStack / S3\nAWS / S3\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];

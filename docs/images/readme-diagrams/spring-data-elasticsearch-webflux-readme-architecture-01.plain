@@ -1,14 +1,13 @@
-graph 1 23.153 1.7263
-node entry 1.8719 0.86313 3.7438 1.7263 "Entry & Verification\nElasticsearchApplication\nAbstractElasticsearchApplicationTest\nElasticsearchClientConfigTest\nSpring Data \
-Elasticsearch" rounded,filled box #88A3B5 #FFF8E7
-node api 6.4663 0.86313 2.3896 1.7263 "API & Adapters\nNettyConfig\nBookController\nDefaultBookService\nBookExceptionHandler" rounded,filled box #88A3B5 #EEF7FF
-node service 10.352 0.86313 1.9938 0.8825 "Service & Domain\nBookService" rounded,filled box #88A3B5 #F1F8E9
-node infra 15.291 0.86313 2.6604 1.7263 "Repository & Infra\nElasticsearchClientConfig\nJacksonConfig\nSwaggerConfig\nModifyBookRequest" rounded,filled box #88A3B5 #F5F0FF
-node bt 19.057 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\ntestcontainers\njackson3" rounded,filled box #88A3B5 #EAF7F0
-node runtime 22.282 0.86313 1.7437 1.1637 "Runtime\nElasticsearch\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+graph 1 24.028 1.7263
+node entry 1.8719 0.86313 3.7438 1.7263 "Data Demo Surface\nElasticsearchApplication\nAbstractElasticsearchApplicationTest\nElasticsearchClientConfigTest\nSpring Data Elasticsearch" rounded,filled box #88A3B5 #FFF8E7
+node api 6.4663 0.86313 2.3896 1.7263 "Web/Data Adapters\nNettyConfig\nBookController\nDefaultBookService\nBookExceptionHandler" rounded,filled box #88A3B5 #EEF7FF
+node service 10.446 0.86313 2.1813 0.8825 "Data Service Layer\nBookService" rounded,filled box #88A3B5 #F1F8E9
+node infra 15.478 0.86313 2.6604 1.7263 "Repository Layer\nElasticsearchClientConfig\nJacksonConfig\nSwaggerConfig\nModifyBookRequest" rounded,filled box #88A3B5 #F5F0FF
+node bt 19.479 0.86313 2.2854 1.445 "bluetape4k Data APIs\nworkshop\ntestcontainers\njackson3" rounded,filled box #88A3B5 #EAF7F0
+node runtime 23.047 0.86313 1.9625 1.1637 "Database Runtime\nElasticsearch\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
 edge entry api 4 3.7472 0.86313 3.7472 0.86313 5.1254 0.86313 5.1254 0.86313 invokes 4.5076 0.95167 solid #637383
-edge api service 4 7.6693 0.86313 7.6693 0.86313 9.2083 0.86313 9.2083 0.86313 delegates 8.5083 0.95167 solid #637383
-edge service infra 4 11.358 0.86313 11.358 0.86313 13.812 0.86313 13.812 0.86313 "persists / publishes" 12.655 0.95167 solid #637383
-edge infra bt 4 16.629 0.86313 16.629 0.86313 17.999 0.86313 17.999 0.86313 extends 17.385 0.95167 solid #637383
-edge bt runtime 4 19.972 0.86313 19.972 0.86313 21.26 0.86313 21.26 0.86313 adapts 20.688 0.95167 solid #637383
+edge api service 4 7.6658 0.86313 7.6658 0.86313 9.2083 0.86313 9.2083 0.86313 delegates 8.5083 0.95167 solid #637383
+edge service infra 4 11.544 0.86313 11.544 0.86313 13.998 0.86313 13.998 0.86313 "persists / publishes" 12.842 0.95167 solid #637383
+edge infra bt 4 16.816 0.86313 16.816 0.86313 18.187 0.86313 18.187 0.86313 extends 17.572 0.95167 solid #637383
+edge bt runtime 4 20.628 0.86313 20.628 0.86313 21.914 0.86313 21.914 0.86313 adapts 21.344 0.95167 solid #637383
 stop

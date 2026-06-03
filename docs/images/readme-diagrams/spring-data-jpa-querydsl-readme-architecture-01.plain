@@ -1,11 +1,11 @@
-graph 1 19.58 1.7263
-node entry 1.5906 0.86313 3.1813 1.445 "Entry & Verification\nAbstractQuerydslTest\nAbstractDomainTest\nSpring Data Jpa Querydsl tests" rounded,filled box #88A3B5 #FFF8E7
-node service 6.6017 0.86313 3.4521 1.7263 "Service & Domain\nMemberRepositoryImpl\nSpringRepositoryQuerydslSupport\nMemberSearchCondition\nTeamDto" rounded,filled box #88A3B5 #F1F8E9
-node infra 11.993 0.86313 2.1083 1.7263 "Repository & Infra\nMemberDto\nMemberTeamDto\nMember\nTeam" rounded,filled box #88A3B5 #F5F0FF
-node bt 15.483 0.86313 1.8167 1.445 "bluetape4k APIs\nhibernate\nspring\ntestcontainers" rounded,filled box #88A3B5 #EAF7F0
-node runtime 18.708 0.86313 1.7437 1.1637 "Runtime\nSQL / R2DBC\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+graph 1 20.163 1.7263
+node entry 1.5906 0.86313 3.1813 1.445 "Data Demo Surface\nAbstractQuerydslTest\nAbstractDomainTest\nSpring Data Jpa Querydsl tests" rounded,filled box #88A3B5 #FFF8E7
+node service 6.6017 0.86313 3.4521 1.7263 "Data Service Layer\nMemberRepositoryImpl\nSpringRepositoryQuerydslSupport\nMemberSearchCondition\nTeamDto" rounded,filled box #88A3B5 #F1F8E9
+node infra 11.941 0.86313 2.0042 1.7263 "Repository Layer\nMemberDto\nMemberTeamDto\nMember\nTeam" rounded,filled box #88A3B5 #F5F0FF
+node bt 15.614 0.86313 2.2854 1.445 "bluetape4k Data APIs\nhibernate\nspring\ntestcontainers" rounded,filled box #88A3B5 #EAF7F0
+node runtime 19.182 0.86313 1.9625 1.1637 "Database Runtime\nSQL / R2DBC\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
 edge entry service 4 3.1899 0.86313 3.1899 0.86313 4.7277 0.86313 4.7277 0.86313 delegates 4.0285 0.95167 solid #637383
-edge service infra 4 8.3373 0.86313 8.3373 0.86313 10.79 0.86313 10.79 0.86313 "persists / publishes" 9.6333 0.95167 solid #637383
-edge infra bt 4 13.054 0.86313 13.054 0.86313 14.426 0.86313 14.426 0.86313 extends 13.811 0.95167 solid #637383
-edge bt runtime 4 16.399 0.86313 16.399 0.86313 17.687 0.86313 17.687 0.86313 adapts 17.114 0.95167 solid #637383
+edge service infra 4 8.3352 0.86313 8.3352 0.86313 10.789 0.86313 10.789 0.86313 "persists / publishes" 9.6333 0.95167 solid #637383
+edge infra bt 4 12.949 0.86313 12.949 0.86313 14.322 0.86313 14.322 0.86313 extends 13.707 0.95167 solid #637383
+edge bt runtime 4 16.762 0.86313 16.762 0.86313 18.049 0.86313 18.049 0.86313 adapts 17.478 0.95167 solid #637383
 stop

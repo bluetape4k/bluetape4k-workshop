@@ -26,11 +26,11 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nKotlinApplication\nAbstractSecurityApplicationTest\nMainControllerTest\nSpring Security Mvc Hello tests", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nSecurityConfig\nMainController", fillcolor="#EEF7FF"];
-  infra [label="Framework Layer\nSpring boot starter security\nSpring boot starter thymeleaf\nSpring boot starter web\nSpring boot starter webmvc test", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\njackson3\njunit5", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nRedis\nAWS / S3", fillcolor="#FFF1F1"];
+  entry [label="Security Demo Surface\nKotlinApplication\nAbstractSecurityApplicationTest\nMainControllerTest\nSpring Security Mvc Hello tests", fillcolor="#FFF8E7"];
+  api [label="Protected Endpoints\nSecurityConfig\nMainController", fillcolor="#EEF7FF"];
+  infra [label="Spring Security Layer\nSpring boot starter security\nSpring boot starter thymeleaf\nSpring boot starter web\nSpring boot starter webmvc test", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Security APIs\nworkshop\njackson3\njunit5", fillcolor="#EAF7F0"];
+  runtime [label="Security Runtime\nRedis\nAWS / S3", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> infra [label="persists / publishes"];

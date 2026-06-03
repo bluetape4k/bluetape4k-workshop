@@ -26,12 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nWebsocketApplication\nWebsocketApplicationTest\nSpring Boot Webflux Websocket\ntests", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nNettyConfig\nReactiveWebSocketConfiguration\nSampleWebfluxRouter\nReactiveWebSocketHandler", fillcolor="#EEF7FF"];
-  service [label="Service & Domain\nQuoteGenerator\nModels", fillcolor="#F1F8E9"];
-  infra [label="Framework Layer\nSpring cloud dependencies get\nSpring boot4 dependencies get\nSpring boot autoconfigure lib\nSpring boot autoconfigure", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\nidgenerators\njunit5", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nIn-memory / JVM", fillcolor="#FFF1F1"];
+  entry [label="Boot App/Test Surface\nWebsocketApplication\nWebsocketApplicationTest\nSpring Boot Webflux Websocket\ntests", fillcolor="#FFF8E7"];
+  api [label="Spring Web Adapters\nNettyConfig\nReactiveWebSocketConfiguration\nSampleWebfluxRouter\nReactiveWebSocketHandler", fillcolor="#EEF7FF"];
+  service [label="Application Feature\nQuoteGenerator\nModels", fillcolor="#F1F8E9"];
+  infra [label="Spring Boot Layer\nSpring cloud dependencies get\nSpring boot4 dependencies get\nSpring boot autoconfigure lib\nSpring boot autoconfigure", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Boot APIs\nworkshop\nidgenerators\njunit5", fillcolor="#EAF7F0"];
+  runtime [label="Boot Runtime\nIn-memory / JVM", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];

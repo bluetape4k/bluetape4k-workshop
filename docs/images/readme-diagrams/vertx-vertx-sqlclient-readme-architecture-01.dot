@@ -29,7 +29,7 @@ digraph G {
   entry [label="Example Family\nVert.x Sql Client Example", fillcolor="#FFF8E7"];
   infra [label="Framework Layer\nTestcontainers lib\nTestcontainers mysql", fillcolor="#F5F0FF"];
   bt [label="bluetape4k APIs\nio\njdbc\njunit5", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC\nTestcontainers", fillcolor="#FFF1F1"];
+  runtime [label="Runtime Dependencies\nSQL / R2DBC\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> infra [label="persists / publishes"];
   infra -> bt [label="extends"];

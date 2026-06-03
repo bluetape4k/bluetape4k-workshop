@@ -1,13 +1,13 @@
-graph 1 22.268 1.7263
-node entry 1.5646 0.86313 3.1292 1.7263 "Entry & Verification\nIdGeneratorApplication\nAbstractIdGeneratorTest\nIdGeneratorControllerTest\nSpring Boot Idgenerator tests" rounded,filled box #88A3B5 #FFF8E7
-node api 5.8517 0.86313 2.3896 0.8825 "API & Adapters\nIdGeneratorController" rounded,filled box #88A3B5 #EEF7FF
-node service 9.7378 0.86313 1.9938 0.8825 "Service & Domain\nIdResponses" rounded,filled box #88A3B5 #F1F8E9
-node infra 14.864 0.86313 3.0354 1.7263 "Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration" rounded,filled box #88A3B5 #F5F0FF
-node bt 18.817 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\nidgenerators\njackson3" rounded,filled box #88A3B5 #EAF7F0
-node runtime 21.719 0.86313 1.0979 0.8825 "Runtime\nRedis" rounded,filled box #88A3B5 #FFF1F1
+graph 1 23.445 1.7263
+node entry 1.5646 0.86313 3.1292 1.7263 "Boot App/Test Surface\nIdGeneratorApplication\nAbstractIdGeneratorTest\nIdGeneratorControllerTest\nSpring Boot Idgenerator tests" rounded,filled box #88A3B5 #FFF8E7
+node api 5.8517 0.86313 2.3896 0.8825 "Spring Web Adapters\nIdGeneratorController" rounded,filled box #88A3B5 #EEF7FF
+node service 9.8056 0.86313 2.1292 0.8825 "Application Feature\nIdResponses" rounded,filled box #88A3B5 #F1F8E9
+node infra 14.999 0.86313 3.0354 1.7263 "Spring Boot Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration" rounded,filled box #88A3B5 #F5F0FF
+node bt 19.213 0.86313 2.3375 1.445 "bluetape4k Boot APIs\nworkshop\nidgenerators\njackson3" rounded,filled box #88A3B5 #EAF7F0
+node runtime 22.636 0.86313 1.6187 0.8825 "Boot Runtime\nRedis" rounded,filled box #88A3B5 #FFF1F1
 edge entry api 4 3.1366 0.86313 3.1366 0.86313 4.5066 0.86313 4.5066 0.86313 invokes 3.8931 0.95167 solid #637383
-edge api service 4 7.0547 0.86313 7.0547 0.86313 8.5937 0.86313 8.5937 0.86313 delegates 7.8938 0.95167 solid #637383
-edge service infra 4 10.744 0.86313 10.744 0.86313 13.196 0.86313 13.196 0.86313 "persists / publishes" 12.04 0.95167 solid #637383
-edge infra bt 4 16.387 0.86313 16.387 0.86313 17.759 0.86313 17.759 0.86313 extends 17.145 0.95167 solid #637383
-edge bt runtime 4 19.732 0.86313 19.732 0.86313 21.021 0.86313 21.021 0.86313 adapts 20.448 0.95167 solid #637383
+edge api service 4 7.0541 0.86313 7.0541 0.86313 8.5937 0.86313 8.5937 0.86313 delegates 7.8938 0.95167 solid #637383
+edge service infra 4 10.875 0.86313 10.875 0.86313 13.33 0.86313 13.33 0.86313 "persists / publishes" 12.176 0.95167 solid #637383
+edge infra bt 4 16.526 0.86313 16.526 0.86313 17.899 0.86313 17.899 0.86313 extends 17.281 0.95167 solid #637383
+edge bt runtime 4 20.391 0.86313 20.391 0.86313 21.674 0.86313 21.674 0.86313 adapts 21.104 0.95167 solid #637383
 stop

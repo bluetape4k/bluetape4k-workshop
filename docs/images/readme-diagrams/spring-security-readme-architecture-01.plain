@@ -1,7 +1,7 @@
-graph 1 10.266 1.7263
-node entry 1.6635 0.86313 3.3271 1.7263 "Entry & Verification\nKotlinApplication\nKotlinWebfluxApplication\nJwtApplication\nAbstractSecurityApplicationTest" rounded,filled box #88A3B5 #FFF8E7
-node api 6.0444 0.86313 2.3792 1.7263 "API & Adapters\nSecurityConfig\nMainController\nSecurityConfiguration\nJwtConfig" rounded,filled box #88A3B5 #EEF7FF
-node runtime 9.4306 0.86313 1.6708 1.445 "Runtime\nSQL / R2DBC\nRedis\nAWS / S3" rounded,filled box #88A3B5 #FFF1F1
+graph 1 10.953 1.7263
+node entry 1.6635 0.86313 3.3271 1.7263 "Example Entrypoints\nKotlinApplication\nKotlinWebfluxApplication\nJwtApplication\nAbstractSecurityApplicationTest" rounded,filled box #88A3B5 #FFF8E7
+node api 6.0444 0.86313 2.3792 1.7263 "API / Adapter Layer\nSecurityConfig\nMainController\nSecurityConfiguration\nJwtConfig" rounded,filled box #88A3B5 #EEF7FF
+node runtime 9.7743 0.86313 2.3583 1.445 "Runtime Dependencies\nSQL / R2DBC\nRedis\nAWS / S3" rounded,filled box #88A3B5 #FFF1F1
 edge entry api 4 3.3323 0.86313 3.3323 0.86313 4.7074 0.86313 4.7074 0.86313 invokes 4.091 0.95167 solid #637383
-edge api runtime 4 7.243 0.86313 7.243 0.86313 8.4472 0.86313 8.4472 0.86313 backs 7.9146 0.95167 solid #637383
+edge api runtime 4 7.24 0.86313 7.24 0.86313 8.4429 0.86313 8.4429 0.86313 backs 7.9146 0.95167 solid #637383
 stop

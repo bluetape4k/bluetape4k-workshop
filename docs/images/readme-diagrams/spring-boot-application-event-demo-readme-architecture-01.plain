@@ -1,13 +1,13 @@
-graph 1 24.778 1.7263
-node entry 1.5333 0.86313 3.0667 1.7263 "Entry & Verification\nEventApplication\nAspectFlowEventEmitterTest\nCustomEventPublisherTest\nSpring Boot Application Event" rounded,filled box #88A3B5 #FFF8E7
-node api 6.1747 0.86313 3.1604 1.7263 "API & Adapters\nAspectEventListener\nCoroutineAspectEventListener\nNettyConfig\nCustomEventController" rounded,filled box #88A3B5 #EEF7FF
-node service 10.925 0.86313 2.9521 1.7263 "Service & Domain\nAspectEventPublisherAspect\nMyEventService\nCustomEventPublisher\nAspectEvent" rounded,filled box #88A3B5 #F1F8E9
-node infra 16.53 0.86313 3.0354 1.7263 "Framework Layer\nSpring boot4 dependencies\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor" rounded,filled box #88A3B5 #F5F0FF
-node bt 20.484 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\nio\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
-node runtime 23.808 0.86313 1.9417 0.8825 "Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
+graph 1 25.299 1.7263
+node entry 1.5333 0.86313 3.0667 1.7263 "Boot App/Test Surface\nEventApplication\nAspectFlowEventEmitterTest\nCustomEventPublisherTest\nSpring Boot Application Event" rounded,filled box #88A3B5 #FFF8E7
+node api 6.1747 0.86313 3.1604 1.7263 "Spring Web Adapters\nAspectEventListener\nCoroutineAspectEventListener\nNettyConfig\nCustomEventController" rounded,filled box #88A3B5 #EEF7FF
+node service 10.925 0.86313 2.9521 1.7263 "Application Feature\nAspectEventPublisherAspect\nMyEventService\nCustomEventPublisher\nAspectEvent" rounded,filled box #88A3B5 #F1F8E9
+node infra 16.53 0.86313 3.0354 1.7263 "Spring Boot Layer\nSpring boot4 dependencies\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor" rounded,filled box #88A3B5 #F5F0FF
+node bt 20.744 0.86313 2.3375 1.445 "bluetape4k Boot APIs\nworkshop\nio\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
+node runtime 24.328 0.86313 1.9417 0.8825 "Boot Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
 edge entry api 4 3.0724 0.86313 3.0724 0.86313 4.4455 0.86313 4.4455 0.86313 invokes 3.8306 0.95167 solid #637383
 edge api service 4 7.7632 0.86313 7.7632 0.86313 9.3 0.86313 9.3 0.86313 delegates 8.6021 0.95167 solid #637383
 edge service infra 4 12.409 0.86313 12.409 0.86313 14.862 0.86313 14.862 0.86313 "persists / publishes" 13.707 0.95167 solid #637383
-edge infra bt 4 18.053 0.86313 18.053 0.86313 19.426 0.86313 19.426 0.86313 extends 18.812 0.95167 solid #637383
-edge bt runtime 4 21.401 0.86313 21.401 0.86313 22.687 0.86313 22.687 0.86313 adapts 22.115 0.95167 solid #637383
+edge infra bt 4 18.058 0.86313 18.058 0.86313 19.43 0.86313 19.43 0.86313 extends 18.812 0.95167 solid #637383
+edge bt runtime 4 21.918 0.86313 21.918 0.86313 23.207 0.86313 23.207 0.86313 adapts 22.635 0.95167 solid #637383
 stop

@@ -26,12 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nSpringModulith\nAppRestControllerTest\nSpringModulithTest\nSpring Modulith Jpa Demo tests", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nDepartmentManagement\nEmployeeManagement\nGatewayManagement", fillcolor="#EEF7FF"];
-  service [label="Service & Domain\nOrganizationAddEvent\nOrganizationRemoveEvent\nDepartmentDTO\nDepartmentExternalAPI", fillcolor="#F1F8E9"];
+  entry [label="Example Entrypoints\nSpringModulith\nAppRestControllerTest\nSpringModulithTest\nSpring Modulith Jpa Demo tests", fillcolor="#FFF8E7"];
+  api [label="API / Adapter Layer\nDepartmentManagement\nEmployeeManagement\nGatewayManagement", fillcolor="#EEF7FF"];
+  service [label="Application Services\nOrganizationAddEvent\nOrganizationRemoveEvent\nDepartmentDTO\nDepartmentExternalAPI", fillcolor="#F1F8E9"];
   infra [label="Framework Layer\nSpring boot4 dependencies\nSpring modulith bom\nSpring modulith actuator\nSpring modulith observability", fillcolor="#F5F0FF"];
   bt [label="bluetape4k APIs\nhibernate\ntestcontainers\ncoroutines", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC\nTestcontainers", fillcolor="#FFF1F1"];
+  runtime [label="Runtime Dependencies\nSQL / R2DBC\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];

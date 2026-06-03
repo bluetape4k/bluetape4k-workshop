@@ -27,8 +27,8 @@ digraph G {
   ];
 
   entry [label="Example Family\nConcurrent programming in Java\nwith virtual threads", fillcolor="#FFF8E7"];
-  bt [label="bluetape4k APIs\ncore\nvirtualthread\ncoroutines", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC\nRedis\nAWS / S3", fillcolor="#FFF1F1"];
+  bt [label="bluetape4k Coroutine APIs\ncore\nvirtualthread\ncoroutines", fillcolor="#EAF7F0"];
+  runtime [label="JVM Thread Runtime\nSQL / R2DBC\nRedis\nAWS / S3", fillcolor="#FFF1F1"];
 
   api -> bt [label="extends"];
   bt -> runtime [label="adapts"];

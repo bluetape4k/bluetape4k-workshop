@@ -26,11 +26,11 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nCacheResilienceApplication\nResilientCacheServiceTest\nSpring Boot Cache Resilience\ntests", fillcolor="#FFF8E7"];
-  service [label="Service & Domain\nResilientProductService", fillcolor="#F1F8E9"];
-  infra [label="Repository & Infra\nResilientCacheConfig", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\njunit5\ntestcontainers", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
+  entry [label="Boot App/Test Surface\nCacheResilienceApplication\nResilientCacheServiceTest\nSpring Boot Cache Resilience\ntests", fillcolor="#FFF8E7"];
+  service [label="Application Feature\nResilientProductService", fillcolor="#F1F8E9"];
+  infra [label="Infrastructure Config\nResilientCacheConfig", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Boot APIs\nworkshop\njunit5\ntestcontainers", fillcolor="#EAF7F0"];
+  runtime [label="Boot Runtime\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> service [label="delegates"];
   service -> infra [label="persists / publishes"];

@@ -26,11 +26,11 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nCacheBenchmarkApplication\nAbstractCacheBenchmarkTest\nCaffeineServiceTest\nSpring Boot Cache Benchmark", fillcolor="#FFF8E7"];
-  service [label="Service & Domain\nCacheConfig\nCaffeineService\nNearCacheService\nNoCacheService", fillcolor="#F1F8E9"];
-  infra [label="Repository & Infra\nDataInitConfig\nRedisTemplateConfig\nRedissonConfig\nProduct", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\nredisson\ncache", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
+  entry [label="Boot App/Test Surface\nCacheBenchmarkApplication\nAbstractCacheBenchmarkTest\nCaffeineServiceTest\nSpring Boot Cache Benchmark", fillcolor="#FFF8E7"];
+  service [label="Application Feature\nCacheConfig\nCaffeineService\nNearCacheService\nNoCacheService", fillcolor="#F1F8E9"];
+  infra [label="Infrastructure Config\nDataInitConfig\nRedisTemplateConfig\nRedissonConfig\nProduct", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Boot APIs\nworkshop\nredisson\ncache", fillcolor="#EAF7F0"];
+  runtime [label="Boot Runtime\nSQL / R2DBC\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> service [label="delegates"];
   service -> infra [label="persists / publishes"];

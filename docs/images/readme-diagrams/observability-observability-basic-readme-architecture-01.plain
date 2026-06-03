@@ -1,13 +1,13 @@
-graph 1 22.185 1.7263
-node entry 1.3615 0.86313 2.7229 1.7263 "Entry & Verification\nBasicObservabilityApp\nAbstractBasicTest\nTestObservationConfig\nObservability Observability" rounded,filled box #88A3B5 #FFF8E7
-node api 5.1851 0.86313 1.8688 0.8825 "API & Adapters\nOrderController" rounded,filled box #88A3B5 #EEF7FF
-node service 8.9097 0.86313 2.1917 1.7263 "Service & Domain\nInventoryClient\nInventory\nOrder\nObservationSupport" rounded,filled box #88A3B5 #F1F8E9
-node infra 14.134 0.86313 3.0354 1.7263 "Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration" rounded,filled box #88A3B5 #F5F0FF
-node bt 18.088 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\nlogging\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
-node runtime 21.313 0.86313 1.7437 1.445 "Runtime\nRedis\nKafka\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 2.7311 0.86313 2.7311 0.86313 4.1011 0.86313 4.1011 0.86313 invokes 3.4868 0.95167 solid #637383
-edge api service 4 6.125 0.86313 6.125 0.86313 7.662 0.86313 7.662 0.86313 delegates 6.9667 0.95167 solid #637383
-edge service infra 4 10.011 0.86313 10.011 0.86313 12.466 0.86313 12.466 0.86313 "persists / publishes" 11.311 0.95167 solid #637383
-edge infra bt 4 15.657 0.86313 15.657 0.86313 17.03 0.86313 17.03 0.86313 extends 16.416 0.95167 solid #637383
-edge bt runtime 4 19.004 0.86313 19.004 0.86313 20.291 0.86313 20.291 0.86313 adapts 19.719 0.95167 solid #637383
+graph 1 25.508 1.7263
+node entry 1.4917 0.86313 2.9833 1.7263 "Observed App/Test Surface\nBasicObservabilityApp\nAbstractBasicTest\nTestObservationConfig\nObservability Observability" rounded,filled box #88A3B5 #FFF8E7
+node api 5.8153 0.86313 2.6083 0.8825 "Observed Web Adapters\nOrderController" rounded,filled box #88A3B5 #EEF7FF
+node service 10.019 0.86313 2.4104 1.7263 "Instrumented Services\nInventoryClient\nInventory\nOrder\nObservationSupport" rounded,filled box #88A3B5 #F1F8E9
+node infra 15.353 0.86313 3.0354 1.7263 "Micrometer/Spring Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration" rounded,filled box #88A3B5 #F5F0FF
+node bt 19.906 0.86313 3.0146 1.445 "bluetape4k Observability APIs\nworkshop\nlogging\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
+node runtime 24.183 0.86313 2.65 1.445 "Metrics / Trace Runtime\nRedis\nKafka\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 2.9917 0.86313 2.9917 0.86313 4.3591 0.86313 4.3591 0.86313 invokes 3.7472 0.95167 solid #637383
+edge api service 4 7.1281 0.86313 7.1281 0.86313 8.663 0.86313 8.663 0.86313 delegates 7.9667 0.95167 solid #637383
+edge service infra 4 11.229 0.86313 11.229 0.86313 13.685 0.86313 13.685 0.86313 "persists / publishes" 12.53 0.95167 solid #637383
+edge infra bt 4 16.875 0.86313 16.875 0.86313 18.25 0.86313 18.25 0.86313 extends 17.635 0.95167 solid #637383
+edge bt runtime 4 21.42 0.86313 21.42 0.86313 22.706 0.86313 22.706 0.86313 adapts 22.135 0.95167 solid #637383
 stop

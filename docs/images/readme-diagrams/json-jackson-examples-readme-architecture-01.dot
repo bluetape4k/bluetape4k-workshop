@@ -26,10 +26,10 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nAbstractJacksonTest\nJson Jackson Examples tests", fillcolor="#FFF8E7"];
-  service [label="Service & Domain\nJsonPathSupport", fillcolor="#F1F8E9"];
+  entry [label="Example Entrypoints\nAbstractJacksonTest\nJson Jackson Examples tests", fillcolor="#FFF8E7"];
+  service [label="Application Services\nJsonPathSupport", fillcolor="#F1F8E9"];
   bt [label="bluetape4k APIs\njackson3\ncore\ncoroutines", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nIn-memory / JVM", fillcolor="#FFF1F1"];
+  runtime [label="Runtime Dependencies\nIn-memory / JVM", fillcolor="#FFF1F1"];
 
   entry -> service [label="delegates"];
   service -> bt [label="extends"];

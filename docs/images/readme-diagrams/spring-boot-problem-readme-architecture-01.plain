@@ -1,13 +1,13 @@
-graph 1 22.966 1.7263
-node entry 1.4135 0.86313 2.8271 1.7263 "Entry & Verification\nProblemApplication\nAbstractProblemTest\nResilience4jControllerTest\nSpring Boot Problem tests" rounded,filled box #88A3B5 #FFF8E7
-node api 5.8101 0.86313 2.9104 1.7263 "API & Adapters\nResilience4jController\nTaskController\nRestControllerLoggingFilter\nResilience4jTrait" rounded,filled box #88A3B5 #EEF7FF
-node service 10.238 0.86313 2.5563 1.445 "Service & Domain\nInvalidTaskIdException\nTaskNotFoundException\nExampleException" rounded,filled box #88A3B5 #F1F8E9
-node infra 15.181 0.86313 2.1083 0.8825 "Repository & Infra\nProblemConfig" rounded,filled box #88A3B5 #F5F0FF
-node bt 18.672 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\njunit5\nresilience4j" rounded,filled box #88A3B5 #EAF7F0
-node runtime 21.995 0.86313 1.9417 0.8825 "Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
+graph 1 23.768 1.7263
+node entry 1.4135 0.86313 2.8271 1.7263 "Boot App/Test Surface\nProblemApplication\nAbstractProblemTest\nResilience4jControllerTest\nSpring Boot Problem tests" rounded,filled box #88A3B5 #FFF8E7
+node api 5.8101 0.86313 2.9104 1.7263 "Spring Web Adapters\nResilience4jController\nTaskController\nRestControllerLoggingFilter\nResilience4jTrait" rounded,filled box #88A3B5 #EEF7FF
+node service 10.238 0.86313 2.5563 1.445 "Application Feature\nInvalidTaskIdException\nTaskNotFoundException\nExampleException" rounded,filled box #88A3B5 #F1F8E9
+node infra 15.322 0.86313 2.3896 0.8825 "Infrastructure Config\nProblemConfig" rounded,filled box #88A3B5 #F5F0FF
+node bt 19.213 0.86313 2.3375 1.445 "bluetape4k Boot APIs\nworkshop\njunit5\nresilience4j" rounded,filled box #88A3B5 #EAF7F0
+node runtime 22.797 0.86313 1.9417 0.8825 "Boot Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
 edge entry api 4 2.8349 0.86313 2.8349 0.86313 4.2057 0.86313 4.2057 0.86313 invokes 3.591 0.95167 solid #637383
 edge api service 4 7.2722 0.86313 7.2722 0.86313 8.8095 0.86313 8.8095 0.86313 delegates 8.1125 0.95167 solid #637383
-edge service infra 4 11.524 0.86313 11.524 0.86313 13.976 0.86313 13.976 0.86313 "persists / publishes" 12.822 0.95167 solid #637383
-edge infra bt 4 16.243 0.86313 16.243 0.86313 17.614 0.86313 17.614 0.86313 extends 16.999 0.95167 solid #637383
-edge bt runtime 4 19.589 0.86313 19.589 0.86313 20.875 0.86313 20.875 0.86313 adapts 20.302 0.95167 solid #637383
+edge service infra 4 11.521 0.86313 11.521 0.86313 13.975 0.86313 13.975 0.86313 "persists / publishes" 12.822 0.95167 solid #637383
+edge infra bt 4 16.521 0.86313 16.521 0.86313 17.895 0.86313 17.895 0.86313 extends 17.281 0.95167 solid #637383
+edge bt runtime 4 20.387 0.86313 20.387 0.86313 21.676 0.86313 21.676 0.86313 adapts 21.104 0.95167 solid #637383
 stop

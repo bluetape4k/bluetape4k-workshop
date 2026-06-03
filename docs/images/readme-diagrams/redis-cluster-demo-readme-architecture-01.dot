@@ -26,11 +26,11 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nRedisClusterApplication\nAbstractRedisClusterTest\nBasicUsageTest\nRedis Cluster Demo tests", fillcolor="#FFF8E7"];
-  service [label="Service & Domain\nNumberService", fillcolor="#F1F8E9"];
-  infra [label="Framework Layer\nSpring boot starter data redis\nlib\nSpring boot autoconfigure lib\nSpring boot starter test", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\ncore\njackson3", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
+  entry [label="Redis Demo Surface\nRedisClusterApplication\nAbstractRedisClusterTest\nBasicUsageTest\nRedis Cluster Demo tests", fillcolor="#FFF8E7"];
+  service [label="Redis Use Cases\nNumberService", fillcolor="#F1F8E9"];
+  infra [label="Redis Client Layer\nSpring boot starter data redis\nlib\nSpring boot autoconfigure lib\nSpring boot starter test", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Redis APIs\nworkshop\ncore\njackson3", fillcolor="#EAF7F0"];
+  runtime [label="Redis Runtime\nSQL / R2DBC\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> service [label="delegates"];
   service -> infra [label="persists / publishes"];
