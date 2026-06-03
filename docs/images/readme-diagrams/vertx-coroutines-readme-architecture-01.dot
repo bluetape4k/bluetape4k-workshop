@@ -3,8 +3,8 @@ digraph G {
     rankdir=LR,
     bgcolor="white",
     pad="0.35",
-    nodesep="0.55",
-    ranksep="0.75",
+    nodesep="0.70",
+    ranksep="0.95",
     splines=ortho,
     outputorder=edgesfirst
   ];
@@ -16,7 +16,7 @@ digraph G {
     fillcolor="#F6FAFF",
     fontname="Architects Daughter",
     fontsize=14,
-    margin="0.14,0.10"
+    margin="0.20,0.16"
   ];
   edge [
     color="#637383",
@@ -26,15 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry / Tests\nMain /\nMovieRatingVerticeTest", fillcolor="#FFF8E7"];
-  api [label="API / Adapter\nMovieRatingVerticle", fillcolor="#EEF7FF"];
-  infra [label="Library Layer\nio / jdbc / vertx", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nio / jdbc / vertx", fillcolor="#EAF7F0"];
+  entry [label="Entry & Verification\nMain\nMovieRatingVerticeTest\nVertx Coroutines tests", fillcolor="#FFF8E7"];
+  api [label="API & Adapters\nMovieRatingVerticle", fillcolor="#EEF7FF"];
+  bt [label="bluetape4k APIs\nio\njdbc\nvertx", fillcolor="#EAF7F0"];
   runtime [label="Runtime\nSQL / R2DBC", fillcolor="#FFF1F1"];
 
-  entry -> api [label="calls"];
-  api -> infra [label="uses"];
-  infra -> bt [label="uses"];
-  infra -> bt [label="extends"];
+  entry -> api [label="invokes"];
+  api -> bt [label="extends"];
   bt -> runtime [label="adapts"];
 }

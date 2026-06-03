@@ -24,9 +24,9 @@ Demonstrates idiomatic coroutine-first HTTP, SSE streaming, and NDJSON export wi
 
 ## Architecture
 
-![ktor-rest-coroutines Graphviz architecture diagram](../../docs/images/readme-diagrams/ktor-rest-coroutines-readme-architecture-01.png)
-
 ![Ktor REST Coroutines Architecture](../../docs/images/readme-diagrams/ktor-rest-coroutines-architecture-01.png)
+
+![ktor-rest-coroutines Graphviz architecture diagram](../../docs/images/readme-diagrams/ktor-rest-coroutines-readme-architecture-01.png)
 
 ---
 

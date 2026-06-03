@@ -8,11 +8,11 @@
 
 ## 아키텍처 다이어그램
 
-![Kafka Demo Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/messaging-kafka-readme-architecture-01.png)
+![Kafka Demo 아키텍처 다이어그램](../../docs/images/readme-diagrams/messaging-kafka-architecture-01.png)
 
 모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성을 중심으로 구성됩니다. README와 코드를 비교할 때는 `io.bluetape4k.workshop.messaging` 패키지 아래의 구현을 기준으로 삼습니다.
 
-![Kafka Demo 아키텍처 다이어그램](../../docs/images/readme-diagrams/messaging-kafka-architecture-01.png)
+![Kafka Demo Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/messaging-kafka-readme-architecture-01.png)
 
 ## 흐름 다이어그램
 

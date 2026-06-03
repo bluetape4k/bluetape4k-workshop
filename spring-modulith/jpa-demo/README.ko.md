@@ -22,7 +22,7 @@
 
 ## 아키텍처
 
-![Spring Modulith JPA Demo Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-architecture-01.png)
+![Spring Modulith JPA Demo Diagram 1](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-flow-01.png)
 
 애플리케이션은 네 개의 논리 모듈로 나뉩니다.
 
@@ -33,7 +33,7 @@
 | `employee` | `Employee` 엔티티를 관리하고 내부 API를 통해 `organization`에 의존합니다. |
 | `gateway` | 단일 REST API(`/organizations/**`)로 모든 모듈을 노출합니다. |
 
-![Spring Modulith JPA Demo Diagram 1](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-flow-01.png)
+![Spring Modulith JPA Demo Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-architecture-01.png)
 
 ## 사용한 bluetape4k 기능
 

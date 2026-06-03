@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1733" height="184" viewBox="0 0 1733 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1832" height="222" viewBox="0 0 1832 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-security/webflux/jwt/src/main/kotlin/io/bluetape4k/workshop/spring/security/webflux/jwt/JwtApplication.kt&quot;,&quot;spring-security/webflux/jwt/src/main/kotlin/io/bluetape4k/workshop/spring/security/webflux/jwt/config/JwtConfig.kt&quot;,&quot;spring-security/webflux/jwt/src/main/kotlin/io/bluetape4k/workshop/spring/security/webflux/jwt/controller/HelloController.kt&quot;,&quot;spring-security/webflux/jwt/src/main/kotlin/io/bluetape4k/workshop/spring/security/webflux/jwt/controller/TokenController.kt&quot;,&quot;spring-security/webflux/jwt/src/test/kotlin/io/bluetape4k/workshop/spring/security/webflux/jwt/AbstractJwtApplicationTest.kt&quot;,&quot;spring-security/webflux/jwt/src/test/kotlin/io/bluetape4k/workshop/spring/security/webflux/jwt/controller/HelloControllerTest.kt&quot;,&quot;spring-security/webflux/jwt/build.gradle.kts&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,38 +9,38 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1733" height="184"/>
-  <rect class="frame" x="10" y="10" width="1713" height="164" rx="18"/>
+  <rect class="canvas" width="1832" height="222"/>
+  <rect class="frame" x="10" y="10" width="1812" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="295.4,91.6 295.4,91.6 392.4,91.6 392.4,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="350.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="575.5,91.6 575.5,91.6 664.7,91.6 664.7,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="626.8" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="954.4,103.8 954.4,103.8 1067.1,103.8 1067.1,103.8" marker-end="url(#arrow)"/><text class="edge-label" x="1017.7" y="37.4" text-anchor="middle">uses</text>
-    <polyline class="connector" points="954.4,79.4 954.4,79.4 1067.1,79.4 1067.1,79.4" marker-end="url(#arrow)"/><text class="edge-label" x="1017.7" y="114.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1305.0,91.6 1305.0,91.6 1410.1,91.6 1410.1,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1364.5" y="76.1" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="319.1,110.9 319.1,110.9 450.5,110.9 450.5,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="391.7" y="95.4" text-anchor="middle">invokes</text>
+    <polyline class="connector" points="645.3,110.9 645.3,110.9 880.8,110.9 880.8,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="769.8" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1184.4,110.9 1184.4,110.9 1315.8,110.9 1315.8,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1256.9" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1505.5,110.9 1505.5,110.9 1629.1,110.9 1629.1,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1573.9" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="41.5" width="266.9" height="100.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="161.4" y="74.6">Entry / Tests</tspan><tspan x="161.4" y="97.6">JwtApplication /</tspan><tspan x="161.4" y="120.6">AbstractJwtApplicationTest</tspan></text>
+      <rect x="28.0" y="28.0" width="290.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="173.2" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="173.2" y="106.9">JwtApplication</tspan><tspan class="node-detail" x="173.2" y="122.9">AbstractJwtApplicationTest</tspan><tspan class="node-detail" x="173.2" y="138.9">HelloControllerTest</tspan><tspan class="node-detail" x="173.2" y="154.9">Spring Security Webflux Jwt</tspan></text>
     </g>
     <g class="node" data-node="api">
-      <rect x="406.9" y="28.0" width="167.9" height="127.2" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="490.8" y="63.1">API / Adapter</tspan><tspan x="490.8" y="86.1">JwtConfig /</tspan><tspan x="490.8" y="109.1">HelloController /</tspan><tspan x="490.8" y="132.1">TokenController</tspan></text>
+      <rect x="465.1" y="41.5" width="179.4" height="138.7" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="554.8" y="92.9">API &amp; Adapters</tspan><tspan class="node-detail" x="554.8" y="114.9">JwtConfig</tspan><tspan class="node-detail" x="554.8" y="130.9">HelloController</tspan><tspan class="node-detail" x="554.8" y="146.9">TokenController</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="678.8" y="55.0" width="274.9" height="73.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="816.2" y="86.1">Library Layer</tspan><tspan x="816.2" y="109.1">workshop / jackson3 / junit5</tspan></text>
+      <rect x="895.2" y="28.0" width="288.4" height="165.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1039.4" y="84.9">Framework Layer</tspan><tspan class="node-detail" x="1039.4" y="106.9">Spring boot starter security</tspan><tspan class="node-detail" x="1039.4" y="122.9">Spring boot starter oauth2</tspan><tspan class="node-detail" x="1039.4" y="138.9">resource server</tspan><tspan class="node-detail" x="1039.4" y="154.9">Spring security test</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1081.6" y="41.5" width="222.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1193.1" y="74.6">bluetape4k APIs</tspan><tspan x="1193.1" y="97.6">workshop / jackson3 /</tspan><tspan x="1193.1" y="120.6">junit5</tspan></text>
+      <rect x="1330.2" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1417.4" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1417.4" y="114.9">workshop</tspan><tspan class="node-detail" x="1417.4" y="130.9">jackson3</tspan><tspan class="node-detail" x="1417.4" y="146.9">junit5</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1424.5" y="41.5" width="279.9" height="100.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1564.5" y="74.6">Runtime</tspan><tspan x="1564.5" y="97.6">SQL / R2DBC / Redis / AWS</tspan><tspan x="1564.5" y="120.6">/ S3</tspan></text>
+      <rect x="1643.3" y="41.5" width="160.4" height="138.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1723.5" y="92.9">Runtime</tspan><tspan class="node-detail" x="1723.5" y="114.9">SQL / R2DBC</tspan><tspan class="node-detail" x="1723.5" y="130.9">Redis</tspan><tspan class="node-detail" x="1723.5" y="146.9">AWS / S3</tspan></text>
     </g>
   </g>
 </svg>

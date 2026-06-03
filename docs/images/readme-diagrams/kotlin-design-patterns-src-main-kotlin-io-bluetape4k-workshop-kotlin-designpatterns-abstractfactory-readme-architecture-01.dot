@@ -3,8 +3,8 @@ digraph G {
     rankdir=LR,
     bgcolor="white",
     pad="0.35",
-    nodesep="0.55",
-    ranksep="0.75",
+    nodesep="0.70",
+    ranksep="0.95",
     splines=ortho,
     outputorder=edgesfirst
   ];
@@ -16,7 +16,7 @@ digraph G {
     fillcolor="#F6FAFF",
     fontname="Architects Daughter",
     fontsize=14,
-    margin="0.14,0.10"
+    margin="0.20,0.16"
   ];
   edge [
     color="#637383",
@@ -26,10 +26,10 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry / Tests\nKotlin Design Patterns\nKotlin DesignPatterns\nAbstractFactory tests", fillcolor="#FFF8E7"];
-  service [label="Service / Domain\nArmy / Castle / FactoryMaker\n/ King", fillcolor="#F1F8E9"];
-  runtime [label="Runtime\nSQL / R2DBC / AWS / S3", fillcolor="#FFF1F1"];
+  entry [label="Entry & Verification\nKotlin Design Patterns Kotlin\nDesignPatterns AbstractFactory", fillcolor="#FFF8E7"];
+  service [label="Service & Domain\nArmy\nCastle\nFactoryMaker\nKing", fillcolor="#F1F8E9"];
+  runtime [label="Runtime\nSQL / R2DBC\nAWS / S3", fillcolor="#FFF1F1"];
 
-  entry -> service [label="calls"];
-  service -> runtime [label="uses"];
+  entry -> service [label="delegates"];
+  service -> runtime [label="backs"];
 }

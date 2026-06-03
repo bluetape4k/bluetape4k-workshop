@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1055" height="184" viewBox="0 0 1055 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1026" height="222" viewBox="0 0 1026 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/abstractFactory/Army.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/abstractFactory/Castle.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/abstractFactory/FactoryMaker.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/abstractFactory/King.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/abstractFactory/KingdomFactory.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/abstractFactory/elf/ElfArmy.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/abstractFactory/elf/ElfCastle.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/abstractFactory/elf/ElfKing.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,27 +9,28 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1055" height="184"/>
-  <rect class="frame" x="10" y="10" width="1035" height="164" rx="18"/>
+  <rect class="canvas" width="1026" height="222"/>
+  <rect class="frame" x="10" y="10" width="1006" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="257.6,91.6 257.6,91.6 354.5,91.6 354.5,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="312.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="667.3,91.6 667.3,91.6 756.4,91.6 756.4,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="718.8" y="76.1" text-anchor="middle">uses</text>
+    <polyline class="connector" points="352.8,110.9 352.8,110.9 500.6,110.9 500.6,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="433.7" y="95.4" text-anchor="middle">delegates</text>
+    <polyline class="connector" points="707.3,110.9 707.3,110.9 823.0,110.9 823.0,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="771.8" y="95.4" text-anchor="middle">backs</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="28.0" width="228.9" height="127.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="142.4" y="63.1">Entry / Tests</tspan><tspan x="142.4" y="86.1">Kotlin Design Patterns</tspan><tspan x="142.4" y="109.1">Kotlin DesignPatterns</tspan><tspan x="142.4" y="132.1">AbstractFactory tests</tspan></text>
+      <rect x="28.0" y="55.0" width="324.4" height="111.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="190.2" y="100.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="190.2" y="122.9">Kotlin Design Patterns Kotlin</tspan><tspan class="node-detail" x="190.2" y="138.9">DesignPatterns AbstractFactory</tspan></text>
     </g>
     <g class="node" data-node="service">
-      <rect x="368.9" y="41.5" width="297.9" height="100.2" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="517.8" y="74.6">Service / Domain</tspan><tspan x="517.8" y="97.6">Army / Castle / FactoryMaker</tspan><tspan x="517.8" y="120.6">/ King</tspan></text>
+      <rect x="515.1" y="28.0" width="191.4" height="165.7" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="610.8" y="84.9">Service &amp; Domain</tspan><tspan class="node-detail" x="610.8" y="106.9">Army</tspan><tspan class="node-detail" x="610.8" y="122.9">Castle</tspan><tspan class="node-detail" x="610.8" y="138.9">FactoryMaker</tspan><tspan class="node-detail" x="610.8" y="154.9">King</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="770.8" y="55.0" width="255.9" height="73.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="898.7" y="86.1">Runtime</tspan><tspan x="898.7" y="109.1">SQL / R2DBC / AWS / S3</tspan></text>
+      <rect x="837.1" y="55.0" width="160.4" height="111.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="917.3" y="100.9">Runtime</tspan><tspan class="node-detail" x="917.3" y="122.9">SQL / R2DBC</tspan><tspan class="node-detail" x="917.3" y="138.9">AWS / S3</tspan></text>
     </g>
   </g>
 </svg>

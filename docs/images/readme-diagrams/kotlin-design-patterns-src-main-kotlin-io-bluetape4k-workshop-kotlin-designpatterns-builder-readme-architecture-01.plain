@@ -1,7 +1,7 @@
-graph 1 9.3087 1.325
-node entry 1.114 0.6625 2.2279 1.325 "Entry / Tests\nKotlin Design Patterns\nKotlin DesignPatterns\nBuilder tests" rounded,filled box #88A3B5 #FFF8E7
-node service 4.8992 0.6625 3.0092 0.7625 "Service / Domain\nEnums / Hero / HeroDataClass" rounded,filled box #88A3B5 #F1F8E9
-node runtime 8.3979 0.6625 1.8217 0.7625 "Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
-edge entry service 4 2.2343 0.6625 2.2343 0.6625 3.2427 0.6625 3.2427 0.6625 calls 2.8113 0.75104 solid #637383
-edge service runtime 4 6.4134 0.6625 6.4134 0.6625 7.3392 0.6625 7.3392 0.6625 uses 6.9454 0.75104 solid #637383
+graph 1 9.9326 1.445
+node entry 1.4708 0.7225 2.9417 1.1637 "Entry & Verification\nKotlin Design Patterns Kotlin\nDesignPatterns Builder tests" rounded,filled box #88A3B5 #FFF8E7
+node service 5.633 0.7225 1.9938 1.445 "Service & Domain\nEnums\nHero\nHeroDataClass" rounded,filled box #88A3B5 #F1F8E9
+node runtime 8.9618 0.7225 1.9417 0.8825 "Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
+edge entry service 4 2.95 0.7225 2.95 0.7225 4.4854 0.7225 4.4854 0.7225 delegates 3.7889 0.81104 solid #637383
+edge service runtime 4 6.6363 0.7225 6.6363 0.7225 7.8408 0.7225 7.8408 0.7225 backs 7.3104 0.81104 solid #637383
 stop

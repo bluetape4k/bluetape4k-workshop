@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1655" height="162" viewBox="0 0 1655 162" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1911" height="222" viewBox="0 0 1911 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-security/webflux/hello-security/src/main/kotlin/io/bluetape4k/workshop/spring/security/webflux/KotlinWebfluxApplication.kt&quot;,&quot;spring-security/webflux/hello-security/src/main/kotlin/io/bluetape4k/workshop/spring/security/webflux/MainController.kt&quot;,&quot;spring-security/webflux/hello-security/src/main/kotlin/io/bluetape4k/workshop/spring/security/webflux/SecurityConfiguration.kt&quot;,&quot;spring-security/webflux/hello-security/src/test/kotlin/io/bluetape4k/workshop/spring/security/webflux/AbstractSecurityApplicationTest.kt&quot;,&quot;spring-security/webflux/hello-security/src/test/kotlin/io/bluetape4k/workshop/spring/security/webflux/MainControllerTest.kt&quot;,&quot;spring-security/webflux/hello-security/build.gradle.kts&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,38 +9,38 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1655" height="162"/>
-  <rect class="frame" x="10" y="10" width="1635" height="142" rx="18"/>
+  <rect class="canvas" width="1911" height="222"/>
+  <rect class="frame" x="10" y="10" width="1891" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="336.4,83.7 336.4,83.7 433.7,83.7 433.7,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="391.9" y="68.2" text-anchor="middle">calls</text>
-    <polyline class="connector" points="665.6,83.7 665.6,83.7 754.5,83.7 754.5,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="716.8" y="68.2" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1044.4,95.9 1044.4,95.9 1157.2,95.9 1157.2,95.9" marker-end="url(#arrow)"/><text class="edge-label" x="1107.6" y="29.5" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1044.4,71.5 1044.4,71.5 1157.2,71.5 1157.2,71.5" marker-end="url(#arrow)"/><text class="edge-label" x="1107.6" y="106.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1395.4,83.7 1395.4,83.7 1500.3,83.7 1500.3,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="1454.6" y="68.2" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="347.9,110.9 347.9,110.9 479.9,110.9 479.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="420.7" y="95.4" text-anchor="middle">invokes</text>
+    <polyline class="connector" points="722.8,110.9 722.8,110.9 958.7,110.9 958.7,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="847.8" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1300.1,110.9 1300.1,110.9 1431.7,110.9 1431.7,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1372.9" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1621.2,110.9 1621.2,110.9 1745.1,110.9 1745.1,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1690.0" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="33.6" width="307.9" height="100.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="181.9" y="66.7">Entry / Tests</tspan><tspan x="181.9" y="89.7">KotlinWebfluxApplication /</tspan><tspan x="181.9" y="112.7">AbstractSecurityApplicationTest</tspan></text>
+      <rect x="28.0" y="28.0" width="319.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="187.7" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="187.7" y="106.9">KotlinWebfluxApplication</tspan><tspan class="node-detail" x="187.7" y="122.9">AbstractSecurityApplicationTest</tspan><tspan class="node-detail" x="187.7" y="138.9">MainControllerTest</tspan><tspan class="node-detail" x="187.7" y="154.9">Spring Security Webflux Hello</tspan></text>
     </g>
     <g class="node" data-node="api">
-      <rect x="447.9" y="33.6" width="216.9" height="100.2" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="556.3" y="66.7">API / Adapter</tspan><tspan x="556.3" y="89.7">MainController /</tspan><tspan x="556.3" y="112.7">SecurityConfiguration</tspan></text>
+      <rect x="494.1" y="55.0" width="228.4" height="111.7" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="608.3" y="100.9">API &amp; Adapters</tspan><tspan class="node-detail" x="608.3" y="122.9">MainController</tspan><tspan class="node-detail" x="608.3" y="138.9">SecurityConfiguration</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="768.8" y="47.1" width="274.9" height="73.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="906.2" y="78.2">Library Layer</tspan><tspan x="906.2" y="101.2">workshop / jackson3 / junit5</tspan></text>
+      <rect x="973.1" y="28.0" width="326.4" height="165.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1136.3" y="84.9">Framework Layer</tspan><tspan class="node-detail" x="1136.3" y="106.9">Spring boot starter security</tspan><tspan class="node-detail" x="1136.3" y="122.9">Spring boot starter thymeleaf</tspan><tspan class="node-detail" x="1136.3" y="138.9">Spring boot starter webflux lib</tspan><tspan class="node-detail" x="1136.3" y="154.9">Spring boot starter webflux test</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1171.7" y="33.6" width="222.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1283.1" y="66.7">bluetape4k APIs</tspan><tspan x="1283.1" y="89.7">workshop / jackson3 /</tspan><tspan x="1283.1" y="112.7">junit5</tspan></text>
+      <rect x="1446.2" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1533.4" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1533.4" y="114.9">workshop</tspan><tspan class="node-detail" x="1533.4" y="130.9">jackson3</tspan><tspan class="node-detail" x="1533.4" y="146.9">junit5</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1514.5" y="47.1" width="111.9" height="73.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1570.4" y="78.2">Runtime</tspan><tspan x="1570.4" y="101.2">AWS / S3</tspan></text>
+      <rect x="1759.3" y="68.5" width="123.4" height="84.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1821.0" y="108.9">Runtime</tspan><tspan class="node-detail" x="1821.0" y="130.9">AWS / S3</tspan></text>
     </g>
   </g>
 </svg>

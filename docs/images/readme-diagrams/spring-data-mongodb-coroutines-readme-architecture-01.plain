@@ -1,14 +1,13 @@
-graph 1 22.826 1.325
-node entry 1.1452 0.6625 2.2904 1.0438 "Entry / Tests\nMongodbApplication /\nAbstractMongodbTest" rounded,filled box #88A3B5 #FFF8E7
-node api 5.045 0.6625 3.1758 1.0438 "API / Adapter\nNettyConfig /\nRepositoryMetricsConfiguration" rounded,filled box #88A3B5 #EEF7FF
-node service 9.1844 0.6625 2.9362 1.0438 "Service / Domain\nPersonCoroutineRepository /\nPersonReactiveRepository" rounded,filled box #88A3B5 #F1F8E9
-node infra 13.287 0.6625 3.1029 1.325 "Repository / Infra\nMongoClientConfig /\nReactiveMongoConfig / Person\n/ PersonRepository" rounded,filled box #88A3B5 #F5F0FF
-node bt 17.526 0.6625 2.7071 1.0438 "bluetape4k APIs\nworkshop / testcontainers\n/ coroutines" rounded,filled box #88A3B5 #EAF7F0
-node runtime 21.477 0.6625 2.6967 0.7625 "Runtime\nMongoDB / Testcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 2.2994 0.6625 2.2994 0.6625 3.3068 0.6625 3.3068 0.6625 calls 2.8737 0.75104 solid #637383
-edge api service 4 6.6395 0.6625 6.6395 0.6625 7.5702 0.6625 7.5702 0.6625 uses 7.1746 0.75104 solid #637383
-edge service infra 4 10.66 0.6625 10.66 0.6625 11.585 0.6625 11.585 0.6625 uses 11.194 0.75104 solid #637383
-edge infra bt 4 14.847 0.48854 14.847 0.48854 16.022 0.48854 16.022 0.48854 uses 15.505 1.1538 solid #637383
-edge infra bt 4 14.847 0.83646 14.847 0.83646 16.022 0.83646 16.022 0.83646 extends 15.505 0.34826 solid #637383
-edge bt runtime 4 18.886 0.6625 18.886 0.6625 19.979 0.6625 19.979 0.6625 adapts 19.504 0.75104 solid #637383
+graph 1 24.258 1.7263
+node entry 1.6688 0.86313 3.3375 1.7263 "Entry & Verification\nMongodbApplication\nAbstractMongodbTest\nCoroutineRepositoryTest\nSpring Data Mongodb Coroutines" rounded,filled box #88A3B5 #FFF8E7
+node api 6.5132 0.86313 3.2958 1.1637 "API & Adapters\nNettyConfig\nRepositoryMetricsConfiguration" rounded,filled box #88A3B5 #EEF7FF
+node service 11.306 0.86313 2.9 1.1637 "Service & Domain\nPersonCoroutineRepository\nPersonReactiveRepository" rounded,filled box #88A3B5 #F1F8E9
+node infra 16.546 0.86313 2.3583 1.7263 "Repository & Infra\nMongoClientConfig\nReactiveMongoConfig\nPerson\nPersonRepository" rounded,filled box #88A3B5 #F5F0FF
+node bt 20.161 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\ntestcontainers\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
+node runtime 23.386 0.86313 1.7437 1.1637 "Runtime\nMongoDB\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.3427 0.86313 3.3427 0.86313 4.717 0.86313 4.717 0.86313 invokes 4.1014 0.95167 solid #637383
+edge api service 4 8.1692 0.86313 8.1692 0.86313 9.7069 0.86313 9.7069 0.86313 delegates 9.0083 0.95167 solid #637383
+edge service infra 4 12.765 0.86313 12.765 0.86313 15.216 0.86313 15.216 0.86313 "persists / publishes" 14.061 0.95167 solid #637383
+edge infra bt 4 17.735 0.86313 17.735 0.86313 19.104 0.86313 19.104 0.86313 extends 18.489 0.95167 solid #637383
+edge bt runtime 4 21.077 0.86313 21.077 0.86313 22.364 0.86313 22.364 0.86313 adapts 21.792 0.95167 solid #637383
 stop

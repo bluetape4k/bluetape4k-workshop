@@ -21,9 +21,9 @@ WebFlux + Coroutines + Exposed R2DBC로 완전한 리액티브/코루틴 데이�
 
 ## 아키텍처
 
-![exposed/webflux-r2dbc Graphviz architecture diagram](../../docs/images/readme-diagrams/exposed-webflux-r2dbc-readme-architecture-01.png)
-
 ![Exposed WebFlux R2DBC Architecture](../../docs/images/readme-diagrams/exposed-webflux-r2dbc-architecture-01.png)
+
+![exposed/webflux-r2dbc Graphviz architecture diagram](../../docs/images/readme-diagrams/exposed-webflux-r2dbc-readme-architecture-01.png)
 
 ## 사용한 bluetape4k 기능
 

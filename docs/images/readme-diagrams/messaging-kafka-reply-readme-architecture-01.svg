@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1573" height="184" viewBox="0 0 1573 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1786" height="222" viewBox="0 0 1786 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;messaging/kafka-reply/src/main/kotlin/io/bluetape4k/workshop/kafka/KafkaApplication.kt&quot;,&quot;messaging/kafka-reply/src/main/kotlin/io/bluetape4k/workshop/kafka/ping/PingApplication.kt&quot;,&quot;messaging/kafka-reply/src/main/kotlin/io/bluetape4k/workshop/kafka/ping/PingController.kt&quot;,&quot;messaging/kafka-reply/src/main/kotlin/io/bluetape4k/workshop/kafka/pong/PongApplication.kt&quot;,&quot;messaging/kafka-reply/src/main/kotlin/io/bluetape4k/workshop/kafka/pong/PongHandler.kt&quot;,&quot;messaging/kafka-reply/src/test/kotlin/io/bluetape4k/workshop/kafka/PingPongApplicationTest.kt&quot;,&quot;messaging/kafka-reply/build.gradle.kts&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,38 +9,38 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1573" height="184"/>
-  <rect class="frame" x="10" y="10" width="1553" height="164" rx="18"/>
+  <rect class="canvas" width="1786" height="222"/>
+  <rect class="frame" x="10" y="10" width="1766" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="260.6,91.6 260.6,91.6 357.3,91.6 357.3,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="315.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="536.6,91.6 536.6,91.6 625.3,91.6 625.3,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="587.8" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="854.4,108.3 854.4,108.3 967.1,108.3 967.1,108.3" marker-end="url(#arrow)"/><text class="edge-label" x="917.6" y="37.4" text-anchor="middle">uses</text>
-    <polyline class="connector" points="854.4,74.9 854.4,74.9 967.1,74.9 967.1,74.9" marker-end="url(#arrow)"/><text class="edge-label" x="917.6" y="114.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1196.1,91.6 1196.1,91.6 1301.0,91.6 1301.0,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1255.6" y="76.1" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="271.9,110.9 271.9,110.9 403.6,110.9 403.6,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="344.7" y="95.4" text-anchor="middle">invokes</text>
+    <polyline class="connector" points="589.4,110.9 589.4,110.9 824.9,110.9 824.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="713.8" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1131.0,110.9 1131.0,110.9 1262.8,110.9 1262.8,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1203.9" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1452.3,110.9 1452.3,110.9 1575.9,110.9 1575.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1520.9" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="28.0" width="231.9" height="127.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="143.9" y="63.1">Entry / Tests</tspan><tspan x="143.9" y="86.1">KafkaApplication /</tspan><tspan x="143.9" y="109.1">PingApplication /</tspan><tspan x="143.9" y="132.1">PingPongApplicationTest</tspan></text>
+      <rect x="28.0" y="28.0" width="243.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="149.7" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="149.7" y="106.9">KafkaApplication</tspan><tspan class="node-detail" x="149.7" y="122.9">PingApplication</tspan><tspan class="node-detail" x="149.7" y="138.9">PongApplication</tspan><tspan class="node-detail" x="149.7" y="154.9">PingPongApplicationTest</tspan></text>
     </g>
     <g class="node" data-node="api">
-      <rect x="371.9" y="41.5" width="163.9" height="100.2" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="453.8" y="74.6">API / Adapter</tspan><tspan x="453.8" y="97.6">PingController /</tspan><tspan x="453.8" y="120.6">PongHandler</tspan></text>
+      <rect x="418.1" y="55.0" width="170.4" height="111.7" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="503.3" y="100.9">API &amp; Adapters</tspan><tspan class="node-detail" x="503.3" y="122.9">PingController</tspan><tspan class="node-detail" x="503.3" y="138.9">PongHandler</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="639.8" y="41.5" width="213.9" height="100.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="746.7" y="74.6">Library Layer</tspan><tspan x="746.7" y="97.6">workshop / kafka4 /</tspan><tspan x="746.7" y="120.6">testcontainers</tspan></text>
+      <rect x="839.1" y="28.0" width="291.4" height="165.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="984.8" y="84.9">Framework Layer</tspan><tspan class="node-detail" x="984.8" y="106.9">Spring kafka lib</tspan><tspan class="node-detail" x="984.8" y="122.9">Spring kafka test</tspan><tspan class="node-detail" x="984.8" y="138.9">Spring data commons</tspan><tspan class="node-detail" x="984.8" y="154.9">Spring boot autoconfigure lib</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="981.7" y="41.5" width="213.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1088.6" y="74.6">bluetape4k APIs</tspan><tspan x="1088.6" y="97.6">workshop / kafka4 /</tspan><tspan x="1088.6" y="120.6">testcontainers</tspan></text>
+      <rect x="1277.2" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1364.4" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1364.4" y="114.9">workshop</tspan><tspan class="node-detail" x="1364.4" y="130.9">kafka4</tspan><tspan class="node-detail" x="1364.4" y="146.9">testcontainers</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1315.5" y="55.0" width="228.9" height="73.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1430.0" y="86.1">Runtime</tspan><tspan x="1430.0" y="109.1">Kafka / Testcontainers</tspan></text>
+      <rect x="1590.2" y="55.0" width="167.4" height="111.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1673.9" y="100.9">Runtime</tspan><tspan class="node-detail" x="1673.9" y="122.9">Kafka</tspan><tspan class="node-detail" x="1673.9" y="138.9">Testcontainers</tspan></text>
     </g>
   </g>
 </svg>

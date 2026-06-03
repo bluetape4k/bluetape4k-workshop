@@ -1,14 +1,14 @@
-graph 1 20.565 1.325
-node entry 1.8744 0.6625 3.7488 1.0438 "Entry / Tests\nWebfluxR2dbcApplication /\nAbstractWebfluxR2dbcApplicationTest" rounded,filled box #88A3B5 #FFF8E7
-node api 6.3158 0.6625 2.8008 1.325 "API / Adapter\nNettyConfig /\nWebfluxR2dbcConfiguration\n/ UserController" rounded,filled box #88A3B5 #EEF7FF
-node service 9.7104 0.6625 1.8217 0.7625 "Service / Domain\nUserService" rounded,filled box #88A3B5 #F1F8E9
-node infra 13.053 0.6625 2.6967 1.0438 "Repository / Infra\nErrorMessage / User /\nUserDTO / UserRepository" rounded,filled box #88A3B5 #F5F0FF
-node bt 16.75 0.6625 2.03 1.0438 "bluetape4k APIs\nworkshop / junit5 /\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
-node runtime 19.79 0.6625 1.5508 0.7625 "Runtime\nSQL / R2DBC" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.758 0.6625 3.758 0.6625 4.7652 0.6625 4.7652 0.6625 calls 4.3321 0.75104 solid #637383
-edge api service 4 7.726 0.6625 7.726 0.6625 8.6511 0.6625 8.6511 0.6625 uses 8.2579 0.75104 solid #637383
-edge service infra 4 10.628 0.6625 10.628 0.6625 11.556 0.6625 11.556 0.6625 uses 11.163 0.75104 solid #637383
-edge infra bt 4 14.408 0.48854 14.408 0.48854 15.587 0.48854 15.587 0.48854 uses 15.068 1.1538 solid #637383
-edge infra bt 4 14.408 0.83646 14.408 0.83646 15.587 0.83646 15.587 0.83646 extends 15.068 0.34826 solid #637383
-edge bt runtime 4 17.77 0.6625 17.77 0.6625 18.865 0.6625 18.865 0.6625 adapts 18.39 0.75104 solid #637383
+graph 1 23.185 1.7263
+node entry 1.9344 0.86313 3.8688 1.7263 "Entry & Verification\nWebfluxR2dbcApplication\nAbstractWebfluxR2dbcApplicationTest\nWebfluxR2dbcConfigurationTest\nSpring Data R2dbc \
+Webflux tests" rounded,filled box #88A3B5 #FFF8E7
+node api 6.8569 0.86313 2.9208 1.7263 "API & Adapters\nNettyConfig\nWebfluxR2dbcConfiguration\nUserController\nUserHandler" rounded,filled box #88A3B5 #EEF7FF
+node service 11.009 0.86313 1.9938 0.8825 "Service & Domain\nUserService" rounded,filled box #88A3B5 #F1F8E9
+node infra 15.671 0.86313 2.1083 1.7263 "Repository & Infra\nErrorMessage\nUser\nUserDTO\nUserRepository" rounded,filled box #88A3B5 #F5F0FF
+node bt 19.161 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\njunit5\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
+node runtime 22.349 0.86313 1.6708 0.8825 "Runtime\nSQL / R2DBC" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.8764 0.86313 3.8764 0.86313 5.2477 0.86313 5.2477 0.86313 invokes 4.6326 0.95167 solid #637383
+edge api service 4 8.3265 0.86313 8.3265 0.86313 9.8607 0.86313 9.8607 0.86313 delegates 9.1646 0.95167 solid #637383
+edge service infra 4 12.015 0.86313 12.015 0.86313 14.467 0.86313 14.467 0.86313 "persists / publishes" 13.311 0.95167 solid #637383
+edge infra bt 4 16.732 0.86313 16.732 0.86313 18.104 0.86313 18.104 0.86313 extends 17.489 0.95167 solid #637383
+edge bt runtime 4 20.079 0.86313 20.079 0.86313 21.366 0.86313 21.366 0.86313 adapts 20.792 0.95167 solid #637383
 stop

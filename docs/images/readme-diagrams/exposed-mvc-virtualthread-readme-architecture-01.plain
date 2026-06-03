@@ -1,14 +1,14 @@
-graph 1 20.107 1.325
-node entry 1.5358 0.6625 3.0717 1.325 "Entry / Tests\nExposedMvcVirtualThreadApp\n/\nAbstractMvcVirtualThreadTest" rounded,filled box #88A3B5 #FFF8E7
-node api 5.3887 0.6625 2.3008 1.325 "API / Adapter\nAuthorController /\nBookController /\nGlobalExceptionHandler" rounded,filled box #88A3B5 #EEF7FF
-node service 8.6427 0.6625 2.0404 1.325 "Service / Domain\nAuthorRepository /\nBookRepository /\nAuthorService /" rounded,filled box #88A3B5 #F1F8E9
-node infra 12.266 0.6625 3.0404 1.0438 "Repository / Infra\nAuthorDTO / AuthorMappers /\nAuthorTable / BookTable" rounded,filled box #88A3B5 #F5F0FF
-node bt 16.135 0.6625 2.03 1.0438 "bluetape4k APIs\nworkshop / junit5 /\nassertions" rounded,filled box #88A3B5 #EAF7F0
-node runtime 19.254 0.6625 1.7071 1.0438 "Runtime\nSQL / R2DBC /\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.0808 0.6625 3.0808 0.6625 4.0865 0.6625 4.0865 0.6625 calls 3.655 0.75104 solid #637383
-edge api service 4 6.5451 0.6625 6.5451 0.6625 7.4719 0.6625 7.4719 0.6625 uses 7.0808 0.75104 solid #637383
-edge service infra 4 9.6714 0.6625 9.6714 0.6625 10.599 0.6625 10.599 0.6625 uses 10.205 0.75104 solid #637383
-edge infra bt 4 13.795 0.48854 13.795 0.48854 14.968 0.48854 14.968 0.48854 uses 14.453 1.1538 solid #637383
-edge infra bt 4 13.795 0.83646 13.795 0.83646 14.968 0.83646 14.968 0.83646 extends 14.453 0.34826 solid #637383
-edge bt runtime 4 17.156 0.6625 17.156 0.6625 18.249 0.6625 18.249 0.6625 adapts 17.775 0.75104 solid #637383
+graph 1 22.237 1.7263
+node entry 1.6688 0.86313 3.3375 1.7263 "Entry & Verification\nExposedMvcVirtualThreadApp\nAbstractMvcVirtualThreadTest\nAuthorControllerTest\nExposed Mvc Virtualthread \
+tests" rounded,filled box #88A3B5 #FFF8E7
+node api 6.0757 0.86313 2.4208 1.7263 "API & Adapters\nAuthorController\nBookController\nGlobalExceptionHandler\nTomcatConfig" rounded,filled box #88A3B5 #EEF7FF
+node service 9.9826 0.86313 2.0042 1.7263 "Service & Domain\nAuthorRepository\nBookRepository\nAuthorService\nDatabaseInitializer" rounded,filled box #88A3B5 #F1F8E9
+node infra 14.65 0.86313 2.1083 1.7263 "Repository & Infra\nAuthorDTO\nAuthorMappers\nAuthorTable\nBookTable" rounded,filled box #88A3B5 #F5F0FF
+node bt 18.14 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\njunit5\nassertions" rounded,filled box #88A3B5 #EAF7F0
+node runtime 21.365 0.86313 1.7437 1.1637 "Runtime\nSQL / R2DBC\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.3411 0.86313 3.3411 0.86313 4.7146 0.86313 4.7146 0.86313 invokes 4.1014 0.95167 solid #637383
+edge api service 4 7.2958 0.86313 7.2958 0.86313 8.8321 0.86313 8.8321 0.86313 delegates 8.1333 0.95167 solid #637383
+edge service infra 4 10.99 0.86313 10.99 0.86313 13.445 0.86313 13.445 0.86313 "persists / publishes" 12.29 0.95167 solid #637383
+edge infra bt 4 15.711 0.86313 15.711 0.86313 17.083 0.86313 17.083 0.86313 extends 16.468 0.95167 solid #637383
+edge bt runtime 4 19.056 0.86313 19.056 0.86313 20.343 0.86313 20.343 0.86313 adapts 19.771 0.95167 solid #637383
 stop

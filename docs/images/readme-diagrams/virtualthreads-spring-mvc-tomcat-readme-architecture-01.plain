@@ -1,14 +1,13 @@
-graph 1 20.951 1.325
-node entry 1.5358 0.6625 3.0717 1.0438 "Entry / Tests\nVirtualThreadMvcApp /\nAbstractVirtualThreadMvcTest" rounded,filled box #88A3B5 #FFF8E7
-node api 5.2065 0.6625 1.9363 1.325 "API / Adapter\nSchedulingConfig /\nTomcatConfig /\nHttpbinController" rounded,filled box #88A3B5 #EEF7FF
-node service 8.3667 0.6625 2.2175 1.325 "Service / Domain\nAsyncConfig /\nVirtualThreadConfig /\nDatabaseInitializer /" rounded,filled box #88A3B5 #F1F8E9
-node infra 12.167 0.6625 3.2175 1.0438 "Repository / Infra\nMemberDTO / Member / Team /\nTeamRepository" rounded,filled box #88A3B5 #F5F0FF
-node bt 16.114 0.6625 2.0092 1.0438 "bluetape4k APIs\nworkshop / core /\nvirtualthread" rounded,filled box #88A3B5 #EAF7F0
-node runtime 19.66 0.6625 2.5821 1.0438 "Runtime\nSQL / R2DBC /\nElasticsearch / AWS / S3" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.0766 0.6625 3.0766 0.6625 4.0868 0.6625 4.0868 0.6625 calls 3.655 0.75104 solid #637383
-edge api service 4 6.1804 0.6625 6.1804 0.6625 7.1096 0.6625 7.1096 0.6625 uses 6.7162 0.75104 solid #637383
-edge service infra 4 9.4814 0.6625 9.4814 0.6625 10.409 0.6625 10.409 0.6625 uses 10.017 0.75104 solid #637383
-edge infra bt 4 13.784 0.48854 13.784 0.48854 14.962 0.48854 14.962 0.48854 uses 14.443 1.1538 solid #637383
-edge infra bt 4 13.784 0.83646 13.784 0.83646 14.962 0.83646 14.962 0.83646 extends 14.443 0.34826 solid #637383
-edge bt runtime 4 17.125 0.6625 17.125 0.6625 18.219 0.6625 18.219 0.6625 adapts 17.744 0.75104 solid #637383
+graph 1 22.133 1.7263
+node entry 1.7521 0.86313 3.5042 1.7263 "Entry & Verification\nVirtualThreadMvcApp\nAbstractVirtualThreadMvcTest\nHttpbinControllerTest\nVirtualthreads Spring Mvc Tomcat" rounded,filled box #88A3B5 #FFF8E7
+node api 6.0549 0.86313 2.0458 1.7263 "API & Adapters\nSchedulingConfig\nTomcatConfig\nHttpbinController\nMemberController" rounded,filled box #88A3B5 #EEF7FF
+node service 9.8628 0.86313 2.1813 1.7263 "Service & Domain\nAsyncConfig\nVirtualThreadConfig\nDatabaseInitializer\nMemberRepository" rounded,filled box #88A3B5 #F1F8E9
+node infra 14.619 0.86313 2.1083 1.7263 "Repository & Infra\nMemberDTO\nMember\nTeam\nTeamRepository" rounded,filled box #88A3B5 #F5F0FF
+node bt 18.109 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\ncore\nvirtualthread" rounded,filled box #88A3B5 #EAF7F0
+node runtime 21.297 0.86313 1.6708 1.445 "Runtime\nSQL / R2DBC\nElasticsearch\nAWS / S3" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.5084 0.86313 3.5084 0.86313 4.8833 0.86313 4.8833 0.86313 invokes 4.2681 0.95167 solid #637383
+edge api service 4 7.0854 0.86313 7.0854 0.86313 8.6222 0.86313 8.6222 0.86313 delegates 7.925 0.95167 solid #637383
+edge service infra 4 10.96 0.86313 10.96 0.86313 13.413 0.86313 13.413 0.86313 "persists / publishes" 12.259 0.95167 solid #637383
+edge infra bt 4 15.68 0.86313 15.68 0.86313 17.052 0.86313 17.052 0.86313 extends 16.437 0.95167 solid #637383
+edge bt runtime 4 19.027 0.86313 19.027 0.86313 20.314 0.86313 20.314 0.86313 adapts 19.74 0.95167 solid #637383
 stop

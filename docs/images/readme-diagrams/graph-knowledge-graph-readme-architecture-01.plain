@@ -1,12 +1,11 @@
-graph 1 18.056 1.1017
-node entry 1.8379 0.52188 3.6758 0.7625 "Entry / Tests\nAbstractKnowledgeGraphSuspendTest" rounded,filled box #88A3B5 #FFF8E7
-node service 6.42 0.52188 3.155 1.0438 "Service / Domain\nKnowledgeGraphService /\nKnowledgeGraphSuspendService" rounded,filled box #88A3B5 #F1F8E9
-node infra 10.299 0.52188 2.4362 0.7625 "Repository / Infra\nKnowledgeGraphSchema" rounded,filled box #88A3B5 #F5F0FF
-node bt 14.016 0.52188 2.3321 1.0438 "bluetape4k APIs\ndependencies / graph /\nlogging" rounded,filled box #88A3B5 #EAF7F0
-node runtime 17.244 0.52188 1.6238 0.7625 "Runtime\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry service 4 3.6818 0.52188 3.6818 0.52188 4.6914 0.52188 4.6914 0.52188 calls 4.2592 0.61042 solid #637383
-edge service infra 4 8.0033 0.52188 8.0033 0.52188 8.9286 0.52188 8.9286 0.52188 uses 8.5392 0.61042 solid #637383
-edge infra bt 4 11.527 0.39479 11.527 0.39479 12.698 0.39479 12.698 0.39479 uses 12.184 1.0132 solid #637383
-edge infra bt 4 11.527 0.64896 11.527 0.64896 12.698 0.64896 12.698 0.64896 extends 12.184 0.20764 solid #637383
-edge bt runtime 4 15.191 0.52188 15.191 0.52188 16.282 0.52188 16.282 0.52188 adapts 15.807 0.61042 solid #637383
+graph 1 20.465 1.445
+node entry 1.8979 0.7225 3.7958 1.445 "Entry & Verification\nAbstractKnowledgeGraphSuspendTest\nAbstractKnowledgeGraphTest\nGraph Knowledge Graph tests" rounded,filled box #88A3B5 #FFF8E7
+node service 7.1278 0.7225 3.275 1.1637 "Service & Domain\nKnowledgeGraphService\nKnowledgeGraphSuspendService" rounded,filled box #88A3B5 #F1F8E9
+node infra 12.655 0.7225 2.5563 0.8825 "Repository & Infra\nKnowledgeGraphSchema" rounded,filled box #88A3B5 #F5F0FF
+node bt 16.369 0.7225 1.8167 1.445 "bluetape4k APIs\ndependencies\ngraph\nlogging" rounded,filled box #88A3B5 #EAF7F0
+node runtime 19.593 0.7225 1.7437 0.8825 "Runtime\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry service 4 3.8045 0.7225 3.8045 0.7225 5.3406 0.7225 5.3406 0.7225 delegates 4.6431 0.81104 solid #637383
+edge service infra 4 8.7748 0.7225 8.7748 0.7225 11.227 0.7225 11.227 0.7225 "persists / publishes" 10.071 0.81104 solid #637383
+edge infra bt 4 13.938 0.7225 13.938 0.7225 15.311 0.7225 15.311 0.7225 extends 14.697 0.81104 solid #637383
+edge bt runtime 4 17.284 0.7225 17.284 0.7225 18.572 0.7225 18.572 0.7225 adapts 17.999 0.81104 solid #637383
 stop

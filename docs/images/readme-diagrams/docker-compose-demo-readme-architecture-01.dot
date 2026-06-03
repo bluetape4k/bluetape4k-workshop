@@ -3,8 +3,8 @@ digraph G {
     rankdir=LR,
     bgcolor="white",
     pad="0.35",
-    nodesep="0.55",
-    ranksep="0.75",
+    nodesep="0.70",
+    ranksep="0.95",
     splines=ortho,
     outputorder=edgesfirst
   ];
@@ -16,7 +16,7 @@ digraph G {
     fillcolor="#F6FAFF",
     fontname="Architects Daughter",
     fontsize=14,
-    margin="0.14,0.10"
+    margin="0.20,0.16"
   ];
   edge [
     color="#637383",
@@ -27,12 +27,11 @@ digraph G {
   ];
 
   entry [label="Example Family\ndocker compose-demo", fillcolor="#FFF8E7"];
-  infra [label="Library Layer\ncore", fillcolor="#F5F0FF"];
+  infra [label="Framework Layer\nTestcontainers lib\nTestcontainers junit jupiter", fillcolor="#F5F0FF"];
   bt [label="bluetape4k APIs\ncore", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC / Redis /\nElasticsearch", fillcolor="#FFF1F1"];
+  runtime [label="Runtime\nSQL / R2DBC\nRedis\nElasticsearch", fillcolor="#FFF1F1"];
 
-  entry -> infra [label="calls"];
-  infra -> bt [label="uses"];
+  entry -> infra [label="persists / publishes"];
   infra -> bt [label="extends"];
   bt -> runtime [label="adapts"];
 }

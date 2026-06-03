@@ -1,14 +1,13 @@
-graph 1 21.42 1.325
-node entry 1.8535 0.6625 3.7071 0.7625 "Entry / Tests\nAbstractAbuserDetectionSuspendTest" rounded,filled box #88A3B5 #FFF8E7
-node api 6.4669 0.6625 3.1862 1.325 "API / Adapter\nAbusePath /\nAbuserDetectionService /\nAbuserDetectionSuspendService" rounded,filled box #88A3B5 #EEF7FF
-node service 10.304 0.6625 2.3217 1.325 "Service / Domain\nAbuseCluster /\nIdentifierEdgeLabel /\nSuspiciousUserScore /" rounded,filled box #88A3B5 #F1F8E9
-node infra 13.714 0.6625 2.3321 1.0438 "Library Layer\ndependencies / graph /\nlogging" rounded,filled box #88A3B5 #F5F0FF
-node bt 17.38 0.6625 2.3321 1.0438 "bluetape4k APIs\ndependencies / graph /\nlogging" rounded,filled box #88A3B5 #EAF7F0
-node runtime 20.608 0.6625 1.6238 0.7625 "Runtime\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.7167 0.6625 3.7167 0.6625 4.7247 0.6625 4.7247 0.6625 calls 4.2904 0.75104 solid #637383
-edge api service 4 8.0664 0.6625 8.0664 0.6625 8.9913 0.6625 8.9913 0.6625 uses 8.6017 0.75104 solid #637383
-edge service infra 4 11.473 0.6625 11.473 0.6625 12.399 0.6625 12.399 0.6625 uses 12.007 0.75104 solid #637383
-edge infra bt 4 14.889 0.48854 14.889 0.48854 16.063 0.48854 16.063 0.48854 uses 15.547 1.1538 solid #637383
-edge infra bt 4 14.889 0.83646 14.889 0.83646 16.063 0.83646 16.063 0.83646 extends 15.547 0.34826 solid #637383
-edge bt runtime 4 18.554 0.6625 18.554 0.6625 19.645 0.6625 19.645 0.6625 adapts 19.171 0.75104 solid #637383
+graph 1 24.383 1.7263
+node entry 1.9135 0.86313 3.8271 1.445 "Entry & Verification\nAbstractAbuserDetectionSuspendTest\nAbstractAbuserDetectionTest\nGraph Abuser Detection tests" rounded,filled box #88A3B5 #FFF8E7
+node api 7.008 0.86313 3.3063 1.445 "API & Adapters\nAbusePath\nAbuserDetectionService\nAbuserDetectionSuspendService" rounded,filled box #88A3B5 #EEF7FF
+node service 11.649 0.86313 2.5875 1.7263 "Service & Domain\nAbuseCluster\nIdentifierEdgeLabel\nSuspiciousUserScore\nAbuserDetectionSchema" rounded,filled box #88A3B5 #F1F8E9
+node infra 16.702 0.86313 2.2958 0.8825 "Framework Layer\nTestcontainers neo4j" rounded,filled box #88A3B5 #F5F0FF
+node bt 20.286 0.86313 1.8167 1.445 "bluetape4k APIs\ndependencies\ngraph\nlogging" rounded,filled box #88A3B5 #EAF7F0
+node runtime 23.511 0.86313 1.7437 0.8825 "Runtime\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.8359 0.86313 3.8359 0.86313 5.2052 0.86313 5.2052 0.86313 invokes 4.591 0.95167 solid #637383
+edge api service 4 8.6705 0.86313 8.6705 0.86313 10.205 0.86313 10.205 0.86313 delegates 9.5083 0.95167 solid #637383
+edge service infra 4 12.951 0.86313 12.951 0.86313 15.405 0.86313 15.405 0.86313 "persists / publishes" 14.249 0.95167 solid #637383
+edge infra bt 4 17.856 0.86313 17.856 0.86313 19.23 0.86313 19.23 0.86313 extends 18.614 0.95167 solid #637383
+edge bt runtime 4 21.202 0.86313 21.202 0.86313 22.489 0.86313 22.489 0.86313 adapts 21.917 0.95167 solid #637383
 stop

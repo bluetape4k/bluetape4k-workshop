@@ -1,10 +1,9 @@
-graph 1 12.287 1.325
-node entry 1.0619 0.6625 2.1237 0.7625 "Entry / Tests\nAbstractSharedTest" rounded,filled box #88A3B5 #FFF8E7
-node infra 4.5294 0.6625 2.4779 1.325 "Repository / Infra\nRestClientExtensions /\nWebClientExtensions /\nWebTestClientExtensions" rounded,filled box #88A3B5 #F5F0FF
-node bt 8.2573 0.6625 2.3112 0.7625 "bluetape4k APIs\nio / coroutines / netty" rounded,filled box #88A3B5 #EAF7F0
-node runtime 11.475 0.6625 1.6238 0.7625 "Runtime\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry infra 4 2.1305 0.6625 2.1305 0.6625 3.1393 0.6625 3.1393 0.6625 calls 2.7071 0.75104 solid #637383
-edge infra bt 4 5.7759 0.53542 5.7759 0.53542 6.9512 0.53542 6.9512 0.53542 uses 6.435 1.1538 solid #637383
-edge infra bt 4 5.7759 0.78958 5.7759 0.78958 6.9512 0.78958 6.9512 0.78958 extends 6.435 0.34826 solid #637383
-edge bt runtime 4 9.4189 0.6625 9.4189 0.6625 10.515 0.6625 10.515 0.6625 adapts 10.038 0.75104 solid #637383
+graph 1 13.985 1.445
+node entry 1.1219 0.7225 2.2438 1.445 "Entry & Verification\nAbstractSharedTest\nAbstractSpringTest\nShared tests" rounded,filled box #88A3B5 #FFF8E7
+node infra 6.1538 0.7225 2.5979 1.445 "Repository & Infra\nRestClientExtensions\nWebClientExtensions\nWebTestClientExtensions" rounded,filled box #88A3B5 #F5F0FF
+node bt 9.8889 0.7225 1.8167 1.445 "bluetape4k APIs\nio\ncoroutines\nnetty" rounded,filled box #88A3B5 #EAF7F0
+node runtime 13.114 0.7225 1.7437 0.8825 "Runtime\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry infra 4 2.2511 0.7225 2.2511 0.7225 4.7034 0.7225 4.7034 0.7225 "persists / publishes" 3.5493 0.81104 solid #637383
+edge infra bt 4 7.4602 0.7225 7.4602 0.7225 8.8284 0.7225 8.8284 0.7225 extends 8.2167 0.81104 solid #637383
+edge bt runtime 4 10.804 0.7225 10.804 0.7225 12.092 0.7225 12.092 0.7225 adapts 11.519 0.81104 solid #637383
 stop

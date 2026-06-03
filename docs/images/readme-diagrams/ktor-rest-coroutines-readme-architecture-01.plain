@@ -1,14 +1,13 @@
-graph 1 19.951 1.325
-node entry 1.2598 0.6625 2.5196 0.7625 "Entry / Tests\nMain / AbstractKtorTest" rounded,filled box #88A3B5 #FFF8E7
-node api 5.071 0.6625 2.7696 1.325 "API / Adapter\nApplicationModule /\nInMemoryBookRepository /\nBookRoutes" rounded,filled box #88A3B5 #EEF7FF
-node service 8.7 0.6625 2.3217 1.325 "Service / Domain\nJackson3Support /\nBookService / Book /\nDomainError" rounded,filled box #88A3B5 #F1F8E9
-node infra 11.912 0.6625 1.9363 0.7625 "Repository / Infra\nBookRepository" rounded,filled box #88A3B5 #F5F0FF
-node bt 15.546 0.6625 2.6654 0.7625 "bluetape4k APIs\nworkshop / core / logging" rounded,filled box #88A3B5 #EAF7F0
-node runtime 19.04 0.6625 1.8217 0.7625 "Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 2.5289 0.6625 2.5289 0.6625 3.5403 0.6625 3.5403 0.6625 calls 3.1029 0.75104 solid #637383
-edge api service 4 6.4637 0.6625 6.4637 0.6625 7.3924 0.6625 7.3924 0.6625 uses 6.9975 0.75104 solid #637383
-edge service infra 4 9.8688 0.6625 9.8688 0.6625 10.792 0.6625 10.792 0.6625 uses 10.402 0.75104 solid #637383
-edge infra bt 4 12.886 0.53542 12.886 0.53542 14.065 0.53542 14.065 0.53542 uses 13.547 1.1538 solid #637383
-edge infra bt 4 12.886 0.78958 12.886 0.78958 14.065 0.78958 14.065 0.78958 extends 13.547 0.34826 solid #637383
-edge bt runtime 4 16.887 0.6625 16.887 0.6625 17.977 0.6625 17.977 0.6625 adapts 17.504 0.75104 solid #637383
+graph 1 22.539 1.7263
+node entry 1.5698 0.86313 3.1396 1.7263 "Entry & Verification\nMain\nAbstractKtorTest\nInMemoryBookRepositoryTest\nKtor Rest Coroutines tests" rounded,filled box #88A3B5 #FFF8E7
+node api 6.034 0.86313 2.7333 1.7263 "API & Adapters\nApplicationModule\nInMemoryBookRepository\nBookRoutes\nHealthRoutes" rounded,filled box #88A3B5 #EEF7FF
+node service 10.092 0.86313 1.9938 1.7263 "Service & Domain\nJackson3Support\nBookService\nBook\nDomainError" rounded,filled box #88A3B5 #F1F8E9
+node infra 14.754 0.86313 2.1083 0.8825 "Repository & Infra\nBookRepository" rounded,filled box #88A3B5 #F5F0FF
+node bt 18.244 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\ncore\nlogging" rounded,filled box #88A3B5 #EAF7F0
+node runtime 21.568 0.86313 1.9417 0.8825 "Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.1437 0.86313 3.1437 0.86313 4.517 0.86313 4.517 0.86313 invokes 3.9035 0.95167 solid #637383
+edge api service 4 7.4079 0.86313 7.4079 0.86313 8.9489 0.86313 8.9489 0.86313 delegates 8.2479 0.95167 solid #637383
+edge service infra 4 11.098 0.86313 11.098 0.86313 13.551 0.86313 13.551 0.86313 "persists / publishes" 12.394 0.95167 solid #637383
+edge infra bt 4 15.816 0.86313 15.816 0.86313 17.187 0.86313 17.187 0.86313 extends 16.572 0.95167 solid #637383
+edge bt runtime 4 19.161 0.86313 19.161 0.86313 20.447 0.86313 20.447 0.86313 adapts 19.875 0.95167 solid #637383
 stop

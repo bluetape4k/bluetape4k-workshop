@@ -8,11 +8,11 @@ This example exercises **ID Generator Workshop** as a runnable Spring Boot appli
 
 ## Architecture Diagram
 
-![ID Generator Workshop Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-idgenerator-readme-architecture-01.png)
+![ID Generator Workshop architecture diagram](../../docs/images/readme-diagrams/spring-boot-idgenerator-architecture-01.png)
 
 The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.springboot` as the source of truth when comparing this README with the code.
 
-![ID Generator Workshop architecture diagram](../../docs/images/readme-diagrams/spring-boot-idgenerator-architecture-01.png)
+![ID Generator Workshop Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-idgenerator-readme-architecture-01.png)
 
 ## Flow Diagram
 

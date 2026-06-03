@@ -24,9 +24,9 @@ Kotlin, Spring Boot 4, JetBrains Exposed, Kafka를 사용해 **Transactional Out
 
 ## 아키텍처
 
-![Transactional Outbox Pattern — bluetape4k Workshop Graphviz architecture diagram](../../docs/images/readme-diagrams/messaging-transactional-outbox-readme-architecture-01.png)
-
 ![Transactional Outbox Architecture](../../docs/images/readme-diagrams/messaging-transactional-outbox-architecture-01.png)
+
+![Transactional Outbox Pattern — bluetape4k Workshop Graphviz architecture diagram](../../docs/images/readme-diagrams/messaging-transactional-outbox-readme-architecture-01.png)
 
 ---
 

@@ -29,14 +29,14 @@ guarantee correct concurrent execution via ZooKeeper ephemeral nodes.
 
 ## Architecture
 
-![Leader ZooKeeper Workshop Graphviz architecture diagram](../../docs/images/readme-diagrams/leader-leader-zookeeper-readme-architecture-01.png)
+![Architecture](docs/images/readme-diagrams/leader-zookeeper-architecture.png)
 
 Multiple app instances compete for ZooKeeper locks backed by
 [Apache Curator](https://curator.apache.org/) `InterProcessMutex` (single-leader) and
 `InterProcessSemaphoreV2` (group-leader). Only the **elected leader(s)** execute each
 scheduled job.
 
-![Architecture](docs/images/readme-diagrams/leader-zookeeper-architecture.png)
+![Leader ZooKeeper Workshop Graphviz architecture diagram](../../docs/images/readme-diagrams/leader-leader-zookeeper-readme-architecture-01.png)
 
 ## ⚠️ R16 — ZooKeeper Has No TTL (Critical Difference from Redis)
 

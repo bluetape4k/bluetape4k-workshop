@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1912" height="184" viewBox="0 0 1912 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="2261" height="222" viewBox="0 0 2261 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-boot/problem/src/main/kotlin/io/bluetape4k/workshop/problem/ProblemApplication.kt&quot;,&quot;spring-boot/problem/src/main/kotlin/io/bluetape4k/workshop/problem/config/ProblemConfig.kt&quot;,&quot;spring-boot/problem/src/main/kotlin/io/bluetape4k/workshop/problem/controller/Resilience4jController.kt&quot;,&quot;spring-boot/problem/src/main/kotlin/io/bluetape4k/workshop/problem/controller/TaskController.kt&quot;,&quot;spring-boot/problem/src/main/kotlin/io/bluetape4k/workshop/problem/exceptions/ExampleException.kt&quot;,&quot;spring-boot/problem/src/main/kotlin/io/bluetape4k/workshop/problem/exceptions/InvalidTaskIdException.kt&quot;,&quot;spring-boot/problem/src/main/kotlin/io/bluetape4k/workshop/problem/exceptions/TaskNotFoundException.kt&quot;,&quot;spring-boot/problem/src/main/kotlin/io/bluetape4k/workshop/problem/filter/RestControllerLoggingFilter.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,43 +9,43 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1912" height="184"/>
-  <rect class="frame" x="10" y="10" width="1892" height="164" rx="18"/>
+  <rect class="canvas" width="2261" height="222"/>
+  <rect class="frame" x="10" y="10" width="2241" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="243.4,91.6 243.4,91.6 340.4,91.6 340.4,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="298.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="623.2,91.6 623.2,91.6 712.3,91.6 712.3,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="674.8" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="976.4,91.6 976.4,91.6 1065.4,91.6 1065.4,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1027.6" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1266.4,103.8 1266.4,103.8 1379.2,103.8 1379.2,103.8" marker-end="url(#arrow)"/><text class="edge-label" x="1329.5" y="37.4" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1266.4,79.4 1266.4,79.4 1379.2,79.4 1379.2,79.4" marker-end="url(#arrow)"/><text class="edge-label" x="1329.5" y="114.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1589.2,91.6 1589.2,91.6 1694.0,91.6 1694.0,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1648.4" y="76.1" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="300.2,110.9 300.2,110.9 431.7,110.9 431.7,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="372.7" y="95.4" text-anchor="middle">invokes</text>
+    <polyline class="connector" points="726.1,110.9 726.1,110.9 873.7,110.9 873.7,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="806.8" y="95.4" text-anchor="middle">delegates</text>
+    <polyline class="connector" points="1134.3,110.9 1134.3,110.9 1369.7,110.9 1369.7,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1258.9" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1587.3,110.9 1587.3,110.9 1718.9,110.9 1718.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1659.9" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1908.5,110.9 1908.5,110.9 2032.0,110.9 2032.0,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1977.0" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="41.5" width="214.9" height="100.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="135.4" y="74.6">Entry / Tests</tspan><tspan x="135.4" y="97.6">ProblemApplication /</tspan><tspan x="135.4" y="120.6">AbstractProblemTest</tspan></text>
+      <rect x="28.0" y="28.0" width="271.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="163.7" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="163.7" y="106.9">ProblemApplication</tspan><tspan class="node-detail" x="163.7" y="122.9">AbstractProblemTest</tspan><tspan class="node-detail" x="163.7" y="138.9">Resilience4jControllerTest</tspan><tspan class="node-detail" x="163.7" y="154.9">Spring Boot Problem tests</tspan></text>
     </g>
     <g class="node" data-node="api">
-      <rect x="354.9" y="28.0" width="267.9" height="127.2" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="488.8" y="63.1">API / Adapter</tspan><tspan x="488.8" y="86.1">Resilience4jController /</tspan><tspan x="488.8" y="109.1">TaskController /</tspan><tspan x="488.8" y="132.1">RestControllerLoggingFilter</tspan></text>
+      <rect x="446.1" y="28.0" width="279.4" height="165.7" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="585.8" y="84.9">API &amp; Adapters</tspan><tspan class="node-detail" x="585.8" y="106.9">Resilience4jController</tspan><tspan class="node-detail" x="585.8" y="122.9">TaskController</tspan><tspan class="node-detail" x="585.8" y="138.9">RestControllerLoggingFilter</tspan><tspan class="node-detail" x="585.8" y="154.9">Resilience4jTrait</tspan></text>
     </g>
     <g class="node" data-node="service">
-      <rect x="726.8" y="28.0" width="248.9" height="127.2" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="851.2" y="63.1">Service / Domain</tspan><tspan x="851.2" y="86.1">InvalidTaskIdException /</tspan><tspan x="851.2" y="109.1">TaskNotFoundException /</tspan><tspan x="851.2" y="132.1">ExampleException</tspan></text>
+      <rect x="888.1" y="41.5" width="245.4" height="138.7" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1010.8" y="92.9">Service &amp; Domain</tspan><tspan class="node-detail" x="1010.8" y="114.9">InvalidTaskIdException</tspan><tspan class="node-detail" x="1010.8" y="130.9">TaskNotFoundException</tspan><tspan class="node-detail" x="1010.8" y="146.9">ExampleException</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="1079.7" y="55.0" width="185.9" height="73.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1172.6" y="86.1">Repository / Infra</tspan><tspan x="1172.6" y="109.1">ProblemConfig</tspan></text>
+      <rect x="1384.2" y="68.5" width="202.4" height="84.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1485.4" y="108.9">Repository &amp; Infra</tspan><tspan class="node-detail" x="1485.4" y="130.9">ProblemConfig</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1393.5" y="41.5" width="194.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1490.9" y="74.6">bluetape4k APIs</tspan><tspan x="1490.9" y="97.6">workshop / junit5 /</tspan><tspan x="1490.9" y="120.6">resilience4j</tspan></text>
+      <rect x="1733.3" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1820.5" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1820.5" y="114.9">workshop</tspan><tspan class="node-detail" x="1820.5" y="130.9">junit5</tspan><tspan class="node-detail" x="1820.5" y="146.9">resilience4j</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1708.4" y="55.0" width="174.9" height="73.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1795.8" y="86.1">Runtime</tspan><tspan x="1795.8" y="109.1">In-memory / JVM</tspan></text>
+      <rect x="2046.3" y="68.5" width="186.4" height="84.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="2139.5" y="108.9">Runtime</tspan><tspan class="node-detail" x="2139.5" y="130.9">In-memory / JVM</tspan></text>
     </g>
   </g>
 </svg>

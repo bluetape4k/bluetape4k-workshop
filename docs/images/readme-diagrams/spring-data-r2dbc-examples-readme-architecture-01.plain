@@ -1,12 +1,12 @@
-graph 1 17.327 1.325
-node entry 1.7494 0.6625 3.4987 1.0438 "Entry / Tests\nApplicationConfiguration /\nCustomerRepositoryIntegrationTest" rounded,filled box #88A3B5 #FFF8E7
-node service 5.7429 0.6625 2.155 0.7625 "Service / Domain\nTransactionalService" rounded,filled box #88A3B5 #F1F8E9
-node infra 9.4135 0.6625 3.0196 1.325 "Repository / Infra\nCustomer /\nCustomerRepository / Person\n/ PersonRepository" rounded,filled box #88A3B5 #F5F0FF
-node bt 13.391 0.6625 2.2696 0.7625 "bluetape4k APIs\ncore / r2dbc / spring" rounded,filled box #88A3B5 #EAF7F0
-node runtime 16.552 0.6625 1.5508 0.7625 "Runtime\nSQL / R2DBC" rounded,filled box #88A3B5 #FFF1F1
-edge entry service 4 3.5068 0.6625 3.5068 0.6625 4.5142 0.6625 4.5142 0.6625 calls 4.0821 0.75104 solid #637383
-edge service infra 4 6.8293 0.6625 6.8293 0.6625 7.7521 0.6625 7.7521 0.6625 uses 7.3621 0.75104 solid #637383
-edge infra bt 4 10.929 0.53542 10.929 0.53542 12.109 0.53542 12.109 0.53542 uses 11.59 1.1538 solid #637383
-edge infra bt 4 10.929 0.78958 10.929 0.78958 12.109 0.78958 12.109 0.78958 extends 11.59 0.34826 solid #637383
-edge bt runtime 4 14.532 0.6625 14.532 0.6625 15.626 0.6625 15.626 0.6625 adapts 15.151 0.75104 solid #637383
+graph 1 18.934 1.7263
+node entry 1.8094 0.86313 3.6188 1.7263 "Entry & Verification\nApplicationConfiguration\nCustomerRepositoryIntegrationTest\nTransactionalServiceIntegrationTest\nSpring Data \
+R2dbc Examples tests" rounded,filled box #88A3B5 #FFF8E7
+node service 6.4507 0.86313 2.275 0.8825 "Service & Domain\nTransactionalService" rounded,filled box #88A3B5 #F1F8E9
+node infra 11.337 0.86313 2.275 1.7263 "Repository & Infra\nCustomer\nCustomerRepository\nPerson\nPersonRepository" rounded,filled box #88A3B5 #F5F0FF
+node bt 14.91 0.86313 1.8167 1.445 "bluetape4k APIs\ncore\nr2dbc\nspring" rounded,filled box #88A3B5 #EAF7F0
+node runtime 18.099 0.86313 1.6708 0.8825 "Runtime\nSQL / R2DBC" rounded,filled box #88A3B5 #FFF1F1
+edge entry service 4 3.6238 0.86313 3.6238 0.86313 5.1647 0.86313 5.1647 0.86313 delegates 4.466 0.95167 solid #637383
+edge service infra 4 7.5963 0.86313 7.5963 0.86313 10.047 0.86313 10.047 0.86313 "persists / publishes" 8.8938 0.95167 solid #637383
+edge infra bt 4 12.482 0.86313 12.482 0.86313 13.855 0.86313 13.855 0.86313 extends 13.238 0.95167 solid #637383
+edge bt runtime 4 15.828 0.86313 15.828 0.86313 17.115 0.86313 17.115 0.86313 adapts 16.541 0.95167 solid #637383
 stop

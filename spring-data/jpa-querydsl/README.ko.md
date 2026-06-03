@@ -8,11 +8,11 @@
 
 ## 아키텍처 다이어그램
 
-![JPA & QueryDSL Example Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-data-jpa-querydsl-readme-architecture-01.png)
+![JPA & QueryDSL Example architecture diagram](../../docs/images/readme-diagrams/spring-data-jpa-querydsl-diagram-01.png)
 
 이 모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제에서 사용하는 런타임 의존성을 중심으로 구성됩니다. 이 README와 코드를 비교할 때는 `io.bluetape4k.workshop.springdata` 패키지를 기준으로 삼으세요.
 
-![JPA & QueryDSL Example architecture diagram](../../docs/images/readme-diagrams/spring-data-jpa-querydsl-diagram-01.png)
+![JPA & QueryDSL Example Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-data-jpa-querydsl-readme-architecture-01.png)
 
 ## 흐름 다이어그램
 

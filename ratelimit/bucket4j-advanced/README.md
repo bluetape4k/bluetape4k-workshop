@@ -22,9 +22,9 @@ rate-limit identity strategies backed by Redis (Lettuce).
 
 ## Architecture
 
-![bucket4j-advanced — Advanced Rate Limit Strategies Graphviz architecture diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-advanced-readme-architecture-01.png)
-
 ![bucket4j advanced Architecture diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-advanced-architecture-01.png)
+
+![bucket4j-advanced — Advanced Rate Limit Strategies Graphviz architecture diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-advanced-readme-architecture-01.png)
 
 ## Rate-Limit Strategies
 

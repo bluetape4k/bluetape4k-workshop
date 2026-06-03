@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="2068" height="184" viewBox="0 0 2068 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="2181" height="222" viewBox="0 0 2181 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;virtualthreads/spring-mvc-tomcat/src/main/kotlin/io/bluetape4k/workshop/virtualthread/tomcat/VirtualThreadMvcApp.kt&quot;,&quot;virtualthreads/spring-mvc-tomcat/src/main/kotlin/io/bluetape4k/workshop/virtualthread/tomcat/config/AsyncConfig.kt&quot;,&quot;virtualthreads/spring-mvc-tomcat/src/main/kotlin/io/bluetape4k/workshop/virtualthread/tomcat/config/SchedulingConfig.kt&quot;,&quot;virtualthreads/spring-mvc-tomcat/src/main/kotlin/io/bluetape4k/workshop/virtualthread/tomcat/config/TomcatConfig.kt&quot;,&quot;virtualthreads/spring-mvc-tomcat/src/main/kotlin/io/bluetape4k/workshop/virtualthread/tomcat/config/VirtualThreadConfig.kt&quot;,&quot;virtualthreads/spring-mvc-tomcat/src/main/kotlin/io/bluetape4k/workshop/virtualthread/tomcat/controller/HttpbinController.kt&quot;,&quot;virtualthreads/spring-mvc-tomcat/src/main/kotlin/io/bluetape4k/workshop/virtualthread/tomcat/controller/MemberController.kt&quot;,&quot;virtualthreads/spring-mvc-tomcat/src/main/kotlin/io/bluetape4k/workshop/virtualthread/tomcat/controller/TeamController.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,43 +9,43 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="2068" height="184"/>
-  <rect class="frame" x="10" y="10" width="2048" height="164" rx="18"/>
+  <rect class="canvas" width="2181" height="222"/>
+  <rect class="frame" x="10" y="10" width="2161" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="323.4,91.6 323.4,91.6 420.3,91.6 420.3,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="378.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="621.3,91.6 621.3,91.6 710.5,91.6 710.5,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="672.8" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="938.2,91.6 938.2,91.6 1027.3,91.6 1027.3,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="989.6" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1351.3,108.3 1351.3,108.3 1464.4,108.3 1464.4,108.3" marker-end="url(#arrow)"/><text class="edge-label" x="1414.5" y="37.4" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1351.3,74.9 1351.3,74.9 1464.4,74.9 1464.4,74.9" marker-end="url(#arrow)"/><text class="edge-label" x="1414.5" y="114.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1672.0,91.6 1672.0,91.6 1777.0,91.6 1777.0,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1731.4" y="76.1" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="364.8,110.9 364.8,110.9 496.8,110.9 496.8,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="437.7" y="95.4" text-anchor="middle">invokes</text>
+    <polyline class="connector" points="708.2,110.9 708.2,110.9 855.7,110.9 855.7,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="788.8" y="95.4" text-anchor="middle">delegates</text>
+    <polyline class="connector" points="1080.2,110.9 1080.2,110.9 1315.6,110.9 1315.6,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1204.9" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1533.3,110.9 1533.3,110.9 1665.0,110.9 1665.0,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1606.0" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1854.6,110.9 1854.6,110.9 1978.1,110.9 1978.1,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1923.0" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="41.5" width="294.9" height="100.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="175.4" y="74.6">Entry / Tests</tspan><tspan x="175.4" y="97.6">VirtualThreadMvcApp /</tspan><tspan x="175.4" y="120.6">AbstractVirtualThreadMvcTest</tspan></text>
+      <rect x="28.0" y="28.0" width="336.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="196.2" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="196.2" y="106.9">VirtualThreadMvcApp</tspan><tspan class="node-detail" x="196.2" y="122.9">AbstractVirtualThreadMvcTest</tspan><tspan class="node-detail" x="196.2" y="138.9">HttpbinControllerTest</tspan><tspan class="node-detail" x="196.2" y="154.9">Virtualthreads Spring Mvc Tomcat</tspan></text>
     </g>
     <g class="node" data-node="api">
-      <rect x="434.9" y="28.0" width="185.9" height="127.2" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="527.8" y="63.1">API / Adapter</tspan><tspan x="527.8" y="86.1">SchedulingConfig /</tspan><tspan x="527.8" y="109.1">TomcatConfig /</tspan><tspan x="527.8" y="132.1">HttpbinController</tspan></text>
+      <rect x="511.1" y="28.0" width="196.4" height="165.7" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="609.3" y="84.9">API &amp; Adapters</tspan><tspan class="node-detail" x="609.3" y="106.9">SchedulingConfig</tspan><tspan class="node-detail" x="609.3" y="122.9">TomcatConfig</tspan><tspan class="node-detail" x="609.3" y="138.9">HttpbinController</tspan><tspan class="node-detail" x="609.3" y="154.9">MemberController</tspan></text>
     </g>
     <g class="node" data-node="service">
-      <rect x="724.8" y="28.0" width="212.9" height="127.2" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="831.2" y="63.1">Service / Domain</tspan><tspan x="831.2" y="86.1">AsyncConfig /</tspan><tspan x="831.2" y="109.1">VirtualThreadConfig /</tspan><tspan x="831.2" y="132.1">DatabaseInitializer /</tspan></text>
+      <rect x="870.1" y="28.0" width="209.4" height="165.7" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="974.8" y="84.9">Service &amp; Domain</tspan><tspan class="node-detail" x="974.8" y="106.9">AsyncConfig</tspan><tspan class="node-detail" x="974.8" y="122.9">VirtualThreadConfig</tspan><tspan class="node-detail" x="974.8" y="138.9">DatabaseInitializer</tspan><tspan class="node-detail" x="974.8" y="154.9">MemberRepository</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="1041.6" y="41.5" width="308.9" height="100.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1196.0" y="74.6">Repository / Infra</tspan><tspan x="1196.0" y="97.6">MemberDTO / Member / Team /</tspan><tspan x="1196.0" y="120.6">TeamRepository</tspan></text>
+      <rect x="1330.2" y="28.0" width="202.4" height="165.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1431.4" y="84.9">Repository &amp; Infra</tspan><tspan class="node-detail" x="1431.4" y="106.9">MemberDTO</tspan><tspan class="node-detail" x="1431.4" y="122.9">Member</tspan><tspan class="node-detail" x="1431.4" y="138.9">Team</tspan><tspan class="node-detail" x="1431.4" y="154.9">TeamRepository</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1478.5" y="41.5" width="192.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1574.9" y="74.6">bluetape4k APIs</tspan><tspan x="1574.9" y="97.6">workshop / core /</tspan><tspan x="1574.9" y="120.6">virtualthread</tspan></text>
+      <rect x="1679.3" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1766.5" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1766.5" y="114.9">workshop</tspan><tspan class="node-detail" x="1766.5" y="130.9">core</tspan><tspan class="node-detail" x="1766.5" y="146.9">virtualthread</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1791.4" y="41.5" width="247.9" height="100.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1915.4" y="74.6">Runtime</tspan><tspan x="1915.4" y="97.6">SQL / R2DBC /</tspan><tspan x="1915.4" y="120.6">Elasticsearch / AWS / S3</tspan></text>
+      <rect x="1992.3" y="41.5" width="160.4" height="138.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="2072.5" y="92.9">Runtime</tspan><tspan class="node-detail" x="2072.5" y="114.9">SQL / R2DBC</tspan><tspan class="node-detail" x="2072.5" y="130.9">Elasticsearch</tspan><tspan class="node-detail" x="2072.5" y="146.9">AWS / S3</tspan></text>
     </g>
   </g>
 </svg>

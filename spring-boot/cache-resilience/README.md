@@ -23,13 +23,13 @@ driven by real network failures injected via Toxiproxy.
 
 ## Architecture
 
-![Spring Boot Cache Resilience Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-cache-resilience-readme-architecture-01.png)
+![Cache Resilience architecture](../../docs/images/readme-diagrams/spring-boot-cache-resilience-diagram-01.png)
 
 The diagram shows the request flow, CircuitBreaker state machine
 (CLOSED → OPEN → HALF-OPEN → CLOSED), and the ToxiproxyServer chaos injection
 used in integration tests.
 
-![Cache Resilience architecture](../../docs/images/readme-diagrams/spring-boot-cache-resilience-diagram-01.png)
+![Spring Boot Cache Resilience Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-cache-resilience-readme-architecture-01.png)
 
 ## What This Module Shows
 

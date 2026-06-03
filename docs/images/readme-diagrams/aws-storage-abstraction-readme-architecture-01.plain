@@ -1,12 +1,11 @@
-graph 1 18.494 1.325
-node entry 1.4629 0.6625 2.9258 1.0438 "Entry / Tests\nStorageApplication /\nAbstractStorageServiceTest" rounded,filled box #88A3B5 #FFF8E7
-node service 5.5658 0.6625 2.9467 1.325 "Service / Domain\nLocalStorageService /\nS3Config /\nS3PresignedStorageService /" rounded,filled box #88A3B5 #F1F8E9
-node infra 9.6427 0.6625 3.0404 0.7625 "Library Layer\nworkshop / core / coroutines" rounded,filled box #88A3B5 #F5F0FF
-node bt 13.501 0.6625 2.0092 1.0438 "bluetape4k APIs\nworkshop / core /\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
-node runtime 17.125 0.6625 2.7383 0.7625 "Runtime\nAWS / S3 / Testcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry service 4 2.9326 0.6625 2.9326 0.6625 3.9431 0.6625 3.9431 0.6625 calls 3.5092 0.75104 solid #637383
-edge service infra 4 7.0434 0.6625 7.0434 0.6625 7.9726 0.6625 7.9726 0.6625 uses 7.5808 0.75104 solid #637383
-edge infra bt 4 11.168 0.53542 11.168 0.53542 12.348 0.53542 12.348 0.53542 uses 11.83 1.1538 solid #637383
-edge infra bt 4 11.168 0.78958 11.168 0.78958 12.348 0.78958 12.348 0.78958 extends 11.83 0.34826 solid #637383
-edge bt runtime 4 14.515 0.6625 14.515 0.6625 15.609 0.6625 15.609 0.6625 adapts 15.13 0.75104 solid #637383
+graph 1 20.017 1.7263
+node entry 1.6167 0.86313 3.2333 1.7263 "Entry & Verification\nStorageApplication\nAbstractStorageServiceTest\nLocalStorageServiceTest\nAws Storage Abstraction tests" rounded,filled box #88A3B5 #FFF8E7
+node service 6.383 0.86313 2.9104 1.7263 "Service & Domain\nLocalStorageService\nS3Config\nS3PresignedStorageService\nS3StorageService" rounded,filled box #88A3B5 #F1F8E9
+node infra 11.967 0.86313 3.0354 1.7263 "Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration" rounded,filled box #88A3B5 #F5F0FF
+node bt 15.921 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\ncore\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
+node runtime 19.145 0.86313 1.7437 1.1637 "Runtime\nAWS / S3\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry service 4 3.237 0.86313 3.237 0.86313 4.7766 0.86313 4.7766 0.86313 delegates 4.0806 0.95167 solid #637383
+edge service infra 4 7.8465 0.86313 7.8465 0.86313 10.297 0.86313 10.297 0.86313 "persists / publishes" 9.1438 0.95167 solid #637383
+edge infra bt 4 13.49 0.86313 13.49 0.86313 14.862 0.86313 14.862 0.86313 extends 14.249 0.95167 solid #637383
+edge bt runtime 4 16.836 0.86313 16.836 0.86313 18.124 0.86313 18.124 0.86313 adapts 17.551 0.95167 solid #637383
 stop

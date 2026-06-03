@@ -3,8 +3,8 @@ digraph G {
     rankdir=LR,
     bgcolor="white",
     pad="0.35",
-    nodesep="0.55",
-    ranksep="0.75",
+    nodesep="0.70",
+    ranksep="0.95",
     splines=ortho,
     outputorder=edgesfirst
   ];
@@ -16,7 +16,7 @@ digraph G {
     fillcolor="#F6FAFF",
     fontname="Architects Daughter",
     fontsize=14,
-    margin="0.14,0.10"
+    margin="0.20,0.16"
   ];
   edge [
     color="#637383",
@@ -26,15 +26,14 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry / Tests\nBucket4jRedisApplication /\nAbstractRateLimitTest", fillcolor="#FFF8E7"];
-  api [label="API / Adapter\nCoroutineController /\nDebugMetricHandler /\nReactiveController", fillcolor="#EEF7FF"];
-  infra [label="Repository / Infra\nLettuceConfiguration", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop / jackson3 /\njunit5", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nRedis / Testcontainers", fillcolor="#FFF1F1"];
+  entry [label="Entry & Verification\nBucket4jRedisApplication\nAbstractRateLimitTest\nCoroutineRateLimitTest\nRatelimit Bucket4j Redis tests", fillcolor="#FFF8E7"];
+  api [label="API & Adapters\nCoroutineController\nDebugMetricHandler\nReactiveController", fillcolor="#EEF7FF"];
+  infra [label="Repository & Infra\nLettuceConfiguration", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k APIs\nworkshop\njackson3\njunit5", fillcolor="#EAF7F0"];
+  runtime [label="Runtime\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
 
-  entry -> api [label="calls"];
-  api -> infra [label="uses"];
-  infra -> bt [label="uses"];
+  entry -> api [label="invokes"];
+  api -> infra [label="persists / publishes"];
   infra -> bt [label="extends"];
   bt -> runtime [label="adapts"];
 }

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1161" height="157" viewBox="0 0 1161 157" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1472" height="168" viewBox="0 0 1472 168" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-data/redis-examples/src/main/kotlin/io/bluetape4k/workshop/redis/stream/SensorData.kt&quot;,&quot;spring-data/redis-examples/src/main/kotlin/io/bluetape4k/workshop/redis/stream/sync/CapturingStreamListener.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,32 +9,33 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1161" height="157"/>
-  <rect class="frame" x="10" y="10" width="1141" height="137" rx="18"/>
+  <rect class="canvas" width="1472" height="168"/>
+  <rect class="frame" x="10" y="10" width="1452" height="148" rx="18"/>
   <g>
-    <polyline class="connector" points="289.5,78.1 289.5,78.1 386.5,78.1 386.5,78.1" marker-end="url(#arrow)"/><text class="edge-label" x="344.9" y="62.6" text-anchor="middle">calls</text>
-    <polyline class="connector" points="645.7,78.1 645.7,78.1 734.5,78.1 734.5,78.1" marker-end="url(#arrow)"/><text class="edge-label" x="696.8" y="62.6" text-anchor="middle">uses</text>
-    <polyline class="connector" points="935.3,78.1 935.3,78.1 1024.2,78.1 1024.2,78.1" marker-end="url(#arrow)"/><text class="edge-label" x="986.6" y="62.6" text-anchor="middle">uses</text>
+    <polyline class="connector" points="352.8,83.9 352.8,83.9 484.5,83.9 484.5,83.9" marker-end="url(#arrow)"/><text class="edge-label" x="425.7" y="68.4" text-anchor="middle">invokes</text>
+    <polyline class="connector" points="755.3,83.9 755.3,83.9 990.8,83.9 990.8,83.9" marker-end="url(#arrow)"/><text class="edge-label" x="879.8" y="68.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1208.2,83.9 1208.2,83.9 1323.8,83.9 1323.8,83.9" marker-end="url(#arrow)"/><text class="edge-label" x="1272.8" y="68.4" text-anchor="middle">backs</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="28.0" width="260.9" height="100.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="158.4" y="61.1">Entry / Tests</tspan><tspan x="158.4" y="84.1">Spring Data Redis Examples</tspan><tspan x="158.4" y="107.1">Redis Stream tests</tspan></text>
+      <rect x="28.0" y="28.0" width="324.4" height="111.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="190.2" y="73.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="190.2" y="95.9">Spring Data Redis Examples Redis</tspan><tspan class="node-detail" x="190.2" y="111.9">Stream tests</tspan></text>
     </g>
     <g class="node" data-node="api">
-      <rect x="400.9" y="41.5" width="243.9" height="73.2" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="522.8" y="72.6">API / Adapter</tspan><tspan x="522.8" y="95.6">CapturingStreamListener</tspan></text>
+      <rect x="499.1" y="41.5" width="255.4" height="84.7" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="626.8" y="81.9">API &amp; Adapters</tspan><tspan class="node-detail" x="626.8" y="103.9">CapturingStreamListener</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="748.8" y="41.5" width="185.9" height="73.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="841.7" y="72.6">Repository / Infra</tspan><tspan x="841.7" y="95.6">SensorData</tspan></text>
+      <rect x="1005.2" y="41.5" width="202.4" height="84.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1106.4" y="81.9">Repository &amp; Infra</tspan><tspan class="node-detail" x="1106.4" y="103.9">SensorData</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1038.6" y="41.5" width="93.9" height="73.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1085.5" y="72.6">Runtime</tspan><tspan x="1085.5" y="95.6">Redis</tspan></text>
+      <rect x="1338.2" y="41.5" width="105.4" height="84.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1390.9" y="81.9">Runtime</tspan><tspan class="node-detail" x="1390.9" y="103.9">Redis</tspan></text>
     </g>
   </g>
 </svg>

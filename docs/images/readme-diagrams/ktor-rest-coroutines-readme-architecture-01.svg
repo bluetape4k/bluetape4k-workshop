@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1972" height="184" viewBox="0 0 1972 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="2220" height="222" viewBox="0 0 2220 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;ktor/rest-coroutines/src/main/kotlin/io/bluetape4k/workshop/ktor/ApplicationModule.kt&quot;,&quot;ktor/rest-coroutines/src/main/kotlin/io/bluetape4k/workshop/ktor/Main.kt&quot;,&quot;ktor/rest-coroutines/src/main/kotlin/io/bluetape4k/workshop/ktor/domain/Book.kt&quot;,&quot;ktor/rest-coroutines/src/main/kotlin/io/bluetape4k/workshop/ktor/domain/DomainError.kt&quot;,&quot;ktor/rest-coroutines/src/main/kotlin/io/bluetape4k/workshop/ktor/json/Jackson3Support.kt&quot;,&quot;ktor/rest-coroutines/src/main/kotlin/io/bluetape4k/workshop/ktor/repository/BookRepository.kt&quot;,&quot;ktor/rest-coroutines/src/main/kotlin/io/bluetape4k/workshop/ktor/repository/InMemoryBookRepository.kt&quot;,&quot;ktor/rest-coroutines/src/main/kotlin/io/bluetape4k/workshop/ktor/routes/BookRoutes.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,43 +9,43 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1972" height="184"/>
-  <rect class="frame" x="10" y="10" width="1952" height="164" rx="18"/>
+  <rect class="canvas" width="2220" height="222"/>
+  <rect class="frame" x="10" y="10" width="2200" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="270.8,91.6 270.8,91.6 367.9,91.6 367.9,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="325.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="648.5,91.6 648.5,91.6 737.7,91.6 737.7,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="699.8" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="975.4,91.6 975.4,91.6 1064.0,91.6 1064.0,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1026.6" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1265.1,103.8 1265.1,103.8 1378.2,103.8 1378.2,103.8" marker-end="url(#arrow)"/><text class="edge-label" x="1328.5" y="37.4" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1265.1,79.4 1265.1,79.4 1378.2,79.4 1378.2,79.4" marker-end="url(#arrow)"/><text class="edge-label" x="1328.5" y="114.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1649.2,91.6 1649.2,91.6 1753.8,91.6 1753.8,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1708.4" y="76.1" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="329.8,110.9 329.8,110.9 461.6,110.9 461.6,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="402.7" y="95.4" text-anchor="middle">invokes</text>
+    <polyline class="connector" points="739.2,110.9 739.2,110.9 887.1,110.9 887.1,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="819.8" y="95.4" text-anchor="middle">delegates</text>
+    <polyline class="connector" points="1093.4,110.9 1093.4,110.9 1328.9,110.9 1328.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1217.8" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1546.3,110.9 1546.3,110.9 1678.0,110.9 1678.0,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1618.9" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1867.5,110.9 1867.5,110.9 1990.9,110.9 1990.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1936.0" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="55.0" width="241.9" height="73.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="148.9" y="86.1">Entry / Tests</tspan><tspan x="148.9" y="109.1">Main / AbstractKtorTest</tspan></text>
+      <rect x="28.0" y="28.0" width="301.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="178.7" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="178.7" y="106.9">Main</tspan><tspan class="node-detail" x="178.7" y="122.9">AbstractKtorTest</tspan><tspan class="node-detail" x="178.7" y="138.9">InMemoryBookRepositoryTest</tspan><tspan class="node-detail" x="178.7" y="154.9">Ktor Rest Coroutines tests</tspan></text>
     </g>
     <g class="node" data-node="api">
-      <rect x="381.9" y="28.0" width="265.9" height="127.2" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="514.8" y="63.1">API / Adapter</tspan><tspan x="514.8" y="86.1">ApplicationModule /</tspan><tspan x="514.8" y="109.1">InMemoryBookRepository /</tspan><tspan x="514.8" y="132.1">BookRoutes</tspan></text>
+      <rect x="476.1" y="28.0" width="262.4" height="165.7" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="607.3" y="84.9">API &amp; Adapters</tspan><tspan class="node-detail" x="607.3" y="106.9">ApplicationModule</tspan><tspan class="node-detail" x="607.3" y="122.9">InMemoryBookRepository</tspan><tspan class="node-detail" x="607.3" y="138.9">BookRoutes</tspan><tspan class="node-detail" x="607.3" y="154.9">HealthRoutes</tspan></text>
     </g>
     <g class="node" data-node="service">
-      <rect x="751.8" y="28.0" width="222.9" height="127.2" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="863.2" y="63.1">Service / Domain</tspan><tspan x="863.2" y="86.1">Jackson3Support /</tspan><tspan x="863.2" y="109.1">BookService / Book /</tspan><tspan x="863.2" y="132.1">DomainError</tspan></text>
+      <rect x="901.1" y="28.0" width="191.4" height="165.7" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="996.8" y="84.9">Service &amp; Domain</tspan><tspan class="node-detail" x="996.8" y="106.9">Jackson3Support</tspan><tspan class="node-detail" x="996.8" y="122.9">BookService</tspan><tspan class="node-detail" x="996.8" y="138.9">Book</tspan><tspan class="node-detail" x="996.8" y="154.9">DomainError</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="1078.6" y="55.0" width="185.9" height="73.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1171.6" y="86.1">Repository / Infra</tspan><tspan x="1171.6" y="109.1">BookRepository</tspan></text>
+      <rect x="1343.2" y="68.5" width="202.4" height="84.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1444.4" y="108.9">Repository &amp; Infra</tspan><tspan class="node-detail" x="1444.4" y="130.9">BookRepository</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1392.5" y="55.0" width="255.9" height="73.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1520.4" y="86.1">bluetape4k APIs</tspan><tspan x="1520.4" y="109.1">workshop / core / logging</tspan></text>
+      <rect x="1692.2" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1779.4" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1779.4" y="114.9">workshop</tspan><tspan class="node-detail" x="1779.4" y="130.9">core</tspan><tspan class="node-detail" x="1779.4" y="146.9">logging</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1768.4" y="55.0" width="174.9" height="73.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1855.8" y="86.1">Runtime</tspan><tspan x="1855.8" y="109.1">In-memory / JVM</tspan></text>
+      <rect x="2005.3" y="68.5" width="186.4" height="84.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="2098.5" y="108.9">Runtime</tspan><tspan class="node-detail" x="2098.5" y="130.9">In-memory / JVM</tspan></text>
     </g>
   </g>
 </svg>

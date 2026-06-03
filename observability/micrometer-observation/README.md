@@ -22,9 +22,9 @@ It automatically attaches metrics and tracing to method execution through the `@
 
 ## Architecture
 
-![Micrometer Observation with Spring MVC Graphviz architecture diagram](../../docs/images/readme-diagrams/observability-micrometer-observation-readme-architecture-01.png)
-
 ![micrometer observation Architecture diagram](../../docs/images/readme-diagrams/observability-micrometer-observation-diagram-01.png)
+
+![Micrometer Observation with Spring MVC Graphviz architecture diagram](../../docs/images/readme-diagrams/observability-micrometer-observation-readme-architecture-01.png)
 
 ## Key Components
 

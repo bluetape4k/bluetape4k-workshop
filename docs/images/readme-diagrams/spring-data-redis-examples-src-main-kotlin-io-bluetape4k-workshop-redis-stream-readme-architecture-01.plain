@@ -1,9 +1,9 @@
-graph 1 11.505 1.0438
-node entry 1.3588 0.52188 2.7175 1.0438 "Entry / Tests\nSpring Data Redis Examples\nRedis Stream tests" rounded,filled box #88A3B5 #FFF8E7
-node api 5.1544 0.52188 2.5404 0.7625 "API / Adapter\nCapturingStreamListener" rounded,filled box #88A3B5 #EEF7FF
-node infra 8.476 0.52188 1.9363 0.7625 "Repository / Infra\nSensorData" rounded,filled box #88A3B5 #F5F0FF
-node runtime 11.016 0.52188 0.97792 0.7625 "Runtime\nRedis" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 2.7237 0.52188 2.7237 0.52188 3.7348 0.52188 3.7348 0.52188 calls 3.3008 0.61042 solid #637383
-edge api infra 4 6.4339 0.52188 6.4339 0.52188 7.3589 0.52188 7.3589 0.52188 uses 6.9662 0.61042 solid #637383
-edge infra runtime 4 9.451 0.52188 9.451 0.52188 10.377 0.52188 10.377 0.52188 uses 9.9858 0.61042 solid #637383
+graph 1 14.746 1.1637
+node entry 1.6896 0.58187 3.3792 1.1637 "Entry & Verification\nSpring Data Redis Examples Redis\nStream tests" rounded,filled box #88A3B5 #FFF8E7
+node api 6.2372 0.58187 2.6604 0.8825 "API & Adapters\nCapturingStreamListener" rounded,filled box #88A3B5 #EEF7FF
+node infra 11.233 0.58187 2.1083 0.8825 "Repository & Infra\nSensorData" rounded,filled box #88A3B5 #F5F0FF
+node runtime 14.197 0.58187 1.0979 0.8825 "Runtime\nRedis" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.3829 0.58187 3.3829 0.58187 4.7549 0.58187 4.7549 0.58187 invokes 4.1431 0.67042 solid #637383
+edge api infra 4 7.5759 0.58187 7.5759 0.58187 10.029 0.58187 10.029 0.58187 "persists / publishes" 8.8729 0.67042 solid #637383
+edge infra runtime 4 12.294 0.58187 12.294 0.58187 13.498 0.58187 13.498 0.58187 backs 12.967 0.67042 solid #637383
 stop

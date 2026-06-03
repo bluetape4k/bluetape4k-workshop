@@ -1,7 +1,7 @@
-graph 1 8.4129 1.0438
-node entry 1.2077 0.52188 2.4154 1.0438 "Entry / Tests\nMain /\nMovieRatingVerticeTest" rounded,filled box #88A3B5 #FFF8E7
-node api 4.6023 0.52188 2.0404 0.7625 "API / Adapter\nMovieRatingVerticle" rounded,filled box #88A3B5 #EEF7FF
-node runtime 7.5594 0.52188 1.7071 1.0438 "Runtime\nSQL / R2DBC /\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 2.4236 0.52188 2.4236 0.52188 3.4315 0.52188 3.4315 0.52188 calls 2.9988 0.61042 solid #637383
-edge api runtime 4 5.6282 0.52188 5.6282 0.52188 6.5545 0.52188 6.5545 0.52188 uses 6.1642 0.61042 solid #637383
+graph 1 9.3285 1.7263
+node entry 1.2677 0.86313 2.5354 1.7263 "Entry & Verification\nMain\nMovieRatingVerticeTest\nAbstractSqlClientTest\nVertx tests" rounded,filled box #88A3B5 #FFF8E7
+node api 5.1434 0.86313 2.1604 0.8825 "API & Adapters\nMovieRatingVerticle" rounded,filled box #88A3B5 #EEF7FF
+node runtime 8.4566 0.86313 1.7437 1.1637 "Runtime\nSQL / R2DBC\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 2.5421 0.86313 2.5421 0.86313 3.9139 0.86313 3.9139 0.86313 invokes 3.2993 0.95167 solid #637383
+edge api runtime 4 6.2329 0.86313 6.2329 0.86313 7.4334 0.86313 7.4334 0.86313 backs 6.9042 0.95167 solid #637383
 stop

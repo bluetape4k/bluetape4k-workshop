@@ -23,7 +23,7 @@ Based on [sample-spring-modulith](https://github.com/piomin/sample-spring-moduli
 
 ## Architecture
 
-![Spring Modulith JPA Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-architecture-01.png)
+![Spring Modulith JPA Demo Diagram 1](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-flow-01.png)
 
 The application is divided into four logical modules:
 
@@ -34,7 +34,7 @@ The application is divided into four logical modules:
 | `employee` | Manages `Employee` entity; depends on `organization` via internal API |
 | `gateway` | Exposes all modules over a single REST API (`/organizations/**`) |
 
-![Spring Modulith JPA Demo Diagram 1](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-flow-01.png)
+![Spring Modulith JPA Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-architecture-01.png)
 
 ## Used bluetape4k Features
 

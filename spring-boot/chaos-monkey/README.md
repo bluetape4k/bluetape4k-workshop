@@ -8,11 +8,11 @@ This example exercises **Chaos Monkey + Spring Boot 4 Demo** as a runnable Sprin
 
 ## Architecture Diagram
 
-![Chaos Monkey + Spring Boot 4 Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-chaos-monkey-readme-architecture-01.png)
+![Chaos Monkey + Spring Boot 4 Demo architecture diagram](../../docs/images/readme-diagrams/spring-boot-chaos-monkey-diagram-01.png)
 
 The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.springboot` as the source of truth when comparing this README with the code.
 
-![Chaos Monkey + Spring Boot 4 Demo architecture diagram](../../docs/images/readme-diagrams/spring-boot-chaos-monkey-diagram-01.png)
+![Chaos Monkey + Spring Boot 4 Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-chaos-monkey-readme-architecture-01.png)
 
 ## Flow Diagram
 

@@ -24,9 +24,9 @@ Redisson을 사용한 분산 락 전략을 시연합니다. 안전하지 않은 
 
 ## 아키텍처
 
-![redis-distributed-lock Graphviz architecture diagram](../../docs/images/readme-diagrams/redis-distributed-lock-readme-architecture-01.png)
-
 ![distributed lock Architecture diagram](../../docs/images/readme-diagrams/redis-distributed-lock-architecture-01.png)
+
+![redis-distributed-lock Graphviz architecture diagram](../../docs/images/readme-diagrams/redis-distributed-lock-readme-architecture-01.png)
 
 ---
 

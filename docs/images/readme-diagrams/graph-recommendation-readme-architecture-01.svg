@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="2166" height="184" viewBox="0 0 2166 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="2421" height="195" viewBox="0 0 2421 195" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;graph/recommendation/src/main/kotlin/io/bluetape4k/workshop/graph/recommendation/RecommendationConstants.kt&quot;,&quot;graph/recommendation/src/main/kotlin/io/bluetape4k/workshop/graph/recommendation/model/FollowRecommendation.kt&quot;,&quot;graph/recommendation/src/main/kotlin/io/bluetape4k/workshop/graph/recommendation/model/ProductRecommendation.kt&quot;,&quot;graph/recommendation/src/main/kotlin/io/bluetape4k/workshop/graph/recommendation/schema/RecommendationSchema.kt&quot;,&quot;graph/recommendation/src/main/kotlin/io/bluetape4k/workshop/graph/recommendation/service/RecommendationService.kt&quot;,&quot;graph/recommendation/src/main/kotlin/io/bluetape4k/workshop/graph/recommendation/service/RecommendationSuspendService.kt&quot;,&quot;graph/recommendation/src/test/kotlin/io/bluetape4k/workshop/graph/recommendation/AbstractRecommendationSuspendTest.kt&quot;,&quot;graph/recommendation/src/test/kotlin/io/bluetape4k/workshop/graph/recommendation/AbstractRecommendationTest.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,43 +9,43 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="2166" height="184"/>
-  <rect class="frame" x="10" y="10" width="2146" height="164" rx="18"/>
+  <rect class="canvas" width="2421" height="195"/>
+  <rect class="frame" x="10" y="10" width="2401" height="175" rx="18"/>
   <g>
-    <polyline class="connector" points="386.6,91.6 386.6,91.6 483.5,91.6 483.5,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="441.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="806.4,91.6 806.4,91.6 895.2,91.6 895.2,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="857.8" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1182.2,91.6 1182.2,91.6 1271.3,91.6 1271.3,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1233.7" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1510.3,108.3 1510.3,108.3 1623.0,108.3 1623.0,108.3" marker-end="url(#arrow)"/><text class="edge-label" x="1573.5" y="37.4" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1510.3,74.9 1510.3,74.9 1623.0,74.9 1623.0,74.9" marker-end="url(#arrow)"/><text class="edge-label" x="1573.5" y="114.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1862.2,91.6 1862.2,91.6 1966.9,91.6 1966.9,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1921.4" y="76.1" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="398.0,97.4 398.0,97.4 529.6,97.4 529.6,97.4" marker-end="url(#arrow)"/><text class="edge-label" x="470.7" y="81.9" text-anchor="middle">invokes</text>
+    <polyline class="connector" points="864.1,97.4 864.1,97.4 1011.6,97.4 1011.6,97.4" marker-end="url(#arrow)"/><text class="edge-label" x="944.8" y="81.9" text-anchor="middle">delegates</text>
+    <polyline class="connector" points="1294.9,97.4 1294.9,97.4 1530.9,97.4 1530.9,97.4" marker-end="url(#arrow)"/><text class="edge-label" x="1419.9" y="81.9" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1766.2,97.4 1766.2,97.4 1898.1,97.4 1898.1,97.4" marker-end="url(#arrow)"/><text class="edge-label" x="1838.9" y="81.9" text-anchor="middle">extends</text>
+    <polyline class="connector" points="2087.4,97.4 2087.4,97.4 2210.9,97.4 2210.9,97.4" marker-end="url(#arrow)"/><text class="edge-label" x="2156.0" y="81.9" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="55.0" width="357.9" height="73.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="206.9" y="86.1">Entry / Tests</tspan><tspan x="206.9" y="109.1">AbstractRecommendationSuspendTest</tspan></text>
+      <rect x="28.0" y="28.0" width="369.4" height="138.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="212.7" y="79.4">Entry &amp; Verification</tspan><tspan class="node-detail" x="212.7" y="101.4">AbstractRecommendationSuspendTest</tspan><tspan class="node-detail" x="212.7" y="117.4">AbstractRecommendationTest</tspan><tspan class="node-detail" x="212.7" y="133.4">Graph Recommendation tests</tspan></text>
     </g>
     <g class="node" data-node="api">
-      <rect x="497.9" y="28.0" width="307.9" height="127.2" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="651.8" y="63.1">API / Adapter</tspan><tspan x="651.8" y="86.1">ProductRecommendation /</tspan><tspan x="651.8" y="109.1">RecommendationService /</tspan><tspan x="651.8" y="132.1">RecommendationSuspendService</tspan></text>
+      <rect x="544.1" y="28.0" width="319.4" height="138.7" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="703.8" y="79.4">API &amp; Adapters</tspan><tspan class="node-detail" x="703.8" y="101.4">ProductRecommendation</tspan><tspan class="node-detail" x="703.8" y="117.4">RecommendationService</tspan><tspan class="node-detail" x="703.8" y="133.4">RecommendationSuspendService</tspan></text>
     </g>
     <g class="node" data-node="service">
-      <rect x="909.8" y="28.0" width="271.9" height="127.2" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1045.7" y="63.1">Service / Domain</tspan><tspan x="1045.7" y="86.1">RecommendationConstants /</tspan><tspan x="1045.7" y="109.1">FollowRecommendation /</tspan><tspan x="1045.7" y="132.1">RecommendationSchema</tspan></text>
+      <rect x="1026.1" y="28.0" width="268.4" height="138.7" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1160.3" y="79.4">Service &amp; Domain</tspan><tspan class="node-detail" x="1160.3" y="101.4">RecommendationConstants</tspan><tspan class="node-detail" x="1160.3" y="117.4">FollowRecommendation</tspan><tspan class="node-detail" x="1160.3" y="133.4">RecommendationSchema</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="1285.6" y="41.5" width="223.9" height="100.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1397.5" y="74.6">Library Layer</tspan><tspan x="1397.5" y="97.6">dependencies / graph /</tspan><tspan x="1397.5" y="120.6">logging</tspan></text>
+      <rect x="1545.2" y="55.0" width="220.4" height="84.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1655.4" y="95.4">Framework Layer</tspan><tspan class="node-detail" x="1655.4" y="117.4">Testcontainers neo4j</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1637.5" y="41.5" width="223.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1749.5" y="74.6">bluetape4k APIs</tspan><tspan x="1749.5" y="97.6">dependencies / graph /</tspan><tspan x="1749.5" y="120.6">logging</tspan></text>
+      <rect x="1912.3" y="28.0" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1999.5" y="79.4">bluetape4k APIs</tspan><tspan class="node-detail" x="1999.5" y="101.4">dependencies</tspan><tspan class="node-detail" x="1999.5" y="117.4">graph</tspan><tspan class="node-detail" x="1999.5" y="133.4">logging</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1981.4" y="55.0" width="155.9" height="73.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="2059.4" y="86.1">Runtime</tspan><tspan x="2059.4" y="109.1">Testcontainers</tspan></text>
+      <rect x="2225.4" y="55.0" width="167.4" height="84.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="2309.1" y="95.4">Runtime</tspan><tspan class="node-detail" x="2309.1" y="117.4">Testcontainers</tspan></text>
     </g>
   </g>
 </svg>

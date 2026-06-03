@@ -3,8 +3,8 @@ digraph G {
     rankdir=LR,
     bgcolor="white",
     pad="0.35",
-    nodesep="0.55",
-    ranksep="0.75",
+    nodesep="0.70",
+    ranksep="0.95",
     splines=ortho,
     outputorder=edgesfirst
   ];
@@ -16,7 +16,7 @@ digraph G {
     fillcolor="#F6FAFF",
     fontname="Architects Daughter",
     fontsize=14,
-    margin="0.14,0.10"
+    margin="0.20,0.16"
   ];
   edge [
     color="#637383",
@@ -26,15 +26,14 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry / Tests\nAbstractKnowledgeGraphSuspendTest", fillcolor="#FFF8E7"];
-  service [label="Service / Domain\nKnowledgeGraphService /\nKnowledgeGraphSuspendService", fillcolor="#F1F8E9"];
-  infra [label="Repository / Infra\nKnowledgeGraphSchema", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\ndependencies / graph /\nlogging", fillcolor="#EAF7F0"];
+  entry [label="Entry & Verification\nAbstractKnowledgeGraphSuspendTest\nAbstractKnowledgeGraphTest\nGraph Knowledge Graph tests", fillcolor="#FFF8E7"];
+  service [label="Service & Domain\nKnowledgeGraphService\nKnowledgeGraphSuspendService", fillcolor="#F1F8E9"];
+  infra [label="Repository & Infra\nKnowledgeGraphSchema", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k APIs\ndependencies\ngraph\nlogging", fillcolor="#EAF7F0"];
   runtime [label="Runtime\nTestcontainers", fillcolor="#FFF1F1"];
 
-  entry -> service [label="calls"];
-  service -> infra [label="uses"];
-  infra -> bt [label="uses"];
+  entry -> service [label="delegates"];
+  service -> infra [label="persists / publishes"];
   infra -> bt [label="extends"];
   bt -> runtime [label="adapts"];
 }

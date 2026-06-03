@@ -21,9 +21,9 @@ Spring MVC + JetBrains Exposed JDBC 예제입니다. **bluetape4k-exposed**의 t
 
 ## 아키텍처
 
-![exposed-mvc-jdbc Graphviz architecture diagram](../../docs/images/readme-diagrams/exposed-mvc-jdbc-readme-architecture-01.png)
-
 ![Exposed MVC JDBC Architecture](../../docs/images/readme-diagrams/exposed-mvc-jdbc-architecture-01.png)
+
+![exposed-mvc-jdbc Graphviz architecture diagram](../../docs/images/readme-diagrams/exposed-mvc-jdbc-readme-architecture-01.png)
 
 ## 도메인 모델
 

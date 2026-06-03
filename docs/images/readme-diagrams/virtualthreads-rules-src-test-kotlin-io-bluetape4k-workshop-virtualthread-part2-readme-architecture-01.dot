@@ -3,8 +3,8 @@ digraph G {
     rankdir=LR,
     bgcolor="white",
     pad="0.35",
-    nodesep="0.55",
-    ranksep="0.75",
+    nodesep="0.70",
+    ranksep="0.95",
     splines=ortho,
     outputorder=edgesfirst
   ];
@@ -16,7 +16,7 @@ digraph G {
     fillcolor="#F6FAFF",
     fontname="Architects Daughter",
     fontsize=14,
-    margin="0.14,0.10"
+    margin="0.20,0.16"
   ];
   edge [
     color="#637383",
@@ -29,5 +29,5 @@ digraph G {
   entry [label="Example Family\npart2", fillcolor="#FFF8E7"];
   runtime [label="Runtime\nIn-memory / JVM", fillcolor="#FFF1F1"];
 
-  entry -> runtime [label="calls"];
+  entry -> runtime [label="runs on"];
 }

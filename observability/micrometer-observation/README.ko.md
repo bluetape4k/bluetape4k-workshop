@@ -22,9 +22,9 @@
 
 ## 아키텍처
 
-![Micrometer Observation with Spring MVC Graphviz architecture diagram](../../docs/images/readme-diagrams/observability-micrometer-observation-readme-architecture-01.png)
-
 ![micrometer observation Architecture diagram](../../docs/images/readme-diagrams/observability-micrometer-observation-diagram-01.png)
+
+![Micrometer Observation with Spring MVC Graphviz architecture diagram](../../docs/images/readme-diagrams/observability-micrometer-observation-readme-architecture-01.png)
 
 ## 핵심 구성 요소
 

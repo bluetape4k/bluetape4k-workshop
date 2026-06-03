@@ -89,6 +89,27 @@ function wrapLabel(text, width = 22) {
   return lines.slice(0, 3).join("\\n");
 }
 
+function wrapLines(text, width = 30, limit = 3) {
+  return wrapLabel(text, width).split("\\n").filter(Boolean).slice(0, limit);
+}
+
+function detailItems(items, width = 30, limit = 4) {
+  return uniqueLimit(items, limit)
+    .flatMap((item) => wrapLines(item, width, 2))
+    .slice(0, limit);
+}
+
+function node(id, title, details, fill) {
+  const lines = [title, ...detailItems(details, 32, 4)];
+  return {
+    id,
+    title,
+    details: lines.slice(1),
+    label: lines.join("\\n"),
+    fill,
+  };
+}
+
 function escapeXml(text) {
   return String(text)
     .replace(/&/g, "&amp;")
@@ -159,6 +180,14 @@ function bluetape4kDeps(buildText) {
     .map((match) => match[1].replace(/[-_]+/g, " ")), 3);
 }
 
+function frameworkDeps(buildText) {
+  return uniqueLimit([
+    ...[...buildText.matchAll(/libs\.spring\.([A-Za-z0-9_.-]+)/g)].map((match) => `Spring ${match[1].replace(/[._-]+/g, " ")}`),
+    ...[...buildText.matchAll(/libs\.kafka\.([A-Za-z0-9_.-]+)/g)].map((match) => `Kafka ${match[1].replace(/[._-]+/g, " ")}`),
+    ...[...buildText.matchAll(/libs\.testcontainers\.([A-Za-z0-9_.-]+)/g)].map((match) => `Testcontainers ${match[1].replace(/[._-]+/g, " ")}`),
+  ], 4);
+}
+
 function childModules(dir) {
   return fs.readdirSync(dir, { withFileTypes: true })
     .filter((entry) => entry.isDirectory() && !skippedDirs.has(entry.name))
@@ -185,6 +214,7 @@ function architectureModel(dir, rel) {
   const children = childModules(dir);
   const runtimes = runtimeOf(files, buildText);
   const btDeps = bluetape4kDeps(buildText);
+  const fwDeps = frameworkDeps(buildText);
   const title = imageTitleOf(dir, rel);
   const module = humanizeRel(rel);
   const sourceEvidence = uniqueLimit([
@@ -193,51 +223,48 @@ function architectureModel(dir, rel) {
     fs.existsSync(buildFile) ? path.relative(root, buildFile).replaceAll(path.sep, "/") : "",
   ], 8);
 
+  const entryDetails = mainKt.length > 0
+    ? uniqueLimit([
+      ...uniqueLimit(grouped.get("entry") || [], 3),
+      ...testKt.map(classNameOf).filter((name) => /Test|IT|Spec/.test(name)).slice(0, 2),
+      `${module} tests`,
+    ], 4)
+    : [title];
+
   const nodes = [
-    {
-      id: "entry",
-      label: mainKt.length > 0
-        ? `Entry / Tests\\n${wrapLabel(uniqueLimit([
-          ...uniqueLimit(grouped.get("entry") || [], 2),
-          ...testKt.map(classNameOf).filter((name) => /Test|IT|Spec/.test(name)).slice(0, 1),
-        ], 3).join(" / ") || `${module} tests`, 26)}`
-        : `Example Family\\n${wrapLabel(title, 26)}`,
-      fill: "#FFF8E7",
-    },
+    node("entry", mainKt.length > 0 ? "Entry & Verification" : "Example Family", entryDetails, "#FFF8E7"),
   ];
 
   if ((grouped.get("api") || []).length > 0) {
-    nodes.push({ id: "api", label: `API / Adapter\\n${wrapLabel(uniqueLimit(grouped.get("api"), 3).join(" / "), 26)}`, fill: "#EEF7FF" });
+    nodes.push(node("api", "API & Adapters", grouped.get("api"), "#EEF7FF"));
   } else if (children.length > 0) {
-    nodes.push({ id: "api", label: `Child Examples\\n${wrapLabel(children.join(" / "), 26)}`, fill: "#EEF7FF" });
+    nodes.push(node("api", "Child Examples", children, "#EEF7FF"));
   }
 
   const serviceItems = uniqueLimit([...(grouped.get("service") || []), ...(grouped.get("domain") || [])], 4);
   if (serviceItems.length > 0) {
-    nodes.push({ id: "service", label: `Service / Domain\\n${wrapLabel(serviceItems.join(" / "), 28)}`, fill: "#F1F8E9" });
+    nodes.push(node("service", "Service & Domain", serviceItems, "#F1F8E9"));
   }
 
   const infraItems = uniqueLimit(grouped.get("infra") || [], 4);
   if (infraItems.length > 0) {
-    nodes.push({ id: "infra", label: `Repository / Infra\\n${wrapLabel(infraItems.join(" / "), 28)}`, fill: "#F5F0FF" });
-  } else if (btDeps.length > 0) {
-    nodes.push({ id: "infra", label: `Library Layer\\n${wrapLabel(btDeps.join(" / "), 28)}`, fill: "#F5F0FF" });
+    nodes.push(node("infra", "Repository & Infra", infraItems, "#F5F0FF"));
+  } else if (fwDeps.length > 0) {
+    nodes.push(node("infra", "Framework Layer", fwDeps, "#F5F0FF"));
   }
 
   if (btDeps.length > 0) {
-    nodes.push({ id: "bt", label: `bluetape4k APIs\\n${wrapLabel(btDeps.join(" / "), 26)}`, fill: "#EAF7F0" });
+    nodes.push(node("bt", "bluetape4k APIs", btDeps, "#EAF7F0"));
   }
 
-  nodes.push({
-    id: "runtime",
-    label: `Runtime\\n${wrapLabel((runtimes.length ? runtimes : ["In-memory / JVM"]).join(" / "), 26)}`,
-    fill: "#FFF1F1",
-  });
+  nodes.push(node("runtime", "Runtime", runtimes.length ? runtimes : ["In-memory / JVM"], "#FFF1F1"));
 
   const ids = nodes.map((node) => node.id);
   const edges = [];
   for (let i = 0; i < ids.length - 1; i++) {
-    if (ids[i] !== "bt") edges.push([ids[i], ids[i + 1], i === 0 ? "calls" : "uses"]);
+    if (ids[i] !== "bt" && ids[i + 1] !== "bt") {
+      edges.push([ids[i], ids[i + 1], edgeLabel(ids[i], ids[i + 1], i)]);
+    }
   }
   if (ids.includes("bt") && ids.includes("runtime")) {
     const source = ids.includes("infra") ? "infra" : ids.includes("service") ? "service" : "api";
@@ -248,14 +275,23 @@ function architectureModel(dir, rel) {
   return { nodes, edges, sourceEvidence };
 }
 
+function edgeLabel(from, to, index) {
+  if (from === "entry" && to === "api") return "invokes";
+  if (to === "service") return "delegates";
+  if (to === "infra") return "persists / publishes";
+  if (to === "bt") return "extends";
+  if (to === "runtime") return index === 0 ? "runs on" : "backs";
+  return index === 0 ? "calls" : "uses";
+}
+
 function dotFor({ model }) {
   return `digraph G {
   graph [
     rankdir=LR,
     bgcolor="white",
     pad="0.35",
-    nodesep="0.55",
-    ranksep="0.75",
+    nodesep="0.70",
+    ranksep="0.95",
     splines=ortho,
     outputorder=edgesfirst
   ];
@@ -267,7 +303,7 @@ function dotFor({ model }) {
     fillcolor="#F6FAFF",
     fontname="${titleFont}",
     fontsize=14,
-    margin="0.14,0.10"
+    margin="0.20,0.16"
   ];
   edge [
     color="#637383",
@@ -357,8 +393,17 @@ function parsePlain(plain) {
   const graph = { width: 0, height: 0 };
   const nodes = [];
   const edges = [];
+  const logicalLines = [];
 
-  for (const rawLine of plain.trim().split(/\r?\n/)) {
+  for (const line of plain.trim().split(/\r?\n/)) {
+    if (logicalLines.length > 0 && logicalLines.at(-1).endsWith("\\")) {
+      logicalLines[logicalLines.length - 1] = `${logicalLines.at(-1).slice(0, -1)}${line}`;
+    } else {
+      logicalLines.push(line);
+    }
+  }
+
+  for (const rawLine of logicalLines) {
     const parts = rawLine.match(/"[^"]*"|\S+/g)?.map((part) => part.replace(/^"|"$/g, "")) || [];
     if (parts[0] === "graph") {
       graph.width = Number(parts[2]);
@@ -421,11 +466,17 @@ function svgFromPlain(plain, model) {
     const w = node.width * pxPerInch;
     const h = node.height * pxPerInch;
     const lines = textLines(node.label);
-    const lineHeight = 23;
-    const startY = top + h / 2 - ((lines.length - 1) * lineHeight) / 2 + 6;
-    const tspans = lines.map((line, index) =>
-      `<tspan x="${(left + w / 2).toFixed(1)}" y="${(startY + index * lineHeight).toFixed(1)}">${escapeXml(line)}</tspan>`
-    ).join("");
+    const titleLineHeight = 22;
+    const detailLineHeight = 16;
+    const blockHeight = titleLineHeight + Math.max(0, lines.length - 1) * detailLineHeight;
+    const startY = top + h / 2 - blockHeight / 2 + 17;
+    const tspans = lines.map((line, index) => {
+      const className = index === 0 ? "node-title" : "node-detail";
+      const yPos = index === 0
+        ? startY
+        : startY + titleLineHeight + (index - 1) * detailLineHeight;
+      return `<tspan class="${className}" x="${(left + w / 2).toFixed(1)}" y="${yPos.toFixed(1)}">${escapeXml(line)}</tspan>`;
+    }).join("");
     return `<g class="node" data-node="${escapeXml(node.id)}">
       <rect ${attrs({
         x: left.toFixed(1),
@@ -436,7 +487,7 @@ function svgFromPlain(plain, model) {
         fill: node.fill,
         stroke: node.stroke,
       })}/>
-      <text class="node-label" text-anchor="middle">${tspans}</text>
+      <text text-anchor="middle">${tspans}</text>
     </g>`;
   }).join("\n    ");
 
@@ -451,7 +502,8 @@ function svgFromPlain(plain, model) {
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family: "${titleFont}"; font-size: 18px; fill: #102033; }
+      .node-title { font-family: "${titleFont}"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "${detailFont}"; font-size: 12px; fill: #465160; }
       .edge-label { font-family: "${detailFont}"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>

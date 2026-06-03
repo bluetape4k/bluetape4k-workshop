@@ -1,12 +1,11 @@
-graph 1 17.369 1.1017
-node entry 0.98375 0.52188 1.9675 1.0438 "Entry / Tests\nRedisApplication /\nAbstractRedisTest" rounded,filled box #88A3B5 #FFF8E7
-node api 4.4044 0.52188 2.5404 0.7625 "API / Adapter\nCapturingStreamListener" rounded,filled box #88A3B5 #EEF7FF
-node infra 8.2677 0.52188 3.0196 1.0438 "Repository / Infra\nActor / Movie / MovieActor /\nMovieActorReference" rounded,filled box #88A3B5 #F5F0FF
-node bt 12.412 0.52188 2.6029 0.7625 "bluetape4k APIs\nworkshop / redis / spring" rounded,filled box #88A3B5 #EAF7F0
-node runtime 16.166 0.52188 2.405 1.0438 "Runtime\nSQL / R2DBC / Redis /\nKafka" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 1.9731 0.52188 1.9731 0.52188 2.9875 0.52188 2.9875 0.52188 calls 2.5508 0.61042 solid #637383
-edge api infra 4 5.6801 0.52188 5.6801 0.52188 6.609 0.52188 6.609 0.52188 uses 6.2162 0.61042 solid #637383
-edge infra bt 4 9.7816 0.39479 9.7816 0.39479 10.965 0.39479 10.965 0.39479 uses 10.444 1.0132 solid #637383
-edge infra bt 4 9.7816 0.64896 9.7816 0.64896 10.965 0.64896 10.965 0.64896 extends 10.444 0.20764 solid #637383
-edge bt runtime 4 13.72 0.52188 13.72 0.52188 14.815 0.52188 14.815 0.52188 adapts 14.339 0.61042 solid #637383
+graph 1 19.08 1.7263
+node entry 1.6844 0.86313 3.3688 1.7263 "Entry & Verification\nRedisApplication\nAbstractRedisTest\nGeoOperationsTest\nSpring Data Redis Examples tests" rounded,filled box #88A3B5 #FFF8E7
+node api 6.2267 0.86313 2.6604 0.8825 "API & Adapters\nCapturingStreamListener" rounded,filled box #88A3B5 #EEF7FF
+node infra 11.394 0.86313 2.4521 1.7263 "Repository & Infra\nActor\nMovie\nMovieActor\nMovieActorReference" rounded,filled box #88A3B5 #F5F0FF
+node bt 15.056 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\nredis\nspring" rounded,filled box #88A3B5 #EAF7F0
+node runtime 18.244 0.86313 1.6708 1.445 "Runtime\nSQL / R2DBC\nRedis\nKafka" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.3758 0.86313 3.3758 0.86313 4.746 0.86313 4.746 0.86313 invokes 4.1326 0.95167 solid #637383
+edge api infra 4 7.5642 0.86313 7.5642 0.86313 10.017 0.86313 10.017 0.86313 "persists / publishes" 8.8625 0.95167 solid #637383
+edge infra bt 4 12.629 0.86313 12.629 0.86313 13.997 0.86313 13.997 0.86313 extends 13.384 0.95167 solid #637383
+edge bt runtime 4 15.974 0.86313 15.974 0.86313 17.261 0.86313 17.261 0.86313 adapts 16.687 0.95167 solid #637383
 stop

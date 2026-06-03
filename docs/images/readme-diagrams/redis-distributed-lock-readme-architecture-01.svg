@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1711" height="184" viewBox="0 0 1711 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1876" height="222" viewBox="0 0 1876 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;redis/distributed-lock/src/main/kotlin/io/bluetape4k/workshop/lock/DistributedLockApp.kt&quot;,&quot;redis/distributed-lock/src/main/kotlin/io/bluetape4k/workshop/lock/domain/DeductionResult.kt&quot;,&quot;redis/distributed-lock/src/main/kotlin/io/bluetape4k/workshop/lock/domain/Inventory.kt&quot;,&quot;redis/distributed-lock/src/main/kotlin/io/bluetape4k/workshop/lock/domain/InventoryStore.kt&quot;,&quot;redis/distributed-lock/src/main/kotlin/io/bluetape4k/workshop/lock/fenced/FencedResource.kt&quot;,&quot;redis/distributed-lock/src/main/kotlin/io/bluetape4k/workshop/lock/fenced/FencedResources.kt&quot;,&quot;redis/distributed-lock/src/main/kotlin/io/bluetape4k/workshop/lock/service/FencedInventoryService.kt&quot;,&quot;redis/distributed-lock/src/main/kotlin/io/bluetape4k/workshop/lock/service/LockedInventoryService.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,38 +9,38 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1711" height="184"/>
-  <rect class="frame" x="10" y="10" width="1691" height="164" rx="18"/>
+  <rect class="canvas" width="1876" height="222"/>
+  <rect class="frame" x="10" y="10" width="1856" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="311.5,91.6 311.5,91.6 408.9,91.6 408.9,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="366.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="688.5,91.6 688.5,91.6 777.6,91.6 777.6,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="739.8" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="998.5,108.3 998.5,108.3 1111.2,108.3 1111.2,108.3" marker-end="url(#arrow)"/><text class="edge-label" x="1061.6" y="37.4" text-anchor="middle">uses</text>
-    <polyline class="connector" points="998.5,74.9 998.5,74.9 1111.2,74.9 1111.2,74.9" marker-end="url(#arrow)"/><text class="edge-label" x="1061.6" y="114.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1332.4,91.6 1332.4,91.6 1437.3,91.6 1437.3,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1391.5" y="76.1" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="322.8,110.9 322.8,110.9 470.8,110.9 470.8,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="403.7" y="95.4" text-anchor="middle">delegates</text>
+    <polyline class="connector" points="677.0,110.9 677.0,110.9 912.7,110.9 912.7,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="801.8" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1221.0,110.9 1221.0,110.9 1352.8,110.9 1352.8,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1293.9" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1542.3,110.9 1542.3,110.9 1666.0,110.9 1666.0,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1610.9" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="41.5" width="282.9" height="100.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="169.4" y="74.6">Entry / Tests</tspan><tspan x="169.4" y="97.6">DistributedLockApp /</tspan><tspan x="169.4" y="120.6">AbstractDistributedLockTest</tspan></text>
+      <rect x="28.0" y="28.0" width="294.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="175.2" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="175.2" y="106.9">DistributedLockApp</tspan><tspan class="node-detail" x="175.2" y="122.9">AbstractDistributedLockTest</tspan><tspan class="node-detail" x="175.2" y="138.9">BaselineRaceTest</tspan><tspan class="node-detail" x="175.2" y="154.9">Redis Distributed Lock tests</tspan></text>
     </g>
     <g class="node" data-node="service">
-      <rect x="422.9" y="28.0" width="264.9" height="127.2" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="555.3" y="63.1">Service / Domain</tspan><tspan x="555.3" y="86.1">DeductionResult / Inventory</tspan><tspan x="555.3" y="109.1">/ InventoryStore /</tspan><tspan x="555.3" y="132.1">FencedResource</tspan></text>
+      <rect x="485.1" y="28.0" width="191.4" height="165.7" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="580.8" y="84.9">Service &amp; Domain</tspan><tspan class="node-detail" x="580.8" y="106.9">DeductionResult</tspan><tspan class="node-detail" x="580.8" y="122.9">Inventory</tspan><tspan class="node-detail" x="580.8" y="138.9">InventoryStore</tspan><tspan class="node-detail" x="580.8" y="154.9">FencedResource</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="791.8" y="41.5" width="205.9" height="100.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="894.7" y="74.6">Library Layer</tspan><tspan x="894.7" y="97.6">workshop / logging /</tspan><tspan x="894.7" y="120.6">redisson</tspan></text>
+      <rect x="927.1" y="41.5" width="293.4" height="138.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1073.8" y="92.9">Framework Layer</tspan><tspan class="node-detail" x="1073.8" y="114.9">Spring boot autoconfigure lib</tspan><tspan class="node-detail" x="1073.8" y="130.9">Spring boot starter actuator</tspan><tspan class="node-detail" x="1073.8" y="146.9">Spring boot starter test</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1125.6" y="41.5" width="205.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1228.6" y="74.6">bluetape4k APIs</tspan><tspan x="1228.6" y="97.6">workshop / logging /</tspan><tspan x="1228.6" y="120.6">redisson</tspan></text>
+      <rect x="1367.2" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1454.4" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1454.4" y="114.9">workshop</tspan><tspan class="node-detail" x="1454.4" y="130.9">logging</tspan><tspan class="node-detail" x="1454.4" y="146.9">redisson</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1451.5" y="41.5" width="230.9" height="100.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1567.0" y="74.6">Runtime</tspan><tspan x="1567.0" y="97.6">SQL / R2DBC / Redis /</tspan><tspan x="1567.0" y="120.6">Testcontainers</tspan></text>
+      <rect x="1680.3" y="41.5" width="167.4" height="138.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1764.0" y="92.9">Runtime</tspan><tspan class="node-detail" x="1764.0" y="114.9">SQL / R2DBC</tspan><tspan class="node-detail" x="1764.0" y="130.9">Redis</tspan><tspan class="node-detail" x="1764.0" y="146.9">Testcontainers</tspan></text>
     </g>
   </g>
 </svg>

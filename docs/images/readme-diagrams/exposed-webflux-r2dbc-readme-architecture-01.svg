@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1973" height="184" viewBox="0 0 1973 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="2169" height="222" viewBox="0 0 2169 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;exposed/webflux-r2dbc/src/main/kotlin/io/bluetape4k/workshop/exposed/webflux/r2dbc/ExposedWebfluxR2dbcApp.kt&quot;,&quot;exposed/webflux-r2dbc/src/main/kotlin/io/bluetape4k/workshop/exposed/webflux/r2dbc/author/controller/AuthorController.kt&quot;,&quot;exposed/webflux-r2dbc/src/main/kotlin/io/bluetape4k/workshop/exposed/webflux/r2dbc/author/controller/BookController.kt&quot;,&quot;exposed/webflux-r2dbc/src/main/kotlin/io/bluetape4k/workshop/exposed/webflux/r2dbc/author/dto/AuthorDTO.kt&quot;,&quot;exposed/webflux-r2dbc/src/main/kotlin/io/bluetape4k/workshop/exposed/webflux/r2dbc/author/dto/BookDTO.kt&quot;,&quot;exposed/webflux-r2dbc/src/main/kotlin/io/bluetape4k/workshop/exposed/webflux/r2dbc/author/repository/AuthorRepository.kt&quot;,&quot;exposed/webflux-r2dbc/src/main/kotlin/io/bluetape4k/workshop/exposed/webflux/r2dbc/author/repository/BookRepository.kt&quot;,&quot;exposed/webflux-r2dbc/src/main/kotlin/io/bluetape4k/workshop/exposed/webflux/r2dbc/author/schema/AuthorTable.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,43 +9,43 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1973" height="184"/>
-  <rect class="frame" x="10" y="10" width="1953" height="164" rx="18"/>
+  <rect class="canvas" width="2169" height="222"/>
+  <rect class="frame" x="10" y="10" width="2149" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="298.4,91.6 298.4,91.6 395.4,91.6 395.4,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="353.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="599.7,91.6 599.7,91.6 688.2,91.6 688.2,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="650.8" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="991.1,91.6 991.1,91.6 1080.3,91.6 1080.3,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1042.6" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1338.4,108.3 1338.4,108.3 1450.9,108.3 1450.9,108.3" marker-end="url(#arrow)"/><text class="edge-label" x="1401.5" y="37.4" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1338.4,74.9 1338.4,74.9 1450.9,74.9 1450.9,74.9" marker-end="url(#arrow)"/><text class="edge-label" x="1401.5" y="114.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1661.0,91.6 1661.0,91.6 1766.0,91.6 1766.0,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1720.4" y="76.1" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="327.8,110.9 327.8,110.9 459.6,110.9 459.6,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="400.7" y="95.4" text-anchor="middle">invokes</text>
+    <polyline class="connector" points="707.2,110.9 707.2,110.9 854.5,110.9 854.5,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="787.8" y="95.4" text-anchor="middle">delegates</text>
+    <polyline class="connector" points="1061.4,110.9 1061.4,110.9 1296.8,110.9 1296.8,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1185.9" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1514.3,110.9 1514.3,110.9 1646.0,110.9 1646.0,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1586.9" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1835.4,110.9 1835.4,110.9 1958.9,110.9 1958.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1904.0" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="41.5" width="269.9" height="100.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="162.9" y="74.6">Entry / Tests</tspan><tspan x="162.9" y="97.6">ExposedWebfluxR2dbcApp /</tspan><tspan x="162.9" y="120.6">AbstractWebfluxR2dbcTest</tspan></text>
+      <rect x="28.0" y="28.0" width="299.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="177.7" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="177.7" y="106.9">ExposedWebfluxR2dbcApp</tspan><tspan class="node-detail" x="177.7" y="122.9">AbstractWebfluxR2dbcTest</tspan><tspan class="node-detail" x="177.7" y="138.9">AuthorControllerTest</tspan><tspan class="node-detail" x="177.7" y="154.9">Exposed Webflux R2dbc tests</tspan></text>
     </g>
     <g class="node" data-node="api">
-      <rect x="409.9" y="28.0" width="188.9" height="127.2" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="504.3" y="63.1">API / Adapter</tspan><tspan x="504.3" y="86.1">AuthorController /</tspan><tspan x="504.3" y="109.1">BookController /</tspan><tspan x="504.3" y="132.1">DatabaseInitializer</tspan></text>
+      <rect x="474.1" y="28.0" width="232.4" height="165.7" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="590.3" y="84.9">API &amp; Adapters</tspan><tspan class="node-detail" x="590.3" y="106.9">AuthorController</tspan><tspan class="node-detail" x="590.3" y="122.9">BookController</tspan><tspan class="node-detail" x="590.3" y="138.9">DatabaseInitializer</tspan><tspan class="node-detail" x="590.3" y="154.9">GlobalExceptionHandler</tspan></text>
     </g>
     <g class="node" data-node="service">
-      <rect x="702.8" y="41.5" width="287.9" height="100.2" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="846.7" y="74.6">Service / Domain</tspan><tspan x="846.7" y="97.6">AuthorService / BookService</tspan><tspan x="846.7" y="120.6">/ OrderService</tspan></text>
+      <rect x="869.1" y="41.5" width="191.4" height="138.7" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="964.8" y="92.9">Service &amp; Domain</tspan><tspan class="node-detail" x="964.8" y="114.9">AuthorService</tspan><tspan class="node-detail" x="964.8" y="130.9">BookService</tspan><tspan class="node-detail" x="964.8" y="146.9">OrderService</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="1094.7" y="28.0" width="242.9" height="127.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1216.1" y="63.1">Repository / Infra</tspan><tspan x="1216.1" y="86.1">AuthorDTO / BookDTO /</tspan><tspan x="1216.1" y="109.1">AuthorRepository /</tspan><tspan x="1216.1" y="132.1">BookRepository</tspan></text>
+      <rect x="1311.2" y="28.0" width="202.4" height="165.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1412.4" y="84.9">Repository &amp; Infra</tspan><tspan class="node-detail" x="1412.4" y="106.9">AuthorDTO</tspan><tspan class="node-detail" x="1412.4" y="122.9">BookDTO</tspan><tspan class="node-detail" x="1412.4" y="138.9">AuthorRepository</tspan><tspan class="node-detail" x="1412.4" y="154.9">BookRepository</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1465.5" y="41.5" width="194.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1562.9" y="74.6">bluetape4k APIs</tspan><tspan x="1562.9" y="97.6">workshop / junit5 /</tspan><tspan x="1562.9" y="120.6">assertions</tspan></text>
+      <rect x="1660.3" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1747.5" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1747.5" y="114.9">workshop</tspan><tspan class="node-detail" x="1747.5" y="130.9">junit5</tspan><tspan class="node-detail" x="1747.5" y="146.9">assertions</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1780.4" y="28.0" width="163.9" height="127.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1862.4" y="63.1">Runtime</tspan><tspan x="1862.4" y="86.1">SQL / R2DBC /</tspan><tspan x="1862.4" y="109.1">Elasticsearch /</tspan><tspan x="1862.4" y="132.1">Testcontainers</tspan></text>
+      <rect x="1973.4" y="41.5" width="167.4" height="138.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="2057.1" y="92.9">Runtime</tspan><tspan class="node-detail" x="2057.1" y="114.9">SQL / R2DBC</tspan><tspan class="node-detail" x="2057.1" y="130.9">Elasticsearch</tspan><tspan class="node-detail" x="2057.1" y="146.9">Testcontainers</tspan></text>
     </g>
   </g>
 </svg>
