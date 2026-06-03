@@ -31,8 +31,6 @@ The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k h
 
 ![mongodb coroutines Class Structure diagram](../../docs/images/readme-diagrams/spring-data-mongodb-coroutines-diagram-01.png)
 
-![mongodb coroutines Sequence Flow 2 diagram](../../docs/images/readme-diagrams/spring-data-mongodb-coroutines-sequence-01.png)
-
 This example performs MongoDB work with `Spring Data Mongo` and Kotlin Coroutines.
 
 ## References

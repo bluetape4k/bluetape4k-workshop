@@ -26,10 +26,6 @@ bluetape4k의 `withObservation` / `withObservationSuspending` DSL을 사용해 c
 
 ![Micrometer Observation for Spring Boot 4 WebFlux & Coroutines Graphviz architecture diagram](../../docs/images/readme-diagrams/observability-micrometer-tracing-coroutines-readme-architecture-01.png)
 
-![micrometer tracing coroutines Architecture diagram](../../docs/images/readme-diagrams/observability-micrometer-tracing-coroutines-sequence-01.png)
-
-![micrometer tracing coroutines Sequence Flow 2 diagram](../../docs/images/readme-diagrams/observability-micrometer-tracing-coroutines-diagram-01.png)
-
 ## 핵심 구성 요소
 
 | 클래스 | 역할 |

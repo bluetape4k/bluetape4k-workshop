@@ -12,6 +12,8 @@ The module is organized around the sample entry point or test fixture, the bluet
 
 ## Sequence Diagram
 
+![api-gateway sequence diagram](../../docs/images/readme-diagrams/gateway-api-gateway-readme-sequence-01.png)
+
 The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 Spring Cloud Gateway (WebFlux-based) demo that provides routing, Swagger UI aggregation,

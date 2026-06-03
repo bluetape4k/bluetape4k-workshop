@@ -1,97 +1,63 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="560" viewBox="0 0 1040 560" role="img" aria-label="Kafka Request-Reply Sequence Flow">
+<svg xmlns="http://www.w3.org/2000/svg" width="1420" height="1155" viewBox="0 0 1420 1155" role="img" aria-label="Kafka Request-Reply Sequence">
 <defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
-    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
-  </marker>
-  <marker id="arrowBack" markerWidth="9" markerHeight="9" refX="1" refY="4.5" orient="auto" markerUnits="strokeWidth">
-    <path d="M8,1 L1,4.5 L8,8 Z" fill="#45A7A1"/>
-  </marker>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <marker id="arrowBlue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M1 1 L7 4 L1 7 Z" fill="#5b8def"/></marker>
+  <marker id="arrowTeal" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M1 1 L7 4 L1 7 Z" fill="#45a7a1"/></marker>
   <style>
-    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter";font-size:38px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Mono";font-size:14px;font-weight:400;fill:#536273}
-    .smallLabel{font-family:"Architects Daughter";font-size:18px;font-weight:400;fill:#102033}
-    .mono{font-family:"Comic Mono";font-size:11px;font-weight:400;fill:#102033}
-    .small{font-family:"Comic Mono";font-size:11px;font-weight:400;fill:#536273}
-    .card{stroke-width:2.1;filter:url(#shadow)}
-    .lifeline{stroke:#b0bbca;stroke-width:1.5;stroke-dasharray:6 4;fill:none}
-    .reqArrow{stroke:#5B8DEF;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
-    .rspArrow{stroke:#45A7A1;stroke-width:2.1;stroke-dasharray:7 4;fill:none;marker-end:url(#arrow)}
+    .canvas{fill:#f7f9fc}
+    .frame{fill:#ffffff;stroke:#d8e0ea;stroke-width:1.5}
+    .title{font-family:"Architects Daughter";font-size:34px;fill:#102033}
+    .subtitle{font-family:"Comic Mono";font-size:13px;fill:#536273}
+    .actor{font-family:"Architects Daughter";font-size:17px;fill:#102033}
+    .message{font-family:"Comic Mono";font-size:12px;fill:#263445;paint-order:stroke;stroke:#ffffff;stroke-width:4px;stroke-linejoin:round}
+    .detail{font-family:"Comic Mono";font-size:11px;fill:#536273}
+    .lifeline{stroke:#b8c4d3;stroke-width:1.4;stroke-dasharray:7 6}
+    .call{stroke:#5b8def;stroke-width:2.15;fill:none;marker-end:url(#arrowBlue)}
+    .return{stroke:#45a7a1;stroke-width:2.05;stroke-dasharray:7 5;fill:none;marker-end:url(#arrowTeal)}
+    .box{stroke-width:1.8;filter:url(#shadow)}
   </style>
 </defs>
-<!-- 5 Participants cx: Client=110, PingCtrl=280, KafkaTemplate=470, KafkaBroker=660, PongHandler=870 -->
-<rect class="canvas" width="1040" height="560"/>
-<rect class="frame" x="24" y="20" width="992" height="516" rx="28"/>
-<text class="title" x="58" y="64">Kafka Request-Reply Sequence</text>
-<text class="subtitle" x="58" y="88">ReplyingKafkaTemplate · PingController · PongHandler · @SendTo · CompletableFuture</text>
-
-<!-- Participant headers (y=100, h=40) -->
-<g transform="translate(40,100)">
-  <rect class="card" x="0" y="0" width="140" height="40" rx="8" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" style="font-size:17px" x="70" y="26" text-anchor="middle">Client</text>
-</g>
-<g transform="translate(210,100)">
-  <rect class="card" x="0" y="0" width="140" height="40" rx="8" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" style="font-size:17px" x="70" y="26" text-anchor="middle">PingController</text>
-</g>
-<g transform="translate(400,100)">
-  <rect class="card" x="0" y="0" width="160" height="40" rx="8" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" style="font-size:17px" x="80" y="26" text-anchor="middle">ReplyingKafkaTemplate</text>
-</g>
-<g transform="translate(600,100)">
-  <rect class="card" x="0" y="0" width="140" height="40" rx="8" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="smallLabel" style="font-size:17px" x="70" y="26" text-anchor="middle">Kafka Broker</text>
-</g>
-<g transform="translate(790,100)">
-  <rect class="card" x="0" y="0" width="140" height="40" rx="8" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" style="font-size:17px" x="70" y="26" text-anchor="middle">PongHandler</text>
-</g>
-
-<!-- Lifelines (from y=140 to y=520) -->
-<line class="lifeline" x1="110" y1="140" x2="110" y2="520"/>
-<line class="lifeline" x1="280" y1="140" x2="280" y2="520"/>
-<line class="lifeline" x1="480" y1="140" x2="480" y2="520"/>
-<line class="lifeline" x1="670" y1="140" x2="670" y2="520"/>
-<line class="lifeline" x1="860" y1="140" x2="860" y2="520"/>
-
-<!-- ① GET /ping/{message}: Client → PingController -->
-<rect x="110" y="156" width="170" height="24" rx="4" fill="#dbeafe" opacity="0.7"/>
-<text class="mono" x="195" y="172" text-anchor="middle">① GET /ping/{message}</text>
-<path class="reqArrow" d="M110 168 L272 168"/>
-
-<!-- ② sendAndReceive(topic, ping): PingController → KafkaTemplate -->
-<rect x="280" y="200" width="200" height="24" rx="4" fill="#dbeafe" opacity="0.7"/>
-<text class="mono" x="380" y="216" text-anchor="middle">② sendAndReceive(pingTopic)</text>
-<path class="reqArrow" d="M280 212 L472 212"/>
-
-<!-- ③ send to ping-topic: KafkaTemplate → Broker -->
-<rect x="480" y="244" width="190" height="24" rx="4" fill="#dbeafe" opacity="0.7"/>
-<text class="mono" x="575" y="260" text-anchor="middle">③ send("ping-topic")</text>
-<path class="reqArrow" d="M480 256 L662 256"/>
-
-<!-- ④ consume ping-topic: Broker → PongHandler -->
-<rect x="670" y="288" width="190" height="24" rx="4" fill="#fef3c7" opacity="0.7"/>
-<text class="mono" x="765" y="304" text-anchor="middle">④ @KafkaListener(ping-topic)</text>
-<path class="reqArrow" d="M670 300 L852 300"/>
-
-<!-- ⑤ @SendTo reply: PongHandler → Broker -->
-<rect x="670" y="340" width="190" height="24" rx="4" fill="#d1fae5" opacity="0.7"/>
-<text class="mono" x="765" y="356" text-anchor="middle">⑤ @SendTo("pong-topic")</text>
-<path class="rspArrow" d="M860 352 L678 352"/>
-
-<!-- ⑥ reply on pong-topic: Broker → KafkaTemplate -->
-<rect x="480" y="384" width="190" height="24" rx="4" fill="#d1fae5" opacity="0.7"/>
-<text class="mono" x="575" y="400" text-anchor="middle">⑥ reply via pong-topic</text>
-<path class="rspArrow" d="M670 396 L488 396"/>
-
-<!-- ⑦ CompletableFuture resolved: KafkaTemplate → PingController -->
-<rect x="280" y="428" width="200" height="24" rx="4" fill="#d1fae5" opacity="0.7"/>
-<text class="mono" x="380" y="444" text-anchor="middle">⑦ Future.onSuccess { pong }</text>
-<path class="rspArrow" d="M480 440 L288 440"/>
-
-<!-- ⑧ pong response: PingController → Client -->
-<rect x="110" y="472" width="170" height="24" rx="4" fill="#d1fae5" opacity="0.7"/>
-<text class="mono" x="195" y="488" text-anchor="middle">⑧ pong response</text>
-<path class="rspArrow" d="M280 484 L118 484"/>
+<rect class="canvas" width="1420" height="1155"/>
+<rect class="frame" x="24" y="20" width="1372" height="1115" rx="18"/>
+<text class="title" x="48" y="58">Kafka Request-Reply Sequence</text>
+<text class="subtitle" x="50" y="84">ReplyingKafkaTemplate · PingController · PongHandler · @SendTo · CompletableFuture</text>
+<rect class="box" x="40" y="108" width="220" height="58" rx="10" fill="#e8f3ff" stroke="#7aa0c4"/>
+<text class="actor" x="150" y="137" text-anchor="middle" dominant-baseline="middle">Client</text>
+<line class="lifeline" x1="150" y1="166" x2="150" y2="1097"/>
+<rect class="box" x="320" y="108" width="220" height="58" rx="10" fill="#eaf7ef" stroke="#7aa0c4"/>
+<text class="actor" x="430" y="137" text-anchor="middle" dominant-baseline="middle">PingController</text>
+<line class="lifeline" x1="430" y1="166" x2="430" y2="1097"/>
+<rect class="box" x="600" y="108" width="220" height="58" rx="10" fill="#fff3d9" stroke="#7aa0c4"/>
+<text class="actor" x="710" y="137" text-anchor="middle" dominant-baseline="middle">ReplyingKafkaTemplate</text>
+<line class="lifeline" x1="710" y1="166" x2="710" y2="1097"/>
+<rect class="box" x="880" y="108" width="220" height="58" rx="10" fill="#f1ecff" stroke="#7aa0c4"/>
+<text class="actor" x="990" y="137" text-anchor="middle" dominant-baseline="middle">Kafka Broker</text>
+<line class="lifeline" x1="990" y1="166" x2="990" y2="1097"/>
+<rect class="box" x="1160" y="108" width="220" height="58" rx="10" fill="#fdecef" stroke="#7aa0c4"/>
+<text class="actor" x="1270" y="137" text-anchor="middle" dominant-baseline="middle">PongHandler</text>
+<line class="lifeline" x1="1270" y1="166" x2="1270" y2="1097"/>
+<path class="call" d="M150 205 L430 205"/>
+<rect class="message-label" x="75" y="219" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="290" y="234.5" text-anchor="middle" dominant-baseline="middle">1. GET /ping/{message}</text>
+<path class="call" d="M430 313 L710 313"/>
+<rect class="message-label" x="355" y="327" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="570" y="342.5" text-anchor="middle" dominant-baseline="middle">2. sendAndReceive(pingTopic)</text>
+<path class="call" d="M710 421 L990 421"/>
+<rect class="message-label" x="635" y="435" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="850" y="450.5" text-anchor="middle" dominant-baseline="middle">3. send(&quot;ping-topic&quot;)</text>
+<path class="call" d="M990 529 L1270 529"/>
+<rect class="message-label" x="915" y="543" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="1130" y="558.5" text-anchor="middle" dominant-baseline="middle">4. @KafkaListener(ping-topic)</text>
+<path class="return" d="M1270 637 L990 637"/>
+<rect class="message-label" x="915" y="651" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="1130" y="666.5" text-anchor="middle" dominant-baseline="middle">5. @SendTo(&quot;pong-topic&quot;)</text>
+<path class="return" d="M990 745 L710 745"/>
+<rect class="message-label" x="635" y="759" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="850" y="774.5" text-anchor="middle" dominant-baseline="middle">6. reply via pong-topic</text>
+<path class="return" d="M710 853 L430 853"/>
+<rect class="message-label" x="355" y="867" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="570" y="882.5" text-anchor="middle" dominant-baseline="middle">7. Future.onSuccess { pong }</text>
+<path class="return" d="M430 961 L150 961"/>
+<rect class="message-label" x="75" y="975" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="290" y="990.5" text-anchor="middle" dominant-baseline="middle">8. pong response</text>
 </svg>

@@ -8,6 +8,8 @@ This example exercises **Spring Modulith JPA Demo** as a runnable Spring Modulit
 
 ## Sequence Diagram
 
+![jpa-demo sequence diagram](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-sequence-02.png)
+
 The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 Spring Modulith application with four logical modules — `organization`, `department`, `employee`, and `gateway` —

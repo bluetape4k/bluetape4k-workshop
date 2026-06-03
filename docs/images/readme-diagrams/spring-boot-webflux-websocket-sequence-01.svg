@@ -1,104 +1,66 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="520" viewBox="0 0 960 520" role="img" aria-label="WebFlux WebSocket connection/message sequence">
+<svg xmlns="http://www.w3.org/2000/svg" width="1420" height="1155" viewBox="0 0 1420 1155" role="img" aria-label="WebFlux WebSocket Flow">
 <defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
-    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
-  </marker>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <marker id="arrowBlue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M1 1 L7 4 L1 7 Z" fill="#5b8def"/></marker>
+  <marker id="arrowTeal" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M1 1 L7 4 L1 7 Z" fill="#45a7a1"/></marker>
   <style>
-    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter";font-size:38px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Mono";font-size:14px;font-weight:400;fill:#536273}
-    .smallLabel{font-family:"Architects Daughter";font-size:21px;font-weight:400;fill:#102033}
-    .mono{font-family:"Comic Mono";font-size:12px;font-weight:400;fill:#102033}
-    .small{font-family:"Comic Mono";font-size:12px;font-weight:400;fill:#536273}
-    .card{stroke-width:2.1;filter:url(#shadow)}
-    .lifeline{stroke:#b0bbca;stroke-width:1.5;stroke-dasharray:6 4;fill:none}
-    .reqArrow{stroke:#5B8DEF;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
-    .rspArrow{stroke:#45A7A1;stroke-width:2.1;stroke-dasharray:7 4;fill:none;marker-end:url(#arrow)}
-    .msgLabel{font-family:"Comic Mono";font-size:13px;fill:#102033}
+    .canvas{fill:#f7f9fc}
+    .frame{fill:#ffffff;stroke:#d8e0ea;stroke-width:1.5}
+    .title{font-family:"Architects Daughter";font-size:34px;fill:#102033}
+    .subtitle{font-family:"Comic Mono";font-size:13px;fill:#536273}
+    .actor{font-family:"Architects Daughter";font-size:17px;fill:#102033}
+    .message{font-family:"Comic Mono";font-size:12px;fill:#263445;paint-order:stroke;stroke:#ffffff;stroke-width:4px;stroke-linejoin:round}
+    .detail{font-family:"Comic Mono";font-size:11px;fill:#536273}
+    .lifeline{stroke:#b8c4d3;stroke-width:1.4;stroke-dasharray:7 6}
+    .call{stroke:#5b8def;stroke-width:2.15;fill:none;marker-end:url(#arrowBlue)}
+    .return{stroke:#45a7a1;stroke-width:2.05;stroke-dasharray:7 5;fill:none;marker-end:url(#arrowTeal)}
+    .box{stroke-width:1.8;filter:url(#shadow)}
   </style>
 </defs>
-<rect class="canvas" width="960" height="520"/>
-<rect class="frame" x="24" y="20" width="912" height="480" rx="22"/>
-
-<!-- Title -->
-<text class="title" x="48" y="66">WebFlux WebSocket Flow</text>
-<text class="subtitle" x="52" y="88">Netty → ReactiveWebSocketHandler → QuoteGenerator → Flux&lt;Quote&gt; streaming</text>
-
-<!-- Participants cx: 90, 260, 460, 680, 870 -->
-<!-- Browser/Client -->
-<g transform="translate(34,104)">
-  <rect class="card" x="0" y="0" width="112" height="68" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" style="font-size:17px" x="56" y="28" text-anchor="middle">Browser</text>
-  <text class="smallLabel" style="font-size:17px" x="56" y="52" text-anchor="middle">Client</text>
-</g>
-<!-- Netty (via Router) -->
-<g transform="translate(200,104)">
-  <rect class="card" x="0" y="0" width="120" height="68" rx="12" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" style="font-size:17px" x="60" y="24" text-anchor="middle">Netty +</text>
-  <text class="smallLabel" style="font-size:17px" x="60" y="48" text-anchor="middle">Router</text>
-  <text class="small" x="60" y="66" text-anchor="middle">/websocket</text>
-</g>
-<!-- ReactiveWebSocketConfig -->
-<g transform="translate(396,104)">
-  <rect class="card" x="0" y="0" width="140" height="68" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="smallLabel" style="font-size:17px" x="70" y="24" text-anchor="middle">Reactive</text>
-  <text class="smallLabel" style="font-size:17px" x="70" y="48" text-anchor="middle">WS Config</text>
-  <text class="small" x="70" y="66" text-anchor="middle">HandlerMapping</text>
-</g>
-<!-- ReactiveWebSocketHandler -->
-<g transform="translate(610,104)">
-  <rect class="card" x="0" y="0" width="140" height="68" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" style="font-size:17px" x="70" y="24" text-anchor="middle">Reactive WS</text>
-  <text class="smallLabel" style="font-size:17px" x="70" y="48" text-anchor="middle">Handler</text>
-  <text class="small" x="70" y="66" text-anchor="middle">handle(session)</text>
-</g>
-<!-- QuoteGenerator -->
-<g transform="translate(808,104)">
-  <rect class="card" x="0" y="0" width="128" height="68" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="smallLabel" style="font-size:17px" x="64" y="28" text-anchor="middle">Quote</text>
-  <text class="smallLabel" style="font-size:17px" x="64" y="52" text-anchor="middle">Generator</text>
-  <text class="small" x="64" y="68" text-anchor="middle">Flux&lt;Quote&gt;</text>
-</g>
-
-<!-- Lifelines cx: 90, 260, 466, 680, 872 -->
-<line class="lifeline" x1="90" y1="172" x2="90" y2="490"/>
-<line class="lifeline" x1="260" y1="172" x2="260" y2="490"/>
-<line class="lifeline" x1="466" y1="172" x2="466" y2="490"/>
-<line class="lifeline" x1="680" y1="172" x2="680" y2="490"/>
-<line class="lifeline" x1="872" y1="172" x2="872" y2="490"/>
-
-<!-- Step 1: WS Upgrade request -->
-<text class="msgLabel" x="48" y="206">1. WebSocket Upgrade (HTTP → WS)</text>
-<path class="reqArrow" d="M90,210 L252,210"/>
-
-<!-- Step 2: Router → ReactiveWebSocketConfiguration -->
-<text class="msgLabel" x="272" y="242">2. SampleWebfluxRouter: route /websocket</text>
-<path class="reqArrow" d="M260,246 L458,246"/>
-
-<!-- Step 3: Config → Handler: handle(session) -->
-<text class="msgLabel" x="478" y="278">3. handle(WebSocketSession)</text>
-<path class="reqArrow" d="M466,282 L672,282"/>
-
-<!-- Step 4: Handler → QuoteGenerator: fetchQuoteStringAsFlux -->
-<text class="msgLabel" x="692" y="314">4. fetchQuoteStringAsFlux(2s)</text>
-<path class="reqArrow" d="M680,318 L864,318"/>
-
-<!-- Step 5: QuoteGenerator returns Flux<Quote> -->
-<text class="msgLabel" x="692" y="350">5. Flux&lt;Quote&gt;</text>
-<path class="rspArrow" d="M864,354 L688,354"/>
-
-<!-- Step 6: Loop - stream messages to client -->
-<rect x="48" y="368" width="900" height="54" rx="8" fill="#F1ECFF" stroke="#8A72D6" stroke-width="1.5"/>
-<text class="mono" x="60" y="386" fill="#8A72D6">LOOP: every 2s</text>
-<text class="msgLabel" x="692" y="406">6. Quote emitted from Flux</text>
-<path class="rspArrow" d="M680,412 L98,412"/>
-
-<!-- Step 7: client can also send text -->
-<text class="msgLabel" x="48" y="446">7. client sends text frame (session.receive)</text>
-<path class="reqArrow" d="M90,450 L672,450"/>
-
-<!-- Step 8: Connection close -->
-<text class="msgLabel" x="48" y="482">8. WebSocket CLOSE (Mono&lt;Void&gt; complete)</text>
-<path class="rspArrow" d="M260,486 L98,486"/>
+<rect class="canvas" width="1420" height="1155"/>
+<rect class="frame" x="24" y="20" width="1372" height="1115" rx="18"/>
+<text class="title" x="48" y="58">WebFlux WebSocket Flow</text>
+<text class="subtitle" x="50" y="84">Netty → ReactiveWebSocketHandler → QuoteGenerator → Flux&lt;Quote&gt; streaming</text>
+<rect class="box" x="40" y="108" width="220" height="58" rx="10" fill="#e8f3ff" stroke="#7aa0c4"/>
+<text class="actor" x="150" y="137" text-anchor="middle" dominant-baseline="middle">Browser Client</text>
+<line class="lifeline" x1="150" y1="166" x2="150" y2="1097"/>
+<rect class="box" x="320" y="108" width="220" height="58" rx="10" fill="#eaf7ef" stroke="#7aa0c4"/>
+<text class="actor" x="430" y="130" text-anchor="middle" dominant-baseline="middle">Netty + Router</text>
+<text class="actor" x="430" y="144" text-anchor="middle" dominant-baseline="middle">/websocket</text>
+<line class="lifeline" x1="430" y1="166" x2="430" y2="1097"/>
+<rect class="box" x="600" y="108" width="220" height="58" rx="10" fill="#fff3d9" stroke="#7aa0c4"/>
+<text class="actor" x="710" y="130" text-anchor="middle" dominant-baseline="middle">Reactive WS Config</text>
+<text class="actor" x="710" y="144" text-anchor="middle" dominant-baseline="middle">HandlerMapping</text>
+<line class="lifeline" x1="710" y1="166" x2="710" y2="1097"/>
+<rect class="box" x="880" y="108" width="220" height="58" rx="10" fill="#f1ecff" stroke="#7aa0c4"/>
+<text class="actor" x="990" y="130" text-anchor="middle" dominant-baseline="middle">Reactive WS Handler</text>
+<text class="actor" x="990" y="144" text-anchor="middle" dominant-baseline="middle">handle(session)</text>
+<line class="lifeline" x1="990" y1="166" x2="990" y2="1097"/>
+<rect class="box" x="1160" y="108" width="220" height="58" rx="10" fill="#fdecef" stroke="#7aa0c4"/>
+<text class="actor" x="1270" y="137" text-anchor="middle" dominant-baseline="middle">Quote Generator</text>
+<line class="lifeline" x1="1270" y1="166" x2="1270" y2="1097"/>
+<path class="call" d="M150 205 L430 205"/>
+<rect class="message-label" x="75" y="219" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="290" y="234.5" text-anchor="middle" dominant-baseline="middle">1. WebSocket Upgrade (HTTP → WS)</text>
+<path class="call" d="M430 313 L710 313"/>
+<rect class="message-label" x="355" y="327" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="570" y="342.5" text-anchor="middle" dominant-baseline="middle">2. SampleWebfluxRouter: route /websocket</text>
+<path class="call" d="M710 421 L990 421"/>
+<rect class="message-label" x="635" y="435" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="850" y="450.5" text-anchor="middle" dominant-baseline="middle">3. handle(WebSocketSession)</text>
+<path class="call" d="M990 529 L1270 529"/>
+<rect class="message-label" x="915" y="543" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="1130" y="558.5" text-anchor="middle" dominant-baseline="middle">4. fetchQuoteStringAsFlux(2s)</text>
+<path class="return" d="M1270 637 L990 637"/>
+<rect class="message-label" x="915" y="651" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="1130" y="666.5" text-anchor="middle" dominant-baseline="middle">5. Flux&lt;Quote&gt;</text>
+<path class="return" d="M990 745 L150 745"/>
+<rect class="message-label" x="290" y="759" width="560" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="570" y="774.5" text-anchor="middle" dominant-baseline="middle">6. Quote emitted from Flux</text>
+<path class="call" d="M150 853 L990 853"/>
+<rect class="message-label" x="290" y="867" width="560" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="570" y="882.5" text-anchor="middle" dominant-baseline="middle">7. client sends text frame (session.receive)</text>
+<path class="return" d="M430 961 L150 961"/>
+<rect class="message-label" x="75" y="975" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="290" y="990.5" text-anchor="middle" dominant-baseline="middle">8. WebSocket CLOSE (Mono&lt;Void&gt; complete)</text>
 </svg>

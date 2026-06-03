@@ -25,8 +25,6 @@ Duplicate-safe command handling with **Idempotency Key** pattern using Redis (Re
 
 ![spring-boot/idempotency Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-idempotency-readme-architecture-01.png)
 
-![idempotency Sequence Flow diagram](../../docs/images/readme-diagrams/spring-boot-idempotency-sequence-01.png)
-
 ## Core Features
 
 | Feature | Detail |

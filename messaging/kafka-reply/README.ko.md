@@ -29,10 +29,6 @@
 bluetape4k의 `CompletableFuture.onSuccess/onFailure`, `uninitialized()`, `KLoggingChannel`을 사용합니다.
 Spring Kafka 4 호환 Bluetape4k 모듈은 `bluetape4k-kafka4`를 사용합니다.
 
-## 아키텍처
-
-![kafka reply Sequence Flow diagram](../../docs/images/readme-diagrams/messaging-kafka-reply-sequence-01.png)
-
 ## 주요 구성 요소
 
 | Class | Role |

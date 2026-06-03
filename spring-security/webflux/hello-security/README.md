@@ -15,6 +15,8 @@ This example exercises **Spring Security WebFlux Hello** as a runnable Spring Se
 
 ## Sequence Diagram
 
+![hello-security sequence diagram](../../../docs/images/readme-diagrams/spring-security-webflux-hello-security-readme-sequence-01.png)
+
 The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 Reactive Spring Security example with WebFlux controllers, a custom login page, and an in-memory reactive user.
@@ -22,8 +24,6 @@ Reactive Spring Security example with WebFlux controllers, a custom login page, 
 ## Architecture
 
 ![Spring Security WebFlux Hello Graphviz architecture diagram](../../../docs/images/readme-diagrams/spring-security-webflux-hello-security-readme-architecture-01.png)
-
-![hello security Sequence Flow diagram](../../../docs/images/readme-diagrams/spring-security-webflux-hello-security-diagram-01.png)
 
 ## What This Module Shows
 

@@ -1,85 +1,63 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="480" viewBox="0 0 960 480" role="img" aria-label="QueryDSL Predicate Query Sequence">
+<svg xmlns="http://www.w3.org/2000/svg" width="1420" height="1155" viewBox="0 0 1420 1155" role="img" aria-label="QueryDSL Predicate Query Sequence">
 <defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="arrowBlue" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth"><path d="M1,1 L8,4.5 L1,8 Z" fill="#5B8DEF"/></marker>
-  <marker id="arrowTeal" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth"><path d="M1,1 L8,4.5 L1,8 Z" fill="#45A7A1"/></marker>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <marker id="arrowBlue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M1 1 L7 4 L1 7 Z" fill="#5b8def"/></marker>
+  <marker id="arrowTeal" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M1 1 L7 4 L1 7 Z" fill="#45a7a1"/></marker>
   <style>
-    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter";font-size:38px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Mono";font-size:14px;font-weight:400;fill:#536273}
-    .smallLabel{font-family:"Architects Daughter";font-size:21px;font-weight:400;fill:#102033}
-    .small{font-family:"Comic Mono";font-size:12px;font-weight:400;fill:#536273}
-    .card{stroke-width:2.1;filter:url(#shadow)}
-    .lifeline{stroke:#b0bbca;stroke-width:1.5;stroke-dasharray:6 4;fill:none}
-    .reqArrow{stroke:#5B8DEF;stroke-width:2.1;fill:none;marker-end:url(#arrowBlue)}
-    .rspArrow{stroke:#45A7A1;stroke-width:2.1;stroke-dasharray:7 4;fill:none;marker-end:url(#arrowTeal)}
+    .canvas{fill:#f7f9fc}
+    .frame{fill:#ffffff;stroke:#d8e0ea;stroke-width:1.5}
+    .title{font-family:"Architects Daughter";font-size:34px;fill:#102033}
+    .subtitle{font-family:"Comic Mono";font-size:13px;fill:#536273}
+    .actor{font-family:"Architects Daughter";font-size:17px;fill:#102033}
+    .message{font-family:"Comic Mono";font-size:12px;fill:#263445;paint-order:stroke;stroke:#ffffff;stroke-width:4px;stroke-linejoin:round}
+    .detail{font-family:"Comic Mono";font-size:11px;fill:#536273}
+    .lifeline{stroke:#b8c4d3;stroke-width:1.4;stroke-dasharray:7 6}
+    .call{stroke:#5b8def;stroke-width:2.15;fill:none;marker-end:url(#arrowBlue)}
+    .return{stroke:#45a7a1;stroke-width:2.05;stroke-dasharray:7 5;fill:none;marker-end:url(#arrowTeal)}
+    .box{stroke-width:1.8;filter:url(#shadow)}
   </style>
 </defs>
-<rect class="canvas" width="960" height="480"/>
-<rect class="frame" x="24" y="20" width="912" height="436" rx="16"/>
-<text class="title" x="48" y="66">QueryDSL Predicate Query Sequence</text>
-<text class="subtitle" x="48" y="90">MemberRepository.findAll(condition) → QueryDSL predicate → JPA/Hibernate → H2</text>
-
-<!-- Participants -->
-<rect class="card" x="40" y="108" width="110" height="44" rx="8" fill="#FDECEF" stroke="#DC6B82"/>
-<text class="smallLabel" style="font-size:17px" x="95" y="135" text-anchor="middle">Test</text>
-
-<rect class="card" x="210" y="108" width="160" height="44" rx="8" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" style="font-size:17px" x="290" y="135" text-anchor="middle">MemberRepository</text>
-
-<rect class="card" x="440" y="108" width="165" height="44" rx="8" fill="#EAF7EF" stroke="#58A978"/>
-<text class="smallLabel" style="font-size:17px" x="522" y="135" text-anchor="middle">QueryDSL Predicate</text>
-
-<rect class="card" x="680" y="108" width="160" height="44" rx="8" fill="#FFF3D9" stroke="#D6A441"/>
-<text class="smallLabel" style="font-size:17px" x="760" y="135" text-anchor="middle">JPA/Hibernate</text>
-
-<rect class="card" x="855" y="108" width="75" height="44" rx="8" fill="#E9F7F6" stroke="#45A7A1"/>
-<text class="smallLabel" style="font-size:17px" x="892" y="135" text-anchor="middle">H2</text>
-
-<!-- Lifelines -->
-<line class="lifeline" x1="95" y1="152" x2="95" y2="440"/>
-<line class="lifeline" x1="290" y1="152" x2="290" y2="440"/>
-<line class="lifeline" x1="522" y1="152" x2="522" y2="440"/>
-<line class="lifeline" x1="760" y1="152" x2="760" y2="440"/>
-<line class="lifeline" x1="892" y1="152" x2="892" y2="440"/>
-
-<!-- 1. findAll(condition) -->
-<rect fill="#EAF7EF" stroke="#58A978" stroke-width="1.2" x="40" y="172" width="120" height="22" rx="4"/>
-<text class="small" x="100" y="187" text-anchor="middle">1. findAll(condition)</text>
-<line class="reqArrow" x1="160" y1="183" x2="282" y2="183"/>
-
-<!-- 2. build predicate -->
-<rect fill="#E8F3FF" stroke="#5B8DEF" stroke-width="1.2" x="210" y="204" width="140" height="22" rx="4"/>
-<text class="small" x="280" y="219" text-anchor="middle">2. build BooleanExpr</text>
-<line class="reqArrow" x1="290" y1="215" x2="514" y2="215"/>
-
-<!-- 3. findAll(predicate) -->
-<rect fill="#EAF7EF" stroke="#58A978" stroke-width="1.2" x="210" y="246" width="140" height="22" rx="4"/>
-<text class="small" x="280" y="261" text-anchor="middle">3. findAll(predicate)</text>
-<line class="reqArrow" x1="290" y1="257" x2="752" y2="257"/>
-
-<!-- 4. generate JPQL -->
-<rect fill="#FFF3D9" stroke="#D6A441" stroke-width="1.2" x="680" y="278" width="140" height="22" rx="4"/>
-<text class="small" x="750" y="293" text-anchor="middle">4. generate JPQL</text>
-<line class="reqArrow" x1="760" y1="289" x2="847" y2="289"/>
-
-<!-- 5. execute SQL -->
-<rect fill="#FFF3D9" stroke="#D6A441" stroke-width="1.2" x="680" y="310" width="140" height="22" rx="4"/>
-<text class="small" x="750" y="325" text-anchor="middle">5. SELECT m.*, t.*</text>
-<line class="reqArrow" x1="760" y1="321" x2="847" y2="321"/>
-
-<!-- 6. ResultSet -->
-<rect fill="#f0faf8" stroke="#45A7A1" stroke-width="1.2" x="680" y="342" width="140" height="22" rx="4"/>
-<text class="small" x="750" y="357" text-anchor="middle">6. ResultSet</text>
-<line class="rspArrow" x1="847" y1="353" x2="768" y2="353"/>
-
-<!-- 7. map to Member entities -->
-<rect fill="#FFF3D9" stroke="#D6A441" stroke-width="1.2" x="210" y="374" width="140" height="22" rx="4"/>
-<text class="small" x="280" y="389" text-anchor="middle">7. Member entities</text>
-<line class="rspArrow" x1="752" y1="385" x2="350" y2="385"/>
-
-<!-- 8. searchPageSimple() -->
-<rect fill="#E8F3FF" stroke="#5B8DEF" stroke-width="1.2" x="40" y="406" width="130" height="22" rx="4"/>
-<text class="small" x="105" y="421" text-anchor="middle">8. Page~MemberTeamDto~</text>
-<line class="rspArrow" x1="282" y1="417" x2="170" y2="417"/>
+<rect class="canvas" width="1420" height="1155"/>
+<rect class="frame" x="24" y="20" width="1372" height="1115" rx="18"/>
+<text class="title" x="48" y="58">QueryDSL Predicate Query Sequence</text>
+<text class="subtitle" x="50" y="84">MemberRepository.findAll(condition) → QueryDSL predicate → JPA/Hibernate → H2</text>
+<rect class="box" x="40" y="108" width="220" height="58" rx="10" fill="#e8f3ff" stroke="#7aa0c4"/>
+<text class="actor" x="150" y="137" text-anchor="middle" dominant-baseline="middle">Test</text>
+<line class="lifeline" x1="150" y1="166" x2="150" y2="1097"/>
+<rect class="box" x="320" y="108" width="220" height="58" rx="10" fill="#eaf7ef" stroke="#7aa0c4"/>
+<text class="actor" x="430" y="137" text-anchor="middle" dominant-baseline="middle">MemberRepository</text>
+<line class="lifeline" x1="430" y1="166" x2="430" y2="1097"/>
+<rect class="box" x="600" y="108" width="220" height="58" rx="10" fill="#fff3d9" stroke="#7aa0c4"/>
+<text class="actor" x="710" y="137" text-anchor="middle" dominant-baseline="middle">QueryDSL Predicate</text>
+<line class="lifeline" x1="710" y1="166" x2="710" y2="1097"/>
+<rect class="box" x="880" y="108" width="220" height="58" rx="10" fill="#f1ecff" stroke="#7aa0c4"/>
+<text class="actor" x="990" y="137" text-anchor="middle" dominant-baseline="middle">JPA/Hibernate</text>
+<line class="lifeline" x1="990" y1="166" x2="990" y2="1097"/>
+<rect class="box" x="1160" y="108" width="220" height="58" rx="10" fill="#fdecef" stroke="#7aa0c4"/>
+<text class="actor" x="1270" y="137" text-anchor="middle" dominant-baseline="middle">H2</text>
+<line class="lifeline" x1="1270" y1="166" x2="1270" y2="1097"/>
+<path class="call" d="M150 205 L430 205"/>
+<rect class="message-label" x="75" y="219" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="290" y="234.5" text-anchor="middle" dominant-baseline="middle">1. findAll(condition)</text>
+<path class="call" d="M430 313 L710 313"/>
+<rect class="message-label" x="355" y="327" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="570" y="342.5" text-anchor="middle" dominant-baseline="middle">2. build BooleanExpr</text>
+<path class="call" d="M430 421 L990 421"/>
+<rect class="message-label" x="430" y="435" width="560" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="710" y="450.5" text-anchor="middle" dominant-baseline="middle">3. findAll(predicate)</text>
+<path class="call" d="M990 529 L1270 529"/>
+<rect class="message-label" x="915" y="543" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="1130" y="558.5" text-anchor="middle" dominant-baseline="middle">4. generate JPQL</text>
+<path class="call" d="M990 637 L1270 637"/>
+<rect class="message-label" x="915" y="651" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="1130" y="666.5" text-anchor="middle" dominant-baseline="middle">5. SELECT m.*, t.*</text>
+<path class="return" d="M1270 745 L990 745"/>
+<rect class="message-label" x="915" y="759" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="1130" y="774.5" text-anchor="middle" dominant-baseline="middle">6. ResultSet</text>
+<path class="return" d="M990 853 L430 853"/>
+<rect class="message-label" x="430" y="867" width="560" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="710" y="882.5" text-anchor="middle" dominant-baseline="middle">7. Member entities</text>
+<path class="return" d="M430 961 L150 961"/>
+<rect class="message-label" x="75" y="975" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="290" y="990.5" text-anchor="middle" dominant-baseline="middle">8. Page~MemberTeamDto~</text>
 </svg>

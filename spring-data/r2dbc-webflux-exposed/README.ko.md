@@ -15,6 +15,8 @@
 
 ## 시퀀스 다이어그램
 
+![r2dbc-webflux-exposed 시퀀스 다이어그램](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-exposed-readme-sequence-01.png)
+
 핵심 시퀀스는 호출자 또는 테스트 픽스처 -> 워크샵 어댑터 -> bluetape4k 헬퍼/API -> 외부 런타임 또는 인메모리 백엔드 -> 검증/응답 순서입니다. 전용 시퀀스 자산이 있는 모듈은 아래 이미지가 상호작용 순서를 보여주며, 그렇지 않은 경우 소스 테스트가 실행 가능한 시퀀스의 기준입니다.
 
 Spring Data R2DBC + Spring WebFlux + JetBrains Exposed ORM 조합이며, coroutine-first 데이터 접근 계층을 위해 **bluetape4k `R2dbcRepository`**를 사용합니다. Exposed table DSL은 schema definition을 처리하고, Spring WebFlux(functional + annotation route)는 HTTP를 처리합니다.
@@ -23,11 +25,7 @@ Spring Data R2DBC + Spring WebFlux + JetBrains Exposed ORM 조합이며, corouti
 
 ![R2DBC + WebFlux + Exposed ORM Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-exposed-readme-architecture-01.png)
 
-![R2DBC + WebFlux + Exposed ORM Diagram 1](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-exposed-readme-sequence-01.png)
-
 ## 아키텍처 다이어그램
-
-![r2dbc webflux exposed Sequence Flow diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-exposed-diagram-01.png)
 
 이 예제는 Spring Data R2DBC, Spring WebFlux, JetBrains Exposed ORM을 함께 사용합니다.
 R2DBC 환경에서 Exposed table definition을 적용하기 위해 `exposed-r2dbc` 모듈을 사용합니다.

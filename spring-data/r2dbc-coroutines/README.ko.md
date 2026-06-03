@@ -25,13 +25,9 @@ Spring Data R2DBC와 Kotlin coroutines를 사용하며, boilerplate 없는 react
 
 ![Spring Data R2DBC + Coroutines Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-coroutines-readme-architecture-01.png)
 
-![Spring Data R2DBC + Coroutines Diagram 1](../../docs/images/readme-diagrams/spring-data-r2dbc-coroutines-readme-sequence-01.png)
-
 ## 아키텍처 다이어그램
 
 ![r2dbc coroutines Class Structure diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-coroutines-diagram-01.png)
-
-![r2dbc coroutines Sequence Flow 2 diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-coroutines-sequence-01.png)
 
 ## 사용된 bluetape4k 기능
 

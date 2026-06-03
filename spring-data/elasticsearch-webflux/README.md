@@ -31,8 +31,6 @@ The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k h
 
 ![elasticsearch webflux Class Structure diagram](../../docs/images/readme-diagrams/spring-data-elasticsearch-webflux-diagram-01.png)
 
-![elasticsearch webflux Sequence Flow 2 diagram](../../docs/images/readme-diagrams/spring-data-elasticsearch-webflux-sequence-01.png)
-
 ## Introduction
 
 This example demonstrates how to use Spring Data Elasticsearch to do simple CRUD operations.

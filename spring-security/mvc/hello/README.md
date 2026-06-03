@@ -15,6 +15,8 @@ This example exercises **Spring Security MVC Hello** as a runnable Spring Securi
 
 ## Sequence Diagram
 
+![hello sequence diagram](../../../docs/images/readme-diagrams/spring-security-mvc-hello-readme-sequence-01.png)
+
 The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 Spring MVC security example with a custom login page, an in-memory user, and role-protected user content.
@@ -22,8 +24,6 @@ Spring MVC security example with a custom login page, an in-memory user, and rol
 ## Architecture
 
 ![Spring Security MVC Hello Graphviz architecture diagram](../../../docs/images/readme-diagrams/spring-security-mvc-hello-readme-architecture-01.png)
-
-![hello Sequence Flow diagram](../../../docs/images/readme-diagrams/spring-security-mvc-hello-diagram-01.png)
 
 ## What This Module Shows
 

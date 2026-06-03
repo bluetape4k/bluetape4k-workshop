@@ -1,81 +1,60 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="480" viewBox="0 0 960 480" role="img" aria-label="MongoDB Coroutine CRUD Sequence">
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="1155" viewBox="0 0 1180 1155" role="img" aria-label="MongoDB Coroutine CRUD Sequence">
 <defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="arrowBlue" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth"><path d="M1,1 L8,4.5 L1,8 Z" fill="#5B8DEF"/></marker>
-  <marker id="arrowTeal" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth"><path d="M1,1 L8,4.5 L1,8 Z" fill="#45A7A1"/></marker>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <marker id="arrowBlue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M1 1 L7 4 L1 7 Z" fill="#5b8def"/></marker>
+  <marker id="arrowTeal" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M1 1 L7 4 L1 7 Z" fill="#45a7a1"/></marker>
   <style>
-    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter";font-size:38px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Mono";font-size:14px;font-weight:400;fill:#536273}
-    .smallLabel{font-family:"Architects Daughter";font-size:21px;font-weight:400;fill:#102033}
-    .small{font-family:"Comic Mono";font-size:12px;font-weight:400;fill:#536273}
-    .card{stroke-width:2.1;filter:url(#shadow)}
-    .lifeline{stroke:#b0bbca;stroke-width:1.5;stroke-dasharray:6 4;fill:none}
-    .reqArrow{stroke:#5B8DEF;stroke-width:2.1;fill:none;marker-end:url(#arrowBlue)}
-    .rspArrow{stroke:#45A7A1;stroke-width:2.1;stroke-dasharray:7 4;fill:none;marker-end:url(#arrowTeal)}
+    .canvas{fill:#f7f9fc}
+    .frame{fill:#ffffff;stroke:#d8e0ea;stroke-width:1.5}
+    .title{font-family:"Architects Daughter";font-size:34px;fill:#102033}
+    .subtitle{font-family:"Comic Mono";font-size:13px;fill:#536273}
+    .actor{font-family:"Architects Daughter";font-size:17px;fill:#102033}
+    .message{font-family:"Comic Mono";font-size:12px;fill:#263445;paint-order:stroke;stroke:#ffffff;stroke-width:4px;stroke-linejoin:round}
+    .detail{font-family:"Comic Mono";font-size:11px;fill:#536273}
+    .lifeline{stroke:#b8c4d3;stroke-width:1.4;stroke-dasharray:7 6}
+    .call{stroke:#5b8def;stroke-width:2.15;fill:none;marker-end:url(#arrowBlue)}
+    .return{stroke:#45a7a1;stroke-width:2.05;stroke-dasharray:7 5;fill:none;marker-end:url(#arrowTeal)}
+    .box{stroke-width:1.8;filter:url(#shadow)}
   </style>
 </defs>
-<rect class="canvas" width="960" height="480"/>
-<rect class="frame" x="24" y="20" width="912" height="436" rx="16"/>
-<text class="title" x="48" y="66">MongoDB Coroutine CRUD Sequence</text>
-<text class="subtitle" x="48" y="90">PersonCoroutineRepository suspend operations → MongoDB Testcontainers</text>
-
-<!-- Participants -->
-<rect class="card" x="50" y="108" width="120" height="44" rx="8" fill="#FDECEF" stroke="#DC6B82"/>
-<text class="smallLabel" style="font-size:17px" x="110" y="135" text-anchor="middle">Test</text>
-
-<rect class="card" x="230" y="108" width="170" height="44" rx="8" fill="#EAF7EF" stroke="#58A978"/>
-<text class="smallLabel" style="font-size:17px" x="315" y="135" text-anchor="middle">PersonCoroutineRepo</text>
-
-<rect class="card" x="470" y="108" width="170" height="44" rx="8" fill="#F1ECFF" stroke="#8A72D6"/>
-<text class="smallLabel" style="font-size:17px" x="555" y="135" text-anchor="middle">ReactiveMongoTemplate</text>
-
-<rect class="card" x="710" y="108" width="150" height="44" rx="8" fill="#E9F7F6" stroke="#45A7A1"/>
-<text class="smallLabel" style="font-size:17px" x="785" y="135" text-anchor="middle">MongoDB</text>
-
-<!-- Lifelines -->
-<line class="lifeline" x1="110" y1="152" x2="110" y2="440"/>
-<line class="lifeline" x1="315" y1="152" x2="315" y2="440"/>
-<line class="lifeline" x1="555" y1="152" x2="555" y2="440"/>
-<line class="lifeline" x1="785" y1="152" x2="785" y2="440"/>
-
-<!-- 1. save(person) -->
-<rect fill="#EAF7EF" stroke="#58A978" stroke-width="1.2" x="50" y="172" width="110" height="22" rx="4"/>
-<text class="small" x="105" y="187" text-anchor="middle">1. save(person)</text>
-<line class="reqArrow" x1="160" y1="183" x2="307" y2="183"/>
-
-<!-- 2. insert document -->
-<rect fill="#F1ECFF" stroke="#8A72D6" stroke-width="1.2" x="230" y="204" width="140" height="22" rx="4"/>
-<text class="small" x="300" y="219" text-anchor="middle">2. insert document</text>
-<line class="reqArrow" x1="315" y1="215" x2="547" y2="215"/>
-
-<!-- 3. insertOne command -->
-<rect fill="#E9F7F6" stroke="#45A7A1" stroke-width="1.2" x="470" y="236" width="140" height="22" rx="4"/>
-<text class="small" x="540" y="251" text-anchor="middle">3. insertOne cmd</text>
-<line class="reqArrow" x1="555" y1="247" x2="777" y2="247"/>
-
-<!-- 4. saved Person -->
-<rect fill="#f0faf8" stroke="#45A7A1" stroke-width="1.2" x="50" y="268" width="120" height="22" rx="4"/>
-<text class="small" x="110" y="283" text-anchor="middle">4. saved Person</text>
-<line class="rspArrow" x1="777" y1="279" x2="160" y2="279"/>
-
-<!-- 5. findPersonByFirstname() -->
-<rect fill="#EAF7EF" stroke="#58A978" stroke-width="1.2" x="50" y="310" width="130" height="22" rx="4"/>
-<text class="small" x="115" y="325" text-anchor="middle">5. findByFirstname()</text>
-<line class="reqArrow" x1="180" y1="321" x2="307" y2="321"/>
-
-<!-- 6. find query -->
-<rect fill="#F1ECFF" stroke="#8A72D6" stroke-width="1.2" x="230" y="342" width="140" height="22" rx="4"/>
-<text class="small" x="300" y="357" text-anchor="middle">6. find by firstname</text>
-<line class="reqArrow" x1="315" y1="353" x2="547" y2="353"/>
-
-<!-- 7. find command -->
-<rect fill="#E9F7F6" stroke="#45A7A1" stroke-width="1.2" x="470" y="374" width="140" height="22" rx="4"/>
-<text class="small" x="540" y="389" text-anchor="middle">7. find cmd</text>
-<line class="reqArrow" x1="555" y1="385" x2="777" y2="385"/>
-
-<!-- 8. Person? -->
-<rect fill="#f0f4ff" stroke="#5B8DEF" stroke-width="1.2" x="50" y="406" width="120" height="22" rx="4"/>
-<text class="small" x="110" y="421" text-anchor="middle">8. Person?</text>
-<line class="rspArrow" x1="777" y1="417" x2="160" y2="417"/>
+<rect class="canvas" width="1180" height="1155"/>
+<rect class="frame" x="24" y="20" width="1132" height="1115" rx="18"/>
+<text class="title" x="48" y="58">MongoDB Coroutine CRUD Sequence</text>
+<text class="subtitle" x="50" y="84">PersonCoroutineRepository suspend operations → MongoDB Testcontainers</text>
+<rect class="box" x="40" y="108" width="220" height="58" rx="10" fill="#e8f3ff" stroke="#7aa0c4"/>
+<text class="actor" x="150" y="137" text-anchor="middle" dominant-baseline="middle">Test</text>
+<line class="lifeline" x1="150" y1="166" x2="150" y2="1097"/>
+<rect class="box" x="333.3333333333333" y="108" width="220" height="58" rx="10" fill="#eaf7ef" stroke="#7aa0c4"/>
+<text class="actor" x="443.3333333333333" y="137" text-anchor="middle" dominant-baseline="middle">PersonCoroutineRepo</text>
+<line class="lifeline" x1="443.3333333333333" y1="166" x2="443.3333333333333" y2="1097"/>
+<rect class="box" x="626.6666666666666" y="108" width="220" height="58" rx="10" fill="#fff3d9" stroke="#7aa0c4"/>
+<text class="actor" x="736.6666666666666" y="137" text-anchor="middle" dominant-baseline="middle">ReactiveMongoTemplate</text>
+<line class="lifeline" x1="736.6666666666666" y1="166" x2="736.6666666666666" y2="1097"/>
+<rect class="box" x="920" y="108" width="220" height="58" rx="10" fill="#f1ecff" stroke="#7aa0c4"/>
+<text class="actor" x="1030" y="137" text-anchor="middle" dominant-baseline="middle">MongoDB</text>
+<line class="lifeline" x1="1030" y1="166" x2="1030" y2="1097"/>
+<path class="call" d="M150 205 L443.3333333333333 205"/>
+<rect class="message-label" x="74.99999999999997" y="219" width="443.3333333333333" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="296.66666666666663" y="234.5" text-anchor="middle" dominant-baseline="middle">1. save(person)</text>
+<path class="call" d="M443.3333333333333 313 L736.6666666666666 313"/>
+<rect class="message-label" x="368.33333333333337" y="327" width="443.3333333333333" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="590" y="342.5" text-anchor="middle" dominant-baseline="middle">2. insert document</text>
+<path class="call" d="M736.6666666666666 421 L1030 421"/>
+<rect class="message-label" x="661.6666666666665" y="435" width="443.33333333333337" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="883.3333333333333" y="450.5" text-anchor="middle" dominant-baseline="middle">3. insertOne cmd</text>
+<path class="return" d="M1030 529 L150 529"/>
+<rect class="message-label" x="310" y="543" width="560" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="590" y="558.5" text-anchor="middle" dominant-baseline="middle">4. saved Person</text>
+<path class="call" d="M150 637 L443.3333333333333 637"/>
+<rect class="message-label" x="74.99999999999997" y="651" width="443.3333333333333" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="296.66666666666663" y="666.5" text-anchor="middle" dominant-baseline="middle">5. findByFirstname()</text>
+<path class="call" d="M443.3333333333333 745 L736.6666666666666 745"/>
+<rect class="message-label" x="368.33333333333337" y="759" width="443.3333333333333" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="590" y="774.5" text-anchor="middle" dominant-baseline="middle">6. find by firstname</text>
+<path class="call" d="M736.6666666666666 853 L1030 853"/>
+<rect class="message-label" x="661.6666666666665" y="867" width="443.33333333333337" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="883.3333333333333" y="882.5" text-anchor="middle" dominant-baseline="middle">7. find cmd</text>
+<path class="return" d="M1030 961 L150 961"/>
+<rect class="message-label" x="310" y="975" width="560" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="590" y="990.5" text-anchor="middle" dominant-baseline="middle">8. Person?</text>
 </svg>

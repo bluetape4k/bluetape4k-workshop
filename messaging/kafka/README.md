@@ -27,7 +27,7 @@ The module is organized around the sample entry point or test fixture, the bluet
 
 The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
-![Kafka Demo sequence diagram](../../docs/images/readme-diagrams/messaging-kafka-reply-sequence-01.png)
+![Kafka Demo sequence diagram](../../docs/images/readme-diagrams/messaging-kafka-sequence-01.png)
 
 This is a basic message publishing and consuming example that uses Spring Kafka.
 It starts Testcontainers Kafka automatically with bluetape4k's `KafkaServer.Launcher`, and handles the Spring Kafka 4 publishing path in a coroutine-friendly way with `suspendSend()` from `bluetape4k-kafka4`.

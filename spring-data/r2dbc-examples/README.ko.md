@@ -31,8 +31,6 @@
 
 ![r2dbc examples Class Structure diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-examples-diagram-01.png)
 
-![r2dbc examples Sequence Flow 2 diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-examples-sequence-01.png)
-
 ## 참고 자료
 
 * [Spring Data Examples - r2dbc/example](https://github.com/spring-projects/spring-data-examples/tree/main/r2dbc/example)

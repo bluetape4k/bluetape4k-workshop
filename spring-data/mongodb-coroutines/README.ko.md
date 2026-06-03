@@ -31,8 +31,6 @@
 
 ![mongodb coroutines Class Structure diagram](../../docs/images/readme-diagrams/spring-data-mongodb-coroutines-diagram-01.png)
 
-![mongodb coroutines Sequence Flow 2 diagram](../../docs/images/readme-diagrams/spring-data-mongodb-coroutines-sequence-01.png)
-
 이 예제는 `Spring Data Mongo`와 Kotlin Coroutines로 MongoDB 작업을 수행합니다.
 
 ## 참고
