@@ -12,7 +12,7 @@ JaVers entity change-history auditing integrated with JetBrains Exposed JDBC and
 
 ## Architecture
 
-![exposed/javers-audit Graphviz architecture diagram](../../docs/images/readme-diagrams/exposed-javers-audit-readme-architecture-01.png)
+![exposed/javers-audit architecture diagram](../../docs/images/readme-diagrams/exposed-javers-audit-architecture-01.png)
 
 ## Core Features
 

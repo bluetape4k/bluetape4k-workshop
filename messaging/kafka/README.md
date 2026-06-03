@@ -8,7 +8,7 @@ This example exercises **Kafka Demo** as a runnable message-driven workflow work
 
 ## Architecture Diagram
 
-![Kafka Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/messaging-kafka-readme-architecture-01.png)
+![Kafka Demo architecture diagram](../../docs/images/readme-diagrams/messaging-kafka-architecture-01.png)
 
 The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.messaging` as the source of truth when comparing this README with the code.
 

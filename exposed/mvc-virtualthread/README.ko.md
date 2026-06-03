@@ -12,7 +12,7 @@ Spring MVC + Virtual Threads + Exposed JDBC 조합이며 **`@Transactional`을 �
 
 ## 아키텍처
 
-![exposed/mvc-virtualthread Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/exposed-mvc-virtualthread-readme-architecture-01.png)
+![exposed/mvc-virtualthread Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/exposed-mvc-virtualthread-architecture-01.png)
 
 ## 사용한 bluetape4k 기능
 

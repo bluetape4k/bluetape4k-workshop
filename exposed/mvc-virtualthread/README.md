@@ -12,7 +12,7 @@ Spring MVC + Virtual Threads + Exposed JDBC — **no `@Transactional`**.
 
 ## Architecture
 
-![exposed/mvc-virtualthread Graphviz architecture diagram](../../docs/images/readme-diagrams/exposed-mvc-virtualthread-readme-architecture-01.png)
+![exposed/mvc-virtualthread architecture diagram](../../docs/images/readme-diagrams/exposed-mvc-virtualthread-architecture-01.png)
 
 ## Used bluetape4k Features
 

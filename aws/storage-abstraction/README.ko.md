@@ -12,7 +12,7 @@ Spring Profile을 통해 애플리케이션 코드를 바꾸지 않고 로컬 �
 
 ## 아키텍처
 
-![Storage Abstraction Workshop Graphviz architecture diagram](../../docs/images/readme-diagrams/aws-storage-abstraction-readme-architecture-01.png)
+![Storage Abstraction Workshop architecture diagram](../../docs/images/readme-diagrams/aws-storage-abstraction-architecture-01.png)
 
 ## 주요 기능
 
