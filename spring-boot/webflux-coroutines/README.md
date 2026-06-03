@@ -29,67 +29,67 @@ The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k h
 
 ![Spring WebFlux + Coroutines sequence diagram](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-sequence-01.png)
 
-Spring WebFlux 환경에서 Kotlin Coroutines를 사용하는 예제입니다.
-bluetape4k의 `Dispatchers.VT`, `Flow<T>.async`, `Runtimex` 등을 활용해 Virtual Thread 기반 반응형 컨트롤러를 구성합니다.
+This example uses Kotlin Coroutines in a Spring WebFlux environment.
+It uses bluetape4k `Dispatchers.VT`, `Flow<T>.async`, `Runtimex`, and related utilities to build Virtual Thread based reactive controllers.
 
-## 아키텍처
+## Architecture
 
 ![webflux coroutines Architecture diagram](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-architecture-01.png)
 
-## 구현 방식 비교
+## Implementation Strategy Comparison
 
-세 가지 Controller로 Dispatcher 전략에 따른 차이를 보여줍니다:
+Three controllers show the differences between dispatcher strategies:
 
-| Controller | Dispatcher 전략 | 설명 |
+| Controller | Dispatcher Strategy | Description |
 |---|---|---|
-| `DefaultCoroutineController` | `Dispatchers.IO` | 기본 I/O 디스패처로 블로킹 작업 처리 |
-| `IOCoroutineController` | `Dispatchers.IO` (명시적) | I/O 집약적 작업에 최적화 |
+| `DefaultCoroutineController` | `Dispatchers.IO` | Handles blocking work with the default I/O dispatcher |
+| `IOCoroutineController` | `Dispatchers.IO` (explicit) | Optimized for I/O-intensive work |
 | `VTCoroutineController` | `Dispatchers.VT` | bluetape4k Virtual Thread CoroutineDispatcher |
-| `CoroutineHandler` | `coRouter` DSL | 함수형 엔드포인트 방식 |
+| `CoroutineHandler` | `coRouter` DSL | Functional endpoint style |
 
-## 사용된 bluetape4k 기능
+## bluetape4k Features Used
 
-| 기능 | 아티팩트 | 코드 위치 | 이점 |
+| Feature | Artifact | Code Location | Benefit |
 |---|---|---|---|
-| `Dispatchers.VT` | `bluetape4k-coroutines` | `VTCoroutineController` | Virtual Thread 기반 CoroutineDispatcher — OS 스레드 없이 코루틴 실행 |
-| `Flow<T>.async { }` | `bluetape4k-coroutines` | `VTCoroutineController.concurrentFlow()` | Flow 요소를 병렬로 변환하는 연산자 |
-| `KLoggingChannel` | `bluetape4k-logging` | 모든 companion object | 코루틴 컨텍스트 포함 구조적 로깅 |
-| `Base58.randomString()` | `bluetape4k-io` | `Banner.kt` | URL-safe 랜덤 문자열 생성 |
-| `Runtimex.availableProcessors` | `bluetape4k-core` | `NettyConfig.kt` | CPU 코어 수 기반 이벤트루프 크기 계산 |
+| `Dispatchers.VT` | `bluetape4k-coroutines` | `VTCoroutineController` | Virtual Thread based CoroutineDispatcher that runs coroutines without OS threads |
+| `Flow<T>.async { }` | `bluetape4k-coroutines` | `VTCoroutineController.concurrentFlow()` | Operator that transforms Flow elements in parallel |
+| `KLoggingChannel` | `bluetape4k-logging` | All companion objects | Structured logging with coroutine context |
+| `Base58.randomString()` | `bluetape4k-io` | `Banner.kt` | Generates URL-safe random strings |
+| `Runtimex.availableProcessors` | `bluetape4k-core` | `NettyConfig.kt` | Calculates event loop size based on CPU core count |
 
 ## bluetape4k Before / After
 
-### `Dispatchers.VT` vs 표준 Dispatcher
+### `Dispatchers.VT` vs Standard Dispatcher
 
 ```kotlin
-// Before — 표준 Dispatchers.IO 또는 수동 ExecutorService
+// Before — Standard Dispatchers.IO or manual ExecutorService
 class CoroutineController : CoroutineScope by CoroutineScope(Dispatchers.IO) {
-    // 또는
+    // Or
     private val executor = Executors.newVirtualThreadPerTaskExecutor()
     val Dispatchers.VirtualThread: CoroutineDispatcher
         get() = executor.asCoroutineDispatcher()
 }
 
-// After — bluetape4k Dispatchers.VT (싱글톤, 즉시 사용)
+// After — bluetape4k Dispatchers.VT (singleton, ready to use)
 class VTCoroutineController(
     private val builder: WebClient.Builder,
 ) : CoroutineScope by CoroutineScope(Dispatchers.VT + CoroutineName("vt")) {
-    // Virtual Thread per task, 앱 전체에서 공유
+    // Virtual Thread per task, shared across the application
 }
 ```
 
-### `Flow<T>.async` vs 순차 flow
+### `Flow<T>.async` vs Sequential Flow
 
 ```kotlin
-// Before — 순차 처리 (병렬 없음)
+// Before — Sequential processing (no parallelism)
 fun sequentialFlow(): Flow<Banner> = flow {
-    repeat(4) { emit(retrieveBanner()) }  // 4개 순차 실행
+    repeat(4) { emit(retrieveBanner()) }  // Runs 4 tasks sequentially
 }
 
-// After — bluetape4k .async { } 로 병렬 변환
+// After — Parallel transformation with bluetape4k .async { }
 fun concurrentFlow(): Flow<Banner> =
     (0..3).asFlow()
-        .async { retrieveBanner() }  // 4개 동시 실행 후 순서 유지
+        .async { retrieveBanner() }  // Runs 4 tasks concurrently while preserving order
 ```
 
 ### `Runtimex` vs `Runtime.getRuntime()`
@@ -98,11 +98,11 @@ fun concurrentFlow(): Flow<Banner> =
 // Before — Java Runtime API
 val eventLoopSize = maxOf(Runtime.getRuntime().availableProcessors() * 8, 64)
 
-// After — bluetape4k Runtimex (Kotlin 프로퍼티 스타일)
+// After — bluetape4k Runtimex (Kotlin property style)
 val eventLoopSize = maxOf(Runtimex.availableProcessors * 8, 64)
 ```
 
-## Netty 고성능 설정
+## High-Performance Netty Configuration
 
 ```kotlin
 @Bean
@@ -120,21 +120,21 @@ fun reactorResourceFactory(): ReactorResourceFactory = ReactorResourceFactory().
 }
 ```
 
-## 실행
+## Run
 
 ```bash
 ./gradlew :webflux-coroutines:bootRun
 
-# VT Dispatcher 엔드포인트
+# VT Dispatcher endpoints
 curl http://localhost:8080/controller/vt/suspend
 curl http://localhost:8080/controller/vt/concurrent-flow
 
-# 함수형 라우터 엔드포인트
+# Functional router endpoint
 curl http://localhost:8080/handler/banners
 ```
 
-## 참고
+## References
 
-- [Spring WebFlux + Coroutines 공식 문서](https://docs.spring.io/spring-framework/reference/languages/kotlin/coroutines.html)
-- [Reactor Meltdown 설명](https://blog.frankel.ch/project-reactor-meltdown/)
+- [Official Spring WebFlux + Coroutines documentation](https://docs.spring.io/spring-framework/reference/languages/kotlin/coroutines.html)
+- [Reactor Meltdown explanation](https://blog.frankel.ch/project-reactor-meltdown/)
 - [bluetape4k-coroutines](https://github.com/bluetape4k/bluetape4k-projects)

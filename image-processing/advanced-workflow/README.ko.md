@@ -8,13 +8,6 @@
 
 ![image-processing-advanced-workflow 시나리오 다이어그램](../../docs/images/readme-diagrams/image-processing-advanced-workflow-scenario-01.png)
 
-## 흐름 다이어그램
-
-1. `image-processing-advanced-workflow` 예제에 필요한 로컬 런타임을 준비합니다.
-2. 예제 시나리오를 담당하는 애플리케이션, 컨트롤러, 서비스 또는 테스트 픽스처를 실행합니다.
-3. 반복적인 인프라 처리는 bluetape4k 유틸리티 또는 Spring/Kotlin 통합 기능에 위임합니다.
-4. 샘플 출력, HTTP 응답, 저장소 상태, metric, trace 또는 테스트 기대값으로 결과를 검증합니다.
-
 ## 시퀀스 다이어그램
 
 핵심 시퀀스는 호출자 또는 테스트 픽스처 -> 워크샵 어댑터 -> bluetape4k 헬퍼/API -> 외부 런타임 또는 인메모리 백엔드 -> 검증/응답 순서입니다. 전용 시퀀스 이미지가 있는 모듈은 아래 이미지가 상호작용 순서를 보여주며, 없는 경우 소스 테스트가 실행 가능한 시퀀스의 기준입니다.
@@ -31,7 +24,7 @@
 
 ![Image Processing Architecture](../../docs/images/readme-diagrams/image-processing-advanced-workflow-architecture-01.png)
 
-## Used Bluetape4k Features
+## 사용한 Bluetape4k 기능
 
 | 기능 | 모듈/artifact | 코드 위치 | 이점 |
 |---|---|---|---|
@@ -165,10 +158,10 @@ storage.upload(key, variant, UploadOptions(contentType = "image/webp"))
 ## 테스트
 
 ```bash
-# 결정적 unit test를 실행합니다. native VIPS test는 기본으로 명시적 skip됩니다.
+# Runs deterministic unit tests and explicitly skips native VIPS tests by default.
 ./gradlew :image-processing-advanced-workflow:test
 
-# Java 25와 libvips가 있으면 VIPS integration test까지 실행합니다.
+# Runs VIPS integration tests when Java 25 and libvips are available.
 ./gradlew :image-processing-advanced-workflow:test -Dvips.enabled=true
 ```
 

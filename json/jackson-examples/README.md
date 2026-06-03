@@ -25,74 +25,74 @@ The module is organized around the sample entry point or test fixture, the bluet
 
 The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
-Jackson 3.x 라이브러리를 사용하여 JSON 데이터를 Java 객체로 변환하거나 Java 객체를 JSON 데이터로 변환하는 방법을 설명합니다.
-bluetape4k의 `Jackson.defaultJsonMapper`로 KotlinModule과 JavaTimeModule을 자동 등록하여 Kotlin data class와 Java Time API를 즉시 직렬화합니다.
+Describes how to convert JSON data to Java objects or Java objects to JSON data using the Jackson 3.x library.
+Automatically registers KotlinModules and JavaTimeModules with bluetape4k's `Jackson.defaultJsonMapper` to instantly serialize Kotlin data classes and Java Time APIs.
 
 ![Jackson Examples diagram](../../docs/images/readme-diagrams/json-jackson-examples-diagram-01.png)
 
-## 사용된 bluetape4k 기능
+## bluetape4k features used
 
-| 기능 | 아티팩트 | 코드 위치 | 이점 |
+| function | artifact | code location | advantage |
 |---|---|---|---|
-| `Jackson.defaultJsonMapper` | `bluetape4k-jackson3` | `AbstractJacksonTest` | KotlinModule + JavaTimeModule + Blackbird 사전 등록 — 별도 설정 불필요 |
-| `KLogging` | `bluetape4k-logging` | companion object | Lazy 람다 로깅 (`log.debug { "..." }`) |
-| `Fakers.faker` | `bluetape4k-junit5` | `AbstractJacksonTest` | JavaFaker 기반 테스트 데이터 생성 |
+| `Jackson.defaultJsonMapper` | `bluetape4k-jackson3` | `AbstractJacksonTest` | KotlinModule + JavaTimeModule + Blackbird pre-registration — no separate configuration required |
+| `KLogging` | `bluetape4k-logging` | companion object | Lazy Lambda Logging (`log.debug { "..." }`) |
+| `Fakers.faker` | `bluetape4k-junit5` | `AbstractJacksonTest` | JavaFaker-based test data generation |
 
 ## Before / After
 
 ```kotlin
-// Before — KotlinModule과 JavaTimeModule을 수동으로 등록
+// Before — Manually register KotlinModule and JavaTimeModule
 val mapper = JsonMapper.builder()
     .addModule(KotlinModule.Builder().build())
     .addModule(JavaTimeModule())
     .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
     .build()
 
-// After — bluetape4k Jackson.defaultJsonMapper (이미 등록됨)
+// After — bluetape4k Jackson.defaultJsonMapper (already registered)
 val mapper: JsonMapper = Jackson.defaultJsonMapper
     .rebuild()
     .apply { configure(SerializationFeature.INDENT_OUTPUT, true) }
     .build()
 ```
 
-## 주요 기능
+## Main features
 
-- **직렬화 / 역직렬화** — `ObjectMapper.writeValueAsString()` / `readValue()` 를 이용한 기본 변환
-- **필드 제어** — `@JsonIgnore`, `@JsonProperty` 로 필드 노출·이름 제어
-- **중첩 객체 평탄화** — `@JsonUnwrapped(prefix = "...")` 로 중첩 객체를 단일 레벨로 펼치기
-- **다형성 처리** — `@JsonTypeInfo` + `@JsonSubTypes` 로 상속 계층 직렬화
-- **원시 JSON 삽입** — `@JsonRawValue` 로 JSON 문자열을 그대로 삽입
-- **뷰 기반 필터링** — `@JsonView` 로 응답 컨텍스트별 필드 선별 노출
-- **날짜/시간 직렬화** — `JavaTimeModule` + `@JsonFormat` 으로 Java Time API 지원
-- **순환 참조 처리** — `@JsonManagedReference` / `@JsonBackReference` 로 양방향 관계 처리
-- **동적 속성** — `@JsonAnySetter` / `@JsonAnyGetter` 로 임의 키-값 처리
-- **루트 래핑** — `@JsonRootValue` 로 최상위 객체 이름 래핑
-- **단방향 직렬화** — `@JsonIgnoreProperties(allowGetters = true)` 패턴 활용
+- **Serialization / Deserialization** — Basic conversion using `ObjectMapper.writeValueAsString()` / `readValue()`
+- **Field Control** — Control field exposure and name with `@JsonIgnore`, `@JsonProperty`
+- **Flattening Nested Objects** — Unfolding nested objects into a single level with `@JsonUnwrapped(prefix = "...")`
+- **Polymorphism handling** — Serialize inheritance hierarchy with `@JsonTypeInfo` + `@JsonSubTypes`
+- **Insert raw JSON** — Insert the JSON string as is into `@JsonRawValue`
+- **View-based filtering** — Selectively expose fields by response context with `@JsonView`
+- **Date/Time Serialization** — Java Time API support with `JavaTimeModule` + `@JsonFormat`
+- **Circular reference handling** — Handling bi-directional relationships with `@JsonManagedReference` / `@JsonBackReference`
+- **Dynamic properties** — Arbitrary key-value processing with `@JsonAnySetter` / `@JsonAnyGetter`
+- **Root Wrapping** — Wrap the top-level object name with `@JsonRootValue`
+- **One-way serialization** — Utilizing the `@JsonIgnoreProperties(allowGetters = true)` pattern
 
-## 핵심 애노테이션
+## Core annotations
 
-| 애노테이션 | 위치 | 설명 |
+| annotation | location | explanation |
 |---|---|---|
-| `@JsonIgnore` | 필드 | 직렬화·역직렬화에서 해당 필드 제외 |
-| `@JsonProperty("name")` | 필드 | JSON 키 이름을 지정된 값으로 변경 |
-| `@JsonUnwrapped(prefix = "p_")` | 필드 | 중첩 객체 필드를 상위 레벨로 평탄화 |
-| `@JsonView(Views.Public::class)` | 필드 | 특정 뷰에서만 해당 필드 노출 |
-| `@JsonTypeInfo` | 클래스 | 다형성 타입 정보를 JSON 에 포함 |
-| `@JsonSubTypes` | 클래스 | 다형성 하위 타입 목록 등록 |
-| `@JsonRawValue` | 필드 | 필드 값을 JSON 문자열로 그대로 출력 |
-| `@JsonRootValue` | 클래스 | 최상위 객체를 클래스명으로 래핑 |
-| `@JsonManagedReference` | 필드 | 순환 참조에서 직렬화 방향 지정 (부모 측) |
-| `@JsonBackReference` | 필드 | 순환 참조에서 역방향 (자식 측, 직렬화 제외) |
-| `@JsonAnySetter` | 메서드 | JSON 에서 알 수 없는 키를 동적으로 수신 |
-| `@JsonAnyGetter` | 메서드 | Map 속성을 JSON 루트 레벨로 펼쳐서 직렬화 |
-| `@JsonFormat(pattern = "...")` | 필드 | 날짜/시간 형식 커스터마이징 |
+| `@JsonIgnore` | field | Exclude the field from serialization/deserialization |
+| `@JsonProperty("name")` | field | Change JSON key name to specified value |
+| `@JsonUnwrapped(prefix = "p_")` | field | Flatten nested object fields to higher level |
+| `@JsonView(Views.Public::class)` | field | Expose the field only in certain views |
+| `@JsonTypeInfo` | class | Include polymorphic type information in JSON |
+| `@JsonSubTypes` | class | Register polymorphic subtype list |
+| `@JsonRawValue` | field | Output field values ​​as JSON strings |
+| `@JsonRootValue` | class | Wrapping the top-level object with a class name |
+| `@JsonManagedReference` | field | Specifying serialization direction in circular references (parent side) |
+| `@JsonBackReference` | field | Reverse from circular references (child side, not serialized) |
+| `@JsonAnySetter` | method | Dynamically receiving an unknown key from JSON |
+| `@JsonAnyGetter` | method | Serialize Map properties by expanding them to the JSON root level |
+| `@JsonFormat(pattern = "...")` | field | Customizing date/time format |
 
-## 사용 예제
+## Usage example
 
-### ObjectMapper 설정
+### ObjectMapper settings
 
 ```kotlin
-// bluetape4k Jackson 기본 설정 (KotlinModule + JavaTimeModule 포함)
+// bluetape4k Jackson default settings (including KotlinModule + JavaTimeModule)
 val mapper: JsonMapper = Jackson.defaultJsonMapper
     .rebuild()
     .apply {
@@ -101,7 +101,7 @@ val mapper: JsonMapper = Jackson.defaultJsonMapper
     .build()
 ```
 
-### 직렬화 (객체 → JSON)
+### Serialization (object → JSON)
 
 ```kotlin
 data class Friend(
@@ -110,20 +110,20 @@ data class Friend(
     val secret: String? = null,
 )
 
-val friend = Friend("Alice", "비밀값")
+val friend = Friend("Alice", "secret value")
 val json = mapper.writeValueAsString(friend)
-// 결과: {"name":"Alice"}  — secret 필드 제외
+// Result: {"name":"Alice"} — excluding secret field
 ```
 
-### 역직렬화 (JSON → 객체)
+### Deserialize (JSON → Object)
 
 ```kotlin
-val json = """{"name":"Alice","secret":"무시됨"}"""
+val json = """{"name":"Alice","secret":"ignored"}"""
 val friend = mapper.readValue<Friend>(json)
-// friend.secret == null  — @JsonIgnore 로 역직렬화도 제외
+// friend.secret == null — also exclude deserialization with @JsonIgnore
 ```
 
-### @JsonUnwrapped — 중첩 객체 평탄화
+### @JsonUnwrapped — Flatten nested objects
 
 ```kotlin
 data class Address(val street: String?, val number: Int?)
@@ -135,11 +135,11 @@ class Person {
     var mainAddress: Address? = null
 }
 
-// 직렬화 결과:
+// Serialization results:
 // {"name":"John","mainAddress_street":"Main Street","mainAddress_number":100}
 ```
 
-### @JsonTypeInfo — 다형성 처리
+### @JsonTypeInfo — Polymorphism handling
 
 ```kotlin
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
@@ -149,10 +149,10 @@ class Person {
 )
 open class Person(var name: String)
 
-// 직렬화 결과: {"type":"student","name":"Bob","school":"Seoul Univ"}
+// Serialized result: {"type":"student","name":"Bob","school":"Seoul Univ"}
 ```
 
-### @JsonFormat — 날짜/시간 커스텀 형식
+### @JsonFormat — Date/time custom format
 
 ```kotlin
 class Report {
@@ -163,50 +163,50 @@ class Report {
     var createdAt: ZonedDateTime? = null
 }
 
-// reportDate 직렬화 결과: "01/01/2024"
-// createdAt  직렬화 결과: "01/01/2024|14:30|+09:00"
+// reportDate serialization result: "01/01/2024"
+// createdAt serialization result: "01/01/2024 | 14:30 | +09:00"
 ```
 
-## Kotlin 모듈
+## Kotlin module
 
-Jackson 3.x 에서 Kotlin data class 를 올바르게 역직렬화하려면 `KotlinModule` 이 필요합니다.
-`bluetape4k-jackson3` 는 `Jackson.defaultJsonMapper` 에 `KotlinModule` 과 `JavaTimeModule` 을 사전 등록합니다.
+`KotlinModule` is required to properly deserialize Kotlin data classes in Jackson 3.x.
+`bluetape4k-jackson3` pre-registers `KotlinModule` and `JavaTimeModule` in `Jackson.defaultJsonMapper`.
 
 ```kotlin
-// 직접 설정 시
+// When setting directly
 val mapper = JsonMapper.builder()
     .addModule(KotlinModule.Builder().build())
     .addModule(JavaTimeModule())
     .build()
 ```
 
-`jackson-module-blackbird` 는 리플렉션 기반 접근자를 바이트코드 생성으로 대체하여 성능을 향상시킵니다.
+`jackson-module-blackbird` improves performance by replacing reflection-based accessors with bytecode generation.
 
 ```kotlin
 // build.gradle.kts
 implementation(Libs.jackson3_module_blackbird)
 ```
 
-## 테스트 목록
+## Test list
 
-| 테스트 파일 | 다루는 내용 |
+| test file | What we cover |
 |---|---|
-| `IgnoreExample` | `@JsonIgnore` 직렬화·역직렬화 |
-| `JsonUnwrappedExample` | `@JsonUnwrapped` 평탄화 |
-| `JsonViewExample` | `@JsonView` 뷰 기반 필터링 |
-| `PolymorphismExample` | `@JsonTypeInfo` / `@JsonSubTypes` 다형성 |
-| `RawValueExample` | `@JsonRawValue` 원시 JSON 삽입 |
-| `RenameExample` | `@JsonProperty` 필드명 변경 |
-| `JavaTimeExample` | `@JsonFormat` 날짜/시간 형식 변환 |
-| `CyclicExample` | `@JsonManagedReference` / `@JsonBackReference` 순환 참조 |
-| `DynamicAttributeExample` | `@JsonAnySetter` / `@JsonAnyGetter` 동적 속성 |
-| `OnewayExample` | 단방향 직렬화 |
-| `RootValueExample` | `@JsonRootValue` 루트 래핑 |
-| `SimpleExamples` | 기본 직렬화·역직렬화 예제 |
+| `IgnoreExample` | `@JsonIgnore` Serialization/Deserialization |
+| `JsonUnwrappedExample` | `@JsonUnwrapped` Flattening |
+| `JsonViewExample` | `@JsonView` View-based filtering |
+| `PolymorphismExample` | `@JsonTypeInfo` / `@JsonSubTypes` polymorphism |
+| `RawValueExample` | `@JsonRawValue` Insert raw JSON |
+| `RenameExample` | `@JsonProperty` Change field name |
+| `JavaTimeExample` | `@JsonFormat` Date/Time Format Conversion |
+| `CyclicExample` | `@JsonManagedReference` / `@JsonBackReference` circular reference |
+| `DynamicAttributeExample` | `@JsonAnySetter` / `@JsonAnyGetter` Dynamic properties |
+| `OnewayExample` | One-way serialization |
+| `RootValueExample` | `@JsonRootValue` Root Wrapping |
+| `SimpleExamples` | Basic serialization/deserialization example |
 
-## 참고
+## reference
 
-- [Jackson 공식 문서](https://github.com/FasterXML/jackson)
+- [Jackson Official Document](https://github.com/FasterXML/jackson)
 - [Jackson Annotations Wiki](https://github.com/FasterXML/jackson-annotations/wiki/Jackson-Annotations)
 - [jackson-module-kotlin](https://github.com/FasterXML/jackson-module-kotlin)
 - [Jackson JavaTimeModule](https://github.com/FasterXML/jackson-modules-java8)

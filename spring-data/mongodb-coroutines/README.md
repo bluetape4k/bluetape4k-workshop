@@ -27,25 +27,25 @@ The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k h
 
 ![mongodb-coroutine demo sequence diagram](../../docs/images/readme-diagrams/spring-data-mongodb-coroutines-sequence-01.png)
 
-## 아키텍처 다이어그램
+## Architecture Diagram
 
 ![mongodb coroutines Class Structure diagram](../../docs/images/readme-diagrams/spring-data-mongodb-coroutines-diagram-01.png)
 
 ![mongodb coroutines Sequence Flow 2 diagram](../../docs/images/readme-diagrams/spring-data-mongodb-coroutines-sequence-01.png)
 
-MongoDB 관련 작업을 `Spring Data Mongo` 와 Kotlin Coroutines 으로 수행하는 예입니다.
+This example performs MongoDB work with `Spring Data Mongo` and Kotlin Coroutines.
 
-## 참고
+## References
 
 * [Spring Data MongoDB - Kotlin examples](https://github.com/spring-projects/spring-data-examples/tree/main/mongodb/kotlin)
 
 * [Spring Data MongoDB - Reactive examples](https://github.com/spring-projects/spring-data-examples/tree/main/mongodb/reactive)
 
-## 처리 흐름
+## Processing Flow
 
 ![mongodb-coroutine demo Diagram 1](../../docs/images/readme-diagrams/spring-data-mongodb-coroutines-readme-sequence-01.png)
 
-## 설명
+## Explanation
 
 ### Value defaulting on entity construction
 
@@ -99,67 +99,67 @@ operations.find<Person>(Query(Person::firstname isEqualTo "Tyrion"))
 ### Coroutines and Flow support
 
 ```kotlin
-// suspend 함수로 단일 결과 조회
+// Fetch a single result with a suspend function
 val person = operations.findAll<Person>().awaitSingle()
 
-// Flow로 스트리밍 조회 (backpressure 지원)
+// Stream results with Flow (backpressure support)
 val persons = operations.findAll<Person>().asFlow().toList()
 ```
 
-## 사용된 bluetape4k 기능
+## Used bluetape4k Features
 
-| 기능 | 아티팩트 | 코드 위치 | 이점 |
+| Feature | Artifact | Code location | Benefit |
 |---|---|---|---|
-| `MongoDBServer.Launcher.mongoDB` | `bluetape4k-testcontainers` | `MongoClientConfig.kt`, `ReactiveMongoConfig.kt` | Testcontainers MongoDB 싱글톤 — JVM 전체에서 컨테이너 한 번만 기동 |
-| `KLoggingChannel` | `bluetape4k-logging` | 모든 companion object | 코루틴 컨텍스트 포함 구조적 로깅 |
-| `runSuspendIO { }` | `bluetape4k-junit5` | `FlowAndCoroutineTest` | `Dispatchers.IO`에서 suspend 테스트 실행 — IO 블로킹 없이 코루틴 테스트 |
-| `Flow.log("label")` | `bluetape4k-coroutines` | `FlowAndCoroutineTest` | Flow 각 요소에 구조적 로그 출력 — 디버깅/추적 단순화 |
-| `Fakers.faker` | `bluetape4k-junit5` | `AbstractMongodbTest` | 테스트 데이터 생성기 — 재사용 가능한 fake 인스턴스 제공 |
-| `shouldBeEqualTo` | `bluetape4k-core` | 테스트 전체 | 가독성 높은 단언문 |
+| `MongoDBServer.Launcher.mongoDB` | `bluetape4k-testcontainers` | `MongoClientConfig.kt`, `ReactiveMongoConfig.kt` | Testcontainers MongoDB singleton — starts one container for the entire JVM |
+| `KLoggingChannel` | `bluetape4k-logging` | All companion objects | Structured logging that includes coroutine context |
+| `runSuspendIO { }` | `bluetape4k-junit5` | `FlowAndCoroutineTest` | Runs suspend tests on `Dispatchers.IO` — coroutine tests without IO blocking |
+| `Flow.log("label")` | `bluetape4k-coroutines` | `FlowAndCoroutineTest` | Emits structured logs for each Flow element — simplifies debugging and tracing |
+| `Fakers.faker` | `bluetape4k-junit5` | `AbstractMongodbTest` | Test data generator — provides a reusable fake instance |
+| `shouldBeEqualTo` | `bluetape4k-core` | All tests | Readable assertions |
 
 ## bluetape4k Before / After
 
-### `MongoDBServer.Launcher` vs 직접 컨테이너 생성
+### `MongoDBServer.Launcher` vs Manual Container Creation
 
 ```kotlin
-// Before — 테스트 클래스마다 새 MongoDBContainer 기동
+// Before — start a new MongoDBContainer for every test class
 @Testcontainers
 class MyTest {
     companion object {
         @Container
-        val mongo = MongoDBContainer("mongo:6.0")  // 매번 새 컨테이너
+        val mongo = MongoDBContainer("mongo:6.0")  // new container every time
     }
 }
 
-// After — bluetape4k 싱글톤 런처 (JVM 전체에서 하나의 컨테이너 재사용)
+// After — bluetape4k singleton launcher (reuse one container for the entire JVM)
 class MongoClientConfig: AbstractMongoClientConfiguration() {
     override fun configureClientSettings(builder: MongoClientSettings.Builder) {
         builder.applyConnectionString(
             ConnectionString(MongoDBServer.Launcher.mongoDB.connectionString)
-        )  // 이미 기동된 인스턴스를 반환 — 컨테이너 재기동 없음
+        )  // returns the already-started instance — no container restart
     }
 }
 ```
 
-### `Flow.log("label")` vs 수동 로깅
+### `Flow.log("label")` vs Manual Logging
 
 ```kotlin
-// Before — 각 요소에 로그를 찍으려면 onEach + 수동 로그 호출
+// Before — use onEach and manual log calls to log each element
 val persons = operations.findAll<Person>()
     .asFlow()
     .onEach { log.debug { "person=$it" } }
     .toList()
 
-// After — bluetape4k Flow.log() (구조적 로그 자동)
+// After — bluetape4k Flow.log() (automatic structured logging)
 val persons = operations.findAll<Person>().asFlow()
-    .log("persons")   // 각 emit/complete/error 자동 로깅
+    .log("persons")   // automatically logs each emit/complete/error event
     .toList()
 ```
 
 ### `runSuspendIO { }` vs runBlocking + Dispatchers.IO
 
 ```kotlin
-// Before — 테스트에서 IO 디스패처 지정 및 블로킹 래핑
+// Before — specify the IO dispatcher and wrap the test in a blocking call
 @Test
 fun `find person`() {
     runBlocking(Dispatchers.IO) {
@@ -168,50 +168,50 @@ fun `find person`() {
     }
 }
 
-// After — bluetape4k runSuspendIO (JUnit 5 확장 + IO 디스패처 내장)
+// After — bluetape4k runSuspendIO (JUnit 5 extension + built-in IO dispatcher)
 @Test
 fun `find person`() = runSuspendIO {
     val person = operations.insert<Person>().one(newPerson()).awaitSingle()
-    // 테스트 컨텍스트에서 바로 suspend 함수 호출 가능
+    // can call suspend functions directly in the test context
 }
 ```
 
-## 취소·구조적 동시성·컨텍스트 전파
+## Cancellation, Structured Concurrency, and Context Propagation
 
-### `CoroutineCrudRepository` Flow와 취소 전파
+### `CoroutineCrudRepository` Flow and Cancellation Propagation
 
-`PersonCoroutineRepository.findAllByFirstname()` 이 반환하는 `Flow<Person>` 은
-Reactor `Flux`를 `asFlow()` 로 변환한 것입니다. 코루틴 스코프가 취소되면 upstream `Flux`
-구독도 즉시 취소되어 MongoDB 커서가 반환됩니다.
+The `Flow<Person>` returned by `PersonCoroutineRepository.findAllByFirstname()` is
+a Reactor `Flux` converted with `asFlow()`. When the coroutine scope is cancelled,
+the upstream `Flux` subscription is cancelled immediately and the MongoDB cursor is released.
 
 ```kotlin
 val job = launch {
     repository.findAllByFirstname("Tyrion")   // Flow<Person>
         .collect { person ->
-            // 이 collect가 실행 중 job.cancel() 호출 시
-            // Flow 수집 중단 + MongoDB 커서 자동 해제
+            // when job.cancel() is called while this collect is running
+            // Flow collection stops and the MongoDB cursor is released automatically
         }
 }
 delay(50)
-job.cancel()   // 취소 신호가 Flow → Flux → MongoDB 커서까지 전파됨
+job.cancel()   // cancellation propagates through Flow -> Flux -> MongoDB cursor
 ```
 
-### `@Tailable` 커서와 백프레셔
+### `@Tailable` Cursors and Backpressure
 
-`PersonCoroutineRepository.findWithTailableCursorBy()` 는 MongoDB tailable 커서를
-`Flux<Person>` 으로 노출합니다. 이를 `.asFlow()` 로 변환하면 코루틴 백프레셔
-(`buffer`, `conflate` 연산자)를 활용해 소비 속도를 제어할 수 있습니다.
+`PersonCoroutineRepository.findWithTailableCursorBy()` exposes a MongoDB tailable cursor
+as `Flux<Person>`. Converting it with `.asFlow()` lets you control consumption speed with
+coroutine backpressure operators such as `buffer` and `conflate`.
 
 ```kotlin
 repository.findWithTailableCursorBy()
     .asFlow()
-    .buffer(capacity = 10)          // 최대 10개 버퍼링
+    .buffer(capacity = 10)          // buffer up to 10 items
     .collect { person ->
-        processSlowly(person)       // 소비가 느려도 tailable 커서가 대기
+        processSlowly(person)       // the tailable cursor waits even if consumption is slow
     }
 ```
 
-## 빌드 및 테스트
+## Build and Test
 
 ```bash
 ./gradlew :spring-data-mongodb-coroutines:test

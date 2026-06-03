@@ -25,69 +25,69 @@ The module is organized around the sample entry point or test fixture, the bluet
 
 The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
-Bluetape4k Workshop 에서 공용으로 사용하고자 하는 기능을 제공하기 위해 만든 모듈입니다.
+This module provides shared utilities used across Bluetape4k Workshop examples.
 
-대부분 `Bluetape4k` 에서 미리 제공하는 기능을 사용할 수 있지만, 추가적인 기능이 필요한 경우 해당 모듈을 사용할 수 있습니다.
+Most features are already provided by `Bluetape4k`, but this module fills the gaps when workshop examples need additional utilities.
 
-## 주요 기능
+## Key Features
 
-- **RestClientExtensions**: `RestClient` 확장 함수 (GET, POST, PUT, PATCH, DELETE)
-- **WebClientExtensions**: `WebClient` 리액티브 확장 함수
-- **WebTestClientExtensions**: `WebTestClient` 테스트 확장 함수
-- **AbstractSpringTest**: Spring 통합 테스트 기본 클래스
+- **RestClientExtensions**: `RestClient` extension functions (GET, POST, PUT, PATCH, DELETE)
+- **WebClientExtensions**: Reactive `WebClient` extension functions
+- **WebTestClientExtensions**: Test extension functions for `WebTestClient`
+- **AbstractSpringTest**: Base class for Spring integration tests
 
-## 모듈 구성
+## Module Structure
 
 ![shared Architecture diagram](../docs/images/readme-diagrams/shared-diagram-01.png)
 
-## 제공 유틸리티 목록
+## Provided Utilities
 
-### RestClientExtensions (동기 HTTP 클라이언트)
+### RestClientExtensions (Synchronous HTTP Client)
 
-Spring `RestClient`에 메서드 체인을 간결하게 래핑한 확장 함수입니다.
+Extension functions that wrap Spring `RestClient` method chains in a concise form.
 
-| 함수 | HTTP 메서드 | 설명 |
+| Function | HTTP Method | Description |
 |---|---|---|
-| `httpGet(uri, accept?)` | GET | 단순 조회 |
-| `httpHead(uri, accept?)` | HEAD | 헤더만 조회 |
-| `httpPost(uri, value?, ...)` | POST | 단일 객체 전송 |
-| `httpPost<T>(uri, publisher, ...)` | POST | Reactor Publisher 스트림 전송 |
-| `httpPost<T>(uri, flow, ...)` | POST | Kotlin Flow 스트림 전송 |
-| `httpPut(uri, value?, ...)` | PUT | 단일 객체 수정 |
-| `httpPatch(uri, value?, ...)` | PATCH | 부분 수정 |
-| `httpDelete(uri, accept?)` | DELETE | 삭제 |
+| `httpGet(uri, accept?)` | GET | Simple retrieval |
+| `httpHead(uri, accept?)` | HEAD | Header-only retrieval |
+| `httpPost(uri, value?, ...)` | POST | Send a single object |
+| `httpPost<T>(uri, publisher, ...)` | POST | Send a Reactor Publisher stream |
+| `httpPost<T>(uri, flow, ...)` | POST | Send a Kotlin Flow stream |
+| `httpPut(uri, value?, ...)` | PUT | Update a single object |
+| `httpPatch(uri, value?, ...)` | PATCH | Partial update |
+| `httpDelete(uri, accept?)` | DELETE | Delete |
 
-### WebClientExtensions (비동기/리액티브 HTTP 클라이언트)
+### WebClientExtensions (Asynchronous/Reactive HTTP Client)
 
-Spring `WebClient`용 동일한 시그니처의 확장 함수입니다. `Publisher<T>` 및 `Flow<T>` 오버로드를 제공하여 리액티브/코루틴 스트림 요청을 단순화합니다.
+Extension functions with the same signatures for Spring `WebClient`. `Publisher<T>` and `Flow<T>` overloads simplify reactive and coroutine stream requests.
 
-### WebTestClientExtensions (통합 테스트용)
+### WebTestClientExtensions (For Integration Tests)
 
-`WebTestClient`에 HTTP 상태 검증(`httpStatus` 파라미터)을 내장한 확장 함수입니다. `exchange()` + `expectStatus()` 호출을 한 줄로 줄입니다.
+Extension functions for `WebTestClient` with built-in HTTP status assertions through the `httpStatus` parameter. They reduce `exchange()` + `expectStatus()` calls to one line.
 
 ```kotlin
-// 사용 예시
+// Usage example
 webTestClient.httpGet("/tasks/1", HttpStatus.OK)
     .expectBody<Task>().returnResult()
 
 webTestClient.httpPost("/tasks", task, HttpStatus.CREATED)
 ```
 
-## 사용 방법
+## Usage
 
-`build.gradle.kts`에 의존성을 추가합니다.
+Add the dependency to `build.gradle.kts`.
 
 ```kotlin
-// 프로덕션 코드에서
+// For production code
 implementation(project(":shared"))
 
-// 테스트 코드에서
+// For test code
 testImplementation(project(":shared"))
 ```
 
-### AbstractSpringTest 상속
+### Extending AbstractSpringTest
 
-Spring WebFlux 통합 테스트 기반 클래스를 상속하면 `WebTestClient` 빈이 자동 주입됩니다.
+Extending the Spring WebFlux integration test base class automatically injects the `WebTestClient` bean.
 
 ```kotlin
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -98,14 +98,14 @@ abstract class AbstractSpringTest {
 
 class MyControllerTest : AbstractSpringTest() {
     @Test
-    fun `태스크 조회 테스트`() {
+    fun `find tasks`() {
         webTestClient.httpGet("/tasks", HttpStatus.OK)
             .expectBodyList<Task>().hasSize(2)
     }
 }
 ```
 
-## 빌드
+## Build
 
 ```bash
 ./gradlew :shared:build

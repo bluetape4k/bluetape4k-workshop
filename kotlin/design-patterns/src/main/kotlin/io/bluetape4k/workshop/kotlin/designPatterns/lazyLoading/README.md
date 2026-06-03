@@ -36,23 +36,23 @@ tags:
     - Performance
 ---
 
-## 취지
+## Purpose
 
-Lazy Loading은 객체의 초기화를 필요한 시점까지 미루는 데 자주 사용되는 디자인 패턴입니다.
-적절하게 사용된다면 프로그램의 작동 효율성에 기여할 수 있습니다.
+Lazy Loading is a design pattern often used to postpone initialization of an object until it is needed.
+If used properly, they can contribute to the operational efficiency of the program.
 
 ![Lazy Loading](./doc/lazy-loading.png "Lazy Loading")
 
-## 적용 방법
+## How to apply
 
-Lazy Loading 방식은 적용할 때 다음과 같은 경우에 사용합니다.
+The Lazy Loading method is used in the following cases:
 
-* eager loading이 비용이 많이 들거나 로드할 객체가 전혀 필요하지 않을 수 있을 때
+* When eager loading is expensive or the object to be loaded may not be needed at all.
 
-## 실제 사례
+## Real examples
 
 * JPA annotations @OneToOne, @OneToMany, @ManyToOne, @ManyToMany and fetch = FetchType.LAZY
 
-## 참고
+## reference
 
 * [J2EE Design Patterns](http://www.amazon.com/J2EE-Design-Patterns-William-Crawford/dp/0596004273/ref=sr_1_2)

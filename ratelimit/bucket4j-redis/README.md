@@ -27,20 +27,20 @@ The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k h
 
 ![Spring Webflux with Bucket4j and Redis sequence diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-redis-sequence-01.png)
 
-## 아키텍처 다이어그램
+## Architecture Diagram
 
 ![bucket4j redis Architecture diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-redis-diagram-01.png)
 
-Spring Webflux Application 에서 Redis를 Bucket 저장소로 사용하는 Rate Limit 을 Bucket4j 로 구현한 예제입니다.
+This example implements Bucket4j rate limiting in a Spring WebFlux application with Redis as the bucket store.
 
-`bucket4j-spring-boot-starter` 를 사용하여 Bucket4j 를 쉽게 사용한 예입니다.
-단, IP 기반 Rate Limit 만 제공합니다.
+It demonstrates an easy Bucket4j setup with `bucket4j-spring-boot-starter`.
+However, it only provides IP-based rate limiting.
 
-## Redis 기반 Rate Limit 요청 처리 흐름
+## Redis-Based Rate Limit Request Flow
 
 ![Redis Rate Limit diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-redis-sequence-01.png)
 
-## application.yml 설정 예제
+## application.yml Configuration Example
 
 ```yaml
 spring:
@@ -54,42 +54,42 @@ spring:
 
 bucket4j:
   enabled: true
-  cache-to-use: redis-lettuce          # Lettuce 기반 Redis 저장소 사용
+  cache-to-use: redis-lettuce          # Use the Lettuce-based Redis store
   filters:
     - cache-name: buckets
-      filter-method: webflux           # WebFlux(비동기) 필터 모드
+      filter-method: webflux           # WebFlux (asynchronous) filter mode
       url: .*
       rate-limits:
         - bandwidths:
-            - capacity: 5              # 버킷 최대 토큰 수
+            - capacity: 5              # Maximum number of bucket tokens
               time: 10
-              unit: seconds            # 10초에 5회 허용
+              unit: seconds            # Allow 5 requests per 10 seconds
 ```
 
-## 주요 구성 요소
+## Key Components
 
-| 클래스 / 파일 | 역할 |
+| Class / File | Role |
 |---------------|------|
-| `Bucket4jRedisApplication.kt` | Spring Boot 진입점 |
-| `LettuceConfiguration.kt` | `RedisClient` 빈 등록 (Testcontainers URL 주입) |
-| `CoroutineController.kt` | `suspend` 기반 `GET /coroutines/hello`, `GET /coroutines/world` |
-| `ReactiveController.kt` | `Mono` 기반 `GET /reactive/hello`, `GET /reactive/world` |
-| `DebugMetricHandler.kt` | Bucket4j 메트릭 디버그 핸들러 |
-| `application.yml` | Redis 연결 + Bucket4j WebFlux 필터 설정 |
-| `CoroutineRateLimitTest.kt` | 코루틴 엔드포인트 Rate Limit 통합 테스트 |
-| `ReactiveRateLimitTest.kt` | Reactive 엔드포인트 Rate Limit 통합 테스트 |
+| `Bucket4jRedisApplication.kt` | Spring Boot entry point |
+| `LettuceConfiguration.kt` | Registers the `RedisClient` bean (injects the Testcontainers URL) |
+| `CoroutineController.kt` | `suspend`-based `GET /coroutines/hello` and `GET /coroutines/world` endpoints |
+| `ReactiveController.kt` | `Mono`-based `GET /reactive/hello` and `GET /reactive/world` endpoints |
+| `DebugMetricHandler.kt` | Bucket4j metric debug handler |
+| `application.yml` | Redis connection + Bucket4j WebFlux filter configuration |
+| `CoroutineRateLimitTest.kt` | Rate Limit integration test for coroutine endpoints |
+| `ReactiveRateLimitTest.kt` | Rate Limit integration test for reactive endpoints |
 
-## Caffeine 방식과의 비교
+## Comparison with the Caffeine Approach
 
-| 항목 | Caffeine (WebMVC) | Redis (WebFlux) |
+| Item | Caffeine (WebMVC) | Redis (WebFlux) |
 |------|-------------------|-----------------|
-| 저장소 | 인메모리 (단일 인스턴스) | Redis (분산 가능) |
-| 동기/비동기 | 동기 (Blocking) | 비동기 (Non-blocking) |
-| 스케일 아웃 | 불가 | 가능 (공유 버킷 상태) |
-| 설정 `cache-to-use` | `jcache` | `redis-lettuce` |
+| Store | In-memory (single instance) | Redis (distributable) |
+| Sync/Async | Synchronous (blocking) | Asynchronous (non-blocking) |
+| Scale-out | No | Yes (shared bucket state) |
+| `cache-to-use` Setting | `jcache` | `redis-lettuce` |
 | `filter-method` | `servlet` | `webflux` |
 
-## 빌드 및 테스트
+## Build and Test
 
 ```bash
 ./gradlew :bucket4j-redis:test

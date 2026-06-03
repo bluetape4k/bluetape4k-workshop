@@ -25,24 +25,24 @@ The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k h
 
 ![Vert.x Sql Client Example sequence diagram](../../docs/images/readme-diagrams/vertx-vertx-sqlclient-sequence-01.png)
 
-## Reactive SQL 처리 흐름
+## Reactive SQL Processing Flow
 
 ![Reactive SQL diagram](../../docs/images/readme-diagrams/vertx-vertx-sqlclient-sequence-01.png)
 
 ![Vert.x Sql Client Example Diagram 1](../../docs/images/readme-diagrams/vertx-vertx-sqlclient-readme-sequence-01.png)
 
-[Vert.x Sql Client](https://vertx.io/docs/vertx-sql-client/java/) 와
-[MyBatis Dynamic SQL](https://mybatis.org/mybatis-dynamic-sql/docs/introduction.html) 을
-사용하여 Async/Non-Blocking 방식으로 데이터베이스를 사용하는 예제입니다.
+[Vert.x Sql Client](https://vertx.io/docs/vertx-sql-client/java/) and
+[MyBatis Dynamic SQL](https://mybatis.org/mybatis-dynamic-sql/docs/introduction.html)
+are used in this example to access a database asynchronously and non-blockingly.
 
-이 방식은 MyBatis의 SQL Mapper 기능과 Vert.x의 Sql Client를 조합하여 사용하는 방식입니다.
+This approach combines MyBatis SQL Mapper capabilities with the Vert.x Sql Client.
 
 ## Mapping with Vert.x data objects
 
-Vert SqlClient 의 RowMapper 를 사용하지 않고, Rows 를 바로 DTO 에 매핑할 수 있다
-dataobject 폴더의 UserDataObject 구현을 참고
+Rows can be mapped directly to DTOs without using the Vert.x SqlClient `RowMapper`.
+See the `UserDataObject` implementation in the `dataobject` folder.
 
-1. `io.vertx:vertx-codegen:4.3.1:processor` 를 dependency 에 추가한다
+1. Add `io.vertx:vertx-codegen:4.3.1:processor` as a dependency.
 
 ```
 compileOnly(Libs.vertx_codegen)
@@ -50,7 +50,7 @@ kapt(Libs.vertx_codegen)
 kaptTest(Libs.vertx_codegen)
 ```
 
-2. module에 package-info.java 를 추가한다
+2. Add `package-info.java` to the module.
 
 [package-info.java](src/main/java/io/bluetape4k/workshop/sqlclient/package-info.java)
 
@@ -61,137 +61,137 @@ package io.bluetape4k.workshop.sqlclient;
 import io.vertx.codegen.annotations.ModuleGen;
 ```
 
-참고 자료 :
+Reference:
 [Mapping with Vert.x data objects](https://vertx.io/docs/vertx-sql-client-templates/java/#_mapping_with_vert_x_data_objects)
 
-## 사용된 bluetape4k 기능
+## Used bluetape4k Features
 
-| 기능 | 아티팩트 | 코드 위치 | 이점 |
+| Feature | Artifact | Code Location | Benefit |
 |---|---|---|---|
-| `withSuspendTransaction { }` | `bluetape4k-vertx` | `JDBCPoolExamples.kt`, `AbstractSqlClientTest` | `Pool`에서 트랜잭션을 열고 suspend 블록 실행 후 자동 커밋/롤백 |
-| `testWithSuspendTransaction` | `bluetape4k-vertx` | 테스트 전체 | `VertxTestContext`와 트랜잭션을 결합한 테스트 헬퍼 — 트랜잭션 자동 롤백으로 테스트 격리 |
-| `tupleMapperOfRecord` | `bluetape4k-vertx` | `SqlClientTemplateExamples.kt` | Kotlin data class / record를 Vert.x `TupleMapper`로 변환하는 유틸 |
-| `MySQL8Server.Launcher` | `bluetape4k-testcontainers` | `AbstractSqlClientTest` | Testcontainers MySQL 8 싱글톤 서버 — 모듈 내 모든 테스트가 하나의 컨테이너 재사용 |
-| `runSuspendIO { }` | `bluetape4k-junit5` | 테스트 전체 | `runBlocking(Dispatchers.IO)` 패턴을 JUnit 5 확장으로 제공 |
-| `KLoggingChannel` | `bluetape4k-logging` | 모든 companion object | 코루틴 컨텍스트 포함 구조적 로깅 |
-| `requireNotBlank` | `bluetape4k-core` | 입력 검증 | `require(value.isNotBlank())` 패턴을 확장 함수로 제공 |
-| `bluetape4k-assertions` | `bluetape4k-core` | 테스트 전체 | 가독성 높은 단언문 (`shouldBeEqualTo`, `shouldHaveSize` 등) |
+| `withSuspendTransaction { }` | `bluetape4k-vertx` | `JDBCPoolExamples.kt`, `AbstractSqlClientTest` | Opens a transaction from `Pool`, runs a suspend block, and automatically commits or rolls back |
+| `testWithSuspendTransaction` | `bluetape4k-vertx` | All tests | Test helper combining `VertxTestContext` with transactions; automatic transaction rollback isolates tests |
+| `tupleMapperOfRecord` | `bluetape4k-vertx` | `SqlClientTemplateExamples.kt` | Utility that converts Kotlin data classes / records into Vert.x `TupleMapper` instances |
+| `MySQL8Server.Launcher` | `bluetape4k-testcontainers` | `AbstractSqlClientTest` | Testcontainers MySQL 8 singleton server; all tests in the module reuse one container |
+| `runSuspendIO { }` | `bluetape4k-junit5` | All tests | Provides the `runBlocking(Dispatchers.IO)` pattern as a JUnit 5 extension |
+| `KLoggingChannel` | `bluetape4k-logging` | All companion objects | Structured logging with coroutine context |
+| `requireNotBlank` | `bluetape4k-core` | Input validation | Provides the `require(value.isNotBlank())` pattern as an extension function |
+| `bluetape4k-assertions` | `bluetape4k-core` | All tests | Readable assertions such as `shouldBeEqualTo` and `shouldHaveSize` |
 
 ## bluetape4k Before / After
 
-### `withSuspendTransaction { }` vs Future 체이닝
+### `withSuspendTransaction { }` vs Future Chaining
 
 ```kotlin
-// Before — Vert.x Future + 콜백 체이닝
+// Before - Vert.x Future + callback chaining
 pool.withTransaction { conn ->
     conn.query("SELECT * from test").execute()
         .flatMap { rows ->
-            // 결과 처리
+            // Process result
             Future.succeededFuture(rows)
         }
 }.onSuccess { result ->
-    // 성공 처리
+    // Handle success
 }.onFailure { err ->
-    // 실패 처리
+    // Handle failure
 }
 
-// After — bluetape4k withSuspendTransaction (suspend 블록으로 순차 처리)
+// After - bluetape4k withSuspendTransaction (sequential processing with a suspend block)
 pool.withSuspendTransaction { conn: SqlConnection ->
     val rows = conn.query("SELECT * from test").execute().coAwait()
-    // 결과 처리 — 예외 발생 시 자동 롤백
+    // Process result; automatically rolls back on exception
 }
 ```
 
-### `testWithSuspendTransaction` vs 수동 테스트 격리
+### `testWithSuspendTransaction` vs Manual Test Isolation
 
 ```kotlin
-// Before — 테스트 후 수동으로 데이터 정리 필요
+// Before - data must be cleaned up manually after the test
 @Test
 fun `test insert`(vertx: Vertx, testContext: VertxTestContext) {
     runBlocking(vertx.dispatcher()) {
         pool.withSuspendTransaction { conn ->
             conn.query("INSERT INTO test VALUES (3, 'Test')").execute().coAwait()
-            // 테스트 종료 후 데이터가 남아 다른 테스트에 영향
+            // Data remains after the test and can affect other tests
         }
         testContext.completeNow()
     }
 }
 
-// After — bluetape4k testWithSuspendTransaction (자동 롤백 + testContext 처리)
+// After - bluetape4k testWithSuspendTransaction (automatic rollback + testContext handling)
 @Test
 fun `test insert`(vertx: Vertx, testContext: VertxTestContext) = runSuspendIO {
     vertx.testWithSuspendTransaction(testContext, pool) {
         pool.query("INSERT INTO test VALUES (3, 'Test')").execute().coAwait()
-        // 테스트 완료 후 자동 롤백 → 테스트 간 격리 보장
+        // Automatically rolls back after test completion, ensuring isolation between tests
     }
 }
 ```
 
-### `MySQL8Server.Launcher` Testcontainers 싱글톤
+### `MySQL8Server.Launcher` Testcontainers Singleton
 
 ```kotlin
-// Before — 테스트마다 또는 클래스마다 컨테이너 생성
+// Before - create a container for each test or class
 class MyTest {
     companion object {
         @JvmField
         @Container
-        val mysql = MySQLContainer("mysql:8.0")  // 매번 새 컨테이너 기동
+        val mysql = MySQLContainer("mysql:8.0")  // starts a new container each time
     }
 }
 
-// After — bluetape4k 싱글톤 런처 (JVM 전체에서 하나의 컨테이너 재사용)
+// After - bluetape4k singleton launcher (reuses one container across the JVM)
 abstract class AbstractSqlClientTest {
     companion object: KLoggingChannel() {
-        val mysql = MySQL8Server.Launcher.mysql  // 이미 기동된 인스턴스 반환
+        val mysql = MySQL8Server.Launcher.mysql  // returns the already-started instance
     }
 }
 ```
 
-## 취소·구조적 동시성·컨텍스트 전파
+## Cancellation, Structured Concurrency, and Context Propagation
 
-### `withSuspendTransaction { }` 취소와 자동 롤백
+### `withSuspendTransaction { }` Cancellation and Automatic Rollback
 
-트랜잭션 블록 실행 중 코루틴이 취소되면 `withSuspendTransaction` 은 롤백을 수행합니다.
-예를 들어 부모 스코프가 타임아웃으로 취소되거나 HTTP 클라이언트가 연결을 끊어도
-DB 커넥션이 정상적으로 트랜잭션 롤백 후 풀에 반환됩니다.
+If a coroutine is cancelled while the transaction block is running, `withSuspendTransaction` performs a rollback.
+For example, even when a parent scope is cancelled by a timeout or an HTTP client disconnects,
+the DB connection is returned normally to the pool after the transaction rolls back.
 
 ```kotlin
-// 타임아웃으로 인한 취소 → 자동 롤백
+// Cancellation due to timeout -> automatic rollback
 withTimeout(200) {
     pool.withSuspendTransaction { conn ->
         conn.query("INSERT INTO items VALUES (...)").execute().coAwait()
-        delay(500)  // 타임아웃 초과 → CancellationException
-        // 블록 종료 전 예외 발생 → 자동 ROLLBACK
+        delay(500)  // exceeds timeout -> CancellationException
+        // Exception before block exit -> automatic ROLLBACK
     }
 }
-// INSERT가 DB에 남지 않음
+// INSERT does not remain in the DB
 ```
 
-### `testWithSuspendTransaction` 테스트 격리 보장
+### `testWithSuspendTransaction` Test Isolation Guarantee
 
-테스트 간 상태 오염을 방지하기 위해 `testWithSuspendTransaction` 은
-블록 완료 여부와 무관하게 항상 롤백합니다. 이로써 각 테스트는 독립적인 초기 상태를 보장받습니다.
+To prevent state contamination between tests, `testWithSuspendTransaction`
+always rolls back regardless of whether the block completes. This guarantees an independent initial state for each test.
 
 ```kotlin
 @Test
-fun `데이터 삽입 테스트`(vertx: Vertx, testContext: VertxTestContext) = runSuspendIO {
+fun `insert data test`(vertx: Vertx, testContext: VertxTestContext) = runSuspendIO {
     vertx.testWithSuspendTransaction(testContext, pool) {
         val rows = pool.preparedQuery("INSERT INTO users VALUES (?, ?)")
             .execute(Tuple.of(1, "Alice"))
             .coAwait()
         rows.rowCount() shouldBeEqualTo 1
-        // 블록 완료 후 자동 롤백 → 다음 테스트에 영향 없음
+        // Automatically rolls back after the block completes -> no effect on the next test
     }
 }
 ```
 
-### Vert.x `Pool` 백프레셔
+### Vert.x `Pool` Backpressure
 
-`MySQLPool` / `JDBCPool` 은 최대 커넥션 수를 제한합니다.
-코루틴의 `coAwait()` 는 풀에 커넥션이 없을 때 비블로킹 대기 (backpressure) 를 수행합니다.
-스레드를 블로킹하지 않으므로 단일 이벤트 루프 스레드에서 수백 개의 동시 요청을 처리할 수 있습니다.
+`MySQLPool` / `JDBCPool` limits the maximum number of connections.
+Coroutine `coAwait()` performs non-blocking waiting (backpressure) when no connection is available in the pool.
+Because it does not block threads, a single event-loop thread can handle hundreds of concurrent requests.
 
-## 빌드 및 테스트
+## Build and Test
 
 ```bash
 ./gradlew :vertx-vertx-sqlclient:test

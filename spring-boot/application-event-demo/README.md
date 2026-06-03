@@ -25,21 +25,21 @@ The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k h
 
 ![Spring Application Event Demo sequence diagram](../../docs/images/readme-diagrams/spring-boot-application-event-demo-sequence-01.png)
 
-Spring Application Event를 비동기 방식(Reactor, Coroutines)으로 발행하고 수신하는 패턴을 보여줍니다.
+Shows patterns for publishing and receiving Spring Application Events asynchronously with Reactor and coroutines.
 
-## 이벤트 발행/수신 흐름
+## Event Publish/Receive Flow
 
 ![/ diagram](../../docs/images/readme-diagrams/spring-boot-application-event-demo-sequence-01.png)
 
-## AOP 기반 이벤트 흐름
+## AOP-Based Event Flow
 
 ![AOP diagram](../../docs/images/readme-diagrams/spring-boot-application-event-demo-sequence-02.png)
 
-## 두 가지 이벤트 발행 방식
+## Two Event Publishing Approaches
 
-### 1. 직접 발행 (`custom/`)
+### 1. Direct Publishing (`custom/`)
 
-`ApplicationEventPublisher`를 직접 주입받아 이벤트를 발행합니다.
+Inject `ApplicationEventPublisher` directly and publish events from the component.
 
 ```kotlin
 @Component
@@ -48,24 +48,24 @@ class CustomEventPublisher(private val publisher: ApplicationEventPublisher) {
 }
 ```
 
-리스너는 일반 방식과 Coroutine 비동기 방식 모두 제공합니다:
-- `CustomEventListener` — `@EventListener`로 동기 수신
-- `AnnotatedCoroutineCustomEventListener` — `@EventListener` + suspend 함수로 비동기 수신
+Listeners are provided in both regular and coroutine-based asynchronous styles:
+- `CustomEventListener` — Receives events synchronously with `@EventListener`
+- `AnnotatedCoroutineCustomEventListener` — Receives events asynchronously with `@EventListener` + a suspend function
 
-### 2. AOP 기반 발행 (`aspect/`)
+### 2. AOP-Based Publishing (`aspect/`)
 
-메서드 실행 시 AOP로 자동으로 이벤트를 발행합니다.
+Publishes events automatically through AOP when a method executes.
 
 ```kotlin
-@AspectEventEmitter  // 이 어노테이션이 붙은 메서드 실행 시 자동으로 이벤트 발행
+@AspectEventEmitter  // Automatically publishes an event when a method with this annotation executes
 fun doSomething(): Result { ... }
 ```
 
-- `AspectEventPublisherAspect` — Around Advice로 이벤트 캡처 후 발행
-- `AspectEventListener` — 동기 수신
-- `CoroutineAspectEventListener` — Coroutine 비동기 수신
+- `AspectEventPublisherAspect` — Captures and publishes events through Around Advice
+- `AspectEventListener` — Synchronous event receiver
+- `CoroutineAspectEventListener` — Coroutine-based asynchronous event receiver
 
-## 참고
+## References
 
 - [Spring Application Events](https://docs.spring.io/spring-framework/reference/core/beans/context-introduction.html#context-functionality-events)
-- [Spring + Coroutines 이벤트 처리](https://docs.spring.io/spring-framework/reference/languages/kotlin/coroutines.html)
+- [Spring + Coroutines event handling](https://docs.spring.io/spring-framework/reference/languages/kotlin/coroutines.html)

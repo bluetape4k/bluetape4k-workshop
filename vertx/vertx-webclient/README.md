@@ -25,38 +25,38 @@ The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k h
 
 ![Vert.x WebClient Examples sequence diagram](../../docs/images/readme-diagrams/vertx-vertx-webclient-sequence-01.png)
 
-[Vert.x WebClient](https://vertx.io/docs/vertx-web-client/java/) 는 Async/Non-Blocking 방식의 WebClient 입니다.
-Spring의 WebClient와 비슷한 기능을 제공하지만, Reactor 를 사용하지 않고, Coroutines를 사용하여 좀 더 쉽게 구현할 수 있습니다.
+[Vert.x WebClient](https://vertx.io/docs/vertx-web-client/java/) is an asynchronous, non-blocking WebClient.
+It provides capabilities similar to Spring's WebClient, but it can be implemented more easily with Coroutines instead of Reactor.
 
-## HTTP 요청 처리 흐름
+## HTTP Request Processing Flow
 
 ![HTTP diagram](../../docs/images/readme-diagrams/vertx-vertx-webclient-sequence-01.png)
 
 ![Vert.x WebClient Examples Diagram 1](../../docs/images/readme-diagrams/vertx-vertx-webclient-readme-sequence-01.png)
 
-## 주요 기능
+## Key Features
 
-| 기능 | 설명 |
+| Feature | Description |
 |------|------|
-| HTTP GET | `client.get(port, host, path).send().coAwait()` — Non-Blocking GET 요청 |
-| HTTP PUT/POST | `client.put(...).sendBuffer(body).coAwait()` — 바디 포함 요청 |
-| BodyCodec 지원 | `BodyCodec.string()`, `BodyCodec.jsonObject()`, `BodyCodec.json(Class)` — 응답 자동 역직렬화 |
-| 코루틴 통합 | `coAwait()` 확장 함수로 콜백 없이 `suspend` 함수처럼 사용 |
-| CoroutineVerticle | `CoroutineVerticle`을 상속하면 `start()` 함수를 `suspend`로 선언 가능 |
-| JSON 응답 매핑 | `BodyCodec.json(User::class.java)` — Jackson으로 응답 바디를 도메인 객체로 자동 변환 |
+| HTTP GET | `client.get(port, host, path).send().coAwait()` — non-blocking GET request |
+| HTTP PUT/POST | `client.put(...).sendBuffer(body).coAwait()` — request with a body |
+| BodyCodec support | `BodyCodec.string()`, `BodyCodec.jsonObject()`, `BodyCodec.json(Class)` — automatic response deserialization |
+| Coroutine integration | Uses the `coAwait()` extension function like a `suspend` function without callbacks |
+| CoroutineVerticle | Extending `CoroutineVerticle` allows `start()` to be declared as `suspend` |
+| JSON response mapping | `BodyCodec.json(User::class.java)` — automatically converts the response body to a domain object with Jackson |
 
-## 예제 파일 구성
+## Example File Layout
 
-| 파일 | 설명 |
+| File | Description |
 |------|------|
-| `SimpleExamples.kt` | `AbstractVerticle` 기반 기본 HTTP 서버 + WebClient GET 요청 |
-| `CoroutineExamples.kt` | `CoroutineVerticle` 기반 코루틴 서버 + `coAwait()` 사용 |
-| `RequestExamples.kt` | `Router` + `BodyHandler` 등록 후 PUT 요청으로 문자열 바디 전송 |
-| `ResponseExamples.kt` | JSON 응답을 `JsonObject` 및 커스텀 클래스로 역직렬화 |
+| `SimpleExamples.kt` | Basic HTTP server based on `AbstractVerticle` + WebClient GET request |
+| `CoroutineExamples.kt` | Coroutine server based on `CoroutineVerticle` + `coAwait()` usage |
+| `RequestExamples.kt` | Registers `Router` + `BodyHandler`, then sends a string body with a PUT request |
+| `ResponseExamples.kt` | Deserializes JSON responses into `JsonObject` and custom classes |
 
-## 사용 예제
+## Usage Examples
 
-### 기본 GET 요청 (콜백 없이 코루틴 사용)
+### Basic GET Request (Coroutines Without Callbacks)
 
 ```kotlin
 val client = WebClient.create(vertx)
@@ -64,12 +64,12 @@ val response = client
     .get(8080, "localhost", "/")
     .`as`(BodyCodec.string())
     .send()
-    .coAwait()                       // suspend — 콜백 불필요
+    .coAwait()                       // suspend - no callback required
 
 println(response.body())             // "Hello World!"
 ```
 
-### PUT 요청으로 바디 전송
+### Send a Body with a PUT Request
 
 ```kotlin
 val body = Buffer.buffer("Hello World!")
@@ -83,25 +83,25 @@ response.statusCode() // 200
 response.body()       // "OK"
 ```
 
-### JSON 응답을 도메인 객체로 역직렬화
+### Deserialize a JSON Response to a Domain Object
 
 ```kotlin
 data class User(val firstname: String, val lastname: String, val male: Boolean)
 
 val response = client
     .put(9999, "localhost", "/")
-    .`as`(BodyCodec.json(User::class.java))   // Jackson 자동 매핑
+    .`as`(BodyCodec.json(User::class.java))   // automatic Jackson mapping
     .send()
     .coAwait()
 
 val user: User = response.body()
 ```
 
-### CoroutineVerticle로 서버 구현
+### Implement a Server with CoroutineVerticle
 
 ```kotlin
 class CoroutineServer : CoroutineVerticle() {
-    override suspend fun start() {                 // suspend 함수로 선언 가능
+    override suspend fun start() {                 // can be declared as a suspend function
         vertx.createHttpServer()
             .requestHandler { req -> req.response().end("Hello Coroutines!") }
             .listen(9988)
@@ -109,53 +109,53 @@ class CoroutineServer : CoroutineVerticle() {
     }
 }
 
-// 배포
+// Deploy
 vertx.deployVerticle(CoroutineServer()).coAwait()
 ```
 
-## 코루틴 통합 방식 비교
+## Coroutine Integration Approach Comparison
 
-| 방식 | API | 특징 |
+| Approach | API | Characteristics |
 |------|-----|------|
-| 콜백 | `send { ar -> ... }` | 전통적 Vert.x 방식, 중첩 가능성 높음 |
-| `coAwait()` | `send().coAwait()` | Kotlin 코루틴, 동기 코드처럼 읽힘 |
-| `CoroutineVerticle` | `override suspend fun start()` | Verticle 전체를 코루틴으로 작성 |
+| Callback | `send { ar -> ... }` | Traditional Vert.x style, often prone to nesting |
+| `coAwait()` | `send().coAwait()` | Kotlin coroutine style that reads like synchronous code |
+| `CoroutineVerticle` | `override suspend fun start()` | Writes the entire Verticle as coroutine code |
 
-## 사용된 bluetape4k 기능
+## Used bluetape4k Features
 
-| 기능 | 아티팩트 | 코드 위치 | 이점 |
+| Feature | Artifact | Code Location | Benefit |
 |---|---|---|---|
-| `suspendHandler { }` | `bluetape4k-vertx` | `RequestExamples.kt`, `ResponseExamples.kt` | Vert.x `Handler<RoutingContext>`를 suspend 람다로 래핑 |
-| `withSuspendTestContext` | `bluetape4k-vertx` | 테스트 전체 | Vert.x `VertxTestContext`를 코루틴 블록에서 안전하게 사용하는 테스트 헬퍼 |
-| `Jackson` (jackson3) | `bluetape4k-jackson3` | `ResponseExamples.kt` | Jackson 3.x `ObjectMapper` 싱글톤 제공 — 직렬화/역직렬화 공유 인스턴스 |
-| `runSuspendTest { }` | `bluetape4k-junit5` | 테스트 전체 | JUnit 5에서 suspend 테스트를 실행하는 확장 함수 |
-| `KLoggingChannel` | `bluetape4k-logging` | 모든 companion object | 코루틴 컨텍스트 포함 구조적 로깅 |
-| `bluetape4k-assertions` | `bluetape4k-core` | 테스트 전체 | 가독성 높은 단언문 (`shouldBeEqualTo`, `shouldNotBeNull` 등) |
+| `suspendHandler { }` | `bluetape4k-vertx` | `RequestExamples.kt`, `ResponseExamples.kt` | Wraps a Vert.x `Handler<RoutingContext>` as a suspend lambda |
+| `withSuspendTestContext` | `bluetape4k-vertx` | All tests | Test helper for safely using Vert.x `VertxTestContext` inside coroutine blocks |
+| `Jackson` (jackson3) | `bluetape4k-jackson3` | `ResponseExamples.kt` | Provides a Jackson 3.x `ObjectMapper` singleton; shared instance for serialization/deserialization |
+| `runSuspendTest { }` | `bluetape4k-junit5` | All tests | Extension function for running suspend tests in JUnit 5 |
+| `KLoggingChannel` | `bluetape4k-logging` | All companion objects | Structured logging with coroutine context |
+| `bluetape4k-assertions` | `bluetape4k-core` | All tests | Readable assertions such as `shouldBeEqualTo` and `shouldNotBeNull` |
 
 ## bluetape4k Before / After
 
-### `suspendHandler { }` vs 콜백 라우팅
+### `suspendHandler { }` vs Callback Routing
 
 ```kotlin
-// Before — 전통 Vert.x 라우터 핸들러 (콜백)
+// Before - traditional Vert.x router handler (callback)
 router.put("/request").handler(BodyHandler.create()).handler { ctx ->
     val body = ctx.body().asString()
-    // 비즈니스 로직
+    // Business logic
     ctx.response().end("OK")
 }
 
-// After — bluetape4k suspendHandler (suspend 함수로 작성)
+// After - bluetape4k suspendHandler (written as a suspend function)
 router.put("/request").handler(BodyHandler.create()).suspendHandler { ctx ->
     val body = ctx.body().asString()
-    // suspend 함수 호출 가능 (예: DB 조회, 외부 API 호출)
+    // Can call suspend functions, such as DB queries or external API calls
     ctx.response().end("OK")
 }
 ```
 
-### `Jackson` 싱글톤 vs 직접 ObjectMapper 생성
+### `Jackson` Singleton vs Direct ObjectMapper Creation
 
 ```kotlin
-// Before — 매번 ObjectMapper 생성 또는 companion object에 직접 선언
+// Before - create ObjectMapper every time or declare it directly in a companion object
 companion object {
     private val objectMapper = ObjectMapper().apply {
         registerModule(JavaTimeModule())
@@ -163,37 +163,37 @@ companion object {
     }
 }
 
-// After — bluetape4k Jackson 싱글톤 (미리 설정된 ObjectMapper 공유)
+// After - bluetape4k Jackson singleton (shares a preconfigured ObjectMapper)
 import io.bluetape4k.jackson3.Jackson
 
 val json = Jackson.defaultJsonMapper.writeValueAsString(user)
 val user = Jackson.defaultJsonMapper.readValue(json, User::class.java)
 ```
 
-## 취소·구조적 동시성·컨텍스트 전파
+## Cancellation, Structured Concurrency, and Context Propagation
 
-### `coAwait()` 취소와 HTTP 요청 중단
+### `coAwait()` Cancellation and HTTP Request Abortion
 
-`Future<T>.coAwait()` 는 코루틴 취소 신호를 수신하면 진행 중인 HTTP 요청을 중단합니다.
-클라이언트가 타임아웃으로 취소되거나 부모 스코프가 취소될 때 소켓 리소스가 즉시 반환됩니다.
+`Future<T>.coAwait()` aborts the in-progress HTTP request when it receives a coroutine cancellation signal.
+Socket resources are returned immediately when the client is cancelled by timeout or the parent scope is cancelled.
 
 ```kotlin
-// withTimeout으로 HTTP 요청에 타임아웃 적용
+// Apply a timeout to the HTTP request with withTimeout
 withTimeout(500) {
     val response = client
         .get(port, "localhost", "/slow-endpoint")
         .send()
-        .coAwait()   // 500ms 초과 시 CancellationException
-                     // → HTTP 요청 중단, 소켓 반환
+        .coAwait()   // CancellationException when exceeding 500ms
+                     // -> HTTP request aborted, socket returned
     response.body()
 }
 ```
 
-### `CoroutineVerticle` 언디플로이와 WebClient 정리
+### `CoroutineVerticle` Undeploy and WebClient Cleanup
 
-`CoroutineVerticle` 을 언디플로이하면 `CoroutineScope` 가 취소됩니다.
-`start()` 에서 시작된 자식 코루틴 (예: `launch { ... }`) 이 모두 취소되므로
-WebClient 요청이 진행 중이어도 스코프 취소 시 정상적으로 중단됩니다.
+Undeploying `CoroutineVerticle` cancels its `CoroutineScope`.
+All child coroutines started from `start()` (for example, `launch { ... }`) are cancelled,
+so even in-progress WebClient requests are stopped normally when the scope is cancelled.
 
 ```kotlin
 class CoroutineServer: CoroutineVerticle() {
@@ -208,28 +208,28 @@ class CoroutineServer: CoroutineVerticle() {
     }
 
     override suspend fun stop() {
-        client.close()   // 언디플로이 시 WebClient 명시적 정리
+        client.close()   // explicitly clean up WebClient on undeploy
     }
 }
 ```
 
-### `suspendHandler` 내 컨텍스트 전파
+### Context Propagation Inside `suspendHandler`
 
-`suspendHandler { ctx -> }` 블록 내에서 `coroutineContext` 는 Vert.x 이벤트 루프의
-`vertx.dispatcher()` 를 포함합니다. 이를 통해 Vert.x API 호출 (예: `EventBus`, `FileSystem`) 이
-올바른 스레드에서 수행됨을 보장합니다.
+Inside the `suspendHandler { ctx -> }` block, `coroutineContext` includes the Vert.x event-loop
+`vertx.dispatcher()`. This guarantees that Vert.x API calls, such as `EventBus` or `FileSystem`,
+run on the correct thread.
 
 ```kotlin
 router.get("/proxy").suspendHandler { ctx ->
-    // Vert.x dispatcher 컨텍스트에서 실행
+    // Runs in the Vert.x dispatcher context
     val upstream = client.get(8081, "backend", "/data")
         .send()
         .coAwait()
-    ctx.response().end(upstream.body())   // 동일 이벤트 루프 스레드에서 응답
+    ctx.response().end(upstream.body())   // respond on the same event-loop thread
 }
 ```
 
-## 빌드 및 테스트
+## Build and Test
 
 ```bash
 ./gradlew :vertx-vertx-webclient:test

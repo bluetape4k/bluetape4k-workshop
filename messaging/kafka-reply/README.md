@@ -25,55 +25,55 @@ The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k h
 
 ![Kafka Reply Demo sequence diagram](../../docs/images/readme-diagrams/messaging-kafka-reply-sequence-01.png)
 
-`ReplyingKafkaTemplate`을 이용한 Kafka 요청-응답(Request-Reply) 패턴 예제입니다.
-bluetape4k의 `CompletableFuture.onSuccess/onFailure`, `uninitialized()`, `KLoggingChannel`을 활용합니다.
-Spring Kafka 4 호환 Bluetape4k 모듈은 `bluetape4k-kafka4`를 사용합니다.
+This example demonstrates the Kafka request-reply pattern with `ReplyingKafkaTemplate`.
+It uses bluetape4k's `CompletableFuture.onSuccess/onFailure`, `uninitialized()`, and `KLoggingChannel`.
+The Spring Kafka 4-compatible Bluetape4k module uses `bluetape4k-kafka4`.
 
-## 아키텍처
+## Architecture
 
 ![kafka reply Sequence Flow diagram](../../docs/images/readme-diagrams/messaging-kafka-reply-sequence-01.png)
 
-## 주요 구성
+## Key Components
 
-| 클래스 | 역할 |
+| Class | Role |
 |---|---|
-| `PingController` | `ReplyingKafkaTemplate.sendAndReceive()` 로 ping 발송 후 응답 대기 |
-| `PongHandler` | `@KafkaListener` + `@SendTo` 로 ping 수신 → pong 응답 |
-| `PingApplication` | Ping 앱 설정 |
-| `PongApplication` | Pong 앱 설정 |
+| `PingController` | Sends a ping with `ReplyingKafkaTemplate.sendAndReceive()` and waits for the reply |
+| `PongHandler` | Receives the ping with `@KafkaListener` + `@SendTo`, then returns a pong reply |
+| `PingApplication` | Ping app configuration |
+| `PongApplication` | Pong app configuration |
 
-## 사용된 bluetape4k 기능
+## Used bluetape4k Features
 
-| 기능 | 아티팩트 | 코드 위치 | 이점 |
+| Feature | Artifact | Code Location | Benefit |
 |---|---|---|---|
-| `CompletableFuture.onSuccess/onFailure` | `bluetape4k-coroutines` | `PingController.ping()` | Java Future에 Kotlin 스타일 콜백 확장 |
-| `bluetape4k-kafka4` dependency | `bluetape4k-kafka4` | `build.gradle.kts` | Spring Kafka 4 예제에서 Bluetape4k Kafka 확장을 사용할 수 있는 호환 아티팩트 |
-| `uninitialized()` | `bluetape4k-core` | `PingController` | 타입 안전 lateinit 초기화 대체 |
-| `KLoggingChannel` | `bluetape4k-logging` | companion object | 코루틴 컨텍스트 포함 구조적 로깅 |
+| `CompletableFuture.onSuccess/onFailure` | `bluetape4k-coroutines` | `PingController.ping()` | Kotlin-style callback extensions for Java Future |
+| `bluetape4k-kafka4` dependency | `bluetape4k-kafka4` | `build.gradle.kts` | Compatible artifact that enables Bluetape4k Kafka extensions in Spring Kafka 4 examples |
+| `uninitialized()` | `bluetape4k-core` | `PingController` | Type-safe alternative to `lateinit` initialization |
+| `KLoggingChannel` | `bluetape4k-logging` | companion object | Structured logging with coroutine context |
 
 ## Bluetape4k boundary
 
-`messaging/kafka-reply`는 실제 요청-응답 프로토콜을 Spring Kafka의 `ReplyingKafkaTemplate.sendAndReceive()`로 유지합니다.
-현재 검증된 `bluetape4k-kafka4` API에는 `ReplyingKafkaTemplate`을 대체하는 request/reply 전용 추상화가 없으므로, 이 예제는 Spring Kafka의 프로토콜 primitive와 Bluetape4k의 Future/coroutine ergonomics를 함께 사용합니다.
+`messaging/kafka-reply` keeps the actual request-reply protocol on Spring Kafka's `ReplyingKafkaTemplate.sendAndReceive()`.
+The currently verified `bluetape4k-kafka4` API does not provide a dedicated request/reply abstraction that replaces `ReplyingKafkaTemplate`, so this example combines Spring Kafka's protocol primitive with Bluetape4k's Future/coroutine ergonomics.
 
 ## bluetape4k Before / After
 
-### `CompletableFuture.onSuccess/onFailure` vs 전통적 콜백
+### `CompletableFuture.onSuccess/onFailure` vs Traditional Callbacks
 
 ```kotlin
-// Before — addCallback (deprecated) 또는 thenAccept/exceptionally
+// Before — addCallback (deprecated) or thenAccept/exceptionally
 replyFuture.addCallback(
     { result -> logger.info("Sent ok: $result") },
     { e -> logger.error("Failed: ${e.message}") }
 )
 
-// After — bluetape4k onSuccess / onFailure 확장 (체이닝 가능)
+// After — bluetape4k onSuccess / onFailure extensions (chainable)
 replyFuture
     .onSuccess { result -> log.info { "callback result: $result" } }
     .onFailure { e -> log.error(e) { "callback exception." } }
 ```
 
-### 요청-응답 처리
+### Request-Reply Handling
 
 ```kotlin
 @GetMapping("/ping")
@@ -90,7 +90,7 @@ suspend fun ping(): String {
     return consumerRecord.value()
 }
 
-// Pong 쪽 — @SendTo로 자동 응답
+// Pong side — automatically replies with @SendTo
 @KafkaListener(groupId = "pong", topics = [TOPIC_PINGPONG])
 @SendTo
 fun handle(request: String): String {
@@ -99,19 +99,19 @@ fun handle(request: String): String {
 }
 ```
 
-## 실행
+## Running
 
 ```bash
 ./gradlew :messaging-kafka-reply:bootRun
-# HTTP 파일로 테스트
+# Test with an HTTP file
 # GET http://localhost:8080/ping
 ```
 
-## 관련 모듈
+## Related Modules
 
-- [`messaging/kafka`](../kafka) — 기본 Producer/Consumer 패턴
+- [`messaging/kafka`](../kafka) — Basic producer/consumer pattern
 
-## 참고
+## References
 
 - [Spring Kafka ReplyingKafkaTemplate](https://docs.spring.io/spring-kafka/reference/kafka/sending-messages.html#replying-template)
 - [bluetape4k-coroutines](https://github.com/bluetape4k/bluetape4k-projects)

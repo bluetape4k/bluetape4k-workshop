@@ -25,17 +25,17 @@ The module is organized around the sample entry point or test fixture, the bluet
 
 The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
-Spring Security를 활용한 MVC·WebFlux 보안 예제 모음입니다.
+This is a collection of MVC and WebFlux security examples using Spring Security.
 
-## 서브모듈 구성
+## Submodule Layout
 
 ![spring security Architecture diagram](../docs/images/readme-diagrams/spring-security-diagram-01.png)
 
-## Security Filter Chain 흐름
+## Security Filter Chain Flow
 
 ![Security Filter Chain diagram](../docs/images/readme-diagrams/spring-security-diagram-02.png)
 
-## 참고
+## References
 
 ### Documents
 

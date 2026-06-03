@@ -25,24 +25,24 @@ The module is organized around the sample entry point or test fixture, the bluet
 
 The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
-## 아키텍처 다이어그램
+## Architecture Diagram
 
 ![redis examples Class Structure diagram](../../docs/images/readme-diagrams/spring-data-redis-examples-diagram-01.png)
 
 ![redis examples Architecture 2 diagram](../../docs/images/readme-diagrams/spring-data-redis-examples-diagram-02.png)
 
-Spring Data Redis를 활용하는 다양한 데이터 구조 예제 모음입니다.
-Testcontainers로 Redis 컨테이너를 자동으로 구동하여 통합 테스트를 수행합니다.
+This is a collection of examples for several data structures using Spring Data Redis.
+Testcontainers automatically starts a Redis container for integration tests.
 
-## 예제 범주
+## Example Categories
 
-- **Redis Stream** (`stream/`) — Consumer Group 기반 메시지 스트림 발행·소비
-- **Redis Hash / String / List / Set / ZSet** — 기본 자료구조 CRUD
-- **Pub/Sub** — 채널 기반 메시지 발행·구독
-- **Transaction** — `MULTI`/`EXEC` 트랜잭션 처리
-- **Lua Script** — `RedisScript`를 이용한 원자적 스크립트 실행
+- **Redis Stream** (`stream/`) — Consumer Group-based message stream publishing and consumption
+- **Redis Hash / String / List / Set / ZSet** — Basic data-structure CRUD
+- **Pub/Sub** — Channel-based message publishing and subscription
+- **Transaction** — `MULTI`/`EXEC` transaction handling
+- **Lua Script** — Atomic script execution with `RedisScript`
 
-## 참고
+## References
 
-- [Spring Data Redis 공식 문서](https://docs.spring.io/spring-data/redis/reference/)
-- Redisson 기반 예제는 [`redis/redisson-examples`](../../redis/redisson-examples) 모듈 참고
+- [Spring Data Redis Reference Documentation](https://docs.spring.io/spring-data/redis/reference/)
+- For Redisson-based examples, see the [`redis/redisson-examples`](../../redis/redisson-examples) module

@@ -27,23 +27,23 @@ The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k h
 
 ![Spring Data Elasticsearch - Demo sequence diagram](../../docs/images/readme-diagrams/spring-data-elasticsearch-sequence-01.png)
 
-## 아키텍처 다이어그램
+## Architecture Diagram
 
 ![elasticsearch Class Structure diagram](../../docs/images/readme-diagrams/spring-data-elasticsearch-diagram-01.png)
 
 ![elasticsearch Sequence Flow 2 diagram](../../docs/images/readme-diagrams/spring-data-elasticsearch-sequence-01.png)
 
-Spring Data Elasticsearch를 활용하는 동기(MVC) 방식 예제입니다.
-Testcontainers로 Elasticsearch 컨테이너를 자동으로 구동하여 통합 테스트를 수행합니다.
+This is a synchronous (MVC) example that uses Spring Data Elasticsearch.
+Testcontainers automatically starts an Elasticsearch container for integration tests.
 
-## 주요 내용
+## Key Topics
 
-- `@Document` 어노테이션을 이용한 Elasticsearch 문서 매핑
-- `ElasticsearchRepository` 기반 CRUD 및 검색 메서드
-- 커스텀 쿼리(`@Query`)와 Native Query 사용
-- Spring MVC 컨트롤러를 통한 REST API 노출
+- Elasticsearch document mapping with the `@Document` annotation
+- `ElasticsearchRepository`-based CRUD and search methods
+- Custom queries with `@Query` and Native Query usage
+- REST API exposure through Spring MVC controllers
 
-## 참고
+## References
 
-- [Spring Data Elasticsearch 공식 문서](https://docs.spring.io/spring-data/elasticsearch/reference/)
-- WebFlux(Reactive) 방식은 [`spring-data/elasticsearch-webflux`](../elasticsearch-webflux) 모듈 참고
+- [Spring Data Elasticsearch Reference Documentation](https://docs.spring.io/spring-data/elasticsearch/reference/)
+- For the WebFlux (reactive) version, see the [`spring-data/elasticsearch-webflux`](../elasticsearch-webflux) module

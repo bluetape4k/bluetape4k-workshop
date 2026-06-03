@@ -69,32 +69,32 @@ Spring이나 리액티브 스트림 없이 관용적인 코루틴 HTTP, SSE 스�
 ## curl 예제
 
 ```bash
-# 전체 도서 목록
+# List all books
 curl http://localhost:8080/books
 
-# 도서 생성
+# Create a book
 curl -X POST http://localhost:8080/books \
      -H "Content-Type: application/json" \
      -d '{"id":"b-1","title":"Kotlin in Action","author":"Jemerov","year":2017}'
 
-# ID로 조회
+# Get by id
 curl http://localhost:8080/books/b-1
 
-# 도서 수정
+# Update a book
 curl -X PUT http://localhost:8080/books/b-1 \
      -H "Content-Type: application/json" \
      -d '{"id":"b-1","title":"Kotlin in Action 2e","author":"Jemerov","year":2024}'
 
-# 도서 삭제
+# Delete a book
 curl -X DELETE http://localhost:8080/books/b-1
 
-# NDJSON 내보내기
+# NDJSON export
 curl http://localhost:8080/books/export
 
-# SSE 스트림 구독 (Ctrl-C로 종료)
+# SSE stream (stays open — Ctrl-C to stop)
 curl -N http://localhost:8080/books/stream
 
-# 헬스 체크
+# Health check
 curl http://localhost:8080/health
 ```
 
@@ -116,13 +116,13 @@ curl http://localhost:8080/health
 ## 실행
 
 ```bash
-# 서버 시작
+# Start the server
 ./gradlew :ktor-rest-coroutines:run
 
-# 테스트 실행
+# Run tests
 ./gradlew :ktor-rest-coroutines:test
 
-# 빌드
+# Build fat JAR
 ./gradlew :ktor-rest-coroutines:build
 ```
 
@@ -138,13 +138,39 @@ curl http://localhost:8080/health
 
 ---
 
+## 의존성
+
+```kotlin
+implementation(platform(libs.ktor.bom))          // version coordination
+implementation(libs.ktor.server.core)
+implementation(libs.ktor.server.netty)
+implementation(libs.ktor.server.content.negotiation)
+implementation(libs.ktor.server.call.logging)
+implementation(libs.ktor.server.status.pages)
+implementation(libs.ktor.server.sse)
+implementation(libs.ktor.serialization.kotlinx.json)
+implementation(libs.kotlinx.serialization.json)
+implementation(libs.bluetape4k.jackson3)          // NDJSON export only
+implementation(libs.jackson3.module.kotlin)
+```
+
+---
+
 ## 프로덕션 한계
 
 이 워크샵 모듈은 의도적으로 최소한의 구현입니다.
-[spec §12 Production Gaps](../../docs/superpowers/specs/2026-05-25-ktor-rest-coroutines-design.md)에서 전체 목록을 확인하세요.
+[spec §12 Production Gaps](../../docs/superpowers/specs/2026-05-25-ktor-rest-coroutines-design.md)에서 아래 항목을 포함한 전체 목록을 확인하세요.
 
 - 인증/인가 없음
 - 인메모리 스토리지만 지원 (DB 백엔드 없음)
 - 페이지네이션/커서 없음
 - 레이트 리미팅 없음
 - SSE reconnect/replay 미구현 (`lastEventId` 미지원)
+
+---
+
+## 후속 작업: bluetape4k-ktor
+
+계획 중인 `bluetape4k-ktor` 라이브러리 모듈은 이 워크샵에서 재사용 가능한 패턴
+(SSE helper, NDJSON responder, StatusPages builder, structured error model)을 추출하여
+bluetape4k 소비자가 사용할 수 있는 publishable artifact로 제공하는 것을 목표로 합니다.

@@ -17,8 +17,8 @@ This example exercises **Micrometer Observation with Spring MVC** as a runnable 
 
 The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
-Micrometer Observation API를 Spring MVC와 연동하는 예제입니다.
-`@Observed` 어노테이션과 `ObservationRegistry`를 통해 메서드 실행에 자동으로 메트릭·트레이싱을 부착합니다.
+This example integrates the Micrometer Observation API with Spring MVC.
+It automatically attaches metrics and tracing to method execution through the `@Observed` annotation and `ObservationRegistry`.
 
 ## Architecture
 

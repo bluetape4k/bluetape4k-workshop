@@ -27,16 +27,16 @@ The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k h
 
 # FIXME
 
-현재 `DockerComposeContainer` 가 제대로 실행되지 않는다.
-`docker-compose-plugin` 을 사용하는 방식을 추천합니다.
+Currently `DockerComposeContainer` is not running properly.
+We recommend using `docker-compose-plugin`.
 
-## 개요
+## outline
 
-이 예제는 `Testcontainers`의 `DockerComposeContainer` 사용하여 `docker-compose.yml` 파일로부터 복수의 컨테이너를 실행하는 방법을 보여줍니다.
+This example shows how to run multiple containers from `docker-compose.yml` files using `DockerComposeContainer` and `Testcontainers`.
 
 ![compose demo Architecture diagram](../../docs/images/readme-diagrams/docker-compose-demo-diagram-01.png)
 
-## 참고
+## reference
 
 * [Docker Compose Module](https://www.testcontainers.org/modules/docker_compose/)
 * [How to run Docker Compose with Testcontainers](https://codeal.medium.com/how-to-run-docker-compose-with-testcontainers-7d1ba73afeeb)
@@ -44,19 +44,19 @@ The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k h
 
 ## Throuble Shooting
 
-### Q. `Container startup failed for image alpine/socat:1.7.4.3-r0` 예외 발생 시
+### Q. `Container startup failed for image alpine/socat:1.7.4.3-r0` When an exception occurs
 
 [alpine/socat container pinned at old version lacking arm64 platform](https://github.com/testcontainers/testcontainers-java/issues/5279)
-를 참고해서, `~/.testcontainers.properties` 파일에 `socat.container.image=alpine/socat:latest` 를 추가하면 됩니다.
+Refer to and add `socat.container.image=alpine/socat:latest` to the `~/.testcontainers.properties` file.
 
 ```shell
 $ grep socat ~/.testcontainers.properties
 socat.container.image=alpine/socat:latest
 ```
 
-### Q. linux/amd64 아키텍처에서만 지원하는 이미지를 사용하는 경우
+### Q. When using an image that is only supported by linux/amd64 architecture
 
-Apple Silicon M1 에서 linux/amd64 platform 용 Docker 이미지를 실행하기 위해서 필요한 라이브러리를 `build.gradle.kts` 에 추가해 주세요.
+Please add the necessary libraries to `build.gradle.kts` to run Docker image for linux/amd64 platform on Apple Silicon M1.
 
 ```kotlin
 testImplementation(Libs.jna)

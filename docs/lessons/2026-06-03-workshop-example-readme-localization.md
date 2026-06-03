@@ -78,3 +78,26 @@ sequence diagram은 participant 좌우 여백, note, branch, return arrow, call 
 사용해 노드 배치와 connector label 겹침을 줄였다. 검증은 README Mermaid 잔여 0건,
 SVG XML 통과, PNG 짝 누락 0건, README image link missing 0건, README의 SVG 직접 참조
 0건, font-family 선언 위반 0건, 22개 PNG 전수 contact sheet 확인으로 마무리했다.
+
+영어 README에서 한국어 상세 본문을 "영어 README를 참고하라"는 요약 문구로
+대체하면 안 된다. `README.md`와 `README.ko.md`는 같은 범위의 내용을 각 언어로
+담아야 한다. 앞으로 README localization batch는 `README.md`의 한글 잔존을
+검사하되, 표준 언어 스위치(`[한국어](README.ko.md) | English`)만 예외로 허용한다.
+이번 보정에서는 `scripts/validate-readme-language.mjs`를 추가해 이 조건을
+자동 검증했다.
+
+요약 문구가 있던 파일만 고치면 충분하지 않다. 기존 README 쌍 중에서도
+한국어판의 heading, code block, image link가 영어판보다 적은 파일이 있었다.
+이번 후속 보정에서는 모든 `README.md` / `README.ko.md` 쌍을 대상으로
+`scripts/validate-readme-parity.mjs`를 추가하고, language switch, heading level
+sequence, code fence count, image target sequence, 금지 요약 문구를 전체 검증했다.
+한국어 README도 코드 블록과 이미지 링크를 생략하지 않고 영어판과 같은 범위의
+내용을 담아야 한다.
+
+Sequence diagram의 call/return line과 label box가 겹치는 문제는 눈대중만으로
+검수하지 않는다. 생성기에서 label 높이를 wrapped line 수에 맞게 계산하고,
+label box 아래와 다음 call/return line 사이의 최소 간격을 12px 이상으로 둔다.
+검증 스크립트는 16개 sequence SVG에서 이 간격 위반 0건, SVG XML 통과,
+sequence SVG 내 한글 label 0건, `Architects Daughter`/`Comic Mono` font signature
+통과를 확인했다. Contact sheet는 빠른 triage용으로만 쓰고, 이전에 문제가 됐거나
+복잡한 대표 PNG는 원본 크기로 직접 확인한다.

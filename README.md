@@ -6,7 +6,7 @@
 [![bluetape4k](https://img.shields.io/badge/bluetape4k-1.7-4A90D9)](https://github.com/bluetape4k)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> 🇰🇷 [한국어 README](README.ko.md)
+[한국어](README.ko.md) | English
 
 Runnable backend examples showing how [bluetape4k](https://github.com/bluetape4k) libraries
 integrate with Spring Boot 4, JetBrains Exposed, Redis, Kafka, observability stacks,

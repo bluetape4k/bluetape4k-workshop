@@ -27,13 +27,13 @@ The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k h
 
 ![Spring Data R2DBC Demo sequence diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-examples-sequence-01.png)
 
-## 아키텍처 다이어그램
+## Architecture Diagram
 
 ![r2dbc examples Class Structure diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-examples-diagram-01.png)
 
 ![r2dbc examples Sequence Flow 2 diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-examples-sequence-01.png)
 
-## 참고
+## References
 
 * [Spring Data Examples - r2dbc/example](https://github.com/spring-projects/spring-data-examples/tree/main/r2dbc/example)
 * [Spring Data Examples - r2dbc/query-by-example](https://github.com/spring-projects/spring-data-examples/tree/main/r2dbc/query-by-example)
@@ -81,26 +81,26 @@ val example = Example.of(Person("", "White", 0), matcher)
 repository.count(example)
 ```
 
-## 처리 흐름
+## Processing Flow
 
 ![Spring Data R2DBC Demo Diagram 1](../../docs/images/readme-diagrams/spring-data-r2dbc-examples-readme-sequence-01.png)
 
-## 사용된 bluetape4k 기능
+## Used bluetape4k Features
 
-| 기능 | 아티팩트 | 코드 위치 | 이점 |
+| Feature | Artifact | Code location | Benefit |
 |---|---|---|---|
-| `connectionFactoryInitializer { }` | `bluetape4k-r2dbc` | `ApplicationConfiguration.kt` | `ConnectionFactoryInitializer` 생성 DSL — 보일러플레이트 설정 코드 축소 |
-| `buildExampleMatcher(vararg props)` | `bluetape4k-spring-boot4-r2dbc` | `PersonRepositoryIntegrationTest` | QBE `ExampleMatcher` DSL — 프로퍼티명 문자열 없이 타입 안전하게 매처 구성 |
-| `asLong()` / `toUtf8Bytes()` | `bluetape4k-core` | `ApplicationConfiguration.kt` | `Row` 컬럼 값 변환 / 문자열 → UTF-8 바이트 변환 확장 함수 |
-| `KLoggingChannel` | `bluetape4k-logging` | 모든 companion object | 코루틴 컨텍스트 포함 구조적 로깅 |
-| `shouldBeEqualTo`, `shouldNotBeNull` | `bluetape4k-core` | 테스트 전체 | 가독성 높은 단언문 (`shouldBeEqualTo`, `shouldContainSame` 등) |
+| `connectionFactoryInitializer { }` | `bluetape4k-r2dbc` | `ApplicationConfiguration.kt` | DSL for creating `ConnectionFactoryInitializer` — reduces boilerplate configuration code |
+| `buildExampleMatcher(vararg props)` | `bluetape4k-spring-boot4-r2dbc` | `PersonRepositoryIntegrationTest` | QBE `ExampleMatcher` DSL — type-safe matcher construction without string property names |
+| `asLong()` / `toUtf8Bytes()` | `bluetape4k-core` | `ApplicationConfiguration.kt` | Extension functions for `Row` column value conversion and string -> UTF-8 byte conversion |
+| `KLoggingChannel` | `bluetape4k-logging` | All companion objects | Structured logging that includes coroutine context |
+| `shouldBeEqualTo`, `shouldNotBeNull` | `bluetape4k-core` | All tests | Readable assertions such as `shouldBeEqualTo` and `shouldContainSame` |
 
 ## bluetape4k Before / After
 
-### `connectionFactoryInitializer { }` vs 직접 빈 생성
+### `connectionFactoryInitializer { }` vs Manual Bean Creation
 
 ```kotlin
-// Before — 표준 Spring R2DBC 방식 (빈 생성 직접 작성)
+// Before — standard Spring R2DBC style (write bean creation manually)
 @Bean
 fun initializer(connectionFactory: ConnectionFactory): ConnectionFactoryInitializer {
     val initializer = ConnectionFactoryInitializer()
@@ -111,7 +111,7 @@ fun initializer(connectionFactory: ConnectionFactory): ConnectionFactoryInitiali
     return initializer
 }
 
-// After — bluetape4k DSL (간결한 람다 빌더)
+// After — bluetape4k DSL (concise lambda builder)
 @Bean
 fun initializer(connectionFactory: ConnectionFactory): ConnectionFactoryInitializer =
     connectionFactoryInitializer(connectionFactory) {
@@ -119,58 +119,59 @@ fun initializer(connectionFactory: ConnectionFactory): ConnectionFactoryInitiali
     }
 ```
 
-### `buildExampleMatcher` vs ExampleMatcher 직접 구성
+### `buildExampleMatcher` vs Manual ExampleMatcher Configuration
 
 ```kotlin
-// Before — 표준 ExampleMatcher (프로퍼티명 문자열 직접 입력)
+// Before — standard ExampleMatcher (manual string property names)
 val matcher = ExampleMatcher.matching()
     .withIgnorePaths("age")
     .withMatcher("lastname", GenericPropertyMatchers.exact())
     .withIgnoreNullValues()
 
-// After — bluetape4k buildExampleMatcher (타입 안전 프로퍼티 참조)
+// After — bluetape4k buildExampleMatcher (type-safe property references)
 val matcher = ExampleMatcher.buildExampleMatcher(Person::lastname.name)
     .withMatcher(Person::lastname.name, GenericPropertyMatchers.exact())
     .withIgnoreNullValues()
 ```
 
-## 취소·구조적 동시성·컨텍스트 전파
+## Cancellation, Structured Concurrency, and Context Propagation
 
-### R2DBC Flow와 코루틴 취소
+### R2DBC Flow and Coroutine Cancellation
 
-`CoroutineCrudRepository`의 `Flow` 반환 메서드는 코루틴 취소 신호를 R2DBC 발행자에 전파합니다.
-테스트에서 `runTest { }` 블록이 시간 초과되거나 예외가 발생하면, `Flow<Customer>`를 수집하던 구독이 자동으로 취소되어
-DB 커넥션 풀에 커넥션이 반환됩니다.
+The `Flow`-returning methods in `CoroutineCrudRepository` propagate coroutine cancellation signals
+to the R2DBC publisher. If a `runTest { }` block times out or throws an exception in a test,
+the subscription collecting `Flow<Customer>` is automatically cancelled and the connection is
+returned to the DB connection pool.
 
 ```kotlin
-// Flow 취소 전파 예시
+// Flow cancellation propagation example
 runTest {
     val job = launch {
-        repository.findAll()        // Flux → Flow 변환
+        repository.findAll()        // Flux -> Flow conversion
             .collect { customer ->
-                // 이 collect 람다가 실행 중일 때 job.cancel() 호출 시
-                // R2DBC 구독이 즉시 취소되고 커넥션이 풀에 반환됨
+                // when job.cancel() is called while this collect lambda is running
+                // the R2DBC subscription is cancelled immediately and the connection returns to the pool
             }
     }
     delay(100)
-    job.cancel()  // → R2DBC upstream Flux도 취소됨
+    job.cancel()  // -> the upstream R2DBC Flux is also cancelled
 }
 ```
 
-### `@Transactional` + 코루틴 컨텍스트 전파
+### `@Transactional` + Coroutine Context Propagation
 
-`TransactionalService`는 `@Transactional suspend fun` 을 사용합니다.
-Spring R2DBC는 Reactor Context를 통해 트랜잭션 컨텍스트를 전파하며,
-`kotlinx-coroutines-reactor`의 `ReactorContext` 요소가 이를 코루틴 컨텍스트와 연결합니다.
+`TransactionalService` uses `@Transactional suspend fun`.
+Spring R2DBC propagates transaction context through Reactor Context, and the `ReactorContext`
+element from `kotlinx-coroutines-reactor` connects it with the coroutine context.
 
 ```kotlin
 // TransactionalService.kt
 @Transactional
 suspend fun insert(customer: Customer): Customer =
-    repository.save(customer)  // 동일 트랜잭션 컨텍스트에서 실행
+    repository.save(customer)  // runs in the same transaction context
 ```
 
-## 빌드 및 테스트
+## Build and Test
 
 ```bash
 ./gradlew :spring-data-r2dbc-examples:test

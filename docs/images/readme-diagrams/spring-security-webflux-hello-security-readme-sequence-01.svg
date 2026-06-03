@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="884" viewBox="0 0 1060 884" role="img" aria-label="Spring Security WebFlux Hello Diagram 1">
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="1192" viewBox="0 0 1060 1192" role="img" aria-label="Spring Security WebFlux Hello Diagram 1">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
   <marker id="arrowBlue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M1 1 L7 4 L1 7 Z" fill="#5b8def"/></marker>
@@ -18,52 +18,54 @@
     .box{stroke-width:1.8;filter:url(#shadow)}
   </style>
 </defs>
-<rect class="canvas" width="1060" height="884"/>
-<rect class="frame" x="24" y="20" width="1012" height="844" rx="18"/>
+<rect class="canvas" width="1060" height="1192"/>
+<rect class="frame" x="24" y="20" width="1012" height="1152" rx="18"/>
 <text class="title" x="48" y="58">Spring Security WebFlux Hello Diagram 1</text>
 <text class="subtitle" x="50" y="84">sequenceDiagram rendered from the current README model; labels are separated from connector lanes</text>
-<rect class="box" x="46" y="116" width="152" height="58" rx="10" fill="#e8f3ff" stroke="#7aa0c4"/>
+<rect class="box" x="30" y="116" width="184" height="58" rx="10" fill="#e8f3ff" stroke="#7aa0c4"/>
 <text class="actor" x="122" y="145" text-anchor="middle" dominant-baseline="middle">Browser</text>
-<line class="lifeline" x1="122" y1="174" x2="122" y2="826"/>
-<rect class="box" x="318" y="116" width="152" height="58" rx="10" fill="#eaf7ef" stroke="#7aa0c4"/>
-<text class="actor" x="394" y="145" text-anchor="middle" dominant-baseline="middle">SecurityWebFilterChain</text>
-<line class="lifeline" x1="394" y1="174" x2="394" y2="826"/>
-<rect class="box" x="590" y="116" width="152" height="58" rx="10" fill="#fff3d9" stroke="#7aa0c4"/>
-<text class="actor" x="666" y="145" text-anchor="middle" dominant-baseline="middle">MapReactiveUserDetailsService</text>
-<line class="lifeline" x1="666" y1="174" x2="666" y2="826"/>
-<rect class="box" x="862" y="116" width="152" height="58" rx="10" fill="#f1ecff" stroke="#7aa0c4"/>
-<text class="actor" x="938" y="145" text-anchor="middle" dominant-baseline="middle">MainController</text>
-<line class="lifeline" x1="938" y1="174" x2="938" y2="826"/>
-<rect x="78" y="188" width="360" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
-<text class="message" x="258" y="201" text-anchor="middle" dominant-baseline="middle">1. GET /user/index</text>
+<line class="lifeline" x1="122" y1="174" x2="122" y2="1134"/>
+<rect class="box" x="302" y="116" width="184" height="58" rx="10" fill="#eaf7ef" stroke="#7aa0c4"/>
+<text class="actor" x="394" y="138" text-anchor="middle" dominant-baseline="middle">Security Web</text>
+<text class="actor" x="394" y="152" text-anchor="middle" dominant-baseline="middle">Filter Chain</text>
+<line class="lifeline" x1="394" y1="174" x2="394" y2="1134"/>
+<rect class="box" x="574" y="116" width="184" height="58" rx="10" fill="#fff3d9" stroke="#7aa0c4"/>
+<text class="actor" x="666" y="138" text-anchor="middle" dominant-baseline="middle">Map Reactive User</text>
+<text class="actor" x="666" y="152" text-anchor="middle" dominant-baseline="middle">Details Service</text>
+<line class="lifeline" x1="666" y1="174" x2="666" y2="1134"/>
+<rect class="box" x="846" y="116" width="184" height="58" rx="10" fill="#f1ecff" stroke="#7aa0c4"/>
+<text class="actor" x="938" y="145" text-anchor="middle" dominant-baseline="middle">Main Controller</text>
+<line class="lifeline" x1="938" y1="174" x2="938" y2="1134"/>
+<rect x="78" y="176" width="360" height="26" rx="6" fill="#ffffff" opacity="0.95" stroke="#dbe3ee"/>
+<text class="message" x="258" y="189" text-anchor="middle" dominant-baseline="middle">1. GET /user/index</text>
 <path class="call" d="M122 218 L394 218"/>
-<rect x="350" y="242" width="88" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
-<text class="message" x="394" y="241" text-anchor="middle" dominant-baseline="middle">2. check</text>
-<text class="message" x="394" y="255" text-anchor="middle" dominant-baseline="middle">authorization</text>
-<text class="message" x="394" y="269" text-anchor="middle" dominant-baseline="middle">(Reactor)</text>
-<path class="call" d="M394 272 L394 272"/>
-<rect x="50" y="308" width="960" height="34" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-dasharray="6 4"/>
-<text class="branch" x="68" y="327" dominant-baseline="middle">alt: not authenticated</text>
-<rect x="78" y="350" width="360" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
-<text class="message" x="258" y="363" text-anchor="middle" dominant-baseline="middle">4. redirect /log-in</text>
-<path class="return" d="M394 380 L122 380"/>
-<rect x="78" y="404" width="360" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
-<text class="message" x="258" y="417" text-anchor="middle" dominant-baseline="middle">5. POST /log-in (form)</text>
-<path class="call" d="M122 434 L394 434"/>
-<rect x="350" y="458" width="360" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
-<text class="message" x="530" y="471" text-anchor="middle" dominant-baseline="middle">6. authenticate (BCrypt, reactive)</text>
-<path class="call" d="M394 488 L666 488"/>
-<rect x="350" y="512" width="360" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
-<text class="message" x="530" y="525" text-anchor="middle" dominant-baseline="middle">7. Mono&lt;Authentication&gt;</text>
-<path class="return" d="M666 542 L394 542"/>
-<rect x="78" y="566" width="360" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
-<text class="message" x="258" y="579" text-anchor="middle" dominant-baseline="middle">8. redirect /user/index</text>
-<path class="return" d="M394 596 L122 596"/>
-<line x1="52" y1="650" x2="1008" y2="650" stroke="#d8e0ea" stroke-width="1.2" stroke-dasharray="5 5"/>
-<rect x="456" y="674" width="420" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
-<text class="message" x="666" y="687" text-anchor="middle" dominant-baseline="middle">10. authorized Mono request</text>
-<path class="call" d="M394 704 L938 704"/>
-<rect x="320" y="728" width="420" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>
-<text class="message" x="530" y="741" text-anchor="middle" dominant-baseline="middle">11. 200 user page</text>
-<path class="return" d="M938 758 L122 758"/>
+<rect x="350" y="230" width="88" height="54" rx="6" fill="#ffffff" opacity="0.95" stroke="#dbe3ee"/>
+<text class="message" x="394" y="243" text-anchor="middle" dominant-baseline="middle">2. check</text>
+<text class="message" x="394" y="257" text-anchor="middle" dominant-baseline="middle">authorization</text>
+<text class="message" x="394" y="271" text-anchor="middle" dominant-baseline="middle">(Reactor)</text>
+<path class="call" d="M394 300 L394 300"/>
+<rect x="50" y="364" width="960" height="34" rx="8" fill="#f8fafc" stroke="#cbd5e1" stroke-dasharray="6 4"/>
+<text class="branch" x="68" y="383" dominant-baseline="middle">alt: not authenticated</text>
+<rect x="78" y="422" width="360" height="26" rx="6" fill="#ffffff" opacity="0.95" stroke="#dbe3ee"/>
+<text class="message" x="258" y="435" text-anchor="middle" dominant-baseline="middle">4. redirect /log-in</text>
+<path class="return" d="M394 464 L122 464"/>
+<rect x="78" y="504" width="360" height="26" rx="6" fill="#ffffff" opacity="0.95" stroke="#dbe3ee"/>
+<text class="message" x="258" y="517" text-anchor="middle" dominant-baseline="middle">5. POST /log-in (form)</text>
+<path class="call" d="M122 546 L394 546"/>
+<rect x="350" y="586" width="360" height="26" rx="6" fill="#ffffff" opacity="0.95" stroke="#dbe3ee"/>
+<text class="message" x="530" y="599" text-anchor="middle" dominant-baseline="middle">6. authenticate (BCrypt, reactive)</text>
+<path class="call" d="M394 628 L666 628"/>
+<rect x="350" y="668" width="360" height="26" rx="6" fill="#ffffff" opacity="0.95" stroke="#dbe3ee"/>
+<text class="message" x="530" y="681" text-anchor="middle" dominant-baseline="middle">7. Mono&lt;Authentication&gt;</text>
+<path class="return" d="M666 710 L394 710"/>
+<rect x="78" y="750" width="360" height="26" rx="6" fill="#ffffff" opacity="0.95" stroke="#dbe3ee"/>
+<text class="message" x="258" y="763" text-anchor="middle" dominant-baseline="middle">8. redirect /user/index</text>
+<path class="return" d="M394 792 L122 792"/>
+<line x1="52" y1="874" x2="1008" y2="874" stroke="#d8e0ea" stroke-width="1.2" stroke-dasharray="5 5"/>
+<rect x="456" y="914" width="420" height="26" rx="6" fill="#ffffff" opacity="0.95" stroke="#dbe3ee"/>
+<text class="message" x="666" y="927" text-anchor="middle" dominant-baseline="middle">10. authorized Mono request</text>
+<path class="call" d="M394 956 L938 956"/>
+<rect x="320" y="996" width="420" height="26" rx="6" fill="#ffffff" opacity="0.95" stroke="#dbe3ee"/>
+<text class="message" x="530" y="1009" text-anchor="middle" dominant-baseline="middle">11. 200 user page</text>
+<path class="return" d="M938 1038 L122 1038"/>
 </svg>

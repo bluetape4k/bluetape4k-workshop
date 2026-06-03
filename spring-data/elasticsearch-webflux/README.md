@@ -27,7 +27,7 @@ The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k h
 
 ![Spring Data Elasticsearch Example with Spring Boot 4 and Elasticsearch 8 sequence diagram](../../docs/images/readme-diagrams/spring-data-elasticsearch-webflux-sequence-01.png)
 
-## 아키텍처 다이어그램
+## Architecture Diagram
 
 ![elasticsearch webflux Class Structure diagram](../../docs/images/readme-diagrams/spring-data-elasticsearch-webflux-diagram-01.png)
 
@@ -49,7 +49,7 @@ For this example, we created a Book controller that allows doing the following o
 - Search for a book by ISBN
 - Fuzzy search for books by author and title
 
-## 참고
+## References
 
 - [Spring Data Elasticsearch - Reference Documentation](https://docs.spring.io/spring-data/elasticsearch/docs/current/reference/html/)
-- [Spring Data Elasticsearch NativeSearchQuery 사용법](https://juntcom.tistory.com/149)
+- [How to use Spring Data Elasticsearch NativeSearchQuery](https://juntcom.tistory.com/149)

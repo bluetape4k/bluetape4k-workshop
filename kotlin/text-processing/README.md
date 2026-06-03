@@ -77,7 +77,7 @@ language models are loaded once and reused across all calls.
 val service = LanguageDetectionService()
 
 service.detectLanguage("Hello, World!")     // Language.ENGLISH
-service.detectLanguage("안녕하세요.")         // Language.KOREAN
+service.detectLanguage("Hello.") // Language.KOREAN
 service.detectLanguage("東京は首都です。")    // Language.JAPANESE
 
 // Confidence values for all plausible languages

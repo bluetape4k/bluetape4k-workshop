@@ -7,6 +7,8 @@ import path from "node:path";
 const root = process.cwd();
 const outDir = path.join(root, "docs/images/readme-diagrams");
 const ignoredDirs = new Set([".git", ".gradle", ".omc", ".omx", "build", "node_modules"]);
+const sourceRefArg = process.argv.find((arg) => arg.startsWith("--source-ref="));
+const sourceRef = sourceRefArg ? sourceRefArg.slice("--source-ref=".length) : "";
 
 function walk(dir, predicate) {
   const out = [];
@@ -62,15 +64,58 @@ function textLines(text, maxChars = 28) {
   const lines = [];
   let line = "";
   for (const word of words) {
-    if (!line) line = word;
-    else if ((line + " " + word).length <= maxChars) line += " " + word;
-    else {
-      lines.push(line);
-      line = word;
+    const parts = word.length > maxChars ? word.match(new RegExp(`.{1,${maxChars}}`, "g")) || [word] : [word];
+    for (const part of parts) {
+      if (!line) line = part;
+      else if ((line + " " + part).length <= maxChars) line += " " + part;
+      else {
+        lines.push(line);
+        line = part;
+      }
+    }
+    if (lines.length >= 3) {
+      line = "";
+      break;
     }
   }
   if (line) lines.push(line);
   return lines.slice(0, 3);
+}
+
+function actorTextLines(text, maxChars = 18) {
+  const clean = diagramText(text.replace(/<br\s*\/?>/gi, " / "))
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/\s+/g, " ")
+    .trim();
+  const words = clean.split(" ");
+  const lines = [];
+  let line = "";
+  for (const word of words) {
+    const parts = word.length > maxChars ? word.match(new RegExp(`.{1,${maxChars}}`, "g")) || [word] : [word];
+    for (const part of parts) {
+      if (!line) line = part;
+      else if ((line + " " + part).length <= maxChars) line += " " + part;
+      else {
+        lines.push(line);
+        line = part;
+      }
+    }
+    if (lines.length >= 3) {
+      line = "";
+      break;
+    }
+  }
+  if (line) lines.push(line);
+  return lines.slice(0, 3);
+}
+
+function actorTextBlock(text, x, y, anchor = "middle", maxChars = 18, lineHeight = 15) {
+  return actorTextLines(text, maxChars)
+    .map((line, index, lines) => {
+      const yy = y + (index - (lines.length - 1) / 2) * lineHeight;
+      return `<text class="actor" x="${x}" y="${yy}" text-anchor="${anchor}" dominant-baseline="middle">${esc(line)}</text>`;
+    })
+    .join("\n");
 }
 
 function textBlock(text, x, y, className, anchor = "middle", maxChars = 28, lineHeight = 17) {
@@ -162,7 +207,7 @@ function renderSequence(source, title, subtitle) {
   const top = 116;
   const actorY = top;
   const eventStart = 218;
-  const eventGap = 54;
+  const eventGap = 82;
   const height = Math.max(420, eventStart + model.events.length * eventGap + 72);
   const laneLeft = 122;
   const laneRight = width - 122;
@@ -174,8 +219,8 @@ function renderSequence(source, title, subtitle) {
   model.actors.forEach((actor, index) => {
     const x = xByActor.get(actor.id);
     const fill = colors[index % colors.length];
-    svg += `\n<rect class="box" x="${x - 76}" y="${actorY}" width="152" height="58" rx="10" fill="${fill}" stroke="#7aa0c4"/>`;
-    svg += `\n${textBlock(actor.label, x, actorY + 29, "actor", "middle", 18, 16)}`;
+    svg += `\n<rect class="box" x="${x - 92}" y="${actorY}" width="184" height="58" rx="10" fill="${fill}" stroke="#7aa0c4"/>`;
+    svg += `\n${actorTextBlock(actor.label, x, actorY + 29, "middle", 18, 14)}`;
     svg += `\n<line class="lifeline" x1="${x}" y1="${actorY + 58}" x2="${x}" y2="${height - 58}"/>`;
   });
 
@@ -203,12 +248,17 @@ function renderSequence(source, title, subtitle) {
     const fromX = xByActor.get(event.from);
     const toX = xByActor.get(event.to);
     if (fromX === undefined || toX === undefined) return;
-    const labelY = y - 16;
     const arrowClass = event.dashed ? "return" : "call";
     const labelWidth = Math.min(Math.abs(toX - fromX) + 88, 420);
     const midX = (fromX + toX) / 2;
-    svg += `\n<rect x="${midX - labelWidth / 2}" y="${labelY - 14}" width="${labelWidth}" height="24" rx="6" fill="#ffffff" opacity="0.92" stroke="#dbe3ee"/>`;
-    svg += `\n${textBlock(`${index + 1}. ${event.label}`, midX, labelY - 1, "message", "middle", Math.max(18, Math.floor(labelWidth / 9)), 14)}`;
+    const maxChars = Math.max(18, Math.floor(labelWidth / 9));
+    const labelLines = textLines(`${index + 1}. ${event.label}`, maxChars);
+    const labelHeight = labelLines.length * 14 + 12;
+    const labelBottomGap = 16;
+    const labelTop = y - labelBottomGap - labelHeight;
+    const labelCenterY = labelTop + labelHeight / 2;
+    svg += `\n<rect x="${midX - labelWidth / 2}" y="${labelTop}" width="${labelWidth}" height="${labelHeight}" rx="6" fill="#ffffff" opacity="0.95" stroke="#dbe3ee"/>`;
+    svg += `\n${textBlock(`${index + 1}. ${event.label}`, midX, labelCenterY, "message", "middle", maxChars, 14)}`;
     svg += `\n<path class="${arrowClass}" d="M${fromX} ${y} L${toX} ${y}"/>`;
   });
 
@@ -399,9 +449,19 @@ function diagramType(source) {
 }
 
 function titleFromReadme(readme) {
-  const content = fs.readFileSync(readme, "utf8");
+  const content = readReadmeContent(readme);
   const match = content.match(/^#\s+(.+)$/m);
   return match ? match[1].trim() : path.basename(path.dirname(readme));
+}
+
+function readReadmeContent(readme) {
+  if (!sourceRef) return fs.readFileSync(readme, "utf8");
+  const rel = path.relative(root, readme).replaceAll(path.sep, "/");
+  try {
+    return execFileSync("git", ["show", `${sourceRef}:${rel}`], { encoding: "utf8" });
+  } catch {
+    return fs.readFileSync(readme, "utf8");
+  }
 }
 
 function renderPng(svgFile, pngFile) {
@@ -415,7 +475,7 @@ fs.mkdirSync(outDir, { recursive: true });
 let converted = 0;
 const files = walk(root, (file) => /^README(\..+)?\.md$/.test(path.basename(file)));
 for (const readme of files) {
-  let content = fs.readFileSync(readme, "utf8");
+  let content = readReadmeContent(readme);
   let blockIndex = 0;
   const next = content.replace(/```mermaid\n([\s\S]*?)\n```/g, (block, source) => {
     blockIndex += 1;
@@ -433,7 +493,7 @@ for (const readme of files) {
     const rel = path.relative(path.dirname(readme), pngFile).replaceAll(path.sep, "/");
     return `![${title}](${rel})`;
   });
-  if (next !== content) {
+  if (!sourceRef && next !== content) {
     fs.writeFileSync(readme, next);
   }
 }

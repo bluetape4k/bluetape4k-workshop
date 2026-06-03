@@ -28,33 +28,33 @@ for zero-boilerplate reactive data access.
 
 ![Spring Data R2DBC + Coroutines Diagram 1](../../docs/images/readme-diagrams/spring-data-r2dbc-coroutines-readme-sequence-01.png)
 
-## 아키텍처 다이어그램
+## Architecture Diagram
 
 ![r2dbc coroutines Class Structure diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-coroutines-diagram-01.png)
 
 ![r2dbc coroutines Sequence Flow 2 diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-coroutines-sequence-01.png)
 
-## 사용된 bluetape4k 기능
+## Used bluetape4k Features
 
-| 기능 | 아티팩트 | 코드 위치 | 이점 |
+| Feature | Artifact | Code location | Benefit |
 |---|---|---|---|
-| `*Suspending` 확장 함수군 | `bluetape4k-spring-boot4-r2dbc` | `PostRepository.kt` | `R2dbcEntityOperations`에 suspend 래퍼 추가 — Flow/Mono 변환 없이 바로 suspend 함수 호출 |
-| `countAllSuspending<T>()` | `bluetape4k-spring-boot4-r2dbc` | `PostRepository.count()` | `operations.count(...)` + `.awaitSingle()` 패턴을 한 줄로 대체 |
-| `selectAllSuspending<T>()` | `bluetape4k-spring-boot4-r2dbc` | `PostRepository.findAll()` | `Flux` → `Flow` 변환을 내부에서 처리 |
-| `findOneByIdSuspending(id)` / `findOneByIdOrNullSuspending(id)` | `bluetape4k-spring-boot4-r2dbc` | `PostRepository.findOneById()` | ID로 단건 조회 — null 여부를 반환 타입으로 표현 |
-| `findFirstByIdSuspending(id)` / `findFirstByIdOrNullSuspending(id)` | `bluetape4k-spring-boot4-r2dbc` | `PostRepository.findFirstById()` | 첫 번째 매칭 엔티티 조회 |
-| `insertSuspending(entity)` | `bluetape4k-spring-boot4-r2dbc` | `PostRepository.save()` | insert 후 생성된 엔티티 반환 — Mono 체이닝 없이 suspend |
-| `deleteAllSuspending<T>()` | `bluetape4k-spring-boot4-r2dbc` | `PostRepository.deleteAll()` | 타입 파라미터로 대상 엔티티 지정, 삭제된 행 수 반환 |
-| `runSuspendIO { }` | `bluetape4k-junit5` | 테스트 전체 | `runBlocking(Dispatchers.IO)` 패턴을 JUnit 5 확장으로 제공 |
-| `KLoggingChannel` | `bluetape4k-logging` | 모든 companion object | 코루틴 컨텍스트 포함 구조적 로깅 |
-| `bluetape4k-assertions` | `bluetape4k-core` | 테스트 전체 | 가독성 높은 단언문 (`shouldBeEqualTo`, `shouldNotBeNull` 등) |
+| `*Suspending` extension family | `bluetape4k-spring-boot4-r2dbc` | `PostRepository.kt` | Adds suspend wrappers to `R2dbcEntityOperations` — call suspend functions directly without Flow/Mono conversion |
+| `countAllSuspending<T>()` | `bluetape4k-spring-boot4-r2dbc` | `PostRepository.count()` | Replaces the `operations.count(...)` + `.awaitSingle()` pattern with one line |
+| `selectAllSuspending<T>()` | `bluetape4k-spring-boot4-r2dbc` | `PostRepository.findAll()` | Handles `Flux` -> `Flow` conversion internally |
+| `findOneByIdSuspending(id)` / `findOneByIdOrNullSuspending(id)` | `bluetape4k-spring-boot4-r2dbc` | `PostRepository.findOneById()` | Fetches one record by ID — expresses nullability in the return type |
+| `findFirstByIdSuspending(id)` / `findFirstByIdOrNullSuspending(id)` | `bluetape4k-spring-boot4-r2dbc` | `PostRepository.findFirstById()` | Fetches the first matching entity |
+| `insertSuspending(entity)` | `bluetape4k-spring-boot4-r2dbc` | `PostRepository.save()` | Returns the generated entity after insert — suspend without Mono chaining |
+| `deleteAllSuspending<T>()` | `bluetape4k-spring-boot4-r2dbc` | `PostRepository.deleteAll()` | Specifies the target entity by type parameter and returns the deleted row count |
+| `runSuspendIO { }` | `bluetape4k-junit5` | All tests | Provides the `runBlocking(Dispatchers.IO)` pattern as a JUnit 5 extension |
+| `KLoggingChannel` | `bluetape4k-logging` | All companion objects | Structured logging that includes coroutine context |
+| `bluetape4k-assertions` | `bluetape4k-core` | All tests | Readable assertions such as `shouldBeEqualTo` and `shouldNotBeNull` |
 
 ## bluetape4k Before / After
 
-### `R2dbcEntityOperations` suspend 확장 함수
+### `R2dbcEntityOperations` Suspend Extension Functions
 
 ```kotlin
-// Before — Reactor API + awaitXxx() 수동 변환
+// Before — Reactor API + manual awaitXxx() conversion
 @Repository
 class PostRepository(private val operations: R2dbcEntityOperations) {
     suspend fun count(): Long =
@@ -71,7 +71,7 @@ class PostRepository(private val operations: R2dbcEntityOperations) {
         operations.insert(post).awaitSingle()
 }
 
-// After — bluetape4k *Suspending 확장 함수 (보일러플레이트 제거)
+// After — bluetape4k *Suspending extensions (boilerplate removed)
 @Repository
 class PostRepository(private val operations: R2dbcEntityOperations) {
     suspend fun count(): Long = operations.countAllSuspending<Post>()
@@ -83,17 +83,17 @@ class PostRepository(private val operations: R2dbcEntityOperations) {
 }
 ```
 
-### `runSuspendIO { }` 테스트 패턴
+### `runSuspendIO { }` Test Pattern
 
 ```kotlin
-// Before — runBlocking + Dispatchers.IO 명시
+// Before — explicit runBlocking + Dispatchers.IO
 @Test
 fun `find all posts`() = runBlocking(Dispatchers.IO) {
     val posts = postRepository.findAll().toList()
     posts.shouldNotBeEmpty()
 }
 
-// After — bluetape4k runSuspendIO (더 명확한 의도 표현)
+// After — bluetape4k runSuspendIO (clearer intent)
 @Test
 fun `find all posts`() = runSuspendIO {
     val posts = postRepository.findAll().toList()
@@ -101,7 +101,7 @@ fun `find all posts`() = runSuspendIO {
 }
 ```
 
-## 참고
+## References
 
 * [Spring Data Examples - r2dbc/example](https://github.com/spring-projects/spring-data-examples/tree/main/r2dbc/example)
 * [Spring Data Examples - r2dbc/query-by-example](https://github.com/spring-projects/spring-data-examples/tree/main/r2dbc/query-by-example)

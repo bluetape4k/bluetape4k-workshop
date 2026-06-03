@@ -31,10 +31,10 @@ Micrometer Observation + W3C 트레이스 전파를 보여주는 최소 Observab
 ## 스팬 트리
 
 ```
-http.server.requests            (자동 — Spring Boot)
-  └─ order.service.fetch        (수동 — observed())
-       └─ http.client.requests  (자동 — Micrometer WebClient)
-            └─ 다운스트림 인벤토리 서비스
+http.server.requests            (auto — Spring Boot)
+  └─ order.service.fetch        (manual — observed())
+       └─ http.client.requests  (auto — Micrometer WebClient)
+            └─ downstream inventory service
 ```
 
 ## 핵심 개념
@@ -51,6 +51,24 @@ http.server.requests            (자동 — Spring Boot)
 
 - `OrderServiceTest`: 스팬 생명주기(시작/중지), 에러 기록, 취소 안전성
 - `OrderControllerTest`: HTTP 200 통합 테스트, W3C traceparent 헤더 전파
+
+## 설정
+
+```yaml
+workshop:
+  observability:
+    inventory:
+      base-url: http://localhost:8080
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  otlp:
+    tracing:
+      export:
+        enabled: false  # set true to export to OTel collector
+```
 
 ## 의존성
 
