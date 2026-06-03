@@ -15,7 +15,7 @@ Spring이나 리액티브 스트림 없이 관용적인 코루틴 HTTP, SSE 스�
 
 ## 아키텍처
 
-![ktor-rest-coroutines Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/ktor-rest-coroutines-readme-architecture-01.png)
+![ktor-rest-coroutines Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/ktor-rest-coroutines-architecture-01.png)
 
 ---
 

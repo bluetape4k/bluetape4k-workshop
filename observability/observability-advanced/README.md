@@ -13,7 +13,7 @@ across HTTP (WebFlux), coroutine service, H2 database (Exposed JDBC), and Redis 
 
 ## Architecture
 
-![observability-advanced Graphviz architecture diagram](../../docs/images/readme-diagrams/observability-observability-advanced-readme-architecture-01.png)
+![observability-advanced architecture diagram](../../docs/images/readme-diagrams/observability-observability-advanced-architecture-01.png)
 
 ## Span Trees
 

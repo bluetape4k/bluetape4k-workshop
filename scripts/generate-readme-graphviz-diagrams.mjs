@@ -232,6 +232,13 @@ function itemNodes(group, items, titlePrefix, fill, limit = 5) {
   );
 }
 
+function pushUniqueEdge(edges, from, to, label) {
+  if (!from || !to || from === to) return;
+  const key = `${from}->${to}`;
+  if (edges.some(([existingFrom, existingTo]) => `${existingFrom}->${existingTo}` === key)) return;
+  edges.push([from, to, label]);
+}
+
 function profileFor(rel) {
   const key = (() => {
     if (rel.startsWith("spring-security/")) return "security";
@@ -513,7 +520,7 @@ function architectureModel(dir, rel) {
     const fromNode = from ? nodes.find((item) => item.id === from) : null;
     const toNode = to ? nodes.find((item) => item.id === to) : null;
     if (fromNode && toNode && fromNode.group === toNode.group) return;
-    if (from && to) edges.push([from, to, label]);
+    if (from && to) pushUniqueEdge(edges, from, to, label);
   };
   connectGroup("api", "service", "delegates");
   if (!firstInGroup("api")) connectGroup("entry", "service", "starts");
@@ -524,7 +531,7 @@ function architectureModel(dir, rel) {
   const btIds = idsByGroup("bt");
   const infraIds = idsByGroup("infra");
   if (btIds.length > 0) {
-    edges.push([btIds.at(-1), firstInGroup("runtime"), "adapts"]);
+    pushUniqueEdge(edges, btIds.at(-1), firstInGroup("runtime"), "adapts");
   } else {
     connectGroup("infra", "runtime", "backs");
     if (infraIds.length === 0) connectGroup("service", "runtime", "runs on");

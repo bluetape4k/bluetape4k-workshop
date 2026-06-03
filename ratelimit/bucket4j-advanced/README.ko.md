@@ -12,7 +12,7 @@ Spring Boot WebFlux + Coroutines 워크숍 모듈로, Redis(Lettuce)를 백엔�
 
 ## 아키텍처
 
-![bucket4j-advanced — Advanced Rate Limit Strategies Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/ratelimit-bucket4j-advanced-readme-architecture-01.png)
+![bucket4j-advanced — Advanced Rate Limit Strategies Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/ratelimit-bucket4j-advanced-architecture-01.png)
 
 ## 요청 제한 전략
 
