@@ -26,10 +26,15 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Example Entrypoints\nKotlin Design Patterns Kotlin\nDesignPatterns LazyLoading tests", fillcolor="#FFF8E7"];
-  service [label="Application Services\nHeavy\nHolderKotlinLazy\nHolderNative\nHolderThreadSafe", fillcolor="#F1F8E9"];
-  runtime [label="Runtime Dependencies\nSQL / R2DBC", fillcolor="#FFF1F1"];
+  entry0 [label="lazyLoading\nExample Entrypoints", fillcolor="#FFF8E7"];
+  service0 [label="Heavy\ncomponent", fillcolor="#F1F8E9"];
+  service1 [label="Holder Kotlin Lazy\ncomponent", fillcolor="#F1F8E9"];
+  service2 [label="Holder Native\ncomponent", fillcolor="#F1F8E9"];
+  service3 [label="Holder Thread Safe\ncomponent", fillcolor="#F1F8E9"];
+  service4 [label="Heavy Deferred\ncoroutines", fillcolor="#F1F8E9"];
+  service5 [label="Heavy Deferred Value\ncoroutines", fillcolor="#F1F8E9"];
+  runtime0 [label="SQL / R2DBC\nRuntime Dependencies", fillcolor="#FFF1F1"];
 
-  entry -> service [label="delegates"];
-  service -> runtime [label="backs"];
+  entry0 -> service0 [label="starts"];
+  service5 -> runtime0 [label="runs on"];
 }

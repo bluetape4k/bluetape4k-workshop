@@ -1,9 +1,16 @@
-graph 1 16.704 1.7263
-node entry 1.9344 0.86313 3.8688 1.7263 "Sample Bootstraps\nSpringCloudAwsS3Sample\nAbstractSpringCloudAwsS3SampleTest\nSpringCloudAwsS3Test\nAws S3 Spring Cloud tests" rounded,filled box #88A3B5 #FFF8E7
-node infra 7.9976 0.86313 3.0354 1.7263 "Spring Cloud AWS\nSpring cloud aws starter\nSpring cloud aws s3\nSpring boot autoconfigure lib\nSpring boot autoconfigure" rounded,filled box #88A3B5 #F5F0FF
-node bt 12.207 0.86313 2.3271 1.445 "bluetape4k AWS APIs\nworkshop\naws\ntestcontainers" rounded,filled box #88A3B5 #EAF7F0
-node runtime 15.759 0.86313 1.8896 1.1637 "LocalStack / S3\nAWS / S3\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry infra 4 3.8778 0.86313 3.8778 0.86313 6.3304 0.86313 6.3304 0.86313 "persists / publishes" 5.1743 0.95167 solid #637383
-edge infra bt 4 9.5231 0.86313 9.5231 0.86313 10.893 0.86313 10.893 0.86313 extends 10.279 0.95167 solid #637383
-edge bt runtime 4 13.38 0.86313 13.38 0.86313 14.664 0.86313 14.664 0.86313 adapts 14.092 0.95167 solid #637383
+graph 1 8.4111 15.133
+node entry0 2.1531 0.44125 2.9417 0.8825 "Spring Cloud Aws S3 Sample\ns3" rounded,filled box #88A3B5 #FFF8E7
+node entry1 2.1531 2.0246 4.3063 0.8825 "Abstract Spring Cloud Aws S3 Sample Test\ns3" rounded,filled box #88A3B5 #FFF8E7
+node entry2 2.1531 3.6079 2.7333 0.8825 "Spring Cloud Aws S3 Test\ns3" rounded,filled box #88A3B5 #FFF8E7
+node infra0 7.0809 3.6079 2.6604 0.8825 "Spring cloud aws starter\nSpring Cloud AWS" rounded,filled box #88A3B5 #F5F0FF
+node infra1 2.1531 5.1913 2.1813 0.8825 "Spring cloud aws s3\nSpring Cloud AWS" rounded,filled box #88A3B5 #F5F0FF
+node infra2 2.1531 6.7746 3.0354 0.8825 "Spring boot autoconfigure lib\nSpring Cloud AWS" rounded,filled box #88A3B5 #F5F0FF
+node infra3 2.1531 8.3579 3.8271 0.8825 "Spring boot autoconfigure processor\nSpring Cloud AWS" rounded,filled box #88A3B5 #F5F0FF
+node bt0 2.1531 9.9413 2.3271 0.8825 "workshop\nbluetape4k AWS APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt1 2.1531 11.525 2.3271 0.8825 "aws\nbluetape4k AWS APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt2 2.1531 13.108 2.3271 0.8825 "testcontainers\nbluetape4k AWS APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime0 7.0809 13.108 1.8896 0.8825 "AWS / S3\nLocalStack / S3" rounded,filled box #88A3B5 #FFF1F1
+node runtime1 2.1531 14.691 1.8896 0.8825 "Testcontainers\nLocalStack / S3" rounded,filled box #88A3B5 #FFF1F1
+edge entry2 infra0 4 3.5258 3.6079 3.5258 3.6079 5.5985 3.6079 5.5985 3.6079 uses 5.0285 3.6965 solid #637383
+edge bt2 runtime0 4 3.3209 13.108 3.3209 13.108 5.9854 13.108 5.9854 13.108 adapts 5.0285 13.196 solid #637383
 stop

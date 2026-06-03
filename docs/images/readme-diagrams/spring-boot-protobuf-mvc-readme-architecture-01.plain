@@ -1,13 +1,17 @@
-graph 1 23.393 1.7263
-node entry 1.7 0.86313 3.4 1.7263 "Boot App/Test Surface\nProtobufApplication\nCourseConfigTest\nProtobufApplicationIT\nSpring Boot Protobuf Mvc tests" rounded,filled box #88A3B5 #FFF8E7
-node api 6.0861 0.86313 2.3167 0.8825 "Spring Web Adapters\nCourseController" rounded,filled box #88A3B5 #EEF7FF
-node service 10.04 0.86313 2.2021 0.8825 "Application Feature\nProtobufConverter" rounded,filled box #88A3B5 #F1F8E9
-node infra 14.947 0.86313 2.3896 1.1637 "Infrastructure Config\nConurceConfig\nCourseRepository" rounded,filled box #88A3B5 #F5F0FF
-node bt 18.838 0.86313 2.3375 1.445 "bluetape4k Boot APIs\nworkshop\ngrpc\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
-node runtime 22.422 0.86313 1.9417 0.8825 "Boot Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.4083 0.86313 3.4083 0.86313 4.7814 0.86313 4.7814 0.86313 invokes 4.1639 0.95167 solid #637383
-edge api service 4 7.251 0.86313 7.251 0.86313 8.7882 0.86313 8.7882 0.86313 delegates 8.0917 0.95167 solid #637383
-edge service infra 4 11.147 0.86313 11.147 0.86313 13.602 0.86313 13.602 0.86313 "persists / publishes" 12.447 0.95167 solid #637383
-edge infra bt 4 16.146 0.86313 16.146 0.86313 17.52 0.86313 17.52 0.86313 extends 16.906 0.95167 solid #637383
-edge bt runtime 4 20.012 0.86313 20.012 0.86313 21.301 0.86313 21.301 0.86313 adapts 20.729 0.95167 solid #637383
+graph 1 11.172 13.549
+node entry0 1.3771 0.44125 2.275 0.8825 "Protobuf Application\napplication bootstrap" rounded,filled box #88A3B5 #FFF8E7
+node entry1 1.3771 2.0246 2.1917 0.8825 "Course Config Test\nprotobuf" rounded,filled box #88A3B5 #FFF8E7
+node entry2 1.3771 3.6079 2.4938 0.8825 "Protobuf Application IT\nprotobuf" rounded,filled box #88A3B5 #FFF8E7
+node entry3 1.3771 5.1913 2.7542 0.8825 "Protobuf Converter Test\nconvert" rounded,filled box #88A3B5 #FFF8E7
+node api0 1.3771 6.7746 2.0354 0.8825 "Course Controller\nHTTP adapter" rounded,filled box #88A3B5 #EEF7FF
+node service0 5.5861 6.7746 2.275 0.8825 "Protobuf Converter\nconvert" rounded,filled box #88A3B5 #F1F8E9
+node infra0 10.253 6.7746 1.8375 0.8825 "Conurce Config\nconfiguration" rounded,filled box #88A3B5 #F5F0FF
+node infra1 1.3771 8.3579 2.1083 0.8825 "Course Repository\nrepository" rounded,filled box #88A3B5 #F5F0FF
+node bt0 1.3771 9.9413 2.3375 0.8825 "workshop\nbluetape4k Boot APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt1 1.3771 11.525 2.3375 0.8825 "grpc\nbluetape4k Boot APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt2 1.3771 13.108 2.3375 0.8825 "coroutines\nbluetape4k Boot APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime0 5.5861 13.108 1.9417 0.8825 "In-memory / JVM\nBoot Runtime" rounded,filled box #88A3B5 #FFF1F1
+edge api0 service0 4 2.4013 6.7746 2.4013 6.7746 4.2995 6.7746 4.2995 6.7746 delegates 3.6014 6.8631 solid #637383
+edge service0 infra0 4 6.7279 6.7746 6.7279 6.7746 9.1843 6.7746 9.1843 6.7746 "persists / publishes" 8.0292 6.8631 solid #637383
+edge bt2 runtime0 4 2.5551 13.108 2.5551 13.108 4.4647 13.108 4.4647 13.108 adapts 3.6014 13.196 solid #637383
 stop

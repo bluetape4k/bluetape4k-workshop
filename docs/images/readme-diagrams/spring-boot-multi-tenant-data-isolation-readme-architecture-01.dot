@@ -26,14 +26,26 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Boot App/Test Surface\nMultiTenantDataIsolationApplication\nTenantIsolationTest\nSpring Boot Multi Tenant Data\nIsolation tests", fillcolor="#FFF8E7"];
-  service [label="Application Feature\nExposedSchemaInitializer\nTenantInvoiceCache\nTenantInvoiceService\nTenantKeyFactory", fillcolor="#F1F8E9"];
-  infra [label="Infrastructure Config\nInvoiceRecord\nInvoiceTable\nTenantId\nTenantInvoiceRepository", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k Boot APIs\nworkshop\njunit5\nassertions", fillcolor="#EAF7F0"];
-  runtime [label="Boot Runtime\nSQL / R2DBC\nRedis", fillcolor="#FFF1F1"];
+  entry0 [label="Multi Tenant Data Isolation Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Tenant Isolation Test\nmultitenant", fillcolor="#FFF8E7"];
+  service0 [label="Exposed Schema Initializer\nconfiguration", fillcolor="#F1F8E9"];
+  service1 [label="Tenant Invoice Cache\nservice component", fillcolor="#F1F8E9"];
+  service2 [label="Tenant Invoice Service\nservice component", fillcolor="#F1F8E9"];
+  service3 [label="Tenant Key Factory\nservice component", fillcolor="#F1F8E9"];
+  service4 [label="Tenant Lock Registry\nservice component", fillcolor="#F1F8E9"];
+  service5 [label="Tenant Metrics\nservice component", fillcolor="#F1F8E9"];
+  infra0 [label="Invoice Record\ndomain model", fillcolor="#F5F0FF"];
+  infra1 [label="Invoice Table\ndomain model", fillcolor="#F5F0FF"];
+  infra2 [label="Tenant Id\ndomain model", fillcolor="#F5F0FF"];
+  infra3 [label="Tenant Invoice Repository\nrepository", fillcolor="#F5F0FF"];
+  infra4 [label="Unsafe Invoice Repository\nrepository", fillcolor="#F5F0FF"];
+  bt0 [label="workshop\nbluetape4k Boot APIs", fillcolor="#EAF7F0"];
+  bt1 [label="junit5\nbluetape4k Boot APIs", fillcolor="#EAF7F0"];
+  bt2 [label="assertions\nbluetape4k Boot APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="SQL / R2DBC\nBoot Runtime", fillcolor="#FFF1F1"];
+  runtime1 [label="Redis\nBoot Runtime", fillcolor="#FFF1F1"];
 
-  entry -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  entry1 -> service0 [label="starts"];
+  service5 -> infra0 [label="persists / publishes"];
+  bt2 -> runtime0 [label="adapts"];
 }

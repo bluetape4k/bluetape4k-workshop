@@ -26,16 +26,27 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Observed App/Test Surface\nObservationApp\nAbstractObservationTest\nObservationRegistryTest\nObservability Micrometer", fillcolor="#FFF8E7"];
-  api [label="Observed Web Adapters\nObservationAspectConfig\nObservationFilterConfig\nObservationLoggingConfig\nGreetingController", fillcolor="#EEF7FF"];
-  service [label="Instrumented Services\nGreetingService\nObservationSupport", fillcolor="#F1F8E9"];
-  infra [label="Micrometer/Spring Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k Observability APIs\nworkshop\nmicrometer\njackson3", fillcolor="#EAF7F0"];
-  runtime [label="Metrics / Trace Runtime\nIn-memory / JVM", fillcolor="#FFF1F1"];
+  entry0 [label="Observation App\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Abstract Observation Test\nobservation", fillcolor="#FFF8E7"];
+  entry2 [label="Observation Registry Test\nexamples", fillcolor="#FFF8E7"];
+  entry3 [label="Greeting Service Tracing Integration Test\ntracing", fillcolor="#FFF8E7"];
+  api0 [label="Observation Aspect Config\nconfiguration", fillcolor="#EEF7FF"];
+  api1 [label="Observation Filter Config\nconfiguration", fillcolor="#EEF7FF"];
+  api2 [label="Observation Logging Config\nconfiguration", fillcolor="#EEF7FF"];
+  api3 [label="Greeting Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  api4 [label="Index Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  service0 [label="Greeting Service\nservice component", fillcolor="#F1F8E9"];
+  service1 [label="Observation Support\nsupport", fillcolor="#F1F8E9"];
+  infra0 [label="Spring boot autoconfigure lib\nMicrometer/Spring Layer", fillcolor="#F5F0FF"];
+  infra1 [label="Spring boot autoconfigure processor\nMicrometer/Spring Layer", fillcolor="#F5F0FF"];
+  infra2 [label="Spring boot configuration processor\nMicrometer/Spring Layer", fillcolor="#F5F0FF"];
+  infra3 [label="Spring boot devtools\nMicrometer/Spring Layer", fillcolor="#F5F0FF"];
+  bt0 [label="workshop\nbluetape4k Observability APIs", fillcolor="#EAF7F0"];
+  bt1 [label="micrometer\nbluetape4k Observability APIs", fillcolor="#EAF7F0"];
+  bt2 [label="jackson3\nbluetape4k Observability APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="In-memory / JVM\nMetrics / Trace Runtime", fillcolor="#FFF1F1"];
 
-  entry -> api [label="invokes"];
-  api -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  api4 -> service0 [label="delegates"];
+  service1 -> infra0 [label="persists / publishes"];
+  bt2 -> runtime0 [label="adapts"];
 }

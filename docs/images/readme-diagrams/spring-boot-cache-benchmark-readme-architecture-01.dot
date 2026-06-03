@@ -26,14 +26,30 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Boot App/Test Surface\nCacheBenchmarkApplication\nAbstractCacheBenchmarkTest\nCaffeineServiceTest\nSpring Boot Cache Benchmark", fillcolor="#FFF8E7"];
-  service [label="Application Feature\nCacheConfig\nCaffeineService\nNearCacheService\nNoCacheService", fillcolor="#F1F8E9"];
-  infra [label="Infrastructure Config\nDataInitConfig\nRedisTemplateConfig\nRedissonConfig\nProduct", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k Boot APIs\nworkshop\nredisson\ncache", fillcolor="#EAF7F0"];
-  runtime [label="Boot Runtime\nSQL / R2DBC\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
+  entry0 [label="Cache Benchmark Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Abstract Cache Benchmark Test\nbenchmark", fillcolor="#FFF8E7"];
+  entry2 [label="Caffeine Service Test\nservice component", fillcolor="#FFF8E7"];
+  entry3 [label="Near Cache Service Test\nservice component", fillcolor="#FFF8E7"];
+  entry4 [label="No Cache Service Test\nservice component", fillcolor="#FFF8E7"];
+  service0 [label="Cache Config\nconfiguration", fillcolor="#F1F8E9"];
+  service1 [label="Caffeine Service\nservice component", fillcolor="#F1F8E9"];
+  service2 [label="Near Cache Service\nservice component", fillcolor="#F1F8E9"];
+  service3 [label="No Cache Service\nservice component", fillcolor="#F1F8E9"];
+  service4 [label="Product Cache Service\nservice component", fillcolor="#F1F8E9"];
+  service5 [label="Read Through Service\nservice component", fillcolor="#F1F8E9"];
+  infra0 [label="Data Init Config\nconfiguration", fillcolor="#F5F0FF"];
+  infra1 [label="Redis Template Config\nconfiguration", fillcolor="#F5F0FF"];
+  infra2 [label="Redisson Config\nconfiguration", fillcolor="#F5F0FF"];
+  infra3 [label="Product\ndomain model", fillcolor="#F5F0FF"];
+  infra4 [label="Product Repository\nrepository", fillcolor="#F5F0FF"];
+  bt0 [label="workshop\nbluetape4k Boot APIs", fillcolor="#EAF7F0"];
+  bt1 [label="redisson\nbluetape4k Boot APIs", fillcolor="#EAF7F0"];
+  bt2 [label="cache\nbluetape4k Boot APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="SQL / R2DBC\nBoot Runtime", fillcolor="#FFF1F1"];
+  runtime1 [label="Redis\nBoot Runtime", fillcolor="#FFF1F1"];
+  runtime2 [label="Testcontainers\nBoot Runtime", fillcolor="#FFF1F1"];
 
-  entry -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  entry4 -> service0 [label="starts"];
+  service5 -> infra0 [label="persists / publishes"];
+  bt2 -> runtime0 [label="adapts"];
 }

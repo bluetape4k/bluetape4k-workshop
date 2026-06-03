@@ -26,16 +26,28 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Observed App/Test Surface\nAdvancedObservabilityApp\nAbstractAdvancedTest\nTestObservationConfig\nObservability Observability", fillcolor="#FFF8E7"];
-  api [label="Observed Web Adapters\nUserController", fillcolor="#EEF7FF"];
-  service [label="Instrumented Services\nSchemaInitializer\nObservationSupport\nUserRepository\nUserService", fillcolor="#F1F8E9"];
-  infra [label="Telemetry Configuration\nRedissonConfig\nUser\nUsers\nUserCacheRepository", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k Observability APIs\nworkshop\nlogging\ncoroutines", fillcolor="#EAF7F0"];
-  runtime [label="Metrics / Trace Runtime\nSQL / R2DBC\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
+  entry0 [label="Advanced Observability App\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Abstract Advanced Test\nadvanced", fillcolor="#FFF8E7"];
+  entry2 [label="Test Observation Config\nconfiguration", fillcolor="#FFF8E7"];
+  entry3 [label="User Controller Test\nHTTP adapter", fillcolor="#FFF8E7"];
+  entry4 [label="User Service Test\nservice component", fillcolor="#FFF8E7"];
+  api0 [label="User Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  service0 [label="Schema Initializer\nconfiguration", fillcolor="#F1F8E9"];
+  service1 [label="Observation Support\nobservation", fillcolor="#F1F8E9"];
+  service2 [label="User Repository\nrepository", fillcolor="#F1F8E9"];
+  service3 [label="User Service\nservice component", fillcolor="#F1F8E9"];
+  infra0 [label="Redisson Config\nconfiguration", fillcolor="#F5F0FF"];
+  infra1 [label="User\ndomain model", fillcolor="#F5F0FF"];
+  infra2 [label="Users\ndomain model", fillcolor="#F5F0FF"];
+  infra3 [label="User Cache Repository\nrepository", fillcolor="#F5F0FF"];
+  bt0 [label="workshop\nbluetape4k Observability APIs", fillcolor="#EAF7F0"];
+  bt1 [label="logging\nbluetape4k Observability APIs", fillcolor="#EAF7F0"];
+  bt2 [label="coroutines\nbluetape4k Observability APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="SQL / R2DBC\nMetrics / Trace Runtime", fillcolor="#FFF1F1"];
+  runtime1 [label="Redis\nMetrics / Trace Runtime", fillcolor="#FFF1F1"];
+  runtime2 [label="Testcontainers\nMetrics / Trace Runtime", fillcolor="#FFF1F1"];
 
-  entry -> api [label="invokes"];
-  api -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  api0 -> service0 [label="delegates"];
+  service3 -> infra0 [label="persists / publishes"];
+  bt2 -> runtime0 [label="adapts"];
 }

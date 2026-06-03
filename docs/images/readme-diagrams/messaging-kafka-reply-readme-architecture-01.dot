@@ -26,14 +26,22 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Messaging App/Test Surface\nKafkaApplication\nPingApplication\nPongApplication\nPingPongApplicationTest", fillcolor="#FFF8E7"];
-  api [label="Producer / Consumer Adapters\nPingController\nPongHandler", fillcolor="#EEF7FF"];
-  infra [label="Spring Kafka Layer\nSpring kafka lib\nSpring kafka test\nSpring data commons\nSpring boot autoconfigure lib", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k Kafka APIs\nworkshop\nkafka4\ntestcontainers", fillcolor="#EAF7F0"];
-  runtime [label="Kafka Broker Runtime\nKafka\nTestcontainers", fillcolor="#FFF1F1"];
+  entry0 [label="Kafka Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Ping Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry2 [label="Pong Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry3 [label="Ping Pong Application Test\nkafka", fillcolor="#FFF8E7"];
+  api0 [label="Ping Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  api1 [label="Pong Handler\npong", fillcolor="#EEF7FF"];
+  infra0 [label="Spring kafka lib\nSpring Kafka Layer", fillcolor="#F5F0FF"];
+  infra1 [label="Spring kafka test\nSpring Kafka Layer", fillcolor="#F5F0FF"];
+  infra2 [label="Spring data commons\nSpring Kafka Layer", fillcolor="#F5F0FF"];
+  infra3 [label="Spring boot autoconfigure lib\nSpring Kafka Layer", fillcolor="#F5F0FF"];
+  bt0 [label="workshop\nbluetape4k Kafka APIs", fillcolor="#EAF7F0"];
+  bt1 [label="kafka4\nbluetape4k Kafka APIs", fillcolor="#EAF7F0"];
+  bt2 [label="testcontainers\nbluetape4k Kafka APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="Kafka\nKafka Broker Runtime", fillcolor="#FFF1F1"];
+  runtime1 [label="Testcontainers\nKafka Broker Runtime", fillcolor="#FFF1F1"];
 
-  entry -> api [label="invokes"];
-  api -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  api1 -> infra0 [label="uses"];
+  bt2 -> runtime0 [label="adapts"];
 }

@@ -26,14 +26,26 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Data Demo Surface\nAbstractMongodbTest\nCoroutineManagedTransitionServiceTest\nSpring Data Mongodb Transactions\ntests", fillcolor="#FFF8E7"];
-  service [label="Data Service Layer\nCoroutineManagedTransitionService\nTransitionService\nReactiveManagedTransitionService\nReactiveTransitionService", fillcolor="#F1F8E9"];
-  infra [label="Repository Layer\nProcess\nState\nCoroutineProcessRepository\nProcessRepository", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k Data APIs\ntestcontainers\ncoroutines\nidgenerators", fillcolor="#EAF7F0"];
-  runtime [label="Database Runtime\nMongoDB\nTestcontainers", fillcolor="#FFF1F1"];
+  entry0 [label="Abstract Mongodb Test\nmongodb", fillcolor="#FFF8E7"];
+  entry1 [label="Coroutine Managed Transition Service Test\ncoroutine", fillcolor="#FFF8E7"];
+  entry2 [label="Transition Service Test\nimperative", fillcolor="#FFF8E7"];
+  entry3 [label="Reactive Managed Transition Service Test\nreactive", fillcolor="#FFF8E7"];
+  service0 [label="Coroutine Managed Transition Service\nservice component", fillcolor="#F1F8E9"];
+  service1 [label="Transition Service\nservice component", fillcolor="#F1F8E9"];
+  service2 [label="Reactive Managed Transition Service\nservice component", fillcolor="#F1F8E9"];
+  service3 [label="Reactive Transition Service\nservice component", fillcolor="#F1F8E9"];
+  infra0 [label="Process\nmongodb", fillcolor="#F5F0FF"];
+  infra1 [label="State\nmongodb", fillcolor="#F5F0FF"];
+  infra2 [label="Coroutine Process Repository\nrepository", fillcolor="#F5F0FF"];
+  infra3 [label="Process Repository\nrepository", fillcolor="#F5F0FF"];
+  infra4 [label="Reactive Process Repository\nrepository", fillcolor="#F5F0FF"];
+  bt0 [label="testcontainers\nbluetape4k Data APIs", fillcolor="#EAF7F0"];
+  bt1 [label="coroutines\nbluetape4k Data APIs", fillcolor="#EAF7F0"];
+  bt2 [label="idgenerators\nbluetape4k Data APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="MongoDB\nDatabase Runtime", fillcolor="#FFF1F1"];
+  runtime1 [label="Testcontainers\nDatabase Runtime", fillcolor="#FFF1F1"];
 
-  entry -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  entry3 -> service0 [label="starts"];
+  service3 -> infra0 [label="persists / publishes"];
+  bt2 -> runtime0 [label="adapts"];
 }

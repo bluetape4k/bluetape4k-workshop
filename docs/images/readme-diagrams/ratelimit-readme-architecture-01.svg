@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="864" viewBox="0 0 1320 864" role="img" aria-label="Rate Limiter Examples architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1376" viewBox="0 0 1320 1376" role="img" aria-label="Rate Limiter Examples architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;ratelimit/bucker4j-bluetape4k-webflux/src/main/kotlin/io/bluetape4k/workshop/bucket4j/RateLimiterWebfluxApplication.kt&quot;,&quot;ratelimit/bucker4j-bluetape4k-webflux/src/main/kotlin/io/bluetape4k/workshop/bucket4j/components/KeyResolver.kt&quot;,&quot;ratelimit/bucker4j-bluetape4k-webflux/src/main/kotlin/io/bluetape4k/workshop/bucket4j/components/RateLimitTargetProvider.kt&quot;,&quot;ratelimit/bucker4j-bluetape4k-webflux/src/main/kotlin/io/bluetape4k/workshop/bucket4j/components/UserKeyResolver.kt&quot;,&quot;ratelimit/bucker4j-bluetape4k-webflux/src/main/kotlin/io/bluetape4k/workshop/bucket4j/config/Bucket4jConfig.kt&quot;,&quot;ratelimit/bucker4j-bluetape4k-webflux/src/main/kotlin/io/bluetape4k/workshop/bucket4j/config/LettuceConfig.kt&quot;,&quot;ratelimit/bucker4j-bluetape4k-webflux/src/main/kotlin/io/bluetape4k/workshop/bucket4j/config/TestRedisConfig.kt&quot;,&quot;ratelimit/bucker4j-bluetape4k-webflux/src/main/kotlin/io/bluetape4k/workshop/bucket4j/controller/CoroutineController.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
   <defs>
     <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
@@ -32,66 +32,135 @@
       .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="864"/>
-  <rect class="frame" x="16" y="16" width="1288" height="832" rx="22"/>
+  <rect class="canvas" width="1320" height="1376"/>
+  <rect class="frame" x="16" y="16" width="1288" height="1344" rx="22"/>
   <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Rate Limiter Examples</text>
   <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">rate-limit policy, token buckets, and backing stores</text>
   <g>
     <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="168.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="182.0">Request Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="212.0">web filters,</tspan><tspan class="layer-detail" x="151.0" y="228.0">controllers, test</tspan><tspan class="layer-detail" x="151.0" y="244.0">clients</tspan></text>
+      <rect x="46.0" y="114.0" width="1228.0" height="518.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
+      <rect x="64.0" y="134.0" width="174" height="478.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="357.0">Request Surface</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="387.0">web filters,</tspan><tspan class="layer-detail" x="151.0" y="403.0">controllers, test</tspan><tspan class="layer-detail" x="151.0" y="419.0">clients</tspan></text>
     </g>
     <g class="layer" data-layer="service">
-      <rect x="46.0" y="300.0" width="1228.0" height="168.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="320.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="368.0">Policy Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="398.0">token buckets,</tspan><tspan class="layer-detail" x="151.0" y="414.0">quota rules,</tspan><tspan class="layer-detail" x="151.0" y="430.0">throttling</tspan></text>
+      <rect x="46.0" y="650.0" width="1228.0" height="256.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
+      <rect x="64.0" y="670.0" width="174" height="216.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="762.0">Policy Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="792.0">token buckets,</tspan><tspan class="layer-detail" x="151.0" y="808.0">quota rules,</tspan><tspan class="layer-detail" x="151.0" y="824.0">throttling</tspan></text>
     </g>
     <g class="layer" data-layer="integration">
-      <rect x="46.0" y="486.0" width="1228.0" height="168.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="506.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="542.5">Bucket Storage</tspan><tspan class="layer-title" x="151.0" y="565.5">Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="592.0">Bucket4j, Redis,</tspan><tspan class="layer-detail" x="151.0" y="608.0">Caffeine, helpers</tspan></text>
+      <rect x="46.0" y="924.0" width="1228.0" height="242.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
+      <rect x="64.0" y="944.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="1017.5">Bucket Storage</tspan><tspan class="layer-title" x="151.0" y="1040.5">Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1067.0">Bucket4j, Redis,</tspan><tspan class="layer-detail" x="151.0" y="1083.0">Caffeine, helpers</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="672.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="692.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="722.0">Runtime Store</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="760.0">Redis, cache, local</tspan><tspan class="layer-detail" x="151.0" y="776.0">JVM</tspan></text>
+      <rect x="46.0" y="1184.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="64.0" y="1204.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="1234.0">Runtime Store</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1272.0">Redis, cache, local</tspan><tspan class="layer-detail" x="151.0" y="1288.0">JVM</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;api" data-label="invokes">
-      <path d="M 704.0 198.0 L 774.0 198.0 L 844.0 198.0" fill="none" stroke="#4F7DB5" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-api)"/>
+    <g class="edge" data-edge="api4-&gt;service0" data-label="delegates">
+      <path d="M 424.0 612.0 L 424.0 644.5 L 424.0 677.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
     </g>
-    <g class="edge" data-edge="api-&gt;service" data-label="delegates">
-      <path d="M 1039.0 262.0 L 1039.0 291.0 L 774.0 291.0 L 774.0 320.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
+    <g class="edge" data-edge="service5-&gt;infra0" data-label="persists / publishes">
+      <path d="M 1096.0 886.0 L 1096.0 915.0 L 424.0 915.0 L 424.0 944.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
     </g>
-    <g class="edge" data-edge="service-&gt;infra" data-label="persists / publishes">
-      <path d="M 774.0 448.0 L 774.0 477.0 L 774.0 506.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
+    <g class="edge" data-edge="infra4-&gt;runtime0" data-label="backs">
+      <path d="M 760.0 1146.0 L 760.0 1175.0 L 592.0 1175.0 L 592.0 1204.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
     </g>
-    <g class="edge" data-edge="infra-&gt;runtime" data-label="backs">
-      <path d="M 774.0 634.0 L 774.0 663.0 L 774.0 692.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+    <g class="node" data-node="entry0" data-lines="Rate Limiter Webflux | Application | application bootstrap">
+      <rect x="274.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="171.5">Rate Limiter Webflux</tspan><tspan class="node-title" x="424.0" y="195.5">Application</tspan><tspan class="node-detail" x="424.0" y="219.5">application bootstrap</tspan></text>
     </g>
-    <g class="node" data-node="entry" data-lines="Rate-limit Surface | RateLimiterWebfluxApplication | Bucket4jAdvancedApplication | CaffeineApplication | AbstractRateLimiterApplicationTest">
-      <rect x="314.0" y="134.0" width="390.0" height="128.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="169.0">Rate-limit Surface</tspan><tspan class="node-detail" x="509.0" y="193.0">RateLimiterWebfluxApplication</tspan><tspan class="node-detail" x="509.0" y="210.0">Bucket4jAdvancedApplication</tspan><tspan class="node-detail" x="509.0" y="227.0">CaffeineApplication</tspan><tspan class="node-detail" x="509.0" y="244.0">AbstractRateLimiterApplicationTest</tspan></text>
+    <g class="node" data-node="entry1" data-lines="Bucket4j Advanced | Application | application bootstrap">
+      <rect x="610.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="171.5">Bucket4j Advanced</tspan><tspan class="node-title" x="760.0" y="195.5">Application</tspan><tspan class="node-detail" x="760.0" y="219.5">application bootstrap</tspan></text>
     </g>
-    <g class="node" data-node="api" data-lines="Web Filter / Controller | CoroutineController | ReactiveController | AsyncUserRateLimitWebFilter | UserRateLimitWebFilter">
-      <rect x="844.0" y="134.0" width="390.0" height="128.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="169.0">Web Filter / Controller</tspan><tspan class="node-detail" x="1039.0" y="193.0">CoroutineController</tspan><tspan class="node-detail" x="1039.0" y="210.0">ReactiveController</tspan><tspan class="node-detail" x="1039.0" y="227.0">AsyncUserRateLimitWebFilter</tspan><tspan class="node-detail" x="1039.0" y="244.0">UserRateLimitWebFilter</tspan></text>
+    <g class="node" data-node="entry2" data-lines="Caffeine Application | application bootstrap">
+      <rect x="946.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="183.5">Caffeine Application</tspan><tspan class="node-detail" x="1096.0" y="207.5">application bootstrap</tspan></text>
     </g>
-    <g class="node" data-node="service" data-lines="Policy Enforcement | KeyResolver | RateLimitTargetProvider | UserKeyResolver | Bucket4jConfig">
-      <rect x="474.0" y="320.0" width="600.0" height="128.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="355.0">Policy Enforcement</tspan><tspan class="node-detail" x="774.0" y="379.0">KeyResolver</tspan><tspan class="node-detail" x="774.0" y="396.0">RateLimitTargetProvider</tspan><tspan class="node-detail" x="774.0" y="413.0">UserKeyResolver</tspan><tspan class="node-detail" x="774.0" y="430.0">Bucket4jConfig</tspan></text>
+    <g class="node" data-node="entry3" data-lines="Bucket4j Redis | Application | application bootstrap">
+      <rect x="274.0" y="258.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="295.5">Bucket4j Redis</tspan><tspan class="node-title" x="424.0" y="319.5">Application</tspan><tspan class="node-detail" x="424.0" y="343.5">application bootstrap</tspan></text>
     </g>
-    <g class="node" data-node="infra" data-lines="Bucket Storage Layer | LettuceConfig | TestRedisConfig | RequestUtils | LettuceConfiguration">
-      <rect x="474.0" y="506.0" width="600.0" height="128.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="541.0">Bucket Storage Layer</tspan><tspan class="node-detail" x="774.0" y="565.0">LettuceConfig</tspan><tspan class="node-detail" x="774.0" y="582.0">TestRedisConfig</tspan><tspan class="node-detail" x="774.0" y="599.0">RequestUtils</tspan><tspan class="node-detail" x="774.0" y="616.0">LettuceConfiguration</tspan></text>
+    <g class="node" data-node="entry4" data-lines="Abstract Rate Limiter | Application Test | verification">
+      <rect x="610.0" y="258.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="295.5">Abstract Rate Limiter</tspan><tspan class="node-title" x="760.0" y="319.5">Application Test</tspan><tspan class="node-detail" x="760.0" y="343.5">verification</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="Bucket Runtime | Redis | Testcontainers">
-      <rect x="474.0" y="692.0" width="600.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="726.0">Bucket Runtime</tspan><tspan class="node-detail" x="774.0" y="750.0">Redis</tspan><tspan class="node-detail" x="774.0" y="767.0">Testcontainers</tspan></text>
+    <g class="node" data-node="api0" data-lines="Coroutine Controller | HTTP adapter">
+      <rect x="946.0" y="265.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="307.5">Coroutine Controller</tspan><tspan class="node-detail" x="1096.0" y="331.5">HTTP adapter</tspan></text>
+    </g>
+    <g class="node" data-node="api1" data-lines="Reactive Controller | HTTP adapter">
+      <rect x="274.0" y="389.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="431.5">Reactive Controller</tspan><tspan class="node-detail" x="424.0" y="455.5">HTTP adapter</tspan></text>
+    </g>
+    <g class="node" data-node="api2" data-lines="Async User Rate Limit | Web Filter | filter">
+      <rect x="610.0" y="382.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="419.5">Async User Rate Limit</tspan><tspan class="node-title" x="760.0" y="443.5">Web Filter</tspan><tspan class="node-detail" x="760.0" y="467.5">filter</tspan></text>
+    </g>
+    <g class="node" data-node="api3" data-lines="User Rate Limit Web | Filter | filter">
+      <rect x="946.0" y="382.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="419.5">User Rate Limit Web</tspan><tspan class="node-title" x="1096.0" y="443.5">Filter</tspan><tspan class="node-detail" x="1096.0" y="467.5">filter</tspan></text>
+    </g>
+    <g class="node" data-node="api4" data-lines="Rate Limit Demo | Controller | HTTP adapter">
+      <rect x="274.0" y="506.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="543.5">Rate Limit Demo</tspan><tspan class="node-title" x="424.0" y="567.5">Controller</tspan><tspan class="node-detail" x="424.0" y="591.5">HTTP adapter</tspan></text>
+    </g>
+    <g class="node" data-node="service0" data-lines="Key Resolver | components">
+      <rect x="274.0" y="677.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="719.5">Key Resolver</tspan><tspan class="node-detail" x="424.0" y="743.5">components</tspan></text>
+    </g>
+    <g class="node" data-node="service1" data-lines="Rate Limit Target | Provider | components">
+      <rect x="610.0" y="670.0" width="300.0" height="106.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="707.5">Rate Limit Target</tspan><tspan class="node-title" x="760.0" y="731.5">Provider</tspan><tspan class="node-detail" x="760.0" y="755.5">components</tspan></text>
+    </g>
+    <g class="node" data-node="service2" data-lines="User Key Resolver | components">
+      <rect x="946.0" y="677.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="719.5">User Key Resolver</tspan><tspan class="node-detail" x="1096.0" y="743.5">components</tspan></text>
+    </g>
+    <g class="node" data-node="service3" data-lines="Bucket4j Config | configuration">
+      <rect x="274.0" y="794.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="836.5">Bucket4j Config</tspan><tspan class="node-detail" x="424.0" y="860.5">configuration</tspan></text>
+    </g>
+    <g class="node" data-node="service4" data-lines="Header Utils | utils">
+      <rect x="610.0" y="794.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="836.5">Header Utils</tspan><tspan class="node-detail" x="760.0" y="860.5">utils</tspan></text>
+    </g>
+    <g class="node" data-node="service5" data-lines="Rate Limit Config | configuration">
+      <rect x="946.0" y="794.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="836.5">Rate Limit Config</tspan><tspan class="node-detail" x="1096.0" y="860.5">configuration</tspan></text>
+    </g>
+    <g class="node" data-node="infra0" data-lines="Lettuce Config | configuration">
+      <rect x="274.0" y="944.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="986.5">Lettuce Config</tspan><tspan class="node-detail" x="424.0" y="1010.5">configuration</tspan></text>
+    </g>
+    <g class="node" data-node="infra1" data-lines="Test Redis Config | configuration">
+      <rect x="610.0" y="944.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="986.5">Test Redis Config</tspan><tspan class="node-detail" x="760.0" y="1010.5">configuration</tspan></text>
+    </g>
+    <g class="node" data-node="infra2" data-lines="Lettuce Config | configuration">
+      <rect x="946.0" y="944.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="986.5">Lettuce Config</tspan><tspan class="node-detail" x="1096.0" y="1010.5">configuration</tspan></text>
+    </g>
+    <g class="node" data-node="infra3" data-lines="Test Redis Config | configuration">
+      <rect x="274.0" y="1054.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="1096.5">Test Redis Config</tspan><tspan class="node-detail" x="424.0" y="1120.5">configuration</tspan></text>
+    </g>
+    <g class="node" data-node="infra4" data-lines="Request Utils | utils">
+      <rect x="610.0" y="1054.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1096.5">Request Utils</tspan><tspan class="node-detail" x="760.0" y="1120.5">utils</tspan></text>
+    </g>
+    <g class="node" data-node="runtime0" data-lines="Redis | Bucket Runtime">
+      <rect x="442.0" y="1204.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="592.0" y="1246.5">Redis</tspan><tspan class="node-detail" x="592.0" y="1270.5">Bucket Runtime</tspan></text>
+    </g>
+    <g class="node" data-node="runtime1" data-lines="Testcontainers | Bucket Runtime">
+      <rect x="778.0" y="1204.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="928.0" y="1246.5">Testcontainers</tspan><tspan class="node-detail" x="928.0" y="1270.5">Bucket Runtime</tspan></text>
     </g>
   </g>
 </svg>

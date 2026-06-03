@@ -26,16 +26,20 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Boot App/Test Surface\nProtobufApplication\nCourseConfigTest\nProtobufApplicationIT\nSpring Boot Protobuf Mvc tests", fillcolor="#FFF8E7"];
-  api [label="Spring Web Adapters\nCourseController", fillcolor="#EEF7FF"];
-  service [label="Application Feature\nProtobufConverter", fillcolor="#F1F8E9"];
-  infra [label="Infrastructure Config\nConurceConfig\nCourseRepository", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k Boot APIs\nworkshop\ngrpc\ncoroutines", fillcolor="#EAF7F0"];
-  runtime [label="Boot Runtime\nIn-memory / JVM", fillcolor="#FFF1F1"];
+  entry0 [label="Protobuf Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Course Config Test\nprotobuf", fillcolor="#FFF8E7"];
+  entry2 [label="Protobuf Application IT\nprotobuf", fillcolor="#FFF8E7"];
+  entry3 [label="Protobuf Converter Test\nconvert", fillcolor="#FFF8E7"];
+  api0 [label="Course Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  service0 [label="Protobuf Converter\nconvert", fillcolor="#F1F8E9"];
+  infra0 [label="Conurce Config\nconfiguration", fillcolor="#F5F0FF"];
+  infra1 [label="Course Repository\nrepository", fillcolor="#F5F0FF"];
+  bt0 [label="workshop\nbluetape4k Boot APIs", fillcolor="#EAF7F0"];
+  bt1 [label="grpc\nbluetape4k Boot APIs", fillcolor="#EAF7F0"];
+  bt2 [label="coroutines\nbluetape4k Boot APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="In-memory / JVM\nBoot Runtime", fillcolor="#FFF1F1"];
 
-  entry -> api [label="invokes"];
-  api -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  api0 -> service0 [label="delegates"];
+  service0 -> infra0 [label="persists / publishes"];
+  bt2 -> runtime0 [label="adapts"];
 }

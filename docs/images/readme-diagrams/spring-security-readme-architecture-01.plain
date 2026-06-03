@@ -1,7 +1,15 @@
-graph 1 10.953 1.7263
-node entry 1.6635 0.86313 3.3271 1.7263 "Example Entrypoints\nKotlinApplication\nKotlinWebfluxApplication\nJwtApplication\nAbstractSecurityApplicationTest" rounded,filled box #88A3B5 #FFF8E7
-node api 6.0444 0.86313 2.3792 1.7263 "API / Adapter Layer\nSecurityConfig\nMainController\nSecurityConfiguration\nJwtConfig" rounded,filled box #88A3B5 #EEF7FF
-node runtime 9.7743 0.86313 2.3583 1.445 "Runtime Dependencies\nSQL / R2DBC\nRedis\nAWS / S3" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.3323 0.86313 3.3323 0.86313 4.7074 0.86313 4.7074 0.86313 invokes 4.091 0.95167 solid #637383
-edge api runtime 4 7.24 0.86313 7.24 0.86313 8.4429 0.86313 8.4429 0.86313 backs 7.9146 0.95167 solid #637383
+graph 1 3.5458 19.883
+node entry0 1.7729 0.44125 2.275 0.8825 "Kotlin Application\napplication bootstrap" rounded,filled box #88A3B5 #FFF8E7
+node entry1 1.7729 2.0246 2.6813 0.8825 "Kotlin Webflux Application\napplication bootstrap" rounded,filled box #88A3B5 #FFF8E7
+node entry2 1.7729 3.6079 2.275 0.8825 "Jwt Application\napplication bootstrap" rounded,filled box #88A3B5 #FFF8E7
+node entry3 1.7729 5.1913 3.5458 0.8825 "Abstract Security Application Test\nverification" rounded,filled box #88A3B5 #FFF8E7
+node entry4 1.7729 6.7746 2.2438 0.8825 "Main Controller Test\nverification" rounded,filled box #88A3B5 #FFF8E7
+node api0 1.7729 8.3579 1.8375 0.8825 "Security Config\nconfiguration" rounded,filled box #88A3B5 #EEF7FF
+node api1 1.7729 9.9413 1.7646 0.8825 "Main Controller\nHTTP adapter" rounded,filled box #88A3B5 #EEF7FF
+node api2 1.7729 11.525 1.7646 0.8825 "Main Controller\nHTTP adapter" rounded,filled box #88A3B5 #EEF7FF
+node api3 1.7729 13.108 2.4521 0.8825 "Security Configuration\nwebflux" rounded,filled box #88A3B5 #EEF7FF
+node api4 1.7729 14.691 1.5979 0.8825 "Jwt Config\nconfiguration" rounded,filled box #88A3B5 #EEF7FF
+node runtime0 1.7729 16.275 2.3583 0.8825 "SQL / R2DBC\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
+node runtime1 1.7729 17.858 2.3583 0.8825 "Redis\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
+node runtime2 1.7729 19.441 2.3583 0.8825 "AWS / S3\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
 stop

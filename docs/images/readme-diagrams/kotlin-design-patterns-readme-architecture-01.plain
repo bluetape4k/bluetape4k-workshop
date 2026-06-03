@@ -1,9 +1,20 @@
-graph 1 13.923 1.7263
-node entry 1.4396 0.86313 2.8792 1.445 "Example Entrypoints\nAbstractFactoryTest\nHeroDataClassTest\nKotlin Design Patterns tests" rounded,filled box #88A3B5 #FFF8E7
-node service 5.6747 0.86313 2.2021 1.7263 "Application Services\nArmy\nCastle\nFactoryMaker\nKing" rounded,filled box #88A3B5 #F1F8E9
-node bt 9.2118 0.86313 1.8167 1.445 "bluetape4k APIs\nio\njunit5\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
-node runtime 12.744 0.86313 2.3583 1.1637 "Runtime Dependencies\nSQL / R2DBC\nAWS / S3" rounded,filled box #88A3B5 #FFF1F1
-edge entry service 4 2.8852 0.86313 2.8852 0.86313 4.4271 0.86313 4.4271 0.86313 delegates 3.7264 0.95167 solid #637383
-edge service bt 4 6.7841 0.86313 6.7841 0.86313 8.1534 0.86313 8.1534 0.86313 extends 7.5396 0.95167 solid #637383
-edge bt runtime 4 10.126 0.86313 10.126 0.86313 11.418 0.86313 11.418 0.86313 adapts 10.842 0.95167 solid #637383
+graph 1 6.3278 21.466
+node entry0 1.2625 0.44125 2.525 0.8825 "Abstract Factory Test\nabstractFactory" rounded,filled box #88A3B5 #FFF8E7
+node entry1 1.2625 2.0246 2.3063 0.8825 "Hero Data Class Test\nbuilder" rounded,filled box #88A3B5 #FFF8E7
+node entry2 1.2625 3.6079 1.3167 0.8825 "Hero Test\nbuilder" rounded,filled box #88A3B5 #FFF8E7
+node entry3 1.2625 5.1913 2.3375 0.8825 "Abstract Holder Test\nlazyLoading" rounded,filled box #88A3B5 #FFF8E7
+node entry4 1.2625 6.7746 2.4938 0.8825 "Holder Kotlin Lazy Test\nlazyLoading" rounded,filled box #88A3B5 #FFF8E7
+node service0 5.1486 6.7746 1.9417 0.8825 "Army\nabstractFactory" rounded,filled box #88A3B5 #F1F8E9
+node service1 1.2625 8.3579 1.9417 0.8825 "Castle\nabstractFactory" rounded,filled box #88A3B5 #F1F8E9
+node service2 1.2625 9.9413 1.9417 0.8825 "Factory Maker\nabstractFactory" rounded,filled box #88A3B5 #F1F8E9
+node service3 1.2625 11.525 1.9417 0.8825 "King\nabstractFactory" rounded,filled box #88A3B5 #F1F8E9
+node service4 1.2625 13.108 1.9521 0.8825 "Kingdom Factory\nabstractFactory" rounded,filled box #88A3B5 #F1F8E9
+node service5 1.2625 14.691 1.2229 0.8825 "Elf Army\nelf" rounded,filled box #88A3B5 #F1F8E9
+node bt0 1.2625 16.275 1.8167 0.8825 "io\nbluetape4k APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt1 1.2625 17.858 1.8167 0.8825 "junit5\nbluetape4k APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt2 1.2625 19.441 1.8167 0.8825 "coroutines\nbluetape4k APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime0 5.1486 19.441 2.3583 0.8825 "SQL / R2DBC\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
+node runtime1 1.2625 21.025 2.3583 0.8825 "AWS / S3\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
+edge entry4 service0 4 2.5188 6.7746 2.5188 6.7746 4.031 6.7746 4.031 6.7746 starts 3.2472 6.8631 solid #637383
+edge bt2 runtime0 4 2.1785 19.441 2.1785 19.441 3.8198 19.441 3.8198 19.441 adapts 3.2472 19.53 solid #637383
 stop

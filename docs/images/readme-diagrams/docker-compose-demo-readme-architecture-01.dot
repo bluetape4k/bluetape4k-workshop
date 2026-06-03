@@ -26,12 +26,16 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Example Family\ndocker compose-demo", fillcolor="#FFF8E7"];
-  infra [label="Framework Layer\nTestcontainers lib\nTestcontainers junit jupiter", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\ncore", fillcolor="#EAF7F0"];
-  runtime [label="Runtime Dependencies\nSQL / R2DBC\nRedis\nElasticsearch", fillcolor="#FFF1F1"];
+  entry0 [label="Docker Compose Postgres Test\ndocker", fillcolor="#FFF8E7"];
+  entry1 [label="Docker Compose Redis Test\ndocker", fillcolor="#FFF8E7"];
+  entry2 [label="Multiple Service Test\ndocker", fillcolor="#FFF8E7"];
+  infra0 [label="Testcontainers lib\nFramework Layer", fillcolor="#F5F0FF"];
+  infra1 [label="Testcontainers junit jupiter\nFramework Layer", fillcolor="#F5F0FF"];
+  bt0 [label="core\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="SQL / R2DBC\nRuntime Dependencies", fillcolor="#FFF1F1"];
+  runtime1 [label="Redis\nRuntime Dependencies", fillcolor="#FFF1F1"];
+  runtime2 [label="Elasticsearch\nRuntime Dependencies", fillcolor="#FFF1F1"];
 
-  entry -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  entry2 -> infra0 [label="uses"];
+  bt0 -> runtime0 [label="adapts"];
 }

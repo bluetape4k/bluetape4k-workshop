@@ -1,8 +1,9 @@
-graph 1 10.37 2.5943
-node entry 1.6115 0.44125 3.2229 0.8825 "Example Family\ndocker-compose-plugin example" rounded,filled box #88A3B5 #FFF8E7
-node bt 5.659 1.8718 1.8167 1.1637 "bluetape4k APIs\nio\njunit5" rounded,filled box #88A3B5 #EAF7F0
-node runtime 9.191 1.8718 2.3583 1.445 "Runtime Dependencies\nSQL / R2DBC\nRedis\nElasticsearch" rounded,filled box #88A3B5 #FFF1F1
-node api 1.6115 1.8718 0.75 0.60125 api rounded,filled box #88A3B5 #F6FAFF
-edge bt runtime 4 6.5732 1.8718 6.5732 1.8718 7.8647 1.8718 7.8647 1.8718 adapts 7.2896 1.9603 solid #637383
-edge api bt 4 1.9959 1.8718 1.9959 1.8718 4.5993 1.8718 4.5993 1.8718 extends 3.9868 1.9603 solid #637383
+graph 1 6.8174 7.2158
+node entry0 1.5073 0.44125 3.0146 0.8825 "Docker Compose Plugin Test\ncompose" rounded,filled box #88A3B5 #FFF8E7
+node bt0 1.5073 2.0246 1.8167 0.8825 "io\nbluetape4k APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt1 1.5073 3.6079 1.8167 0.8825 "junit5\nbluetape4k APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime0 5.6382 3.6079 2.3583 0.8825 "SQL / R2DBC\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
+node runtime1 1.5073 5.1913 2.3583 0.8825 "Redis\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
+node runtime2 1.5073 6.7746 2.3583 0.8825 "Elasticsearch\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
+edge bt1 runtime0 4 2.4241 3.6079 2.4241 3.6079 4.3104 3.6079 4.3104 3.6079 adapts 3.7368 3.6965 solid #637383
 stop

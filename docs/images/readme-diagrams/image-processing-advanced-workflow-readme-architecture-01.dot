@@ -26,16 +26,33 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Example Entrypoints\nImageProcessingAdvancedApplication\nImageProcessingAdvancedPropertiesTest\nAbstractImagePersistenceTest\nImage Processing Advanced", fillcolor="#FFF8E7"];
-  api [label="API / Adapter Layer\nImagePersistenceServiceImpl\nImageDerivativesController\nImageProcessingExceptionHandler", fillcolor="#EEF7FF"];
-  service [label="Application Services\nImageProcessingAdvancedProperties\nImagePersistenceModels\nImagePersistenceService\nImagePersistenceDatabaseInitializer", fillcolor="#F1F8E9"];
-  infra [label="Infrastructure Layer\nImageObjectKind\nImagePersistenceMappers\nImageProcessingEventRepository\nImageProcessingJobRepository", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\ncore\ncoroutines", fillcolor="#EAF7F0"];
-  runtime [label="Runtime Dependencies\nSQL / R2DBC\nAWS / S3\nTestcontainers", fillcolor="#FFF1F1"];
+  entry0 [label="Image Processing Advanced Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Image Processing Advanced Properties Test\nconfiguration", fillcolor="#FFF8E7"];
+  entry2 [label="Abstract Image Persistence Test\npersistence", fillcolor="#FFF8E7"];
+  entry3 [label="Image Asset Repository Test\npersistence", fillcolor="#FFF8E7"];
+  entry4 [label="Image Persistence Service Impl Test\npersistence", fillcolor="#FFF8E7"];
+  api0 [label="Image Persistence Service Impl\npersistence", fillcolor="#EEF7FF"];
+  api1 [label="Image Derivatives Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  api2 [label="Image Processing Exception Handler\nweb", fillcolor="#EEF7FF"];
+  service0 [label="Image Processing Advanced Properties\nconfiguration", fillcolor="#F1F8E9"];
+  service1 [label="Image Persistence Models\ndomain model", fillcolor="#F1F8E9"];
+  service2 [label="Image Persistence Service\nservice component", fillcolor="#F1F8E9"];
+  service3 [label="Image Persistence Database Initializer\nconfiguration", fillcolor="#F1F8E9"];
+  service4 [label="Image Asset Repository\nrepository", fillcolor="#F1F8E9"];
+  service5 [label="Image Object Repository\nrepository", fillcolor="#F1F8E9"];
+  infra0 [label="Image Object Kind\ndomain model", fillcolor="#F5F0FF"];
+  infra1 [label="Image Persistence Mappers\nmapper", fillcolor="#F5F0FF"];
+  infra2 [label="Image Processing Event Repository\nrepository", fillcolor="#F5F0FF"];
+  infra3 [label="Image Processing Job Repository\nrepository", fillcolor="#F5F0FF"];
+  infra4 [label="Image Asset Status\ndomain model", fillcolor="#F5F0FF"];
+  bt0 [label="workshop\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  bt1 [label="core\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  bt2 [label="coroutines\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="SQL / R2DBC\nRuntime Dependencies", fillcolor="#FFF1F1"];
+  runtime1 [label="AWS / S3\nRuntime Dependencies", fillcolor="#FFF1F1"];
+  runtime2 [label="Testcontainers\nRuntime Dependencies", fillcolor="#FFF1F1"];
 
-  entry -> api [label="invokes"];
-  api -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  api2 -> service0 [label="delegates"];
+  service5 -> infra0 [label="persists / publishes"];
+  bt2 -> runtime0 [label="adapts"];
 }

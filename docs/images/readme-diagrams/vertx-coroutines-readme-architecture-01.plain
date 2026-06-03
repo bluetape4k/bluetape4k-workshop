@@ -1,9 +1,10 @@
-graph 1 13.454 1.445
-node entry 1.2677 0.7225 2.5354 1.445 "Example Entrypoints\nMain\nMovieRatingVerticeTest\nVertx Coroutines tests" rounded,filled box #88A3B5 #FFF8E7
-node api 5.1851 0.7225 2.2438 0.8825 "API / Adapter Layer\nMovieRatingVerticle" rounded,filled box #88A3B5 #EEF7FF
-node bt 8.7431 0.7225 1.8167 1.445 "bluetape4k APIs\nio\njdbc\nvertx" rounded,filled box #88A3B5 #EAF7F0
-node runtime 12.275 0.7225 2.3583 0.8825 "Runtime Dependencies\nSQL / R2DBC" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 2.545 0.7225 2.545 0.7225 3.9121 0.7225 3.9121 0.7225 invokes 3.2993 0.81104 solid #637383
-edge api bt 4 6.3157 0.7225 6.3157 0.7225 7.6866 0.7225 7.6866 0.7225 extends 7.0708 0.81104 solid #637383
-edge bt runtime 4 9.6572 0.7225 9.6572 0.7225 10.949 0.7225 10.949 0.7225 adapts 10.374 0.81104 solid #637383
+graph 1 6.5569 8.7992
+node entry0 1.3771 0.44125 1.4208 0.8825 "Main\nmovierating" rounded,filled box #88A3B5 #FFF8E7
+node entry1 1.3771 2.0246 2.7542 0.8825 "Movie Rating Vertice Test\nmovierating" rounded,filled box #88A3B5 #FFF8E7
+node api0 1.3771 3.6079 2.3063 0.8825 "Movie Rating Verticle\nmovierating" rounded,filled box #88A3B5 #EEF7FF
+node bt0 1.3771 5.1913 1.8167 0.8825 "io\nbluetape4k APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt1 1.3771 6.7746 1.8167 0.8825 "jdbc\nbluetape4k APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt2 1.3771 8.3579 1.8167 0.8825 "vertx\nbluetape4k APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime0 5.3778 8.3579 2.3583 0.8825 "SQL / R2DBC\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
+edge bt2 runtime0 4 2.2949 8.3579 2.2949 8.3579 4.0481 8.3579 4.0481 8.3579 adapts 3.4764 8.4465 solid #637383
 stop

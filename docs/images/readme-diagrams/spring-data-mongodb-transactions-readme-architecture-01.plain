@@ -1,11 +1,23 @@
-graph 1 22.132 1.7263
-node entry 1.9969 0.86313 3.9938 1.7263 "Data Demo Surface\nAbstractMongodbTest\nCoroutineManagedTransitionServiceTest\nSpring Data Mongodb Transactions\ntests" rounded,filled box #88A3B5 #FFF8E7
-node service 7.4819 0.86313 3.5875 1.7263 "Data Service Layer\nCoroutineManagedTransitionService\nTransitionService\nReactiveManagedTransitionService\nReactiveTransitionService" rounded,filled box #88A3B5 #F1F8E9
-node infra 13.399 0.86313 3.025 1.7263 "Repository Layer\nProcess\nState\nCoroutineProcessRepository\nProcessRepository" rounded,filled box #88A3B5 #F5F0FF
-node bt 17.582 0.86313 2.2854 1.445 "bluetape4k Data APIs\ntestcontainers\ncoroutines\nidgenerators" rounded,filled box #88A3B5 #EAF7F0
-node runtime 21.151 0.86313 1.9625 1.1637 "Database Runtime\nMongoDB\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry service 4 4.0004 0.86313 4.0004 0.86313 5.5365 0.86313 5.5365 0.86313 delegates 4.841 0.95167 solid #637383
-edge service infra 4 9.2814 0.86313 9.2814 0.86313 11.735 0.86313 11.735 0.86313 "persists / publishes" 10.581 0.95167 solid #637383
-edge infra bt 4 14.921 0.86313 14.921 0.86313 16.293 0.86313 16.293 0.86313 extends 15.676 0.95167 solid #637383
-edge bt runtime 4 18.731 0.86313 18.731 0.86313 20.018 0.86313 20.018 0.86313 adapts 19.447 0.95167 solid #637383
+graph 1 10.703 23.049
+node entry0 2.1427 0.44125 2.5563 0.8825 "Abstract Mongodb Test\nmongodb" rounded,filled box #88A3B5 #FFF8E7
+node entry1 2.1427 2.0246 4.2854 0.8825 "Coroutine Managed Transition Service Test\ncoroutine" rounded,filled box #88A3B5 #FFF8E7
+node entry2 2.1427 3.6079 2.5146 0.8825 "Transition Service Test\nimperative" rounded,filled box #88A3B5 #FFF8E7
+node entry3 2.1427 5.1913 4.1917 0.8825 "Reactive Managed Transition Service Test\nreactive" rounded,filled box #88A3B5 #FFF8E7
+node service0 8.7997 5.1913 3.8063 0.8825 "Coroutine Managed Transition Service\nservice component" rounded,filled box #88A3B5 #F1F8E9
+node service1 2.1427 6.7746 2.1292 0.8825 "Transition Service\nservice component" rounded,filled box #88A3B5 #F1F8E9
+node service2 2.1427 8.3579 3.7125 0.8825 "Reactive Managed Transition Service\nservice component" rounded,filled box #88A3B5 #F1F8E9
+node service3 2.1427 9.9413 2.8896 0.8825 "Reactive Transition Service\nservice component" rounded,filled box #88A3B5 #F1F8E9
+node infra0 8.7997 9.9413 1.1917 0.8825 "Process\nmongodb" rounded,filled box #88A3B5 #F5F0FF
+node infra1 2.1427 11.525 1.1917 0.8825 "State\nmongodb" rounded,filled box #88A3B5 #F5F0FF
+node infra2 2.1427 13.108 3.1708 0.8825 "Coroutine Process Repository\nrepository" rounded,filled box #88A3B5 #F5F0FF
+node infra3 2.1427 14.691 2.2229 0.8825 "Process Repository\nrepository" rounded,filled box #88A3B5 #F5F0FF
+node infra4 2.1427 16.275 3.0771 0.8825 "Reactive Process Repository\nrepository" rounded,filled box #88A3B5 #F5F0FF
+node bt0 2.1427 17.858 2.2854 0.8825 "testcontainers\nbluetape4k Data APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt1 2.1427 19.441 2.2854 0.8825 "coroutines\nbluetape4k Data APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt2 2.1427 21.025 2.2854 0.8825 "idgenerators\nbluetape4k Data APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime0 8.7997 21.025 1.9625 0.8825 "MongoDB\nDatabase Runtime" rounded,filled box #88A3B5 #FFF1F1
+node runtime1 2.1427 22.608 1.9625 0.8825 "Testcontainers\nDatabase Runtime" rounded,filled box #88A3B5 #FFF1F1
+edge entry3 service0 4 4.2444 5.1913 4.2444 5.1913 6.748 5.1913 6.748 5.1913 starts 5.591 5.2798 solid #637383
+edge service3 infra0 4 3.5954 9.9413 3.5954 9.9413 8.055 9.9413 8.055 9.9413 "persists / publishes" 5.591 10.03 solid #637383
+edge bt2 runtime0 4 3.2947 21.025 3.2947 21.025 7.6708 21.025 7.6708 21.025 adapts 5.591 21.113 solid #637383
 stop

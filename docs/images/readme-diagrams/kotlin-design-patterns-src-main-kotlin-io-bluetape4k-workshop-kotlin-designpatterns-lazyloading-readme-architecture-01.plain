@@ -1,7 +1,12 @@
-graph 1 11.058 1.7263
-node entry 1.7208 0.86313 3.4417 1.1637 "Example Entrypoints\nKotlin Design Patterns Kotlin\nDesignPatterns LazyLoading tests" rounded,filled box #88A3B5 #FFF8E7
-node service 6.2372 0.86313 2.2021 1.7263 "Application Services\nHeavy\nHolderKotlinLazy\nHolderNative\nHolderThreadSafe" rounded,filled box #88A3B5 #F1F8E9
-node runtime 9.8785 0.86313 2.3583 0.8825 "Runtime Dependencies\nSQL / R2DBC" rounded,filled box #88A3B5 #FFF1F1
-edge entry service 4 3.4476 0.86313 3.4476 0.86313 4.9892 0.86313 4.9892 0.86313 delegates 4.2889 0.95167 solid #637383
-edge service runtime 4 7.3445 0.86313 7.3445 0.86313 8.5515 0.86313 8.5515 0.86313 backs 8.0187 0.95167 solid #637383
+graph 1 6.2653 8.7992
+node entry0 1.1896 0.44125 2.1917 0.8825 "lazyLoading\nExample Entrypoints" rounded,filled box #88A3B5 #FFF8E7
+node service0 5.0861 0.44125 1.3896 0.8825 "Heavy\ncomponent" rounded,filled box #88A3B5 #F1F8E9
+node service1 1.1896 2.0246 2.0146 0.8825 "Holder Kotlin Lazy\ncomponent" rounded,filled box #88A3B5 #F1F8E9
+node service2 1.1896 3.6079 1.5875 0.8825 "Holder Native\ncomponent" rounded,filled box #88A3B5 #F1F8E9
+node service3 1.1896 5.1913 2.1813 0.8825 "Holder Thread Safe\ncomponent" rounded,filled box #88A3B5 #F1F8E9
+node service4 1.1896 6.7746 1.8583 0.8825 "Heavy Deferred\ncoroutines" rounded,filled box #88A3B5 #F1F8E9
+node service5 1.1896 8.3579 2.3792 0.8825 "Heavy Deferred Value\ncoroutines" rounded,filled box #88A3B5 #F1F8E9
+node runtime0 5.0861 8.3579 2.3583 0.8825 "SQL / R2DBC\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
+edge entry0 service0 4 2.2905 0.44125 2.2905 0.44125 4.2439 0.44125 4.2439 0.44125 starts 3.1431 0.52979 solid #637383
+edge service5 runtime0 4 2.3852 8.3579 2.3852 8.3579 3.7569 8.3579 3.7569 8.3579 "runs on" 3.1431 8.4465 solid #637383
 stop

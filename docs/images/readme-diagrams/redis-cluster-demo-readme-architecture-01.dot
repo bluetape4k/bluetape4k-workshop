@@ -26,14 +26,23 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Redis Demo Surface\nRedisClusterApplication\nAbstractRedisClusterTest\nBasicUsageTest\nRedis Cluster Demo tests", fillcolor="#FFF8E7"];
-  service [label="Redis Use Cases\nNumberService", fillcolor="#F1F8E9"];
-  infra [label="Redis Client Layer\nSpring boot starter data redis\nlib\nSpring boot autoconfigure lib\nSpring boot starter test", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k Redis APIs\nworkshop\ncore\njackson3", fillcolor="#EAF7F0"];
-  runtime [label="Redis Runtime\nSQL / R2DBC\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
+  entry0 [label="Redis Cluster Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Abstract Redis Cluster Test\ncluster", fillcolor="#FFF8E7"];
+  entry2 [label="Basic Usage Test\nbasic", fillcolor="#FFF8E7"];
+  entry3 [label="Bluetape4k Lettuce Usage Test\nbasic", fillcolor="#FFF8E7"];
+  entry4 [label="Number Service Test\nservice component", fillcolor="#FFF8E7"];
+  service0 [label="Number Service\nservice component", fillcolor="#F1F8E9"];
+  infra0 [label="Spring boot starter data redis lib\nRedis Client Layer", fillcolor="#F5F0FF"];
+  infra1 [label="Spring boot autoconfigure lib\nRedis Client Layer", fillcolor="#F5F0FF"];
+  infra2 [label="Spring boot starter test\nRedis Client Layer", fillcolor="#F5F0FF"];
+  bt0 [label="workshop\nbluetape4k Redis APIs", fillcolor="#EAF7F0"];
+  bt1 [label="core\nbluetape4k Redis APIs", fillcolor="#EAF7F0"];
+  bt2 [label="jackson3\nbluetape4k Redis APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="SQL / R2DBC\nRedis Runtime", fillcolor="#FFF1F1"];
+  runtime1 [label="Redis\nRedis Runtime", fillcolor="#FFF1F1"];
+  runtime2 [label="Testcontainers\nRedis Runtime", fillcolor="#FFF1F1"];
 
-  entry -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  entry4 -> service0 [label="starts"];
+  service0 -> infra0 [label="persists / publishes"];
+  bt2 -> runtime0 [label="adapts"];
 }

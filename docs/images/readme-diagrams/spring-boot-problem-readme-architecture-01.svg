@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="828" viewBox="0 0 1320 828" role="img" aria-label="Problem Web Demo architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1128" viewBox="0 0 1320 1128" role="img" aria-label="Problem Web Demo architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-boot/problem/src/main/kotlin/io/bluetape4k/workshop/problem/ProblemApplication.kt&quot;,&quot;spring-boot/problem/src/main/kotlin/io/bluetape4k/workshop/problem/config/ProblemConfig.kt&quot;,&quot;spring-boot/problem/src/main/kotlin/io/bluetape4k/workshop/problem/controller/Resilience4jController.kt&quot;,&quot;spring-boot/problem/src/main/kotlin/io/bluetape4k/workshop/problem/controller/TaskController.kt&quot;,&quot;spring-boot/problem/src/main/kotlin/io/bluetape4k/workshop/problem/exceptions/ExampleException.kt&quot;,&quot;spring-boot/problem/src/main/kotlin/io/bluetape4k/workshop/problem/exceptions/InvalidTaskIdException.kt&quot;,&quot;spring-boot/problem/src/main/kotlin/io/bluetape4k/workshop/problem/exceptions/TaskNotFoundException.kt&quot;,&quot;spring-boot/problem/src/main/kotlin/io/bluetape4k/workshop/problem/filter/RestControllerLoggingFilter.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
   <defs>
     <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
@@ -32,73 +32,111 @@
       .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="828"/>
-  <rect class="frame" x="16" y="16" width="1288" height="796" rx="22"/>
+  <rect class="canvas" width="1320" height="1128"/>
+  <rect class="frame" x="16" y="16" width="1288" height="1096" rx="22"/>
   <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Problem Web Demo</text>
   <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Spring Boot application feature and runtime integration</text>
   <g>
     <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="168.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="170.5">Spring Boot</tspan><tspan class="layer-title" x="151.0" y="193.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="220.0">apps, controllers,</tspan><tspan class="layer-detail" x="151.0" y="236.0">scheduled tests</tspan></text>
+      <rect x="46.0" y="114.0" width="1228.0" height="380.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
+      <rect x="64.0" y="134.0" width="174" height="340.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="276.5">Spring Boot</tspan><tspan class="layer-title" x="151.0" y="299.5">Surface</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="326.0">apps, controllers,</tspan><tspan class="layer-detail" x="151.0" y="342.0">scheduled tests</tspan></text>
     </g>
     <g class="layer" data-layer="service">
-      <rect x="46.0" y="300.0" width="1228.0" height="150.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="320.0" width="174" height="110.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="359.0">Feature Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="389.0">services,</tspan><tspan class="layer-detail" x="151.0" y="405.0">resilience, events,</tspan><tspan class="layer-detail" x="151.0" y="421.0">cache policy</tspan></text>
+      <rect x="46.0" y="512.0" width="1228.0" height="146.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
+      <rect x="64.0" y="532.0" width="174" height="106.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="569.0">Feature Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="599.0">services,</tspan><tspan class="layer-detail" x="151.0" y="615.0">resilience, events,</tspan><tspan class="layer-detail" x="151.0" y="631.0">cache policy</tspan></text>
     </g>
     <g class="layer" data-layer="integration">
-      <rect x="46.0" y="468.0" width="1228.0" height="150.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="488.0" width="174" height="110.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="515.5">Boot Integration</tspan><tspan class="layer-title" x="151.0" y="538.5">Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="557.0">auto-config,</tspan><tspan class="layer-detail" x="151.0" y="573.0">clients,</tspan><tspan class="layer-detail" x="151.0" y="589.0">repositories</tspan></text>
+      <rect x="46.0" y="676.0" width="1228.0" height="242.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
+      <rect x="64.0" y="696.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="769.5">Boot Integration</tspan><tspan class="layer-title" x="151.0" y="792.5">Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="811.0">auto-config,</tspan><tspan class="layer-detail" x="151.0" y="827.0">clients,</tspan><tspan class="layer-detail" x="151.0" y="843.0">repositories</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="636.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="656.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="674.5">Runtime</tspan><tspan class="layer-title" x="151.0" y="697.5">Dependencies</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="716.0">database, cache,</tspan><tspan class="layer-detail" x="151.0" y="732.0">messaging,</tspan><tspan class="layer-detail" x="151.0" y="748.0">containers</tspan></text>
+      <rect x="46.0" y="936.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="64.0" y="956.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="974.5">Runtime</tspan><tspan class="layer-title" x="151.0" y="997.5">Dependencies</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1016.0">database, cache,</tspan><tspan class="layer-detail" x="151.0" y="1032.0">messaging,</tspan><tspan class="layer-detail" x="151.0" y="1048.0">containers</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;api" data-label="invokes">
-      <path d="M 704.0 198.0 L 774.0 198.0 L 844.0 198.0" fill="none" stroke="#4F7DB5" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-api)"/>
+    <g class="edge" data-edge="api4-&gt;service0" data-label="delegates">
+      <path d="M 1096.0 474.0 L 1096.0 503.0 L 424.0 503.0 L 424.0 532.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
     </g>
-    <g class="edge" data-edge="api-&gt;service" data-label="delegates">
-      <path d="M 1039.0 262.0 L 1039.0 291.0 L 774.0 291.0 L 774.0 320.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
+    <g class="edge" data-edge="service2-&gt;infra0" data-label="persists / publishes">
+      <path d="M 1096.0 631.0 L 1096.0 663.5 L 424.0 663.5 L 424.0 696.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
     </g>
-    <g class="edge" data-edge="service-&gt;infra" data-label="persists / publishes">
-      <path d="M 774.0 430.0 L 774.0 463.5 L 509.0 463.5 L 509.0 497.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
+    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
+      <path d="M 424.0 898.0 L 424.0 927.0 L 760.0 927.0 L 760.0 956.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
     </g>
-    <g class="edge" data-edge="infra-&gt;bt" data-label="extends">
-      <path d="M 704.0 543.0 L 774.0 543.0 L 844.0 543.0" fill="none" stroke="#3E927D" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-bt)"/>
+    <g class="node" data-node="entry0" data-lines="Problem Application | application bootstrap">
+      <rect x="274.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="183.5">Problem Application</tspan><tspan class="node-detail" x="424.0" y="207.5">application bootstrap</tspan></text>
     </g>
-    <g class="edge" data-edge="bt-&gt;runtime" data-label="adapts">
-      <path d="M 1039.0 598.0 L 1039.0 627.0 L 774.0 627.0 L 774.0 656.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+    <g class="node" data-node="entry1" data-lines="Abstract Problem Test | problem">
+      <rect x="610.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="183.5">Abstract Problem Test</tspan><tspan class="node-detail" x="760.0" y="207.5">problem</tspan></text>
     </g>
-    <g class="node" data-node="entry" data-lines="Boot App/Test Surface | ProblemApplication | AbstractProblemTest | Resilience4jControllerTest | Spring Boot Problem tests">
-      <rect x="314.0" y="134.0" width="390.0" height="128.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="169.0">Boot App/Test Surface</tspan><tspan class="node-detail" x="509.0" y="193.0">ProblemApplication</tspan><tspan class="node-detail" x="509.0" y="210.0">AbstractProblemTest</tspan><tspan class="node-detail" x="509.0" y="227.0">Resilience4jControllerTest</tspan><tspan class="node-detail" x="509.0" y="244.0">Spring Boot Problem tests</tspan></text>
+    <g class="node" data-node="entry2" data-lines="Resilience4j Controller | Test | HTTP adapter">
+      <rect x="946.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="171.5">Resilience4j Controller</tspan><tspan class="node-title" x="1096.0" y="195.5">Test</tspan><tspan class="node-detail" x="1096.0" y="219.5">HTTP adapter</tspan></text>
     </g>
-    <g class="node" data-node="api" data-lines="Spring Web Adapters | Resilience4jController | TaskController | RestControllerLoggingFilter | Resilience4jTrait">
-      <rect x="844.0" y="134.0" width="390.0" height="128.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="169.0">Spring Web Adapters</tspan><tspan class="node-detail" x="1039.0" y="193.0">Resilience4jController</tspan><tspan class="node-detail" x="1039.0" y="210.0">TaskController</tspan><tspan class="node-detail" x="1039.0" y="227.0">RestControllerLoggingFilter</tspan><tspan class="node-detail" x="1039.0" y="244.0">Resilience4jTrait</tspan></text>
+    <g class="node" data-node="entry3" data-lines="Task Controller Test | HTTP adapter">
+      <rect x="274.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="300.5">Task Controller Test</tspan><tspan class="node-detail" x="424.0" y="324.5">HTTP adapter</tspan></text>
     </g>
-    <g class="node" data-node="service" data-lines="Application Feature | InvalidTaskIdException | TaskNotFoundException | ExampleException">
-      <rect x="474.0" y="320.0" width="600.0" height="110.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="354.5">Application Feature</tspan><tspan class="node-detail" x="774.0" y="378.5">InvalidTaskIdException</tspan><tspan class="node-detail" x="774.0" y="395.5">TaskNotFoundException</tspan><tspan class="node-detail" x="774.0" y="412.5">ExampleException</tspan></text>
+    <g class="node" data-node="api0" data-lines="Resilience4j Controller | HTTP adapter">
+      <rect x="610.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="300.5">Resilience4j Controller</tspan><tspan class="node-detail" x="760.0" y="324.5">HTTP adapter</tspan></text>
     </g>
-    <g class="node" data-node="infra" data-lines="Infrastructure Config | ProblemConfig">
-      <rect x="314.0" y="497.0" width="390.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="539.5">Infrastructure Config</tspan><tspan class="node-detail" x="509.0" y="563.5">ProblemConfig</tspan></text>
+    <g class="node" data-node="api1" data-lines="Task Controller | HTTP adapter">
+      <rect x="946.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="300.5">Task Controller</tspan><tspan class="node-detail" x="1096.0" y="324.5">HTTP adapter</tspan></text>
     </g>
-    <g class="node" data-node="bt" data-lines="bluetape4k Boot APIs | workshop | junit5 | resilience4j">
-      <rect x="844.0" y="488.0" width="390.0" height="110.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="522.5">bluetape4k Boot APIs</tspan><tspan class="node-detail" x="1039.0" y="546.5">workshop</tspan><tspan class="node-detail" x="1039.0" y="563.5">junit5</tspan><tspan class="node-detail" x="1039.0" y="580.5">resilience4j</tspan></text>
+    <g class="node" data-node="api2" data-lines="Rest Controller Logging | Filter | filter">
+      <rect x="274.0" y="368.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="405.5">Rest Controller Logging</tspan><tspan class="node-title" x="424.0" y="429.5">Filter</tspan><tspan class="node-detail" x="424.0" y="453.5">filter</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="Boot Runtime | In-memory / JVM">
-      <rect x="474.0" y="656.0" width="600.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="698.5">Boot Runtime</tspan><tspan class="node-detail" x="774.0" y="722.5">In-memory / JVM</tspan></text>
+    <g class="node" data-node="api3" data-lines="Resilience4j Trait | handlers">
+      <rect x="610.0" y="375.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="417.5">Resilience4j Trait</tspan><tspan class="node-detail" x="760.0" y="441.5">handlers</tspan></text>
+    </g>
+    <g class="node" data-node="api4" data-lines="Rest Api Exception | Handler | handlers">
+      <rect x="946.0" y="368.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="405.5">Rest Api Exception</tspan><tspan class="node-title" x="1096.0" y="429.5">Handler</tspan><tspan class="node-detail" x="1096.0" y="453.5">handlers</tspan></text>
+    </g>
+    <g class="node" data-node="service0" data-lines="Invalid Task Id | Exception | exceptions">
+      <rect x="274.0" y="532.0" width="300.0" height="106.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="569.5">Invalid Task Id</tspan><tspan class="node-title" x="424.0" y="593.5">Exception</tspan><tspan class="node-detail" x="424.0" y="617.5">exceptions</tspan></text>
+    </g>
+    <g class="node" data-node="service1" data-lines="Task Not Found Exception | exceptions">
+      <rect x="610.0" y="539.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="581.5">Task Not Found Exception</tspan><tspan class="node-detail" x="760.0" y="605.5">exceptions</tspan></text>
+    </g>
+    <g class="node" data-node="service2" data-lines="Example Exception | exceptions">
+      <rect x="946.0" y="539.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="581.5">Example Exception</tspan><tspan class="node-detail" x="1096.0" y="605.5">exceptions</tspan></text>
+    </g>
+    <g class="node" data-node="infra0" data-lines="Problem Config | configuration">
+      <rect x="274.0" y="696.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="738.5">Problem Config</tspan><tspan class="node-detail" x="424.0" y="762.5">configuration</tspan></text>
+    </g>
+    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k Boot APIs">
+      <rect x="610.0" y="696.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="738.5">workshop</tspan><tspan class="node-detail" x="760.0" y="762.5">bluetape4k Boot APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt1" data-lines="junit5 | bluetape4k Boot APIs">
+      <rect x="946.0" y="696.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="738.5">junit5</tspan><tspan class="node-detail" x="1096.0" y="762.5">bluetape4k Boot APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt2" data-lines="resilience4j | bluetape4k Boot APIs">
+      <rect x="274.0" y="806.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="848.5">resilience4j</tspan><tspan class="node-detail" x="424.0" y="872.5">bluetape4k Boot APIs</tspan></text>
+    </g>
+    <g class="node" data-node="runtime0" data-lines="In-memory / JVM | Boot Runtime">
+      <rect x="610.0" y="956.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="998.5">In-memory / JVM</tspan><tspan class="node-detail" x="760.0" y="1022.5">Boot Runtime</tspan></text>
     </g>
   </g>
 </svg>

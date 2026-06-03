@@ -26,16 +26,26 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Example Entrypoints\nMain\nAbstractKtorTest\nInMemoryBookRepositoryTest\nKtor Rest Coroutines tests", fillcolor="#FFF8E7"];
-  api [label="API / Adapter Layer\nApplicationModule\nInMemoryBookRepository\nBookRoutes\nHealthRoutes", fillcolor="#EEF7FF"];
-  service [label="Application Services\nJackson3Support\nBookService\nBook\nDomainError", fillcolor="#F1F8E9"];
-  infra [label="Infrastructure Layer\nBookRepository", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\ncore\nlogging", fillcolor="#EAF7F0"];
-  runtime [label="Runtime Dependencies\nIn-memory / JVM", fillcolor="#FFF1F1"];
+  entry0 [label="Main\nktor", fillcolor="#FFF8E7"];
+  entry1 [label="Abstract Ktor Test\nktor", fillcolor="#FFF8E7"];
+  entry2 [label="In Memory Book Repository Test\nrepository", fillcolor="#FFF8E7"];
+  entry3 [label="Book Routes Test\nroutes", fillcolor="#FFF8E7"];
+  entry4 [label="Book Stream Test\nroutes", fillcolor="#FFF8E7"];
+  api0 [label="Application Module\nktor", fillcolor="#EEF7FF"];
+  api1 [label="In Memory Book Repository\nrepository", fillcolor="#EEF7FF"];
+  api2 [label="Book Routes\nroutes", fillcolor="#EEF7FF"];
+  api3 [label="Health Routes\nroutes", fillcolor="#EEF7FF"];
+  service0 [label="Jackson3 Support\njson", fillcolor="#F1F8E9"];
+  service1 [label="Book Service\nservice component", fillcolor="#F1F8E9"];
+  service2 [label="Book\ndomain model", fillcolor="#F1F8E9"];
+  service3 [label="Domain Error\ndomain model", fillcolor="#F1F8E9"];
+  infra0 [label="Book Repository\nrepository", fillcolor="#F5F0FF"];
+  bt0 [label="workshop\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  bt1 [label="core\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  bt2 [label="logging\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="In-memory / JVM\nRuntime Dependencies", fillcolor="#FFF1F1"];
 
-  entry -> api [label="invokes"];
-  api -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  api3 -> service0 [label="delegates"];
+  service3 -> infra0 [label="persists / publishes"];
+  bt2 -> runtime0 [label="adapts"];
 }

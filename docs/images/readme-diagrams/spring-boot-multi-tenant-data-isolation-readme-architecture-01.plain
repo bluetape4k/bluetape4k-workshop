@@ -1,11 +1,23 @@
-graph 1 19.84 1.7263
-node entry 1.7052 0.86313 3.4104 1.7263 "Boot App/Test Surface\nMultiTenantDataIsolationApplication\nTenantIsolationTest\nSpring Boot Multi Tenant Data\nIsolation tests" rounded,filled box #88A3B5 #FFF8E7
-node service 6.383 0.86313 2.5563 1.7263 "Application Feature\nExposedSchemaInitializer\nTenantInvoiceCache\nTenantInvoiceService\nTenantKeyFactory" rounded,filled box #88A3B5 #F1F8E9
-node infra 11.566 0.86313 2.5875 1.7263 "Infrastructure Config\nInvoiceRecord\nInvoiceTable\nTenantId\nTenantInvoiceRepository" rounded,filled box #88A3B5 #F5F0FF
-node bt 15.556 0.86313 2.3375 1.445 "bluetape4k Boot APIs\nworkshop\njunit5\nassertions" rounded,filled box #88A3B5 #EAF7F0
-node runtime 19.005 0.86313 1.6708 1.1637 "Boot Runtime\nSQL / R2DBC\nRedis" rounded,filled box #88A3B5 #FFF1F1
-edge entry service 4 3.4138 0.86313 3.4138 0.86313 4.954 0.86313 4.954 0.86313 delegates 4.2576 0.95167 solid #637383
-edge service infra 4 7.6708 0.86313 7.6708 0.86313 10.124 0.86313 10.124 0.86313 "persists / publishes" 8.9667 0.95167 solid #637383
-edge infra bt 4 12.867 0.86313 12.867 0.86313 14.236 0.86313 14.236 0.86313 extends 13.624 0.95167 solid #637383
-edge bt runtime 4 16.733 0.86313 16.733 0.86313 18.022 0.86313 18.022 0.86313 adapts 17.447 0.95167 solid #637383
+graph 1 9.0153 23.049
+node entry0 1.851 0.44125 3.7021 0.8825 "Multi Tenant Data Isolation Application\napplication bootstrap" rounded,filled box #88A3B5 #FFF8E7
+node entry1 1.851 2.0246 2.2333 0.8825 "Tenant Isolation Test\nmultitenant" rounded,filled box #88A3B5 #FFF8E7
+node service0 7.6642 2.0246 2.7021 0.8825 "Exposed Schema Initializer\nconfiguration" rounded,filled box #88A3B5 #F1F8E9
+node service1 1.851 3.6079 2.2958 0.8825 "Tenant Invoice Cache\nservice component" rounded,filled box #88A3B5 #F1F8E9
+node service2 1.851 5.1913 2.4417 0.8825 "Tenant Invoice Service\nservice component" rounded,filled box #88A3B5 #F1F8E9
+node service3 1.851 6.7746 2.2229 0.8825 "Tenant Key Factory\nservice component" rounded,filled box #88A3B5 #F1F8E9
+node service4 1.851 8.3579 2.3896 0.8825 "Tenant Lock Registry\nservice component" rounded,filled box #88A3B5 #F1F8E9
+node service5 1.851 9.9413 2.1292 0.8825 "Tenant Metrics\nservice component" rounded,filled box #88A3B5 #F1F8E9
+node infra0 7.6642 9.9413 1.7646 0.8825 "Invoice Record\ndomain model" rounded,filled box #88A3B5 #F5F0FF
+node infra1 1.851 11.525 1.5771 0.8825 "Invoice Table\ndomain model" rounded,filled box #88A3B5 #F5F0FF
+node infra2 1.851 13.108 1.5771 0.8825 "Tenant Id\ndomain model" rounded,filled box #88A3B5 #F5F0FF
+node infra3 1.851 14.691 2.7333 0.8825 "Tenant Invoice Repository\nrepository" rounded,filled box #88A3B5 #F5F0FF
+node infra4 1.851 16.275 2.7438 0.8825 "Unsafe Invoice Repository\nrepository" rounded,filled box #88A3B5 #F5F0FF
+node bt0 1.851 17.858 2.3375 0.8825 "workshop\nbluetape4k Boot APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt1 1.851 19.441 2.3375 0.8825 "junit5\nbluetape4k Boot APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt2 1.851 21.025 2.3375 0.8825 "assertions\nbluetape4k Boot APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime0 7.6642 21.025 1.6708 0.8825 "SQL / R2DBC\nBoot Runtime" rounded,filled box #88A3B5 #FFF1F1
+node runtime1 1.851 22.608 1.6187 0.8825 "Redis\nBoot Runtime" rounded,filled box #88A3B5 #FFF1F1
+edge entry1 service0 4 2.9719 2.0246 2.9719 2.0246 6.1639 2.0246 6.1639 2.0246 starts 5.0076 2.1131 solid #637383
+edge service5 infra0 4 2.924 9.9413 2.924 9.9413 6.6309 9.9413 6.6309 9.9413 "persists / publishes" 5.0076 10.03 solid #637383
+edge bt2 runtime0 4 3.0274 21.025 3.0274 21.025 6.6808 21.025 6.6808 21.025 adapts 5.0076 21.113 solid #637383
 stop

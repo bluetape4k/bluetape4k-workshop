@@ -26,16 +26,29 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Data Demo Surface\nElasticsearchApplication\nAbstractElasticsearchApplicationTest\nElasticsearchClientConfigTest\nSpring Data Elasticsearch", fillcolor="#FFF8E7"];
-  api [label="Web/Data Adapters\nNettyConfig\nBookController\nDefaultBookService\nBookExceptionHandler", fillcolor="#EEF7FF"];
-  service [label="Data Service Layer\nBookService", fillcolor="#F1F8E9"];
-  infra [label="Repository Layer\nElasticsearchClientConfig\nJacksonConfig\nSwaggerConfig\nModifyBookRequest", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k Data APIs\nworkshop\ntestcontainers\njackson3", fillcolor="#EAF7F0"];
-  runtime [label="Database Runtime\nElasticsearch\nTestcontainers", fillcolor="#FFF1F1"];
+  entry0 [label="Elasticsearch Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Abstract Elasticsearch Application Test\nelasticsearch", fillcolor="#FFF8E7"];
+  entry2 [label="Elasticsearch Client Config Test\nconfiguration", fillcolor="#FFF8E7"];
+  entry3 [label="Book Controller Test\nHTTP adapter", fillcolor="#FFF8E7"];
+  entry4 [label="Book Repository Test\nrepository", fillcolor="#FFF8E7"];
+  api0 [label="Netty Config\nconfiguration", fillcolor="#EEF7FF"];
+  api1 [label="Book Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  api2 [label="Default Book Service\nservice component", fillcolor="#EEF7FF"];
+  api3 [label="Book Exception Handler\nhandlers", fillcolor="#EEF7FF"];
+  api4 [label="Redirect Web Filter\nwebfilter", fillcolor="#EEF7FF"];
+  service0 [label="Book Service\nservice component", fillcolor="#F1F8E9"];
+  infra0 [label="Elasticsearch Client Config\nconfiguration", fillcolor="#F5F0FF"];
+  infra1 [label="Jackson Config\nconfiguration", fillcolor="#F5F0FF"];
+  infra2 [label="Swagger Config\nconfiguration", fillcolor="#F5F0FF"];
+  infra3 [label="Modify Book Request\ndomain model", fillcolor="#F5F0FF"];
+  infra4 [label="Book Not Found Exception\ndomain model", fillcolor="#F5F0FF"];
+  bt0 [label="workshop\nbluetape4k Data APIs", fillcolor="#EAF7F0"];
+  bt1 [label="testcontainers\nbluetape4k Data APIs", fillcolor="#EAF7F0"];
+  bt2 [label="jackson3\nbluetape4k Data APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="Elasticsearch\nDatabase Runtime", fillcolor="#FFF1F1"];
+  runtime1 [label="Testcontainers\nDatabase Runtime", fillcolor="#FFF1F1"];
 
-  entry -> api [label="invokes"];
-  api -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  api4 -> service0 [label="delegates"];
+  service0 -> infra0 [label="persists / publishes"];
+  bt2 -> runtime0 [label="adapts"];
 }

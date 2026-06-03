@@ -1,14 +1,22 @@
-graph 1 24.737 1.7263
-node entry 1.95 0.86313 3.9 1.7263 "Boot App/Test Surface\nCaffeineCacheApplication\nAbstractCaffeineCacheApplicationTest\nCaffeineCacheConfigTest\nSpring Boot Cache \
-Caffeine tests" rounded,filled box #88A3B5 #FFF8E7
-node api 6.5861 0.86313 2.3167 0.8825 "Spring Web Adapters\nSchedulingConfig" rounded,filled box #88A3B5 #EEF7FF
-node service 10.535 0.86313 2.1917 1.7263 "Application Feature\nCaffeineConfig\nCountryRepository\nCountryPrefetcher\nCountry" rounded,filled box #88A3B5 #F1F8E9
-node infra 15.864 0.86313 3.2438 1.7263 "Spring Boot Layer\nSpring boot starter cache lib\nSpring boot starter cache test\nSpring boot autoconfigure lib\nSpring boot autoconfigure" rounded,filled box #88A3B5 #F5F0FF
-node bt 20.182 0.86313 2.3375 1.445 "bluetape4k Boot APIs\nworkshop\ncache\njackson3" rounded,filled box #88A3B5 #EAF7F0
-node runtime 23.766 0.86313 1.9417 0.8825 "Boot Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.9094 0.86313 3.9094 0.86313 5.2768 0.86313 5.2768 0.86313 invokes 4.6639 0.95167 solid #637383
-edge api service 4 7.7495 0.86313 7.7495 0.86313 9.2912 0.86313 9.2912 0.86313 delegates 8.5917 0.95167 solid #637383
-edge service infra 4 11.639 0.86313 11.639 0.86313 14.092 0.86313 14.092 0.86313 "persists / publishes" 12.936 0.95167 solid #637383
-edge infra bt 4 17.49 0.86313 17.49 0.86313 18.865 0.86313 18.865 0.86313 extends 18.249 0.95167 solid #637383
-edge bt runtime 4 21.355 0.86313 21.355 0.86313 22.645 0.86313 22.645 0.86313 adapts 22.073 0.95167 solid #637383
+graph 1 9.8486 21.466
+node entry0 2.0958 0.44125 2.8271 0.8825 "Caffeine Cache Application\napplication bootstrap" rounded,filled box #88A3B5 #FFF8E7
+node entry1 2.0958 2.0246 4.1917 0.8825 "Abstract Caffeine Cache Application Test\ncaffeine" rounded,filled box #88A3B5 #FFF8E7
+node entry2 2.0958 3.6079 2.9625 0.8825 "Caffeine Cache Config Test\nconfiguration" rounded,filled box #88A3B5 #FFF8E7
+node entry3 2.0958 5.1913 2.6708 0.8825 "Country Repository Test\ndomain model" rounded,filled box #88A3B5 #FFF8E7
+node api0 2.0958 6.7746 1.9729 0.8825 "Scheduling Config\nconfiguration" rounded,filled box #88A3B5 #EEF7FF
+node service0 8.3257 6.7746 1.8583 0.8825 "Caffeine Config\nconfiguration" rounded,filled box #88A3B5 #F1F8E9
+node service1 2.0958 8.3579 2.1917 0.8825 "Country Repository\nrepository" rounded,filled box #88A3B5 #F1F8E9
+node service2 2.0958 9.9413 2.2646 0.8825 "Country Prefetcher\nprefetcher" rounded,filled box #88A3B5 #F1F8E9
+node service3 2.0958 11.525 1.5771 0.8825 "Country\ndomain model" rounded,filled box #88A3B5 #F1F8E9
+node infra0 8.3257 11.525 3.0458 0.8825 "Spring boot starter cache lib\nSpring Boot Layer" rounded,filled box #88A3B5 #F5F0FF
+node infra1 2.0958 13.108 3.2438 0.8825 "Spring boot starter cache test\nSpring Boot Layer" rounded,filled box #88A3B5 #F5F0FF
+node infra2 2.0958 14.691 3.0354 0.8825 "Spring boot autoconfigure lib\nSpring Boot Layer" rounded,filled box #88A3B5 #F5F0FF
+node infra3 2.0958 16.275 3.8271 0.8825 "Spring boot autoconfigure processor\nSpring Boot Layer" rounded,filled box #88A3B5 #F5F0FF
+node bt0 2.0958 17.858 2.3375 0.8825 "workshop\nbluetape4k Boot APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt1 2.0958 19.441 2.3375 0.8825 "cache\nbluetape4k Boot APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt2 2.0958 21.025 2.3375 0.8825 "jackson3\nbluetape4k Boot APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime0 8.3257 21.025 1.9417 0.8825 "In-memory / JVM\nBoot Runtime" rounded,filled box #88A3B5 #FFF1F1
+edge api0 service0 4 3.0899 6.7746 3.0899 6.7746 7.2486 6.7746 7.2486 6.7746 delegates 5.4972 6.8631 solid #637383
+edge service3 infra0 4 2.8912 11.525 2.8912 11.525 6.6532 11.525 6.6532 11.525 "persists / publishes" 5.4972 11.613 solid #637383
+edge bt2 runtime0 4 3.2713 21.025 3.2713 21.025 7.2071 21.025 7.2071 21.025 adapts 5.4972 21.113 solid #637383
 stop

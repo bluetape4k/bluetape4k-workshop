@@ -1,13 +1,25 @@
-graph 1 23.622 1.7263
-node entry 1.5594 0.86313 3.1188 1.7263 "Example Entrypoints\nKotlinGatlingApplication\nAbstractGatlingTest\nAsyncTaskControllerTest\nGatling Virtualthread Simulation" rounded,filled box #88A3B5 #FFF8E7
-node api 5.7892 0.86313 2.2854 1.445 "API / Adapter Layer\nTomcatConfig\nAsyncTaskController\nSyncTaskController" rounded,filled box #88A3B5 #EEF7FF
-node service 9.7274 0.86313 2.2021 1.445 "Application Services\nAsyncConfig\nAsyncTaskService\nSyncTaskService" rounded,filled box #88A3B5 #F1F8E9
-node infra 14.957 0.86313 3.0354 1.7263 "Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration" rounded,filled box #88A3B5 #F5F0FF
-node bt 18.911 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\nio\njackson3" rounded,filled box #88A3B5 #EAF7F0
-node runtime 22.443 0.86313 2.3583 1.445 "Runtime Dependencies\nSQL / R2DBC\nMongoDB\nAWS / S3" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.1284 0.86313 3.1284 0.86313 4.4965 0.86313 4.4965 0.86313 invokes 3.8826 0.95167 solid #637383
-edge api service 4 6.9389 0.86313 6.9389 0.86313 8.4744 0.86313 8.4744 0.86313 delegates 7.7792 0.95167 solid #637383
-edge service infra 4 10.837 0.86313 10.837 0.86313 13.291 0.86313 13.291 0.86313 "persists / publishes" 12.134 0.95167 solid #637383
-edge infra bt 4 16.48 0.86313 16.48 0.86313 17.853 0.86313 17.853 0.86313 extends 17.239 0.95167 solid #637383
-edge bt runtime 4 19.825 0.86313 19.825 0.86313 21.117 0.86313 21.117 0.86313 adapts 20.542 0.95167 solid #637383
+graph 1 9.4736 26.216
+node entry0 1.9135 0.44125 2.525 0.8825 "Kotlin Gatling Application\napplication bootstrap" rounded,filled box #88A3B5 #FFF8E7
+node entry1 1.9135 2.0246 2.3375 0.8825 "Abstract Gatling Test\ngatling" rounded,filled box #88A3B5 #FFF8E7
+node entry2 1.9135 3.6079 2.9104 0.8825 "Async Task Controller Test\nHTTP adapter" rounded,filled box #88A3B5 #FFF8E7
+node entry3 1.9135 5.1913 2.8167 0.8825 "Sync Task Controller Test\nHTTP adapter" rounded,filled box #88A3B5 #FFF8E7
+node api0 1.9135 6.7746 1.7646 0.8825 "Tomcat Config\nconfiguration" rounded,filled box #88A3B5 #EEF7FF
+node api1 1.9135 8.3579 2.4313 0.8825 "Async Task Controller\nHTTP adapter" rounded,filled box #88A3B5 #EEF7FF
+node api2 1.9135 9.9413 2.3375 0.8825 "Sync Task Controller\nHTTP adapter" rounded,filled box #88A3B5 #EEF7FF
+node service0 7.9559 9.9413 1.6083 0.8825 "Async Config\nconfiguration" rounded,filled box #88A3B5 #F1F8E9
+node service1 1.9135 11.525 2.2125 0.8825 "Async Task Service\nservice component" rounded,filled box #88A3B5 #F1F8E9
+node service2 1.9135 13.108 2.1292 0.8825 "Sync Task Service\nservice component" rounded,filled box #88A3B5 #F1F8E9
+node infra0 7.9559 13.108 3.0354 0.8825 "Spring boot autoconfigure lib\nFramework Layer" rounded,filled box #88A3B5 #F5F0FF
+node infra1 1.9135 14.691 3.8271 0.8825 "Spring boot autoconfigure processor\nFramework Layer" rounded,filled box #88A3B5 #F5F0FF
+node infra2 1.9135 16.275 3.7542 0.8825 "Spring boot configuration processor\nFramework Layer" rounded,filled box #88A3B5 #F5F0FF
+node infra3 1.9135 17.858 2.275 0.8825 "Spring boot devtools\nFramework Layer" rounded,filled box #88A3B5 #F5F0FF
+node bt0 1.9135 19.441 1.8167 0.8825 "workshop\nbluetape4k APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt1 1.9135 21.025 1.8167 0.8825 "io\nbluetape4k APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt2 1.9135 22.608 1.8167 0.8825 "jackson3\nbluetape4k APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime0 7.9559 22.608 2.3583 0.8825 "SQL / R2DBC\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
+node runtime1 1.9135 24.191 2.3583 0.8825 "MongoDB\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
+node runtime2 1.9135 25.775 2.3583 0.8825 "AWS / S3\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
+edge api2 service0 4 3.0893 9.9413 3.0893 9.9413 7.0029 9.9413 7.0029 9.9413 delegates 5.1326 10.03 solid #637383
+edge service2 infra0 4 2.9868 13.108 2.9868 13.108 6.2906 13.108 6.2906 13.108 "persists / publishes" 5.1326 13.196 solid #637383
+edge bt2 runtime0 4 2.8312 22.608 2.8312 22.608 6.6266 22.608 6.6266 22.608 adapts 5.1326 22.696 solid #637383
 stop

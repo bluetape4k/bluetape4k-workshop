@@ -38,34 +38,40 @@
   <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Vertx example runtime and module dependencies</text>
   <g>
     <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="168.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="182.0">Example Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="220.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="236.0">adapters</tspan></text>
+      <rect x="46.0" y="114.0" width="1228.0" height="256.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
+      <rect x="64.0" y="134.0" width="174" height="216.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="226.0">Example Surface</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="264.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="280.0">adapters</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="300.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="320.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="350.0">Runtime Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="380.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="396.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="412.0">JVM</tspan></text>
+      <rect x="46.0" y="388.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="64.0" y="408.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="438.0">Runtime Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="468.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="484.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="500.0">JVM</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;api" data-label="invokes">
-      <path d="M 704.0 198.0 L 774.0 198.0 L 844.0 198.0" fill="none" stroke="#4F7DB5" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-api)"/>
+    <g class="node" data-node="entry0" data-lines="Main | movierating">
+      <rect x="274.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="183.5">Main</tspan><tspan class="node-detail" x="424.0" y="207.5">movierating</tspan></text>
     </g>
-    <g class="edge" data-edge="api-&gt;runtime" data-label="backs">
-      <path d="M 1039.0 244.0 L 1039.0 282.0 L 774.0 282.0 L 774.0 320.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+    <g class="node" data-node="entry1" data-lines="Movie Rating Vertice | Test | verification">
+      <rect x="610.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="171.5">Movie Rating Vertice</tspan><tspan class="node-title" x="760.0" y="195.5">Test</tspan><tspan class="node-detail" x="760.0" y="219.5">verification</tspan></text>
     </g>
-    <g class="node" data-node="entry" data-lines="Example Entrypoints | Main | MovieRatingVerticeTest | AbstractSqlClientTest | Vertx tests">
-      <rect x="314.0" y="134.0" width="390.0" height="128.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="169.0">Example Entrypoints</tspan><tspan class="node-detail" x="509.0" y="193.0">Main</tspan><tspan class="node-detail" x="509.0" y="210.0">MovieRatingVerticeTest</tspan><tspan class="node-detail" x="509.0" y="227.0">AbstractSqlClientTest</tspan><tspan class="node-detail" x="509.0" y="244.0">Vertx tests</tspan></text>
+    <g class="node" data-node="entry2" data-lines="Abstract Sql Client Test | verification">
+      <rect x="946.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="183.5">Abstract Sql Client Test</tspan><tspan class="node-detail" x="1096.0" y="207.5">verification</tspan></text>
     </g>
-    <g class="node" data-node="api" data-lines="API / Adapter Layer | MovieRatingVerticle">
-      <rect x="844.0" y="152.0" width="390.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="194.5">API / Adapter Layer</tspan><tspan class="node-detail" x="1039.0" y="218.5">MovieRatingVerticle</tspan></text>
+    <g class="node" data-node="api0" data-lines="Movie Rating Verticle | movierating">
+      <rect x="274.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="300.5">Movie Rating Verticle</tspan><tspan class="node-detail" x="424.0" y="324.5">movierating</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="Runtime Dependencies | SQL / R2DBC | Testcontainers">
-      <rect x="474.0" y="320.0" width="600.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="354.0">Runtime Dependencies</tspan><tspan class="node-detail" x="774.0" y="378.0">SQL / R2DBC</tspan><tspan class="node-detail" x="774.0" y="395.0">Testcontainers</tspan></text>
+    <g class="node" data-node="runtime0" data-lines="SQL / R2DBC | Runtime Dependencies">
+      <rect x="442.0" y="408.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="592.0" y="450.5">SQL / R2DBC</tspan><tspan class="node-detail" x="592.0" y="474.5">Runtime Dependencies</tspan></text>
+    </g>
+    <g class="node" data-node="runtime1" data-lines="Testcontainers | Runtime Dependencies">
+      <rect x="778.0" y="408.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="928.0" y="450.5">Testcontainers</tspan><tspan class="node-detail" x="928.0" y="474.5">Runtime Dependencies</tspan></text>
     </g>
   </g>
 </svg>

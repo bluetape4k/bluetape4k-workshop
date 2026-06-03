@@ -1,13 +1,25 @@
-graph 1 24.466 1.7263
-node entry 1.6115 0.86313 3.2229 1.7263 "Messaging App/Test Surface\nOutboxApplication\nAbstractOutboxTest\nOutboxTransactionTest\nMessaging Transactional Outbox" rounded,filled box #88A3B5 #FFF8E7
-node api 6.3934 0.86313 3.2854 1.445 "Producer / Consumer Adapters\nOrderController\nOrderService\nOutboxEventTable" rounded,filled box #88A3B5 #EEF7FF
-node service 10.811 0.86313 2.1604 1.7263 "Message Workflow\nOrderResponse\nExposedConfig\nKafkaConfig\nOrderTable" rounded,filled box #88A3B5 #F1F8E9
-node infra 15.561 0.86313 2.1188 1.1637 "Kafka Topic Layer\nOutboxEvent\nOutboxStatus" rounded,filled box #88A3B5 #F5F0FF
-node bt 19.359 0.86313 2.4208 1.445 "bluetape4k Kafka APIs\nworkshop\njunit5\nassertions" rounded,filled box #88A3B5 #EAF7F0
-node runtime 23.24 0.86313 2.4521 1.445 "Kafka Broker Runtime\nSQL / R2DBC\nKafka\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.2304 0.86313 3.2304 0.86313 4.6009 0.86313 4.6009 0.86313 invokes 3.9868 0.95167 solid #637383
-edge api service 4 8.0445 0.86313 8.0445 0.86313 9.5814 0.86313 9.5814 0.86313 delegates 8.8833 0.95167 solid #637383
-edge service infra 4 11.901 0.86313 11.901 0.86313 14.35 0.86313 14.35 0.86313 "persists / publishes" 13.197 0.95167 solid #637383
-edge infra bt 4 16.629 0.86313 16.629 0.86313 18.003 0.86313 18.003 0.86313 extends 17.385 0.95167 solid #637383
-edge bt runtime 4 20.576 0.86313 20.576 0.86313 21.864 0.86313 21.864 0.86313 adapts 21.292 0.95167 solid #637383
+graph 1 7.6924 26.216
+node entry0 1.3146 0.44125 2.275 0.8825 "Outbox Application\napplication bootstrap" rounded,filled box #88A3B5 #FFF8E7
+node entry1 1.3146 2.0246 2.3896 0.8825 "Abstract Outbox Test\noutbox" rounded,filled box #88A3B5 #FFF8E7
+node entry2 1.3146 3.6079 2.6292 0.8825 "Outbox Transaction Test\noutbox" rounded,filled box #88A3B5 #FFF8E7
+node api0 1.3146 5.1913 1.9417 0.8825 "Order Controller\nHTTP adapter" rounded,filled box #88A3B5 #EEF7FF
+node api1 1.3146 6.7746 2.1292 0.8825 "Order Service\nservice component" rounded,filled box #88A3B5 #EEF7FF
+node api2 1.3146 8.3579 2.1292 0.8825 "Outbox Event Table\ndomain model" rounded,filled box #88A3B5 #EEF7FF
+node service0 6.4663 8.3579 1.8688 0.8825 "Order Response\napi" rounded,filled box #88A3B5 #F1F8E9
+node service1 1.3146 9.9413 1.7958 0.8825 "Exposed Config\nconfiguration" rounded,filled box #88A3B5 #F1F8E9
+node service2 1.3146 11.525 1.5979 0.8825 "Kafka Config\nconfiguration" rounded,filled box #88A3B5 #F1F8E9
+node service3 1.3146 13.108 1.5771 0.8825 "Order Table\ndomain model" rounded,filled box #88A3B5 #F1F8E9
+node service4 1.3146 14.691 1.8792 0.8825 "Outbox Publisher\noutbox" rounded,filled box #88A3B5 #F1F8E9
+node service5 1.3146 16.275 1.7437 0.8825 "Order Request\napi" rounded,filled box #88A3B5 #F1F8E9
+node infra0 6.4663 16.275 1.5979 0.8825 "Outbox Event\noutbox" rounded,filled box #88A3B5 #F5F0FF
+node infra1 1.3146 17.858 1.6708 0.8825 "Outbox Status\noutbox" rounded,filled box #88A3B5 #F5F0FF
+node bt0 1.3146 19.441 2.4208 0.8825 "workshop\nbluetape4k Kafka APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt1 1.3146 21.025 2.4208 0.8825 "junit5\nbluetape4k Kafka APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt2 1.3146 22.608 2.4208 0.8825 "assertions\nbluetape4k Kafka APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime0 6.4663 22.608 2.4521 0.8825 "SQL / R2DBC\nKafka Broker Runtime" rounded,filled box #88A3B5 #FFF1F1
+node runtime1 1.3146 24.191 2.4521 0.8825 "Kafka\nKafka Broker Runtime" rounded,filled box #88A3B5 #FFF1F1
+node runtime2 1.3146 25.775 2.4521 0.8825 "Testcontainers\nKafka Broker Runtime" rounded,filled box #88A3B5 #FFF1F1
+edge api2 service0 4 2.3883 8.3579 2.3883 8.3579 5.3812 8.3579 5.3812 8.3579 delegates 3.9347 8.4465 solid #637383
+edge service5 infra0 4 2.1943 16.275 2.1943 16.275 5.5154 16.275 5.5154 16.275 "persists / publishes" 3.9347 16.363 solid #637383
+edge bt2 runtime0 4 2.5289 22.608 2.5289 22.608 5.0907 22.608 5.0907 22.608 adapts 3.9347 22.696 solid #637383
 stop

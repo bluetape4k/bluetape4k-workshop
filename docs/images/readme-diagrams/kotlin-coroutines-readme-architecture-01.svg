@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="660" viewBox="0 0 1320 660" role="img" aria-label="Coroutines Examples architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="854" viewBox="0 0 1320 854" role="img" aria-label="Coroutines Examples architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;kotlin/coroutines/src/test/kotlin/io/bluetape4k/workshop/coroutines/TestSupport.kt&quot;,&quot;kotlin/coroutines/src/test/kotlin/io/bluetape4k/workshop/coroutines/builders/CoroutineBuilderExamples.kt&quot;,&quot;kotlin/coroutines/src/test/kotlin/io/bluetape4k/workshop/coroutines/builders/CoroutineContextBuilderExamples.kt&quot;,&quot;kotlin/coroutines/src/test/kotlin/io/bluetape4k/workshop/coroutines/cancellation/CancellationExamples.kt&quot;,&quot;kotlin/coroutines/src/test/kotlin/io/bluetape4k/workshop/coroutines/channels/ActorExamples.kt&quot;,&quot;kotlin/coroutines/src/test/kotlin/io/bluetape4k/workshop/coroutines/channels/ChannelExamples.kt&quot;,&quot;kotlin/coroutines/src/test/kotlin/io/bluetape4k/workshop/coroutines/context/CoroutineContextExamples.kt&quot;,&quot;kotlin/coroutines/src/test/kotlin/io/bluetape4k/workshop/coroutines/context/CounterCoroutineContext.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
   <defs>
     <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
@@ -32,53 +32,78 @@
       .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="660"/>
-  <rect class="frame" x="16" y="16" width="1288" height="628" rx="22"/>
+  <rect class="canvas" width="1320" height="854"/>
+  <rect class="frame" x="16" y="16" width="1288" height="822" rx="22"/>
   <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Coroutines Examples</text>
   <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Kotlin example runtime and module dependencies</text>
   <g>
     <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="132.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="164.0">Example Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="202.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="218.0">adapters</tspan></text>
+      <rect x="46.0" y="114.0" width="1228.0" height="146.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
+      <rect x="64.0" y="134.0" width="174" height="106.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="171.0">Example Surface</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="209.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="225.0">adapters</tspan></text>
     </g>
     <g class="layer" data-layer="integration">
-      <rect x="46.0" y="264.0" width="1228.0" height="168.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="284.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="332.0">Integration Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="370.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="386.0">adapters, helpers</tspan></text>
+      <rect x="46.0" y="278.0" width="1228.0" height="366.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
+      <rect x="64.0" y="298.0" width="174" height="326.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="445.0">Integration Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="483.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="499.0">adapters, helpers</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="450.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="470.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="500.0">Runtime Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="530.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="546.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="562.0">JVM</tspan></text>
+      <rect x="46.0" y="662.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="64.0" y="682.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="712.0">Runtime Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="742.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="758.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="774.0">JVM</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;infra" data-label="persists / publishes">
-      <path d="M 774.0 226.0 L 774.0 255.0 L 509.0 255.0 L 509.0 284.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
+    <g class="edge" data-edge="entry1-&gt;infra0" data-label="uses">
+      <path d="M 928.0 240.0 L 928.0 269.0 L 424.0 269.0 L 424.0 298.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
     </g>
-    <g class="edge" data-edge="infra-&gt;bt" data-label="extends">
-      <path d="M 704.0 348.0 L 774.0 348.0 L 844.0 348.0" fill="none" stroke="#3E927D" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-bt)"/>
+    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
+      <path d="M 424.0 624.0 L 424.0 653.0 L 592.0 653.0 L 592.0 682.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
     </g>
-    <g class="edge" data-edge="bt-&gt;runtime" data-label="adapts">
-      <path d="M 1039.0 403.0 L 1039.0 436.5 L 774.0 436.5 L 774.0 470.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+    <g class="node" data-node="entry0" data-lines="Test Support | coroutines">
+      <rect x="442.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="592.0" y="183.5">Test Support</tspan><tspan class="node-detail" x="592.0" y="207.5">coroutines</tspan></text>
     </g>
-    <g class="node" data-node="entry" data-lines="Example Family | Coroutines Examples">
-      <rect x="474.0" y="134.0" width="600.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="176.5">Example Family</tspan><tspan class="node-detail" x="774.0" y="200.5">Coroutines Examples</tspan></text>
+    <g class="node" data-node="entry1" data-lines="Spring Coroutine Scope | Test | spring">
+      <rect x="778.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="928.0" y="171.5">Spring Coroutine Scope</tspan><tspan class="node-title" x="928.0" y="195.5">Test</tspan><tspan class="node-detail" x="928.0" y="219.5">spring</tspan></text>
     </g>
-    <g class="node" data-node="infra" data-lines="Framework Layer | Spring context | Spring boot starter test | Testcontainers lib | Testcontainers junit jupiter">
-      <rect x="314.0" y="284.0" width="390.0" height="128.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="319.0">Framework Layer</tspan><tspan class="node-detail" x="509.0" y="343.0">Spring context</tspan><tspan class="node-detail" x="509.0" y="360.0">Spring boot starter test</tspan><tspan class="node-detail" x="509.0" y="377.0">Testcontainers lib</tspan><tspan class="node-detail" x="509.0" y="394.0">Testcontainers junit jupiter</tspan></text>
+    <g class="node" data-node="infra0" data-lines="Spring context | Framework Layer">
+      <rect x="274.0" y="298.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="340.5">Spring context</tspan><tspan class="node-detail" x="424.0" y="364.5">Framework Layer</tspan></text>
     </g>
-    <g class="node" data-node="bt" data-lines="bluetape4k APIs | coroutines | idgenerators | testcontainers">
-      <rect x="844.0" y="293.0" width="390.0" height="110.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="327.5">bluetape4k APIs</tspan><tspan class="node-detail" x="1039.0" y="351.5">coroutines</tspan><tspan class="node-detail" x="1039.0" y="368.5">idgenerators</tspan><tspan class="node-detail" x="1039.0" y="385.5">testcontainers</tspan></text>
+    <g class="node" data-node="infra1" data-lines="Spring boot starter test | Framework Layer">
+      <rect x="610.0" y="298.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="340.5">Spring boot starter test</tspan><tspan class="node-detail" x="760.0" y="364.5">Framework Layer</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="Runtime Dependencies | Kafka | Testcontainers">
-      <rect x="474.0" y="470.0" width="600.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="504.0">Runtime Dependencies</tspan><tspan class="node-detail" x="774.0" y="528.0">Kafka</tspan><tspan class="node-detail" x="774.0" y="545.0">Testcontainers</tspan></text>
+    <g class="node" data-node="infra2" data-lines="Testcontainers lib | Framework Layer">
+      <rect x="946.0" y="298.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="340.5">Testcontainers lib</tspan><tspan class="node-detail" x="1096.0" y="364.5">Framework Layer</tspan></text>
+    </g>
+    <g class="node" data-node="infra3" data-lines="Testcontainers junit | jupiter | Framework Layer">
+      <rect x="274.0" y="408.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="445.5">Testcontainers junit</tspan><tspan class="node-title" x="424.0" y="469.5">jupiter</tspan><tspan class="node-detail" x="424.0" y="493.5">Framework Layer</tspan></text>
+    </g>
+    <g class="node" data-node="bt0" data-lines="coroutines | bluetape4k APIs">
+      <rect x="610.0" y="415.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="457.5">coroutines</tspan><tspan class="node-detail" x="760.0" y="481.5">bluetape4k APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt1" data-lines="idgenerators | bluetape4k APIs">
+      <rect x="946.0" y="415.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="457.5">idgenerators</tspan><tspan class="node-detail" x="1096.0" y="481.5">bluetape4k APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt2" data-lines="testcontainers | bluetape4k APIs">
+      <rect x="274.0" y="532.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="574.5">testcontainers</tspan><tspan class="node-detail" x="424.0" y="598.5">bluetape4k APIs</tspan></text>
+    </g>
+    <g class="node" data-node="runtime0" data-lines="Kafka | Runtime Dependencies">
+      <rect x="442.0" y="682.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="592.0" y="724.5">Kafka</tspan><tspan class="node-detail" x="592.0" y="748.5">Runtime Dependencies</tspan></text>
+    </g>
+    <g class="node" data-node="runtime1" data-lines="Testcontainers | Runtime Dependencies">
+      <rect x="778.0" y="682.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="928.0" y="724.5">Testcontainers</tspan><tspan class="node-detail" x="928.0" y="748.5">Runtime Dependencies</tspan></text>
     </g>
   </g>
 </svg>

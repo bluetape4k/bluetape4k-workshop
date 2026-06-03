@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="660" viewBox="0 0 1320 660" role="img" aria-label="Kafka Demo architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="964" viewBox="0 0 1320 964" role="img" aria-label="Kafka Demo architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;messaging/kafka/src/main/kotlin/io/bluetape4k/workshop/messaging/kafka/KafkaApplication.kt&quot;,&quot;messaging/kafka/src/main/kotlin/io/bluetape4k/workshop/messaging/kafka/KafkaTopics.kt&quot;,&quot;messaging/kafka/src/main/kotlin/io/bluetape4k/workshop/messaging/kafka/config/KafkaConfig.kt&quot;,&quot;messaging/kafka/src/main/kotlin/io/bluetape4k/workshop/messaging/kafka/controller/GreetingController.kt&quot;,&quot;messaging/kafka/src/main/kotlin/io/bluetape4k/workshop/messaging/kafka/filters/RedirectWebFilter.kt&quot;,&quot;messaging/kafka/src/main/kotlin/io/bluetape4k/workshop/messaging/kafka/listener/CoroutineSimpleMessageHandler.kt&quot;,&quot;messaging/kafka/src/main/kotlin/io/bluetape4k/workshop/messaging/kafka/listener/GreetingMessageHandler.kt&quot;,&quot;messaging/kafka/src/main/kotlin/io/bluetape4k/workshop/messaging/kafka/listener/KafkaMessageHandler.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
   <defs>
     <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
@@ -32,60 +32,102 @@
       .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="660"/>
-  <rect class="frame" x="16" y="16" width="1288" height="628" rx="22"/>
+  <rect class="canvas" width="1320" height="964"/>
+  <rect class="frame" x="16" y="16" width="1288" height="932" rx="22"/>
   <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Kafka Demo</text>
   <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">message producers, consumers, and broker-backed flows</text>
   <g>
     <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="168.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="182.0">Messaging Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="220.0">apps, controllers,</tspan><tspan class="layer-detail" x="151.0" y="236.0">producer tests</tspan></text>
+      <rect x="46.0" y="114.0" width="1228.0" height="380.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
+      <rect x="64.0" y="134.0" width="174" height="340.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="288.0">Messaging Surface</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="326.0">apps, controllers,</tspan><tspan class="layer-detail" x="151.0" y="342.0">producer tests</tspan></text>
     </g>
     <g class="layer" data-layer="integration">
-      <rect x="46.0" y="300.0" width="1228.0" height="150.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="320.0" width="174" height="110.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="347.5">Broker</tspan><tspan class="layer-title" x="151.0" y="370.5">Integration Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="389.0">topics, templates,</tspan><tspan class="layer-detail" x="151.0" y="405.0">serializers,</tspan><tspan class="layer-detail" x="151.0" y="421.0">helpers</tspan></text>
+      <rect x="46.0" y="512.0" width="1228.0" height="242.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
+      <rect x="64.0" y="532.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="605.5">Broker</tspan><tspan class="layer-title" x="151.0" y="628.5">Integration Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="647.0">topics, templates,</tspan><tspan class="layer-detail" x="151.0" y="663.0">serializers,</tspan><tspan class="layer-detail" x="151.0" y="679.0">helpers</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="468.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="488.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="518.0">Broker Runtime</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="548.0">Kafka,</tspan><tspan class="layer-detail" x="151.0" y="564.0">Testcontainers,</tspan><tspan class="layer-detail" x="151.0" y="580.0">delivery state</tspan></text>
+      <rect x="46.0" y="772.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="64.0" y="792.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="822.0">Broker Runtime</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="852.0">Kafka,</tspan><tspan class="layer-detail" x="151.0" y="868.0">Testcontainers,</tspan><tspan class="layer-detail" x="151.0" y="884.0">delivery state</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;api" data-label="invokes">
-      <path d="M 704.0 198.0 L 774.0 198.0 L 844.0 198.0" fill="none" stroke="#4F7DB5" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-api)"/>
+    <g class="edge" data-edge="api4-&gt;infra0" data-label="uses">
+      <path d="M 1096.0 467.0 L 1096.0 499.5 L 424.0 499.5 L 424.0 532.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
     </g>
-    <g class="edge" data-edge="api-&gt;infra" data-label="persists / publishes">
-      <path d="M 1039.0 262.0 L 1039.0 291.0 L 509.0 291.0 L 509.0 320.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
+    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
+      <path d="M 1096.0 734.0 L 1096.0 763.0 L 592.0 763.0 L 592.0 792.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
     </g>
-    <g class="edge" data-edge="infra-&gt;bt" data-label="extends">
-      <path d="M 704.0 375.0 L 774.0 375.0 L 844.0 375.0" fill="none" stroke="#3E927D" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-bt)"/>
+    <g class="node" data-node="entry0" data-lines="Kafka Application | application bootstrap">
+      <rect x="274.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="183.5">Kafka Application</tspan><tspan class="node-detail" x="424.0" y="207.5">application bootstrap</tspan></text>
     </g>
-    <g class="edge" data-edge="bt-&gt;runtime" data-label="adapts">
-      <path d="M 1039.0 430.0 L 1039.0 459.0 L 774.0 459.0 L 774.0 488.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+    <g class="node" data-node="entry1" data-lines="Embedded Kafka Test | kafka">
+      <rect x="610.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="183.5">Embedded Kafka Test</tspan><tspan class="node-detail" x="760.0" y="207.5">kafka</tspan></text>
     </g>
-    <g class="node" data-node="entry" data-lines="Messaging App/Test Surface | KafkaApplication | EmbeddedKafkaTest | GreetingControllerScopeTest | Messaging Kafka tests">
-      <rect x="314.0" y="134.0" width="390.0" height="128.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="169.0">Messaging App/Test Surface</tspan><tspan class="node-detail" x="509.0" y="193.0">KafkaApplication</tspan><tspan class="node-detail" x="509.0" y="210.0">EmbeddedKafkaTest</tspan><tspan class="node-detail" x="509.0" y="227.0">GreetingControllerScopeTest</tspan><tspan class="node-detail" x="509.0" y="244.0">Messaging Kafka tests</tspan></text>
+    <g class="node" data-node="entry2" data-lines="Greeting Controller | Scope Test | HTTP adapter">
+      <rect x="946.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="171.5">Greeting Controller</tspan><tspan class="node-title" x="1096.0" y="195.5">Scope Test</tspan><tspan class="node-detail" x="1096.0" y="219.5">HTTP adapter</tspan></text>
     </g>
-    <g class="node" data-node="api" data-lines="Producer / Consumer Adapters | KafkaConfig | GreetingController | RedirectWebFilter | CoroutineSimpleMessageHandler">
-      <rect x="844.0" y="134.0" width="390.0" height="128.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="169.0">Producer / Consumer Adapters</tspan><tspan class="node-detail" x="1039.0" y="193.0">KafkaConfig</tspan><tspan class="node-detail" x="1039.0" y="210.0">GreetingController</tspan><tspan class="node-detail" x="1039.0" y="227.0">RedirectWebFilter</tspan><tspan class="node-detail" x="1039.0" y="244.0">CoroutineSimpleMessageHandler</tspan></text>
+    <g class="node" data-node="entry3" data-lines="Greeting Controller Test | HTTP adapter">
+      <rect x="274.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="300.5">Greeting Controller Test</tspan><tspan class="node-detail" x="424.0" y="324.5">HTTP adapter</tspan></text>
     </g>
-    <g class="node" data-node="infra" data-lines="Kafka Topic Layer | KafkaTopics | GreetingRequest | GreetingResult">
-      <rect x="314.0" y="320.0" width="390.0" height="110.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="354.5">Kafka Topic Layer</tspan><tspan class="node-detail" x="509.0" y="378.5">KafkaTopics</tspan><tspan class="node-detail" x="509.0" y="395.5">GreetingRequest</tspan><tspan class="node-detail" x="509.0" y="412.5">GreetingResult</tspan></text>
+    <g class="node" data-node="api0" data-lines="Kafka Config | configuration">
+      <rect x="610.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="300.5">Kafka Config</tspan><tspan class="node-detail" x="760.0" y="324.5">configuration</tspan></text>
     </g>
-    <g class="node" data-node="bt" data-lines="bluetape4k Kafka APIs | workshop | kafka4 | testcontainers">
-      <rect x="844.0" y="320.0" width="390.0" height="110.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="354.5">bluetape4k Kafka APIs</tspan><tspan class="node-detail" x="1039.0" y="378.5">workshop</tspan><tspan class="node-detail" x="1039.0" y="395.5">kafka4</tspan><tspan class="node-detail" x="1039.0" y="412.5">testcontainers</tspan></text>
+    <g class="node" data-node="api1" data-lines="Greeting Controller | HTTP adapter">
+      <rect x="946.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="300.5">Greeting Controller</tspan><tspan class="node-detail" x="1096.0" y="324.5">HTTP adapter</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="Kafka Broker Runtime | Kafka | Testcontainers">
-      <rect x="474.0" y="488.0" width="600.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="522.0">Kafka Broker Runtime</tspan><tspan class="node-detail" x="774.0" y="546.0">Kafka</tspan><tspan class="node-detail" x="774.0" y="563.0">Testcontainers</tspan></text>
+    <g class="node" data-node="api2" data-lines="Redirect Web Filter | filters">
+      <rect x="274.0" y="375.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="417.5">Redirect Web Filter</tspan><tspan class="node-detail" x="424.0" y="441.5">filters</tspan></text>
+    </g>
+    <g class="node" data-node="api3" data-lines="Coroutine Simple Message | Handler | listener">
+      <rect x="610.0" y="368.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="405.5">Coroutine Simple Message</tspan><tspan class="node-title" x="760.0" y="429.5">Handler</tspan><tspan class="node-detail" x="760.0" y="453.5">listener</tspan></text>
+    </g>
+    <g class="node" data-node="api4" data-lines="Greeting Message Handler | listener">
+      <rect x="946.0" y="375.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="417.5">Greeting Message Handler</tspan><tspan class="node-detail" x="1096.0" y="441.5">listener</tspan></text>
+    </g>
+    <g class="node" data-node="infra0" data-lines="Kafka Topics | kafka">
+      <rect x="274.0" y="532.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="574.5">Kafka Topics</tspan><tspan class="node-detail" x="424.0" y="598.5">kafka</tspan></text>
+    </g>
+    <g class="node" data-node="infra1" data-lines="Greeting Request | domain model">
+      <rect x="610.0" y="532.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="574.5">Greeting Request</tspan><tspan class="node-detail" x="760.0" y="598.5">domain model</tspan></text>
+    </g>
+    <g class="node" data-node="infra2" data-lines="Greeting Result | domain model">
+      <rect x="946.0" y="532.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="574.5">Greeting Result</tspan><tspan class="node-detail" x="1096.0" y="598.5">domain model</tspan></text>
+    </g>
+    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k Kafka APIs">
+      <rect x="274.0" y="642.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="684.5">workshop</tspan><tspan class="node-detail" x="424.0" y="708.5">bluetape4k Kafka APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt1" data-lines="kafka4 | bluetape4k Kafka APIs">
+      <rect x="610.0" y="642.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="684.5">kafka4</tspan><tspan class="node-detail" x="760.0" y="708.5">bluetape4k Kafka APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt2" data-lines="testcontainers | bluetape4k Kafka APIs">
+      <rect x="946.0" y="642.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="684.5">testcontainers</tspan><tspan class="node-detail" x="1096.0" y="708.5">bluetape4k Kafka APIs</tspan></text>
+    </g>
+    <g class="node" data-node="runtime0" data-lines="Kafka | Kafka Broker Runtime">
+      <rect x="442.0" y="792.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="592.0" y="834.5">Kafka</tspan><tspan class="node-detail" x="592.0" y="858.5">Kafka Broker Runtime</tspan></text>
+    </g>
+    <g class="node" data-node="runtime1" data-lines="Testcontainers | Kafka Broker Runtime">
+      <rect x="778.0" y="792.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="928.0" y="834.5">Testcontainers</tspan><tspan class="node-detail" x="928.0" y="858.5">Kafka Broker Runtime</tspan></text>
     </g>
   </g>
 </svg>

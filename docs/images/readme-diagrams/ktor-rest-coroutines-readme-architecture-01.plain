@@ -1,13 +1,23 @@
-graph 1 23.393 1.7263
-node entry 1.5698 0.86313 3.1396 1.7263 "Example Entrypoints\nMain\nAbstractKtorTest\nInMemoryBookRepositoryTest\nKtor Rest Coroutines tests" rounded,filled box #88A3B5 #FFF8E7
-node api 6.034 0.86313 2.7333 1.7263 "API / Adapter Layer\nApplicationModule\nInMemoryBookRepository\nBookRoutes\nHealthRoutes" rounded,filled box #88A3B5 #EEF7FF
-node service 10.196 0.86313 2.2021 1.7263 "Application Services\nJackson3Support\nBookService\nBook\nDomainError" rounded,filled box #88A3B5 #F1F8E9
-node infra 15.077 0.86313 2.3375 0.8825 "Infrastructure Layer\nBookRepository" rounded,filled box #88A3B5 #F5F0FF
-node bt 18.682 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\ncore\nlogging" rounded,filled box #88A3B5 #EAF7F0
-node runtime 22.214 0.86313 2.3583 0.8825 "Runtime Dependencies\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.1437 0.86313 3.1437 0.86313 4.517 0.86313 4.517 0.86313 invokes 3.9035 0.95167 solid #637383
-edge api service 4 7.4084 0.86313 7.4084 0.86313 8.9437 0.86313 8.9437 0.86313 delegates 8.2479 0.95167 solid #637383
-edge service infra 4 11.304 0.86313 11.304 0.86313 13.759 0.86313 13.759 0.86313 "persists / publishes" 12.603 0.95167 solid #637383
-edge infra bt 4 16.252 0.86313 16.252 0.86313 17.623 0.86313 17.623 0.86313 extends 17.01 0.95167 solid #637383
-edge bt runtime 4 19.596 0.86313 19.596 0.86313 20.888 0.86313 20.888 0.86313 adapts 20.313 0.95167 solid #637383
+graph 1 8.4007 23.049
+node entry0 1.7156 0.44125 0.81667 0.8825 "Main\nktor" rounded,filled box #88A3B5 #FFF8E7
+node entry1 1.7156 2.0246 2.1813 0.8825 "Abstract Ktor Test\nktor" rounded,filled box #88A3B5 #FFF8E7
+node entry2 1.7156 3.6079 3.4313 0.8825 "In Memory Book Repository Test\nrepository" rounded,filled box #88A3B5 #FFF8E7
+node entry3 1.7156 5.1913 2.0563 0.8825 "Book Routes Test\nroutes" rounded,filled box #88A3B5 #FFF8E7
+node entry4 1.7156 6.7746 2.0979 0.8825 "Book Stream Test\nroutes" rounded,filled box #88A3B5 #FFF8E7
+node api0 1.7156 8.3579 2.0146 0.8825 "Application Module\nktor" rounded,filled box #88A3B5 #EEF7FF
+node api1 1.7156 9.9413 2.9521 0.8825 "In Memory Book Repository\nrepository" rounded,filled box #88A3B5 #EEF7FF
+node api2 1.7156 11.525 1.5771 0.8825 "Book Routes\nroutes" rounded,filled box #88A3B5 #EEF7FF
+node api3 1.7156 13.108 1.6187 0.8825 "Health Routes\nroutes" rounded,filled box #88A3B5 #EEF7FF
+node service0 7.2215 13.108 2.0354 0.8825 "Jackson3 Support\njson" rounded,filled box #88A3B5 #F1F8E9
+node service1 1.7156 14.691 2.1292 0.8825 "Book Service\nservice component" rounded,filled box #88A3B5 #F1F8E9
+node service2 1.7156 16.275 1.5771 0.8825 "Book\ndomain model" rounded,filled box #88A3B5 #F1F8E9
+node service3 1.7156 17.858 1.6292 0.8825 "Domain Error\ndomain model" rounded,filled box #88A3B5 #F1F8E9
+node infra0 7.2215 17.858 1.9417 0.8825 "Book Repository\nrepository" rounded,filled box #88A3B5 #F5F0FF
+node bt0 1.7156 19.441 1.8167 0.8825 "workshop\nbluetape4k APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt1 1.7156 21.025 1.8167 0.8825 "core\nbluetape4k APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt2 1.7156 22.608 1.8167 0.8825 "logging\nbluetape4k APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime0 7.2215 22.608 2.3583 0.8825 "In-memory / JVM\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
+edge api3 service0 4 2.534 13.108 2.534 13.108 6.0542 13.108 6.0542 13.108 delegates 4.7368 13.196 solid #637383
+edge service3 infra0 4 2.5399 17.858 2.5399 17.858 6.1 17.858 6.1 17.858 "persists / publishes" 4.7368 17.946 solid #637383
+edge bt2 runtime0 4 2.631 22.608 2.631 22.608 5.8919 22.608 5.8919 22.608 adapts 4.7368 22.696 solid #637383
 stop

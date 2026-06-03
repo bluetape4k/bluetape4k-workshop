@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="774" viewBox="0 0 1320 774" role="img" aria-label="Jackson Examples architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="756" viewBox="0 0 1320 756" role="img" aria-label="Jackson Examples architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;json/jackson-examples/src/main/kotlin/io/bluetape4k/workshop/jackson/JsonPathSupport.kt&quot;,&quot;json/jackson-examples/src/test/kotlin/io/bluetape4k/workshop/jackson/AbstractJacksonTest.kt&quot;,&quot;json/jackson-examples/src/test/kotlin/io/bluetape4k/workshop/jackson/annotations/CyclicExample.kt&quot;,&quot;json/jackson-examples/src/test/kotlin/io/bluetape4k/workshop/jackson/annotations/CyclicWithOwnerExample.kt&quot;,&quot;json/jackson-examples/src/test/kotlin/io/bluetape4k/workshop/jackson/annotations/DynamicAttributeExample.kt&quot;,&quot;json/jackson-examples/src/test/kotlin/io/bluetape4k/workshop/jackson/annotations/IgnoreExample.kt&quot;,&quot;json/jackson-examples/src/test/kotlin/io/bluetape4k/workshop/jackson/annotations/JavaTimeExample.kt&quot;,&quot;json/jackson-examples/src/test/kotlin/io/bluetape4k/workshop/jackson/annotations/JsonUnwrappedExample.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
   <defs>
     <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
@@ -32,8 +32,8 @@
       .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="774"/>
-  <rect class="frame" x="16" y="16" width="1288" height="742" rx="22"/>
+  <rect class="canvas" width="1320" height="756"/>
+  <rect class="frame" x="16" y="16" width="1288" height="724" rx="22"/>
   <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Jackson Examples</text>
   <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Json example runtime and module dependencies</text>
   <g>
@@ -50,41 +50,46 @@
       <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="352.0">services, domain</tspan><tspan class="layer-detail" x="151.0" y="368.0">rules, use cases</tspan></text>
     </g>
     <g class="layer" data-layer="integration">
-      <rect x="46.0" y="414.0" width="1228.0" height="150.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="434.0" width="174" height="110.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="473.0">Integration Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="511.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="527.0">adapters, helpers</tspan></text>
+      <rect x="46.0" y="414.0" width="1228.0" height="132.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
+      <rect x="64.0" y="434.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="464.0">Integration Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="502.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="518.0">adapters, helpers</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="582.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="602.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="632.0">Runtime Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="662.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="678.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="694.0">JVM</tspan></text>
+      <rect x="46.0" y="564.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="64.0" y="584.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="614.0">Runtime Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="644.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="660.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="676.0">JVM</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;service" data-label="delegates">
-      <path d="M 774.0 226.0 L 774.0 255.0 L 774.0 284.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
+    <g class="edge" data-edge="entry0-&gt;service0" data-label="starts">
+      <path d="M 760.0 226.0 L 760.0 255.0 L 760.0 284.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
     </g>
-    <g class="edge" data-edge="service-&gt;bt" data-label="extends">
-      <path d="M 774.0 376.0 L 774.0 405.0 L 774.0 434.0" fill="none" stroke="#3E927D" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-bt)"/>
+    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
+      <path d="M 1096.0 526.0 L 1096.0 555.0 L 760.0 555.0 L 760.0 584.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
     </g>
-    <g class="edge" data-edge="bt-&gt;runtime" data-label="adapts">
-      <path d="M 774.0 544.0 L 774.0 573.0 L 774.0 602.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+    <g class="node" data-node="entry0" data-lines="Abstract Jackson Test | jackson">
+      <rect x="610.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="176.5">Abstract Jackson Test</tspan><tspan class="node-detail" x="760.0" y="200.5">jackson</tspan></text>
     </g>
-    <g class="node" data-node="entry" data-lines="Example Entrypoints | AbstractJacksonTest | Json Jackson Examples tests">
-      <rect x="474.0" y="134.0" width="600.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="168.0">Example Entrypoints</tspan><tspan class="node-detail" x="774.0" y="192.0">AbstractJacksonTest</tspan><tspan class="node-detail" x="774.0" y="209.0">Json Jackson Examples tests</tspan></text>
+    <g class="node" data-node="service0" data-lines="Json Path Support | jackson">
+      <rect x="610.0" y="284.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="326.5">Json Path Support</tspan><tspan class="node-detail" x="760.0" y="350.5">jackson</tspan></text>
     </g>
-    <g class="node" data-node="service" data-lines="Application Services | JsonPathSupport">
-      <rect x="474.0" y="284.0" width="600.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="326.5">Application Services</tspan><tspan class="node-detail" x="774.0" y="350.5">JsonPathSupport</tspan></text>
+    <g class="node" data-node="bt0" data-lines="jackson3 | bluetape4k APIs">
+      <rect x="274.0" y="434.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="476.5">jackson3</tspan><tspan class="node-detail" x="424.0" y="500.5">bluetape4k APIs</tspan></text>
     </g>
-    <g class="node" data-node="bt" data-lines="bluetape4k APIs | jackson3 | core | coroutines">
-      <rect x="474.0" y="434.0" width="600.0" height="110.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="468.5">bluetape4k APIs</tspan><tspan class="node-detail" x="774.0" y="492.5">jackson3</tspan><tspan class="node-detail" x="774.0" y="509.5">core</tspan><tspan class="node-detail" x="774.0" y="526.5">coroutines</tspan></text>
+    <g class="node" data-node="bt1" data-lines="core | bluetape4k APIs">
+      <rect x="610.0" y="434.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="476.5">core</tspan><tspan class="node-detail" x="760.0" y="500.5">bluetape4k APIs</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="Runtime Dependencies | In-memory / JVM">
-      <rect x="474.0" y="602.0" width="600.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="644.5">Runtime Dependencies</tspan><tspan class="node-detail" x="774.0" y="668.5">In-memory / JVM</tspan></text>
+    <g class="node" data-node="bt2" data-lines="coroutines | bluetape4k APIs">
+      <rect x="946.0" y="434.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="476.5">coroutines</tspan><tspan class="node-detail" x="1096.0" y="500.5">bluetape4k APIs</tspan></text>
+    </g>
+    <g class="node" data-node="runtime0" data-lines="In-memory / JVM | Runtime Dependencies">
+      <rect x="610.0" y="584.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="626.5">In-memory / JVM</tspan><tspan class="node-detail" x="760.0" y="650.5">Runtime Dependencies</tspan></text>
     </g>
   </g>
 </svg>

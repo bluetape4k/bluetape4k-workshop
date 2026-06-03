@@ -26,16 +26,33 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Example Entrypoints\nLeaderElectionApp\nAbstractLeaderElectionTest\nConcurrentLeaderElectionTest\nLeader Leader Election tests", fillcolor="#FFF8E7"];
-  api [label="API / Adapter Layer\nLeaderElectionConfig\nLeaderScheduledJobService\nLeaderEventListenerService\nSuspendLeaderService", fillcolor="#EEF7FF"];
-  service [label="Application Services\nLeaderElectionProperties\nCacheWarmupJob\nLeaderGuardedJob\nLockAssertJob", fillcolor="#F1F8E9"];
-  infra [label="Framework Layer\nSpring boot autoconfigure lib\nSpring boot starter actuator\nSpring boot autoconfigure\nprocessor", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\nleader\nlogging", fillcolor="#EAF7F0"];
-  runtime [label="Runtime Dependencies\nSQL / R2DBC\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
+  entry0 [label="Leader Election App\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Abstract Leader Election Test\nleader", fillcolor="#FFF8E7"];
+  entry2 [label="Concurrent Leader Election Test\nleader", fillcolor="#FFF8E7"];
+  entry3 [label="Duplicate Lock Name Test\nleader", fillcolor="#FFF8E7"];
+  entry4 [label="Job Isolation Test\nleader", fillcolor="#FFF8E7"];
+  api0 [label="Leader Election Config\nconfiguration", fillcolor="#EEF7FF"];
+  api1 [label="Leader Scheduled Job Service\nservice component", fillcolor="#EEF7FF"];
+  api2 [label="Leader Event Listener Service\nservice component", fillcolor="#EEF7FF"];
+  api3 [label="Suspend Leader Service\nservice component", fillcolor="#EEF7FF"];
+  service0 [label="Leader Election Properties\nconfiguration", fillcolor="#F1F8E9"];
+  service1 [label="Cache Warmup Job\njob", fillcolor="#F1F8E9"];
+  service2 [label="Leader Guarded Job\njob", fillcolor="#F1F8E9"];
+  service3 [label="Lock Assert Job\njob", fillcolor="#F1F8E9"];
+  service4 [label="Lock Extender Job\njob", fillcolor="#F1F8E9"];
+  service5 [label="Stale Workflow Cleanup Job\njob", fillcolor="#F1F8E9"];
+  infra0 [label="Spring boot autoconfigure lib\nFramework Layer", fillcolor="#F5F0FF"];
+  infra1 [label="Spring boot starter actuator\nFramework Layer", fillcolor="#F5F0FF"];
+  infra2 [label="Spring boot autoconfigure processor\nFramework Layer", fillcolor="#F5F0FF"];
+  infra3 [label="Spring boot configuration processor\nFramework Layer", fillcolor="#F5F0FF"];
+  bt0 [label="workshop\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  bt1 [label="leader\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  bt2 [label="logging\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="SQL / R2DBC\nRuntime Dependencies", fillcolor="#FFF1F1"];
+  runtime1 [label="Redis\nRuntime Dependencies", fillcolor="#FFF1F1"];
+  runtime2 [label="Testcontainers\nRuntime Dependencies", fillcolor="#FFF1F1"];
 
-  entry -> api [label="invokes"];
-  api -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  api3 -> service0 [label="delegates"];
+  service5 -> infra0 [label="persists / publishes"];
+  bt2 -> runtime0 [label="adapts"];
 }

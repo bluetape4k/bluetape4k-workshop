@@ -1,11 +1,20 @@
-graph 1 19.101 1.7263
-node entry 1.3667 0.86313 2.7333 1.7263 "Redis Demo Surface\nRedisClusterApplication\nAbstractRedisClusterTest\nBasicUsageTest\nRedis Cluster Demo tests" rounded,filled box #88A3B5 #FFF8E7
-node service 5.3465 0.86313 1.8375 0.8825 "Redis Use Cases\nNumberService" rounded,filled box #88A3B5 #F1F8E9
-node infra 10.451 0.86313 3.15 1.7263 "Redis Client Layer\nSpring boot starter data redis\nlib\nSpring boot autoconfigure lib\nSpring boot starter test" rounded,filled box #88A3B5 #F5F0FF
-node bt 14.733 0.86313 2.3583 1.445 "bluetape4k Redis APIs\nworkshop\ncore\njackson3" rounded,filled box #88A3B5 #EAF7F0
-node runtime 18.229 0.86313 1.7437 1.445 "Redis Runtime\nSQL / R2DBC\nRedis\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry service 4 2.7419 0.86313 2.7419 0.86313 4.2789 0.86313 4.2789 0.86313 delegates 3.5806 0.95167 solid #637383
-edge service infra 4 6.271 0.86313 6.271 0.86313 8.7246 0.86313 8.7246 0.86313 "persists / publishes" 7.5708 0.95167 solid #637383
-edge infra bt 4 12.034 0.86313 12.034 0.86313 13.403 0.86313 13.403 0.86313 extends 12.79 0.95167 solid #637383
-edge bt runtime 4 15.922 0.86313 15.922 0.86313 17.205 0.86313 17.205 0.86313 adapts 16.635 0.95167 solid #637383
+graph 1 12.828 18.299
+node entry0 1.6271 0.44125 2.5979 0.8825 "Redis Cluster Application\napplication bootstrap" rounded,filled box #88A3B5 #FFF8E7
+node entry1 1.6271 2.0246 2.9521 0.8825 "Abstract Redis Cluster Test\ncluster" rounded,filled box #88A3B5 #FFF8E7
+node entry2 1.6271 3.6079 1.9313 0.8825 "Basic Usage Test\nbasic" rounded,filled box #88A3B5 #FFF8E7
+node entry3 1.6271 5.1913 3.2542 0.8825 "Bluetape4k Lettuce Usage Test\nbasic" rounded,filled box #88A3B5 #FFF8E7
+node entry4 1.6271 6.7746 2.3375 0.8825 "Number Service Test\nservice component" rounded,filled box #88A3B5 #FFF8E7
+node service0 5.7632 6.7746 2.1292 0.8825 "Number Service\nservice component" rounded,filled box #88A3B5 #F1F8E9
+node infra0 11.134 6.7746 3.3896 0.8825 "Spring boot starter data redis lib\nRedis Client Layer" rounded,filled box #88A3B5 #F5F0FF
+node infra1 1.6271 8.3579 3.0354 0.8825 "Spring boot autoconfigure lib\nRedis Client Layer" rounded,filled box #88A3B5 #F5F0FF
+node infra2 1.6271 9.9413 2.6292 0.8825 "Spring boot starter test\nRedis Client Layer" rounded,filled box #88A3B5 #F5F0FF
+node bt0 1.6271 11.525 2.3583 0.8825 "workshop\nbluetape4k Redis APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt1 1.6271 13.108 2.3583 0.8825 "core\nbluetape4k Redis APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt2 1.6271 14.691 2.3583 0.8825 "jackson3\nbluetape4k Redis APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime0 5.7632 14.691 1.6708 0.8825 "SQL / R2DBC\nRedis Runtime" rounded,filled box #88A3B5 #FFF1F1
+node runtime1 1.6271 16.275 1.6396 0.8825 "Redis\nRedis Runtime" rounded,filled box #88A3B5 #FFF1F1
+node runtime2 1.6271 17.858 1.7437 0.8825 "Testcontainers\nRedis Runtime" rounded,filled box #88A3B5 #FFF1F1
+edge entry4 service0 4 2.8013 6.7746 2.8013 6.7746 4.5496 6.7746 4.5496 6.7746 starts 3.9764 6.8631 solid #637383
+edge service0 infra0 4 6.8371 6.7746 6.8371 6.7746 9.29 6.7746 9.29 6.7746 "persists / publishes" 8.1333 6.8631 solid #637383
+edge bt2 runtime0 4 2.8123 14.691 2.8123 14.691 4.7767 14.691 4.7767 14.691 adapts 3.9764 14.78 solid #637383
 stop

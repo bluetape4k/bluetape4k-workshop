@@ -26,14 +26,27 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Sample Bootstraps\nStorageApplication\nAbstractStorageServiceTest\nLocalStorageServiceTest\nAws Storage Abstraction tests", fillcolor="#FFF8E7"];
-  service [label="Storage Workflow\nLocalStorageService\nS3Config\nS3PresignedStorageService\nS3StorageService", fillcolor="#F1F8E9"];
-  infra [label="Spring Cloud AWS\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k AWS APIs\nworkshop\ncore\ncoroutines", fillcolor="#EAF7F0"];
-  runtime [label="LocalStack / S3\nAWS / S3\nTestcontainers", fillcolor="#FFF1F1"];
+  entry0 [label="Storage Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Abstract Storage Service Test\nstorage", fillcolor="#FFF8E7"];
+  entry2 [label="Local Storage Service Test\nstorage", fillcolor="#FFF8E7"];
+  entry3 [label="S3 Presigned Storage Service Test\nstorage", fillcolor="#FFF8E7"];
+  entry4 [label="S3 Storage Service Test\nstorage", fillcolor="#FFF8E7"];
+  service0 [label="Local Storage Service\nservice component", fillcolor="#F1F8E9"];
+  service1 [label="S3 Config\nconfiguration", fillcolor="#F1F8E9"];
+  service2 [label="S3 Presigned Storage Service\nservice component", fillcolor="#F1F8E9"];
+  service3 [label="S3 Storage Service\nservice component", fillcolor="#F1F8E9"];
+  service4 [label="Storage Service\nservice component", fillcolor="#F1F8E9"];
+  infra0 [label="Spring boot autoconfigure lib\nSpring Cloud AWS", fillcolor="#F5F0FF"];
+  infra1 [label="Spring boot autoconfigure processor\nSpring Cloud AWS", fillcolor="#F5F0FF"];
+  infra2 [label="Spring boot configuration processor\nSpring Cloud AWS", fillcolor="#F5F0FF"];
+  infra3 [label="Spring boot devtools\nSpring Cloud AWS", fillcolor="#F5F0FF"];
+  bt0 [label="workshop\nbluetape4k AWS APIs", fillcolor="#EAF7F0"];
+  bt1 [label="core\nbluetape4k AWS APIs", fillcolor="#EAF7F0"];
+  bt2 [label="coroutines\nbluetape4k AWS APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="AWS / S3\nLocalStack / S3", fillcolor="#FFF1F1"];
+  runtime1 [label="Testcontainers\nLocalStack / S3", fillcolor="#FFF1F1"];
 
-  entry -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  entry4 -> service0 [label="starts"];
+  service4 -> infra0 [label="persists / publishes"];
+  bt2 -> runtime0 [label="adapts"];
 }

@@ -26,12 +26,18 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Example Family\nCoroutines Examples", fillcolor="#FFF8E7"];
-  infra [label="Framework Layer\nSpring context\nSpring boot starter test\nTestcontainers lib\nTestcontainers junit jupiter", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\ncoroutines\nidgenerators\ntestcontainers", fillcolor="#EAF7F0"];
-  runtime [label="Runtime Dependencies\nKafka\nTestcontainers", fillcolor="#FFF1F1"];
+  entry0 [label="Test Support\ncoroutines", fillcolor="#FFF8E7"];
+  entry1 [label="Spring Coroutine Scope Test\nspring", fillcolor="#FFF8E7"];
+  infra0 [label="Spring context\nFramework Layer", fillcolor="#F5F0FF"];
+  infra1 [label="Spring boot starter test\nFramework Layer", fillcolor="#F5F0FF"];
+  infra2 [label="Testcontainers lib\nFramework Layer", fillcolor="#F5F0FF"];
+  infra3 [label="Testcontainers junit jupiter\nFramework Layer", fillcolor="#F5F0FF"];
+  bt0 [label="coroutines\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  bt1 [label="idgenerators\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  bt2 [label="testcontainers\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="Kafka\nRuntime Dependencies", fillcolor="#FFF1F1"];
+  runtime1 [label="Testcontainers\nRuntime Dependencies", fillcolor="#FFF1F1"];
 
-  entry -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  entry1 -> infra0 [label="uses"];
+  bt2 -> runtime0 [label="adapts"];
 }

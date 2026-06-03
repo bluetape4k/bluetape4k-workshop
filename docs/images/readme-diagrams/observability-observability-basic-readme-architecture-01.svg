@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="882" viewBox="0 0 1320 882" role="img" aria-label="observability-basic architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1210" viewBox="0 0 1320 1210" role="img" aria-label="observability-basic architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;observability/observability-basic/src/main/kotlin/io/bluetape4k/workshop/observability/basic/BasicObservabilityApp.kt&quot;,&quot;observability/observability-basic/src/main/kotlin/io/bluetape4k/workshop/observability/basic/client/InventoryClient.kt&quot;,&quot;observability/observability-basic/src/main/kotlin/io/bluetape4k/workshop/observability/basic/controller/OrderController.kt&quot;,&quot;observability/observability-basic/src/main/kotlin/io/bluetape4k/workshop/observability/basic/model/Inventory.kt&quot;,&quot;observability/observability-basic/src/main/kotlin/io/bluetape4k/workshop/observability/basic/model/Order.kt&quot;,&quot;observability/observability-basic/src/main/kotlin/io/bluetape4k/workshop/observability/basic/observation/ObservationSupport.kt&quot;,&quot;observability/observability-basic/src/main/kotlin/io/bluetape4k/workshop/observability/basic/service/OrderService.kt&quot;,&quot;observability/observability-basic/src/test/kotlin/io/bluetape4k/workshop/observability/basic/AbstractBasicTest.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
   <defs>
     <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
@@ -32,73 +32,127 @@
       .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="882"/>
-  <rect class="frame" x="16" y="16" width="1288" height="850" rx="22"/>
+  <rect class="canvas" width="1320" height="1210"/>
+  <rect class="frame" x="16" y="16" width="1288" height="1178" rx="22"/>
   <text class="diagram-title" x="660.0" y="58" text-anchor="middle">observability-basic</text>
   <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">observed requests, coroutine traces, and telemetry export</text>
   <g>
     <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="168.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="170.5">Observed Request</tspan><tspan class="layer-title" x="151.0" y="193.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="212.0">controllers,</tspan><tspan class="layer-detail" x="151.0" y="228.0">tracing apps, test</tspan><tspan class="layer-detail" x="151.0" y="244.0">probes</tspan></text>
+      <rect x="46.0" y="114.0" width="1228.0" height="242.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
+      <rect x="64.0" y="134.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="207.5">Observed Request</tspan><tspan class="layer-title" x="151.0" y="230.5">Surface</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="249.0">controllers,</tspan><tspan class="layer-detail" x="151.0" y="265.0">tracing apps, test</tspan><tspan class="layer-detail" x="151.0" y="281.0">probes</tspan></text>
     </g>
     <g class="layer" data-layer="service">
-      <rect x="46.0" y="300.0" width="1228.0" height="168.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="320.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="356.5">Instrumented</tspan><tspan class="layer-title" x="151.0" y="379.5">Service Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="406.0">coroutines, spans,</tspan><tspan class="layer-detail" x="151.0" y="422.0">observation scopes</tspan></text>
+      <rect x="46.0" y="374.0" width="1228.0" height="242.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
+      <rect x="64.0" y="394.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="467.5">Instrumented</tspan><tspan class="layer-title" x="151.0" y="490.5">Service Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="517.0">coroutines, spans,</tspan><tspan class="layer-detail" x="151.0" y="533.0">observation scopes</tspan></text>
     </g>
     <g class="layer" data-layer="integration">
-      <rect x="46.0" y="486.0" width="1228.0" height="168.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="506.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="542.5">Telemetry</tspan><tspan class="layer-title" x="151.0" y="565.5">Integration</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="584.0">Micrometer,</tspan><tspan class="layer-detail" x="151.0" y="600.0">exporters,</tspan><tspan class="layer-detail" x="151.0" y="616.0">auto-config</tspan></text>
+      <rect x="46.0" y="634.0" width="1228.0" height="366.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
+      <rect x="64.0" y="654.0" width="174" height="326.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="789.5">Telemetry</tspan><tspan class="layer-title" x="151.0" y="812.5">Integration</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="831.0">Micrometer,</tspan><tspan class="layer-detail" x="151.0" y="847.0">exporters,</tspan><tspan class="layer-detail" x="151.0" y="863.0">auto-config</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="672.0" width="1228.0" height="150.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="692.0" width="174" height="110.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="731.0">Telemetry Runtime</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="769.0">metrics, traces,</tspan><tspan class="layer-detail" x="151.0" y="785.0">logs, test backends</tspan></text>
+      <rect x="46.0" y="1018.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="64.0" y="1038.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="1068.0">Telemetry Runtime</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1106.0">metrics, traces,</tspan><tspan class="layer-detail" x="151.0" y="1122.0">logs, test backends</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;api" data-label="invokes">
-      <path d="M 704.0 198.0 L 774.0 198.0 L 844.0 198.0" fill="none" stroke="#4F7DB5" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-api)"/>
+    <g class="edge" data-edge="api0-&gt;service0" data-label="delegates">
+      <path d="M 1096.0 336.0 L 1096.0 365.0 L 424.0 365.0 L 424.0 394.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
     </g>
-    <g class="edge" data-edge="api-&gt;service" data-label="delegates">
-      <path d="M 1039.0 244.0 L 1039.0 282.0 L 774.0 282.0 L 774.0 320.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
+    <g class="edge" data-edge="service4-&gt;infra0" data-label="persists / publishes">
+      <path d="M 760.0 596.0 L 760.0 625.0 L 424.0 625.0 L 424.0 654.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
     </g>
-    <g class="edge" data-edge="service-&gt;infra" data-label="persists / publishes">
-      <path d="M 774.0 448.0 L 774.0 477.0 L 509.0 477.0 L 509.0 506.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
+    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
+      <path d="M 424.0 980.0 L 424.0 1009.0 L 424.0 1038.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
     </g>
-    <g class="edge" data-edge="infra-&gt;bt" data-label="extends">
-      <path d="M 704.0 570.0 L 774.0 570.0 L 844.0 570.0" fill="none" stroke="#3E927D" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-bt)"/>
+    <g class="node" data-node="entry0" data-lines="Basic Observability App | application bootstrap">
+      <rect x="274.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="176.5">Basic Observability App</tspan><tspan class="node-detail" x="424.0" y="200.5">application bootstrap</tspan></text>
     </g>
-    <g class="edge" data-edge="bt-&gt;runtime" data-label="adapts">
-      <path d="M 1039.0 625.0 L 1039.0 658.5 L 774.0 658.5 L 774.0 692.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+    <g class="node" data-node="entry1" data-lines="Abstract Basic Test | basic">
+      <rect x="610.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="176.5">Abstract Basic Test</tspan><tspan class="node-detail" x="760.0" y="200.5">basic</tspan></text>
     </g>
-    <g class="node" data-node="entry" data-lines="Observed App/Test Surface | BasicObservabilityApp | AbstractBasicTest | TestObservationConfig | Observability Observability">
-      <rect x="314.0" y="134.0" width="390.0" height="128.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="169.0">Observed App/Test Surface</tspan><tspan class="node-detail" x="509.0" y="193.0">BasicObservabilityApp</tspan><tspan class="node-detail" x="509.0" y="210.0">AbstractBasicTest</tspan><tspan class="node-detail" x="509.0" y="227.0">TestObservationConfig</tspan><tspan class="node-detail" x="509.0" y="244.0">Observability Observability</tspan></text>
+    <g class="node" data-node="entry2" data-lines="Test Observation Config | configuration">
+      <rect x="946.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="176.5">Test Observation Config</tspan><tspan class="node-detail" x="1096.0" y="200.5">configuration</tspan></text>
     </g>
-    <g class="node" data-node="api" data-lines="Observed Web Adapters | OrderController">
-      <rect x="844.0" y="152.0" width="390.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="194.5">Observed Web Adapters</tspan><tspan class="node-detail" x="1039.0" y="218.5">OrderController</tspan></text>
+    <g class="node" data-node="entry3" data-lines="Order Controller Test | HTTP adapter">
+      <rect x="274.0" y="244.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="286.5">Order Controller Test</tspan><tspan class="node-detail" x="424.0" y="310.5">HTTP adapter</tspan></text>
     </g>
-    <g class="node" data-node="service" data-lines="Instrumented Services | InventoryClient | Inventory | Order | ObservationSupport">
-      <rect x="474.0" y="320.0" width="600.0" height="128.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="355.0">Instrumented Services</tspan><tspan class="node-detail" x="774.0" y="379.0">InventoryClient</tspan><tspan class="node-detail" x="774.0" y="396.0">Inventory</tspan><tspan class="node-detail" x="774.0" y="413.0">Order</tspan><tspan class="node-detail" x="774.0" y="430.0">ObservationSupport</tspan></text>
+    <g class="node" data-node="entry4" data-lines="Trace Propagation Test | HTTP adapter">
+      <rect x="610.0" y="244.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="286.5">Trace Propagation Test</tspan><tspan class="node-detail" x="760.0" y="310.5">HTTP adapter</tspan></text>
     </g>
-    <g class="node" data-node="infra" data-lines="Micrometer/Spring Layer | Spring boot autoconfigure lib | Spring boot autoconfigure | processor | Spring boot configuration">
-      <rect x="314.0" y="506.0" width="390.0" height="128.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="541.0">Micrometer/Spring Layer</tspan><tspan class="node-detail" x="509.0" y="565.0">Spring boot autoconfigure lib</tspan><tspan class="node-detail" x="509.0" y="582.0">Spring boot autoconfigure</tspan><tspan class="node-detail" x="509.0" y="599.0">processor</tspan><tspan class="node-detail" x="509.0" y="616.0">Spring boot configuration</tspan></text>
+    <g class="node" data-node="api0" data-lines="Order Controller | HTTP adapter">
+      <rect x="946.0" y="244.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="286.5">Order Controller</tspan><tspan class="node-detail" x="1096.0" y="310.5">HTTP adapter</tspan></text>
     </g>
-    <g class="node" data-node="bt" data-lines="bluetape4k Observability APIs | workshop | logging | coroutines">
-      <rect x="844.0" y="515.0" width="390.0" height="110.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="549.5">bluetape4k Observability APIs</tspan><tspan class="node-detail" x="1039.0" y="573.5">workshop</tspan><tspan class="node-detail" x="1039.0" y="590.5">logging</tspan><tspan class="node-detail" x="1039.0" y="607.5">coroutines</tspan></text>
+    <g class="node" data-node="service0" data-lines="Inventory Client | client">
+      <rect x="274.0" y="394.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="436.5">Inventory Client</tspan><tspan class="node-detail" x="424.0" y="460.5">client</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="Metrics / Trace Runtime | Redis | Kafka | Testcontainers">
-      <rect x="474.0" y="692.0" width="600.0" height="110.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="726.5">Metrics / Trace Runtime</tspan><tspan class="node-detail" x="774.0" y="750.5">Redis</tspan><tspan class="node-detail" x="774.0" y="767.5">Kafka</tspan><tspan class="node-detail" x="774.0" y="784.5">Testcontainers</tspan></text>
+    <g class="node" data-node="service1" data-lines="Inventory | domain model">
+      <rect x="610.0" y="394.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="436.5">Inventory</tspan><tspan class="node-detail" x="760.0" y="460.5">domain model</tspan></text>
+    </g>
+    <g class="node" data-node="service2" data-lines="Order | domain model">
+      <rect x="946.0" y="394.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="436.5">Order</tspan><tspan class="node-detail" x="1096.0" y="460.5">domain model</tspan></text>
+    </g>
+    <g class="node" data-node="service3" data-lines="Observation Support | observation">
+      <rect x="274.0" y="504.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="546.5">Observation Support</tspan><tspan class="node-detail" x="424.0" y="570.5">observation</tspan></text>
+    </g>
+    <g class="node" data-node="service4" data-lines="Order Service | service component">
+      <rect x="610.0" y="504.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="546.5">Order Service</tspan><tspan class="node-detail" x="760.0" y="570.5">service component</tspan></text>
+    </g>
+    <g class="node" data-node="infra0" data-lines="Spring boot | autoconfigure lib | Micrometer/Spring Layer">
+      <rect x="274.0" y="654.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="691.5">Spring boot</tspan><tspan class="node-title" x="424.0" y="715.5">autoconfigure lib</tspan><tspan class="node-detail" x="424.0" y="739.5">Micrometer/Spring Layer</tspan></text>
+    </g>
+    <g class="node" data-node="infra1" data-lines="Spring boot | autoconfigure processor | Micrometer/Spring Layer">
+      <rect x="610.0" y="654.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="691.5">Spring boot</tspan><tspan class="node-title" x="760.0" y="715.5">autoconfigure processor</tspan><tspan class="node-detail" x="760.0" y="739.5">Micrometer/Spring Layer</tspan></text>
+    </g>
+    <g class="node" data-node="infra2" data-lines="Spring boot | configuration processor | Micrometer/Spring Layer">
+      <rect x="946.0" y="654.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="691.5">Spring boot</tspan><tspan class="node-title" x="1096.0" y="715.5">configuration processor</tspan><tspan class="node-detail" x="1096.0" y="739.5">Micrometer/Spring Layer</tspan></text>
+    </g>
+    <g class="node" data-node="infra3" data-lines="Spring boot devtools | Micrometer/Spring Layer">
+      <rect x="274.0" y="778.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="820.5">Spring boot devtools</tspan><tspan class="node-detail" x="424.0" y="844.5">Micrometer/Spring Layer</tspan></text>
+    </g>
+    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k Observability APIs">
+      <rect x="610.0" y="778.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="820.5">workshop</tspan><tspan class="node-detail" x="760.0" y="844.5">bluetape4k Observability APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt1" data-lines="logging | bluetape4k Observability APIs">
+      <rect x="946.0" y="778.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="820.5">logging</tspan><tspan class="node-detail" x="1096.0" y="844.5">bluetape4k Observability APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt2" data-lines="coroutines | bluetape4k Observability APIs">
+      <rect x="274.0" y="888.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="930.5">coroutines</tspan><tspan class="node-detail" x="424.0" y="954.5">bluetape4k Observability APIs</tspan></text>
+    </g>
+    <g class="node" data-node="runtime0" data-lines="Redis | Metrics / Trace Runtime">
+      <rect x="274.0" y="1038.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="1080.5">Redis</tspan><tspan class="node-detail" x="424.0" y="1104.5">Metrics / Trace Runtime</tspan></text>
+    </g>
+    <g class="node" data-node="runtime1" data-lines="Kafka | Metrics / Trace Runtime">
+      <rect x="610.0" y="1038.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1080.5">Kafka</tspan><tspan class="node-detail" x="760.0" y="1104.5">Metrics / Trace Runtime</tspan></text>
+    </g>
+    <g class="node" data-node="runtime2" data-lines="Testcontainers | Metrics / Trace Runtime">
+      <rect x="946.0" y="1038.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="1080.5">Testcontainers</tspan><tspan class="node-detail" x="1096.0" y="1104.5">Metrics / Trace Runtime</tspan></text>
     </g>
   </g>
 </svg>

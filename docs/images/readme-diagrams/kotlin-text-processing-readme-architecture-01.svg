@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="792" viewBox="0 0 1320 792" role="img" aria-label="kotlin/text-processing architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="894" viewBox="0 0 1320 894" role="img" aria-label="kotlin/text-processing architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;kotlin/text-processing/src/main/kotlin/io/bluetape4k/workshop/text/detection/LanguageDetectionService.kt&quot;,&quot;kotlin/text-processing/src/main/kotlin/io/bluetape4k/workshop/text/filter/AbuseWordFilter.kt&quot;,&quot;kotlin/text-processing/src/main/kotlin/io/bluetape4k/workshop/text/normalize/TextNormalizer.kt&quot;,&quot;kotlin/text-processing/src/test/kotlin/io/bluetape4k/workshop/text/detection/LanguageDetectionServiceTest.kt&quot;,&quot;kotlin/text-processing/src/test/kotlin/io/bluetape4k/workshop/text/filter/AbuseWordFilterTest.kt&quot;,&quot;kotlin/text-processing/src/test/kotlin/io/bluetape4k/workshop/text/normalize/TextNormalizerTest.kt&quot;,&quot;kotlin/text-processing/build.gradle.kts&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
   <defs>
     <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
@@ -32,66 +32,80 @@
       .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="792"/>
-  <rect class="frame" x="16" y="16" width="1288" height="760" rx="22"/>
+  <rect class="canvas" width="1320" height="894"/>
+  <rect class="frame" x="16" y="16" width="1288" height="862" rx="22"/>
   <text class="diagram-title" x="660.0" y="58" text-anchor="middle">kotlin/text-processing</text>
   <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Kotlin example runtime and module dependencies</text>
   <g>
     <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="150.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="110.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="173.0">Example Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="211.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="227.0">adapters</tspan></text>
+      <rect x="46.0" y="114.0" width="1228.0" height="256.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
+      <rect x="64.0" y="134.0" width="174" height="216.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="226.0">Example Surface</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="264.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="280.0">adapters</tspan></text>
     </g>
     <g class="layer" data-layer="service">
-      <rect x="46.0" y="282.0" width="1228.0" height="132.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="302.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="332.0">Application Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="370.0">services, domain</tspan><tspan class="layer-detail" x="151.0" y="386.0">rules, use cases</tspan></text>
+      <rect x="46.0" y="388.0" width="1228.0" height="146.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
+      <rect x="64.0" y="408.0" width="174" height="106.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="445.0">Application Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="483.0">services, domain</tspan><tspan class="layer-detail" x="151.0" y="499.0">rules, use cases</tspan></text>
     </g>
     <g class="layer" data-layer="integration">
-      <rect x="46.0" y="432.0" width="1228.0" height="150.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="452.0" width="174" height="110.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="491.0">Integration Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="529.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="545.0">adapters, helpers</tspan></text>
+      <rect x="46.0" y="552.0" width="1228.0" height="132.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
+      <rect x="64.0" y="572.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="602.0">Integration Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="640.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="656.0">adapters, helpers</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="600.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="620.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="650.0">Runtime Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="680.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="696.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="712.0">JVM</tspan></text>
+      <rect x="46.0" y="702.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="64.0" y="722.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="752.0">Runtime Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="782.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="798.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="814.0">JVM</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;api" data-label="invokes">
-      <path d="M 704.0 189.0 L 774.0 189.0 L 844.0 189.0" fill="none" stroke="#4F7DB5" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-api)"/>
+    <g class="edge" data-edge="api1-&gt;service0" data-label="delegates">
+      <path d="M 760.0 350.0 L 760.0 379.0 L 760.0 408.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
     </g>
-    <g class="edge" data-edge="api-&gt;service" data-label="delegates">
-      <path d="M 1039.0 235.0 L 1039.0 268.5 L 774.0 268.5 L 774.0 302.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
+    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
+      <path d="M 1096.0 664.0 L 1096.0 693.0 L 760.0 693.0 L 760.0 722.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
     </g>
-    <g class="edge" data-edge="service-&gt;bt" data-label="extends">
-      <path d="M 774.0 394.0 L 774.0 423.0 L 774.0 452.0" fill="none" stroke="#3E927D" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-bt)"/>
+    <g class="node" data-node="entry0" data-lines="Language Detection | Service Test | detection">
+      <rect x="274.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="171.5">Language Detection</tspan><tspan class="node-title" x="424.0" y="195.5">Service Test</tspan><tspan class="node-detail" x="424.0" y="219.5">detection</tspan></text>
     </g>
-    <g class="edge" data-edge="bt-&gt;runtime" data-label="adapts">
-      <path d="M 774.0 562.0 L 774.0 591.0 L 774.0 620.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+    <g class="node" data-node="entry1" data-lines="Abuse Word Filter Test | filter">
+      <rect x="610.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="183.5">Abuse Word Filter Test</tspan><tspan class="node-detail" x="760.0" y="207.5">filter</tspan></text>
     </g>
-    <g class="node" data-node="entry" data-lines="Example Entrypoints | LanguageDetectionServiceTest | AbuseWordFilterTest | Kotlin Text Processing tests">
-      <rect x="314.0" y="134.0" width="390.0" height="110.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="168.5">Example Entrypoints</tspan><tspan class="node-detail" x="509.0" y="192.5">LanguageDetectionServiceTest</tspan><tspan class="node-detail" x="509.0" y="209.5">AbuseWordFilterTest</tspan><tspan class="node-detail" x="509.0" y="226.5">Kotlin Text Processing tests</tspan></text>
+    <g class="node" data-node="entry2" data-lines="Text Normalizer Test | normalize">
+      <rect x="946.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="183.5">Text Normalizer Test</tspan><tspan class="node-detail" x="1096.0" y="207.5">normalize</tspan></text>
     </g>
-    <g class="node" data-node="api" data-lines="API / Adapter Layer | AbuseWordFilter | TextNormalizer">
-      <rect x="844.0" y="143.0" width="390.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="177.0">API / Adapter Layer</tspan><tspan class="node-detail" x="1039.0" y="201.0">AbuseWordFilter</tspan><tspan class="node-detail" x="1039.0" y="218.0">TextNormalizer</tspan></text>
+    <g class="node" data-node="api0" data-lines="Abuse Word Filter | filter">
+      <rect x="274.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="300.5">Abuse Word Filter</tspan><tspan class="node-detail" x="424.0" y="324.5">filter</tspan></text>
     </g>
-    <g class="node" data-node="service" data-lines="Application Services | LanguageDetectionService">
-      <rect x="474.0" y="302.0" width="600.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="344.5">Application Services</tspan><tspan class="node-detail" x="774.0" y="368.5">LanguageDetectionService</tspan></text>
+    <g class="node" data-node="api1" data-lines="Text Normalizer | normalize">
+      <rect x="610.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="300.5">Text Normalizer</tspan><tspan class="node-detail" x="760.0" y="324.5">normalize</tspan></text>
     </g>
-    <g class="node" data-node="bt" data-lines="bluetape4k APIs | text | logging | junit5">
-      <rect x="474.0" y="452.0" width="600.0" height="110.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="486.5">bluetape4k APIs</tspan><tspan class="node-detail" x="774.0" y="510.5">text</tspan><tspan class="node-detail" x="774.0" y="527.5">logging</tspan><tspan class="node-detail" x="774.0" y="544.5">junit5</tspan></text>
+    <g class="node" data-node="service0" data-lines="Language Detection | Service | service component">
+      <rect x="610.0" y="408.0" width="300.0" height="106.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="445.5">Language Detection</tspan><tspan class="node-title" x="760.0" y="469.5">Service</tspan><tspan class="node-detail" x="760.0" y="493.5">service component</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="Runtime Dependencies | In-memory / JVM">
-      <rect x="474.0" y="620.0" width="600.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="662.5">Runtime Dependencies</tspan><tspan class="node-detail" x="774.0" y="686.5">In-memory / JVM</tspan></text>
+    <g class="node" data-node="bt0" data-lines="text | bluetape4k APIs">
+      <rect x="274.0" y="572.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="614.5">text</tspan><tspan class="node-detail" x="424.0" y="638.5">bluetape4k APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt1" data-lines="logging | bluetape4k APIs">
+      <rect x="610.0" y="572.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="614.5">logging</tspan><tspan class="node-detail" x="760.0" y="638.5">bluetape4k APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt2" data-lines="junit5 | bluetape4k APIs">
+      <rect x="946.0" y="572.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="614.5">junit5</tspan><tspan class="node-detail" x="1096.0" y="638.5">bluetape4k APIs</tspan></text>
+    </g>
+    <g class="node" data-node="runtime0" data-lines="In-memory / JVM | Runtime Dependencies">
+      <rect x="610.0" y="722.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="764.5">In-memory / JVM</tspan><tspan class="node-detail" x="760.0" y="788.5">Runtime Dependencies</tspan></text>
     </g>
   </g>
 </svg>

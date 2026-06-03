@@ -26,16 +26,24 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Boot App/Test Surface\nWebsocketApplication\nWebsocketApplicationTest\nSpring Boot Webflux Websocket\ntests", fillcolor="#FFF8E7"];
-  api [label="Spring Web Adapters\nNettyConfig\nReactiveWebSocketConfiguration\nSampleWebfluxRouter\nReactiveWebSocketHandler", fillcolor="#EEF7FF"];
-  service [label="Application Feature\nQuoteGenerator\nModels", fillcolor="#F1F8E9"];
-  infra [label="Spring Boot Layer\nSpring cloud dependencies get\nSpring boot4 dependencies get\nSpring boot autoconfigure lib\nSpring boot autoconfigure", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k Boot APIs\nworkshop\nidgenerators\njunit5", fillcolor="#EAF7F0"];
-  runtime [label="Boot Runtime\nIn-memory / JVM", fillcolor="#FFF1F1"];
+  entry0 [label="Websocket Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Websocket Application Test\nwebflux", fillcolor="#FFF8E7"];
+  api0 [label="Netty Config\nconfiguration", fillcolor="#EEF7FF"];
+  api1 [label="Reactive Web Socket Configuration\nconfiguration", fillcolor="#EEF7FF"];
+  api2 [label="Sample Webflux Router\nconfiguration", fillcolor="#EEF7FF"];
+  api3 [label="Reactive Web Socket Handler\nhandler", fillcolor="#EEF7FF"];
+  service0 [label="Quote Generator\nservice component", fillcolor="#F1F8E9"];
+  service1 [label="Models\ndomain model", fillcolor="#F1F8E9"];
+  infra0 [label="Spring cloud dependencies get\nSpring Boot Layer", fillcolor="#F5F0FF"];
+  infra1 [label="Spring boot4 dependencies get\nSpring Boot Layer", fillcolor="#F5F0FF"];
+  infra2 [label="Spring boot autoconfigure lib\nSpring Boot Layer", fillcolor="#F5F0FF"];
+  infra3 [label="Spring boot autoconfigure processor\nSpring Boot Layer", fillcolor="#F5F0FF"];
+  bt0 [label="workshop\nbluetape4k Boot APIs", fillcolor="#EAF7F0"];
+  bt1 [label="idgenerators\nbluetape4k Boot APIs", fillcolor="#EAF7F0"];
+  bt2 [label="junit5\nbluetape4k Boot APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="In-memory / JVM\nBoot Runtime", fillcolor="#FFF1F1"];
 
-  entry -> api [label="invokes"];
-  api -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  api3 -> service0 [label="delegates"];
+  service1 -> infra0 [label="persists / publishes"];
+  bt2 -> runtime0 [label="adapts"];
 }

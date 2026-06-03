@@ -26,14 +26,27 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Data Demo Surface\nAbstractQuerydslTest\nAbstractDomainTest\nSpring Data Jpa Querydsl tests", fillcolor="#FFF8E7"];
-  service [label="Data Service Layer\nMemberRepositoryImpl\nSpringRepositoryQuerydslSupport\nMemberSearchCondition\nTeamDto", fillcolor="#F1F8E9"];
-  infra [label="Repository Layer\nMemberDto\nMemberTeamDto\nMember\nTeam", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k Data APIs\nhibernate\nspring\ntestcontainers", fillcolor="#EAF7F0"];
-  runtime [label="Database Runtime\nSQL / R2DBC\nTestcontainers", fillcolor="#FFF1F1"];
+  entry0 [label="Abstract Querydsl Test\nquerydsl", fillcolor="#FFF8E7"];
+  entry1 [label="Abstract Domain Test\ndomain model", fillcolor="#FFF8E7"];
+  entry2 [label="Member Repository Test\nrepository", fillcolor="#FFF8E7"];
+  entry3 [label="Team Repository Test\nrepository", fillcolor="#FFF8E7"];
+  service0 [label="Member Repository Impl\nrepository", fillcolor="#F1F8E9"];
+  service1 [label="Spring Repository Querydsl Support\nspring", fillcolor="#F1F8E9"];
+  service2 [label="Member Search Condition\ndomain model", fillcolor="#F1F8E9"];
+  service3 [label="Team Dto\ndomain model", fillcolor="#F1F8E9"];
+  service4 [label="dto-mapping\ndomain model", fillcolor="#F1F8E9"];
+  infra0 [label="Member Dto\ndomain model", fillcolor="#F5F0FF"];
+  infra1 [label="Member Team Dto\ndomain model", fillcolor="#F5F0FF"];
+  infra2 [label="Member\ndomain model", fillcolor="#F5F0FF"];
+  infra3 [label="Team\ndomain model", fillcolor="#F5F0FF"];
+  infra4 [label="Member Repository\nrepository", fillcolor="#F5F0FF"];
+  bt0 [label="hibernate\nbluetape4k Data APIs", fillcolor="#EAF7F0"];
+  bt1 [label="spring\nbluetape4k Data APIs", fillcolor="#EAF7F0"];
+  bt2 [label="testcontainers\nbluetape4k Data APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="SQL / R2DBC\nDatabase Runtime", fillcolor="#FFF1F1"];
+  runtime1 [label="Testcontainers\nDatabase Runtime", fillcolor="#FFF1F1"];
 
-  entry -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  entry3 -> service0 [label="starts"];
+  service4 -> infra0 [label="persists / publishes"];
+  bt2 -> runtime0 [label="adapts"];
 }

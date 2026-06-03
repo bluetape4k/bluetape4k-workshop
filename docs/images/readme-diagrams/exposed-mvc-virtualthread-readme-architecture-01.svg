@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="864" viewBox="0 0 1320 864" role="img" aria-label="exposed/mvc-virtualthread architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1444" viewBox="0 0 1320 1444" role="img" aria-label="exposed/mvc-virtualthread architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;exposed/mvc-virtualthread/src/main/kotlin/io/bluetape4k/workshop/exposed/mvc/vt/ExposedMvcVirtualThreadApp.kt&quot;,&quot;exposed/mvc-virtualthread/src/main/kotlin/io/bluetape4k/workshop/exposed/mvc/vt/author/controller/AuthorController.kt&quot;,&quot;exposed/mvc-virtualthread/src/main/kotlin/io/bluetape4k/workshop/exposed/mvc/vt/author/controller/BookController.kt&quot;,&quot;exposed/mvc-virtualthread/src/main/kotlin/io/bluetape4k/workshop/exposed/mvc/vt/author/dto/AuthorDTO.kt&quot;,&quot;exposed/mvc-virtualthread/src/main/kotlin/io/bluetape4k/workshop/exposed/mvc/vt/author/mapper/AuthorMappers.kt&quot;,&quot;exposed/mvc-virtualthread/src/main/kotlin/io/bluetape4k/workshop/exposed/mvc/vt/author/repository/AuthorRepository.kt&quot;,&quot;exposed/mvc-virtualthread/src/main/kotlin/io/bluetape4k/workshop/exposed/mvc/vt/author/repository/BookRepository.kt&quot;,&quot;exposed/mvc-virtualthread/src/main/kotlin/io/bluetape4k/workshop/exposed/mvc/vt/author/schema/AuthorTable.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
   <defs>
     <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
@@ -32,73 +32,147 @@
       .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="864"/>
-  <rect class="frame" x="16" y="16" width="1288" height="832" rx="22"/>
+  <rect class="canvas" width="1320" height="1444"/>
+  <rect class="frame" x="16" y="16" width="1288" height="1412" rx="22"/>
   <text class="diagram-title" x="660.0" y="58" text-anchor="middle">exposed/mvc-virtualthread</text>
   <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">HTTP services, Exposed repositories, and SQL runtime</text>
   <g>
     <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="168.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="182.0">Web/API Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="212.0">controllers, app</tspan><tspan class="layer-detail" x="151.0" y="228.0">bootstraps, HTTP</tspan><tspan class="layer-detail" x="151.0" y="244.0">tests</tspan></text>
+      <rect x="46.0" y="114.0" width="1228.0" height="490.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
+      <rect x="64.0" y="134.0" width="174" height="450.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="343.0">Web/API Surface</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="373.0">controllers, app</tspan><tspan class="layer-detail" x="151.0" y="389.0">bootstraps, HTTP</tspan><tspan class="layer-detail" x="151.0" y="405.0">tests</tspan></text>
     </g>
     <g class="layer" data-layer="service">
-      <rect x="46.0" y="300.0" width="1228.0" height="168.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="320.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="368.0">Application Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="406.0">services, domain</tspan><tspan class="layer-detail" x="151.0" y="422.0">rules, transactions</tspan></text>
+      <rect x="46.0" y="622.0" width="1228.0" height="242.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
+      <rect x="64.0" y="642.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="727.0">Application Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="765.0">services, domain</tspan><tspan class="layer-detail" x="151.0" y="781.0">rules, transactions</tspan></text>
     </g>
     <g class="layer" data-layer="integration">
-      <rect x="46.0" y="486.0" width="1228.0" height="168.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="506.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="542.5">Exposed</tspan><tspan class="layer-title" x="151.0" y="565.5">Persistence Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="584.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="600.0">tables, mappers,</tspan><tspan class="layer-detail" x="151.0" y="616.0">helpers</tspan></text>
+      <rect x="46.0" y="882.0" width="1228.0" height="352.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
+      <rect x="64.0" y="902.0" width="174" height="312.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="1030.5">Exposed</tspan><tspan class="layer-title" x="151.0" y="1053.5">Persistence Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1072.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="1088.0">tables, mappers,</tspan><tspan class="layer-detail" x="151.0" y="1104.0">helpers</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="672.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="692.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="722.0">SQL Runtime</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="760.0">R2DBC/JDBC, Redis,</tspan><tspan class="layer-detail" x="151.0" y="776.0">containers</tspan></text>
+      <rect x="46.0" y="1252.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="64.0" y="1272.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="1302.0">SQL Runtime</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1340.0">R2DBC/JDBC, Redis,</tspan><tspan class="layer-detail" x="151.0" y="1356.0">containers</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;api" data-label="invokes">
-      <path d="M 704.0 198.0 L 774.0 198.0 L 844.0 198.0" fill="none" stroke="#4F7DB5" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-api)"/>
+    <g class="edge" data-edge="api4-&gt;service0" data-label="delegates">
+      <path d="M 424.0 584.0 L 424.0 613.0 L 424.0 642.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
     </g>
-    <g class="edge" data-edge="api-&gt;service" data-label="delegates">
-      <path d="M 1039.0 262.0 L 1039.0 291.0 L 774.0 291.0 L 774.0 320.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
+    <g class="edge" data-edge="service5-&gt;infra0" data-label="persists / publishes">
+      <path d="M 1096.0 844.0 L 1096.0 873.0 L 424.0 873.0 L 424.0 902.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
     </g>
-    <g class="edge" data-edge="service-&gt;infra" data-label="persists / publishes">
-      <path d="M 774.0 448.0 L 774.0 477.0 L 509.0 477.0 L 509.0 506.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
+    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
+      <path d="M 760.0 1214.0 L 760.0 1243.0 L 592.0 1243.0 L 592.0 1272.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
     </g>
-    <g class="edge" data-edge="infra-&gt;bt" data-label="extends">
-      <path d="M 704.0 570.0 L 774.0 570.0 L 844.0 570.0" fill="none" stroke="#3E927D" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-bt)"/>
+    <g class="node" data-node="entry0" data-lines="Exposed Mvc Virtual | Thread App | application bootstrap">
+      <rect x="274.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="171.5">Exposed Mvc Virtual</tspan><tspan class="node-title" x="424.0" y="195.5">Thread App</tspan><tspan class="node-detail" x="424.0" y="219.5">application bootstrap</tspan></text>
     </g>
-    <g class="edge" data-edge="bt-&gt;runtime" data-label="adapts">
-      <path d="M 1039.0 625.0 L 1039.0 658.5 L 774.0 658.5 L 774.0 692.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+    <g class="node" data-node="entry1" data-lines="Abstract Mvc Virtual | Thread Test | vt">
+      <rect x="610.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="171.5">Abstract Mvc Virtual</tspan><tspan class="node-title" x="760.0" y="195.5">Thread Test</tspan><tspan class="node-detail" x="760.0" y="219.5">vt</tspan></text>
     </g>
-    <g class="node" data-node="entry" data-lines="Web/Test Entrypoints | ExposedMvcVirtualThreadApp | AbstractMvcVirtualThreadTest | AuthorControllerTest | Exposed Mvc Virtualthread tests">
-      <rect x="314.0" y="134.0" width="390.0" height="128.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="169.0">Web/Test Entrypoints</tspan><tspan class="node-detail" x="509.0" y="193.0">ExposedMvcVirtualThreadApp</tspan><tspan class="node-detail" x="509.0" y="210.0">AbstractMvcVirtualThreadTest</tspan><tspan class="node-detail" x="509.0" y="227.0">AuthorControllerTest</tspan><tspan class="node-detail" x="509.0" y="244.0">Exposed Mvc Virtualthread tests</tspan></text>
+    <g class="node" data-node="entry2" data-lines="Author Controller Test | author">
+      <rect x="946.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="183.5">Author Controller Test</tspan><tspan class="node-detail" x="1096.0" y="207.5">author</tspan></text>
     </g>
-    <g class="node" data-node="api" data-lines="MVC/WebFlux Controllers | AuthorController | BookController | GlobalExceptionHandler | TomcatConfig">
-      <rect x="844.0" y="134.0" width="390.0" height="128.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="169.0">MVC/WebFlux Controllers</tspan><tspan class="node-detail" x="1039.0" y="193.0">AuthorController</tspan><tspan class="node-detail" x="1039.0" y="210.0">BookController</tspan><tspan class="node-detail" x="1039.0" y="227.0">GlobalExceptionHandler</tspan><tspan class="node-detail" x="1039.0" y="244.0">TomcatConfig</tspan></text>
+    <g class="node" data-node="entry3" data-lines="Concurrent Place Order | Test | order">
+      <rect x="274.0" y="258.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="295.5">Concurrent Place Order</tspan><tspan class="node-title" x="424.0" y="319.5">Test</tspan><tspan class="node-detail" x="424.0" y="343.5">order</tspan></text>
     </g>
-    <g class="node" data-node="service" data-lines="Application Services | AuthorRepository | BookRepository | AuthorService | DatabaseInitializer">
-      <rect x="474.0" y="320.0" width="600.0" height="128.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="355.0">Application Services</tspan><tspan class="node-detail" x="774.0" y="379.0">AuthorRepository</tspan><tspan class="node-detail" x="774.0" y="396.0">BookRepository</tspan><tspan class="node-detail" x="774.0" y="413.0">AuthorService</tspan><tspan class="node-detail" x="774.0" y="430.0">DatabaseInitializer</tspan></text>
+    <g class="node" data-node="entry4" data-lines="Order Controller Test | order">
+      <rect x="610.0" y="265.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="307.5">Order Controller Test</tspan><tspan class="node-detail" x="760.0" y="331.5">order</tspan></text>
     </g>
-    <g class="node" data-node="infra" data-lines="Exposed Persistence | AuthorDTO | AuthorMappers | AuthorTable | BookTable">
-      <rect x="314.0" y="506.0" width="390.0" height="128.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="541.0">Exposed Persistence</tspan><tspan class="node-detail" x="509.0" y="565.0">AuthorDTO</tspan><tspan class="node-detail" x="509.0" y="582.0">AuthorMappers</tspan><tspan class="node-detail" x="509.0" y="599.0">AuthorTable</tspan><tspan class="node-detail" x="509.0" y="616.0">BookTable</tspan></text>
+    <g class="node" data-node="api0" data-lines="Author Controller | HTTP adapter">
+      <rect x="946.0" y="265.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="307.5">Author Controller</tspan><tspan class="node-detail" x="1096.0" y="331.5">HTTP adapter</tspan></text>
     </g>
-    <g class="node" data-node="bt" data-lines="bluetape4k Data APIs | workshop | junit5 | assertions">
-      <rect x="844.0" y="515.0" width="390.0" height="110.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="549.5">bluetape4k Data APIs</tspan><tspan class="node-detail" x="1039.0" y="573.5">workshop</tspan><tspan class="node-detail" x="1039.0" y="590.5">junit5</tspan><tspan class="node-detail" x="1039.0" y="607.5">assertions</tspan></text>
+    <g class="node" data-node="api1" data-lines="Book Controller | HTTP adapter">
+      <rect x="274.0" y="382.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="424.5">Book Controller</tspan><tspan class="node-detail" x="424.0" y="448.5">HTTP adapter</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="SQL Test Runtime | SQL / R2DBC | Testcontainers">
-      <rect x="474.0" y="692.0" width="600.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="726.0">SQL Test Runtime</tspan><tspan class="node-detail" x="774.0" y="750.0">SQL / R2DBC</tspan><tspan class="node-detail" x="774.0" y="767.0">Testcontainers</tspan></text>
+    <g class="node" data-node="api2" data-lines="Global Exception Handler | configuration">
+      <rect x="610.0" y="382.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="424.5">Global Exception Handler</tspan><tspan class="node-detail" x="760.0" y="448.5">configuration</tspan></text>
+    </g>
+    <g class="node" data-node="api3" data-lines="Tomcat Config | configuration">
+      <rect x="946.0" y="382.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="424.5">Tomcat Config</tspan><tspan class="node-detail" x="1096.0" y="448.5">configuration</tspan></text>
+    </g>
+    <g class="node" data-node="api4" data-lines="Order Controller | HTTP adapter">
+      <rect x="274.0" y="492.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="534.5">Order Controller</tspan><tspan class="node-detail" x="424.0" y="558.5">HTTP adapter</tspan></text>
+    </g>
+    <g class="node" data-node="service0" data-lines="Author Repository | repository">
+      <rect x="274.0" y="642.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="684.5">Author Repository</tspan><tspan class="node-detail" x="424.0" y="708.5">repository</tspan></text>
+    </g>
+    <g class="node" data-node="service1" data-lines="Book Repository | repository">
+      <rect x="610.0" y="642.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="684.5">Book Repository</tspan><tspan class="node-detail" x="760.0" y="708.5">repository</tspan></text>
+    </g>
+    <g class="node" data-node="service2" data-lines="Author Service | service component">
+      <rect x="946.0" y="642.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="684.5">Author Service</tspan><tspan class="node-detail" x="1096.0" y="708.5">service component</tspan></text>
+    </g>
+    <g class="node" data-node="service3" data-lines="Database Initializer | configuration">
+      <rect x="274.0" y="752.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="794.5">Database Initializer</tspan><tspan class="node-detail" x="424.0" y="818.5">configuration</tspan></text>
+    </g>
+    <g class="node" data-node="service4" data-lines="Order Line Repository | repository">
+      <rect x="610.0" y="752.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="794.5">Order Line Repository</tspan><tspan class="node-detail" x="760.0" y="818.5">repository</tspan></text>
+    </g>
+    <g class="node" data-node="service5" data-lines="Order Repository | repository">
+      <rect x="946.0" y="752.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="794.5">Order Repository</tspan><tspan class="node-detail" x="1096.0" y="818.5">repository</tspan></text>
+    </g>
+    <g class="node" data-node="infra0" data-lines="Author DTO | dto">
+      <rect x="274.0" y="902.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="944.5">Author DTO</tspan><tspan class="node-detail" x="424.0" y="968.5">dto</tspan></text>
+    </g>
+    <g class="node" data-node="infra1" data-lines="Author Mappers | mapper">
+      <rect x="610.0" y="902.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="944.5">Author Mappers</tspan><tspan class="node-detail" x="760.0" y="968.5">mapper</tspan></text>
+    </g>
+    <g class="node" data-node="infra2" data-lines="Author Table | domain model">
+      <rect x="946.0" y="902.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="944.5">Author Table</tspan><tspan class="node-detail" x="1096.0" y="968.5">domain model</tspan></text>
+    </g>
+    <g class="node" data-node="infra3" data-lines="Book Table | domain model">
+      <rect x="274.0" y="1012.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="1054.5">Book Table</tspan><tspan class="node-detail" x="424.0" y="1078.5">domain model</tspan></text>
+    </g>
+    <g class="node" data-node="infra4" data-lines="Database Config | configuration">
+      <rect x="610.0" y="1012.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1054.5">Database Config</tspan><tspan class="node-detail" x="760.0" y="1078.5">configuration</tspan></text>
+    </g>
+    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k Data APIs">
+      <rect x="946.0" y="1012.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="1054.5">workshop</tspan><tspan class="node-detail" x="1096.0" y="1078.5">bluetape4k Data APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt1" data-lines="junit5 | bluetape4k Data APIs">
+      <rect x="274.0" y="1122.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="1164.5">junit5</tspan><tspan class="node-detail" x="424.0" y="1188.5">bluetape4k Data APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt2" data-lines="assertions | bluetape4k Data APIs">
+      <rect x="610.0" y="1122.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1164.5">assertions</tspan><tspan class="node-detail" x="760.0" y="1188.5">bluetape4k Data APIs</tspan></text>
+    </g>
+    <g class="node" data-node="runtime0" data-lines="SQL / R2DBC | SQL Test Runtime">
+      <rect x="442.0" y="1272.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="592.0" y="1314.5">SQL / R2DBC</tspan><tspan class="node-detail" x="592.0" y="1338.5">SQL Test Runtime</tspan></text>
+    </g>
+    <g class="node" data-node="runtime1" data-lines="Testcontainers | SQL Test Runtime">
+      <rect x="778.0" y="1272.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="928.0" y="1314.5">Testcontainers</tspan><tspan class="node-detail" x="928.0" y="1338.5">SQL Test Runtime</tspan></text>
     </g>
   </g>
 </svg>

@@ -26,16 +26,28 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Example Entrypoints\nKotlinGatlingApplication\nAbstractGatlingTest\nAsyncTaskControllerTest\nGatling Virtualthread Simulation", fillcolor="#FFF8E7"];
-  api [label="API / Adapter Layer\nTomcatConfig\nAsyncTaskController\nSyncTaskController", fillcolor="#EEF7FF"];
-  service [label="Application Services\nAsyncConfig\nAsyncTaskService\nSyncTaskService", fillcolor="#F1F8E9"];
-  infra [label="Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\nio\njackson3", fillcolor="#EAF7F0"];
-  runtime [label="Runtime Dependencies\nSQL / R2DBC\nMongoDB\nAWS / S3", fillcolor="#FFF1F1"];
+  entry0 [label="Kotlin Gatling Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Abstract Gatling Test\ngatling", fillcolor="#FFF8E7"];
+  entry2 [label="Async Task Controller Test\nHTTP adapter", fillcolor="#FFF8E7"];
+  entry3 [label="Sync Task Controller Test\nHTTP adapter", fillcolor="#FFF8E7"];
+  api0 [label="Tomcat Config\nconfiguration", fillcolor="#EEF7FF"];
+  api1 [label="Async Task Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  api2 [label="Sync Task Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  service0 [label="Async Config\nconfiguration", fillcolor="#F1F8E9"];
+  service1 [label="Async Task Service\nservice component", fillcolor="#F1F8E9"];
+  service2 [label="Sync Task Service\nservice component", fillcolor="#F1F8E9"];
+  infra0 [label="Spring boot autoconfigure lib\nFramework Layer", fillcolor="#F5F0FF"];
+  infra1 [label="Spring boot autoconfigure processor\nFramework Layer", fillcolor="#F5F0FF"];
+  infra2 [label="Spring boot configuration processor\nFramework Layer", fillcolor="#F5F0FF"];
+  infra3 [label="Spring boot devtools\nFramework Layer", fillcolor="#F5F0FF"];
+  bt0 [label="workshop\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  bt1 [label="io\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  bt2 [label="jackson3\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="SQL / R2DBC\nRuntime Dependencies", fillcolor="#FFF1F1"];
+  runtime1 [label="MongoDB\nRuntime Dependencies", fillcolor="#FFF1F1"];
+  runtime2 [label="AWS / S3\nRuntime Dependencies", fillcolor="#FFF1F1"];
 
-  entry -> api [label="invokes"];
-  api -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  api2 -> service0 [label="delegates"];
+  service2 -> infra0 [label="persists / publishes"];
+  bt2 -> runtime0 [label="adapts"];
 }

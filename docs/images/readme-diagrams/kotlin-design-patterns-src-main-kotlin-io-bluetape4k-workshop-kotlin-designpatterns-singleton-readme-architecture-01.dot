@@ -26,10 +26,15 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Example Entrypoints\nKotlin Design Patterns Kotlin\nDesignPatterns Singleton tests", fillcolor="#FFF8E7"];
-  service [label="Application Services\nEnumIvoryTower\nInitializingOnDemandHolderIdiom\nIvoryTower\nIvoryTowerObject", fillcolor="#F1F8E9"];
-  runtime [label="Runtime Dependencies\nIn-memory / JVM", fillcolor="#FFF1F1"];
+  entry0 [label="singleton\nExample Entrypoints", fillcolor="#FFF8E7"];
+  service0 [label="Enum Ivory Tower\ncomponent", fillcolor="#F1F8E9"];
+  service1 [label="Initializing On Demand Holder Idiom\ncomponent", fillcolor="#F1F8E9"];
+  service2 [label="Ivory Tower\ncomponent", fillcolor="#F1F8E9"];
+  service3 [label="Ivory Tower Object\ncomponent", fillcolor="#F1F8E9"];
+  service4 [label="Kotlin Singleton\ncomponent", fillcolor="#F1F8E9"];
+  service5 [label="Thread Safe Double Check Locking\ncomponent", fillcolor="#F1F8E9"];
+  runtime0 [label="In-memory / JVM\nRuntime Dependencies", fillcolor="#FFF1F1"];
 
-  entry -> service [label="delegates"];
-  service -> runtime [label="backs"];
+  entry0 -> service0 [label="starts"];
+  service5 -> runtime0 [label="runs on"];
 }

@@ -1,7 +1,15 @@
-graph 1 10.36 1.7263
-node entry 1.4344 0.86313 2.8688 1.7263 "Example Entrypoints\nApiGatewayDemoApplication\nCustomerApplication\nOrderApplication\nAbstractGatewayTest" rounded,filled box #88A3B5 #FFF8E7
-node api 5.5184 0.86313 2.2438 1.7263 "API / Adapter Layer\nGatewayConfig\nSwaggerConfig\nIndexController\nRedirectWebFilter" rounded,filled box #88A3B5 #EEF7FF
-node runtime 9.1806 0.86313 2.3583 1.445 "Runtime Dependencies\nRedis\nAWS / S3\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 2.8743 0.86313 2.8743 0.86313 4.2502 0.86313 4.2502 0.86313 invokes 3.6326 0.95167 solid #637383
-edge api runtime 4 6.6471 0.86313 6.6471 0.86313 7.8496 0.86313 7.8496 0.86313 backs 7.3208 0.95167 solid #637383
+graph 1 3.0875 19.883
+node entry0 1.5438 0.44125 3.0875 0.8825 "Api Gateway Demo Application\napplication bootstrap" rounded,filled box #88A3B5 #FFF8E7
+node entry1 1.5438 2.0246 2.2958 0.8825 "Customer Application\napplication bootstrap" rounded,filled box #88A3B5 #FFF8E7
+node entry2 1.5438 3.6079 2.275 0.8825 "Order Application\napplication bootstrap" rounded,filled box #88A3B5 #FFF8E7
+node entry3 1.5438 5.1913 2.5354 0.8825 "Abstract Gateway Test\nverification" rounded,filled box #88A3B5 #FFF8E7
+node entry4 1.5438 6.7746 2.2958 0.8825 "Index Controller Test\nverification" rounded,filled box #88A3B5 #FFF8E7
+node api0 1.5438 8.3579 1.8375 0.8825 "Gateway Config\nconfiguration" rounded,filled box #88A3B5 #EEF7FF
+node api1 1.5438 9.9413 1.8583 0.8825 "Swagger Config\nconfiguration" rounded,filled box #88A3B5 #EEF7FF
+node api2 1.5438 11.525 1.8167 0.8825 "Index Controller\nHTTP adapter" rounded,filled box #88A3B5 #EEF7FF
+node api3 1.5438 13.108 2.2229 0.8825 "Redirect Web Filter\nfilter" rounded,filled box #88A3B5 #EEF7FF
+node api4 1.5438 14.691 1.9521 0.8825 "Customer Config\nconfiguration" rounded,filled box #88A3B5 #EEF7FF
+node runtime0 1.5438 16.275 2.3583 0.8825 "Redis\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
+node runtime1 1.5438 17.858 2.3583 0.8825 "AWS / S3\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
+node runtime2 1.5438 19.441 2.3583 0.8825 "Testcontainers\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
 stop

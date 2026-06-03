@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="828" viewBox="0 0 1320 828" role="img" aria-label="Spring WebFlux with Coroutines and Virtual Thread architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1252" viewBox="0 0 1320 1252" role="img" aria-label="Spring WebFlux with Coroutines and Virtual Thread architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;virtualthreads/spring-webflux/src/main/kotlin/io/bluetape4k/workshop/webflux/virtualthread/WebfluxVirtualThreadApp.kt&quot;,&quot;virtualthreads/spring-webflux/src/main/kotlin/io/bluetape4k/workshop/webflux/virtualthread/config/AsyncConfig.kt&quot;,&quot;virtualthreads/spring-webflux/src/main/kotlin/io/bluetape4k/workshop/webflux/virtualthread/config/NettyConfig.kt&quot;,&quot;virtualthreads/spring-webflux/src/main/kotlin/io/bluetape4k/workshop/webflux/virtualthread/config/SchedulingConfig.kt&quot;,&quot;virtualthreads/spring-webflux/src/main/kotlin/io/bluetape4k/workshop/webflux/virtualthread/controller/AbstractDispatcherController.kt&quot;,&quot;virtualthreads/spring-webflux/src/main/kotlin/io/bluetape4k/workshop/webflux/virtualthread/controller/CustomDispatcherController.kt&quot;,&quot;virtualthreads/spring-webflux/src/main/kotlin/io/bluetape4k/workshop/webflux/virtualthread/controller/DefaultDispatcherController.kt&quot;,&quot;virtualthreads/spring-webflux/src/main/kotlin/io/bluetape4k/workshop/webflux/virtualthread/controller/HttpbinController.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
   <defs>
     <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
@@ -32,73 +32,119 @@
       .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="828"/>
-  <rect class="frame" x="16" y="16" width="1288" height="796" rx="22"/>
+  <rect class="canvas" width="1320" height="1252"/>
+  <rect class="frame" x="16" y="16" width="1288" height="1220" rx="22"/>
   <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Spring WebFlux with Coroutines and Virtual Thread</text>
   <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">virtual-thread execution model and blocking boundary examples</text>
   <g>
     <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="168.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="170.5">Request/Test</tspan><tspan class="layer-title" x="151.0" y="193.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="220.0">MVC/WebFlux tests,</tspan><tspan class="layer-detail" x="151.0" y="236.0">sample endpoints</tspan></text>
+      <rect x="46.0" y="114.0" width="1228.0" height="518.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
+      <rect x="64.0" y="134.0" width="174" height="478.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="345.5">Request/Test</tspan><tspan class="layer-title" x="151.0" y="368.5">Surface</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="395.0">MVC/WebFlux tests,</tspan><tspan class="layer-detail" x="151.0" y="411.0">sample endpoints</tspan></text>
     </g>
     <g class="layer" data-layer="service">
-      <rect x="46.0" y="300.0" width="1228.0" height="132.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="320.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="350.0">Execution Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="380.0">virtual threads,</tspan><tspan class="layer-detail" x="151.0" y="396.0">coroutines,</tspan><tspan class="layer-detail" x="151.0" y="412.0">blocking work</tspan></text>
+      <rect x="46.0" y="650.0" width="1228.0" height="132.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
+      <rect x="64.0" y="670.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="700.0">Execution Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="730.0">virtual threads,</tspan><tspan class="layer-detail" x="151.0" y="746.0">coroutines,</tspan><tspan class="layer-detail" x="151.0" y="762.0">blocking work</tspan></text>
     </g>
     <g class="layer" data-layer="integration">
-      <rect x="46.0" y="450.0" width="1228.0" height="150.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="470.0" width="174" height="110.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="497.5">Thread Boundary</tspan><tspan class="layer-title" x="151.0" y="520.5">Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="547.0">dispatchers, JDBC,</tspan><tspan class="layer-detail" x="151.0" y="563.0">Tomcat, helpers</tspan></text>
+      <rect x="46.0" y="800.0" width="1228.0" height="242.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
+      <rect x="64.0" y="820.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="893.5">Thread Boundary</tspan><tspan class="layer-title" x="151.0" y="916.5">Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="943.0">dispatchers, JDBC,</tspan><tspan class="layer-detail" x="151.0" y="959.0">Tomcat, helpers</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="618.0" width="1228.0" height="150.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="638.0" width="174" height="110.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="677.0">JVM Runtime</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="707.0">virtual threads,</tspan><tspan class="layer-detail" x="151.0" y="723.0">platform threads,</tspan><tspan class="layer-detail" x="151.0" y="739.0">containers</tspan></text>
+      <rect x="46.0" y="1060.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="64.0" y="1080.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="1110.0">JVM Runtime</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1140.0">virtual threads,</tspan><tspan class="layer-detail" x="151.0" y="1156.0">platform threads,</tspan><tspan class="layer-detail" x="151.0" y="1172.0">containers</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;api" data-label="invokes">
-      <path d="M 704.0 198.0 L 774.0 198.0 L 844.0 198.0" fill="none" stroke="#4F7DB5" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-api)"/>
+    <g class="edge" data-edge="api4-&gt;service0" data-label="delegates">
+      <path d="M 424.0 612.0 L 424.0 641.0 L 592.0 641.0 L 592.0 670.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
     </g>
-    <g class="edge" data-edge="api-&gt;service" data-label="delegates">
-      <path d="M 1039.0 262.0 L 1039.0 291.0 L 774.0 291.0 L 774.0 320.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
+    <g class="edge" data-edge="service1-&gt;infra0" data-label="persists / publishes">
+      <path d="M 928.0 762.0 L 928.0 791.0 L 424.0 791.0 L 424.0 820.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
     </g>
-    <g class="edge" data-edge="service-&gt;infra" data-label="persists / publishes">
-      <path d="M 774.0 412.0 L 774.0 445.5 L 509.0 445.5 L 509.0 479.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
+    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
+      <path d="M 424.0 1022.0 L 424.0 1051.0 L 424.0 1080.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
     </g>
-    <g class="edge" data-edge="infra-&gt;bt" data-label="extends">
-      <path d="M 704.0 525.0 L 774.0 525.0 L 844.0 525.0" fill="none" stroke="#3E927D" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-bt)"/>
+    <g class="node" data-node="entry0" data-lines="Webflux Virtual Thread | App | application bootstrap">
+      <rect x="274.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="171.5">Webflux Virtual Thread</tspan><tspan class="node-title" x="424.0" y="195.5">App</tspan><tspan class="node-detail" x="424.0" y="219.5">application bootstrap</tspan></text>
     </g>
-    <g class="edge" data-edge="bt-&gt;runtime" data-label="adapts">
-      <path d="M 1039.0 580.0 L 1039.0 609.0 L 774.0 609.0 L 774.0 638.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+    <g class="node" data-node="entry1" data-lines="Abstract Webflux Virtual | Thread Test | virtualthread">
+      <rect x="610.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="171.5">Abstract Webflux Virtual</tspan><tspan class="node-title" x="760.0" y="195.5">Thread Test</tspan><tspan class="node-detail" x="760.0" y="219.5">virtualthread</tspan></text>
     </g>
-    <g class="node" data-node="entry" data-lines="Virtual Thread Surface | WebfluxVirtualThreadApp | AbstractWebfluxVirtualThreadTest | AbstractDispatcherControllerTest | Virtualthreads Spring Webflux">
-      <rect x="314.0" y="134.0" width="390.0" height="128.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="169.0">Virtual Thread Surface</tspan><tspan class="node-detail" x="509.0" y="193.0">WebfluxVirtualThreadApp</tspan><tspan class="node-detail" x="509.0" y="210.0">AbstractWebfluxVirtualThreadTest</tspan><tspan class="node-detail" x="509.0" y="227.0">AbstractDispatcherControllerTest</tspan><tspan class="node-detail" x="509.0" y="244.0">Virtualthreads Spring Webflux</tspan></text>
+    <g class="node" data-node="entry2" data-lines="Abstract Dispatcher | Controller Test | HTTP adapter">
+      <rect x="946.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="171.5">Abstract Dispatcher</tspan><tspan class="node-title" x="1096.0" y="195.5">Controller Test</tspan><tspan class="node-detail" x="1096.0" y="219.5">HTTP adapter</tspan></text>
     </g>
-    <g class="node" data-node="api" data-lines="Threaded Web Adapters | NettyConfig | SchedulingConfig | AbstractDispatcherController | CustomDispatcherController">
-      <rect x="844.0" y="134.0" width="390.0" height="128.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="169.0">Threaded Web Adapters</tspan><tspan class="node-detail" x="1039.0" y="193.0">NettyConfig</tspan><tspan class="node-detail" x="1039.0" y="210.0">SchedulingConfig</tspan><tspan class="node-detail" x="1039.0" y="227.0">AbstractDispatcherController</tspan><tspan class="node-detail" x="1039.0" y="244.0">CustomDispatcherController</tspan></text>
+    <g class="node" data-node="entry3" data-lines="Custom Dispatcher | Controller Test | HTTP adapter">
+      <rect x="274.0" y="258.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="295.5">Custom Dispatcher</tspan><tspan class="node-title" x="424.0" y="319.5">Controller Test</tspan><tspan class="node-detail" x="424.0" y="343.5">HTTP adapter</tspan></text>
     </g>
-    <g class="node" data-node="service" data-lines="Execution Model | Banner | DispatcherType">
-      <rect x="474.0" y="320.0" width="600.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="354.0">Execution Model</tspan><tspan class="node-detail" x="774.0" y="378.0">Banner</tspan><tspan class="node-detail" x="774.0" y="395.0">DispatcherType</tspan></text>
+    <g class="node" data-node="entry4" data-lines="Default Dispatcher | Controller Test | HTTP adapter">
+      <rect x="610.0" y="258.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="295.5">Default Dispatcher</tspan><tspan class="node-title" x="760.0" y="319.5">Controller Test</tspan><tspan class="node-detail" x="760.0" y="343.5">HTTP adapter</tspan></text>
     </g>
-    <g class="node" data-node="infra" data-lines="Blocking Boundary | AsyncConfig">
-      <rect x="314.0" y="479.0" width="390.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="521.5">Blocking Boundary</tspan><tspan class="node-detail" x="509.0" y="545.5">AsyncConfig</tspan></text>
+    <g class="node" data-node="api0" data-lines="Netty Config | configuration">
+      <rect x="946.0" y="265.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="307.5">Netty Config</tspan><tspan class="node-detail" x="1096.0" y="331.5">configuration</tspan></text>
     </g>
-    <g class="node" data-node="bt" data-lines="bluetape4k Coroutine APIs | workshop | core | virtualthread">
-      <rect x="844.0" y="470.0" width="390.0" height="110.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="504.5">bluetape4k Coroutine APIs</tspan><tspan class="node-detail" x="1039.0" y="528.5">workshop</tspan><tspan class="node-detail" x="1039.0" y="545.5">core</tspan><tspan class="node-detail" x="1039.0" y="562.5">virtualthread</tspan></text>
+    <g class="node" data-node="api1" data-lines="Scheduling Config | configuration">
+      <rect x="274.0" y="389.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="431.5">Scheduling Config</tspan><tspan class="node-detail" x="424.0" y="455.5">configuration</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="JVM Thread Runtime | SQL / R2DBC | Elasticsearch | Testcontainers">
-      <rect x="474.0" y="638.0" width="600.0" height="110.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="672.5">JVM Thread Runtime</tspan><tspan class="node-detail" x="774.0" y="696.5">SQL / R2DBC</tspan><tspan class="node-detail" x="774.0" y="713.5">Elasticsearch</tspan><tspan class="node-detail" x="774.0" y="730.5">Testcontainers</tspan></text>
+    <g class="node" data-node="api2" data-lines="Abstract Dispatcher | Controller | HTTP adapter">
+      <rect x="610.0" y="382.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="419.5">Abstract Dispatcher</tspan><tspan class="node-title" x="760.0" y="443.5">Controller</tspan><tspan class="node-detail" x="760.0" y="467.5">HTTP adapter</tspan></text>
+    </g>
+    <g class="node" data-node="api3" data-lines="Custom Dispatcher | Controller | HTTP adapter">
+      <rect x="946.0" y="382.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="419.5">Custom Dispatcher</tspan><tspan class="node-title" x="1096.0" y="443.5">Controller</tspan><tspan class="node-detail" x="1096.0" y="467.5">HTTP adapter</tspan></text>
+    </g>
+    <g class="node" data-node="api4" data-lines="Default Dispatcher | Controller | HTTP adapter">
+      <rect x="274.0" y="506.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="543.5">Default Dispatcher</tspan><tspan class="node-title" x="424.0" y="567.5">Controller</tspan><tspan class="node-detail" x="424.0" y="591.5">HTTP adapter</tspan></text>
+    </g>
+    <g class="node" data-node="service0" data-lines="Banner | domain model">
+      <rect x="442.0" y="670.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="592.0" y="712.5">Banner</tspan><tspan class="node-detail" x="592.0" y="736.5">domain model</tspan></text>
+    </g>
+    <g class="node" data-node="service1" data-lines="Dispatcher Type | domain model">
+      <rect x="778.0" y="670.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="928.0" y="712.5">Dispatcher Type</tspan><tspan class="node-detail" x="928.0" y="736.5">domain model</tspan></text>
+    </g>
+    <g class="node" data-node="infra0" data-lines="Async Config | configuration">
+      <rect x="274.0" y="820.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="862.5">Async Config</tspan><tspan class="node-detail" x="424.0" y="886.5">configuration</tspan></text>
+    </g>
+    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k Coroutine APIs">
+      <rect x="610.0" y="820.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="862.5">workshop</tspan><tspan class="node-detail" x="760.0" y="886.5">bluetape4k Coroutine APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt1" data-lines="core | bluetape4k Coroutine APIs">
+      <rect x="946.0" y="820.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="862.5">core</tspan><tspan class="node-detail" x="1096.0" y="886.5">bluetape4k Coroutine APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt2" data-lines="virtualthread | bluetape4k Coroutine APIs">
+      <rect x="274.0" y="930.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="972.5">virtualthread</tspan><tspan class="node-detail" x="424.0" y="996.5">bluetape4k Coroutine APIs</tspan></text>
+    </g>
+    <g class="node" data-node="runtime0" data-lines="SQL / R2DBC | JVM Thread Runtime">
+      <rect x="274.0" y="1080.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="1122.5">SQL / R2DBC</tspan><tspan class="node-detail" x="424.0" y="1146.5">JVM Thread Runtime</tspan></text>
+    </g>
+    <g class="node" data-node="runtime1" data-lines="Elasticsearch | JVM Thread Runtime">
+      <rect x="610.0" y="1080.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1122.5">Elasticsearch</tspan><tspan class="node-detail" x="760.0" y="1146.5">JVM Thread Runtime</tspan></text>
+    </g>
+    <g class="node" data-node="runtime2" data-lines="Testcontainers | JVM Thread Runtime">
+      <rect x="946.0" y="1080.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="1122.5">Testcontainers</tspan><tspan class="node-detail" x="1096.0" y="1146.5">JVM Thread Runtime</tspan></text>
     </g>
   </g>
 </svg>

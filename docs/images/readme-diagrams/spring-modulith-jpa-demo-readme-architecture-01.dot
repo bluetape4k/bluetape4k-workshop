@@ -26,16 +26,31 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Example Entrypoints\nSpringModulith\nAppRestControllerTest\nSpringModulithTest\nSpring Modulith Jpa Demo tests", fillcolor="#FFF8E7"];
-  api [label="API / Adapter Layer\nDepartmentManagement\nEmployeeManagement\nGatewayManagement", fillcolor="#EEF7FF"];
-  service [label="Application Services\nOrganizationAddEvent\nOrganizationRemoveEvent\nDepartmentDTO\nDepartmentExternalAPI", fillcolor="#F1F8E9"];
-  infra [label="Framework Layer\nSpring boot4 dependencies\nSpring modulith bom\nSpring modulith actuator\nSpring modulith observability", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nhibernate\ntestcontainers\ncoroutines", fillcolor="#EAF7F0"];
-  runtime [label="Runtime Dependencies\nSQL / R2DBC\nTestcontainers", fillcolor="#FFF1F1"];
+  entry0 [label="Spring Modulith\nservices", fillcolor="#FFF8E7"];
+  entry1 [label="App Rest Controller Test\nservices", fillcolor="#FFF8E7"];
+  entry2 [label="Spring Modulith Test\nservices", fillcolor="#FFF8E7"];
+  entry3 [label="Department Module Test\ndepartment", fillcolor="#FFF8E7"];
+  entry4 [label="Employee Module Test\nemployee", fillcolor="#FFF8E7"];
+  api0 [label="Department Management\nmanagement", fillcolor="#EEF7FF"];
+  api1 [label="Employee Management\nmanagement", fillcolor="#EEF7FF"];
+  api2 [label="Gateway Management\ngateway", fillcolor="#EEF7FF"];
+  service0 [label="Organization Add Event\nservices", fillcolor="#F1F8E9"];
+  service1 [label="Organization Remove Event\nservices", fillcolor="#F1F8E9"];
+  service2 [label="Department DTO\ndepartment", fillcolor="#F1F8E9"];
+  service3 [label="Department External API\ndepartment", fillcolor="#F1F8E9"];
+  service4 [label="Department Internal API\ndepartment", fillcolor="#F1F8E9"];
+  service5 [label="Department Mapper\nmapper", fillcolor="#F1F8E9"];
+  infra0 [label="Spring boot4 dependencies\nFramework Layer", fillcolor="#F5F0FF"];
+  infra1 [label="Spring modulith bom\nFramework Layer", fillcolor="#F5F0FF"];
+  infra2 [label="Spring modulith actuator\nFramework Layer", fillcolor="#F5F0FF"];
+  infra3 [label="Spring modulith observability\nFramework Layer", fillcolor="#F5F0FF"];
+  bt0 [label="hibernate\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  bt1 [label="testcontainers\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  bt2 [label="coroutines\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="SQL / R2DBC\nRuntime Dependencies", fillcolor="#FFF1F1"];
+  runtime1 [label="Testcontainers\nRuntime Dependencies", fillcolor="#FFF1F1"];
 
-  entry -> api [label="invokes"];
-  api -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  api2 -> service0 [label="delegates"];
+  service5 -> infra0 [label="persists / publishes"];
+  bt2 -> runtime0 [label="adapts"];
 }
