@@ -35,27 +35,27 @@ tags:
     - Difficulty-Intermediate
 ---
 
-## 취지
+## Purpose
 
-복잡한 객체의 생성을 표현으로부터 분리하여 동일한 생성 프로세스가 다른 표현을 만들 수 있도록 합니다.
+Separates the creation of complex objects from their representations, allowing the same creation process to create different representations.
 
-## 설명
+## explanation
 
-실제 예제
+real example
 
-> 역할을 하는 게임을 위한 캐릭터 생성기를 상상해보십시오. 가장 쉬운 옵션은 컴퓨터가 캐릭터를 생성하도록 하는 것입니다.
-> 그러나 직업, 성별, 머리 색깔 등과 같은 캐릭터 세부 정보를 선택하려면 캐릭터 생성이 모든 선택 사항이 준비되었을 때 완료되는 단계별 프로세스가 됩니다.
+> Imagine a character creator for a role-playing game. The easiest option is to let the computer create your character.
+> However, choosing character details such as occupation, gender, hair color, etc. makes character creation a step-by-step process that is completed when all choices are in place.
 
-간단히 말하면
+To put it simply
 
-> 객체의 다양한 플레이버를 생성하고 생성자 오염을 피할 수 있습니다.
-> 객체의 여러 가지 플레이버가 있을 수 있는 경우 유용합니다. 또는 객체 생성에 많은 단계가 포함되어 있는 경우 유용합니다.
+> You can create different flavors of objects and avoid constructor pollution.
+> This is useful when there may be multiple flavors of an object. Alternatively, it is useful when object creation involves many steps.
 
-Wikipedia에 따르면
+According to Wikipedia
 
-> 빌더 패턴은 망원경 생성자 안티 패턴에 대한 해결책을 찾기 위한 의도로 하는 객체 생성 소프트웨어 디자인 패턴입니다.
+> The Builder pattern is an object creation software design pattern intended to find a solution to the telescope constructor anti-pattern.
 
-그렇다면 망원경 생성자 안티 패턴에 대해 조금 더 설명하겠습니다. 어느 순간이든 우리는 아래와 같은 생성자를 본 적이 있습니다.:
+So, let me explain a little more about the telescope constructor anti-pattern. At some point we have seen constructors like this:
 
 ```kotlin
 class Hero(
@@ -70,13 +70,13 @@ class Hero(
 }
 ```
 
-생성자 매개변수의 수가 금방 너무 많아질 수 있으며 매개변수의 배열을 이해하기 어려워질 수 있습니다.
-또한 이 매개변수 목록은 나중에 더 많은 옵션을 추가하려는 경우 계속해서 증가할 수 있습니다.
-이것은 망원경 생성자 안티 패턴이라고 합니다.
+The number of constructor parameters can quickly become overwhelming, and their arrangement can become difficult to understand.
+Additionally, this list of parameters can continue to grow if you want to add more options later.
+This is called the telescope generator anti-pattern.
 
-**프로그램 예제**
+**Program example**
 
-이상적인 대안은 빌더 패턴을 사용하는 것입니다. 먼저 만들고자 하는 Heror가 있습니다.
+An ideal alternative would be to use the Builder pattern. First, there is the Heror we want to create.
 
 ```kotlin
 class Hero private constructor(builder: Hero.Builder) {
@@ -108,7 +108,7 @@ class Hero private constructor(builder: Hero.Builder) {
 }
 ```
 
-그런 다음 빌더를 만듭니다.
+Then create a builder.
 
 ```kotlin
 class Builder(val profession: Profession, val name: String) {
@@ -134,7 +134,7 @@ class Builder(val profession: Profession, val name: String) {
 }
 ```
 
-그런 다음 다음과 같이 사용할 수 있습니다 :
+Then you can use it like this:
 
 ```kotlin
 val mage = Hero.Builder(Profession.MAGE, "Riobard")
@@ -143,14 +143,14 @@ val mage = Hero.Builder(Profession.MAGE, "Riobard")
     .build()
 ```
 
-## 적용 가능
+## Applicable
 
-Builder 패턴 사용하는 경우
+When using the Builder pattern
 
-* 생성 프로세스가 복잡한 객체의 부분과 객체를 구성하는 방법과 독립적이어야 합니다
-* 객체 생성에 대한 다른 표현을 허용해야 합니다
+* The creation process must be independent of the parts of the complex object and how the object is constructed
+* Should allow different expressions for object creation
 
-## 예제
+## Example
 
 * [java.lang.StringBuilder](http://docs.oracle.com/javase/8/docs/api/java/lang/StringBuilder.html)
 * [java.nio.ByteBuffer](http://docs.oracle.com/javase/8/docs/api/java/nio/ByteBuffer.html#put-byte-) as well as similar
@@ -159,7 +159,7 @@ Builder 패턴 사용하는 경우
 * All implementations of [java.lang.Appendable](http://docs.oracle.com/javase/8/docs/api/java/lang/Appendable.html)
 * [Apache Camel builders](https://github.com/apache/camel/tree/0e195428ee04531be27a0b659005e3aa8d159d23/camel-core/src/main/java/org/apache/camel/builder)
 
-## 참고
+## reference
 
 * [Design Patterns: Elements of Reusable Object-Oriented Software](http://www.amazon.com/Design-Patterns-Elements-Reusable-Object-Oriented/dp/0201633612)
 * [Effective Java (2nd Edition)](http://www.amazon.com/Effective-Java-Edition-Joshua-Bloch/dp/0321356683)

@@ -27,11 +27,11 @@ The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k h
 
 ![Vert.x Demo sequence diagram](../docs/images/readme-diagrams/vertx-coroutines-sequence-01.png)
 
-## 모듈 구조
+## Module Structure
 
 ![vertx Architecture diagram](../docs/images/readme-diagrams/vertx-diagram-01.png)
 
-## 참고 자료
+## References
 
 * [Vertx Documents](https://vertx.io/docs/)
 * [Vertx Lang Kotlin Coroutines](https://vertx.io/docs/vertx-lang-kotlin-coroutines/kotlin/)

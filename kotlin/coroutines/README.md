@@ -25,124 +25,124 @@ The module is organized around the sample entry point or test fixture, the bluet
 
 The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
-Kotlin Coroutines의 핵심 개념을 학습하는 예제 모음입니다.
+A collection of examples to learn the core concepts of Kotlin Coroutines.
 
-## 코루틴 구조 개요
+## Coroutine structure overview
 
 ![coroutines Architecture diagram](../../docs/images/readme-diagrams/kotlin-coroutines-diagram-01.png)
 
-## 예제 범주
+## Example Category
 
-### 기초 (`guide/`)
-| 파일 | 내용 |
+### Basics (`guide/`)
+| file | detail |
 |---|---|
-| `CoroutineBuilderExamples` | `launch`, `async`, `runBlocking` 빌더 사용법 |
-| `CoroutineContextExamples` | `CoroutineContext`, `Dispatcher` 이해 |
-| `SuspendExamples` | suspend 함수 작성 패턴 |
-| `FlowExamples` | Cold Stream인 `Flow` 기본 연산자 |
-| `SharedFlowExamples` | Hot Stream인 `SharedFlow` / `StateFlow` |
-| `ChannelExamples` | `Channel`을 이용한 Producer-Consumer 패턴 |
-| `ChannelAsFlowExamples` | Channel을 Flow로 변환하는 패턴 |
-| `MDCContextExamples` | 로그 MDC와 Coroutine Context 연동 |
+| `CoroutineBuilderExamples` | How to use `launch`, `async`, `runBlocking` builders |
+| `CoroutineContextExamples` | Understand `CoroutineContext`, `Dispatcher` |
+| `SuspendExamples` | pattern for writing suspend functions |
+| `FlowExamples` | Cold Stream `Flow` Basic Operator |
+| `SharedFlowExamples` | Hot Stream `SharedFlow` / `StateFlow` |
+| `ChannelExamples` | Producer-Consumer pattern using `Channel` |
+| `ChannelAsFlowExamples` | Pattern to convert Channel to Flow |
+| `MDCContextExamples` | Log MDC and Coroutine Context integration |
 
-### 취소 처리 (`cancellation/`)
-- `CancellationExamples` — 코루틴 취소 전파, `CancellationException` 처리, `NonCancellable` 활용
+### Cancellation processing (`cancellation/`)
+- `CancellationExamples` — Propagate coroutine cancellation, handle `CancellationException`, utilize `NonCancellable`
 
-### 커스텀 CoroutineContext (`context/`)
-- `CounterCoroutineContext` — 상태를 가진 커스텀 Context Element
-- `UuidProviderCoroutineContext` — 요청별 UUID 제공 Context
+### Custom CoroutineContext (`context/`)
+- `CounterCoroutineContext` — Custom Context Element with state
+- `UuidProviderCoroutineContext` — UUID provided for each request Context
 
-### 빌더 심화 (`builders/`)
-- `CoroutineBuilderExamples` — `supervisorScope`, `coroutineScope`, 에러 전파 차이
-- `CoroutineContextBuilderExamples` — `withContext`, Context 전환 패턴
+### Builder Advanced (`builders/`)
+- `CoroutineBuilderExamples` — `supervisorScope`, `coroutineScope`, error propagation difference
+- `CoroutineContextBuilderExamples` — `withContext`, Context switching pattern
 
-### 스코프 관리 (`scope/`)
-- `CoroutineScopeExamples` — 구조화된 동시성(Structured Concurrency)
-- `SpringCoroutineScopeTest` — Spring Bean 수명주기와 CoroutineScope 연동
+### Scope Management (`scope/`)
+- `CoroutineScopeExamples` — Structured Concurrency
+- `SpringCoroutineScopeTest` — Spring Bean life cycle and CoroutineScope integration
 
-### Flow 테스트 (`tests/`)
-- `TurbineExamples` — [Turbine](https://github.com/cashapp/turbine) 라이브러리를 사용한 Flow 테스트
+### Flow Test (`tests/`)
+- `TurbineExamples` — [Turbine](Flow test using https://github.com/cashapp/turbine) library
 
-## 사용된 bluetape4k 기능
+## bluetape4k features used
 
-| 기능 | 아티팩트 | 코드 위치 | 이점 |
+| function | artifact | code location | advantage |
 |---|---|---|---|
-| `KLoggingChannel` | `bluetape4k-logging` | 모든 companion object | 코루틴 컨텍스트를 포함한 구조적 로깅; SLF4J MDC와 연동 |
-| `suspendLogging { }` | `bluetape4k-logging` | `DispatcherExamples` | suspend 컨텍스트에서 안전하게 로그 메시지 빌드 |
-| `coroutines.support.log` | `bluetape4k-coroutines` | `DispatcherExamples` | Job에 이름 태그 달아 완료 로그 자동 출력 |
-| `Flow<T>.log()` | `bluetape4k-coroutines` | `FlowBuilderExamples`, `FlowLifecycleExamples` | Flow 파이프라인 중간에 emit 값 로깅 |
-| `coroutines.tests.assertResult` | `bluetape4k-coroutines` | `FlowBuilderExamples`, `CallbackFlowExamples` | Flow 결과를 Turbine 없이 검증하는 테스트 유틸 |
-| `PropertyCoroutineContext` | `bluetape4k-coroutines` | `context/` 패키지 | 타입 안전 키-값 저장소를 가진 커스텀 CoroutineContext 구현 |
-| `runSuspendTest { }` | `bluetape4k-junit5` | 테스트 전체 | JUnit 5에서 suspend 테스트를 실행하는 확장 함수 |
-| `Fakers` | `bluetape4k-junit5` | 테스트 픽스처 | JavaFaker 기반 테스트 데이터 생성 유틸리티 |
-| `OutputCapture` / `OutputCapturer` | `bluetape4k-junit5` | 출력 검증 테스트 | stdout/stderr 캡처 JUnit 5 확장 |
-| `bluetape4k-assertions` | `bluetape4k-core` | 테스트 전체 | Kluent 스타일의 가독성 높은 단언문 (`shouldBeEqualTo`, `shouldNotBeNull` 등) |
-| `Uuid` (idgenerators) | `bluetape4k-idgenerators` | `UuidProviderCoroutineContext` | UUID v7 등 다양한 ID 생성 전략 |
-| `withLoggingContext { }` | `bluetape4k-logging` | MDC 연동 예제 | Kotlin DSL 방식의 MDC context 설정 |
+| `KLoggingChannel` | `bluetape4k-logging` | All companion objects | Structured logging including coroutine context; Linked with SLF4J MDC |
+| `suspendLogging { }` | `bluetape4k-logging` | `DispatcherExamples` | Building log messages safely in suspend context |
+| `coroutines.support.log` | `bluetape4k-coroutines` | `DispatcherExamples` | Add name tag to job and automatically print completion log |
+| `Flow<T>.log()` | `bluetape4k-coroutines` | `FlowBuilderExamples`, `FlowLifecycleExamples` | Logging emit values ​​in the middle of the flow pipeline |
+| `coroutines.tests.assertResult` | `bluetape4k-coroutines` | `FlowBuilderExamples`, `CallbackFlowExamples` | Test utility that verifies flow results without turbine |
+| `PropertyCoroutineContext` | `bluetape4k-coroutines` | `context/` package | Custom CoroutineContext implementation with type-safe key-value store |
+| `runSuspendTest { }` | `bluetape4k-junit5` | test full | Extension function to run suspend tests in JUnit 5 |
+| `Fakers` | `bluetape4k-junit5` | test fixture | JavaFaker-based test data generation utility |
+| `OutputCapture` / `OutputCapturer` | `bluetape4k-junit5` | Output Verification Test | stdout/stderr capture JUnit 5 extension |
+| `bluetape4k-assertions` | `bluetape4k-core` | test full | Kluent-style highly readable assertions (`shouldBeEqualTo`, `shouldNotBeNull`, etc.) |
+| `Uuid` (idgenerators) | `bluetape4k-idgenerators` | `UuidProviderCoroutineContext` | Various ID generation strategies, including UUID v7 |
+| `withLoggingContext { }` | `bluetape4k-logging` | MDC integration example | Kotlin DSL-based MDC context setting |
 
 ## bluetape4k Before / After
 
-### `KLoggingChannel` vs 표준 Logger
+### `KLoggingChannel` vs Standard Logger
 
 ```kotlin
-// Before — SLF4J LoggerFactory 직접 사용
+// Before — Direct use of SLF4J LoggerFactory
 class MyClass {
     companion object {
         private val log = LoggerFactory.getLogger(MyClass::class.java)
     }
 }
 
-// After — bluetape4k KLoggingChannel (코루틴 컨텍스트 포함)
+// After — bluetape4k KLoggingChannel (with coroutine context)
 class MyClass {
     companion object: KLoggingChannel()
-    // log 프로퍼티 자동 생성 + 코루틴 컨텍스트 정보 로그에 포함
+// Automatic creation of log property + Included in coroutine context information log
 }
 ```
 
-### `suspendLogging { }` vs 일반 로그 호출
+### `suspendLogging { }` vs general log call
 
 ```kotlin
-// Before — 코루틴 내 일반 로그 (스레드 정보만 포함)
+// Before — General log in coroutine (only includes thread information)
 launch(Dispatchers.IO) {
     log.debug("Running on thread ${Thread.currentThread().name}")
 }
 
-// After — bluetape4k suspendLogging (코루틴 이름 + 스레드 정보 포함)
+// After — bluetape4k suspendLogging (includes coroutine name + thread information)
 launch(Dispatchers.IO) {
     suspendLogging { "Running on thread ${Thread.currentThread().name}" }
-    // 출력 예: [DefaultDispatcher-worker-1 @coroutine#3] Running on thread ...
+// Example output: [DefaultDispatcher-worker-1 @coroutine#3] Running on thread ...
 }
 ```
 
-### `Flow<T>.log()` 디버깅 연산자
+### `Flow<T>.log()` Debugging operators
 
 ```kotlin
-// Before — 중간 값 확인을 위한 onEach + println
+// Before — onEach + println to check intermediate values
 flow { emit(1); emit(2) }
     .onEach { println("value: $it") }
     .collect()
 
-// After — bluetape4k .log() 확장 함수
+// After — bluetape4k .log() extension function
 flow { emit(1); emit(2) }
-    .log("my-flow")   // 자동으로 emit/complete/error 이벤트 로깅
+.log("my-flow") // Automatically log emit/complete/error events
     .collect()
 ```
 
 ### `coroutines.tests.assertResult` vs Turbine
 
 ```kotlin
-// Before — Turbine 라이브러리 의존 필요
+// Before — Requires Turbine library dependency
 someFlow.test {
     awaitItem() shouldBeEqualTo 1
     awaitItem() shouldBeEqualTo 2
     awaitComplete()
 }
 
-// After — bluetape4k assertResult (추가 의존성 없음)
+// After — bluetape4k assertResult (no additional dependencies)
 someFlow.assertResult(1, 2)
 ```
 
-## 참고
+## reference
 
-- [Kotlin Coroutines 공식 가이드](https://kotlinlang.org/docs/coroutines-guide.html)
-- [Kotlin Flow 공식 문서](https://kotlinlang.org/docs/flow.html)
+- [Kotlin Coroutines Official Guide](https://kotlinlang.org/docs/coroutines-guide.html)
+- [Kotlin Flow official documentation](https://kotlinlang.org/docs/flow.html)

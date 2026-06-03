@@ -4,28 +4,55 @@
 
 ## 예제 시나리오
 
+이 예제는 **lazyLoading**을 실행 가능한 Kotlin 언어 및 코루틴 패턴 워크샵 조각으로 다룹니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리나 프레임워크 API 관찰에 초점을 둡니다.
+
 ## 아키텍처 다이어그램
 
 ![lazyLoading Graphviz 아키텍처 다이어그램](../../../../../../../../../../../docs/images/readme-diagrams/kotlin-design-patterns-src-main-kotlin-io-bluetape4k-workshop-kotlin-designpatterns-lazyloading-readme-architecture-01.png)
 
-모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성으로 구성됩니다. README와 코드를 비교할 때는 `io.bluetape4k.workshop.kotlin` 패키지 아래의 구현을 기준으로 삼습니다.
+모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성을 중심으로 구성됩니다. README와 코드를 비교할 때는 `io.bluetape4k.workshop.kotlin` 패키지 아래의 구현을 기준으로 삼습니다.
 
 ## 흐름 다이어그램
 
-1. `lazyLoading` 예제에 필요한 로컬 런타임을 준비합니다.
+1. `lazyLoading`에 필요한 로컬 런타임을 준비합니다.
 2. 예제 시나리오를 담당하는 애플리케이션, 컨트롤러, 서비스 또는 테스트 픽스처를 실행합니다.
-3. 반복적인 인프라 처리는 bluetape4k 유틸리티 또는 Spring/Kotlin 통합 기능에 위임합니다.
-4. 샘플 출력, HTTP 응답, 저장소 상태, metric, trace 또는 테스트 기대값으로 결과를 검증합니다.
+3. 반복적인 인프라 작업을 bluetape4k 유틸리티 또는 Spring/Kotlin 통합 기능에 위임합니다.
+4. 샘플 출력, HTTP 응답, 저장소 상태, metric, trace 또는 테스트 기대값으로 보이는 결과를 검증합니다.
 
 ## 시퀀스 다이어그램
 
-핵심 시퀀스는 호출자 또는 테스트 픽스처 -> 워크샵 어댑터 -> bluetape4k 헬퍼/API -> 외부 런타임 또는 인메모리 백엔드 -> 검증/응답 순서입니다. 전용 시퀀스 이미지가 있는 모듈은 아래 이미지가 상호작용 순서를 보여주며, 없는 경우 소스 테스트가 실행 가능한 시퀀스의 기준입니다.
+핵심 시퀀스는 호출자 또는 테스트 픽스처 -> 워크샵 어댑터 -> bluetape4k 헬퍼/API -> 외부 런타임 또는 인메모리 백엔드 -> 검증/응답 순서입니다. 이 모듈에 전용 시퀀스 자산이 있으면 아래 이미지가 상호작용 순서를 보여주며, 그렇지 않으면 소스 테스트가 실행 가능한 시퀀스의 기준입니다.
 
-## 원문 상세 항목
+---
+layout: pattern
+title: Lazy Loading
+folder: lazy-loading
+permalink: /patterns/lazy-loading/
+categories: Other
+tags:
+    - Java
+    - Difficulty-Beginner
+    - Idiom
+    - Performance
+---
 
-영어 README에는 다음 상세 항목이 포함되어 있습니다. 한국어 요약은 위의 시나리오/아키텍처/흐름을 기준으로 읽고, 코드 예제와 설정 세부사항은 영어 README의 같은 모듈 설명을 함께 참고하세요.
+## 목적
 
-- 취지
-- 적용 방법
-- 실제 사례
-- 참고
+Lazy Loading은 객체가 실제로 필요할 때까지 초기화를 미루기 위해 자주 사용하는 디자인 패턴입니다.
+올바르게 사용하면 프로그램의 운영 효율성을 높이는 데 도움이 됩니다.
+
+![Lazy Loading](./doc/lazy-loading.png "Lazy Loading")
+
+## 적용 방법
+
+Lazy Loading 방식은 다음과 같은 경우에 사용합니다.
+
+* 즉시 로딩 비용이 크거나, 로딩할 객체가 전혀 필요하지 않을 수도 있는 경우
+
+## 실제 사례
+
+* JPA annotations @OneToOne, @OneToMany, @ManyToOne, @ManyToMany and fetch = FetchType.LAZY
+
+## 참고
+
+* [J2EE Design Patterns](http://www.amazon.com/J2EE-Design-Patterns-William-Crawford/dp/0596004273/ref=sr_1_2)

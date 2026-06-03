@@ -17,9 +17,9 @@ This example exercises **Gatling Load Testing Tutorial for Kotlin** as a runnabl
 
 The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
-원본: [github: mdportnov/kotlin-gatling-tutorial](https://github.com/mdportnov/kotlin-gatling-tutorial)
+Original: [github: mdportnov/kotlin-gatling-tutorial](https://github.com/mdportnov/kotlin-gatling-tutorial)
 
-원본에서는 MySQL 를 사용하는 데, 여기서는 편의를 위핸 Testcontainers + MongoDB 를 사용합니다.
+The original uses MySQL, but here, for convenience, Testcontainers + MongoDB are used.
 
 This repository contains the code examples and resources for the
 article ["Gatling Load Testing Tutorial"](https://medium.com/@mdportnov/stress-testing-with-gatling-kotlin-part-2-1eb13d489dc9),

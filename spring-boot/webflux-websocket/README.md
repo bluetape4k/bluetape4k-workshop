@@ -25,29 +25,29 @@ The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k h
 
 ![Webflux & Websockets Demo sequence diagram](../../docs/images/readme-diagrams/spring-boot-webflux-websocket-sequence-01.png)
 
-원본: [sample-webflux-websockets](https://github.com/ketangit/sample-webflux-websockets)
+Original source: [sample-webflux-websockets](https://github.com/ketangit/sample-webflux-websockets)
 
-## 소개
+## Introduction
 
-Webflux의 비동기 방식으로 Websocket 통신을 하는 방식에 대한 예제입니다.
+This example demonstrates asynchronous WebSocket communication with WebFlux.
 
-## WebSocket 연결 및 메시지 흐름
+## WebSocket Connection and Message Flow
 
 ![WebSocket diagram](../../docs/images/readme-diagrams/spring-boot-webflux-websocket-sequence-01.png)
 
-## 주요 컴포넌트
+## Main Components
 
-| 클래스 | 역할 |
+| Class | Role |
 |---|---|
-| `ReactiveWebSocketConfiguration` | `/event-emitter` 경로에 핸들러 매핑, `WebSocketHandlerAdapter` 빈 등록 |
-| `ReactiveWebSocketHandler` | `WebSocketSession`을 받아 Quote 스트림을 텍스트 메시지로 전송 |
-| `QuoteGenerator` | 7개 주식 티커(APPL, TSLA, GOOG 등)의 가격을 주기적으로 생성하는 서비스 |
-| `SampleWebfluxRouter` | HTTP 라우터 설정 |
-| `NettyConfig` | Netty 서버 설정 |
-| `Quote` | 티커, 가격, 타임스탬프를 포함하는 데이터 모델 |
-| `Event` | traceId(UUID v7) + Quote 목록을 묶는 이벤트 래퍼 |
+| `ReactiveWebSocketConfiguration` | Maps the handler to `/event-emitter` and registers the `WebSocketHandlerAdapter` bean |
+| `ReactiveWebSocketHandler` | Receives a `WebSocketSession` and sends the Quote stream as text messages |
+| `QuoteGenerator` | Service that periodically generates prices for seven stock tickers such as APPL, TSLA, and GOOG |
+| `SampleWebfluxRouter` | Configures HTTP routes |
+| `NettyConfig` | Configures the Netty server |
+| `Quote` | Data model containing ticker, price, and timestamp |
+| `Event` | Event wrapper that combines traceId (UUID v7) + a list of Quotes |
 
-## 데이터 모델
+## Data Model
 
 ```kotlin
 data class Quote(
@@ -57,14 +57,14 @@ data class Quote(
 )
 
 data class Event(
-    val id: String,       // UUID v7 기반 traceId
+    val id: String,       // UUID v7 based traceId
     val data: List<Quote>,
 )
 ```
 
-## WebSocket 핸들러 동작 방식
+## WebSocket Handler Behavior
 
-`ReactiveWebSocketHandler`는 `QuoteGenerator.fetchQuoteStringAsFlux(Duration.ofSeconds(2))`로 2초 간격 Flux를 구독하여 세션에 전송하고, 동시에 클라이언트에서 수신되는 메시지도 로깅합니다.
+`ReactiveWebSocketHandler` subscribes to a Flux emitted every two seconds by `QuoteGenerator.fetchQuoteStringAsFlux(Duration.ofSeconds(2))`, sends it to the session, and also logs messages received from the client.
 
 ```kotlin
 override fun handle(session: WebSocketSession): Mono<Void> {
@@ -77,16 +77,16 @@ override fun handle(session: WebSocketSession): Mono<Void> {
 }
 ```
 
-`QuoteGenerator`는 Reactor `Flux`(동기)와 Kotlin `Flow`(코루틴) 두 가지 방식을 모두 제공합니다. Backpressure 처리를 위해 `conflate()`(Flow의 `onBackpressureDrop()` 상당)를 적용합니다.
+`QuoteGenerator` provides both Reactor `Flux` (synchronous) and Kotlin `Flow` (coroutine) styles. It applies `conflate()` for backpressure handling, equivalent to Flow's `onBackpressureDrop()`.
 
-## 실행 방법
+## How to Run
 
 ```bash
 ./gradlew :webflux-websocket:bootRun
-# WebSocket 엔드포인트: ws://localhost:8080/event-emitter
+# WebSocket endpoint: ws://localhost:8080/event-emitter
 ```
 
-## 참고
+## References
 
-- [Spring WebFlux WebSocket 공식 문서](https://docs.spring.io/spring-framework/reference/web/webflux-websocket.html)
-- 원본: [sample-webflux-websockets](https://github.com/ketangit/sample-webflux-websockets)
+- [Official Spring WebFlux WebSocket documentation](https://docs.spring.io/spring-framework/reference/web/webflux-websocket.html)
+- Original source: [sample-webflux-websockets](https://github.com/ketangit/sample-webflux-websockets)

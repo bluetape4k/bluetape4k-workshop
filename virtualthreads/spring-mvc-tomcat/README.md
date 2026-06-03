@@ -1,18 +1,18 @@
-# Spring Boot MVC + Virtual Thread + Embedded Tomcat 예제
+# Spring Boot MVC + Virtual Thread + Embedded Tomcat Example
 
 [한국어](README.ko.md) | English
 
 ## Example Scenario
 
-This example exercises **Spring Boot MVC + Virtual Thread + Embedded Tomcat 예제** as a runnable virtual-thread execution workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+This example exercises **Spring Boot MVC + Virtual Thread + Embedded Tomcat Example** as a runnable virtual-thread execution workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
 
 ## Architecture Diagram
 
-![Spring Boot MVC + Virtual Thread + Embedded Tomcat 예제 Graphviz architecture diagram](../../docs/images/readme-diagrams/virtualthreads-spring-mvc-tomcat-readme-architecture-01.png)
+![Spring Boot MVC + Virtual Thread + Embedded Tomcat Example Graphviz architecture diagram](../../docs/images/readme-diagrams/virtualthreads-spring-mvc-tomcat-readme-architecture-01.png)
 
 The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.virtualthreads` as the source of truth when comparing this README with the code.
 
-![Spring Boot MVC + Virtual Thread + Embedded Tomcat 예제 architecture diagram](../../docs/images/readme-diagrams/virtualthreads-spring-mvc-tomcat-diagram-01.png)
+![Spring Boot MVC + Virtual Thread + Embedded Tomcat Example architecture diagram](../../docs/images/readme-diagrams/virtualthreads-spring-mvc-tomcat-diagram-01.png)
 
 ## Flow Diagram
 
@@ -25,17 +25,17 @@ The module is organized around the sample entry point or test fixture, the bluet
 
 The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
-Spring Boot MVC 에서 Virtual Thread 를 사용하는 예제입니다.
+This example uses Virtual Threads in Spring Boot MVC.
 
 ## Virtual Thread Processing Model
 
-![Spring Boot MVC + Virtual Thread + Embedded Tomcat 예제 Diagram 1](../../docs/images/readme-diagrams/virtualthreads-spring-mvc-tomcat-readme-flow-01.png)
+![Spring Boot MVC + Virtual Thread + Embedded Tomcat Example Diagram 1](../../docs/images/readme-diagrams/virtualthreads-spring-mvc-tomcat-readme-flow-01.png)
 
 ![Virtual Thread diagram](../../docs/images/readme-diagrams/virtualthreads-spring-mvc-tomcat-diagram-01.png)
 
 ## Environment Setup
 
-[Kotlin + Spring Boot, Virtual Thread 적용하기](https://jsonobject.tistory.com/631) 를 참고하여 JDK 25를 설치한다. 현 예제는 JDK 25 를 사용합니다.
+Install JDK 25 by referring to [Applying Virtual Threads in Kotlin + Spring Boot](https://jsonobject.tistory.com/631). This example uses JDK 25.
 
 ### Spring Boot Configuration
 
@@ -243,13 +243,13 @@ init {
 
 ### Find Member by Id API
 
-`/api/members/{id}` API 를 호출하여 Member 정보를 조회하는 API 입니다.
+This API calls `/api/members/{id}` to retrieve `Member` information.
 
 ![gatling](doc/FindMemberById.png)
 
 ### JPA Find All Teams API
 
-`/api/teams` API 를 호출하여 Team 정보를 조회하는 API 입니다.
+This API calls `/api/teams` to retrieve `Team` information.
 
 ![gatling](doc/JpaFindAllTeams.png)
 
@@ -263,7 +263,7 @@ init {
 
 ### Spring Boot with Virtual Threads
 
-- [Kotlin + Spring Boot, Virtual Thread 적용하기](https://jsonobject.tistory.com/631)
+- [Applying Virtual Threads in Kotlin + Spring Boot](https://jsonobject.tistory.com/631)
 - [A guide to using virtual threads with Spring Boot](https://bell-sw.com/blog/a-guide-to-using-virtual-threads-with-spring-boot/)
 - [Virtual Threads in Springboot 3.2](https://medium.com/nerd-for-tech/virtual-threads-in-springboot-3-2-9a7250429809?)
 

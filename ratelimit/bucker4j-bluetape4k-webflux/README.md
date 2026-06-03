@@ -25,14 +25,14 @@ The module is organized around the sample entry point or test fixture, the bluet
 
 The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
-## 아키텍처 다이어그램
+## Architecture Diagram
 
 ![bucker4j bluetape4k webflux Architecture diagram](../../docs/images/readme-diagrams/ratelimit-bucker4j-bluetape4k-webflux-diagram-01.png)
 
-Spring Webflux 환경에서 IpAddress 가 아닌 User Token으로 Rate Limit을 적용하는 예제입니다.
+This example applies rate limiting by user token, rather than by IP address, in a Spring WebFlux environment.
 
-참고: `UserRateLimitWebFilter` 는 Spring Webflux 환경에서 요청 정보 (`ServerHttpRequest`) 의 Header에서 `X-BLUETAPE4K-UID` 값을 추출해서
-이 값을 기준의 Bucket4j의 Rate Limit을 적용합니다.
+Note: In a Spring WebFlux environment, `UserRateLimitWebFilter` extracts the `X-BLUETAPE4K-UID` value from the headers of the request information (`ServerHttpRequest`),
+then applies Bucket4j rate limiting based on that value.
 
-기존 `bucket4j-spring-boot-starter` 는 User 기반으로 사용하려면 Spring SpEL을 동기 방식으로 사용해야 하는데,
-헤더에서 User Token 값을 추출하는데, 동기 방식만 지원해서 성능이 느려질 수 있습니다.
+To use the existing `bucket4j-spring-boot-starter` with a user-based key, Spring SpEL must run synchronously.
+Because extracting the user token value from headers only supports the synchronous path there, performance can be slower.

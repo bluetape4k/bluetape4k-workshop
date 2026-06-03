@@ -28,14 +28,14 @@ Uses H2 in-memory database.
 
 ![R2DBC + Spring WebFlux (Functional Router) Diagram 1](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-readme-sequence-01.png)
 
-## 아키텍처 다이어그램
+## Architecture Diagram
 
 ![r2dbc webflux Architecture diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-diagram-01.png)
 
 ![r2dbc webflux Sequence Flow 2 diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-sequence-01.png)
 
-Spring Data R2DBC와 WebFlux 함수형 라우터(Handler + Router)를 조합한 리액티브 CRUD 예제입니다.
-H2 인메모리 데이터베이스를 사용합니다.
+This is a reactive CRUD example that combines Spring Data R2DBC with WebFlux functional routers
+(Handler + Router). It uses an H2 in-memory database.
 
 ## Used bluetape4k Features
 
@@ -100,12 +100,12 @@ fun routes(handler: UserHandler) = coRouter {
 }
 ```
 
-## 구성 방식
+## Configuration Style
 
-어노테이션 컨트롤러 대신 **함수형 엔드포인트** 방식을 사용합니다:
+It uses **functional endpoints** instead of annotation-based controllers:
 
 ```kotlin
-// Router: 경로 정의
+// Router: path definitions
 @Bean
 fun routes(handler: UserHandler) = coRouter {
     "/users".nest {
@@ -116,19 +116,19 @@ fun routes(handler: UserHandler) = coRouter {
     }
 }
 
-// Handler: 요청 처리 (suspend 함수)
+// Handler: request handling (suspend function)
 suspend fun findAll(request: ServerRequest): ServerResponse =
     ServerResponse.ok().bodyAndAwait(userRepository.findAll())
 ```
 
-## 어노테이션 컨트롤러 방식과 비교
+## Comparison with Annotation-Based Controllers
 
-| 방식 | 특징 |
+| Style | Characteristics |
 |---|---|
-| 함수형 (이 모듈) | Router + Handler 분리, 명시적 경로 정의 |
-| 어노테이션 (`r2dbc-webflux-exposed`) | `@RestController` + `@GetMapping` |
+| Functional (this module) | Router and Handler separation, explicit path definitions |
+| Annotation-based (`r2dbc-webflux-exposed`) | `@RestController` + `@GetMapping` |
 
-## 참고
+## References
 
-- [Spring WebFlux 함수형 엔드포인트](https://docs.spring.io/spring-framework/reference/web/webflux-functional.html)
+- [Spring WebFlux Functional Endpoints](https://docs.spring.io/spring-framework/reference/web/webflux-functional.html)
 - [POC WebFlux-R2DBC H2-Kotlin](https://github.com/razvn/webflux-r2dbc-kotlin)

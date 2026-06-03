@@ -25,23 +25,23 @@ The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k h
 
 ![Spring Cloud AWS S3 Demo sequence diagram](../../docs/images/readme-diagrams/aws-s3-spring-cloud-sequence-01.png)
 
-[Spring Cloud AWS](https://github.com/awspring/spring-cloud-aws) 를 이용하여 S3 서비스를 사용하는 예제입니다.
+This is an example of using the S3 service using [Spring Cloud AWS](https://github.com/awspring/spring-cloud-aws)).
 
 ![Spring Cloud AWS S3 Demo diagram](../../docs/images/readme-diagrams/aws-s3-spring-cloud-sequence-01.png)
 
-## 주요 기능
+## Main features
 
-| 기능 | 설명 |
+| function | explanation |
 |------|------|
-| 버킷 생성 | `S3Client.createBucket()` — bluetape4k 확장 함수로 간결하게 생성 |
-| 파일 업로드 | `S3Template.store(bucket, key, content)` — Spring Cloud AWS 추상화 |
-| 파일 목록 조회 | `S3Client.listObjects { it.bucket(...) }` — 버킷 내 오브젝트 열거 |
-| 리소스 읽기 | `ResourceLoader.getResource("s3://bucket/key")` — Spring Resource 추상화 |
-| 로컬 테스트 | `LocalStackServer` (Testcontainers) — 실제 AWS 없이 로컬에서 S3 에뮬레이션 |
+| Create bucket | `S3Client.createBucket()` — Concise creation with bluetape4k extension function |
+| file upload | `S3Template.store(bucket, key, content)` — Spring Cloud AWS abstraction |
+| View file list | `S3Client.listObjects { it.bucket(...) }` — Enumerate objects within a bucket |
+| Read Resources | `ResourceLoader.getResource("s3://bucket/key")` — Spring Resource abstraction |
+| local test | `LocalStackServer` (Testcontainers) — S3 emulation locally without actual AWS |
 
-## 설정 방법
+## How to set up
 
-### 의존성 (`build.gradle.kts`)
+### Dependencies (`build.gradle.kts`)
 
 ```kotlin
 implementation("io.awspring.cloud:spring-cloud-aws-starter-s3")
@@ -49,13 +49,13 @@ implementation("software.amazon.awssdk:s3")
 testImplementation("io.bluetape4k:bluetape4k-testcontainers")  // LocalStackServer
 ```
 
-### S3Client 빈 등록 (LocalStack 연동)
+### Register S3Client bean (LocalStack integration)
 
 ```kotlin
 @Bean
 fun s3Client(): S3Client {
     return S3Client.builder()
-        .endpointOverride(s3Server.endpoint)          // LocalStack 엔드포인트
+.endpointOverride(s3Server.endpoint) // LocalStack endpoint
         .region(Region.of(s3Server.region))
         .credentialsProvider(
             staticCredentialsProviderOf(s3Server.accessKey, s3Server.secretKey)
@@ -64,7 +64,7 @@ fun s3Client(): S3Client {
 }
 ```
 
-### 실제 AWS 연동 시 `application.yml` 설정
+### Setting `application.yml` when connecting to actual AWS
 
 ```yaml
 spring:
@@ -79,31 +79,31 @@ spring:
         enabled: true
 ```
 
-## 사용 예제
+## Usage example
 
-### 파일 업로드 및 목록 조회
+### Upload files and view list
 
 ```kotlin
-// 버킷 생성 (bluetape4k 확장 함수)
+// Create bucket (bluetape4k extension function)
 s3Client.createBucket("my-bucket") {}
 
-// 파일 업로드 (Spring Cloud AWS S3Template)
+// Upload file (Spring Cloud AWS S3Template)
 s3Template.store("my-bucket", "hello.txt", "Hello, S3!")
 
-// 오브젝트 목록 출력
+// Output object list
 s3Client.listObjects { it.bucket("my-bucket") }
     .contents()
     .forEach { log.info { "key=${it.key()}" } }
 ```
 
-### Spring Resource 추상화로 파일 읽기
+### Reading files with Spring Resource abstraction
 
 ```kotlin
 val resource = resourceLoader.getResource("s3://my-bucket/hello.txt") as WritableResource
 val content = resource.inputStream.bufferedReader().readText()
 ```
 
-## 테스트 전제 조건
+## Test prerequisites
 
-- Docker 데몬 실행 필요 (Testcontainers가 LocalStack 컨테이너 자동 기동)
-- 실제 AWS 자격증명 불필요 — LocalStack이 S3 API를 로컬에서 에뮬레이션
+- Requires Docker daemon to run (Testcontainers automatically starts LocalStack container)
+- No need for actual AWS credentials — LocalStack emulates the S3 API locally

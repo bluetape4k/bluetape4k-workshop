@@ -27,12 +27,12 @@ for a coroutine-first data access layer. Exposed table DSL handles schema defini
 
 ![R2DBC + WebFlux + Exposed ORM Diagram 1](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-exposed-readme-sequence-01.png)
 
-## 아키텍처 다이어그램
+## Architecture Diagram
 
 ![r2dbc webflux exposed Sequence Flow diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-exposed-diagram-01.png)
 
-Spring Data R2DBC와 Spring WebFlux, JetBrains Exposed ORM을 함께 사용하는 예제입니다.
-`exposed-r2dbc` 모듈을 활용해 Exposed 테이블 정의를 R2DBC 환경에서 사용합니다.
+This example uses Spring Data R2DBC, Spring WebFlux, and JetBrains Exposed ORM together.
+It uses the `exposed-r2dbc` module to apply Exposed table definitions in an R2DBC environment.
 
 ## Used bluetape4k Features
 
@@ -89,28 +89,28 @@ class UserExposedRepository : R2dbcRepository<Int, UserRecord> {
 .maxSize(max(Runtimex.availableProcessors * 8, 100))
 ```
 
-## 구성
+## Components
 
-| 클래스 | 역할 |
+| Class | Role |
 |---|---|
-| `UserSchema` | Exposed Table 정의 (`Users` 테이블) |
-| `UserExposedRepository` | Exposed R2DBC DSL로 구현한 Repository |
-| `UserService` | 비즈니스 로직 (suspend 함수) |
-| `UserController` | `@RestController` 어노테이션 방식 REST API |
-| `UserHandler` | WebFlux 함수형 라우터 방식 Handler |
-| `ExposedR2dbcConfig` | R2DBC + Exposed 연동 설정 |
-| `SchemaInitializer` | 애플리케이션 시작 시 스키마 자동 생성 |
+| `UserSchema` | Exposed table definition (`Users` table) |
+| `UserExposedRepository` | Repository implemented with the Exposed R2DBC DSL |
+| `UserService` | Business logic (suspend functions) |
+| `UserController` | `@RestController` annotation-style REST API |
+| `UserHandler` | WebFlux functional-router style handler |
+| `ExposedR2dbcConfig` | R2DBC + Exposed integration configuration |
+| `SchemaInitializer` | Automatic schema creation at application startup |
 
-## Exposed R2DBC 사용 패턴
+## Exposed R2DBC Usage Pattern
 
 ```kotlin
-// Exposed Table 정의
+// Exposed table definition
 object Users : LongIdTable("users") {
     val name = varchar("name", 255)
     val email = varchar("email", 255).uniqueIndex()
 }
 
-// Repository에서 R2DBC 트랜잭션 안에서 Exposed DSL 사용
+// Use the Exposed DSL inside an R2DBC transaction in the repository
 suspend fun findById(id: Long): User? = suspendedTransaction {
     Users.selectAll().where { Users.id eq id }.singleOrNull()?.toUser()
 }
@@ -118,20 +118,20 @@ suspend fun findById(id: Long): User? = suspendedTransaction {
 
 ## REST API
 
-| Method | 경로 | 설명 |
+| Method | Path | Description |
 |---|---|---|
-| GET | `/users` | 전체 사용자 목록 |
-| GET | `/users/{id}` | 사용자 조회 |
-| POST | `/users` | 사용자 생성 |
-| DELETE | `/users/{id}` | 사용자 삭제 |
+| GET | `/users` | List all users |
+| GET | `/users/{id}` | Fetch a user |
+| POST | `/users` | Create a user |
+| DELETE | `/users/{id}` | Delete a user |
 
-## 실행
+## Run
 
 ```bash
 ./gradlew :spring-data-r2dbc-webflux-exposed:bootRun
 ```
 
-## 참고
+## References
 
 - [POC WebFlux-R2DBC H2-Kotlin](https://github.com/razvn/webflux-r2dbc-kotlin)
-- [Bluetape4k Exposed R2DBC 모듈](https://github.com/bluetape4k/bluetape4k-projects)
+- [Bluetape4k Exposed R2DBC module](https://github.com/bluetape4k/bluetape4k-projects)

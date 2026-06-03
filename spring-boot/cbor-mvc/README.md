@@ -25,27 +25,27 @@ The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k h
 
 ![CBOR in Spring Boot MVC sequence diagram](../../docs/images/readme-diagrams/spring-boot-cbor-mvc-sequence-01.png)
 
-REST API 통신 프로토콜을 일반적인 JSON이 아닌 Binary JSON 포맷의 일종인 CBOR (Concise Binary Object Representation)로 사용하는 방법을 알아보자.
+This example shows how to use CBOR (Concise Binary Object Representation), a binary JSON format, as the REST API communication format instead of regular JSON.
 
-## CBOR 직렬화 흐름
+## CBOR Serialization Flow
 
 ![CBOR diagram](../../docs/images/readme-diagrams/spring-boot-cbor-mvc-sequence-01.png)
 
-## CBOR 개념
+## CBOR Concepts
 
-**CBOR (Concise Binary Object Representation)** 는 RFC 7049로 표준화된 바이너리 JSON 포맷입니다.
+**CBOR (Concise Binary Object Representation)** is a binary JSON format standardized by RFC 7049.
 
-| 특성 | JSON | CBOR |
+| Feature | JSON | CBOR |
 |------|------|------|
-| 포맷 | 텍스트 (UTF-8) | 바이너리 |
-| 페이로드 크기 | 상대적으로 큼 | 20~50% 절감 |
-| 파싱 속도 | 보통 | 빠름 (바이너리 직접 파싱) |
+| Format | Text (UTF-8) | Binary |
+| Payload size | Relatively large | 20-50% smaller |
+| Parsing speed | Moderate | Fast (direct binary parsing) |
 | Content-Type | `application/json` | `application/cbor` |
-| 사람이 읽기 | 가능 | 불가 (디코더 필요) |
+| Human-readable | Yes | No (requires a decoder) |
 
-Jackson의 `CBORMapper`를 사용하며, Spring MVC의 `HttpMessageConverter` 체계에 `JacksonCborHttpMessageConverter`를 등록하면 기존 JSON 컨트롤러와 동일한 코드로 CBOR를 지원합니다.
+It uses Jackson's `CBORMapper`. Registering `JacksonCborHttpMessageConverter` in Spring MVC's `HttpMessageConverter` system enables CBOR support with the same controller code used for JSON.
 
-## 도메인 모델
+## Domain Model
 
 ```
 Course
@@ -60,33 +60,33 @@ Course
                 └── type: PhoneType (MOBILE | LANDLINE)
 ```
 
-## 주요 기능
+## Key Features
 
-| 기능 | 구현 위치 | 설명 |
+| Feature | Implementation Location | Description |
 |------|----------|------|
-| CBOR 컨버터 등록 | `CborConfig` | `JacksonCborHttpMessageConverter` 빈 등록 + `WebMvcConfigurer` |
-| 과목 조회 | `CourseController.course()` | `GET /courses/{id}` — CBOR 직렬화 응답 |
-| 인메모리 저장소 | `CourseRepository` | `Map<Int, Course>` 기반 간단 저장소 |
+| CBOR converter registration | `CborConfig` | Registers the `JacksonCborHttpMessageConverter` bean + `WebMvcConfigurer` |
+| Course lookup | `CourseController.course()` | `GET /courses/{id}` — CBOR-serialized response |
+| In-memory repository | `CourseRepository` | Simple repository based on `Map<Int, Course>` |
 
-## API 엔드포인트
+## API Endpoints
 
-| 메서드 | 경로 | 설명 | Content-Type |
+| Method | Path | Description | Content-Type |
 |--------|------|------|-------------|
-| `GET` | `/courses/{id}` | 특정 과목 조회 | `application/cbor` |
+| `GET` | `/courses/{id}` | Retrieves a specific course | `application/cbor` |
 
-## 사용 예제
+## Usage Examples
 
-### CBOR 요청 (curl)
+### CBOR Request (curl)
 
 ```bash
-# CBOR 응답 수신 (바이너리 — 파일로 저장)
+# Receive a CBOR response (binary, saved to a file)
 curl -H "Accept: application/cbor" http://localhost:8080/courses/1 -o course.cbor
 
-# JSON 응답 수신 (Accept 헤더 미지정 시 JSON 폴백)
+# Receive a JSON response (falls back to JSON when no Accept header is specified)
 curl http://localhost:8080/courses/1
 ```
 
-### 테스트 코드에서 CBOR TestRestTemplate 사용
+### Using CBOR TestRestTemplate in Test Code
 
 ```kotlin
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -111,11 +111,11 @@ class CborApplicationTest {
 }
 ```
 
-## 설정
+## Configuration
 
-### `cbor` 프로파일 활성화
+### Activating the `cbor` Profile
 
-`JacksonCborHttpMessageConverter`는 `@Profile("cbor")`로 조건부 등록됩니다.
+`JacksonCborHttpMessageConverter` is registered conditionally with `@Profile("cbor")`.
 
 ```yaml
 # application.yml

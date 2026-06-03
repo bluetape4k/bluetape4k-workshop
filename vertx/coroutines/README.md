@@ -27,99 +27,99 @@ The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k h
 
 ![Example for Vert.x with Kotlin Coroutines sequence diagram](../../docs/images/readme-diagrams/vertx-coroutines-sequence-01.png)
 
-Vert.x 를 Kotlin Coroutines 와 함께 사용하는 예제입니다.
+This example shows how to use Vert.x with Kotlin Coroutines.
 
-## 처리 흐름
+## Processing Flow
 
 ![coroutines Sequence Flow diagram](../../docs/images/readme-diagrams/vertx-coroutines-sequence-01.png)
 
 ![Example for Vert.x with Kotlin Coroutines Diagram 1](../../docs/images/readme-diagrams/vertx-coroutines-readme-sequence-01.png)
 
-## Vert.x 코루틴 통합 설명
+## Vert.x Coroutine Integration
 
-`CoroutineVerticle`을 상속하면 Vert.x 이벤트 루프 위에서 `suspend` 함수를 직접 사용할 수 있습니다.
-콜백 지옥 없이 순차적인 코드 스타일로 비동기 DB 쿼리와 HTTP 응답을 처리합니다.
+Extending `CoroutineVerticle` lets you call `suspend` functions directly on top of the Vert.x event loop.
+It handles asynchronous DB queries and HTTP responses in a sequential code style without callback nesting.
 
-| 구성 요소 | 설명 |
+| Component | Description |
 |-----------|------|
-| `CoroutineVerticle` | `suspend fun start()` 를 오버라이드해 라우터·DB 초기화 |
-| `suspendHandler { }` | Vert.x `Handler<RoutingContext>` 를 `suspend` 람다로 래핑 (`bluetape4k-vertx`) |
-| `coAwait()` | `Future<T>.coAwait()` — Vert.x Future 를 코루틴 일시 중단으로 변환 |
-| `JDBCPool` | H2 인메모리 DB, 커넥션 풀 크기 `maxSize=16` |
+| `CoroutineVerticle` | Overrides `suspend fun start()` to initialize the router and DB |
+| `suspendHandler { }` | Wraps a Vert.x `Handler<RoutingContext>` as a `suspend` lambda (`bluetape4k-vertx`) |
+| `coAwait()` | `Future<T>.coAwait()` — converts a Vert.x Future into a coroutine suspension |
+| `JDBCPool` | H2 in-memory DB with connection pool size `maxSize=16` |
 | `Router` | `GET /movie/:id`, `POST /rateMovie/:id`, `GET /getRating/:id` |
 
-### 핵심 패턴: `suspendHandler`
+### Core Pattern: `suspendHandler`
 
 ```kotlin
-// 기존 콜백 방식 대신 suspend 함수로 라우팅
+// Route with a suspend function instead of the existing callback style
 router.get("/movie/:id").suspendHandler { ctx ->
     val rows = pool
         .preparedQuery("SELECT TITLE FROM MOVIE WHERE ID=?")
         .execute(Tuple.of(ctx.pathParam("id")))
-        .coAwait()          // Future → suspend
+        .coAwait()          // Future -> suspend
     ctx.response().end(Json.obj { ... }.encode())
 }
 ```
 
-## 데이터 모델
+## Data Model
 
 ![coroutines Entity Relationship 2 diagram](../../docs/images/readme-diagrams/vertx-coroutines-diagram-01.png)
 
-## 제공 API 엔드포인트
+## Provided API Endpoints
 
-| 메서드 | 경로 | 설명 |
+| Method | Path | Description |
 |--------|------|------|
-| `GET` | `/movie/:id` | 영화 제목 조회 (JSON 반환) |
-| `POST` | `/rateMovie/:id?getRating=N` | 영화 평점 등록 |
-| `GET` | `/getRating/:id` | 영화 평균 평점 조회 |
+| `GET` | `/movie/:id` | Retrieves a movie title (JSON response) |
+| `POST` | `/rateMovie/:id?getRating=N` | Registers a movie rating |
+| `GET` | `/getRating/:id` | Retrieves the movie's average rating |
 
-## 사용된 bluetape4k 기능
+## Used bluetape4k Features
 
-| 기능 | 아티팩트 | 코드 위치 | 이점 |
+| Feature | Artifact | Code Location | Benefit |
 |---|---|---|---|
-| `suspendHandler { }` | `bluetape4k-vertx` | `MainVerticle.kt` | Vert.x `Handler<RoutingContext>`를 suspend 람다로 래핑 — 콜백 중첩 없이 순차 코드 작성 |
-| `withSuspendTestContext` | `bluetape4k-vertx` | 테스트 전체 | Vert.x `VertxTestContext`를 코루틴 블록에서 안전하게 사용하는 테스트 헬퍼 |
-| `runSuspendTest { }` | `bluetape4k-junit5` | 테스트 전체 | JUnit 5에서 suspend 테스트를 실행하는 확장 함수 |
-| `KLoggingChannel` | `bluetape4k-logging` | 모든 companion object | 코루틴 컨텍스트 포함 구조적 로깅 |
-| `bluetape4k-assertions` | `bluetape4k-core` | 테스트 전체 | 가독성 높은 단언문 (`shouldBeEqualTo`, `shouldNotBeEmpty` 등) |
+| `suspendHandler { }` | `bluetape4k-vertx` | `MainVerticle.kt` | Wraps a Vert.x `Handler<RoutingContext>` as a suspend lambda, enabling sequential code without nested callbacks |
+| `withSuspendTestContext` | `bluetape4k-vertx` | All tests | Test helper for safely using Vert.x `VertxTestContext` inside coroutine blocks |
+| `runSuspendTest { }` | `bluetape4k-junit5` | All tests | Extension function for running suspend tests in JUnit 5 |
+| `KLoggingChannel` | `bluetape4k-logging` | All companion objects | Structured logging with coroutine context |
+| `bluetape4k-assertions` | `bluetape4k-core` | All tests | Readable assertions such as `shouldBeEqualTo` and `shouldNotBeEmpty` |
 
 ## bluetape4k Before / After
 
-### `suspendHandler { }` vs 콜백 기반 라우팅
+### `suspendHandler { }` vs Callback-Based Routing
 
 ```kotlin
-// Before — 전통 Vert.x 콜백 방식
+// Before - traditional Vert.x callback style
 router.get("/movie/:id").handler { ctx ->
     pool.preparedQuery("SELECT TITLE FROM MOVIE WHERE ID=?")
         .execute(Tuple.of(ctx.pathParam("id"))) { ar ->
             if (ar.succeeded()) {
                 val rows = ar.result()
-                ctx.response().end(/* 결과 직렬화 */)
+                ctx.response().end(/* serialize result */)
             } else {
                 ctx.fail(ar.cause())
             }
         }
 }
 
-// After — bluetape4k suspendHandler (suspend 함수로 순차 처리)
+// After - bluetape4k suspendHandler (sequential processing with a suspend function)
 router.get("/movie/:id").suspendHandler { ctx ->
     val rows = pool
         .preparedQuery("SELECT TITLE FROM MOVIE WHERE ID=?")
         .execute(Tuple.of(ctx.pathParam("id")))
-        .coAwait()          // Future → suspend
+        .coAwait()          // Future -> suspend
     ctx.response().end(Json.obj { ... }.encode())
 }
 ```
 
-### `withSuspendTestContext` vs VertxTestContext 수동 처리
+### `withSuspendTestContext` vs Manual VertxTestContext Handling
 
 ```kotlin
-// Before — VertxTestContext 수동 완료/실패 처리
+// Before - manual VertxTestContext completion/failure handling
 @Test
 fun `test route`(vertx: Vertx, testContext: VertxTestContext) {
     vertx.deployVerticle(MainVerticle()) { ar ->
         if (ar.succeeded()) {
-            // 콜백 중첩으로 테스트 로직 작성
+            // Write test logic with nested callbacks
             testContext.completeNow()
         } else {
             testContext.failNow(ar.cause())
@@ -127,48 +127,48 @@ fun `test route`(vertx: Vertx, testContext: VertxTestContext) {
     }
 }
 
-// After — bluetape4k withSuspendTestContext (코루틴 블록 자동 완료)
+// After - bluetape4k withSuspendTestContext (automatic coroutine block completion)
 @Test
 fun `test route`(vertx: Vertx, testContext: VertxTestContext) = runSuspendTest {
     vertx.withSuspendTestContext(testContext) {
         vertx.deployVerticle(MainVerticle()).coAwait()
-        // 순차 코드로 테스트 작성 — 예외 시 testContext.failNow() 자동 호출
+        // Write tests as sequential code; exceptions automatically call testContext.failNow()
     }
 }
 ```
 
-## 취소·구조적 동시성·컨텍스트 전파
+## Cancellation, Structured Concurrency, and Context Propagation
 
-### `CoroutineVerticle` 스코프와 언디플로이
+### `CoroutineVerticle` Scope and Undeploy
 
-`CoroutineVerticle` 은 `CoroutineScope` 를 구현합니다.
-`Verticle`이 언디플로이되면 해당 스코프가 취소되어, `start()` 내부에서 시작된
-모든 자식 코루틴이 즉시 취소됩니다. 이를 통해 구조적 동시성 (structured concurrency) 이 보장됩니다.
+`CoroutineVerticle` implements `CoroutineScope`.
+When the `Verticle` is undeployed, that scope is cancelled, so every child coroutine started inside `start()`
+is cancelled immediately. This guarantees structured concurrency.
 
 ```kotlin
 class MainVerticle: CoroutineVerticle() {
     override suspend fun start() {
-        // 이 스코프(CoroutineVerticle)가 취소되면
-        // launch { ... } 자식 코루틴도 모두 취소됨
+        // When this scope (CoroutineVerticle) is cancelled,
+        // all launch { ... } child coroutines are also cancelled
         launch {
-            // 백그라운드 작업 (예: 주기적 캐시 갱신)
+            // Background work, such as periodic cache refresh
         }
-        // Router 등록 ...
+        // Register Router ...
     }
 }
-// vertx.undeploy(deploymentId) → MainVerticle 스코프 취소 → launch 블록 취소
+// vertx.undeploy(deploymentId) -> MainVerticle scope cancelled -> launch block cancelled
 ```
 
-### `coAwait()` 취소 동작
+### `coAwait()` Cancellation Behavior
 
-`Future<T>.coAwait()` 는 코루틴이 취소되면 Vert.x `Future` 를 즉시 취소합니다.
-DB 쿼리 대기 중 HTTP 연결이 끊어져도 커넥션 풀에 커넥션이 정상 반환됩니다.
+`Future<T>.coAwait()` immediately cancels the Vert.x `Future` when the coroutine is cancelled.
+Even if an HTTP connection closes while waiting for a DB query, the connection is returned normally to the pool.
 
 ```kotlin
 router.get("/movie/:id").suspendHandler { ctx ->
-    // 이 suspend 블록 실행 중 ctx.request()가 abort되면
-    // pool.preparedQuery(...).execute(...).coAwait() 가 CancellationException 발생
-    // → JDBCPool 커넥션 자동 반환
+    // If ctx.request() is aborted while this suspend block is running,
+    // pool.preparedQuery(...).execute(...).coAwait() throws CancellationException
+    // -> JDBCPool connection is returned automatically
     val rows = pool.preparedQuery("SELECT TITLE FROM MOVIE WHERE ID=?")
         .execute(Tuple.of(ctx.pathParam("id")))
         .coAwait()
@@ -176,28 +176,28 @@ router.get("/movie/:id").suspendHandler { ctx ->
 }
 ```
 
-### `vertx.dispatcher()` 컨텍스트 전파
+### `vertx.dispatcher()` Context Propagation
 
-`CoroutineVerticle` 내부에서는 `coroutineContext` 에 `vertx.dispatcher()` 가 포함되어
-Vert.x 이벤트 루프 스레드에서 코루틴이 실행됩니다.
-`withContext(vertx.dispatcher())` 를 명시적으로 사용하면 이벤트 루프를 벗어난 컨텍스트에서
-Vert.x API를 안전하게 호출할 수 있습니다.
+Inside `CoroutineVerticle`, `coroutineContext` includes `vertx.dispatcher()`,
+so coroutines run on the Vert.x event-loop thread.
+Using `withContext(vertx.dispatcher())` explicitly lets you safely call Vert.x APIs
+from a context outside the event loop.
 
 ```kotlin
-// 다른 디스패처에서 Vert.x API 호출이 필요할 때
+// When a Vert.x API call is needed from another dispatcher
 suspend fun queryAndRespond(ctx: RoutingContext) {
     val result = withContext(Dispatchers.IO) {
-        // 블로킹 I/O 처리
+        // Process blocking I/O
         blockingComputation()
     }
-    // Vert.x 이벤트 루프로 복귀하여 응답
+    // Return to the Vert.x event loop and respond
     withContext(vertx.dispatcher()) {
         ctx.response().end(result)
     }
 }
 ```
 
-## 빌드 및 테스트
+## Build and Test
 
 ```bash
 ./gradlew :vertx-coroutines:test

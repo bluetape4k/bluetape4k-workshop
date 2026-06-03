@@ -27,21 +27,21 @@ The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k h
 
 ![Spring Boot WebMVC with Bucket4j and Caffeine Demo sequence diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-caffeine-web-sequence-01.png)
 
-## 아키텍처 다이어그램
+## Architecture Diagram
 
 ![bucket4j caffeine web Architecture diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-caffeine-web-diagram-01.png)
 
-Bucket4j 저장소로 Caffeine 을 사용하는 Spring Boot WebMVC 데모 프로젝트입니다.
-Caffeine JCache 가 동기 방식밖에 지원하지 않기 때문에 Spring Boot WebMVC 에서만 가능합니다.
+This is a Spring Boot WebMVC demo project that uses Caffeine as the Bucket4j store.
+Because Caffeine JCache only supports synchronous access, this is only suitable for Spring Boot WebMVC.
 
-만약, Spring Webflux 등 비동기 방식의 API 에 대해서는 Redis, Hazelcast 등을 사용해야 합니다.
-아니면 Virtual Threads 를 사용하는 방식을 고려해야 합니다.
+For asynchronous APIs such as Spring WebFlux, use Redis, Hazelcast, or another asynchronous-capable store.
+Another option is to consider using Virtual Threads.
 
-## Rate Limit 요청 처리 흐름
+## Rate Limit Request Flow
 
 ![Rate Limit diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-caffeine-web-sequence-01.png)
 
-## application.yml 설정 예제
+## application.yml Configuration Example
 
 ```yaml
 spring:
@@ -57,36 +57,36 @@ bucket4j:
   enabled: true
   filters:
     - cache-name: buckets
-      url: .*                      # 모든 URL 에 적용
+      url: .*                      # Apply to all URLs
       rate-limits:
         - bandwidths:
-            - capacity: 10         # 버킷 최대 토큰 수
-              refill-capacity: 1   # 매 interval 마다 충전 토큰 수
+            - capacity: 10         # Maximum number of bucket tokens
+              refill-capacity: 1   # Tokens refilled each interval
               time: 1
               unit: seconds
-              initial-capacity: 20 # 초기 토큰 수 (burst 허용)
+              initial-capacity: 20 # Initial token count (allows burst)
               refill-speed: interval
 ```
 
-## 주요 구성 요소
+## Key Components
 
-| 클래스 / 파일 | 역할 |
+| Class / File | Role |
 |---------------|------|
-| `CaffeineApplication.kt` | Spring Boot 진입점, `@SpringBootApplication` |
-| `IndexController.kt` | `GET /hello`, `GET /world` 엔드포인트 제공 |
-| `application.yml` | Caffeine JCache + Bucket4j 필터 설정 |
-| `ServletRateLimitTest.kt` | `@SpringBootTest` 기반 Rate Limit 통합 테스트 |
+| `CaffeineApplication.kt` | Spring Boot entry point, `@SpringBootApplication` |
+| `IndexController.kt` | Provides the `GET /hello` and `GET /world` endpoints |
+| `application.yml` | Caffeine JCache + Bucket4j filter configuration |
+| `ServletRateLimitTest.kt` | Rate Limit integration test based on `@SpringBootTest` |
 
-## 제약 사항 및 대안
+## Constraints and Alternatives
 
-| 항목 | 내용 |
+| Item | Details |
 |------|------|
-| 저장소 | Caffeine JCache — **동기(Blocking)** 전용 |
-| 적용 가능 서버 | Spring Boot WebMVC (Servlet 기반) |
-| 비동기 대안 | Redis (`LettuceBasedProxyManager`), Hazelcast |
-| Virtual Threads 대안 | `spring.threads.virtual.enabled=true` + WebMVC |
+| Store | Caffeine JCache — **synchronous (blocking)** only |
+| Applicable Server | Spring Boot WebMVC (Servlet-based) |
+| Asynchronous Alternatives | Redis (`LettuceBasedProxyManager`), Hazelcast |
+| Virtual Threads Alternative | `spring.threads.virtual.enabled=true` + WebMVC |
 
-## 빌드 및 테스트
+## Build and Test
 
 ```bash
 ./gradlew :bucket4j-caffeine-web:test

@@ -27,23 +27,23 @@ The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k h
 
 ![mongo-transactions demo sequence diagram](../../docs/images/readme-diagrams/spring-data-mongodb-transactions-sequence-01.png)
 
-## 아키텍처 다이어그램
+## Architecture Diagram
 
 ![mongodb transactions Class Structure diagram](../../docs/images/readme-diagrams/spring-data-mongodb-transactions-diagram-01.png)
 
 ![mongodb transactions Sequence Flow 2 diagram](../../docs/images/readme-diagrams/spring-data-mongodb-transactions-sequence-01.png)
 
-MongoDB 관련 작업을 `Spring Data Mongo` 와 Kotlin Coroutines 으로 수행하는 예입니다.
+This example performs MongoDB work with `Spring Data Mongo` and Kotlin Coroutines.
 
-## 참고
+## References
 
 * [Spring Data MongoDB - Transaction sample](https://github.com/spring-projects/spring-data-examples/tree/main/mongodb/transactions/README.md)
 
-## 처리 흐름
+## Processing Flow
 
 ![mongo-transactions demo Diagram 1](../../docs/images/readme-diagrams/spring-data-mongodb-transactions-readme-sequence-01.png)
 
-## 설명
+## Explanation
 
 ### Running the Sample
 
@@ -96,10 +96,10 @@ on these resources accordingly.
 
 ### Coroutine Transactions
 
-`CoroutineManagedTransitionService`는 `@Transactional suspend fun` 과
-`ReactiveMongoTransactionManager` 를 조합합니다.
-`kotlinx-coroutines-reactor`의 `ReactorContext` 가 Reactor Context (트랜잭션 세션)를
-코루틴 컨텍스트와 자동으로 연결합니다.
+`CoroutineManagedTransitionService` combines `@Transactional suspend fun` with
+`ReactiveMongoTransactionManager`.
+The `ReactorContext` from `kotlinx-coroutines-reactor` automatically connects the Reactor Context
+(transaction session) with the coroutine context.
 
 ```kotlin
 @Service
@@ -118,37 +118,37 @@ class CoroutineManagedTransitionService(
 }
 ```
 
-## 사용된 bluetape4k 기능
+## Used bluetape4k Features
 
-| 기능 | 아티팩트 | 코드 위치 | 이점 |
+| Feature | Artifact | Code location | Benefit |
 |---|---|---|---|
-| `MongoDBServer.Launcher.mongoDB` | `bluetape4k-testcontainers` | `AbstractMongodbTest` | Testcontainers MongoDB 싱글톤 — 레플리카 셋 포함 JVM 전체 공유 |
-| `KLoggingChannel` | `bluetape4k-logging` | `CoroutineManagedTransitionService`, 테스트 | 코루틴 컨텍스트 포함 구조적 로깅 |
-| `log.debug { }` / `log.warn { }` | `bluetape4k-logging` | 테스트 전체 | 람다 기반 지연 평가 로그 메시지 — 비활성 레벨에서 문자열 생성 없음 |
-| `uninitialized()` | `bluetape4k-core` | 테스트 전체 | `@Autowired` 필드의 lateinit 대체 — 타입 안전 초기화 마커 |
-| `shouldBeEqualTo`, `shouldNotBeNull` | `bluetape4k-core` | 테스트 전체 | 가독성 높은 단언문 |
-| `Fakers.faker` | `bluetape4k-junit5` | `AbstractMongodbTest` | 테스트 데이터 생성기 — 재사용 가능한 fake 인스턴스 |
+| `MongoDBServer.Launcher.mongoDB` | `bluetape4k-testcontainers` | `AbstractMongodbTest` | Testcontainers MongoDB singleton — shared across the entire JVM, including the replica set |
+| `KLoggingChannel` | `bluetape4k-logging` | `CoroutineManagedTransitionService`, tests | Structured logging that includes coroutine context |
+| `log.debug { }` / `log.warn { }` | `bluetape4k-logging` | All tests | Lambda-based lazy log messages — no string creation for disabled levels |
+| `uninitialized()` | `bluetape4k-core` | All tests | Replaces `lateinit` for `@Autowired` fields — type-safe initialization marker |
+| `shouldBeEqualTo`, `shouldNotBeNull` | `bluetape4k-core` | All tests | Readable assertions |
+| `Fakers.faker` | `bluetape4k-junit5` | `AbstractMongodbTest` | Test data generator — reusable fake instance |
 
 ## bluetape4k Before / After
 
-### `MongoDBServer.Launcher` vs 직접 컨테이너 생성
+### `MongoDBServer.Launcher` vs Manual Container Creation
 
 ```kotlin
-// Before — AbstractReactiveMongoConfiguration에서 직접 MongoClient 생성
+// Before — create MongoClient directly in AbstractReactiveMongoConfiguration
 class TestConfig: AbstractReactiveMongoConfiguration() {
     @Bean
     override fun reactiveMongoClient(): MongoClient {
-        // 직접 연결 문자열 관리 — 포트 충돌, 클린업 책임
+        // manual connection string management — port collisions and cleanup responsibility
         return MongoClients.create("mongodb://localhost:27017")
     }
 }
 
-// After — bluetape4k 싱글톤 런처 (클린업 자동)
+// After — bluetape4k singleton launcher (automatic cleanup)
 abstract class AbstractMongodbTest {
     companion object: KLoggingChannel() {
         val mongodb by lazy { MongoDBServer.Launcher.mongoDB }
         fun createReactiveMongoClient() =
-            MongoClients.create(mongodb.url)  // 한 번 기동된 인스턴스 재사용
+            MongoClients.create(mongodb.url)  // reuse the already-started instance
     }
 }
 ```
@@ -156,19 +156,19 @@ abstract class AbstractMongodbTest {
 ### `uninitialized()` vs lateinit var
 
 ```kotlin
-// Before — lateinit var (초기화 전 접근 시 UnitializedPropertyAccessException)
+// Before — lateinit var (UnitializedPropertyAccessException if accessed before initialization)
 @Autowired
 private lateinit var managedTransitionService: CoroutineManagedTransitionService
 
-// After — bluetape4k uninitialized() (타입 안전 마커, 명시적 의도 표현)
+// After — bluetape4k uninitialized() (type-safe marker with explicit intent)
 @Autowired
 private val managedTransitionService: CoroutineManagedTransitionService = uninitialized()
 ```
 
-### `@Transactional suspend fun` vs Reactor 체이닝 트랜잭션
+### `@Transactional suspend fun` vs Reactor-Chained Transactions
 
 ```kotlin
-// Before — Reactor 방식 (flatMap 체이닝으로 트랜잭션 구성)
+// Before — Reactor style (transaction composed with flatMap chaining)
 fun run(id: Int): Mono<Int> =
     template.inTransaction().execute { action ->
         lookup(id)
@@ -178,39 +178,40 @@ fun run(id: Int): Mono<Int> =
             .flatMap { finish(action, it) }
     }.next().map { it.id }
 
-// After — 코루틴 방식 (@Transactional suspend fun, 순차 코드)
+// After — coroutine style (@Transactional suspend fun, sequential code)
 @Transactional
 suspend fun run(id: Int) {
     val process = lookup(id)
     if (process.state != State.CREATED) return
-    start(process)    // 예외 발생 시 자동 rollback
+    start(process)    // automatic rollback when an exception occurs
     verify(process)   // id % 3 == 0 → IllegalStateException → rollback
     finish(process)
 }
 ```
 
-## 취소·구조적 동시성·컨텍스트 전파
+## Cancellation, Structured Concurrency, and Context Propagation
 
-### `@Transactional` + 코루틴 컨텍스트
+### `@Transactional` + Coroutine Context
 
-`ReactiveMongoTransactionManager`는 트랜잭션 세션을 Reactor `Context` 에 저장합니다.
-`kotlinx-coroutines-reactor`는 `ReactorContext` 요소를 통해 이 Context 를
-코루틴 컨텍스트와 연결하므로, `@Transactional suspend fun` 내부에서 호출된
-모든 `awaitSingle()` / `awaitFirst()` 이 동일 세션에서 실행됩니다.
+`ReactiveMongoTransactionManager` stores the transaction session in the Reactor `Context`.
+`kotlinx-coroutines-reactor` connects that context with the coroutine context through the
+`ReactorContext` element, so every `awaitSingle()` / `awaitFirst()` call inside
+`@Transactional suspend fun` runs in the same session.
 
-### 코루틴 취소와 트랜잭션 롤백
+### Coroutine Cancellation and Transaction Rollback
 
-`@Transactional suspend fun` 실행 중 코루틴이 취소되면 (예: timeout 또는 부모 스코프 취소),
-Spring AOP 트랜잭션 인터셉터가 `CancellationException` 을 감지하고 롤백을 수행합니다.
+If a coroutine is cancelled while `@Transactional suspend fun` is running (for example, timeout
+or parent-scope cancellation), the Spring AOP transaction interceptor detects
+`CancellationException` and rolls back the transaction.
 
 ```kotlin
-// 타임아웃으로 인한 취소 → 트랜잭션 자동 롤백
+// timeout-driven cancellation -> automatic transaction rollback
 withTimeout(500) {
-    service.run(processId)  // 500ms 초과 시 CancellationException → rollback
+    service.run(processId)  // CancellationException after 500ms -> rollback
 }
 ```
 
-### 테스트에서의 검증 패턴
+### Test Verification Pattern
 
 ```kotlin
 @Test
@@ -219,15 +220,15 @@ fun `coroutine transaction commit and rollback`() = runTest {
         val process = managedTransitionService.newProcess()
         try {
             managedTransitionService.run(process.id)
-            stateInDb(process) shouldBeEqualTo State.DONE       // 커밋 확인
+            stateInDb(process) shouldBeEqualTo State.DONE       // verify commit
         } catch (e: IllegalStateException) {
-            stateInDb(process) shouldBeEqualTo State.CREATED    // 롤백 확인
+            stateInDb(process) shouldBeEqualTo State.CREATED    // verify rollback
         }
     }
 }
 ```
 
-## 빌드 및 테스트
+## Build and Test
 
 ```bash
 ./gradlew :spring-data-mongodb-transactions:test

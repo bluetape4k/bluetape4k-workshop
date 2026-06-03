@@ -4,41 +4,147 @@
 
 ## 예제 시나리오
 
-이 예제는 **Transactional Outbox Pattern — bluetape4k Workshop** 모듈을 실행 가능한 메시지 기반 워크플로우 예제로 보여줍니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 사용 방식을 중심으로 설명합니다.
-
-## 아키텍처 다이어그램
-
-![Transactional Outbox Pattern — bluetape4k Workshop Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/messaging-transactional-outbox-readme-architecture-01.png)
-
-모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성으로 구성됩니다. README와 코드를 비교할 때는 `io.bluetape4k.workshop.messaging` 패키지 아래의 구현을 기준으로 삼습니다.
-
-![Transactional Outbox Pattern — bluetape4k Workshop 아키텍처 다이어그램](../../docs/images/readme-diagrams/messaging-transactional-outbox-architecture-01.png)
+이 예제는 **Transactional Outbox Pattern — bluetape4k Workshop**을 실행 가능한 메시지 기반 워크플로 워크숍 조각으로 다룹니다. 개발자가 먼저 확인할 흐름인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄여 주는 라이브러리와 프레임워크 API 관찰에 초점을 맞춥니다.
 
 ## 흐름 다이어그램
 
-1. `messaging-transactional-outbox` 예제에 필요한 로컬 런타임을 준비합니다.
+1. `messaging-transactional-outbox`에 필요한 로컬 런타임을 준비합니다.
 2. 예제 시나리오를 담당하는 애플리케이션, 컨트롤러, 서비스 또는 테스트 픽스처를 실행합니다.
-3. 반복적인 인프라 처리는 bluetape4k 유틸리티 또는 Spring/Kotlin 통합 기능에 위임합니다.
-4. 샘플 출력, HTTP 응답, 저장소 상태, metric, trace 또는 테스트 기대값으로 결과를 검증합니다.
+3. 반복적인 인프라 작업을 bluetape4k 유틸리티나 Spring/Kotlin 통합에 위임합니다.
+4. 샘플 출력, HTTP 응답, 리포지토리 상태, 메트릭, 트레이스 또는 테스트 기대값으로 보이는 결과를 검증합니다.
 
 ## 시퀀스 다이어그램
 
-핵심 시퀀스는 호출자 또는 테스트 픽스처 -> 워크샵 어댑터 -> bluetape4k 헬퍼/API -> 외부 런타임 또는 인메모리 백엔드 -> 검증/응답 순서입니다. 전용 시퀀스 이미지가 있는 모듈은 아래 이미지가 상호작용 순서를 보여주며, 없는 경우 소스 테스트가 실행 가능한 시퀀스의 기준입니다.
+핵심 시퀀스는 호출자 또는 테스트 픽스처 -> 워크숍 어댑터 -> bluetape4k 헬퍼/API -> 외부 런타임 또는 인메모리 백엔드 -> 검증/응답 순서입니다. 이 모듈에 전용 시퀀스 자산이 있으면 아래 이미지가 상호작용 순서를 보여 줍니다. 그렇지 않으면 소스 테스트가 실행 가능한 시퀀스의 기준입니다.
 
-## 원문 상세 항목
+Kotlin, Spring Boot 4, JetBrains Exposed, Kafka를 사용해 **Transactional Outbox** 패턴을 보여 줍니다.
+이 패턴은 도메인 상태 변경과 그에 대응하는 Kafka 이벤트가 원자적으로 기록되도록 보장합니다. 이중 쓰기 문제도, 조용한 메시지 손실도 없습니다.
 
-영어 README에는 다음 상세 항목이 포함되어 있습니다. 한국어 요약은 위의 시나리오/아키텍처/흐름을 기준으로 읽고, 코드 예제와 설정 세부사항은 영어 README의 같은 모듈 설명을 함께 참고하세요.
+---
 
-- Architecture
-- Problem / Solution
-- Key Concepts
-- bluetape4k Features Used
-- Outbox Table Schema
-- Test Coverage
-- Run
+## 아키텍처
+
+![Transactional Outbox Pattern — bluetape4k Workshop Graphviz architecture diagram](../../docs/images/readme-diagrams/messaging-transactional-outbox-readme-architecture-01.png)
+
+![Transactional Outbox Architecture](../../docs/images/readme-diagrams/messaging-transactional-outbox-architecture-01.png)
+
+---
+
+## 문제 / 해결
+
+### Before — 순진한 이중 쓰기(깨진 방식)
+
+```kotlin
+// WRONG: two independent I/O operations — no atomicity guarantee
+orderRepository.save(order)          // succeeds
+kafkaTemplate.send("order-events", …) // crashes → event lost forever
+```
+
+두 호출 사이에서 프로세스가 중단되면 Kafka 메시지가 조용히 유실됩니다.
+Kafka 전송은 성공했지만 DB 쓰기가 실패하면, 대응하는 주문 row 없이 메시지만 발행됩니다.
+
+### After — Transactional Outbox(올바른 방식)
+
+```kotlin
+// RIGHT: one transaction, two table writes
+@Transactional
+fun placeOrder(…): OrderResponse {
+    val orderId = OrderTable.insertAndGetId { … }          // domain row
+    OutboxEventTable.insert { … }                          // outbox row (same tx)
+    return getOrderResponse(orderId.value)
+}
+```
+
+백그라운드 `OutboxPublisher`는 `outbox_events`를 폴링하고 Kafka로 발행한 뒤 row를 `PUBLISHED`로 표시합니다. 각 이벤트는 별도의 `REQUIRES_NEW` 트랜잭션에서 처리됩니다.
+Kafka를 일시적으로 사용할 수 없으면 row는 `FAILED` 상태로 남고, `MAX_RETRY`(3)회까지 재시도한 뒤 `DEAD_LETTER`로 이동합니다.
+
+---
+
+## 핵심 개념
+
+| 개념 | 상세 |
+|---------|--------|
+| **원자적 쓰기** | 주문 row와 outbox event row가 하나의 ACID 트랜잭션을 공유합니다. 둘 다 기록되거나 둘 다 기록되지 않습니다. |
+| **At-least-once delivery** | 스케줄러는 `PENDING`/`FAILED` 이벤트가 `PUBLISHED`가 될 때까지 재시도합니다. Consumer는 **반드시** 멱등적이어야 합니다. |
+| **멱등 publisher** | 이벤트가 이미 `PUBLISHED`이면 `publishEvent(id)`가 즉시 `false`를 반환해, 동시 스케줄러 실행에서 중복 전송을 막습니다. |
+| **Dead-letter 승격** | `MAX_RETRY`(3)회 실패 후 이벤트는 수동 점검이나 전용 DLQ consumer 처리를 위해 `DEAD_LETTER`로 이동합니다. |
+| **REQUIRES_NEW 재시도 카운터** | `incrementRetry`와 `markPublished`는 각자의 중첩 트랜잭션에서 실행되므로, 외부 트랜잭션이 롤백되어도 재시도 횟수는 항상 저장됩니다. |
+
+---
+
+## 사용한 bluetape4k 기능
+
+| 기능 | 모듈 | 코드 참조 | 이점 |
+|---------|--------|----------------|---------|
+| `KLogging` | `bluetape4k-logging` | `OrderService`, `OutboxPublisher` | 보일러플레이트 없는 구조적, 컨텍스트 인식 로깅 |
+| `requireNotBlank`, `requirePositiveNumber` | `bluetape4k-core` | `OrderService.placeOrder` | 검증된 자기 설명적 입력 계약 |
+| `PostgreSQLServer.Launcher` | `bluetape4k-testcontainers` | `AbstractOutboxTest` | 모든 테스트가 공유하는 설정 없는 싱글턴 PostgreSQL 컨테이너 |
+| `KafkaServer.Launcher` | `bluetape4k-testcontainers` | `AbstractOutboxTest` | 모든 테스트가 공유하는 설정 없는 싱글턴 Kafka 컨테이너 |
+| `Fakers.faker` | `bluetape4k-junit5` | `AbstractOutboxTest` | 하드코딩 문자열 없이 현실적인 locale-aware 테스트 데이터 제공 |
+
+---
+
+## Outbox 테이블 스키마
+
+```sql
+CREATE TABLE outbox_events (
+    id             BIGSERIAL    PRIMARY KEY,
+    aggregate_type VARCHAR(100) NOT NULL,          -- e.g. "Order"
+    aggregate_id   VARCHAR(100) NOT NULL,          -- string PK of the domain entity
+    event_type     VARCHAR(100) NOT NULL,          -- e.g. "OrderPlaced", "OrderStatusChanged"
+    payload        TEXT         NOT NULL,          -- JSON-serialised event payload
+    status         VARCHAR(20)  NOT NULL DEFAULT 'PENDING',  -- PENDING | PUBLISHED | FAILED | DEAD_LETTER
+    retry_count    INT          NOT NULL DEFAULT 0,
+    created_at     TIMESTAMP    NOT NULL DEFAULT NOW(),
+    processed_at   TIMESTAMP                       -- set when status → PUBLISHED
+);
+```
+
+애플리케이션 시작 시 `ExposedConfig`를 통해 Exposed의 `SchemaUtils.create()`가 관리합니다.
+
+---
+
+## 테스트 커버리지
+
+| 테스트 | 시나리오 |
+|------|----------|
+| `placeOrder creates order and outbox event in same transaction` | 원자적 쓰기를 검증합니다. `placeOrder` 호출마다 주문 row 하나와 outbox event row 하나가 생성됩니다. |
+| `POST api-orders creates order and returns 201` | HTTP 계층 smoke test입니다. Controller가 service에 올바르게 연결되는지 확인합니다. |
+| `PUT api-orders-id-status updates order status` | REST를 통한 상태 전이가 업데이트된 본문과 함께 `200 OK`를 반환합니다. |
+| `publishEvent publishes to Kafka and marks event PUBLISHED` | Happy path입니다. Kafka 전송이 성공하고 row가 `PUBLISHED`로 전이됩니다. |
+| `failed publish increments retry count and sets status FAILED` | Kafka를 사용할 수 없을 때 `retryCount`가 1 증가하고 상태가 `FAILED`가 됩니다. |
+| `event exceeding max retries moves to DEAD_LETTER` | 기존 실패가 `MAX_RETRY - 1`회인 상태에서 한 번 더 실패하면 상태가 `DEAD_LETTER`가 됩니다. |
+| `duplicate publish call is idempotent` | 이미 `PUBLISHED`인 이벤트에 대한 두 번째 `publishEvent` 호출은 `false`를 반환하고 상태는 바뀌지 않습니다. |
+
+---
 
 ## 실행
 
+### 사전 조건
+
+Docker가 실행 중이어야 합니다. Testcontainers가 PostgreSQL과 Kafka를 자동으로 시작합니다.
+
+### 테스트
+
 ```bash
+# Run all tests in this module
 ./gradlew :messaging-transactional-outbox:test
+
+# Run a specific test class
+./gradlew :messaging-transactional-outbox:test \
+    --tests "io.bluetape4k.workshop.messaging.outbox.OutboxTransactionTest"
+
+# Run with verbose output
+./gradlew :messaging-transactional-outbox:test --info
 ```
+
+### 애플리케이션(standalone)
+
+실행 중인 PostgreSQL과 Kafka 인스턴스를 가리키는 환경 변수를 설정한 뒤 다음을 실행합니다.
+
+```bash
+./gradlew :messaging-transactional-outbox:bootRun
+```
+
+스케줄러는 자동으로 시작되며 2초마다 `outbox_events`를 폴링합니다.
+Swagger UI는 `http://localhost:8080/swagger-ui/index.html`에서 사용할 수 있습니다.

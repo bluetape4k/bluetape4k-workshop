@@ -6,7 +6,7 @@
 [![bluetape4k](https://img.shields.io/badge/bluetape4k-1.7-4A90D9)](https://github.com/bluetape4k)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-> 🇺🇸 [English README](README.md)
+[English](README.md) | 한국어
 
 [bluetape4k](https://github.com/bluetape4k) 라이브러리를 Spring Boot 4, JetBrains Exposed,
 Redis, Kafka, Observability 스택, 가상 스레드, Vert.x, 클라우드 네이티브 패턴과 통합하는

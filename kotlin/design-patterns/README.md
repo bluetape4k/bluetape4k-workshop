@@ -25,6 +25,6 @@ The module is organized around the sample entry point or test fixture, the bluet
 
 The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
-## 구현된 패턴
+## Implemented pattern
 
 ![design patterns Class Structure diagram](../../docs/images/readme-diagrams/kotlin-design-patterns-diagram-01.png)

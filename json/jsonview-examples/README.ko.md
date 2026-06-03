@@ -4,41 +4,185 @@
 
 ## 예제 시나리오
 
-이 예제는 **JsonView in Spring Boot Demo** 모듈을 실행 가능한 JSON 직렬화 워크플로우 예제로 보여줍니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 사용 방식을 중심으로 설명합니다.
+이 예제는 **JsonView in Spring Boot Demo**를 실행 가능한 JSON serialization 워크플로우 워크샵 조각으로 다룹니다. 개발자가 가장 먼저 확인할 흐름인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄여 주는 라이브러리/프레임워크 API 관찰에 초점을 둡니다.
 
 ## 아키텍처 다이어그램
 
-![JsonView in Spring Boot Demo Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/json-jsonview-examples-readme-architecture-01.png)
+![JsonView in Spring Boot Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/json-jsonview-examples-readme-architecture-01.png)
 
-모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성으로 구성됩니다. README와 코드를 비교할 때는 `io.bluetape4k.workshop.json` 패키지 아래의 구현을 기준으로 삼습니다.
+이 모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성을 중심으로 구성됩니다. 이 README를 코드와 비교할 때는 `io.bluetape4k.workshop.json` 패키지를 기준으로 삼습니다.
 
-![JsonView in Spring Boot Demo 아키텍처 다이어그램](../../docs/images/readme-diagrams/json-jsonview-examples-diagram-01.png)
+![JsonView in Spring Boot Demo architecture diagram](../../docs/images/readme-diagrams/json-jsonview-examples-diagram-01.png)
 
 ## 흐름 다이어그램
 
-1. `json-jsonview-examples` 예제에 필요한 로컬 런타임을 준비합니다.
+1. `json-jsonview-examples`에 필요한 로컬 런타임을 준비합니다.
 2. 예제 시나리오를 담당하는 애플리케이션, 컨트롤러, 서비스 또는 테스트 픽스처를 실행합니다.
-3. 반복적인 인프라 처리는 bluetape4k 유틸리티 또는 Spring/Kotlin 통합 기능에 위임합니다.
-4. 샘플 출력, HTTP 응답, 저장소 상태, metric, trace 또는 테스트 기대값으로 결과를 검증합니다.
+3. 반복적인 인프라 작업을 bluetape4k 유틸리티 또는 Spring/Kotlin 통합 기능에 위임합니다.
+4. 샘플 출력, HTTP 응답, 저장소 상태, 메트릭, 트레이스 또는 테스트 기대값으로 보이는 결과를 검증합니다.
 
 ## 시퀀스 다이어그램
 
-핵심 시퀀스는 호출자 또는 테스트 픽스처 -> 워크샵 어댑터 -> bluetape4k 헬퍼/API -> 외부 런타임 또는 인메모리 백엔드 -> 검증/응답 순서입니다. 전용 시퀀스 이미지가 있는 모듈은 아래 이미지가 상호작용 순서를 보여주며, 없는 경우 소스 테스트가 실행 가능한 시퀀스의 기준입니다.
+핵심 시퀀스는 호출자 또는 테스트 픽스처 -> 워크샵 어댑터 -> bluetape4k 헬퍼/API -> 외부 런타임 또는 인메모리 백엔드 -> 검증/응답 순서입니다. 이 모듈에 전용 시퀀스 자산이 있으면 아래 이미지가 상호작용 순서를 보여 줍니다. 그렇지 않으면 소스 테스트가 실행 가능한 시퀀스의 기준입니다.
 
-## 원문 상세 항목
+Spring Boot REST API에서 응답할 때 `@JsonView`를 사용해 응답 데이터를 필터링하는 방법을 배웁니다.
+bluetape4k의 `Jackson.defaultJsonMapper`를 `@Bean`으로 등록해 KotlinModule + JavaTimeModule 설정을 단순화합니다.
 
-영어 README에는 다음 상세 항목이 포함되어 있습니다. 한국어 요약은 위의 시나리오/아키텍처/흐름을 기준으로 읽고, 코드 예제와 설정 세부사항은 영어 README의 같은 모듈 설명을 함께 참고하세요.
+## 사용한 bluetape4k 기능
 
-- 사용된 bluetape4k 기능
-- Before / After
-- 주요 기능
-- 뷰 계층 구조
-- API 엔드포인트
-- 사용 예제
-- 참고
+| function | artifact | code location | advantage |
+|---|---|---|---|
+| `Jackson.defaultJsonMapper` | `bluetape4k-jackson3` | `JacksonConfig.jsonMapper()` | KotlinModule + JavaTimeModule 사전 등록 — 수동 설정 불필요 |
+| `KLogging` | `bluetape4k-logging` | companion object | 지연 lambda logging |
+| `shouldBeNull()` / `shouldBeEqualTo` | `bluetape4k-assertions` | controller test | Kluent style assertion |
 
-## 실행
+## Before / After
 
-```bash
-./gradlew :json-jsonview-examples:test
+```kotlin
+// Before — Manual JsonMapper setup
+@Bean
+fun jsonMapper(): JsonMapper = JsonMapper.builder()
+    .addModule(KotlinModule.Builder().build())
+    .addModule(JavaTimeModule())
+    .build()
+
+// After — bluetape4k Jackson.defaultJsonMapper
+@Bean
+fun jsonMapper(): JsonMapper = Jackson.defaultJsonMapper
 ```
+
+![Before / After diagram](../../docs/images/readme-diagrams/json-jsonview-examples-diagram-01.png)
+
+![Before / After diagram](../../docs/images/readme-diagrams/json-jsonview-examples-diagram-02.png)
+
+## 주요 기능
+
+- **Response field screening** — 같은 DTO class를 재사용하면서 endpoint별로 노출 필드를 다르게 제어
+- **Hierarchical view inheritance** — `Internal`이 `Public`과 `Analytics`를 동시에 상속해 모든 필드를 노출
+- **Automatically exclude fields not specified in the view** — `content` 필드처럼 `@JsonView` 없이 정의된 필드는 view 적용 시 응답에서 제외됩니다.
+- **Controller level declaration** — method에 `@JsonView`를 선언하면 serialization 단계에서 자동으로 필터링됩니다.
+- **Spring WebFlux coroutine support** — `suspend fun`과 `Flow` 반환 타입에서 동작합니다.
+
+## View hierarchy
+
+```kotlin
+interface Views {
+interface Public // Public information: id, title, category
+interface Analytics // Statistical information: views, likes
+interface Internal: Public, Analytics // Internal information: includes both public + statistics
+}
+```
+
+| view interface | exposure field | explanation |
+|---|---|---|
+| `Views.Public` | `id`, `title`, `category` | 외부 공개용 — 식별자와 기본 정보만 노출 |
+| `Views.Analytics` | `views`, `likes` | 통계와 분석용 — 조회 수와 좋아요 수만 노출 |
+| `Views.Internal` | `id`, `title`, `category`, `views`, `likes` | 내부 관리자용 — Public + Analytics 모두 노출 |
+| (no view) | `content` | 어떤 view에도 포함되지 않으므로 항상 제외 |
+
+## API endpoint
+
+| method | channel | Applied view | response field |
+|---|---|---|---|
+| `GET` | `/articles` | `Views.Public` | `id`, `title`, `category` |
+| `GET` | `/articles/{id}` | (no view) | 모든 필드(`content` 포함) |
+| `GET` | `/articles/{id}/analytics` | `Views.Analytics` | `views`, `likes` |
+| `GET` | `/articles/{id}/internal` | `Views.Internal` | `id`, `title`, `category`, `views`, `likes` |
+
+## 사용 예제
+
+### DTO definition — @JsonView applied
+
+```kotlin
+data class ArticleDTO(
+    @JsonView(Views.Public::class)
+    val id: Long?,
+
+    @JsonView(Views.Public::class)
+    val title: String?,
+
+    @JsonView(Views.Public::class)
+    val category: String?,
+
+val content: String?, // @JsonView none — always excluded when applying a view
+
+    @JsonView(Views.Analytics::class)
+    val views: Long?,
+
+    @JsonView(Views.Analytics::class)
+    val likes: Long?,
+)
+```
+
+### Controller — Endpoint-specific view declarations
+
+```kotlin
+@RestController
+@RequestMapping("/articles")
+class ArticleController {
+
+// Full list: Apply public view → expose only id, title, and category
+    @GetMapping
+    @JsonView(Views.Public::class)
+    fun getAllArticles(): Flow<ArticleDTO> = articles.values.asFlow()
+
+// Detailed query: No view → All fields exposed (including content)
+    @GetMapping("/{id}")
+    suspend fun getArticleDetails(@PathVariable id: Long): ArticleDTO? = articles[id]
+
+// Statistics inquiry: Analytics view → Only views and likes are exposed
+    @JsonView(Views.Analytics::class)
+    @GetMapping("/{id}/analytics")
+    suspend fun getArticleAnalytics(@PathVariable id: Long): ArticleDTO? = articles[id]
+
+// Internal view: Internal view → Exposure of both Public + Analytics fields
+    @JsonView(Views.Internal::class)
+    @GetMapping("/{id}/internal")
+    suspend fun getArticleInternal(@PathVariable id: Long): ArticleDTO? = articles[id]
+}
+```
+
+### Jackson 설정
+
+```kotlin
+@Configuration(proxyBeanMethods = false)
+class JacksonConfig {
+
+// bluetape4k Jackson.defaultJsonMapper: KotlinModule + JavaTimeModule pre-registration
+    @Bean
+    fun jsonMapper(): JsonMapper = Jackson.defaultJsonMapper
+}
+```
+
+### 테스트 예제
+
+```kotlin
+// Public view: views, likes return null
+val articles = client.httpGet("/articles")
+    .expectStatus().is2xxSuccessful
+    .expectBodyList<ArticleDTO>()
+    .returnResult().responseBody!!
+
+articles.forEach { it.views.shouldBeNull() } // Check for exclusion of Analytics fields
+articles.forEach { it.likes.shouldBeNull() }
+
+// Analytics view: id, title, category return as null
+val analytics = client.httpGet("/articles/1/analytics")
+    .returnResult<ArticleDTO>().responseBody.awaitSingle()
+
+analytics.id.shouldBeNull()
+analytics.views shouldBeEqualTo 1000L
+
+// Internal view: Public + Analytics return all fields
+val internal = client.httpGet("/articles/1/internal")
+    .returnResult<ArticleDTO>().responseBody.awaitSingle()
+
+internal.id shouldBeEqualTo 1
+internal.views shouldBeEqualTo 1000L
+```
+
+## 참고 자료
+
+* [@JsonView with Spring Boot and Kotlin](https://codersee.com/jsonview-with-spring-boot-and-kotlin/)
+* [Jackson @JsonView official documentation](https://github.com/FasterXML/jackson-annotations/wiki/Jackson-Annotations#jsonview)
+* [Spring MVC @JsonView support](https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-methods/jackson.html)

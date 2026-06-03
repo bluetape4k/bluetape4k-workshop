@@ -27,7 +27,7 @@ The module is organized around the sample entry point or test fixture, the bluet
 
 The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
-## Virtual Thread 개념 구조
+## Virtual Thread Concept Structure
 
 ![Virtual Thread diagram](../../docs/images/readme-diagrams/virtualthreads-rules-diagram-01.png)
 

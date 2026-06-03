@@ -25,17 +25,17 @@ The module is organized around the sample entry point or test fixture, the bluet
 
 The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
-원본: [chaos-monkey-springboot](https://github.com/vaquarkhan/chaos-monkey-springboot)
+Original source: [chaos-monkey-springboot](https://github.com/vaquarkhan/chaos-monkey-springboot)
 
-## 개요
+## Overview
 
-Chaos Monkey for Spring Boot 에 대한 예제입니다.
+This example demonstrates Chaos Monkey for Spring Boot.
 
 ## Chaos Monkey with Springboot
 
 ----------------------------------
 
-## Chaos Engineering 흐름
+## Chaos Engineering Flow
 
 ![Chaos Engineering diagram](../../docs/images/readme-diagrams/spring-boot-chaos-monkey-diagram-01.png)
 

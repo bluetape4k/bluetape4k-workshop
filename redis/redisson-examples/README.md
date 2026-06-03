@@ -27,97 +27,97 @@ The module is organized around the sample entry point or test fixture, the bluet
 
 The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
-Redis 클라이언트 라이브러리 [Redisson](https://redisson.org/)의 분산 동기화 객체를 활용하는 예제 모음입니다.
-bluetape4k의 `RedissonCodecs.LZ4ForyComposite`, `localCachedMap()`, `streamAddArgsOf()`, `VirtualThreadExecutor`, `RedisServer.Launcher`, 테스트 동시성 헬퍼를 활용합니다.
-Testcontainers로 Redis 컨테이너를 자동으로 구동하여 통합 테스트를 수행합니다.
+This collection of examples uses distributed synchronization objects from the Redis client library [Redisson](https://redisson.org/).
+It uses bluetape4k's `RedissonCodecs.LZ4ForyComposite`, `localCachedMap()`, `streamAddArgsOf()`, `VirtualThreadExecutor`, `RedisServer.Launcher`, and test concurrency helpers.
+It automatically starts a Redis container with Testcontainers and runs integration tests against it.
 
-## 아키텍처
+## Architecture
 
 ![redisson examples Architecture diagram](../../docs/images/readme-diagrams/redis-redisson-examples-architecture-01.png)
 
-## 예제 범주
+## Example Categories
 
-### 분산 락 (`locks/`)
+### Distributed Locks (`locks/`)
 
-| 클래스 | 설명 |
+| Class | Description |
 |---|---|
-| `LockExamples` | 기본 분산 락 (`RLock`) |
-| `FairLockExamples` | 공정 락 — 요청 순서 보장 |
-| `ReadWriteLockExamples` | 읽기/쓰기 분리 락 (`RReadWriteLock`) |
-| `FencedLockExamples` | Fencing Token 기반 락 (Split-Brain 방지) |
-| `SpinLockExamples` | 스핀 락 (짧은 임계구역용) |
-| `MultiLockExamples` | 여러 Redis 노드에 걸친 분산 락 |
+| `LockExamples` | Basic distributed lock (`RLock`) |
+| `FairLockExamples` | Fair lock that preserves request order |
+| `ReadWriteLockExamples` | Separate read/write lock (`RReadWriteLock`) |
+| `FencedLockExamples` | Fencing-token-based lock (prevents split brain) |
+| `SpinLockExamples` | Spin lock for short critical sections |
+| `MultiLockExamples` | Distributed lock across multiple Redis nodes |
 
-### 분산 세마포어 (`locks/`)
+### Distributed Semaphores (`locks/`)
 
-| 클래스 | 설명 |
+| Class | Description |
 |---|---|
-| `SemaphoreExamples` | 분산 세마포어 (`RSemaphore`) |
-| `PermitExpirableSemaphoreExamples` | TTL 기반 자동 만료 세마포어 |
-| `CountDownLatchExamples` | 분산 `CountDownLatch` |
+| `SemaphoreExamples` | Distributed semaphore (`RSemaphore`) |
+| `PermitExpirableSemaphoreExamples` | TTL-based auto-expiring semaphore |
+| `CountDownLatchExamples` | Distributed `CountDownLatch` |
 
-### 분산 객체 (`objects/`)
+### Distributed Objects (`objects/`)
 
-| 클래스 | 설명 |
+| Class | Description |
 |---|---|
-| `BucketExamples` | `RBucket` — 객체 홀더 (AtomicReference와 유사) |
-| `AtomicLongExamples` | `RAtomicLong` — 분산 원자적 정수 |
-| `BloomFilterExamples` | `RBloomFilter` — 확률적 멤버십 필터 |
-| `HyperLogLogExamples` | `RHyperLogLog` — 대용량 카디널리티 추정 |
-| `GeoExamples` | `RGeo` — 지리 공간 데이터 |
-| `RateLimiterExamples` | `RRateLimiter` — 분산 Rate Limiting |
-| `IdGeneratorExamples` | `RIdGenerator` — 분산 ID 생성 |
-| `BatchExamples` | 명령 배치 실행 |
+| `BucketExamples` | `RBucket` — object holder similar to `AtomicReference` |
+| `AtomicLongExamples` | `RAtomicLong` — distributed atomic integer |
+| `BloomFilterExamples` | `RBloomFilter` — probabilistic membership filter |
+| `HyperLogLogExamples` | `RHyperLogLog` — large-scale cardinality estimation |
+| `GeoExamples` | `RGeo` — geospatial data |
+| `RateLimiterExamples` | `RRateLimiter` — distributed rate limiting |
+| `IdGeneratorExamples` | `RIdGenerator` — distributed ID generation |
+| `BatchExamples` | Executes commands in batches |
 
 ### Pub/Sub (`objects/`)
 
-| 클래스 | 설명 |
+| Class | Description |
 |---|---|
-| `TopicExamples` | `RTopic` 채널 기반 메시지 발행·구독 |
-| `ReliableTopicExamples` | `RReliableTopic` — 메시지 손실 없는 신뢰적 Pub/Sub |
+| `TopicExamples` | Publishes and subscribes to messages through `RTopic` channels |
+| `ReliableTopicExamples` | `RReliableTopic` — reliable Pub/Sub without message loss |
 
-### 분산 컬렉션 (`collections/`)
+### Distributed Collections (`collections/`)
 
-| 클래스 | 설명 |
+| Class | Description |
 |---|---|
-| `LocalCachedMapExamples` | `RLocalCachedMap` — 로컬 캐시 + Redis 동기화 |
+| `LocalCachedMapExamples` | `RLocalCachedMap` — local cache + Redis synchronization |
 | `StreamExamples` | `RStream` — Redis Streams |
-| `ScoredSortedSetExamples` | `RScoredSortedSet` — 점수 기반 정렬 집합 |
+| `ScoredSortedSetExamples` | `RScoredSortedSet` — score-based sorted set |
 
 ### Read/Write Through
 
-| 클래스 | 설명 |
+| Class | Description |
 |---|---|
-| `ReadWriteThroughExamples` | Cache-as-SOR — DB 읽기/쓰기를 캐시가 대리 처리 |
+| `ReadWriteThroughExamples` | Cache-as-SOR — the cache proxies DB reads and writes |
 
-## 사용된 bluetape4k 기능
+## Used bluetape4k Features
 
-| 기능 | 아티팩트 | 코드 위치 | 이점 |
+| Feature | Artifact | Code Location | Benefit |
 |---|---|---|---|
-| `RedissonCodecs.LZ4ForyComposite` | `bluetape4k-redisson` | `AbstractRedissonTest` | LZ4 압축 + Fory 직렬화 — JSON 대비 공간·속도 우위 |
-| `localCachedMap()` | `bluetape4k-redisson` | `LocalCachedMapExamples` | `LocalCachedMapOptions` DSL과 map 생성 호출을 한 곳에 묶어 Near Cache 설정 중복 축소 |
-| `streamAddArgsOf()` | `bluetape4k-redisson` | `StreamExamples` | Redis Stream append 인자를 Kotlin-friendly helper로 생성 |
-| `VirtualThreadExecutor` | `bluetape4k-coroutines` | `AbstractRedissonTest` | Redisson I/O를 Virtual Thread로 처리 |
-| `RedisServer.Launcher.redis` | `bluetape4k-testcontainers` | `AbstractRedissonTest` | Testcontainers Redis 싱글톤 — 자동 구동·종료 |
-| `ShutdownQueue.register` | `bluetape4k-core` | `AbstractRedissonTest` | JVM 종료 시 RedissonClient 자동 close |
-| `Base58.randomString` | `bluetape4k-io` | `AbstractRedissonTest` | URL-safe 랜덤 키 생성 |
-| `MultithreadingTester` | `bluetape4k-junit5` | `FencedLockExamples` | 고정 스레드풀 동시성 검증 |
-| `StructuredTaskScopeTester` | `bluetape4k-junit5` | `FencedLockExamples` | Virtual Thread 동시성 검증 |
-| `SuspendedJobTester` | `bluetape4k-junit5` | `FencedLockExamples` | 코루틴 경쟁 조건 검증 |
-| `getLockId()` | `bluetape4k-redis` | `FencedLockExamples` | 코루틴 안전한 RFencedLock ID 획득 |
+| `RedissonCodecs.LZ4ForyComposite` | `bluetape4k-redisson` | `AbstractRedissonTest` | LZ4 compression + Fory serialization with better space and speed characteristics than JSON |
+| `localCachedMap()` | `bluetape4k-redisson` | `LocalCachedMapExamples` | Combines the `LocalCachedMapOptions` DSL and map creation call to reduce duplicate Near Cache configuration |
+| `streamAddArgsOf()` | `bluetape4k-redisson` | `StreamExamples` | Creates Redis Stream append arguments with a Kotlin-friendly helper |
+| `VirtualThreadExecutor` | `bluetape4k-coroutines` | `AbstractRedissonTest` | Handles Redisson I/O with Virtual Threads |
+| `RedisServer.Launcher.redis` | `bluetape4k-testcontainers` | `AbstractRedissonTest` | Testcontainers Redis singleton that starts and stops automatically |
+| `ShutdownQueue.register` | `bluetape4k-core` | `AbstractRedissonTest` | Automatically closes `RedissonClient` on JVM shutdown |
+| `Base58.randomString` | `bluetape4k-io` | `AbstractRedissonTest` | Generates URL-safe random keys |
+| `MultithreadingTester` | `bluetape4k-junit5` | `FencedLockExamples` | Verifies concurrency with a fixed thread pool |
+| `StructuredTaskScopeTester` | `bluetape4k-junit5` | `FencedLockExamples` | Verifies Virtual Thread concurrency |
+| `SuspendedJobTester` | `bluetape4k-junit5` | `FencedLockExamples` | Verifies coroutine race conditions |
+| `getLockId()` | `bluetape4k-redis` | `FencedLockExamples` | Gets coroutine-safe `RFencedLock` IDs |
 
 ## bluetape4k Before / After
 
-### `RedissonCodecs.LZ4ForyComposite` vs 기본 codec
+### `RedissonCodecs.LZ4ForyComposite` vs Default Codec
 
 ```kotlin
-// Before — 기본 JSON 직렬화 (텍스트, 용량 큼)
+// Before — default JSON serialization (text-based, larger payloads)
 val config = Config().apply {
     useSingleServer().setAddress(redisUrl)
-    codec = JsonJacksonCodec()  // 텍스트 기반 직렬화
+    codec = JsonJacksonCodec()  // text-based serialization
 }
 
-// After — bluetape4k LZ4ForyComposite (이진 압축 직렬화)
+// After — bluetape4k LZ4ForyComposite (binary compressed serialization)
 val config = Config().apply {
     useSingleServer()
         .setAddress(redis.url)
@@ -126,64 +126,64 @@ val config = Config().apply {
     executor = VirtualThreadExecutor          // Virtual Thread I/O
     threads = 256
     nettyThreads = 128
-    codec = RedissonCodecs.LZ4ForyComposite   // LZ4 + Fory 이진 압축
+    codec = RedissonCodecs.LZ4ForyComposite   // LZ4 + Fory binary compression
 }
 ```
 
-### 동시성 테스트 — BT 테스트 헬퍼
+### Concurrency Testing — BT Test Helpers
 
 ```kotlin
-// Before — 수동 Thread 생성 (비결정적, 경쟁 조건 검증 어려움)
+// Before — manual Thread creation (non-deterministic, hard to verify race conditions)
 val threads = (1..8).map { Thread { lock.tryLock() } }
 threads.forEach { it.start() }
 threads.forEach { it.join() }
 
-// After — bluetape4k MultithreadingTester (재현 가능한 동시성 검증)
+// After — bluetape4k MultithreadingTester (reproducible concurrency verification)
 MultithreadingTester()
     .workers(8)
     .rounds(2)
     .add {
         val token = lock.tryLockAndGetTokenAsync(5, 10, TimeUnit.SECONDS).get()
         if (token != null) {
-            // 임계구역 작업
+            // Critical section work
             lock.unlock()
         }
     }
     .run()
 ```
 
-### `SuspendedJobTester` — 코루틴 FencedLock
+### `SuspendedJobTester` — Coroutine FencedLock
 
 ```kotlin
-// After — 코루틴 환경에서 FencedLock 동시성 검증
+// After — verifies FencedLock concurrency in a coroutine environment
 SuspendedJobTester()
     .workers(8)
     .rounds(16)
     .add {
-        val mlockId = redisson.getLockId("fencedLock")  // BT 코루틴 안전 getLockId
+        val mlockId = redisson.getLockId("fencedLock")  // BT coroutine-safe getLockId
         val locked = lock.tryLockAsync(5, 10, TimeUnit.SECONDS, mlockId).await()
         if (locked) {
-            // 임계구역
+            // Critical section
             lock.unlockAsync(mlockId).await()
         }
     }
     .run()
 ```
 
-## 실행
+## Running
 
 ```bash
-# Redis 컨테이너 자동 구동 후 테스트
+# Automatically starts the Redis container, then runs tests
 ./gradlew :redis-redisson-examples:test
 
-# 특정 예제만 실행
+# Run only a specific example
 ./gradlew :redis-redisson-examples:test --tests "*.FencedLockExamples"
 ```
 
-## 참고
+## References
 
-- [Redisson 공식 문서](https://redisson.org/docs/)
+- [Redisson official docs](https://redisson.org/docs/)
 - [Redisson GitHub](https://github.com/redisson/redisson)
 - [bluetape4k-redis](https://github.com/bluetape4k/bluetape4k-projects)
 - [bluetape4k-redisson](https://github.com/bluetape4k/bluetape4k-projects)
-- Spring Data Redis 기반 예제는 [`spring-data/redis-examples`](../../spring-data/redis-examples) 참고
+- For Spring Data Redis-based examples, see [`spring-data/redis-examples`](../../spring-data/redis-examples)

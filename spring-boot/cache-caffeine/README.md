@@ -38,39 +38,39 @@ and structured logging with `KLoggingChannel`.
 
 ---
 
-## 상세-설명
+## Detailed Description
 
-[Caffeine](https://github.com/ben-manes/caffeine)을 Spring Cache 추상화와 연동하는 예제입니다.
-bluetape4k의 `caffeine { }` DSL과 `VirtualThreadExecutor`로 로컬 인메모리 캐시를 구성합니다.
+This example integrates [Caffeine](https://github.com/ben-manes/caffeine) with the Spring Cache abstraction.
+It configures a local in-memory cache with the bluetape4k `caffeine { }` DSL and `VirtualThreadExecutor`.
 
-## 아키텍처
+## Architecture
 
 ![cache caffeine Architecture diagram](../../docs/images/readme-diagrams/spring-boot-cache-caffeine-architecture-01.png)
 
-## 주요 구성
+## Main Components
 
-| 클래스 | 역할 |
+| Class | Role |
 |---|---|
-| `CaffeineConfig` | `CacheManager` 빈 구성 — bluetape4k `caffeine { }` DSL + `VirtualThreadExecutor` |
-| `CountryRepository` | `@Cacheable`, `@CacheEvict` 어노테이션 적용 |
-| `CountryPrefetcher` | 스케줄러로 캐시를 주기적으로 워밍업(pre-fetch) |
-| `SchedulingConfig` | `@EnableScheduling` 설정 |
+| `CaffeineConfig` | Configures the `CacheManager` bean with the bluetape4k `caffeine { }` DSL + `VirtualThreadExecutor` |
+| `CountryRepository` | Applies the `@Cacheable` and `@CacheEvict` annotations |
+| `CountryPrefetcher` | Periodically warms up the cache through a scheduler |
+| `SchedulingConfig` | Configures `@EnableScheduling` |
 
-## 사용된 bluetape4k 기능
+## bluetape4k Features Used
 
-| 기능 | 아티팩트 | 코드 위치 | 이점 |
+| Feature | Artifact | Code Location | Benefit |
 |---|---|---|---|
-| `caffeine { }` DSL | `bluetape4k-cache-core` | `CaffeineConfig.caffeineBean()` | 타입 안전 빌더, Kotlin Duration 직접 사용 |
-| `VirtualThreadExecutor` | `bluetape4k-coroutines` | `CaffeineConfig.caffeineBean()` | Lazy loading을 Virtual Thread로 실행 |
-| `KLoggingChannel` | `bluetape4k-logging` | 모든 companion object | 코루틴 컨텍스트 포함 구조적 로깅 |
-| `randomString()` | `bluetape4k-core` | `Country.kt` | 캐시 페이로드 테스트 데이터 생성 |
+| `caffeine { }` DSL | `bluetape4k-cache-core` | `CaffeineConfig.caffeineBean()` | Type-safe builder with direct Kotlin Duration support |
+| `VirtualThreadExecutor` | `bluetape4k-coroutines` | `CaffeineConfig.caffeineBean()` | Runs lazy loading on Virtual Threads |
+| `KLoggingChannel` | `bluetape4k-logging` | All companion objects | Structured logging with coroutine context |
+| `randomString()` | `bluetape4k-core` | `Country.kt` | Generates test data for cache payloads |
 
 ## bluetape4k Before / After
 
-### `caffeine { }` DSL vs 기존 빌더
+### `caffeine { }` DSL vs Traditional Builder
 
 ```kotlin
-// Before — Java Caffeine.newBuilder() 방식
+// Before — Java Caffeine.newBuilder() style
 @Bean
 fun cacheManager(): CacheManager = CaffeineCacheManager().apply {
     setCaffeine(
@@ -82,30 +82,30 @@ fun cacheManager(): CacheManager = CaffeineCacheManager().apply {
     )
 }
 
-// After — bluetape4k caffeine { } DSL (Kotlin Duration, 가독성 향상)
+// After — bluetape4k caffeine { } DSL (Kotlin Duration, improved readability)
 @Bean
 fun caffeineBean(): Caffeine<Any, Any> = caffeine {
     initialCapacity(100)
     maximumSize(1000)
-    expireAfterAccess(5.minutes.toJavaDuration())  // kotlin.time.Duration 직접 사용
+    expireAfterAccess(5.minutes.toJavaDuration())  // Uses kotlin.time.Duration directly
     recordStats()
-    executor(VirtualThreadExecutor)                // Virtual Thread로 lazy loading
+    executor(VirtualThreadExecutor)                // Lazy loading on Virtual Threads
 }
 ```
 
-### `KLoggingChannel` vs 기존 로거
+### `KLoggingChannel` vs Traditional Logger
 
 ```kotlin
-// Before — LoggerFactory 직접 사용
+// Before — Direct LoggerFactory usage
 private val logger = LoggerFactory.getLogger(CaffeineConfig::class.java)
 
-// After — KLoggingChannel (코루틴 MDC 컨텍스트 전파 포함)
+// After — KLoggingChannel (includes coroutine MDC context propagation)
 companion object: KLoggingChannel()
 
 log.debug { "Loading country with code[$code]..." }  // lazy lambda
 ```
 
-## 캐시 설정 예시
+## Cache Configuration Example
 
 ```kotlin
 @Configuration
@@ -132,13 +132,13 @@ class CaffeineConfig {
 }
 ```
 
-## 실행
+## Run
 
 ```bash
 ./gradlew :cache-caffeine:bootRun
 ```
 
-## 참고
+## References
 
 - [Caffeine GitHub](https://github.com/ben-manes/caffeine)
 - [Spring Cache Abstraction](https://docs.spring.io/spring-framework/reference/integration/cache.html)

@@ -29,10 +29,28 @@
 
 ![Exposed Examples 시퀀스 다이어그램](../docs/images/readme-diagrams/exposed-dao-web-transaction-sequence-01.png)
 
-## 원문 상세 항목
+Spring Boot와 [JetBrains Exposed](https://github.com/JetBrains/Exposed) ORM을 사용하는 운영 스타일 예제입니다.
 
-영어 README에는 다음 상세 항목이 포함되어 있습니다. 한국어 요약은 위의 시나리오/아키텍처/흐름을 기준으로 읽고, 코드 예제와 설정 세부사항은 영어 README의 같은 모듈 설명을 함께 참고하세요.
+## 하위 모듈
 
-- Submodules
-- Domain
-- Key Patterns Demonstrated
+| 모듈 | 스택 | 트랜잭션 전략 |
+|--------|-------|-------------|
+| [mvc-jdbc](./mvc-jdbc/) | Spring MVC + Exposed JDBC | `@Transactional` (Spring declarative) |
+| [mvc-virtualthread](./mvc-virtualthread/) | Spring MVC + Virtual Threads + Exposed JDBC | `virtualFuture(executor){ transaction(db){} }` |
+| [webflux-r2dbc](./webflux-r2dbc/) | WebFlux + Coroutines + Exposed R2DBC | `suspendTransaction(db=db){ }` |
+
+## 도메인
+
+세 모듈은 모두 같은 Author/Book/Product/Order 도메인을 전체 CRUD와 함께 구현합니다. 또한 lock ordering과 재고 차감을 보여주는 동시 `placeOrder` use case를 포함합니다.
+
+```
+Author ──< Book
+Product
+Order ──< OrderLine ──> Product
+```
+
+## 보여주는 핵심 패턴
+
+- **mvc-jdbc**: Spring declarative `@Transactional`, SELECT FOR UPDATE, rollback verification
+- **mvc-virtualthread**: `virtualFuture` VT executor pattern, `ExecutionException` unwrapping, no `@Transactional`
+- **webflux-r2dbc**: `Flow<T>` repositories, `suspendTransaction{}`, concurrent order test with coroutines

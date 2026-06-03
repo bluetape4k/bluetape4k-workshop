@@ -182,5 +182,3 @@ Test coverage: 73 tests, 6 skipped (annotated `@Disabled` for known Resilience4j
 - [Resilience4j Spring Boot 3 Demo](https://github.com/resilience4j/resilience4j-spring-boot3-demo)
 - [Resilience4j Kotlin Coroutines support](https://resilience4j.readme.io/docs/getting-started-3)
 - [bluetape4k-leader](https://github.com/bluetape4k/bluetape4k-leader) — distributed leader election
-
-[한국어](README.ko.md)

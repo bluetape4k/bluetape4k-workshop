@@ -25,14 +25,14 @@ The module is organized around the sample entry point or test fixture, the bluet
 
 The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
-## 아키텍처 다이어그램
+## Architecture Diagram
 
 ![gateway example Architecture diagram](../../docs/images/readme-diagrams/spring-cloud-gateway-example-diagram-01.png)
 
-## 참고
+## Notes
 
-이 예제는 Bucket4j 를 사용하지 않고, Spring Cloud에서 자체 제공하는
-Redis 를 이용한 Rate Limiter 와 Resilience4j 의 Circuit Breaker를 사용하는 예를 보여준다.
+This example does not use Bucket4j. It demonstrates Spring Cloud's built-in
+Redis-backed Rate Limiter and Resilience4j Circuit Breaker.
 
 ## Resources
 

@@ -4,42 +4,95 @@
 
 ## 예제 시나리오
 
-이 예제는 **bucket4j-advanced — Advanced Rate Limit Strategies** 모듈을 실행 가능한 요청 속도 제한 예제로 보여줍니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 사용 방식을 중심으로 설명합니다.
-
-## 아키텍처 다이어그램
-
-![bucket4j-advanced — Advanced Rate Limit Strategies Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/ratelimit-bucket4j-advanced-readme-architecture-01.png)
-
-모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성으로 구성됩니다. README와 코드를 비교할 때는 `io.bluetape4k.workshop.ratelimit` 패키지 아래의 구현을 기준으로 삼습니다.
-
-![bucket4j-advanced — Advanced Rate Limit Strategies 아키텍처 다이어그램](../../docs/images/readme-diagrams/ratelimit-bucket4j-advanced-architecture-01.png)
+이 예제는 **bucket4j-advanced — Advanced Rate Limit Strategies**를 실행 가능한 요청 속도 제한 워크숍 조각으로 다룹니다. 개발자가 먼저 확인할 흐름인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄여 주는 라이브러리와 프레임워크 API 관찰에 초점을 맞춥니다.
 
 ## 흐름 다이어그램
 
-1. `ratelimit-bucket4j-advanced` 예제에 필요한 로컬 런타임을 준비합니다.
+1. `ratelimit-bucket4j-advanced`에 필요한 로컬 런타임을 준비합니다.
 2. 예제 시나리오를 담당하는 애플리케이션, 컨트롤러, 서비스 또는 테스트 픽스처를 실행합니다.
-3. 반복적인 인프라 처리는 bluetape4k 유틸리티 또는 Spring/Kotlin 통합 기능에 위임합니다.
-4. 샘플 출력, HTTP 응답, 저장소 상태, metric, trace 또는 테스트 기대값으로 결과를 검증합니다.
+3. 반복적인 인프라 작업을 bluetape4k 유틸리티나 Spring/Kotlin 통합에 위임합니다.
+4. 샘플 출력, HTTP 응답, 리포지토리 상태, 메트릭, 트레이스 또는 테스트 기대값으로 보이는 결과를 검증합니다.
 
 ## 시퀀스 다이어그램
 
-핵심 시퀀스는 호출자 또는 테스트 픽스처 -> 워크샵 어댑터 -> bluetape4k 헬퍼/API -> 외부 런타임 또는 인메모리 백엔드 -> 검증/응답 순서입니다. 전용 시퀀스 이미지가 있는 모듈은 아래 이미지가 상호작용 순서를 보여주며, 없는 경우 소스 테스트가 실행 가능한 시퀀스의 기준입니다.
+핵심 시퀀스는 호출자 또는 테스트 픽스처 -> 워크숍 어댑터 -> bluetape4k 헬퍼/API -> 외부 런타임 또는 인메모리 백엔드 -> 검증/응답 순서입니다. 이 모듈에 전용 시퀀스 자산이 있으면 아래 이미지가 상호작용 순서를 보여 줍니다. 그렇지 않으면 소스 테스트가 실행 가능한 시퀀스의 기준입니다.
 
-## 원문 상세 항목
+Spring Boot WebFlux + Coroutines 워크숍 모듈로, Redis(Lettuce)를 백엔드로 사용하는 세 가지 Bucket4j 요청 제한 식별 전략을 보여 줍니다.
 
-영어 README에는 다음 상세 항목이 포함되어 있습니다. 한국어 요약은 위의 시나리오/아키텍처/흐름을 기준으로 읽고, 코드 예제와 설정 세부사항은 영어 README의 같은 모듈 설명을 함께 참고하세요.
+## 아키텍처
 
-- Architecture
-- Rate-Limit Strategies
-- Before / After Comparison
-- Response Headers
-- Proxy Trust Configuration
-- Running
-- Example Requests
-- Dependencies
+![bucket4j-advanced — Advanced Rate Limit Strategies Graphviz architecture diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-advanced-readme-architecture-01.png)
+
+![bucket4j advanced Architecture diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-advanced-architecture-01.png)
+
+## 요청 제한 전략
+
+| 전략 | 엔드포인트 | 키 | 버킷 | 필요한 헤더 |
+|---|---|---|---|---|
+| IP 기반 | `GET /api/anonymous/hello` | `ip:<address>` | 20 tokens / 10 s | 없음 |
+| userId 기반 | `GET /api/authenticated/hello` | `user:<userId>` | 50 tokens / 10 s | `X-User-ID` |
+| 조합(IP + userId) | `GET /api/sensitive/hello` | `combined:<ip>:<userId>` | 10 tokens / 10 s | `X-User-ID` |
+
+## 적용 전 / 후 비교
+
+| 관심사 | 적용 전(기본 `bucker4j-bluetape4k-webflux`) | 적용 후(이 모듈) |
+|---|---|---|
+| 식별 전략 | 단일 전략(userId 또는 IP) | 세 개의 독립 전략 |
+| 필터 격리 | 겹치는 필터 두 개가 이중 카운팅을 유발 | 각 필터가 자신의 경로 prefix만 처리 |
+| 응답 헤더 | `X-BLUETAPE4K-REMAINING-TOKEN`(커스텀) | `X-RateLimit-Remaining` + `Retry-After`(HTTP 표준) |
+| 사용자 ID 헤더 | `X-BLUETAPE4K-UID` | `X-User-ID` |
+| 누락된 식별자 | 조용히 remoteAddress로 대체 | 명시적 오류 코드(400 / 401) |
+| 조합 quota | 지원하지 않음 | IP+userId 복합 키 |
+
+## 응답 헤더
+
+| 헤더 | 의미 |
+|---|---|
+| `X-RateLimit-Remaining` | 이 요청 이후 현재 윈도우에 남은 토큰 수 |
+| `X-RateLimit-Reset` | _(예약됨. 아직 채우지 않음)_ |
+| `Retry-After` | 재시도 전 기다릴 초. HTTP 429 응답에만 포함됩니다. |
+
+## 프록시 신뢰 설정
+
+기본값은 `ratelimit.trust-proxy=false`이며 `X-Forwarded-For` / `X-Real-IP` 헤더는 **무시**됩니다. IP 추출에는 항상 원시 TCP remote address를 사용합니다.
+
+**보안 경고**: `ratelimit.trust-proxy=true`를 설정하면 `X-Forwarded-For`를 신뢰하고 해당 헤더의 **가장 왼쪽** IP를 클라이언트 주소로 사용합니다. 애플리케이션이 알려진 통제된 리버스 프록시(예: 내부 로드 밸런서) 뒤에 있을 때만 활성화하세요. 신뢰할 수 있는 프록시가 없으면 클라이언트가 `X-Forwarded-For` 헤더에 임의의 IP 주소를 위조해 IP별 요청 제한을 완전히 우회할 수 있습니다.
+
+```yaml
+# application.yml — enable only behind a trusted proxy
+ratelimit:
+  trust-proxy: true
+```
 
 ## 실행
 
 ```bash
-./gradlew :ratelimit-bucket4j-advanced:test
+# Start a Redis instance (or let Testcontainers manage it in dev/test profile)
+./gradlew :bucket4j-advanced:bootRun
+
+# Run tests
+./gradlew :bucket4j-advanced:test
 ```
+
+## 예제 요청
+
+```bash
+# IP-based (anonymous)
+curl http://localhost:8080/api/anonymous/hello
+
+# userId-based (authenticated)
+curl -H "X-User-ID: alice" http://localhost:8080/api/authenticated/hello
+
+# Combined IP + userId (sensitive)
+curl -H "X-User-ID: alice" http://localhost:8080/api/sensitive/hello
+```
+
+## 의존성
+
+| 의존성 | 목적 |
+|---|---|
+| `bluetape4k-bucket4j` | `DistributedSuspendRateLimiter`, `AsyncBucketProxyProvider`, `bucketConfiguration {}` DSL |
+| `bucket4j-lettuce` | Redis-backed distributed `ProxyManager` |
+| `bluetape4k-redis` / `lettuce-core` | Lettuce Redis client |
+| `bluetape4k-coroutines` | `mono {}`, `awaitSingleOrNull()` bridges |
+| `bluetape4k-testcontainers` | `RedisServer.Launcher.redis` singleton for tests |

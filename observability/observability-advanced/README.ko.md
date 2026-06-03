@@ -30,18 +30,18 @@ HTTP(WebFlux), 코루틴 서비스, H2 데이터베이스(Exposed JDBC), Redis �
 
 **캐시 미스 경로:**
 ```
-http.server.requests              (자동)
-  └─ user.service.get             (수동)
-       ├─ user.cache.get          (수동 — null 반환)
-       ├─ user.db.find            (수동)
-       └─ user.cache.put          (수동)
+http.server.requests              (auto)
+  └─ user.service.get             (manual)
+       ├─ user.cache.get          (manual — returns null)
+       ├─ user.db.find            (manual)
+       └─ user.cache.put          (manual)
 ```
 
 **캐시 히트 경로:**
 ```
-http.server.requests              (자동)
-  └─ user.service.get             (수동)
-       └─ user.cache.get          (수동 — User 반환)
+http.server.requests              (auto)
+  └─ user.service.get             (manual)
+       └─ user.cache.get          (manual — returns User)
 ```
 
 ## 핵심 개념
@@ -148,6 +148,24 @@ user.service.get
 
 로컬 load run은 error rate가 1%를 넘거나, p95 latency가 scenario README 임계값을 넘거나,
 컨테이너 CPU/메모리가 포화되거나, 애플리케이션 로그에 연결 실패가 반복되면 중단합니다.
+
+## 설정
+
+```yaml
+workshop:
+  observability:
+    redis:
+      url: redis://localhost:6379  # override in tests via Testcontainers
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:observability;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+```
 
 ## 의존성
 

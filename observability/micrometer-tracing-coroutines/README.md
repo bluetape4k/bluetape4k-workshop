@@ -19,8 +19,8 @@ The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k h
 
 ![Micrometer Observation for Spring Boot 4 WebFlux & Coroutines sequence diagram](../../docs/images/readme-diagrams/observability-micrometer-tracing-coroutines-sequence-01.png)
 
-Spring Boot 4 WebFlux 환경에서 Micrometer Tracing을 동기(Sync), 리액터(Reactor), 코루틴(Coroutine) 방식으로 적용하는 예제입니다.
-bluetape4k의 `withObservation` / `withObservationSuspending` DSL로 코루틴 context에서 tracing span을 안전하게 전파합니다.
+This example applies Micrometer Tracing in synchronous, Reactor, and coroutine styles in a Spring Boot 4 WebFlux environment.
+It safely propagates tracing spans through coroutine context with bluetape4k's `withObservation` / `withObservationSuspending` DSL.
 
 ## Architecture
 

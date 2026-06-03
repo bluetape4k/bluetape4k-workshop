@@ -29,7 +29,7 @@ The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k h
 
 JPA & QueryDSL example using Spring Boot.
 
-## 아키텍처 다이어그램
+## Architecture Diagram
 
 ![jpa querydsl Class Structure diagram](../../docs/images/readme-diagrams/spring-data-jpa-querydsl-diagram-01.png)
 

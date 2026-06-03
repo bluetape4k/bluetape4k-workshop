@@ -29,39 +29,39 @@ The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k h
 
 ![Kafka Demo sequence diagram](../../docs/images/readme-diagrams/messaging-kafka-reply-sequence-01.png)
 
-Spring Kafka를 사용하는 기본 메시지 발행·소비 예제입니다.
-bluetape4k의 `KafkaServer.Launcher`로 Testcontainers Kafka를 자동 구동하고, `bluetape4k-kafka4`의 `suspendSend()`로 Spring Kafka 4 발행 경로를 코루틴 친화적으로 처리합니다.
+This is a basic message publishing and consuming example that uses Spring Kafka.
+It starts Testcontainers Kafka automatically with bluetape4k's `KafkaServer.Launcher`, and handles the Spring Kafka 4 publishing path in a coroutine-friendly way with `suspendSend()` from `bluetape4k-kafka4`.
 
-## 아키텍처
+## Architecture
 
 ![kafka Architecture diagram](../../docs/images/readme-diagrams/messaging-kafka-architecture-01.png)
 
-## 주요 구성
+## Key Components
 
-| 클래스 | 역할 |
+| Class | Role |
 |---|---|
-| `KafkaApplication` | `KafkaServer.Launcher.kafka`로 Testcontainers Kafka 자동 구동 |
-| `KafkaConfig` | `KafkaTemplate` 빈 구성 |
-| `GreetingController` | `suspend` 엔드포인트 — `KafkaTemplate.suspendSend()`로 메시지 발행 |
-| `SimpleMessageHandler` | `TOPIC_SIMPLE` 문자열 메시지 소비 |
-| `GreetingMessageHandler` | `TOPIC_GREETING` JSON 객체 메시지 소비 |
-| `LoggerMessageHandler` | 모든 토픽 로깅 |
+| `KafkaApplication` | Starts Testcontainers Kafka automatically with `KafkaServer.Launcher.kafka` |
+| `KafkaConfig` | Configures the `KafkaTemplate` bean |
+| `GreetingController` | `suspend` endpoint that publishes messages with `KafkaTemplate.suspendSend()` |
+| `SimpleMessageHandler` | Consumes string messages from `TOPIC_SIMPLE` |
+| `GreetingMessageHandler` | Consumes JSON object messages from `TOPIC_GREETING` |
+| `LoggerMessageHandler` | Logs all topics |
 
-## 사용된 bluetape4k 기능
+## Used bluetape4k Features
 
-| 기능 | 아티팩트 | 코드 위치 | 이점 |
+| Feature | Artifact | Code Location | Benefit |
 |---|---|---|---|
-| `KafkaServer.Launcher.kafka` | `bluetape4k-testcontainers` | `KafkaApplication` companion | Testcontainers Kafka 싱글톤 — `application.yml` 없이 자동 구동 |
-| `KafkaOperations.suspendSend()` | `bluetape4k-kafka4` | `GreetingController` | Spring Kafka 4 `KafkaTemplate` 발행 결과를 suspend 함수 안에서 코루틴 방식으로 대기 |
-| `KLoggingChannel` | `bluetape4k-logging` | 모든 companion object | 코루틴 컨텍스트 포함 구조적 로깅 |
-| `uninitialized()` | `bluetape4k-core` | `GreetingController` | 타입 안전 lateinit 초기화 대체 |
+| `KafkaServer.Launcher.kafka` | `bluetape4k-testcontainers` | `KafkaApplication` companion | Testcontainers Kafka singleton that starts automatically without `application.yml` |
+| `KafkaOperations.suspendSend()` | `bluetape4k-kafka4` | `GreetingController` | Waits for Spring Kafka 4 `KafkaTemplate` publish results in coroutine style inside a suspend function |
+| `KLoggingChannel` | `bluetape4k-logging` | All companion objects | Structured logging with coroutine context |
+| `uninitialized()` | `bluetape4k-core` | `GreetingController` | Type-safe alternative to `lateinit` initialization |
 
 ## bluetape4k Before / After
 
-### `KafkaServer.Launcher` vs 수동 Testcontainers 설정
+### `KafkaServer.Launcher` vs Manual Testcontainers Setup
 
 ```kotlin
-// Before — @DynamicPropertySource + KafkaContainer 수동 관리
+// Before — manual @DynamicPropertySource + KafkaContainer management
 @SpringBootTest
 class KafkaTest {
     companion object {
@@ -76,50 +76,50 @@ class KafkaTest {
     }
 }
 
-// After — KafkaServer.Launcher.kafka 싱글톤 (앱 시작 시 자동 구동)
+// After — KafkaServer.Launcher.kafka singleton (starts automatically on app startup)
 @SpringBootApplication
 class KafkaApplication {
     companion object: KLoggingChannel() {
-        val kafka = KafkaServer.Launcher.kafka  // 한 줄로 끝
+        val kafka = KafkaServer.Launcher.kafka  // done in one line
     }
 }
 ```
 
-### `KLoggingChannel` — 코루틴 로깅
+### `KLoggingChannel` — Coroutine Logging
 
 ```kotlin
 // Before
 private val logger = LoggerFactory.getLogger(SimpleMessageHandler::class.java)
 logger.debug("Received message: {}", message)
 
-// After — KLoggingChannel (lazy lambda + 코루틴 MDC 컨텍스트)
+// After — KLoggingChannel (lazy lambda + coroutine MDC context)
 companion object: KLoggingChannel()
 log.debug { "Received message: $message" }
 ```
 
-## 메시지 발행 예시
+## Message Publishing Examples
 
 ```kotlin
-// 문자열 메시지 발행
+// Publish a string message
 kafkaTemplate.suspendSend(KafkaTopics.TOPIC_SIMPLE, "Hello Kafka")
 
-// JSON 객체 메시지 발행
-kafkaTemplate.suspendSend(KafkaTopics.TOPIC_GREETING, GreetingRequest("Alice", "안녕하세요"))
+// Publish a JSON object message
+kafkaTemplate.suspendSend(KafkaTopics.TOPIC_GREETING, GreetingRequest("Alice", "Hello"))
 ```
 
-## @KafkaListener — 코루틴 제약
+## @KafkaListener — Coroutine Limitations
 
-> **참고**: `@KafkaListener`는 `suspend` 함수와 Reactor를 공식 지원하지 않습니다.
-> `CoroutineSimpleMessageHandler`는 비활성화 상태 (`// @Component`)로 참고용입니다.
+> **Note**: `@KafkaListener` does not officially support `suspend` functions or Reactor.
+> `CoroutineSimpleMessageHandler` is disabled (`// @Component`) and kept for reference.
 
 ```kotlin
-// @Component 비활성화 — KafkaListener는 suspend 미지원
+// @Component disabled — KafkaListener does not support suspend
 class CoroutineSimpleMessageHandler {
     @KafkaListener(topics = [TOPIC_SIMPLE])
-    suspend fun handleWithCoroutines(message: String) { ... }  // 비동작
+    suspend fun handleWithCoroutines(message: String) { ... }  // does not work
 }
 
-// 대안: mono { } 래핑
+// Alternative: wrap with mono { }
 @KafkaListener(topics = [TOPIC_SIMPLE])
 fun handleWithMono(message: String): Mono<Void> = mono {
     delay(100)
@@ -127,21 +127,21 @@ fun handleWithMono(message: String): Mono<Void> = mono {
 }
 ```
 
-## 실행
+## Running
 
 ```bash
 ./gradlew :messaging-kafka:bootRun
-# 또는 테스트
+# Or run tests
 ./gradlew :messaging-kafka:test
 ```
 
-## 관련 모듈
+## Related Modules
 
-- [`messaging/kafka-reply`](../kafka-reply) — `ReplyingKafkaTemplate`을 이용한 요청-응답 패턴
+- [`messaging/kafka-reply`](../kafka-reply) — Request-reply pattern with `ReplyingKafkaTemplate`
 
-## 참고
+## References
 
-- [Spring Kafka 공식 문서](https://docs.spring.io/spring-kafka/reference/)
+- [Spring Kafka official docs](https://docs.spring.io/spring-kafka/reference/)
 - [Apache Kafka](https://kafka.apache.org/documentation/)
 - [bluetape4k-testcontainers](https://github.com/bluetape4k/bluetape4k-projects)
 - [bluetape4k-kafka4](https://github.com/bluetape4k/bluetape4k-projects)
