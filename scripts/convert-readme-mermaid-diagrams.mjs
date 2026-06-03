@@ -207,7 +207,7 @@ function renderSequence(source, title, subtitle) {
   const top = 116;
   const actorY = top;
   const eventStart = 218;
-  const eventGap = 82;
+  const eventGap = 112;
   const height = Math.max(420, eventStart + model.events.length * eventGap + 72);
   const laneLeft = 122;
   const laneRight = width - 122;
@@ -254,12 +254,12 @@ function renderSequence(source, title, subtitle) {
     const maxChars = Math.max(18, Math.floor(labelWidth / 9));
     const labelLines = textLines(`${index + 1}. ${event.label}`, maxChars);
     const labelHeight = labelLines.length * 14 + 12;
-    const labelBottomGap = 16;
-    const labelTop = y - labelBottomGap - labelHeight;
+    const labelTopGap = 14;
+    const labelTop = y + labelTopGap;
     const labelCenterY = labelTop + labelHeight / 2;
-    svg += `\n<rect x="${midX - labelWidth / 2}" y="${labelTop}" width="${labelWidth}" height="${labelHeight}" rx="6" fill="#ffffff" opacity="0.95" stroke="#dbe3ee"/>`;
-    svg += `\n${textBlock(`${index + 1}. ${event.label}`, midX, labelCenterY, "message", "middle", maxChars, 14)}`;
     svg += `\n<path class="${arrowClass}" d="M${fromX} ${y} L${toX} ${y}"/>`;
+    svg += `\n<rect class="message-label" x="${midX - labelWidth / 2}" y="${labelTop}" width="${labelWidth}" height="${labelHeight}" rx="6" fill="#ffffff" opacity="0.95" stroke="#dbe3ee"/>`;
+    svg += `\n${textBlock(`${index + 1}. ${event.label}`, midX, labelCenterY, "message", "middle", maxChars, 14)}`;
   });
 
   svg += "\n</svg>\n";

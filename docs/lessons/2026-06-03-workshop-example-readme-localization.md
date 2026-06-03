@@ -101,3 +101,14 @@ label box 아래와 다음 call/return line 사이의 최소 간격을 12px 이�
 sequence SVG 내 한글 label 0건, `Architects Daughter`/`Comic Mono` font signature
 통과를 확인했다. Contact sheet는 빠른 triage용으로만 쓰고, 이전에 문제가 됐거나
 복잡한 대표 PNG는 원본 크기로 직접 확인한다.
+
+후속 전수 검수에서는 16개 README 변환 자산만으로 충분하지 않았다. 기존 수작업
+sequence diagram까지 포함한 46개 `*sequence*.svg/png` 전체를 같은 규칙으로
+정규화했다. `scripts/normalize-sequence-diagrams.mjs`는 모든 label을 connector
+line 아래로 분리하고 self-call label은 loop segment 아래에 둔다.
+`scripts/validate-sequence-diagrams.mjs`는 시작 y 좌표만 보지 않고 label box와
+connector의 모든 horizontal/vertical segment 교차를 검사한다. 또한 `1.`, `2.`
+같은 숫자-only label과 `Actor N`/`source to target` fallback을 실패로 잡는다.
+최종 검증은 sequence 46개 gate 통과, SVG XML 통과, README image link missing 0건,
+README SVG 직접 참조 0건, README language/parity 검증 통과, 8개 contact sheet와
+Kafka/Kafka Reply/Event/Vert.x 대표 PNG 원본 크기 직접 확인으로 마무리했다.

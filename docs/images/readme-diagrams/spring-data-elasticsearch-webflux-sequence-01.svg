@@ -1,90 +1,66 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="480" viewBox="0 0 960 480" role="img" aria-label="Elasticsearch WebFlux Reactive Search Sequence">
+<svg xmlns="http://www.w3.org/2000/svg" width="1270" height="1263" viewBox="0 0 1270 1263" role="img" aria-label="Elasticsearch WebFlux Search Sequence">
 <defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="arrowBlue" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth"><path d="M1,1 L8,4.5 L1,8 Z" fill="#5B8DEF"/></marker>
-  <marker id="arrowTeal" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth"><path d="M1,1 L8,4.5 L1,8 Z" fill="#45A7A1"/></marker>
+  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
+  <marker id="arrowBlue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M1 1 L7 4 L1 7 Z" fill="#5b8def"/></marker>
+  <marker id="arrowTeal" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M1 1 L7 4 L1 7 Z" fill="#45a7a1"/></marker>
   <style>
-    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter";font-size:38px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Mono";font-size:14px;font-weight:400;fill:#536273}
-    .smallLabel{font-family:"Architects Daughter";font-size:21px;font-weight:400;fill:#102033}
-    .small{font-family:"Comic Mono";font-size:12px;font-weight:400;fill:#536273}
-    .card{stroke-width:2.1;filter:url(#shadow)}
-    .lifeline{stroke:#b0bbca;stroke-width:1.5;stroke-dasharray:6 4;fill:none}
-    .reqArrow{stroke:#5B8DEF;stroke-width:2.1;fill:none;marker-end:url(#arrowBlue)}
-    .rspArrow{stroke:#45A7A1;stroke-width:2.1;stroke-dasharray:7 4;fill:none;marker-end:url(#arrowTeal)}
+    .canvas{fill:#f7f9fc}
+    .frame{fill:#ffffff;stroke:#d8e0ea;stroke-width:1.5}
+    .title{font-family:"Architects Daughter";font-size:34px;fill:#102033}
+    .subtitle{font-family:"Comic Mono";font-size:13px;fill:#536273}
+    .actor{font-family:"Architects Daughter";font-size:17px;fill:#102033}
+    .message{font-family:"Comic Mono";font-size:12px;fill:#263445;paint-order:stroke;stroke:#ffffff;stroke-width:4px;stroke-linejoin:round}
+    .detail{font-family:"Comic Mono";font-size:11px;fill:#536273}
+    .lifeline{stroke:#b8c4d3;stroke-width:1.4;stroke-dasharray:7 6}
+    .call{stroke:#5b8def;stroke-width:2.15;fill:none;marker-end:url(#arrowBlue)}
+    .return{stroke:#45a7a1;stroke-width:2.05;stroke-dasharray:7 5;fill:none;marker-end:url(#arrowTeal)}
+    .box{stroke-width:1.8;filter:url(#shadow)}
   </style>
 </defs>
-<rect class="canvas" width="960" height="480"/>
-<rect class="frame" x="24" y="20" width="912" height="436" rx="16"/>
-<text class="title" x="48" y="66">Elasticsearch WebFlux Search Sequence</text>
-<text class="subtitle" x="48" y="90">BookController → BookService → BookRepository → Elasticsearch (Mono/Flux)</text>
-
-<!-- Participants -->
-<rect class="card" x="40" y="108" width="110" height="44" rx="8" fill="#FDECEF" stroke="#DC6B82"/>
-<text class="smallLabel" style="font-size:17px" x="95" y="135" text-anchor="middle">Client</text>
-
-<rect class="card" x="200" y="108" width="150" height="44" rx="8" fill="#FDECEF" stroke="#DC6B82"/>
-<text class="smallLabel" style="font-size:17px" x="275" y="135" text-anchor="middle">BookController</text>
-
-<rect class="card" x="415" y="108" width="150" height="44" rx="8" fill="#FFF3D9" stroke="#D6A441"/>
-<text class="smallLabel" style="font-size:17px" x="490" y="135" text-anchor="middle">BookService</text>
-
-<rect class="card" x="630" y="108" width="150" height="44" rx="8" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" style="font-size:17px" x="705" y="135" text-anchor="middle">BookRepository</text>
-
-<rect class="card" x="830" y="108" width="90" height="44" rx="8" fill="#E9F7F6" stroke="#45A7A1"/>
-<text class="smallLabel" style="font-size:17px" x="875" y="135" text-anchor="middle">ES</text>
-
-<!-- Lifelines -->
-<line class="lifeline" x1="95" y1="152" x2="95" y2="440"/>
-<line class="lifeline" x1="275" y1="152" x2="275" y2="440"/>
-<line class="lifeline" x1="490" y1="152" x2="490" y2="440"/>
-<line class="lifeline" x1="705" y1="152" x2="705" y2="440"/>
-<line class="lifeline" x1="875" y1="152" x2="875" y2="440"/>
-
-<!-- 1. GET /v1/books -->
-<rect fill="#EAF7EF" stroke="#58A978" stroke-width="1.2" x="40" y="172" width="110" height="22" rx="4"/>
-<text class="small" x="95" y="187" text-anchor="middle">1. GET /v1/books</text>
-<line class="reqArrow" x1="150" y1="183" x2="267" y2="183"/>
-
-<!-- 2. getAll() -->
-<rect fill="#FFF3D9" stroke="#D6A441" stroke-width="1.2" x="200" y="204" width="130" height="22" rx="4"/>
-<text class="small" x="265" y="219" text-anchor="middle">2. getAll()</text>
-<line class="reqArrow" x1="275" y1="215" x2="482" y2="215"/>
-
-<!-- 3. findAll() -->
-<rect fill="#E8F3FF" stroke="#5B8DEF" stroke-width="1.2" x="415" y="236" width="130" height="22" rx="4"/>
-<text class="small" x="480" y="251" text-anchor="middle">3. findAll()</text>
-<line class="reqArrow" x1="490" y1="247" x2="697" y2="247"/>
-
-<!-- 4. search all -->
-<rect fill="#E9F7F6" stroke="#45A7A1" stroke-width="1.2" x="630" y="268" width="110" height="22" rx="4"/>
-<text class="small" x="685" y="283" text-anchor="middle">4. search all</text>
-<line class="reqArrow" x1="705" y1="279" x2="822" y2="279"/>
-
-<!-- 5. hits -->
-<rect fill="#f0faf8" stroke="#45A7A1" stroke-width="1.2" x="40" y="300" width="110" height="22" rx="4"/>
-<text class="small" x="95" y="315" text-anchor="middle">5. List~Book~</text>
-<line class="rspArrow" x1="822" y1="311" x2="150" y2="311"/>
-
-<!-- 6. POST /v1/books -->
-<rect fill="#FFF3D9" stroke="#D6A441" stroke-width="1.2" x="40" y="342" width="130" height="22" rx="4"/>
-<text class="small" x="105" y="357" text-anchor="middle">6. POST /v1/books</text>
-<line class="reqArrow" x1="170" y1="353" x2="267" y2="353"/>
-
-<!-- 7. create(book) -->
-<rect fill="#FFF3D9" stroke="#D6A441" stroke-width="1.2" x="200" y="374" width="130" height="22" rx="4"/>
-<text class="small" x="265" y="389" text-anchor="middle">7. create(book)</text>
-<line class="reqArrow" x1="275" y1="385" x2="482" y2="385"/>
-
-<!-- 8. index document -->
-<rect fill="#E8F3FF" stroke="#5B8DEF" stroke-width="1.2" x="415" y="406" width="130" height="22" rx="4"/>
-<text class="small" x="480" y="421" text-anchor="middle">8. index document</text>
-<line class="reqArrow" x1="490" y1="417" x2="822" y2="417"/>
-
-<!-- 9. Book created -->
-<rect fill="#f7f2ff" stroke="#8A72D6" stroke-width="1.2" x="40" y="416" width="130" height="22" rx="4"/>
-<text class="small" x="105" y="447" text-anchor="middle">9. Book (201 Created)</text>
-<line class="rspArrow" x1="822" y1="443" x2="170" y2="443"/>
+<rect class="canvas" width="1270" height="1263"/>
+<rect class="frame" x="24" y="20" width="1222" height="1223" rx="18"/>
+<text class="title" x="48" y="58">Elasticsearch WebFlux Search Sequence</text>
+<text class="subtitle" x="50" y="84">BookController → BookService → BookRepository → Elasticsearch (Mono/Flux)</text>
+<rect class="box" x="2" y="108" width="180" height="58" rx="10" fill="#e8f3ff" stroke="#7aa0c4"/>
+<text class="actor" x="92" y="137" text-anchor="middle" dominant-baseline="middle">Client</text>
+<line class="lifeline" x1="92" y1="166" x2="92" y2="1205"/>
+<rect class="box" x="273.5" y="108" width="180" height="58" rx="10" fill="#eaf7ef" stroke="#7aa0c4"/>
+<text class="actor" x="363.5" y="137" text-anchor="middle" dominant-baseline="middle">BookController</text>
+<line class="lifeline" x1="363.5" y1="166" x2="363.5" y2="1205"/>
+<rect class="box" x="545" y="108" width="180" height="58" rx="10" fill="#fff3d9" stroke="#7aa0c4"/>
+<text class="actor" x="635" y="137" text-anchor="middle" dominant-baseline="middle">BookService</text>
+<line class="lifeline" x1="635" y1="166" x2="635" y2="1205"/>
+<rect class="box" x="816.5" y="108" width="180" height="58" rx="10" fill="#f1ecff" stroke="#7aa0c4"/>
+<text class="actor" x="906.5" y="137" text-anchor="middle" dominant-baseline="middle">BookRepository</text>
+<line class="lifeline" x1="906.5" y1="166" x2="906.5" y2="1205"/>
+<rect class="box" x="1088" y="108" width="180" height="58" rx="10" fill="#fdecef" stroke="#7aa0c4"/>
+<text class="actor" x="1178" y="137" text-anchor="middle" dominant-baseline="middle">ES</text>
+<line class="lifeline" x1="1178" y1="166" x2="1178" y2="1205"/>
+<path class="call" d="M92 205 L363.5 205"/>
+<rect class="message-label" x="17" y="219" width="421.5" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="227.75" y="234.5" text-anchor="middle" dominant-baseline="middle">1. GET /v1/books</text>
+<path class="call" d="M363.5 313 L635 313"/>
+<rect class="message-label" x="288.5" y="327" width="421.5" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="499.25" y="342.5" text-anchor="middle" dominant-baseline="middle">2. getAll()</text>
+<path class="call" d="M635 421 L906.5 421"/>
+<rect class="message-label" x="560" y="435" width="421.5" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="770.75" y="450.5" text-anchor="middle" dominant-baseline="middle">3. findAll()</text>
+<path class="call" d="M906.5 529 L1178 529"/>
+<rect class="message-label" x="831.5" y="543" width="421.5" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="1042.25" y="558.5" text-anchor="middle" dominant-baseline="middle">4. search all</text>
+<path class="return" d="M1178 637 L92 637"/>
+<rect class="message-label" x="355" y="651" width="560" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="635" y="666.5" text-anchor="middle" dominant-baseline="middle">5. List~Book~</text>
+<path class="call" d="M92 745 L363.5 745"/>
+<rect class="message-label" x="17" y="759" width="421.5" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="227.75" y="774.5" text-anchor="middle" dominant-baseline="middle">6. POST /v1/books</text>
+<path class="call" d="M363.5 853 L635 853"/>
+<rect class="message-label" x="288.5" y="867" width="421.5" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="499.25" y="882.5" text-anchor="middle" dominant-baseline="middle">7. create(book)</text>
+<path class="call" d="M635 961 L1178 961"/>
+<rect class="message-label" x="626.5" y="975" width="560" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="906.5" y="990.5" text-anchor="middle" dominant-baseline="middle">8. index document</text>
+<path class="return" d="M1178 1069 L92 1069"/>
+<rect class="message-label" x="355" y="1083" width="560" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="635" y="1098.5" text-anchor="middle" dominant-baseline="middle">9. Book (201 Created)</text>
 </svg>
