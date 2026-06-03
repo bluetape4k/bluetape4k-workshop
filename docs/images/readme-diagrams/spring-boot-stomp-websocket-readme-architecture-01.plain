@@ -1,13 +1,21 @@
-graph 1 23.539 1.7263
-node entry 1.6219 0.86313 3.2438 1.7263 "Boot App/Test Surface\nStompWebSocketApplication\nGreetingIntegrationTest\nTestSessionHandler\nSpring Boot Stomp Websocket" rounded,filled box #88A3B5 #FFF8E7
-node api 5.9299 0.86313 2.3167 1.1637 "Spring Web Adapters\nTomcatConfig\nGreetingController" rounded,filled box #88A3B5 #EEF7FF
-node service 9.8472 0.86313 2.1292 1.445 "Application Feature\nWebSocketConfig\nGreeting\nHelloMessage" rounded,filled box #88A3B5 #F1F8E9
-node infra 15.041 0.86313 3.0354 1.7263 "Spring Boot Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration" rounded,filled box #88A3B5 #F5F0FF
-node bt 19.255 0.86313 2.3375 1.445 "bluetape4k Boot APIs\nworkshop\ncore\njunit5" rounded,filled box #88A3B5 #EAF7F0
-node runtime 22.703 0.86313 1.6708 0.8825 "Boot Runtime\nSQL / R2DBC" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.2505 0.86313 3.2505 0.86313 4.6192 0.86313 4.6192 0.86313 invokes 4.0076 0.95167 solid #637383
-edge api service 4 7.0946 0.86313 7.0946 0.86313 8.6313 0.86313 8.6313 0.86313 delegates 7.9354 0.95167 solid #637383
-edge service infra 4 10.917 0.86313 10.917 0.86313 13.372 0.86313 13.372 0.86313 "persists / publishes" 12.217 0.95167 solid #637383
-edge infra bt 4 16.568 0.86313 16.568 0.86313 17.94 0.86313 17.94 0.86313 extends 17.322 0.95167 solid #637383
-edge bt runtime 4 20.432 0.86313 20.432 0.86313 21.721 0.86313 21.721 0.86313 adapts 21.146 0.95167 solid #637383
+graph 1 9.4736 19.883
+node entry0 1.9135 0.44125 3.2021 0.8825 "Stomp Web Socket Application\napplication bootstrap" rounded,filled box #88A3B5 #FFF8E7
+node entry1 1.9135 2.0246 2.65 0.8825 "Greeting Integration Test\nwebsocket" rounded,filled box #88A3B5 #FFF8E7
+node entry2 1.9135 3.6079 2.2542 0.8825 "Test Session Handler\nwebsocket" rounded,filled box #88A3B5 #FFF8E7
+node api0 1.9135 5.1913 1.7646 0.8825 "Tomcat Config\nconfiguration" rounded,filled box #88A3B5 #EEF7FF
+node api1 1.9135 6.7746 2.15 0.8825 "Greeting Controller\nHTTP adapter" rounded,filled box #88A3B5 #EEF7FF
+node service0 7.9559 6.7746 2.2021 0.8825 "Web Socket Config\nconfiguration" rounded,filled box #88A3B5 #F1F8E9
+node service1 1.9135 8.3579 1.5771 0.8825 "Greeting\ndomain model" rounded,filled box #88A3B5 #F1F8E9
+node service2 1.9135 9.9413 1.6187 0.8825 "Hello Message\ndomain model" rounded,filled box #88A3B5 #F1F8E9
+node infra0 7.9559 9.9413 3.0354 0.8825 "Spring boot autoconfigure lib\nSpring Boot Layer" rounded,filled box #88A3B5 #F5F0FF
+node infra1 1.9135 11.525 3.8271 0.8825 "Spring boot autoconfigure processor\nSpring Boot Layer" rounded,filled box #88A3B5 #F5F0FF
+node infra2 1.9135 13.108 3.7542 0.8825 "Spring boot configuration processor\nSpring Boot Layer" rounded,filled box #88A3B5 #F5F0FF
+node infra3 1.9135 14.691 2.275 0.8825 "Spring boot devtools\nSpring Boot Layer" rounded,filled box #88A3B5 #F5F0FF
+node bt0 1.9135 16.275 2.3375 0.8825 "workshop\nbluetape4k Boot APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt1 1.9135 17.858 2.3375 0.8825 "core\nbluetape4k Boot APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt2 1.9135 19.441 2.3375 0.8825 "junit5\nbluetape4k Boot APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime0 7.9559 19.441 1.6708 0.8825 "SQL / R2DBC\nBoot Runtime" rounded,filled box #88A3B5 #FFF1F1
+edge api1 service0 4 2.9973 6.7746 2.9973 6.7746 6.7028 6.7746 6.7028 6.7746 delegates 5.1326 6.8631 solid #637383
+edge service2 infra0 4 2.7284 9.9413 2.7284 9.9413 6.2863 9.9413 6.2863 9.9413 "persists / publishes" 5.1326 10.03 solid #637383
+edge bt2 runtime0 4 3.0893 19.441 3.0893 19.441 6.9712 19.441 6.9712 19.441 adapts 5.1326 19.53 solid #637383
 stop

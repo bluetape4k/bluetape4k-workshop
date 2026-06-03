@@ -26,14 +26,17 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Boot App/Test Surface\nCacheResilienceApplication\nResilientCacheServiceTest\nSpring Boot Cache Resilience\ntests", fillcolor="#FFF8E7"];
-  service [label="Application Feature\nResilientProductService", fillcolor="#F1F8E9"];
-  infra [label="Infrastructure Config\nResilientCacheConfig", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k Boot APIs\nworkshop\njunit5\ntestcontainers", fillcolor="#EAF7F0"];
-  runtime [label="Boot Runtime\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
+  entry0 [label="Cache Resilience Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Resilient Cache Service Test\nresilience", fillcolor="#FFF8E7"];
+  service0 [label="Resilient Product Service\nservice component", fillcolor="#F1F8E9"];
+  infra0 [label="Resilient Cache Config\nconfiguration", fillcolor="#F5F0FF"];
+  bt0 [label="workshop\nbluetape4k Boot APIs", fillcolor="#EAF7F0"];
+  bt1 [label="junit5\nbluetape4k Boot APIs", fillcolor="#EAF7F0"];
+  bt2 [label="testcontainers\nbluetape4k Boot APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="Redis\nBoot Runtime", fillcolor="#FFF1F1"];
+  runtime1 [label="Testcontainers\nBoot Runtime", fillcolor="#FFF1F1"];
 
-  entry -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  entry1 -> service0 [label="starts"];
+  service0 -> infra0 [label="persists / publishes"];
+  bt2 -> runtime0 [label="adapts"];
 }

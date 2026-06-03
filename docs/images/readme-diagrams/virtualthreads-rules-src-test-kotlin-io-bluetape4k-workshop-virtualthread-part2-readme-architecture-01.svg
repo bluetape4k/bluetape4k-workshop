@@ -49,16 +49,16 @@
       <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="314.0">JVM Runtime</tspan></text>
       <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="344.0">virtual threads,</tspan><tspan class="layer-detail" x="151.0" y="360.0">platform threads,</tspan><tspan class="layer-detail" x="151.0" y="376.0">containers</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;runtime" data-label="runs on">
-      <path d="M 774.0 226.0 L 774.0 255.0 L 774.0 284.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+    <g class="edge" data-edge="entry0-&gt;runtime0" data-label="runs on">
+      <path d="M 760.0 226.0 L 760.0 255.0 L 760.0 284.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
     </g>
-    <g class="node" data-node="entry" data-lines="Example Family | part2">
-      <rect x="474.0" y="134.0" width="600.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="176.5">Example Family</tspan><tspan class="node-detail" x="774.0" y="200.5">part2</tspan></text>
+    <g class="node" data-node="entry0" data-lines="part2 | Virtual Thread Surface">
+      <rect x="610.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="176.5">part2</tspan><tspan class="node-detail" x="760.0" y="200.5">Virtual Thread Surface</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="JVM Thread Runtime | In-memory / JVM">
-      <rect x="474.0" y="284.0" width="600.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="326.5">JVM Thread Runtime</tspan><tspan class="node-detail" x="774.0" y="350.5">In-memory / JVM</tspan></text>
+    <g class="node" data-node="runtime0" data-lines="In-memory / JVM | JVM Thread Runtime">
+      <rect x="610.0" y="284.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="326.5">In-memory / JVM</tspan><tspan class="node-detail" x="760.0" y="350.5">JVM Thread Runtime</tspan></text>
     </g>
   </g>
 </svg>

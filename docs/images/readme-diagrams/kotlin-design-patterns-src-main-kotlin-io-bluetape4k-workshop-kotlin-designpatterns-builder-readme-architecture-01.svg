@@ -44,34 +44,42 @@
       <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="202.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="218.0">adapters</tspan></text>
     </g>
     <g class="layer" data-layer="service">
-      <rect x="46.0" y="264.0" width="1228.0" height="150.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="284.0" width="174" height="110.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="323.0">Application Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="361.0">services, domain</tspan><tspan class="layer-detail" x="151.0" y="377.0">rules, use cases</tspan></text>
+      <rect x="46.0" y="264.0" width="1228.0" height="132.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
+      <rect x="64.0" y="284.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="314.0">Application Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="352.0">services, domain</tspan><tspan class="layer-detail" x="151.0" y="368.0">rules, use cases</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="432.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="452.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="482.0">Runtime Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="512.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="528.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="544.0">JVM</tspan></text>
+      <rect x="46.0" y="414.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="64.0" y="434.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="464.0">Runtime Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="494.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="510.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="526.0">JVM</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;service" data-label="delegates">
-      <path d="M 774.0 226.0 L 774.0 255.0 L 774.0 284.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
+    <g class="edge" data-edge="entry0-&gt;service0" data-label="starts">
+      <path d="M 760.0 226.0 L 760.0 255.0 L 424.0 255.0 L 424.0 284.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
     </g>
-    <g class="edge" data-edge="service-&gt;runtime" data-label="backs">
-      <path d="M 774.0 394.0 L 774.0 423.0 L 774.0 452.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+    <g class="edge" data-edge="service2-&gt;runtime0" data-label="runs on">
+      <path d="M 1096.0 376.0 L 1096.0 405.0 L 760.0 405.0 L 760.0 434.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
     </g>
-    <g class="node" data-node="entry" data-lines="Example Entrypoints | Kotlin Design Patterns Kotlin | DesignPatterns Builder tests">
-      <rect x="474.0" y="134.0" width="600.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="168.0">Example Entrypoints</tspan><tspan class="node-detail" x="774.0" y="192.0">Kotlin Design Patterns Kotlin</tspan><tspan class="node-detail" x="774.0" y="209.0">DesignPatterns Builder tests</tspan></text>
+    <g class="node" data-node="entry0" data-lines="builder | Example Entrypoints">
+      <rect x="610.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="176.5">builder</tspan><tspan class="node-detail" x="760.0" y="200.5">Example Entrypoints</tspan></text>
     </g>
-    <g class="node" data-node="service" data-lines="Application Services | Enums | Hero | HeroDataClass">
-      <rect x="474.0" y="284.0" width="600.0" height="110.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="318.5">Application Services</tspan><tspan class="node-detail" x="774.0" y="342.5">Enums</tspan><tspan class="node-detail" x="774.0" y="359.5">Hero</tspan><tspan class="node-detail" x="774.0" y="376.5">HeroDataClass</tspan></text>
+    <g class="node" data-node="service0" data-lines="Enums | component">
+      <rect x="274.0" y="284.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="326.5">Enums</tspan><tspan class="node-detail" x="424.0" y="350.5">component</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="Runtime Dependencies | In-memory / JVM">
-      <rect x="474.0" y="452.0" width="600.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="494.5">Runtime Dependencies</tspan><tspan class="node-detail" x="774.0" y="518.5">In-memory / JVM</tspan></text>
+    <g class="node" data-node="service1" data-lines="Hero | component">
+      <rect x="610.0" y="284.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="326.5">Hero</tspan><tspan class="node-detail" x="760.0" y="350.5">component</tspan></text>
+    </g>
+    <g class="node" data-node="service2" data-lines="Hero Data Class | component">
+      <rect x="946.0" y="284.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="326.5">Hero Data Class</tspan><tspan class="node-detail" x="1096.0" y="350.5">component</tspan></text>
+    </g>
+    <g class="node" data-node="runtime0" data-lines="In-memory / JVM | Runtime Dependencies">
+      <rect x="610.0" y="434.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="476.5">In-memory / JVM</tspan><tspan class="node-detail" x="760.0" y="500.5">Runtime Dependencies</tspan></text>
     </g>
   </g>
 </svg>

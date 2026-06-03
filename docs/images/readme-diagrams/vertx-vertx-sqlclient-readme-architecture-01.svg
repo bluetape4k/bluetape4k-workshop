@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="660" viewBox="0 0 1320 660" role="img" aria-label="Vert.x Sql Client Example architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="716" viewBox="0 0 1320 716" role="img" aria-label="Vert.x Sql Client Example architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;vertx/vertx-sqlclient/src/test/kotlin/io/bluetape4k/workshop/vertx/sqlclient/AbstractSqlClientTest.kt&quot;,&quot;vertx/vertx-sqlclient/src/test/kotlin/io/bluetape4k/workshop/vertx/sqlclient/JDBCPoolExamples.kt&quot;,&quot;vertx/vertx-sqlclient/src/test/kotlin/io/bluetape4k/workshop/vertx/sqlclient/dataobject/DataObjectMappingExamples.kt&quot;,&quot;vertx/vertx-sqlclient/src/test/kotlin/io/bluetape4k/workshop/vertx/sqlclient/dataobject/UserDataObject.kt&quot;,&quot;vertx/vertx-sqlclient/src/test/kotlin/io/bluetape4k/workshop/vertx/sqlclient/model/User.kt&quot;,&quot;vertx/vertx-sqlclient/src/test/kotlin/io/bluetape4k/workshop/vertx/sqlclient/model/user-mappers.kt&quot;,&quot;vertx/vertx-sqlclient/src/test/kotlin/io/bluetape4k/workshop/vertx/sqlclient/templates/SqlClientTemplateExamples.kt&quot;,&quot;vertx/vertx-sqlclient/build.gradle.kts&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
   <defs>
     <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
@@ -32,8 +32,8 @@
       .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="660"/>
-  <rect class="frame" x="16" y="16" width="1288" height="628" rx="22"/>
+  <rect class="canvas" width="1320" height="716"/>
+  <rect class="frame" x="16" y="16" width="1288" height="684" rx="22"/>
   <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Vert.x Sql Client Example</text>
   <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Vertx example runtime and module dependencies</text>
   <g>
@@ -44,41 +44,54 @@
       <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="202.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="218.0">adapters</tspan></text>
     </g>
     <g class="layer" data-layer="integration">
-      <rect x="46.0" y="264.0" width="1228.0" height="150.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="284.0" width="174" height="110.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="323.0">Integration Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="361.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="377.0">adapters, helpers</tspan></text>
+      <rect x="46.0" y="264.0" width="1228.0" height="242.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
+      <rect x="64.0" y="284.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="369.0">Integration Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="407.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="423.0">adapters, helpers</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="432.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="452.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="482.0">Runtime Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="512.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="528.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="544.0">JVM</tspan></text>
+      <rect x="46.0" y="524.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="64.0" y="544.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="574.0">Runtime Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="604.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="620.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="636.0">JVM</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;infra" data-label="persists / publishes">
-      <path d="M 774.0 226.0 L 774.0 259.5 L 509.0 259.5 L 509.0 293.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
+    <g class="edge" data-edge="entry0-&gt;infra0" data-label="uses">
+      <path d="M 760.0 226.0 L 760.0 255.0 L 424.0 255.0 L 424.0 284.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
     </g>
-    <g class="edge" data-edge="infra-&gt;bt" data-label="extends">
-      <path d="M 704.0 339.0 L 774.0 339.0 L 844.0 339.0" fill="none" stroke="#3E927D" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-bt)"/>
+    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
+      <path d="M 760.0 486.0 L 760.0 515.0 L 592.0 515.0 L 592.0 544.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
     </g>
-    <g class="edge" data-edge="bt-&gt;runtime" data-label="adapts">
-      <path d="M 1039.0 394.0 L 1039.0 423.0 L 774.0 423.0 L 774.0 452.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+    <g class="node" data-node="entry0" data-lines="Abstract Sql Client Test | sqlclient">
+      <rect x="610.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="176.5">Abstract Sql Client Test</tspan><tspan class="node-detail" x="760.0" y="200.5">sqlclient</tspan></text>
     </g>
-    <g class="node" data-node="entry" data-lines="Example Family | Vert.x Sql Client Example">
-      <rect x="474.0" y="134.0" width="600.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="176.5">Example Family</tspan><tspan class="node-detail" x="774.0" y="200.5">Vert.x Sql Client Example</tspan></text>
+    <g class="node" data-node="infra0" data-lines="Testcontainers lib | Framework Layer">
+      <rect x="274.0" y="284.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="326.5">Testcontainers lib</tspan><tspan class="node-detail" x="424.0" y="350.5">Framework Layer</tspan></text>
     </g>
-    <g class="node" data-node="infra" data-lines="Framework Layer | Testcontainers lib | Testcontainers mysql">
-      <rect x="314.0" y="293.0" width="390.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="327.0">Framework Layer</tspan><tspan class="node-detail" x="509.0" y="351.0">Testcontainers lib</tspan><tspan class="node-detail" x="509.0" y="368.0">Testcontainers mysql</tspan></text>
+    <g class="node" data-node="infra1" data-lines="Testcontainers mysql | Framework Layer">
+      <rect x="610.0" y="284.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="326.5">Testcontainers mysql</tspan><tspan class="node-detail" x="760.0" y="350.5">Framework Layer</tspan></text>
     </g>
-    <g class="node" data-node="bt" data-lines="bluetape4k APIs | io | jdbc | junit5">
-      <rect x="844.0" y="284.0" width="390.0" height="110.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="318.5">bluetape4k APIs</tspan><tspan class="node-detail" x="1039.0" y="342.5">io</tspan><tspan class="node-detail" x="1039.0" y="359.5">jdbc</tspan><tspan class="node-detail" x="1039.0" y="376.5">junit5</tspan></text>
+    <g class="node" data-node="bt0" data-lines="io | bluetape4k APIs">
+      <rect x="946.0" y="284.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="326.5">io</tspan><tspan class="node-detail" x="1096.0" y="350.5">bluetape4k APIs</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="Runtime Dependencies | SQL / R2DBC | Testcontainers">
-      <rect x="474.0" y="452.0" width="600.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="486.0">Runtime Dependencies</tspan><tspan class="node-detail" x="774.0" y="510.0">SQL / R2DBC</tspan><tspan class="node-detail" x="774.0" y="527.0">Testcontainers</tspan></text>
+    <g class="node" data-node="bt1" data-lines="jdbc | bluetape4k APIs">
+      <rect x="274.0" y="394.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="436.5">jdbc</tspan><tspan class="node-detail" x="424.0" y="460.5">bluetape4k APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt2" data-lines="junit5 | bluetape4k APIs">
+      <rect x="610.0" y="394.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="436.5">junit5</tspan><tspan class="node-detail" x="760.0" y="460.5">bluetape4k APIs</tspan></text>
+    </g>
+    <g class="node" data-node="runtime0" data-lines="SQL / R2DBC | Runtime Dependencies">
+      <rect x="442.0" y="544.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="592.0" y="586.5">SQL / R2DBC</tspan><tspan class="node-detail" x="592.0" y="610.5">Runtime Dependencies</tspan></text>
+    </g>
+    <g class="node" data-node="runtime1" data-lines="Testcontainers | Runtime Dependencies">
+      <rect x="778.0" y="544.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="928.0" y="586.5">Testcontainers</tspan><tspan class="node-detail" x="928.0" y="610.5">Runtime Dependencies</tspan></text>
     </g>
   </g>
 </svg>

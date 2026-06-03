@@ -26,16 +26,25 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Boot App/Test Surface\nProblemApplication\nAbstractProblemTest\nResilience4jControllerTest\nSpring Boot Problem tests", fillcolor="#FFF8E7"];
-  api [label="Spring Web Adapters\nResilience4jController\nTaskController\nRestControllerLoggingFilter\nResilience4jTrait", fillcolor="#EEF7FF"];
-  service [label="Application Feature\nInvalidTaskIdException\nTaskNotFoundException\nExampleException", fillcolor="#F1F8E9"];
-  infra [label="Infrastructure Config\nProblemConfig", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k Boot APIs\nworkshop\njunit5\nresilience4j", fillcolor="#EAF7F0"];
-  runtime [label="Boot Runtime\nIn-memory / JVM", fillcolor="#FFF1F1"];
+  entry0 [label="Problem Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Abstract Problem Test\nproblem", fillcolor="#FFF8E7"];
+  entry2 [label="Resilience4j Controller Test\nHTTP adapter", fillcolor="#FFF8E7"];
+  entry3 [label="Task Controller Test\nHTTP adapter", fillcolor="#FFF8E7"];
+  api0 [label="Resilience4j Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  api1 [label="Task Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  api2 [label="Rest Controller Logging Filter\nfilter", fillcolor="#EEF7FF"];
+  api3 [label="Resilience4j Trait\nhandlers", fillcolor="#EEF7FF"];
+  api4 [label="Rest Api Exception Handler\nhandlers", fillcolor="#EEF7FF"];
+  service0 [label="Invalid Task Id Exception\nexceptions", fillcolor="#F1F8E9"];
+  service1 [label="Task Not Found Exception\nexceptions", fillcolor="#F1F8E9"];
+  service2 [label="Example Exception\nexceptions", fillcolor="#F1F8E9"];
+  infra0 [label="Problem Config\nconfiguration", fillcolor="#F5F0FF"];
+  bt0 [label="workshop\nbluetape4k Boot APIs", fillcolor="#EAF7F0"];
+  bt1 [label="junit5\nbluetape4k Boot APIs", fillcolor="#EAF7F0"];
+  bt2 [label="resilience4j\nbluetape4k Boot APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="In-memory / JVM\nBoot Runtime", fillcolor="#FFF1F1"];
 
-  entry -> api [label="invokes"];
-  api -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  api4 -> service0 [label="delegates"];
+  service2 -> infra0 [label="persists / publishes"];
+  bt2 -> runtime0 [label="adapts"];
 }

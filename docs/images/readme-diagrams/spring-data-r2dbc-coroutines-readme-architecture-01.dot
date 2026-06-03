@@ -26,14 +26,25 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Data Demo Surface\nR2dbcApplication\nAbstractR2dbcApplicationTest\nPostControllerTest\nSpring Data R2dbc Coroutines", fillcolor="#FFF8E7"];
-  api [label="Web/Data Adapters\nDatabaseInitializer\nPostController\nRestWebExceptionHandler", fillcolor="#EEF7FF"];
-  infra [label="Repository Layer\nComment\nCommentRepository\nMember\nMemberRepository", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k Data APIs\nworkshop\nio\njunit5", fillcolor="#EAF7F0"];
-  runtime [label="Database Runtime\nSQL / R2DBC\nTestcontainers", fillcolor="#FFF1F1"];
+  entry0 [label="R2dbc Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Abstract R2dbc Application Test\nr2dbc", fillcolor="#FFF8E7"];
+  entry2 [label="Post Controller Test\ncontrollers", fillcolor="#FFF8E7"];
+  entry3 [label="Comment Repository Test\ndomain model", fillcolor="#FFF8E7"];
+  entry4 [label="Member Repository Test\ndomain model", fillcolor="#FFF8E7"];
+  api0 [label="Database Initializer\nr2dbc", fillcolor="#EEF7FF"];
+  api1 [label="Post Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  api2 [label="Rest Web Exception Handler\nhandlers", fillcolor="#EEF7FF"];
+  infra0 [label="Comment\ndomain model", fillcolor="#F5F0FF"];
+  infra1 [label="Comment Repository\nrepository", fillcolor="#F5F0FF"];
+  infra2 [label="Member\ndomain model", fillcolor="#F5F0FF"];
+  infra3 [label="Member Repository\nrepository", fillcolor="#F5F0FF"];
+  infra4 [label="Post\ndomain model", fillcolor="#F5F0FF"];
+  bt0 [label="workshop\nbluetape4k Data APIs", fillcolor="#EAF7F0"];
+  bt1 [label="io\nbluetape4k Data APIs", fillcolor="#EAF7F0"];
+  bt2 [label="junit5\nbluetape4k Data APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="SQL / R2DBC\nDatabase Runtime", fillcolor="#FFF1F1"];
+  runtime1 [label="Testcontainers\nDatabase Runtime", fillcolor="#FFF1F1"];
 
-  entry -> api [label="invokes"];
-  api -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  api2 -> infra0 [label="uses"];
+  bt2 -> runtime0 [label="adapts"];
 }

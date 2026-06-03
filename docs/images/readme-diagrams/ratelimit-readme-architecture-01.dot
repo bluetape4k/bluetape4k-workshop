@@ -26,14 +26,31 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Rate-limit Surface\nRateLimiterWebfluxApplication\nBucket4jAdvancedApplication\nCaffeineApplication\nAbstractRateLimiterApplicationTest", fillcolor="#FFF8E7"];
-  api [label="Web Filter / Controller\nCoroutineController\nReactiveController\nAsyncUserRateLimitWebFilter\nUserRateLimitWebFilter", fillcolor="#EEF7FF"];
-  service [label="Policy Enforcement\nKeyResolver\nRateLimitTargetProvider\nUserKeyResolver\nBucket4jConfig", fillcolor="#F1F8E9"];
-  infra [label="Bucket Storage Layer\nLettuceConfig\nTestRedisConfig\nRequestUtils\nLettuceConfiguration", fillcolor="#F5F0FF"];
-  runtime [label="Bucket Runtime\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
+  entry0 [label="Rate Limiter Webflux Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Bucket4j Advanced Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry2 [label="Caffeine Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry3 [label="Bucket4j Redis Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry4 [label="Abstract Rate Limiter Application Test\nverification", fillcolor="#FFF8E7"];
+  api0 [label="Coroutine Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  api1 [label="Reactive Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  api2 [label="Async User Rate Limit Web Filter\nfilter", fillcolor="#EEF7FF"];
+  api3 [label="User Rate Limit Web Filter\nfilter", fillcolor="#EEF7FF"];
+  api4 [label="Rate Limit Demo Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  service0 [label="Key Resolver\ncomponents", fillcolor="#F1F8E9"];
+  service1 [label="Rate Limit Target Provider\ncomponents", fillcolor="#F1F8E9"];
+  service2 [label="User Key Resolver\ncomponents", fillcolor="#F1F8E9"];
+  service3 [label="Bucket4j Config\nconfiguration", fillcolor="#F1F8E9"];
+  service4 [label="Header Utils\nutils", fillcolor="#F1F8E9"];
+  service5 [label="Rate Limit Config\nconfiguration", fillcolor="#F1F8E9"];
+  infra0 [label="Lettuce Config\nconfiguration", fillcolor="#F5F0FF"];
+  infra1 [label="Test Redis Config\nconfiguration", fillcolor="#F5F0FF"];
+  infra2 [label="Lettuce Config\nconfiguration", fillcolor="#F5F0FF"];
+  infra3 [label="Test Redis Config\nconfiguration", fillcolor="#F5F0FF"];
+  infra4 [label="Request Utils\nutils", fillcolor="#F5F0FF"];
+  runtime0 [label="Redis\nBucket Runtime", fillcolor="#FFF1F1"];
+  runtime1 [label="Testcontainers\nBucket Runtime", fillcolor="#FFF1F1"];
 
-  entry -> api [label="invokes"];
-  api -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> runtime [label="backs"];
+  api4 -> service0 [label="delegates"];
+  service5 -> infra0 [label="persists / publishes"];
+  infra4 -> runtime0 [label="backs"];
 }

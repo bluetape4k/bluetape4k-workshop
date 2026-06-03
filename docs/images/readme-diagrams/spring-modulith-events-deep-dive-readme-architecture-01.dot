@@ -26,16 +26,33 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Example Entrypoints\nApplication\nOrderEventPublicationTests\nSpring Modulith Events Deep Dive\ntests", fillcolor="#FFF8E7"];
-  api [label="API / Adapter Layer\nOrderListeners\nInventory\nStringAggregate\nUuidAggregate", fillcolor="#EEF7FF"];
-  service [label="Application Services\nOrderManagement\nInventory\nOrder\nLoggingConfiguration", fillcolor="#F1F8E9"];
-  infra [label="Infrastructure Layer\nOrderRepository\nOrder", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nhibernate\nidgenerators\nspring", fillcolor="#EAF7F0"];
-  runtime [label="Runtime Dependencies\nSQL / R2DBC", fillcolor="#FFF1F1"];
+  entry0 [label="Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry2 [label="Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry3 [label="Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry4 [label="Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  api0 [label="Order Listeners\nquickstart", fillcolor="#EEF7FF"];
+  api1 [label="Order Listeners\nspringdata", fillcolor="#EEF7FF"];
+  api2 [label="Order Listeners\ntransactions", fillcolor="#EEF7FF"];
+  api3 [label="Inventory\ninventory", fillcolor="#EEF7FF"];
+  api4 [label="String Aggregate\nutil", fillcolor="#EEF7FF"];
+  service0 [label="Order Management\nquickstart", fillcolor="#F1F8E9"];
+  service1 [label="Order Management\nspringdata", fillcolor="#F1F8E9"];
+  service2 [label="Order Management\ntransactions", fillcolor="#F1F8E9"];
+  service3 [label="Inventory\ninventory", fillcolor="#F1F8E9"];
+  service4 [label="Order Management\norder", fillcolor="#F1F8E9"];
+  service5 [label="Order Management\norder", fillcolor="#F1F8E9"];
+  infra0 [label="Order Repository\nrepository", fillcolor="#F5F0FF"];
+  infra1 [label="Order\nspringdata", fillcolor="#F5F0FF"];
+  infra2 [label="Order Repository\nrepository", fillcolor="#F5F0FF"];
+  infra3 [label="Order\ntransactions", fillcolor="#F5F0FF"];
+  infra4 [label="Order Repository\nrepository", fillcolor="#F5F0FF"];
+  bt0 [label="hibernate\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  bt1 [label="idgenerators\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  bt2 [label="spring\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="SQL / R2DBC\nRuntime Dependencies", fillcolor="#FFF1F1"];
 
-  entry -> api [label="invokes"];
-  api -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  api4 -> service0 [label="delegates"];
+  service5 -> infra0 [label="persists / publishes"];
+  bt2 -> runtime0 [label="adapts"];
 }

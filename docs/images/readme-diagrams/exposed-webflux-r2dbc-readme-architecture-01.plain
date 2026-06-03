@@ -1,13 +1,29 @@
-graph 1 23.456 1.7263
-node entry 1.5594 0.86313 3.1188 1.7263 "Web/Test Entrypoints\nExposedWebfluxR2dbcApp\nAbstractWebfluxR2dbcTest\nAuthorControllerTest\nExposed Webflux R2dbc tests" rounded,filled box #88A3B5 #FFF8E7
-node api 6.0132 0.86313 2.7333 1.7263 "MVC/WebFlux Controllers\nAuthorController\nBookController\nDatabaseInitializer\nGlobalExceptionHandler" rounded,filled box #88A3B5 #EEF7FF
-node service 10.175 0.86313 2.2021 1.445 "Application Services\nAuthorService\nBookService\nOrderService" rounded,filled box #88A3B5 #F1F8E9
-node infra 15.02 0.86313 2.2646 1.7263 "Exposed Persistence\nAuthorDTO\nBookDTO\nAuthorRepository\nBookRepository" rounded,filled box #88A3B5 #F5F0FF
-node bt 18.823 0.86313 2.2854 1.445 "bluetape4k Data APIs\nworkshop\njunit5\nassertions" rounded,filled box #88A3B5 #EAF7F0
-node runtime 22.433 0.86313 2.0458 1.445 "SQL Test Runtime\nSQL / R2DBC\nElasticsearch\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.1234 0.86313 3.1234 0.86313 4.4957 0.86313 4.4957 0.86313 invokes 3.8826 0.95167 solid #637383
-edge api service 4 7.3876 0.86313 7.3876 0.86313 8.9228 0.86313 8.9228 0.86313 delegates 8.2271 0.95167 solid #637383
-edge service infra 4 11.281 0.86313 11.281 0.86313 13.739 0.86313 13.739 0.86313 "persists / publishes" 12.582 0.95167 solid #637383
-edge infra bt 4 16.161 0.86313 16.161 0.86313 17.533 0.86313 17.533 0.86313 extends 16.916 0.95167 solid #637383
-edge bt runtime 4 19.975 0.86313 19.975 0.86313 21.259 0.86313 21.259 0.86313 adapts 20.688 0.95167 solid #637383
+graph 1 7.8903 32.549
+node entry0 1.575 0.44125 2.9938 0.8825 "Exposed Webflux R2dbc App\napplication bootstrap" rounded,filled box #88A3B5 #FFF8E7
+node entry1 1.575 2.0246 3.15 0.8825 "Abstract Webflux R2dbc Test\nr2dbc" rounded,filled box #88A3B5 #FFF8E7
+node entry2 1.575 3.6079 2.4833 0.8825 "Author Controller Test\nauthor" rounded,filled box #88A3B5 #FFF8E7
+node entry3 1.575 5.1913 3.1083 0.8825 "Concurrent Place Order Test\norder" rounded,filled box #88A3B5 #FFF8E7
+node entry4 1.575 6.7746 2.4208 0.8825 "Order Controller Test\norder" rounded,filled box #88A3B5 #FFF8E7
+node api0 1.575 8.3579 2.0042 0.8825 "Author Controller\nHTTP adapter" rounded,filled box #88A3B5 #EEF7FF
+node api1 1.575 9.9413 1.8688 0.8825 "Book Controller\nHTTP adapter" rounded,filled box #88A3B5 #EEF7FF
+node api2 1.575 11.525 1.9938 0.8825 "Database Initializer\nconfiguration" rounded,filled box #88A3B5 #EEF7FF
+node api3 1.575 13.108 2.5667 0.8825 "Global Exception Handler\nconfiguration" rounded,filled box #88A3B5 #EEF7FF
+node api4 1.575 14.691 1.9417 0.8825 "Order Controller\nHTTP adapter" rounded,filled box #88A3B5 #EEF7FF
+node service0 6.8257 14.691 2.1292 0.8825 "Author Service\nservice component" rounded,filled box #88A3B5 #F1F8E9
+node service1 1.575 16.275 2.1292 0.8825 "Book Service\nservice component" rounded,filled box #88A3B5 #F1F8E9
+node service2 1.575 17.858 2.1292 0.8825 "Order Service\nservice component" rounded,filled box #88A3B5 #F1F8E9
+node infra0 6.8257 17.858 1.4729 0.8825 "Author DTO\ndto" rounded,filled box #88A3B5 #F5F0FF
+node infra1 1.575 19.441 1.3375 0.8825 "Book DTO\ndto" rounded,filled box #88A3B5 #F5F0FF
+node infra2 1.575 21.025 2.0771 0.8825 "Author Repository\nrepository" rounded,filled box #88A3B5 #F5F0FF
+node infra3 1.575 22.608 1.9417 0.8825 "Book Repository\nrepository" rounded,filled box #88A3B5 #F5F0FF
+node infra4 1.575 24.191 1.5771 0.8825 "Author Table\ndomain model" rounded,filled box #88A3B5 #F5F0FF
+node bt0 1.575 25.775 2.2854 0.8825 "workshop\nbluetape4k Data APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt1 1.575 27.358 2.2854 0.8825 "junit5\nbluetape4k Data APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt2 1.575 28.941 2.2854 0.8825 "assertions\nbluetape4k Data APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime0 6.8257 28.941 2.0458 0.8825 "SQL / R2DBC\nSQL Test Runtime" rounded,filled box #88A3B5 #FFF1F1
+node runtime1 1.575 30.525 2.0458 0.8825 "Elasticsearch\nSQL Test Runtime" rounded,filled box #88A3B5 #FFF1F1
+node runtime2 1.575 32.108 2.0458 0.8825 "Testcontainers\nSQL Test Runtime" rounded,filled box #88A3B5 #FFF1F1
+edge api4 service0 4 2.5503 14.691 2.5503 14.691 5.609 14.691 5.609 14.691 delegates 4.4556 14.78 solid #637383
+edge service2 infra0 4 2.6439 17.858 2.6439 17.858 5.9374 17.858 5.9374 17.858 "persists / publishes" 4.4556 17.946 solid #637383
+edge bt2 runtime0 4 2.7273 28.941 2.7273 28.941 5.6535 28.941 5.6535 28.941 adapts 4.4556 29.03 solid #637383
 stop

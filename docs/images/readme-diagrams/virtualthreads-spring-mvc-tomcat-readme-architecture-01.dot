@@ -26,16 +26,34 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Virtual Thread Surface\nVirtualThreadMvcApp\nAbstractVirtualThreadMvcTest\nHttpbinControllerTest\nVirtualthreads Spring Mvc Tomcat", fillcolor="#FFF8E7"];
-  api [label="Threaded Web Adapters\nSchedulingConfig\nTomcatConfig\nHttpbinController\nMemberController", fillcolor="#EEF7FF"];
-  service [label="Execution Model\nAsyncConfig\nVirtualThreadConfig\nDatabaseInitializer\nMemberRepository", fillcolor="#F1F8E9"];
-  infra [label="Blocking Boundary\nMemberDTO\nMember\nTeam\nTeamRepository", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k Coroutine APIs\nworkshop\ncore\nvirtualthread", fillcolor="#EAF7F0"];
-  runtime [label="JVM Thread Runtime\nSQL / R2DBC\nElasticsearch\nAWS / S3", fillcolor="#FFF1F1"];
+  entry0 [label="Virtual Thread Mvc App\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Abstract Virtual Thread Mvc Test\ntomcat", fillcolor="#FFF8E7"];
+  entry2 [label="Httpbin Controller Test\nHTTP adapter", fillcolor="#FFF8E7"];
+  entry3 [label="Member Controller Test\nHTTP adapter", fillcolor="#FFF8E7"];
+  entry4 [label="Team Controller Test\nHTTP adapter", fillcolor="#FFF8E7"];
+  api0 [label="Scheduling Config\nconfiguration", fillcolor="#EEF7FF"];
+  api1 [label="Tomcat Config\nconfiguration", fillcolor="#EEF7FF"];
+  api2 [label="Httpbin Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  api3 [label="Member Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  api4 [label="Team Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  service0 [label="Async Config\nconfiguration", fillcolor="#F1F8E9"];
+  service1 [label="Virtual Thread Config\nconfiguration", fillcolor="#F1F8E9"];
+  service2 [label="Database Initializer\ndomain model", fillcolor="#F1F8E9"];
+  service3 [label="Member Repository\nrepository", fillcolor="#F1F8E9"];
+  service4 [label="Member Search Condition\ndomain model", fillcolor="#F1F8E9"];
+  service5 [label="Member With Team DTO\ndomain model", fillcolor="#F1F8E9"];
+  infra0 [label="Member DTO\ndomain model", fillcolor="#F5F0FF"];
+  infra1 [label="Member\ndomain model", fillcolor="#F5F0FF"];
+  infra2 [label="Team\ndomain model", fillcolor="#F5F0FF"];
+  infra3 [label="Team Repository\nrepository", fillcolor="#F5F0FF"];
+  bt0 [label="workshop\nbluetape4k Coroutine APIs", fillcolor="#EAF7F0"];
+  bt1 [label="core\nbluetape4k Coroutine APIs", fillcolor="#EAF7F0"];
+  bt2 [label="virtualthread\nbluetape4k Coroutine APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="SQL / R2DBC\nJVM Thread Runtime", fillcolor="#FFF1F1"];
+  runtime1 [label="Elasticsearch\nJVM Thread Runtime", fillcolor="#FFF1F1"];
+  runtime2 [label="AWS / S3\nJVM Thread Runtime", fillcolor="#FFF1F1"];
 
-  entry -> api [label="invokes"];
-  api -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  api4 -> service0 [label="delegates"];
+  service5 -> infra0 [label="persists / publishes"];
+  bt2 -> runtime0 [label="adapts"];
 }

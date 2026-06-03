@@ -38,47 +38,53 @@
   <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Vertx example runtime and module dependencies</text>
   <g>
     <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="150.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="110.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="173.0">Example Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="211.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="227.0">adapters</tspan></text>
+      <rect x="46.0" y="114.0" width="1228.0" height="146.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
+      <rect x="64.0" y="134.0" width="174" height="106.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="171.0">Example Surface</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="209.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="225.0">adapters</tspan></text>
     </g>
     <g class="layer" data-layer="integration">
-      <rect x="46.0" y="282.0" width="1228.0" height="150.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="302.0" width="174" height="110.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="341.0">Integration Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="379.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="395.0">adapters, helpers</tspan></text>
+      <rect x="46.0" y="278.0" width="1228.0" height="132.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
+      <rect x="64.0" y="298.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="328.0">Integration Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="366.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="382.0">adapters, helpers</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="450.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="470.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="500.0">Runtime Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="530.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="546.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="562.0">JVM</tspan></text>
+      <rect x="46.0" y="428.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="64.0" y="448.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="478.0">Runtime Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="508.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="524.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="540.0">JVM</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;api" data-label="invokes">
-      <path d="M 704.0 189.0 L 774.0 189.0 L 844.0 189.0" fill="none" stroke="#4F7DB5" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-api)"/>
+    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
+      <path d="M 1096.0 390.0 L 1096.0 419.0 L 760.0 419.0 L 760.0 448.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
     </g>
-    <g class="edge" data-edge="api-&gt;bt" data-label="extends">
-      <path d="M 1039.0 235.0 L 1039.0 268.5 L 774.0 268.5 L 774.0 302.0" fill="none" stroke="#3E927D" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-bt)"/>
+    <g class="node" data-node="entry0" data-lines="Main | movierating">
+      <rect x="274.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="183.5">Main</tspan><tspan class="node-detail" x="424.0" y="207.5">movierating</tspan></text>
     </g>
-    <g class="edge" data-edge="bt-&gt;runtime" data-label="adapts">
-      <path d="M 774.0 412.0 L 774.0 441.0 L 774.0 470.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+    <g class="node" data-node="entry1" data-lines="Movie Rating Vertice | Test | movierating">
+      <rect x="610.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="171.5">Movie Rating Vertice</tspan><tspan class="node-title" x="760.0" y="195.5">Test</tspan><tspan class="node-detail" x="760.0" y="219.5">movierating</tspan></text>
     </g>
-    <g class="node" data-node="entry" data-lines="Example Entrypoints | Main | MovieRatingVerticeTest | Vertx Coroutines tests">
-      <rect x="314.0" y="134.0" width="390.0" height="110.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="168.5">Example Entrypoints</tspan><tspan class="node-detail" x="509.0" y="192.5">Main</tspan><tspan class="node-detail" x="509.0" y="209.5">MovieRatingVerticeTest</tspan><tspan class="node-detail" x="509.0" y="226.5">Vertx Coroutines tests</tspan></text>
+    <g class="node" data-node="api0" data-lines="Movie Rating Verticle | movierating">
+      <rect x="946.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="183.5">Movie Rating Verticle</tspan><tspan class="node-detail" x="1096.0" y="207.5">movierating</tspan></text>
     </g>
-    <g class="node" data-node="api" data-lines="API / Adapter Layer | MovieRatingVerticle">
-      <rect x="844.0" y="143.0" width="390.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="185.5">API / Adapter Layer</tspan><tspan class="node-detail" x="1039.0" y="209.5">MovieRatingVerticle</tspan></text>
+    <g class="node" data-node="bt0" data-lines="io | bluetape4k APIs">
+      <rect x="274.0" y="298.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="340.5">io</tspan><tspan class="node-detail" x="424.0" y="364.5">bluetape4k APIs</tspan></text>
     </g>
-    <g class="node" data-node="bt" data-lines="bluetape4k APIs | io | jdbc | vertx">
-      <rect x="474.0" y="302.0" width="600.0" height="110.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="336.5">bluetape4k APIs</tspan><tspan class="node-detail" x="774.0" y="360.5">io</tspan><tspan class="node-detail" x="774.0" y="377.5">jdbc</tspan><tspan class="node-detail" x="774.0" y="394.5">vertx</tspan></text>
+    <g class="node" data-node="bt1" data-lines="jdbc | bluetape4k APIs">
+      <rect x="610.0" y="298.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="340.5">jdbc</tspan><tspan class="node-detail" x="760.0" y="364.5">bluetape4k APIs</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="Runtime Dependencies | SQL / R2DBC">
-      <rect x="474.0" y="470.0" width="600.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="512.5">Runtime Dependencies</tspan><tspan class="node-detail" x="774.0" y="536.5">SQL / R2DBC</tspan></text>
+    <g class="node" data-node="bt2" data-lines="vertx | bluetape4k APIs">
+      <rect x="946.0" y="298.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="340.5">vertx</tspan><tspan class="node-detail" x="1096.0" y="364.5">bluetape4k APIs</tspan></text>
+    </g>
+    <g class="node" data-node="runtime0" data-lines="SQL / R2DBC | Runtime Dependencies">
+      <rect x="610.0" y="448.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="490.5">SQL / R2DBC</tspan><tspan class="node-detail" x="760.0" y="514.5">Runtime Dependencies</tspan></text>
     </g>
   </g>
 </svg>

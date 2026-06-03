@@ -1,7 +1,13 @@
-graph 1 10.995 1.7263
-node entry 1.6896 0.86313 3.3792 1.1637 "Example Entrypoints\nKotlin Design Patterns Kotlin\nDesignPatterns AbstractFactory" rounded,filled box #88A3B5 #FFF8E7
-node service 6.1747 0.86313 2.2021 1.7263 "Application Services\nArmy\nCastle\nFactoryMaker\nKing" rounded,filled box #88A3B5 #F1F8E9
-node runtime 9.816 0.86313 2.3583 1.1637 "Runtime Dependencies\nSQL / R2DBC\nAWS / S3" rounded,filled box #88A3B5 #FFF1F1
-edge entry service 4 3.3852 0.86313 3.3852 0.86313 4.9247 0.86313 4.9247 0.86313 delegates 4.2264 0.95167 solid #637383
-edge service runtime 4 7.282 0.86313 7.282 0.86313 8.489 0.86313 8.489 0.86313 backs 7.9562 0.95167 solid #637383
+graph 1 6.2444 10.383
+node entry0 1.1792 0.44125 2.1917 0.8825 "abstractFactory\nExample Entrypoints" rounded,filled box #88A3B5 #FFF8E7
+node service0 5.0653 0.44125 1.3896 0.8825 "Army\ncomponent" rounded,filled box #88A3B5 #F1F8E9
+node service1 1.1792 2.0246 1.3896 0.8825 "Castle\ncomponent" rounded,filled box #88A3B5 #F1F8E9
+node service2 1.1792 3.6079 1.8063 0.8825 "Factory Maker\ncomponent" rounded,filled box #88A3B5 #F1F8E9
+node service3 1.1792 5.1913 1.3896 0.8825 "King\ncomponent" rounded,filled box #88A3B5 #F1F8E9
+node service4 1.1792 6.7746 1.9521 0.8825 "Kingdom Factory\ncomponent" rounded,filled box #88A3B5 #F1F8E9
+node service5 1.1792 8.3579 1.2229 0.8825 "Elf Army\nelf" rounded,filled box #88A3B5 #F1F8E9
+node runtime0 5.0653 8.3579 2.3583 0.8825 "SQL / R2DBC\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
+node runtime1 1.1792 9.9413 2.3583 0.8825 "AWS / S3\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
+edge entry0 service0 4 2.2824 0.44125 2.2824 0.44125 4.221 0.44125 4.221 0.44125 starts 3.1222 0.52979 solid #637383
+edge service5 runtime0 4 1.7992 8.3579 1.7992 8.3579 3.7367 8.3579 3.7367 8.3579 "runs on" 3.1222 8.4465 solid #637383
 stop

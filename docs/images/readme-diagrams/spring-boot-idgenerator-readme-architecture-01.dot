@@ -26,16 +26,21 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Boot App/Test Surface\nIdGeneratorApplication\nAbstractIdGeneratorTest\nIdGeneratorControllerTest\nSpring Boot Idgenerator tests", fillcolor="#FFF8E7"];
-  api [label="Spring Web Adapters\nIdGeneratorController", fillcolor="#EEF7FF"];
-  service [label="Application Feature\nIdResponses", fillcolor="#F1F8E9"];
-  infra [label="Spring Boot Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k Boot APIs\nworkshop\nidgenerators\njackson3", fillcolor="#EAF7F0"];
-  runtime [label="Boot Runtime\nRedis", fillcolor="#FFF1F1"];
+  entry0 [label="Id Generator Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Abstract Id Generator Test\nidgenerator", fillcolor="#FFF8E7"];
+  entry2 [label="Id Generator Controller Test\nHTTP adapter", fillcolor="#FFF8E7"];
+  api0 [label="Id Generator Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  service0 [label="Id Responses\ndomain model", fillcolor="#F1F8E9"];
+  infra0 [label="Spring boot autoconfigure lib\nSpring Boot Layer", fillcolor="#F5F0FF"];
+  infra1 [label="Spring boot autoconfigure processor\nSpring Boot Layer", fillcolor="#F5F0FF"];
+  infra2 [label="Spring boot configuration processor\nSpring Boot Layer", fillcolor="#F5F0FF"];
+  infra3 [label="Spring boot devtools\nSpring Boot Layer", fillcolor="#F5F0FF"];
+  bt0 [label="workshop\nbluetape4k Boot APIs", fillcolor="#EAF7F0"];
+  bt1 [label="idgenerators\nbluetape4k Boot APIs", fillcolor="#EAF7F0"];
+  bt2 [label="jackson3\nbluetape4k Boot APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="Redis\nBoot Runtime", fillcolor="#FFF1F1"];
 
-  entry -> api [label="invokes"];
-  api -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  api0 -> service0 [label="delegates"];
+  service0 -> infra0 [label="persists / publishes"];
+  bt2 -> runtime0 [label="adapts"];
 }

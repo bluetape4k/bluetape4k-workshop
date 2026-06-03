@@ -1,13 +1,30 @@
-graph 1 24.945 1.7263
-node entry 1.601 0.86313 3.2021 1.7263 "Example Entrypoints\nLeaderElectionApp\nAbstractLeaderElectionTest\nConcurrentLeaderElectionTest\nLeader Leader Election tests" rounded,filled box #88A3B5 #FFF8E7
-node api 6.2267 0.86313 2.9938 1.7263 "API / Adapter Layer\nLeaderElectionConfig\nLeaderScheduledJobService\nLeaderEventListenerService\nSuspendLeaderService" rounded,filled box #88A3B5 #EEF7FF
-node service 10.774 0.86313 2.7125 1.7263 "Application Services\nLeaderElectionProperties\nCacheWarmupJob\nLeaderGuardedJob\nLockAssertJob" rounded,filled box #88A3B5 #F1F8E9
-node infra 16.27 0.86313 3.0563 1.7263 "Framework Layer\nSpring boot autoconfigure lib\nSpring boot starter actuator\nSpring boot autoconfigure\nprocessor" rounded,filled box #88A3B5 #F5F0FF
-node bt 20.234 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\nleader\nlogging" rounded,filled box #88A3B5 #EAF7F0
-node runtime 23.766 0.86313 2.3583 1.445 "Runtime Dependencies\nSQL / R2DBC\nRedis\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.2059 0.86313 3.2059 0.86313 4.5792 0.86313 4.5792 0.86313 invokes 3.966 0.95167 solid #637383
-edge api service 4 7.7284 0.86313 7.7284 0.86313 9.2659 0.86313 9.2659 0.86313 delegates 8.5708 0.95167 solid #637383
-edge service infra 4 12.14 0.86313 12.14 0.86313 14.594 0.86313 14.594 0.86313 "persists / publishes" 13.436 0.95167 solid #637383
-edge infra bt 4 17.802 0.86313 17.802 0.86313 19.176 0.86313 19.176 0.86313 extends 18.562 0.95167 solid #637383
-edge bt runtime 4 21.148 0.86313 21.148 0.86313 22.44 0.86313 22.44 0.86313 adapts 21.865 0.95167 solid #637383
+graph 1 9.4736 34.133
+node entry0 1.9135 0.44125 2.275 0.8825 "Leader Election App\napplication bootstrap" rounded,filled box #88A3B5 #FFF8E7
+node entry1 1.9135 2.0246 3.1813 0.8825 "Abstract Leader Election Test\nleader" rounded,filled box #88A3B5 #FFF8E7
+node entry2 1.9135 3.6079 3.4208 0.8825 "Concurrent Leader Election Test\nleader" rounded,filled box #88A3B5 #FFF8E7
+node entry3 1.9135 5.1913 2.7854 0.8825 "Duplicate Lock Name Test\nleader" rounded,filled box #88A3B5 #FFF8E7
+node entry4 1.9135 6.7746 1.9625 0.8825 "Job Isolation Test\nleader" rounded,filled box #88A3B5 #FFF8E7
+node api0 1.9135 8.3579 2.4833 0.8825 "Leader Election Config\nconfiguration" rounded,filled box #88A3B5 #EEF7FF
+node api1 1.9135 9.9413 3.1708 0.8825 "Leader Scheduled Job Service\nservice component" rounded,filled box #88A3B5 #EEF7FF
+node api2 1.9135 11.525 3.2125 0.8825 "Leader Event Listener Service\nservice component" rounded,filled box #88A3B5 #EEF7FF
+node api3 1.9135 13.108 2.6083 0.8825 "Suspend Leader Service\nservice component" rounded,filled box #88A3B5 #EEF7FF
+node service0 7.9559 13.108 2.8583 0.8825 "Leader Election Properties\nconfiguration" rounded,filled box #88A3B5 #F1F8E9
+node service1 1.9135 14.691 2.1604 0.8825 "Cache Warmup Job\njob" rounded,filled box #88A3B5 #F1F8E9
+node service2 1.9135 16.275 2.2542 0.8825 "Leader Guarded Job\njob" rounded,filled box #88A3B5 #F1F8E9
+node service3 1.9135 17.858 1.9625 0.8825 "Lock Assert Job\njob" rounded,filled box #88A3B5 #F1F8E9
+node service4 1.9135 19.441 2.1604 0.8825 "Lock Extender Job\njob" rounded,filled box #88A3B5 #F1F8E9
+node service5 1.9135 21.025 2.9729 0.8825 "Stale Workflow Cleanup Job\njob" rounded,filled box #88A3B5 #F1F8E9
+node infra0 7.9559 21.025 3.0354 0.8825 "Spring boot autoconfigure lib\nFramework Layer" rounded,filled box #88A3B5 #F5F0FF
+node infra1 1.9135 22.608 3.0563 0.8825 "Spring boot starter actuator\nFramework Layer" rounded,filled box #88A3B5 #F5F0FF
+node infra2 1.9135 24.191 3.8271 0.8825 "Spring boot autoconfigure processor\nFramework Layer" rounded,filled box #88A3B5 #F5F0FF
+node infra3 1.9135 25.775 3.7542 0.8825 "Spring boot configuration processor\nFramework Layer" rounded,filled box #88A3B5 #F5F0FF
+node bt0 1.9135 27.358 1.8167 0.8825 "workshop\nbluetape4k APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt1 1.9135 28.941 1.8167 0.8825 "leader\nbluetape4k APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt2 1.9135 30.525 1.8167 0.8825 "logging\nbluetape4k APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime0 7.9559 30.525 2.3583 0.8825 "SQL / R2DBC\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
+node runtime1 1.9135 32.108 2.3583 0.8825 "Redis\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
+node runtime2 1.9135 33.691 2.3583 0.8825 "Testcontainers\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
+edge api3 service0 4 3.2246 13.108 3.2246 13.108 6.378 13.108 6.378 13.108 delegates 5.1326 13.196 solid #637383
+edge service5 infra0 4 3.4072 21.025 3.4072 21.025 6.2896 21.025 6.2896 21.025 "persists / publishes" 5.1326 21.113 solid #637383
+edge bt2 runtime0 4 2.8312 30.525 2.8312 30.525 6.6266 30.525 6.6266 30.525 adapts 5.1326 30.613 solid #637383
 stop

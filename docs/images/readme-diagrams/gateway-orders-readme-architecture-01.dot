@@ -26,14 +26,22 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Example Entrypoints\nOrderApplication\nProductControllerScopeTest\nGateway Orders tests", fillcolor="#FFF8E7"];
-  api [label="API / Adapter Layer\nOrderConfig\nObservationConfig\nSwaggerConfig\nOrderController", fillcolor="#EEF7FF"];
-  infra [label="Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\njackson3\nidgenerators", fillcolor="#EAF7F0"];
-  runtime [label="Runtime Dependencies\nIn-memory / JVM", fillcolor="#FFF1F1"];
+  entry0 [label="Order Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Product Controller Scope Test\nHTTP adapter", fillcolor="#FFF8E7"];
+  api0 [label="Order Config\nconfiguration", fillcolor="#EEF7FF"];
+  api1 [label="Observation Config\nconfiguration", fillcolor="#EEF7FF"];
+  api2 [label="Swagger Config\nconfiguration", fillcolor="#EEF7FF"];
+  api3 [label="Order Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  api4 [label="Product Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  infra0 [label="Spring boot autoconfigure lib\nFramework Layer", fillcolor="#F5F0FF"];
+  infra1 [label="Spring boot autoconfigure processor\nFramework Layer", fillcolor="#F5F0FF"];
+  infra2 [label="Spring boot configuration processor\nFramework Layer", fillcolor="#F5F0FF"];
+  infra3 [label="Spring boot devtools\nFramework Layer", fillcolor="#F5F0FF"];
+  bt0 [label="workshop\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  bt1 [label="jackson3\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  bt2 [label="idgenerators\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="In-memory / JVM\nRuntime Dependencies", fillcolor="#FFF1F1"];
 
-  entry -> api [label="invokes"];
-  api -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  api4 -> infra0 [label="uses"];
+  bt2 -> runtime0 [label="adapts"];
 }

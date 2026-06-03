@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="660" viewBox="0 0 1320 660" role="img" aria-label="spring-boot/idempotency architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="840" viewBox="0 0 1320 840" role="img" aria-label="spring-boot/idempotency architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-boot/idempotency/src/main/kotlin/io/bluetape4k/workshop/idempotency/IdempotencyApplication.kt&quot;,&quot;spring-boot/idempotency/src/main/kotlin/io/bluetape4k/workshop/idempotency/config/RedissonConfig.kt&quot;,&quot;spring-boot/idempotency/src/main/kotlin/io/bluetape4k/workshop/idempotency/controller/OrderController.kt&quot;,&quot;spring-boot/idempotency/src/main/kotlin/io/bluetape4k/workshop/idempotency/model/OrderModels.kt&quot;,&quot;spring-boot/idempotency/src/main/kotlin/io/bluetape4k/workshop/idempotency/service/IdempotencyService.kt&quot;,&quot;spring-boot/idempotency/src/test/kotlin/io/bluetape4k/workshop/idempotency/AbstractIdempotencyTest.kt&quot;,&quot;spring-boot/idempotency/src/test/kotlin/io/bluetape4k/workshop/idempotency/controller/OrderControllerTest.kt&quot;,&quot;spring-boot/idempotency/build.gradle.kts&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
   <defs>
     <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
@@ -32,60 +32,82 @@
       .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="660"/>
-  <rect class="frame" x="16" y="16" width="1288" height="628" rx="22"/>
+  <rect class="canvas" width="1320" height="840"/>
+  <rect class="frame" x="16" y="16" width="1288" height="808" rx="22"/>
   <text class="diagram-title" x="660.0" y="58" text-anchor="middle">spring-boot/idempotency</text>
   <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Spring Boot application feature and runtime integration</text>
   <g>
     <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="168.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="170.5">Spring Boot</tspan><tspan class="layer-title" x="151.0" y="193.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="220.0">apps, controllers,</tspan><tspan class="layer-detail" x="151.0" y="236.0">scheduled tests</tspan></text>
+      <rect x="46.0" y="114.0" width="1228.0" height="256.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
+      <rect x="64.0" y="134.0" width="174" height="216.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="214.5">Spring Boot</tspan><tspan class="layer-title" x="151.0" y="237.5">Surface</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="264.0">apps, controllers,</tspan><tspan class="layer-detail" x="151.0" y="280.0">scheduled tests</tspan></text>
     </g>
     <g class="layer" data-layer="integration">
-      <rect x="46.0" y="300.0" width="1228.0" height="150.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="320.0" width="174" height="110.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="347.5">Boot Integration</tspan><tspan class="layer-title" x="151.0" y="370.5">Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="389.0">auto-config,</tspan><tspan class="layer-detail" x="151.0" y="405.0">clients,</tspan><tspan class="layer-detail" x="151.0" y="421.0">repositories</tspan></text>
+      <rect x="46.0" y="388.0" width="1228.0" height="242.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
+      <rect x="64.0" y="408.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="481.5">Boot Integration</tspan><tspan class="layer-title" x="151.0" y="504.5">Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="523.0">auto-config,</tspan><tspan class="layer-detail" x="151.0" y="539.0">clients,</tspan><tspan class="layer-detail" x="151.0" y="555.0">repositories</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="468.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="488.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="506.5">Runtime</tspan><tspan class="layer-title" x="151.0" y="529.5">Dependencies</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="548.0">database, cache,</tspan><tspan class="layer-detail" x="151.0" y="564.0">messaging,</tspan><tspan class="layer-detail" x="151.0" y="580.0">containers</tspan></text>
+      <rect x="46.0" y="648.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="64.0" y="668.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="686.5">Runtime</tspan><tspan class="layer-title" x="151.0" y="709.5">Dependencies</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="728.0">database, cache,</tspan><tspan class="layer-detail" x="151.0" y="744.0">messaging,</tspan><tspan class="layer-detail" x="151.0" y="760.0">containers</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;api" data-label="invokes">
-      <path d="M 704.0 198.0 L 774.0 198.0 L 844.0 198.0" fill="none" stroke="#4F7DB5" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-api)"/>
+    <g class="edge" data-edge="api1-&gt;infra0" data-label="uses">
+      <path d="M 760.0 350.0 L 760.0 379.0 L 424.0 379.0 L 424.0 408.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
     </g>
-    <g class="edge" data-edge="api-&gt;infra" data-label="persists / publishes">
-      <path d="M 1039.0 244.0 L 1039.0 286.5 L 509.0 286.5 L 509.0 329.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
+    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
+      <path d="M 760.0 610.0 L 760.0 639.0 L 592.0 639.0 L 592.0 668.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
     </g>
-    <g class="edge" data-edge="infra-&gt;bt" data-label="extends">
-      <path d="M 704.0 375.0 L 774.0 375.0 L 844.0 375.0" fill="none" stroke="#3E927D" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-bt)"/>
+    <g class="node" data-node="entry0" data-lines="Idempotency Application | application bootstrap">
+      <rect x="274.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="183.5">Idempotency Application</tspan><tspan class="node-detail" x="424.0" y="207.5">application bootstrap</tspan></text>
     </g>
-    <g class="edge" data-edge="bt-&gt;runtime" data-label="adapts">
-      <path d="M 1039.0 430.0 L 1039.0 459.0 L 774.0 459.0 L 774.0 488.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+    <g class="node" data-node="entry1" data-lines="Abstract Idempotency | Test | idempotency">
+      <rect x="610.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="171.5">Abstract Idempotency</tspan><tspan class="node-title" x="760.0" y="195.5">Test</tspan><tspan class="node-detail" x="760.0" y="219.5">idempotency</tspan></text>
     </g>
-    <g class="node" data-node="entry" data-lines="Boot App/Test Surface | IdempotencyApplication | AbstractIdempotencyTest | OrderControllerTest | Spring Boot Idempotency tests">
-      <rect x="314.0" y="134.0" width="390.0" height="128.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="169.0">Boot App/Test Surface</tspan><tspan class="node-detail" x="509.0" y="193.0">IdempotencyApplication</tspan><tspan class="node-detail" x="509.0" y="210.0">AbstractIdempotencyTest</tspan><tspan class="node-detail" x="509.0" y="227.0">OrderControllerTest</tspan><tspan class="node-detail" x="509.0" y="244.0">Spring Boot Idempotency tests</tspan></text>
+    <g class="node" data-node="entry2" data-lines="Order Controller Test | HTTP adapter">
+      <rect x="946.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="183.5">Order Controller Test</tspan><tspan class="node-detail" x="1096.0" y="207.5">HTTP adapter</tspan></text>
     </g>
-    <g class="node" data-node="api" data-lines="Spring Web Adapters | OrderController | IdempotencyService">
-      <rect x="844.0" y="152.0" width="390.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="186.0">Spring Web Adapters</tspan><tspan class="node-detail" x="1039.0" y="210.0">OrderController</tspan><tspan class="node-detail" x="1039.0" y="227.0">IdempotencyService</tspan></text>
+    <g class="node" data-node="api0" data-lines="Order Controller | HTTP adapter">
+      <rect x="274.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="300.5">Order Controller</tspan><tspan class="node-detail" x="424.0" y="324.5">HTTP adapter</tspan></text>
     </g>
-    <g class="node" data-node="infra" data-lines="Infrastructure Config | RedissonConfig | OrderModels">
-      <rect x="314.0" y="329.0" width="390.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="363.0">Infrastructure Config</tspan><tspan class="node-detail" x="509.0" y="387.0">RedissonConfig</tspan><tspan class="node-detail" x="509.0" y="404.0">OrderModels</tspan></text>
+    <g class="node" data-node="api1" data-lines="Idempotency Service | service component">
+      <rect x="610.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="300.5">Idempotency Service</tspan><tspan class="node-detail" x="760.0" y="324.5">service component</tspan></text>
     </g>
-    <g class="node" data-node="bt" data-lines="bluetape4k Boot APIs | workshop | jackson3 | core">
-      <rect x="844.0" y="320.0" width="390.0" height="110.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="354.5">bluetape4k Boot APIs</tspan><tspan class="node-detail" x="1039.0" y="378.5">workshop</tspan><tspan class="node-detail" x="1039.0" y="395.5">jackson3</tspan><tspan class="node-detail" x="1039.0" y="412.5">core</tspan></text>
+    <g class="node" data-node="infra0" data-lines="Redisson Config | configuration">
+      <rect x="274.0" y="408.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="450.5">Redisson Config</tspan><tspan class="node-detail" x="424.0" y="474.5">configuration</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="Boot Runtime | Redis | Testcontainers">
-      <rect x="474.0" y="488.0" width="600.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="522.0">Boot Runtime</tspan><tspan class="node-detail" x="774.0" y="546.0">Redis</tspan><tspan class="node-detail" x="774.0" y="563.0">Testcontainers</tspan></text>
+    <g class="node" data-node="infra1" data-lines="Order Models | domain model">
+      <rect x="610.0" y="408.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="450.5">Order Models</tspan><tspan class="node-detail" x="760.0" y="474.5">domain model</tspan></text>
+    </g>
+    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k Boot APIs">
+      <rect x="946.0" y="408.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="450.5">workshop</tspan><tspan class="node-detail" x="1096.0" y="474.5">bluetape4k Boot APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt1" data-lines="jackson3 | bluetape4k Boot APIs">
+      <rect x="274.0" y="518.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="560.5">jackson3</tspan><tspan class="node-detail" x="424.0" y="584.5">bluetape4k Boot APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt2" data-lines="core | bluetape4k Boot APIs">
+      <rect x="610.0" y="518.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="560.5">core</tspan><tspan class="node-detail" x="760.0" y="584.5">bluetape4k Boot APIs</tspan></text>
+    </g>
+    <g class="node" data-node="runtime0" data-lines="Redis | Boot Runtime">
+      <rect x="442.0" y="668.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="592.0" y="710.5">Redis</tspan><tspan class="node-detail" x="592.0" y="734.5">Boot Runtime</tspan></text>
+    </g>
+    <g class="node" data-node="runtime1" data-lines="Testcontainers | Boot Runtime">
+      <rect x="778.0" y="668.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="928.0" y="710.5">Testcontainers</tspan><tspan class="node-detail" x="928.0" y="734.5">Boot Runtime</tspan></text>
     </g>
   </g>
 </svg>

@@ -26,10 +26,11 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Example Family\nVert.x WebClient Examples", fillcolor="#FFF8E7"];
-  bt [label="bluetape4k APIs\nio\njdbc\nvertx", fillcolor="#EAF7F0"];
-  runtime [label="Runtime Dependencies\nSQL / R2DBC", fillcolor="#FFF1F1"];
+  entry0 [label="Vert.x WebClient Examples\nExample Entrypoints", fillcolor="#FFF8E7"];
+  bt0 [label="io\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  bt1 [label="jdbc\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  bt2 [label="vertx\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="SQL / R2DBC\nRuntime Dependencies", fillcolor="#FFF1F1"];
 
-  api -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  bt2 -> runtime0 [label="adapts"];
 }

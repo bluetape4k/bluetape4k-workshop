@@ -1,7 +1,8 @@
-graph 1 10.026 1.7263
-node entry 1.2677 0.86313 2.5354 1.7263 "Example Entrypoints\nMain\nMovieRatingVerticeTest\nAbstractSqlClientTest\nVertx tests" rounded,filled box #88A3B5 #FFF8E7
-node api 5.1851 0.86313 2.2438 0.8825 "API / Adapter Layer\nMovieRatingVerticle" rounded,filled box #88A3B5 #EEF7FF
-node runtime 8.8472 0.86313 2.3583 1.1637 "Runtime Dependencies\nSQL / R2DBC\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 2.545 0.86313 2.545 0.86313 3.9121 0.86313 3.9121 0.86313 invokes 3.2993 0.95167 solid #637383
-edge api runtime 4 6.3137 0.86313 6.3137 0.86313 7.5162 0.86313 7.5162 0.86313 backs 6.9875 0.95167 solid #637383
+graph 1 2.7542 8.7992
+node entry0 1.3771 0.44125 1.4208 0.8825 "Main\nmovierating" rounded,filled box #88A3B5 #FFF8E7
+node entry1 1.3771 2.0246 2.7542 0.8825 "Movie Rating Vertice Test\nverification" rounded,filled box #88A3B5 #FFF8E7
+node entry2 1.3771 3.6079 2.5771 0.8825 "Abstract Sql Client Test\nverification" rounded,filled box #88A3B5 #FFF8E7
+node api0 1.3771 5.1913 2.3063 0.8825 "Movie Rating Verticle\nmovierating" rounded,filled box #88A3B5 #EEF7FF
+node runtime0 1.3771 6.7746 2.3583 0.8825 "SQL / R2DBC\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
+node runtime1 1.3771 8.3579 2.3583 0.8825 "Testcontainers\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
 stop

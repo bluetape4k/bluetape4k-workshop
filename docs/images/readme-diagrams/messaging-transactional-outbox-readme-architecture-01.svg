@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="864" viewBox="0 0 1320 864" role="img" aria-label="Messaging Transactional Outbox architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1086" viewBox="0 0 1320 1086" role="img" aria-label="Messaging Transactional Outbox architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;messaging/transactional-outbox/src/main/kotlin/io/bluetape4k/workshop/messaging/outbox/OutboxApplication.kt&quot;,&quot;messaging/transactional-outbox/src/main/kotlin/io/bluetape4k/workshop/messaging/outbox/api/OrderController.kt&quot;,&quot;messaging/transactional-outbox/src/main/kotlin/io/bluetape4k/workshop/messaging/outbox/api/OrderRequest.kt&quot;,&quot;messaging/transactional-outbox/src/main/kotlin/io/bluetape4k/workshop/messaging/outbox/api/OrderResponse.kt&quot;,&quot;messaging/transactional-outbox/src/main/kotlin/io/bluetape4k/workshop/messaging/outbox/config/ExposedConfig.kt&quot;,&quot;messaging/transactional-outbox/src/main/kotlin/io/bluetape4k/workshop/messaging/outbox/config/KafkaConfig.kt&quot;,&quot;messaging/transactional-outbox/src/main/kotlin/io/bluetape4k/workshop/messaging/outbox/domain/OrderService.kt&quot;,&quot;messaging/transactional-outbox/src/main/kotlin/io/bluetape4k/workshop/messaging/outbox/domain/OrderStatus.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
   <defs>
     <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
@@ -32,73 +32,123 @@
       .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="864"/>
-  <rect class="frame" x="16" y="16" width="1288" height="832" rx="22"/>
+  <rect class="canvas" width="1320" height="1086"/>
+  <rect class="frame" x="16" y="16" width="1288" height="1054" rx="22"/>
   <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Messaging Transactional Outbox</text>
   <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">message producers, consumers, and broker-backed flows</text>
   <g>
     <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="168.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="182.0">Messaging Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="220.0">apps, controllers,</tspan><tspan class="layer-detail" x="151.0" y="236.0">producer tests</tspan></text>
+      <rect x="46.0" y="114.0" width="1228.0" height="242.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
+      <rect x="64.0" y="134.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="219.0">Messaging Surface</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="257.0">apps, controllers,</tspan><tspan class="layer-detail" x="151.0" y="273.0">producer tests</tspan></text>
     </g>
     <g class="layer" data-layer="service">
-      <rect x="46.0" y="300.0" width="1228.0" height="168.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="320.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="356.5">Message Workflow</tspan><tspan class="layer-title" x="151.0" y="379.5">Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="406.0">request/reply,</tspan><tspan class="layer-detail" x="151.0" y="422.0">outbox, handlers</tspan></text>
+      <rect x="46.0" y="374.0" width="1228.0" height="242.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
+      <rect x="64.0" y="394.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="467.5">Message Workflow</tspan><tspan class="layer-title" x="151.0" y="490.5">Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="517.0">request/reply,</tspan><tspan class="layer-detail" x="151.0" y="533.0">outbox, handlers</tspan></text>
     </g>
     <g class="layer" data-layer="integration">
-      <rect x="46.0" y="486.0" width="1228.0" height="150.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="506.0" width="174" height="110.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="533.5">Broker</tspan><tspan class="layer-title" x="151.0" y="556.5">Integration Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="575.0">topics, templates,</tspan><tspan class="layer-detail" x="151.0" y="591.0">serializers,</tspan><tspan class="layer-detail" x="151.0" y="607.0">helpers</tspan></text>
+      <rect x="46.0" y="634.0" width="1228.0" height="242.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
+      <rect x="64.0" y="654.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="727.5">Broker</tspan><tspan class="layer-title" x="151.0" y="750.5">Integration Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="769.0">topics, templates,</tspan><tspan class="layer-detail" x="151.0" y="785.0">serializers,</tspan><tspan class="layer-detail" x="151.0" y="801.0">helpers</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="654.0" width="1228.0" height="150.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="674.0" width="174" height="110.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="713.0">Broker Runtime</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="743.0">Kafka,</tspan><tspan class="layer-detail" x="151.0" y="759.0">Testcontainers,</tspan><tspan class="layer-detail" x="151.0" y="775.0">delivery state</tspan></text>
+      <rect x="46.0" y="894.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="64.0" y="914.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="944.0">Broker Runtime</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="974.0">Kafka,</tspan><tspan class="layer-detail" x="151.0" y="990.0">Testcontainers,</tspan><tspan class="layer-detail" x="151.0" y="1006.0">delivery state</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;api" data-label="invokes">
-      <path d="M 704.0 198.0 L 774.0 198.0 L 844.0 198.0" fill="none" stroke="#4F7DB5" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-api)"/>
+    <g class="edge" data-edge="api2-&gt;service0" data-label="delegates">
+      <path d="M 1096.0 336.0 L 1096.0 365.0 L 424.0 365.0 L 424.0 394.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
     </g>
-    <g class="edge" data-edge="api-&gt;service" data-label="delegates">
-      <path d="M 1039.0 253.0 L 1039.0 286.5 L 774.0 286.5 L 774.0 320.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
+    <g class="edge" data-edge="service5-&gt;infra0" data-label="persists / publishes">
+      <path d="M 1096.0 596.0 L 1096.0 625.0 L 424.0 625.0 L 424.0 654.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
     </g>
-    <g class="edge" data-edge="service-&gt;infra" data-label="persists / publishes">
-      <path d="M 774.0 448.0 L 774.0 481.5 L 509.0 481.5 L 509.0 515.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
+    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
+      <path d="M 760.0 856.0 L 760.0 885.0 L 424.0 885.0 L 424.0 914.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
     </g>
-    <g class="edge" data-edge="infra-&gt;bt" data-label="extends">
-      <path d="M 704.0 561.0 L 774.0 561.0 L 844.0 561.0" fill="none" stroke="#3E927D" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-bt)"/>
+    <g class="node" data-node="entry0" data-lines="Outbox Application | application bootstrap">
+      <rect x="274.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="176.5">Outbox Application</tspan><tspan class="node-detail" x="424.0" y="200.5">application bootstrap</tspan></text>
     </g>
-    <g class="edge" data-edge="bt-&gt;runtime" data-label="adapts">
-      <path d="M 1039.0 616.0 L 1039.0 645.0 L 774.0 645.0 L 774.0 674.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+    <g class="node" data-node="entry1" data-lines="Abstract Outbox Test | outbox">
+      <rect x="610.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="176.5">Abstract Outbox Test</tspan><tspan class="node-detail" x="760.0" y="200.5">outbox</tspan></text>
     </g>
-    <g class="node" data-node="entry" data-lines="Messaging App/Test Surface | OutboxApplication | AbstractOutboxTest | OutboxTransactionTest | Messaging Transactional Outbox">
-      <rect x="314.0" y="134.0" width="390.0" height="128.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="169.0">Messaging App/Test Surface</tspan><tspan class="node-detail" x="509.0" y="193.0">OutboxApplication</tspan><tspan class="node-detail" x="509.0" y="210.0">AbstractOutboxTest</tspan><tspan class="node-detail" x="509.0" y="227.0">OutboxTransactionTest</tspan><tspan class="node-detail" x="509.0" y="244.0">Messaging Transactional Outbox</tspan></text>
+    <g class="node" data-node="entry2" data-lines="Outbox Transaction Test | outbox">
+      <rect x="946.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="176.5">Outbox Transaction Test</tspan><tspan class="node-detail" x="1096.0" y="200.5">outbox</tspan></text>
     </g>
-    <g class="node" data-node="api" data-lines="Producer / Consumer Adapters | OrderController | OrderService | OutboxEventTable">
-      <rect x="844.0" y="143.0" width="390.0" height="110.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="177.5">Producer / Consumer Adapters</tspan><tspan class="node-detail" x="1039.0" y="201.5">OrderController</tspan><tspan class="node-detail" x="1039.0" y="218.5">OrderService</tspan><tspan class="node-detail" x="1039.0" y="235.5">OutboxEventTable</tspan></text>
+    <g class="node" data-node="api0" data-lines="Order Controller | HTTP adapter">
+      <rect x="274.0" y="244.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="286.5">Order Controller</tspan><tspan class="node-detail" x="424.0" y="310.5">HTTP adapter</tspan></text>
     </g>
-    <g class="node" data-node="service" data-lines="Message Workflow | OrderResponse | ExposedConfig | KafkaConfig | OrderTable">
-      <rect x="474.0" y="320.0" width="600.0" height="128.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="355.0">Message Workflow</tspan><tspan class="node-detail" x="774.0" y="379.0">OrderResponse</tspan><tspan class="node-detail" x="774.0" y="396.0">ExposedConfig</tspan><tspan class="node-detail" x="774.0" y="413.0">KafkaConfig</tspan><tspan class="node-detail" x="774.0" y="430.0">OrderTable</tspan></text>
+    <g class="node" data-node="api1" data-lines="Order Service | service component">
+      <rect x="610.0" y="244.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="286.5">Order Service</tspan><tspan class="node-detail" x="760.0" y="310.5">service component</tspan></text>
     </g>
-    <g class="node" data-node="infra" data-lines="Kafka Topic Layer | OutboxEvent | OutboxStatus">
-      <rect x="314.0" y="515.0" width="390.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="549.0">Kafka Topic Layer</tspan><tspan class="node-detail" x="509.0" y="573.0">OutboxEvent</tspan><tspan class="node-detail" x="509.0" y="590.0">OutboxStatus</tspan></text>
+    <g class="node" data-node="api2" data-lines="Outbox Event Table | domain model">
+      <rect x="946.0" y="244.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="286.5">Outbox Event Table</tspan><tspan class="node-detail" x="1096.0" y="310.5">domain model</tspan></text>
     </g>
-    <g class="node" data-node="bt" data-lines="bluetape4k Kafka APIs | workshop | junit5 | assertions">
-      <rect x="844.0" y="506.0" width="390.0" height="110.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="540.5">bluetape4k Kafka APIs</tspan><tspan class="node-detail" x="1039.0" y="564.5">workshop</tspan><tspan class="node-detail" x="1039.0" y="581.5">junit5</tspan><tspan class="node-detail" x="1039.0" y="598.5">assertions</tspan></text>
+    <g class="node" data-node="service0" data-lines="Order Response | api">
+      <rect x="274.0" y="394.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="436.5">Order Response</tspan><tspan class="node-detail" x="424.0" y="460.5">api</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="Kafka Broker Runtime | SQL / R2DBC | Kafka | Testcontainers">
-      <rect x="474.0" y="674.0" width="600.0" height="110.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="708.5">Kafka Broker Runtime</tspan><tspan class="node-detail" x="774.0" y="732.5">SQL / R2DBC</tspan><tspan class="node-detail" x="774.0" y="749.5">Kafka</tspan><tspan class="node-detail" x="774.0" y="766.5">Testcontainers</tspan></text>
+    <g class="node" data-node="service1" data-lines="Exposed Config | configuration">
+      <rect x="610.0" y="394.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="436.5">Exposed Config</tspan><tspan class="node-detail" x="760.0" y="460.5">configuration</tspan></text>
+    </g>
+    <g class="node" data-node="service2" data-lines="Kafka Config | configuration">
+      <rect x="946.0" y="394.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="436.5">Kafka Config</tspan><tspan class="node-detail" x="1096.0" y="460.5">configuration</tspan></text>
+    </g>
+    <g class="node" data-node="service3" data-lines="Order Table | domain model">
+      <rect x="274.0" y="504.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="546.5">Order Table</tspan><tspan class="node-detail" x="424.0" y="570.5">domain model</tspan></text>
+    </g>
+    <g class="node" data-node="service4" data-lines="Outbox Publisher | outbox">
+      <rect x="610.0" y="504.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="546.5">Outbox Publisher</tspan><tspan class="node-detail" x="760.0" y="570.5">outbox</tspan></text>
+    </g>
+    <g class="node" data-node="service5" data-lines="Order Request | api">
+      <rect x="946.0" y="504.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="546.5">Order Request</tspan><tspan class="node-detail" x="1096.0" y="570.5">api</tspan></text>
+    </g>
+    <g class="node" data-node="infra0" data-lines="Outbox Event | outbox">
+      <rect x="274.0" y="654.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="696.5">Outbox Event</tspan><tspan class="node-detail" x="424.0" y="720.5">outbox</tspan></text>
+    </g>
+    <g class="node" data-node="infra1" data-lines="Outbox Status | outbox">
+      <rect x="610.0" y="654.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="696.5">Outbox Status</tspan><tspan class="node-detail" x="760.0" y="720.5">outbox</tspan></text>
+    </g>
+    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k Kafka APIs">
+      <rect x="946.0" y="654.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="696.5">workshop</tspan><tspan class="node-detail" x="1096.0" y="720.5">bluetape4k Kafka APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt1" data-lines="junit5 | bluetape4k Kafka APIs">
+      <rect x="274.0" y="764.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="806.5">junit5</tspan><tspan class="node-detail" x="424.0" y="830.5">bluetape4k Kafka APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt2" data-lines="assertions | bluetape4k Kafka APIs">
+      <rect x="610.0" y="764.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="806.5">assertions</tspan><tspan class="node-detail" x="760.0" y="830.5">bluetape4k Kafka APIs</tspan></text>
+    </g>
+    <g class="node" data-node="runtime0" data-lines="SQL / R2DBC | Kafka Broker Runtime">
+      <rect x="274.0" y="914.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="956.5">SQL / R2DBC</tspan><tspan class="node-detail" x="424.0" y="980.5">Kafka Broker Runtime</tspan></text>
+    </g>
+    <g class="node" data-node="runtime1" data-lines="Kafka | Kafka Broker Runtime">
+      <rect x="610.0" y="914.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="956.5">Kafka</tspan><tspan class="node-detail" x="760.0" y="980.5">Kafka Broker Runtime</tspan></text>
+    </g>
+    <g class="node" data-node="runtime2" data-lines="Testcontainers | Kafka Broker Runtime">
+      <rect x="946.0" y="914.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="956.5">Testcontainers</tspan><tspan class="node-detail" x="1096.0" y="980.5">Kafka Broker Runtime</tspan></text>
     </g>
   </g>
 </svg>

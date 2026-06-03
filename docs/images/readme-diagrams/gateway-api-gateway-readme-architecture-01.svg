@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="696" viewBox="0 0 1320 696" role="img" aria-label="Spring Cloud API Gateway Demo architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1088" viewBox="0 0 1320 1088" role="img" aria-label="Spring Cloud API Gateway Demo architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;gateway/api-gateway/src/main/kotlin/io/bluetape4k/workshop/gateway/ApiGatewayDemoApplication.kt&quot;,&quot;gateway/api-gateway/src/main/kotlin/io/bluetape4k/workshop/gateway/config/GatewayConfig.kt&quot;,&quot;gateway/api-gateway/src/main/kotlin/io/bluetape4k/workshop/gateway/config/managements/SwaggerConfig.kt&quot;,&quot;gateway/api-gateway/src/main/kotlin/io/bluetape4k/workshop/gateway/controller/IndexController.kt&quot;,&quot;gateway/api-gateway/src/main/kotlin/io/bluetape4k/workshop/gateway/filter/RedirectWebFilter.kt&quot;,&quot;gateway/api-gateway/src/test/kotlin/io/bluetape4k/workshop/gateway/AbstractGatewayTest.kt&quot;,&quot;gateway/api-gateway/src/test/kotlin/io/bluetape4k/workshop/gateway/controller/IndexControllerTest.kt&quot;,&quot;gateway/api-gateway/build.gradle.kts&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
   <defs>
     <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
@@ -32,60 +32,102 @@
       .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="696"/>
-  <rect class="frame" x="16" y="16" width="1288" height="664" rx="22"/>
+  <rect class="canvas" width="1320" height="1088"/>
+  <rect class="frame" x="16" y="16" width="1288" height="1056" rx="22"/>
   <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Spring Cloud API Gateway Demo</text>
   <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Gateway example runtime and module dependencies</text>
   <g>
     <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="168.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="182.0">Example Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="220.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="236.0">adapters</tspan></text>
+      <rect x="46.0" y="114.0" width="1228.0" height="366.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
+      <rect x="64.0" y="134.0" width="174" height="326.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="281.0">Example Surface</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="319.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="335.0">adapters</tspan></text>
     </g>
     <g class="layer" data-layer="integration">
-      <rect x="46.0" y="300.0" width="1228.0" height="168.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="320.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="368.0">Integration Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="406.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="422.0">adapters, helpers</tspan></text>
+      <rect x="46.0" y="498.0" width="1228.0" height="380.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
+      <rect x="64.0" y="518.0" width="174" height="340.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="672.0">Integration Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="710.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="726.0">adapters, helpers</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="486.0" width="1228.0" height="150.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="506.0" width="174" height="110.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="545.0">Runtime Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="575.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="591.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="607.0">JVM</tspan></text>
+      <rect x="46.0" y="896.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="64.0" y="916.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="946.0">Runtime Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="976.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="992.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="1008.0">JVM</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;api" data-label="invokes">
-      <path d="M 704.0 198.0 L 774.0 198.0 L 844.0 198.0" fill="none" stroke="#4F7DB5" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-api)"/>
+    <g class="edge" data-edge="api3-&gt;infra0" data-label="uses">
+      <path d="M 424.0 460.0 L 424.0 489.0 L 424.0 518.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
     </g>
-    <g class="edge" data-edge="api-&gt;infra" data-label="persists / publishes">
-      <path d="M 1039.0 262.0 L 1039.0 291.0 L 509.0 291.0 L 509.0 320.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
+    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
+      <path d="M 424.0 858.0 L 424.0 887.0 L 424.0 916.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
     </g>
-    <g class="edge" data-edge="infra-&gt;bt" data-label="extends">
-      <path d="M 704.0 384.0 L 774.0 384.0 L 844.0 384.0" fill="none" stroke="#3E927D" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-bt)"/>
+    <g class="node" data-node="entry0" data-lines="Api Gateway Demo | Application | application bootstrap">
+      <rect x="274.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="171.5">Api Gateway Demo</tspan><tspan class="node-title" x="424.0" y="195.5">Application</tspan><tspan class="node-detail" x="424.0" y="219.5">application bootstrap</tspan></text>
     </g>
-    <g class="edge" data-edge="bt-&gt;runtime" data-label="adapts">
-      <path d="M 1039.0 439.0 L 1039.0 472.5 L 774.0 472.5 L 774.0 506.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+    <g class="node" data-node="entry1" data-lines="Abstract Gateway Test | gateway">
+      <rect x="610.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="183.5">Abstract Gateway Test</tspan><tspan class="node-detail" x="760.0" y="207.5">gateway</tspan></text>
     </g>
-    <g class="node" data-node="entry" data-lines="Example Entrypoints | ApiGatewayDemoApplication | AbstractGatewayTest | IndexControllerTest | Gateway Api Gateway tests">
-      <rect x="314.0" y="134.0" width="390.0" height="128.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="169.0">Example Entrypoints</tspan><tspan class="node-detail" x="509.0" y="193.0">ApiGatewayDemoApplication</tspan><tspan class="node-detail" x="509.0" y="210.0">AbstractGatewayTest</tspan><tspan class="node-detail" x="509.0" y="227.0">IndexControllerTest</tspan><tspan class="node-detail" x="509.0" y="244.0">Gateway Api Gateway tests</tspan></text>
+    <g class="node" data-node="entry2" data-lines="Index Controller Test | HTTP adapter">
+      <rect x="946.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="183.5">Index Controller Test</tspan><tspan class="node-detail" x="1096.0" y="207.5">HTTP adapter</tspan></text>
     </g>
-    <g class="node" data-node="api" data-lines="API / Adapter Layer | GatewayConfig | SwaggerConfig | IndexController | RedirectWebFilter">
-      <rect x="844.0" y="134.0" width="390.0" height="128.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="169.0">API / Adapter Layer</tspan><tspan class="node-detail" x="1039.0" y="193.0">GatewayConfig</tspan><tspan class="node-detail" x="1039.0" y="210.0">SwaggerConfig</tspan><tspan class="node-detail" x="1039.0" y="227.0">IndexController</tspan><tspan class="node-detail" x="1039.0" y="244.0">RedirectWebFilter</tspan></text>
+    <g class="node" data-node="api0" data-lines="Gateway Config | configuration">
+      <rect x="274.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="300.5">Gateway Config</tspan><tspan class="node-detail" x="424.0" y="324.5">configuration</tspan></text>
     </g>
-    <g class="node" data-node="infra" data-lines="Framework Layer | Spring cloud starter gateway | server webflux | Spring cloud starter | loadbalancer">
-      <rect x="314.0" y="320.0" width="390.0" height="128.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="355.0">Framework Layer</tspan><tspan class="node-detail" x="509.0" y="379.0">Spring cloud starter gateway</tspan><tspan class="node-detail" x="509.0" y="396.0">server webflux</tspan><tspan class="node-detail" x="509.0" y="413.0">Spring cloud starter</tspan><tspan class="node-detail" x="509.0" y="430.0">loadbalancer</tspan></text>
+    <g class="node" data-node="api1" data-lines="Swagger Config | configuration">
+      <rect x="610.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="300.5">Swagger Config</tspan><tspan class="node-detail" x="760.0" y="324.5">configuration</tspan></text>
     </g>
-    <g class="node" data-node="bt" data-lines="bluetape4k APIs | workshop | jackson3 | netty">
-      <rect x="844.0" y="329.0" width="390.0" height="110.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="363.5">bluetape4k APIs</tspan><tspan class="node-detail" x="1039.0" y="387.5">workshop</tspan><tspan class="node-detail" x="1039.0" y="404.5">jackson3</tspan><tspan class="node-detail" x="1039.0" y="421.5">netty</tspan></text>
+    <g class="node" data-node="api2" data-lines="Index Controller | HTTP adapter">
+      <rect x="946.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="300.5">Index Controller</tspan><tspan class="node-detail" x="1096.0" y="324.5">HTTP adapter</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="Runtime Dependencies | Redis | AWS / S3 | Testcontainers">
-      <rect x="474.0" y="506.0" width="600.0" height="110.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="540.5">Runtime Dependencies</tspan><tspan class="node-detail" x="774.0" y="564.5">Redis</tspan><tspan class="node-detail" x="774.0" y="581.5">AWS / S3</tspan><tspan class="node-detail" x="774.0" y="598.5">Testcontainers</tspan></text>
+    <g class="node" data-node="api3" data-lines="Redirect Web Filter | filter">
+      <rect x="274.0" y="368.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="410.5">Redirect Web Filter</tspan><tspan class="node-detail" x="424.0" y="434.5">filter</tspan></text>
+    </g>
+    <g class="node" data-node="infra0" data-lines="Spring cloud starter | gateway server webflux | Framework Layer">
+      <rect x="274.0" y="518.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="555.5">Spring cloud starter</tspan><tspan class="node-title" x="424.0" y="579.5">gateway server webflux</tspan><tspan class="node-detail" x="424.0" y="603.5">Framework Layer</tspan></text>
+    </g>
+    <g class="node" data-node="infra1" data-lines="Spring cloud starter | loadbalancer | Framework Layer">
+      <rect x="610.0" y="518.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="555.5">Spring cloud starter</tspan><tspan class="node-title" x="760.0" y="579.5">loadbalancer</tspan><tspan class="node-detail" x="760.0" y="603.5">Framework Layer</tspan></text>
+    </g>
+    <g class="node" data-node="infra2" data-lines="Spring cloud test | support | Framework Layer">
+      <rect x="946.0" y="518.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="555.5">Spring cloud test</tspan><tspan class="node-title" x="1096.0" y="579.5">support</tspan><tspan class="node-detail" x="1096.0" y="603.5">Framework Layer</tspan></text>
+    </g>
+    <g class="node" data-node="infra3" data-lines="Spring boot | autoconfigure lib | Framework Layer">
+      <rect x="274.0" y="642.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="679.5">Spring boot</tspan><tspan class="node-title" x="424.0" y="703.5">autoconfigure lib</tspan><tspan class="node-detail" x="424.0" y="727.5">Framework Layer</tspan></text>
+    </g>
+    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k APIs">
+      <rect x="610.0" y="649.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="691.5">workshop</tspan><tspan class="node-detail" x="760.0" y="715.5">bluetape4k APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt1" data-lines="jackson3 | bluetape4k APIs">
+      <rect x="946.0" y="649.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="691.5">jackson3</tspan><tspan class="node-detail" x="1096.0" y="715.5">bluetape4k APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt2" data-lines="netty | bluetape4k APIs">
+      <rect x="274.0" y="766.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="808.5">netty</tspan><tspan class="node-detail" x="424.0" y="832.5">bluetape4k APIs</tspan></text>
+    </g>
+    <g class="node" data-node="runtime0" data-lines="Redis | Runtime Dependencies">
+      <rect x="274.0" y="916.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="958.5">Redis</tspan><tspan class="node-detail" x="424.0" y="982.5">Runtime Dependencies</tspan></text>
+    </g>
+    <g class="node" data-node="runtime1" data-lines="AWS / S3 | Runtime Dependencies">
+      <rect x="610.0" y="916.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="958.5">AWS / S3</tspan><tspan class="node-detail" x="760.0" y="982.5">Runtime Dependencies</tspan></text>
+    </g>
+    <g class="node" data-node="runtime2" data-lines="Testcontainers | Runtime Dependencies">
+      <rect x="946.0" y="916.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="958.5">Testcontainers</tspan><tspan class="node-detail" x="1096.0" y="982.5">Runtime Dependencies</tspan></text>
     </g>
   </g>
 </svg>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="864" viewBox="0 0 1320 864" role="img" aria-label="Spring Modulith JPA Demo architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1348" viewBox="0 0 1320 1348" role="img" aria-label="Spring Modulith JPA Demo architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-modulith/jpa-demo/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/services/OrganizationAddEvent.kt&quot;,&quot;spring-modulith/jpa-demo/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/services/OrganizationRemoveEvent.kt&quot;,&quot;spring-modulith/jpa-demo/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/services/SpringModulith.kt&quot;,&quot;spring-modulith/jpa-demo/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/services/department/DepartmentDTO.kt&quot;,&quot;spring-modulith/jpa-demo/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/services/department/DepartmentExternalAPI.kt&quot;,&quot;spring-modulith/jpa-demo/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/services/department/DepartmentInternalAPI.kt&quot;,&quot;spring-modulith/jpa-demo/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/services/department/management/DepartmentManagement.kt&quot;,&quot;spring-modulith/jpa-demo/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/services/department/mapper/DepartmentMapper.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
   <defs>
     <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
@@ -32,73 +32,135 @@
       .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="864"/>
-  <rect class="frame" x="16" y="16" width="1288" height="832" rx="22"/>
+  <rect class="canvas" width="1320" height="1348"/>
+  <rect class="frame" x="16" y="16" width="1288" height="1316" rx="22"/>
   <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Spring Modulith JPA Demo</text>
   <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Modulith example runtime and module dependencies</text>
   <g>
     <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="168.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="182.0">Example Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="220.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="236.0">adapters</tspan></text>
+      <rect x="46.0" y="114.0" width="1228.0" height="352.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
+      <rect x="64.0" y="134.0" width="174" height="312.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="274.0">Example Surface</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="312.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="328.0">adapters</tspan></text>
     </g>
     <g class="layer" data-layer="service">
-      <rect x="46.0" y="300.0" width="1228.0" height="168.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="320.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="368.0">Application Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="406.0">services, domain</tspan><tspan class="layer-detail" x="151.0" y="422.0">rules, use cases</tspan></text>
+      <rect x="46.0" y="484.0" width="1228.0" height="256.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
+      <rect x="64.0" y="504.0" width="174" height="216.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="596.0">Application Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="634.0">services, domain</tspan><tspan class="layer-detail" x="151.0" y="650.0">rules, use cases</tspan></text>
     </g>
     <g class="layer" data-layer="integration">
-      <rect x="46.0" y="486.0" width="1228.0" height="168.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="506.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="554.0">Integration Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="592.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="608.0">adapters, helpers</tspan></text>
+      <rect x="46.0" y="758.0" width="1228.0" height="380.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
+      <rect x="64.0" y="778.0" width="174" height="340.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="932.0">Integration Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="970.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="986.0">adapters, helpers</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="672.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="692.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="722.0">Runtime Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="752.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="768.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="784.0">JVM</tspan></text>
+      <rect x="46.0" y="1156.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="64.0" y="1176.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="1206.0">Runtime Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1236.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="1252.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="1268.0">JVM</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;api" data-label="invokes">
-      <path d="M 704.0 198.0 L 774.0 198.0 L 844.0 198.0" fill="none" stroke="#4F7DB5" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-api)"/>
+    <g class="edge" data-edge="api2-&gt;service0" data-label="delegates">
+      <path d="M 760.0 446.0 L 760.0 478.5 L 424.0 478.5 L 424.0 511.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
     </g>
-    <g class="edge" data-edge="api-&gt;service" data-label="delegates">
-      <path d="M 1039.0 253.0 L 1039.0 286.5 L 774.0 286.5 L 774.0 320.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
+    <g class="edge" data-edge="service5-&gt;infra0" data-label="persists / publishes">
+      <path d="M 1096.0 720.0 L 1096.0 749.0 L 424.0 749.0 L 424.0 778.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
     </g>
-    <g class="edge" data-edge="service-&gt;infra" data-label="persists / publishes">
-      <path d="M 774.0 448.0 L 774.0 477.0 L 509.0 477.0 L 509.0 506.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
+    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
+      <path d="M 424.0 1118.0 L 424.0 1147.0 L 592.0 1147.0 L 592.0 1176.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
     </g>
-    <g class="edge" data-edge="infra-&gt;bt" data-label="extends">
-      <path d="M 704.0 570.0 L 774.0 570.0 L 844.0 570.0" fill="none" stroke="#3E927D" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-bt)"/>
+    <g class="node" data-node="entry0" data-lines="Spring Modulith | services">
+      <rect x="274.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="176.5">Spring Modulith</tspan><tspan class="node-detail" x="424.0" y="200.5">services</tspan></text>
     </g>
-    <g class="edge" data-edge="bt-&gt;runtime" data-label="adapts">
-      <path d="M 1039.0 625.0 L 1039.0 658.5 L 774.0 658.5 L 774.0 692.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+    <g class="node" data-node="entry1" data-lines="App Rest Controller Test | services">
+      <rect x="610.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="176.5">App Rest Controller Test</tspan><tspan class="node-detail" x="760.0" y="200.5">services</tspan></text>
     </g>
-    <g class="node" data-node="entry" data-lines="Example Entrypoints | SpringModulith | AppRestControllerTest | SpringModulithTest | Spring Modulith Jpa Demo tests">
-      <rect x="314.0" y="134.0" width="390.0" height="128.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="169.0">Example Entrypoints</tspan><tspan class="node-detail" x="509.0" y="193.0">SpringModulith</tspan><tspan class="node-detail" x="509.0" y="210.0">AppRestControllerTest</tspan><tspan class="node-detail" x="509.0" y="227.0">SpringModulithTest</tspan><tspan class="node-detail" x="509.0" y="244.0">Spring Modulith Jpa Demo tests</tspan></text>
+    <g class="node" data-node="entry2" data-lines="Spring Modulith Test | services">
+      <rect x="946.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="176.5">Spring Modulith Test</tspan><tspan class="node-detail" x="1096.0" y="200.5">services</tspan></text>
     </g>
-    <g class="node" data-node="api" data-lines="API / Adapter Layer | DepartmentManagement | EmployeeManagement | GatewayManagement">
-      <rect x="844.0" y="143.0" width="390.0" height="110.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="177.5">API / Adapter Layer</tspan><tspan class="node-detail" x="1039.0" y="201.5">DepartmentManagement</tspan><tspan class="node-detail" x="1039.0" y="218.5">EmployeeManagement</tspan><tspan class="node-detail" x="1039.0" y="235.5">GatewayManagement</tspan></text>
+    <g class="node" data-node="entry3" data-lines="Department Module Test | department">
+      <rect x="274.0" y="244.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="286.5">Department Module Test</tspan><tspan class="node-detail" x="424.0" y="310.5">department</tspan></text>
     </g>
-    <g class="node" data-node="service" data-lines="Application Services | OrganizationAddEvent | OrganizationRemoveEvent | DepartmentDTO | DepartmentExternalAPI">
-      <rect x="474.0" y="320.0" width="600.0" height="128.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="355.0">Application Services</tspan><tspan class="node-detail" x="774.0" y="379.0">OrganizationAddEvent</tspan><tspan class="node-detail" x="774.0" y="396.0">OrganizationRemoveEvent</tspan><tspan class="node-detail" x="774.0" y="413.0">DepartmentDTO</tspan><tspan class="node-detail" x="774.0" y="430.0">DepartmentExternalAPI</tspan></text>
+    <g class="node" data-node="entry4" data-lines="Employee Module Test | employee">
+      <rect x="610.0" y="244.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="286.5">Employee Module Test</tspan><tspan class="node-detail" x="760.0" y="310.5">employee</tspan></text>
     </g>
-    <g class="node" data-node="infra" data-lines="Framework Layer | Spring boot4 dependencies | Spring modulith bom | Spring modulith actuator | Spring modulith observability">
-      <rect x="314.0" y="506.0" width="390.0" height="128.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="541.0">Framework Layer</tspan><tspan class="node-detail" x="509.0" y="565.0">Spring boot4 dependencies</tspan><tspan class="node-detail" x="509.0" y="582.0">Spring modulith bom</tspan><tspan class="node-detail" x="509.0" y="599.0">Spring modulith actuator</tspan><tspan class="node-detail" x="509.0" y="616.0">Spring modulith observability</tspan></text>
+    <g class="node" data-node="api0" data-lines="Department Management | management">
+      <rect x="946.0" y="244.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="286.5">Department Management</tspan><tspan class="node-detail" x="1096.0" y="310.5">management</tspan></text>
     </g>
-    <g class="node" data-node="bt" data-lines="bluetape4k APIs | hibernate | testcontainers | coroutines">
-      <rect x="844.0" y="515.0" width="390.0" height="110.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="549.5">bluetape4k APIs</tspan><tspan class="node-detail" x="1039.0" y="573.5">hibernate</tspan><tspan class="node-detail" x="1039.0" y="590.5">testcontainers</tspan><tspan class="node-detail" x="1039.0" y="607.5">coroutines</tspan></text>
+    <g class="node" data-node="api1" data-lines="Employee Management | management">
+      <rect x="274.0" y="354.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="396.5">Employee Management</tspan><tspan class="node-detail" x="424.0" y="420.5">management</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="Runtime Dependencies | SQL / R2DBC | Testcontainers">
-      <rect x="474.0" y="692.0" width="600.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="726.0">Runtime Dependencies</tspan><tspan class="node-detail" x="774.0" y="750.0">SQL / R2DBC</tspan><tspan class="node-detail" x="774.0" y="767.0">Testcontainers</tspan></text>
+    <g class="node" data-node="api2" data-lines="Gateway Management | gateway">
+      <rect x="610.0" y="354.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="396.5">Gateway Management</tspan><tspan class="node-detail" x="760.0" y="420.5">gateway</tspan></text>
+    </g>
+    <g class="node" data-node="service0" data-lines="Organization Add Event | services">
+      <rect x="274.0" y="511.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="553.5">Organization Add Event</tspan><tspan class="node-detail" x="424.0" y="577.5">services</tspan></text>
+    </g>
+    <g class="node" data-node="service1" data-lines="Organization Remove | Event | services">
+      <rect x="610.0" y="504.0" width="300.0" height="106.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="541.5">Organization Remove</tspan><tspan class="node-title" x="760.0" y="565.5">Event</tspan><tspan class="node-detail" x="760.0" y="589.5">services</tspan></text>
+    </g>
+    <g class="node" data-node="service2" data-lines="Department DTO | department">
+      <rect x="946.0" y="511.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="553.5">Department DTO</tspan><tspan class="node-detail" x="1096.0" y="577.5">department</tspan></text>
+    </g>
+    <g class="node" data-node="service3" data-lines="Department External API | department">
+      <rect x="274.0" y="628.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="670.5">Department External API</tspan><tspan class="node-detail" x="424.0" y="694.5">department</tspan></text>
+    </g>
+    <g class="node" data-node="service4" data-lines="Department Internal API | department">
+      <rect x="610.0" y="628.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="670.5">Department Internal API</tspan><tspan class="node-detail" x="760.0" y="694.5">department</tspan></text>
+    </g>
+    <g class="node" data-node="service5" data-lines="Department Mapper | mapper">
+      <rect x="946.0" y="628.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="670.5">Department Mapper</tspan><tspan class="node-detail" x="1096.0" y="694.5">mapper</tspan></text>
+    </g>
+    <g class="node" data-node="infra0" data-lines="Spring boot4 | dependencies | Framework Layer">
+      <rect x="274.0" y="778.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="815.5">Spring boot4</tspan><tspan class="node-title" x="424.0" y="839.5">dependencies</tspan><tspan class="node-detail" x="424.0" y="863.5">Framework Layer</tspan></text>
+    </g>
+    <g class="node" data-node="infra1" data-lines="Spring modulith bom | Framework Layer">
+      <rect x="610.0" y="785.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="827.5">Spring modulith bom</tspan><tspan class="node-detail" x="760.0" y="851.5">Framework Layer</tspan></text>
+    </g>
+    <g class="node" data-node="infra2" data-lines="Spring modulith actuator | Framework Layer">
+      <rect x="946.0" y="785.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="827.5">Spring modulith actuator</tspan><tspan class="node-detail" x="1096.0" y="851.5">Framework Layer</tspan></text>
+    </g>
+    <g class="node" data-node="infra3" data-lines="Spring modulith | observability | Framework Layer">
+      <rect x="274.0" y="902.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="939.5">Spring modulith</tspan><tspan class="node-title" x="424.0" y="963.5">observability</tspan><tspan class="node-detail" x="424.0" y="987.5">Framework Layer</tspan></text>
+    </g>
+    <g class="node" data-node="bt0" data-lines="hibernate | bluetape4k APIs">
+      <rect x="610.0" y="909.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="951.5">hibernate</tspan><tspan class="node-detail" x="760.0" y="975.5">bluetape4k APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt1" data-lines="testcontainers | bluetape4k APIs">
+      <rect x="946.0" y="909.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="951.5">testcontainers</tspan><tspan class="node-detail" x="1096.0" y="975.5">bluetape4k APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt2" data-lines="coroutines | bluetape4k APIs">
+      <rect x="274.0" y="1026.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="1068.5">coroutines</tspan><tspan class="node-detail" x="424.0" y="1092.5">bluetape4k APIs</tspan></text>
+    </g>
+    <g class="node" data-node="runtime0" data-lines="SQL / R2DBC | Runtime Dependencies">
+      <rect x="442.0" y="1176.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="592.0" y="1218.5">SQL / R2DBC</tspan><tspan class="node-detail" x="592.0" y="1242.5">Runtime Dependencies</tspan></text>
+    </g>
+    <g class="node" data-node="runtime1" data-lines="Testcontainers | Runtime Dependencies">
+      <rect x="778.0" y="1176.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="928.0" y="1218.5">Testcontainers</tspan><tspan class="node-detail" x="928.0" y="1242.5">Runtime Dependencies</tspan></text>
     </g>
   </g>
 </svg>

@@ -26,16 +26,34 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Boot App/Test Surface\nResilienceApplication\nAbstractResilienceTest\nPrometheusMetricsTest\nSpring Boot Resilience4j", fillcolor="#FFF8E7"];
-  api [label="Spring Web Adapters\nNettyConfig\nResilience4jConfig\nBackendAController\nBackendBController", fillcolor="#EEF7FF"];
-  service [label="Application Feature\nRecordFailurePredicate\nBackendAService\nBackendCService\nService", fillcolor="#F1F8E9"];
-  infra [label="Spring Boot Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k Boot APIs\nworkshop\njunit5\nresilience4j", fillcolor="#EAF7F0"];
-  runtime [label="Boot Runtime\nSQL / R2DBC\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
+  entry0 [label="Resilience Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Abstract Resilience Test\nresilience", fillcolor="#FFF8E7"];
+  entry2 [label="Prometheus Metrics Test\nactuator", fillcolor="#FFF8E7"];
+  entry3 [label="Bulkhead Test\nbulkhead", fillcolor="#FFF8E7"];
+  entry4 [label="Abstract Circuit Breaker Test\ncircuitbreaker", fillcolor="#FFF8E7"];
+  api0 [label="Netty Config\nconfiguration", fillcolor="#EEF7FF"];
+  api1 [label="Resilience4j Config\nconfiguration", fillcolor="#EEF7FF"];
+  api2 [label="Backend A Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  api3 [label="Backend B Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  api4 [label="Backend C Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  service0 [label="Record Failure Predicate\nexception", fillcolor="#F1F8E9"];
+  service1 [label="Backend A Service\nservice component", fillcolor="#F1F8E9"];
+  service2 [label="Backend C Service\nservice component", fillcolor="#F1F8E9"];
+  service3 [label="Service\nservice component", fillcolor="#F1F8E9"];
+  service4 [label="Backend A Co Service\nservice component", fillcolor="#F1F8E9"];
+  service5 [label="Backend B Co Service\nservice component", fillcolor="#F1F8E9"];
+  infra0 [label="Spring boot autoconfigure lib\nSpring Boot Layer", fillcolor="#F5F0FF"];
+  infra1 [label="Spring boot autoconfigure processor\nSpring Boot Layer", fillcolor="#F5F0FF"];
+  infra2 [label="Spring boot configuration processor\nSpring Boot Layer", fillcolor="#F5F0FF"];
+  infra3 [label="Spring boot devtools\nSpring Boot Layer", fillcolor="#F5F0FF"];
+  bt0 [label="workshop\nbluetape4k Boot APIs", fillcolor="#EAF7F0"];
+  bt1 [label="junit5\nbluetape4k Boot APIs", fillcolor="#EAF7F0"];
+  bt2 [label="resilience4j\nbluetape4k Boot APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="SQL / R2DBC\nBoot Runtime", fillcolor="#FFF1F1"];
+  runtime1 [label="Redis\nBoot Runtime", fillcolor="#FFF1F1"];
+  runtime2 [label="Testcontainers\nBoot Runtime", fillcolor="#FFF1F1"];
 
-  entry -> api [label="invokes"];
-  api -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  api4 -> service0 [label="delegates"];
+  service5 -> infra0 [label="persists / publishes"];
+  bt2 -> runtime0 [label="adapts"];
 }

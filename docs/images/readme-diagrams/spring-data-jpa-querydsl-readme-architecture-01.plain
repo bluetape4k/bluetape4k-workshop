@@ -1,11 +1,24 @@
-graph 1 20.163 1.7263
-node entry 1.5906 0.86313 3.1813 1.445 "Data Demo Surface\nAbstractQuerydslTest\nAbstractDomainTest\nSpring Data Jpa Querydsl tests" rounded,filled box #88A3B5 #FFF8E7
-node service 6.6017 0.86313 3.4521 1.7263 "Data Service Layer\nMemberRepositoryImpl\nSpringRepositoryQuerydslSupport\nMemberSearchCondition\nTeamDto" rounded,filled box #88A3B5 #F1F8E9
-node infra 11.941 0.86313 2.0042 1.7263 "Repository Layer\nMemberDto\nMemberTeamDto\nMember\nTeam" rounded,filled box #88A3B5 #F5F0FF
-node bt 15.614 0.86313 2.2854 1.445 "bluetape4k Data APIs\nhibernate\nspring\ntestcontainers" rounded,filled box #88A3B5 #EAF7F0
-node runtime 19.182 0.86313 1.9625 1.1637 "Database Runtime\nSQL / R2DBC\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry service 4 3.1899 0.86313 3.1899 0.86313 4.7277 0.86313 4.7277 0.86313 delegates 4.0285 0.95167 solid #637383
-edge service infra 4 8.3352 0.86313 8.3352 0.86313 10.789 0.86313 10.789 0.86313 "persists / publishes" 9.6333 0.95167 solid #637383
-edge infra bt 4 12.949 0.86313 12.949 0.86313 14.322 0.86313 14.322 0.86313 extends 13.707 0.95167 solid #637383
-edge bt runtime 4 16.762 0.86313 16.762 0.86313 18.049 0.86313 18.049 0.86313 adapts 17.478 0.95167 solid #637383
+graph 1 8.8694 24.633
+node entry0 1.8354 0.44125 2.5354 0.8825 "Abstract Querydsl Test\nquerydsl" rounded,filled box #88A3B5 #FFF8E7
+node entry1 1.8354 2.0246 2.3792 0.8825 "Abstract Domain Test\ndomain model" rounded,filled box #88A3B5 #FFF8E7
+node entry2 1.8354 3.6079 2.6708 0.8825 "Member Repository Test\nrepository" rounded,filled box #88A3B5 #FFF8E7
+node entry3 1.8354 5.1913 2.4208 0.8825 "Team Repository Test\nrepository" rounded,filled box #88A3B5 #FFF8E7
+node service0 7.5757 5.1913 2.5875 0.8825 "Member Repository Impl\nrepository" rounded,filled box #88A3B5 #F1F8E9
+node service1 1.8354 6.7746 3.6708 0.8825 "Spring Repository Querydsl Support\nspring" rounded,filled box #88A3B5 #F1F8E9
+node service2 1.8354 8.3579 2.7229 0.8825 "Member Search Condition\ndomain model" rounded,filled box #88A3B5 #F1F8E9
+node service3 1.8354 9.9413 1.5771 0.8825 "Team Dto\ndomain model" rounded,filled box #88A3B5 #F1F8E9
+node service4 1.8354 11.525 1.5771 0.8825 "dto-mapping\ndomain model" rounded,filled box #88A3B5 #F1F8E9
+node infra0 7.5757 11.525 1.5771 0.8825 "Member Dto\ndomain model" rounded,filled box #88A3B5 #F5F0FF
+node infra1 1.8354 13.108 2.0771 0.8825 "Member Team Dto\ndomain model" rounded,filled box #88A3B5 #F5F0FF
+node infra2 1.8354 14.691 1.5771 0.8825 "Member\ndomain model" rounded,filled box #88A3B5 #F5F0FF
+node infra3 1.8354 16.275 1.5771 0.8825 "Team\ndomain model" rounded,filled box #88A3B5 #F5F0FF
+node infra4 1.8354 17.858 2.1917 0.8825 "Member Repository\nrepository" rounded,filled box #88A3B5 #F5F0FF
+node bt0 1.8354 19.441 2.2854 0.8825 "hibernate\nbluetape4k Data APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt1 1.8354 21.025 2.2854 0.8825 "spring\nbluetape4k Data APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt2 1.8354 22.608 2.2854 0.8825 "testcontainers\nbluetape4k Data APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime0 7.5757 22.608 1.9625 0.8825 "SQL / R2DBC\nDatabase Runtime" rounded,filled box #88A3B5 #FFF1F1
+node runtime1 1.8354 24.191 1.9625 0.8825 "Testcontainers\nDatabase Runtime" rounded,filled box #88A3B5 #FFF1F1
+edge entry3 service0 4 3.0528 5.1913 3.0528 5.1913 6.1326 5.1913 6.1326 5.1913 starts 4.9764 5.2798 solid #637383
+edge service4 infra0 4 2.6336 11.525 2.6336 11.525 6.6371 11.525 6.6371 11.525 "persists / publishes" 4.9764 11.613 solid #637383
+edge bt2 runtime0 4 2.9833 22.608 2.9833 22.608 6.4451 22.608 6.4451 22.608 adapts 4.9764 22.696 solid #637383
 stop

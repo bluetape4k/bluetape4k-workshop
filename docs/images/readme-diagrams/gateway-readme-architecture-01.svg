@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="660" viewBox="0 0 1320 660" role="img" aria-label="Gateway Demo architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="800" viewBox="0 0 1320 800" role="img" aria-label="Gateway Demo architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;gateway/api-gateway/src/main/kotlin/io/bluetape4k/workshop/gateway/ApiGatewayDemoApplication.kt&quot;,&quot;gateway/api-gateway/src/main/kotlin/io/bluetape4k/workshop/gateway/config/GatewayConfig.kt&quot;,&quot;gateway/api-gateway/src/main/kotlin/io/bluetape4k/workshop/gateway/config/managements/SwaggerConfig.kt&quot;,&quot;gateway/api-gateway/src/main/kotlin/io/bluetape4k/workshop/gateway/controller/IndexController.kt&quot;,&quot;gateway/api-gateway/src/main/kotlin/io/bluetape4k/workshop/gateway/filter/RedirectWebFilter.kt&quot;,&quot;gateway/customers/src/main/kotlin/io/bluetape4k/workshop/gateway/customer/CustomerApplication.kt&quot;,&quot;gateway/customers/src/main/kotlin/io/bluetape4k/workshop/gateway/customer/config/CustomerConfig.kt&quot;,&quot;gateway/customers/src/main/kotlin/io/bluetape4k/workshop/gateway/customer/config/managements/ObservationConfig.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
   <defs>
     <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
@@ -32,40 +32,74 @@
       .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="660"/>
-  <rect class="frame" x="16" y="16" width="1288" height="628" rx="22"/>
+  <rect class="canvas" width="1320" height="800"/>
+  <rect class="frame" x="16" y="16" width="1288" height="768" rx="22"/>
   <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Gateway Demo</text>
   <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Gateway example runtime and module dependencies</text>
   <g>
     <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="168.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="182.0">Example Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="220.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="236.0">adapters</tspan></text>
+      <rect x="46.0" y="114.0" width="1228.0" height="476.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
+      <rect x="64.0" y="134.0" width="174" height="436.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="336.0">Example Surface</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="374.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="390.0">adapters</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="300.0" width="1228.0" height="150.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="320.0" width="174" height="110.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="359.0">Runtime Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="389.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="405.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="421.0">JVM</tspan></text>
+      <rect x="46.0" y="608.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="64.0" y="628.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="658.0">Runtime Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="688.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="704.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="720.0">JVM</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;api" data-label="invokes">
-      <path d="M 704.0 198.0 L 774.0 198.0 L 844.0 198.0" fill="none" stroke="#4F7DB5" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-api)"/>
+    <g class="node" data-node="entry0" data-lines="Api Gateway Demo | Application | application bootstrap">
+      <rect x="274.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="171.5">Api Gateway Demo</tspan><tspan class="node-title" x="424.0" y="195.5">Application</tspan><tspan class="node-detail" x="424.0" y="219.5">application bootstrap</tspan></text>
     </g>
-    <g class="edge" data-edge="api-&gt;runtime" data-label="backs">
-      <path d="M 1039.0 262.0 L 1039.0 291.0 L 774.0 291.0 L 774.0 320.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+    <g class="node" data-node="entry1" data-lines="Customer Application | application bootstrap">
+      <rect x="610.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="183.5">Customer Application</tspan><tspan class="node-detail" x="760.0" y="207.5">application bootstrap</tspan></text>
     </g>
-    <g class="node" data-node="entry" data-lines="Example Entrypoints | ApiGatewayDemoApplication | CustomerApplication | OrderApplication | AbstractGatewayTest">
-      <rect x="314.0" y="134.0" width="390.0" height="128.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="169.0">Example Entrypoints</tspan><tspan class="node-detail" x="509.0" y="193.0">ApiGatewayDemoApplication</tspan><tspan class="node-detail" x="509.0" y="210.0">CustomerApplication</tspan><tspan class="node-detail" x="509.0" y="227.0">OrderApplication</tspan><tspan class="node-detail" x="509.0" y="244.0">AbstractGatewayTest</tspan></text>
+    <g class="node" data-node="entry2" data-lines="Order Application | application bootstrap">
+      <rect x="946.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="183.5">Order Application</tspan><tspan class="node-detail" x="1096.0" y="207.5">application bootstrap</tspan></text>
     </g>
-    <g class="node" data-node="api" data-lines="API / Adapter Layer | GatewayConfig | SwaggerConfig | IndexController | RedirectWebFilter">
-      <rect x="844.0" y="134.0" width="390.0" height="128.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="169.0">API / Adapter Layer</tspan><tspan class="node-detail" x="1039.0" y="193.0">GatewayConfig</tspan><tspan class="node-detail" x="1039.0" y="210.0">SwaggerConfig</tspan><tspan class="node-detail" x="1039.0" y="227.0">IndexController</tspan><tspan class="node-detail" x="1039.0" y="244.0">RedirectWebFilter</tspan></text>
+    <g class="node" data-node="entry3" data-lines="Abstract Gateway Test | verification">
+      <rect x="274.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="300.5">Abstract Gateway Test</tspan><tspan class="node-detail" x="424.0" y="324.5">verification</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="Runtime Dependencies | Redis | AWS / S3 | Testcontainers">
-      <rect x="474.0" y="320.0" width="600.0" height="110.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="354.5">Runtime Dependencies</tspan><tspan class="node-detail" x="774.0" y="378.5">Redis</tspan><tspan class="node-detail" x="774.0" y="395.5">AWS / S3</tspan><tspan class="node-detail" x="774.0" y="412.5">Testcontainers</tspan></text>
+    <g class="node" data-node="entry4" data-lines="Index Controller Test | verification">
+      <rect x="610.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="300.5">Index Controller Test</tspan><tspan class="node-detail" x="760.0" y="324.5">verification</tspan></text>
+    </g>
+    <g class="node" data-node="api0" data-lines="Gateway Config | configuration">
+      <rect x="946.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="300.5">Gateway Config</tspan><tspan class="node-detail" x="1096.0" y="324.5">configuration</tspan></text>
+    </g>
+    <g class="node" data-node="api1" data-lines="Swagger Config | configuration">
+      <rect x="274.0" y="368.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="410.5">Swagger Config</tspan><tspan class="node-detail" x="424.0" y="434.5">configuration</tspan></text>
+    </g>
+    <g class="node" data-node="api2" data-lines="Index Controller | HTTP adapter">
+      <rect x="610.0" y="368.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="410.5">Index Controller</tspan><tspan class="node-detail" x="760.0" y="434.5">HTTP adapter</tspan></text>
+    </g>
+    <g class="node" data-node="api3" data-lines="Redirect Web Filter | filter">
+      <rect x="946.0" y="368.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="410.5">Redirect Web Filter</tspan><tspan class="node-detail" x="1096.0" y="434.5">filter</tspan></text>
+    </g>
+    <g class="node" data-node="api4" data-lines="Customer Config | configuration">
+      <rect x="274.0" y="478.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="520.5">Customer Config</tspan><tspan class="node-detail" x="424.0" y="544.5">configuration</tspan></text>
+    </g>
+    <g class="node" data-node="runtime0" data-lines="Redis | Runtime Dependencies">
+      <rect x="274.0" y="628.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="670.5">Redis</tspan><tspan class="node-detail" x="424.0" y="694.5">Runtime Dependencies</tspan></text>
+    </g>
+    <g class="node" data-node="runtime1" data-lines="AWS / S3 | Runtime Dependencies">
+      <rect x="610.0" y="628.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="670.5">AWS / S3</tspan><tspan class="node-detail" x="760.0" y="694.5">Runtime Dependencies</tspan></text>
+    </g>
+    <g class="node" data-node="runtime2" data-lines="Testcontainers | Runtime Dependencies">
+      <rect x="946.0" y="628.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="670.5">Testcontainers</tspan><tspan class="node-detail" x="1096.0" y="694.5">Runtime Dependencies</tspan></text>
     </g>
   </g>
 </svg>

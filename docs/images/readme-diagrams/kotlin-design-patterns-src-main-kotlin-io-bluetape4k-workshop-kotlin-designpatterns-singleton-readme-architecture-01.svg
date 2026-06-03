@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="660" viewBox="0 0 1320 660" role="img" aria-label="singleton architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="744" viewBox="0 0 1320 744" role="img" aria-label="singleton architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/singleton/EnumIvoryTower.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/singleton/InitializingOnDemandHolderIdiom.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/singleton/IvoryTower.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/singleton/IvoryTowerObject.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/singleton/KotlinSingleton.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/singleton/ThreadSafeDoubleCheckLocking.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/singleton/ThreadSafeLazyLoadedIvoryTower.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
   <defs>
     <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
@@ -32,8 +32,8 @@
       .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="660"/>
-  <rect class="frame" x="16" y="16" width="1288" height="628" rx="22"/>
+  <rect class="canvas" width="1320" height="744"/>
+  <rect class="frame" x="16" y="16" width="1288" height="712" rx="22"/>
   <text class="diagram-title" x="660.0" y="58" text-anchor="middle">singleton</text>
   <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Kotlin example runtime and module dependencies</text>
   <g>
@@ -44,34 +44,54 @@
       <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="202.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="218.0">adapters</tspan></text>
     </g>
     <g class="layer" data-layer="service">
-      <rect x="46.0" y="264.0" width="1228.0" height="168.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="284.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="332.0">Application Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="370.0">services, domain</tspan><tspan class="layer-detail" x="151.0" y="386.0">rules, use cases</tspan></text>
+      <rect x="46.0" y="264.0" width="1228.0" height="270.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
+      <rect x="64.0" y="284.0" width="174" height="230.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="383.0">Application Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="421.0">services, domain</tspan><tspan class="layer-detail" x="151.0" y="437.0">rules, use cases</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="450.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="470.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="500.0">Runtime Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="530.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="546.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="562.0">JVM</tspan></text>
+      <rect x="46.0" y="552.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="64.0" y="572.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="602.0">Runtime Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="632.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="648.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="664.0">JVM</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;service" data-label="delegates">
-      <path d="M 774.0 226.0 L 774.0 255.0 L 774.0 284.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
+    <g class="edge" data-edge="entry0-&gt;service0" data-label="starts">
+      <path d="M 760.0 226.0 L 760.0 258.5 L 424.0 258.5 L 424.0 291.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
     </g>
-    <g class="edge" data-edge="service-&gt;runtime" data-label="backs">
-      <path d="M 774.0 412.0 L 774.0 441.0 L 774.0 470.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+    <g class="edge" data-edge="service5-&gt;runtime0" data-label="runs on">
+      <path d="M 1096.0 514.0 L 1096.0 543.0 L 760.0 543.0 L 760.0 572.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
     </g>
-    <g class="node" data-node="entry" data-lines="Example Entrypoints | Kotlin Design Patterns Kotlin | DesignPatterns Singleton tests">
-      <rect x="474.0" y="134.0" width="600.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="168.0">Example Entrypoints</tspan><tspan class="node-detail" x="774.0" y="192.0">Kotlin Design Patterns Kotlin</tspan><tspan class="node-detail" x="774.0" y="209.0">DesignPatterns Singleton tests</tspan></text>
+    <g class="node" data-node="entry0" data-lines="singleton | Example Entrypoints">
+      <rect x="610.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="176.5">singleton</tspan><tspan class="node-detail" x="760.0" y="200.5">Example Entrypoints</tspan></text>
     </g>
-    <g class="node" data-node="service" data-lines="Application Services | EnumIvoryTower | InitializingOnDemandHolderIdiom | IvoryTower | IvoryTowerObject">
-      <rect x="474.0" y="284.0" width="600.0" height="128.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="319.0">Application Services</tspan><tspan class="node-detail" x="774.0" y="343.0">EnumIvoryTower</tspan><tspan class="node-detail" x="774.0" y="360.0">InitializingOnDemandHolderIdiom</tspan><tspan class="node-detail" x="774.0" y="377.0">IvoryTower</tspan><tspan class="node-detail" x="774.0" y="394.0">IvoryTowerObject</tspan></text>
+    <g class="node" data-node="service0" data-lines="Enum Ivory Tower | component">
+      <rect x="274.0" y="291.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="333.5">Enum Ivory Tower</tspan><tspan class="node-detail" x="424.0" y="357.5">component</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="Runtime Dependencies | In-memory / JVM">
-      <rect x="474.0" y="470.0" width="600.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="512.5">Runtime Dependencies</tspan><tspan class="node-detail" x="774.0" y="536.5">In-memory / JVM</tspan></text>
+    <g class="node" data-node="service1" data-lines="Initializing On Demand | Holder Idiom | component">
+      <rect x="610.0" y="284.0" width="300.0" height="106.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="321.5">Initializing On Demand</tspan><tspan class="node-title" x="760.0" y="345.5">Holder Idiom</tspan><tspan class="node-detail" x="760.0" y="369.5">component</tspan></text>
+    </g>
+    <g class="node" data-node="service2" data-lines="Ivory Tower | component">
+      <rect x="946.0" y="291.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="333.5">Ivory Tower</tspan><tspan class="node-detail" x="1096.0" y="357.5">component</tspan></text>
+    </g>
+    <g class="node" data-node="service3" data-lines="Ivory Tower Object | component">
+      <rect x="274.0" y="415.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="457.5">Ivory Tower Object</tspan><tspan class="node-detail" x="424.0" y="481.5">component</tspan></text>
+    </g>
+    <g class="node" data-node="service4" data-lines="Kotlin Singleton | component">
+      <rect x="610.0" y="415.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="457.5">Kotlin Singleton</tspan><tspan class="node-detail" x="760.0" y="481.5">component</tspan></text>
+    </g>
+    <g class="node" data-node="service5" data-lines="Thread Safe Double Check | Locking | component">
+      <rect x="946.0" y="408.0" width="300.0" height="106.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="445.5">Thread Safe Double Check</tspan><tspan class="node-title" x="1096.0" y="469.5">Locking</tspan><tspan class="node-detail" x="1096.0" y="493.5">component</tspan></text>
+    </g>
+    <g class="node" data-node="runtime0" data-lines="In-memory / JVM | Runtime Dependencies">
+      <rect x="610.0" y="572.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="614.5">In-memory / JVM</tspan><tspan class="node-detail" x="760.0" y="638.5">Runtime Dependencies</tspan></text>
     </g>
   </g>
 </svg>

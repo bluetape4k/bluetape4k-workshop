@@ -26,16 +26,32 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Web/Test Entrypoints\nExposedWebfluxR2dbcApp\nAbstractWebfluxR2dbcTest\nAuthorControllerTest\nExposed Webflux R2dbc tests", fillcolor="#FFF8E7"];
-  api [label="MVC/WebFlux Controllers\nAuthorController\nBookController\nDatabaseInitializer\nGlobalExceptionHandler", fillcolor="#EEF7FF"];
-  service [label="Application Services\nAuthorService\nBookService\nOrderService", fillcolor="#F1F8E9"];
-  infra [label="Exposed Persistence\nAuthorDTO\nBookDTO\nAuthorRepository\nBookRepository", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k Data APIs\nworkshop\njunit5\nassertions", fillcolor="#EAF7F0"];
-  runtime [label="SQL Test Runtime\nSQL / R2DBC\nElasticsearch\nTestcontainers", fillcolor="#FFF1F1"];
+  entry0 [label="Exposed Webflux R2dbc App\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Abstract Webflux R2dbc Test\nr2dbc", fillcolor="#FFF8E7"];
+  entry2 [label="Author Controller Test\nauthor", fillcolor="#FFF8E7"];
+  entry3 [label="Concurrent Place Order Test\norder", fillcolor="#FFF8E7"];
+  entry4 [label="Order Controller Test\norder", fillcolor="#FFF8E7"];
+  api0 [label="Author Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  api1 [label="Book Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  api2 [label="Database Initializer\nconfiguration", fillcolor="#EEF7FF"];
+  api3 [label="Global Exception Handler\nconfiguration", fillcolor="#EEF7FF"];
+  api4 [label="Order Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  service0 [label="Author Service\nservice component", fillcolor="#F1F8E9"];
+  service1 [label="Book Service\nservice component", fillcolor="#F1F8E9"];
+  service2 [label="Order Service\nservice component", fillcolor="#F1F8E9"];
+  infra0 [label="Author DTO\ndto", fillcolor="#F5F0FF"];
+  infra1 [label="Book DTO\ndto", fillcolor="#F5F0FF"];
+  infra2 [label="Author Repository\nrepository", fillcolor="#F5F0FF"];
+  infra3 [label="Book Repository\nrepository", fillcolor="#F5F0FF"];
+  infra4 [label="Author Table\ndomain model", fillcolor="#F5F0FF"];
+  bt0 [label="workshop\nbluetape4k Data APIs", fillcolor="#EAF7F0"];
+  bt1 [label="junit5\nbluetape4k Data APIs", fillcolor="#EAF7F0"];
+  bt2 [label="assertions\nbluetape4k Data APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="SQL / R2DBC\nSQL Test Runtime", fillcolor="#FFF1F1"];
+  runtime1 [label="Elasticsearch\nSQL Test Runtime", fillcolor="#FFF1F1"];
+  runtime2 [label="Testcontainers\nSQL Test Runtime", fillcolor="#FFF1F1"];
 
-  entry -> api [label="invokes"];
-  api -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  api4 -> service0 [label="delegates"];
+  service2 -> infra0 [label="persists / publishes"];
+  bt2 -> runtime0 [label="adapts"];
 }

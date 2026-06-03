@@ -26,16 +26,29 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Example Entrypoints\nLeaderZookeeperApp\nAbstractLeaderZookeeperTest\nBlockingSingleLeaderTest\nLeader Leader Zookeeper tests", fillcolor="#FFF8E7"];
-  api [label="API / Adapter Layer\nLeaderZookeeperConfig\nBlockingLeaderService\nGroupLeaderService\nSuspendGroupLeaderService", fillcolor="#EEF7FF"];
-  service [label="Application Services\nLeaderZookeeperProperties", fillcolor="#F1F8E9"];
-  infra [label="Framework Layer\nSpring boot autoconfigure lib\nSpring boot starter actuator\nSpring boot autoconfigure\nprocessor", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\nleader zookeeper\nleader", fillcolor="#EAF7F0"];
-  runtime [label="Runtime Dependencies\nSQL / R2DBC\nRedis\nZooKeeper", fillcolor="#FFF1F1"];
+  entry0 [label="Leader Zookeeper App\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Abstract Leader Zookeeper Test\nzookeeper", fillcolor="#FFF8E7"];
+  entry2 [label="Blocking Single Leader Test\nzookeeper", fillcolor="#FFF8E7"];
+  entry3 [label="Concurrent Blocking Leader Test\nzookeeper", fillcolor="#FFF8E7"];
+  entry4 [label="Extension Function Test\nzookeeper", fillcolor="#FFF8E7"];
+  api0 [label="Leader Zookeeper Config\nconfiguration", fillcolor="#EEF7FF"];
+  api1 [label="Blocking Leader Service\nservice component", fillcolor="#EEF7FF"];
+  api2 [label="Group Leader Service\nservice component", fillcolor="#EEF7FF"];
+  api3 [label="Suspend Group Leader Service\nservice component", fillcolor="#EEF7FF"];
+  api4 [label="Suspend Leader Zk Service\nservice component", fillcolor="#EEF7FF"];
+  service0 [label="Leader Zookeeper Properties\nconfiguration", fillcolor="#F1F8E9"];
+  infra0 [label="Spring boot autoconfigure lib\nFramework Layer", fillcolor="#F5F0FF"];
+  infra1 [label="Spring boot starter actuator\nFramework Layer", fillcolor="#F5F0FF"];
+  infra2 [label="Spring boot autoconfigure processor\nFramework Layer", fillcolor="#F5F0FF"];
+  infra3 [label="Spring boot configuration processor\nFramework Layer", fillcolor="#F5F0FF"];
+  bt0 [label="workshop\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  bt1 [label="leader zookeeper\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  bt2 [label="leader\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="SQL / R2DBC\nRuntime Dependencies", fillcolor="#FFF1F1"];
+  runtime1 [label="Redis\nRuntime Dependencies", fillcolor="#FFF1F1"];
+  runtime2 [label="ZooKeeper\nRuntime Dependencies", fillcolor="#FFF1F1"];
 
-  entry -> api [label="invokes"];
-  api -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  api4 -> service0 [label="delegates"];
+  service0 -> infra0 [label="persists / publishes"];
+  bt2 -> runtime0 [label="adapts"];
 }

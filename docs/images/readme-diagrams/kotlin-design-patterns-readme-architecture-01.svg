@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="828" viewBox="0 0 1320 828" role="img" aria-label="Kotlin Design Patterns architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="976" viewBox="0 0 1320 976" role="img" aria-label="Kotlin Design Patterns architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/abstractFactory/Army.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/abstractFactory/Castle.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/abstractFactory/FactoryMaker.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/abstractFactory/King.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/abstractFactory/KingdomFactory.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/abstractFactory/elf/ElfArmy.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/abstractFactory/elf/ElfCastle.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/abstractFactory/elf/ElfKing.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
   <defs>
     <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
@@ -32,59 +32,104 @@
       .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="828"/>
-  <rect class="frame" x="16" y="16" width="1288" height="796" rx="22"/>
+  <rect class="canvas" width="1320" height="976"/>
+  <rect class="frame" x="16" y="16" width="1288" height="944" rx="22"/>
   <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Kotlin Design Patterns</text>
   <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Kotlin example runtime and module dependencies</text>
   <g>
     <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="150.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="110.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="173.0">Example Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="211.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="227.0">adapters</tspan></text>
+      <rect x="46.0" y="114.0" width="1228.0" height="242.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
+      <rect x="64.0" y="134.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="219.0">Example Surface</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="257.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="273.0">adapters</tspan></text>
     </g>
     <g class="layer" data-layer="service">
-      <rect x="46.0" y="282.0" width="1228.0" height="168.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="302.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="350.0">Application Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="388.0">services, domain</tspan><tspan class="layer-detail" x="151.0" y="404.0">rules, use cases</tspan></text>
+      <rect x="46.0" y="374.0" width="1228.0" height="242.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
+      <rect x="64.0" y="394.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="479.0">Application Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="517.0">services, domain</tspan><tspan class="layer-detail" x="151.0" y="533.0">rules, use cases</tspan></text>
     </g>
     <g class="layer" data-layer="integration">
-      <rect x="46.0" y="468.0" width="1228.0" height="150.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="488.0" width="174" height="110.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="527.0">Integration Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="565.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="581.0">adapters, helpers</tspan></text>
+      <rect x="46.0" y="634.0" width="1228.0" height="132.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
+      <rect x="64.0" y="654.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="684.0">Integration Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="722.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="738.0">adapters, helpers</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="636.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="656.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="686.0">Runtime Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="716.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="732.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="748.0">JVM</tspan></text>
+      <rect x="46.0" y="784.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="64.0" y="804.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="834.0">Runtime Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="864.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="880.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="896.0">JVM</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;service" data-label="delegates">
-      <path d="M 774.0 244.0 L 774.0 273.0 L 774.0 302.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
+    <g class="edge" data-edge="entry4-&gt;service0" data-label="starts">
+      <path d="M 760.0 336.0 L 760.0 365.0 L 424.0 365.0 L 424.0 394.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
     </g>
-    <g class="edge" data-edge="service-&gt;bt" data-label="extends">
-      <path d="M 774.0 430.0 L 774.0 459.0 L 774.0 488.0" fill="none" stroke="#3E927D" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-bt)"/>
+    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
+      <path d="M 1096.0 746.0 L 1096.0 775.0 L 592.0 775.0 L 592.0 804.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
     </g>
-    <g class="edge" data-edge="bt-&gt;runtime" data-label="adapts">
-      <path d="M 774.0 598.0 L 774.0 627.0 L 774.0 656.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+    <g class="node" data-node="entry0" data-lines="Abstract Factory Test | abstractFactory">
+      <rect x="274.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="176.5">Abstract Factory Test</tspan><tspan class="node-detail" x="424.0" y="200.5">abstractFactory</tspan></text>
     </g>
-    <g class="node" data-node="entry" data-lines="Example Entrypoints | AbstractFactoryTest | HeroDataClassTest | Kotlin Design Patterns tests">
-      <rect x="474.0" y="134.0" width="600.0" height="110.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="168.5">Example Entrypoints</tspan><tspan class="node-detail" x="774.0" y="192.5">AbstractFactoryTest</tspan><tspan class="node-detail" x="774.0" y="209.5">HeroDataClassTest</tspan><tspan class="node-detail" x="774.0" y="226.5">Kotlin Design Patterns tests</tspan></text>
+    <g class="node" data-node="entry1" data-lines="Hero Data Class Test | builder">
+      <rect x="610.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="176.5">Hero Data Class Test</tspan><tspan class="node-detail" x="760.0" y="200.5">builder</tspan></text>
     </g>
-    <g class="node" data-node="service" data-lines="Application Services | Army | Castle | FactoryMaker | King">
-      <rect x="474.0" y="302.0" width="600.0" height="128.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="337.0">Application Services</tspan><tspan class="node-detail" x="774.0" y="361.0">Army</tspan><tspan class="node-detail" x="774.0" y="378.0">Castle</tspan><tspan class="node-detail" x="774.0" y="395.0">FactoryMaker</tspan><tspan class="node-detail" x="774.0" y="412.0">King</tspan></text>
+    <g class="node" data-node="entry2" data-lines="Hero Test | builder">
+      <rect x="946.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="176.5">Hero Test</tspan><tspan class="node-detail" x="1096.0" y="200.5">builder</tspan></text>
     </g>
-    <g class="node" data-node="bt" data-lines="bluetape4k APIs | io | junit5 | coroutines">
-      <rect x="474.0" y="488.0" width="600.0" height="110.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="522.5">bluetape4k APIs</tspan><tspan class="node-detail" x="774.0" y="546.5">io</tspan><tspan class="node-detail" x="774.0" y="563.5">junit5</tspan><tspan class="node-detail" x="774.0" y="580.5">coroutines</tspan></text>
+    <g class="node" data-node="entry3" data-lines="Abstract Holder Test | lazyLoading">
+      <rect x="274.0" y="244.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="286.5">Abstract Holder Test</tspan><tspan class="node-detail" x="424.0" y="310.5">lazyLoading</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="Runtime Dependencies | SQL / R2DBC | AWS / S3">
-      <rect x="474.0" y="656.0" width="600.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="690.0">Runtime Dependencies</tspan><tspan class="node-detail" x="774.0" y="714.0">SQL / R2DBC</tspan><tspan class="node-detail" x="774.0" y="731.0">AWS / S3</tspan></text>
+    <g class="node" data-node="entry4" data-lines="Holder Kotlin Lazy Test | lazyLoading">
+      <rect x="610.0" y="244.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="286.5">Holder Kotlin Lazy Test</tspan><tspan class="node-detail" x="760.0" y="310.5">lazyLoading</tspan></text>
+    </g>
+    <g class="node" data-node="service0" data-lines="Army | abstractFactory">
+      <rect x="274.0" y="394.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="436.5">Army</tspan><tspan class="node-detail" x="424.0" y="460.5">abstractFactory</tspan></text>
+    </g>
+    <g class="node" data-node="service1" data-lines="Castle | abstractFactory">
+      <rect x="610.0" y="394.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="436.5">Castle</tspan><tspan class="node-detail" x="760.0" y="460.5">abstractFactory</tspan></text>
+    </g>
+    <g class="node" data-node="service2" data-lines="Factory Maker | abstractFactory">
+      <rect x="946.0" y="394.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="436.5">Factory Maker</tspan><tspan class="node-detail" x="1096.0" y="460.5">abstractFactory</tspan></text>
+    </g>
+    <g class="node" data-node="service3" data-lines="King | abstractFactory">
+      <rect x="274.0" y="504.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="546.5">King</tspan><tspan class="node-detail" x="424.0" y="570.5">abstractFactory</tspan></text>
+    </g>
+    <g class="node" data-node="service4" data-lines="Kingdom Factory | abstractFactory">
+      <rect x="610.0" y="504.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="546.5">Kingdom Factory</tspan><tspan class="node-detail" x="760.0" y="570.5">abstractFactory</tspan></text>
+    </g>
+    <g class="node" data-node="service5" data-lines="Elf Army | elf">
+      <rect x="946.0" y="504.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="546.5">Elf Army</tspan><tspan class="node-detail" x="1096.0" y="570.5">elf</tspan></text>
+    </g>
+    <g class="node" data-node="bt0" data-lines="io | bluetape4k APIs">
+      <rect x="274.0" y="654.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="696.5">io</tspan><tspan class="node-detail" x="424.0" y="720.5">bluetape4k APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt1" data-lines="junit5 | bluetape4k APIs">
+      <rect x="610.0" y="654.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="696.5">junit5</tspan><tspan class="node-detail" x="760.0" y="720.5">bluetape4k APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt2" data-lines="coroutines | bluetape4k APIs">
+      <rect x="946.0" y="654.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="696.5">coroutines</tspan><tspan class="node-detail" x="1096.0" y="720.5">bluetape4k APIs</tspan></text>
+    </g>
+    <g class="node" data-node="runtime0" data-lines="SQL / R2DBC | Runtime Dependencies">
+      <rect x="442.0" y="804.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="592.0" y="846.5">SQL / R2DBC</tspan><tspan class="node-detail" x="592.0" y="870.5">Runtime Dependencies</tspan></text>
+    </g>
+    <g class="node" data-node="runtime1" data-lines="AWS / S3 | Runtime Dependencies">
+      <rect x="778.0" y="804.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="928.0" y="846.5">AWS / S3</tspan><tspan class="node-detail" x="928.0" y="870.5">Runtime Dependencies</tspan></text>
     </g>
   </g>
 </svg>

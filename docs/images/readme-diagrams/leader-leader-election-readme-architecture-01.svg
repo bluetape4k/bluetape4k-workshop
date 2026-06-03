@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="882" viewBox="0 0 1320 882" role="img" aria-label="Leader Election Workshop architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1390" viewBox="0 0 1320 1390" role="img" aria-label="Leader Election Workshop architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;leader/leader-election/src/main/kotlin/io/bluetape4k/workshop/leader/LeaderElectionApp.kt&quot;,&quot;leader/leader-election/src/main/kotlin/io/bluetape4k/workshop/leader/config/LeaderElectionConfig.kt&quot;,&quot;leader/leader-election/src/main/kotlin/io/bluetape4k/workshop/leader/config/LeaderElectionProperties.kt&quot;,&quot;leader/leader-election/src/main/kotlin/io/bluetape4k/workshop/leader/job/CacheWarmupJob.kt&quot;,&quot;leader/leader-election/src/main/kotlin/io/bluetape4k/workshop/leader/job/LeaderGuardedJob.kt&quot;,&quot;leader/leader-election/src/main/kotlin/io/bluetape4k/workshop/leader/job/LeaderScheduledJobService.kt&quot;,&quot;leader/leader-election/src/main/kotlin/io/bluetape4k/workshop/leader/job/LockAssertJob.kt&quot;,&quot;leader/leader-election/src/main/kotlin/io/bluetape4k/workshop/leader/job/LockExtenderJob.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
   <defs>
     <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
@@ -32,73 +32,143 @@
       .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="882"/>
-  <rect class="frame" x="16" y="16" width="1288" height="850" rx="22"/>
+  <rect class="canvas" width="1320" height="1390"/>
+  <rect class="frame" x="16" y="16" width="1288" height="1358" rx="22"/>
   <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Leader Election Workshop</text>
   <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Leader example runtime and module dependencies</text>
   <g>
     <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="168.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="182.0">Example Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="220.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="236.0">adapters</tspan></text>
+      <rect x="46.0" y="114.0" width="1228.0" height="380.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
+      <rect x="64.0" y="134.0" width="174" height="340.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="288.0">Example Surface</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="326.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="342.0">adapters</tspan></text>
     </g>
     <g class="layer" data-layer="service">
-      <rect x="46.0" y="300.0" width="1228.0" height="168.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="320.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="368.0">Application Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="406.0">services, domain</tspan><tspan class="layer-detail" x="151.0" y="422.0">rules, use cases</tspan></text>
+      <rect x="46.0" y="512.0" width="1228.0" height="270.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
+      <rect x="64.0" y="532.0" width="174" height="230.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="631.0">Application Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="669.0">services, domain</tspan><tspan class="layer-detail" x="151.0" y="685.0">rules, use cases</tspan></text>
     </g>
     <g class="layer" data-layer="integration">
-      <rect x="46.0" y="486.0" width="1228.0" height="168.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="506.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="554.0">Integration Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="592.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="608.0">adapters, helpers</tspan></text>
+      <rect x="46.0" y="800.0" width="1228.0" height="380.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
+      <rect x="64.0" y="820.0" width="174" height="340.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="974.0">Integration Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1012.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="1028.0">adapters, helpers</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="672.0" width="1228.0" height="150.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="692.0" width="174" height="110.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="731.0">Runtime Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="761.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="777.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="793.0">JVM</tspan></text>
+      <rect x="46.0" y="1198.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="64.0" y="1218.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="1248.0">Runtime Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1278.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="1294.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="1310.0">JVM</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;api" data-label="invokes">
-      <path d="M 704.0 198.0 L 774.0 198.0 L 844.0 198.0" fill="none" stroke="#4F7DB5" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-api)"/>
+    <g class="edge" data-edge="api3-&gt;service0" data-label="delegates">
+      <path d="M 1096.0 467.0 L 1096.0 499.5 L 424.0 499.5 L 424.0 532.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
     </g>
-    <g class="edge" data-edge="api-&gt;service" data-label="delegates">
-      <path d="M 1039.0 262.0 L 1039.0 291.0 L 774.0 291.0 L 774.0 320.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
+    <g class="edge" data-edge="service5-&gt;infra0" data-label="persists / publishes">
+      <path d="M 1096.0 762.0 L 1096.0 791.0 L 424.0 791.0 L 424.0 820.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
     </g>
-    <g class="edge" data-edge="service-&gt;infra" data-label="persists / publishes">
-      <path d="M 774.0 448.0 L 774.0 477.0 L 509.0 477.0 L 509.0 506.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
+    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
+      <path d="M 424.0 1160.0 L 424.0 1189.0 L 424.0 1218.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
     </g>
-    <g class="edge" data-edge="infra-&gt;bt" data-label="extends">
-      <path d="M 704.0 570.0 L 774.0 570.0 L 844.0 570.0" fill="none" stroke="#3E927D" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-bt)"/>
+    <g class="node" data-node="entry0" data-lines="Leader Election App | application bootstrap">
+      <rect x="274.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="183.5">Leader Election App</tspan><tspan class="node-detail" x="424.0" y="207.5">application bootstrap</tspan></text>
     </g>
-    <g class="edge" data-edge="bt-&gt;runtime" data-label="adapts">
-      <path d="M 1039.0 625.0 L 1039.0 658.5 L 774.0 658.5 L 774.0 692.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+    <g class="node" data-node="entry1" data-lines="Abstract Leader Election | Test | leader">
+      <rect x="610.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="171.5">Abstract Leader Election</tspan><tspan class="node-title" x="760.0" y="195.5">Test</tspan><tspan class="node-detail" x="760.0" y="219.5">leader</tspan></text>
     </g>
-    <g class="node" data-node="entry" data-lines="Example Entrypoints | LeaderElectionApp | AbstractLeaderElectionTest | ConcurrentLeaderElectionTest | Leader Leader Election tests">
-      <rect x="314.0" y="134.0" width="390.0" height="128.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="169.0">Example Entrypoints</tspan><tspan class="node-detail" x="509.0" y="193.0">LeaderElectionApp</tspan><tspan class="node-detail" x="509.0" y="210.0">AbstractLeaderElectionTest</tspan><tspan class="node-detail" x="509.0" y="227.0">ConcurrentLeaderElectionTest</tspan><tspan class="node-detail" x="509.0" y="244.0">Leader Leader Election tests</tspan></text>
+    <g class="node" data-node="entry2" data-lines="Concurrent Leader | Election Test | leader">
+      <rect x="946.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="171.5">Concurrent Leader</tspan><tspan class="node-title" x="1096.0" y="195.5">Election Test</tspan><tspan class="node-detail" x="1096.0" y="219.5">leader</tspan></text>
     </g>
-    <g class="node" data-node="api" data-lines="API / Adapter Layer | LeaderElectionConfig | LeaderScheduledJobService | LeaderEventListenerService | SuspendLeaderService">
-      <rect x="844.0" y="134.0" width="390.0" height="128.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="169.0">API / Adapter Layer</tspan><tspan class="node-detail" x="1039.0" y="193.0">LeaderElectionConfig</tspan><tspan class="node-detail" x="1039.0" y="210.0">LeaderScheduledJobService</tspan><tspan class="node-detail" x="1039.0" y="227.0">LeaderEventListenerService</tspan><tspan class="node-detail" x="1039.0" y="244.0">SuspendLeaderService</tspan></text>
+    <g class="node" data-node="entry3" data-lines="Duplicate Lock Name Test | leader">
+      <rect x="274.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="300.5">Duplicate Lock Name Test</tspan><tspan class="node-detail" x="424.0" y="324.5">leader</tspan></text>
     </g>
-    <g class="node" data-node="service" data-lines="Application Services | LeaderElectionProperties | CacheWarmupJob | LeaderGuardedJob | LockAssertJob">
-      <rect x="474.0" y="320.0" width="600.0" height="128.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="355.0">Application Services</tspan><tspan class="node-detail" x="774.0" y="379.0">LeaderElectionProperties</tspan><tspan class="node-detail" x="774.0" y="396.0">CacheWarmupJob</tspan><tspan class="node-detail" x="774.0" y="413.0">LeaderGuardedJob</tspan><tspan class="node-detail" x="774.0" y="430.0">LockAssertJob</tspan></text>
+    <g class="node" data-node="entry4" data-lines="Job Isolation Test | leader">
+      <rect x="610.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="300.5">Job Isolation Test</tspan><tspan class="node-detail" x="760.0" y="324.5">leader</tspan></text>
     </g>
-    <g class="node" data-node="infra" data-lines="Framework Layer | Spring boot autoconfigure lib | Spring boot starter actuator | Spring boot autoconfigure | processor">
-      <rect x="314.0" y="506.0" width="390.0" height="128.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="541.0">Framework Layer</tspan><tspan class="node-detail" x="509.0" y="565.0">Spring boot autoconfigure lib</tspan><tspan class="node-detail" x="509.0" y="582.0">Spring boot starter actuator</tspan><tspan class="node-detail" x="509.0" y="599.0">Spring boot autoconfigure</tspan><tspan class="node-detail" x="509.0" y="616.0">processor</tspan></text>
+    <g class="node" data-node="api0" data-lines="Leader Election Config | configuration">
+      <rect x="946.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="300.5">Leader Election Config</tspan><tspan class="node-detail" x="1096.0" y="324.5">configuration</tspan></text>
     </g>
-    <g class="node" data-node="bt" data-lines="bluetape4k APIs | workshop | leader | logging">
-      <rect x="844.0" y="515.0" width="390.0" height="110.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="549.5">bluetape4k APIs</tspan><tspan class="node-detail" x="1039.0" y="573.5">workshop</tspan><tspan class="node-detail" x="1039.0" y="590.5">leader</tspan><tspan class="node-detail" x="1039.0" y="607.5">logging</tspan></text>
+    <g class="node" data-node="api1" data-lines="Leader Scheduled Job | Service | service component">
+      <rect x="274.0" y="368.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="405.5">Leader Scheduled Job</tspan><tspan class="node-title" x="424.0" y="429.5">Service</tspan><tspan class="node-detail" x="424.0" y="453.5">service component</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="Runtime Dependencies | SQL / R2DBC | Redis | Testcontainers">
-      <rect x="474.0" y="692.0" width="600.0" height="110.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="726.5">Runtime Dependencies</tspan><tspan class="node-detail" x="774.0" y="750.5">SQL / R2DBC</tspan><tspan class="node-detail" x="774.0" y="767.5">Redis</tspan><tspan class="node-detail" x="774.0" y="784.5">Testcontainers</tspan></text>
+    <g class="node" data-node="api2" data-lines="Leader Event Listener | Service | service component">
+      <rect x="610.0" y="368.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="405.5">Leader Event Listener</tspan><tspan class="node-title" x="760.0" y="429.5">Service</tspan><tspan class="node-detail" x="760.0" y="453.5">service component</tspan></text>
+    </g>
+    <g class="node" data-node="api3" data-lines="Suspend Leader Service | service component">
+      <rect x="946.0" y="375.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="417.5">Suspend Leader Service</tspan><tspan class="node-detail" x="1096.0" y="441.5">service component</tspan></text>
+    </g>
+    <g class="node" data-node="service0" data-lines="Leader Election | Properties | configuration">
+      <rect x="274.0" y="532.0" width="300.0" height="106.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="569.5">Leader Election</tspan><tspan class="node-title" x="424.0" y="593.5">Properties</tspan><tspan class="node-detail" x="424.0" y="617.5">configuration</tspan></text>
+    </g>
+    <g class="node" data-node="service1" data-lines="Cache Warmup Job | job">
+      <rect x="610.0" y="539.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="581.5">Cache Warmup Job</tspan><tspan class="node-detail" x="760.0" y="605.5">job</tspan></text>
+    </g>
+    <g class="node" data-node="service2" data-lines="Leader Guarded Job | job">
+      <rect x="946.0" y="539.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="581.5">Leader Guarded Job</tspan><tspan class="node-detail" x="1096.0" y="605.5">job</tspan></text>
+    </g>
+    <g class="node" data-node="service3" data-lines="Lock Assert Job | job">
+      <rect x="274.0" y="663.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="705.5">Lock Assert Job</tspan><tspan class="node-detail" x="424.0" y="729.5">job</tspan></text>
+    </g>
+    <g class="node" data-node="service4" data-lines="Lock Extender Job | job">
+      <rect x="610.0" y="663.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="705.5">Lock Extender Job</tspan><tspan class="node-detail" x="760.0" y="729.5">job</tspan></text>
+    </g>
+    <g class="node" data-node="service5" data-lines="Stale Workflow Cleanup | Job | job">
+      <rect x="946.0" y="656.0" width="300.0" height="106.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="693.5">Stale Workflow Cleanup</tspan><tspan class="node-title" x="1096.0" y="717.5">Job</tspan><tspan class="node-detail" x="1096.0" y="741.5">job</tspan></text>
+    </g>
+    <g class="node" data-node="infra0" data-lines="Spring boot | autoconfigure lib | Framework Layer">
+      <rect x="274.0" y="820.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="857.5">Spring boot</tspan><tspan class="node-title" x="424.0" y="881.5">autoconfigure lib</tspan><tspan class="node-detail" x="424.0" y="905.5">Framework Layer</tspan></text>
+    </g>
+    <g class="node" data-node="infra1" data-lines="Spring boot starter | actuator | Framework Layer">
+      <rect x="610.0" y="820.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="857.5">Spring boot starter</tspan><tspan class="node-title" x="760.0" y="881.5">actuator</tspan><tspan class="node-detail" x="760.0" y="905.5">Framework Layer</tspan></text>
+    </g>
+    <g class="node" data-node="infra2" data-lines="Spring boot | autoconfigure processor | Framework Layer">
+      <rect x="946.0" y="820.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="857.5">Spring boot</tspan><tspan class="node-title" x="1096.0" y="881.5">autoconfigure processor</tspan><tspan class="node-detail" x="1096.0" y="905.5">Framework Layer</tspan></text>
+    </g>
+    <g class="node" data-node="infra3" data-lines="Spring boot | configuration processor | Framework Layer">
+      <rect x="274.0" y="944.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="981.5">Spring boot</tspan><tspan class="node-title" x="424.0" y="1005.5">configuration processor</tspan><tspan class="node-detail" x="424.0" y="1029.5">Framework Layer</tspan></text>
+    </g>
+    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k APIs">
+      <rect x="610.0" y="951.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="993.5">workshop</tspan><tspan class="node-detail" x="760.0" y="1017.5">bluetape4k APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt1" data-lines="leader | bluetape4k APIs">
+      <rect x="946.0" y="951.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="993.5">leader</tspan><tspan class="node-detail" x="1096.0" y="1017.5">bluetape4k APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt2" data-lines="logging | bluetape4k APIs">
+      <rect x="274.0" y="1068.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="1110.5">logging</tspan><tspan class="node-detail" x="424.0" y="1134.5">bluetape4k APIs</tspan></text>
+    </g>
+    <g class="node" data-node="runtime0" data-lines="SQL / R2DBC | Runtime Dependencies">
+      <rect x="274.0" y="1218.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="1260.5">SQL / R2DBC</tspan><tspan class="node-detail" x="424.0" y="1284.5">Runtime Dependencies</tspan></text>
+    </g>
+    <g class="node" data-node="runtime1" data-lines="Redis | Runtime Dependencies">
+      <rect x="610.0" y="1218.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1260.5">Redis</tspan><tspan class="node-detail" x="760.0" y="1284.5">Runtime Dependencies</tspan></text>
+    </g>
+    <g class="node" data-node="runtime2" data-lines="Testcontainers | Runtime Dependencies">
+      <rect x="946.0" y="1218.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="1260.5">Testcontainers</tspan><tspan class="node-detail" x="1096.0" y="1284.5">Runtime Dependencies</tspan></text>
     </g>
   </g>
 </svg>

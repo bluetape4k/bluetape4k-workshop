@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="828" viewBox="0 0 1320 828" role="img" aria-label="mongodb-coroutine demo architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1238" viewBox="0 0 1320 1238" role="img" aria-label="mongodb-coroutine demo architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-data/mongodb-coroutines/src/main/kotlin/io/bluetape4k/workshop/mongodb/MongodbApplication.kt&quot;,&quot;spring-data/mongodb-coroutines/src/main/kotlin/io/bluetape4k/workshop/mongodb/config/MongoClientConfig.kt&quot;,&quot;spring-data/mongodb-coroutines/src/main/kotlin/io/bluetape4k/workshop/mongodb/config/NettyConfig.kt&quot;,&quot;spring-data/mongodb-coroutines/src/main/kotlin/io/bluetape4k/workshop/mongodb/config/ReactiveMongoConfig.kt&quot;,&quot;spring-data/mongodb-coroutines/src/main/kotlin/io/bluetape4k/workshop/mongodb/config/RepositoryMetricsConfiguration.kt&quot;,&quot;spring-data/mongodb-coroutines/src/main/kotlin/io/bluetape4k/workshop/mongodb/domain/Person.kt&quot;,&quot;spring-data/mongodb-coroutines/src/main/kotlin/io/bluetape4k/workshop/mongodb/domain/PersonCoroutineRepository.kt&quot;,&quot;spring-data/mongodb-coroutines/src/main/kotlin/io/bluetape4k/workshop/mongodb/domain/PersonReactiveRepository.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
   <defs>
     <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
@@ -32,73 +32,115 @@
       .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="828"/>
-  <rect class="frame" x="16" y="16" width="1288" height="796" rx="22"/>
+  <rect class="canvas" width="1320" height="1238"/>
+  <rect class="frame" x="16" y="16" width="1288" height="1206" rx="22"/>
   <text class="diagram-title" x="660.0" y="58" text-anchor="middle">mongodb-coroutine demo</text>
   <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Spring Data repositories, reactive APIs, and backing stores</text>
   <g>
     <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="168.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="170.5">Data Access</tspan><tspan class="layer-title" x="151.0" y="193.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="220.0">apps, handlers,</tspan><tspan class="layer-detail" x="151.0" y="236.0">repository tests</tspan></text>
+      <rect x="46.0" y="114.0" width="1228.0" height="380.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
+      <rect x="64.0" y="134.0" width="174" height="340.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="276.5">Data Access</tspan><tspan class="layer-title" x="151.0" y="299.5">Surface</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="326.0">apps, handlers,</tspan><tspan class="layer-detail" x="151.0" y="342.0">repository tests</tspan></text>
     </g>
     <g class="layer" data-layer="service">
-      <rect x="46.0" y="300.0" width="1228.0" height="132.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="320.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="338.5">Data Service</tspan><tspan class="layer-title" x="151.0" y="361.5">Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="380.0">query use cases,</tspan><tspan class="layer-detail" x="151.0" y="396.0">transaction</tspan><tspan class="layer-detail" x="151.0" y="412.0">boundaries</tspan></text>
+      <rect x="46.0" y="512.0" width="1228.0" height="146.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
+      <rect x="64.0" y="532.0" width="174" height="106.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="557.5">Data Service</tspan><tspan class="layer-title" x="151.0" y="580.5">Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="599.0">query use cases,</tspan><tspan class="layer-detail" x="151.0" y="615.0">transaction</tspan><tspan class="layer-detail" x="151.0" y="631.0">boundaries</tspan></text>
     </g>
     <g class="layer" data-layer="integration">
-      <rect x="46.0" y="450.0" width="1228.0" height="168.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="470.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="506.5">Repository</tspan><tspan class="layer-title" x="151.0" y="529.5">Integration</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="556.0">Spring Data, R2DBC,</tspan><tspan class="layer-detail" x="151.0" y="572.0">Mongo, Redis</tspan></text>
+      <rect x="46.0" y="676.0" width="1228.0" height="352.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
+      <rect x="64.0" y="696.0" width="174" height="312.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="824.5">Repository</tspan><tspan class="layer-title" x="151.0" y="847.5">Integration</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="874.0">Spring Data, R2DBC,</tspan><tspan class="layer-detail" x="151.0" y="890.0">Mongo, Redis</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="636.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="656.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="686.0">Database Runtime</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="716.0">SQL, MongoDB,</tspan><tspan class="layer-detail" x="151.0" y="732.0">Elasticsearch,</tspan><tspan class="layer-detail" x="151.0" y="748.0">Redis</tspan></text>
+      <rect x="46.0" y="1046.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="64.0" y="1066.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="1096.0">Database Runtime</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1126.0">SQL, MongoDB,</tspan><tspan class="layer-detail" x="151.0" y="1142.0">Elasticsearch,</tspan><tspan class="layer-detail" x="151.0" y="1158.0">Redis</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;api" data-label="invokes">
-      <path d="M 704.0 198.0 L 774.0 198.0 L 844.0 198.0" fill="none" stroke="#4F7DB5" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-api)"/>
+    <g class="edge" data-edge="api1-&gt;service0" data-label="delegates">
+      <path d="M 424.0 474.0 L 424.0 503.0 L 592.0 503.0 L 592.0 532.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
     </g>
-    <g class="edge" data-edge="api-&gt;service" data-label="delegates">
-      <path d="M 1039.0 244.0 L 1039.0 282.0 L 774.0 282.0 L 774.0 320.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
+    <g class="edge" data-edge="service1-&gt;infra0" data-label="persists / publishes">
+      <path d="M 928.0 638.0 L 928.0 667.0 L 424.0 667.0 L 424.0 696.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
     </g>
-    <g class="edge" data-edge="service-&gt;infra" data-label="persists / publishes">
-      <path d="M 774.0 412.0 L 774.0 441.0 L 509.0 441.0 L 509.0 470.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
+    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
+      <path d="M 424.0 1008.0 L 424.0 1037.0 L 592.0 1037.0 L 592.0 1066.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
     </g>
-    <g class="edge" data-edge="infra-&gt;bt" data-label="extends">
-      <path d="M 704.0 534.0 L 774.0 534.0 L 844.0 534.0" fill="none" stroke="#3E927D" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-bt)"/>
+    <g class="node" data-node="entry0" data-lines="Mongodb Application | application bootstrap">
+      <rect x="274.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="183.5">Mongodb Application</tspan><tspan class="node-detail" x="424.0" y="207.5">application bootstrap</tspan></text>
     </g>
-    <g class="edge" data-edge="bt-&gt;runtime" data-label="adapts">
-      <path d="M 1039.0 589.0 L 1039.0 622.5 L 774.0 622.5 L 774.0 656.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+    <g class="node" data-node="entry1" data-lines="Abstract Mongodb Test | mongodb">
+      <rect x="610.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="183.5">Abstract Mongodb Test</tspan><tspan class="node-detail" x="760.0" y="207.5">mongodb</tspan></text>
     </g>
-    <g class="node" data-node="entry" data-lines="Data Demo Surface | MongodbApplication | AbstractMongodbTest | CoroutineRepositoryTest | Spring Data Mongodb Coroutines">
-      <rect x="314.0" y="134.0" width="390.0" height="128.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="169.0">Data Demo Surface</tspan><tspan class="node-detail" x="509.0" y="193.0">MongodbApplication</tspan><tspan class="node-detail" x="509.0" y="210.0">AbstractMongodbTest</tspan><tspan class="node-detail" x="509.0" y="227.0">CoroutineRepositoryTest</tspan><tspan class="node-detail" x="509.0" y="244.0">Spring Data Mongodb Coroutines</tspan></text>
+    <g class="node" data-node="entry2" data-lines="Coroutine Repository | Test | domain model">
+      <rect x="946.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="171.5">Coroutine Repository</tspan><tspan class="node-title" x="1096.0" y="195.5">Test</tspan><tspan class="node-detail" x="1096.0" y="219.5">domain model</tspan></text>
     </g>
-    <g class="node" data-node="api" data-lines="Web/Data Adapters | NettyConfig | RepositoryMetricsConfiguration">
-      <rect x="844.0" y="152.0" width="390.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="186.0">Web/Data Adapters</tspan><tspan class="node-detail" x="1039.0" y="210.0">NettyConfig</tspan><tspan class="node-detail" x="1039.0" y="227.0">RepositoryMetricsConfiguration</tspan></text>
+    <g class="node" data-node="entry3" data-lines="Flow And Coroutine Test | domain model">
+      <rect x="274.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="300.5">Flow And Coroutine Test</tspan><tspan class="node-detail" x="424.0" y="324.5">domain model</tspan></text>
     </g>
-    <g class="node" data-node="service" data-lines="Data Service Layer | PersonCoroutineRepository | PersonReactiveRepository">
-      <rect x="474.0" y="320.0" width="600.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="354.0">Data Service Layer</tspan><tspan class="node-detail" x="774.0" y="378.0">PersonCoroutineRepository</tspan><tspan class="node-detail" x="774.0" y="395.0">PersonReactiveRepository</tspan></text>
+    <g class="node" data-node="entry4" data-lines="Repository Test | domain model">
+      <rect x="610.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="300.5">Repository Test</tspan><tspan class="node-detail" x="760.0" y="324.5">domain model</tspan></text>
     </g>
-    <g class="node" data-node="infra" data-lines="Repository Layer | MongoClientConfig | ReactiveMongoConfig | Person | PersonRepository">
-      <rect x="314.0" y="470.0" width="390.0" height="128.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="505.0">Repository Layer</tspan><tspan class="node-detail" x="509.0" y="529.0">MongoClientConfig</tspan><tspan class="node-detail" x="509.0" y="546.0">ReactiveMongoConfig</tspan><tspan class="node-detail" x="509.0" y="563.0">Person</tspan><tspan class="node-detail" x="509.0" y="580.0">PersonRepository</tspan></text>
+    <g class="node" data-node="api0" data-lines="Netty Config | configuration">
+      <rect x="946.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="300.5">Netty Config</tspan><tspan class="node-detail" x="1096.0" y="324.5">configuration</tspan></text>
     </g>
-    <g class="node" data-node="bt" data-lines="bluetape4k Data APIs | workshop | testcontainers | coroutines">
-      <rect x="844.0" y="479.0" width="390.0" height="110.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="513.5">bluetape4k Data APIs</tspan><tspan class="node-detail" x="1039.0" y="537.5">workshop</tspan><tspan class="node-detail" x="1039.0" y="554.5">testcontainers</tspan><tspan class="node-detail" x="1039.0" y="571.5">coroutines</tspan></text>
+    <g class="node" data-node="api1" data-lines="Repository Metrics | Configuration | configuration">
+      <rect x="274.0" y="368.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="405.5">Repository Metrics</tspan><tspan class="node-title" x="424.0" y="429.5">Configuration</tspan><tspan class="node-detail" x="424.0" y="453.5">configuration</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="Database Runtime | MongoDB | Testcontainers">
-      <rect x="474.0" y="656.0" width="600.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="690.0">Database Runtime</tspan><tspan class="node-detail" x="774.0" y="714.0">MongoDB</tspan><tspan class="node-detail" x="774.0" y="731.0">Testcontainers</tspan></text>
+    <g class="node" data-node="service0" data-lines="Person Coroutine | Repository | repository">
+      <rect x="442.0" y="532.0" width="300.0" height="106.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="592.0" y="569.5">Person Coroutine</tspan><tspan class="node-title" x="592.0" y="593.5">Repository</tspan><tspan class="node-detail" x="592.0" y="617.5">repository</tspan></text>
+    </g>
+    <g class="node" data-node="service1" data-lines="Person Reactive | Repository | repository">
+      <rect x="778.0" y="532.0" width="300.0" height="106.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="928.0" y="569.5">Person Reactive</tspan><tspan class="node-title" x="928.0" y="593.5">Repository</tspan><tspan class="node-detail" x="928.0" y="617.5">repository</tspan></text>
+    </g>
+    <g class="node" data-node="infra0" data-lines="Mongo Client Config | configuration">
+      <rect x="274.0" y="696.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="738.5">Mongo Client Config</tspan><tspan class="node-detail" x="424.0" y="762.5">configuration</tspan></text>
+    </g>
+    <g class="node" data-node="infra1" data-lines="Reactive Mongo Config | configuration">
+      <rect x="610.0" y="696.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="738.5">Reactive Mongo Config</tspan><tspan class="node-detail" x="760.0" y="762.5">configuration</tspan></text>
+    </g>
+    <g class="node" data-node="infra2" data-lines="Person | domain model">
+      <rect x="946.0" y="696.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="738.5">Person</tspan><tspan class="node-detail" x="1096.0" y="762.5">domain model</tspan></text>
+    </g>
+    <g class="node" data-node="infra3" data-lines="Person Repository | repository">
+      <rect x="274.0" y="806.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="848.5">Person Repository</tspan><tspan class="node-detail" x="424.0" y="872.5">repository</tspan></text>
+    </g>
+    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k Data APIs">
+      <rect x="610.0" y="806.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="848.5">workshop</tspan><tspan class="node-detail" x="760.0" y="872.5">bluetape4k Data APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt1" data-lines="testcontainers | bluetape4k Data APIs">
+      <rect x="946.0" y="806.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="848.5">testcontainers</tspan><tspan class="node-detail" x="1096.0" y="872.5">bluetape4k Data APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt2" data-lines="coroutines | bluetape4k Data APIs">
+      <rect x="274.0" y="916.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="958.5">coroutines</tspan><tspan class="node-detail" x="424.0" y="982.5">bluetape4k Data APIs</tspan></text>
+    </g>
+    <g class="node" data-node="runtime0" data-lines="MongoDB | Database Runtime">
+      <rect x="442.0" y="1066.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="592.0" y="1108.5">MongoDB</tspan><tspan class="node-detail" x="592.0" y="1132.5">Database Runtime</tspan></text>
+    </g>
+    <g class="node" data-node="runtime1" data-lines="Testcontainers | Database Runtime">
+      <rect x="778.0" y="1066.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="928.0" y="1108.5">Testcontainers</tspan><tspan class="node-detail" x="928.0" y="1132.5">Database Runtime</tspan></text>
     </g>
   </g>
 </svg>

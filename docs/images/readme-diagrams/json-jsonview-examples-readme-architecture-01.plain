@@ -1,13 +1,20 @@
-graph 1 23.841 1.7263
-node entry 1.6896 0.86313 3.3792 1.7263 "Example Entrypoints\nJsonViewApplication\nAbstractJsonViewApplicationTest\nArticleControllerTest\nJson Jsonview Examples tests" rounded,filled box #88A3B5 #FFF8E7
-node api 6.0288 0.86313 2.2438 0.8825 "API / Adapter Layer\nArticleController" rounded,filled box #88A3B5 #EEF7FF
-node service 9.9462 0.86313 2.2021 1.445 "Application Services\nJacksonConfig\nArticleDTO\nViews" rounded,filled box #88A3B5 #F1F8E9
-node infra 15.176 0.86313 3.0354 1.7263 "Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration" rounded,filled box #88A3B5 #F5F0FF
-node bt 19.13 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\njackson3\ncore" rounded,filled box #88A3B5 #EAF7F0
-node runtime 22.662 0.86313 2.3583 0.8825 "Runtime Dependencies\nSQL / R2DBC" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.3859 0.86313 3.3859 0.86313 4.7594 0.86313 4.7594 0.86313 invokes 4.1431 0.95167 solid #637383
-edge api service 4 7.1566 0.86313 7.1566 0.86313 8.6972 0.86313 8.6972 0.86313 delegates 7.9979 0.95167 solid #637383
-edge service infra 4 11.055 0.86313 11.055 0.86313 13.509 0.86313 13.509 0.86313 "persists / publishes" 12.353 0.95167 solid #637383
-edge infra bt 4 16.699 0.86313 16.699 0.86313 18.071 0.86313 18.071 0.86313 extends 17.458 0.95167 solid #637383
-edge bt runtime 4 20.044 0.86313 20.044 0.86313 21.336 0.86313 21.336 0.86313 adapts 20.76 0.95167 solid #637383
+graph 1 9.4736 18.299
+node entry0 1.9135 0.44125 2.3063 0.8825 "Json View Application\napplication bootstrap" rounded,filled box #88A3B5 #FFF8E7
+node entry1 1.9135 2.0246 3.6708 0.8825 "Abstract Json View Application Test\njsonview" rounded,filled box #88A3B5 #FFF8E7
+node entry2 1.9135 3.6079 2.4729 0.8825 "Article Controller Test\nHTTP adapter" rounded,filled box #88A3B5 #FFF8E7
+node api0 1.9135 5.1913 1.9938 0.8825 "Article Controller\nHTTP adapter" rounded,filled box #88A3B5 #EEF7FF
+node service0 7.9559 5.1913 1.8063 0.8825 "Jackson Config\nconfiguration" rounded,filled box #88A3B5 #F1F8E9
+node service1 1.9135 6.7746 1.4625 0.8825 "Article DTO\ndto" rounded,filled box #88A3B5 #F1F8E9
+node service2 1.9135 8.3579 0.91042 0.8825 "Views\ndto" rounded,filled box #88A3B5 #F1F8E9
+node infra0 7.9559 8.3579 3.0354 0.8825 "Spring boot autoconfigure lib\nFramework Layer" rounded,filled box #88A3B5 #F5F0FF
+node infra1 1.9135 9.9413 3.8271 0.8825 "Spring boot autoconfigure processor\nFramework Layer" rounded,filled box #88A3B5 #F5F0FF
+node infra2 1.9135 11.525 3.7542 0.8825 "Spring boot configuration processor\nFramework Layer" rounded,filled box #88A3B5 #F5F0FF
+node infra3 1.9135 13.108 2.275 0.8825 "Spring boot devtools\nFramework Layer" rounded,filled box #88A3B5 #F5F0FF
+node bt0 1.9135 14.691 1.8167 0.8825 "workshop\nbluetape4k APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt1 1.9135 16.275 1.8167 0.8825 "jackson3\nbluetape4k APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt2 1.9135 17.858 1.8167 0.8825 "core\nbluetape4k APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime0 7.9559 17.858 2.3583 0.8825 "SQL / R2DBC\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
+edge api0 service0 4 2.9181 5.1913 2.9181 5.1913 6.9052 5.1913 6.9052 5.1913 delegates 5.1326 5.2798 solid #637383
+edge service2 infra0 4 2.3776 8.3579 2.3776 8.3579 6.2871 8.3579 6.2871 8.3579 "persists / publishes" 5.1326 8.4465 solid #637383
+edge bt2 runtime0 4 2.8312 17.858 2.8312 17.858 6.6266 17.858 6.6266 17.858 adapts 5.1326 17.946 solid #637383
 stop

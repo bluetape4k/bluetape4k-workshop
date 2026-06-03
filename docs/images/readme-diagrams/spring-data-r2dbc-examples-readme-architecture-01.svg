@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="828" viewBox="0 0 1320 828" role="img" aria-label="Spring Data R2DBC Demo architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1114" viewBox="0 0 1320 1114" role="img" aria-label="Spring Data R2DBC Demo architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-data/r2dbc-examples/src/main/kotlin/io/bluetape4k/workshop/r2dbc/basics/Customer.kt&quot;,&quot;spring-data/r2dbc-examples/src/main/kotlin/io/bluetape4k/workshop/r2dbc/basics/CustomerRepository.kt&quot;,&quot;spring-data/r2dbc-examples/src/main/kotlin/io/bluetape4k/workshop/r2dbc/basics/TransactionalService.kt&quot;,&quot;spring-data/r2dbc-examples/src/main/kotlin/io/bluetape4k/workshop/r2dbc/entitycallback/ApplicationConfiguration.kt&quot;,&quot;spring-data/r2dbc-examples/src/main/kotlin/io/bluetape4k/workshop/r2dbc/entitycallback/Customer.kt&quot;,&quot;spring-data/r2dbc-examples/src/main/kotlin/io/bluetape4k/workshop/r2dbc/entitycallback/CustomerRepository.kt&quot;,&quot;spring-data/r2dbc-examples/src/main/kotlin/io/bluetape4k/workshop/r2dbc/queryexample/Person.kt&quot;,&quot;spring-data/r2dbc-examples/src/main/kotlin/io/bluetape4k/workshop/r2dbc/queryexample/PersonRepository.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
   <defs>
     <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
@@ -32,66 +32,103 @@
       .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="828"/>
-  <rect class="frame" x="16" y="16" width="1288" height="796" rx="22"/>
+  <rect class="canvas" width="1320" height="1114"/>
+  <rect class="frame" x="16" y="16" width="1288" height="1082" rx="22"/>
   <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Spring Data R2DBC Demo</text>
   <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Spring Data repositories, reactive APIs, and backing stores</text>
   <g>
     <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="168.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="170.5">Data Access</tspan><tspan class="layer-title" x="151.0" y="193.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="220.0">apps, handlers,</tspan><tspan class="layer-detail" x="151.0" y="236.0">repository tests</tspan></text>
+      <rect x="46.0" y="114.0" width="1228.0" height="270.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
+      <rect x="64.0" y="134.0" width="174" height="230.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="221.5">Data Access</tspan><tspan class="layer-title" x="151.0" y="244.5">Surface</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="271.0">apps, handlers,</tspan><tspan class="layer-detail" x="151.0" y="287.0">repository tests</tspan></text>
     </g>
     <g class="layer" data-layer="service">
-      <rect x="46.0" y="300.0" width="1228.0" height="132.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="320.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="338.5">Data Service</tspan><tspan class="layer-title" x="151.0" y="361.5">Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="380.0">query use cases,</tspan><tspan class="layer-detail" x="151.0" y="396.0">transaction</tspan><tspan class="layer-detail" x="151.0" y="412.0">boundaries</tspan></text>
+      <rect x="46.0" y="402.0" width="1228.0" height="132.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
+      <rect x="64.0" y="422.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="440.5">Data Service</tspan><tspan class="layer-title" x="151.0" y="463.5">Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="482.0">query use cases,</tspan><tspan class="layer-detail" x="151.0" y="498.0">transaction</tspan><tspan class="layer-detail" x="151.0" y="514.0">boundaries</tspan></text>
     </g>
     <g class="layer" data-layer="integration">
-      <rect x="46.0" y="450.0" width="1228.0" height="168.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="470.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="506.5">Repository</tspan><tspan class="layer-title" x="151.0" y="529.5">Integration</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="556.0">Spring Data, R2DBC,</tspan><tspan class="layer-detail" x="151.0" y="572.0">Mongo, Redis</tspan></text>
+      <rect x="46.0" y="552.0" width="1228.0" height="352.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
+      <rect x="64.0" y="572.0" width="174" height="312.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="700.5">Repository</tspan><tspan class="layer-title" x="151.0" y="723.5">Integration</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="750.0">Spring Data, R2DBC,</tspan><tspan class="layer-detail" x="151.0" y="766.0">Mongo, Redis</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="636.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="656.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="686.0">Database Runtime</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="716.0">SQL, MongoDB,</tspan><tspan class="layer-detail" x="151.0" y="732.0">Elasticsearch,</tspan><tspan class="layer-detail" x="151.0" y="748.0">Redis</tspan></text>
+      <rect x="46.0" y="922.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="64.0" y="942.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="972.0">Database Runtime</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1002.0">SQL, MongoDB,</tspan><tspan class="layer-detail" x="151.0" y="1018.0">Elasticsearch,</tspan><tspan class="layer-detail" x="151.0" y="1034.0">Redis</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;service" data-label="delegates">
-      <path d="M 774.0 262.0 L 774.0 291.0 L 774.0 320.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
+    <g class="edge" data-edge="entry4-&gt;service0" data-label="starts">
+      <path d="M 760.0 364.0 L 760.0 393.0 L 760.0 422.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
     </g>
-    <g class="edge" data-edge="service-&gt;infra" data-label="persists / publishes">
-      <path d="M 774.0 412.0 L 774.0 441.0 L 509.0 441.0 L 509.0 470.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
+    <g class="edge" data-edge="service0-&gt;infra0" data-label="persists / publishes">
+      <path d="M 760.0 514.0 L 760.0 543.0 L 424.0 543.0 L 424.0 572.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
     </g>
-    <g class="edge" data-edge="infra-&gt;bt" data-label="extends">
-      <path d="M 704.0 534.0 L 774.0 534.0 L 844.0 534.0" fill="none" stroke="#3E927D" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-bt)"/>
+    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
+      <path d="M 760.0 884.0 L 760.0 913.0 L 760.0 942.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
     </g>
-    <g class="edge" data-edge="bt-&gt;runtime" data-label="adapts">
-      <path d="M 1039.0 589.0 L 1039.0 622.5 L 774.0 622.5 L 774.0 656.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+    <g class="node" data-node="entry0" data-lines="Application | Configuration | entitycallback">
+      <rect x="274.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="171.5">Application</tspan><tspan class="node-title" x="424.0" y="195.5">Configuration</tspan><tspan class="node-detail" x="424.0" y="219.5">entitycallback</tspan></text>
     </g>
-    <g class="node" data-node="entry" data-lines="Data Demo Surface | ApplicationConfiguration | CustomerRepositoryIntegrationTest | TransactionalServiceIntegrationTest | Spring Data R2dbc Examples tests">
-      <rect x="474.0" y="134.0" width="600.0" height="128.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="169.0">Data Demo Surface</tspan><tspan class="node-detail" x="774.0" y="193.0">ApplicationConfiguration</tspan><tspan class="node-detail" x="774.0" y="210.0">CustomerRepositoryIntegrationTest</tspan><tspan class="node-detail" x="774.0" y="227.0">TransactionalServiceIntegrationTest</tspan><tspan class="node-detail" x="774.0" y="244.0">Spring Data R2dbc Examples tests</tspan></text>
+    <g class="node" data-node="entry1" data-lines="Customer Repository | Integration Test | basics">
+      <rect x="610.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="171.5">Customer Repository</tspan><tspan class="node-title" x="760.0" y="195.5">Integration Test</tspan><tspan class="node-detail" x="760.0" y="219.5">basics</tspan></text>
     </g>
-    <g class="node" data-node="service" data-lines="Data Service Layer | TransactionalService">
-      <rect x="474.0" y="320.0" width="600.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="362.5">Data Service Layer</tspan><tspan class="node-detail" x="774.0" y="386.5">TransactionalService</tspan></text>
+    <g class="node" data-node="entry2" data-lines="Transactional Service | Integration Test | basics">
+      <rect x="946.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="171.5">Transactional Service</tspan><tspan class="node-title" x="1096.0" y="195.5">Integration Test</tspan><tspan class="node-detail" x="1096.0" y="219.5">basics</tspan></text>
     </g>
-    <g class="node" data-node="infra" data-lines="Repository Layer | Customer | CustomerRepository | Person | PersonRepository">
-      <rect x="314.0" y="470.0" width="390.0" height="128.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="505.0">Repository Layer</tspan><tspan class="node-detail" x="509.0" y="529.0">Customer</tspan><tspan class="node-detail" x="509.0" y="546.0">CustomerRepository</tspan><tspan class="node-detail" x="509.0" y="563.0">Person</tspan><tspan class="node-detail" x="509.0" y="580.0">PersonRepository</tspan></text>
+    <g class="node" data-node="entry3" data-lines="Customer Repository | Integration Test | entitycallback">
+      <rect x="274.0" y="258.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="295.5">Customer Repository</tspan><tspan class="node-title" x="424.0" y="319.5">Integration Test</tspan><tspan class="node-detail" x="424.0" y="343.5">entitycallback</tspan></text>
     </g>
-    <g class="node" data-node="bt" data-lines="bluetape4k Data APIs | core | r2dbc | spring">
-      <rect x="844.0" y="479.0" width="390.0" height="110.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="513.5">bluetape4k Data APIs</tspan><tspan class="node-detail" x="1039.0" y="537.5">core</tspan><tspan class="node-detail" x="1039.0" y="554.5">r2dbc</tspan><tspan class="node-detail" x="1039.0" y="571.5">spring</tspan></text>
+    <g class="node" data-node="entry4" data-lines="Person Repository | Integration Test | queryexample">
+      <rect x="610.0" y="258.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="295.5">Person Repository</tspan><tspan class="node-title" x="760.0" y="319.5">Integration Test</tspan><tspan class="node-detail" x="760.0" y="343.5">queryexample</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="Database Runtime | SQL / R2DBC">
-      <rect x="474.0" y="656.0" width="600.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="698.5">Database Runtime</tspan><tspan class="node-detail" x="774.0" y="722.5">SQL / R2DBC</tspan></text>
+    <g class="node" data-node="service0" data-lines="Transactional Service | service component">
+      <rect x="610.0" y="422.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="464.5">Transactional Service</tspan><tspan class="node-detail" x="760.0" y="488.5">service component</tspan></text>
+    </g>
+    <g class="node" data-node="infra0" data-lines="Customer | basics">
+      <rect x="274.0" y="572.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="614.5">Customer</tspan><tspan class="node-detail" x="424.0" y="638.5">basics</tspan></text>
+    </g>
+    <g class="node" data-node="infra1" data-lines="Customer Repository | repository">
+      <rect x="610.0" y="572.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="614.5">Customer Repository</tspan><tspan class="node-detail" x="760.0" y="638.5">repository</tspan></text>
+    </g>
+    <g class="node" data-node="infra2" data-lines="Customer | entitycallback">
+      <rect x="946.0" y="572.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="614.5">Customer</tspan><tspan class="node-detail" x="1096.0" y="638.5">entitycallback</tspan></text>
+    </g>
+    <g class="node" data-node="infra3" data-lines="Customer Repository | repository">
+      <rect x="274.0" y="682.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="724.5">Customer Repository</tspan><tspan class="node-detail" x="424.0" y="748.5">repository</tspan></text>
+    </g>
+    <g class="node" data-node="infra4" data-lines="Person | queryexample">
+      <rect x="610.0" y="682.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="724.5">Person</tspan><tspan class="node-detail" x="760.0" y="748.5">queryexample</tspan></text>
+    </g>
+    <g class="node" data-node="bt0" data-lines="core | bluetape4k Data APIs">
+      <rect x="946.0" y="682.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="724.5">core</tspan><tspan class="node-detail" x="1096.0" y="748.5">bluetape4k Data APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt1" data-lines="r2dbc | bluetape4k Data APIs">
+      <rect x="274.0" y="792.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="834.5">r2dbc</tspan><tspan class="node-detail" x="424.0" y="858.5">bluetape4k Data APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt2" data-lines="spring | bluetape4k Data APIs">
+      <rect x="610.0" y="792.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="834.5">spring</tspan><tspan class="node-detail" x="760.0" y="858.5">bluetape4k Data APIs</tspan></text>
+    </g>
+    <g class="node" data-node="runtime0" data-lines="SQL / R2DBC | Database Runtime">
+      <rect x="610.0" y="942.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="984.5">SQL / R2DBC</tspan><tspan class="node-detail" x="760.0" y="1008.5">Database Runtime</tspan></text>
     </g>
   </g>
 </svg>

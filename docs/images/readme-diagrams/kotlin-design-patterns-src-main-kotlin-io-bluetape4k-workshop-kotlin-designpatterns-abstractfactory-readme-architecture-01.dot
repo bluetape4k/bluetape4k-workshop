@@ -26,10 +26,16 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Example Entrypoints\nKotlin Design Patterns Kotlin\nDesignPatterns AbstractFactory", fillcolor="#FFF8E7"];
-  service [label="Application Services\nArmy\nCastle\nFactoryMaker\nKing", fillcolor="#F1F8E9"];
-  runtime [label="Runtime Dependencies\nSQL / R2DBC\nAWS / S3", fillcolor="#FFF1F1"];
+  entry0 [label="abstractFactory\nExample Entrypoints", fillcolor="#FFF8E7"];
+  service0 [label="Army\ncomponent", fillcolor="#F1F8E9"];
+  service1 [label="Castle\ncomponent", fillcolor="#F1F8E9"];
+  service2 [label="Factory Maker\ncomponent", fillcolor="#F1F8E9"];
+  service3 [label="King\ncomponent", fillcolor="#F1F8E9"];
+  service4 [label="Kingdom Factory\ncomponent", fillcolor="#F1F8E9"];
+  service5 [label="Elf Army\nelf", fillcolor="#F1F8E9"];
+  runtime0 [label="SQL / R2DBC\nRuntime Dependencies", fillcolor="#FFF1F1"];
+  runtime1 [label="AWS / S3\nRuntime Dependencies", fillcolor="#FFF1F1"];
 
-  entry -> service [label="delegates"];
-  service -> runtime [label="backs"];
+  entry0 -> service0 [label="starts"];
+  service5 -> runtime0 [label="runs on"];
 }

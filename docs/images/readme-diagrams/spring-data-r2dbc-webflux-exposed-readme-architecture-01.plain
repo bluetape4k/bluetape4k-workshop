@@ -1,14 +1,23 @@
-graph 1 24.299 1.7263
-node entry 2.299 0.86313 4.5979 1.7263 "Data Demo Surface\nWebfluxR2dbcExposedApplication\nAbstractWebfluxR2dbcExposedApplicationTest\nWebfluxR2dbcConfigurationTest\nSpring \
-Data R2dbc Webflux" rounded,filled box #88A3B5 #FFF8E7
-node api 7.2059 0.86313 2.1604 1.445 "Web/Data Adapters\nUserController\nSchemaInitializer\nUserHandler" rounded,filled box #88A3B5 #EEF7FF
-node service 11.071 0.86313 2.1813 0.8825 "Data Service Layer\nUserService" rounded,filled box #88A3B5 #F1F8E9
-node infra 15.926 0.86313 2.3063 1.7263 "Repository Layer\nExposedR2dbcConfig\nErrorMessage\nMappers\nUserRecord" rounded,filled box #88A3B5 #F5F0FF
-node bt 19.75 0.86313 2.2854 1.445 "bluetape4k Data APIs\nworkshop\njunit5\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
-node runtime 23.318 0.86313 1.9625 0.8825 "Database Runtime\nSQL / R2DBC" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 4.6052 0.86313 4.6052 0.86313 5.9742 0.86313 5.9742 0.86313 invokes 5.3618 0.95167 solid #637383
-edge api service 4 8.2929 0.86313 8.2929 0.86313 9.8296 0.86313 9.8296 0.86313 delegates 9.1333 0.95167 solid #637383
-edge service infra 4 12.167 0.86313 12.167 0.86313 14.624 0.86313 14.624 0.86313 "persists / publishes" 13.467 0.95167 solid #637383
-edge infra bt 4 17.089 0.86313 17.089 0.86313 18.456 0.86313 18.456 0.86313 extends 17.843 0.95167 solid #637383
-edge bt runtime 4 20.898 0.86313 20.898 0.86313 22.185 0.86313 22.185 0.86313 adapts 21.615 0.95167 solid #637383
+graph 1 13.849 23.049
+node entry0 2.4812 0.44125 3.5979 0.8825 "Webflux R2dbc Exposed Application\napplication bootstrap" rounded,filled box #88A3B5 #FFF8E7
+node entry1 2.4812 2.0246 4.9625 0.8825 "Abstract Webflux R2dbc Exposed Application Test\nr2dbc" rounded,filled box #88A3B5 #FFF8E7
+node entry2 2.4812 3.6079 3.5458 0.8825 "Webflux R2dbc Configuration Test\nconfiguration" rounded,filled box #88A3B5 #FFF8E7
+node entry3 2.4812 5.1913 2.9208 0.8825 "User Controller Scope Test\nHTTP adapter" rounded,filled box #88A3B5 #FFF8E7
+node entry4 2.4812 6.7746 2.275 0.8825 "User Controller Test\nHTTP adapter" rounded,filled box #88A3B5 #FFF8E7
+node api0 2.4812 8.3579 1.7958 0.8825 "User Controller\nHTTP adapter" rounded,filled box #88A3B5 #EEF7FF
+node api1 2.4812 9.9413 1.9 0.8825 "Schema Initializer\ndomain model" rounded,filled box #88A3B5 #EEF7FF
+node api2 2.4812 11.525 1.525 0.8825 "User Handler\nhandler" rounded,filled box #88A3B5 #EEF7FF
+node service0 7.7215 11.525 2.1292 0.8825 "User Service\nservice component" rounded,filled box #88A3B5 #F1F8E9
+node infra0 12.623 11.525 2.4521 0.8825 "Exposed R2dbc Config\nconfiguration" rounded,filled box #88A3B5 #F5F0FF
+node infra1 2.4812 13.108 1.7646 0.8825 "Error Message\ndomain model" rounded,filled box #88A3B5 #F5F0FF
+node infra2 2.4812 14.691 1.5771 0.8825 "Mappers\ndomain model" rounded,filled box #88A3B5 #F5F0FF
+node infra3 2.4812 16.275 1.5771 0.8825 "User Record\ndomain model" rounded,filled box #88A3B5 #F5F0FF
+node infra4 2.4812 17.858 2.6708 0.8825 "User Exposed Repository\nrepository" rounded,filled box #88A3B5 #F5F0FF
+node bt0 2.4812 19.441 2.2854 0.8825 "workshop\nbluetape4k Data APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt1 2.4812 21.025 2.2854 0.8825 "junit5\nbluetape4k Data APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt2 2.4812 22.608 2.2854 0.8825 "coroutines\nbluetape4k Data APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime0 7.7215 22.608 1.9625 0.8825 "SQL / R2DBC\nDatabase Runtime" rounded,filled box #88A3B5 #FFF1F1
+edge api2 service0 4 3.2488 11.525 3.2488 11.525 6.5093 11.525 6.5093 11.525 delegates 5.8097 11.613 solid #637383
+edge service0 infra0 4 8.7912 11.525 8.7912 11.525 11.249 11.525 11.249 11.525 "persists / publishes" 10.092 11.613 solid #637383
+edge bt2 runtime0 4 3.6313 22.608 3.6313 22.608 6.5902 22.608 6.5902 22.608 adapts 5.8097 22.696 solid #637383
 stop

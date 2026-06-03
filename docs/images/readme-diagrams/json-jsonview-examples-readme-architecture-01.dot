@@ -26,16 +26,23 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Example Entrypoints\nJsonViewApplication\nAbstractJsonViewApplicationTest\nArticleControllerTest\nJson Jsonview Examples tests", fillcolor="#FFF8E7"];
-  api [label="API / Adapter Layer\nArticleController", fillcolor="#EEF7FF"];
-  service [label="Application Services\nJacksonConfig\nArticleDTO\nViews", fillcolor="#F1F8E9"];
-  infra [label="Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\njackson3\ncore", fillcolor="#EAF7F0"];
-  runtime [label="Runtime Dependencies\nSQL / R2DBC", fillcolor="#FFF1F1"];
+  entry0 [label="Json View Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Abstract Json View Application Test\njsonview", fillcolor="#FFF8E7"];
+  entry2 [label="Article Controller Test\nHTTP adapter", fillcolor="#FFF8E7"];
+  api0 [label="Article Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  service0 [label="Jackson Config\nconfiguration", fillcolor="#F1F8E9"];
+  service1 [label="Article DTO\ndto", fillcolor="#F1F8E9"];
+  service2 [label="Views\ndto", fillcolor="#F1F8E9"];
+  infra0 [label="Spring boot autoconfigure lib\nFramework Layer", fillcolor="#F5F0FF"];
+  infra1 [label="Spring boot autoconfigure processor\nFramework Layer", fillcolor="#F5F0FF"];
+  infra2 [label="Spring boot configuration processor\nFramework Layer", fillcolor="#F5F0FF"];
+  infra3 [label="Spring boot devtools\nFramework Layer", fillcolor="#F5F0FF"];
+  bt0 [label="workshop\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  bt1 [label="jackson3\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  bt2 [label="core\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="SQL / R2DBC\nRuntime Dependencies", fillcolor="#FFF1F1"];
 
-  entry -> api [label="invokes"];
-  api -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  api0 -> service0 [label="delegates"];
+  service2 -> infra0 [label="persists / publishes"];
+  bt2 -> runtime0 [label="adapts"];
 }

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="882" viewBox="0 0 1320 882" role="img" aria-label="Spring Boot 4 + Resilience4j + Coroutines Workshop architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1444" viewBox="0 0 1320 1444" role="img" aria-label="Spring Boot 4 + Resilience4j + Coroutines Workshop architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-boot/resilience4j-coroutines/src/main/kotlin/io/bluetape4k/workshop/resilience/ResilienceApplication.kt&quot;,&quot;spring-boot/resilience4j-coroutines/src/main/kotlin/io/bluetape4k/workshop/resilience/config/NettyConfig.kt&quot;,&quot;spring-boot/resilience4j-coroutines/src/main/kotlin/io/bluetape4k/workshop/resilience/config/Resilience4jConfig.kt&quot;,&quot;spring-boot/resilience4j-coroutines/src/main/kotlin/io/bluetape4k/workshop/resilience/controller/BackendAController.kt&quot;,&quot;spring-boot/resilience4j-coroutines/src/main/kotlin/io/bluetape4k/workshop/resilience/controller/BackendBController.kt&quot;,&quot;spring-boot/resilience4j-coroutines/src/main/kotlin/io/bluetape4k/workshop/resilience/controller/BackendCController.kt&quot;,&quot;spring-boot/resilience4j-coroutines/src/main/kotlin/io/bluetape4k/workshop/resilience/controller/coroutines/SuspendBackendAController.kt&quot;,&quot;spring-boot/resilience4j-coroutines/src/main/kotlin/io/bluetape4k/workshop/resilience/controller/coroutines/SuspendBackendBController.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
   <defs>
     <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
@@ -32,73 +32,147 @@
       .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="882"/>
-  <rect class="frame" x="16" y="16" width="1288" height="850" rx="22"/>
+  <rect class="canvas" width="1320" height="1444"/>
+  <rect class="frame" x="16" y="16" width="1288" height="1412" rx="22"/>
   <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Spring Boot 4 + Resilience4j + Coroutines Workshop</text>
   <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Spring Boot application feature and runtime integration</text>
   <g>
     <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="168.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="170.5">Spring Boot</tspan><tspan class="layer-title" x="151.0" y="193.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="220.0">apps, controllers,</tspan><tspan class="layer-detail" x="151.0" y="236.0">scheduled tests</tspan></text>
+      <rect x="46.0" y="114.0" width="1228.0" height="476.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
+      <rect x="64.0" y="134.0" width="174" height="436.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="324.5">Spring Boot</tspan><tspan class="layer-title" x="151.0" y="347.5">Surface</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="374.0">apps, controllers,</tspan><tspan class="layer-detail" x="151.0" y="390.0">scheduled tests</tspan></text>
     </g>
     <g class="layer" data-layer="service">
-      <rect x="46.0" y="300.0" width="1228.0" height="168.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="320.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="368.0">Feature Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="398.0">services,</tspan><tspan class="layer-detail" x="151.0" y="414.0">resilience, events,</tspan><tspan class="layer-detail" x="151.0" y="430.0">cache policy</tspan></text>
+      <rect x="46.0" y="608.0" width="1228.0" height="242.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
+      <rect x="64.0" y="628.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="713.0">Feature Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="743.0">services,</tspan><tspan class="layer-detail" x="151.0" y="759.0">resilience, events,</tspan><tspan class="layer-detail" x="151.0" y="775.0">cache policy</tspan></text>
     </g>
     <g class="layer" data-layer="integration">
-      <rect x="46.0" y="486.0" width="1228.0" height="168.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="506.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="542.5">Boot Integration</tspan><tspan class="layer-title" x="151.0" y="565.5">Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="584.0">auto-config,</tspan><tspan class="layer-detail" x="151.0" y="600.0">clients,</tspan><tspan class="layer-detail" x="151.0" y="616.0">repositories</tspan></text>
+      <rect x="46.0" y="868.0" width="1228.0" height="366.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
+      <rect x="64.0" y="888.0" width="174" height="326.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="1023.5">Boot Integration</tspan><tspan class="layer-title" x="151.0" y="1046.5">Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1065.0">auto-config,</tspan><tspan class="layer-detail" x="151.0" y="1081.0">clients,</tspan><tspan class="layer-detail" x="151.0" y="1097.0">repositories</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="672.0" width="1228.0" height="150.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="692.0" width="174" height="110.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="719.5">Runtime</tspan><tspan class="layer-title" x="151.0" y="742.5">Dependencies</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="761.0">database, cache,</tspan><tspan class="layer-detail" x="151.0" y="777.0">messaging,</tspan><tspan class="layer-detail" x="151.0" y="793.0">containers</tspan></text>
+      <rect x="46.0" y="1252.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="64.0" y="1272.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="1290.5">Runtime</tspan><tspan class="layer-title" x="151.0" y="1313.5">Dependencies</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1332.0">database, cache,</tspan><tspan class="layer-detail" x="151.0" y="1348.0">messaging,</tspan><tspan class="layer-detail" x="151.0" y="1364.0">containers</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;api" data-label="invokes">
-      <path d="M 704.0 198.0 L 774.0 198.0 L 844.0 198.0" fill="none" stroke="#4F7DB5" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-api)"/>
+    <g class="edge" data-edge="api4-&gt;service0" data-label="delegates">
+      <path d="M 424.0 570.0 L 424.0 599.0 L 424.0 628.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
     </g>
-    <g class="edge" data-edge="api-&gt;service" data-label="delegates">
-      <path d="M 1039.0 262.0 L 1039.0 291.0 L 774.0 291.0 L 774.0 320.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
+    <g class="edge" data-edge="service5-&gt;infra0" data-label="persists / publishes">
+      <path d="M 1096.0 830.0 L 1096.0 859.0 L 424.0 859.0 L 424.0 888.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
     </g>
-    <g class="edge" data-edge="service-&gt;infra" data-label="persists / publishes">
-      <path d="M 774.0 448.0 L 774.0 477.0 L 509.0 477.0 L 509.0 506.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
+    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
+      <path d="M 424.0 1214.0 L 424.0 1243.0 L 424.0 1272.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
     </g>
-    <g class="edge" data-edge="infra-&gt;bt" data-label="extends">
-      <path d="M 704.0 570.0 L 774.0 570.0 L 844.0 570.0" fill="none" stroke="#3E927D" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-bt)"/>
+    <g class="node" data-node="entry0" data-lines="Resilience Application | application bootstrap">
+      <rect x="274.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="176.5">Resilience Application</tspan><tspan class="node-detail" x="424.0" y="200.5">application bootstrap</tspan></text>
     </g>
-    <g class="edge" data-edge="bt-&gt;runtime" data-label="adapts">
-      <path d="M 1039.0 625.0 L 1039.0 658.5 L 774.0 658.5 L 774.0 692.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+    <g class="node" data-node="entry1" data-lines="Abstract Resilience Test | resilience">
+      <rect x="610.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="176.5">Abstract Resilience Test</tspan><tspan class="node-detail" x="760.0" y="200.5">resilience</tspan></text>
     </g>
-    <g class="node" data-node="entry" data-lines="Boot App/Test Surface | ResilienceApplication | AbstractResilienceTest | PrometheusMetricsTest | Spring Boot Resilience4j">
-      <rect x="314.0" y="134.0" width="390.0" height="128.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="169.0">Boot App/Test Surface</tspan><tspan class="node-detail" x="509.0" y="193.0">ResilienceApplication</tspan><tspan class="node-detail" x="509.0" y="210.0">AbstractResilienceTest</tspan><tspan class="node-detail" x="509.0" y="227.0">PrometheusMetricsTest</tspan><tspan class="node-detail" x="509.0" y="244.0">Spring Boot Resilience4j</tspan></text>
+    <g class="node" data-node="entry2" data-lines="Prometheus Metrics Test | actuator">
+      <rect x="946.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="176.5">Prometheus Metrics Test</tspan><tspan class="node-detail" x="1096.0" y="200.5">actuator</tspan></text>
     </g>
-    <g class="node" data-node="api" data-lines="Spring Web Adapters | NettyConfig | Resilience4jConfig | BackendAController | BackendBController">
-      <rect x="844.0" y="134.0" width="390.0" height="128.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="169.0">Spring Web Adapters</tspan><tspan class="node-detail" x="1039.0" y="193.0">NettyConfig</tspan><tspan class="node-detail" x="1039.0" y="210.0">Resilience4jConfig</tspan><tspan class="node-detail" x="1039.0" y="227.0">BackendAController</tspan><tspan class="node-detail" x="1039.0" y="244.0">BackendBController</tspan></text>
+    <g class="node" data-node="entry3" data-lines="Bulkhead Test | bulkhead">
+      <rect x="274.0" y="251.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="293.5">Bulkhead Test</tspan><tspan class="node-detail" x="424.0" y="317.5">bulkhead</tspan></text>
     </g>
-    <g class="node" data-node="service" data-lines="Application Feature | RecordFailurePredicate | BackendAService | BackendCService | Service">
-      <rect x="474.0" y="320.0" width="600.0" height="128.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="355.0">Application Feature</tspan><tspan class="node-detail" x="774.0" y="379.0">RecordFailurePredicate</tspan><tspan class="node-detail" x="774.0" y="396.0">BackendAService</tspan><tspan class="node-detail" x="774.0" y="413.0">BackendCService</tspan><tspan class="node-detail" x="774.0" y="430.0">Service</tspan></text>
+    <g class="node" data-node="entry4" data-lines="Abstract Circuit Breaker | Test | circuitbreaker">
+      <rect x="610.0" y="244.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="281.5">Abstract Circuit Breaker</tspan><tspan class="node-title" x="760.0" y="305.5">Test</tspan><tspan class="node-detail" x="760.0" y="329.5">circuitbreaker</tspan></text>
     </g>
-    <g class="node" data-node="infra" data-lines="Spring Boot Layer | Spring boot autoconfigure lib | Spring boot autoconfigure | processor | Spring boot configuration">
-      <rect x="314.0" y="506.0" width="390.0" height="128.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="541.0">Spring Boot Layer</tspan><tspan class="node-detail" x="509.0" y="565.0">Spring boot autoconfigure lib</tspan><tspan class="node-detail" x="509.0" y="582.0">Spring boot autoconfigure</tspan><tspan class="node-detail" x="509.0" y="599.0">processor</tspan><tspan class="node-detail" x="509.0" y="616.0">Spring boot configuration</tspan></text>
+    <g class="node" data-node="api0" data-lines="Netty Config | configuration">
+      <rect x="946.0" y="251.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="293.5">Netty Config</tspan><tspan class="node-detail" x="1096.0" y="317.5">configuration</tspan></text>
     </g>
-    <g class="node" data-node="bt" data-lines="bluetape4k Boot APIs | workshop | junit5 | resilience4j">
-      <rect x="844.0" y="515.0" width="390.0" height="110.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="549.5">bluetape4k Boot APIs</tspan><tspan class="node-detail" x="1039.0" y="573.5">workshop</tspan><tspan class="node-detail" x="1039.0" y="590.5">junit5</tspan><tspan class="node-detail" x="1039.0" y="607.5">resilience4j</tspan></text>
+    <g class="node" data-node="api1" data-lines="Resilience4j Config | configuration">
+      <rect x="274.0" y="368.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="410.5">Resilience4j Config</tspan><tspan class="node-detail" x="424.0" y="434.5">configuration</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="Boot Runtime | SQL / R2DBC | Redis | Testcontainers">
-      <rect x="474.0" y="692.0" width="600.0" height="110.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="726.5">Boot Runtime</tspan><tspan class="node-detail" x="774.0" y="750.5">SQL / R2DBC</tspan><tspan class="node-detail" x="774.0" y="767.5">Redis</tspan><tspan class="node-detail" x="774.0" y="784.5">Testcontainers</tspan></text>
+    <g class="node" data-node="api2" data-lines="Backend A Controller | HTTP adapter">
+      <rect x="610.0" y="368.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="410.5">Backend A Controller</tspan><tspan class="node-detail" x="760.0" y="434.5">HTTP adapter</tspan></text>
+    </g>
+    <g class="node" data-node="api3" data-lines="Backend B Controller | HTTP adapter">
+      <rect x="946.0" y="368.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="410.5">Backend B Controller</tspan><tspan class="node-detail" x="1096.0" y="434.5">HTTP adapter</tspan></text>
+    </g>
+    <g class="node" data-node="api4" data-lines="Backend C Controller | HTTP adapter">
+      <rect x="274.0" y="478.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="520.5">Backend C Controller</tspan><tspan class="node-detail" x="424.0" y="544.5">HTTP adapter</tspan></text>
+    </g>
+    <g class="node" data-node="service0" data-lines="Record Failure Predicate | exception">
+      <rect x="274.0" y="628.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="670.5">Record Failure Predicate</tspan><tspan class="node-detail" x="424.0" y="694.5">exception</tspan></text>
+    </g>
+    <g class="node" data-node="service1" data-lines="Backend A Service | service component">
+      <rect x="610.0" y="628.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="670.5">Backend A Service</tspan><tspan class="node-detail" x="760.0" y="694.5">service component</tspan></text>
+    </g>
+    <g class="node" data-node="service2" data-lines="Backend C Service | service component">
+      <rect x="946.0" y="628.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="670.5">Backend C Service</tspan><tspan class="node-detail" x="1096.0" y="694.5">service component</tspan></text>
+    </g>
+    <g class="node" data-node="service3" data-lines="Service | service component">
+      <rect x="274.0" y="738.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="780.5">Service</tspan><tspan class="node-detail" x="424.0" y="804.5">service component</tspan></text>
+    </g>
+    <g class="node" data-node="service4" data-lines="Backend A Co Service | service component">
+      <rect x="610.0" y="738.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="780.5">Backend A Co Service</tspan><tspan class="node-detail" x="760.0" y="804.5">service component</tspan></text>
+    </g>
+    <g class="node" data-node="service5" data-lines="Backend B Co Service | service component">
+      <rect x="946.0" y="738.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="780.5">Backend B Co Service</tspan><tspan class="node-detail" x="1096.0" y="804.5">service component</tspan></text>
+    </g>
+    <g class="node" data-node="infra0" data-lines="Spring boot | autoconfigure lib | Spring Boot Layer">
+      <rect x="274.0" y="888.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="925.5">Spring boot</tspan><tspan class="node-title" x="424.0" y="949.5">autoconfigure lib</tspan><tspan class="node-detail" x="424.0" y="973.5">Spring Boot Layer</tspan></text>
+    </g>
+    <g class="node" data-node="infra1" data-lines="Spring boot | autoconfigure processor | Spring Boot Layer">
+      <rect x="610.0" y="888.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="925.5">Spring boot</tspan><tspan class="node-title" x="760.0" y="949.5">autoconfigure processor</tspan><tspan class="node-detail" x="760.0" y="973.5">Spring Boot Layer</tspan></text>
+    </g>
+    <g class="node" data-node="infra2" data-lines="Spring boot | configuration processor | Spring Boot Layer">
+      <rect x="946.0" y="888.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="925.5">Spring boot</tspan><tspan class="node-title" x="1096.0" y="949.5">configuration processor</tspan><tspan class="node-detail" x="1096.0" y="973.5">Spring Boot Layer</tspan></text>
+    </g>
+    <g class="node" data-node="infra3" data-lines="Spring boot devtools | Spring Boot Layer">
+      <rect x="274.0" y="1012.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="1054.5">Spring boot devtools</tspan><tspan class="node-detail" x="424.0" y="1078.5">Spring Boot Layer</tspan></text>
+    </g>
+    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k Boot APIs">
+      <rect x="610.0" y="1012.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1054.5">workshop</tspan><tspan class="node-detail" x="760.0" y="1078.5">bluetape4k Boot APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt1" data-lines="junit5 | bluetape4k Boot APIs">
+      <rect x="946.0" y="1012.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="1054.5">junit5</tspan><tspan class="node-detail" x="1096.0" y="1078.5">bluetape4k Boot APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt2" data-lines="resilience4j | bluetape4k Boot APIs">
+      <rect x="274.0" y="1122.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="1164.5">resilience4j</tspan><tspan class="node-detail" x="424.0" y="1188.5">bluetape4k Boot APIs</tspan></text>
+    </g>
+    <g class="node" data-node="runtime0" data-lines="SQL / R2DBC | Boot Runtime">
+      <rect x="274.0" y="1272.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="1314.5">SQL / R2DBC</tspan><tspan class="node-detail" x="424.0" y="1338.5">Boot Runtime</tspan></text>
+    </g>
+    <g class="node" data-node="runtime1" data-lines="Redis | Boot Runtime">
+      <rect x="610.0" y="1272.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1314.5">Redis</tspan><tspan class="node-detail" x="760.0" y="1338.5">Boot Runtime</tspan></text>
+    </g>
+    <g class="node" data-node="runtime2" data-lines="Testcontainers | Boot Runtime">
+      <rect x="946.0" y="1272.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="1314.5">Testcontainers</tspan><tspan class="node-detail" x="1096.0" y="1338.5">Boot Runtime</tspan></text>
     </g>
   </g>
 </svg>

@@ -26,16 +26,28 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Messaging App/Test Surface\nOutboxApplication\nAbstractOutboxTest\nOutboxTransactionTest\nMessaging Transactional Outbox", fillcolor="#FFF8E7"];
-  api [label="Producer / Consumer Adapters\nOrderController\nOrderService\nOutboxEventTable", fillcolor="#EEF7FF"];
-  service [label="Message Workflow\nOrderResponse\nExposedConfig\nKafkaConfig\nOrderTable", fillcolor="#F1F8E9"];
-  infra [label="Kafka Topic Layer\nOutboxEvent\nOutboxStatus", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k Kafka APIs\nworkshop\njunit5\nassertions", fillcolor="#EAF7F0"];
-  runtime [label="Kafka Broker Runtime\nSQL / R2DBC\nKafka\nTestcontainers", fillcolor="#FFF1F1"];
+  entry0 [label="Outbox Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Abstract Outbox Test\noutbox", fillcolor="#FFF8E7"];
+  entry2 [label="Outbox Transaction Test\noutbox", fillcolor="#FFF8E7"];
+  api0 [label="Order Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  api1 [label="Order Service\nservice component", fillcolor="#EEF7FF"];
+  api2 [label="Outbox Event Table\ndomain model", fillcolor="#EEF7FF"];
+  service0 [label="Order Response\napi", fillcolor="#F1F8E9"];
+  service1 [label="Exposed Config\nconfiguration", fillcolor="#F1F8E9"];
+  service2 [label="Kafka Config\nconfiguration", fillcolor="#F1F8E9"];
+  service3 [label="Order Table\ndomain model", fillcolor="#F1F8E9"];
+  service4 [label="Outbox Publisher\noutbox", fillcolor="#F1F8E9"];
+  service5 [label="Order Request\napi", fillcolor="#F1F8E9"];
+  infra0 [label="Outbox Event\noutbox", fillcolor="#F5F0FF"];
+  infra1 [label="Outbox Status\noutbox", fillcolor="#F5F0FF"];
+  bt0 [label="workshop\nbluetape4k Kafka APIs", fillcolor="#EAF7F0"];
+  bt1 [label="junit5\nbluetape4k Kafka APIs", fillcolor="#EAF7F0"];
+  bt2 [label="assertions\nbluetape4k Kafka APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="SQL / R2DBC\nKafka Broker Runtime", fillcolor="#FFF1F1"];
+  runtime1 [label="Kafka\nKafka Broker Runtime", fillcolor="#FFF1F1"];
+  runtime2 [label="Testcontainers\nKafka Broker Runtime", fillcolor="#FFF1F1"];
 
-  entry -> api [label="invokes"];
-  api -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  api2 -> service0 [label="delegates"];
+  service5 -> infra0 [label="persists / publishes"];
+  bt2 -> runtime0 [label="adapts"];
 }

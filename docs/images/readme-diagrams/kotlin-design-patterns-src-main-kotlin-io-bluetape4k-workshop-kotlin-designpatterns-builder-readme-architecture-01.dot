@@ -26,10 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Example Entrypoints\nKotlin Design Patterns Kotlin\nDesignPatterns Builder tests", fillcolor="#FFF8E7"];
-  service [label="Application Services\nEnums\nHero\nHeroDataClass", fillcolor="#F1F8E9"];
-  runtime [label="Runtime Dependencies\nIn-memory / JVM", fillcolor="#FFF1F1"];
+  entry0 [label="builder\nExample Entrypoints", fillcolor="#FFF8E7"];
+  service0 [label="Enums\ncomponent", fillcolor="#F1F8E9"];
+  service1 [label="Hero\ncomponent", fillcolor="#F1F8E9"];
+  service2 [label="Hero Data Class\ncomponent", fillcolor="#F1F8E9"];
+  runtime0 [label="In-memory / JVM\nRuntime Dependencies", fillcolor="#FFF1F1"];
 
-  entry -> service [label="delegates"];
-  service -> runtime [label="backs"];
+  entry0 -> service0 [label="starts"];
+  service2 -> runtime0 [label="runs on"];
 }

@@ -1,7 +1,9 @@
-graph 1 10.558 1.445
-node entry 1.4708 0.7225 2.9417 1.1637 "Example Entrypoints\nKotlin Design Patterns Kotlin\nDesignPatterns Builder tests" rounded,filled box #88A3B5 #FFF8E7
-node service 5.7372 0.7225 2.2021 1.445 "Application Services\nEnums\nHero\nHeroDataClass" rounded,filled box #88A3B5 #F1F8E9
-node runtime 9.3785 0.7225 2.3583 0.8825 "Runtime Dependencies\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
-edge entry service 4 2.951 0.7225 2.951 0.7225 4.487 0.7225 4.487 0.7225 delegates 3.7889 0.81104 solid #637383
-edge service runtime 4 6.8445 0.7225 6.8445 0.7225 8.0515 0.7225 8.0515 0.7225 backs 7.5187 0.81104 solid #637383
+graph 1 6.0778 4.0492
+node entry0 1.0958 0.44125 2.1917 0.8825 "builder\nExample Entrypoints" rounded,filled box #88A3B5 #FFF8E7
+node service0 4.8986 0.44125 1.3896 0.8825 "Enums\ncomponent" rounded,filled box #88A3B5 #F1F8E9
+node service1 1.0958 2.0246 1.3896 0.8825 "Hero\ncomponent" rounded,filled box #88A3B5 #F1F8E9
+node service2 1.0958 3.6079 1.8271 0.8825 "Hero Data Class\ncomponent" rounded,filled box #88A3B5 #F1F8E9
+node runtime0 4.8986 3.6079 2.3583 0.8825 "In-memory / JVM\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
+edge entry0 service0 4 2.2009 0.44125 2.2009 0.44125 4.0559 0.44125 4.0559 0.44125 starts 2.9556 0.52979 solid #637383
+edge service2 runtime0 4 2.0164 3.6079 2.0164 3.6079 3.5703 3.6079 3.5703 3.6079 "runs on" 2.9556 3.6965 solid #637383
 stop

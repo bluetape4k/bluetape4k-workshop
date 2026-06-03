@@ -26,16 +26,20 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Boot App/Test Surface\nChaosApplication\nAbstractChaosApplicationTest\nStudentControllerTest\nSpring Boot Chaos Monkey tests", fillcolor="#FFF8E7"];
-  api [label="Spring Web Adapters\nStudentController", fillcolor="#EEF7FF"];
-  service [label="Application Feature\nStudentService\nStudent", fillcolor="#F1F8E9"];
-  infra [label="Infrastructure Config\nStudentJdbcRepository", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k Boot APIs\nworkshop\ncore\njunit5", fillcolor="#EAF7F0"];
-  runtime [label="Boot Runtime\nSQL / R2DBC\nAWS / S3", fillcolor="#FFF1F1"];
+  entry0 [label="Chaos Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Abstract Chaos Application Test\nchaos", fillcolor="#FFF8E7"];
+  entry2 [label="Student Controller Test\nHTTP adapter", fillcolor="#FFF8E7"];
+  api0 [label="Student Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  service0 [label="Student Service\nservice component", fillcolor="#F1F8E9"];
+  service1 [label="Student\ndomain model", fillcolor="#F1F8E9"];
+  infra0 [label="Student Jdbc Repository\nrepository", fillcolor="#F5F0FF"];
+  bt0 [label="workshop\nbluetape4k Boot APIs", fillcolor="#EAF7F0"];
+  bt1 [label="core\nbluetape4k Boot APIs", fillcolor="#EAF7F0"];
+  bt2 [label="junit5\nbluetape4k Boot APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="SQL / R2DBC\nBoot Runtime", fillcolor="#FFF1F1"];
+  runtime1 [label="AWS / S3\nBoot Runtime", fillcolor="#FFF1F1"];
 
-  entry -> api [label="invokes"];
-  api -> service [label="delegates"];
-  service -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  api0 -> service0 [label="delegates"];
+  service1 -> infra0 [label="persists / publishes"];
+  bt2 -> runtime0 [label="adapts"];
 }

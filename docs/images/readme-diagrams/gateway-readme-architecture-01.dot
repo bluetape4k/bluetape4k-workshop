@@ -26,10 +26,19 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Example Entrypoints\nApiGatewayDemoApplication\nCustomerApplication\nOrderApplication\nAbstractGatewayTest", fillcolor="#FFF8E7"];
-  api [label="API / Adapter Layer\nGatewayConfig\nSwaggerConfig\nIndexController\nRedirectWebFilter", fillcolor="#EEF7FF"];
-  runtime [label="Runtime Dependencies\nRedis\nAWS / S3\nTestcontainers", fillcolor="#FFF1F1"];
+  entry0 [label="Api Gateway Demo Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Customer Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry2 [label="Order Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry3 [label="Abstract Gateway Test\nverification", fillcolor="#FFF8E7"];
+  entry4 [label="Index Controller Test\nverification", fillcolor="#FFF8E7"];
+  api0 [label="Gateway Config\nconfiguration", fillcolor="#EEF7FF"];
+  api1 [label="Swagger Config\nconfiguration", fillcolor="#EEF7FF"];
+  api2 [label="Index Controller\nHTTP adapter", fillcolor="#EEF7FF"];
+  api3 [label="Redirect Web Filter\nfilter", fillcolor="#EEF7FF"];
+  api4 [label="Customer Config\nconfiguration", fillcolor="#EEF7FF"];
+  runtime0 [label="Redis\nRuntime Dependencies", fillcolor="#FFF1F1"];
+  runtime1 [label="AWS / S3\nRuntime Dependencies", fillcolor="#FFF1F1"];
+  runtime2 [label="Testcontainers\nRuntime Dependencies", fillcolor="#FFF1F1"];
 
-  entry -> api [label="invokes"];
-  api -> runtime [label="backs"];
+
 }

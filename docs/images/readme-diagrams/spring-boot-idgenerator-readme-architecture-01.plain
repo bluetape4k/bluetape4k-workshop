@@ -1,13 +1,18 @@
-graph 1 23.445 1.7263
-node entry 1.5646 0.86313 3.1292 1.7263 "Boot App/Test Surface\nIdGeneratorApplication\nAbstractIdGeneratorTest\nIdGeneratorControllerTest\nSpring Boot Idgenerator tests" rounded,filled box #88A3B5 #FFF8E7
-node api 5.8517 0.86313 2.3896 0.8825 "Spring Web Adapters\nIdGeneratorController" rounded,filled box #88A3B5 #EEF7FF
-node service 9.8056 0.86313 2.1292 0.8825 "Application Feature\nIdResponses" rounded,filled box #88A3B5 #F1F8E9
-node infra 14.999 0.86313 3.0354 1.7263 "Spring Boot Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration" rounded,filled box #88A3B5 #F5F0FF
-node bt 19.213 0.86313 2.3375 1.445 "bluetape4k Boot APIs\nworkshop\nidgenerators\njackson3" rounded,filled box #88A3B5 #EAF7F0
-node runtime 22.636 0.86313 1.6187 0.8825 "Boot Runtime\nRedis" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.1366 0.86313 3.1366 0.86313 4.5066 0.86313 4.5066 0.86313 invokes 3.8931 0.95167 solid #637383
-edge api service 4 7.0541 0.86313 7.0541 0.86313 8.5937 0.86313 8.5937 0.86313 delegates 7.8938 0.95167 solid #637383
-edge service infra 4 10.875 0.86313 10.875 0.86313 13.33 0.86313 13.33 0.86313 "persists / publishes" 12.176 0.95167 solid #637383
-edge infra bt 4 16.526 0.86313 16.526 0.86313 17.899 0.86313 17.899 0.86313 extends 17.281 0.95167 solid #637383
-edge bt runtime 4 20.391 0.86313 20.391 0.86313 21.674 0.86313 21.674 0.86313 adapts 21.104 0.95167 solid #637383
+graph 1 12.787 15.133
+node entry0 1.9135 0.44125 2.5563 0.8825 "Id Generator Application\napplication bootstrap" rounded,filled box #88A3B5 #FFF8E7
+node entry1 1.9135 2.0246 2.9104 0.8825 "Abstract Id Generator Test\nidgenerator" rounded,filled box #88A3B5 #FFF8E7
+node entry2 1.9135 3.6079 3.0146 0.8825 "Id Generator Controller Test\nHTTP adapter" rounded,filled box #88A3B5 #FFF8E7
+node api0 1.9135 5.1913 2.5354 0.8825 "Id Generator Controller\nHTTP adapter" rounded,filled box #88A3B5 #EEF7FF
+node service0 6.3309 5.1913 1.5771 0.8825 "Id Responses\ndomain model" rounded,filled box #88A3B5 #F1F8E9
+node infra0 11.269 5.1913 3.0354 0.8825 "Spring boot autoconfigure lib\nSpring Boot Layer" rounded,filled box #88A3B5 #F5F0FF
+node infra1 1.9135 6.7746 3.8271 0.8825 "Spring boot autoconfigure processor\nSpring Boot Layer" rounded,filled box #88A3B5 #F5F0FF
+node infra2 1.9135 8.3579 3.7542 0.8825 "Spring boot configuration processor\nSpring Boot Layer" rounded,filled box #88A3B5 #F5F0FF
+node infra3 1.9135 9.9413 2.275 0.8825 "Spring boot devtools\nSpring Boot Layer" rounded,filled box #88A3B5 #F5F0FF
+node bt0 1.9135 11.525 2.3375 0.8825 "workshop\nbluetape4k Boot APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt1 1.9135 13.108 2.3375 0.8825 "idgenerators\nbluetape4k Boot APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt2 1.9135 14.691 2.3375 0.8825 "jackson3\nbluetape4k Boot APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime0 6.3309 14.691 1.6187 0.8825 "Redis\nBoot Runtime" rounded,filled box #88A3B5 #FFF1F1
+edge api0 service0 4 3.1853 5.1913 3.1853 5.1913 5.3905 5.1913 5.3905 5.1913 delegates 4.6743 5.2798 solid #637383
+edge service0 infra0 4 7.1243 5.1913 7.1243 5.1913 9.6027 5.1913 9.6027 5.1913 "persists / publishes" 8.4458 5.2798 solid #637383
+edge bt2 runtime0 4 3.0915 14.691 3.0915 14.691 5.3696 14.691 5.3696 14.691 adapts 4.6743 14.78 solid #637383
 stop

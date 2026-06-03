@@ -99,10 +99,11 @@ function detailItems(items, width = 30, limit = 4) {
     .slice(0, limit);
 }
 
-function node(id, title, details, fill) {
+function node(id, title, details, fill, group = id) {
   const lines = [title, ...detailItems(details, 32, 4)];
   return {
     id,
+    group,
     title,
     details: lines.slice(1),
     label: lines.join("\\n"),
@@ -195,6 +196,40 @@ function childModules(dir) {
     .filter((child) => fs.existsSync(path.join(child, "build.gradle.kts")) || fs.existsSync(path.join(child, "README.md")))
     .map((child) => path.basename(child).replace(/[-_]+/g, " "))
     .slice(0, 4);
+}
+
+function sourceDetail(file, dir) {
+  const rel = path.relative(dir, file).replaceAll(path.sep, "/");
+  if (rel.includes("/src/test/")) return "verification";
+  if (rel.includes("/controller/") || /Controller\.kt$/.test(rel)) return "HTTP adapter";
+  if (rel.includes("/service/") || /Service\.kt$/.test(rel)) return "service component";
+  if (rel.includes("/repository/") || /Repository\.kt$/.test(rel)) return "repository";
+  if (rel.includes("/model/") || rel.includes("/domain/") || rel.includes("/schema/")) return "domain model";
+  if (rel.includes("/config/") || /Config\.kt$/.test(rel)) return "configuration";
+  if (/Application\.kt$|App\.kt$/.test(rel)) return "application bootstrap";
+  return rel.split("/").slice(-2, -1)[0]?.replace(/[-_]+/g, " ") || "component";
+}
+
+function sourceNodes(group, files, dir, titlePrefix, fill, limit = 5) {
+  return uniqueLimit(files.map((file) => file), limit).map((file, index) => {
+    const className = classNameOf(file);
+    const displayName = className
+      .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+      .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2");
+    return node(
+      `${group}${index}`,
+      displayName,
+      [sourceDetail(file, dir)],
+      fill,
+      group,
+    );
+  });
+}
+
+function itemNodes(group, items, titlePrefix, fill, limit = 5) {
+  return uniqueLimit(items, limit).map((item, index) =>
+    node(`${group}${index}`, item, [titlePrefix], fill, group),
+  );
 }
 
 function profileFor(rel) {
@@ -418,7 +453,7 @@ function architectureModel(dir, rel) {
   for (const file of mainKt) {
     const group = classifySource(file);
     if (!grouped.has(group)) grouped.set(group, []);
-    grouped.get(group).push(classNameOf(file));
+    grouped.get(group).push(file);
   }
 
   const children = childModules(dir);
@@ -434,53 +469,66 @@ function architectureModel(dir, rel) {
     fs.existsSync(buildFile) ? path.relative(root, buildFile).replaceAll(path.sep, "/") : "",
   ], 8);
 
-  const entryDetails = mainKt.length > 0
-    ? uniqueLimit([
-      ...uniqueLimit(grouped.get("entry") || [], 3),
-      ...testKt.map(classNameOf).filter((name) => /Test|IT|Spec/.test(name)).slice(0, 2),
-      `${module} tests`,
-    ], 4)
-    : [title];
+  const nodes = [];
+  const entryFiles = uniqueLimit([...(grouped.get("entry") || []), ...testKt.filter((file) => /Test|IT|Spec/.test(classNameOf(file)))], 5);
+  if (entryFiles.length > 0) {
+    nodes.push(...sourceNodes("entry", entryFiles, dir, profile.entryTitle, "#FFF8E7", 5));
+  } else {
+    nodes.push(node("entry0", title, [profile.entryTitle], "#FFF8E7", "entry"));
+  }
 
-  const nodes = [
-    node("entry", mainKt.length > 0 ? profile.entryTitle : "Example Family", entryDetails, "#FFF8E7"),
-  ];
-
-  if ((grouped.get("api") || []).length > 0) {
-    nodes.push(node("api", profile.apiTitle, grouped.get("api"), "#EEF7FF"));
+  const apiFiles = grouped.get("api") || [];
+  if (apiFiles.length > 0) {
+    nodes.push(...sourceNodes("api", apiFiles, dir, profile.apiTitle, "#EEF7FF", 5));
   } else if (children.length > 0) {
-    nodes.push(node("api", profile.childrenTitle || "Child Examples", children, "#EEF7FF"));
+    nodes.push(...itemNodes("api", children, profile.childrenTitle || "child module", "#EEF7FF", 5));
   }
 
-  const serviceItems = uniqueLimit([...(grouped.get("service") || []), ...(grouped.get("domain") || [])], 4);
-  if (serviceItems.length > 0) {
-    nodes.push(node("service", profile.serviceTitle, serviceItems, "#F1F8E9"));
+  const serviceFiles = [...(grouped.get("service") || []), ...(grouped.get("domain") || [])];
+  if (serviceFiles.length > 0) {
+    nodes.push(...sourceNodes("service", serviceFiles, dir, profile.serviceTitle, "#F1F8E9", 6));
   }
 
-  const infraItems = uniqueLimit(grouped.get("infra") || [], 4);
-  if (infraItems.length > 0) {
-    nodes.push(node("infra", profile.infraTitle, infraItems, "#F5F0FF"));
+  const infraFiles = grouped.get("infra") || [];
+  if (infraFiles.length > 0) {
+    nodes.push(...sourceNodes("infra", infraFiles, dir, profile.infraTitle, "#F5F0FF", 5));
   } else if (fwDeps.length > 0) {
-    nodes.push(node("infra", profile.frameworkTitle, fwDeps, "#F5F0FF"));
+    nodes.push(...itemNodes("infra", fwDeps, profile.frameworkTitle, "#F5F0FF", 4));
   }
 
   if (btDeps.length > 0) {
-    nodes.push(node("bt", profile.btTitle, btDeps, "#EAF7F0"));
+    nodes.push(...itemNodes("bt", btDeps, profile.btTitle, "#EAF7F0", 4));
   }
 
-  nodes.push(node("runtime", profile.runtimeTitle, runtimes.length ? runtimes : ["In-memory / JVM"], "#FFF1F1"));
+  nodes.push(...itemNodes("runtime", runtimes.length ? runtimes : ["In-memory / JVM"], profile.runtimeTitle, "#FFF1F1", 4));
 
-  const ids = nodes.map((node) => node.id);
+  const idsByGroup = (group) => nodes.filter((item) => item.group === group).map((item) => item.id);
   const edges = [];
-  for (let i = 0; i < ids.length - 1; i++) {
-    if (ids[i] !== "bt" && ids[i + 1] !== "bt") {
-      edges.push([ids[i], ids[i + 1], edgeLabel(ids[i], ids[i + 1], i)]);
-    }
-  }
-  if (ids.includes("bt") && ids.includes("runtime")) {
-    const source = ids.includes("infra") ? "infra" : ids.includes("service") ? "service" : "api";
-    if (source) edges.push([source, "bt", "extends"]);
-    edges.push(["bt", "runtime", "adapts"]);
+  const firstInGroup = (group) => idsByGroup(group)[0];
+  const lastInGroup = (group) => idsByGroup(group).at(-1);
+  const connectGroup = (fromGroup, toGroup, label) => {
+    const from = lastInGroup(fromGroup);
+    const to = firstInGroup(toGroup);
+    if (from && to && fromGroup === toGroup) return;
+    const fromNode = from ? nodes.find((item) => item.id === from) : null;
+    const toNode = to ? nodes.find((item) => item.id === to) : null;
+    if (fromNode && toNode && fromNode.group === toNode.group) return;
+    if (from && to) edges.push([from, to, label]);
+  };
+  connectGroup("api", "service", "delegates");
+  if (!firstInGroup("api")) connectGroup("entry", "service", "starts");
+  connectGroup("service", "infra", "persists / publishes");
+  if (!firstInGroup("service")) connectGroup("api", "infra", "uses");
+  if (!firstInGroup("api") && !firstInGroup("service")) connectGroup("entry", "infra", "uses");
+
+  const btIds = idsByGroup("bt");
+  const infraIds = idsByGroup("infra");
+  if (btIds.length > 0) {
+    edges.push([btIds.at(-1), firstInGroup("runtime"), "adapts"]);
+  } else {
+    connectGroup("infra", "runtime", "backs");
+    if (infraIds.length === 0) connectGroup("service", "runtime", "runs on");
+    if (infraIds.length === 0 && !firstInGroup("service") && !firstInGroup("api")) connectGroup("entry", "runtime", "runs on");
   }
 
   return { title, domain: domainOf(rel), module, profile, nodes, edges, sourceEvidence };
@@ -733,6 +781,10 @@ function nodeById(model, id) {
   return model.nodes.find((node) => node.id === id);
 }
 
+function nodesByGroup(model, groups) {
+  return model.nodes.filter((node) => groups.includes(node.group));
+}
+
 function layoutLayers(model) {
   const profileLayers = model.profile.layers;
   const bands = [
@@ -742,7 +794,7 @@ function layoutLayers(model) {
       detail: profileLayers.surface[1],
       fill: "#EAF3FF",
       stroke: "#9AB7D9",
-      nodeIds: ["entry", "api"],
+      groups: ["entry", "api"],
     },
     {
       id: "service",
@@ -750,7 +802,7 @@ function layoutLayers(model) {
       detail: profileLayers.service[1],
       fill: "#EAF7F0",
       stroke: "#9CC7AE",
-      nodeIds: ["service"],
+      groups: ["service"],
     },
     {
       id: "integration",
@@ -758,7 +810,7 @@ function layoutLayers(model) {
       detail: profileLayers.integration[1],
       fill: "#FFF6E5",
       stroke: "#D9B978",
-      nodeIds: ["infra", "bt"],
+      groups: ["infra", "bt"],
     },
     {
       id: "runtime",
@@ -766,20 +818,21 @@ function layoutLayers(model) {
       detail: profileLayers.runtime[1],
       fill: "#F3F5F8",
       stroke: "#B5C0CB",
-      nodeIds: ["runtime"],
+      groups: ["runtime"],
     },
   ];
 
   return bands
     .map((band) => ({
       ...band,
-      nodes: band.nodeIds.map((id) => nodeById(model, id)).filter(Boolean),
+      nodes: nodesByGroup(model, band.groups),
     }))
     .filter((band) => band.nodes.length > 0);
 }
 
 function cardHeight(node) {
-  return Math.max(92, 56 + node.details.length * 18);
+  const titleLines = wrapLines(node.title, 24, 2);
+  return Math.max(92, 44 + titleLines.length * 22 + node.details.length * 18);
 }
 
 function layerCardRects(model, width) {
@@ -794,21 +847,30 @@ function layerCardRects(model, width) {
   const placedLayers = [];
 
   for (const layer of layers) {
-    const maxCardHeight = Math.max(...layer.nodes.map(cardHeight));
-    const bandHeight = Math.max(132, maxCardHeight + 40);
-    const cardGap = layer.nodes.length === 2 ? 140 : 56;
-    const cardWidth = layer.nodes.length === 1
-      ? Math.min(600, bandWidth - contentOffset - 24)
-      : Math.min(390, (bandWidth - contentOffset - 24 - cardGap * (layer.nodes.length - 1)) / layer.nodes.length);
-    const totalCardsWidth = cardWidth * layer.nodes.length + cardGap * (layer.nodes.length - 1);
-    const cardStartX = left + contentOffset + (bandWidth - contentOffset - totalCardsWidth) / 2;
-    const cardY = y + (bandHeight - maxCardHeight) / 2;
+    const columns = Math.min(3, layer.nodes.length);
+    const cardGapX = 36;
+    const cardGapY = 18;
+    const contentWidth = bandWidth - contentOffset - 28;
+    const cardWidth = Math.min(300, (contentWidth - cardGapX * (columns - 1)) / columns);
+    const rows = Math.ceil(layer.nodes.length / columns);
+    const rowHeights = Array.from({ length: rows }, (_, row) => {
+      const rowNodes = layer.nodes.slice(row * columns, row * columns + columns);
+      return Math.max(...rowNodes.map(cardHeight));
+    });
+    const gridHeight = rowHeights.reduce((sum, height) => sum + height, 0) + cardGapY * (rows - 1);
+    const bandHeight = Math.max(132, gridHeight + 40);
+    const totalCardsWidth = cardWidth * columns + cardGapX * (columns - 1);
+    const cardStartX = left + contentOffset + (contentWidth - totalCardsWidth) / 2;
+    const cardStartY = y + (bandHeight - gridHeight) / 2;
 
     layer.nodes.forEach((node, index) => {
+      const row = Math.floor(index / columns);
+      const column = index % columns;
       const h = cardHeight(node);
+      const rowY = cardStartY + rowHeights.slice(0, row).reduce((sum, height) => sum + height, 0) + row * cardGapY;
       cardRects.set(node.id, {
-        x: cardStartX + index * (cardWidth + cardGap),
-        y: cardY + (maxCardHeight - h) / 2,
+        x: cardStartX + column * (cardWidth + cardGapX),
+        y: rowY + (rowHeights[row] - h) / 2,
         w: cardWidth,
         h,
       });
@@ -832,12 +894,15 @@ function textSvg(lines, x, centerY, className, lineHeight, anchor = "middle") {
 function cardSvg(node, rect) {
   const titleLineHeight = 24;
   const detailLineHeight = 17;
-  const allLines = [node.title, ...node.details];
-  const blockHeight = titleLineHeight + Math.max(0, node.details.length) * detailLineHeight;
+  const titleLines = wrapLines(node.title, 24, 2);
+  const allLines = [...titleLines, ...node.details];
+  const blockHeight = titleLines.length * titleLineHeight + Math.max(0, node.details.length) * detailLineHeight;
   const startY = rect.y + rect.h / 2 - blockHeight / 2 + 17;
-  const title = `<tspan class="node-title" x="${(rect.x + rect.w / 2).toFixed(1)}" y="${startY.toFixed(1)}">${escapeXml(node.title)}</tspan>`;
+  const title = titleLines.map((line, index) =>
+    `<tspan class="node-title" x="${(rect.x + rect.w / 2).toFixed(1)}" y="${(startY + index * titleLineHeight).toFixed(1)}">${escapeXml(line)}</tspan>`,
+  ).join("");
   const details = node.details.map((line, index) =>
-    `<tspan class="node-detail" x="${(rect.x + rect.w / 2).toFixed(1)}" y="${(startY + titleLineHeight + index * detailLineHeight).toFixed(1)}">${escapeXml(line)}</tspan>`,
+    `<tspan class="node-detail" x="${(rect.x + rect.w / 2).toFixed(1)}" y="${(startY + titleLines.length * titleLineHeight + index * detailLineHeight).toFixed(1)}">${escapeXml(line)}</tspan>`,
   ).join("");
   const dataLines = allLines.map((line) => escapeXml(line)).join(" | ");
   return `<g class="node" data-node="${escapeXml(node.id)}" data-lines="${dataLines}">
@@ -887,6 +952,8 @@ function connectorSvg(model, layout) {
   };
 
   return edges.map(([from, to, label], index) => {
+    const sourceNode = nodeById(model, from);
+    const targetNode = nodeById(model, to);
     const source = cardRects.get(from);
     const target = cardRects.get(to);
     const sourceCenter = centerOf(source);
@@ -930,9 +997,10 @@ function connectorSvg(model, layout) {
         end,
       ];
     }
-    const color = colorByTarget[to] || "#637383";
+    const targetGroup = targetNode?.group || to;
+    const color = colorByTarget[targetGroup] || "#637383";
     return `<g class="edge" data-edge="${escapeXml(`${from}->${to}`)}" data-label="${escapeXml(label)}">
-      <path d="${pathThrough(route)}" fill="none" stroke="${color}" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-${to})"/>
+      <path d="${pathThrough(route)}" fill="none" stroke="${color}" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-${targetGroup})"/>
     </g>`;
   }).join("\n    ");
 }
@@ -971,6 +1039,8 @@ function layeredSvg(model) {
   const nodeSvg = layout.layers.flatMap((layer) =>
     layer.nodes.map((node) => cardSvg(node, layout.cardRects.get(node.id))),
   ).join("\n    ");
+  const edgeSvg = connectorSvg(model, layout);
+  const diagramBody = [layerSvg, edgeSvg, nodeSvg].filter((part) => part.trim()).join("\n    ");
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeXml(model.title)} architecture diagram">
@@ -997,9 +1067,7 @@ function layeredSvg(model) {
   <text class="diagram-title" x="${(width / 2).toFixed(1)}" y="58" text-anchor="middle">${escapeXml(model.title)}</text>
   <text class="diagram-subtitle" x="${(width / 2).toFixed(1)}" y="84" text-anchor="middle">${escapeXml(subtitle)}</text>
   <g>
-    ${layerSvg}
-    ${connectorSvg(model, layout)}
-    ${nodeSvg}
+    ${diagramBody}
   </g>
 </svg>
 `;

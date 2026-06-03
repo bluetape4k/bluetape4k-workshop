@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="846" viewBox="0 0 1320 846" role="img" aria-label="Leader ZooKeeper Workshop architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1404" viewBox="0 0 1320 1404" role="img" aria-label="Leader ZooKeeper Workshop architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;leader/leader-zookeeper/src/main/kotlin/io/bluetape4k/workshop/leader/zookeeper/LeaderZookeeperApp.kt&quot;,&quot;leader/leader-zookeeper/src/main/kotlin/io/bluetape4k/workshop/leader/zookeeper/config/LeaderZookeeperConfig.kt&quot;,&quot;leader/leader-zookeeper/src/main/kotlin/io/bluetape4k/workshop/leader/zookeeper/config/LeaderZookeeperProperties.kt&quot;,&quot;leader/leader-zookeeper/src/main/kotlin/io/bluetape4k/workshop/leader/zookeeper/service/BlockingLeaderService.kt&quot;,&quot;leader/leader-zookeeper/src/main/kotlin/io/bluetape4k/workshop/leader/zookeeper/service/GroupLeaderService.kt&quot;,&quot;leader/leader-zookeeper/src/main/kotlin/io/bluetape4k/workshop/leader/zookeeper/service/SuspendGroupLeaderService.kt&quot;,&quot;leader/leader-zookeeper/src/main/kotlin/io/bluetape4k/workshop/leader/zookeeper/service/SuspendLeaderZkService.kt&quot;,&quot;leader/leader-zookeeper/src/test/kotlin/io/bluetape4k/workshop/leader/zookeeper/AbstractLeaderZookeeperTest.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
   <defs>
     <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
@@ -32,73 +32,127 @@
       .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="846"/>
-  <rect class="frame" x="16" y="16" width="1288" height="814" rx="22"/>
+  <rect class="canvas" width="1320" height="1404"/>
+  <rect class="frame" x="16" y="16" width="1288" height="1372" rx="22"/>
   <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Leader ZooKeeper Workshop</text>
   <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Leader example runtime and module dependencies</text>
   <g>
     <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="168.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="182.0">Example Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="220.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="236.0">adapters</tspan></text>
+      <rect x="46.0" y="114.0" width="1228.0" height="518.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
+      <rect x="64.0" y="134.0" width="174" height="478.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="357.0">Example Surface</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="395.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="411.0">adapters</tspan></text>
     </g>
     <g class="layer" data-layer="service">
-      <rect x="46.0" y="300.0" width="1228.0" height="132.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="320.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="350.0">Application Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="388.0">services, domain</tspan><tspan class="layer-detail" x="151.0" y="404.0">rules, use cases</tspan></text>
+      <rect x="46.0" y="650.0" width="1228.0" height="146.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
+      <rect x="64.0" y="670.0" width="174" height="106.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="707.0">Application Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="745.0">services, domain</tspan><tspan class="layer-detail" x="151.0" y="761.0">rules, use cases</tspan></text>
     </g>
     <g class="layer" data-layer="integration">
-      <rect x="46.0" y="450.0" width="1228.0" height="168.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="470.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="518.0">Integration Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="556.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="572.0">adapters, helpers</tspan></text>
+      <rect x="46.0" y="814.0" width="1228.0" height="380.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
+      <rect x="64.0" y="834.0" width="174" height="340.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="988.0">Integration Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1026.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="1042.0">adapters, helpers</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="636.0" width="1228.0" height="150.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="656.0" width="174" height="110.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="695.0">Runtime Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="725.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="741.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="757.0">JVM</tspan></text>
+      <rect x="46.0" y="1212.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="64.0" y="1232.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="1262.0">Runtime Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1292.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="1308.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="1324.0">JVM</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;api" data-label="invokes">
-      <path d="M 704.0 198.0 L 774.0 198.0 L 844.0 198.0" fill="none" stroke="#4F7DB5" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-api)"/>
+    <g class="edge" data-edge="api4-&gt;service0" data-label="delegates">
+      <path d="M 424.0 612.0 L 424.0 641.0 L 760.0 641.0 L 760.0 670.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
     </g>
-    <g class="edge" data-edge="api-&gt;service" data-label="delegates">
-      <path d="M 1039.0 262.0 L 1039.0 291.0 L 774.0 291.0 L 774.0 320.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
+    <g class="edge" data-edge="service0-&gt;infra0" data-label="persists / publishes">
+      <path d="M 760.0 776.0 L 760.0 805.0 L 424.0 805.0 L 424.0 834.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
     </g>
-    <g class="edge" data-edge="service-&gt;infra" data-label="persists / publishes">
-      <path d="M 774.0 412.0 L 774.0 441.0 L 509.0 441.0 L 509.0 470.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
+    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
+      <path d="M 424.0 1174.0 L 424.0 1203.0 L 424.0 1232.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
     </g>
-    <g class="edge" data-edge="infra-&gt;bt" data-label="extends">
-      <path d="M 704.0 534.0 L 774.0 534.0 L 844.0 534.0" fill="none" stroke="#3E927D" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-bt)"/>
+    <g class="node" data-node="entry0" data-lines="Leader Zookeeper App | application bootstrap">
+      <rect x="274.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="183.5">Leader Zookeeper App</tspan><tspan class="node-detail" x="424.0" y="207.5">application bootstrap</tspan></text>
     </g>
-    <g class="edge" data-edge="bt-&gt;runtime" data-label="adapts">
-      <path d="M 1039.0 589.0 L 1039.0 622.5 L 774.0 622.5 L 774.0 656.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+    <g class="node" data-node="entry1" data-lines="Abstract Leader | Zookeeper Test | zookeeper">
+      <rect x="610.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="171.5">Abstract Leader</tspan><tspan class="node-title" x="760.0" y="195.5">Zookeeper Test</tspan><tspan class="node-detail" x="760.0" y="219.5">zookeeper</tspan></text>
     </g>
-    <g class="node" data-node="entry" data-lines="Example Entrypoints | LeaderZookeeperApp | AbstractLeaderZookeeperTest | BlockingSingleLeaderTest | Leader Leader Zookeeper tests">
-      <rect x="314.0" y="134.0" width="390.0" height="128.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="169.0">Example Entrypoints</tspan><tspan class="node-detail" x="509.0" y="193.0">LeaderZookeeperApp</tspan><tspan class="node-detail" x="509.0" y="210.0">AbstractLeaderZookeeperTest</tspan><tspan class="node-detail" x="509.0" y="227.0">BlockingSingleLeaderTest</tspan><tspan class="node-detail" x="509.0" y="244.0">Leader Leader Zookeeper tests</tspan></text>
+    <g class="node" data-node="entry2" data-lines="Blocking Single Leader | Test | zookeeper">
+      <rect x="946.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="171.5">Blocking Single Leader</tspan><tspan class="node-title" x="1096.0" y="195.5">Test</tspan><tspan class="node-detail" x="1096.0" y="219.5">zookeeper</tspan></text>
     </g>
-    <g class="node" data-node="api" data-lines="API / Adapter Layer | LeaderZookeeperConfig | BlockingLeaderService | GroupLeaderService | SuspendGroupLeaderService">
-      <rect x="844.0" y="134.0" width="390.0" height="128.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="169.0">API / Adapter Layer</tspan><tspan class="node-detail" x="1039.0" y="193.0">LeaderZookeeperConfig</tspan><tspan class="node-detail" x="1039.0" y="210.0">BlockingLeaderService</tspan><tspan class="node-detail" x="1039.0" y="227.0">GroupLeaderService</tspan><tspan class="node-detail" x="1039.0" y="244.0">SuspendGroupLeaderService</tspan></text>
+    <g class="node" data-node="entry3" data-lines="Concurrent Blocking | Leader Test | zookeeper">
+      <rect x="274.0" y="258.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="295.5">Concurrent Blocking</tspan><tspan class="node-title" x="424.0" y="319.5">Leader Test</tspan><tspan class="node-detail" x="424.0" y="343.5">zookeeper</tspan></text>
     </g>
-    <g class="node" data-node="service" data-lines="Application Services | LeaderZookeeperProperties">
-      <rect x="474.0" y="320.0" width="600.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="362.5">Application Services</tspan><tspan class="node-detail" x="774.0" y="386.5">LeaderZookeeperProperties</tspan></text>
+    <g class="node" data-node="entry4" data-lines="Extension Function Test | zookeeper">
+      <rect x="610.0" y="265.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="307.5">Extension Function Test</tspan><tspan class="node-detail" x="760.0" y="331.5">zookeeper</tspan></text>
     </g>
-    <g class="node" data-node="infra" data-lines="Framework Layer | Spring boot autoconfigure lib | Spring boot starter actuator | Spring boot autoconfigure | processor">
-      <rect x="314.0" y="470.0" width="390.0" height="128.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="505.0">Framework Layer</tspan><tspan class="node-detail" x="509.0" y="529.0">Spring boot autoconfigure lib</tspan><tspan class="node-detail" x="509.0" y="546.0">Spring boot starter actuator</tspan><tspan class="node-detail" x="509.0" y="563.0">Spring boot autoconfigure</tspan><tspan class="node-detail" x="509.0" y="580.0">processor</tspan></text>
+    <g class="node" data-node="api0" data-lines="Leader Zookeeper Config | configuration">
+      <rect x="946.0" y="265.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="307.5">Leader Zookeeper Config</tspan><tspan class="node-detail" x="1096.0" y="331.5">configuration</tspan></text>
     </g>
-    <g class="node" data-node="bt" data-lines="bluetape4k APIs | workshop | leader zookeeper | leader">
-      <rect x="844.0" y="479.0" width="390.0" height="110.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="513.5">bluetape4k APIs</tspan><tspan class="node-detail" x="1039.0" y="537.5">workshop</tspan><tspan class="node-detail" x="1039.0" y="554.5">leader zookeeper</tspan><tspan class="node-detail" x="1039.0" y="571.5">leader</tspan></text>
+    <g class="node" data-node="api1" data-lines="Blocking Leader Service | service component">
+      <rect x="274.0" y="389.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="431.5">Blocking Leader Service</tspan><tspan class="node-detail" x="424.0" y="455.5">service component</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="Runtime Dependencies | SQL / R2DBC | Redis | ZooKeeper">
-      <rect x="474.0" y="656.0" width="600.0" height="110.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="690.5">Runtime Dependencies</tspan><tspan class="node-detail" x="774.0" y="714.5">SQL / R2DBC</tspan><tspan class="node-detail" x="774.0" y="731.5">Redis</tspan><tspan class="node-detail" x="774.0" y="748.5">ZooKeeper</tspan></text>
+    <g class="node" data-node="api2" data-lines="Group Leader Service | service component">
+      <rect x="610.0" y="389.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="431.5">Group Leader Service</tspan><tspan class="node-detail" x="760.0" y="455.5">service component</tspan></text>
+    </g>
+    <g class="node" data-node="api3" data-lines="Suspend Group Leader | Service | service component">
+      <rect x="946.0" y="382.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="419.5">Suspend Group Leader</tspan><tspan class="node-title" x="1096.0" y="443.5">Service</tspan><tspan class="node-detail" x="1096.0" y="467.5">service component</tspan></text>
+    </g>
+    <g class="node" data-node="api4" data-lines="Suspend Leader Zk | Service | service component">
+      <rect x="274.0" y="506.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="543.5">Suspend Leader Zk</tspan><tspan class="node-title" x="424.0" y="567.5">Service</tspan><tspan class="node-detail" x="424.0" y="591.5">service component</tspan></text>
+    </g>
+    <g class="node" data-node="service0" data-lines="Leader Zookeeper | Properties | configuration">
+      <rect x="610.0" y="670.0" width="300.0" height="106.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="707.5">Leader Zookeeper</tspan><tspan class="node-title" x="760.0" y="731.5">Properties</tspan><tspan class="node-detail" x="760.0" y="755.5">configuration</tspan></text>
+    </g>
+    <g class="node" data-node="infra0" data-lines="Spring boot | autoconfigure lib | Framework Layer">
+      <rect x="274.0" y="834.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="871.5">Spring boot</tspan><tspan class="node-title" x="424.0" y="895.5">autoconfigure lib</tspan><tspan class="node-detail" x="424.0" y="919.5">Framework Layer</tspan></text>
+    </g>
+    <g class="node" data-node="infra1" data-lines="Spring boot starter | actuator | Framework Layer">
+      <rect x="610.0" y="834.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="871.5">Spring boot starter</tspan><tspan class="node-title" x="760.0" y="895.5">actuator</tspan><tspan class="node-detail" x="760.0" y="919.5">Framework Layer</tspan></text>
+    </g>
+    <g class="node" data-node="infra2" data-lines="Spring boot | autoconfigure processor | Framework Layer">
+      <rect x="946.0" y="834.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="871.5">Spring boot</tspan><tspan class="node-title" x="1096.0" y="895.5">autoconfigure processor</tspan><tspan class="node-detail" x="1096.0" y="919.5">Framework Layer</tspan></text>
+    </g>
+    <g class="node" data-node="infra3" data-lines="Spring boot | configuration processor | Framework Layer">
+      <rect x="274.0" y="958.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="995.5">Spring boot</tspan><tspan class="node-title" x="424.0" y="1019.5">configuration processor</tspan><tspan class="node-detail" x="424.0" y="1043.5">Framework Layer</tspan></text>
+    </g>
+    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k APIs">
+      <rect x="610.0" y="965.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1007.5">workshop</tspan><tspan class="node-detail" x="760.0" y="1031.5">bluetape4k APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt1" data-lines="leader zookeeper | bluetape4k APIs">
+      <rect x="946.0" y="965.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="1007.5">leader zookeeper</tspan><tspan class="node-detail" x="1096.0" y="1031.5">bluetape4k APIs</tspan></text>
+    </g>
+    <g class="node" data-node="bt2" data-lines="leader | bluetape4k APIs">
+      <rect x="274.0" y="1082.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="1124.5">leader</tspan><tspan class="node-detail" x="424.0" y="1148.5">bluetape4k APIs</tspan></text>
+    </g>
+    <g class="node" data-node="runtime0" data-lines="SQL / R2DBC | Runtime Dependencies">
+      <rect x="274.0" y="1232.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="1274.5">SQL / R2DBC</tspan><tspan class="node-detail" x="424.0" y="1298.5">Runtime Dependencies</tspan></text>
+    </g>
+    <g class="node" data-node="runtime1" data-lines="Redis | Runtime Dependencies">
+      <rect x="610.0" y="1232.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1274.5">Redis</tspan><tspan class="node-detail" x="760.0" y="1298.5">Runtime Dependencies</tspan></text>
+    </g>
+    <g class="node" data-node="runtime2" data-lines="ZooKeeper | Runtime Dependencies">
+      <rect x="946.0" y="1232.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="1274.5">ZooKeeper</tspan><tspan class="node-detail" x="1096.0" y="1298.5">Runtime Dependencies</tspan></text>
     </g>
   </g>
 </svg>

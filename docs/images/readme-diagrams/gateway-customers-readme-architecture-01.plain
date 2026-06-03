@@ -1,11 +1,18 @@
-graph 1 19.319 1.7263
-node entry 1.3771 0.86313 2.7542 1.1637 "Example Entrypoints\nCustomerApplication\nGateway Customers tests" rounded,filled box #88A3B5 #FFF8E7
-node api 5.4038 0.86313 2.2438 1.7263 "API / Adapter Layer\nCustomerConfig\nObservationConfig\nSwaggerConfig\nCustomerContoller" rounded,filled box #88A3B5 #EEF7FF
-node infra 10.655 0.86313 3.0354 1.7263 "Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration" rounded,filled box #88A3B5 #F5F0FF
-node bt 14.608 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\njackson3\nnetty" rounded,filled box #88A3B5 #EAF7F0
-node runtime 18.14 0.86313 2.3583 0.8825 "Runtime Dependencies\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 2.7629 0.86313 2.7629 0.86313 4.1329 0.86313 4.1329 0.86313 invokes 3.5181 0.95167 solid #637383
-edge api infra 4 6.5302 0.86313 6.5302 0.86313 8.9889 0.86313 8.9889 0.86313 "persists / publishes" 7.8313 0.95167 solid #637383
-edge infra bt 4 12.178 0.86313 12.178 0.86313 13.55 0.86313 13.55 0.86313 extends 12.936 0.95167 solid #637383
-edge bt runtime 4 15.522 0.86313 15.522 0.86313 16.814 0.86313 16.814 0.86313 adapts 16.239 0.95167 solid #637383
+graph 1 8.3069 18.299
+node entry0 1.9135 0.44125 2.2958 0.8825 "Customer Application\napplication bootstrap" rounded,filled box #88A3B5 #FFF8E7
+node api0 1.9135 2.0246 1.9521 0.8825 "Customer Config\nconfiguration" rounded,filled box #88A3B5 #EEF7FF
+node api1 1.9135 3.6079 2.1292 0.8825 "Observation Config\nconfiguration" rounded,filled box #88A3B5 #EEF7FF
+node api2 1.9135 5.1913 1.8583 0.8825 "Swagger Config\nconfiguration" rounded,filled box #88A3B5 #EEF7FF
+node api3 1.9135 6.7746 2.1708 0.8825 "Customer Contoller\nHTTP adapter" rounded,filled box #88A3B5 #EEF7FF
+node api4 1.9135 8.3579 2.2229 0.8825 "Redirect Web Filter\nfilters" rounded,filled box #88A3B5 #EEF7FF
+node infra0 6.7892 8.3579 3.0354 0.8825 "Spring boot autoconfigure lib\nFramework Layer" rounded,filled box #88A3B5 #F5F0FF
+node infra1 1.9135 9.9413 3.8271 0.8825 "Spring boot autoconfigure processor\nFramework Layer" rounded,filled box #88A3B5 #F5F0FF
+node infra2 1.9135 11.525 3.7542 0.8825 "Spring boot configuration processor\nFramework Layer" rounded,filled box #88A3B5 #F5F0FF
+node infra3 1.9135 13.108 2.275 0.8825 "Spring boot devtools\nFramework Layer" rounded,filled box #88A3B5 #F5F0FF
+node bt0 1.9135 14.691 1.8167 0.8825 "workshop\nbluetape4k APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt1 1.9135 16.275 1.8167 0.8825 "jackson3\nbluetape4k APIs" rounded,filled box #88A3B5 #EAF7F0
+node bt2 1.9135 17.858 1.8167 0.8825 "netty\nbluetape4k APIs" rounded,filled box #88A3B5 #EAF7F0
+node runtime0 6.7892 17.858 2.3583 0.8825 "In-memory / JVM\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
+edge api4 infra0 4 3.0321 8.3579 3.0321 8.3579 5.1222 8.3579 5.1222 8.3579 uses 4.5493 8.4465 solid #637383
+edge bt2 runtime0 4 2.8306 17.858 2.8306 17.858 5.4613 17.858 5.4613 17.858 adapts 4.5493 17.946 solid #637383
 stop

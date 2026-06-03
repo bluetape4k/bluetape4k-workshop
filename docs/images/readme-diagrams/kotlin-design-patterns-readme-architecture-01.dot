@@ -26,12 +26,23 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Example Entrypoints\nAbstractFactoryTest\nHeroDataClassTest\nKotlin Design Patterns tests", fillcolor="#FFF8E7"];
-  service [label="Application Services\nArmy\nCastle\nFactoryMaker\nKing", fillcolor="#F1F8E9"];
-  bt [label="bluetape4k APIs\nio\njunit5\ncoroutines", fillcolor="#EAF7F0"];
-  runtime [label="Runtime Dependencies\nSQL / R2DBC\nAWS / S3", fillcolor="#FFF1F1"];
+  entry0 [label="Abstract Factory Test\nabstractFactory", fillcolor="#FFF8E7"];
+  entry1 [label="Hero Data Class Test\nbuilder", fillcolor="#FFF8E7"];
+  entry2 [label="Hero Test\nbuilder", fillcolor="#FFF8E7"];
+  entry3 [label="Abstract Holder Test\nlazyLoading", fillcolor="#FFF8E7"];
+  entry4 [label="Holder Kotlin Lazy Test\nlazyLoading", fillcolor="#FFF8E7"];
+  service0 [label="Army\nabstractFactory", fillcolor="#F1F8E9"];
+  service1 [label="Castle\nabstractFactory", fillcolor="#F1F8E9"];
+  service2 [label="Factory Maker\nabstractFactory", fillcolor="#F1F8E9"];
+  service3 [label="King\nabstractFactory", fillcolor="#F1F8E9"];
+  service4 [label="Kingdom Factory\nabstractFactory", fillcolor="#F1F8E9"];
+  service5 [label="Elf Army\nelf", fillcolor="#F1F8E9"];
+  bt0 [label="io\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  bt1 [label="junit5\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  bt2 [label="coroutines\nbluetape4k APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="SQL / R2DBC\nRuntime Dependencies", fillcolor="#FFF1F1"];
+  runtime1 [label="AWS / S3\nRuntime Dependencies", fillcolor="#FFF1F1"];
 
-  entry -> service [label="delegates"];
-  service -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  entry4 -> service0 [label="starts"];
+  bt2 -> runtime0 [label="adapts"];
 }

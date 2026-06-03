@@ -26,14 +26,24 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Data Demo Surface\nRedisApplication\nAbstractRedisTest\nGeoOperationsTest\nSpring Data Redis Examples tests", fillcolor="#FFF8E7"];
-  api [label="Web/Data Adapters\nCapturingStreamListener", fillcolor="#EEF7FF"];
-  infra [label="Repository Layer\nActor\nMovie\nMovieActor\nMovieActorReference", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k Data APIs\nworkshop\nredis\nspring", fillcolor="#EAF7F0"];
-  runtime [label="Database Runtime\nSQL / R2DBC\nRedis\nKafka", fillcolor="#FFF1F1"];
+  entry0 [label="Redis Application\napplication bootstrap", fillcolor="#FFF8E7"];
+  entry1 [label="Abstract Redis Test\nredis", fillcolor="#FFF8E7"];
+  entry2 [label="Geo Operations Test\ncommands", fillcolor="#FFF8E7"];
+  entry3 [label="Key Operations Test\ncommands", fillcolor="#FFF8E7"];
+  entry4 [label="Movie Repository Test\nmovie", fillcolor="#FFF8E7"];
+  api0 [label="Capturing Stream Listener\nsync", fillcolor="#EEF7FF"];
+  infra0 [label="Actor\ndomain model", fillcolor="#F5F0FF"];
+  infra1 [label="Movie\ndomain model", fillcolor="#F5F0FF"];
+  infra2 [label="Movie Actor\ndomain model", fillcolor="#F5F0FF"];
+  infra3 [label="Movie Actor Reference\ndomain model", fillcolor="#F5F0FF"];
+  infra4 [label="Actor Repository\nrepository", fillcolor="#F5F0FF"];
+  bt0 [label="workshop\nbluetape4k Data APIs", fillcolor="#EAF7F0"];
+  bt1 [label="redis\nbluetape4k Data APIs", fillcolor="#EAF7F0"];
+  bt2 [label="spring\nbluetape4k Data APIs", fillcolor="#EAF7F0"];
+  runtime0 [label="SQL / R2DBC\nDatabase Runtime", fillcolor="#FFF1F1"];
+  runtime1 [label="Redis\nDatabase Runtime", fillcolor="#FFF1F1"];
+  runtime2 [label="Kafka\nDatabase Runtime", fillcolor="#FFF1F1"];
 
-  entry -> api [label="invokes"];
-  api -> infra [label="persists / publishes"];
-  infra -> bt [label="extends"];
-  bt -> runtime [label="adapts"];
+  api0 -> infra0 [label="uses"];
+  bt2 -> runtime0 [label="adapts"];
 }
