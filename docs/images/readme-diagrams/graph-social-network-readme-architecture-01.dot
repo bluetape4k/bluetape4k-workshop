@@ -26,12 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Graph Demo Surface\nAbstractSocialNetworkSuspendTest\nAbstractSocialNetworkTest\nGraph Social Network tests", fillcolor="#FFF8E7"];
-  api [label="Graph Example Modules\nSocialNetworkService\nSocialNetworkSuspendService", fillcolor="#EEF7FF"];
-  service [label="Graph Service Layer\nConnectionRecommendation\nSocialNetworkSchema", fillcolor="#F1F8E9"];
-  infra [label="Graph Driver Layer\nTestcontainers neo4j", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k Graph APIs\ndependencies\ngraph\nlogging", fillcolor="#EAF7F0"];
-  runtime [label="Graph Backends\nTestcontainers", fillcolor="#FFF1F1"];
+  entry [label="Entry & Verification\nAbstractSocialNetworkSuspendTest\nAbstractSocialNetworkTest\nGraph Social Network tests", fillcolor="#FFF8E7"];
+  api [label="API & Adapters\nSocialNetworkService\nSocialNetworkSuspendService", fillcolor="#EEF7FF"];
+  service [label="Service & Domain\nConnectionRecommendation\nSocialNetworkSchema", fillcolor="#F1F8E9"];
+  infra [label="Framework Layer\nTestcontainers neo4j", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k APIs\ndependencies\ngraph\nlogging", fillcolor="#EAF7F0"];
+  runtime [label="Runtime\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];
