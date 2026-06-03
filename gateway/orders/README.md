@@ -6,22 +6,11 @@
 
 This example exercises **Gateway Orders Service** as a runnable gateway and downstream service coordination workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
 
-## Flow Diagram
-
-1. Prepare the local runtime required by `gateway-orders`.
-2. Execute the application, controller, service, or test fixture that owns the example scenario.
-3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
-4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
-
 ## Sequence Diagram
-
-The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 Order service example for the Gateway workshop. It exposes product and order APIs, redirects the root path to Swagger UI, and runs as the order backend on port `8082`.
 
 ## Architecture
-
-![Gateway Orders architecture](../../docs/images/readme-diagrams/gateway-orders-diagram-01.png)
 
 ![Gateway Orders Service Graphviz architecture diagram](../../docs/images/readme-diagrams/gateway-orders-readme-architecture-01.png)
 

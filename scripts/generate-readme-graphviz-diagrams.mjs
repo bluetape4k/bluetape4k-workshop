@@ -272,7 +272,7 @@ function architectureModel(dir, rel) {
     edges.push(["bt", "runtime", "adapts"]);
   }
 
-  return { nodes, edges, sourceEvidence };
+  return { title, domain: domainOf(rel), module, nodes, edges, sourceEvidence };
 }
 
 function edgeLabel(from, to, index) {
@@ -518,6 +518,271 @@ function svgFromPlain(plain, model) {
 `;
 }
 
+function nodeById(model, id) {
+  return model.nodes.find((node) => node.id === id);
+}
+
+function layoutLayers(model) {
+  const bands = [
+    {
+      id: "surface",
+      title: "Domain / Entry Surface",
+      detail: "Entrypoints, tests, adapters, child examples",
+      fill: "#EAF3FF",
+      stroke: "#9AB7D9",
+      nodeIds: ["entry", "api"],
+    },
+    {
+      id: "service",
+      title: "Service & Domain Layer",
+      detail: "Services, domain rules, use cases",
+      fill: "#EAF7F0",
+      stroke: "#9CC7AE",
+      nodeIds: ["service"],
+    },
+    {
+      id: "integration",
+      title: "Integration Layer",
+      detail: "Repositories, adapters, helpers, clients",
+      fill: "#FFF6E5",
+      stroke: "#D9B978",
+      nodeIds: ["infra", "bt"],
+    },
+    {
+      id: "runtime",
+      title: "Runtime Backends",
+      detail: "External systems, containers, local JVM",
+      fill: "#F3F5F8",
+      stroke: "#B5C0CB",
+      nodeIds: ["runtime"],
+    },
+  ];
+
+  return bands
+    .map((band) => ({
+      ...band,
+      nodes: band.nodeIds.map((id) => nodeById(model, id)).filter(Boolean),
+    }))
+    .filter((band) => band.nodes.length > 0);
+}
+
+function cardHeight(node) {
+  return Math.max(92, 56 + node.details.length * 18);
+}
+
+function layerCardRects(model, width) {
+  const layers = layoutLayers(model);
+  const left = 46;
+  const bandWidth = width - left * 2;
+  const labelPanelWidth = 174;
+  const contentOffset = labelPanelWidth + 54;
+  let y = 114;
+  const gap = 18;
+  const cardRects = new Map();
+  const placedLayers = [];
+
+  for (const layer of layers) {
+    const maxCardHeight = Math.max(...layer.nodes.map(cardHeight));
+    const bandHeight = Math.max(132, maxCardHeight + 40);
+    const cardGap = 22;
+    const cardWidth = layer.nodes.length === 1
+      ? Math.min(520, bandWidth - contentOffset - 24)
+      : Math.min(380, (bandWidth - contentOffset - 24 - cardGap * (layer.nodes.length - 1)) / layer.nodes.length);
+    const totalCardsWidth = cardWidth * layer.nodes.length + cardGap * (layer.nodes.length - 1);
+    const cardStartX = left + contentOffset + (bandWidth - contentOffset - totalCardsWidth) / 2;
+    const cardY = y + (bandHeight - maxCardHeight) / 2;
+
+    layer.nodes.forEach((node, index) => {
+      const h = cardHeight(node);
+      cardRects.set(node.id, {
+        x: cardStartX + index * (cardWidth + cardGap),
+        y: cardY + (maxCardHeight - h) / 2,
+        w: cardWidth,
+        h,
+      });
+    });
+
+    placedLayers.push({ ...layer, x: left, y, w: bandWidth, h: bandHeight, labelPanelWidth });
+    y += bandHeight + gap;
+  }
+
+  return { layers: placedLayers, cardRects, height: y + 42 };
+}
+
+function textSvg(lines, x, centerY, className, lineHeight, anchor = "middle") {
+  const blockHeight = (lines.length - 1) * lineHeight;
+  const startY = centerY - blockHeight / 2;
+  return lines.map((line, index) =>
+    `<tspan class="${className}" x="${x.toFixed(1)}" y="${(startY + index * lineHeight).toFixed(1)}">${escapeXml(line)}</tspan>`,
+  ).join("");
+}
+
+function cardSvg(node, rect) {
+  const titleLineHeight = 24;
+  const detailLineHeight = 17;
+  const allLines = [node.title, ...node.details];
+  const blockHeight = titleLineHeight + Math.max(0, node.details.length) * detailLineHeight;
+  const startY = rect.y + rect.h / 2 - blockHeight / 2 + 17;
+  const title = `<tspan class="node-title" x="${(rect.x + rect.w / 2).toFixed(1)}" y="${startY.toFixed(1)}">${escapeXml(node.title)}</tspan>`;
+  const details = node.details.map((line, index) =>
+    `<tspan class="node-detail" x="${(rect.x + rect.w / 2).toFixed(1)}" y="${(startY + titleLineHeight + index * detailLineHeight).toFixed(1)}">${escapeXml(line)}</tspan>`,
+  ).join("");
+  const dataLines = allLines.map((line) => escapeXml(line)).join(" | ");
+  return `<g class="node" data-node="${escapeXml(node.id)}" data-lines="${dataLines}">
+      <rect x="${rect.x.toFixed(1)}" y="${rect.y.toFixed(1)}" width="${rect.w.toFixed(1)}" height="${rect.h.toFixed(1)}" rx="14" fill="${node.fill}" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle">${title}${details}</text>
+    </g>`;
+}
+
+function centerOf(rect) {
+  return { x: rect.x + rect.w / 2, y: rect.y + rect.h / 2 };
+}
+
+function boundaryPoint(rect, side) {
+  if (side === "top") return { x: rect.x + rect.w / 2, y: rect.y };
+  if (side === "bottom") return { x: rect.x + rect.w / 2, y: rect.y + rect.h };
+  if (side === "left") return { x: rect.x, y: rect.y + rect.h / 2 };
+  return { x: rect.x + rect.w, y: rect.y + rect.h / 2 };
+}
+
+function pathThrough(points) {
+  return points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`).join(" ");
+}
+
+function connectorSvg(model, layout) {
+  const { cardRects, layers } = layout;
+  const layerByNode = new Map();
+  const layerById = new Map();
+  for (const layer of layers) {
+    layerById.set(layer.id, layer);
+    for (const node of layer.nodes) layerByNode.set(node.id, layer.id);
+  }
+  const edges = model.edges
+    .filter(([from, to]) => cardRects.has(from) && cardRects.has(to));
+  const colorByTarget = {
+    api: "#4F7DB5",
+    service: "#4A9667",
+    infra: "#B18435",
+    bt: "#3E927D",
+    runtime: "#B85E63",
+  };
+
+  return edges.map(([from, to, label], index) => {
+    const source = cardRects.get(from);
+    const target = cardRects.get(to);
+    const sourceCenter = centerOf(source);
+    const targetCenter = centerOf(target);
+    const sameLayer = layerByNode.get(from) === layerByNode.get(to);
+    let route;
+    let labelX;
+    let labelY;
+    if (sameLayer) {
+      const layer = layerById.get(layerByNode.get(from));
+      const start = boundaryPoint(source, "top");
+      const end = boundaryPoint(target, "top");
+      const laneY = Math.max(layer.y + 28, Math.min(source.y, target.y) - 24);
+      const midX = start.x + (end.x - start.x) / 2;
+      route = [
+        start,
+        { x: start.x, y: laneY },
+        { x: end.x, y: laneY },
+        end,
+      ];
+      labelX = midX;
+      labelY = laneY - 12;
+    } else {
+      const start = boundaryPoint(source, "bottom");
+      const end = boundaryPoint(target, "top");
+      const midY = start.y + (end.y - start.y) / 2;
+      route = [
+        start,
+        { x: start.x, y: midY },
+        { x: end.x, y: midY },
+        end,
+      ];
+      labelX = (sourceCenter.x + targetCenter.x) / 2;
+      labelY = midY - 12 - (index % 2) * 3;
+    }
+    const color = colorByTarget[to] || "#637383";
+    const labelWidth = Math.max(72, Math.min(168, label.length * 8 + 28));
+    return `<g class="edge" data-edge="${escapeXml(`${from}->${to}`)}">
+      <path d="${pathThrough(route)}" fill="none" stroke="${color}" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-${to})"/>
+      <rect class="edge-label-bg" x="${(labelX - labelWidth / 2).toFixed(1)}" y="${(labelY - 15).toFixed(1)}" width="${labelWidth.toFixed(1)}" height="23" rx="11"/>
+      <text class="edge-label" x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle">${escapeXml(label)}</text>
+    </g>`;
+  }).join("\n    ");
+}
+
+function layeredSvg(model) {
+  const width = 1120;
+  const layout = layerCardRects(model, width);
+  const height = Math.max(660, layout.height);
+  const frame = { x: 16, y: 16, w: width - 32, h: height - 32 };
+  const subtitle = `${model.domain} example architecture, generated from README module sources`;
+  const metadata = {
+    sourceEvidence: model.sourceEvidence,
+    rendering: "layered-readme-architecture",
+    visualBaseline: "graph module README architecture diagrams",
+  };
+
+  const markerDefs = ["api", "service", "infra", "bt", "runtime"].map((id) => {
+    const color = { api: "#4F7DB5", service: "#4A9667", infra: "#B18435", bt: "#3E927D", runtime: "#B85E63" }[id] || "#637383";
+    return `<marker id="arrow-${id}" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="${arrowMarker}" fill="${color}"/>
+    </marker>`;
+  }).join("\n    ");
+
+  const layerSvg = layout.layers.map((layer) => {
+    const labelLines = wrapLines(layer.title, 17, 2);
+    const detailLines = wrapLines(layer.detail, 19, 3);
+    const labelX = layer.x + layer.labelPanelWidth / 2 + 18;
+    return `<g class="layer" data-layer="${escapeXml(layer.id)}">
+      <rect x="${layer.x.toFixed(1)}" y="${layer.y.toFixed(1)}" width="${layer.w.toFixed(1)}" height="${layer.h.toFixed(1)}" rx="18" fill="${layer.fill}" stroke="${layer.stroke}"/>
+      <rect x="${(layer.x + 18).toFixed(1)}" y="${(layer.y + 20).toFixed(1)}" width="${layer.labelPanelWidth}" height="${(layer.h - 40).toFixed(1)}" rx="14" fill="#FFFFFF" stroke="${layer.stroke}" opacity="0.92"/>
+      <text text-anchor="middle">${textSvg(labelLines, labelX, layer.y + layer.h / 2 - 16, "layer-title", 23)}</text>
+      <text text-anchor="middle">${textSvg(detailLines, labelX, layer.y + layer.h / 2 + 30, "layer-detail", 16)}</text>
+    </g>`;
+  }).join("\n    ");
+
+  const nodeSvg = layout.layers.flatMap((layer) =>
+    layer.nodes.map((node) => cardSvg(node, layout.cardRects.get(node.id))),
+  ).join("\n    ");
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeXml(model.title)} architecture diagram">
+  <metadata>${escapeXml(JSON.stringify(metadata))}</metadata>
+  <defs>
+    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
+    </filter>
+    ${markerDefs}
+    <style>
+      .canvas { fill: #F8FBFD; }
+      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
+      .diagram-title { font-family: "${titleFont}"; font-size: 31px; fill: #102033; }
+      .diagram-subtitle { font-family: "${detailFont}"; font-size: 14px; fill: #51606F; }
+      .layer-title { font-family: "${titleFont}"; font-size: 18px; fill: #102033; }
+      .layer-detail { font-family: "${detailFont}"; font-size: 11px; fill: #536170; }
+      .node rect { stroke-width: 1.5; }
+      .node-title { font-family: "${titleFont}"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "${detailFont}"; font-size: 12px; fill: #465160; }
+      .edge-label-bg { fill: #FFFFFF; stroke: #CAD6E0; stroke-width: 1; opacity: 0.96; }
+      .edge-label { font-family: "${detailFont}"; font-size: 12px; fill: #102033; dominant-baseline: middle; }
+    </style>
+  </defs>
+  <rect class="canvas" width="${width}" height="${height}"/>
+  <rect class="frame" x="${frame.x}" y="${frame.y}" width="${frame.w}" height="${frame.h}" rx="22"/>
+  <text class="diagram-title" x="${(width / 2).toFixed(1)}" y="58" text-anchor="middle">${escapeXml(model.title)}</text>
+  <text class="diagram-subtitle" x="${(width / 2).toFixed(1)}" y="84" text-anchor="middle">${escapeXml(subtitle)}</text>
+  <g>
+    ${layerSvg}
+    ${connectorSvg(model, layout)}
+    ${nodeSvg}
+  </g>
+</svg>
+`;
+}
+
 fs.mkdirSync(outDir, { recursive: true });
 const renderEnv = fontconfigEnv();
 
@@ -540,7 +805,7 @@ for (const dir of dirs) {
   fs.writeFileSync(`${base}.plain`, plain);
   run("dot", ["-Tsvg", `${base}.dot`, "-o", `${base}-graphviz.svg`], { env: renderEnv });
   run("dot", ["-Tpng", `${base}.dot`, "-o", `${base}-graphviz.png`], { env: renderEnv });
-  fs.writeFileSync(`${base}.svg`, svgFromPlain(plain, model));
+  fs.writeFileSync(`${base}.svg`, layeredSvg(model));
   run("rsvg-convert", [`${base}.svg`, "-o", `${base}.png`], { env: renderEnv });
   generated++;
 }

@@ -10,8 +10,6 @@ This example exercises **Spring Modulith Events Deep Dive** as a runnable Spring
 
 ![events-deep-dive sequence diagram](../../docs/images/readme-diagrams/spring-modulith-events-deep-dive-readme-sequence-01.png)
 
-The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
-
 Spring Modulith event publication examples that move from basic application events to transactional publication and module-boundary verification.
 
 ## Architecture
@@ -68,14 +66,6 @@ fun on(event: Order.OrderCompleted) {
     log.info { "Received event: $event" }
 }
 ```
-
-## Event Publication Flow
-
-![Spring Modulith Events Deep Dive Diagram 1](../../docs/images/readme-diagrams/spring-modulith-events-deep-dive-readme-sequence-01.png)
-
-## Architecture: Before vs After Module Boundary
-
-![Spring Modulith Events Deep Dive Diagram 2](../../docs/images/readme-diagrams/spring-modulith-events-deep-dive-readme-flow-02.png)
 
 ## Operational Notes
 

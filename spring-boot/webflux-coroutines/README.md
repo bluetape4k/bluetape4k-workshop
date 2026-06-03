@@ -8,33 +8,16 @@ This example exercises **Spring WebFlux + Coroutines** as a runnable Spring Boot
 
 ## Architecture Diagram
 
-![Spring WebFlux + Coroutines architecture diagram](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-architecture-01.png)
+![Spring WebFlux + Coroutines Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-readme-architecture-01.png)
 
 The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.springboot` as the source of truth when comparing this README with the code.
 
-![Spring WebFlux + Coroutines Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-readme-architecture-01.png)
-
-## Flow Diagram
-
-1. Prepare the local runtime required by `spring-boot-webflux-coroutines`.
-2. Execute the application, controller, service, or test fixture that owns the example scenario.
-3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
-4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
-
-![Spring WebFlux + Coroutines flow diagram](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-diagram-01.png)
-
 ## Sequence Diagram
-
-The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 ![Spring WebFlux + Coroutines sequence diagram](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-sequence-01.png)
 
 This example uses Kotlin Coroutines in a Spring WebFlux environment.
 It uses bluetape4k `Dispatchers.VT`, `Flow<T>.async`, `Runtimex`, and related utilities to build Virtual Thread based reactive controllers.
-
-## Architecture
-
-![webflux coroutines Architecture diagram](../../docs/images/readme-diagrams/spring-boot-webflux-coroutines-architecture-01.png)
 
 ## Implementation Strategy Comparison
 

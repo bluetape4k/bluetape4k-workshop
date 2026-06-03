@@ -6,16 +6,7 @@
 
 This example exercises **ktor-rest-coroutines** as a runnable Ktor coroutine REST service workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
 
-## Flow Diagram
-
-1. Prepare the local runtime required by `ktor-rest-coroutines`.
-2. Execute the application, controller, service, or test fixture that owns the example scenario.
-3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
-4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
-
 ## Sequence Diagram
-
-The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 Kotlin-first REST API workshop built with **Ktor 3** and Kotlin coroutines.
 Demonstrates idiomatic coroutine-first HTTP, SSE streaming, and NDJSON export without Spring or reactive streams.
@@ -23,8 +14,6 @@ Demonstrates idiomatic coroutine-first HTTP, SSE streaming, and NDJSON export wi
 ---
 
 ## Architecture
-
-![Ktor REST Coroutines Architecture](../../docs/images/readme-diagrams/ktor-rest-coroutines-architecture-01.png)
 
 ![ktor-rest-coroutines Graphviz architecture diagram](../../docs/images/readme-diagrams/ktor-rest-coroutines-readme-architecture-01.png)
 

@@ -6,22 +6,11 @@
 
 This example exercises **exposed/webflux-r2dbc** as a runnable Exposed data access workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
 
-## Flow Diagram
-
-1. Prepare the local runtime required by `exposed-webflux-r2dbc`.
-2. Execute the application, controller, service, or test fixture that owns the example scenario.
-3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
-4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
-
 ## Sequence Diagram
-
-The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 WebFlux + Coroutines + Exposed R2DBC — fully reactive/coroutine data access.
 
 ## Architecture
-
-![Exposed WebFlux R2DBC Architecture](../../docs/images/readme-diagrams/exposed-webflux-r2dbc-architecture-01.png)
 
 ![exposed/webflux-r2dbc Graphviz architecture diagram](../../docs/images/readme-diagrams/exposed-webflux-r2dbc-readme-architecture-01.png)
 

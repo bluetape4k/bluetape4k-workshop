@@ -8,32 +8,15 @@ This example exercises **Redisson Examples** as a runnable Redis-backed coordina
 
 ## Architecture Diagram
 
-![Redisson Examples architecture diagram](../../docs/images/readme-diagrams/redis-redisson-examples-architecture-01.png)
+![Redisson Examples Graphviz architecture diagram](../../docs/images/readme-diagrams/redis-redisson-examples-readme-architecture-01.png)
 
 The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.redis` as the source of truth when comparing this README with the code.
 
-![Redisson Examples Graphviz architecture diagram](../../docs/images/readme-diagrams/redis-redisson-examples-readme-architecture-01.png)
-
-## Flow Diagram
-
-1. Prepare the local runtime required by `redis-redisson-examples`.
-2. Execute the application, controller, service, or test fixture that owns the example scenario.
-3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
-4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
-
-![Redisson Examples flow diagram](../../docs/images/readme-diagrams/redis-redisson-examples-diagram-01.png)
-
 ## Sequence Diagram
-
-The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 This collection of examples uses distributed synchronization objects from the Redis client library [Redisson](https://redisson.org/).
 It uses bluetape4k's `RedissonCodecs.LZ4ForyComposite`, `localCachedMap()`, `streamAddArgsOf()`, `VirtualThreadExecutor`, `RedisServer.Launcher`, and test concurrency helpers.
 It automatically starts a Redis container with Testcontainers and runs integration tests against it.
-
-## Architecture
-
-![redisson examples Architecture diagram](../../docs/images/readme-diagrams/redis-redisson-examples-architecture-01.png)
 
 ## Example Categories
 

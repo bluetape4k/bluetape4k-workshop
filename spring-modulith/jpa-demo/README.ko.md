@@ -10,8 +10,6 @@
 
 ![jpa-demo 시퀀스 다이어그램](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-sequence-02.png)
 
-핵심 시퀀스는 호출자 또는 테스트 픽스처 -> 워크샵 어댑터 -> bluetape4k 헬퍼/API -> 외부 런타임 또는 인메모리 백엔드 -> 검증/응답 순서입니다. 전용 시퀀스 이미지가 있는 모듈은 아래 이미지가 상호작용 순서를 보여주며, 없는 경우 소스 테스트가 실행 가능한 시퀀스의 기준입니다.
-
 이 Spring Modulith 애플리케이션은 `organization`, `department`, `employee`, `gateway` 네 개의 논리 모듈로 구성됩니다. 각 모듈은 내부 모듈 API와 Spring 애플리케이션 이벤트로 연결되며, Modulith 구조 테스트로 검증됩니다.
 
 [sample-spring-modulith](https://github.com/piomin/sample-spring-modulith)를 기반으로 합니다.
@@ -22,7 +20,7 @@
 
 ## 아키텍처
 
-![Spring Modulith JPA Demo Diagram 1](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-flow-01.png)
+![Spring Modulith JPA Demo Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-architecture-01.png)
 
 애플리케이션은 네 개의 논리 모듈로 나뉩니다.
 
@@ -32,8 +30,6 @@
 | `department` | `Department` 엔티티를 관리하고 내부 API를 통해 `organization`에 의존합니다. |
 | `employee` | `Employee` 엔티티를 관리하고 내부 API를 통해 `organization`에 의존합니다. |
 | `gateway` | 단일 REST API(`/organizations/**`)로 모든 모듈을 노출합니다. |
-
-![Spring Modulith JPA Demo Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-architecture-01.png)
 
 ## 사용한 bluetape4k 기능
 
@@ -91,10 +87,6 @@ class GatewayManagement(
     private val organizationAPI: OrganizationExternalAPI,  // public contract only
 )
 ```
-
-## 이벤트 흐름
-
-![Spring Modulith JPA Demo Diagram 2](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-sequence-02.png)
 
 ## 관측성
 

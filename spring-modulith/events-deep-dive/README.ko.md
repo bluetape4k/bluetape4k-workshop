@@ -10,8 +10,6 @@
 
 ![events-deep-dive 시퀀스 다이어그램](../../docs/images/readme-diagrams/spring-modulith-events-deep-dive-readme-sequence-01.png)
 
-핵심 시퀀스는 호출자 또는 테스트 픽스처 -> 워크샵 어댑터 -> bluetape4k 헬퍼/API -> 외부 런타임 또는 인메모리 백엔드 -> 검증/응답 순서입니다. 이 모듈에 전용 시퀀스 자산이 있으면 아래 이미지가 상호작용 순서를 보여주며, 그렇지 않으면 소스 테스트가 실행 가능한 시퀀스의 기준입니다.
-
 기본 애플리케이션 이벤트에서 트랜잭션 이벤트 발행과 모듈 경계 검증으로 이어지는 Spring Modulith 이벤트 발행 예제입니다.
 
 ## 아키텍처
@@ -68,14 +66,6 @@ fun on(event: Order.OrderCompleted) {
     log.info { "Received event: $event" }
 }
 ```
-
-## 이벤트 발행 흐름
-
-![Spring Modulith Events Deep Dive Diagram 1](../../docs/images/readme-diagrams/spring-modulith-events-deep-dive-readme-sequence-01.png)
-
-## 아키텍처: 모듈 경계 적용 전과 후
-
-![Spring Modulith Events Deep Dive Diagram 2](../../docs/images/readme-diagrams/spring-modulith-events-deep-dive-readme-flow-02.png)
 
 ## 운영 노트
 

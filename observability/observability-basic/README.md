@@ -6,16 +6,7 @@
 
 This example exercises **observability-basic** as a runnable metrics, tracing, and observation workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
 
-## Flow Diagram
-
-1. Prepare the local runtime required by `observability-observability-basic`.
-2. Execute the application, controller, service, or test fixture that owns the example scenario.
-3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
-4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
-
 ## Sequence Diagram
-
-The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 Minimal observability workshop demonstrating Micrometer Observation + W3C trace propagation
 across a WebFlux HTTP endpoint, a coroutine service, and an outbound WebClient call.
@@ -23,8 +14,6 @@ across a WebFlux HTTP endpoint, a coroutine service, and an outbound WebClient c
 No infrastructure (DB, Redis, Kafka) required. MockWebServer is used for downstream simulation.
 
 ## Architecture
-
-![observability basic Architecture diagram](../../docs/images/readme-diagrams/observability-observability-basic-architecture-01.png)
 
 ![observability-basic Graphviz architecture diagram](../../docs/images/readme-diagrams/observability-observability-basic-readme-architecture-01.png)
 

@@ -6,16 +6,7 @@
 
 This example exercises **Spring Boot Cache Resilience** as a runnable Spring Boot application feature workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
 
-## Flow Diagram
-
-1. Prepare the local runtime required by `spring-boot-cache-resilience`.
-2. Execute the application, controller, service, or test fixture that owns the example scenario.
-3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
-4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
-
 ## Sequence Diagram
-
-The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 Redis primary cache with Caffeine local fallback using Resilience4j CircuitBreaker.
 Demonstrates the full circuit breaker state machine (`CLOSED → OPEN → HALF-OPEN → CLOSED`)
@@ -23,13 +14,11 @@ driven by real network failures injected via Toxiproxy.
 
 ## Architecture
 
-![Cache Resilience architecture](../../docs/images/readme-diagrams/spring-boot-cache-resilience-diagram-01.png)
+![Spring Boot Cache Resilience Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-cache-resilience-readme-architecture-01.png)
 
 The diagram shows the request flow, CircuitBreaker state machine
 (CLOSED → OPEN → HALF-OPEN → CLOSED), and the ToxiproxyServer chaos injection
 used in integration tests.
-
-![Spring Boot Cache Resilience Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-cache-resilience-readme-architecture-01.png)
 
 ## What This Module Shows
 

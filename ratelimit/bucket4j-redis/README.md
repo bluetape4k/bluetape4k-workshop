@@ -8,37 +8,13 @@ This example exercises **Spring Webflux with Bucket4j and Redis** as a runnable 
 
 ## Architecture Diagram
 
-![Spring Webflux with Bucket4j and Redis architecture diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-redis-diagram-01.png)
+![Spring Webflux with Bucket4j and Redis Graphviz architecture diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-redis-readme-architecture-01.png)
 
 The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.ratelimit` as the source of truth when comparing this README with the code.
 
-![Spring Webflux with Bucket4j and Redis Graphviz architecture diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-redis-readme-architecture-01.png)
-
-## Flow Diagram
-
-1. Prepare the local runtime required by `ratelimit-bucket4j-redis`.
-2. Execute the application, controller, service, or test fixture that owns the example scenario.
-3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
-4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
-
 ## Sequence Diagram
 
-The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
-
 ![Spring Webflux with Bucket4j and Redis sequence diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-redis-sequence-01.png)
-
-## Architecture Diagram
-
-![bucket4j redis Architecture diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-redis-diagram-01.png)
-
-This example implements Bucket4j rate limiting in a Spring WebFlux application with Redis as the bucket store.
-
-It demonstrates an easy Bucket4j setup with `bucket4j-spring-boot-starter`.
-However, it only provides IP-based rate limiting.
-
-## Redis-Based Rate Limit Request Flow
-
-![Redis Rate Limit diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-redis-sequence-01.png)
 
 ## application.yml Configuration Example
 

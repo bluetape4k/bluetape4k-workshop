@@ -8,22 +8,11 @@ This example exercises **JsonView in Spring Boot Demo** as a runnable JSON seria
 
 ## Architecture Diagram
 
-![JsonView in Spring Boot Demo architecture diagram](../../docs/images/readme-diagrams/json-jsonview-examples-diagram-01.png)
+![JsonView in Spring Boot Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/json-jsonview-examples-readme-architecture-01.png)
 
 The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.json` as the source of truth when comparing this README with the code.
 
-![JsonView in Spring Boot Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/json-jsonview-examples-readme-architecture-01.png)
-
-## Flow Diagram
-
-1. Prepare the local runtime required by `json-jsonview-examples`.
-2. Execute the application, controller, service, or test fixture that owns the example scenario.
-3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
-4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
-
 ## Sequence Diagram
-
-The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 Let's learn how to filter response data using `@JsonView` when responding in Spring Boot REST API.
 Simplify KotlinModule + JavaTimeModule configuration by registering bluetape4k's `Jackson.defaultJsonMapper` as `@Bean`.
@@ -50,8 +39,6 @@ fun jsonMapper(): JsonMapper = JsonMapper.builder()
 @Bean
 fun jsonMapper(): JsonMapper = Jackson.defaultJsonMapper
 ```
-
-![Before / After diagram](../../docs/images/readme-diagrams/json-jsonview-examples-diagram-01.png)
 
 ![Before / After diagram](../../docs/images/readme-diagrams/json-jsonview-examples-diagram-02.png)
 

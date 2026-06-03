@@ -1,36 +1,83 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1010" height="195" viewBox="0 0 1010 195" role="img" aria-label="Source-derived README architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/builder/Enums.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/builder/Hero.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/builder/HeroDataClass.kt&quot;]}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="660" viewBox="0 0 1120 660" role="img" aria-label="builder architecture diagram">
+  <metadata>{&quot;sourceEvidence&quot;:[&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/builder/Enums.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/builder/Hero.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/builder/HeroDataClass.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
   <defs>
-    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#637383"/>
+    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
+    </filter>
+    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
+    </marker>
+    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
+    </marker>
+    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
+    </marker>
+    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
+    </marker>
+    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
     </marker>
     <style>
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .node rect { stroke-width: 1.6; }
+      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
+      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
+      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
+      .node rect { stroke-width: 1.5; }
       .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
       .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
-      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
-      .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
+      .edge-label-bg { fill: #FFFFFF; stroke: #CAD6E0; stroke-width: 1; opacity: 0.96; }
+      .edge-label { font-family: "Comic Mono"; font-size: 12px; fill: #102033; dominant-baseline: middle; }
     </style>
   </defs>
-  <rect class="canvas" width="1010" height="195"/>
-  <rect class="frame" x="10" y="10" width="990" height="175" rx="18"/>
+  <rect class="canvas" width="1120" height="660"/>
+  <rect class="frame" x="16" y="16" width="1088" height="628" rx="22"/>
+  <text class="diagram-title" x="560.0" y="58" text-anchor="middle">builder</text>
+  <text class="diagram-subtitle" x="560.0" y="84" text-anchor="middle">Kotlin example architecture, generated from README module sources</text>
   <g>
-    <polyline class="connector" points="311.2,97.4 311.2,97.4 458.6,97.4 458.6,97.4" marker-end="url(#arrow)"/><text class="edge-label" x="391.7" y="81.9" text-anchor="middle">delegates</text>
-    <polyline class="connector" points="665.1,97.4 665.1,97.4 780.7,97.4 780.7,97.4" marker-end="url(#arrow)"/><text class="edge-label" x="729.8" y="81.9" text-anchor="middle">backs</text>
-    <g class="node" data-node="entry">
-      <rect x="28.0" y="41.5" width="282.4" height="111.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text text-anchor="middle"><tspan class="node-title" x="169.2" y="87.4">Entry &amp; Verification</tspan><tspan class="node-detail" x="169.2" y="109.4">Kotlin Design Patterns Kotlin</tspan><tspan class="node-detail" x="169.2" y="125.4">DesignPatterns Builder tests</tspan></text>
+    <g class="layer" data-layer="surface">
+      <rect x="46.0" y="114.0" width="1028.0" height="132.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
+      <rect x="64.0" y="134.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="152.5">Domain / Entry</tspan><tspan class="layer-title" x="151.0" y="175.5">Surface</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="194.0">Entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="210.0">adapters, child</tspan><tspan class="layer-detail" x="151.0" y="226.0">examples</tspan></text>
     </g>
-    <g class="node" data-node="service">
-      <rect x="473.1" y="28.0" width="191.4" height="138.7" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
-      <text text-anchor="middle"><tspan class="node-title" x="568.8" y="79.4">Service &amp; Domain</tspan><tspan class="node-detail" x="568.8" y="101.4">Enums</tspan><tspan class="node-detail" x="568.8" y="117.4">Hero</tspan><tspan class="node-detail" x="568.8" y="133.4">HeroDataClass</tspan></text>
+    <g class="layer" data-layer="service">
+      <rect x="46.0" y="264.0" width="1028.0" height="150.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
+      <rect x="64.0" y="284.0" width="174" height="110.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="311.5">Service &amp; Domain</tspan><tspan class="layer-title" x="151.0" y="334.5">Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="361.0">Services, domain</tspan><tspan class="layer-detail" x="151.0" y="377.0">rules, use cases</tspan></text>
     </g>
-    <g class="node" data-node="runtime">
-      <rect x="795.1" y="55.0" width="186.4" height="84.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text text-anchor="middle"><tspan class="node-title" x="888.3" y="95.4">Runtime</tspan><tspan class="node-detail" x="888.3" y="117.4">In-memory / JVM</tspan></text>
+    <g class="layer" data-layer="runtime">
+      <rect x="46.0" y="432.0" width="1028.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="64.0" y="452.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="482.0">Runtime Backends</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="512.0">External systems,</tspan><tspan class="layer-detail" x="151.0" y="528.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="544.0">JVM</tspan></text>
+    </g>
+    <g class="edge" data-edge="entry-&gt;service">
+      <path d="M 674.0 226.0 L 674.0 255.0 L 674.0 255.0 L 674.0 284.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
+      <rect class="edge-label-bg" x="624.0" y="228.0" width="100.0" height="23" rx="11"/>
+      <text class="edge-label" x="674.0" y="243.0" text-anchor="middle">delegates</text>
+    </g>
+    <g class="edge" data-edge="service-&gt;runtime">
+      <path d="M 674.0 394.0 L 674.0 423.0 L 674.0 423.0 L 674.0 452.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+      <rect class="edge-label-bg" x="638.0" y="393.0" width="72.0" height="23" rx="11"/>
+      <text class="edge-label" x="674.0" y="408.0" text-anchor="middle">backs</text>
+    </g>
+    <g class="node" data-node="entry" data-lines="Entry &amp; Verification | Kotlin Design Patterns Kotlin | DesignPatterns Builder tests">
+      <rect x="414.0" y="134.0" width="520.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="674.0" y="168.0">Entry &amp; Verification</tspan><tspan class="node-detail" x="674.0" y="192.0">Kotlin Design Patterns Kotlin</tspan><tspan class="node-detail" x="674.0" y="209.0">DesignPatterns Builder tests</tspan></text>
+    </g>
+    <g class="node" data-node="service" data-lines="Service &amp; Domain | Enums | Hero | HeroDataClass">
+      <rect x="414.0" y="284.0" width="520.0" height="110.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="674.0" y="318.5">Service &amp; Domain</tspan><tspan class="node-detail" x="674.0" y="342.5">Enums</tspan><tspan class="node-detail" x="674.0" y="359.5">Hero</tspan><tspan class="node-detail" x="674.0" y="376.5">HeroDataClass</tspan></text>
+    </g>
+    <g class="node" data-node="runtime" data-lines="Runtime | In-memory / JVM">
+      <rect x="414.0" y="452.0" width="520.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="674.0" y="494.5">Runtime</tspan><tspan class="node-detail" x="674.0" y="518.5">In-memory / JVM</tspan></text>
     </g>
   </g>
 </svg>

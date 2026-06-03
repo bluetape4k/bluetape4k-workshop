@@ -8,22 +8,11 @@ This example exercises **Chaos Monkey + Spring Boot 4 Demo** as a runnable Sprin
 
 ## Architecture Diagram
 
-![Chaos Monkey + Spring Boot 4 Demo architecture diagram](../../docs/images/readme-diagrams/spring-boot-chaos-monkey-diagram-01.png)
+![Chaos Monkey + Spring Boot 4 Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-chaos-monkey-readme-architecture-01.png)
 
 The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.springboot` as the source of truth when comparing this README with the code.
 
-![Chaos Monkey + Spring Boot 4 Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-chaos-monkey-readme-architecture-01.png)
-
-## Flow Diagram
-
-1. Prepare the local runtime required by `spring-boot-chaos-monkey`.
-2. Execute the application, controller, service, or test fixture that owns the example scenario.
-3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
-4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
-
 ## Sequence Diagram
-
-The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 Original source: [chaos-monkey-springboot](https://github.com/vaquarkhan/chaos-monkey-springboot)
 
@@ -34,10 +23,6 @@ This example demonstrates Chaos Monkey for Spring Boot.
 ## Chaos Monkey with Springboot
 
 ----------------------------------
-
-## Chaos Engineering Flow
-
-![Chaos Engineering diagram](../../docs/images/readme-diagrams/spring-boot-chaos-monkey-diagram-01.png)
 
 ## PRINCIPLES OF CHAOS ENGINEERING
 

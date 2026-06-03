@@ -8,30 +8,17 @@ This example exercises **Example for Vert.x with Kotlin Coroutines** as a runnab
 
 ## Architecture Diagram
 
-![Example for Vert.x with Kotlin Coroutines architecture diagram](../../docs/images/readme-diagrams/vertx-coroutines-diagram-01.png)
+![Example for Vert.x with Kotlin Coroutines Graphviz architecture diagram](../../docs/images/readme-diagrams/vertx-coroutines-readme-architecture-01.png)
 
 The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.vertx` as the source of truth when comparing this README with the code.
 
-![Example for Vert.x with Kotlin Coroutines Graphviz architecture diagram](../../docs/images/readme-diagrams/vertx-coroutines-readme-architecture-01.png)
-
-## Flow Diagram
-
-1. Prepare the local runtime required by `vertx-coroutines`.
-2. Execute the application, controller, service, or test fixture that owns the example scenario.
-3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
-4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
-
 ## Sequence Diagram
-
-The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 ![Example for Vert.x with Kotlin Coroutines sequence diagram](../../docs/images/readme-diagrams/vertx-coroutines-sequence-01.png)
 
 This example shows how to use Vert.x with Kotlin Coroutines.
 
 ## Processing Flow
-
-![coroutines Sequence Flow diagram](../../docs/images/readme-diagrams/vertx-coroutines-sequence-01.png)
 
 ![Example for Vert.x with Kotlin Coroutines Diagram 1](../../docs/images/readme-diagrams/vertx-coroutines-readme-sequence-01.png)
 
@@ -62,8 +49,6 @@ router.get("/movie/:id").suspendHandler { ctx ->
 ```
 
 ## Data Model
-
-![coroutines Entity Relationship 2 diagram](../../docs/images/readme-diagrams/vertx-coroutines-diagram-01.png)
 
 ## Provided API Endpoints
 

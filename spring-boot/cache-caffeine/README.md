@@ -8,24 +8,11 @@ This example exercises **Cache Caffeine Demo** as a runnable Spring Boot applica
 
 ## Architecture Diagram
 
-![Cache Caffeine Demo architecture diagram](../../docs/images/readme-diagrams/spring-boot-cache-caffeine-architecture-01.png)
+![Cache Caffeine Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-cache-caffeine-readme-architecture-01.png)
 
 The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.springboot` as the source of truth when comparing this README with the code.
 
-![Cache Caffeine Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-cache-caffeine-readme-architecture-01.png)
-
-## Flow Diagram
-
-1. Prepare the local runtime required by `spring-boot-cache-caffeine`.
-2. Execute the application, controller, service, or test fixture that owns the example scenario.
-3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
-4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
-
-![Cache Caffeine Demo flow diagram](../../docs/images/readme-diagrams/spring-boot-cache-caffeine-diagram-01.png)
-
 ## Sequence Diagram
-
-The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 Local in-memory cache example using [Caffeine](https://github.com/ben-manes/caffeine) with Spring Cache abstraction.
 Demonstrates the bluetape4k `caffeine { }` DSL and `VirtualThreadExecutor` for lazy-loading cache entries.
@@ -42,10 +29,6 @@ and structured logging with `KLoggingChannel`.
 
 This example integrates [Caffeine](https://github.com/ben-manes/caffeine) with the Spring Cache abstraction.
 It configures a local in-memory cache with the bluetape4k `caffeine { }` DSL and `VirtualThreadExecutor`.
-
-## Architecture
-
-![cache caffeine Architecture diagram](../../docs/images/readme-diagrams/spring-boot-cache-caffeine-architecture-01.png)
 
 ## Main Components
 
