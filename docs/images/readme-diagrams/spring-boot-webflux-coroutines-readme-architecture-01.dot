@@ -26,12 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nCoroutineApplication\nAbstractCoroutineApplicationTest\nDefaultCoroutineControllerTest\nSpring Boot Webflux Coroutines", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nNettyConfig\nDefaultCoroutineController\nIOCoroutineController\nVTCoroutineController", fillcolor="#EEF7FF"];
-  service [label="Service & Domain\nBanner", fillcolor="#F1F8E9"];
-  infra [label="Repository & Infra\nWebClientConfig", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\nio\njackson3", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nIn-memory / JVM", fillcolor="#FFF1F1"];
+  entry [label="Boot App/Test Surface\nCoroutineApplication\nAbstractCoroutineApplicationTest\nDefaultCoroutineControllerTest\nSpring Boot Webflux Coroutines", fillcolor="#FFF8E7"];
+  api [label="Spring Web Adapters\nNettyConfig\nDefaultCoroutineController\nIOCoroutineController\nVTCoroutineController", fillcolor="#EEF7FF"];
+  service [label="Application Feature\nBanner", fillcolor="#F1F8E9"];
+  infra [label="Infrastructure Config\nWebClientConfig", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Boot APIs\nworkshop\nio\njackson3", fillcolor="#EAF7F0"];
+  runtime [label="Boot Runtime\nIn-memory / JVM", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];

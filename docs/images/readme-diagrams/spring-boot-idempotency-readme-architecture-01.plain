@@ -1,11 +1,11 @@
-graph 1 18.215 1.7263
-node entry 1.6063 0.86313 3.2125 1.7263 "Entry & Verification\nIdempotencyApplication\nAbstractIdempotencyTest\nOrderControllerTest\nSpring Boot Idempotency tests" rounded,filled box #88A3B5 #FFF8E7
-node api 5.8517 0.86313 2.2229 1.1637 "API & Adapters\nOrderController\nIdempotencyService" rounded,filled box #88A3B5 #EEF7FF
-node infra 10.628 0.86313 2.1083 1.1637 "Repository & Infra\nRedissonConfig\nOrderModels" rounded,filled box #88A3B5 #F5F0FF
-node bt 14.119 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\njackson3\ncore" rounded,filled box #88A3B5 #EAF7F0
-node runtime 17.343 0.86313 1.7437 1.1637 "Runtime\nRedis\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.2173 0.86313 3.2173 0.86313 4.5937 0.86313 4.5937 0.86313 invokes 3.9764 0.95167 solid #637383
-edge api infra 4 6.9717 0.86313 6.9717 0.86313 9.4221 0.86313 9.4221 0.86313 "persists / publishes" 8.2688 0.95167 solid #637383
-edge infra bt 4 11.69 0.86313 11.69 0.86313 13.061 0.86313 13.061 0.86313 extends 12.447 0.95167 solid #637383
-edge bt runtime 4 15.034 0.86313 15.034 0.86313 16.322 0.86313 16.322 0.86313 adapts 15.749 0.95167 solid #637383
+graph 1 19.111 1.7263
+node entry 1.6063 0.86313 3.2125 1.7263 "Boot App/Test Surface\nIdempotencyApplication\nAbstractIdempotencyTest\nOrderControllerTest\nSpring Boot Idempotency tests" rounded,filled box #88A3B5 #FFF8E7
+node api 5.8986 0.86313 2.3167 1.1637 "Spring Web Adapters\nOrderController\nIdempotencyService" rounded,filled box #88A3B5 #EEF7FF
+node infra 10.863 0.86313 2.3896 1.1637 "Infrastructure Config\nRedissonConfig\nOrderModels" rounded,filled box #88A3B5 #F5F0FF
+node bt 14.754 0.86313 2.3375 1.445 "bluetape4k Boot APIs\nworkshop\njackson3\ncore" rounded,filled box #88A3B5 #EAF7F0
+node runtime 18.239 0.86313 1.7437 1.1637 "Boot Runtime\nRedis\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.2168 0.86313 3.2168 0.86313 4.5922 0.86313 4.5922 0.86313 invokes 3.9764 0.95167 solid #637383
+edge api infra 4 7.0625 0.86313 7.0625 0.86313 9.5161 0.86313 9.5161 0.86313 "persists / publishes" 8.3625 0.95167 solid #637383
+edge infra bt 4 12.062 0.86313 12.062 0.86313 13.436 0.86313 13.436 0.86313 extends 12.822 0.95167 solid #637383
+edge bt runtime 4 15.929 0.86313 15.929 0.86313 17.219 0.86313 17.219 0.86313 adapts 16.645 0.95167 solid #637383
 stop

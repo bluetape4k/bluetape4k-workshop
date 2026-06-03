@@ -1,13 +1,13 @@
-graph 1 24.362 1.445
-node entry 1.8302 0.7225 3.6604 1.445 "Entry & Verification\nAbstractSocialNetworkSuspendTest\nAbstractSocialNetworkTest\nGraph Social Network tests" rounded,filled box #88A3B5 #FFF8E7
-node api 6.758 0.7225 3.1396 1.1637 "API & Adapters\nSocialNetworkService\nSocialNetworkSuspendService" rounded,filled box #88A3B5 #EEF7FF
-node service 11.472 0.7225 2.9 1.1637 "Service & Domain\nConnectionRecommendation\nSocialNetworkSchema" rounded,filled box #88A3B5 #F1F8E9
-node infra 16.681 0.7225 2.2958 0.8825 "Framework Layer\nTestcontainers neo4j" rounded,filled box #88A3B5 #F5F0FF
-node bt 20.265 0.7225 1.8167 1.445 "bluetape4k APIs\ndependencies\ngraph\nlogging" rounded,filled box #88A3B5 #EAF7F0
-node runtime 23.49 0.7225 1.7437 0.8825 "Runtime\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+graph 1 25.091 1.445
+node entry 1.8302 0.7225 3.6604 1.445 "Graph Demo Surface\nAbstractSocialNetworkSuspendTest\nAbstractSocialNetworkTest\nGraph Social Network tests" rounded,filled box #88A3B5 #FFF8E7
+node api 6.758 0.7225 3.1396 1.1637 "Graph Example Modules\nSocialNetworkService\nSocialNetworkSuspendService" rounded,filled box #88A3B5 #EEF7FF
+node service 11.472 0.7225 2.9 1.1637 "Graph Service Layer\nConnectionRecommendation\nSocialNetworkSchema" rounded,filled box #88A3B5 #F1F8E9
+node infra 16.681 0.7225 2.2958 0.8825 "Graph Driver Layer\nTestcontainers neo4j" rounded,filled box #88A3B5 #F5F0FF
+node bt 20.567 0.7225 2.4208 1.445 "bluetape4k Graph APIs\ndependencies\ngraph\nlogging" rounded,filled box #88A3B5 #EAF7F0
+node runtime 24.157 0.7225 1.8688 0.8825 "Graph Backends\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
 edge entry api 4 3.6686 0.7225 3.6686 0.7225 5.036 0.7225 5.036 0.7225 invokes 4.4243 0.81104 solid #637383
 edge api service 4 8.3343 0.7225 8.3343 0.7225 9.8701 0.7225 9.8701 0.7225 delegates 9.175 0.81104 solid #637383
 edge service infra 4 12.93 0.7225 12.93 0.7225 15.383 0.7225 15.383 0.7225 "persists / publishes" 14.228 0.81104 solid #637383
-edge infra bt 4 17.835 0.7225 17.835 0.7225 19.21 0.7225 19.21 0.7225 extends 18.593 0.81104 solid #637383
-edge bt runtime 4 21.181 0.7225 21.181 0.7225 22.468 0.7225 22.468 0.7225 adapts 21.896 0.81104 solid #637383
+edge infra bt 4 17.837 0.7225 17.837 0.7225 19.206 0.7225 19.206 0.7225 extends 18.593 0.81104 solid #637383
+edge bt runtime 4 21.783 0.7225 21.783 0.7225 23.072 0.7225 23.072 0.7225 adapts 22.5 0.81104 solid #637383
 stop

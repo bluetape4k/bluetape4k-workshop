@@ -28,7 +28,7 @@ digraph G {
 
   entry [label="Example Family\nVert.x WebClient Examples", fillcolor="#FFF8E7"];
   bt [label="bluetape4k APIs\nio\njdbc\nvertx", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC", fillcolor="#FFF1F1"];
+  runtime [label="Runtime Dependencies\nSQL / R2DBC", fillcolor="#FFF1F1"];
 
   api -> bt [label="extends"];
   bt -> runtime [label="adapts"];

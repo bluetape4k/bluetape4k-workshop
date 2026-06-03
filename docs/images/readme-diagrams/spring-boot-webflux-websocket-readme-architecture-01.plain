@@ -1,13 +1,13 @@
-graph 1 24.591 1.7263
-node entry 1.6948 0.86313 3.3896 1.7263 "Entry & Verification\nWebsocketApplication\nWebsocketApplicationTest\nSpring Boot Webflux Websocket\ntests" rounded,filled box #88A3B5 #FFF8E7
-node api 6.6434 0.86313 3.4521 1.7263 "API & Adapters\nNettyConfig\nReactiveWebSocketConfiguration\nSampleWebfluxRouter\nReactiveWebSocketHandler" rounded,filled box #88A3B5 #EEF7FF
-node service 11.061 0.86313 1.9938 1.1637 "Service & Domain\nQuoteGenerator\nModels" rounded,filled box #88A3B5 #F1F8E9
-node infra 16.265 0.86313 3.1917 1.7263 "Framework Layer\nSpring cloud dependencies get\nSpring boot4 dependencies get\nSpring boot autoconfigure lib\nSpring boot autoconfigure" rounded,filled box #88A3B5 #F5F0FF
-node bt 20.297 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\nidgenerators\njunit5" rounded,filled box #88A3B5 #EAF7F0
-node runtime 23.62 0.86313 1.9417 0.8825 "Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
+graph 1 25.247 1.7263
+node entry 1.6948 0.86313 3.3896 1.7263 "Boot App/Test Surface\nWebsocketApplication\nWebsocketApplicationTest\nSpring Boot Webflux Websocket\ntests" rounded,filled box #88A3B5 #FFF8E7
+node api 6.6434 0.86313 3.4521 1.7263 "Spring Web Adapters\nNettyConfig\nReactiveWebSocketConfiguration\nSampleWebfluxRouter\nReactiveWebSocketHandler" rounded,filled box #88A3B5 #EEF7FF
+node service 11.128 0.86313 2.1292 1.1637 "Application Feature\nQuoteGenerator\nModels" rounded,filled box #88A3B5 #F1F8E9
+node infra 16.4 0.86313 3.1917 1.7263 "Spring Boot Layer\nSpring cloud dependencies get\nSpring boot4 dependencies get\nSpring boot autoconfigure lib\nSpring boot autoconfigure" rounded,filled box #88A3B5 #F5F0FF
+node bt 20.692 0.86313 2.3375 1.445 "bluetape4k Boot APIs\nworkshop\nidgenerators\njunit5" rounded,filled box #88A3B5 #EAF7F0
+node runtime 24.276 0.86313 1.9417 0.8825 "Boot Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
 edge entry api 4 3.3978 0.86313 3.3978 0.86313 4.7652 0.86313 4.7652 0.86313 invokes 4.1535 0.95167 solid #637383
-edge api service 4 8.3766 0.86313 8.3766 0.86313 9.9164 0.86313 9.9164 0.86313 delegates 9.2167 0.95167 solid #637383
-edge service infra 4 12.064 0.86313 12.064 0.86313 14.518 0.86313 14.518 0.86313 "persists / publishes" 13.363 0.95167 solid #637383
-edge infra bt 4 17.87 0.86313 17.87 0.86313 19.239 0.86313 19.239 0.86313 extends 18.624 0.95167 solid #637383
-edge bt runtime 4 21.214 0.86313 21.214 0.86313 22.5 0.86313 22.5 0.86313 adapts 21.927 0.95167 solid #637383
+edge api service 4 8.3774 0.86313 8.3774 0.86313 9.9175 0.86313 9.9175 0.86313 delegates 9.2167 0.95167 solid #637383
+edge service infra 4 12.202 0.86313 12.202 0.86313 14.655 0.86313 14.655 0.86313 "persists / publishes" 13.499 0.95167 solid #637383
+edge infra bt 4 18.004 0.86313 18.004 0.86313 19.376 0.86313 19.376 0.86313 extends 18.76 0.95167 solid #637383
+edge bt runtime 4 21.866 0.86313 21.866 0.86313 23.155 0.86313 23.155 0.86313 adapts 22.583 0.95167 solid #637383
 stop

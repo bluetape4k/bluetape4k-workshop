@@ -26,12 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nMongodbApplication\nAbstractMongodbTest\nCoroutineRepositoryTest\nSpring Data Mongodb Coroutines", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nNettyConfig\nRepositoryMetricsConfiguration", fillcolor="#EEF7FF"];
-  service [label="Service & Domain\nPersonCoroutineRepository\nPersonReactiveRepository", fillcolor="#F1F8E9"];
-  infra [label="Repository & Infra\nMongoClientConfig\nReactiveMongoConfig\nPerson\nPersonRepository", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\ntestcontainers\ncoroutines", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nMongoDB\nTestcontainers", fillcolor="#FFF1F1"];
+  entry [label="Data Demo Surface\nMongodbApplication\nAbstractMongodbTest\nCoroutineRepositoryTest\nSpring Data Mongodb Coroutines", fillcolor="#FFF8E7"];
+  api [label="Web/Data Adapters\nNettyConfig\nRepositoryMetricsConfiguration", fillcolor="#EEF7FF"];
+  service [label="Data Service Layer\nPersonCoroutineRepository\nPersonReactiveRepository", fillcolor="#F1F8E9"];
+  infra [label="Repository Layer\nMongoClientConfig\nReactiveMongoConfig\nPerson\nPersonRepository", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Data APIs\nworkshop\ntestcontainers\ncoroutines", fillcolor="#EAF7F0"];
+  runtime [label="Database Runtime\nMongoDB\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];

@@ -26,11 +26,11 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nCaffeineApplication\nServletRateLimitTest\nRatelimit Bucket4j Caffeine Web\ntests", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nIndexController", fillcolor="#EEF7FF"];
-  infra [label="Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\njackson3\njunit5", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nRedis", fillcolor="#FFF1F1"];
+  entry [label="Rate-limit Surface\nCaffeineApplication\nServletRateLimitTest\nRatelimit Bucket4j Caffeine Web\ntests", fillcolor="#FFF8E7"];
+  api [label="Web Filter / Controller\nIndexController", fillcolor="#EEF7FF"];
+  infra [label="Bucket4j Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k RateLimit APIs\nworkshop\njackson3\njunit5", fillcolor="#EAF7F0"];
+  runtime [label="Bucket Runtime\nRedis", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> infra [label="persists / publishes"];

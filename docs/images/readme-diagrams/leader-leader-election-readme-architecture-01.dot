@@ -26,12 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nLeaderElectionApp\nAbstractLeaderElectionTest\nConcurrentLeaderElectionTest\nLeader Leader Election tests", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nLeaderElectionConfig\nLeaderScheduledJobService\nLeaderEventListenerService\nSuspendLeaderService", fillcolor="#EEF7FF"];
-  service [label="Service & Domain\nLeaderElectionProperties\nCacheWarmupJob\nLeaderGuardedJob\nLockAssertJob", fillcolor="#F1F8E9"];
+  entry [label="Example Entrypoints\nLeaderElectionApp\nAbstractLeaderElectionTest\nConcurrentLeaderElectionTest\nLeader Leader Election tests", fillcolor="#FFF8E7"];
+  api [label="API / Adapter Layer\nLeaderElectionConfig\nLeaderScheduledJobService\nLeaderEventListenerService\nSuspendLeaderService", fillcolor="#EEF7FF"];
+  service [label="Application Services\nLeaderElectionProperties\nCacheWarmupJob\nLeaderGuardedJob\nLockAssertJob", fillcolor="#F1F8E9"];
   infra [label="Framework Layer\nSpring boot autoconfigure lib\nSpring boot starter actuator\nSpring boot autoconfigure\nprocessor", fillcolor="#F5F0FF"];
   bt [label="bluetape4k APIs\nworkshop\nleader\nlogging", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
+  runtime [label="Runtime Dependencies\nSQL / R2DBC\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];

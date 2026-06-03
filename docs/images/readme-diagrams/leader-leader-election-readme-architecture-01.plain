@@ -1,13 +1,13 @@
-graph 1 24.331 1.7263
-node entry 1.601 0.86313 3.2021 1.7263 "Entry & Verification\nLeaderElectionApp\nAbstractLeaderElectionTest\nConcurrentLeaderElectionTest\nLeader Leader Election tests" rounded,filled box #88A3B5 #FFF8E7
-node api 6.2267 0.86313 2.9938 1.7263 "API & Adapters\nLeaderElectionConfig\nLeaderScheduledJobService\nLeaderEventListenerService\nSuspendLeaderService" rounded,filled box #88A3B5 #EEF7FF
-node service 10.774 0.86313 2.7125 1.7263 "Service & Domain\nLeaderElectionProperties\nCacheWarmupJob\nLeaderGuardedJob\nLockAssertJob" rounded,filled box #88A3B5 #F1F8E9
+graph 1 24.945 1.7263
+node entry 1.601 0.86313 3.2021 1.7263 "Example Entrypoints\nLeaderElectionApp\nAbstractLeaderElectionTest\nConcurrentLeaderElectionTest\nLeader Leader Election tests" rounded,filled box #88A3B5 #FFF8E7
+node api 6.2267 0.86313 2.9938 1.7263 "API / Adapter Layer\nLeaderElectionConfig\nLeaderScheduledJobService\nLeaderEventListenerService\nSuspendLeaderService" rounded,filled box #88A3B5 #EEF7FF
+node service 10.774 0.86313 2.7125 1.7263 "Application Services\nLeaderElectionProperties\nCacheWarmupJob\nLeaderGuardedJob\nLockAssertJob" rounded,filled box #88A3B5 #F1F8E9
 node infra 16.27 0.86313 3.0563 1.7263 "Framework Layer\nSpring boot autoconfigure lib\nSpring boot starter actuator\nSpring boot autoconfigure\nprocessor" rounded,filled box #88A3B5 #F5F0FF
 node bt 20.234 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\nleader\nlogging" rounded,filled box #88A3B5 #EAF7F0
-node runtime 23.459 0.86313 1.7437 1.445 "Runtime\nSQL / R2DBC\nRedis\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+node runtime 23.766 0.86313 2.3583 1.445 "Runtime Dependencies\nSQL / R2DBC\nRedis\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
 edge entry api 4 3.2059 0.86313 3.2059 0.86313 4.5792 0.86313 4.5792 0.86313 invokes 3.966 0.95167 solid #637383
 edge api service 4 7.7284 0.86313 7.7284 0.86313 9.2659 0.86313 9.2659 0.86313 delegates 8.5708 0.95167 solid #637383
 edge service infra 4 12.14 0.86313 12.14 0.86313 14.594 0.86313 14.594 0.86313 "persists / publishes" 13.436 0.95167 solid #637383
 edge infra bt 4 17.802 0.86313 17.802 0.86313 19.176 0.86313 19.176 0.86313 extends 18.562 0.95167 solid #637383
-edge bt runtime 4 21.149 0.86313 21.149 0.86313 22.437 0.86313 22.437 0.86313 adapts 21.865 0.95167 solid #637383
+edge bt runtime 4 21.148 0.86313 21.148 0.86313 22.44 0.86313 22.44 0.86313 adapts 21.865 0.95167 solid #637383
 stop

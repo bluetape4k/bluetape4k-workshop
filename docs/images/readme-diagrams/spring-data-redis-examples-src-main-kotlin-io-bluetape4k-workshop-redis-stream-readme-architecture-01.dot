@@ -26,10 +26,10 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nSpring Data Redis Examples Redis\nStream tests", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nCapturingStreamListener", fillcolor="#EEF7FF"];
-  infra [label="Repository & Infra\nSensorData", fillcolor="#F5F0FF"];
-  runtime [label="Runtime\nRedis", fillcolor="#FFF1F1"];
+  entry [label="Data Demo Surface\nSpring Data Redis Examples Redis\nStream tests", fillcolor="#FFF8E7"];
+  api [label="Web/Data Adapters\nCapturingStreamListener", fillcolor="#EEF7FF"];
+  infra [label="Repository Layer\nSensorData", fillcolor="#F5F0FF"];
+  runtime [label="Database Runtime\nRedis", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> infra [label="persists / publishes"];

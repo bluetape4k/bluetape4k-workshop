@@ -26,10 +26,10 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nAbstractSharedTest\nAbstractSpringTest\nShared tests", fillcolor="#FFF8E7"];
-  infra [label="Repository & Infra\nRestClientExtensions\nWebClientExtensions\nWebTestClientExtensions", fillcolor="#F5F0FF"];
+  entry [label="Example Entrypoints\nAbstractSharedTest\nAbstractSpringTest\nShared tests", fillcolor="#FFF8E7"];
+  infra [label="Infrastructure Layer\nRestClientExtensions\nWebClientExtensions\nWebTestClientExtensions", fillcolor="#F5F0FF"];
   bt [label="bluetape4k APIs\nio\ncoroutines\nnetty", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nTestcontainers", fillcolor="#FFF1F1"];
+  runtime [label="Runtime Dependencies\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> infra [label="persists / publishes"];
   infra -> bt [label="extends"];

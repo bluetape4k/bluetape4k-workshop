@@ -1,11 +1,11 @@
-graph 1 19.08 1.7263
-node entry 1.6844 0.86313 3.3688 1.7263 "Entry & Verification\nRedisApplication\nAbstractRedisTest\nGeoOperationsTest\nSpring Data Redis Examples tests" rounded,filled box #88A3B5 #FFF8E7
-node api 6.2267 0.86313 2.6604 0.8825 "API & Adapters\nCapturingStreamListener" rounded,filled box #88A3B5 #EEF7FF
-node infra 11.394 0.86313 2.4521 1.7263 "Repository & Infra\nActor\nMovie\nMovieActor\nMovieActorReference" rounded,filled box #88A3B5 #F5F0FF
-node bt 15.056 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\nredis\nspring" rounded,filled box #88A3B5 #EAF7F0
-node runtime 18.244 0.86313 1.6708 1.445 "Runtime\nSQL / R2DBC\nRedis\nKafka" rounded,filled box #88A3B5 #FFF1F1
+graph 1 19.84 1.7263
+node entry 1.6844 0.86313 3.3688 1.7263 "Data Demo Surface\nRedisApplication\nAbstractRedisTest\nGeoOperationsTest\nSpring Data Redis Examples tests" rounded,filled box #88A3B5 #FFF8E7
+node api 6.2267 0.86313 2.6604 0.8825 "Web/Data Adapters\nCapturingStreamListener" rounded,filled box #88A3B5 #EEF7FF
+node infra 11.394 0.86313 2.4521 1.7263 "Repository Layer\nActor\nMovie\nMovieActor\nMovieActorReference" rounded,filled box #88A3B5 #F5F0FF
+node bt 15.291 0.86313 2.2854 1.445 "bluetape4k Data APIs\nworkshop\nredis\nspring" rounded,filled box #88A3B5 #EAF7F0
+node runtime 18.859 0.86313 1.9625 1.445 "Database Runtime\nSQL / R2DBC\nRedis\nKafka" rounded,filled box #88A3B5 #FFF1F1
 edge entry api 4 3.3758 0.86313 3.3758 0.86313 4.746 0.86313 4.746 0.86313 invokes 4.1326 0.95167 solid #637383
 edge api infra 4 7.5642 0.86313 7.5642 0.86313 10.017 0.86313 10.017 0.86313 "persists / publishes" 8.8625 0.95167 solid #637383
-edge infra bt 4 12.629 0.86313 12.629 0.86313 13.997 0.86313 13.997 0.86313 extends 13.384 0.95167 solid #637383
-edge bt runtime 4 15.974 0.86313 15.974 0.86313 17.261 0.86313 17.261 0.86313 adapts 16.687 0.95167 solid #637383
+edge infra bt 4 12.627 0.86313 12.627 0.86313 13.996 0.86313 13.996 0.86313 extends 13.384 0.95167 solid #637383
+edge bt runtime 4 16.439 0.86313 16.439 0.86313 17.726 0.86313 17.726 0.86313 adapts 17.156 0.95167 solid #637383
 stop

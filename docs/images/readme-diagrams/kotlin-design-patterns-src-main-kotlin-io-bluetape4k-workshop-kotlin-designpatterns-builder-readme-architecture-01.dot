@@ -26,9 +26,9 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nKotlin Design Patterns Kotlin\nDesignPatterns Builder tests", fillcolor="#FFF8E7"];
-  service [label="Service & Domain\nEnums\nHero\nHeroDataClass", fillcolor="#F1F8E9"];
-  runtime [label="Runtime\nIn-memory / JVM", fillcolor="#FFF1F1"];
+  entry [label="Example Entrypoints\nKotlin Design Patterns Kotlin\nDesignPatterns Builder tests", fillcolor="#FFF8E7"];
+  service [label="Application Services\nEnums\nHero\nHeroDataClass", fillcolor="#F1F8E9"];
+  runtime [label="Runtime Dependencies\nIn-memory / JVM", fillcolor="#FFF1F1"];
 
   entry -> service [label="delegates"];
   service -> runtime [label="backs"];

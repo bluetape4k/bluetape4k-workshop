@@ -1,8 +1,8 @@
-graph 1 9.2139 2.5943
+graph 1 9.9014 2.5943
 node entry 1.3771 0.44125 2.7542 0.8825 "Example Family\nVert.x WebClient Examples" rounded,filled box #88A3B5 #FFF8E7
 node bt 5.1903 1.8718 1.8167 1.445 "bluetape4k APIs\nio\njdbc\nvertx" rounded,filled box #88A3B5 #EAF7F0
-node runtime 8.3785 1.8718 1.6708 0.8825 "Runtime\nSQL / R2DBC" rounded,filled box #88A3B5 #FFF1F1
+node runtime 8.7222 1.8718 2.3583 0.8825 "Runtime Dependencies\nSQL / R2DBC" rounded,filled box #88A3B5 #FFF1F1
 node api 1.3771 1.8718 0.75 0.60125 api rounded,filled box #88A3B5 #F6FAFF
-edge bt runtime 4 6.1082 1.8718 6.1082 1.8718 7.3952 1.8718 7.3952 1.8718 adapts 6.8208 1.9603 solid #637383
+edge bt runtime 4 6.1044 1.8718 6.1044 1.8718 7.396 1.8718 7.396 1.8718 adapts 6.8208 1.9603 solid #637383
 edge api bt 4 1.7602 1.8718 1.7602 1.8718 4.1328 1.8718 4.1328 1.8718 extends 3.5181 1.9603 solid #637383
 stop

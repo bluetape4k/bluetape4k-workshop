@@ -1,11 +1,11 @@
-graph 1 18.955 1.7263
-node entry 1.5333 0.86313 3.0667 1.7263 "Entry & Verification\nDistributedLockApp\nAbstractDistributedLockTest\nBaselineRaceTest\nRedis Distributed Lock tests" rounded,filled box #88A3B5 #FFF8E7
-node service 5.758 0.86313 1.9938 1.7263 "Service & Domain\nDeductionResult\nInventory\nInventoryStore\nFencedResource" rounded,filled box #88A3B5 #F1F8E9
-node infra 10.894 0.86313 3.0563 1.445 "Framework Layer\nSpring boot autoconfigure lib\nSpring boot starter actuator\nSpring boot starter test" rounded,filled box #88A3B5 #F5F0FF
-node bt 14.858 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\nlogging\nredisson" rounded,filled box #88A3B5 #EAF7F0
-node runtime 18.083 0.86313 1.7437 1.445 "Runtime\nSQL / R2DBC\nRedis\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry service 4 3.0705 0.86313 3.0705 0.86313 4.6125 0.86313 4.6125 0.86313 delegates 3.9139 0.95167 solid #637383
-edge service infra 4 6.7605 0.86313 6.7605 0.86313 9.2153 0.86313 9.2153 0.86313 "persists / publishes" 8.0604 0.95167 solid #637383
-edge infra bt 4 12.427 0.86313 12.427 0.86313 13.8 0.86313 13.8 0.86313 extends 13.186 0.95167 solid #637383
-edge bt runtime 4 15.774 0.86313 15.774 0.86313 17.062 0.86313 17.062 0.86313 adapts 16.489 0.95167 solid #637383
+graph 1 19.444 1.7263
+node entry 1.5333 0.86313 3.0667 1.7263 "Redis Demo Surface\nDistributedLockApp\nAbstractDistributedLockTest\nBaselineRaceTest\nRedis Distributed Lock tests" rounded,filled box #88A3B5 #FFF8E7
+node service 5.7319 0.86313 1.9417 1.7263 "Redis Use Cases\nDeductionResult\nInventory\nInventoryStore\nFencedResource" rounded,filled box #88A3B5 #F1F8E9
+node infra 10.842 0.86313 3.0563 1.445 "Redis Client Layer\nSpring boot autoconfigure lib\nSpring boot starter actuator\nSpring boot starter test" rounded,filled box #88A3B5 #F5F0FF
+node bt 15.077 0.86313 2.3583 1.445 "bluetape4k Redis APIs\nworkshop\nlogging\nredisson" rounded,filled box #88A3B5 #EAF7F0
+node runtime 18.573 0.86313 1.7437 1.445 "Redis Runtime\nSQL / R2DBC\nRedis\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry service 4 3.0729 0.86313 3.0729 0.86313 4.6109 0.86313 4.6109 0.86313 delegates 3.9139 0.95167 solid #637383
+edge service infra 4 6.7112 0.86313 6.7112 0.86313 9.1655 0.86313 9.1655 0.86313 "persists / publishes" 8.0083 0.95167 solid #637383
+edge infra bt 4 12.377 0.86313 12.377 0.86313 13.75 0.86313 13.75 0.86313 extends 13.134 0.95167 solid #637383
+edge bt runtime 4 16.265 0.86313 16.265 0.86313 17.549 0.86313 17.549 0.86313 adapts 16.978 0.95167 solid #637383
 stop

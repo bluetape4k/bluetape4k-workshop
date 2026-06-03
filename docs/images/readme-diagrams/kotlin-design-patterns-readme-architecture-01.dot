@@ -26,10 +26,10 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nAbstractFactoryTest\nHeroDataClassTest\nKotlin Design Patterns tests", fillcolor="#FFF8E7"];
-  service [label="Service & Domain\nArmy\nCastle\nFactoryMaker\nKing", fillcolor="#F1F8E9"];
+  entry [label="Example Entrypoints\nAbstractFactoryTest\nHeroDataClassTest\nKotlin Design Patterns tests", fillcolor="#FFF8E7"];
+  service [label="Application Services\nArmy\nCastle\nFactoryMaker\nKing", fillcolor="#F1F8E9"];
   bt [label="bluetape4k APIs\nio\njunit5\ncoroutines", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC\nAWS / S3", fillcolor="#FFF1F1"];
+  runtime [label="Runtime Dependencies\nSQL / R2DBC\nAWS / S3", fillcolor="#FFF1F1"];
 
   entry -> service [label="delegates"];
   service -> bt [label="extends"];

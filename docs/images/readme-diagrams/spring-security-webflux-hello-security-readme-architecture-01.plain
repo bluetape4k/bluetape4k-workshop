@@ -1,12 +1,12 @@
-graph 1 19.319 1.7263
-node entry 1.6635 0.86313 3.3271 1.7263 "Entry & Verification\nKotlinWebfluxApplication\nAbstractSecurityApplicationTest\nMainControllerTest\nSpring Security Webflux Hello" rounded,filled box #88A3B5 #FFF8E7
-node api 6.0444 0.86313 2.3792 1.1637 "API & Adapters\nMainController\nSecurityConfiguration" rounded,filled box #88A3B5 #EEF7FF
-node infra 11.545 0.86313 3.4 1.7263 "Framework Layer\nSpring boot starter security\nSpring boot starter thymeleaf\nSpring boot starter webflux lib\nSpring boot starter \
-webflux test" rounded,filled box #88A3B5 #F5F0FF
-node bt 15.681 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\njackson3\njunit5" rounded,filled box #88A3B5 #EAF7F0
-node runtime 18.677 0.86313 1.2854 0.8825 "Runtime\nAWS / S3" rounded,filled box #88A3B5 #FFF1F1
+graph 1 20.819 1.7263
+node entry 1.6635 0.86313 3.3271 1.7263 "Security Demo Surface\nKotlinWebfluxApplication\nAbstractSecurityApplicationTest\nMainControllerTest\nSpring Security Webflux Hello" rounded,filled box #88A3B5 #FFF8E7
+node api 6.0444 0.86313 2.3792 1.1637 "Protected Endpoints\nMainController\nSecurityConfiguration" rounded,filled box #88A3B5 #EEF7FF
+node infra 11.545 0.86313 3.4 1.7263 "Spring Security Layer\nSpring boot starter security\nSpring boot starter thymeleaf\nSpring boot starter webflux lib\nSpring boot \
+starter webflux test" rounded,filled box #88A3B5 #F5F0FF
+node bt 16.103 0.86313 2.6604 1.445 "bluetape4k Security APIs\nworkshop\njackson3\njunit5" rounded,filled box #88A3B5 #EAF7F0
+node runtime 19.849 0.86313 1.9417 0.8825 "Security Runtime\nAWS / S3" rounded,filled box #88A3B5 #FFF1F1
 edge entry api 4 3.3323 0.86313 3.3323 0.86313 4.7074 0.86313 4.7074 0.86313 invokes 4.091 0.95167 solid #637383
 edge api infra 4 7.238 0.86313 7.238 0.86313 9.6946 0.86313 9.6946 0.86313 "persists / publishes" 8.5396 0.95167 solid #637383
-edge infra bt 4 13.251 0.86313 13.251 0.86313 14.622 0.86313 14.622 0.86313 extends 14.009 0.95167 solid #637383
-edge bt runtime 4 16.596 0.86313 16.596 0.86313 17.886 0.86313 17.886 0.86313 adapts 17.312 0.95167 solid #637383
+edge infra bt 4 13.249 0.86313 13.249 0.86313 14.622 0.86313 14.622 0.86313 extends 14.009 0.95167 solid #637383
+edge bt runtime 4 17.439 0.86313 17.439 0.86313 18.729 0.86313 18.729 0.86313 adapts 18.156 0.95167 solid #637383
 stop

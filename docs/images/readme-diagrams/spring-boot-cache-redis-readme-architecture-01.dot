@@ -26,11 +26,11 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nRedisCacheApplication\nAbstractRedisCacheTest\nLettuceRedisCacheConfigurationTest\nSpring Boot Cache Redis tests", fillcolor="#FFF8E7"];
-  service [label="Service & Domain\nLettuceRedisCacheConfiguration\nCountryRepository\nCountryPrefetcher", fillcolor="#F1F8E9"];
-  infra [label="Repository & Infra\nAsyncConfig\nCountry", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\nlettuce\njackson3", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
+  entry [label="Boot App/Test Surface\nRedisCacheApplication\nAbstractRedisCacheTest\nLettuceRedisCacheConfigurationTest\nSpring Boot Cache Redis tests", fillcolor="#FFF8E7"];
+  service [label="Application Feature\nLettuceRedisCacheConfiguration\nCountryRepository\nCountryPrefetcher", fillcolor="#F1F8E9"];
+  infra [label="Infrastructure Config\nAsyncConfig\nCountry", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Boot APIs\nworkshop\nlettuce\njackson3", fillcolor="#EAF7F0"];
+  runtime [label="Boot Runtime\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> service [label="delegates"];
   service -> infra [label="persists / publishes"];

@@ -1,14 +1,14 @@
-graph 1 23.018 1.7263
-node entry 2.299 0.86313 4.5979 1.7263 "Entry & Verification\nWebfluxR2dbcExposedApplication\nAbstractWebfluxR2dbcExposedApplicationTest\nWebfluxR2dbcConfigurationTest\nSpring \
+graph 1 24.299 1.7263
+node entry 2.299 0.86313 4.5979 1.7263 "Data Demo Surface\nWebfluxR2dbcExposedApplication\nAbstractWebfluxR2dbcExposedApplicationTest\nWebfluxR2dbcConfigurationTest\nSpring \
 Data R2dbc Webflux" rounded,filled box #88A3B5 #FFF8E7
-node api 7.0392 0.86313 1.8271 1.445 "API & Adapters\nUserController\nSchemaInitializer\nUserHandler" rounded,filled box #88A3B5 #EEF7FF
-node service 10.644 0.86313 1.9938 0.8825 "Service & Domain\nUserService" rounded,filled box #88A3B5 #F1F8E9
-node infra 15.405 0.86313 2.3063 1.7263 "Repository & Infra\nExposedR2dbcConfig\nErrorMessage\nMappers\nUserRecord" rounded,filled box #88A3B5 #F5F0FF
-node bt 18.994 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\njunit5\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
-node runtime 22.183 0.86313 1.6708 0.8825 "Runtime\nSQL / R2DBC" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 4.6066 0.86313 4.6066 0.86313 5.977 0.86313 5.977 0.86313 invokes 5.3618 0.95167 solid #637383
-edge api service 4 7.9582 0.86313 7.9582 0.86313 9.4954 0.86313 9.4954 0.86313 delegates 8.8 0.95167 solid #637383
-edge service infra 4 11.648 0.86313 11.648 0.86313 14.101 0.86313 14.101 0.86313 "persists / publishes" 12.947 0.95167 solid #637383
-edge infra bt 4 16.566 0.86313 16.566 0.86313 17.934 0.86313 17.934 0.86313 extends 17.322 0.95167 solid #637383
-edge bt runtime 4 19.912 0.86313 19.912 0.86313 21.199 0.86313 21.199 0.86313 adapts 20.625 0.95167 solid #637383
+node api 7.2059 0.86313 2.1604 1.445 "Web/Data Adapters\nUserController\nSchemaInitializer\nUserHandler" rounded,filled box #88A3B5 #EEF7FF
+node service 11.071 0.86313 2.1813 0.8825 "Data Service Layer\nUserService" rounded,filled box #88A3B5 #F1F8E9
+node infra 15.926 0.86313 2.3063 1.7263 "Repository Layer\nExposedR2dbcConfig\nErrorMessage\nMappers\nUserRecord" rounded,filled box #88A3B5 #F5F0FF
+node bt 19.75 0.86313 2.2854 1.445 "bluetape4k Data APIs\nworkshop\njunit5\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
+node runtime 23.318 0.86313 1.9625 0.8825 "Database Runtime\nSQL / R2DBC" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 4.6052 0.86313 4.6052 0.86313 5.9742 0.86313 5.9742 0.86313 invokes 5.3618 0.95167 solid #637383
+edge api service 4 8.2929 0.86313 8.2929 0.86313 9.8296 0.86313 9.8296 0.86313 delegates 9.1333 0.95167 solid #637383
+edge service infra 4 12.167 0.86313 12.167 0.86313 14.624 0.86313 14.624 0.86313 "persists / publishes" 13.467 0.95167 solid #637383
+edge infra bt 4 17.089 0.86313 17.089 0.86313 18.456 0.86313 18.456 0.86313 extends 17.843 0.95167 solid #637383
+edge bt runtime 4 20.898 0.86313 20.898 0.86313 22.185 0.86313 22.185 0.86313 adapts 21.615 0.95167 solid #637383
 stop

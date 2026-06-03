@@ -26,11 +26,11 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nApplicationConfiguration\nCustomerRepositoryIntegrationTest\nTransactionalServiceIntegrationTest\nSpring Data R2dbc Examples tests", fillcolor="#FFF8E7"];
-  service [label="Service & Domain\nTransactionalService", fillcolor="#F1F8E9"];
-  infra [label="Repository & Infra\nCustomer\nCustomerRepository\nPerson\nPersonRepository", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\ncore\nr2dbc\nspring", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC", fillcolor="#FFF1F1"];
+  entry [label="Data Demo Surface\nApplicationConfiguration\nCustomerRepositoryIntegrationTest\nTransactionalServiceIntegrationTest\nSpring Data R2dbc Examples tests", fillcolor="#FFF8E7"];
+  service [label="Data Service Layer\nTransactionalService", fillcolor="#F1F8E9"];
+  infra [label="Repository Layer\nCustomer\nCustomerRepository\nPerson\nPersonRepository", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Data APIs\ncore\nr2dbc\nspring", fillcolor="#EAF7F0"];
+  runtime [label="Database Runtime\nSQL / R2DBC", fillcolor="#FFF1F1"];
 
   entry -> service [label="delegates"];
   service -> infra [label="persists / publishes"];

@@ -26,12 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nEventApplication\nAspectFlowEventEmitterTest\nCustomEventPublisherTest\nSpring Boot Application Event", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nAspectEventListener\nCoroutineAspectEventListener\nNettyConfig\nCustomEventController", fillcolor="#EEF7FF"];
-  service [label="Service & Domain\nAspectEventPublisherAspect\nMyEventService\nCustomEventPublisher\nAspectEvent", fillcolor="#F1F8E9"];
-  infra [label="Framework Layer\nSpring boot4 dependencies\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\nio\ncoroutines", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nIn-memory / JVM", fillcolor="#FFF1F1"];
+  entry [label="Boot App/Test Surface\nEventApplication\nAspectFlowEventEmitterTest\nCustomEventPublisherTest\nSpring Boot Application Event", fillcolor="#FFF8E7"];
+  api [label="Spring Web Adapters\nAspectEventListener\nCoroutineAspectEventListener\nNettyConfig\nCustomEventController", fillcolor="#EEF7FF"];
+  service [label="Application Feature\nAspectEventPublisherAspect\nMyEventService\nCustomEventPublisher\nAspectEvent", fillcolor="#F1F8E9"];
+  infra [label="Spring Boot Layer\nSpring boot4 dependencies\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Boot APIs\nworkshop\nio\ncoroutines", fillcolor="#EAF7F0"];
+  runtime [label="Boot Runtime\nIn-memory / JVM", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];

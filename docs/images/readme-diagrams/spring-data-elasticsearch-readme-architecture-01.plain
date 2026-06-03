@@ -1,12 +1,11 @@
-graph 1 18.934 1.7263
-node entry 1.6115 0.86313 3.2229 1.7263 "Entry & Verification\nElasticsearchApplication\nAbstractElasticsearchTest\nElasticsearchOperationsTest\nSpring Data Elasticsearch \
-tests" rounded,filled box #88A3B5 #FFF8E7
-node api 5.6382 0.86313 1.775 0.8825 "API & Adapters\nNettyConfig" rounded,filled box #88A3B5 #EEF7FF
-node infra 10.769 0.86313 3.2646 1.7263 "Repository & Infra\nElasticsearchClientConfig\nConference\nConferenceRepository\nReactiveConferenceRepository" rounded,filled box #88A3B5 #F5F0FF
-node bt 14.838 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\ntestcontainers\nspring" rounded,filled box #88A3B5 #EAF7F0
-node runtime 18.062 0.86313 1.7437 1.445 "Runtime\nElasticsearch\nAWS / S3\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.2319 0.86313 3.2319 0.86313 4.6013 0.86313 4.6013 0.86313 invokes 3.9868 0.95167 solid #637383
-edge api infra 4 6.5319 0.86313 6.5319 0.86313 8.9869 0.86313 8.9869 0.86313 "persists / publishes" 7.8313 0.95167 solid #637383
-edge infra bt 4 12.406 0.86313 12.406 0.86313 13.78 0.86313 13.78 0.86313 extends 13.165 0.95167 solid #637383
-edge bt runtime 4 15.753 0.86313 15.753 0.86313 17.041 0.86313 17.041 0.86313 adapts 16.468 0.95167 solid #637383
+graph 1 20.007 1.7263
+node entry 1.6115 0.86313 3.2229 1.7263 "Data Demo Surface\nElasticsearchApplication\nAbstractElasticsearchTest\nElasticsearchOperationsTest\nSpring Data Elasticsearch tests" rounded,filled box #88A3B5 #FFF8E7
+node api 5.8309 0.86313 2.1604 0.8825 "Web/Data Adapters\nNettyConfig" rounded,filled box #88A3B5 #EEF7FF
+node infra 11.155 0.86313 3.2646 1.7263 "Repository Layer\nElasticsearchClientConfig\nConference\nConferenceRepository\nReactiveConferenceRepository" rounded,filled box #88A3B5 #F5F0FF
+node bt 15.457 0.86313 2.2854 1.445 "bluetape4k Data APIs\nworkshop\ntestcontainers\nspring" rounded,filled box #88A3B5 #EAF7F0
+node runtime 19.026 0.86313 1.9625 1.445 "Database Runtime\nElasticsearch\nAWS / S3\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.2307 0.86313 3.2307 0.86313 4.602 0.86313 4.602 0.86313 invokes 3.9868 0.95167 solid #637383
+edge api infra 4 6.9146 0.86313 6.9146 0.86313 9.3734 0.86313 9.3734 0.86313 "persists / publishes" 8.2167 0.95167 solid #637383
+edge infra bt 4 12.793 0.86313 12.793 0.86313 14.168 0.86313 14.168 0.86313 extends 13.551 0.95167 solid #637383
+edge bt runtime 4 16.606 0.86313 16.606 0.86313 17.893 0.86313 17.893 0.86313 adapts 17.322 0.95167 solid #637383
 stop

@@ -1,11 +1,11 @@
-graph 1 18.007 1.445
-node entry 1.424 0.7225 2.8479 1.1637 "Entry & Verification\nProductAuditServiceTest\nExposed Javers Audit tests" rounded,filled box #88A3B5 #FFF8E7
-node service 5.6851 0.7225 2.2854 0.8825 "Service & Domain\nProductAuditService" rounded,filled box #88A3B5 #F1F8E9
-node infra 10.493 0.7225 2.1083 1.1637 "Repository & Infra\nProduct\nProductTable" rounded,filled box #88A3B5 #F5F0FF
-node bt 13.983 0.7225 1.8167 1.445 "bluetape4k APIs\nworkshop\njavers\nassertions" rounded,filled box #88A3B5 #EAF7F0
-node runtime 17.172 0.7225 1.6708 1.1637 "Runtime\nSQL / R2DBC\nRedis" rounded,filled box #88A3B5 #FFF1F1
+graph 1 19.007 1.445
+node entry 1.424 0.7225 2.8479 1.1637 "Web/Test Entrypoints\nProductAuditServiceTest\nExposed Javers Audit tests" rounded,filled box #88A3B5 #FFF8E7
+node service 5.6851 0.7225 2.2854 0.8825 "Application Services\nProductAuditService" rounded,filled box #88A3B5 #F1F8E9
+node infra 10.571 0.7225 2.2646 1.1637 "Exposed Persistence\nProduct\nProductTable" rounded,filled box #88A3B5 #F5F0FF
+node bt 14.374 0.7225 2.2854 1.445 "bluetape4k Data APIs\nworkshop\njavers\nassertions" rounded,filled box #88A3B5 #EAF7F0
+node runtime 17.984 0.7225 2.0458 1.1637 "SQL Test Runtime\nSQL / R2DBC\nRedis" rounded,filled box #88A3B5 #FFF1F1
 edge entry service 4 2.8547 0.7225 2.8547 0.7225 4.3911 0.7225 4.3911 0.7225 delegates 3.6951 0.81104 solid #637383
-edge service infra 4 6.8367 0.7225 6.8367 0.7225 9.2904 0.7225 9.2904 0.7225 "persists / publishes" 8.1333 0.81104 solid #637383
-edge infra bt 4 11.554 0.7225 11.554 0.7225 12.926 0.7225 12.926 0.7225 extends 12.311 0.81104 solid #637383
-edge bt runtime 4 14.901 0.7225 14.901 0.7225 16.188 0.7225 16.188 0.7225 adapts 15.614 0.81104 solid #637383
+edge service infra 4 6.8368 0.7225 6.8368 0.7225 9.2887 0.7225 9.2887 0.7225 "persists / publishes" 8.1333 0.81104 solid #637383
+edge infra bt 4 11.712 0.7225 11.712 0.7225 13.085 0.7225 13.085 0.7225 extends 12.467 0.81104 solid #637383
+edge bt runtime 4 15.526 0.7225 15.526 0.7225 16.81 0.7225 16.81 0.7225 adapts 16.239 0.81104 solid #637383
 stop

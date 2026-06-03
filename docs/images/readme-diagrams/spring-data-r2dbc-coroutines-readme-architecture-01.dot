@@ -26,11 +26,11 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nR2dbcApplication\nAbstractR2dbcApplicationTest\nPostControllerTest\nSpring Data R2dbc Coroutines", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nDatabaseInitializer\nPostController\nRestWebExceptionHandler", fillcolor="#EEF7FF"];
-  infra [label="Repository & Infra\nComment\nCommentRepository\nMember\nMemberRepository", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\nio\njunit5", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC\nTestcontainers", fillcolor="#FFF1F1"];
+  entry [label="Data Demo Surface\nR2dbcApplication\nAbstractR2dbcApplicationTest\nPostControllerTest\nSpring Data R2dbc Coroutines", fillcolor="#FFF8E7"];
+  api [label="Web/Data Adapters\nDatabaseInitializer\nPostController\nRestWebExceptionHandler", fillcolor="#EEF7FF"];
+  infra [label="Repository Layer\nComment\nCommentRepository\nMember\nMemberRepository", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Data APIs\nworkshop\nio\njunit5", fillcolor="#EAF7F0"];
+  runtime [label="Database Runtime\nSQL / R2DBC\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> infra [label="persists / publishes"];

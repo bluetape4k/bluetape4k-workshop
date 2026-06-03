@@ -26,12 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nVirtualThreadMvcApp\nAbstractVirtualThreadMvcTest\nHttpbinControllerTest\nVirtualthreads Spring Mvc Tomcat", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nSchedulingConfig\nTomcatConfig\nHttpbinController\nMemberController", fillcolor="#EEF7FF"];
-  service [label="Service & Domain\nAsyncConfig\nVirtualThreadConfig\nDatabaseInitializer\nMemberRepository", fillcolor="#F1F8E9"];
-  infra [label="Repository & Infra\nMemberDTO\nMember\nTeam\nTeamRepository", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\ncore\nvirtualthread", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC\nElasticsearch\nAWS / S3", fillcolor="#FFF1F1"];
+  entry [label="Virtual Thread Surface\nVirtualThreadMvcApp\nAbstractVirtualThreadMvcTest\nHttpbinControllerTest\nVirtualthreads Spring Mvc Tomcat", fillcolor="#FFF8E7"];
+  api [label="Threaded Web Adapters\nSchedulingConfig\nTomcatConfig\nHttpbinController\nMemberController", fillcolor="#EEF7FF"];
+  service [label="Execution Model\nAsyncConfig\nVirtualThreadConfig\nDatabaseInitializer\nMemberRepository", fillcolor="#F1F8E9"];
+  infra [label="Blocking Boundary\nMemberDTO\nMember\nTeam\nTeamRepository", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Coroutine APIs\nworkshop\ncore\nvirtualthread", fillcolor="#EAF7F0"];
+  runtime [label="JVM Thread Runtime\nSQL / R2DBC\nElasticsearch\nAWS / S3", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];

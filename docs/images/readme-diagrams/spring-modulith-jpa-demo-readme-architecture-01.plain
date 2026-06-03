@@ -1,13 +1,13 @@
-graph 1 23.737 1.7263
-node entry 1.6115 0.86313 3.2229 1.7263 "Entry & Verification\nSpringModulith\nAppRestControllerTest\nSpringModulithTest\nSpring Modulith Jpa Demo tests" rounded,filled box #88A3B5 #FFF8E7
-node api 6.0184 0.86313 2.5354 1.445 "API & Adapters\nDepartmentManagement\nEmployeeManagement\nGatewayManagement" rounded,filled box #88A3B5 #EEF7FF
-node service 10.326 0.86313 2.6917 1.7263 "Service & Domain\nOrganizationAddEvent\nOrganizationRemoveEvent\nDepartmentDTO\nDepartmentExternalAPI" rounded,filled box #88A3B5 #F1F8E9
+graph 1 24.351 1.7263
+node entry 1.6115 0.86313 3.2229 1.7263 "Example Entrypoints\nSpringModulith\nAppRestControllerTest\nSpringModulithTest\nSpring Modulith Jpa Demo tests" rounded,filled box #88A3B5 #FFF8E7
+node api 6.0184 0.86313 2.5354 1.445 "API / Adapter Layer\nDepartmentManagement\nEmployeeManagement\nGatewayManagement" rounded,filled box #88A3B5 #EEF7FF
+node service 10.326 0.86313 2.6917 1.7263 "Application Services\nOrganizationAddEvent\nOrganizationRemoveEvent\nDepartmentDTO\nDepartmentExternalAPI" rounded,filled box #88A3B5 #F1F8E9
 node infra 15.744 0.86313 2.9208 1.7263 "Framework Layer\nSpring boot4 dependencies\nSpring modulith bom\nSpring modulith actuator\nSpring modulith observability" rounded,filled box #88A3B5 #F5F0FF
 node bt 19.64 0.86313 1.8167 1.445 "bluetape4k APIs\nhibernate\ntestcontainers\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
-node runtime 22.865 0.86313 1.7437 1.1637 "Runtime\nSQL / R2DBC\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+node runtime 23.172 0.86313 2.3583 1.1637 "Runtime Dependencies\nSQL / R2DBC\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
 edge entry api 4 3.2274 0.86313 3.2274 0.86313 4.6015 0.86313 4.6015 0.86313 invokes 3.9868 0.95167 solid #637383
 edge api service 4 7.2935 0.86313 7.2935 0.86313 8.8295 0.86313 8.8295 0.86313 delegates 8.1333 0.95167 solid #637383
 edge service infra 4 11.679 0.86313 11.679 0.86313 14.132 0.86313 14.132 0.86313 "persists / publishes" 12.978 0.95167 solid #637383
 edge infra bt 4 17.211 0.86313 17.211 0.86313 18.585 0.86313 18.585 0.86313 extends 17.968 0.95167 solid #637383
-edge bt runtime 4 20.556 0.86313 20.556 0.86313 21.843 0.86313 21.843 0.86313 adapts 21.271 0.95167 solid #637383
+edge bt runtime 4 20.554 0.86313 20.554 0.86313 21.846 0.86313 21.846 0.86313 adapts 21.271 0.95167 solid #637383
 stop

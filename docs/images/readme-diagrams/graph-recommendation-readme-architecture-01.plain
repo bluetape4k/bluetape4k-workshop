@@ -1,13 +1,13 @@
-graph 1 24.633 1.445
-node entry 1.924 0.7225 3.8479 1.445 "Entry & Verification\nAbstractRecommendationSuspendTest\nAbstractRecommendationTest\nGraph Recommendation tests" rounded,filled box #88A3B5 #FFF8E7
-node api 7.0392 0.7225 3.3271 1.445 "API & Adapters\nProductRecommendation\nRecommendationService\nRecommendationSuspendService" rounded,filled box #88A3B5 #EEF7FF
-node service 11.795 0.7225 2.7958 1.445 "Service & Domain\nRecommendationConstants\nFollowRecommendation\nRecommendationSchema" rounded,filled box #88A3B5 #F1F8E9
-node infra 16.952 0.7225 2.2958 0.8825 "Framework Layer\nTestcontainers neo4j" rounded,filled box #88A3B5 #F5F0FF
-node bt 20.536 0.7225 1.8167 1.445 "bluetape4k APIs\ndependencies\ngraph\nlogging" rounded,filled box #88A3B5 #EAF7F0
-node runtime 23.761 0.7225 1.7437 0.8825 "Runtime\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+graph 1 25.362 1.445
+node entry 1.924 0.7225 3.8479 1.445 "Graph Demo Surface\nAbstractRecommendationSuspendTest\nAbstractRecommendationTest\nGraph Recommendation tests" rounded,filled box #88A3B5 #FFF8E7
+node api 7.0392 0.7225 3.3271 1.445 "Graph Example Modules\nProductRecommendation\nRecommendationService\nRecommendationSuspendService" rounded,filled box #88A3B5 #EEF7FF
+node service 11.795 0.7225 2.7958 1.445 "Graph Service Layer\nRecommendationConstants\nFollowRecommendation\nRecommendationSchema" rounded,filled box #88A3B5 #F1F8E9
+node infra 16.952 0.7225 2.2958 0.8825 "Graph Driver Layer\nTestcontainers neo4j" rounded,filled box #88A3B5 #F5F0FF
+node bt 20.838 0.7225 2.4208 1.445 "bluetape4k Graph APIs\ndependencies\ngraph\nlogging" rounded,filled box #88A3B5 #EAF7F0
+node runtime 24.427 0.7225 1.8688 0.8825 "Graph Backends\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
 edge entry api 4 3.8542 0.7225 3.8542 0.7225 5.2255 0.7225 5.2255 0.7225 invokes 4.6118 0.81104 solid #637383
 edge api service 4 8.7093 0.7225 8.7093 0.7225 10.246 0.7225 10.246 0.7225 delegates 9.55 0.81104 solid #637383
 edge service infra 4 13.197 0.7225 13.197 0.7225 15.655 0.7225 15.655 0.7225 "persists / publishes" 14.499 0.81104 solid #637383
-edge infra bt 4 18.106 0.7225 18.106 0.7225 19.48 0.7225 19.48 0.7225 extends 18.864 0.81104 solid #637383
-edge bt runtime 4 21.452 0.7225 21.452 0.7225 22.739 0.7225 22.739 0.7225 adapts 22.167 0.81104 solid #637383
+edge infra bt 4 18.108 0.7225 18.108 0.7225 19.477 0.7225 19.477 0.7225 extends 18.864 0.81104 solid #637383
+edge bt runtime 4 22.053 0.7225 22.053 0.7225 23.343 0.7225 23.343 0.7225 adapts 22.771 0.81104 solid #637383
 stop

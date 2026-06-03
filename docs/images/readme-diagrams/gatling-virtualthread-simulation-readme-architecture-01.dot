@@ -26,12 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nKotlinGatlingApplication\nAbstractGatlingTest\nAsyncTaskControllerTest\nGatling Virtualthread Simulation", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nTomcatConfig\nAsyncTaskController\nSyncTaskController", fillcolor="#EEF7FF"];
-  service [label="Service & Domain\nAsyncConfig\nAsyncTaskService\nSyncTaskService", fillcolor="#F1F8E9"];
+  entry [label="Example Entrypoints\nKotlinGatlingApplication\nAbstractGatlingTest\nAsyncTaskControllerTest\nGatling Virtualthread Simulation", fillcolor="#FFF8E7"];
+  api [label="API / Adapter Layer\nTomcatConfig\nAsyncTaskController\nSyncTaskController", fillcolor="#EEF7FF"];
+  service [label="Application Services\nAsyncConfig\nAsyncTaskService\nSyncTaskService", fillcolor="#F1F8E9"];
   infra [label="Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration", fillcolor="#F5F0FF"];
   bt [label="bluetape4k APIs\nworkshop\nio\njackson3", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC\nMongoDB\nAWS / S3", fillcolor="#FFF1F1"];
+  runtime [label="Runtime Dependencies\nSQL / R2DBC\nMongoDB\nAWS / S3", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];

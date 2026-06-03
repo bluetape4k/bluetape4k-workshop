@@ -1,14 +1,14 @@
-graph 1 22.935 1.7263
-node entry 1.7156 0.86313 3.4313 1.7263 "Entry & Verification\nCoroutineApplication\nAbstractCoroutineApplicationTest\nDefaultCoroutineControllerTest\nSpring Boot Webflux \
+graph 1 23.872 1.7263
+node entry 1.7156 0.86313 3.4313 1.7263 "Boot App/Test Surface\nCoroutineApplication\nAbstractCoroutineApplicationTest\nDefaultCoroutineControllerTest\nSpring Boot Webflux \
 Coroutines" rounded,filled box #88A3B5 #FFF8E7
-node api 6.3778 0.86313 2.8375 1.7263 "API & Adapters\nNettyConfig\nDefaultCoroutineController\nIOCoroutineController\nVTCoroutineController" rounded,filled box #88A3B5 #EEF7FF
-node service 10.488 0.86313 1.9938 0.8825 "Service & Domain\nBanner" rounded,filled box #88A3B5 #F1F8E9
-node infra 15.15 0.86313 2.1083 0.8825 "Repository & Infra\nWebClientConfig" rounded,filled box #88A3B5 #F5F0FF
-node bt 18.64 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\nio\njackson3" rounded,filled box #88A3B5 #EAF7F0
-node runtime 21.964 0.86313 1.9417 0.8825 "Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
+node api 6.3778 0.86313 2.8375 1.7263 "Spring Web Adapters\nNettyConfig\nDefaultCoroutineController\nIOCoroutineController\nVTCoroutineController" rounded,filled box #88A3B5 #EEF7FF
+node service 10.556 0.86313 2.1292 0.8825 "Application Feature\nBanner" rounded,filled box #88A3B5 #F1F8E9
+node infra 15.426 0.86313 2.3896 0.8825 "Infrastructure Config\nWebClientConfig" rounded,filled box #88A3B5 #F5F0FF
+node bt 19.317 0.86313 2.3375 1.445 "bluetape4k Boot APIs\nworkshop\nio\njackson3" rounded,filled box #88A3B5 #EAF7F0
+node runtime 22.901 0.86313 1.9417 0.8825 "Boot Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
 edge entry api 4 3.4384 0.86313 3.4384 0.86313 4.8094 0.86313 4.8094 0.86313 invokes 4.1951 0.95167 solid #637383
-edge api service 4 7.8037 0.86313 7.8037 0.86313 9.3423 0.86313 9.3423 0.86313 delegates 8.6438 0.95167 solid #637383
-edge service infra 4 11.494 0.86313 11.494 0.86313 13.947 0.86313 13.947 0.86313 "persists / publishes" 12.79 0.95167 solid #637383
-edge infra bt 4 16.211 0.86313 16.211 0.86313 17.583 0.86313 17.583 0.86313 extends 16.968 0.95167 solid #637383
-edge bt runtime 4 19.557 0.86313 19.557 0.86313 20.843 0.86313 20.843 0.86313 adapts 20.271 0.95167 solid #637383
+edge api service 4 7.8038 0.86313 7.8038 0.86313 9.3428 0.86313 9.3428 0.86313 delegates 8.6438 0.95167 solid #637383
+edge service infra 4 11.624 0.86313 11.624 0.86313 14.08 0.86313 14.08 0.86313 "persists / publishes" 12.926 0.95167 solid #637383
+edge infra bt 4 16.625 0.86313 16.625 0.86313 17.999 0.86313 17.999 0.86313 extends 17.385 0.95167 solid #637383
+edge bt runtime 4 20.491 0.86313 20.491 0.86313 21.78 0.86313 21.78 0.86313 adapts 21.208 0.95167 solid #637383
 stop

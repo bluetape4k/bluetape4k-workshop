@@ -1,11 +1,11 @@
-graph 1 17.944 1.7263
-node entry 1.5021 0.86313 3.0042 1.7263 "Entry & Verification\nCborApplication\nCborApplicationTest\nCborConfigTest\nSpring Boot Cbor Mvc tests" rounded,filled box #88A3B5 #FFF8E7
-node api 5.5132 0.86313 1.9625 0.8825 "API & Adapters\nCourseController" rounded,filled box #88A3B5 #EEF7FF
-node infra 10.16 0.86313 2.1083 1.445 "Repository & Infra\nCborConfig\nCourseModels\nCourseRepository" rounded,filled box #88A3B5 #F5F0FF
-node bt 13.65 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\njackson3\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
-node runtime 16.974 0.86313 1.9417 0.8825 "Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.0128 0.86313 3.0128 0.86313 4.3834 0.86313 4.3834 0.86313 invokes 3.7681 0.95167 solid #637383
-edge api infra 4 6.4986 0.86313 6.4986 0.86313 8.9563 0.86313 8.9563 0.86313 "persists / publishes" 7.8 0.95167 solid #637383
-edge infra bt 4 11.221 0.86313 11.221 0.86313 12.593 0.86313 12.593 0.86313 extends 11.978 0.95167 solid #637383
-edge bt runtime 4 14.567 0.86313 14.567 0.86313 15.853 0.86313 15.853 0.86313 adapts 15.281 0.95167 solid #637383
+graph 1 19.101 1.7263
+node entry 1.5021 0.86313 3.0042 1.7263 "Boot App/Test Surface\nCborApplication\nCborApplicationTest\nCborConfigTest\nSpring Boot Cbor Mvc tests" rounded,filled box #88A3B5 #FFF8E7
+node api 5.6903 0.86313 2.3167 0.8825 "Spring Web Adapters\nCourseController" rounded,filled box #88A3B5 #EEF7FF
+node infra 10.655 0.86313 2.3896 1.445 "Infrastructure Config\nCborConfig\nCourseModels\nCourseRepository" rounded,filled box #88A3B5 #F5F0FF
+node bt 14.546 0.86313 2.3375 1.445 "bluetape4k Boot APIs\nworkshop\njackson3\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
+node runtime 18.13 0.86313 1.9417 0.8825 "Boot Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.0082 0.86313 3.0082 0.86313 4.383 0.86313 4.383 0.86313 invokes 3.7681 0.95167 solid #637383
+edge api infra 4 6.8542 0.86313 6.8542 0.86313 9.3078 0.86313 9.3078 0.86313 "persists / publishes" 8.1542 0.95167 solid #637383
+edge infra bt 4 11.854 0.86313 11.854 0.86313 13.228 0.86313 13.228 0.86313 extends 12.613 0.95167 solid #637383
+edge bt runtime 4 15.719 0.86313 15.719 0.86313 17.009 0.86313 17.009 0.86313 adapts 16.437 0.95167 solid #637383
 stop

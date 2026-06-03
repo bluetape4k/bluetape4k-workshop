@@ -26,11 +26,11 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nAbstractMongodbTest\nCoroutineManagedTransitionServiceTest\nSpring Data Mongodb Transactions\ntests", fillcolor="#FFF8E7"];
-  service [label="Service & Domain\nCoroutineManagedTransitionService\nTransitionService\nReactiveManagedTransitionService\nReactiveTransitionService", fillcolor="#F1F8E9"];
-  infra [label="Repository & Infra\nProcess\nState\nCoroutineProcessRepository\nProcessRepository", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\ntestcontainers\ncoroutines\nidgenerators", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nMongoDB\nTestcontainers", fillcolor="#FFF1F1"];
+  entry [label="Data Demo Surface\nAbstractMongodbTest\nCoroutineManagedTransitionServiceTest\nSpring Data Mongodb Transactions\ntests", fillcolor="#FFF8E7"];
+  service [label="Data Service Layer\nCoroutineManagedTransitionService\nTransitionService\nReactiveManagedTransitionService\nReactiveTransitionService", fillcolor="#F1F8E9"];
+  infra [label="Repository Layer\nProcess\nState\nCoroutineProcessRepository\nProcessRepository", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Data APIs\ntestcontainers\ncoroutines\nidgenerators", fillcolor="#EAF7F0"];
+  runtime [label="Database Runtime\nMongoDB\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> service [label="delegates"];
   service -> infra [label="persists / publishes"];

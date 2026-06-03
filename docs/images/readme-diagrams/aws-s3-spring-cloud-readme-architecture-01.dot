@@ -26,10 +26,10 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nSpringCloudAwsS3Sample\nAbstractSpringCloudAwsS3SampleTest\nSpringCloudAwsS3Test\nAws S3 Spring Cloud tests", fillcolor="#FFF8E7"];
-  infra [label="Framework Layer\nSpring cloud aws starter\nSpring cloud aws s3\nSpring boot autoconfigure lib\nSpring boot autoconfigure", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\naws\ntestcontainers", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nAWS / S3\nTestcontainers", fillcolor="#FFF1F1"];
+  entry [label="Sample Bootstraps\nSpringCloudAwsS3Sample\nAbstractSpringCloudAwsS3SampleTest\nSpringCloudAwsS3Test\nAws S3 Spring Cloud tests", fillcolor="#FFF8E7"];
+  infra [label="Spring Cloud AWS\nSpring cloud aws starter\nSpring cloud aws s3\nSpring boot autoconfigure lib\nSpring boot autoconfigure", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k AWS APIs\nworkshop\naws\ntestcontainers", fillcolor="#EAF7F0"];
+  runtime [label="LocalStack / S3\nAWS / S3\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> infra [label="persists / publishes"];
   infra -> bt [label="extends"];

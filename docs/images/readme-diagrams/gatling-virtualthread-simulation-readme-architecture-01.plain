@@ -1,13 +1,13 @@
-graph 1 22.799 1.7263
-node entry 1.5594 0.86313 3.1188 1.7263 "Entry & Verification\nKotlinGatlingApplication\nAbstractGatlingTest\nAsyncTaskControllerTest\nGatling Virtualthread Simulation" rounded,filled box #88A3B5 #FFF8E7
-node api 5.7892 0.86313 2.2854 1.445 "API & Adapters\nTomcatConfig\nAsyncTaskController\nSyncTaskController" rounded,filled box #88A3B5 #EEF7FF
-node service 9.6597 0.86313 2.0667 1.445 "Service & Domain\nAsyncConfig\nAsyncTaskService\nSyncTaskService" rounded,filled box #88A3B5 #F1F8E9
-node infra 14.822 0.86313 3.0354 1.7263 "Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration" rounded,filled box #88A3B5 #F5F0FF
-node bt 18.776 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\nio\njackson3" rounded,filled box #88A3B5 #EAF7F0
-node runtime 21.964 0.86313 1.6708 1.445 "Runtime\nSQL / R2DBC\nMongoDB\nAWS / S3" rounded,filled box #88A3B5 #FFF1F1
+graph 1 23.622 1.7263
+node entry 1.5594 0.86313 3.1188 1.7263 "Example Entrypoints\nKotlinGatlingApplication\nAbstractGatlingTest\nAsyncTaskControllerTest\nGatling Virtualthread Simulation" rounded,filled box #88A3B5 #FFF8E7
+node api 5.7892 0.86313 2.2854 1.445 "API / Adapter Layer\nTomcatConfig\nAsyncTaskController\nSyncTaskController" rounded,filled box #88A3B5 #EEF7FF
+node service 9.7274 0.86313 2.2021 1.445 "Application Services\nAsyncConfig\nAsyncTaskService\nSyncTaskService" rounded,filled box #88A3B5 #F1F8E9
+node infra 14.957 0.86313 3.0354 1.7263 "Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration" rounded,filled box #88A3B5 #F5F0FF
+node bt 18.911 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\nio\njackson3" rounded,filled box #88A3B5 #EAF7F0
+node runtime 22.443 0.86313 2.3583 1.445 "Runtime Dependencies\nSQL / R2DBC\nMongoDB\nAWS / S3" rounded,filled box #88A3B5 #FFF1F1
 edge entry api 4 3.1284 0.86313 3.1284 0.86313 4.4965 0.86313 4.4965 0.86313 invokes 3.8826 0.95167 solid #637383
-edge api service 4 6.94 0.86313 6.94 0.86313 8.4762 0.86313 8.4762 0.86313 delegates 7.7792 0.95167 solid #637383
-edge service infra 4 10.698 0.86313 10.698 0.86313 13.153 0.86313 13.153 0.86313 "persists / publishes" 11.999 0.95167 solid #637383
-edge infra bt 4 16.345 0.86313 16.345 0.86313 17.717 0.86313 17.717 0.86313 extends 17.103 0.95167 solid #637383
-edge bt runtime 4 19.694 0.86313 19.694 0.86313 20.981 0.86313 20.981 0.86313 adapts 20.406 0.95167 solid #637383
+edge api service 4 6.9389 0.86313 6.9389 0.86313 8.4744 0.86313 8.4744 0.86313 delegates 7.7792 0.95167 solid #637383
+edge service infra 4 10.837 0.86313 10.837 0.86313 13.291 0.86313 13.291 0.86313 "persists / publishes" 12.134 0.95167 solid #637383
+edge infra bt 4 16.48 0.86313 16.48 0.86313 17.853 0.86313 17.853 0.86313 extends 17.239 0.95167 solid #637383
+edge bt runtime 4 19.825 0.86313 19.825 0.86313 21.117 0.86313 21.117 0.86313 adapts 20.542 0.95167 solid #637383
 stop

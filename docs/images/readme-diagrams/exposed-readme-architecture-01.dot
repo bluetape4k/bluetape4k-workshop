@@ -26,11 +26,11 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nExposedMvcJdbcApp\nExposedMvcVirtualThreadApp\nExposedWebfluxR2dbcApp\nProductAuditServiceTest", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nAuthorController\nBookController\nGlobalExceptionHandler\nOrderController", fillcolor="#EEF7FF"];
-  service [label="Service & Domain\nProductAuditService\nAuthorService\nDatabaseInitializer\nOrderService", fillcolor="#F1F8E9"];
-  infra [label="Repository & Infra\nProduct\nProductTable\nAuthorDTO\nAuthorMappers", fillcolor="#F5F0FF"];
-  runtime [label="Runtime\nSQL / R2DBC\nRedis\nElasticsearch", fillcolor="#FFF1F1"];
+  entry [label="Web/Test Entrypoints\nExposedMvcJdbcApp\nExposedMvcVirtualThreadApp\nExposedWebfluxR2dbcApp\nProductAuditServiceTest", fillcolor="#FFF8E7"];
+  api [label="MVC/WebFlux Controllers\nAuthorController\nBookController\nGlobalExceptionHandler\nOrderController", fillcolor="#EEF7FF"];
+  service [label="Application Services\nProductAuditService\nAuthorService\nDatabaseInitializer\nOrderService", fillcolor="#F1F8E9"];
+  infra [label="Exposed Persistence\nProduct\nProductTable\nAuthorDTO\nAuthorMappers", fillcolor="#F5F0FF"];
+  runtime [label="SQL Test Runtime\nSQL / R2DBC\nRedis\nElasticsearch", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="678" viewBox="0 0 1120 678" role="img" aria-label="Spring Cloud AWS S3 Demo architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="678" viewBox="0 0 1320 678" role="img" aria-label="Spring Cloud AWS S3 Demo architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;aws/s3-spring-cloud/src/main/kotlin/io/bluetape4k/workshop/aws/s3/SpringCloudAwsS3Sample.kt&quot;,&quot;aws/s3-spring-cloud/src/test/kotlin/io/bluetape4k/workshop/aws/s3/AbstractSpringCloudAwsS3SampleTest.kt&quot;,&quot;aws/s3-spring-cloud/src/test/kotlin/io/bluetape4k/workshop/aws/s3/SpringCloudAwsS3Test.kt&quot;,&quot;aws/s3-spring-cloud/build.gradle.kts&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
   <defs>
     <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
@@ -30,63 +30,55 @@
       .node rect { stroke-width: 1.5; }
       .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
       .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
-      .edge-label-bg { fill: #FFFFFF; stroke: #CAD6E0; stroke-width: 1; opacity: 0.96; }
-      .edge-label { font-family: "Comic Mono"; font-size: 12px; fill: #102033; dominant-baseline: middle; }
     </style>
   </defs>
-  <rect class="canvas" width="1120" height="678"/>
-  <rect class="frame" x="16" y="16" width="1088" height="646" rx="22"/>
-  <text class="diagram-title" x="560.0" y="58" text-anchor="middle">Spring Cloud AWS S3 Demo</text>
-  <text class="diagram-subtitle" x="560.0" y="84" text-anchor="middle">Aws example architecture, generated from README module sources</text>
+  <rect class="canvas" width="1320" height="678"/>
+  <rect class="frame" x="16" y="16" width="1288" height="646" rx="22"/>
+  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Spring Cloud AWS S3 Demo</text>
+  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">S3 client workflow and LocalStack runtime</text>
   <g>
     <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1028.0" height="168.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
+      <rect x="46.0" y="114.0" width="1228.0" height="168.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
       <rect x="64.0" y="134.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="170.5">Domain / Entry</tspan><tspan class="layer-title" x="151.0" y="193.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="212.0">Entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="228.0">adapters, child</tspan><tspan class="layer-detail" x="151.0" y="244.0">examples</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="170.5">AWS Example</tspan><tspan class="layer-title" x="151.0" y="193.5">Surface</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="212.0">sample apps, S3</tspan><tspan class="layer-detail" x="151.0" y="228.0">tests, module</tspan><tspan class="layer-detail" x="151.0" y="244.0">catalog</tspan></text>
     </g>
     <g class="layer" data-layer="integration">
-      <rect x="46.0" y="300.0" width="1028.0" height="168.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
+      <rect x="46.0" y="300.0" width="1228.0" height="168.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
       <rect x="64.0" y="320.0" width="174" height="128.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="368.0">Integration Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="398.0">Repositories,</tspan><tspan class="layer-detail" x="151.0" y="414.0">adapters, helpers,</tspan><tspan class="layer-detail" x="151.0" y="430.0">clients</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="356.5">AWS Integration</tspan><tspan class="layer-title" x="151.0" y="379.5">Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="406.0">S3 clients, Spring</tspan><tspan class="layer-detail" x="151.0" y="422.0">Cloud AWS, helpers</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="486.0" width="1028.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="46.0" y="486.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
       <rect x="64.0" y="506.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="536.0">Runtime Backends</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="566.0">External systems,</tspan><tspan class="layer-detail" x="151.0" y="582.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="598.0">JVM</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="536.0">Local AWS Runtime</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="574.0">LocalStack, S3,</tspan><tspan class="layer-detail" x="151.0" y="590.0">Testcontainers</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;infra">
-      <path d="M 674.0 262.0 L 674.0 291.0 L 474.5 291.0 L 474.5 320.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-      <rect class="edge-label-bg" x="490.3" y="264.0" width="168.0" height="23" rx="11"/>
-      <text class="edge-label" x="574.3" y="279.0" text-anchor="middle">persists / publishes</text>
+    <g class="edge" data-edge="entry-&gt;infra" data-label="persists / publishes">
+      <path d="M 774.0 262.0 L 774.0 291.0 L 509.0 291.0 L 509.0 320.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
     </g>
-    <g class="edge" data-edge="infra-&gt;bt">
-      <path d="M 474.5 320.0 L 474.5 328.0 L 873.5 328.0 L 873.5 329.0" fill="none" stroke="#3E927D" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-bt)"/>
-      <rect class="edge-label-bg" x="632.0" y="301.0" width="84.0" height="23" rx="11"/>
-      <text class="edge-label" x="674.0" y="316.0" text-anchor="middle">extends</text>
+    <g class="edge" data-edge="infra-&gt;bt" data-label="extends">
+      <path d="M 704.0 384.0 L 774.0 384.0 L 844.0 384.0" fill="none" stroke="#3E927D" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-bt)"/>
     </g>
-    <g class="edge" data-edge="bt-&gt;runtime">
-      <path d="M 873.5 439.0 L 873.5 472.5 L 674.0 472.5 L 674.0 506.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-      <rect class="edge-label-bg" x="735.8" y="445.5" width="76.0" height="23" rx="11"/>
-      <text class="edge-label" x="773.8" y="460.5" text-anchor="middle">adapts</text>
+    <g class="edge" data-edge="bt-&gt;runtime" data-label="adapts">
+      <path d="M 1039.0 439.0 L 1039.0 472.5 L 774.0 472.5 L 774.0 506.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
     </g>
-    <g class="node" data-node="entry" data-lines="Entry &amp; Verification | SpringCloudAwsS3Sample | AbstractSpringCloudAwsS3SampleTest | SpringCloudAwsS3Test | Aws S3 Spring Cloud tests">
-      <rect x="414.0" y="134.0" width="520.0" height="128.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="674.0" y="169.0">Entry &amp; Verification</tspan><tspan class="node-detail" x="674.0" y="193.0">SpringCloudAwsS3Sample</tspan><tspan class="node-detail" x="674.0" y="210.0">AbstractSpringCloudAwsS3SampleTest</tspan><tspan class="node-detail" x="674.0" y="227.0">SpringCloudAwsS3Test</tspan><tspan class="node-detail" x="674.0" y="244.0">Aws S3 Spring Cloud tests</tspan></text>
+    <g class="node" data-node="entry" data-lines="Sample Bootstraps | SpringCloudAwsS3Sample | AbstractSpringCloudAwsS3SampleTest | SpringCloudAwsS3Test | Aws S3 Spring Cloud tests">
+      <rect x="474.0" y="134.0" width="600.0" height="128.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="169.0">Sample Bootstraps</tspan><tspan class="node-detail" x="774.0" y="193.0">SpringCloudAwsS3Sample</tspan><tspan class="node-detail" x="774.0" y="210.0">AbstractSpringCloudAwsS3SampleTest</tspan><tspan class="node-detail" x="774.0" y="227.0">SpringCloudAwsS3Test</tspan><tspan class="node-detail" x="774.0" y="244.0">Aws S3 Spring Cloud tests</tspan></text>
     </g>
-    <g class="node" data-node="infra" data-lines="Framework Layer | Spring cloud aws starter | Spring cloud aws s3 | Spring boot autoconfigure lib | Spring boot autoconfigure">
-      <rect x="286.0" y="320.0" width="377.0" height="128.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="474.5" y="355.0">Framework Layer</tspan><tspan class="node-detail" x="474.5" y="379.0">Spring cloud aws starter</tspan><tspan class="node-detail" x="474.5" y="396.0">Spring cloud aws s3</tspan><tspan class="node-detail" x="474.5" y="413.0">Spring boot autoconfigure lib</tspan><tspan class="node-detail" x="474.5" y="430.0">Spring boot autoconfigure</tspan></text>
+    <g class="node" data-node="infra" data-lines="Spring Cloud AWS | Spring cloud aws starter | Spring cloud aws s3 | Spring boot autoconfigure lib | Spring boot autoconfigure">
+      <rect x="314.0" y="320.0" width="390.0" height="128.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="355.0">Spring Cloud AWS</tspan><tspan class="node-detail" x="509.0" y="379.0">Spring cloud aws starter</tspan><tspan class="node-detail" x="509.0" y="396.0">Spring cloud aws s3</tspan><tspan class="node-detail" x="509.0" y="413.0">Spring boot autoconfigure lib</tspan><tspan class="node-detail" x="509.0" y="430.0">Spring boot autoconfigure</tspan></text>
     </g>
-    <g class="node" data-node="bt" data-lines="bluetape4k APIs | workshop | aws | testcontainers">
-      <rect x="685.0" y="329.0" width="377.0" height="110.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="873.5" y="363.5">bluetape4k APIs</tspan><tspan class="node-detail" x="873.5" y="387.5">workshop</tspan><tspan class="node-detail" x="873.5" y="404.5">aws</tspan><tspan class="node-detail" x="873.5" y="421.5">testcontainers</tspan></text>
+    <g class="node" data-node="bt" data-lines="bluetape4k AWS APIs | workshop | aws | testcontainers">
+      <rect x="844.0" y="329.0" width="390.0" height="110.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="363.5">bluetape4k AWS APIs</tspan><tspan class="node-detail" x="1039.0" y="387.5">workshop</tspan><tspan class="node-detail" x="1039.0" y="404.5">aws</tspan><tspan class="node-detail" x="1039.0" y="421.5">testcontainers</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="Runtime | AWS / S3 | Testcontainers">
-      <rect x="414.0" y="506.0" width="520.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="674.0" y="540.0">Runtime</tspan><tspan class="node-detail" x="674.0" y="564.0">AWS / S3</tspan><tspan class="node-detail" x="674.0" y="581.0">Testcontainers</tspan></text>
+    <g class="node" data-node="runtime" data-lines="LocalStack / S3 | AWS / S3 | Testcontainers">
+      <rect x="474.0" y="506.0" width="600.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="540.0">LocalStack / S3</tspan><tspan class="node-detail" x="774.0" y="564.0">AWS / S3</tspan><tspan class="node-detail" x="774.0" y="581.0">Testcontainers</tspan></text>
     </g>
   </g>
 </svg>

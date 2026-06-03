@@ -1,13 +1,13 @@
-graph 1 21.674 1.7263
-node entry 1.6115 0.86313 3.2229 1.7263 "Entry & Verification\nOutboxApplication\nAbstractOutboxTest\nOutboxTransactionTest\nMessaging Transactional Outbox" rounded,filled box #88A3B5 #FFF8E7
-node api 5.7424 0.86313 1.9833 1.445 "API & Adapters\nOrderController\nOrderService\nOutboxEventTable" rounded,filled box #88A3B5 #EEF7FF
-node service 9.4253 0.86313 1.9938 1.7263 "Service & Domain\nOrderResponse\nExposedConfig\nKafkaConfig\nOrderTable" rounded,filled box #88A3B5 #F1F8E9
-node infra 14.088 0.86313 2.1083 1.1637 "Repository & Infra\nOutboxEvent\nOutboxStatus" rounded,filled box #88A3B5 #F5F0FF
-node bt 17.578 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\njunit5\nassertions" rounded,filled box #88A3B5 #EAF7F0
-node runtime 20.802 0.86313 1.7437 1.445 "Runtime\nSQL / R2DBC\nKafka\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.2322 0.86313 3.2322 0.86313 4.6032 0.86313 4.6032 0.86313 invokes 3.9868 0.95167 solid #637383
-edge api service 4 6.739 0.86313 6.739 0.86313 8.2788 0.86313 8.2788 0.86313 delegates 7.5813 0.95167 solid #637383
-edge service infra 4 10.431 0.86313 10.431 0.86313 12.884 0.86313 12.884 0.86313 "persists / publishes" 11.728 0.95167 solid #637383
-edge infra bt 4 15.149 0.86313 15.149 0.86313 16.52 0.86313 16.52 0.86313 extends 15.906 0.95167 solid #637383
-edge bt runtime 4 18.493 0.86313 18.493 0.86313 19.781 0.86313 19.781 0.86313 adapts 19.208 0.95167 solid #637383
+graph 1 24.466 1.7263
+node entry 1.6115 0.86313 3.2229 1.7263 "Messaging App/Test Surface\nOutboxApplication\nAbstractOutboxTest\nOutboxTransactionTest\nMessaging Transactional Outbox" rounded,filled box #88A3B5 #FFF8E7
+node api 6.3934 0.86313 3.2854 1.445 "Producer / Consumer Adapters\nOrderController\nOrderService\nOutboxEventTable" rounded,filled box #88A3B5 #EEF7FF
+node service 10.811 0.86313 2.1604 1.7263 "Message Workflow\nOrderResponse\nExposedConfig\nKafkaConfig\nOrderTable" rounded,filled box #88A3B5 #F1F8E9
+node infra 15.561 0.86313 2.1188 1.1637 "Kafka Topic Layer\nOutboxEvent\nOutboxStatus" rounded,filled box #88A3B5 #F5F0FF
+node bt 19.359 0.86313 2.4208 1.445 "bluetape4k Kafka APIs\nworkshop\njunit5\nassertions" rounded,filled box #88A3B5 #EAF7F0
+node runtime 23.24 0.86313 2.4521 1.445 "Kafka Broker Runtime\nSQL / R2DBC\nKafka\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.2304 0.86313 3.2304 0.86313 4.6009 0.86313 4.6009 0.86313 invokes 3.9868 0.95167 solid #637383
+edge api service 4 8.0445 0.86313 8.0445 0.86313 9.5814 0.86313 9.5814 0.86313 delegates 8.8833 0.95167 solid #637383
+edge service infra 4 11.901 0.86313 11.901 0.86313 14.35 0.86313 14.35 0.86313 "persists / publishes" 13.197 0.95167 solid #637383
+edge infra bt 4 16.629 0.86313 16.629 0.86313 18.003 0.86313 18.003 0.86313 extends 17.385 0.95167 solid #637383
+edge bt runtime 4 20.576 0.86313 20.576 0.86313 21.864 0.86313 21.864 0.86313 adapts 21.292 0.95167 solid #637383
 stop

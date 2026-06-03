@@ -1,7 +1,7 @@
-graph 1 11.183 1.7263
-node entry 1.5594 0.86313 3.1188 1.1637 "Entry & Verification\nKotlin Design Patterns Kotlin\nDesignPatterns Singleton tests" rounded,filled box #88A3B5 #FFF8E7
-node service 6.3465 0.86313 3.0667 1.7263 "Service & Domain\nEnumIvoryTower\nInitializingOnDemandHolderIdiom\nIvoryTower\nIvoryTowerObject" rounded,filled box #88A3B5 #F1F8E9
-node runtime 10.212 0.86313 1.9417 0.8825 "Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
+graph 1 11.599 1.7263
+node entry 1.5594 0.86313 3.1188 1.1637 "Example Entrypoints\nKotlin Design Patterns Kotlin\nDesignPatterns Singleton tests" rounded,filled box #88A3B5 #FFF8E7
+node service 6.3465 0.86313 3.0667 1.7263 "Application Services\nEnumIvoryTower\nInitializingOnDemandHolderIdiom\nIvoryTower\nIvoryTowerObject" rounded,filled box #88A3B5 #F1F8E9
+node runtime 10.42 0.86313 2.3583 0.8825 "Runtime Dependencies\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
 edge entry service 4 3.1269 0.86313 3.1269 0.86313 4.6615 0.86313 4.6615 0.86313 delegates 3.966 0.95167 solid #637383
-edge service runtime 4 7.8853 0.86313 7.8853 0.86313 9.0914 0.86313 9.0914 0.86313 backs 8.5604 0.95167 solid #637383
+edge service runtime 4 7.8866 0.86313 7.8866 0.86313 9.0909 0.86313 9.0909 0.86313 backs 8.5604 0.95167 solid #637383
 stop

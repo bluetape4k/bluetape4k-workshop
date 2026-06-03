@@ -26,11 +26,11 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nJwtApplication\nAbstractJwtApplicationTest\nHelloControllerTest\nSpring Security Webflux Jwt", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nJwtConfig\nHelloController\nTokenController", fillcolor="#EEF7FF"];
-  infra [label="Framework Layer\nSpring boot starter security\nSpring boot starter oauth2\nresource server\nSpring security test", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\njackson3\njunit5", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC\nRedis\nAWS / S3", fillcolor="#FFF1F1"];
+  entry [label="Security Demo Surface\nJwtApplication\nAbstractJwtApplicationTest\nHelloControllerTest\nSpring Security Webflux Jwt", fillcolor="#FFF8E7"];
+  api [label="Protected Endpoints\nJwtConfig\nHelloController\nTokenController", fillcolor="#EEF7FF"];
+  infra [label="Spring Security Layer\nSpring boot starter security\nSpring boot starter oauth2\nresource server\nSpring security test", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Security APIs\nworkshop\njackson3\njunit5", fillcolor="#EAF7F0"];
+  runtime [label="Security Runtime\nSQL / R2DBC\nRedis\nAWS / S3", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> infra [label="persists / publishes"];

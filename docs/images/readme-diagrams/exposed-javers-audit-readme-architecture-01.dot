@@ -26,11 +26,11 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nProductAuditServiceTest\nExposed Javers Audit tests", fillcolor="#FFF8E7"];
-  service [label="Service & Domain\nProductAuditService", fillcolor="#F1F8E9"];
-  infra [label="Repository & Infra\nProduct\nProductTable", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\njavers\nassertions", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC\nRedis", fillcolor="#FFF1F1"];
+  entry [label="Web/Test Entrypoints\nProductAuditServiceTest\nExposed Javers Audit tests", fillcolor="#FFF8E7"];
+  service [label="Application Services\nProductAuditService", fillcolor="#F1F8E9"];
+  infra [label="Exposed Persistence\nProduct\nProductTable", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Data APIs\nworkshop\njavers\nassertions", fillcolor="#EAF7F0"];
+  runtime [label="SQL Test Runtime\nSQL / R2DBC\nRedis", fillcolor="#FFF1F1"];
 
   entry -> service [label="delegates"];
   service -> infra [label="persists / publishes"];

@@ -26,12 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nIdGeneratorApplication\nAbstractIdGeneratorTest\nIdGeneratorControllerTest\nSpring Boot Idgenerator tests", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nIdGeneratorController", fillcolor="#EEF7FF"];
-  service [label="Service & Domain\nIdResponses", fillcolor="#F1F8E9"];
-  infra [label="Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\nidgenerators\njackson3", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nRedis", fillcolor="#FFF1F1"];
+  entry [label="Boot App/Test Surface\nIdGeneratorApplication\nAbstractIdGeneratorTest\nIdGeneratorControllerTest\nSpring Boot Idgenerator tests", fillcolor="#FFF8E7"];
+  api [label="Spring Web Adapters\nIdGeneratorController", fillcolor="#EEF7FF"];
+  service [label="Application Feature\nIdResponses", fillcolor="#F1F8E9"];
+  infra [label="Spring Boot Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Boot APIs\nworkshop\nidgenerators\njackson3", fillcolor="#EAF7F0"];
+  runtime [label="Boot Runtime\nRedis", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];

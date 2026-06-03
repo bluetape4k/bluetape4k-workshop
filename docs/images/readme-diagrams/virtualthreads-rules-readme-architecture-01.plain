@@ -1,8 +1,8 @@
-graph 1 9.8181 2.8877
+graph 1 11.349 2.8877
 node entry 1.6792 0.58187 3.3583 1.1637 "Example Family\nConcurrent programming in Java\nwith virtual threads" rounded,filled box #88A3B5 #FFF8E7
-node bt 5.7944 2.1652 1.8167 1.445 "bluetape4k APIs\ncore\nvirtualthread\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
-node runtime 8.9826 2.1652 1.6708 1.445 "Runtime\nSQL / R2DBC\nRedis\nAWS / S3" rounded,filled box #88A3B5 #FFF1F1
+node bt 6.2684 2.1652 2.7646 1.445 "bluetape4k Coroutine APIs\ncore\nvirtualthread\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
+node runtime 10.222 2.1652 2.2542 1.445 "JVM Thread Runtime\nSQL / R2DBC\nRedis\nAWS / S3" rounded,filled box #88A3B5 #FFF1F1
 node api 1.6792 2.1652 0.75 0.60125 api rounded,filled box #88A3B5 #F6FAFF
-edge bt runtime 4 6.7123 2.1652 6.7123 2.1652 7.9994 2.1652 7.9994 2.1652 adapts 7.425 2.2537 solid #637383
-edge api bt 4 2.0626 2.1652 2.0626 2.1652 4.7363 2.1652 4.7363 2.1652 extends 4.1222 2.2537 solid #637383
+edge bt runtime 4 7.6568 2.1652 7.6568 2.1652 8.9489 2.1652 8.9489 2.1652 adapts 8.3729 2.2537 solid #637383
+edge api bt 4 2.0625 2.1652 2.0625 2.1652 4.7356 2.1652 4.7356 2.1652 extends 4.1222 2.2537 solid #637383
 stop

@@ -1,11 +1,11 @@
-graph 1 18.497 1.7263
-node entry 1.5125 0.86313 3.025 1.7263 "Entry & Verification\nJwtApplication\nAbstractJwtApplicationTest\nHelloControllerTest\nSpring Security Webflux Jwt" rounded,filled box #88A3B5 #FFF8E7
-node api 5.4872 0.86313 1.8688 1.445 "API & Adapters\nJwtConfig\nHelloController\nTokenController" rounded,filled box #88A3B5 #EEF7FF
-node infra 10.535 0.86313 3.0042 1.7263 "Framework Layer\nSpring boot starter security\nSpring boot starter oauth2\nresource server\nSpring security test" rounded,filled box #88A3B5 #F5F0FF
-node bt 14.473 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\njackson3\njunit5" rounded,filled box #88A3B5 #EAF7F0
-node runtime 17.661 0.86313 1.6708 1.445 "Runtime\nSQL / R2DBC\nRedis\nAWS / S3" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.0322 0.86313 3.0322 0.86313 4.4011 0.86313 4.4011 0.86313 invokes 3.7889 0.95167 solid #637383
-edge api infra 4 6.4306 0.86313 6.4306 0.86313 8.883 0.86313 8.883 0.86313 "persists / publishes" 7.7271 0.95167 solid #637383
-edge infra bt 4 12.046 0.86313 12.046 0.86313 13.415 0.86313 13.415 0.86313 extends 12.801 0.95167 solid #637383
-edge bt runtime 4 15.391 0.86313 15.391 0.86313 16.678 0.86313 16.678 0.86313 adapts 16.103 0.95167 solid #637383
+graph 1 19.997 1.7263
+node entry 1.5125 0.86313 3.025 1.7263 "Security Demo Surface\nJwtApplication\nAbstractJwtApplicationTest\nHelloControllerTest\nSpring Security Webflux Jwt" rounded,filled box #88A3B5 #FFF8E7
+node api 5.6799 0.86313 2.2542 1.445 "Protected Endpoints\nJwtConfig\nHelloController\nTokenController" rounded,filled box #88A3B5 #EEF7FF
+node infra 10.92 0.86313 3.0042 1.7263 "Spring Security Layer\nSpring boot starter security\nSpring boot starter oauth2\nresource server\nSpring security test" rounded,filled box #88A3B5 #F5F0FF
+node bt 15.28 0.86313 2.6604 1.445 "bluetape4k Security APIs\nworkshop\njackson3\njunit5" rounded,filled box #88A3B5 #EAF7F0
+node runtime 19.026 0.86313 1.9417 1.445 "Security Runtime\nSQL / R2DBC\nRedis\nAWS / S3" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.0347 0.86313 3.0347 0.86313 4.4043 0.86313 4.4043 0.86313 invokes 3.7889 0.95167 solid #637383
+edge api infra 4 6.8105 0.86313 6.8105 0.86313 9.266 0.86313 9.266 0.86313 "persists / publishes" 8.1125 0.95167 solid #637383
+edge infra bt 4 12.427 0.86313 12.427 0.86313 13.799 0.86313 13.799 0.86313 extends 13.186 0.95167 solid #637383
+edge bt runtime 4 16.617 0.86313 16.617 0.86313 17.906 0.86313 17.906 0.86313 adapts 17.333 0.95167 solid #637383
 stop

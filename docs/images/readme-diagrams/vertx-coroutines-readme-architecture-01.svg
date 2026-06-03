@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="660" viewBox="0 0 1120 660" role="img" aria-label="Example for Vert.x with Kotlin Coroutines architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="660" viewBox="0 0 1320 660" role="img" aria-label="Example for Vert.x with Kotlin Coroutines architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;vertx/coroutines/src/main/kotlin/io/bluetape4k/workshop/movierating/Main.kt&quot;,&quot;vertx/coroutines/src/main/kotlin/io/bluetape4k/workshop/movierating/MovieRatingVerticle.kt&quot;,&quot;vertx/coroutines/src/test/kotlin/io/bluetape4k/workshop/movierating/MovieRatingVerticeTest.kt&quot;,&quot;vertx/coroutines/build.gradle.kts&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
   <defs>
     <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
@@ -30,63 +30,55 @@
       .node rect { stroke-width: 1.5; }
       .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
       .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
-      .edge-label-bg { fill: #FFFFFF; stroke: #CAD6E0; stroke-width: 1; opacity: 0.96; }
-      .edge-label { font-family: "Comic Mono"; font-size: 12px; fill: #102033; dominant-baseline: middle; }
     </style>
   </defs>
-  <rect class="canvas" width="1120" height="660"/>
-  <rect class="frame" x="16" y="16" width="1088" height="628" rx="22"/>
-  <text class="diagram-title" x="560.0" y="58" text-anchor="middle">Example for Vert.x with Kotlin Coroutines</text>
-  <text class="diagram-subtitle" x="560.0" y="84" text-anchor="middle">Vertx example architecture, generated from README module sources</text>
+  <rect class="canvas" width="1320" height="660"/>
+  <rect class="frame" x="16" y="16" width="1288" height="628" rx="22"/>
+  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Example for Vert.x with Kotlin Coroutines</text>
+  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Vertx example runtime and module dependencies</text>
   <g>
     <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1028.0" height="150.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
+      <rect x="46.0" y="114.0" width="1228.0" height="150.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
       <rect x="64.0" y="134.0" width="174" height="110.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="161.5">Domain / Entry</tspan><tspan class="layer-title" x="151.0" y="184.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="203.0">Entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="219.0">adapters, child</tspan><tspan class="layer-detail" x="151.0" y="235.0">examples</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="173.0">Example Surface</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="211.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="227.0">adapters</tspan></text>
     </g>
     <g class="layer" data-layer="integration">
-      <rect x="46.0" y="282.0" width="1028.0" height="150.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
+      <rect x="46.0" y="282.0" width="1228.0" height="150.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
       <rect x="64.0" y="302.0" width="174" height="110.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
       <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="341.0">Integration Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="371.0">Repositories,</tspan><tspan class="layer-detail" x="151.0" y="387.0">adapters, helpers,</tspan><tspan class="layer-detail" x="151.0" y="403.0">clients</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="379.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="395.0">adapters, helpers</tspan></text>
     </g>
     <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="450.0" width="1028.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="46.0" y="450.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
       <rect x="64.0" y="470.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="500.0">Runtime Backends</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="530.0">External systems,</tspan><tspan class="layer-detail" x="151.0" y="546.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="562.0">JVM</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="500.0">Runtime Layer</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="530.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="546.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="562.0">JVM</tspan></text>
     </g>
-    <g class="edge" data-edge="entry-&gt;api">
-      <path d="M 474.5 134.0 L 474.5 142.0 L 873.5 142.0 L 873.5 143.0" fill="none" stroke="#4F7DB5" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-api)"/>
-      <rect class="edge-label-bg" x="632.0" y="115.0" width="84.0" height="23" rx="11"/>
-      <text class="edge-label" x="674.0" y="130.0" text-anchor="middle">invokes</text>
+    <g class="edge" data-edge="entry-&gt;api" data-label="invokes">
+      <path d="M 704.0 189.0 L 774.0 189.0 L 844.0 189.0" fill="none" stroke="#4F7DB5" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-api)"/>
     </g>
-    <g class="edge" data-edge="api-&gt;bt">
-      <path d="M 873.5 235.0 L 873.5 268.5 L 674.0 268.5 L 674.0 302.0" fill="none" stroke="#3E927D" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-bt)"/>
-      <rect class="edge-label-bg" x="731.8" y="238.5" width="84.0" height="23" rx="11"/>
-      <text class="edge-label" x="773.8" y="253.5" text-anchor="middle">extends</text>
+    <g class="edge" data-edge="api-&gt;bt" data-label="extends">
+      <path d="M 1039.0 235.0 L 1039.0 268.5 L 774.0 268.5 L 774.0 302.0" fill="none" stroke="#3E927D" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-bt)"/>
     </g>
-    <g class="edge" data-edge="bt-&gt;runtime">
-      <path d="M 674.0 412.0 L 674.0 441.0 L 674.0 441.0 L 674.0 470.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-      <rect class="edge-label-bg" x="636.0" y="414.0" width="76.0" height="23" rx="11"/>
-      <text class="edge-label" x="674.0" y="429.0" text-anchor="middle">adapts</text>
+    <g class="edge" data-edge="bt-&gt;runtime" data-label="adapts">
+      <path d="M 774.0 412.0 L 774.0 441.0 L 774.0 470.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
     </g>
-    <g class="node" data-node="entry" data-lines="Entry &amp; Verification | Main | MovieRatingVerticeTest | Vertx Coroutines tests">
-      <rect x="286.0" y="134.0" width="377.0" height="110.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="474.5" y="168.5">Entry &amp; Verification</tspan><tspan class="node-detail" x="474.5" y="192.5">Main</tspan><tspan class="node-detail" x="474.5" y="209.5">MovieRatingVerticeTest</tspan><tspan class="node-detail" x="474.5" y="226.5">Vertx Coroutines tests</tspan></text>
+    <g class="node" data-node="entry" data-lines="Example Entrypoints | Main | MovieRatingVerticeTest | Vertx Coroutines tests">
+      <rect x="314.0" y="134.0" width="390.0" height="110.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="509.0" y="168.5">Example Entrypoints</tspan><tspan class="node-detail" x="509.0" y="192.5">Main</tspan><tspan class="node-detail" x="509.0" y="209.5">MovieRatingVerticeTest</tspan><tspan class="node-detail" x="509.0" y="226.5">Vertx Coroutines tests</tspan></text>
     </g>
-    <g class="node" data-node="api" data-lines="API &amp; Adapters | MovieRatingVerticle">
-      <rect x="685.0" y="143.0" width="377.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="873.5" y="185.5">API &amp; Adapters</tspan><tspan class="node-detail" x="873.5" y="209.5">MovieRatingVerticle</tspan></text>
+    <g class="node" data-node="api" data-lines="API / Adapter Layer | MovieRatingVerticle">
+      <rect x="844.0" y="143.0" width="390.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1039.0" y="185.5">API / Adapter Layer</tspan><tspan class="node-detail" x="1039.0" y="209.5">MovieRatingVerticle</tspan></text>
     </g>
     <g class="node" data-node="bt" data-lines="bluetape4k APIs | io | jdbc | vertx">
-      <rect x="414.0" y="302.0" width="520.0" height="110.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="674.0" y="336.5">bluetape4k APIs</tspan><tspan class="node-detail" x="674.0" y="360.5">io</tspan><tspan class="node-detail" x="674.0" y="377.5">jdbc</tspan><tspan class="node-detail" x="674.0" y="394.5">vertx</tspan></text>
+      <rect x="474.0" y="302.0" width="600.0" height="110.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="336.5">bluetape4k APIs</tspan><tspan class="node-detail" x="774.0" y="360.5">io</tspan><tspan class="node-detail" x="774.0" y="377.5">jdbc</tspan><tspan class="node-detail" x="774.0" y="394.5">vertx</tspan></text>
     </g>
-    <g class="node" data-node="runtime" data-lines="Runtime | SQL / R2DBC">
-      <rect x="414.0" y="470.0" width="520.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="674.0" y="512.5">Runtime</tspan><tspan class="node-detail" x="674.0" y="536.5">SQL / R2DBC</tspan></text>
+    <g class="node" data-node="runtime" data-lines="Runtime Dependencies | SQL / R2DBC">
+      <rect x="474.0" y="470.0" width="600.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="774.0" y="512.5">Runtime Dependencies</tspan><tspan class="node-detail" x="774.0" y="536.5">SQL / R2DBC</tspan></text>
     </g>
   </g>
 </svg>

@@ -26,9 +26,9 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nApiGatewayDemoApplication\nCustomerApplication\nOrderApplication\nAbstractGatewayTest", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nGatewayConfig\nSwaggerConfig\nIndexController\nRedirectWebFilter", fillcolor="#EEF7FF"];
-  runtime [label="Runtime\nRedis\nAWS / S3\nTestcontainers", fillcolor="#FFF1F1"];
+  entry [label="Example Entrypoints\nApiGatewayDemoApplication\nCustomerApplication\nOrderApplication\nAbstractGatewayTest", fillcolor="#FFF8E7"];
+  api [label="API / Adapter Layer\nGatewayConfig\nSwaggerConfig\nIndexController\nRedirectWebFilter", fillcolor="#EEF7FF"];
+  runtime [label="Runtime Dependencies\nRedis\nAWS / S3\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> runtime [label="backs"];

@@ -1,5 +1,5 @@
-graph 1 5.1924 0.8825
+graph 1 5.5049 0.8825
 node entry 0.86146 0.44125 1.7229 0.8825 "Example Family\npart2" rounded,filled box #88A3B5 #FFF8E7
-node runtime 4.2215 0.44125 1.9417 0.8825 "Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
-edge entry runtime 4 1.7311 0.44125 1.7311 0.44125 3.1002 0.44125 3.1002 0.44125 "runs on" 2.4868 0.52979 solid #637383
+node runtime 4.3778 0.44125 2.2542 0.8825 "JVM Thread Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
+edge entry runtime 4 1.7307 0.44125 1.7307 0.44125 3.1037 0.44125 3.1037 0.44125 "runs on" 2.4868 0.52979 solid #637383
 stop

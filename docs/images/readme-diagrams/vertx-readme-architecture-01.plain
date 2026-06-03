@@ -1,7 +1,7 @@
-graph 1 9.3285 1.7263
-node entry 1.2677 0.86313 2.5354 1.7263 "Entry & Verification\nMain\nMovieRatingVerticeTest\nAbstractSqlClientTest\nVertx tests" rounded,filled box #88A3B5 #FFF8E7
-node api 5.1434 0.86313 2.1604 0.8825 "API & Adapters\nMovieRatingVerticle" rounded,filled box #88A3B5 #EEF7FF
-node runtime 8.4566 0.86313 1.7437 1.1637 "Runtime\nSQL / R2DBC\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 2.5421 0.86313 2.5421 0.86313 3.9139 0.86313 3.9139 0.86313 invokes 3.2993 0.95167 solid #637383
-edge api runtime 4 6.2329 0.86313 6.2329 0.86313 7.4334 0.86313 7.4334 0.86313 backs 6.9042 0.95167 solid #637383
+graph 1 10.026 1.7263
+node entry 1.2677 0.86313 2.5354 1.7263 "Example Entrypoints\nMain\nMovieRatingVerticeTest\nAbstractSqlClientTest\nVertx tests" rounded,filled box #88A3B5 #FFF8E7
+node api 5.1851 0.86313 2.2438 0.8825 "API / Adapter Layer\nMovieRatingVerticle" rounded,filled box #88A3B5 #EEF7FF
+node runtime 8.8472 0.86313 2.3583 1.1637 "Runtime Dependencies\nSQL / R2DBC\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 2.545 0.86313 2.545 0.86313 3.9121 0.86313 3.9121 0.86313 invokes 3.2993 0.95167 solid #637383
+edge api runtime 4 6.3137 0.86313 6.3137 0.86313 7.5162 0.86313 7.5162 0.86313 backs 6.9875 0.95167 solid #637383
 stop

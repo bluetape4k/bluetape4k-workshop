@@ -1,12 +1,12 @@
-graph 1 18.767 1.7263
-node entry 1.6635 0.86313 3.3271 1.7263 "Entry & Verification\nKotlinApplication\nAbstractSecurityApplicationTest\nMainControllerTest\nSpring Security Mvc Hello tests" rounded,filled box #88A3B5 #FFF8E7
-node api 5.7424 0.86313 1.775 1.1637 "API & Adapters\nSecurityConfig\nMainController" rounded,filled box #88A3B5 #EEF7FF
-node infra 10.967 0.86313 3.4521 1.7263 "Framework Layer\nSpring boot starter security\nSpring boot starter thymeleaf\nSpring boot starter web\nSpring boot starter webmvc \
-test" rounded,filled box #88A3B5 #F5F0FF
-node bt 15.129 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\njackson3\njunit5" rounded,filled box #88A3B5 #EAF7F0
-node runtime 18.125 0.86313 1.2854 1.1637 "Runtime\nRedis\nAWS / S3" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.3343 0.86313 3.3343 0.86313 4.7075 0.86313 4.7075 0.86313 invokes 4.091 0.95167 solid #637383
-edge api infra 4 6.6346 0.86313 6.6346 0.86313 9.0905 0.86313 9.0905 0.86313 "persists / publishes" 7.9354 0.95167 solid #637383
-edge infra bt 4 12.702 0.86313 12.702 0.86313 14.073 0.86313 14.073 0.86313 extends 13.457 0.95167 solid #637383
-edge bt runtime 4 16.044 0.86313 16.044 0.86313 17.334 0.86313 17.334 0.86313 adapts 16.76 0.95167 solid #637383
+graph 1 20.747 1.7263
+node entry 1.6635 0.86313 3.3271 1.7263 "Security Demo Surface\nKotlinApplication\nAbstractSecurityApplicationTest\nMainControllerTest\nSpring Security Mvc Hello tests" rounded,filled box #88A3B5 #FFF8E7
+node api 5.9819 0.86313 2.2542 1.1637 "Protected Endpoints\nSecurityConfig\nMainController" rounded,filled box #88A3B5 #EEF7FF
+node infra 11.446 0.86313 3.4521 1.7263 "Spring Security Layer\nSpring boot starter security\nSpring boot starter thymeleaf\nSpring boot starter web\nSpring boot starter \
+webmvc test" rounded,filled box #88A3B5 #F5F0FF
+node bt 16.03 0.86313 2.6604 1.445 "bluetape4k Security APIs\nworkshop\njackson3\njunit5" rounded,filled box #88A3B5 #EAF7F0
+node runtime 19.776 0.86313 1.9417 1.1637 "Security Runtime\nRedis\nAWS / S3" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.3331 0.86313 3.3331 0.86313 4.7081 0.86313 4.7081 0.86313 invokes 4.091 0.95167 solid #637383
+edge api infra 4 7.1141 0.86313 7.1141 0.86313 9.5699 0.86313 9.5699 0.86313 "persists / publishes" 8.4146 0.95167 solid #637383
+edge infra bt 4 13.179 0.86313 13.179 0.86313 14.549 0.86313 14.549 0.86313 extends 13.936 0.95167 solid #637383
+edge bt runtime 4 17.367 0.86313 17.367 0.86313 18.656 0.86313 18.656 0.86313 adapts 18.083 0.95167 solid #637383
 stop

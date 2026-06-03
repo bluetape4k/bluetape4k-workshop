@@ -26,11 +26,11 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nAbstractQuerydslTest\nAbstractDomainTest\nSpring Data Jpa Querydsl tests", fillcolor="#FFF8E7"];
-  service [label="Service & Domain\nMemberRepositoryImpl\nSpringRepositoryQuerydslSupport\nMemberSearchCondition\nTeamDto", fillcolor="#F1F8E9"];
-  infra [label="Repository & Infra\nMemberDto\nMemberTeamDto\nMember\nTeam", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nhibernate\nspring\ntestcontainers", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC\nTestcontainers", fillcolor="#FFF1F1"];
+  entry [label="Data Demo Surface\nAbstractQuerydslTest\nAbstractDomainTest\nSpring Data Jpa Querydsl tests", fillcolor="#FFF8E7"];
+  service [label="Data Service Layer\nMemberRepositoryImpl\nSpringRepositoryQuerydslSupport\nMemberSearchCondition\nTeamDto", fillcolor="#F1F8E9"];
+  infra [label="Repository Layer\nMemberDto\nMemberTeamDto\nMember\nTeam", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Data APIs\nhibernate\nspring\ntestcontainers", fillcolor="#EAF7F0"];
+  runtime [label="Database Runtime\nSQL / R2DBC\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> service [label="delegates"];
   service -> infra [label="persists / publishes"];

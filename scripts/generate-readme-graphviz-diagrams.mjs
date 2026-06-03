@@ -197,6 +197,216 @@ function childModules(dir) {
     .slice(0, 4);
 }
 
+function profileFor(rel) {
+  const key = (() => {
+    if (rel.startsWith("spring-security/")) return "security";
+    if (rel.startsWith("spring-data/")) return "springData";
+    if (rel.startsWith("spring-boot/")) return "springBoot";
+    if (rel.startsWith("spring-modulith/")) return "modulith";
+    if (rel.startsWith("spring-cloud/")) return "springCloud";
+    if (rel.startsWith("image-processing/")) return "image";
+    if (rel.startsWith("virtualthreads/")) return "virtualthreads";
+    return rel.split("/")[0].replace(/-/g, "");
+  })();
+  const profiles = {
+    aws: {
+      subtitle: "S3 client workflow and LocalStack runtime",
+      entryTitle: "Sample Bootstraps",
+      apiTitle: "S3 Example Modules",
+      childrenTitle: "S3 Example Modules",
+      serviceTitle: "Storage Workflow",
+      infraTitle: "AWS Client Layer",
+      frameworkTitle: "Spring Cloud AWS",
+      btTitle: "bluetape4k AWS APIs",
+      runtimeTitle: "LocalStack / S3",
+      layers: {
+        surface: ["AWS Example Surface", "sample apps, S3 tests, module catalog"],
+        service: ["Storage Workflow Layer", "bucket setup, object IO, service rules"],
+        integration: ["AWS Integration Layer", "S3 clients, Spring Cloud AWS, helpers"],
+        runtime: ["Local AWS Runtime", "LocalStack, S3, Testcontainers"],
+      },
+    },
+    exposed: {
+      subtitle: "HTTP services, Exposed repositories, and SQL runtime",
+      entryTitle: "Web/Test Entrypoints",
+      apiTitle: "MVC/WebFlux Controllers",
+      serviceTitle: "Application Services",
+      infraTitle: "Exposed Persistence",
+      frameworkTitle: "Exposed Framework",
+      btTitle: "bluetape4k Data APIs",
+      runtimeTitle: "SQL Test Runtime",
+      layers: {
+        surface: ["Web/API Surface", "controllers, app bootstraps, HTTP tests"],
+        service: ["Application Layer", "services, domain rules, transactions"],
+        integration: ["Exposed Persistence Layer", "repositories, tables, mappers, helpers"],
+        runtime: ["SQL Runtime", "R2DBC/JDBC, Redis, containers"],
+      },
+    },
+    messaging: {
+      subtitle: "message producers, consumers, and broker-backed flows",
+      entryTitle: "Messaging App/Test Surface",
+      apiTitle: "Producer / Consumer Adapters",
+      serviceTitle: "Message Workflow",
+      infraTitle: "Kafka Topic Layer",
+      frameworkTitle: "Spring Kafka Layer",
+      btTitle: "bluetape4k Kafka APIs",
+      runtimeTitle: "Kafka Broker Runtime",
+      layers: {
+        surface: ["Messaging Surface", "apps, controllers, producer tests"],
+        service: ["Message Workflow Layer", "request/reply, outbox, handlers"],
+        integration: ["Broker Integration Layer", "topics, templates, serializers, helpers"],
+        runtime: ["Broker Runtime", "Kafka, Testcontainers, delivery state"],
+      },
+    },
+    graph: {
+      subtitle: "graph domain model, traversal services, and graph backends",
+      entryTitle: "Graph Demo Surface",
+      apiTitle: "Graph Example Modules",
+      childrenTitle: "Graph Example Modules",
+      serviceTitle: "Graph Service Layer",
+      infraTitle: "Graph Operations",
+      frameworkTitle: "Graph Driver Layer",
+      btTitle: "bluetape4k Graph APIs",
+      runtimeTitle: "Graph Backends",
+      layers: {
+        surface: ["Graph Domain Surface", "sample apps, seed tests, example catalog"],
+        service: ["Graph Service Layer", "domain rules, traversal use cases"],
+        integration: ["Graph Operations Layer", "queries, repositories, graph helpers"],
+        runtime: ["Graph Backends", "Neo4j, Memgraph, AGE, containers"],
+      },
+    },
+    observability: {
+      subtitle: "observed requests, coroutine traces, and telemetry export",
+      entryTitle: "Observed App/Test Surface",
+      apiTitle: "Observed Web Adapters",
+      serviceTitle: "Instrumented Services",
+      infraTitle: "Telemetry Configuration",
+      frameworkTitle: "Micrometer/Spring Layer",
+      btTitle: "bluetape4k Observability APIs",
+      runtimeTitle: "Metrics / Trace Runtime",
+      layers: {
+        surface: ["Observed Request Surface", "controllers, tracing apps, test probes"],
+        service: ["Instrumented Service Layer", "coroutines, spans, observation scopes"],
+        integration: ["Telemetry Integration", "Micrometer, exporters, auto-config"],
+        runtime: ["Telemetry Runtime", "metrics, traces, logs, test backends"],
+      },
+    },
+    redis: {
+      subtitle: "Redis-backed coordination, cache, and stream examples",
+      entryTitle: "Redis Demo Surface",
+      apiTitle: "Redis API Adapters",
+      serviceTitle: "Redis Use Cases",
+      infraTitle: "Redis Data Layer",
+      frameworkTitle: "Redis Client Layer",
+      btTitle: "bluetape4k Redis APIs",
+      runtimeTitle: "Redis Runtime",
+      layers: {
+        surface: ["Redis Example Surface", "apps, tests, HTTP endpoints"],
+        service: ["Redis Use Case Layer", "locks, cache, streams, cluster logic"],
+        integration: ["Redis Integration Layer", "Lettuce, Redisson, serializers, helpers"],
+        runtime: ["Redis Runtime", "standalone, cluster, containers"],
+      },
+    },
+    ratelimit: {
+      subtitle: "rate-limit policy, token buckets, and backing stores",
+      entryTitle: "Rate-limit Surface",
+      apiTitle: "Web Filter / Controller",
+      serviceTitle: "Policy Enforcement",
+      infraTitle: "Bucket Storage Layer",
+      frameworkTitle: "Bucket4j Layer",
+      btTitle: "bluetape4k RateLimit APIs",
+      runtimeTitle: "Bucket Runtime",
+      layers: {
+        surface: ["Request Surface", "web filters, controllers, test clients"],
+        service: ["Policy Layer", "token buckets, quota rules, throttling"],
+        integration: ["Bucket Storage Layer", "Bucket4j, Redis, Caffeine, helpers"],
+        runtime: ["Runtime Store", "Redis, cache, local JVM"],
+      },
+    },
+    springData: {
+      subtitle: "Spring Data repositories, reactive APIs, and backing stores",
+      entryTitle: "Data Demo Surface",
+      apiTitle: "Web/Data Adapters",
+      serviceTitle: "Data Service Layer",
+      infraTitle: "Repository Layer",
+      frameworkTitle: "Spring Data Layer",
+      btTitle: "bluetape4k Data APIs",
+      runtimeTitle: "Database Runtime",
+      layers: {
+        surface: ["Data Access Surface", "apps, handlers, repository tests"],
+        service: ["Data Service Layer", "query use cases, transaction boundaries"],
+        integration: ["Repository Integration", "Spring Data, R2DBC, Mongo, Redis"],
+        runtime: ["Database Runtime", "SQL, MongoDB, Elasticsearch, Redis"],
+      },
+    },
+    springBoot: {
+      subtitle: "Spring Boot application feature and runtime integration",
+      entryTitle: "Boot App/Test Surface",
+      apiTitle: "Spring Web Adapters",
+      serviceTitle: "Application Feature",
+      infraTitle: "Infrastructure Config",
+      frameworkTitle: "Spring Boot Layer",
+      btTitle: "bluetape4k Boot APIs",
+      runtimeTitle: "Boot Runtime",
+      layers: {
+        surface: ["Spring Boot Surface", "apps, controllers, scheduled tests"],
+        service: ["Feature Layer", "services, resilience, events, cache policy"],
+        integration: ["Boot Integration Layer", "auto-config, clients, repositories"],
+        runtime: ["Runtime Dependencies", "database, cache, messaging, containers"],
+      },
+    },
+    security: {
+      subtitle: "security filters, authentication flows, and protected endpoints",
+      entryTitle: "Security Demo Surface",
+      apiTitle: "Protected Endpoints",
+      serviceTitle: "Security Policy Layer",
+      infraTitle: "Security Infrastructure",
+      frameworkTitle: "Spring Security Layer",
+      btTitle: "bluetape4k Security APIs",
+      runtimeTitle: "Security Runtime",
+      layers: {
+        surface: ["Protected Request Surface", "controllers, filters, test clients"],
+        service: ["Security Policy Layer", "authentication, authorization, JWT rules"],
+        integration: ["Security Integration", "Spring Security, token services, helpers"],
+        runtime: ["Identity Runtime", "users, tokens, local JVM"],
+      },
+    },
+    virtualthreads: {
+      subtitle: "virtual-thread execution model and blocking boundary examples",
+      entryTitle: "Virtual Thread Surface",
+      apiTitle: "Threaded Web Adapters",
+      serviceTitle: "Execution Model",
+      infraTitle: "Blocking Boundary",
+      frameworkTitle: "Thread Runtime Layer",
+      btTitle: "bluetape4k Coroutine APIs",
+      runtimeTitle: "JVM Thread Runtime",
+      layers: {
+        surface: ["Request/Test Surface", "MVC/WebFlux tests, sample endpoints"],
+        service: ["Execution Layer", "virtual threads, coroutines, blocking work"],
+        integration: ["Thread Boundary Layer", "dispatchers, JDBC, Tomcat, helpers"],
+        runtime: ["JVM Runtime", "virtual threads, platform threads, containers"],
+      },
+    },
+  };
+  return profiles[key] || {
+    subtitle: `${domainOf(rel)} example runtime and module dependencies`,
+    entryTitle: "Example Entrypoints",
+    apiTitle: "API / Adapter Layer",
+    childrenTitle: "Child Examples",
+    serviceTitle: "Application Services",
+    infraTitle: "Infrastructure Layer",
+    frameworkTitle: "Framework Layer",
+    btTitle: "bluetape4k APIs",
+    runtimeTitle: "Runtime Dependencies",
+    layers: {
+      surface: ["Example Surface", "entrypoints, tests, adapters"],
+      service: ["Application Layer", "services, domain rules, use cases"],
+      integration: ["Integration Layer", "repositories, adapters, helpers"],
+      runtime: ["Runtime Layer", "external systems, containers, local JVM"],
+    },
+  };
+}
+
 function architectureModel(dir, rel) {
   const files = listFiles(dir);
   const ktFiles = files.filter((file) => file.endsWith(".kt"));
@@ -217,6 +427,7 @@ function architectureModel(dir, rel) {
   const fwDeps = frameworkDeps(buildText);
   const title = imageTitleOf(dir, rel);
   const module = humanizeRel(rel);
+  const profile = profileFor(rel);
   const sourceEvidence = uniqueLimit([
     ...mainKt.map((file) => path.relative(root, file).replaceAll(path.sep, "/")),
     ...testKt.map((file) => path.relative(root, file).replaceAll(path.sep, "/")),
@@ -232,32 +443,32 @@ function architectureModel(dir, rel) {
     : [title];
 
   const nodes = [
-    node("entry", mainKt.length > 0 ? "Entry & Verification" : "Example Family", entryDetails, "#FFF8E7"),
+    node("entry", mainKt.length > 0 ? profile.entryTitle : "Example Family", entryDetails, "#FFF8E7"),
   ];
 
   if ((grouped.get("api") || []).length > 0) {
-    nodes.push(node("api", "API & Adapters", grouped.get("api"), "#EEF7FF"));
+    nodes.push(node("api", profile.apiTitle, grouped.get("api"), "#EEF7FF"));
   } else if (children.length > 0) {
-    nodes.push(node("api", "Child Examples", children, "#EEF7FF"));
+    nodes.push(node("api", profile.childrenTitle || "Child Examples", children, "#EEF7FF"));
   }
 
   const serviceItems = uniqueLimit([...(grouped.get("service") || []), ...(grouped.get("domain") || [])], 4);
   if (serviceItems.length > 0) {
-    nodes.push(node("service", "Service & Domain", serviceItems, "#F1F8E9"));
+    nodes.push(node("service", profile.serviceTitle, serviceItems, "#F1F8E9"));
   }
 
   const infraItems = uniqueLimit(grouped.get("infra") || [], 4);
   if (infraItems.length > 0) {
-    nodes.push(node("infra", "Repository & Infra", infraItems, "#F5F0FF"));
+    nodes.push(node("infra", profile.infraTitle, infraItems, "#F5F0FF"));
   } else if (fwDeps.length > 0) {
-    nodes.push(node("infra", "Framework Layer", fwDeps, "#F5F0FF"));
+    nodes.push(node("infra", profile.frameworkTitle, fwDeps, "#F5F0FF"));
   }
 
   if (btDeps.length > 0) {
-    nodes.push(node("bt", "bluetape4k APIs", btDeps, "#EAF7F0"));
+    nodes.push(node("bt", profile.btTitle, btDeps, "#EAF7F0"));
   }
 
-  nodes.push(node("runtime", "Runtime", runtimes.length ? runtimes : ["In-memory / JVM"], "#FFF1F1"));
+  nodes.push(node("runtime", profile.runtimeTitle, runtimes.length ? runtimes : ["In-memory / JVM"], "#FFF1F1"));
 
   const ids = nodes.map((node) => node.id);
   const edges = [];
@@ -272,7 +483,7 @@ function architectureModel(dir, rel) {
     edges.push(["bt", "runtime", "adapts"]);
   }
 
-  return { title, domain: domainOf(rel), module, nodes, edges, sourceEvidence };
+  return { title, domain: domainOf(rel), module, profile, nodes, edges, sourceEvidence };
 }
 
 function edgeLabel(from, to, index) {
@@ -523,35 +734,36 @@ function nodeById(model, id) {
 }
 
 function layoutLayers(model) {
+  const profileLayers = model.profile.layers;
   const bands = [
     {
       id: "surface",
-      title: "Domain / Entry Surface",
-      detail: "Entrypoints, tests, adapters, child examples",
+      title: profileLayers.surface[0],
+      detail: profileLayers.surface[1],
       fill: "#EAF3FF",
       stroke: "#9AB7D9",
       nodeIds: ["entry", "api"],
     },
     {
       id: "service",
-      title: "Service & Domain Layer",
-      detail: "Services, domain rules, use cases",
+      title: profileLayers.service[0],
+      detail: profileLayers.service[1],
       fill: "#EAF7F0",
       stroke: "#9CC7AE",
       nodeIds: ["service"],
     },
     {
       id: "integration",
-      title: "Integration Layer",
-      detail: "Repositories, adapters, helpers, clients",
+      title: profileLayers.integration[0],
+      detail: profileLayers.integration[1],
       fill: "#FFF6E5",
       stroke: "#D9B978",
       nodeIds: ["infra", "bt"],
     },
     {
       id: "runtime",
-      title: "Runtime Backends",
-      detail: "External systems, containers, local JVM",
+      title: profileLayers.runtime[0],
+      detail: profileLayers.runtime[1],
       fill: "#F3F5F8",
       stroke: "#B5C0CB",
       nodeIds: ["runtime"],
@@ -584,10 +796,10 @@ function layerCardRects(model, width) {
   for (const layer of layers) {
     const maxCardHeight = Math.max(...layer.nodes.map(cardHeight));
     const bandHeight = Math.max(132, maxCardHeight + 40);
-    const cardGap = 22;
+    const cardGap = layer.nodes.length === 2 ? 140 : 56;
     const cardWidth = layer.nodes.length === 1
-      ? Math.min(520, bandWidth - contentOffset - 24)
-      : Math.min(380, (bandWidth - contentOffset - 24 - cardGap * (layer.nodes.length - 1)) / layer.nodes.length);
+      ? Math.min(600, bandWidth - contentOffset - 24)
+      : Math.min(390, (bandWidth - contentOffset - 24 - cardGap * (layer.nodes.length - 1)) / layer.nodes.length);
     const totalCardsWidth = cardWidth * layer.nodes.length + cardGap * (layer.nodes.length - 1);
     const cardStartX = left + contentOffset + (bandWidth - contentOffset - totalCardsWidth) / 2;
     const cardY = y + (bandHeight - maxCardHeight) / 2;
@@ -646,7 +858,14 @@ function boundaryPoint(rect, side) {
 }
 
 function pathThrough(points) {
-  return points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`).join(" ");
+  const normalized = [];
+  for (const point of points) {
+    const previous = normalized.at(-1);
+    if (!previous || Math.abs(previous.x - point.x) > 0.1 || Math.abs(previous.y - point.y) > 0.1) {
+      normalized.push(point);
+    }
+  }
+  return normalized.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`).join(" ");
 }
 
 function connectorSvg(model, layout) {
@@ -674,22 +893,32 @@ function connectorSvg(model, layout) {
     const targetCenter = centerOf(target);
     const sameLayer = layerByNode.get(from) === layerByNode.get(to);
     let route;
-    let labelX;
-    let labelY;
     if (sameLayer) {
       const layer = layerById.get(layerByNode.get(from));
-      const start = boundaryPoint(source, "top");
-      const end = boundaryPoint(target, "top");
-      const laneY = Math.max(layer.y + 28, Math.min(source.y, target.y) - 24);
-      const midX = start.x + (end.x - start.x) / 2;
-      route = [
-        start,
-        { x: start.x, y: laneY },
-        { x: end.x, y: laneY },
-        end,
-      ];
-      labelX = midX;
-      labelY = laneY - 12;
+      const alignedCenters = Math.abs(sourceCenter.y - targetCenter.y) <= 18;
+      if (alignedCenters) {
+        const sourceSide = sourceCenter.x <= targetCenter.x ? "right" : "left";
+        const targetSide = sourceSide === "right" ? "left" : "right";
+        const start = boundaryPoint(source, sourceSide);
+        const end = boundaryPoint(target, targetSide);
+        const midX = start.x + (end.x - start.x) / 2;
+        route = [
+          start,
+          { x: midX, y: start.y },
+          { x: midX, y: end.y },
+          end,
+        ];
+      } else {
+        const start = boundaryPoint(source, "top");
+        const end = boundaryPoint(target, "top");
+        const laneY = Math.max(layer.y + 28, Math.min(source.y, target.y) - 24);
+        route = [
+          start,
+          { x: start.x, y: laneY },
+          { x: end.x, y: laneY },
+          end,
+        ];
+      }
     } else {
       const start = boundaryPoint(source, "bottom");
       const end = boundaryPoint(target, "top");
@@ -700,25 +929,20 @@ function connectorSvg(model, layout) {
         { x: end.x, y: midY },
         end,
       ];
-      labelX = (sourceCenter.x + targetCenter.x) / 2;
-      labelY = midY - 12 - (index % 2) * 3;
     }
     const color = colorByTarget[to] || "#637383";
-    const labelWidth = Math.max(72, Math.min(168, label.length * 8 + 28));
-    return `<g class="edge" data-edge="${escapeXml(`${from}->${to}`)}">
+    return `<g class="edge" data-edge="${escapeXml(`${from}->${to}`)}" data-label="${escapeXml(label)}">
       <path d="${pathThrough(route)}" fill="none" stroke="${color}" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-${to})"/>
-      <rect class="edge-label-bg" x="${(labelX - labelWidth / 2).toFixed(1)}" y="${(labelY - 15).toFixed(1)}" width="${labelWidth.toFixed(1)}" height="23" rx="11"/>
-      <text class="edge-label" x="${labelX.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle">${escapeXml(label)}</text>
     </g>`;
   }).join("\n    ");
 }
 
 function layeredSvg(model) {
-  const width = 1120;
+  const width = 1320;
   const layout = layerCardRects(model, width);
   const height = Math.max(660, layout.height);
   const frame = { x: 16, y: 16, w: width - 32, h: height - 32 };
-  const subtitle = `${model.domain} example architecture, generated from README module sources`;
+  const subtitle = model.profile.subtitle;
   const metadata = {
     sourceEvidence: model.sourceEvidence,
     rendering: "layered-readme-architecture",
@@ -766,8 +990,6 @@ function layeredSvg(model) {
       .node rect { stroke-width: 1.5; }
       .node-title { font-family: "${titleFont}"; font-size: 18px; fill: #102033; }
       .node-detail { font-family: "${detailFont}"; font-size: 12px; fill: #465160; }
-      .edge-label-bg { fill: #FFFFFF; stroke: #CAD6E0; stroke-width: 1; opacity: 0.96; }
-      .edge-label { font-family: "${detailFont}"; font-size: 12px; fill: #102033; dominant-baseline: middle; }
     </style>
   </defs>
   <rect class="canvas" width="${width}" height="${height}"/>

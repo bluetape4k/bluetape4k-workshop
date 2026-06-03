@@ -1,7 +1,7 @@
-graph 1 9.5785 1.7263
-node entry 1.4344 0.86313 2.8688 1.7263 "Entry & Verification\nApiGatewayDemoApplication\nCustomerApplication\nOrderApplication\nAbstractGatewayTest" rounded,filled box #88A3B5 #FFF8E7
-node api 5.4351 0.86313 2.0771 1.7263 "API & Adapters\nGatewayConfig\nSwaggerConfig\nIndexController\nRedirectWebFilter" rounded,filled box #88A3B5 #EEF7FF
-node runtime 8.7066 0.86313 1.7437 1.445 "Runtime\nRedis\nAWS / S3\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 2.8731 0.86313 2.8731 0.86313 4.2488 0.86313 4.2488 0.86313 invokes 3.6326 0.95167 solid #637383
-edge api runtime 4 6.4792 0.86313 6.4792 0.86313 7.6833 0.86313 7.6833 0.86313 backs 7.1542 0.95167 solid #637383
+graph 1 10.36 1.7263
+node entry 1.4344 0.86313 2.8688 1.7263 "Example Entrypoints\nApiGatewayDemoApplication\nCustomerApplication\nOrderApplication\nAbstractGatewayTest" rounded,filled box #88A3B5 #FFF8E7
+node api 5.5184 0.86313 2.2438 1.7263 "API / Adapter Layer\nGatewayConfig\nSwaggerConfig\nIndexController\nRedirectWebFilter" rounded,filled box #88A3B5 #EEF7FF
+node runtime 9.1806 0.86313 2.3583 1.445 "Runtime Dependencies\nRedis\nAWS / S3\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 2.8743 0.86313 2.8743 0.86313 4.2502 0.86313 4.2502 0.86313 invokes 3.6326 0.95167 solid #637383
+edge api runtime 4 6.6471 0.86313 6.6471 0.86313 7.8496 0.86313 7.8496 0.86313 backs 7.3208 0.95167 solid #637383
 stop

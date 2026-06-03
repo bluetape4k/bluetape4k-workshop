@@ -26,10 +26,10 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nMain\nMovieRatingVerticeTest\nVertx Coroutines tests", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nMovieRatingVerticle", fillcolor="#EEF7FF"];
+  entry [label="Example Entrypoints\nMain\nMovieRatingVerticeTest\nVertx Coroutines tests", fillcolor="#FFF8E7"];
+  api [label="API / Adapter Layer\nMovieRatingVerticle", fillcolor="#EEF7FF"];
   bt [label="bluetape4k APIs\nio\njdbc\nvertx", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC", fillcolor="#FFF1F1"];
+  runtime [label="Runtime Dependencies\nSQL / R2DBC", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> bt [label="extends"];

@@ -26,12 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nBasicObservabilityApp\nAbstractBasicTest\nTestObservationConfig\nObservability Observability", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nOrderController", fillcolor="#EEF7FF"];
-  service [label="Service & Domain\nInventoryClient\nInventory\nOrder\nObservationSupport", fillcolor="#F1F8E9"];
-  infra [label="Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop\nlogging\ncoroutines", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nRedis\nKafka\nTestcontainers", fillcolor="#FFF1F1"];
+  entry [label="Observed App/Test Surface\nBasicObservabilityApp\nAbstractBasicTest\nTestObservationConfig\nObservability Observability", fillcolor="#FFF8E7"];
+  api [label="Observed Web Adapters\nOrderController", fillcolor="#EEF7FF"];
+  service [label="Instrumented Services\nInventoryClient\nInventory\nOrder\nObservationSupport", fillcolor="#F1F8E9"];
+  infra [label="Micrometer/Spring Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k Observability APIs\nworkshop\nlogging\ncoroutines", fillcolor="#EAF7F0"];
+  runtime [label="Metrics / Trace Runtime\nRedis\nKafka\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];

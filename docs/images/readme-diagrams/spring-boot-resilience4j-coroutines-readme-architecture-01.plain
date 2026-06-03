@@ -1,13 +1,13 @@
-graph 1 22.758 1.7263
-node entry 1.2885 0.86313 2.5771 1.7263 "Entry & Verification\nResilienceApplication\nAbstractResilienceTest\nPrometheusMetricsTest\nSpring Boot Resilience4j" rounded,filled box #88A3B5 #FFF8E7
-node api 5.2163 0.86313 2.2229 1.7263 "API & Adapters\nNettyConfig\nResilience4jConfig\nBackendAController\nBackendBController" rounded,filled box #88A3B5 #EEF7FF
-node service 9.3003 0.86313 2.5563 1.7263 "Service & Domain\nRecordFailurePredicate\nBackendAService\nBackendCService\nService" rounded,filled box #88A3B5 #F1F8E9
-node infra 14.707 0.86313 3.0354 1.7263 "Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration" rounded,filled box #88A3B5 #F5F0FF
-node bt 18.661 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\njunit5\nresilience4j" rounded,filled box #88A3B5 #EAF7F0
-node runtime 21.886 0.86313 1.7437 1.445 "Runtime\nSQL / R2DBC\nRedis\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 2.5855 0.86313 2.5855 0.86313 3.9559 0.86313 3.9559 0.86313 invokes 3.341 0.95167 solid #637383
-edge api service 4 6.3323 0.86313 6.3323 0.86313 7.8734 0.86313 7.8734 0.86313 delegates 7.175 0.95167 solid #637383
-edge service infra 4 10.582 0.86313 10.582 0.86313 13.038 0.86313 13.038 0.86313 "persists / publishes" 11.884 0.95167 solid #637383
-edge infra bt 4 16.23 0.86313 16.23 0.86313 17.603 0.86313 17.603 0.86313 extends 16.989 0.95167 solid #637383
-edge bt runtime 4 19.577 0.86313 19.577 0.86313 20.864 0.86313 20.864 0.86313 adapts 20.292 0.95167 solid #637383
+graph 1 23.372 1.7263
+node entry 1.2885 0.86313 2.5771 1.7263 "Boot App/Test Surface\nResilienceApplication\nAbstractResilienceTest\nPrometheusMetricsTest\nSpring Boot Resilience4j" rounded,filled box #88A3B5 #FFF8E7
+node api 5.2632 0.86313 2.3167 1.7263 "Spring Web Adapters\nNettyConfig\nResilience4jConfig\nBackendAController\nBackendBController" rounded,filled box #88A3B5 #EEF7FF
+node service 9.3941 0.86313 2.5563 1.7263 "Application Feature\nRecordFailurePredicate\nBackendAService\nBackendCService\nService" rounded,filled box #88A3B5 #F1F8E9
+node infra 14.801 0.86313 3.0354 1.7263 "Spring Boot Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration" rounded,filled box #88A3B5 #F5F0FF
+node bt 19.015 0.86313 2.3375 1.445 "bluetape4k Boot APIs\nworkshop\njunit5\nresilience4j" rounded,filled box #88A3B5 #EAF7F0
+node runtime 22.5 0.86313 1.7437 1.445 "Boot Runtime\nSQL / R2DBC\nRedis\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 2.5845 0.86313 2.5845 0.86313 3.9539 0.86313 3.9539 0.86313 invokes 3.341 0.95167 solid #637383
+edge api service 4 6.4304 0.86313 6.4304 0.86313 7.9639 0.86313 7.9639 0.86313 delegates 7.2688 0.95167 solid #637383
+edge service infra 4 10.675 0.86313 10.675 0.86313 13.131 0.86313 13.131 0.86313 "persists / publishes" 11.978 0.95167 solid #637383
+edge infra bt 4 16.328 0.86313 16.328 0.86313 17.701 0.86313 17.701 0.86313 extends 17.083 0.95167 solid #637383
+edge bt runtime 4 20.19 0.86313 20.19 0.86313 21.48 0.86313 21.48 0.86313 adapts 20.906 0.95167 solid #637383
 stop

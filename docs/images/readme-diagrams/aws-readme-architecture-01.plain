@@ -1,9 +1,9 @@
-graph 1 15.298 1.7263
-node entry 1.9344 0.86313 3.8688 1.7263 "Entry & Verification\nSpringCloudAwsS3Sample\nStorageApplication\nAbstractSpringCloudAwsS3SampleTest\nSpringCloudAwsS3Test" rounded,filled box #88A3B5 #FFF8E7
-node api 6.4924 0.86313 2.1917 1.1637 "Child Examples\ns3 spring cloud\nstorage abstraction" rounded,filled box #88A3B5 #EEF7FF
-node service 10.738 0.86313 2.9104 1.7263 "Service & Domain\nLocalStorageService\nS3Config\nS3PresignedStorageService\nS3StorageService" rounded,filled box #88A3B5 #F1F8E9
-node runtime 14.426 0.86313 1.7437 1.1637 "Runtime\nAWS / S3\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+graph 1 15.444 1.7263
+node entry 1.9344 0.86313 3.8688 1.7263 "Sample Bootstraps\nSpringCloudAwsS3Sample\nStorageApplication\nAbstractSpringCloudAwsS3SampleTest\nSpringCloudAwsS3Test" rounded,filled box #88A3B5 #FFF8E7
+node api 6.4924 0.86313 2.1917 1.1637 "S3 Example Modules\ns3 spring cloud\nstorage abstraction" rounded,filled box #88A3B5 #EEF7FF
+node service 10.738 0.86313 2.9104 1.7263 "Storage Workflow\nLocalStorageService\nS3Config\nS3PresignedStorageService\nS3StorageService" rounded,filled box #88A3B5 #F1F8E9
+node runtime 14.499 0.86313 1.8896 1.1637 "LocalStack / S3\nAWS / S3\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
 edge entry api 4 3.874 0.86313 3.874 0.86313 5.2482 0.86313 5.2482 0.86313 invokes 4.6326 0.95167 solid #637383
 edge api service 4 7.5967 0.86313 7.5967 0.86313 9.1325 0.86313 9.1325 0.86313 delegates 8.4354 0.95167 solid #637383
-edge service runtime 4 12.201 0.86313 12.201 0.86313 13.407 0.86313 13.407 0.86313 backs 12.874 0.95167 solid #637383
+edge service runtime 4 12.203 0.86313 12.203 0.86313 13.405 0.86313 13.405 0.86313 backs 12.874 0.95167 solid #637383
 stop

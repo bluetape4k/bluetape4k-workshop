@@ -26,12 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry & Verification\nMain\nAbstractKtorTest\nInMemoryBookRepositoryTest\nKtor Rest Coroutines tests", fillcolor="#FFF8E7"];
-  api [label="API & Adapters\nApplicationModule\nInMemoryBookRepository\nBookRoutes\nHealthRoutes", fillcolor="#EEF7FF"];
-  service [label="Service & Domain\nJackson3Support\nBookService\nBook\nDomainError", fillcolor="#F1F8E9"];
-  infra [label="Repository & Infra\nBookRepository", fillcolor="#F5F0FF"];
+  entry [label="Example Entrypoints\nMain\nAbstractKtorTest\nInMemoryBookRepositoryTest\nKtor Rest Coroutines tests", fillcolor="#FFF8E7"];
+  api [label="API / Adapter Layer\nApplicationModule\nInMemoryBookRepository\nBookRoutes\nHealthRoutes", fillcolor="#EEF7FF"];
+  service [label="Application Services\nJackson3Support\nBookService\nBook\nDomainError", fillcolor="#F1F8E9"];
+  infra [label="Infrastructure Layer\nBookRepository", fillcolor="#F5F0FF"];
   bt [label="bluetape4k APIs\nworkshop\ncore\nlogging", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nIn-memory / JVM", fillcolor="#FFF1F1"];
+  runtime [label="Runtime Dependencies\nIn-memory / JVM", fillcolor="#FFF1F1"];
 
   entry -> api [label="invokes"];
   api -> service [label="delegates"];
