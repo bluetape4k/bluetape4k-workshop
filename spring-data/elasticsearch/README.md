@@ -31,8 +31,6 @@ The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k h
 
 ![elasticsearch Class Structure diagram](../../docs/images/readme-diagrams/spring-data-elasticsearch-diagram-01.png)
 
-![elasticsearch Sequence Flow 2 diagram](../../docs/images/readme-diagrams/spring-data-elasticsearch-sequence-01.png)
-
 This is a synchronous (MVC) example that uses Spring Data Elasticsearch.
 Testcontainers automatically starts an Elasticsearch container for integration tests.
 

@@ -31,8 +31,6 @@
 
 ![elasticsearch webflux Class Structure diagram](../../docs/images/readme-diagrams/spring-data-elasticsearch-webflux-diagram-01.png)
 
-![elasticsearch webflux Sequence Flow 2 diagram](../../docs/images/readme-diagrams/spring-data-elasticsearch-webflux-sequence-01.png)
-
 ## 소개
 
 이 예제는 Spring Data Elasticsearch로 간단한 CRUD 작업을 수행하는 방법을 보여 줍니다.

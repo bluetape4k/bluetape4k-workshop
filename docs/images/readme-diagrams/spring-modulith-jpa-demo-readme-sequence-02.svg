@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1710" height="1155" viewBox="0 0 1710 1155" role="img" aria-label="Spring Modulith JPA Demo Diagram 2">
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="1155" viewBox="0 0 1900 1155" role="img" aria-label="Spring Modulith JPA Demo Diagram 2">
 <defs>
   <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
   <marker id="arrowBlue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M1 1 L7 4 L1 7 Z" fill="#5b8def"/></marker>
@@ -17,58 +17,55 @@
     .box{stroke-width:1.8;filter:url(#shadow)}
   </style>
 </defs>
-<rect class="canvas" width="1710" height="1155"/>
-<rect class="frame" x="24" y="20" width="1662" height="1115" rx="18"/>
+<rect class="canvas" width="1900" height="1155"/>
+<rect class="frame" x="24" y="20" width="1852" height="1115" rx="18"/>
 <text class="title" x="48" y="58">Spring Modulith JPA Demo Diagram 2</text>
 <text class="subtitle" x="50" y="84">sequenceDiagram rendered from the current README model; labels are separated from connector lanes</text>
-<rect class="box" x="2" y="108" width="180" height="58" rx="10" fill="#e8f3ff" stroke="#7aa0c4"/>
-<text class="actor" x="92" y="137" text-anchor="middle" dominant-baseline="middle">Client</text>
-<line class="lifeline" x1="92" y1="166" x2="92" y2="1097"/>
-<rect class="box" x="256.33333333333337" y="108" width="180" height="58" rx="10" fill="#eaf7ef" stroke="#7aa0c4"/>
-<text class="actor" x="346.33333333333337" y="130" text-anchor="middle" dominant-baseline="middle">Gateway</text>
-<text class="actor" x="346.33333333333337" y="144" text-anchor="middle" dominant-baseline="middle">Management</text>
-<line class="lifeline" x1="346.33333333333337" y1="166" x2="346.33333333333337" y2="1097"/>
-<rect class="box" x="510.66666666666674" y="108" width="180" height="58" rx="10" fill="#fff3d9" stroke="#7aa0c4"/>
-<text class="actor" x="600.6666666666667" y="130" text-anchor="middle" dominant-baseline="middle">Organization</text>
-<text class="actor" x="600.6666666666667" y="144" text-anchor="middle" dominant-baseline="middle">Management</text>
-<line class="lifeline" x1="600.6666666666667" y1="166" x2="600.6666666666667" y2="1097"/>
-<rect class="box" x="765" y="108" width="180" height="58" rx="10" fill="#f1ecff" stroke="#7aa0c4"/>
-<text class="actor" x="855" y="137" text-anchor="middle" dominant-baseline="middle">H2 Database</text>
-<line class="lifeline" x1="855" y1="166" x2="855" y2="1097"/>
-<rect class="box" x="1019.3333333333335" y="108" width="180" height="58" rx="10" fill="#fdecef" stroke="#7aa0c4"/>
-<text class="actor" x="1109.3333333333335" y="130" text-anchor="middle" dominant-baseline="middle">Application Event</text>
-<text class="actor" x="1109.3333333333335" y="144" text-anchor="middle" dominant-baseline="middle">Publisher</text>
-<line class="lifeline" x1="1109.3333333333335" y1="166" x2="1109.3333333333335" y2="1097"/>
-<rect class="box" x="1273.6666666666667" y="108" width="180" height="58" rx="10" fill="#e9f7f6" stroke="#7aa0c4"/>
-<text class="actor" x="1363.6666666666667" y="130" text-anchor="middle" dominant-baseline="middle">Department</text>
-<text class="actor" x="1363.6666666666667" y="144" text-anchor="middle" dominant-baseline="middle">Management</text>
-<line class="lifeline" x1="1363.6666666666667" y1="166" x2="1363.6666666666667" y2="1097"/>
-<rect class="box" x="1528" y="108" width="180" height="58" rx="10" fill="#e8f3ff" stroke="#7aa0c4"/>
-<text class="actor" x="1618" y="130" text-anchor="middle" dominant-baseline="middle">Employee</text>
-<text class="actor" x="1618" y="144" text-anchor="middle" dominant-baseline="middle">Management</text>
-<line class="lifeline" x1="1618" y1="166" x2="1618" y2="1097"/>
-<path class="call" d="M92 205 L346.33333333333337 205"/>
-<rect class="message-label" x="17" y="219" width="404.33333333333337" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="219.16666666666669" y="234.5" text-anchor="middle" dominant-baseline="middle">1. POST /organizations</text>
-<path class="call" d="M346.33333333333337 313 L600.6666666666667 313"/>
-<rect class="message-label" x="271.33333333333337" y="327" width="404.33333333333337" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="473.50000000000006" y="342.5" text-anchor="middle" dominant-baseline="middle">2. add(organizationDTO)</text>
-<path class="call" d="M600.6666666666667 421 L855 421"/>
-<rect class="message-label" x="525.6666666666667" y="435" width="404.33333333333326" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="727.8333333333334" y="450.5" text-anchor="middle" dominant-baseline="middle">3. save(organization)</text>
-<path class="call" d="M600.6666666666667 529 L1109.3333333333335 529"/>
-<rect class="message-label" x="575.0000000000001" y="543" width="560" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="855.0000000000001" y="558.5" text-anchor="middle" dominant-baseline="middle">4. publishEvent(OrganizationAddEvent)</text>
-<path class="call" d="M1109.3333333333335 637 L1363.6666666666667 637"/>
-<rect class="message-label" x="1034.3333333333335" y="651" width="404.33333333333326" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="1236.5" y="666.5" text-anchor="middle" dominant-baseline="middle">5. @EventListener(OrganizationAddEvent)</text>
-<path class="call" d="M1109.3333333333335 745 L1618 745"/>
-<rect class="message-label" x="1083.6666666666667" y="759" width="560" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="1363.6666666666667" y="774.5" text-anchor="middle" dominant-baseline="middle">6. @EventListener(OrganizationAddEvent)</text>
-<path class="return" d="M600.6666666666667 853 L346.33333333333337 853"/>
-<rect class="message-label" x="271.33333333333337" y="867" width="404.33333333333337" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="473.50000000000006" y="882.5" text-anchor="middle" dominant-baseline="middle">7. OrganizationDTO</text>
-<path class="return" d="M346.33333333333337 961 L92 961"/>
-<rect class="message-label" x="17" y="975" width="404.33333333333337" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="219.16666666666669" y="990.5" text-anchor="middle" dominant-baseline="middle">8. 201 Created</text>
+<rect class="box" x="40" y="108" width="220" height="58" rx="10" fill="#e8f3ff" stroke="#7aa0c4"/>
+<text class="actor" x="150" y="137" text-anchor="middle" dominant-baseline="middle">Client</text>
+<line class="lifeline" x1="150" y1="166" x2="150" y2="1097"/>
+<rect class="box" x="306.6666666666667" y="108" width="220" height="58" rx="10" fill="#eaf7ef" stroke="#7aa0c4"/>
+<text class="actor" x="416.6666666666667" y="137" text-anchor="middle" dominant-baseline="middle">Gateway Management</text>
+<line class="lifeline" x1="416.6666666666667" y1="166" x2="416.6666666666667" y2="1097"/>
+<rect class="box" x="573.3333333333334" y="108" width="220" height="58" rx="10" fill="#fff3d9" stroke="#7aa0c4"/>
+<text class="actor" x="683.3333333333334" y="130" text-anchor="middle" dominant-baseline="middle">Organization</text>
+<text class="actor" x="683.3333333333334" y="144" text-anchor="middle" dominant-baseline="middle">Management</text>
+<line class="lifeline" x1="683.3333333333334" y1="166" x2="683.3333333333334" y2="1097"/>
+<rect class="box" x="840" y="108" width="220" height="58" rx="10" fill="#f1ecff" stroke="#7aa0c4"/>
+<text class="actor" x="950" y="137" text-anchor="middle" dominant-baseline="middle">H2 Database</text>
+<line class="lifeline" x1="950" y1="166" x2="950" y2="1097"/>
+<rect class="box" x="1106.6666666666667" y="108" width="220" height="58" rx="10" fill="#fdecef" stroke="#7aa0c4"/>
+<text class="actor" x="1216.6666666666667" y="130" text-anchor="middle" dominant-baseline="middle">Application Event</text>
+<text class="actor" x="1216.6666666666667" y="144" text-anchor="middle" dominant-baseline="middle">Publisher</text>
+<line class="lifeline" x1="1216.6666666666667" y1="166" x2="1216.6666666666667" y2="1097"/>
+<rect class="box" x="1373.3333333333335" y="108" width="220" height="58" rx="10" fill="#e9f7f6" stroke="#7aa0c4"/>
+<text class="actor" x="1483.3333333333335" y="137" text-anchor="middle" dominant-baseline="middle">Department Management</text>
+<line class="lifeline" x1="1483.3333333333335" y1="166" x2="1483.3333333333335" y2="1097"/>
+<rect class="box" x="1640" y="108" width="220" height="58" rx="10" fill="#e8f3ff" stroke="#7aa0c4"/>
+<text class="actor" x="1750" y="137" text-anchor="middle" dominant-baseline="middle">Employee Management</text>
+<line class="lifeline" x1="1750" y1="166" x2="1750" y2="1097"/>
+<path class="call" d="M150 205 L416.6666666666667 205"/>
+<rect class="message-label" x="75.00000000000003" y="219" width="416.6666666666667" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="283.33333333333337" y="234.5" text-anchor="middle" dominant-baseline="middle">1. POST /organizations</text>
+<path class="call" d="M416.6666666666667 313 L683.3333333333334 313"/>
+<rect class="message-label" x="341.66666666666663" y="327" width="416.6666666666667" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="550" y="342.5" text-anchor="middle" dominant-baseline="middle">2. add(organizationDTO)</text>
+<path class="call" d="M683.3333333333334 421 L950 421"/>
+<rect class="message-label" x="608.3333333333335" y="435" width="416.66666666666663" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="816.6666666666667" y="450.5" text-anchor="middle" dominant-baseline="middle">3. save(organization)</text>
+<path class="call" d="M683.3333333333334 529 L1216.6666666666667 529"/>
+<rect class="message-label" x="670" y="543" width="560" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="950" y="558.5" text-anchor="middle" dominant-baseline="middle">4. publishEvent(OrganizationAddEvent)</text>
+<path class="call" d="M1216.6666666666667 637 L1483.3333333333335 637"/>
+<rect class="message-label" x="1141.6666666666665" y="651" width="416.66666666666674" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="1350" y="666.5" text-anchor="middle" dominant-baseline="middle">5. @EventListener(OrganizationAddEvent)</text>
+<path class="call" d="M1216.6666666666667 745 L1750 745"/>
+<rect class="message-label" x="1203.3333333333335" y="759" width="560" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="1483.3333333333335" y="774.5" text-anchor="middle" dominant-baseline="middle">6. @EventListener(OrganizationAddEvent)</text>
+<path class="return" d="M683.3333333333334 853 L416.6666666666667 853"/>
+<rect class="message-label" x="341.66666666666663" y="867" width="416.6666666666667" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="550" y="882.5" text-anchor="middle" dominant-baseline="middle">7. OrganizationDTO</text>
+<path class="return" d="M416.6666666666667 961 L150 961"/>
+<rect class="message-label" x="75.00000000000003" y="975" width="416.6666666666667" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
+<text class="message" x="283.33333333333337" y="990.5" text-anchor="middle" dominant-baseline="middle">8. 201 Created</text>
 </svg>

@@ -26,13 +26,9 @@ H2 in-memory database를 사용합니다.
 
 ![R2DBC + Spring WebFlux (Functional Router) Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-readme-architecture-01.png)
 
-![R2DBC + Spring WebFlux (Functional Router) Diagram 1](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-readme-sequence-01.png)
-
 ## 아키텍처 다이어그램
 
 ![r2dbc webflux Architecture diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-diagram-01.png)
-
-![r2dbc webflux Sequence Flow 2 diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-sequence-01.png)
 
 이 reactive CRUD 예제는 Spring Data R2DBC와 WebFlux functional router(Handler + Router)를 결합합니다.
 H2 in-memory database를 사용합니다.

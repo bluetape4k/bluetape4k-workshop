@@ -29,10 +29,6 @@ This example demonstrates the Kafka request-reply pattern with `ReplyingKafkaTem
 It uses bluetape4k's `CompletableFuture.onSuccess/onFailure`, `uninitialized()`, and `KLoggingChannel`.
 The Spring Kafka 4-compatible Bluetape4k module uses `bluetape4k-kafka4`.
 
-## Architecture
-
-![kafka reply Sequence Flow diagram](../../docs/images/readme-diagrams/messaging-kafka-reply-sequence-01.png)
-
 ## Key Components
 
 | Class | Role |

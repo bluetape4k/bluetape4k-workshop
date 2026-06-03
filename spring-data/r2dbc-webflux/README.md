@@ -26,13 +26,9 @@ Uses H2 in-memory database.
 
 ![R2DBC + Spring WebFlux (Functional Router) Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-readme-architecture-01.png)
 
-![R2DBC + Spring WebFlux (Functional Router) Diagram 1](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-readme-sequence-01.png)
-
 ## Architecture Diagram
 
 ![r2dbc webflux Architecture diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-diagram-01.png)
-
-![r2dbc webflux Sequence Flow 2 diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-sequence-01.png)
 
 This is a reactive CRUD example that combines Spring Data R2DBC with WebFlux functional routers
 (Handler + Router). It uses an H2 in-memory database.

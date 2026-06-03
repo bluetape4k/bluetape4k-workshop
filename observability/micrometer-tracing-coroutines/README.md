@@ -26,10 +26,6 @@ It safely propagates tracing spans through coroutine context with bluetape4k's `
 
 ![Micrometer Observation for Spring Boot 4 WebFlux & Coroutines Graphviz architecture diagram](../../docs/images/readme-diagrams/observability-micrometer-tracing-coroutines-readme-architecture-01.png)
 
-![micrometer tracing coroutines Architecture diagram](../../docs/images/readme-diagrams/observability-micrometer-tracing-coroutines-sequence-01.png)
-
-![micrometer tracing coroutines Sequence Flow 2 diagram](../../docs/images/readme-diagrams/observability-micrometer-tracing-coroutines-diagram-01.png)
-
 ## Key Components
 
 | Class | Role |

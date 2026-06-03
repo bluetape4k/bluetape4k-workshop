@@ -25,8 +25,6 @@ Redis(Redisson)와 Spring Boot WebFlux + Kotlin Coroutines를 사용해 **Idempo
 
 ![spring-boot/idempotency Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-idempotency-readme-architecture-01.png)
 
-![idempotency Sequence Flow diagram](../../docs/images/readme-diagrams/spring-boot-idempotency-sequence-01.png)
-
 ## 핵심 기능
 
 | 기능 | 상세 |

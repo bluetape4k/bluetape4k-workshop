@@ -15,6 +15,8 @@
 
 ## 시퀀스 다이어그램
 
+![hello-security 시퀀스 다이어그램](../../../docs/images/readme-diagrams/spring-security-webflux-hello-security-readme-sequence-01.png)
+
 핵심 시퀀스는 호출자 또는 테스트 픽스처 -> 워크샵 어댑터 -> bluetape4k 헬퍼/API -> 외부 런타임 또는 인메모리 백엔드 -> 검증/응답 순서입니다. 이 모듈에 전용 시퀀스 자산이 있으면 아래 이미지가 상호작용 순서를 보여주며, 그렇지 않으면 소스 테스트가 실행 가능한 시퀀스의 기준입니다.
 
 WebFlux controller, 커스텀 로그인 페이지, in-memory reactive user를 포함한 Reactive Spring Security 예제입니다.
@@ -22,8 +24,6 @@ WebFlux controller, 커스텀 로그인 페이지, in-memory reactive user를 �
 ## 아키텍처
 
 ![Spring Security WebFlux Hello Graphviz architecture diagram](../../../docs/images/readme-diagrams/spring-security-webflux-hello-security-readme-architecture-01.png)
-
-![hello security Sequence Flow diagram](../../../docs/images/readme-diagrams/spring-security-webflux-hello-security-diagram-01.png)
 
 ## 이 모듈에서 확인할 내용
 

@@ -61,7 +61,7 @@ function textBlock(text, x, y, className, maxChars, lineHeight = 15) {
 }
 
 function actorText(label, x, y) {
-  return textBlock(label, x, y, "actor", 17, 14);
+  return textBlock(label, x, y, "actor", 22, 14);
 }
 
 function readTexts(svg) {
@@ -161,6 +161,14 @@ function nearestActor(x, actors) {
   }, null)?.actor;
 }
 
+function normalizeActorLabel(label) {
+  return String(label)
+    .replace(/\b([A-Za-z]{6,})\s+(er|ry|late)\b/g, "$1$2")
+    .replace(/\b([A-Za-z]{6,})\s+(tion|sion|ment|ing)\b/g, "$1$2")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function labelForPath(pathInfo, texts, used) {
   const minX = Math.min(pathInfo.x1, pathInfo.x2) - 90;
   const maxX = Math.max(pathInfo.x1, pathInfo.x2) + 90;
@@ -191,7 +199,7 @@ function inferActors(svg, texts, lifelines) {
       .filter((text) => Math.abs(text.x - line.x) < 86)
       .filter((text) => text.y >= 88 && text.y <= headerY + 10)
       .sort((a, b) => a.y - b.y);
-    const label = candidates.map((text) => text.text).join(" ").trim() || `Actor ${index + 1}`;
+    const label = normalizeActorLabel(candidates.map((text) => text.text).join(" ")) || `Actor ${index + 1}`;
     return { id: `a${index}`, oldX: line.x, label };
   });
 }
@@ -220,13 +228,13 @@ function parseSequenceSvg(svg) {
 
 function renderSequence(model) {
   const actorCount = Math.max(model.actors.length, 2);
-  const width = Math.max(1040, actorCount * 220 + 170);
+  const width = Math.max(1040, actorCount * 240 + 220);
   const actorY = 108;
   const eventStart = 205;
   const eventGap = 108;
   const height = Math.max(430, eventStart + model.messages.length * eventGap + 86);
-  const laneLeft = 92;
-  const laneRight = width - 92;
+  const laneLeft = 150;
+  const laneRight = width - 150;
   const laneStep = (laneRight - laneLeft) / (actorCount - 1);
   const actors = model.actors.length ? model.actors : [{ id: "a0", label: "Source" }, { id: "a1", label: "Target" }];
   const xByActor = new Map(actors.map((actor, index) => [actor.id, laneLeft + laneStep * index]));
@@ -258,7 +266,7 @@ function renderSequence(model) {
 
   actors.forEach((actor, index) => {
     const x = xByActor.get(actor.id);
-    svg += `\n<rect class="box" x="${x - 90}" y="${actorY}" width="180" height="58" rx="10" fill="${colors[index % colors.length]}" stroke="#7aa0c4"/>`;
+    svg += `\n<rect class="box" x="${x - 110}" y="${actorY}" width="220" height="58" rx="10" fill="${colors[index % colors.length]}" stroke="#7aa0c4"/>`;
     svg += `\n${actorText(actor.label, x, actorY + 29)}`;
     svg += `\n<line class="lifeline" x1="${x}" y1="${actorY + 58}" x2="${x}" y2="${height - 58}"/>`;
   });

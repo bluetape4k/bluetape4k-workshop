@@ -15,6 +15,8 @@ This example exercises **R2DBC + WebFlux + Exposed ORM** as a runnable Spring Da
 
 ## Sequence Diagram
 
+![r2dbc-webflux-exposed sequence diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-exposed-readme-sequence-01.png)
+
 The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 Spring Data R2DBC + Spring WebFlux + JetBrains Exposed ORM, using **bluetape4k `R2dbcRepository`**
@@ -25,11 +27,7 @@ for a coroutine-first data access layer. Exposed table DSL handles schema defini
 
 ![R2DBC + WebFlux + Exposed ORM Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-exposed-readme-architecture-01.png)
 
-![R2DBC + WebFlux + Exposed ORM Diagram 1](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-exposed-readme-sequence-01.png)
-
 ## Architecture Diagram
-
-![r2dbc webflux exposed Sequence Flow diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-exposed-diagram-01.png)
 
 This example uses Spring Data R2DBC, Spring WebFlux, and JetBrains Exposed ORM together.
 It uses the `exposed-r2dbc` module to apply Exposed table definitions in an R2DBC environment.

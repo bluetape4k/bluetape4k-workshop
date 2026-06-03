@@ -8,6 +8,8 @@
 
 ## 시퀀스 다이어그램
 
+![jwt 시퀀스 다이어그램](../../../docs/images/readme-diagrams/spring-security-webflux-jwt-readme-sequence-01.png)
+
 핵심 시퀀스는 호출자 또는 테스트 픽스처 -> 워크샵 어댑터 -> bluetape4k 헬퍼/API -> 외부 런타임 또는 인메모리 백엔드 -> 검증/응답 순서입니다. 이 모듈에 전용 시퀀스 자산이 있으면 아래 이미지가 상호작용 순서를 보여주며, 그렇지 않으면 소스 테스트가 실행 가능한 시퀀스의 기준입니다.
 
 Reactive JWT resource server 예제입니다. `/token`에서 RSA 서명 JWT를 발급하고 bearer-token 인증으로 greeting endpoint를 보호합니다.
@@ -15,8 +17,6 @@ Reactive JWT resource server 예제입니다. `/token`에서 RSA 서명 JWT를 �
 ## 아키텍처
 
 ![Spring Security WebFlux JWT Graphviz architecture diagram](../../../docs/images/readme-diagrams/spring-security-webflux-jwt-readme-architecture-01.png)
-
-![jwt Sequence Flow diagram](../../../docs/images/readme-diagrams/spring-security-webflux-jwt-diagram-01.png)
 
 ## 이 모듈에서 확인할 내용
 

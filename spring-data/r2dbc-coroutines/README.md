@@ -26,13 +26,9 @@ for zero-boilerplate reactive data access.
 
 ![Spring Data R2DBC + Coroutines Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-coroutines-readme-architecture-01.png)
 
-![Spring Data R2DBC + Coroutines Diagram 1](../../docs/images/readme-diagrams/spring-data-r2dbc-coroutines-readme-sequence-01.png)
-
 ## Architecture Diagram
 
 ![r2dbc coroutines Class Structure diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-coroutines-diagram-01.png)
-
-![r2dbc coroutines Sequence Flow 2 diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-coroutines-sequence-01.png)
 
 ## Used bluetape4k Features
 

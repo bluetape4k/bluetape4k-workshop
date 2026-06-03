@@ -50,6 +50,21 @@ function readMessageLabels(svg) {
   return labels;
 }
 
+function readActorBoxes(svg) {
+  const boxes = [];
+  const rectRe = /<rect\b([^>]*\bclass="box"[^>]*)\/>/g;
+  let match;
+  while ((match = rectRe.exec(svg))) {
+    const attrs = match[1];
+    const x = Number((attrs.match(/\bx="([^"]+)"/) || [])[1]);
+    const y = Number((attrs.match(/\by="([^"]+)"/) || [])[1]);
+    const width = Number((attrs.match(/\bwidth="([^"]+)"/) || [])[1]);
+    const height = Number((attrs.match(/\bheight="([^"]+)"/) || [])[1]);
+    if ([x, y, width, height].every(Number.isFinite)) boxes.push({ x, y, width, height });
+  }
+  return boxes;
+}
+
 function labelIntersectsPath(label, points) {
   const labelTop = label.y;
   const labelBottom = label.y + label.height;
@@ -107,13 +122,22 @@ for (const file of files) {
 
   const paths = readMessagePaths(svg);
   const labels = readMessageLabels(svg);
+  const actorBoxes = readActorBoxes(svg);
   const messageTexts = readMessageTexts(svg);
+  const viewBox = firstNumberList((svg.match(/\bviewBox="([^"]+)"/) || [])[1] || "");
+  const canvasWidth = viewBox.length >= 4 ? viewBox[2] : Number((svg.match(/\bwidth="([^"]+)"/) || [])[1]);
   if (paths.length !== labels.length) {
     failures.push({ file: rel, failure: `message path/label count ${paths.length}/${labels.length}` });
     continue;
   }
-  if (messageTexts.some((text) => /^\d+\.?$/.test(text))) {
-    failures.push({ file: rel, failure: "empty or numeric-only message label" });
+  actorBoxes.forEach((box, index) => {
+    if (box.x < 24 || Number.isFinite(canvasWidth) && box.x + box.width > canvasWidth - 24) {
+      failures.push({ file: rel, failure: `participant box outside frame at actor ${index + 1}` });
+    }
+  });
+  const fallbackLabel = /^(?:\d+\.\s*)?(?:Actor\s+\d+|source\s+to\s+target|.+\s+to\s+target|source\s+to\s+.+|undefined|null)$/i;
+  if (messageTexts.some((text) => /^\d+\.?$/.test(text) || fallbackLabel.test(text))) {
+    failures.push({ file: rel, failure: "empty, numeric-only, or fallback message label" });
   }
 
   paths.forEach((messagePath, index) => {

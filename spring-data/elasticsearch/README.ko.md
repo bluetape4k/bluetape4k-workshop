@@ -31,8 +31,6 @@
 
 ![elasticsearch Class Structure diagram](../../docs/images/readme-diagrams/spring-data-elasticsearch-diagram-01.png)
 
-![elasticsearch Sequence Flow 2 diagram](../../docs/images/readme-diagrams/spring-data-elasticsearch-sequence-01.png)
-
 이 예제는 Spring Data Elasticsearch를 사용하는 동기(MVC) 예제입니다.
 통합 테스트에서는 Testcontainers가 Elasticsearch container를 자동으로 시작합니다.
 

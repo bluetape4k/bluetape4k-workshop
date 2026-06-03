@@ -32,5 +32,3 @@ Spring Boot를 사용하는 JPA & QueryDSL 예제입니다.
 ## 아키텍처 다이어그램
 
 ![jpa querydsl Class Structure diagram](../../docs/images/readme-diagrams/spring-data-jpa-querydsl-diagram-01.png)
-
-![jpa querydsl Sequence Flow 2 diagram](../../docs/images/readme-diagrams/spring-data-jpa-querydsl-sequence-01.png)

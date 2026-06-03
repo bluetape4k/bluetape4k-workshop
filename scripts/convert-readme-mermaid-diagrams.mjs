@@ -203,14 +203,14 @@ function parseSequence(source) {
 function renderSequence(source, title, subtitle) {
   const model = parseSequence(source);
   const actorCount = Math.max(model.actors.length, 2);
-  const width = Math.max(1040, actorCount * 210 + 220);
+  const width = Math.max(1040, actorCount * 240 + 220);
   const top = 116;
   const actorY = top;
   const eventStart = 218;
   const eventGap = 112;
   const height = Math.max(420, eventStart + model.events.length * eventGap + 72);
-  const laneLeft = 122;
-  const laneRight = width - 122;
+  const laneLeft = 150;
+  const laneRight = width - 150;
   const laneStep = (laneRight - laneLeft) / (actorCount - 1);
   const xByActor = new Map(model.actors.map((actor, index) => [actor.id, laneLeft + laneStep * index]));
   const colors = ["#e8f3ff", "#eaf7ef", "#fff3d9", "#f1ecff", "#fdecef", "#e9f7f6"];
@@ -219,8 +219,8 @@ function renderSequence(source, title, subtitle) {
   model.actors.forEach((actor, index) => {
     const x = xByActor.get(actor.id);
     const fill = colors[index % colors.length];
-    svg += `\n<rect class="box" x="${x - 92}" y="${actorY}" width="184" height="58" rx="10" fill="${fill}" stroke="#7aa0c4"/>`;
-    svg += `\n${actorTextBlock(actor.label, x, actorY + 29, "middle", 18, 14)}`;
+    svg += `\n<rect class="box" x="${x - 110}" y="${actorY}" width="220" height="58" rx="10" fill="${fill}" stroke="#7aa0c4"/>`;
+    svg += `\n${actorTextBlock(actor.label, x, actorY + 29, "middle", 22, 14)}`;
     svg += `\n<line class="lifeline" x1="${x}" y1="${actorY + 58}" x2="${x}" y2="${height - 58}"/>`;
   });
 

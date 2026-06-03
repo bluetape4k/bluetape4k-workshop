@@ -112,3 +112,19 @@ connector의 모든 horizontal/vertical segment 교차를 검사한다. 또한 `
 최종 검증은 sequence 46개 gate 통과, SVG XML 통과, README image link missing 0건,
 README SVG 직접 참조 0건, README language/parity 검증 통과, 8개 contact sheet와
 Kafka/Kafka Reply/Event/Vert.x 대표 PNG 원본 크기 직접 확인으로 마무리했다.
+
+추가 재검수에서는 PR branch만 고치고 `develop`에 merge하지 않으면 GitHub의
+`develop` URL에서는 여전히 예전 Mermaid/겹침 이미지가 보인다는 점을 확인했다.
+또한 Architecture 섹션에 sequence PNG가 중복 삽입된 README가 여러 개 있었으므로,
+diagram 검증은 asset geometry뿐 아니라 README 섹션 배치도 함께 검사해야 한다.
+이번 보정에서는 Architecture/아키텍처 섹션 안의 sequence image를 제거하고, 전용
+sequence asset이 있는데 Sequence/시퀀스 섹션에 빠진 경우 해당 섹션으로 옮겼다.
+검증 스크립트는 변경 README 37개 image link missing 0건, Architecture 섹션 내
+sequence image 0건, 빈 Architecture 섹션 0건을 확인했다.
+
+participant box 폭을 넓힐 때는 lane margin도 같이 늘려야 한다. box만 220px로
+키우면 첫/마지막 participant가 frame 밖으로 나갈 수 있다. `normalize-sequence-diagrams`
+와 Mermaid conversion generator는 lane 좌우 여백을 150px로 두고, validator는
+participant box가 frame 안에 남는지 검사해야 한다. 최종 시각 검수는 46개 sequence
+PNG를 4개 contact sheet로 훑고, Kafka/Kafka Reply/Micrometer PNG를 원본 크기로
+직접 열어 call/return line과 label box가 겹치지 않음을 확인했다.
