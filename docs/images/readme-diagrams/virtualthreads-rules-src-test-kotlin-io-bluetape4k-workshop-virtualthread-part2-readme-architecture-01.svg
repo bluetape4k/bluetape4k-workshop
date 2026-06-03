@@ -1,31 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="555" height="141" viewBox="0 0 555 141" role="img" aria-label="Source-derived README architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/part2/Rule2WriteBlockingSynchronousCode.kt&quot;,&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/part2/Rule3DoNotPoolVirtualThreads.kt&quot;,&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/part2/Rule4UseSemaphoreInsteadOfFixedThreadPools.kt&quot;,&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/part2/Rule5UseThreadLocalVariablesCarefully.kt&quot;,&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/part2/Rule6UseSynchronizedBlocksAndMethodsCarefully.kt&quot;]}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="660" viewBox="0 0 1120 660" role="img" aria-label="part2 architecture diagram">
+  <metadata>{&quot;sourceEvidence&quot;:[&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/part2/Rule2WriteBlockingSynchronousCode.kt&quot;,&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/part2/Rule3DoNotPoolVirtualThreads.kt&quot;,&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/part2/Rule4UseSemaphoreInsteadOfFixedThreadPools.kt&quot;,&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/part2/Rule5UseThreadLocalVariablesCarefully.kt&quot;,&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/part2/Rule6UseSynchronizedBlocksAndMethodsCarefully.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
   <defs>
-    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#637383"/>
+    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
+    </filter>
+    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
+    </marker>
+    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
+    </marker>
+    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
+    </marker>
+    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
+    </marker>
+    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
+      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
     </marker>
     <style>
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .node rect { stroke-width: 1.6; }
+      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
+      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
+      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
+      .node rect { stroke-width: 1.5; }
       .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
       .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
-      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
-      .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
+      .edge-label-bg { fill: #FFFFFF; stroke: #CAD6E0; stroke-width: 1; opacity: 0.96; }
+      .edge-label { font-family: "Comic Mono"; font-size: 12px; fill: #102033; dominant-baseline: middle; }
     </style>
   </defs>
-  <rect class="canvas" width="555" height="141"/>
-  <rect class="frame" x="10" y="10" width="535" height="121" rx="18"/>
+  <rect class="canvas" width="1120" height="660"/>
+  <rect class="frame" x="16" y="16" width="1088" height="628" rx="22"/>
+  <text class="diagram-title" x="560.0" y="58" text-anchor="middle">part2</text>
+  <text class="diagram-subtitle" x="560.0" y="84" text-anchor="middle">Virtualthreads example architecture, generated from README module sources</text>
   <g>
-    <polyline class="connector" points="194.2,70.4 194.2,70.4 325.6,70.4 325.6,70.4" marker-end="url(#arrow)"/><text class="edge-label" x="266.7" y="54.9" text-anchor="middle">runs on</text>
-    <g class="node" data-node="entry">
-      <rect x="28.0" y="28.0" width="165.4" height="84.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text text-anchor="middle"><tspan class="node-title" x="110.7" y="68.4">Example Family</tspan><tspan class="node-detail" x="110.7" y="90.4">part2</tspan></text>
+    <g class="layer" data-layer="surface">
+      <rect x="46.0" y="114.0" width="1028.0" height="132.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
+      <rect x="64.0" y="134.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="152.5">Domain / Entry</tspan><tspan class="layer-title" x="151.0" y="175.5">Surface</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="194.0">Entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="210.0">adapters, child</tspan><tspan class="layer-detail" x="151.0" y="226.0">examples</tspan></text>
     </g>
-    <g class="node" data-node="runtime">
-      <rect x="340.1" y="28.0" width="186.4" height="84.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text text-anchor="middle"><tspan class="node-title" x="433.3" y="68.4">Runtime</tspan><tspan class="node-detail" x="433.3" y="90.4">In-memory / JVM</tspan></text>
+    <g class="layer" data-layer="runtime">
+      <rect x="46.0" y="264.0" width="1028.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
+      <rect x="64.0" y="284.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
+      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="314.0">Runtime Backends</tspan></text>
+      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="344.0">External systems,</tspan><tspan class="layer-detail" x="151.0" y="360.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="376.0">JVM</tspan></text>
+    </g>
+    <g class="edge" data-edge="entry-&gt;runtime">
+      <path d="M 674.0 226.0 L 674.0 255.0 L 674.0 255.0 L 674.0 284.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
+      <rect class="edge-label-bg" x="632.0" y="228.0" width="84.0" height="23" rx="11"/>
+      <text class="edge-label" x="674.0" y="243.0" text-anchor="middle">runs on</text>
+    </g>
+    <g class="node" data-node="entry" data-lines="Example Family | part2">
+      <rect x="414.0" y="134.0" width="520.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="674.0" y="176.5">Example Family</tspan><tspan class="node-detail" x="674.0" y="200.5">part2</tspan></text>
+    </g>
+    <g class="node" data-node="runtime" data-lines="Runtime | In-memory / JVM">
+      <rect x="414.0" y="284.0" width="520.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
+      <text text-anchor="middle"><tspan class="node-title" x="674.0" y="326.5">Runtime</tspan><tspan class="node-detail" x="674.0" y="350.5">In-memory / JVM</tspan></text>
     </g>
   </g>
 </svg>

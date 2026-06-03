@@ -12,25 +12,6 @@ This example exercises **singleton** as a runnable Kotlin language and coroutine
 
 The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.kotlin` as the source of truth when comparing this README with the code.
 
-## Flow Diagram
-
-1. Prepare the local runtime required by `singleton`.
-2. Execute the application, controller, service, or test fixture that owns the example scenario.
-3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
-4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
-
----
-layout: pattern
-title: Singleton
-folder: singleton
-permalink: /patterns/singleton/
-categories: Creational
-tags:
-    - Java
-    - Gang Of Four
-    - Difficulty-Beginner
----
-
 ## Intent
 
 Ensures that a class has only one instance and provides a global access point to that instance.

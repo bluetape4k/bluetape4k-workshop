@@ -2,26 +2,24 @@
 
 [한국어](README.ko.md) | English
 
+## Example Scenario
+
+This example exercises **Spring Cloud API Gateway Demo** as a runnable gateway and downstream service coordination workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+
+![Spring Cloud API Gateway Demo scenario diagram](../../docs/images/readme-diagrams/gateway-api-gateway-scenario-01.png)
+
 ## Architecture Diagram
 
-![Spring Cloud API Gateway Demo architecture diagram](../../docs/images/readme-diagrams/gateway-api-gateway-diagram-01.png)
+![Spring Cloud API Gateway Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/gateway-api-gateway-readme-architecture-01.png)
 
 The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.gateway` as the source of truth when comparing this README with the code.
-
-![Spring Cloud API Gateway Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/gateway-api-gateway-readme-architecture-01.png)
 
 ## Sequence Diagram
 
 ![api-gateway sequence diagram](../../docs/images/readme-diagrams/gateway-api-gateway-readme-sequence-01.png)
 
-The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
-
 Spring Cloud Gateway (WebFlux-based) demo that provides routing, Swagger UI aggregation,
 and Bucket4j token-bucket rate limiting for downstream Customer and Order microservices.
-
-## Scenario
-
-![API Gateway Routing](../../docs/images/readme-diagrams/gateway-api-gateway-scenario-01.png)
 
 ## What This Module Shows
 
@@ -75,10 +73,6 @@ val bucket = bucket4j {
     }
 }.build(proxyManager, key)
 ```
-
-## Rate Limit Flow
-
-![Spring Cloud API Gateway Demo Diagram 1](../../docs/images/readme-diagrams/gateway-api-gateway-readme-sequence-01.png)
 
 ## Configuration
 

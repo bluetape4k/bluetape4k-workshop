@@ -2,16 +2,13 @@
 
 [English](README.md) | 한국어
 
-## 흐름 다이어그램
+## 아키텍처 다이어그램
 
-1. `graph-abuser-detection` 예제에 필요한 로컬 런타임을 준비합니다.
-2. 예제 시나리오를 담당하는 애플리케이션, 컨트롤러, 서비스 또는 테스트 픽스처를 실행합니다.
-3. 반복적인 인프라 처리는 bluetape4k 유틸리티 또는 Spring/Kotlin 통합 기능에 위임합니다.
-4. 샘플 출력, HTTP 응답, 저장소 상태, metric, trace 또는 테스트 기대값으로 결과를 검증합니다.
+모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성으로 구성됩니다. README와 코드를 비교할 때는 `io.bluetape4k.workshop.graph` 패키지 아래의 구현을 기준으로 삼습니다.
+
+![graph-abuser-detection 아키텍처 다이어그램](../../docs/images/readme-diagrams/graph-abuser-detection-readme-architecture-01.png)
 
 ## 시퀀스 다이어그램
-
-핵심 시퀀스는 호출자 또는 테스트 픽스처 -> 워크샵 어댑터 -> bluetape4k 헬퍼/API -> 외부 런타임 또는 인메모리 백엔드 -> 검증/응답 순서입니다. 전용 시퀀스 이미지가 있는 모듈은 아래 이미지가 상호작용 순서를 보여주며, 없는 경우 소스 테스트가 실행 가능한 시퀀스의 기준입니다.
 
 bluetape4k 워크샵 모듈로, 그래프 기반 어뷰저(abuser) 탐지를 시연합니다. 이 모듈은 사용자 계정과 공유 식별자(디바이스, IP 주소, 해시된 전화번호, 결제 토큰)를 연결하는 **신원 그래프(identity graph)**를 구축하고, 그래프 알고리즘을 적용하여 어뷰저 클러스터, 의심스러운 연결 경로, 추천인 루프, PageRank 기반 위험 점수를 탐지합니다.
 
@@ -25,12 +22,6 @@ bluetape4k 워크샵 모듈로, 그래프 기반 어뷰저(abuser) 탐지를 시
 위 다이어그램은 User A(사기 행위자)와 User B(공범)가 `Device-1`과 결제 토큰을 공유하는 상황을 보여줍니다.
 `findAbuseCluster("userA")` 호출 시 두 사용자를 하나의 클러스터로 반환합니다.
 User C는 IP 주소만 공유하며(예: VPN 출구 노드), 클러스터 포함 여부는 별도 판단이 필요합니다.
-
-## 모듈 아키텍처
-
-![모듈 아키텍처](docs/images/readme-diagrams/abuser-detection-architecture.png)
-
-![graph-abuser-detection Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/graph-abuser-detection-readme-architecture-01.png)
 
 ## 그래프 스키마
 

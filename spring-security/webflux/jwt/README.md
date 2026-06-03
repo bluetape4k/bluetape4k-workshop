@@ -10,8 +10,6 @@ This example exercises **Spring Security WebFlux JWT** as a runnable Spring Secu
 
 ![jwt sequence diagram](../../../docs/images/readme-diagrams/spring-security-webflux-jwt-readme-sequence-01.png)
 
-The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
-
 Reactive JWT resource server example. It issues RSA-signed JWTs from `/token` and protects the greeting endpoint with bearer-token authentication.
 
 ## Architecture
@@ -87,10 +85,6 @@ return http.invoke {
     }
 }
 ```
-
-## JWT Token Flow
-
-![Spring Security WebFlux JWT Diagram 1](../../../docs/images/readme-diagrams/spring-security-webflux-jwt-readme-sequence-01.png)
 
 ## Key Pairs
 

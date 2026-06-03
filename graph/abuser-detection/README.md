@@ -2,16 +2,13 @@
 
 [한국어](README.ko.md) | English
 
-## Flow Diagram
+## Architecture Diagram
 
-1. Prepare the local runtime required by `graph-abuser-detection`.
-2. Execute the application, controller, service, or test fixture that owns the example scenario.
-3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
-4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
+The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.graph` as the source of truth when comparing this README with the code.
+
+![graph-abuser-detection architecture diagram](../../docs/images/readme-diagrams/graph-abuser-detection-readme-architecture-01.png)
 
 ## Sequence Diagram
-
-The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 A bluetape4k workshop module demonstrating graph-based abuser detection. The module builds an
 **identity graph** that links user accounts to shared identifiers — devices, IP addresses, hashed
@@ -30,12 +27,6 @@ Users sharing the same device, payment token, or IP address are flagged as a pot
 cluster. The diagram above shows User A (fraudster) and User B (accomplice) sharing `Device-1`
 and a payment token — `findAbuseCluster("userA")` returns both as a cluster.
 User C shares only an IP address (e.g. a VPN exit node) and may or may not belong to the cluster.
-
-## Module Architecture
-
-![Module Architecture](docs/images/readme-diagrams/abuser-detection-architecture.png)
-
-![graph-abuser-detection Graphviz architecture diagram](../../docs/images/readme-diagrams/graph-abuser-detection-readme-architecture-01.png)
 
 ## Graph Schema
 

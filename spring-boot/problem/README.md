@@ -8,31 +8,14 @@ This example exercises **Problem Web Demo** as a runnable Spring Boot applicatio
 
 ## Architecture Diagram
 
-![Problem Web Demo architecture diagram](../../docs/images/readme-diagrams/spring-boot-problem-architecture-01.png)
+![Problem Web Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-problem-readme-architecture-01.png)
 
 The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.springboot` as the source of truth when comparing this README with the code.
 
-![Problem Web Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-problem-readme-architecture-01.png)
-
-## Flow Diagram
-
-1. Prepare the local runtime required by `spring-boot-problem`.
-2. Execute the application, controller, service, or test fixture that owns the example scenario.
-3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
-4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
-
-![Problem Web Demo flow diagram](../../docs/images/readme-diagrams/spring-boot-problem-diagram-01.png)
-
 ## Sequence Diagram
-
-The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 This error-handling example combines Spring Boot 4, which includes built-in RFC 9457 Problem Details support, with Zalando Problem Spring Web.
 It uses bluetape4k `KLogging` and `bluetape4k-resilience4j` to convert Circuit Breaker related exceptions into the RFC 9457 format.
-
-## Error Handling Flow
-
-![problem Architecture diagram](../../docs/images/readme-diagrams/spring-boot-problem-architecture-01.png)
 
 ## RFC 9457 Problem Details Concepts
 

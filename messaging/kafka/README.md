@@ -8,33 +8,16 @@ This example exercises **Kafka Demo** as a runnable message-driven workflow work
 
 ## Architecture Diagram
 
-![Kafka Demo architecture diagram](../../docs/images/readme-diagrams/messaging-kafka-architecture-01.png)
+![Kafka Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/messaging-kafka-readme-architecture-01.png)
 
 The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.messaging` as the source of truth when comparing this README with the code.
 
-![Kafka Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/messaging-kafka-readme-architecture-01.png)
-
-## Flow Diagram
-
-1. Prepare the local runtime required by `messaging-kafka`.
-2. Execute the application, controller, service, or test fixture that owns the example scenario.
-3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
-4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
-
-![Kafka Demo flow diagram](../../docs/images/readme-diagrams/messaging-kafka-diagram-01.png)
-
 ## Sequence Diagram
-
-The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 ![Kafka Demo sequence diagram](../../docs/images/readme-diagrams/messaging-kafka-sequence-01.png)
 
 This is a basic message publishing and consuming example that uses Spring Kafka.
 It starts Testcontainers Kafka automatically with bluetape4k's `KafkaServer.Launcher`, and handles the Spring Kafka 4 publishing path in a coroutine-friendly way with `suspendSend()` from `bluetape4k-kafka4`.
-
-## Architecture
-
-![kafka Architecture diagram](../../docs/images/readme-diagrams/messaging-kafka-architecture-01.png)
 
 ## Key Components
 

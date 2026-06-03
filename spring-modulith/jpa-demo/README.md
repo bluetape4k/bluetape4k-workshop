@@ -10,8 +10,6 @@ This example exercises **Spring Modulith JPA Demo** as a runnable Spring Modulit
 
 ![jpa-demo sequence diagram](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-sequence-02.png)
 
-The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
-
 Spring Modulith application with four logical modules — `organization`, `department`, `employee`, and `gateway` —
 connected through internal module APIs and Spring application events, verified by Modulith's structural tests.
 
@@ -23,7 +21,7 @@ Based on [sample-spring-modulith](https://github.com/piomin/sample-spring-moduli
 
 ## Architecture
 
-![Spring Modulith JPA Demo Diagram 1](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-flow-01.png)
+![Spring Modulith JPA Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-architecture-01.png)
 
 The application is divided into four logical modules:
 
@@ -33,8 +31,6 @@ The application is divided into four logical modules:
 | `department` | Manages `Department` entity; depends on `organization` via internal API |
 | `employee` | Manages `Employee` entity; depends on `organization` via internal API |
 | `gateway` | Exposes all modules over a single REST API (`/organizations/**`) |
-
-![Spring Modulith JPA Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-architecture-01.png)
 
 ## Used bluetape4k Features
 
@@ -92,10 +88,6 @@ class GatewayManagement(
     private val organizationAPI: OrganizationExternalAPI,  // public contract only
 )
 ```
-
-## Event Flow
-
-![Spring Modulith JPA Demo Diagram 2](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-sequence-02.png)
 
 ## Observability
 

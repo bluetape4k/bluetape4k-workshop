@@ -6,16 +6,7 @@
 
 This example exercises **Storage Abstraction Workshop** as a runnable AWS integration workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
 
-## Flow Diagram
-
-1. Prepare the local runtime required by `aws-storage-abstraction`.
-2. Execute the application, controller, service, or test fixture that owns the example scenario.
-3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
-4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
-
 ## Sequence Diagram
-
-The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 Demonstrates a pluggable storage strategy that switches between local filesystem,
 AWS S3, and S3 pre-signed URL backends via Spring Profile — without changing application code.
@@ -23,8 +14,6 @@ AWS S3, and S3 pre-signed URL backends via Spring Profile — without changing a
 ## Architecture
 
 ![Storage Abstraction Workshop Graphviz architecture diagram](../../docs/images/readme-diagrams/aws-storage-abstraction-readme-architecture-01.png)
-
-![storage abstraction Architecture diagram](../../docs/images/readme-diagrams/aws-storage-abstraction-readme-architecture-01.png)
 
 ## Key Features
 

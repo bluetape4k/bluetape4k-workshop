@@ -106,10 +106,12 @@ function imagesFor(rel) {
       && !file.includes("sequence")
       && (file.includes("architecture") || file.includes("diagram"))
   );
+  const generatedArchitecture = files.includes(readmeArchitecture) ? readmeArchitecture : undefined;
+  const graphModuleDetailedArchitecture = rel.startsWith("graph/") ? detailedArchitecture : undefined;
   return {
     scenario: exact("scenario"),
-    architecture: detailedArchitecture || (files.includes(readmeArchitecture) ? readmeArchitecture : exact("architecture") || exact("diagram")),
-    flow: exact("flow") || exact("diagram"),
+    architecture: graphModuleDetailedArchitecture || generatedArchitecture || detailedArchitecture || exact("architecture") || exact("diagram"),
+    flow: exact("flow"),
     sequence: exact("sequence"),
   };
 }
@@ -155,45 +157,49 @@ function domainOf(rel) {
 function enSections(rel, title, images) {
   const [domain] = domainText[domainOf(rel)] || ["workshop example"];
   const name = buildDirs.has(rel) ? moduleName(rel) : title;
+  const flowImage = images.flow && images.flow !== images.architecture ? images.flow : undefined;
+  const sequenceImage = images.sequence && images.sequence !== images.flow ? images.sequence : undefined;
   return {
     scenario: `## Example Scenario\n\nThis example exercises **${title}** as a runnable ${domain} workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.\n${imageMarkdown(rel, images.scenario, `${title} scenario diagram`)}`,
     architecture: `## Architecture Diagram\n\nThe module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under \`io.bluetape4k.workshop.${domainOf(rel).replace(/-/g, "")}\` as the source of truth when comparing this README with the code.\n${imageMarkdown(rel, images.architecture, `${title} architecture diagram`)}`,
-    flow: `## Flow Diagram\n\n1. Prepare the local runtime required by \`${name}\`.\n2. Execute the application, controller, service, or test fixture that owns the example scenario.\n3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.\n4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.\n${imageMarkdown(rel, images.flow && images.flow !== images.architecture ? images.flow : undefined, `${title} flow diagram`)}`,
-    sequence: `## Sequence Diagram\n\nThe core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.\n${imageMarkdown(rel, images.sequence && images.sequence !== images.flow ? images.sequence : undefined, `${title} sequence diagram`)}`,
+    flow: flowImage ? `## Flow Diagram\n\n![${title} flow diagram](${path.posix.relative(rel, `${imageDir}/${flowImage}`)})\n` : "",
+    sequence: sequenceImage ? `## Sequence Diagram\n\n![${title} sequence diagram](${path.posix.relative(rel, `${imageDir}/${sequenceImage}`)})\n` : "",
   };
 }
 
 function koSections(rel, title, images) {
   const [, domain] = domainText[domainOf(rel)] || ["", "워크샵 예제"];
   const name = buildDirs.has(rel) ? moduleName(rel) : title;
+  const flowImage = images.flow && images.flow !== images.architecture ? images.flow : undefined;
+  const sequenceImage = images.sequence && images.sequence !== images.flow ? images.sequence : undefined;
   return {
     scenario: `## 예제 시나리오\n\n이 예제는 **${title}** 모듈을 실행 가능한 ${domain} 예제로 보여줍니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 사용 방식을 중심으로 설명합니다.\n${imageMarkdown(rel, images.scenario, `${title} 시나리오 다이어그램`)}`,
     architecture: `## 아키텍처 다이어그램\n\n모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성으로 구성됩니다. README와 코드를 비교할 때는 \`io.bluetape4k.workshop.${domainOf(rel).replace(/-/g, "")}\` 패키지 아래의 구현을 기준으로 삼습니다.\n${imageMarkdown(rel, images.architecture, `${title} 아키텍처 다이어그램`)}`,
-    flow: `## 흐름 다이어그램\n\n1. \`${name}\` 예제에 필요한 로컬 런타임을 준비합니다.\n2. 예제 시나리오를 담당하는 애플리케이션, 컨트롤러, 서비스 또는 테스트 픽스처를 실행합니다.\n3. 반복적인 인프라 처리는 bluetape4k 유틸리티 또는 Spring/Kotlin 통합 기능에 위임합니다.\n4. 샘플 출력, HTTP 응답, 저장소 상태, metric, trace 또는 테스트 기대값으로 결과를 검증합니다.\n${imageMarkdown(rel, images.flow && images.flow !== images.architecture ? images.flow : undefined, `${title} 흐름 다이어그램`)}`,
-    sequence: `## 시퀀스 다이어그램\n\n핵심 시퀀스는 호출자 또는 테스트 픽스처 -> 워크샵 어댑터 -> bluetape4k 헬퍼/API -> 외부 런타임 또는 인메모리 백엔드 -> 검증/응답 순서입니다. 전용 시퀀스 이미지가 있는 모듈은 아래 이미지가 상호작용 순서를 보여주며, 없는 경우 소스 테스트가 실행 가능한 시퀀스의 기준입니다.\n${imageMarkdown(rel, images.sequence && images.sequence !== images.flow ? images.sequence : undefined, `${title} 시퀀스 다이어그램`)}`,
+    flow: flowImage ? `## 흐름 다이어그램\n\n![${title} 흐름 다이어그램](${path.posix.relative(rel, `${imageDir}/${flowImage}`)})\n` : "",
+    sequence: sequenceImage ? `## 시퀀스 다이어그램\n\n![${title} 시퀀스 다이어그램](${path.posix.relative(rel, `${imageDir}/${sequenceImage}`)})\n` : "",
   };
 }
 
 function hasSection(text, lang, key) {
   const patterns = {
     en: {
-      scenario: /^##\s+.*Scenario/im,
-      architecture: /^##\s+.*Architecture/im,
-      flow: /^##\s+.*Flow/im,
-      sequence: /^##\s+.*Sequence/im,
+      scenario: /^##\s+Example Scenario\s*$/im,
+      architecture: /^##\s+(Architecture|Architecture Diagram)\s*$/im,
+      flow: /^##\s+Flow Diagram\s*$/im,
+      sequence: /^##\s+Sequence Diagram\s*$/im,
     },
     ko: {
-      scenario: /^##\s+.*시나리오/im,
-      architecture: /^##\s+.*아키텍처/im,
-      flow: /^##\s+.*흐름/im,
-      sequence: /^##\s+.*시퀀스/im,
+      scenario: /^##\s+예제 시나리오\s*$/im,
+      architecture: /^##\s+아키텍처( 다이어그램)?\s*$/im,
+      flow: /^##\s+흐름 다이어그램\s*$/im,
+      sequence: /^##\s+시퀀스 다이어그램\s*$/im,
     },
   };
   return patterns[lang][key].test(text);
 }
 
 function insertMissingSections(text, sections, lang) {
-  const missing = ["scenario", "architecture", "flow", "sequence"].filter((key) => !hasSection(text, lang, key));
+  const missing = ["scenario", "architecture", "flow", "sequence"].filter((key) => sections[key] && !hasSection(text, lang, key));
   if (missing.length === 0) return text;
   const block = missing.map((key) => sections[key]).join("\n");
   const lines = text.split(/\r?\n/);
@@ -204,7 +210,7 @@ function insertMissingSections(text, sections, lang) {
 
 function ensureArchitectureImage(text, rel, title, images, lang) {
   const image = images.architecture;
-  if (!image || !image.includes("readme-architecture-01")) return text;
+  if (!image) return text;
   if (text.includes(image)) return text;
   const heading = lang === "en"
     ? /^(##\s+.*Architecture.*)$/im
@@ -214,10 +220,96 @@ function ensureArchitectureImage(text, rel, title, images, lang) {
   return text.replace(heading, `$1\n\n${markdown}`);
 }
 
+function normalizeArchitectureImages(text) {
+  const sections = text.split(/(?=^##\s+)/m);
+  return sections.map((section) => {
+    if (!/^##\s+.*(?:Architecture|아키텍처).*$/im.test(section)) return section;
+
+    const imagePattern = /^!\[[^\]]*]\([^)]+\)\s*$/gm;
+    const imageMatches = [...section.matchAll(imagePattern)];
+    if (imageMatches.length <= 1) return section;
+
+    const preferred = imageMatches.find((match) => match[0].includes("readme-architecture"))
+      || imageMatches.find((match) => !match[0].includes("readme-architecture"))
+      || imageMatches[0];
+    let kept = false;
+    return section.replace(imagePattern, (line) => {
+      if (line === preferred[0] && !kept) {
+        kept = true;
+        return line;
+      }
+      return "";
+    }).replace(/\n{3,}/g, "\n\n");
+  }).join("");
+}
+
+function normalizeDuplicateImages(text) {
+  const seen = new Set();
+  return text.replace(/^!\[[^\]]*]\(([^)]+)\)\s*$/gm, (line, target) => {
+    if (seen.has(target)) return "";
+    seen.add(target);
+    return line;
+  }).replace(/\n{3,}/g, "\n\n");
+}
+
+function removeDuplicateArchitectureSections(text) {
+  const sections = text.split(/(?=^##\s+)/m);
+  let seenArchitecture = false;
+  return sections.filter((section) => {
+    const heading = section.match(/^##\s+(.+?)\s*$/m)?.[1] || "";
+    if (!/(^|\s)(Architecture|Architecture Diagram|아키텍처|아키텍처 다이어그램)($|\s)/i.test(heading)) {
+      return true;
+    }
+    if (seenArchitecture) return false;
+    seenArchitecture = true;
+    return true;
+  }).join("").replace(/\n{3,}/g, "\n\n");
+}
+
+function removeGeneratedFlowSections(text) {
+  const sections = text.split(/(?=^##\s+)/m);
+  return sections.filter((section) => {
+    const heading = section.match(/^##\s+(.+?)\s*$/m)?.[1] || "";
+    return !/(^|\s)(Flow Diagram|흐름 다이어그램)($|\s)/i.test(heading);
+  }).join("").replace(/\n{3,}/g, "\n\n");
+}
+
+function removeGeneratedSequenceBoilerplate(text) {
+  return text
+    .replace(/\nThe core sequence is: caller or test fixture[\s\S]*?source tests are the authoritative executable sequence\.\n/g, "\n")
+    .replace(/\n핵심 시퀀스는 호출자 또는 테스트 픽스처[\s\S]*?소스 테스트가 실행 가능한 시퀀스의 기준입니다\.\n/g, "\n")
+    .replace(/\nThe core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper\/API -> external runtime or in-memory backend -> assertion\/response\. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence\.\n/g, "\n")
+    .replace(/\n핵심 시퀀스는 호출자 또는 테스트 픽스처 -> 워크샵 어댑터 -> bluetape4k 헬퍼\/API -> 외부 런타임 또는 인메모리 백엔드 -> 검증\/응답 순서입니다\. 전용 시퀀스 이미지가 있는 모듈은 아래 이미지가 상호작용 순서를 보여주며, 없는 경우 소스 테스트가 실행 가능한 시퀀스의 기준입니다\.\n/g, "\n")
+    .replace(/\n핵심 시퀀스는 호출자 또는 테스트 픽스처 -> 워크샵 어댑터 -> bluetape4k 헬퍼\/API -> 외부 런타임 또는 인메모리 백엔드 -> 검증\/응답 순서입니다\. 이 모듈에 전용 시퀀스 자산이 있으면 아래 이미지가 상호작용 순서를 보여주며, 그렇지 않으면 소스 테스트가 실행 가능한 시퀀스의 기준입니다\.\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n");
+}
+
+function removeEmptyDiagramSections(text) {
+  const sections = text.split(/(?=^##\s+)/m);
+  return sections.filter((section) => {
+    const heading = section.match(/^##\s+(.+?)\s*$/m)?.[1] || "";
+    if (!/(Scenario|Architecture|Flow|Sequence|Workflow|시나리오|아키텍처|흐름|시퀀스|워크플로우)/i.test(heading)) return true;
+    const body = section
+      .replace(/^##\s+.+?\s*$/m, "")
+      .replace(/\s+/g, "");
+    return body.length > 0;
+  }).join("").replace(/\n{3,}/g, "\n\n");
+}
+
 function summarizeExistingEn(enText) {
   const headings = [...enText.matchAll(/^##\s+(.+?)\s*$/gm)].map((m) => m[1]).slice(0, 8);
   if (headings.length === 0) return "";
   return `\n## 원문 상세 항목\n\n영어 README에는 다음 상세 항목이 포함되어 있습니다. 한국어 요약은 위의 시나리오/아키텍처/흐름을 기준으로 읽고, 코드 예제와 설정 세부사항은 영어 README의 같은 모듈 설명을 함께 참고하세요.\n\n${headings.map((h) => `- ${h}`).join("\n")}\n`;
+}
+
+function ensureKoScenarioSection(ko, rel, title) {
+  if (/^##\s+예제 시나리오\s*$/im.test(ko)) return ko;
+  const [, domain] = domainText[domainOf(rel)] || ["", "워크샵 예제"];
+  const section = `## 예제 시나리오\n\n이 예제는 **${title}**를 실행 가능한 ${domain} 예제로 보여줍니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 사용 방식을 중심으로 설명합니다.\n`;
+  const lines = ko.split(/\r?\n/);
+  const insertAt = Math.min(lines.length, 4);
+  lines.splice(insertAt, 0, section.trimEnd());
+  return lines.join("\n").replace(/\n{3,}/g, "\n\n").trimEnd() + "\n";
 }
 
 let changed = 0;
@@ -248,6 +340,12 @@ for (const dir of modules) {
   let en = ensureTitleAndSwitch(originalEn, title, "en");
   en = insertMissingSections(en, enSections(rel, title, images), "en");
   en = ensureArchitectureImage(en, rel, title, images, "en");
+  en = normalizeArchitectureImages(en);
+  en = normalizeDuplicateImages(en);
+  en = removeDuplicateArchitectureSections(en);
+  en = removeGeneratedFlowSections(en);
+  en = removeGeneratedSequenceBoilerplate(en);
+  en = removeEmptyDiagramSections(en);
   if (writeIfChanged(enFile, en)) changed++;
 
   const koTitle = fs.existsSync(koFile) ? titleFrom(readIfExists(koFile), rel) : title;
@@ -259,6 +357,15 @@ for (const dir of modules) {
   }
   ko = insertMissingSections(ko, koSections(rel, koTitle, images), "ko");
   ko = ensureArchitectureImage(ko, rel, koTitle, images, "ko");
+  ko = normalizeArchitectureImages(ko);
+  ko = normalizeDuplicateImages(ko);
+  ko = removeDuplicateArchitectureSections(ko);
+  ko = removeGeneratedFlowSections(ko);
+  ko = removeGeneratedSequenceBoilerplate(ko);
+  ko = removeEmptyDiagramSections(ko);
+  if (/^##\s+Example Scenario\s*$/im.test(en)) {
+    ko = ensureKoScenarioSection(ko, rel, koTitle);
+  }
   if (!fs.existsSync(koFile)) {
     ko += summarizeExistingEn(originalEn);
     if (buildDirs.has(rel)) {

@@ -10,17 +10,9 @@ This example exercises **image-processing-advanced-workflow** as a runnable imag
 
 ## Sequence Diagram
 
-The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
-
 Advanced Spring Boot 4 workflow for uploaded images: validate, store the original, generate WebP derivatives with Java 25 libvips, store every object through Bluetape4k `ImageStorage`, and return unsigned public URLs.
 
-## Workflow
-
-![Image Upload Workflow](../../docs/images/readme-diagrams/image-processing-advanced-workflow-scenario-01.png)
-
 ## Architecture
-
-![Image Processing Architecture](../../docs/images/readme-diagrams/image-processing-advanced-workflow-architecture-01.png)
 
 ![image-processing-advanced-workflow Graphviz architecture diagram](../../docs/images/readme-diagrams/image-processing-advanced-workflow-readme-architecture-01.png)
 

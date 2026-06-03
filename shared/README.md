@@ -8,22 +8,11 @@ This example exercises **Bluetape4k Workshop Shared** as a runnable shared works
 
 ## Architecture Diagram
 
-![Bluetape4k Workshop Shared architecture diagram](../docs/images/readme-diagrams/shared-diagram-01.png)
+![Bluetape4k Workshop Shared Graphviz architecture diagram](../docs/images/readme-diagrams/shared-readme-architecture-01.png)
 
 The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.shared` as the source of truth when comparing this README with the code.
 
-![Bluetape4k Workshop Shared Graphviz architecture diagram](../docs/images/readme-diagrams/shared-readme-architecture-01.png)
-
-## Flow Diagram
-
-1. Prepare the local runtime required by `shared`.
-2. Execute the application, controller, service, or test fixture that owns the example scenario.
-3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
-4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
-
 ## Sequence Diagram
-
-The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 This module provides shared utilities used across Bluetape4k Workshop examples.
 
@@ -37,8 +26,6 @@ Most features are already provided by `Bluetape4k`, but this module fills the ga
 - **AbstractSpringTest**: Base class for Spring integration tests
 
 ## Module Structure
-
-![shared Architecture diagram](../docs/images/readme-diagrams/shared-diagram-01.png)
 
 ## Provided Utilities
 

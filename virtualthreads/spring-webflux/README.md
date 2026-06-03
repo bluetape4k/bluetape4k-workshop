@@ -2,32 +2,21 @@
 
 [한국어](README.ko.md) | English
 
+## Example Scenario
+
+This example exercises **Spring WebFlux with Coroutines and Virtual Thread** as a runnable virtual-thread execution workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+
 ## Architecture Diagram
-
-![Spring WebFlux with Coroutines and Virtual Thread architecture diagram](../../docs/images/readme-diagrams/virtualthreads-spring-webflux-diagram-01.png)
-
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.virtualthreads` as the source of truth when comparing this README with the code.
 
 ![Spring WebFlux with Coroutines and Virtual Thread Graphviz architecture diagram](../../docs/images/readme-diagrams/virtualthreads-spring-webflux-readme-architecture-01.png)
 
-## Flow Diagram
-
-1. Prepare the local runtime required by `virtualthreads-spring-webflux`.
-2. Execute the application, controller, service, or test fixture that owns the example scenario.
-3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
-4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
+The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.virtualthreads` as the source of truth when comparing this README with the code.
 
 ## Sequence Diagram
-
-The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 This example compares the performance of several Coroutine Dispatchers in a Spring WebFlux environment.
 
 ## Dispatcher Processing Model
-
-![Spring WebFlux with Coroutines and Virtual Thread Diagram 1](../../docs/images/readme-diagrams/virtualthreads-spring-webflux-readme-flow-01.png)
-
-![Dispatcher diagram](../../docs/images/readme-diagrams/virtualthreads-spring-webflux-diagram-01.png)
 
 ## Dispatcher Comparison
 

@@ -10,17 +10,9 @@
 
 ## 시퀀스 다이어그램
 
-핵심 시퀀스는 호출자 또는 테스트 픽스처 -> 워크샵 어댑터 -> bluetape4k 헬퍼/API -> 외부 런타임 또는 인메모리 백엔드 -> 검증/응답 순서입니다. 전용 시퀀스 이미지가 있는 모듈은 아래 이미지가 상호작용 순서를 보여주며, 없는 경우 소스 테스트가 실행 가능한 시퀀스의 기준입니다.
-
 업로드된 이미지를 검증하고, 원본을 저장하고, Java 25 libvips로 WebP 파생 이미지를 생성한 뒤, 모든 객체를 Bluetape4k `ImageStorage`로 저장하고 unsigned public URL을 반환하는 Spring Boot 4 고급 예제입니다.
 
-## 워크플로우
-
-![Image Upload Workflow](../../docs/images/readme-diagrams/image-processing-advanced-workflow-scenario-01.png)
-
 ## 아키텍처
-
-![Image Processing Architecture](../../docs/images/readme-diagrams/image-processing-advanced-workflow-architecture-01.png)
 
 ![image-processing-advanced-workflow Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/image-processing-advanced-workflow-readme-architecture-01.png)
 

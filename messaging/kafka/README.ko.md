@@ -8,33 +8,16 @@
 
 ## 아키텍처 다이어그램
 
-![Kafka Demo 아키텍처 다이어그램](../../docs/images/readme-diagrams/messaging-kafka-architecture-01.png)
+![Kafka Demo Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/messaging-kafka-readme-architecture-01.png)
 
 모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성을 중심으로 구성됩니다. README와 코드를 비교할 때는 `io.bluetape4k.workshop.messaging` 패키지 아래의 구현을 기준으로 삼습니다.
 
-![Kafka Demo Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/messaging-kafka-readme-architecture-01.png)
-
-## 흐름 다이어그램
-
-1. `messaging-kafka`에 필요한 로컬 런타임을 준비합니다.
-2. 예제 시나리오를 담당하는 애플리케이션, 컨트롤러, 서비스 또는 테스트 픽스처를 실행합니다.
-3. 반복적인 인프라 작업을 bluetape4k 유틸리티 또는 Spring/Kotlin 통합 기능에 위임합니다.
-4. 샘플 출력, HTTP 응답, 저장소 상태, metric, trace 또는 테스트 기대값으로 보이는 결과를 검증합니다.
-
-![Kafka Demo 흐름 다이어그램](../../docs/images/readme-diagrams/messaging-kafka-diagram-01.png)
-
 ## 시퀀스 다이어그램
-
-핵심 시퀀스는 호출자 또는 테스트 픽스처 -> 워크샵 어댑터 -> bluetape4k 헬퍼/API -> 외부 런타임 또는 인메모리 백엔드 -> 검증/응답 순서입니다. 이 모듈에 전용 시퀀스 자산이 있으면 아래 이미지가 상호작용 순서를 보여주며, 그렇지 않으면 소스 테스트가 실행 가능한 시퀀스의 기준입니다.
 
 ![Kafka Demo 시퀀스 다이어그램](../../docs/images/readme-diagrams/messaging-kafka-sequence-01.png)
 
 Spring Kafka를 사용하는 기본 메시지 발행 및 소비 예제입니다.
 bluetape4k의 `KafkaServer.Launcher`로 Testcontainers Kafka를 자동 시작하고, `bluetape4k-kafka4`의 `suspendSend()`로 Spring Kafka 4 발행 경로를 코루틴 친화적으로 처리합니다.
-
-## 아키텍처
-
-![kafka Architecture diagram](../../docs/images/readme-diagrams/messaging-kafka-architecture-01.png)
 
 ## 주요 구성 요소
 

@@ -2,25 +2,23 @@
 
 [English](README.md) | 한국어
 
+## 예제 시나리오
+
+이 예제는 **Spring Cloud API Gateway Demo** 모듈을 실행 가능한 게이트웨이와 하위 서비스 연동 예제로 보여줍니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 사용 방식을 중심으로 설명합니다.
+
+![Spring Cloud API Gateway Demo 시나리오 다이어그램](../../docs/images/readme-diagrams/gateway-api-gateway-scenario-01.png)
+
 ## 아키텍처 다이어그램
 
-![Spring Cloud API Gateway Demo architecture diagram](../../docs/images/readme-diagrams/gateway-api-gateway-diagram-01.png)
+![Spring Cloud API Gateway Demo Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/gateway-api-gateway-readme-architecture-01.png)
 
 이 모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성을 중심으로 구성됩니다. 이 README와 코드를 비교할 때는 `io.bluetape4k.workshop.gateway` 패키지를 기준으로 삼으세요.
-
-![Spring Cloud API Gateway Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/gateway-api-gateway-readme-architecture-01.png)
 
 ## 시퀀스 다이어그램
 
 ![api-gateway 시퀀스 다이어그램](../../docs/images/readme-diagrams/gateway-api-gateway-readme-sequence-01.png)
 
-핵심 시퀀스는 호출자 또는 테스트 픽스처 -> 워크숍 어댑터 -> bluetape4k 헬퍼/API -> 외부 런타임 또는 인메모리 백엔드 -> 검증/응답 순서입니다. 이 모듈에 전용 시퀀스 자산이 있으면 아래 이미지가 상호작용 순서를 보여 줍니다. 그렇지 않으면 소스 테스트가 실행 가능한 시퀀스의 기준입니다.
-
 Spring Cloud Gateway(WebFlux 기반) 데모로, 하위 Customer 및 Order 마이크로서비스에 대한 라우팅, Swagger UI 집계, Redis(Lettuce)와 Redisson 기반 Bucket4j 토큰 버킷 요청 제한을 제공합니다.
-
-## 시나리오
-
-![API Gateway Routing](../../docs/images/readme-diagrams/gateway-api-gateway-scenario-01.png)
 
 ## 이 모듈이 보여 주는 것
 
@@ -74,10 +72,6 @@ val bucket = bucket4j {
     }
 }.build(proxyManager, key)
 ```
-
-## 요청 제한 흐름
-
-![Spring Cloud API Gateway Demo Diagram 1](../../docs/images/readme-diagrams/gateway-api-gateway-readme-sequence-01.png)
 
 ## 설정
 

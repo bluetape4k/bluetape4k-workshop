@@ -6,18 +6,9 @@
 
 This example exercises **Spring Security WebFlux Hello** as a runnable Spring Security request protection workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
 
-## Flow Diagram
-
-1. Prepare the local runtime required by `spring-security-webflux-hello-security`.
-2. Execute the application, controller, service, or test fixture that owns the example scenario.
-3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
-4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
-
 ## Sequence Diagram
 
 ![hello-security sequence diagram](../../../docs/images/readme-diagrams/spring-security-webflux-hello-security-readme-sequence-01.png)
-
-The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 Reactive Spring Security example with WebFlux controllers, a custom login page, and an in-memory reactive user.
 
@@ -92,8 +83,6 @@ return http {
 ```
 
 ## Security Filter Chain (WebFlux)
-
-![Spring Security WebFlux Hello Diagram 1](../../../docs/images/readme-diagrams/spring-security-webflux-hello-security-readme-sequence-01.png)
 
 ## Operational Notes
 

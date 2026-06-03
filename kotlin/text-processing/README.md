@@ -2,22 +2,19 @@
 
 [한국어](README.ko.md) | English
 
+## Example Scenario
+
+This example exercises **kotlin/text-processing** as a runnable Kotlin language and coroutine patterns workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+
+![kotlin/text-processing scenario diagram](../../docs/images/readme-diagrams/kotlin-text-processing-scenario-01.png)
+
 ## Architecture Diagram
 
 ![kotlin/text-processing Graphviz architecture diagram](../../docs/images/readme-diagrams/kotlin-text-processing-readme-architecture-01.png)
 
 The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.kotlin` as the source of truth when comparing this README with the code.
 
-## Flow Diagram
-
-1. Prepare the local runtime required by `kotlin-text-processing`.
-2. Execute the application, controller, service, or test fixture that owns the example scenario.
-3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
-4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
-
 ## Sequence Diagram
-
-The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
 
 Text processing workshop module using [bluetape4k-text](https://github.com/bluetape4k/bluetape4k-text) libraries.
 
@@ -32,8 +29,6 @@ Demonstrates three practical text-processing scenarios:
 ---
 
 ## Scenario
-
-![3 Text Processing Scenarios](../../docs/images/readme-diagrams/kotlin-text-processing-scenario-01.png)
 
 ---
 

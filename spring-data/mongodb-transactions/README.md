@@ -8,30 +8,13 @@ This example exercises **mongo-transactions demo** as a runnable Spring Data per
 
 ## Architecture Diagram
 
-![mongo-transactions demo architecture diagram](../../docs/images/readme-diagrams/spring-data-mongodb-transactions-diagram-01.png)
+![mongo-transactions demo Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-data-mongodb-transactions-readme-architecture-01.png)
 
 The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.springdata` as the source of truth when comparing this README with the code.
 
-![mongo-transactions demo Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-data-mongodb-transactions-readme-architecture-01.png)
-
-## Flow Diagram
-
-1. Prepare the local runtime required by `spring-data-mongodb-transactions`.
-2. Execute the application, controller, service, or test fixture that owns the example scenario.
-3. Delegate repetitive infrastructure work to bluetape4k utilities or Spring/Kotlin integrations.
-4. Assert the visible result through the sample output, HTTP response, repository state, metric, trace, or test expectation.
-
 ## Sequence Diagram
 
-The core sequence is: caller or test fixture -> workshop adapter -> bluetape4k helper/API -> external runtime or in-memory backend -> assertion/response. When this module has a dedicated sequence asset, the image below shows that interaction order; otherwise the source tests are the authoritative executable sequence.
-
 ![mongo-transactions demo sequence diagram](../../docs/images/readme-diagrams/spring-data-mongodb-transactions-sequence-01.png)
-
-## Architecture Diagram
-
-![mongodb transactions Class Structure diagram](../../docs/images/readme-diagrams/spring-data-mongodb-transactions-diagram-01.png)
-
-This example performs MongoDB work with `Spring Data Mongo` and Kotlin Coroutines.
 
 ## References
 
