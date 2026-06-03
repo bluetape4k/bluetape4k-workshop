@@ -33,9 +33,9 @@ User C shares only an IP address (e.g. a VPN exit node) and may or may not belon
 
 ## Module Architecture
 
-![graph-abuser-detection Graphviz architecture diagram](../../docs/images/readme-diagrams/graph-abuser-detection-readme-architecture-01.png)
-
 ![Module Architecture](docs/images/readme-diagrams/abuser-detection-architecture.png)
+
+![graph-abuser-detection Graphviz architecture diagram](../../docs/images/readme-diagrams/graph-abuser-detection-readme-architecture-01.png)
 
 ## Graph Schema
 

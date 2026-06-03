@@ -1,12 +1,11 @@
-graph 1 17.869 1.1017
-node entry 1.3067 0.52188 2.6133 1.0438 "Entry / Tests\nRedisClusterApplication /\nAbstractRedisClusterTest" rounded,filled box #88A3B5 #FFF8E7
-node service 4.6908 0.52188 1.8217 0.7625 "Service / Domain\nNumberService" rounded,filled box #88A3B5 #F1F8E9
-node infra 8.1062 0.52188 2.8425 0.7625 "Library Layer\nworkshop / core / jackson3" rounded,filled box #88A3B5 #F5F0FF
-node bt 12.282 0.52188 2.8425 0.7625 "bluetape4k APIs\nworkshop / core / jackson3" rounded,filled box #88A3B5 #EAF7F0
-node runtime 16.411 0.52188 2.9154 1.0438 "Runtime\nSQL / R2DBC / Redis / AWS\n/ S3" rounded,filled box #88A3B5 #FFF1F1
-edge entry service 4 2.6199 0.52188 2.6199 0.52188 3.6285 0.52188 3.6285 0.52188 calls 3.1967 0.61042 solid #637383
-edge service infra 4 5.6106 0.52188 5.6106 0.52188 6.5342 0.52188 6.5342 0.52188 uses 6.1433 0.61042 solid #637383
-edge infra bt 4 9.5317 0.39479 9.5317 0.39479 10.71 0.39479 10.71 0.39479 uses 10.194 1.0132 solid #637383
-edge infra bt 4 9.5317 0.64896 9.5317 0.64896 10.71 0.64896 10.71 0.64896 extends 10.194 0.20764 solid #637383
-edge bt runtime 4 13.709 0.52188 13.709 0.52188 14.803 0.52188 14.803 0.52188 adapts 14.328 0.61042 solid #637383
+graph 1 18.715 1.7263
+node entry 1.3667 0.86313 2.7333 1.7263 "Entry & Verification\nRedisClusterApplication\nAbstractRedisClusterTest\nBasicUsageTest\nRedis Cluster Demo tests" rounded,filled box #88A3B5 #FFF8E7
+node service 5.4247 0.86313 1.9938 0.8825 "Service & Domain\nNumberService" rounded,filled box #88A3B5 #F1F8E9
+node infra 10.608 0.86313 3.15 1.7263 "Framework Layer\nSpring boot starter data redis\nlib\nSpring boot autoconfigure lib\nSpring boot starter test" rounded,filled box #88A3B5 #F5F0FF
+node bt 14.619 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\ncore\njackson3" rounded,filled box #88A3B5 #EAF7F0
+node runtime 17.843 0.86313 1.7437 1.445 "Runtime\nSQL / R2DBC\nRedis\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry service 4 2.7405 0.86313 2.7405 0.86313 4.2815 0.86313 4.2815 0.86313 delegates 3.5806 0.95167 solid #637383
+edge service infra 4 6.4301 0.86313 6.4301 0.86313 8.881 0.86313 8.881 0.86313 "persists / publishes" 7.7271 0.95167 solid #637383
+edge infra bt 4 12.187 0.86313 12.187 0.86313 13.563 0.86313 13.563 0.86313 extends 12.947 0.95167 solid #637383
+edge bt runtime 4 15.534 0.86313 15.534 0.86313 16.822 0.86313 16.822 0.86313 adapts 16.249 0.95167 solid #637383
 stop

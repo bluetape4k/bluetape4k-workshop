@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1876" height="184" viewBox="0 0 1876 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="2115" height="222" viewBox="0 0 2115 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-data/mongodb-transactions/src/main/kotlin/io/bluetape4k/workshop/mongodb/Process.kt&quot;,&quot;spring-data/mongodb-transactions/src/main/kotlin/io/bluetape4k/workshop/mongodb/State.kt&quot;,&quot;spring-data/mongodb-transactions/src/main/kotlin/io/bluetape4k/workshop/mongodb/coroutine/CoroutineManagedTransitionService.kt&quot;,&quot;spring-data/mongodb-transactions/src/main/kotlin/io/bluetape4k/workshop/mongodb/coroutine/CoroutineProcessRepository.kt&quot;,&quot;spring-data/mongodb-transactions/src/main/kotlin/io/bluetape4k/workshop/mongodb/imperative/ProcessRepository.kt&quot;,&quot;spring-data/mongodb-transactions/src/main/kotlin/io/bluetape4k/workshop/mongodb/imperative/TransitionService.kt&quot;,&quot;spring-data/mongodb-transactions/src/main/kotlin/io/bluetape4k/workshop/mongodb/reactive/ReactiveManagedTransitionService.kt&quot;,&quot;spring-data/mongodb-transactions/src/main/kotlin/io/bluetape4k/workshop/mongodb/reactive/ReactiveProcessRepository.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,38 +9,38 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1876" height="184"/>
-  <rect class="frame" x="10" y="10" width="1856" height="164" rx="18"/>
+  <rect class="canvas" width="2115" height="222"/>
+  <rect class="frame" x="10" y="10" width="2095" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="248.7,91.6 248.7,91.6 345.5,91.6 345.5,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="303.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="693.7,91.6 693.7,91.6 782.1,91.6 782.1,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="744.8" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1091.5,108.3 1091.5,108.3 1204.4,108.3 1204.4,108.3" marker-end="url(#arrow)"/><text class="edge-label" x="1154.7" y="37.4" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1091.5,74.9 1091.5,74.9 1204.4,74.9 1204.4,74.9" marker-end="url(#arrow)"/><text class="edge-label" x="1154.7" y="114.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1469.2,91.6 1469.2,91.6 1574.5,91.6 1574.5,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1528.5" y="76.1" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="412.0,110.9 412.0,110.9 559.5,110.9 559.5,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="492.7" y="95.4" text-anchor="middle">delegates</text>
+    <polyline class="connector" points="919.0,110.9 919.0,110.9 1154.6,110.9 1154.6,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1043.8" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1460.3,110.9 1460.3,110.9 1591.9,110.9 1591.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1532.9" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1781.2,110.9 1781.2,110.9 1904.9,110.9 1904.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1849.9" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="55.0" width="219.9" height="73.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="137.9" y="86.1">Entry / Tests</tspan><tspan x="137.9" y="109.1">AbstractMongodbTest</tspan></text>
+      <rect x="28.0" y="28.0" width="383.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="219.7" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="219.7" y="106.9">AbstractMongodbTest</tspan><tspan class="node-detail" x="219.7" y="122.9">CoroutineManagedTransitionServiceTest</tspan><tspan class="node-detail" x="219.7" y="138.9">Spring Data Mongodb Transactions</tspan><tspan class="node-detail" x="219.7" y="154.9">tests</tspan></text>
     </g>
     <g class="node" data-node="service">
-      <rect x="359.9" y="28.0" width="332.9" height="127.2" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="526.3" y="63.1">Service / Domain</tspan><tspan x="526.3" y="86.1">CoroutineManagedTransitionService</tspan><tspan x="526.3" y="109.1">/ TransitionService /</tspan><tspan x="526.3" y="132.1">ReactiveManagedTransitionService</tspan></text>
+      <rect x="574.1" y="28.0" width="344.4" height="165.7" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="746.3" y="84.9">Service &amp; Domain</tspan><tspan class="node-detail" x="746.3" y="106.9">CoroutineManagedTransitionService</tspan><tspan class="node-detail" x="746.3" y="122.9">TransitionService</tspan><tspan class="node-detail" x="746.3" y="138.9">ReactiveManagedTransitionService</tspan><tspan class="node-detail" x="746.3" y="154.9">ReactiveTransitionService</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="796.8" y="28.0" width="293.9" height="127.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="943.7" y="63.1">Repository / Infra</tspan><tspan x="943.7" y="86.1">Process / State /</tspan><tspan x="943.7" y="109.1">CoroutineProcessRepository /</tspan><tspan x="943.7" y="132.1">ProcessRepository</tspan></text>
+      <rect x="1169.1" y="28.0" width="290.4" height="165.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1314.3" y="84.9">Repository &amp; Infra</tspan><tspan class="node-detail" x="1314.3" y="106.9">Process</tspan><tspan class="node-detail" x="1314.3" y="122.9">State</tspan><tspan class="node-detail" x="1314.3" y="138.9">CoroutineProcessRepository</tspan><tspan class="node-detail" x="1314.3" y="154.9">ProcessRepository</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1218.6" y="41.5" width="249.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1343.6" y="74.6">bluetape4k APIs</tspan><tspan x="1343.6" y="97.6">testcontainers /</tspan><tspan x="1343.6" y="120.6">coroutines / idgenerators</tspan></text>
+      <rect x="1606.2" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1693.4" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1693.4" y="114.9">testcontainers</tspan><tspan class="node-detail" x="1693.4" y="130.9">coroutines</tspan><tspan class="node-detail" x="1693.4" y="146.9">idgenerators</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1588.5" y="55.0" width="258.9" height="73.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1718.0" y="86.1">Runtime</tspan><tspan x="1718.0" y="109.1">MongoDB / Testcontainers</tspan></text>
+      <rect x="1919.3" y="55.0" width="167.4" height="111.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="2003.0" y="100.9">Runtime</tspan><tspan class="node-detail" x="2003.0" y="122.9">MongoDB</tspan><tspan class="node-detail" x="2003.0" y="138.9">Testcontainers</tspan></text>
     </g>
   </g>
 </svg>

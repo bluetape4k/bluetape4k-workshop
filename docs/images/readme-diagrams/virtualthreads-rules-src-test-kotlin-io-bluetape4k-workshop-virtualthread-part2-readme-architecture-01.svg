@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="497" height="130" viewBox="0 0 497 130" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="555" height="141" viewBox="0 0 555 141" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/part2/Rule2WriteBlockingSynchronousCode.kt&quot;,&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/part2/Rule3DoNotPoolVirtualThreads.kt&quot;,&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/part2/Rule4UseSemaphoreInsteadOfFixedThreadPools.kt&quot;,&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/part2/Rule5UseThreadLocalVariablesCarefully.kt&quot;,&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/part2/Rule6UseSynchronizedBlocksAndMethodsCarefully.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,22 +9,23 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="497" height="130"/>
-  <rect class="frame" x="10" y="10" width="477" height="110" rx="18"/>
+  <rect class="canvas" width="555" height="141"/>
+  <rect class="frame" x="10" y="10" width="535" height="121" rx="18"/>
   <g>
-    <polyline class="connector" points="182.7,64.6 182.7,64.6 279.3,64.6 279.3,64.6" marker-end="url(#arrow)"/><text class="edge-label" x="237.9" y="49.1" text-anchor="middle">calls</text>
+    <polyline class="connector" points="194.2,70.4 194.2,70.4 325.6,70.4 325.6,70.4" marker-end="url(#arrow)"/><text class="edge-label" x="266.7" y="54.9" text-anchor="middle">runs on</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="28.0" width="153.9" height="73.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="104.9" y="59.1">Example Family</tspan><tspan x="104.9" y="82.1">part2</tspan></text>
+      <rect x="28.0" y="28.0" width="165.4" height="84.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="110.7" y="68.4">Example Family</tspan><tspan class="node-detail" x="110.7" y="90.4">part2</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="293.9" y="28.0" width="174.9" height="73.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="381.3" y="59.1">Runtime</tspan><tspan x="381.3" y="82.1">In-memory / JVM</tspan></text>
+      <rect x="340.1" y="28.0" width="186.4" height="84.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="433.3" y="68.4">Runtime</tspan><tspan class="node-detail" x="433.3" y="90.4">In-memory / JVM</tspan></text>
     </g>
   </g>
 </svg>

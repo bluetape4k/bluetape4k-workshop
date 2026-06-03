@@ -1,10 +1,8 @@
-graph 1 11.766 1.1017
-node entry 1.1713 0.52188 2.3425 1.0438 "Example Family\ndocker-compose-plugin\nexample" rounded,filled box #88A3B5 #FFF8E7
-node infra 4.295 0.52188 1.5717 0.7625 "Library Layer\nio / junit5" rounded,filled box #88A3B5 #F5F0FF
-node bt 7.2625 0.52188 1.6967 0.7625 "bluetape4k APIs\nio / junit5" rounded,filled box #88A3B5 #EAF7F0
-node runtime 10.563 0.52188 2.405 1.0438 "Runtime\nSQL / R2DBC / Redis /\nElasticsearch" rounded,filled box #88A3B5 #FFF1F1
-edge entry infra 4 2.3522 0.52188 2.3522 0.52188 3.3577 0.52188 3.3577 0.52188 calls 2.9258 0.61042 solid #637383
-edge infra bt 4 5.0902 0.39479 5.0902 0.39479 6.2652 0.39479 6.2652 0.39479 uses 5.7475 1.0132 solid #637383
-edge infra bt 4 5.0902 0.64896 5.0902 0.64896 6.2652 0.64896 6.2652 0.64896 extends 5.7475 0.20764 solid #637383
-edge bt runtime 4 8.1168 0.52188 8.1168 0.52188 9.2094 0.52188 9.2094 0.52188 adapts 8.7358 0.61042 solid #637383
+graph 1 9.6826 2.5943
+node entry 1.6115 0.44125 3.2229 0.8825 "Example Family\ndocker-compose-plugin example" rounded,filled box #88A3B5 #FFF8E7
+node bt 5.659 1.8718 1.8167 1.1637 "bluetape4k APIs\nio\njunit5" rounded,filled box #88A3B5 #EAF7F0
+node runtime 8.8472 1.8718 1.6708 1.445 "Runtime\nSQL / R2DBC\nRedis\nElasticsearch" rounded,filled box #88A3B5 #FFF1F1
+node api 1.6115 1.8718 0.75 0.60125 api rounded,filled box #88A3B5 #F6FAFF
+edge bt runtime 4 6.5769 1.8718 6.5769 1.8718 7.864 1.8718 7.864 1.8718 adapts 7.2896 1.9603 solid #637383
+edge api bt 4 1.9959 1.8718 1.9959 1.8718 4.5993 1.8718 4.5993 1.8718 extends 3.9868 1.9603 solid #637383
 stop

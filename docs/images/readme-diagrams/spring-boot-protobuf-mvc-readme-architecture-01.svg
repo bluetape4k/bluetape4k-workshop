@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1768" height="162" viewBox="0 0 1768 162" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="2191" height="222" viewBox="0 0 2191 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-boot/protobuf-mvc/src/main/kotlin/io/bluetape4k/workshop/protobuf/ConurceConfig.kt&quot;,&quot;spring-boot/protobuf-mvc/src/main/kotlin/io/bluetape4k/workshop/protobuf/CourseController.kt&quot;,&quot;spring-boot/protobuf-mvc/src/main/kotlin/io/bluetape4k/workshop/protobuf/CourseRepository.kt&quot;,&quot;spring-boot/protobuf-mvc/src/main/kotlin/io/bluetape4k/workshop/protobuf/ProtobufApplication.kt&quot;,&quot;spring-boot/protobuf-mvc/src/main/kotlin/io/bluetape4k/workshop/protobuf/convert/ProtobufConverter.kt&quot;,&quot;spring-boot/protobuf-mvc/src/test/kotlin/io/bluetape4k/workshop/protobuf/CourseConfigTest.kt&quot;,&quot;spring-boot/protobuf-mvc/src/test/kotlin/io/bluetape4k/workshop/protobuf/ProtobufApplicationIT.kt&quot;,&quot;spring-boot/protobuf-mvc/src/test/kotlin/io/bluetape4k/workshop/protobuf/convert/ProtobufConverterTest.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,43 +9,43 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1768" height="162"/>
-  <rect class="frame" x="10" y="10" width="1748" height="142" rx="18"/>
+  <rect class="canvas" width="2191" height="222"/>
+  <rect class="frame" x="10" y="10" width="2171" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="242.4,83.7 242.4,83.7 339.5,83.7 339.5,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="297.9" y="68.2" text-anchor="middle">calls</text>
-    <polyline class="connector" points="531.6,83.7 531.6,83.7 620.5,83.7 620.5,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="582.8" y="68.2" text-anchor="middle">uses</text>
-    <polyline class="connector" points="835.2,83.7 835.2,83.7 924.5,83.7 924.5,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="886.6" y="68.2" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1125.4,100.4 1125.4,100.4 1237.9,100.4 1237.9,100.4" marker-end="url(#arrow)"/><text class="edge-label" x="1188.5" y="29.5" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1125.4,67.0 1125.4,67.0 1237.9,67.0 1237.9,67.0" marker-end="url(#arrow)"/><text class="edge-label" x="1188.5" y="106.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1445.2,83.7 1445.2,83.7 1550.0,83.7 1550.0,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="1504.4" y="68.2" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="355.0,110.9 355.0,110.9 486.7,110.9 486.7,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="427.7" y="95.4" text-anchor="middle">invokes</text>
+    <polyline class="connector" points="690.1,110.9 690.1,110.9 837.8,110.9 837.8,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="770.8" y="95.4" text-anchor="middle">delegates</text>
+    <polyline class="connector" points="1063.9,110.9 1063.9,110.9 1299.7,110.9 1299.7,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1188.8" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1517.2,110.9 1517.2,110.9 1649.0,110.9 1649.0,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1589.9" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1838.5,110.9 1838.5,110.9 1961.9,110.9 1961.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1907.0" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="33.6" width="213.9" height="100.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="134.9" y="66.7">Entry / Tests</tspan><tspan x="134.9" y="89.7">ProtobufApplication /</tspan><tspan x="134.9" y="112.7">CourseConfigTest</tspan></text>
+      <rect x="28.0" y="28.0" width="326.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="191.2" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="191.2" y="106.9">ProtobufApplication</tspan><tspan class="node-detail" x="191.2" y="122.9">CourseConfigTest</tspan><tspan class="node-detail" x="191.2" y="138.9">ProtobufApplicationIT</tspan><tspan class="node-detail" x="191.2" y="154.9">Spring Boot Protobuf Mvc tests</tspan></text>
     </g>
     <g class="node" data-node="api">
-      <rect x="353.9" y="47.1" width="176.9" height="73.2" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="442.3" y="78.2">API / Adapter</tspan><tspan x="442.3" y="101.2">CourseController</tspan></text>
+      <rect x="501.1" y="68.5" width="188.4" height="84.7" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="595.3" y="108.9">API &amp; Adapters</tspan><tspan class="node-detail" x="595.3" y="130.9">CourseController</tspan></text>
     </g>
     <g class="node" data-node="service">
-      <rect x="634.8" y="47.1" width="199.9" height="73.2" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="734.7" y="78.2">Service / Domain</tspan><tspan x="734.7" y="101.2">ProtobufConverter</tspan></text>
+      <rect x="852.1" y="68.5" width="211.4" height="84.7" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="957.8" y="108.9">Service &amp; Domain</tspan><tspan class="node-detail" x="957.8" y="130.9">ProtobufConverter</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="938.6" y="33.6" width="185.9" height="100.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1031.6" y="66.7">Repository / Infra</tspan><tspan x="1031.6" y="89.7">ConurceConfig /</tspan><tspan x="1031.6" y="112.7">CourseRepository</tspan></text>
+      <rect x="1314.2" y="55.0" width="202.4" height="111.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1415.4" y="100.9">Repository &amp; Infra</tspan><tspan class="node-detail" x="1415.4" y="122.9">ConurceConfig</tspan><tspan class="node-detail" x="1415.4" y="138.9">CourseRepository</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1252.5" y="33.6" width="191.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1348.5" y="66.7">bluetape4k APIs</tspan><tspan x="1348.5" y="89.7">workshop / grpc /</tspan><tspan x="1348.5" y="112.7">coroutines</tspan></text>
+      <rect x="1663.2" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1750.4" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1750.4" y="114.9">workshop</tspan><tspan class="node-detail" x="1750.4" y="130.9">grpc</tspan><tspan class="node-detail" x="1750.4" y="146.9">coroutines</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1564.4" y="47.1" width="174.9" height="73.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1651.8" y="78.2">Runtime</tspan><tspan x="1651.8" y="101.2">In-memory / JVM</tspan></text>
+      <rect x="1976.3" y="68.5" width="186.4" height="84.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="2069.5" y="108.9">Runtime</tspan><tspan class="node-detail" x="2069.5" y="130.9">In-memory / JVM</tspan></text>
     </g>
   </g>
 </svg>

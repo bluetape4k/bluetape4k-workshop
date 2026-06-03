@@ -4,11 +4,11 @@
 
 ## Architecture Diagram
 
-![Spring WebFlux with Coroutines and Virtual Thread Graphviz architecture diagram](../../docs/images/readme-diagrams/virtualthreads-spring-webflux-readme-architecture-01.png)
+![Spring WebFlux with Coroutines and Virtual Thread architecture diagram](../../docs/images/readme-diagrams/virtualthreads-spring-webflux-diagram-01.png)
 
 The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.virtualthreads` as the source of truth when comparing this README with the code.
 
-![Spring WebFlux with Coroutines and Virtual Thread architecture diagram](../../docs/images/readme-diagrams/virtualthreads-spring-webflux-diagram-01.png)
+![Spring WebFlux with Coroutines and Virtual Thread Graphviz architecture diagram](../../docs/images/readme-diagrams/virtualthreads-spring-webflux-readme-architecture-01.png)
 
 ## Flow Diagram
 

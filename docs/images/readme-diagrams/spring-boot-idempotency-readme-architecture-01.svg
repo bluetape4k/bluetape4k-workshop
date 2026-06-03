@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1761" height="162" viewBox="0 0 1761 162" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1805" height="222" viewBox="0 0 1805 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-boot/idempotency/src/main/kotlin/io/bluetape4k/workshop/idempotency/IdempotencyApplication.kt&quot;,&quot;spring-boot/idempotency/src/main/kotlin/io/bluetape4k/workshop/idempotency/config/RedissonConfig.kt&quot;,&quot;spring-boot/idempotency/src/main/kotlin/io/bluetape4k/workshop/idempotency/controller/OrderController.kt&quot;,&quot;spring-boot/idempotency/src/main/kotlin/io/bluetape4k/workshop/idempotency/model/OrderModels.kt&quot;,&quot;spring-boot/idempotency/src/main/kotlin/io/bluetape4k/workshop/idempotency/service/IdempotencyService.kt&quot;,&quot;spring-boot/idempotency/src/test/kotlin/io/bluetape4k/workshop/idempotency/AbstractIdempotencyTest.kt&quot;,&quot;spring-boot/idempotency/src/test/kotlin/io/bluetape4k/workshop/idempotency/controller/OrderControllerTest.kt&quot;,&quot;spring-boot/idempotency/build.gradle.kts&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,38 +9,38 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1761" height="162"/>
-  <rect class="frame" x="10" y="10" width="1741" height="142" rx="18"/>
+  <rect class="canvas" width="1805" height="222"/>
+  <rect class="frame" x="10" y="10" width="1785" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="280.6,83.7 280.6,83.7 377.4,83.7 377.4,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="335.9" y="68.2" text-anchor="middle">calls</text>
-    <polyline class="connector" points="594.6,83.7 594.6,83.7 683.8,83.7 683.8,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="645.8" y="68.2" text-anchor="middle">uses</text>
-    <polyline class="connector" points="989.4,95.9 989.4,95.9 1102.1,95.9 1102.1,95.9" marker-end="url(#arrow)"/><text class="edge-label" x="1052.6" y="29.5" text-anchor="middle">uses</text>
-    <polyline class="connector" points="989.4,71.5 989.4,71.5 1102.1,71.5 1102.1,71.5" marker-end="url(#arrow)"/><text class="edge-label" x="1052.6" y="106.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1390.0,83.7 1390.0,83.7 1495.4,83.7 1495.4,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="1449.5" y="68.2" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="336.9,110.9 336.9,110.9 469.0,110.9 469.0,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="409.7" y="95.4" text-anchor="middle">invokes</text>
+    <polyline class="connector" points="697.3,110.9 697.3,110.9 932.5,110.9 932.5,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="821.8" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1150.2,110.9 1150.2,110.9 1281.9,110.9 1281.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1222.9" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1471.3,110.9 1471.3,110.9 1594.9,110.9 1594.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1539.9" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="33.6" width="251.9" height="100.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="153.9" y="66.7">Entry / Tests</tspan><tspan x="153.9" y="89.7">IdempotencyApplication /</tspan><tspan x="153.9" y="112.7">AbstractIdempotencyTest</tspan></text>
+      <rect x="28.0" y="28.0" width="308.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="182.2" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="182.2" y="106.9">IdempotencyApplication</tspan><tspan class="node-detail" x="182.2" y="122.9">AbstractIdempotencyTest</tspan><tspan class="node-detail" x="182.2" y="138.9">OrderControllerTest</tspan><tspan class="node-detail" x="182.2" y="154.9">Spring Boot Idempotency tests</tspan></text>
     </g>
     <g class="node" data-node="api">
-      <rect x="391.9" y="33.6" width="201.9" height="100.2" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="492.8" y="66.7">API / Adapter</tspan><tspan x="492.8" y="89.7">OrderController /</tspan><tspan x="492.8" y="112.7">IdempotencyService</tspan></text>
+      <rect x="483.1" y="55.0" width="213.4" height="111.7" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="589.8" y="100.9">API &amp; Adapters</tspan><tspan class="node-detail" x="589.8" y="122.9">OrderController</tspan><tspan class="node-detail" x="589.8" y="138.9">IdempotencyService</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="697.8" y="47.1" width="290.9" height="73.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="843.2" y="78.2">Repository / Infra</tspan><tspan x="843.2" y="101.2">RedissonConfig / OrderModels</tspan></text>
+      <rect x="947.1" y="55.0" width="202.4" height="111.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1048.3" y="100.9">Repository &amp; Infra</tspan><tspan class="node-detail" x="1048.3" y="122.9">RedissonConfig</tspan><tspan class="node-detail" x="1048.3" y="138.9">OrderModels</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1116.6" y="47.1" width="272.9" height="73.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1253.1" y="78.2">bluetape4k APIs</tspan><tspan x="1253.1" y="101.2">workshop / jackson3 / core</tspan></text>
+      <rect x="1296.2" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1383.4" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1383.4" y="114.9">workshop</tspan><tspan class="node-detail" x="1383.4" y="130.9">jackson3</tspan><tspan class="node-detail" x="1383.4" y="146.9">core</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1509.5" y="47.1" width="222.9" height="73.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1620.9" y="78.2">Runtime</tspan><tspan x="1620.9" y="101.2">Redis / Testcontainers</tspan></text>
+      <rect x="1609.2" y="55.0" width="167.4" height="111.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1692.9" y="100.9">Runtime</tspan><tspan class="node-detail" x="1692.9" y="122.9">Redis</tspan><tspan class="node-detail" x="1692.9" y="138.9">Testcontainers</tspan></text>
     </g>
   </g>
 </svg>

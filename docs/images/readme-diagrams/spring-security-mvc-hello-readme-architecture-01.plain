@@ -1,12 +1,12 @@
-graph 1 16.89 1.1017
-node entry 1.6035 0.52188 3.2071 1.0438 "Entry / Tests\nKotlinApplication /\nAbstractSecurityApplicationTest" rounded,filled box #88A3B5 #FFF8E7
-node api 5.2742 0.52188 1.8008 1.0438 "API / Adapter\nSecurityConfig /\nMainController" rounded,filled box #88A3B5 #EEF7FF
-node infra 8.6896 0.52188 2.8633 0.7625 "Library Layer\nworkshop / jackson3 / junit5" rounded,filled box #88A3B5 #F5F0FF
-node bt 12.615 0.52188 2.3217 1.0438 "bluetape4k APIs\nworkshop / jackson3 /\njunit5" rounded,filled box #88A3B5 #EAF7F0
-node runtime 15.958 0.52188 1.8633 0.7625 "Runtime\nRedis / AWS / S3" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.2135 0.52188 3.2135 0.52188 4.2233 0.52188 4.2233 0.52188 calls 3.7904 0.61042 solid #637383
-edge api infra 4 6.1805 0.52188 6.1805 0.52188 7.1075 0.52188 7.1075 0.52188 uses 6.7162 0.61042 solid #637383
-edge infra bt 4 10.129 0.39479 10.129 0.39479 11.303 0.39479 11.303 0.39479 uses 10.788 1.0132 solid #637383
-edge infra bt 4 10.129 0.64896 10.129 0.64896 11.303 0.64896 11.303 0.64896 extends 10.788 0.20764 solid #637383
-edge bt runtime 4 13.784 0.52188 13.784 0.52188 14.878 0.52188 14.878 0.52188 adapts 14.401 0.61042 solid #637383
+graph 1 18.767 1.7263
+node entry 1.6635 0.86313 3.3271 1.7263 "Entry & Verification\nKotlinApplication\nAbstractSecurityApplicationTest\nMainControllerTest\nSpring Security Mvc Hello tests" rounded,filled box #88A3B5 #FFF8E7
+node api 5.7424 0.86313 1.775 1.1637 "API & Adapters\nSecurityConfig\nMainController" rounded,filled box #88A3B5 #EEF7FF
+node infra 10.967 0.86313 3.4521 1.7263 "Framework Layer\nSpring boot starter security\nSpring boot starter thymeleaf\nSpring boot starter web\nSpring boot starter webmvc \
+test" rounded,filled box #88A3B5 #F5F0FF
+node bt 15.129 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\njackson3\njunit5" rounded,filled box #88A3B5 #EAF7F0
+node runtime 18.125 0.86313 1.2854 1.1637 "Runtime\nRedis\nAWS / S3" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.3343 0.86313 3.3343 0.86313 4.7075 0.86313 4.7075 0.86313 invokes 4.091 0.95167 solid #637383
+edge api infra 4 6.6346 0.86313 6.6346 0.86313 9.0905 0.86313 9.0905 0.86313 "persists / publishes" 7.9354 0.95167 solid #637383
+edge infra bt 4 12.702 0.86313 12.702 0.86313 14.073 0.86313 14.073 0.86313 extends 13.457 0.95167 solid #637383
+edge bt runtime 4 16.044 0.86313 16.044 0.86313 17.334 0.86313 17.334 0.86313 adapts 16.76 0.95167 solid #637383
 stop

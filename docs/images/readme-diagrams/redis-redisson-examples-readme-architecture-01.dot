@@ -3,8 +3,8 @@ digraph G {
     rankdir=LR,
     bgcolor="white",
     pad="0.35",
-    nodesep="0.55",
-    ranksep="0.75",
+    nodesep="0.70",
+    ranksep="0.95",
     splines=ortho,
     outputorder=edgesfirst
   ];
@@ -16,7 +16,7 @@ digraph G {
     fillcolor="#F6FAFF",
     fontname="Architects Daughter",
     fontsize=14,
-    margin="0.14,0.10"
+    margin="0.20,0.16"
   ];
   edge [
     color="#637383",
@@ -27,12 +27,11 @@ digraph G {
   ];
 
   entry [label="Example Family\nRedisson Examples", fillcolor="#FFF8E7"];
-  infra [label="Library Layer\nredis / redisson /\ntestcontainers", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nredis / redisson /\ntestcontainers", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC / Redis / AWS\n/ S3", fillcolor="#FFF1F1"];
+  infra [label="Framework Layer\nSpring boot starter jdbc lib\nSpring boot starter data redis\nlib\nSpring boot starter data redis", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k APIs\nredis\nredisson\ntestcontainers", fillcolor="#EAF7F0"];
+  runtime [label="Runtime\nSQL / R2DBC\nRedis\nAWS / S3", fillcolor="#FFF1F1"];
 
-  entry -> infra [label="calls"];
-  infra -> bt [label="uses"];
+  entry -> infra [label="persists / publishes"];
   infra -> bt [label="extends"];
   bt -> runtime [label="adapts"];
 }

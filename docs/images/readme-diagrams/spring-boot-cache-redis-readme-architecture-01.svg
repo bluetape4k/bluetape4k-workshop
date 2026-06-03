@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1734" height="184" viewBox="0 0 1734 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1983" height="222" viewBox="0 0 1983 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-boot/cache-redis/src/main/kotlin/io/bluetape4k/workshop/cache/redis/RedisCacheApplication.kt&quot;,&quot;spring-boot/cache-redis/src/main/kotlin/io/bluetape4k/workshop/cache/redis/config/AsyncConfig.kt&quot;,&quot;spring-boot/cache-redis/src/main/kotlin/io/bluetape4k/workshop/cache/redis/config/LettuceRedisCacheConfiguration.kt&quot;,&quot;spring-boot/cache-redis/src/main/kotlin/io/bluetape4k/workshop/cache/redis/domain/Country.kt&quot;,&quot;spring-boot/cache-redis/src/main/kotlin/io/bluetape4k/workshop/cache/redis/domain/CountryRepository.kt&quot;,&quot;spring-boot/cache-redis/src/main/kotlin/io/bluetape4k/workshop/cache/redis/prefetcher/CountryPrefetcher.kt&quot;,&quot;spring-boot/cache-redis/src/test/kotlin/io/bluetape4k/workshop/cache/redis/AbstractRedisCacheTest.kt&quot;,&quot;spring-boot/cache-redis/src/test/kotlin/io/bluetape4k/workshop/cache/redis/config/LettuceRedisCacheConfigurationTest.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,38 +9,38 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1734" height="184"/>
-  <rect class="frame" x="10" y="10" width="1714" height="164" rx="18"/>
+  <rect class="canvas" width="1983" height="222"/>
+  <rect class="frame" x="10" y="10" width="1963" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="270.8,91.6 270.8,91.6 367.3,91.6 367.3,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="325.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="693.5,91.6 693.5,91.6 782.3,91.6 782.3,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="744.8" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1025.2,103.8 1025.2,103.8 1138.2,103.8 1138.2,103.8" marker-end="url(#arrow)"/><text class="edge-label" x="1088.6" y="37.4" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1025.2,79.4 1025.2,79.4 1138.2,79.4 1138.2,79.4" marker-end="url(#arrow)"/><text class="edge-label" x="1088.6" y="114.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1363.1,91.6 1363.1,91.6 1468.2,91.6 1468.2,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1422.5" y="76.1" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="390.2,110.9 390.2,110.9 537.7,110.9 537.7,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="470.7" y="95.4" text-anchor="middle">delegates</text>
+    <polyline class="connector" points="875.2,110.9 875.2,110.9 1110.8,110.9 1110.8,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="999.8" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1328.2,110.9 1328.2,110.9 1459.8,110.9 1459.8,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1400.9" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1649.2,110.9 1649.2,110.9 1772.9,110.9 1772.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1717.9" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="41.5" width="241.9" height="100.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="148.9" y="74.6">Entry / Tests</tspan><tspan x="148.9" y="97.6">RedisCacheApplication /</tspan><tspan x="148.9" y="120.6">AbstractRedisCacheTest</tspan></text>
+      <rect x="28.0" y="28.0" width="361.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="208.7" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="208.7" y="106.9">RedisCacheApplication</tspan><tspan class="node-detail" x="208.7" y="122.9">AbstractRedisCacheTest</tspan><tspan class="node-detail" x="208.7" y="138.9">LettuceRedisCacheConfigurationTest</tspan><tspan class="node-detail" x="208.7" y="154.9">Spring Boot Cache Redis tests</tspan></text>
     </g>
     <g class="node" data-node="service">
-      <rect x="381.9" y="28.0" width="310.9" height="127.2" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="537.3" y="63.1">Service / Domain</tspan><tspan x="537.3" y="86.1">LettuceRedisCacheConfiguration</tspan><tspan x="537.3" y="109.1">/ CountryRepository /</tspan><tspan x="537.3" y="132.1">CountryPrefetcher</tspan></text>
+      <rect x="552.1" y="41.5" width="322.4" height="138.7" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="713.3" y="92.9">Service &amp; Domain</tspan><tspan class="node-detail" x="713.3" y="114.9">LettuceRedisCacheConfiguration</tspan><tspan class="node-detail" x="713.3" y="130.9">CountryRepository</tspan><tspan class="node-detail" x="713.3" y="146.9">CountryPrefetcher</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="796.8" y="55.0" width="227.9" height="73.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="910.7" y="86.1">Repository / Infra</tspan><tspan x="910.7" y="109.1">AsyncConfig / Country</tspan></text>
+      <rect x="1125.2" y="55.0" width="202.4" height="111.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1226.4" y="100.9">Repository &amp; Infra</tspan><tspan class="node-detail" x="1226.4" y="122.9">AsyncConfig</tspan><tspan class="node-detail" x="1226.4" y="138.9">Country</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1152.6" y="41.5" width="209.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1257.6" y="74.6">bluetape4k APIs</tspan><tspan x="1257.6" y="97.6">workshop / lettuce /</tspan><tspan x="1257.6" y="120.6">jackson3</tspan></text>
+      <rect x="1474.2" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1561.4" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1561.4" y="114.9">workshop</tspan><tspan class="node-detail" x="1561.4" y="130.9">lettuce</tspan><tspan class="node-detail" x="1561.4" y="146.9">jackson3</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1482.5" y="55.0" width="222.9" height="73.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1594.0" y="86.1">Runtime</tspan><tspan x="1594.0" y="109.1">Redis / Testcontainers</tspan></text>
+      <rect x="1787.3" y="55.0" width="167.4" height="111.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1871.0" y="100.9">Runtime</tspan><tspan class="node-detail" x="1871.0" y="122.9">Redis</tspan><tspan class="node-detail" x="1871.0" y="138.9">Testcontainers</tspan></text>
     </g>
   </g>
 </svg>

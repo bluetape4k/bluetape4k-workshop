@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="950" height="184" viewBox="0 0 950 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1010" height="195" viewBox="0 0 1010 195" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/builder/Enums.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/builder/Hero.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/builder/HeroDataClass.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,27 +9,28 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="950" height="184"/>
-  <rect class="frame" x="10" y="10" width="930" height="164" rx="18"/>
+  <rect class="canvas" width="1010" height="195"/>
+  <rect class="frame" x="10" y="10" width="990" height="175" rx="18"/>
   <g>
-    <polyline class="connector" points="242.5,91.6 242.5,91.6 339.3,91.6 339.3,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="297.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="643.7,91.6 643.7,91.6 732.6,91.6 732.6,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="694.8" y="76.1" text-anchor="middle">uses</text>
+    <polyline class="connector" points="311.2,97.4 311.2,97.4 458.6,97.4 458.6,97.4" marker-end="url(#arrow)"/><text class="edge-label" x="391.7" y="81.9" text-anchor="middle">delegates</text>
+    <polyline class="connector" points="665.1,97.4 665.1,97.4 780.7,97.4 780.7,97.4" marker-end="url(#arrow)"/><text class="edge-label" x="729.8" y="81.9" text-anchor="middle">backs</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="28.0" width="213.9" height="127.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="134.9" y="63.1">Entry / Tests</tspan><tspan x="134.9" y="86.1">Kotlin Design Patterns</tspan><tspan x="134.9" y="109.1">Kotlin DesignPatterns</tspan><tspan x="134.9" y="132.1">Builder tests</tspan></text>
+      <rect x="28.0" y="41.5" width="282.4" height="111.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="169.2" y="87.4">Entry &amp; Verification</tspan><tspan class="node-detail" x="169.2" y="109.4">Kotlin Design Patterns Kotlin</tspan><tspan class="node-detail" x="169.2" y="125.4">DesignPatterns Builder tests</tspan></text>
     </g>
     <g class="node" data-node="service">
-      <rect x="353.9" y="55.0" width="288.9" height="73.2" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="498.3" y="86.1">Service / Domain</tspan><tspan x="498.3" y="109.1">Enums / Hero / HeroDataClass</tspan></text>
+      <rect x="473.1" y="28.0" width="191.4" height="138.7" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="568.8" y="79.4">Service &amp; Domain</tspan><tspan class="node-detail" x="568.8" y="101.4">Enums</tspan><tspan class="node-detail" x="568.8" y="117.4">Hero</tspan><tspan class="node-detail" x="568.8" y="133.4">HeroDataClass</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="746.8" y="55.0" width="174.9" height="73.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="834.2" y="86.1">Runtime</tspan><tspan x="834.2" y="109.1">In-memory / JVM</tspan></text>
+      <rect x="795.1" y="55.0" width="186.4" height="84.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="888.3" y="95.4">Runtime</tspan><tspan class="node-detail" x="888.3" y="117.4">In-memory / JVM</tspan></text>
     </g>
   </g>
 </svg>

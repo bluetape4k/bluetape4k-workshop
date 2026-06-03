@@ -3,8 +3,8 @@ digraph G {
     rankdir=LR,
     bgcolor="white",
     pad="0.35",
-    nodesep="0.55",
-    ranksep="0.75",
+    nodesep="0.70",
+    ranksep="0.95",
     splines=ortho,
     outputorder=edgesfirst
   ];
@@ -16,7 +16,7 @@ digraph G {
     fillcolor="#F6FAFF",
     fontname="Architects Daughter",
     fontsize=14,
-    margin="0.14,0.10"
+    margin="0.20,0.16"
   ];
   edge [
     color="#637383",
@@ -26,17 +26,16 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry / Tests\nVirtualThreadMvcApp /\nAbstractVirtualThreadMvcTest", fillcolor="#FFF8E7"];
-  api [label="API / Adapter\nSchedulingConfig /\nTomcatConfig /\nHttpbinController", fillcolor="#EEF7FF"];
-  service [label="Service / Domain\nAsyncConfig /\nVirtualThreadConfig /\nDatabaseInitializer /", fillcolor="#F1F8E9"];
-  infra [label="Repository / Infra\nMemberDTO / Member / Team /\nTeamRepository", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop / core /\nvirtualthread", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC /\nElasticsearch / AWS / S3", fillcolor="#FFF1F1"];
+  entry [label="Entry & Verification\nVirtualThreadMvcApp\nAbstractVirtualThreadMvcTest\nHttpbinControllerTest\nVirtualthreads Spring Mvc Tomcat", fillcolor="#FFF8E7"];
+  api [label="API & Adapters\nSchedulingConfig\nTomcatConfig\nHttpbinController\nMemberController", fillcolor="#EEF7FF"];
+  service [label="Service & Domain\nAsyncConfig\nVirtualThreadConfig\nDatabaseInitializer\nMemberRepository", fillcolor="#F1F8E9"];
+  infra [label="Repository & Infra\nMemberDTO\nMember\nTeam\nTeamRepository", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k APIs\nworkshop\ncore\nvirtualthread", fillcolor="#EAF7F0"];
+  runtime [label="Runtime\nSQL / R2DBC\nElasticsearch\nAWS / S3", fillcolor="#FFF1F1"];
 
-  entry -> api [label="calls"];
-  api -> service [label="uses"];
-  service -> infra [label="uses"];
-  infra -> bt [label="uses"];
+  entry -> api [label="invokes"];
+  api -> service [label="delegates"];
+  service -> infra [label="persists / publishes"];
   infra -> bt [label="extends"];
   bt -> runtime [label="adapts"];
 }

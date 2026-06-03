@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1234" height="162" viewBox="0 0 1234 162" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1425" height="222" viewBox="0 0 1425 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/AbstractRedissonTest.kt&quot;,&quot;redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/RedissonClientConfigTest.kt&quot;,&quot;redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/collections/BlockingDequeExamples.kt&quot;,&quot;redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/collections/BoundedBlockingQueueExamples.kt&quot;,&quot;redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/collections/ListMultimapCacheExamples.kt&quot;,&quot;redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/collections/LocalCachedMapExamples.kt&quot;,&quot;redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/collections/LocalCachedMapTest.kt&quot;,&quot;redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/collections/PriorityDequeExamples.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,33 +9,33 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1234" height="162"/>
-  <rect class="frame" x="10" y="10" width="1214" height="142" rx="18"/>
+  <rect class="canvas" width="1425" height="222"/>
+  <rect class="frame" x="10" y="10" width="1405" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="212.5,83.7 212.5,83.7 309.7,83.7 309.7,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="267.9" y="68.2" text-anchor="middle">calls</text>
-    <polyline class="connector" points="501.3,100.4 501.3,100.4 614.4,100.4 614.4,100.4" marker-end="url(#arrow)"/><text class="edge-label" x="564.8" y="29.5" text-anchor="middle">uses</text>
-    <polyline class="connector" points="501.3,67.0 501.3,67.0 614.4,67.0 614.4,67.0" marker-end="url(#arrow)"/><text class="edge-label" x="564.8" y="106.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="806.5,83.7 806.5,83.7 911.1,83.7 911.1,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="865.6" y="68.2" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="223.8,110.9 223.8,110.9 459.6,110.9 459.6,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="348.7" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="776.9,110.9 776.9,110.9 909.0,110.9 909.0,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="849.8" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1098.5,110.9 1098.5,110.9 1222.0,110.9 1222.0,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1166.8" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="47.1" width="183.9" height="73.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="119.9" y="78.2">Example Family</tspan><tspan x="119.9" y="101.2">Redisson Examples</tspan></text>
+      <rect x="28.0" y="68.5" width="195.4" height="84.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="125.7" y="108.9">Example Family</tspan><tspan class="node-detail" x="125.7" y="130.9">Redisson Examples</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="323.9" y="33.6" width="176.9" height="100.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="412.3" y="66.7">Library Layer</tspan><tspan x="412.3" y="89.7">redis / redisson /</tspan><tspan x="412.3" y="112.7">testcontainers</tspan></text>
+      <rect x="474.1" y="28.0" width="302.4" height="165.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="625.3" y="84.9">Framework Layer</tspan><tspan class="node-detail" x="625.3" y="106.9">Spring boot starter jdbc lib</tspan><tspan class="node-detail" x="625.3" y="122.9">Spring boot starter data redis</tspan><tspan class="node-detail" x="625.3" y="138.9">lib</tspan><tspan class="node-detail" x="625.3" y="154.9">Spring boot starter data redis</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="628.8" y="33.6" width="176.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="717.2" y="66.7">bluetape4k APIs</tspan><tspan x="717.2" y="89.7">redis / redisson /</tspan><tspan x="717.2" y="112.7">testcontainers</tspan></text>
+      <rect x="923.2" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1010.4" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1010.4" y="114.9">redis</tspan><tspan class="node-detail" x="1010.4" y="130.9">redisson</tspan><tspan class="node-detail" x="1010.4" y="146.9">testcontainers</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="925.6" y="33.6" width="279.9" height="100.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1065.6" y="66.7">Runtime</tspan><tspan x="1065.6" y="89.7">SQL / R2DBC / Redis / AWS</tspan><tspan x="1065.6" y="112.7">/ S3</tspan></text>
+      <rect x="1236.2" y="41.5" width="160.4" height="138.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1316.4" y="92.9">Runtime</tspan><tspan class="node-detail" x="1316.4" y="114.9">SQL / R2DBC</tspan><tspan class="node-detail" x="1316.4" y="130.9">Redis</tspan><tspan class="node-detail" x="1316.4" y="146.9">AWS / S3</tspan></text>
     </g>
   </g>
 </svg>

@@ -1,11 +1,11 @@
-graph 1 17.348 1.325
-node entry 1.5046 0.6625 3.0092 1.325 "Entry / Tests\nRateLimiterWebfluxApplication\n/\nBucket4jAdvancedApplication" rounded,filled box #88A3B5 #FFF8E7
-node api 5.6596 0.6625 2.9675 1.325 "API / Adapter\nCoroutineController /\nReactiveController /\nAsyncUserRateLimitWebFilter" rounded,filled box #88A3B5 #EEF7FF
-node service 9.575 0.6625 2.6967 1.325 "Service / Domain\nKeyResolver /\nRateLimitTargetProvider /\nUserKeyResolver /" rounded,filled box #88A3B5 #F1F8E9
-node infra 12.975 0.6625 1.9363 1.325 "Repository / Infra\nLettuceConfig /\nTestRedisConfig /\nRequestUtils /" rounded,filled box #88A3B5 #F5F0FF
-node runtime 16.187 0.6625 2.3217 0.7625 "Runtime\nRedis / Testcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.0164 0.6625 3.0164 0.6625 4.0236 0.6625 4.0236 0.6625 calls 3.5925 0.75104 solid #637383
-edge api service 4 7.151 0.6625 7.151 0.6625 8.08 0.6625 8.08 0.6625 uses 7.685 0.75104 solid #637383
-edge service infra 4 10.928 0.6625 10.928 0.6625 11.855 0.6625 11.855 0.6625 uses 11.465 0.75104 solid #637383
-edge infra runtime 4 13.952 0.6625 13.952 0.6625 14.874 0.6625 14.874 0.6625 uses 14.485 0.75104 solid #637383
+graph 1 20.642 1.7263
+node entry 1.8094 0.86313 3.6188 1.7263 "Entry & Verification\nRateLimiterWebfluxApplication\nBucket4jAdvancedApplication\nCaffeineApplication\nAbstractRateLimiterApplicationTest" rounded,filled box #88A3B5 #FFF8E7
+node api 6.6903 0.86313 3.0875 1.7263 "API & Adapters\nCoroutineController\nReactiveController\nAsyncUserRateLimitWebFilter\nUserRateLimitWebFilter" rounded,filled box #88A3B5 #EEF7FF
+node service 11.259 0.86313 2.6604 1.7263 "Service & Domain\nKeyResolver\nRateLimitTargetProvider\nUserKeyResolver\nBucket4jConfig" rounded,filled box #88A3B5 #F1F8E9
+node infra 16.369 0.86313 2.3375 1.7263 "Repository & Infra\nLettuceConfig\nTestRedisConfig\nRequestUtils\nLettuceConfiguration" rounded,filled box #88A3B5 #F5F0FF
+node runtime 19.77 0.86313 1.7437 1.1637 "Runtime\nRedis\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.6268 0.86313 3.6268 0.86313 4.9968 0.86313 4.9968 0.86313 invokes 4.3826 0.95167 solid #637383
+edge api service 4 8.2433 0.86313 8.2433 0.86313 9.7771 0.86313 9.7771 0.86313 delegates 9.0813 0.95167 solid #637383
+edge service infra 4 12.595 0.86313 12.595 0.86313 15.05 0.86313 15.05 0.86313 "persists / publishes" 13.894 0.95167 solid #637383
+edge infra runtime 4 17.544 0.86313 17.544 0.86313 18.748 0.86313 18.748 0.86313 backs 18.218 0.95167 solid #637383
 stop

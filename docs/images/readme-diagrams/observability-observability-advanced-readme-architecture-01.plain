@@ -1,14 +1,13 @@
-graph 1 20.784 1.325
-node entry 1.3744 0.6625 2.7487 1.0438 "Entry / Tests\nAdvancedObservabilityApp /\nAbstractAdvancedTest" rounded,filled box #88A3B5 #FFF8E7
-node api 4.7169 0.6625 1.6029 0.7625 "API / Adapter\nUserController" rounded,filled box #88A3B5 #EEF7FF
-node service 8.1062 0.6625 3.0092 1.325 "Service / Domain\nSchemaInitializer /\nObservationSupport /\nUserRepository / UserService" rounded,filled box #88A3B5 #F1F8E9
-node infra 12.173 0.6625 2.9571 1.0438 "Repository / Infra\nRedissonConfig / User /\nUsers / UserCacheRepository" rounded,filled box #88A3B5 #F5F0FF
-node bt 16.057 0.6625 2.1446 1.0438 "bluetape4k APIs\nworkshop / logging /\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
-node runtime 19.582 0.6625 2.405 1.0438 "Runtime\nSQL / R2DBC / Redis /\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 2.758 0.6625 2.758 0.6625 3.7656 0.6625 3.7656 0.6625 calls 3.3321 0.75104 solid #637383
-edge api service 4 5.5244 0.6625 5.5244 0.6625 6.4518 0.6625 6.4518 0.6625 uses 6.06 0.75104 solid #637383
-edge service infra 4 9.6204 0.6625 9.6204 0.6625 10.548 0.6625 10.548 0.6625 uses 10.152 0.75104 solid #637383
-edge infra bt 4 13.658 0.48854 13.658 0.48854 14.835 0.48854 14.835 0.48854 uses 14.318 1.1538 solid #637383
-edge infra bt 4 13.658 0.83646 13.658 0.83646 14.835 0.83646 14.835 0.83646 extends 14.318 0.34826 solid #637383
-edge bt runtime 4 17.138 0.6625 17.138 0.6625 18.23 0.6625 18.23 0.6625 adapts 17.754 0.75104 solid #637383
+graph 1 21.403 1.7263
+node entry 1.3615 0.86313 2.7229 1.7263 "Entry & Verification\nAdvancedObservabilityApp\nAbstractAdvancedTest\nTestObservationConfig\nObservability Observability" rounded,filled box #88A3B5 #FFF8E7
+node api 5.1382 0.86313 1.775 0.8825 "API & Adapters\nUserController" rounded,filled box #88A3B5 #EEF7FF
+node service 8.816 0.86313 2.1917 1.7263 "Service & Domain\nSchemaInitializer\nObservationSupport\nUserRepository\nUserService" rounded,filled box #88A3B5 #F1F8E9
+node infra 13.697 0.86313 2.3479 1.7263 "Repository & Infra\nRedissonConfig\nUser\nUsers\nUserCacheRepository" rounded,filled box #88A3B5 #F5F0FF
+node bt 17.307 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\nlogging\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
+node runtime 20.532 0.86313 1.7437 1.445 "Runtime\nSQL / R2DBC\nRedis\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 2.7303 0.86313 2.7303 0.86313 4.1022 0.86313 4.1022 0.86313 invokes 3.4868 0.95167 solid #637383
+edge api service 4 6.0332 0.86313 6.0332 0.86313 7.5702 0.86313 7.5702 0.86313 delegates 6.8729 0.95167 solid #637383
+edge service infra 4 9.9174 0.86313 9.9174 0.86313 12.372 0.86313 12.372 0.86313 "persists / publishes" 11.217 0.95167 solid #637383
+edge infra bt 4 14.879 0.86313 14.879 0.86313 16.249 0.86313 16.249 0.86313 extends 15.635 0.95167 solid #637383
+edge bt runtime 4 18.222 0.86313 18.222 0.86313 19.51 0.86313 19.51 0.86313 adapts 18.938 0.95167 solid #637383
 stop

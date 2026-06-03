@@ -1,11 +1,11 @@
-graph 1 17.244 1.325
-node entry 1.4577 0.6625 2.9154 1.325 "Entry / Tests\nExposedMvcJdbcApp /\nExposedMvcVirtualThreadApp\n/ ProductAuditServiceTest" rounded,filled box #88A3B5 #FFF8E7
-node api 5.2325 0.6625 2.3008 1.325 "API / Adapter\nAuthorController /\nBookController /\nGlobalExceptionHandler" rounded,filled box #88A3B5 #EEF7FF
-node service 8.6271 0.6625 2.3217 1.325 "Service / Domain\nProductAuditService /\nAuthorService /\nDatabaseInitializer /" rounded,filled box #88A3B5 #F1F8E9
-node infra 12.313 0.6625 2.8842 1.0438 "Repository / Infra\nProduct / ProductTable /\nAuthorDTO / AuthorMappers" rounded,filled box #88A3B5 #F5F0FF
-node runtime 16.041 0.6625 2.405 1.0438 "Runtime\nSQL / R2DBC / Redis /\nElasticsearch" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 2.9225 0.6625 2.9225 0.6625 3.93 0.6625 3.93 0.6625 calls 3.4987 0.75104 solid #637383
-edge api service 4 6.3912 0.6625 6.3912 0.6625 7.3194 0.6625 7.3194 0.6625 uses 6.9246 0.75104 solid #637383
-edge service infra 4 9.7934 0.6625 9.7934 0.6625 10.72 0.6625 10.72 0.6625 uses 10.33 0.75104 solid #637383
-edge infra runtime 4 13.76 0.6625 13.76 0.6625 14.688 0.6625 14.688 0.6625 uses 14.297 0.75104 solid #637383
+graph 1 18.715 1.7263
+node entry 1.5177 0.86313 3.0354 1.7263 "Entry & Verification\nExposedMvcJdbcApp\nExposedMvcVirtualThreadApp\nExposedWebfluxR2dbcApp\nProductAuditServiceTest" rounded,filled box #88A3B5 #FFF8E7
+node api 5.7736 0.86313 2.4208 1.7263 "API & Adapters\nAuthorController\nBookController\nGlobalExceptionHandler\nOrderController" rounded,filled box #88A3B5 #EEF7FF
+node service 9.8212 0.86313 2.2854 1.7263 "Service & Domain\nProductAuditService\nAuthorService\nDatabaseInitializer\nOrderService" rounded,filled box #88A3B5 #F1F8E9
+node infra 14.629 0.86313 2.1083 1.7263 "Repository & Infra\nProduct\nProductTable\nAuthorDTO\nAuthorMappers" rounded,filled box #88A3B5 #F5F0FF
+node runtime 17.88 0.86313 1.6708 1.445 "Runtime\nSQL / R2DBC\nRedis\nElasticsearch" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.0422 0.86313 3.0422 0.86313 4.4171 0.86313 4.4171 0.86313 invokes 3.7993 0.95167 solid #637383
+edge api service 4 6.9935 0.86313 6.9935 0.86313 8.5304 0.86313 8.5304 0.86313 delegates 7.8313 0.95167 solid #637383
+edge service infra 4 10.973 0.86313 10.973 0.86313 13.426 0.86313 13.426 0.86313 "persists / publishes" 12.269 0.95167 solid #637383
+edge infra runtime 4 15.689 0.86313 15.689 0.86313 16.895 0.86313 16.895 0.86313 backs 16.364 0.95167 solid #637383
 stop

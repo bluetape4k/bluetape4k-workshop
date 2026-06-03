@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1701" height="184" viewBox="0 0 1701 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1901" height="222" viewBox="0 0 1901 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-cloud/gateway-example/src/main/kotlin/io/bluetape4k/workshop/gateway/GatewayApplication.kt&quot;,&quot;spring-cloud/gateway-example/src/main/kotlin/io/bluetape4k/workshop/gateway/RateLimitHeaders.kt&quot;,&quot;spring-cloud/gateway-example/src/main/kotlin/io/bluetape4k/workshop/gateway/config/CircuitBreakerConfig.kt&quot;,&quot;spring-cloud/gateway-example/src/main/kotlin/io/bluetape4k/workshop/gateway/config/NettyConfig.kt&quot;,&quot;spring-cloud/gateway-example/src/main/kotlin/io/bluetape4k/workshop/gateway/config/RateLimitConfig.kt&quot;,&quot;spring-cloud/gateway-example/src/main/kotlin/io/bluetape4k/workshop/gateway/controller/FallbackController.kt&quot;,&quot;spring-cloud/gateway-example/src/main/kotlin/io/bluetape4k/workshop/gateway/controller/IndexController.kt&quot;,&quot;spring-cloud/gateway-example/src/main/kotlin/io/bluetape4k/workshop/gateway/filter/UserKeyResolver.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,38 +9,38 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1701" height="184"/>
-  <rect class="frame" x="10" y="10" width="1681" height="164" rx="18"/>
+  <rect class="canvas" width="1901" height="222"/>
+  <rect class="frame" x="10" y="10" width="1881" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="258.7,91.6 258.7,91.6 355.5,91.6 355.5,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="313.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="600.5,91.6 600.5,91.6 689.4,91.6 689.4,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="651.8" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="979.4,103.8 979.4,103.8 1092.2,103.8 1092.2,103.8" marker-end="url(#arrow)"/><text class="edge-label" x="1042.6" y="37.4" text-anchor="middle">uses</text>
-    <polyline class="connector" points="979.4,79.4 979.4,79.4 1092.2,79.4 1092.2,79.4" marker-end="url(#arrow)"/><text class="edge-label" x="1042.6" y="114.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1330.3,91.6 1330.3,91.6 1435.4,91.6 1435.4,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1389.5" y="76.1" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="329.1,110.9 329.1,110.9 460.5,110.9 460.5,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="401.7" y="95.4" text-anchor="middle">invokes</text>
+    <polyline class="connector" points="702.2,110.9 702.2,110.9 937.6,110.9 937.6,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="826.8" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1246.0,110.9 1246.0,110.9 1377.9,110.9 1377.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1318.9" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1567.3,110.9 1567.3,110.9 1690.9,110.9 1690.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1635.9" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="41.5" width="229.9" height="100.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="142.9" y="74.6">Entry / Tests</tspan><tspan x="142.9" y="97.6">GatewayApplication /</tspan><tspan x="142.9" y="120.6">GatewayApplicationTest</tspan></text>
+      <rect x="28.0" y="28.0" width="300.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="178.2" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="178.2" y="106.9">GatewayApplication</tspan><tspan class="node-detail" x="178.2" y="122.9">GatewayApplicationTest</tspan><tspan class="node-detail" x="178.2" y="138.9">DemoRoutesTest</tspan><tspan class="node-detail" x="178.2" y="154.9">Spring Cloud Gateway Example</tspan></text>
     </g>
     <g class="node" data-node="api">
-      <rect x="369.9" y="28.0" width="229.9" height="127.2" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="484.8" y="63.1">API / Adapter</tspan><tspan x="484.8" y="86.1">RateLimitHeaders /</tspan><tspan x="484.8" y="109.1">CircuitBreakerConfig /</tspan><tspan x="484.8" y="132.1">NettyConfig</tspan></text>
+      <rect x="475.1" y="28.0" width="226.4" height="165.7" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="588.3" y="84.9">API &amp; Adapters</tspan><tspan class="node-detail" x="588.3" y="106.9">RateLimitHeaders</tspan><tspan class="node-detail" x="588.3" y="122.9">CircuitBreakerConfig</tspan><tspan class="node-detail" x="588.3" y="138.9">NettyConfig</tspan><tspan class="node-detail" x="588.3" y="154.9">RateLimitConfig</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="703.8" y="55.0" width="274.9" height="73.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="841.2" y="86.1">Library Layer</tspan><tspan x="841.2" y="109.1">workshop / jackson3 / junit5</tspan></text>
+      <rect x="952.2" y="28.0" width="293.4" height="165.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1098.9" y="84.9">Framework Layer</tspan><tspan class="node-detail" x="1098.9" y="106.9">Spring boot4 dependencies</tspan><tspan class="node-detail" x="1098.9" y="122.9">Spring cloud dependencies</tspan><tspan class="node-detail" x="1098.9" y="138.9">Spring cloud starter gateway</tspan><tspan class="node-detail" x="1098.9" y="154.9">server webflux</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1106.7" y="41.5" width="222.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1218.1" y="74.6">bluetape4k APIs</tspan><tspan x="1218.1" y="97.6">workshop / jackson3 /</tspan><tspan x="1218.1" y="120.6">junit5</tspan></text>
+      <rect x="1392.2" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1479.4" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1479.4" y="114.9">workshop</tspan><tspan class="node-detail" x="1479.4" y="130.9">jackson3</tspan><tspan class="node-detail" x="1479.4" y="146.9">junit5</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1449.5" y="55.0" width="222.9" height="73.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1560.9" y="86.1">Runtime</tspan><tspan x="1560.9" y="109.1">Redis / Testcontainers</tspan></text>
+      <rect x="1705.2" y="55.0" width="167.4" height="111.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1788.9" y="100.9">Runtime</tspan><tspan class="node-detail" x="1788.9" y="122.9">Redis</tspan><tspan class="node-detail" x="1788.9" y="138.9">Testcontainers</tspan></text>
     </g>
   </g>
 </svg>

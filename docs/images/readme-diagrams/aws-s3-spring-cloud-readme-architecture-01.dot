@@ -3,8 +3,8 @@ digraph G {
     rankdir=LR,
     bgcolor="white",
     pad="0.35",
-    nodesep="0.55",
-    ranksep="0.75",
+    nodesep="0.70",
+    ranksep="0.95",
     splines=ortho,
     outputorder=edgesfirst
   ];
@@ -16,7 +16,7 @@ digraph G {
     fillcolor="#F6FAFF",
     fontname="Architects Daughter",
     fontsize=14,
-    margin="0.14,0.10"
+    margin="0.20,0.16"
   ];
   edge [
     color="#637383",
@@ -26,13 +26,12 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry / Tests\nSpringCloudAwsS3Sample /\nAbstractSpringCloudAwsS3SampleTest", fillcolor="#FFF8E7"];
-  infra [label="Library Layer\nworkshop / aws /\ntestcontainers", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop / aws /\ntestcontainers", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nAWS / S3 / Testcontainers", fillcolor="#FFF1F1"];
+  entry [label="Entry & Verification\nSpringCloudAwsS3Sample\nAbstractSpringCloudAwsS3SampleTest\nSpringCloudAwsS3Test\nAws S3 Spring Cloud tests", fillcolor="#FFF8E7"];
+  infra [label="Framework Layer\nSpring cloud aws starter\nSpring cloud aws s3\nSpring boot autoconfigure lib\nSpring boot autoconfigure", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k APIs\nworkshop\naws\ntestcontainers", fillcolor="#EAF7F0"];
+  runtime [label="Runtime\nAWS / S3\nTestcontainers", fillcolor="#FFF1F1"];
 
-  entry -> infra [label="calls"];
-  infra -> bt [label="uses"];
+  entry -> infra [label="persists / publishes"];
   infra -> bt [label="extends"];
   bt -> runtime [label="adapts"];
 }

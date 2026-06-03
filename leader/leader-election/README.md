@@ -25,9 +25,9 @@ single execution across all running instances.
 
 ## Architecture
 
-![Leader Election Workshop Graphviz architecture diagram](../../docs/images/readme-diagrams/leader-leader-election-readme-architecture-01.png)
-
 ![Architecture Overview](../../docs/images/readme-diagrams/architecture-overview.png)
+
+![Leader Election Workshop Graphviz architecture diagram](../../docs/images/readme-diagrams/leader-leader-election-readme-architecture-01.png)
 
 Multiple app instances compete for a distributed lock via Redis `SET NX EX`.  
 Only the **elected leader** instance executes each `LeaderGuardedJob`.

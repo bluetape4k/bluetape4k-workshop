@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="2069" height="162" viewBox="0 0 2069 162" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="2186" height="222" viewBox="0 0 2186 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-boot/chaos-monkey/src/main/kotlin/io/bluetape4k/workshop/chaos/ChaosApplication.kt&quot;,&quot;spring-boot/chaos-monkey/src/main/kotlin/io/bluetape4k/workshop/chaos/controller/StudentController.kt&quot;,&quot;spring-boot/chaos-monkey/src/main/kotlin/io/bluetape4k/workshop/chaos/model/Student.kt&quot;,&quot;spring-boot/chaos-monkey/src/main/kotlin/io/bluetape4k/workshop/chaos/repository/StudentJdbcRepository.kt&quot;,&quot;spring-boot/chaos-monkey/src/main/kotlin/io/bluetape4k/workshop/chaos/service/StudentService.kt&quot;,&quot;spring-boot/chaos-monkey/src/test/kotlin/io/bluetape4k/workshop/chaos/AbstractChaosApplicationTest.kt&quot;,&quot;spring-boot/chaos-monkey/src/test/kotlin/io/bluetape4k/workshop/chaos/controller/StudentControllerTest.kt&quot;,&quot;spring-boot/chaos-monkey/build.gradle.kts&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,43 +9,43 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="2069" height="162"/>
-  <rect class="frame" x="10" y="10" width="2049" height="142" rx="18"/>
+  <rect class="canvas" width="2186" height="222"/>
+  <rect class="frame" x="10" y="10" width="2166" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="313.7,83.7 313.7,83.7 410.5,83.7 410.5,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="368.9" y="68.2" text-anchor="middle">calls</text>
-    <polyline class="connector" points="606.6,83.7 606.6,83.7 695.5,83.7 695.5,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="657.8" y="68.2" text-anchor="middle">uses</text>
-    <polyline class="connector" points="958.5,83.7 958.5,83.7 1047.3,83.7 1047.3,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="1009.6" y="68.2" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1292.2,95.9 1292.2,95.9 1405.2,95.9 1405.2,95.9" marker-end="url(#arrow)"/><text class="edge-label" x="1355.5" y="29.5" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1292.2,71.5 1292.2,71.5 1405.2,71.5 1405.2,71.5" marker-end="url(#arrow)"/><text class="edge-label" x="1355.5" y="106.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1665.3,83.7 1665.3,83.7 1770.1,83.7 1770.1,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="1724.4" y="68.2" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="353.2,110.9 353.2,110.9 484.7,110.9 484.7,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="425.7" y="95.4" text-anchor="middle">invokes</text>
+    <polyline class="connector" points="692.2,110.9 692.2,110.9 840.0,110.9 840.0,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="772.8" y="95.4" text-anchor="middle">delegates</text>
+    <polyline class="connector" points="1046.1,110.9 1046.1,110.9 1281.8,110.9 1281.8,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1170.9" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1538.5,110.9 1538.5,110.9 1670.0,110.9 1670.0,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1610.9" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1859.6,110.9 1859.6,110.9 1983.1,110.9 1983.1,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1928.0" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="33.6" width="284.9" height="100.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="170.4" y="66.7">Entry / Tests</tspan><tspan x="170.4" y="89.7">ChaosApplication /</tspan><tspan x="170.4" y="112.7">AbstractChaosApplicationTest</tspan></text>
+      <rect x="28.0" y="28.0" width="324.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="190.2" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="190.2" y="106.9">ChaosApplication</tspan><tspan class="node-detail" x="190.2" y="122.9">AbstractChaosApplicationTest</tspan><tspan class="node-detail" x="190.2" y="138.9">StudentControllerTest</tspan><tspan class="node-detail" x="190.2" y="154.9">Spring Boot Chaos Monkey tests</tspan></text>
     </g>
     <g class="node" data-node="api">
-      <rect x="424.9" y="47.1" width="180.9" height="73.2" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="515.3" y="78.2">API / Adapter</tspan><tspan x="515.3" y="101.2">StudentController</tspan></text>
+      <rect x="499.1" y="68.5" width="192.4" height="84.7" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="595.3" y="108.9">API &amp; Adapters</tspan><tspan class="node-detail" x="595.3" y="130.9">StudentController</tspan></text>
     </g>
     <g class="node" data-node="service">
-      <rect x="709.8" y="47.1" width="247.9" height="73.2" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="833.7" y="78.2">Service / Domain</tspan><tspan x="833.7" y="101.2">StudentService / Student</tspan></text>
+      <rect x="854.1" y="55.0" width="191.4" height="111.7" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="949.8" y="100.9">Service &amp; Domain</tspan><tspan class="node-detail" x="949.8" y="122.9">StudentService</tspan><tspan class="node-detail" x="949.8" y="138.9">Student</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="1061.6" y="47.1" width="229.9" height="73.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1176.5" y="78.2">Repository / Infra</tspan><tspan x="1176.5" y="101.2">StudentJdbcRepository</tspan></text>
+      <rect x="1296.2" y="68.5" width="241.4" height="84.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1416.9" y="108.9">Repository &amp; Infra</tspan><tspan class="node-detail" x="1416.9" y="130.9">StudentJdbcRepository</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1419.5" y="47.1" width="244.9" height="73.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1541.9" y="78.2">bluetape4k APIs</tspan><tspan x="1541.9" y="101.2">workshop / core / junit5</tspan></text>
+      <rect x="1684.3" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1771.5" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1771.5" y="114.9">workshop</tspan><tspan class="node-detail" x="1771.5" y="130.9">core</tspan><tspan class="node-detail" x="1771.5" y="146.9">junit5</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1784.4" y="47.1" width="255.9" height="73.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1912.4" y="78.2">Runtime</tspan><tspan x="1912.4" y="101.2">SQL / R2DBC / AWS / S3</tspan></text>
+      <rect x="1997.3" y="55.0" width="160.4" height="111.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="2077.5" y="100.9">Runtime</tspan><tspan class="node-detail" x="2077.5" y="122.9">SQL / R2DBC</tspan><tspan class="node-detail" x="2077.5" y="138.9">AWS / S3</tspan></text>
     </g>
   </g>
 </svg>

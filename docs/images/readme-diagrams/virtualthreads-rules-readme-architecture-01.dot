@@ -3,8 +3,8 @@ digraph G {
     rankdir=LR,
     bgcolor="white",
     pad="0.35",
-    nodesep="0.55",
-    ranksep="0.75",
+    nodesep="0.70",
+    ranksep="0.95",
     splines=ortho,
     outputorder=edgesfirst
   ];
@@ -16,7 +16,7 @@ digraph G {
     fillcolor="#F6FAFF",
     fontname="Architects Daughter",
     fontsize=14,
-    margin="0.14,0.10"
+    margin="0.20,0.16"
   ];
   edge [
     color="#637383",
@@ -26,13 +26,10 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Example Family\nConcurrent programming in\nJava with virtual threads", fillcolor="#FFF8E7"];
-  infra [label="Library Layer\ncore / virtualthread /\ncoroutines", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\ncore / virtualthread /\ncoroutines", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nSQL / R2DBC / Redis / AWS\n/ S3", fillcolor="#FFF1F1"];
+  entry [label="Example Family\nConcurrent programming in Java\nwith virtual threads", fillcolor="#FFF8E7"];
+  bt [label="bluetape4k APIs\ncore\nvirtualthread\ncoroutines", fillcolor="#EAF7F0"];
+  runtime [label="Runtime\nSQL / R2DBC\nRedis\nAWS / S3", fillcolor="#FFF1F1"];
 
-  entry -> infra [label="calls"];
-  infra -> bt [label="uses"];
-  infra -> bt [label="extends"];
+  api -> bt [label="extends"];
   bt -> runtime [label="adapts"];
 }

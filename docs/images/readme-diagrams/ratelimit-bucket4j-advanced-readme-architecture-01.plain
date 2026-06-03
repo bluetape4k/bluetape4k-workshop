@@ -1,14 +1,14 @@
-graph 1 20.42 1.325
-node entry 1.5879 0.6625 3.1758 1.325 "Entry / Tests\nBucket4jAdvancedApplication\n/\nAbstractBucket4jAdvancedTest" rounded,filled box #88A3B5 #FFF8E7
-node api 5.7742 0.6625 2.8633 1.325 "API / Adapter\nRateLimitDemoController /\nCombinedRateLimitWebFilter\n/ IpRateLimitWebFilter" rounded,filled box #88A3B5 #EEF7FF
-node service 9.2312 0.6625 1.8842 1.0438 "Service / Domain\nRateLimitConfig /\nHeaderConstants" rounded,filled box #88A3B5 #F1F8E9
-node infra 12.225 0.6625 1.9363 1.325 "Repository / Infra\nLettuceConfig /\nTestRedisConfig /\nRequestUtils" rounded,filled box #88A3B5 #F5F0FF
-node bt 15.687 0.6625 2.3217 1.0438 "bluetape4k APIs\nworkshop / jackson3 /\nbucket4j" rounded,filled box #88A3B5 #EAF7F0
-node runtime 19.259 0.6625 2.3217 0.7625 "Runtime\nRedis / Testcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.1825 0.6625 3.1825 0.6625 4.1924 0.6625 4.1924 0.6625 calls 3.7592 0.75104 solid #637383
-edge api service 4 7.2152 0.6625 7.2152 0.6625 8.1375 0.6625 8.1375 0.6625 uses 7.7475 0.75104 solid #637383
-edge service infra 4 10.183 0.6625 10.183 0.6625 11.108 0.6625 11.108 0.6625 uses 10.715 0.75104 solid #637383
-edge infra bt 4 13.198 0.48854 13.198 0.48854 14.375 0.48854 14.375 0.48854 uses 13.86 1.1538 solid #637383
-edge infra bt 4 13.198 0.83646 13.198 0.83646 14.375 0.83646 14.375 0.83646 extends 13.86 0.34826 solid #637383
-edge bt runtime 4 16.857 0.6625 16.857 0.6625 17.95 0.6625 17.95 0.6625 adapts 17.473 0.75104 solid #637383
+graph 1 22.747 1.7263
+node entry 1.6479 0.86313 3.2958 1.7263 "Entry & Verification\nBucket4jAdvancedApplication\nAbstractBucket4jAdvancedTest\nRateLimitDemoControllerTest\nRatelimit Bucket4j \
+Advanced" rounded,filled box #88A3B5 #FFF8E7
+node api 6.3153 0.86313 2.9833 1.7263 "API & Adapters\nRateLimitDemoController\nCombinedRateLimitWebFilter\nIpRateLimitWebFilter\nUserRateLimitWebFilter" rounded,filled box #88A3B5 #EEF7FF
+node service 10.498 0.86313 1.9938 1.1637 "Service & Domain\nRateLimitConfig\nHeaderConstants" rounded,filled box #88A3B5 #F1F8E9
+node infra 15.16 0.86313 2.1083 1.445 "Repository & Infra\nLettuceConfig\nTestRedisConfig\nRequestUtils" rounded,filled box #88A3B5 #F5F0FF
+node bt 18.651 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\njackson3\nbucket4j" rounded,filled box #88A3B5 #EAF7F0
+node runtime 21.875 0.86313 1.7437 1.1637 "Runtime\nRedis\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.3 0.86313 3.3 0.86313 4.6746 0.86313 4.6746 0.86313 invokes 4.0597 0.95167 solid #637383
+edge api service 4 7.8136 0.86313 7.8136 0.86313 9.3513 0.86313 9.3513 0.86313 delegates 8.6542 0.95167 solid #637383
+edge service infra 4 11.504 0.86313 11.504 0.86313 13.957 0.86313 13.957 0.86313 "persists / publishes" 12.801 0.95167 solid #637383
+edge infra bt 4 16.222 0.86313 16.222 0.86313 17.593 0.86313 17.593 0.86313 extends 16.978 0.95167 solid #637383
+edge bt runtime 4 19.566 0.86313 19.566 0.86313 20.854 0.86313 20.854 0.86313 adapts 20.281 0.95167 solid #637383
 stop

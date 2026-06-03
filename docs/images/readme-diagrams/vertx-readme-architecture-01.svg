@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="864" height="157" viewBox="0 0 864 157" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="952" height="222" viewBox="0 0 952 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;vertx/coroutines/src/main/kotlin/io/bluetape4k/workshop/movierating/Main.kt&quot;,&quot;vertx/coroutines/src/main/kotlin/io/bluetape4k/workshop/movierating/MovieRatingVerticle.kt&quot;,&quot;vertx/coroutines/src/test/kotlin/io/bluetape4k/workshop/movierating/MovieRatingVerticeTest.kt&quot;,&quot;vertx/vertx-sqlclient/src/test/kotlin/io/bluetape4k/workshop/vertx/sqlclient/AbstractSqlClientTest.kt&quot;,&quot;vertx/vertx-sqlclient/src/test/kotlin/io/bluetape4k/workshop/vertx/sqlclient/JDBCPoolExamples.kt&quot;,&quot;vertx/vertx-sqlclient/src/test/kotlin/io/bluetape4k/workshop/vertx/sqlclient/dataobject/DataObjectMappingExamples.kt&quot;,&quot;vertx/vertx-sqlclient/src/test/kotlin/io/bluetape4k/workshop/vertx/sqlclient/dataobject/UserDataObject.kt&quot;,&quot;vertx/vertx-sqlclient/src/test/kotlin/io/bluetape4k/workshop/vertx/sqlclient/model/User.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,27 +9,28 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="864" height="157"/>
-  <rect class="frame" x="10" y="10" width="844" height="137" rx="18"/>
+  <rect class="canvas" width="952" height="222"/>
+  <rect class="frame" x="10" y="10" width="932" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="260.7,78.1 260.7,78.1 357.4,78.1 357.4,78.1" marker-end="url(#arrow)"/><text class="edge-label" x="315.9" y="62.6" text-anchor="middle">calls</text>
-    <polyline class="connector" points="568.3,78.1 568.3,78.1 657.2,78.1 657.2,78.1" marker-end="url(#arrow)"/><text class="edge-label" x="619.8" y="62.6" text-anchor="middle">uses</text>
+    <polyline class="connector" points="272.0,110.9 272.0,110.9 403.7,110.9 403.7,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="344.7" y="95.4" text-anchor="middle">invokes</text>
+    <polyline class="connector" points="626.4,110.9 626.4,110.9 741.6,110.9 741.6,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="690.8" y="95.4" text-anchor="middle">backs</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="28.0" width="231.9" height="100.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="143.9" y="61.1">Entry / Tests</tspan><tspan x="143.9" y="84.1">Main /</tspan><tspan x="143.9" y="107.1">MovieRatingVerticeTest</tspan></text>
+      <rect x="28.0" y="28.0" width="243.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="149.7" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="149.7" y="106.9">Main</tspan><tspan class="node-detail" x="149.7" y="122.9">MovieRatingVerticeTest</tspan><tspan class="node-detail" x="149.7" y="138.9">AbstractSqlClientTest</tspan><tspan class="node-detail" x="149.7" y="154.9">Vertx tests</tspan></text>
     </g>
     <g class="node" data-node="api">
-      <rect x="371.9" y="41.5" width="195.9" height="73.2" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="469.8" y="72.6">API / Adapter</tspan><tspan x="469.8" y="95.6">MovieRatingVerticle</tspan></text>
+      <rect x="418.1" y="68.5" width="207.4" height="84.7" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="521.8" y="108.9">API &amp; Adapters</tspan><tspan class="node-detail" x="521.8" y="130.9">MovieRatingVerticle</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="671.8" y="28.0" width="163.9" height="100.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="753.7" y="61.1">Runtime</tspan><tspan x="753.7" y="84.1">SQL / R2DBC /</tspan><tspan x="753.7" y="107.1">Testcontainers</tspan></text>
+      <rect x="756.1" y="55.0" width="167.4" height="111.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="839.8" y="100.9">Runtime</tspan><tspan class="node-detail" x="839.8" y="122.9">SQL / R2DBC</tspan><tspan class="node-detail" x="839.8" y="138.9">Testcontainers</tspan></text>
     </g>
   </g>
 </svg>

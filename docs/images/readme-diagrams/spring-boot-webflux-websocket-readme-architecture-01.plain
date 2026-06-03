@@ -1,14 +1,13 @@
-graph 1 21.701 1.325
-node entry 1.3275 0.6625 2.655 1.0438 "Entry / Tests\nWebsocketApplication /\nWebsocketApplicationTest" rounded,filled box #88A3B5 #FFF8E7
-node api 5.4877 0.6625 3.3321 1.325 "API / Adapter\nNettyConfig /\nReactiveWebSocketConfiguration\n/ SampleWebfluxRouter" rounded,filled box #88A3B5 #EEF7FF
-node service 9.5281 0.6625 2.5821 0.7625 "Service / Domain\nQuoteGenerator / Models" rounded,filled box #88A3B5 #F1F8E9
-node infra 13.251 0.6625 2.6967 1.0438 "Library Layer\nworkshop / idgenerators /\njunit5" rounded,filled box #88A3B5 #F5F0FF
-node bt 17.281 0.6625 2.6967 1.0438 "bluetape4k APIs\nworkshop / idgenerators /\njunit5" rounded,filled box #88A3B5 #EAF7F0
-node runtime 20.79 0.6625 1.8217 0.7625 "Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 2.661 0.6625 2.661 0.6625 3.6722 0.6625 3.6722 0.6625 calls 3.2383 0.75104 solid #637383
-edge api service 4 7.1603 0.6625 7.1603 0.6625 8.0905 0.6625 8.0905 0.6625 uses 7.6954 0.75104 solid #637383
-edge service infra 4 10.825 0.6625 10.825 0.6625 11.753 0.6625 11.753 0.6625 uses 11.361 0.75104 solid #637383
-edge infra bt 4 14.604 0.48854 14.604 0.48854 15.782 0.48854 15.782 0.48854 uses 15.266 1.1538 solid #637383
-edge infra bt 4 14.604 0.83646 14.604 0.83646 15.782 0.83646 15.782 0.83646 extends 15.266 0.34826 solid #637383
-edge bt runtime 4 18.638 0.6625 18.638 0.6625 19.728 0.6625 19.728 0.6625 adapts 19.254 0.75104 solid #637383
+graph 1 24.591 1.7263
+node entry 1.6948 0.86313 3.3896 1.7263 "Entry & Verification\nWebsocketApplication\nWebsocketApplicationTest\nSpring Boot Webflux Websocket\ntests" rounded,filled box #88A3B5 #FFF8E7
+node api 6.6434 0.86313 3.4521 1.7263 "API & Adapters\nNettyConfig\nReactiveWebSocketConfiguration\nSampleWebfluxRouter\nReactiveWebSocketHandler" rounded,filled box #88A3B5 #EEF7FF
+node service 11.061 0.86313 1.9938 1.1637 "Service & Domain\nQuoteGenerator\nModels" rounded,filled box #88A3B5 #F1F8E9
+node infra 16.265 0.86313 3.1917 1.7263 "Framework Layer\nSpring cloud dependencies get\nSpring boot4 dependencies get\nSpring boot autoconfigure lib\nSpring boot autoconfigure" rounded,filled box #88A3B5 #F5F0FF
+node bt 20.297 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\nidgenerators\njunit5" rounded,filled box #88A3B5 #EAF7F0
+node runtime 23.62 0.86313 1.9417 0.8825 "Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.3978 0.86313 3.3978 0.86313 4.7652 0.86313 4.7652 0.86313 invokes 4.1535 0.95167 solid #637383
+edge api service 4 8.3766 0.86313 8.3766 0.86313 9.9164 0.86313 9.9164 0.86313 delegates 9.2167 0.95167 solid #637383
+edge service infra 4 12.064 0.86313 12.064 0.86313 14.518 0.86313 14.518 0.86313 "persists / publishes" 13.363 0.95167 solid #637383
+edge infra bt 4 17.87 0.86313 17.87 0.86313 19.239 0.86313 19.239 0.86313 extends 18.624 0.95167 solid #637383
+edge bt runtime 4 21.214 0.86313 21.214 0.86313 22.5 0.86313 22.5 0.86313 adapts 21.927 0.95167 solid #637383
 stop

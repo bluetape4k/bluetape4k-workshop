@@ -25,9 +25,9 @@
 
 ## 아키텍처
 
-![graph-social-network Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/graph-social-network-readme-architecture-01.png)
-
 ![모듈 아키텍처](docs/images/readme-diagrams/social-network-architecture.png)
+
+![graph-social-network Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/graph-social-network-readme-architecture-01.png)
 
 ```
 graph/social-network/

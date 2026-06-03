@@ -28,9 +28,9 @@ User C는 IP 주소만 공유하며(예: VPN 출구 노드), 클러스터 포함
 
 ## 모듈 아키텍처
 
-![graph-abuser-detection Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/graph-abuser-detection-readme-architecture-01.png)
-
 ![모듈 아키텍처](docs/images/readme-diagrams/abuser-detection-architecture.png)
+
+![graph-abuser-detection Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/graph-abuser-detection-readme-architecture-01.png)
 
 ## 그래프 스키마
 

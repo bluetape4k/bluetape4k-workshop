@@ -1,14 +1,13 @@
-graph 1 21.159 1.325
-node entry 1.3796 0.6625 2.7592 1.0438 "Entry / Tests\nApplication /\nOrderEventPublicationTests" rounded,filled box #88A3B5 #FFF8E7
-node api 5.295 0.6625 2.7383 1.0438 "API / Adapter\nOrderListeners / Inventory\n/ StringAggregate" rounded,filled box #88A3B5 #EEF7FF
-node service 9.2365 0.6625 2.9779 1.325 "Service / Domain\nOrderManagement / Inventory\n/ Order /\nLoggingConfiguration" rounded,filled box #88A3B5 #F1F8E9
-node infra 13.11 0.6625 2.6029 0.7625 "Repository / Infra\nOrderRepository / Order" rounded,filled box #88A3B5 #F5F0FF
-node bt 17.052 0.6625 2.6133 1.0438 "bluetape4k APIs\nhibernate / idgenerators /\nspring" rounded,filled box #88A3B5 #EAF7F0
-node runtime 20.384 0.6625 1.5508 0.7625 "Runtime\nSQL / R2DBC" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 2.7655 0.6625 2.7655 0.6625 3.7749 0.6625 3.7749 0.6625 calls 3.3425 0.75104 solid #637383
-edge api service 4 6.6735 0.6625 6.6735 0.6625 7.5952 0.6625 7.5952 0.6625 uses 7.2058 0.75104 solid #637383
-edge service infra 4 10.734 0.6625 10.734 0.6625 11.657 0.6625 11.657 0.6625 uses 11.267 0.75104 solid #637383
-edge infra bt 4 14.417 0.53542 14.417 0.53542 15.599 0.53542 15.599 0.53542 uses 15.078 1.1538 solid #637383
-edge infra bt 4 14.417 0.78958 14.417 0.78958 15.599 0.78958 15.599 0.78958 extends 15.078 0.34826 solid #637383
-edge bt runtime 4 18.364 0.6625 18.364 0.6625 19.459 0.6625 19.459 0.6625 adapts 18.983 0.75104 solid #637383
+graph 1 21.924 1.7263
+node entry 1.6792 0.86313 3.3583 1.7263 "Entry & Verification\nApplication\nOrderEventPublicationTests\nSpring Modulith Events Deep Dive\ntests" rounded,filled box #88A3B5 #FFF8E7
+node api 5.8205 0.86313 1.8688 1.7263 "API & Adapters\nOrderListeners\nInventory\nStringAggregate\nUuidAggregate" rounded,filled box #88A3B5 #EEF7FF
+node service 9.5972 0.86313 2.2958 1.7263 "Service & Domain\nOrderManagement\nInventory\nOrder\nLoggingConfiguration" rounded,filled box #88A3B5 #F1F8E9
+node infra 14.41 0.86313 2.1083 1.1637 "Repository & Infra\nOrderRepository\nOrder" rounded,filled box #88A3B5 #F5F0FF
+node bt 17.901 0.86313 1.8167 1.445 "bluetape4k APIs\nhibernate\nidgenerators\nspring" rounded,filled box #88A3B5 #EAF7F0
+node runtime 21.089 0.86313 1.6708 0.8825 "Runtime\nSQL / R2DBC" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.3636 0.86313 3.3636 0.86313 4.7375 0.86313 4.7375 0.86313 invokes 4.1222 0.95167 solid #637383
+edge api service 4 6.7638 0.86313 6.7638 0.86313 8.3009 0.86313 8.3009 0.86313 delegates 7.6021 0.95167 solid #637383
+edge service infra 4 10.75 0.86313 10.75 0.86313 13.207 0.86313 13.207 0.86313 "persists / publishes" 12.051 0.95167 solid #637383
+edge infra bt 4 15.472 0.86313 15.472 0.86313 16.843 0.86313 16.843 0.86313 extends 16.228 0.95167 solid #637383
+edge bt runtime 4 18.819 0.86313 18.819 0.86313 20.106 0.86313 20.106 0.86313 adapts 19.531 0.95167 solid #637383
 stop

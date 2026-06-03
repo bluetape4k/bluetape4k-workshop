@@ -21,9 +21,9 @@ Order service example for the Gateway workshop. It exposes product and order API
 
 ## Architecture
 
-![Gateway Orders Service Graphviz architecture diagram](../../docs/images/readme-diagrams/gateway-orders-readme-architecture-01.png)
-
 ![Gateway Orders architecture](../../docs/images/readme-diagrams/gateway-orders-diagram-01.png)
+
+![Gateway Orders Service Graphviz architecture diagram](../../docs/images/readme-diagrams/gateway-orders-readme-architecture-01.png)
 
 ## What This Module Shows
 

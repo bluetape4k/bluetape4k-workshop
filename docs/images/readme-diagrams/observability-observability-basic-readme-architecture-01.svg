@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1881" height="162" viewBox="0 0 1881 162" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="2186" height="222" viewBox="0 0 2186 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;observability/observability-basic/src/main/kotlin/io/bluetape4k/workshop/observability/basic/BasicObservabilityApp.kt&quot;,&quot;observability/observability-basic/src/main/kotlin/io/bluetape4k/workshop/observability/basic/client/InventoryClient.kt&quot;,&quot;observability/observability-basic/src/main/kotlin/io/bluetape4k/workshop/observability/basic/controller/OrderController.kt&quot;,&quot;observability/observability-basic/src/main/kotlin/io/bluetape4k/workshop/observability/basic/model/Inventory.kt&quot;,&quot;observability/observability-basic/src/main/kotlin/io/bluetape4k/workshop/observability/basic/model/Order.kt&quot;,&quot;observability/observability-basic/src/main/kotlin/io/bluetape4k/workshop/observability/basic/observation/ObservationSupport.kt&quot;,&quot;observability/observability-basic/src/main/kotlin/io/bluetape4k/workshop/observability/basic/service/OrderService.kt&quot;,&quot;observability/observability-basic/src/test/kotlin/io/bluetape4k/workshop/observability/basic/AbstractBasicTest.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,43 +9,43 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1881" height="162"/>
-  <rect class="frame" x="10" y="10" width="1861" height="142" rx="18"/>
+  <rect class="canvas" width="2186" height="222"/>
+  <rect class="frame" x="10" y="10" width="2166" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="256.5,83.7 256.5,83.7 353.6,83.7 353.6,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="311.9" y="68.2" text-anchor="middle">calls</text>
-    <polyline class="connector" points="536.6,83.7 536.6,83.7 625.2,83.7 625.2,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="587.8" y="68.2" text-anchor="middle">uses</text>
-    <polyline class="connector" points="929.2,83.7 929.2,83.7 1018.0,83.7 1018.0,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="980.6" y="68.2" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1239.4,100.4 1239.4,100.4 1352.0,100.4 1352.0,100.4" marker-end="url(#arrow)"/><text class="edge-label" x="1302.5" y="29.5" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1239.4,67.0 1239.4,67.0 1352.0,67.0 1352.0,67.0" marker-end="url(#arrow)"/><text class="edge-label" x="1302.5" y="106.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1573.3,83.7 1573.3,83.7 1678.0,83.7 1678.0,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="1632.4" y="68.2" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="290.2,110.9 290.2,110.9 421.7,110.9 421.7,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="362.7" y="95.4" text-anchor="middle">invokes</text>
+    <polyline class="connector" points="616.0,110.9 616.0,110.9 763.6,110.9 763.6,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="696.8" y="95.4" text-anchor="middle">delegates</text>
+    <polyline class="connector" points="989.1,110.9 989.1,110.9 1224.7,110.9 1224.7,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1113.9" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1531.1,110.9 1531.1,110.9 1662.9,110.9 1662.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1603.9" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1852.4,110.9 1852.4,110.9 1975.9,110.9 1975.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1921.0" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="33.6" width="227.9" height="100.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="141.9" y="66.7">Entry / Tests</tspan><tspan x="141.9" y="89.7">BasicObservabilityApp /</tspan><tspan x="141.9" y="112.7">AbstractBasicTest</tspan></text>
+      <rect x="28.0" y="28.0" width="261.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="158.7" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="158.7" y="106.9">BasicObservabilityApp</tspan><tspan class="node-detail" x="158.7" y="122.9">AbstractBasicTest</tspan><tspan class="node-detail" x="158.7" y="138.9">TestObservationConfig</tspan><tspan class="node-detail" x="158.7" y="154.9">Observability Observability</tspan></text>
     </g>
     <g class="node" data-node="api">
-      <rect x="367.9" y="47.1" width="167.9" height="73.2" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="451.8" y="78.2">API / Adapter</tspan><tspan x="451.8" y="101.2">OrderController</tspan></text>
+      <rect x="436.1" y="68.5" width="179.4" height="84.7" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="525.8" y="108.9">API &amp; Adapters</tspan><tspan class="node-detail" x="525.8" y="130.9">OrderController</tspan></text>
     </g>
     <g class="node" data-node="service">
-      <rect x="639.8" y="33.6" width="288.9" height="100.2" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="784.2" y="66.7">Service / Domain</tspan><tspan x="784.2" y="89.7">InventoryClient / Inventory</tspan><tspan x="784.2" y="112.7">/ Order / ObservationSupport</tspan></text>
+      <rect x="778.1" y="28.0" width="210.4" height="165.7" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="883.3" y="84.9">Service &amp; Domain</tspan><tspan class="node-detail" x="883.3" y="106.9">InventoryClient</tspan><tspan class="node-detail" x="883.3" y="122.9">Inventory</tspan><tspan class="node-detail" x="883.3" y="138.9">Order</tspan><tspan class="node-detail" x="883.3" y="154.9">ObservationSupport</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="1032.6" y="33.6" width="205.9" height="100.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1135.6" y="66.7">Library Layer</tspan><tspan x="1135.6" y="89.7">workshop / logging /</tspan><tspan x="1135.6" y="112.7">coroutines</tspan></text>
+      <rect x="1239.2" y="28.0" width="291.4" height="165.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1384.9" y="84.9">Framework Layer</tspan><tspan class="node-detail" x="1384.9" y="106.9">Spring boot autoconfigure lib</tspan><tspan class="node-detail" x="1384.9" y="122.9">Spring boot autoconfigure</tspan><tspan class="node-detail" x="1384.9" y="138.9">processor</tspan><tspan class="node-detail" x="1384.9" y="154.9">Spring boot configuration</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1366.5" y="33.6" width="205.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1469.4" y="66.7">bluetape4k APIs</tspan><tspan x="1469.4" y="89.7">workshop / logging /</tspan><tspan x="1469.4" y="112.7">coroutines</tspan></text>
+      <rect x="1677.2" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1764.4" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1764.4" y="114.9">workshop</tspan><tspan class="node-detail" x="1764.4" y="130.9">logging</tspan><tspan class="node-detail" x="1764.4" y="146.9">coroutines</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1692.4" y="33.6" width="159.9" height="100.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1772.3" y="66.7">Runtime</tspan><tspan x="1772.3" y="89.7">Redis / Kafka /</tspan><tspan x="1772.3" y="112.7">Testcontainers</tspan></text>
+      <rect x="1990.4" y="41.5" width="167.4" height="138.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="2074.0" y="92.9">Runtime</tspan><tspan class="node-detail" x="2074.0" y="114.9">Redis</tspan><tspan class="node-detail" x="2074.0" y="130.9">Kafka</tspan><tspan class="node-detail" x="2074.0" y="146.9">Testcontainers</tspan></text>
     </g>
   </g>
 </svg>

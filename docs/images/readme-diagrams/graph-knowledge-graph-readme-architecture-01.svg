@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1790" height="162" viewBox="0 0 1790 162" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="2021" height="195" viewBox="0 0 2021 195" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;graph/knowledge-graph/src/main/kotlin/io/bluetape4k/workshop/graph/knowledge/schema/KnowledgeGraphSchema.kt&quot;,&quot;graph/knowledge-graph/src/main/kotlin/io/bluetape4k/workshop/graph/knowledge/service/KnowledgeGraphService.kt&quot;,&quot;graph/knowledge-graph/src/main/kotlin/io/bluetape4k/workshop/graph/knowledge/service/KnowledgeGraphSuspendService.kt&quot;,&quot;graph/knowledge-graph/src/test/kotlin/io/bluetape4k/workshop/graph/knowledge/AbstractKnowledgeGraphSuspendTest.kt&quot;,&quot;graph/knowledge-graph/src/test/kotlin/io/bluetape4k/workshop/graph/knowledge/AbstractKnowledgeGraphTest.kt&quot;,&quot;graph/knowledge-graph/src/test/kotlin/io/bluetape4k/workshop/graph/knowledge/MemgraphKnowledgeGraphTest.kt&quot;,&quot;graph/knowledge-graph/src/test/kotlin/io/bluetape4k/workshop/graph/knowledge/Neo4jKnowledgeGraphTest.kt&quot;,&quot;graph/knowledge-graph/src/test/kotlin/io/bluetape4k/workshop/graph/knowledge/TinkerGraphKnowledgeGraphTest.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,38 +9,38 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1790" height="162"/>
-  <rect class="frame" x="10" y="10" width="1770" height="142" rx="18"/>
+  <rect class="canvas" width="2021" height="195"/>
+  <rect class="frame" x="10" y="10" width="2001" height="175" rx="18"/>
   <g>
-    <polyline class="connector" points="381.5,83.7 381.5,83.7 478.4,83.7 478.4,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="436.9" y="68.2" text-anchor="middle">calls</text>
-    <polyline class="connector" points="796.3,83.7 796.3,83.7 885.1,83.7 885.1,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="847.8" y="68.2" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1134.6,95.9 1134.6,95.9 1247.0,95.9 1247.0,95.9" marker-end="url(#arrow)"/><text class="edge-label" x="1197.7" y="29.5" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1134.6,71.5 1134.6,71.5 1247.0,71.5 1247.0,71.5" marker-end="url(#arrow)"/><text class="edge-label" x="1197.7" y="106.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1486.3,83.7 1486.3,83.7 1591.1,83.7 1591.1,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="1545.5" y="68.2" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="393.2,97.4 393.2,97.4 540.7,97.4 540.7,97.4" marker-end="url(#arrow)"/><text class="edge-label" x="473.7" y="81.9" text-anchor="middle">delegates</text>
+    <polyline class="connector" points="870.4,97.4 870.4,97.4 1105.8,97.4 1105.8,97.4" marker-end="url(#arrow)"/><text class="edge-label" x="994.8" y="81.9" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1366.0,97.4 1366.0,97.4 1497.9,97.4 1497.9,97.4" marker-end="url(#arrow)"/><text class="edge-label" x="1438.9" y="81.9" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1687.3,97.4 1687.3,97.4 1810.9,97.4 1810.9,97.4" marker-end="url(#arrow)"/><text class="edge-label" x="1755.9" y="81.9" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="47.1" width="352.9" height="73.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="204.4" y="78.2">Entry / Tests</tspan><tspan x="204.4" y="101.2">AbstractKnowledgeGraphSuspendTest</tspan></text>
+      <rect x="28.0" y="28.0" width="364.4" height="138.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="210.2" y="79.4">Entry &amp; Verification</tspan><tspan class="node-detail" x="210.2" y="101.4">AbstractKnowledgeGraphSuspendTest</tspan><tspan class="node-detail" x="210.2" y="117.4">AbstractKnowledgeGraphTest</tspan><tspan class="node-detail" x="210.2" y="133.4">Graph Knowledge Graph tests</tspan></text>
     </g>
     <g class="node" data-node="service">
-      <rect x="492.9" y="33.6" width="302.9" height="100.2" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="644.3" y="66.7">Service / Domain</tspan><tspan x="644.3" y="89.7">KnowledgeGraphService /</tspan><tspan x="644.3" y="112.7">KnowledgeGraphSuspendService</tspan></text>
+      <rect x="555.1" y="41.5" width="314.4" height="111.7" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="712.3" y="87.4">Service &amp; Domain</tspan><tspan class="node-detail" x="712.3" y="109.4">KnowledgeGraphService</tspan><tspan class="node-detail" x="712.3" y="125.4">KnowledgeGraphSuspendService</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="899.8" y="47.1" width="233.9" height="73.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1016.7" y="78.2">Repository / Infra</tspan><tspan x="1016.7" y="101.2">KnowledgeGraphSchema</tspan></text>
+      <rect x="1120.2" y="55.0" width="245.4" height="84.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1242.9" y="95.4">Repository &amp; Infra</tspan><tspan class="node-detail" x="1242.9" y="117.4">KnowledgeGraphSchema</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1261.6" y="33.6" width="223.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1373.5" y="66.7">bluetape4k APIs</tspan><tspan x="1373.5" y="89.7">dependencies / graph /</tspan><tspan x="1373.5" y="112.7">logging</tspan></text>
+      <rect x="1512.2" y="28.0" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1599.4" y="79.4">bluetape4k APIs</tspan><tspan class="node-detail" x="1599.4" y="101.4">dependencies</tspan><tspan class="node-detail" x="1599.4" y="117.4">graph</tspan><tspan class="node-detail" x="1599.4" y="133.4">logging</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1605.5" y="47.1" width="155.9" height="73.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1683.4" y="78.2">Runtime</tspan><tspan x="1683.4" y="101.2">Testcontainers</tspan></text>
+      <rect x="1825.2" y="55.0" width="167.4" height="84.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1908.9" y="95.4">Runtime</tspan><tspan class="node-detail" x="1908.9" y="117.4">Testcontainers</tspan></text>
     </g>
   </g>
 </svg>

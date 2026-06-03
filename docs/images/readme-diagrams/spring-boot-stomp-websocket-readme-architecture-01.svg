@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="2022" height="162" viewBox="0 0 2022 162" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="2236" height="222" viewBox="0 0 2236 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-boot/stomp-websocket/src/main/kotlin/io/bluetape4k/workshop/stomp/websocket/StompWebSocketApplication.kt&quot;,&quot;spring-boot/stomp-websocket/src/main/kotlin/io/bluetape4k/workshop/stomp/websocket/config/TomcatConfig.kt&quot;,&quot;spring-boot/stomp-websocket/src/main/kotlin/io/bluetape4k/workshop/stomp/websocket/config/WebSocketConfig.kt&quot;,&quot;spring-boot/stomp-websocket/src/main/kotlin/io/bluetape4k/workshop/stomp/websocket/controller/GreetingController.kt&quot;,&quot;spring-boot/stomp-websocket/src/main/kotlin/io/bluetape4k/workshop/stomp/websocket/model/Greeting.kt&quot;,&quot;spring-boot/stomp-websocket/src/main/kotlin/io/bluetape4k/workshop/stomp/websocket/model/HelloMessage.kt&quot;,&quot;spring-boot/stomp-websocket/src/test/kotlin/io/bluetape4k/workshop/stomp/websocket/GreetingIntegrationTest.kt&quot;,&quot;spring-boot/stomp-websocket/src/test/kotlin/io/bluetape4k/workshop/stomp/websocket/TestSessionHandler.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,43 +9,43 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="2022" height="162"/>
-  <rect class="frame" x="10" y="10" width="2002" height="142" rx="18"/>
+  <rect class="canvas" width="2236" height="222"/>
+  <rect class="frame" x="10" y="10" width="2216" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="303.6,83.7 303.6,83.7 400.4,83.7 400.4,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="358.9" y="68.2" text-anchor="middle">calls</text>
-    <polyline class="connector" points="603.3,83.7 603.3,83.7 692.7,83.7 692.7,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="654.8" y="68.2" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1003.2,83.7 1003.2,83.7 1092.4,83.7 1092.4,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="1054.6" y="68.2" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1352.2,95.9 1352.2,95.9 1465.3,95.9 1465.3,95.9" marker-end="url(#arrow)"/><text class="edge-label" x="1415.5" y="29.5" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1352.2,71.5 1352.2,71.5 1465.3,71.5 1465.3,71.5" marker-end="url(#arrow)"/><text class="edge-label" x="1415.5" y="106.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1724.9,83.7 1724.9,83.7 1829.9,83.7 1829.9,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="1784.4" y="68.2" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="340.3,110.9 340.3,110.9 471.5,110.9 471.5,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="412.7" y="95.4" text-anchor="middle">invokes</text>
+    <polyline class="connector" points="686.3,110.9 686.3,110.9 833.7,110.9 833.7,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="766.8" y="95.4" text-anchor="middle">delegates</text>
+    <polyline class="connector" points="1046.5,110.9 1046.5,110.9 1281.9,110.9 1281.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1170.9" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1588.1,110.9 1588.1,110.9 1719.9,110.9 1719.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1661.0" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1909.6,110.9 1909.6,110.9 2033.2,110.9 2033.2,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1978.0" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="33.6" width="274.9" height="100.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="165.4" y="66.7">Entry / Tests</tspan><tspan x="165.4" y="89.7">StompWebSocketApplication</tspan><tspan x="165.4" y="112.7">/ GreetingIntegrationTest</tspan></text>
+      <rect x="28.0" y="28.0" width="311.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="183.7" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="183.7" y="106.9">StompWebSocketApplication</tspan><tspan class="node-detail" x="183.7" y="122.9">GreetingIntegrationTest</tspan><tspan class="node-detail" x="183.7" y="138.9">TestSessionHandler</tspan><tspan class="node-detail" x="183.7" y="154.9">Spring Boot Stomp Websocket</tspan></text>
     </g>
     <g class="node" data-node="api">
-      <rect x="414.9" y="33.6" width="187.9" height="100.2" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="508.8" y="66.7">API / Adapter</tspan><tspan x="508.8" y="89.7">TomcatConfig /</tspan><tspan x="508.8" y="112.7">GreetingController</tspan></text>
+      <rect x="486.1" y="55.0" width="199.4" height="111.7" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="585.8" y="100.9">API &amp; Adapters</tspan><tspan class="node-detail" x="585.8" y="122.9">TomcatConfig</tspan><tspan class="node-detail" x="585.8" y="138.9">GreetingController</tspan></text>
     </g>
     <g class="node" data-node="service">
-      <rect x="706.8" y="33.6" width="295.9" height="100.2" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="854.7" y="66.7">Service / Domain</tspan><tspan x="854.7" y="89.7">WebSocketConfig / Greeting /</tspan><tspan x="854.7" y="112.7">HelloMessage</tspan></text>
+      <rect x="848.1" y="41.5" width="197.4" height="138.7" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="946.8" y="92.9">Service &amp; Domain</tspan><tspan class="node-detail" x="946.8" y="114.9">WebSocketConfig</tspan><tspan class="node-detail" x="946.8" y="130.9">Greeting</tspan><tspan class="node-detail" x="946.8" y="146.9">HelloMessage</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="1106.6" y="47.1" width="244.9" height="73.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1229.1" y="78.2">Library Layer</tspan><tspan x="1229.1" y="101.2">workshop / core / junit5</tspan></text>
+      <rect x="1296.2" y="28.0" width="291.4" height="165.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1441.9" y="84.9">Framework Layer</tspan><tspan class="node-detail" x="1441.9" y="106.9">Spring boot autoconfigure lib</tspan><tspan class="node-detail" x="1441.9" y="122.9">Spring boot autoconfigure</tspan><tspan class="node-detail" x="1441.9" y="138.9">processor</tspan><tspan class="node-detail" x="1441.9" y="154.9">Spring boot configuration</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1479.5" y="47.1" width="244.9" height="73.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1601.9" y="78.2">bluetape4k APIs</tspan><tspan x="1601.9" y="101.2">workshop / core / junit5</tspan></text>
+      <rect x="1734.3" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1821.5" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1821.5" y="114.9">workshop</tspan><tspan class="node-detail" x="1821.5" y="130.9">core</tspan><tspan class="node-detail" x="1821.5" y="146.9">junit5</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1844.4" y="47.1" width="148.9" height="73.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1918.8" y="78.2">Runtime</tspan><tspan x="1918.8" y="101.2">SQL / R2DBC</tspan></text>
+      <rect x="2047.3" y="68.5" width="160.4" height="84.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="2127.5" y="108.9">Runtime</tspan><tspan class="node-detail" x="2127.5" y="130.9">SQL / R2DBC</tspan></text>
     </g>
   </g>
 </svg>

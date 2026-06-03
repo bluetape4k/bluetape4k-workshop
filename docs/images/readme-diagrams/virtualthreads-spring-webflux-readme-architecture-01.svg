@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="2023" height="184" viewBox="0 0 2023 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="2273" height="222" viewBox="0 0 2273 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;virtualthreads/spring-webflux/src/main/kotlin/io/bluetape4k/workshop/webflux/virtualthread/WebfluxVirtualThreadApp.kt&quot;,&quot;virtualthreads/spring-webflux/src/main/kotlin/io/bluetape4k/workshop/webflux/virtualthread/config/AsyncConfig.kt&quot;,&quot;virtualthreads/spring-webflux/src/main/kotlin/io/bluetape4k/workshop/webflux/virtualthread/config/NettyConfig.kt&quot;,&quot;virtualthreads/spring-webflux/src/main/kotlin/io/bluetape4k/workshop/webflux/virtualthread/config/SchedulingConfig.kt&quot;,&quot;virtualthreads/spring-webflux/src/main/kotlin/io/bluetape4k/workshop/webflux/virtualthread/controller/AbstractDispatcherController.kt&quot;,&quot;virtualthreads/spring-webflux/src/main/kotlin/io/bluetape4k/workshop/webflux/virtualthread/controller/CustomDispatcherController.kt&quot;,&quot;virtualthreads/spring-webflux/src/main/kotlin/io/bluetape4k/workshop/webflux/virtualthread/controller/DefaultDispatcherController.kt&quot;,&quot;virtualthreads/spring-webflux/src/main/kotlin/io/bluetape4k/workshop/webflux/virtualthread/controller/HttpbinController.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,43 +9,43 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="2023" height="184"/>
-  <rect class="frame" x="10" y="10" width="2003" height="164" rx="18"/>
+  <rect class="canvas" width="2273" height="222"/>
+  <rect class="frame" x="10" y="10" width="2253" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="356.7,91.6 356.7,91.6 453.4,91.6 453.4,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="411.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="753.6,91.6 753.6,91.6 842.5,91.6 842.5,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="804.8" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1100.4,91.6 1100.4,91.6 1189.2,91.6 1189.2,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1151.7" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1390.0,103.8 1390.0,103.8 1503.0,103.8 1503.0,103.8" marker-end="url(#arrow)"/><text class="edge-label" x="1453.5" y="37.4" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1390.0,79.4 1390.0,79.4 1503.0,79.4 1503.0,79.4" marker-end="url(#arrow)"/><text class="edge-label" x="1453.5" y="114.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1711.3,91.6 1711.3,91.6 1816.0,91.6 1816.0,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1770.4" y="76.1" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="368.1,110.9 368.1,110.9 499.7,110.9 499.7,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="440.7" y="95.4" text-anchor="middle">invokes</text>
+    <polyline class="connector" points="811.4,110.9 811.4,110.9 958.6,110.9 958.6,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="891.8" y="95.4" text-anchor="middle">delegates</text>
+    <polyline class="connector" points="1165.4,110.9 1165.4,110.9 1400.9,110.9 1400.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1289.8" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1618.3,110.9 1618.3,110.9 1750.0,110.9 1750.0,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1690.9" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1939.4,110.9 1939.4,110.9 2063.0,110.9 2063.0,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="2008.0" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="41.5" width="327.9" height="100.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="191.9" y="74.6">Entry / Tests</tspan><tspan x="191.9" y="97.6">WebfluxVirtualThreadApp /</tspan><tspan x="191.9" y="120.6">AbstractWebfluxVirtualThreadTest</tspan></text>
+      <rect x="28.0" y="28.0" width="339.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="197.7" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="197.7" y="106.9">WebfluxVirtualThreadApp</tspan><tspan class="node-detail" x="197.7" y="122.9">AbstractWebfluxVirtualThreadTest</tspan><tspan class="node-detail" x="197.7" y="138.9">AbstractDispatcherControllerTest</tspan><tspan class="node-detail" x="197.7" y="154.9">Virtualthreads Spring Webflux</tspan></text>
     </g>
     <g class="node" data-node="api">
-      <rect x="467.9" y="28.0" width="284.9" height="127.2" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="610.3" y="63.1">API / Adapter</tspan><tspan x="610.3" y="86.1">NettyConfig /</tspan><tspan x="610.3" y="109.1">SchedulingConfig /</tspan><tspan x="610.3" y="132.1">AbstractDispatcherController</tspan></text>
+      <rect x="514.1" y="28.0" width="296.4" height="165.7" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="662.3" y="84.9">API &amp; Adapters</tspan><tspan class="node-detail" x="662.3" y="106.9">NettyConfig</tspan><tspan class="node-detail" x="662.3" y="122.9">SchedulingConfig</tspan><tspan class="node-detail" x="662.3" y="138.9">AbstractDispatcherController</tspan><tspan class="node-detail" x="662.3" y="154.9">CustomDispatcherController</tspan></text>
     </g>
     <g class="node" data-node="service">
-      <rect x="856.8" y="55.0" width="242.9" height="73.2" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="978.2" y="86.1">Service / Domain</tspan><tspan x="978.2" y="109.1">Banner / DispatcherType</tspan></text>
+      <rect x="973.1" y="55.0" width="191.4" height="111.7" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1068.8" y="100.9">Service &amp; Domain</tspan><tspan class="node-detail" x="1068.8" y="122.9">Banner</tspan><tspan class="node-detail" x="1068.8" y="138.9">DispatcherType</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="1203.6" y="55.0" width="185.9" height="73.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1296.5" y="86.1">Repository / Infra</tspan><tspan x="1296.5" y="109.1">AsyncConfig</tspan></text>
+      <rect x="1415.2" y="68.5" width="202.4" height="84.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1516.4" y="108.9">Repository &amp; Infra</tspan><tspan class="node-detail" x="1516.4" y="130.9">AsyncConfig</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1517.5" y="41.5" width="192.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1613.9" y="74.6">bluetape4k APIs</tspan><tspan x="1613.9" y="97.6">workshop / core /</tspan><tspan x="1613.9" y="120.6">virtualthread</tspan></text>
+      <rect x="1764.2" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1851.4" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1851.4" y="114.9">workshop</tspan><tspan class="node-detail" x="1851.4" y="130.9">core</tspan><tspan class="node-detail" x="1851.4" y="146.9">virtualthread</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1830.4" y="28.0" width="163.9" height="127.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1912.4" y="63.1">Runtime</tspan><tspan x="1912.4" y="86.1">SQL / R2DBC /</tspan><tspan x="1912.4" y="109.1">Elasticsearch /</tspan><tspan x="1912.4" y="132.1">Testcontainers</tspan></text>
+      <rect x="2077.3" y="41.5" width="167.4" height="138.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="2161.0" y="92.9">Runtime</tspan><tspan class="node-detail" x="2161.0" y="114.9">SQL / R2DBC</tspan><tspan class="node-detail" x="2161.0" y="130.9">Elasticsearch</tspan><tspan class="node-detail" x="2161.0" y="146.9">Testcontainers</tspan></text>
     </g>
   </g>
 </svg>

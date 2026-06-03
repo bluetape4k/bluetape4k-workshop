@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1722" height="184" viewBox="0 0 1722 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1821" height="222" viewBox="0 0 1821 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-boot/cache-benchmark/src/main/kotlin/io/bluetape4k/workshop/cache/benchmark/CacheBenchmarkApplication.kt&quot;,&quot;spring-boot/cache-benchmark/src/main/kotlin/io/bluetape4k/workshop/cache/benchmark/config/CacheConfig.kt&quot;,&quot;spring-boot/cache-benchmark/src/main/kotlin/io/bluetape4k/workshop/cache/benchmark/config/DataInitConfig.kt&quot;,&quot;spring-boot/cache-benchmark/src/main/kotlin/io/bluetape4k/workshop/cache/benchmark/config/RedisTemplateConfig.kt&quot;,&quot;spring-boot/cache-benchmark/src/main/kotlin/io/bluetape4k/workshop/cache/benchmark/config/RedissonConfig.kt&quot;,&quot;spring-boot/cache-benchmark/src/main/kotlin/io/bluetape4k/workshop/cache/benchmark/domain/Product.kt&quot;,&quot;spring-boot/cache-benchmark/src/main/kotlin/io/bluetape4k/workshop/cache/benchmark/domain/ProductRepository.kt&quot;,&quot;spring-boot/cache-benchmark/src/main/kotlin/io/bluetape4k/workshop/cache/benchmark/service/CaffeineService.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,38 +9,38 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1722" height="184"/>
-  <rect class="frame" x="10" y="10" width="1702" height="164" rx="18"/>
+  <rect class="canvas" width="1821" height="222"/>
+  <rect class="frame" x="10" y="10" width="1801" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="323.8,91.6 323.8,91.6 420.5,91.6 420.5,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="378.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="638.4,91.6 638.4,91.6 727.7,91.6 727.7,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="689.8" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="994.1,108.3 994.1,108.3 1107.4,108.3 1107.4,108.3" marker-end="url(#arrow)"/><text class="edge-label" x="1057.6" y="37.4" text-anchor="middle">uses</text>
-    <polyline class="connector" points="994.1,74.9 994.1,74.9 1107.4,74.9 1107.4,74.9" marker-end="url(#arrow)"/><text class="edge-label" x="1057.6" y="114.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1343.4,91.6 1343.4,91.6 1448.4,91.6 1448.4,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1402.5" y="76.1" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="336.0,110.9 336.0,110.9 483.6,110.9 483.6,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="416.7" y="95.4" text-anchor="middle">delegates</text>
+    <polyline class="connector" points="697.9,110.9 697.9,110.9 933.5,110.9 933.5,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="822.8" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1166.2,110.9 1166.2,110.9 1298.0,110.9 1298.0,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1238.8" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1487.3,110.9 1487.3,110.9 1610.9,110.9 1610.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1555.9" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="28.0" width="294.9" height="127.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="175.4" y="63.1">Entry / Tests</tspan><tspan x="175.4" y="86.1">CacheBenchmarkApplication</tspan><tspan x="175.4" y="109.1">/</tspan><tspan x="175.4" y="132.1">AbstractCacheBenchmarkTest</tspan></text>
+      <rect x="28.0" y="28.0" width="307.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="181.7" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="181.7" y="106.9">CacheBenchmarkApplication</tspan><tspan class="node-detail" x="181.7" y="122.9">AbstractCacheBenchmarkTest</tspan><tspan class="node-detail" x="181.7" y="138.9">CaffeineServiceTest</tspan><tspan class="node-detail" x="181.7" y="154.9">Spring Boot Cache Benchmark</tspan></text>
     </g>
     <g class="node" data-node="service">
-      <rect x="434.9" y="28.0" width="202.9" height="127.2" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="536.3" y="63.1">Service / Domain</tspan><tspan x="536.3" y="86.1">CacheConfig /</tspan><tspan x="536.3" y="109.1">CaffeineService /</tspan><tspan x="536.3" y="132.1">NearCacheService /</tspan></text>
+      <rect x="498.1" y="28.0" width="199.4" height="165.7" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="597.8" y="84.9">Service &amp; Domain</tspan><tspan class="node-detail" x="597.8" y="106.9">CacheConfig</tspan><tspan class="node-detail" x="597.8" y="122.9">CaffeineService</tspan><tspan class="node-detail" x="597.8" y="138.9">NearCacheService</tspan><tspan class="node-detail" x="597.8" y="154.9">NoCacheService</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="741.8" y="28.0" width="251.9" height="127.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="867.7" y="63.1">Repository / Infra</tspan><tspan x="867.7" y="86.1">DataInitConfig /</tspan><tspan x="867.7" y="109.1">RedisTemplateConfig /</tspan><tspan x="867.7" y="132.1">RedissonConfig / Product</tspan></text>
+      <rect x="948.1" y="28.0" width="217.4" height="165.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1056.8" y="84.9">Repository &amp; Infra</tspan><tspan class="node-detail" x="1056.8" y="106.9">DataInitConfig</tspan><tspan class="node-detail" x="1056.8" y="122.9">RedisTemplateConfig</tspan><tspan class="node-detail" x="1056.8" y="138.9">RedissonConfig</tspan><tspan class="node-detail" x="1056.8" y="154.9">Product</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1121.6" y="41.5" width="220.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1232.0" y="74.6">bluetape4k APIs</tspan><tspan x="1232.0" y="97.6">workshop / redisson /</tspan><tspan x="1232.0" y="120.6">cache</tspan></text>
+      <rect x="1312.2" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1399.4" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1399.4" y="114.9">workshop</tspan><tspan class="node-detail" x="1399.4" y="130.9">redisson</tspan><tspan class="node-detail" x="1399.4" y="146.9">cache</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1462.5" y="41.5" width="230.9" height="100.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1577.9" y="74.6">Runtime</tspan><tspan x="1577.9" y="97.6">SQL / R2DBC / Redis /</tspan><tspan x="1577.9" y="120.6">Testcontainers</tspan></text>
+      <rect x="1625.3" y="41.5" width="167.4" height="138.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1709.0" y="92.9">Runtime</tspan><tspan class="node-detail" x="1709.0" y="114.9">SQL / R2DBC</tspan><tspan class="node-detail" x="1709.0" y="130.9">Redis</tspan><tspan class="node-detail" x="1709.0" y="146.9">Testcontainers</tspan></text>
     </g>
   </g>
 </svg>

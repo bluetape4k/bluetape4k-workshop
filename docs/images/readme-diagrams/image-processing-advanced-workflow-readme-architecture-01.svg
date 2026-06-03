@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="2401" height="184" viewBox="0 0 2401 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="2642" height="222" viewBox="0 0 2642 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;image-processing/advanced-workflow/src/main/kotlin/io/bluetape4k/workshop/imageprocessing/advanced/ImageProcessingAdvancedApplication.kt&quot;,&quot;image-processing/advanced-workflow/src/main/kotlin/io/bluetape4k/workshop/imageprocessing/advanced/config/ImageProcessingAdvancedProperties.kt&quot;,&quot;image-processing/advanced-workflow/src/main/kotlin/io/bluetape4k/workshop/imageprocessing/advanced/model/ImageObjectKind.kt&quot;,&quot;image-processing/advanced-workflow/src/main/kotlin/io/bluetape4k/workshop/imageprocessing/advanced/model/ImagePersistenceModels.kt&quot;,&quot;image-processing/advanced-workflow/src/main/kotlin/io/bluetape4k/workshop/imageprocessing/advanced/model/ImageProcessingModels.kt&quot;,&quot;image-processing/advanced-workflow/src/main/kotlin/io/bluetape4k/workshop/imageprocessing/advanced/persistence/ImagePersistenceService.kt&quot;,&quot;image-processing/advanced-workflow/src/main/kotlin/io/bluetape4k/workshop/imageprocessing/advanced/persistence/ImagePersistenceServiceImpl.kt&quot;,&quot;image-processing/advanced-workflow/src/main/kotlin/io/bluetape4k/workshop/imageprocessing/advanced/persistence/config/ImagePersistenceDatabaseInitializer.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,43 +9,43 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="2401" height="184"/>
-  <rect class="frame" x="10" y="10" width="2381" height="164" rx="18"/>
+  <rect class="canvas" width="2642" height="222"/>
+  <rect class="frame" x="10" y="10" width="2622" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="411.3,91.6 411.3,91.6 508.5,91.6 508.5,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="466.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="797.3,91.6 797.3,91.6 886.5,91.6 886.5,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="848.8" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1245.3,91.6 1245.3,91.6 1334.4,91.6 1334.4,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1296.6" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1661.0,108.3 1661.0,108.3 1774.3,108.3 1774.3,108.3" marker-end="url(#arrow)"/><text class="edge-label" x="1724.5" y="37.4" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1661.0,74.9 1661.0,74.9 1774.3,74.9 1774.3,74.9" marker-end="url(#arrow)"/><text class="edge-label" x="1724.5" y="114.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1982.1,91.6 1982.1,91.6 2086.9,91.6 2086.9,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="2041.4" y="76.1" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="423.2,110.9 423.2,110.9 554.5,110.9 554.5,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="495.7" y="95.4" text-anchor="middle">invokes</text>
+    <polyline class="connector" points="895.1,110.9 895.1,110.9 1042.5,110.9 1042.5,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="975.8" y="95.4" text-anchor="middle">delegates</text>
+    <polyline class="connector" points="1413.1,110.9 1413.1,110.9 1649.1,110.9 1649.1,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1537.9" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1987.6,110.9 1987.6,110.9 2118.9,110.9 2118.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="2059.9" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="2308.4,110.9 2308.4,110.9 2431.9,110.9 2431.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="2377.0" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="28.0" width="382.9" height="127.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="219.4" y="63.1">Entry / Tests</tspan><tspan x="219.4" y="86.1">ImageProcessingAdvancedApplication</tspan><tspan x="219.4" y="109.1">/</tspan><tspan x="219.4" y="132.1">ImageProcessingAdvancedPropertiesTest</tspan></text>
+      <rect x="28.0" y="28.0" width="394.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="225.2" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="225.2" y="106.9">ImageProcessingAdvancedApplication</tspan><tspan class="node-detail" x="225.2" y="122.9">ImageProcessingAdvancedPropertiesTest</tspan><tspan class="node-detail" x="225.2" y="138.9">AbstractImagePersistenceTest</tspan><tspan class="node-detail" x="225.2" y="154.9">Image Processing Advanced</tspan></text>
     </g>
     <g class="node" data-node="api">
-      <rect x="522.9" y="28.0" width="273.9" height="127.2" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="659.8" y="63.1">API / Adapter</tspan><tspan x="659.8" y="86.1">ImagePersistenceServiceImpl</tspan><tspan x="659.8" y="109.1">/</tspan><tspan x="659.8" y="132.1">ImageDerivativesController</tspan></text>
+      <rect x="569.1" y="41.5" width="325.4" height="138.7" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="731.8" y="92.9">API &amp; Adapters</tspan><tspan class="node-detail" x="731.8" y="114.9">ImagePersistenceServiceImpl</tspan><tspan class="node-detail" x="731.8" y="130.9">ImageDerivativesController</tspan><tspan class="node-detail" x="731.8" y="146.9">ImageProcessingExceptionHandler</tspan></text>
     </g>
     <g class="node" data-node="service">
-      <rect x="900.7" y="28.0" width="343.9" height="127.2" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1072.7" y="63.1">Service / Domain</tspan><tspan x="1072.7" y="86.1">ImageProcessingAdvancedProperties</tspan><tspan x="1072.7" y="109.1">/ ImagePersistenceModels /</tspan><tspan x="1072.7" y="132.1">ImagePersistenceService /</tspan></text>
+      <rect x="1057.1" y="28.0" width="355.4" height="165.7" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1234.8" y="84.9">Service &amp; Domain</tspan><tspan class="node-detail" x="1234.8" y="106.9">ImageProcessingAdvancedProperties</tspan><tspan class="node-detail" x="1234.8" y="122.9">ImagePersistenceModels</tspan><tspan class="node-detail" x="1234.8" y="138.9">ImagePersistenceService</tspan><tspan class="node-detail" x="1234.8" y="154.9">ImagePersistenceDatabaseInitializer</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="1348.6" y="28.0" width="311.9" height="127.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1504.6" y="63.1">Repository / Infra</tspan><tspan x="1504.6" y="86.1">ImageObjectKind /</tspan><tspan x="1504.6" y="109.1">ImagePersistenceMappers /</tspan><tspan x="1504.6" y="132.1">ImageProcessingEventRepository</tspan></text>
+      <rect x="1663.2" y="28.0" width="323.4" height="165.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1824.9" y="84.9">Repository &amp; Infra</tspan><tspan class="node-detail" x="1824.9" y="106.9">ImageObjectKind</tspan><tspan class="node-detail" x="1824.9" y="122.9">ImagePersistenceMappers</tspan><tspan class="node-detail" x="1824.9" y="138.9">ImageProcessingEventRepository</tspan><tspan class="node-detail" x="1824.9" y="154.9">ImageProcessingJobRepository</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1788.5" y="41.5" width="192.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1884.9" y="74.6">bluetape4k APIs</tspan><tspan x="1884.9" y="97.6">workshop / core /</tspan><tspan x="1884.9" y="120.6">coroutines</tspan></text>
+      <rect x="2133.2" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="2220.4" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="2220.4" y="114.9">workshop</tspan><tspan class="node-detail" x="2220.4" y="130.9">core</tspan><tspan class="node-detail" x="2220.4" y="146.9">coroutines</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="2101.4" y="41.5" width="270.9" height="100.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="2236.9" y="74.6">Runtime</tspan><tspan x="2236.9" y="97.6">SQL / R2DBC / AWS / S3 /</tspan><tspan x="2236.9" y="120.6">Testcontainers</tspan></text>
+      <rect x="2446.4" y="41.5" width="167.4" height="138.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="2530.0" y="92.9">Runtime</tspan><tspan class="node-detail" x="2530.0" y="114.9">SQL / R2DBC</tspan><tspan class="node-detail" x="2530.0" y="130.9">AWS / S3</tspan><tspan class="node-detail" x="2530.0" y="146.9">Testcontainers</tspan></text>
     </g>
   </g>
 </svg>

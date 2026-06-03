@@ -1,14 +1,13 @@
-graph 1 17.826 1.1017
-node entry 1.114 0.52188 2.2279 1.0438 "Entry / Tests\nProtobufApplication /\nCourseConfigTest" rounded,filled box #88A3B5 #FFF8E7
-node api 4.3158 0.52188 1.8425 0.7625 "API / Adapter\nCourseController" rounded,filled box #88A3B5 #EEF7FF
-node service 7.3615 0.52188 2.0821 0.7625 "Service / Domain\nProtobufConverter" rounded,filled box #88A3B5 #F1F8E9
-node infra 10.454 0.52188 1.9363 1.0438 "Repository / Infra\nConurceConfig /\nCourseRepository" rounded,filled box #88A3B5 #F5F0FF
-node bt 13.755 0.52188 1.9988 1.0438 "bluetape4k APIs\nworkshop / grpc /\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
-node runtime 16.915 0.52188 1.8217 0.7625 "Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 2.2338 0.52188 2.2338 0.52188 3.2447 0.52188 3.2447 0.52188 calls 2.8112 0.61042 solid #637383
-edge api service 4 5.2462 0.52188 5.2462 0.52188 6.1718 0.52188 6.1718 0.52188 uses 5.7787 0.61042 solid #637383
-edge service infra 4 8.4084 0.52188 8.4084 0.52188 9.3384 0.52188 9.3384 0.52188 uses 8.9442 0.61042 solid #637383
-edge infra bt 4 11.431 0.34792 11.431 0.34792 12.603 0.34792 12.603 0.34792 uses 12.089 1.0132 solid #637383
-edge infra bt 4 11.431 0.69583 11.431 0.69583 12.603 0.69583 12.603 0.69583 extends 12.089 0.20764 solid #637383
-edge bt runtime 4 14.763 0.52188 14.763 0.52188 15.854 0.52188 15.854 0.52188 adapts 15.379 0.61042 solid #637383
+graph 1 22.237 1.7263
+node entry 1.7 0.86313 3.4 1.7263 "Entry & Verification\nProtobufApplication\nCourseConfigTest\nProtobufApplicationIT\nSpring Boot Protobuf Mvc tests" rounded,filled box #88A3B5 #FFF8E7
+node api 5.909 0.86313 1.9625 0.8825 "API & Adapters\nCourseController" rounded,filled box #88A3B5 #EEF7FF
+node service 9.6858 0.86313 2.2021 0.8825 "Service & Domain\nProtobufConverter" rounded,filled box #88A3B5 #F1F8E9
+node infra 14.452 0.86313 2.1083 1.1637 "Repository & Infra\nConurceConfig\nCourseRepository" rounded,filled box #88A3B5 #F5F0FF
+node bt 17.942 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\ngrpc\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
+node runtime 21.266 0.86313 1.9417 0.8825 "Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.4059 0.86313 3.4059 0.86313 4.7779 0.86313 4.7779 0.86313 invokes 4.1639 0.95167 solid #637383
+edge api service 4 6.8964 0.86313 6.8964 0.86313 8.435 0.86313 8.435 0.86313 delegates 7.7375 0.95167 solid #637383
+edge service infra 4 10.791 0.86313 10.791 0.86313 13.247 0.86313 13.247 0.86313 "persists / publishes" 12.092 0.95167 solid #637383
+edge infra bt 4 15.513 0.86313 15.513 0.86313 16.885 0.86313 16.885 0.86313 extends 16.27 0.95167 solid #637383
+edge bt runtime 4 18.859 0.86313 18.859 0.86313 20.145 0.86313 20.145 0.86313 adapts 19.573 0.95167 solid #637383
 stop

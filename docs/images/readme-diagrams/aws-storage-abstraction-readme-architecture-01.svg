@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1832" height="184" viewBox="0 0 1832 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1978" height="222" viewBox="0 0 1978 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;aws/storage-abstraction/src/main/kotlin/io/bluetape4k/workshop/storage/LocalStorageService.kt&quot;,&quot;aws/storage-abstraction/src/main/kotlin/io/bluetape4k/workshop/storage/S3Config.kt&quot;,&quot;aws/storage-abstraction/src/main/kotlin/io/bluetape4k/workshop/storage/S3PresignedStorageService.kt&quot;,&quot;aws/storage-abstraction/src/main/kotlin/io/bluetape4k/workshop/storage/S3StorageService.kt&quot;,&quot;aws/storage-abstraction/src/main/kotlin/io/bluetape4k/workshop/storage/StorageApplication.kt&quot;,&quot;aws/storage-abstraction/src/main/kotlin/io/bluetape4k/workshop/storage/StorageService.kt&quot;,&quot;aws/storage-abstraction/src/test/kotlin/io/bluetape4k/workshop/storage/AbstractStorageServiceTest.kt&quot;,&quot;aws/storage-abstraction/src/test/kotlin/io/bluetape4k/workshop/storage/LocalStorageServiceTest.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,38 +9,38 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1832" height="184"/>
-  <rect class="frame" x="10" y="10" width="1812" height="164" rx="18"/>
+  <rect class="canvas" width="1978" height="222"/>
+  <rect class="frame" x="10" y="10" width="1958" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="309.5,91.6 309.5,91.6 406.5,91.6 406.5,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="364.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="704.2,91.6 704.2,91.6 793.4,91.6 793.4,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="755.8" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1100.1,103.8 1100.1,103.8 1213.4,103.8 1213.4,103.8" marker-end="url(#arrow)"/><text class="edge-label" x="1163.7" y="37.4" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1100.1,79.4 1100.1,79.4 1213.4,79.4 1213.4,79.4" marker-end="url(#arrow)"/><text class="edge-label" x="1163.7" y="114.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1421.4,91.6 1421.4,91.6 1526.5,91.6 1526.5,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1480.5" y="76.1" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="338.8,110.9 338.8,110.9 486.6,110.9 486.6,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="419.7" y="95.4" text-anchor="middle">delegates</text>
+    <polyline class="connector" points="781.3,110.9 781.3,110.9 1016.5,110.9 1016.5,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="905.8" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1323.0,110.9 1323.0,110.9 1454.8,110.9 1454.8,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1395.9" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1644.3,110.9 1644.3,110.9 1767.9,110.9 1767.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1712.9" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="41.5" width="280.9" height="100.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="168.4" y="74.6">Entry / Tests</tspan><tspan x="168.4" y="97.6">StorageApplication /</tspan><tspan x="168.4" y="120.6">AbstractStorageServiceTest</tspan></text>
+      <rect x="28.0" y="28.0" width="310.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="183.2" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="183.2" y="106.9">StorageApplication</tspan><tspan class="node-detail" x="183.2" y="122.9">AbstractStorageServiceTest</tspan><tspan class="node-detail" x="183.2" y="138.9">LocalStorageServiceTest</tspan><tspan class="node-detail" x="183.2" y="154.9">Aws Storage Abstraction tests</tspan></text>
     </g>
     <g class="node" data-node="service">
-      <rect x="420.9" y="28.0" width="282.9" height="127.2" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="562.3" y="63.1">Service / Domain</tspan><tspan x="562.3" y="86.1">LocalStorageService /</tspan><tspan x="562.3" y="109.1">S3Config /</tspan><tspan x="562.3" y="132.1">S3PresignedStorageService /</tspan></text>
+      <rect x="501.1" y="28.0" width="279.4" height="165.7" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="640.8" y="84.9">Service &amp; Domain</tspan><tspan class="node-detail" x="640.8" y="106.9">LocalStorageService</tspan><tspan class="node-detail" x="640.8" y="122.9">S3Config</tspan><tspan class="node-detail" x="640.8" y="138.9">S3PresignedStorageService</tspan><tspan class="node-detail" x="640.8" y="154.9">S3StorageService</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="807.8" y="55.0" width="291.9" height="73.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="953.7" y="86.1">Library Layer</tspan><tspan x="953.7" y="109.1">workshop / core / coroutines</tspan></text>
+      <rect x="1031.1" y="28.0" width="291.4" height="165.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1176.8" y="84.9">Framework Layer</tspan><tspan class="node-detail" x="1176.8" y="106.9">Spring boot autoconfigure lib</tspan><tspan class="node-detail" x="1176.8" y="122.9">Spring boot autoconfigure</tspan><tspan class="node-detail" x="1176.8" y="138.9">processor</tspan><tspan class="node-detail" x="1176.8" y="154.9">Spring boot configuration</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1227.7" y="41.5" width="192.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1324.1" y="74.6">bluetape4k APIs</tspan><tspan x="1324.1" y="97.6">workshop / core /</tspan><tspan x="1324.1" y="120.6">coroutines</tspan></text>
+      <rect x="1469.2" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1556.4" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1556.4" y="114.9">workshop</tspan><tspan class="node-detail" x="1556.4" y="130.9">core</tspan><tspan class="node-detail" x="1556.4" y="146.9">coroutines</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1540.6" y="55.0" width="262.9" height="73.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1672.0" y="86.1">Runtime</tspan><tspan x="1672.0" y="109.1">AWS / S3 / Testcontainers</tspan></text>
+      <rect x="1782.2" y="55.0" width="167.4" height="111.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1865.9" y="100.9">Runtime</tspan><tspan class="node-detail" x="1865.9" y="122.9">AWS / S3</tspan><tspan class="node-detail" x="1865.9" y="138.9">Testcontainers</tspan></text>
     </g>
   </g>
 </svg>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="944" height="184" viewBox="0 0 944 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1130" height="222" viewBox="0 0 1130 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/singleton/EnumIvoryTower.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/singleton/InitializingOnDemandHolderIdiom.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/singleton/IvoryTower.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/singleton/IvoryTowerObject.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/singleton/KotlinSingleton.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/singleton/ThreadSafeDoubleCheckLocking.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/singleton/ThreadSafeLazyLoadedIvoryTower.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,27 +9,28 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="944" height="184"/>
-  <rect class="frame" x="10" y="10" width="924" height="164" rx="18"/>
+  <rect class="canvas" width="1130" height="222"/>
+  <rect class="frame" x="10" y="10" width="1110" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="242.6,91.6 242.6,91.6 339.8,91.6 339.8,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="297.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="637.5,91.6 637.5,91.6 726.3,91.6 726.3,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="688.8" y="76.1" text-anchor="middle">uses</text>
+    <polyline class="connector" points="328.2,110.9 328.2,110.9 475.5,110.9 475.5,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="408.7" y="95.4" text-anchor="middle">delegates</text>
+    <polyline class="connector" points="785.0,110.9 785.0,110.9 900.8,110.9 900.8,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="849.8" y="95.4" text-anchor="middle">backs</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="28.0" width="213.9" height="127.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="134.9" y="63.1">Entry / Tests</tspan><tspan x="134.9" y="86.1">Kotlin Design Patterns</tspan><tspan x="134.9" y="109.1">Kotlin DesignPatterns</tspan><tspan x="134.9" y="132.1">Singleton tests</tspan></text>
+      <rect x="28.0" y="55.0" width="299.4" height="111.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="177.7" y="100.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="177.7" y="122.9">Kotlin Design Patterns Kotlin</tspan><tspan class="node-detail" x="177.7" y="138.9">DesignPatterns Singleton tests</tspan></text>
     </g>
     <g class="node" data-node="service">
-      <rect x="353.9" y="28.0" width="282.9" height="127.2" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="495.3" y="63.1">Service / Domain</tspan><tspan x="495.3" y="86.1">EnumIvoryTower /</tspan><tspan x="495.3" y="109.1">InitializingOnDemandHolderIdiom</tspan><tspan x="495.3" y="132.1">/ IvoryTower /</tspan></text>
+      <rect x="490.1" y="28.0" width="294.4" height="165.7" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="637.3" y="84.9">Service &amp; Domain</tspan><tspan class="node-detail" x="637.3" y="106.9">EnumIvoryTower</tspan><tspan class="node-detail" x="637.3" y="122.9">InitializingOnDemandHolderIdiom</tspan><tspan class="node-detail" x="637.3" y="138.9">IvoryTower</tspan><tspan class="node-detail" x="637.3" y="154.9">IvoryTowerObject</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="740.8" y="55.0" width="174.9" height="73.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="828.2" y="86.1">Runtime</tspan><tspan x="828.2" y="109.1">In-memory / JVM</tspan></text>
+      <rect x="915.2" y="68.5" width="186.4" height="84.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1008.4" y="108.9">Runtime</tspan><tspan class="node-detail" x="1008.4" y="130.9">In-memory / JVM</tspan></text>
     </g>
   </g>
 </svg>

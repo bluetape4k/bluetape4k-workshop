@@ -24,9 +24,9 @@ Micrometer Observation + W3C 트레이스 전파를 보여주는 최소 Observab
 
 ## 아키텍처
 
-![observability-basic Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/observability-observability-basic-readme-architecture-01.png)
-
 ![observability basic Architecture diagram](../../docs/images/readme-diagrams/observability-observability-basic-architecture-01.png)
+
+![observability-basic Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/observability-observability-basic-readme-architecture-01.png)
 
 ## 스팬 트리
 

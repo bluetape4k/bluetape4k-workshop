@@ -22,9 +22,9 @@ and repository interfaces for type-safe, boilerplate-free data access.
 
 ## Architecture
 
-![exposed-mvc-jdbc Graphviz architecture diagram](../../docs/images/readme-diagrams/exposed-mvc-jdbc-readme-architecture-01.png)
-
 ![Exposed MVC JDBC Architecture](../../docs/images/readme-diagrams/exposed-mvc-jdbc-architecture-01.png)
+
+![exposed-mvc-jdbc Graphviz architecture diagram](../../docs/images/readme-diagrams/exposed-mvc-jdbc-readme-architecture-01.png)
 
 ## Domain Model
 

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="905" height="184" viewBox="0 0 905 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="976" height="222" viewBox="0 0 976 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;gateway/api-gateway/src/main/kotlin/io/bluetape4k/workshop/gateway/ApiGatewayDemoApplication.kt&quot;,&quot;gateway/api-gateway/src/main/kotlin/io/bluetape4k/workshop/gateway/config/GatewayConfig.kt&quot;,&quot;gateway/api-gateway/src/main/kotlin/io/bluetape4k/workshop/gateway/config/managements/SwaggerConfig.kt&quot;,&quot;gateway/api-gateway/src/main/kotlin/io/bluetape4k/workshop/gateway/controller/IndexController.kt&quot;,&quot;gateway/api-gateway/src/main/kotlin/io/bluetape4k/workshop/gateway/filter/RedirectWebFilter.kt&quot;,&quot;gateway/customers/src/main/kotlin/io/bluetape4k/workshop/gateway/customer/CustomerApplication.kt&quot;,&quot;gateway/customers/src/main/kotlin/io/bluetape4k/workshop/gateway/customer/config/CustomerConfig.kt&quot;,&quot;gateway/customers/src/main/kotlin/io/bluetape4k/workshop/gateway/customer/config/managements/ObservationConfig.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,27 +9,28 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="905" height="184"/>
-  <rect class="frame" x="10" y="10" width="885" height="164" rx="18"/>
+  <rect class="canvas" width="976" height="222"/>
+  <rect class="frame" x="10" y="10" width="956" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="292.3,91.6 292.3,91.6 389.7,91.6 389.7,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="347.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="579.4,91.6 579.4,91.6 668.4,91.6 668.4,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="630.8" y="76.1" text-anchor="middle">uses</text>
+    <polyline class="connector" points="303.8,110.9 303.8,110.9 435.9,110.9 435.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="376.7" y="95.4" text-anchor="middle">invokes</text>
+    <polyline class="connector" points="650.0,110.9 650.0,110.9 765.6,110.9 765.6,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="714.8" y="95.4" text-anchor="middle">backs</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="28.0" width="263.9" height="127.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="159.9" y="63.1">Entry / Tests</tspan><tspan x="159.9" y="86.1">ApiGatewayDemoApplication</tspan><tspan x="159.9" y="109.1">/ CustomerApplication /</tspan><tspan x="159.9" y="132.1">AbstractGatewayTest</tspan></text>
+      <rect x="28.0" y="28.0" width="275.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="165.7" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="165.7" y="106.9">ApiGatewayDemoApplication</tspan><tspan class="node-detail" x="165.7" y="122.9">CustomerApplication</tspan><tspan class="node-detail" x="165.7" y="138.9">OrderApplication</tspan><tspan class="node-detail" x="165.7" y="154.9">AbstractGatewayTest</tspan></text>
     </g>
     <g class="node" data-node="api">
-      <rect x="403.9" y="28.0" width="174.9" height="127.2" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="491.3" y="63.1">API / Adapter</tspan><tspan x="491.3" y="86.1">GatewayConfig /</tspan><tspan x="491.3" y="109.1">SwaggerConfig /</tspan><tspan x="491.3" y="132.1">IndexController</tspan></text>
+      <rect x="450.1" y="28.0" width="199.4" height="165.7" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="549.8" y="84.9">API &amp; Adapters</tspan><tspan class="node-detail" x="549.8" y="106.9">GatewayConfig</tspan><tspan class="node-detail" x="549.8" y="122.9">SwaggerConfig</tspan><tspan class="node-detail" x="549.8" y="138.9">IndexController</tspan><tspan class="node-detail" x="549.8" y="154.9">RedirectWebFilter</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="682.8" y="41.5" width="193.9" height="100.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="779.7" y="74.6">Runtime</tspan><tspan x="779.7" y="97.6">Redis / AWS / S3 /</tspan><tspan x="779.7" y="120.6">Testcontainers</tspan></text>
+      <rect x="780.1" y="41.5" width="167.4" height="138.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="863.8" y="92.9">Runtime</tspan><tspan class="node-detail" x="863.8" y="114.9">Redis</tspan><tspan class="node-detail" x="863.8" y="130.9">AWS / S3</tspan><tspan class="node-detail" x="863.8" y="146.9">Testcontainers</tspan></text>
     </g>
   </g>
 </svg>

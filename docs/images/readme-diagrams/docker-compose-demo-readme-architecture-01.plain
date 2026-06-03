@@ -1,10 +1,9 @@
-graph 1 11.797 1.1017
-node entry 1.1869 0.52188 2.3737 0.7625 "Example Family\ndocker compose-demo" rounded,filled box #88A3B5 #FFF8E7
-node infra 4.3263 0.52188 1.5717 0.7625 "Library Layer\ncore" rounded,filled box #88A3B5 #F5F0FF
-node bt 7.2938 0.52188 1.6967 0.7625 "bluetape4k APIs\ncore" rounded,filled box #88A3B5 #EAF7F0
-node runtime 10.595 0.52188 2.405 1.0438 "Runtime\nSQL / R2DBC / Redis /\nElasticsearch" rounded,filled box #88A3B5 #FFF1F1
-edge entry infra 4 2.3827 0.52188 2.3827 0.52188 3.3896 0.52188 3.3896 0.52188 calls 2.9571 0.61042 solid #637383
-edge infra bt 4 5.1215 0.39479 5.1215 0.39479 6.2964 0.39479 6.2964 0.39479 uses 5.7788 1.0132 solid #637383
-edge infra bt 4 5.1215 0.64896 5.1215 0.64896 6.2964 0.64896 6.2964 0.64896 extends 5.7788 0.20764 solid #637383
-edge bt runtime 4 8.1481 0.52188 8.1481 0.52188 9.2406 0.52188 9.2406 0.52188 adapts 8.7671 0.61042 solid #637383
+graph 1 14.34 1.445
+node entry 1.2469 0.7225 2.4938 0.8825 "Example Family\ndocker compose-demo" rounded,filled box #88A3B5 #FFF8E7
+node infra 6.4924 0.7225 2.775 1.1637 "Framework Layer\nTestcontainers lib\nTestcontainers junit jupiter" rounded,filled box #88A3B5 #F5F0FF
+node bt 10.316 0.7225 1.8167 0.8825 "bluetape4k APIs\ncore" rounded,filled box #88A3B5 #EAF7F0
+node runtime 13.504 0.7225 1.6708 1.445 "Runtime\nSQL / R2DBC\nRedis\nElasticsearch" rounded,filled box #88A3B5 #FFF1F1
+edge entry infra 4 2.5033 0.7225 2.5033 0.7225 4.9559 0.7225 4.9559 0.7225 "persists / publishes" 3.7993 0.81104 solid #637383
+edge infra bt 4 7.889 0.7225 7.889 0.7225 9.2568 0.7225 9.2568 0.7225 extends 8.6438 0.81104 solid #637383
+edge bt runtime 4 11.234 0.7225 11.234 0.7225 12.521 0.7225 12.521 0.7225 adapts 11.947 0.81104 solid #637383
 stop

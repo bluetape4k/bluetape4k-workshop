@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1705" height="184" viewBox="0 0 1705 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1874" height="222" viewBox="0 0 1874 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-data/elasticsearch/src/main/kotlin/io/bluetape4k/workshop/elasticsearch/ElasticsearchApplication.kt&quot;,&quot;spring-data/elasticsearch/src/main/kotlin/io/bluetape4k/workshop/elasticsearch/config/ElasticsearchClientConfig.kt&quot;,&quot;spring-data/elasticsearch/src/main/kotlin/io/bluetape4k/workshop/elasticsearch/config/NettyConfig.kt&quot;,&quot;spring-data/elasticsearch/src/main/kotlin/io/bluetape4k/workshop/elasticsearch/model/Conference.kt&quot;,&quot;spring-data/elasticsearch/src/main/kotlin/io/bluetape4k/workshop/elasticsearch/repository/ConferenceRepository.kt&quot;,&quot;spring-data/elasticsearch/src/main/kotlin/io/bluetape4k/workshop/elasticsearch/repository/ReactiveConferenceRepository.kt&quot;,&quot;spring-data/elasticsearch/src/test/kotlin/io/bluetape4k/workshop/elasticsearch/AbstractElasticsearchTest.kt&quot;,&quot;spring-data/elasticsearch/src/test/kotlin/io/bluetape4k/workshop/elasticsearch/repository/ElasticsearchOperationsTest.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,38 +9,38 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1705" height="184"/>
-  <rect class="frame" x="10" y="10" width="1685" height="164" rx="18"/>
+  <rect class="canvas" width="1874" height="222"/>
+  <rect class="frame" x="10" y="10" width="1854" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="286.7,91.6 286.7,91.6 383.5,91.6 383.5,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="341.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="543.6,91.6 543.6,91.6 632.4,91.6 632.4,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="594.8" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="906.3,108.3 906.3,108.3 1019.5,108.3 1019.5,108.3" marker-end="url(#arrow)"/><text class="edge-label" x="969.6" y="37.4" text-anchor="middle">uses</text>
-    <polyline class="connector" points="906.3,74.9 906.3,74.9 1019.5,74.9 1019.5,74.9" marker-end="url(#arrow)"/><text class="edge-label" x="969.6" y="114.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1294.3,91.6 1294.3,91.6 1399.5,91.6 1399.5,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1353.5" y="76.1" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="338.3,110.9 338.3,110.9 469.7,110.9 469.7,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="410.7" y="95.4" text-anchor="middle">invokes</text>
+    <polyline class="connector" points="655.1,110.9 655.1,110.9 890.7,110.9 890.7,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="779.8" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1219.0,110.9 1219.0,110.9 1350.9,110.9 1350.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1291.8" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1540.3,110.9 1540.3,110.9 1663.9,110.9 1663.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1608.9" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="41.5" width="257.9" height="100.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="156.9" y="74.6">Entry / Tests</tspan><tspan x="156.9" y="97.6">ElasticsearchApplication /</tspan><tspan x="156.9" y="120.6">AbstractElasticsearchTest</tspan></text>
+      <rect x="28.0" y="28.0" width="309.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="182.7" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="182.7" y="106.9">ElasticsearchApplication</tspan><tspan class="node-detail" x="182.7" y="122.9">AbstractElasticsearchTest</tspan><tspan class="node-detail" x="182.7" y="138.9">ElasticsearchOperationsTest</tspan><tspan class="node-detail" x="182.7" y="154.9">Spring Data Elasticsearch tests</tspan></text>
     </g>
     <g class="node" data-node="api">
-      <rect x="397.9" y="55.0" width="144.9" height="73.2" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="470.3" y="86.1">API / Adapter</tspan><tspan x="470.3" y="109.1">NettyConfig</tspan></text>
+      <rect x="484.1" y="68.5" width="170.4" height="84.7" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="569.3" y="108.9">API &amp; Adapters</tspan><tspan class="node-detail" x="569.3" y="130.9">NettyConfig</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="646.8" y="28.0" width="258.9" height="127.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="776.2" y="63.1">Repository / Infra</tspan><tspan x="776.2" y="86.1">ElasticsearchClientConfig /</tspan><tspan x="776.2" y="109.1">Conference /</tspan><tspan x="776.2" y="132.1">ConferenceRepository /</tspan></text>
+      <rect x="905.1" y="28.0" width="313.4" height="165.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1061.8" y="84.9">Repository &amp; Infra</tspan><tspan class="node-detail" x="1061.8" y="106.9">ElasticsearchClientConfig</tspan><tspan class="node-detail" x="1061.8" y="122.9">Conference</tspan><tspan class="node-detail" x="1061.8" y="138.9">ConferenceRepository</tspan><tspan class="node-detail" x="1061.8" y="154.9">ReactiveConferenceRepository</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1033.6" y="41.5" width="259.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1163.6" y="74.6">bluetape4k APIs</tspan><tspan x="1163.6" y="97.6">workshop / testcontainers</tspan><tspan x="1163.6" y="120.6">/ spring</tspan></text>
+      <rect x="1365.2" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1452.4" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1452.4" y="114.9">workshop</tspan><tspan class="node-detail" x="1452.4" y="130.9">testcontainers</tspan><tspan class="node-detail" x="1452.4" y="146.9">spring</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1413.6" y="41.5" width="262.9" height="100.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1545.0" y="74.6">Runtime</tspan><tspan x="1545.0" y="97.6">Elasticsearch / AWS / S3 /</tspan><tspan x="1545.0" y="120.6">Testcontainers</tspan></text>
+      <rect x="1678.3" y="41.5" width="167.4" height="138.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1762.0" y="92.9">Runtime</tspan><tspan class="node-detail" x="1762.0" y="114.9">Elasticsearch</tspan><tspan class="node-detail" x="1762.0" y="130.9">AWS / S3</tspan><tspan class="node-detail" x="1762.0" y="146.9">Testcontainers</tspan></text>
     </g>
   </g>
 </svg>

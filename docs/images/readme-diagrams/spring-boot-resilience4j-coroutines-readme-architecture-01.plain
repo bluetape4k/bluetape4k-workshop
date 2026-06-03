@@ -1,14 +1,13 @@
-graph 1 19.638 1.325
-node entry 1.1765 0.6625 2.3529 1.0438 "Entry / Tests\nResilienceApplication /\nAbstractResilienceTest" rounded,filled box #88A3B5 #FFF8E7
-node api 4.5658 0.6625 2.0925 1.325 "API / Adapter\nNettyConfig /\nResilience4jConfig /\nBackendAController" rounded,filled box #88A3B5 #EEF7FF
-node service 8.101 0.6625 2.8112 1.325 "Service / Domain\nRecordFailurePredicate /\nBackendAService /\nBackendCService / Service" rounded,filled box #88A3B5 #F1F8E9
-node infra 11.605 0.6625 2.03 1.0438 "Library Layer\nworkshop / junit5 /\nresilience4j" rounded,filled box #88A3B5 #F5F0FF
-node bt 14.968 0.6625 2.03 1.0438 "bluetape4k APIs\nworkshop / junit5 /\nresilience4j" rounded,filled box #88A3B5 #EAF7F0
-node runtime 18.436 0.6625 2.405 1.0438 "Runtime\nSQL / R2DBC / Redis /\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 2.3619 0.6625 2.3619 0.6625 3.3685 0.6625 3.3685 0.6625 calls 2.9362 0.75104 solid #637383
-edge api service 4 5.6217 0.6625 5.6217 0.6625 6.5482 0.6625 6.5482 0.6625 uses 6.1537 0.75104 solid #637383
-edge service infra 4 9.5161 0.6625 9.5161 0.6625 10.441 0.6625 10.441 0.6625 uses 10.048 0.75104 solid #637383
-edge infra bt 4 12.628 0.48854 12.628 0.48854 13.802 0.48854 13.802 0.48854 uses 13.287 1.1538 solid #637383
-edge infra bt 4 12.628 0.83646 12.628 0.83646 13.802 0.83646 13.802 0.83646 extends 13.287 0.34826 solid #637383
-edge bt runtime 4 15.99 0.6625 15.99 0.6625 17.083 0.6625 17.083 0.6625 adapts 16.608 0.75104 solid #637383
+graph 1 22.758 1.7263
+node entry 1.2885 0.86313 2.5771 1.7263 "Entry & Verification\nResilienceApplication\nAbstractResilienceTest\nPrometheusMetricsTest\nSpring Boot Resilience4j" rounded,filled box #88A3B5 #FFF8E7
+node api 5.2163 0.86313 2.2229 1.7263 "API & Adapters\nNettyConfig\nResilience4jConfig\nBackendAController\nBackendBController" rounded,filled box #88A3B5 #EEF7FF
+node service 9.3003 0.86313 2.5563 1.7263 "Service & Domain\nRecordFailurePredicate\nBackendAService\nBackendCService\nService" rounded,filled box #88A3B5 #F1F8E9
+node infra 14.707 0.86313 3.0354 1.7263 "Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration" rounded,filled box #88A3B5 #F5F0FF
+node bt 18.661 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\njunit5\nresilience4j" rounded,filled box #88A3B5 #EAF7F0
+node runtime 21.886 0.86313 1.7437 1.445 "Runtime\nSQL / R2DBC\nRedis\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 2.5855 0.86313 2.5855 0.86313 3.9559 0.86313 3.9559 0.86313 invokes 3.341 0.95167 solid #637383
+edge api service 4 6.3323 0.86313 6.3323 0.86313 7.8734 0.86313 7.8734 0.86313 delegates 7.175 0.95167 solid #637383
+edge service infra 4 10.582 0.86313 10.582 0.86313 13.038 0.86313 13.038 0.86313 "persists / publishes" 11.884 0.95167 solid #637383
+edge infra bt 4 16.23 0.86313 16.23 0.86313 17.603 0.86313 17.603 0.86313 extends 16.989 0.95167 solid #637383
+edge bt runtime 4 19.577 0.86313 19.577 0.86313 20.864 0.86313 20.864 0.86313 adapts 20.292 0.95167 solid #637383
 stop

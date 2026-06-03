@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="2108" height="184" viewBox="0 0 2108 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="2341" height="222" viewBox="0 0 2341 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-boot/cache-caffeine/src/main/kotlin/io/bluetape4k/workshop/cache/caffeine/CaffeineCacheApplication.kt&quot;,&quot;spring-boot/cache-caffeine/src/main/kotlin/io/bluetape4k/workshop/cache/caffeine/config/CaffeineConfig.kt&quot;,&quot;spring-boot/cache-caffeine/src/main/kotlin/io/bluetape4k/workshop/cache/caffeine/config/SchedulingConfig.kt&quot;,&quot;spring-boot/cache-caffeine/src/main/kotlin/io/bluetape4k/workshop/cache/caffeine/domain/Country.kt&quot;,&quot;spring-boot/cache-caffeine/src/main/kotlin/io/bluetape4k/workshop/cache/caffeine/domain/CountryRepository.kt&quot;,&quot;spring-boot/cache-caffeine/src/main/kotlin/io/bluetape4k/workshop/cache/caffeine/prefetcher/CountryPrefetcher.kt&quot;,&quot;spring-boot/cache-caffeine/src/test/kotlin/io/bluetape4k/workshop/cache/caffeine/AbstractCaffeineCacheApplicationTest.kt&quot;,&quot;spring-boot/cache-caffeine/src/test/kotlin/io/bluetape4k/workshop/cache/caffeine/config/CaffeineCacheConfigTest.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,43 +9,43 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="2108" height="184"/>
-  <rect class="frame" x="10" y="10" width="2088" height="164" rx="18"/>
+  <rect class="canvas" width="2341" height="222"/>
+  <rect class="frame" x="10" y="10" width="2321" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="391.7,91.6 391.7,91.6 488.7,91.6 488.7,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="446.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="674.6,91.6 674.6,91.6 763.1,91.6 763.1,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="725.8" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1069.1,91.6 1069.1,91.6 1158.0,91.6 1158.0,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1120.7" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1455.0,103.8 1455.0,103.8 1568.1,103.8 1568.1,103.8" marker-end="url(#arrow)"/><text class="edge-label" x="1518.5" y="37.4" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1455.0,79.4 1455.0,79.4 1568.1,79.4 1568.1,79.4" marker-end="url(#arrow)"/><text class="edge-label" x="1518.5" y="114.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1785.3,91.6 1785.3,91.6 1889.9,91.6 1889.9,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1844.4" y="76.1" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="402.9,110.9 402.9,110.9 534.7,110.9 534.7,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="475.7" y="95.4" text-anchor="middle">invokes</text>
+    <polyline class="connector" points="732.3,110.9 732.3,110.9 879.9,110.9 879.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="812.8" y="95.4" text-anchor="middle">delegates</text>
+    <polyline class="connector" points="1105.3,110.9 1105.3,110.9 1340.8,110.9 1340.8,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1229.8" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1667.1,110.9 1667.1,110.9 1798.9,110.9 1798.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1740.0" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1988.5,110.9 1988.5,110.9 2112.0,110.9 2112.0,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="2057.0" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="41.5" width="362.9" height="100.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="209.4" y="74.6">Entry / Tests</tspan><tspan x="209.4" y="97.6">CaffeineCacheApplication /</tspan><tspan x="209.4" y="120.6">AbstractCaffeineCacheApplicationTest</tspan></text>
+      <rect x="28.0" y="28.0" width="374.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="215.2" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="215.2" y="106.9">CaffeineCacheApplication</tspan><tspan class="node-detail" x="215.2" y="122.9">AbstractCaffeineCacheApplicationTest</tspan><tspan class="node-detail" x="215.2" y="138.9">CaffeineCacheConfigTest</tspan><tspan class="node-detail" x="215.2" y="154.9">Spring Boot Cache Caffeine tests</tspan></text>
     </g>
     <g class="node" data-node="api">
-      <rect x="502.9" y="55.0" width="170.9" height="73.2" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="588.3" y="86.1">API / Adapter</tspan><tspan x="588.3" y="109.1">SchedulingConfig</tspan></text>
+      <rect x="549.1" y="68.5" width="182.4" height="84.7" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="640.3" y="108.9">API &amp; Adapters</tspan><tspan class="node-detail" x="640.3" y="130.9">SchedulingConfig</tspan></text>
     </g>
     <g class="node" data-node="service">
-      <rect x="777.8" y="28.0" width="290.9" height="127.2" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="923.2" y="63.1">Service / Domain</tspan><tspan x="923.2" y="86.1">CaffeineConfig /</tspan><tspan x="923.2" y="109.1">CountryRepository /</tspan><tspan x="923.2" y="132.1">CountryPrefetcher / Country</tspan></text>
+      <rect x="894.1" y="28.0" width="210.4" height="165.7" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="999.3" y="84.9">Service &amp; Domain</tspan><tspan class="node-detail" x="999.3" y="106.9">CaffeineConfig</tspan><tspan class="node-detail" x="999.3" y="122.9">CountryRepository</tspan><tspan class="node-detail" x="999.3" y="138.9">CountryPrefetcher</tspan><tspan class="node-detail" x="999.3" y="154.9">Country</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="1172.6" y="55.0" width="281.9" height="73.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1313.5" y="86.1">Library Layer</tspan><tspan x="1313.5" y="109.1">workshop / cache / jackson3</tspan></text>
+      <rect x="1355.2" y="28.0" width="311.4" height="165.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1510.9" y="84.9">Framework Layer</tspan><tspan class="node-detail" x="1510.9" y="106.9">Spring boot starter cache lib</tspan><tspan class="node-detail" x="1510.9" y="122.9">Spring boot starter cache test</tspan><tspan class="node-detail" x="1510.9" y="138.9">Spring boot autoconfigure lib</tspan><tspan class="node-detail" x="1510.9" y="154.9">Spring boot autoconfigure</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1582.5" y="41.5" width="201.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1683.4" y="74.6">bluetape4k APIs</tspan><tspan x="1683.4" y="97.6">workshop / cache /</tspan><tspan x="1683.4" y="120.6">jackson3</tspan></text>
+      <rect x="1813.3" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1900.5" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1900.5" y="114.9">workshop</tspan><tspan class="node-detail" x="1900.5" y="130.9">cache</tspan><tspan class="node-detail" x="1900.5" y="146.9">jackson3</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1904.4" y="55.0" width="174.9" height="73.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1991.9" y="86.1">Runtime</tspan><tspan x="1991.9" y="109.1">In-memory / JVM</tspan></text>
+      <rect x="2126.3" y="68.5" width="186.4" height="84.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="2219.5" y="108.9">Runtime</tspan><tspan class="node-detail" x="2219.5" y="130.9">In-memory / JVM</tspan></text>
     </g>
   </g>
 </svg>

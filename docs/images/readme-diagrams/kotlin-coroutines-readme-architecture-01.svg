@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1363" height="162" viewBox="0 0 1363 162" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1415" height="222" viewBox="0 0 1415 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;kotlin/coroutines/src/test/kotlin/io/bluetape4k/workshop/coroutines/TestSupport.kt&quot;,&quot;kotlin/coroutines/src/test/kotlin/io/bluetape4k/workshop/coroutines/builders/CoroutineBuilderExamples.kt&quot;,&quot;kotlin/coroutines/src/test/kotlin/io/bluetape4k/workshop/coroutines/builders/CoroutineContextBuilderExamples.kt&quot;,&quot;kotlin/coroutines/src/test/kotlin/io/bluetape4k/workshop/coroutines/cancellation/CancellationExamples.kt&quot;,&quot;kotlin/coroutines/src/test/kotlin/io/bluetape4k/workshop/coroutines/channels/ActorExamples.kt&quot;,&quot;kotlin/coroutines/src/test/kotlin/io/bluetape4k/workshop/coroutines/channels/ChannelExamples.kt&quot;,&quot;kotlin/coroutines/src/test/kotlin/io/bluetape4k/workshop/coroutines/context/CoroutineContextExamples.kt&quot;,&quot;kotlin/coroutines/src/test/kotlin/io/bluetape4k/workshop/coroutines/context/CounterCoroutineContext.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,33 +9,33 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1363" height="162"/>
-  <rect class="frame" x="10" y="10" width="1343" height="142" rx="18"/>
+  <rect class="canvas" width="1415" height="222"/>
+  <rect class="frame" x="10" y="10" width="1395" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="231.8,83.7 231.8,83.7 328.7,83.7 328.7,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="286.9" y="68.2" text-anchor="middle">calls</text>
-    <polyline class="connector" points="608.5,100.4 608.5,100.4 721.6,100.4 721.6,100.4" marker-end="url(#arrow)"/><text class="edge-label" x="671.8" y="29.5" text-anchor="middle">uses</text>
-    <polyline class="connector" points="608.5,67.0 608.5,67.0 721.6,67.0 721.6,67.0" marker-end="url(#arrow)"/><text class="edge-label" x="671.8" y="106.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="986.4,83.7 986.4,83.7 1091.6,83.7 1091.6,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="1045.6" y="68.2" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="243.0,110.9 243.0,110.9 478.8,110.9 478.8,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="367.7" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="760.3,110.9 760.3,110.9 891.7,110.9 891.7,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="832.8" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1081.2,110.9 1081.2,110.9 1204.9,110.9 1204.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1149.9" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="47.1" width="202.9" height="73.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="129.4" y="78.2">Example Family</tspan><tspan x="129.4" y="101.2">Coroutines Examples</tspan></text>
+      <rect x="28.0" y="68.5" width="214.4" height="84.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="135.2" y="108.9">Example Family</tspan><tspan class="node-detail" x="135.2" y="130.9">Coroutines Examples</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="342.9" y="33.6" width="264.9" height="100.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="475.3" y="66.7">Library Layer</tspan><tspan x="475.3" y="89.7">coroutines / idgenerators /</tspan><tspan x="475.3" y="112.7">testcontainers</tspan></text>
+      <rect x="493.1" y="28.0" width="266.4" height="165.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="626.3" y="84.9">Framework Layer</tspan><tspan class="node-detail" x="626.3" y="106.9">Spring context</tspan><tspan class="node-detail" x="626.3" y="122.9">Spring boot starter test</tspan><tspan class="node-detail" x="626.3" y="138.9">Testcontainers lib</tspan><tspan class="node-detail" x="626.3" y="154.9">Testcontainers junit jupiter</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="735.8" y="33.6" width="249.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="860.7" y="66.7">bluetape4k APIs</tspan><tspan x="860.7" y="89.7">coroutines / idgenerators</tspan><tspan x="860.7" y="112.7">/ testcontainers</tspan></text>
+      <rect x="906.2" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="993.4" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="993.4" y="114.9">coroutines</tspan><tspan class="node-detail" x="993.4" y="130.9">idgenerators</tspan><tspan class="node-detail" x="993.4" y="146.9">testcontainers</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1105.6" y="47.1" width="228.9" height="73.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1220.0" y="78.2">Runtime</tspan><tspan x="1220.0" y="101.2">Kafka / Testcontainers</tspan></text>
+      <rect x="1219.2" y="55.0" width="167.4" height="111.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1302.9" y="100.9">Runtime</tspan><tspan class="node-detail" x="1302.9" y="122.9">Kafka</tspan><tspan class="node-detail" x="1302.9" y="138.9">Testcontainers</tspan></text>
     </g>
   </g>
 </svg>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1189" height="162" viewBox="0 0 1189 162" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1433" height="195" viewBox="0 0 1433 195" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;docker/compose-demo/src/test/kotlin/io/bluetape4k/workshop/docker/DockerComposePostgresTest.kt&quot;,&quot;docker/compose-demo/src/test/kotlin/io/bluetape4k/workshop/docker/DockerComposeRedisTest.kt&quot;,&quot;docker/compose-demo/src/test/kotlin/io/bluetape4k/workshop/docker/MultipleServiceTest.kt&quot;,&quot;docker/compose-demo/build.gradle.kts&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,33 +9,33 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1189" height="162"/>
-  <rect class="frame" x="10" y="10" width="1169" height="142" rx="18"/>
+  <rect class="canvas" width="1433" height="195"/>
+  <rect class="frame" x="10" y="10" width="1413" height="175" rx="18"/>
   <g>
-    <polyline class="connector" points="256.7,83.7 256.7,83.7 353.4,83.7 353.4,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="311.9" y="68.2" text-anchor="middle">calls</text>
-    <polyline class="connector" points="519.7,95.9 519.7,95.9 632.5,95.9 632.5,95.9" marker-end="url(#arrow)"/><text class="edge-label" x="582.8" y="29.5" text-anchor="middle">uses</text>
-    <polyline class="connector" points="519.7,71.5 519.7,71.5 632.5,71.5 632.5,71.5" marker-end="url(#arrow)"/><text class="edge-label" x="582.8" y="106.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="810.2,83.7 810.2,83.7 915.1,83.7 915.1,83.7" marker-end="url(#arrow)"/><text class="edge-label" x="869.6" y="68.2" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="268.3,97.4 268.3,97.4 503.8,97.4 503.8,97.4" marker-end="url(#arrow)"/><text class="edge-label" x="392.7" y="81.9" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="785.3,97.4 785.3,97.4 916.7,97.4 916.7,97.4" marker-end="url(#arrow)"/><text class="edge-label" x="857.8" y="81.9" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1106.5,97.4 1106.5,97.4 1230.0,97.4 1230.0,97.4" marker-end="url(#arrow)"/><text class="edge-label" x="1174.9" y="81.9" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="47.1" width="227.9" height="73.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="141.9" y="78.2">Example Family</tspan><tspan x="141.9" y="101.2">docker compose-demo</tspan></text>
+      <rect x="28.0" y="55.0" width="239.4" height="84.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="147.7" y="95.4">Example Family</tspan><tspan class="node-detail" x="147.7" y="117.4">docker compose-demo</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="367.9" y="47.1" width="150.9" height="73.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="443.3" y="78.2">Library Layer</tspan><tspan x="443.3" y="101.2">core</tspan></text>
+      <rect x="518.1" y="41.5" width="266.4" height="111.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="651.3" y="87.4">Framework Layer</tspan><tspan class="node-detail" x="651.3" y="109.4">Testcontainers lib</tspan><tspan class="node-detail" x="651.3" y="125.4">Testcontainers junit jupiter</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="646.8" y="47.1" width="162.9" height="73.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="728.2" y="78.2">bluetape4k APIs</tspan><tspan x="728.2" y="101.2">core</tspan></text>
+      <rect x="931.1" y="55.0" width="174.4" height="84.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1018.3" y="95.4">bluetape4k APIs</tspan><tspan class="node-detail" x="1018.3" y="117.4">core</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="929.7" y="33.6" width="230.9" height="100.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1045.1" y="66.7">Runtime</tspan><tspan x="1045.1" y="89.7">SQL / R2DBC / Redis /</tspan><tspan x="1045.1" y="112.7">Elasticsearch</tspan></text>
+      <rect x="1244.2" y="28.0" width="160.4" height="138.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1324.4" y="79.4">Runtime</tspan><tspan class="node-detail" x="1324.4" y="101.4">SQL / R2DBC</tspan><tspan class="node-detail" x="1324.4" y="117.4">Redis</tspan><tspan class="node-detail" x="1324.4" y="133.4">Elasticsearch</tspan></text>
     </g>
   </g>
 </svg>

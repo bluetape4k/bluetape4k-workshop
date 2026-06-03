@@ -3,8 +3,8 @@ digraph G {
     rankdir=LR,
     bgcolor="white",
     pad="0.35",
-    nodesep="0.55",
-    ranksep="0.75",
+    nodesep="0.70",
+    ranksep="0.95",
     splines=ortho,
     outputorder=edgesfirst
   ];
@@ -16,7 +16,7 @@ digraph G {
     fillcolor="#F6FAFF",
     fontname="Architects Daughter",
     fontsize=14,
-    margin="0.14,0.10"
+    margin="0.20,0.16"
   ];
   edge [
     color="#637383",
@@ -26,17 +26,16 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry / Tests\nRateLimiterWebfluxApplication\n/\nAbstractRateLimiterApplicationTest", fillcolor="#FFF8E7"];
-  api [label="API / Adapter\nCoroutineController /\nReactiveController /\nAsyncUserRateLimitWebFilter", fillcolor="#EEF7FF"];
-  service [label="Service / Domain\nKeyResolver /\nRateLimitTargetProvider /\nUserKeyResolver /", fillcolor="#F1F8E9"];
-  infra [label="Repository / Infra\nLettuceConfig /\nTestRedisConfig", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop / jackson3 /\nspring", fillcolor="#EAF7F0"];
-  runtime [label="Runtime\nRedis / Testcontainers", fillcolor="#FFF1F1"];
+  entry [label="Entry & Verification\nRateLimiterWebfluxApplication\nAbstractRateLimiterApplicationTest\nCoroutineControllerTest\nRatelimit Bucker4j Bluetape4k", fillcolor="#FFF8E7"];
+  api [label="API & Adapters\nCoroutineController\nReactiveController\nAsyncUserRateLimitWebFilter\nUserRateLimitWebFilter", fillcolor="#EEF7FF"];
+  service [label="Service & Domain\nKeyResolver\nRateLimitTargetProvider\nUserKeyResolver\nBucket4jConfig", fillcolor="#F1F8E9"];
+  infra [label="Repository & Infra\nLettuceConfig\nTestRedisConfig", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k APIs\nworkshop\njackson3\nspring", fillcolor="#EAF7F0"];
+  runtime [label="Runtime\nRedis\nTestcontainers", fillcolor="#FFF1F1"];
 
-  entry -> api [label="calls"];
-  api -> service [label="uses"];
-  service -> infra [label="uses"];
-  infra -> bt [label="uses"];
+  entry -> api [label="invokes"];
+  api -> service [label="delegates"];
+  service -> infra [label="persists / publishes"];
   infra -> bt [label="extends"];
   bt -> runtime [label="adapts"];
 }

@@ -20,9 +20,9 @@ TinkerGraph, Neo4j, Memgraph 백엔드를 지원합니다.
 
 ## 아키텍처
 
-![graph-recommendation Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/graph-recommendation-readme-architecture-01.png)
-
 ![Architecture](docs/images/readme-diagrams/recommendation-architecture.png)
+
+![graph-recommendation Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/graph-recommendation-readme-architecture-01.png)
 
 | 계층 | 구성 요소 |
 |------|-----------|

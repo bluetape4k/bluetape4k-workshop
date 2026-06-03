@@ -101,9 +101,14 @@ function imagesFor(rel) {
   const matching = files.filter((file) => file.startsWith(`${slug}-`));
   const exact = (needle) => matching.find((file) => file.includes(needle));
   const readmeArchitecture = `${graphvizSlug}-readme-architecture-01.png`;
+  const detailedArchitecture = matching.find((file) =>
+    !file.includes("readme-architecture")
+      && !file.includes("sequence")
+      && (file.includes("architecture") || file.includes("diagram"))
+  );
   return {
     scenario: exact("scenario"),
-    architecture: files.includes(readmeArchitecture) ? readmeArchitecture : exact("architecture") || exact("diagram"),
+    architecture: detailedArchitecture || (files.includes(readmeArchitecture) ? readmeArchitecture : exact("architecture") || exact("diagram")),
     flow: exact("flow") || exact("diagram"),
     sequence: exact("sequence"),
   };

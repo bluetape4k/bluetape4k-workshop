@@ -1,12 +1,9 @@
-graph 1 15.494 1.1017
-node entry 1.1192 0.52188 2.2383 0.7625 "Entry / Tests\nAbstractJacksonTest" rounded,filled box #88A3B5 #FFF8E7
-node service 4.3158 0.52188 1.8217 0.7625 "Service / Domain\nJsonPathSupport" rounded,filled box #88A3B5 #F1F8E9
-node infra 7.7625 0.52188 2.905 0.7625 "Library Layer\njackson3 / core / coroutines" rounded,filled box #88A3B5 #F5F0FF
-node bt 11.485 0.52188 1.8738 1.0438 "bluetape4k APIs\njackson3 / core /\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
-node runtime 14.583 0.52188 1.8217 0.7625 "Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
-edge entry service 4 2.2462 0.52188 2.2462 0.52188 3.2565 0.52188 3.2565 0.52188 calls 2.8217 0.61042 solid #637383
-edge service infra 4 5.2349 0.52188 5.2349 0.52188 6.164 0.52188 6.164 0.52188 uses 5.7683 0.61042 solid #637383
-edge infra bt 4 9.2231 0.39479 9.2231 0.39479 10.401 0.39479 10.401 0.39479 uses 9.8817 1.0132 solid #637383
-edge infra bt 4 9.2231 0.64896 9.2231 0.64896 10.401 0.64896 10.401 0.64896 extends 9.8817 0.20764 solid #637383
-edge bt runtime 4 12.431 0.52188 12.431 0.52188 13.521 0.52188 13.521 0.52188 adapts 13.047 0.61042 solid #637383
+graph 1 13.433 1.445
+node entry 1.5073 0.7225 3.0146 1.1637 "Entry & Verification\nAbstractJacksonTest\nJson Jackson Examples tests" rounded,filled box #88A3B5 #FFF8E7
+node service 5.7059 0.7225 1.9938 0.8825 "Service & Domain\nJsonPathSupport" rounded,filled box #88A3B5 #F1F8E9
+node bt 9.1389 0.7225 1.8167 1.445 "bluetape4k APIs\njackson3\ncore\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
+node runtime 12.462 0.7225 1.9417 0.8825 "Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
+edge entry service 4 3.0231 0.7225 3.0231 0.7225 4.5609 0.7225 4.5609 0.7225 delegates 3.8618 0.81104 solid #637383
+edge service bt 4 6.7081 0.7225 6.7081 0.7225 8.0808 0.7225 8.0808 0.7225 extends 7.4667 0.81104 solid #637383
+edge bt runtime 4 10.056 0.7225 10.056 0.7225 11.342 0.7225 11.342 0.7225 adapts 10.769 0.81104 solid #637383
 stop

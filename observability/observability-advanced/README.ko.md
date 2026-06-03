@@ -22,9 +22,9 @@ HTTP(WebFlux), 코루틴 서비스, H2 데이터베이스(Exposed JDBC), Redis �
 
 ## 아키텍처
 
-![observability-advanced Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/observability-observability-advanced-readme-architecture-01.png)
-
 ![observability advanced Architecture diagram](../../docs/images/readme-diagrams/observability-observability-advanced-architecture-01.png)
+
+![observability-advanced Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/observability-observability-advanced-readme-architecture-01.png)
 
 ## 스팬 트리
 

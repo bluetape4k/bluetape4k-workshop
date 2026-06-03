@@ -21,9 +21,9 @@ Gateway 워크숍의 주문 서비스 예제입니다. 상품과 주문 API를 �
 
 ## 아키텍처
 
-![Gateway Orders Service Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/gateway-orders-readme-architecture-01.png)
-
 ![Gateway Orders architecture](../../docs/images/readme-diagrams/gateway-orders-diagram-01.png)
+
+![Gateway Orders Service Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/gateway-orders-readme-architecture-01.png)
 
 ## 이 모듈에서 확인할 내용
 

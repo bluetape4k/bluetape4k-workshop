@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1649" height="184" viewBox="0 0 1649 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1815" height="222" viewBox="0 0 1815 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;ratelimit/bucket4j-redis/src/main/kotlin/io/bluetape4k/workshop/bucket4j/Bucket4jRedisApplication.kt&quot;,&quot;ratelimit/bucket4j-redis/src/main/kotlin/io/bluetape4k/workshop/bucket4j/config/LettuceConfiguration.kt&quot;,&quot;ratelimit/bucket4j-redis/src/main/kotlin/io/bluetape4k/workshop/bucket4j/controller/CoroutineController.kt&quot;,&quot;ratelimit/bucket4j-redis/src/main/kotlin/io/bluetape4k/workshop/bucket4j/controller/DebugMetricHandler.kt&quot;,&quot;ratelimit/bucket4j-redis/src/main/kotlin/io/bluetape4k/workshop/bucket4j/controller/ReactiveController.kt&quot;,&quot;ratelimit/bucket4j-redis/src/test/kotlin/io/bluetape4k/workshop/bucket4j/AbstractRateLimitTest.kt&quot;,&quot;ratelimit/bucket4j-redis/src/test/kotlin/io/bluetape4k/workshop/bucket4j/controller/CoroutineRateLimitTest.kt&quot;,&quot;ratelimit/bucket4j-redis/src/test/kotlin/io/bluetape4k/workshop/bucket4j/controller/ReactiveRateLimitTest.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,38 +9,38 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1649" height="184"/>
-  <rect class="frame" x="10" y="10" width="1629" height="164" rx="18"/>
+  <rect class="canvas" width="1815" height="222"/>
+  <rect class="frame" x="10" y="10" width="1795" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="284.6,91.6 284.6,91.6 381.7,91.6 381.7,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="339.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="610.3,91.6 610.3,91.6 699.2,91.6 699.2,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="661.8" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="927.3,103.8 927.3,103.8 1040.4,103.8 1040.4,103.8" marker-end="url(#arrow)"/><text class="edge-label" x="990.6" y="37.4" text-anchor="middle">uses</text>
-    <polyline class="connector" points="927.3,79.4 927.3,79.4 1040.4,79.4 1040.4,79.4" marker-end="url(#arrow)"/><text class="edge-label" x="990.6" y="114.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1278.3,91.6 1278.3,91.6 1383.3,91.6 1383.3,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1337.5" y="76.1" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="327.8,110.9 327.8,110.9 459.5,110.9 459.5,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="400.7" y="95.4" text-anchor="middle">invokes</text>
+    <polyline class="connector" points="684.9,110.9 684.9,110.9 920.6,110.9 920.6,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="809.8" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1160.1,110.9 1160.1,110.9 1291.7,110.9 1291.7,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1232.9" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1481.2,110.9 1481.2,110.9 1604.9,110.9 1604.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1549.9" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="41.5" width="255.9" height="100.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="155.9" y="74.6">Entry / Tests</tspan><tspan x="155.9" y="97.6">Bucket4jRedisApplication /</tspan><tspan x="155.9" y="120.6">AbstractRateLimitTest</tspan></text>
+      <rect x="28.0" y="28.0" width="299.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="177.7" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="177.7" y="106.9">Bucket4jRedisApplication</tspan><tspan class="node-detail" x="177.7" y="122.9">AbstractRateLimitTest</tspan><tspan class="node-detail" x="177.7" y="138.9">CoroutineRateLimitTest</tspan><tspan class="node-detail" x="177.7" y="154.9">Ratelimit Bucket4j Redis tests</tspan></text>
     </g>
     <g class="node" data-node="api">
-      <rect x="395.9" y="28.0" width="213.9" height="127.2" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="502.8" y="63.1">API / Adapter</tspan><tspan x="502.8" y="86.1">CoroutineController /</tspan><tspan x="502.8" y="109.1">DebugMetricHandler /</tspan><tspan x="502.8" y="132.1">ReactiveController</tspan></text>
+      <rect x="474.1" y="41.5" width="210.4" height="138.7" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="579.3" y="92.9">API &amp; Adapters</tspan><tspan class="node-detail" x="579.3" y="114.9">CoroutineController</tspan><tspan class="node-detail" x="579.3" y="130.9">DebugMetricHandler</tspan><tspan class="node-detail" x="579.3" y="146.9">ReactiveController</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="713.8" y="55.0" width="212.9" height="73.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="820.2" y="86.1">Repository / Infra</tspan><tspan x="820.2" y="109.1">LettuceConfiguration</tspan></text>
+      <rect x="935.1" y="68.5" width="224.4" height="84.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1047.3" y="108.9">Repository &amp; Infra</tspan><tspan class="node-detail" x="1047.3" y="130.9">LettuceConfiguration</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1054.6" y="41.5" width="222.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1166.1" y="74.6">bluetape4k APIs</tspan><tspan x="1166.1" y="97.6">workshop / jackson3 /</tspan><tspan x="1166.1" y="120.6">junit5</tspan></text>
+      <rect x="1306.2" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1393.4" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1393.4" y="114.9">workshop</tspan><tspan class="node-detail" x="1393.4" y="130.9">jackson3</tspan><tspan class="node-detail" x="1393.4" y="146.9">junit5</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1397.6" y="55.0" width="222.9" height="73.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1509.0" y="86.1">Runtime</tspan><tspan x="1509.0" y="109.1">Redis / Testcontainers</tspan></text>
+      <rect x="1619.3" y="55.0" width="167.4" height="111.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1703.0" y="100.9">Runtime</tspan><tspan class="node-detail" x="1703.0" y="122.9">Redis</tspan><tspan class="node-detail" x="1703.0" y="138.9">Testcontainers</tspan></text>
     </g>
   </g>
 </svg>

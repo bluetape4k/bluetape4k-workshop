@@ -1,10 +1,8 @@
-graph 1 11.412 0.98264
-node entry 1.3171 0.40278 2.6342 0.7625 "Example Family\nVert.x WebClient Examples" rounded,filled box #88A3B5 #FFF8E7
-node infra 4.67 0.40278 1.7383 0.7625 "Library Layer\nio / jdbc / vertx" rounded,filled box #88A3B5 #F5F0FF
-node bt 7.7417 0.40278 1.7383 0.7625 "bluetape4k APIs\nio / jdbc / vertx" rounded,filled box #88A3B5 #EAF7F0
-node runtime 10.636 0.40278 1.5508 0.7625 "Runtime\nSQL / R2DBC" rounded,filled box #88A3B5 #FFF1F1
-edge entry infra 4 2.6422 0.40278 2.6422 0.40278 3.6494 0.40278 3.6494 0.40278 calls 3.2175 0.49132 solid #637383
-edge infra bt 4 5.5461 0.27569 5.5461 0.27569 6.7218 0.27569 6.7218 0.27569 uses 6.2058 0.8941 solid #637383
-edge infra bt 4 5.5461 0.52986 5.5461 0.52986 6.7218 0.52986 6.7218 0.52986 extends 6.2058 0.088542 solid #637383
-edge bt runtime 4 8.618 0.40278 8.618 0.40278 9.7088 0.40278 9.7088 0.40278 adapts 9.2358 0.49132 solid #637383
+graph 1 9.2139 2.5943
+node entry 1.3771 0.44125 2.7542 0.8825 "Example Family\nVert.x WebClient Examples" rounded,filled box #88A3B5 #FFF8E7
+node bt 5.1903 1.8718 1.8167 1.445 "bluetape4k APIs\nio\njdbc\nvertx" rounded,filled box #88A3B5 #EAF7F0
+node runtime 8.3785 1.8718 1.6708 0.8825 "Runtime\nSQL / R2DBC" rounded,filled box #88A3B5 #FFF1F1
+node api 1.3771 1.8718 0.75 0.60125 api rounded,filled box #88A3B5 #F6FAFF
+edge bt runtime 4 6.1082 1.8718 6.1082 1.8718 7.3952 1.8718 7.3952 1.8718 adapts 6.8208 1.9603 solid #637383
+edge api bt 4 1.7602 1.8718 1.7602 1.8718 4.1328 1.8718 4.1328 1.8718 extends 3.5181 1.9603 solid #637383
 stop

@@ -128,3 +128,20 @@ participant box 폭을 넓힐 때는 lane margin도 같이 늘려야 한다. box
 participant box가 frame 안에 남는지 검사해야 한다. 최종 시각 검수는 46개 sequence
 PNG를 4개 contact sheet로 훑고, Kafka/Kafka Reply/Micrometer PNG를 원본 크기로
 직접 열어 call/return line과 label box가 겹치지 않음을 확인했다.
+
+Architecture diagram은 기존에 더 상세한 hand-authored/Claude-style asset이 있으면
+그 그림을 README의 첫 visual signal로 유지해야 한다. Graphviz 기반
+`*-readme-architecture-01.png`는 source-derived evidence와 보조 overview로 유용하지만,
+상세 asset을 밀어내고 첫 그림이 되면 독자가 실제 구성 요소와 메시지 흐름을 덜
+파악하게 된다. `standardize-example-readmes.mjs`는 상세 `*-architecture-01.png` 또는
+`*-diagram-01.png`를 우선하고, Graphviz overview는 뒤에 배치한다.
+
+상세 asset이 없는 예제에서는 Graphviz overview도 너무 얕으면 안 된다. 이번 보정에서는
+91개 README architecture diagram을 다시 생성하면서 entry/test, API/adapter,
+service/domain, repository/infra, bluetape4k API, runtime 박스 안에 실제 클래스,
+테스트, build dependency 단서를 더 넣었다. generator는 title text를
+`Architects Daughter`, detail text를 `Comic Mono`로 분리하고, Graphviz `.plain`
+continuation line을 올바르게 파싱해 잘못된 fill/stroke가 검은 박스로 렌더링되지
+않게 했다. 검증은 91개 architecture SVG/PNG/evidence 쌍, font signature, bad
+fill/stroke 0건, README image link missing 0건, Architecture 섹션 내 sequence/SVG
+참조 0건, contact sheet 전수 preview와 Kafka/Kafka Reply PNG 원본 확인으로 마무리했다.

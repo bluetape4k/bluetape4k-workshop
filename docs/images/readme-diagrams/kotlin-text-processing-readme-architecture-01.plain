@@ -1,14 +1,11 @@
-graph 1 19.742 1.1017
-node entry 1.5358 0.52188 3.0717 0.7625 "Entry / Tests\nLanguageDetectionServiceTest" rounded,filled box #88A3B5 #FFF8E7
-node api 5.2169 0.52188 1.9571 1.0438 "API / Adapter\nAbuseWordFilter /\nTextNormalizer" rounded,filled box #88A3B5 #EEF7FF
-node service 8.6115 0.52188 2.6654 0.7625 "Service / Domain\nLanguageDetectionService" rounded,filled box #88A3B5 #F1F8E9
-node infra 12.105 0.52188 2.155 0.7625 "Library Layer\ntext / logging / junit5" rounded,filled box #88A3B5 #F5F0FF
-node bt 15.593 0.52188 2.155 0.7625 "bluetape4k APIs\ntext / logging / junit5" rounded,filled box #88A3B5 #EAF7F0
-node runtime 18.832 0.52188 1.8217 0.7625 "Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.0809 0.52188 3.0809 0.52188 4.0891 0.52188 4.0891 0.52188 calls 3.655 0.61042 solid #637383
-edge api service 4 6.2033 0.52188 6.2033 0.52188 7.1325 0.52188 7.1325 0.52188 uses 6.7371 0.61042 solid #637383
-edge service infra 4 9.9522 0.52188 9.9522 0.52188 10.88 0.52188 10.88 0.52188 uses 10.486 0.61042 solid #637383
-edge infra bt 4 13.19 0.39479 13.19 0.39479 14.367 0.39479 14.367 0.39479 uses 13.849 1.0132 solid #637383
-edge infra bt 4 13.19 0.64896 13.19 0.64896 14.367 0.64896 14.367 0.64896 extends 13.849 0.20764 solid #637383
-edge bt runtime 4 16.676 0.52188 16.676 0.52188 17.77 0.52188 17.77 0.52188 adapts 17.296 0.61042 solid #637383
+graph 1 17.851 1.445
+node entry 1.5958 0.7225 3.1917 1.445 "Entry & Verification\nLanguageDetectionServiceTest\nAbuseWordFilterTest\nKotlin Text Processing tests" rounded,filled box #88A3B5 #FFF8E7
+node api 5.6799 0.7225 1.9208 1.1637 "API & Adapters\nAbuseWordFilter\nTextNormalizer" rounded,filled box #88A3B5 #EEF7FF
+node service 9.7274 0.7225 2.7854 0.8825 "Service & Domain\nLanguageDetectionService" rounded,filled box #88A3B5 #F1F8E9
+node bt 13.556 0.7225 1.8167 1.445 "bluetape4k APIs\ntext\nlogging\njunit5" rounded,filled box #88A3B5 #EAF7F0
+node runtime 16.88 0.7225 1.9417 0.8825 "Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.1982 0.7225 3.1982 0.7225 4.5699 0.7225 4.5699 0.7225 invokes 3.9556 0.81104 solid #637383
+edge api service 4 6.6494 0.7225 6.6494 0.7225 8.1829 0.7225 8.1829 0.7225 delegates 7.4875 0.81104 solid #637383
+edge service bt 4 11.126 0.7225 11.126 0.7225 12.496 0.7225 12.496 0.7225 extends 11.884 0.81104 solid #637383
+edge bt runtime 4 14.473 0.7225 14.473 0.7225 15.759 0.7225 15.759 0.7225 adapts 15.187 0.81104 solid #637383
 stop

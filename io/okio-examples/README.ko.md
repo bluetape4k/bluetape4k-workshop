@@ -8,11 +8,11 @@
 
 ## 아키텍처 다이어그램
 
-![Okio Examples Graphviz architecture diagram](../../docs/images/readme-diagrams/io-okio-examples-readme-architecture-01.png)
+![Okio Examples architecture diagram](../../docs/images/readme-diagrams/io-okio-examples-diagram-01.png)
 
 이 모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성을 중심으로 구성됩니다. 이 README를 코드와 비교할 때는 `io.bluetape4k.workshop.io` 패키지를 기준으로 삼습니다.
 
-![Okio Examples architecture diagram](../../docs/images/readme-diagrams/io-okio-examples-diagram-01.png)
+![Okio Examples Graphviz architecture diagram](../../docs/images/readme-diagrams/io-okio-examples-readme-architecture-01.png)
 
 ## 흐름 다이어그램
 

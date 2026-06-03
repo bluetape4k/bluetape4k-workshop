@@ -1,14 +1,13 @@
-graph 1 19.513 1.325
-node entry 0.94729 0.6625 1.8946 0.7625 "Entry / Tests\nAbstractOkioTest" rounded,filled box #88A3B5 #FFF8E7
-node api 4.3315 0.6625 2.5404 0.7625 "API / Adapter\nChannelCompletionHandler" rounded,filled box #88A3B5 #EEF7FF
-node service 8.1323 0.6625 2.8946 1.325 "Service / Domain\nBufferExtensions /\nBufferedSourceExtensions /\nInputStreamSource /" rounded,filled box #88A3B5 #F1F8E9
-node infra 12.105 0.6625 2.8842 1.325 "Repository / Infra\nAbstractBase64Sink /\nByteChannelSink / CipherSink\n/ CompressSink" rounded,filled box #88A3B5 #F5F0FF
-node bt 15.989 0.6625 2.2175 0.7625 "bluetape4k APIs\nio / okio / coroutines" rounded,filled box #88A3B5 #EAF7F0
-node runtime 18.931 0.6625 1.1654 0.7625 "Runtime\nAWS / S3" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 1.9035 0.6625 1.9035 0.6625 2.9127 0.6625 2.9127 0.6625 calls 2.4779 0.75104 solid #637383
-edge api service 4 5.6077 0.6625 5.6077 0.6625 6.5332 0.6625 6.5332 0.6625 uses 6.1433 0.75104 solid #637383
-edge service infra 4 9.589 0.6625 9.589 0.6625 10.512 0.6625 10.512 0.6625 uses 10.121 0.75104 solid #637383
-edge infra bt 4 13.551 0.53542 13.551 0.53542 14.733 0.53542 14.733 0.53542 uses 14.214 1.1538 solid #637383
-edge infra bt 4 13.551 0.78958 13.551 0.78958 14.733 0.78958 14.733 0.78958 extends 14.214 0.34826 solid #637383
-edge bt runtime 4 17.105 0.6625 17.105 0.6625 18.196 0.6625 18.196 0.6625 adapts 17.723 0.75104 solid #637383
+graph 1 22.278 1.7263
+node entry 1.2938 0.86313 2.5875 1.445 "Entry & Verification\nAbstractOkioTest\nBufferCursorKotlinTest\nIo Okio Examples tests" rounded,filled box #88A3B5 #FFF8E7
+node api 5.4455 0.86313 2.6604 0.8825 "API & Adapters\nChannelCompletionHandler" rounded,filled box #88A3B5 #EEF7FF
+node service 9.8993 0.86313 2.8583 1.7263 "Service & Domain\nBufferExtensions\nBufferedSourceExtensions\nInputStreamSource\nOutputStreamSink" rounded,filled box #88A3B5 #F1F8E9
+node infra 15.072 0.86313 2.2646 1.7263 "Repository & Infra\nAbstractBase64Sink\nByteChannelSink\nCipherSink\nCompressSink" rounded,filled box #88A3B5 #F5F0FF
+node bt 18.64 0.86313 1.8167 1.445 "bluetape4k APIs\nio\nokio\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
+node runtime 21.636 0.86313 1.2854 0.8825 "Runtime\nAWS / S3" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 2.596 0.86313 2.596 0.86313 3.9659 0.86313 3.9659 0.86313 invokes 3.3514 0.95167 solid #637383
+edge api service 4 6.7818 0.86313 6.7818 0.86313 8.3205 0.86313 8.3205 0.86313 delegates 7.6229 0.95167 solid #637383
+edge service infra 4 11.333 0.86313 11.333 0.86313 13.788 0.86313 13.788 0.86313 "persists / publishes" 12.634 0.95167 solid #637383
+edge infra bt 4 16.211 0.86313 16.211 0.86313 17.584 0.86313 17.584 0.86313 extends 16.968 0.95167 solid #637383
+edge bt runtime 4 19.555 0.86313 19.555 0.86313 20.845 0.86313 20.845 0.86313 adapts 20.271 0.95167 solid #637383
 stop

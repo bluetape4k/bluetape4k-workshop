@@ -1,14 +1,13 @@
-graph 1 20.68 1.325
-node entry 1.1765 0.6625 2.3529 1.0438 "Entry / Tests\nSpringModulith /\nAppRestControllerTest" rounded,filled box #88A3B5 #FFF8E7
-node api 4.8054 0.6625 2.5717 1.325 "API / Adapter\nDepartmentManagement /\nEmployeeManagement /\nGatewayManagement" rounded,filled box #88A3B5 #EEF7FF
-node service 8.5385 0.6625 2.7279 1.325 "Service / Domain\nOrganizationAddEvent /\nOrganizationRemoveEvent /\nDepartmentDTO /" rounded,filled box #88A3B5 #F1F8E9
-node infra 12.376 0.6625 2.78 1.0438 "Library Layer\nhibernate / testcontainers /\ncoroutines" rounded,filled box #88A3B5 #F5F0FF
-node bt 16.411 0.6625 2.6237 1.0438 "bluetape4k APIs\nhibernate / testcontainers\n/ coroutines" rounded,filled box #88A3B5 #EAF7F0
-node runtime 19.826 0.6625 1.7071 1.0438 "Runtime\nSQL / R2DBC /\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 2.3597 0.6625 2.3597 0.6625 3.3683 0.6625 3.3683 0.6625 calls 2.9362 0.75104 solid #637383
-edge api service 4 6.1006 0.6625 6.1006 0.6625 7.0268 0.6625 7.0268 0.6625 uses 6.6329 0.75104 solid #637383
-edge service infra 4 9.9076 0.6625 9.9076 0.6625 10.839 0.6625 10.839 0.6625 uses 10.444 0.75104 solid #637383
-edge infra bt 4 13.77 0.48854 13.77 0.48854 14.949 0.48854 14.949 0.48854 uses 14.432 1.1538 solid #637383
-edge infra bt 4 13.77 0.83646 13.77 0.83646 14.949 0.83646 14.949 0.83646 extends 14.432 0.34826 solid #637383
-edge bt runtime 4 17.732 0.6625 17.732 0.6625 18.825 0.6625 18.825 0.6625 adapts 18.348 0.75104 solid #637383
+graph 1 23.737 1.7263
+node entry 1.6115 0.86313 3.2229 1.7263 "Entry & Verification\nSpringModulith\nAppRestControllerTest\nSpringModulithTest\nSpring Modulith Jpa Demo tests" rounded,filled box #88A3B5 #FFF8E7
+node api 6.0184 0.86313 2.5354 1.445 "API & Adapters\nDepartmentManagement\nEmployeeManagement\nGatewayManagement" rounded,filled box #88A3B5 #EEF7FF
+node service 10.326 0.86313 2.6917 1.7263 "Service & Domain\nOrganizationAddEvent\nOrganizationRemoveEvent\nDepartmentDTO\nDepartmentExternalAPI" rounded,filled box #88A3B5 #F1F8E9
+node infra 15.744 0.86313 2.9208 1.7263 "Framework Layer\nSpring boot4 dependencies\nSpring modulith bom\nSpring modulith actuator\nSpring modulith observability" rounded,filled box #88A3B5 #F5F0FF
+node bt 19.64 0.86313 1.8167 1.445 "bluetape4k APIs\nhibernate\ntestcontainers\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
+node runtime 22.865 0.86313 1.7437 1.1637 "Runtime\nSQL / R2DBC\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.2274 0.86313 3.2274 0.86313 4.6015 0.86313 4.6015 0.86313 invokes 3.9868 0.95167 solid #637383
+edge api service 4 7.2935 0.86313 7.2935 0.86313 8.8295 0.86313 8.8295 0.86313 delegates 8.1333 0.95167 solid #637383
+edge service infra 4 11.679 0.86313 11.679 0.86313 14.132 0.86313 14.132 0.86313 "persists / publishes" 12.978 0.95167 solid #637383
+edge infra bt 4 17.211 0.86313 17.211 0.86313 18.585 0.86313 18.585 0.86313 extends 17.968 0.95167 solid #637383
+edge bt runtime 4 20.556 0.86313 20.556 0.86313 21.843 0.86313 21.843 0.86313 adapts 21.271 0.95167 solid #637383
 stop

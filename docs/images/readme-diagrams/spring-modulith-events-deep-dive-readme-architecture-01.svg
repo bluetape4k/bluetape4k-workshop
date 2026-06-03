@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="2088" height="184" viewBox="0 0 2088 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="2161" height="222" viewBox="0 0 2161 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-modulith/events-deep-dive/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/events/a/fundamentals/quickstart/Application.kt&quot;,&quot;spring-modulith/events-deep-dive/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/events/a/fundamentals/quickstart/Order.kt&quot;,&quot;spring-modulith/events-deep-dive/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/events/a/fundamentals/quickstart/OrderListeners.kt&quot;,&quot;spring-modulith/events-deep-dive/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/events/a/fundamentals/quickstart/OrderManagement.kt&quot;,&quot;spring-modulith/events-deep-dive/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/events/a/fundamentals/quickstart/OrderRepository.kt&quot;,&quot;spring-modulith/events-deep-dive/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/events/a/fundamentals/springdata/Application.kt&quot;,&quot;spring-modulith/events-deep-dive/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/events/a/fundamentals/springdata/Order.kt&quot;,&quot;spring-modulith/events-deep-dive/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/events/a/fundamentals/springdata/OrderListeners.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,43 +9,43 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="2088" height="184"/>
-  <rect class="frame" x="10" y="10" width="2068" height="164" rx="18"/>
+  <rect class="canvas" width="2161" height="222"/>
+  <rect class="frame" x="10" y="10" width="2141" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="293.5,91.6 293.5,91.6 390.4,91.6 390.4,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="348.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="668.7,91.6 668.7,91.6 757.1,91.6 757.1,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="719.8" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1058.5,91.6 1058.5,91.6 1147.1,91.6 1147.1,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1109.6" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1412.0,103.8 1412.0,103.8 1525.5,103.8 1525.5,103.8" marker-end="url(#arrow)"/><text class="edge-label" x="1475.5" y="37.4" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1412.0,79.4 1412.0,79.4 1525.5,79.4 1525.5,79.4" marker-end="url(#arrow)"/><text class="edge-label" x="1475.5" y="114.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1790.9,91.6 1790.9,91.6 1896.1,91.6 1896.1,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1850.4" y="76.1" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="350.9,110.9 350.9,110.9 482.8,110.9 482.8,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="423.7" y="95.4" text-anchor="middle">invokes</text>
+    <polyline class="connector" points="677.3,110.9 677.3,110.9 824.9,110.9 824.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="757.8" y="95.4" text-anchor="middle">delegates</text>
+    <polyline class="connector" points="1060.0,110.9 1060.0,110.9 1295.9,110.9 1295.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1184.9" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1513.3,110.9 1513.3,110.9 1644.9,110.9 1644.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1585.9" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1834.6,110.9 1834.6,110.9 1958.2,110.9 1958.2,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1903.0" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="41.5" width="264.9" height="100.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="160.4" y="74.6">Entry / Tests</tspan><tspan x="160.4" y="97.6">Application /</tspan><tspan x="160.4" y="120.6">OrderEventPublicationTests</tspan></text>
+      <rect x="28.0" y="28.0" width="322.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="189.2" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="189.2" y="106.9">Application</tspan><tspan class="node-detail" x="189.2" y="122.9">OrderEventPublicationTests</tspan><tspan class="node-detail" x="189.2" y="138.9">Spring Modulith Events Deep Dive</tspan><tspan class="node-detail" x="189.2" y="154.9">tests</tspan></text>
     </g>
     <g class="node" data-node="api">
-      <rect x="404.9" y="41.5" width="262.9" height="100.2" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="536.3" y="74.6">API / Adapter</tspan><tspan x="536.3" y="97.6">OrderListeners / Inventory</tspan><tspan x="536.3" y="120.6">/ StringAggregate</tspan></text>
+      <rect x="497.1" y="28.0" width="179.4" height="165.7" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="586.8" y="84.9">API &amp; Adapters</tspan><tspan class="node-detail" x="586.8" y="106.9">OrderListeners</tspan><tspan class="node-detail" x="586.8" y="122.9">Inventory</tspan><tspan class="node-detail" x="586.8" y="138.9">StringAggregate</tspan><tspan class="node-detail" x="586.8" y="154.9">UuidAggregate</tspan></text>
     </g>
     <g class="node" data-node="service">
-      <rect x="771.8" y="28.0" width="285.9" height="127.2" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="914.7" y="63.1">Service / Domain</tspan><tspan x="914.7" y="86.1">OrderManagement / Inventory</tspan><tspan x="914.7" y="109.1">/ Order /</tspan><tspan x="914.7" y="132.1">LoggingConfiguration</tspan></text>
+      <rect x="839.1" y="28.0" width="220.4" height="165.7" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="949.3" y="84.9">Service &amp; Domain</tspan><tspan class="node-detail" x="949.3" y="106.9">OrderManagement</tspan><tspan class="node-detail" x="949.3" y="122.9">Inventory</tspan><tspan class="node-detail" x="949.3" y="138.9">Order</tspan><tspan class="node-detail" x="949.3" y="154.9">LoggingConfiguration</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="1161.6" y="55.0" width="249.9" height="73.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1286.6" y="86.1">Repository / Infra</tspan><tspan x="1286.6" y="109.1">OrderRepository / Order</tspan></text>
+      <rect x="1310.2" y="55.0" width="202.4" height="111.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1411.4" y="100.9">Repository &amp; Infra</tspan><tspan class="node-detail" x="1411.4" y="122.9">OrderRepository</tspan><tspan class="node-detail" x="1411.4" y="138.9">Order</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1539.6" y="41.5" width="250.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1665.0" y="74.6">bluetape4k APIs</tspan><tspan x="1665.0" y="97.6">hibernate / idgenerators /</tspan><tspan x="1665.0" y="120.6">spring</tspan></text>
+      <rect x="1659.3" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1746.5" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1746.5" y="114.9">hibernate</tspan><tspan class="node-detail" x="1746.5" y="130.9">idgenerators</tspan><tspan class="node-detail" x="1746.5" y="146.9">spring</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1910.4" y="55.0" width="148.9" height="73.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1984.9" y="86.1">Runtime</tspan><tspan x="1984.9" y="109.1">SQL / R2DBC</tspan></text>
+      <rect x="1972.3" y="68.5" width="160.4" height="84.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="2052.5" y="108.9">Runtime</tspan><tspan class="node-detail" x="2052.5" y="130.9">SQL / R2DBC</tspan></text>
     </g>
   </g>
 </svg>

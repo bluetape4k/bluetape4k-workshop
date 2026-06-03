@@ -3,8 +3,8 @@ digraph G {
     rankdir=LR,
     bgcolor="white",
     pad="0.35",
-    nodesep="0.55",
-    ranksep="0.75",
+    nodesep="0.70",
+    ranksep="0.95",
     splines=ortho,
     outputorder=edgesfirst
   ];
@@ -16,7 +16,7 @@ digraph G {
     fillcolor="#F6FAFF",
     fontname="Architects Daughter",
     fontsize=14,
-    margin="0.14,0.10"
+    margin="0.20,0.16"
   ];
   edge [
     color="#637383",
@@ -26,17 +26,16 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry / Tests\nWebfluxR2dbcApplication /\nAbstractWebfluxR2dbcApplicationTest", fillcolor="#FFF8E7"];
-  api [label="API / Adapter\nNettyConfig /\nWebfluxR2dbcConfiguration\n/ UserController", fillcolor="#EEF7FF"];
-  service [label="Service / Domain\nUserService", fillcolor="#F1F8E9"];
-  infra [label="Repository / Infra\nErrorMessage / User /\nUserDTO / UserRepository", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop / junit5 /\ncoroutines", fillcolor="#EAF7F0"];
+  entry [label="Entry & Verification\nWebfluxR2dbcApplication\nAbstractWebfluxR2dbcApplicationTest\nWebfluxR2dbcConfigurationTest\nSpring Data R2dbc Webflux tests", fillcolor="#FFF8E7"];
+  api [label="API & Adapters\nNettyConfig\nWebfluxR2dbcConfiguration\nUserController\nUserHandler", fillcolor="#EEF7FF"];
+  service [label="Service & Domain\nUserService", fillcolor="#F1F8E9"];
+  infra [label="Repository & Infra\nErrorMessage\nUser\nUserDTO\nUserRepository", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k APIs\nworkshop\njunit5\ncoroutines", fillcolor="#EAF7F0"];
   runtime [label="Runtime\nSQL / R2DBC", fillcolor="#FFF1F1"];
 
-  entry -> api [label="calls"];
-  api -> service [label="uses"];
-  service -> infra [label="uses"];
-  infra -> bt [label="uses"];
+  entry -> api [label="invokes"];
+  api -> service [label="delegates"];
+  service -> infra [label="persists / publishes"];
   infra -> bt [label="extends"];
   bt -> runtime [label="adapts"];
 }

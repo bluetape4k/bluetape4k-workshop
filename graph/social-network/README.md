@@ -25,9 +25,9 @@ Demonstrates **Person–Company relationship modelling**, **multi-hop BFS traver
 
 ## Architecture
 
-![graph-social-network Graphviz architecture diagram](../../docs/images/readme-diagrams/graph-social-network-readme-architecture-01.png)
-
 ![Module Architecture](docs/images/readme-diagrams/social-network-architecture.png)
+
+![graph-social-network Graphviz architecture diagram](../../docs/images/readme-diagrams/graph-social-network-readme-architecture-01.png)
 
 ```
 graph/social-network/

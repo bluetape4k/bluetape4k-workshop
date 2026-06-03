@@ -1,12 +1,11 @@
-graph 1 16.587 1.325
-node entry 1.3327 0.6625 2.6654 1.0438 "Entry / Tests\nBucket4jRedisApplication /\nAbstractRateLimitTest" rounded,filled box #88A3B5 #FFF8E7
-node api 4.946 0.6625 2.2279 1.325 "API / Adapter\nCoroutineController /\nDebugMetricHandler /\nReactiveController" rounded,filled box #88A3B5 #EEF7FF
-node infra 8.2521 0.6625 2.2175 0.7625 "Repository / Infra\nLettuceConfiguration" rounded,filled box #88A3B5 #F5F0FF
-node bt 11.855 0.6625 2.3217 1.0438 "bluetape4k APIs\nworkshop / jackson3 /\njunit5" rounded,filled box #88A3B5 #EAF7F0
-node runtime 15.427 0.6625 2.3217 0.7625 "Runtime\nRedis / Testcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 2.673 0.6625 2.673 0.6625 3.6841 0.6625 3.6841 0.6625 calls 3.2487 0.75104 solid #637383
-edge api infra 4 6.0653 0.6625 6.0653 0.6625 6.9913 0.6625 6.9913 0.6625 uses 6.6017 0.75104 solid #637383
-edge infra bt 4 9.3674 0.53542 9.3674 0.53542 10.546 0.53542 10.546 0.53542 uses 10.027 1.1538 solid #637383
-edge infra bt 4 9.3674 0.78958 9.3674 0.78958 10.546 0.78958 10.546 0.78958 extends 10.027 0.34826 solid #637383
-edge bt runtime 4 13.024 0.6625 13.024 0.6625 14.118 0.6625 14.118 0.6625 adapts 13.641 0.75104 solid #637383
+graph 1 18.319 1.7263
+node entry 1.5594 0.86313 3.1188 1.7263 "Entry & Verification\nBucket4jRedisApplication\nAbstractRateLimitTest\nCoroutineRateLimitTest\nRatelimit Bucket4j Redis tests" rounded,filled box #88A3B5 #FFF8E7
+node api 5.7424 0.86313 2.1917 1.445 "API & Adapters\nCoroutineController\nDebugMetricHandler\nReactiveController" rounded,filled box #88A3B5 #EEF7FF
+node infra 10.618 0.86313 2.3375 0.8825 "Repository & Infra\nLettuceConfiguration" rounded,filled box #88A3B5 #F5F0FF
+node bt 14.223 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\njackson3\njunit5" rounded,filled box #88A3B5 #EAF7F0
+node runtime 17.448 0.86313 1.7437 1.1637 "Runtime\nRedis\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.1229 0.86313 3.1229 0.86313 4.4945 0.86313 4.4945 0.86313 invokes 3.8826 0.95167 solid #637383
+edge api infra 4 6.8426 0.86313 6.8426 0.86313 9.2983 0.86313 9.2983 0.86313 "persists / publishes" 8.1438 0.95167 solid #637383
+edge infra bt 4 11.793 0.86313 11.793 0.86313 13.164 0.86313 13.164 0.86313 extends 12.551 0.95167 solid #637383
+edge bt runtime 4 15.138 0.86313 15.138 0.86313 16.426 0.86313 16.426 0.86313 adapts 15.853 0.95167 solid #637383
 stop

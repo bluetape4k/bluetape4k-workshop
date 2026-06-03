@@ -3,8 +3,8 @@ digraph G {
     rankdir=LR,
     bgcolor="white",
     pad="0.35",
-    nodesep="0.55",
-    ranksep="0.75",
+    nodesep="0.70",
+    ranksep="0.95",
     splines=ortho,
     outputorder=edgesfirst
   ];
@@ -16,7 +16,7 @@ digraph G {
     fillcolor="#F6FAFF",
     fontname="Architects Daughter",
     fontsize=14,
-    margin="0.14,0.10"
+    margin="0.20,0.16"
   ];
   edge [
     color="#637383",
@@ -26,10 +26,10 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry / Tests\nKotlinApplication /\nKotlinWebfluxApplication /\nAbstractSecurityApplicationTest", fillcolor="#FFF8E7"];
-  api [label="API / Adapter\nSecurityConfig /\nMainController /\nSecurityConfiguration", fillcolor="#EEF7FF"];
-  runtime [label="Runtime\nSQL / R2DBC / Redis / AWS\n/ S3", fillcolor="#FFF1F1"];
+  entry [label="Entry & Verification\nKotlinApplication\nKotlinWebfluxApplication\nJwtApplication\nAbstractSecurityApplicationTest", fillcolor="#FFF8E7"];
+  api [label="API & Adapters\nSecurityConfig\nMainController\nSecurityConfiguration\nJwtConfig", fillcolor="#EEF7FF"];
+  runtime [label="Runtime\nSQL / R2DBC\nRedis\nAWS / S3", fillcolor="#FFF1F1"];
 
-  entry -> api [label="calls"];
-  api -> runtime [label="uses"];
+  entry -> api [label="invokes"];
+  api -> runtime [label="backs"];
 }

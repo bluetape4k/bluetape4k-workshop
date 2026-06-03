@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="2140" height="184" viewBox="0 0 2140 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="2417" height="222" viewBox="0 0 2417 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-boot/webflux-websocket/src/main/kotlin/io/bluetape4k/workshop/webflux/WebsocketApplication.kt&quot;,&quot;spring-boot/webflux-websocket/src/main/kotlin/io/bluetape4k/workshop/webflux/config/NettyConfig.kt&quot;,&quot;spring-boot/webflux-websocket/src/main/kotlin/io/bluetape4k/workshop/webflux/config/ReactiveWebSocketConfiguration.kt&quot;,&quot;spring-boot/webflux-websocket/src/main/kotlin/io/bluetape4k/workshop/webflux/config/SampleWebfluxRouter.kt&quot;,&quot;spring-boot/webflux-websocket/src/main/kotlin/io/bluetape4k/workshop/webflux/handler/ReactiveWebSocketHandler.kt&quot;,&quot;spring-boot/webflux-websocket/src/main/kotlin/io/bluetape4k/workshop/webflux/model/Models.kt&quot;,&quot;spring-boot/webflux-websocket/src/main/kotlin/io/bluetape4k/workshop/webflux/service/QuoteGenerator.kt&quot;,&quot;spring-boot/webflux-websocket/src/test/kotlin/io/bluetape4k/workshop/webflux/WebsocketApplicationTest.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,43 +9,43 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="2140" height="184"/>
-  <rect class="frame" x="10" y="10" width="2120" height="164" rx="18"/>
+  <rect class="canvas" width="2417" height="222"/>
+  <rect class="frame" x="10" y="10" width="2397" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="283.5,91.6 283.5,91.6 380.5,91.6 380.5,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="338.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="715.4,91.6 715.4,91.6 804.7,91.6 804.7,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="766.8" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1067.2,91.6 1067.2,91.6 1156.3,91.6 1156.3,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1118.7" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1430.0,108.3 1430.0,108.3 1543.1,108.3 1543.1,108.3" marker-end="url(#arrow)"/><text class="edge-label" x="1493.5" y="37.4" text-anchor="middle">uses</text>
-    <polyline class="connector" points="1430.0,74.9 1430.0,74.9 1543.1,74.9 1543.1,74.9" marker-end="url(#arrow)"/><text class="edge-label" x="1493.5" y="114.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1817.2,91.6 1817.2,91.6 1921.9,91.6 1921.9,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1876.4" y="76.1" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="354.2,110.9 354.2,110.9 485.5,110.9 485.5,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="426.7" y="95.4" text-anchor="middle">invokes</text>
+    <polyline class="connector" points="832.2,110.9 832.2,110.9 980.0,110.9 980.0,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="912.8" y="95.4" text-anchor="middle">delegates</text>
+    <polyline class="connector" points="1186.1,110.9 1186.1,110.9 1421.7,110.9 1421.7,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1310.8" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1743.5,110.9 1743.5,110.9 1874.9,110.9 1874.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1815.9" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="2064.5,110.9 2064.5,110.9 2188.0,110.9 2188.0,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="2133.0" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="41.5" width="254.9" height="100.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="155.4" y="74.6">Entry / Tests</tspan><tspan x="155.4" y="97.6">WebsocketApplication /</tspan><tspan x="155.4" y="120.6">WebsocketApplicationTest</tspan></text>
+      <rect x="28.0" y="28.0" width="325.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="190.7" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="190.7" y="106.9">WebsocketApplication</tspan><tspan class="node-detail" x="190.7" y="122.9">WebsocketApplicationTest</tspan><tspan class="node-detail" x="190.7" y="138.9">Spring Boot Webflux Websocket</tspan><tspan class="node-detail" x="190.7" y="154.9">tests</tspan></text>
     </g>
     <g class="node" data-node="api">
-      <rect x="394.9" y="28.0" width="319.9" height="127.2" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="554.8" y="63.1">API / Adapter</tspan><tspan x="554.8" y="86.1">NettyConfig /</tspan><tspan x="554.8" y="109.1">ReactiveWebSocketConfiguration</tspan><tspan x="554.8" y="132.1">/ SampleWebfluxRouter</tspan></text>
+      <rect x="500.1" y="28.0" width="331.4" height="165.7" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="665.8" y="84.9">API &amp; Adapters</tspan><tspan class="node-detail" x="665.8" y="106.9">NettyConfig</tspan><tspan class="node-detail" x="665.8" y="122.9">ReactiveWebSocketConfiguration</tspan><tspan class="node-detail" x="665.8" y="138.9">SampleWebfluxRouter</tspan><tspan class="node-detail" x="665.8" y="154.9">ReactiveWebSocketHandler</tspan></text>
     </g>
     <g class="node" data-node="service">
-      <rect x="818.8" y="55.0" width="247.9" height="73.2" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="942.7" y="86.1">Service / Domain</tspan><tspan x="942.7" y="109.1">QuoteGenerator / Models</tspan></text>
+      <rect x="994.2" y="55.0" width="191.4" height="111.7" rx="15" fill="#F1F8E9" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1089.9" y="100.9">Service &amp; Domain</tspan><tspan class="node-detail" x="1089.9" y="122.9">QuoteGenerator</tspan><tspan class="node-detail" x="1089.9" y="138.9">Models</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="1170.7" y="41.5" width="258.9" height="100.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1300.1" y="74.6">Library Layer</tspan><tspan x="1300.1" y="97.6">workshop / idgenerators /</tspan><tspan x="1300.1" y="120.6">junit5</tspan></text>
+      <rect x="1436.2" y="28.0" width="306.4" height="165.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1589.4" y="84.9">Framework Layer</tspan><tspan class="node-detail" x="1589.4" y="106.9">Spring cloud dependencies get</tspan><tspan class="node-detail" x="1589.4" y="122.9">Spring boot4 dependencies get</tspan><tspan class="node-detail" x="1589.4" y="138.9">Spring boot autoconfigure lib</tspan><tspan class="node-detail" x="1589.4" y="154.9">Spring boot autoconfigure</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1557.5" y="41.5" width="258.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1687.0" y="74.6">bluetape4k APIs</tspan><tspan x="1687.0" y="97.6">workshop / idgenerators /</tspan><tspan x="1687.0" y="120.6">junit5</tspan></text>
+      <rect x="1889.3" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1976.5" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1976.5" y="114.9">workshop</tspan><tspan class="node-detail" x="1976.5" y="130.9">idgenerators</tspan><tspan class="node-detail" x="1976.5" y="146.9">junit5</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1936.4" y="55.0" width="174.9" height="73.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="2023.8" y="86.1">Runtime</tspan><tspan x="2023.8" y="109.1">In-memory / JVM</tspan></text>
+      <rect x="2202.3" y="68.5" width="186.4" height="84.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="2295.5" y="108.9">Runtime</tspan><tspan class="node-detail" x="2295.5" y="130.9">In-memory / JVM</tspan></text>
     </g>
   </g>
 </svg>

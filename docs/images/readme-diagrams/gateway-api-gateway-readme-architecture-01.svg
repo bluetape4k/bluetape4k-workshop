@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1651" height="184" viewBox="0 0 1651 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1850" height="222" viewBox="0 0 1850 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;gateway/api-gateway/src/main/kotlin/io/bluetape4k/workshop/gateway/ApiGatewayDemoApplication.kt&quot;,&quot;gateway/api-gateway/src/main/kotlin/io/bluetape4k/workshop/gateway/config/GatewayConfig.kt&quot;,&quot;gateway/api-gateway/src/main/kotlin/io/bluetape4k/workshop/gateway/config/managements/SwaggerConfig.kt&quot;,&quot;gateway/api-gateway/src/main/kotlin/io/bluetape4k/workshop/gateway/controller/IndexController.kt&quot;,&quot;gateway/api-gateway/src/main/kotlin/io/bluetape4k/workshop/gateway/filter/RedirectWebFilter.kt&quot;,&quot;gateway/api-gateway/src/test/kotlin/io/bluetape4k/workshop/gateway/AbstractGatewayTest.kt&quot;,&quot;gateway/api-gateway/src/test/kotlin/io/bluetape4k/workshop/gateway/controller/IndexControllerTest.kt&quot;,&quot;gateway/api-gateway/build.gradle.kts&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,38 +9,38 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1651" height="184"/>
-  <rect class="frame" x="10" y="10" width="1631" height="164" rx="18"/>
+  <rect class="canvas" width="1850" height="222"/>
+  <rect class="frame" x="10" y="10" width="1830" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="292.3,91.6 292.3,91.6 389.7,91.6 389.7,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="347.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="579.5,91.6 579.5,91.6 668.5,91.6 668.5,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="630.8" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="958.4,103.8 958.4,103.8 1071.1,103.8 1071.1,103.8" marker-end="url(#arrow)"/><text class="edge-label" x="1021.6" y="37.4" text-anchor="middle">uses</text>
-    <polyline class="connector" points="958.4,79.4 958.4,79.4 1071.1,79.4 1071.1,79.4" marker-end="url(#arrow)"/><text class="edge-label" x="1021.6" y="114.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1309.2,91.6 1309.2,91.6 1413.9,91.6 1413.9,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1368.5" y="76.1" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="305.0,110.9 305.0,110.9 436.4,110.9 436.4,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="377.7" y="95.4" text-anchor="middle">invokes</text>
+    <polyline class="connector" points="651.4,110.9 651.4,110.9 886.6,110.9 886.6,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="775.8" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1195.0,110.9 1195.0,110.9 1326.8,110.9 1326.8,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1267.8" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1516.3,110.9 1516.3,110.9 1639.9,110.9 1639.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1584.9" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="41.5" width="263.9" height="100.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="159.9" y="74.6">Entry / Tests</tspan><tspan x="159.9" y="97.6">ApiGatewayDemoApplication</tspan><tspan x="159.9" y="120.6">/ AbstractGatewayTest</tspan></text>
+      <rect x="28.0" y="28.0" width="276.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="166.2" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="166.2" y="106.9">ApiGatewayDemoApplication</tspan><tspan class="node-detail" x="166.2" y="122.9">AbstractGatewayTest</tspan><tspan class="node-detail" x="166.2" y="138.9">IndexControllerTest</tspan><tspan class="node-detail" x="166.2" y="154.9">Gateway Api Gateway tests</tspan></text>
     </g>
     <g class="node" data-node="api">
-      <rect x="403.9" y="28.0" width="174.9" height="127.2" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="491.3" y="63.1">API / Adapter</tspan><tspan x="491.3" y="86.1">GatewayConfig /</tspan><tspan x="491.3" y="109.1">SwaggerConfig /</tspan><tspan x="491.3" y="132.1">IndexController</tspan></text>
+      <rect x="451.1" y="28.0" width="199.4" height="165.7" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="550.8" y="84.9">API &amp; Adapters</tspan><tspan class="node-detail" x="550.8" y="106.9">GatewayConfig</tspan><tspan class="node-detail" x="550.8" y="122.9">SwaggerConfig</tspan><tspan class="node-detail" x="550.8" y="138.9">IndexController</tspan><tspan class="node-detail" x="550.8" y="154.9">RedirectWebFilter</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="682.8" y="55.0" width="274.9" height="73.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="820.2" y="86.1">Library Layer</tspan><tspan x="820.2" y="109.1">workshop / jackson3 / netty</tspan></text>
+      <rect x="901.1" y="28.0" width="293.4" height="165.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1047.8" y="84.9">Framework Layer</tspan><tspan class="node-detail" x="1047.8" y="106.9">Spring cloud starter gateway</tspan><tspan class="node-detail" x="1047.8" y="122.9">server webflux</tspan><tspan class="node-detail" x="1047.8" y="138.9">Spring cloud starter</tspan><tspan class="node-detail" x="1047.8" y="154.9">loadbalancer</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1085.6" y="41.5" width="222.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1197.1" y="74.6">bluetape4k APIs</tspan><tspan x="1197.1" y="97.6">workshop / jackson3 /</tspan><tspan x="1197.1" y="120.6">netty</tspan></text>
+      <rect x="1341.2" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1428.4" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1428.4" y="114.9">workshop</tspan><tspan class="node-detail" x="1428.4" y="130.9">jackson3</tspan><tspan class="node-detail" x="1428.4" y="146.9">netty</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1428.6" y="41.5" width="193.9" height="100.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1525.5" y="74.6">Runtime</tspan><tspan x="1525.5" y="97.6">Redis / AWS / S3 /</tspan><tspan x="1525.5" y="120.6">Testcontainers</tspan></text>
+      <rect x="1654.3" y="41.5" width="167.4" height="138.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1738.0" y="92.9">Runtime</tspan><tspan class="node-detail" x="1738.0" y="114.9">Redis</tspan><tspan class="node-detail" x="1738.0" y="130.9">AWS / S3</tspan><tspan class="node-detail" x="1738.0" y="146.9">Testcontainers</tspan></text>
     </g>
   </g>
 </svg>

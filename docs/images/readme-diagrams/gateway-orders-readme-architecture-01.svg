@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1623" height="184" viewBox="0 0 1623 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1881" height="222" viewBox="0 0 1881 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;gateway/orders/src/main/kotlin/io/bluetape4k/workshop/gateway/orders/OrderApplication.kt&quot;,&quot;gateway/orders/src/main/kotlin/io/bluetape4k/workshop/gateway/orders/config/OrderConfig.kt&quot;,&quot;gateway/orders/src/main/kotlin/io/bluetape4k/workshop/gateway/orders/config/managements/ObservationConfig.kt&quot;,&quot;gateway/orders/src/main/kotlin/io/bluetape4k/workshop/gateway/orders/config/managements/SwaggerConfig.kt&quot;,&quot;gateway/orders/src/main/kotlin/io/bluetape4k/workshop/gateway/orders/controller/OrderController.kt&quot;,&quot;gateway/orders/src/main/kotlin/io/bluetape4k/workshop/gateway/orders/controller/ProductController.kt&quot;,&quot;gateway/orders/src/main/kotlin/io/bluetape4k/workshop/gateway/orders/filters/RedirectWebFilter.kt&quot;,&quot;gateway/orders/src/main/kotlin/io/bluetape4k/workshop/gateway/orders/model/Order.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,38 +9,38 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1623" height="184"/>
-  <rect class="frame" x="10" y="10" width="1603" height="164" rx="18"/>
+  <rect class="canvas" width="1881" height="222"/>
+  <rect class="frame" x="10" y="10" width="1861" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="309.4,91.6 309.4,91.6 406.5,91.6 406.5,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="364.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="622.6,91.6 622.6,91.6 711.3,91.6 711.3,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="673.8" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="949.2,108.3 949.2,108.3 1062.3,108.3 1062.3,108.3" marker-end="url(#arrow)"/><text class="edge-label" x="1012.7" y="37.4" text-anchor="middle">uses</text>
-    <polyline class="connector" points="949.2,74.9 949.2,74.9 1062.3,74.9 1062.3,74.9" marker-end="url(#arrow)"/><text class="edge-label" x="1012.7" y="114.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1300.1,91.6 1300.1,91.6 1405.1,91.6 1405.1,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1359.5" y="76.1" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="321.1,110.9 321.1,110.9 452.5,110.9 452.5,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="393.7" y="95.4" text-anchor="middle">invokes</text>
+    <polyline class="connector" points="665.4,110.9 665.4,110.9 900.8,110.9 900.8,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="789.8" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1207.1,110.9 1207.1,110.9 1338.8,110.9 1338.8,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1279.8" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1528.4,110.9 1528.4,110.9 1651.9,110.9 1651.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1596.9" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="41.5" width="280.9" height="100.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="168.4" y="74.6">Entry / Tests</tspan><tspan x="168.4" y="97.6">OrderApplication /</tspan><tspan x="168.4" y="120.6">ProductControllerScopeTest</tspan></text>
+      <rect x="28.0" y="41.5" width="292.4" height="138.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="174.2" y="92.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="174.2" y="114.9">OrderApplication</tspan><tspan class="node-detail" x="174.2" y="130.9">ProductControllerScopeTest</tspan><tspan class="node-detail" x="174.2" y="146.9">Gateway Orders tests</tspan></text>
     </g>
     <g class="node" data-node="api">
-      <rect x="420.9" y="28.0" width="200.9" height="127.2" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="521.3" y="63.1">API / Adapter</tspan><tspan x="521.3" y="86.1">OrderConfig /</tspan><tspan x="521.3" y="109.1">ObservationConfig /</tspan><tspan x="521.3" y="132.1">SwaggerConfig</tspan></text>
+      <rect x="467.1" y="28.0" width="197.4" height="165.7" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="565.8" y="84.9">API &amp; Adapters</tspan><tspan class="node-detail" x="565.8" y="106.9">OrderConfig</tspan><tspan class="node-detail" x="565.8" y="122.9">ObservationConfig</tspan><tspan class="node-detail" x="565.8" y="138.9">SwaggerConfig</tspan><tspan class="node-detail" x="565.8" y="154.9">OrderController</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="725.8" y="41.5" width="222.9" height="100.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="837.2" y="74.6">Library Layer</tspan><tspan x="837.2" y="97.6">workshop / jackson3 /</tspan><tspan x="837.2" y="120.6">idgenerators</tspan></text>
+      <rect x="915.2" y="28.0" width="291.4" height="165.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1060.9" y="84.9">Framework Layer</tspan><tspan class="node-detail" x="1060.9" y="106.9">Spring boot autoconfigure lib</tspan><tspan class="node-detail" x="1060.9" y="122.9">Spring boot autoconfigure</tspan><tspan class="node-detail" x="1060.9" y="138.9">processor</tspan><tspan class="node-detail" x="1060.9" y="154.9">Spring boot configuration</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="1076.6" y="41.5" width="222.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1188.1" y="74.6">bluetape4k APIs</tspan><tspan x="1188.1" y="97.6">workshop / jackson3 /</tspan><tspan x="1188.1" y="120.6">idgenerators</tspan></text>
+      <rect x="1353.2" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1440.4" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1440.4" y="114.9">workshop</tspan><tspan class="node-detail" x="1440.4" y="130.9">jackson3</tspan><tspan class="node-detail" x="1440.4" y="146.9">idgenerators</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1419.5" y="55.0" width="174.9" height="73.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1507.0" y="86.1">Runtime</tspan><tspan x="1507.0" y="109.1">In-memory / JVM</tspan></text>
+      <rect x="1666.3" y="68.5" width="186.4" height="84.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1759.5" y="108.9">Runtime</tspan><tspan class="node-detail" x="1759.5" y="130.9">In-memory / JVM</tspan></text>
     </g>
   </g>
 </svg>

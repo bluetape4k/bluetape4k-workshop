@@ -3,8 +3,8 @@ digraph G {
     rankdir=LR,
     bgcolor="white",
     pad="0.35",
-    nodesep="0.55",
-    ranksep="0.75",
+    nodesep="0.70",
+    ranksep="0.95",
     splines=ortho,
     outputorder=edgesfirst
   ];
@@ -16,7 +16,7 @@ digraph G {
     fillcolor="#F6FAFF",
     fontname="Architects Daughter",
     fontsize=14,
-    margin="0.14,0.10"
+    margin="0.20,0.16"
   ];
   edge [
     color="#637383",
@@ -26,17 +26,16 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Entry / Tests\nStompWebSocketApplication\n/ GreetingIntegrationTest", fillcolor="#FFF8E7"];
-  api [label="API / Adapter\nTomcatConfig /\nGreetingController", fillcolor="#EEF7FF"];
-  service [label="Service / Domain\nWebSocketConfig / Greeting /\nHelloMessage", fillcolor="#F1F8E9"];
-  infra [label="Library Layer\nworkshop / core / junit5", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k APIs\nworkshop / core / junit5", fillcolor="#EAF7F0"];
+  entry [label="Entry & Verification\nStompWebSocketApplication\nGreetingIntegrationTest\nTestSessionHandler\nSpring Boot Stomp Websocket", fillcolor="#FFF8E7"];
+  api [label="API & Adapters\nTomcatConfig\nGreetingController", fillcolor="#EEF7FF"];
+  service [label="Service & Domain\nWebSocketConfig\nGreeting\nHelloMessage", fillcolor="#F1F8E9"];
+  infra [label="Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k APIs\nworkshop\ncore\njunit5", fillcolor="#EAF7F0"];
   runtime [label="Runtime\nSQL / R2DBC", fillcolor="#FFF1F1"];
 
-  entry -> api [label="calls"];
-  api -> service [label="uses"];
-  service -> infra [label="uses"];
-  infra -> bt [label="uses"];
+  entry -> api [label="invokes"];
+  api -> service [label="delegates"];
+  service -> infra [label="persists / publishes"];
   infra -> bt [label="extends"];
   bt -> runtime [label="adapts"];
 }

@@ -1,14 +1,13 @@
-graph 1 21.409 1.325
-node entry 1.0879 0.6625 2.1758 1.0438 "Entry / Tests\nTracingApplication /\nAbstractTracingTest" rounded,filled box #88A3B5 #FFF8E7
-node api 4.3887 0.6625 2.0925 1.325 "API / Adapter\nNettyConfig /\nObservationConfig /\nCoroutineController" rounded,filled box #88A3B5 #EEF7FF
-node service 8.075 0.6625 3.1133 1.325 "Service / Domain\nCoroutineService /\nReactorService / SyncService\n/ Todo" rounded,filled box #88A3B5 #F1F8E9
-node infra 12.037 0.6625 2.6446 1.0438 "Library Layer\nworkshop / micrometer /\njackson3" rounded,filled box #88A3B5 #F5F0FF
-node bt 16.015 0.6625 2.6446 1.0438 "bluetape4k APIs\nworkshop / micrometer /\njackson3" rounded,filled box #88A3B5 #EAF7F0
-node runtime 19.998 0.6625 2.8217 1.0438 "Runtime\nSQL / R2DBC / AWS / S3 /\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 2.1825 0.6625 2.1825 0.6625 3.1937 0.6625 3.1937 0.6625 calls 2.7592 0.75104 solid #637383
-edge api service 4 5.4401 0.6625 5.4401 0.6625 6.3707 0.6625 6.3707 0.6625 uses 5.9767 0.75104 solid #637383
-edge service infra 4 9.641 0.6625 9.641 0.6625 10.564 0.6625 10.564 0.6625 uses 10.173 0.75104 solid #637383
-edge infra bt 4 13.367 0.48854 13.367 0.48854 14.544 0.48854 14.544 0.48854 uses 14.026 1.1538 solid #637383
-edge infra bt 4 13.367 0.83646 13.367 0.83646 14.544 0.83646 14.544 0.83646 extends 14.026 0.34826 solid #637383
-edge bt runtime 4 17.347 0.6625 17.347 0.6625 18.436 0.6625 18.436 0.6625 adapts 17.962 0.75104 solid #637383
+graph 1 23.018 1.7263
+node entry 1.7156 0.86313 3.4313 1.7263 "Entry & Verification\nTracingApplication\nAbstractTracingTest\nCoroutineControllerTest\nObservability Micrometer Tracing" rounded,filled box #88A3B5 #FFF8E7
+node api 6.0549 0.86313 2.1917 1.7263 "API & Adapters\nNettyConfig\nObservationConfig\nCoroutineController\nIndexController" rounded,filled box #88A3B5 #EEF7FF
+node service 9.842 0.86313 1.9938 1.7263 "Service & Domain\nCoroutineService\nReactorService\nSyncService\nTodo" rounded,filled box #88A3B5 #F1F8E9
+node infra 14.968 0.86313 3.0354 1.7263 "Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration" rounded,filled box #88A3B5 #F5F0FF
+node bt 18.922 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\nmicrometer\njackson3" rounded,filled box #88A3B5 #EAF7F0
+node runtime 22.146 0.86313 1.7437 1.445 "Runtime\nSQL / R2DBC\nAWS / S3\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.4368 0.86313 3.4368 0.86313 4.8114 0.86313 4.8114 0.86313 invokes 4.1951 0.95167 solid #637383
+edge api service 4 7.1553 0.86313 7.1553 0.86313 8.6933 0.86313 8.6933 0.86313 delegates 7.9979 0.95167 solid #637383
+edge service infra 4 10.849 0.86313 10.849 0.86313 13.301 0.86313 13.301 0.86313 "persists / publishes" 12.144 0.95167 solid #637383
+edge infra bt 4 16.491 0.86313 16.491 0.86313 17.863 0.86313 17.863 0.86313 extends 17.249 0.95167 solid #637383
+edge bt runtime 4 19.837 0.86313 19.837 0.86313 21.125 0.86313 21.125 0.86313 adapts 20.552 0.95167 solid #637383
 stop

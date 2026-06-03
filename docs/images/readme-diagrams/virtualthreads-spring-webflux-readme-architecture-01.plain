@@ -1,14 +1,14 @@
-graph 1 20.482 1.325
-node entry 1.7077 0.6625 3.4154 1.0438 "Entry / Tests\nWebfluxVirtualThreadApp /\nAbstractWebfluxVirtualThreadTest" rounded,filled box #88A3B5 #FFF8E7
-node api 6.0658 0.6625 2.9675 1.325 "API / Adapter\nNettyConfig /\nSchedulingConfig /\nAbstractDispatcherController" rounded,filled box #88A3B5 #EEF7FF
-node service 9.8979 0.6625 2.53 0.7625 "Service / Domain\nBanner / DispatcherType" rounded,filled box #88A3B5 #F1F8E9
-node infra 13.214 0.6625 1.9363 0.7625 "Repository / Infra\nAsyncConfig" rounded,filled box #88A3B5 #F5F0FF
-node bt 16.52 0.6625 2.0092 1.0438 "bluetape4k APIs\nworkshop / core /\nvirtualthread" rounded,filled box #88A3B5 #EAF7F0
-node runtime 19.629 0.6625 1.7071 1.325 "Runtime\nSQL / R2DBC /\nElasticsearch /\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.4239 0.6625 3.4239 0.6625 4.4309 0.6625 4.4309 0.6625 calls 3.9987 0.75104 solid #637383
-edge api service 4 7.5584 0.6625 7.5584 0.6625 8.4842 0.6625 8.4842 0.6625 uses 8.0912 0.75104 solid #637383
-edge service infra 4 11.171 0.6625 11.171 0.6625 12.096 0.6625 12.096 0.6625 uses 11.705 0.75104 solid #637383
-edge infra bt 4 14.188 0.53542 14.188 0.53542 15.365 0.53542 15.365 0.53542 uses 14.849 1.1538 solid #637383
-edge infra bt 4 14.188 0.78958 14.188 0.78958 15.365 0.78958 15.365 0.78958 extends 14.849 0.34826 solid #637383
-edge bt runtime 4 17.534 0.6625 17.534 0.6625 18.625 0.6625 18.625 0.6625 adapts 18.15 0.75104 solid #637383
+graph 1 23.091 1.7263
+node entry 1.7677 0.86313 3.5354 1.7263 "Entry & Verification\nWebfluxVirtualThreadApp\nAbstractWebfluxVirtualThreadTest\nAbstractDispatcherControllerTest\nVirtualthreads \
+Spring Webflux" rounded,filled box #88A3B5 #FFF8E7
+node api 6.6069 0.86313 3.0875 1.7263 "API & Adapters\nNettyConfig\nSchedulingConfig\nAbstractDispatcherController\nCustomDispatcherController" rounded,filled box #88A3B5 #EEF7FF
+node service 10.842 0.86313 1.9938 1.1637 "Service & Domain\nBanner\nDispatcherType" rounded,filled box #88A3B5 #F1F8E9
+node infra 15.504 0.86313 2.1083 0.8825 "Repository & Infra\nAsyncConfig" rounded,filled box #88A3B5 #F5F0FF
+node bt 18.994 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\ncore\nvirtualthread" rounded,filled box #88A3B5 #EAF7F0
+node runtime 22.219 0.86313 1.7437 1.445 "Runtime\nSQL / R2DBC\nElasticsearch\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.5422 0.86313 3.5422 0.86313 4.9136 0.86313 4.9136 0.86313 invokes 4.2993 0.95167 solid #637383
+edge api service 4 8.1599 0.86313 8.1599 0.86313 9.6935 0.86313 9.6935 0.86313 delegates 8.9979 0.95167 solid #637383
+edge service infra 4 11.848 0.86313 11.848 0.86313 14.301 0.86313 14.301 0.86313 "persists / publishes" 13.144 0.95167 solid #637383
+edge infra bt 4 16.566 0.86313 16.566 0.86313 17.937 0.86313 17.937 0.86313 extends 17.322 0.95167 solid #637383
+edge bt runtime 4 19.91 0.86313 19.91 0.86313 21.198 0.86313 21.198 0.86313 adapts 20.625 0.95167 solid #637383
 stop

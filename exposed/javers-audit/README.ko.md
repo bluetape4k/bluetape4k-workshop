@@ -21,9 +21,9 @@ JetBrains Exposed JDBC와 H2 인메모리 데이터베이스에 통합한 JaVers
 
 ## 아키텍처
 
-![exposed/javers-audit Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/exposed-javers-audit-readme-architecture-01.png)
-
 ![javers audit 아키텍처 다이어그램](../../docs/images/readme-diagrams/exposed-javers-audit-architecture-01.png)
+
+![exposed/javers-audit Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/exposed-javers-audit-readme-architecture-01.png)
 
 ## 핵심 기능
 

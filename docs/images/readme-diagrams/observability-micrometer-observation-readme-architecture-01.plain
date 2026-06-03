@@ -1,14 +1,13 @@
-graph 1 20.388 1.325
-node entry 1.2806 0.6625 2.5612 1.0438 "Entry / Tests\nObservationApp /\nAbstractObservationTest" rounded,filled box #88A3B5 #FFF8E7
-node api 5.0919 0.6625 2.7279 1.325 "API / Adapter\nObservationAspectConfig /\nObservationFilterConfig /\nObservationLoggingConfig" rounded,filled box #88A3B5 #EEF7FF
-node service 8.575 0.6625 2.0717 1.0438 "Service / Domain\nGreetingService /\nObservationSupport" rounded,filled box #88A3B5 #F1F8E9
-node infra 12.016 0.6625 2.6446 1.0438 "Library Layer\nworkshop / micrometer /\njackson3" rounded,filled box #88A3B5 #F5F0FF
-node bt 15.994 0.6625 2.6446 1.0438 "bluetape4k APIs\nworkshop / micrometer /\njackson3" rounded,filled box #88A3B5 #EAF7F0
-node runtime 19.477 0.6625 1.8217 0.7625 "Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 2.5709 0.6625 2.5709 0.6625 3.582 0.6625 3.582 0.6625 calls 3.1446 0.75104 solid #637383
-edge api service 4 6.4635 0.6625 6.4635 0.6625 7.3904 0.6625 7.3904 0.6625 uses 6.9975 0.75104 solid #637383
-edge service infra 4 9.6169 0.6625 9.6169 0.6625 10.542 0.6625 10.542 0.6625 uses 10.152 0.75104 solid #637383
-edge infra bt 4 13.347 0.48854 13.347 0.48854 14.523 0.48854 14.523 0.48854 uses 14.005 1.1538 solid #637383
-edge infra bt 4 13.347 0.83646 13.347 0.83646 14.523 0.83646 14.523 0.83646 extends 14.005 0.34826 solid #637383
-edge bt runtime 4 17.326 0.6625 17.326 0.6625 18.414 0.6625 18.414 0.6625 adapts 17.942 0.75104 solid #637383
+graph 1 23.216 1.7263
+node entry 1.3406 0.86313 2.6813 1.7263 "Entry & Verification\nObservationApp\nAbstractObservationTest\nObservationRegistryTest\nObservability Micrometer" rounded,filled box #88A3B5 #FFF8E7
+node api 5.5809 0.86313 2.7438 1.7263 "API & Adapters\nObservationAspectConfig\nObservationFilterConfig\nObservationLoggingConfig\nGreetingController" rounded,filled box #88A3B5 #EEF7FF
+node service 9.7431 0.86313 2.1917 1.1637 "Service & Domain\nGreetingService\nObservationSupport" rounded,filled box #88A3B5 #F1F8E9
+node infra 14.968 0.86313 3.0354 1.7263 "Framework Layer\nSpring boot autoconfigure lib\nSpring boot autoconfigure\nprocessor\nSpring boot configuration" rounded,filled box #88A3B5 #F5F0FF
+node bt 18.922 0.86313 1.8167 1.445 "bluetape4k APIs\nworkshop\nmicrometer\njackson3" rounded,filled box #88A3B5 #EAF7F0
+node runtime 22.245 0.86313 1.9417 0.8825 "Runtime\nIn-memory / JVM" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 2.6881 0.86313 2.6881 0.86313 4.0578 0.86313 4.0578 0.86313 invokes 3.4451 0.95167 solid #637383
+edge api service 4 6.9611 0.86313 6.9611 0.86313 8.5003 0.86313 8.5003 0.86313 delegates 7.8 0.95167 solid #637383
+edge service infra 4 10.845 0.86313 10.845 0.86313 13.299 0.86313 13.299 0.86313 "persists / publishes" 12.144 0.95167 solid #637383
+edge infra bt 4 16.491 0.86313 16.491 0.86313 17.863 0.86313 17.863 0.86313 extends 17.249 0.95167 solid #637383
+edge bt runtime 4 19.839 0.86313 19.839 0.86313 21.125 0.86313 21.125 0.86313 adapts 20.552 0.95167 solid #637383
 stop

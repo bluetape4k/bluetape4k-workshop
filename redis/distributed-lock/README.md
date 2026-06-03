@@ -24,9 +24,9 @@ thread-safe locks to fenced (token-based) locks and their coroutine-native count
 
 ## Architecture
 
-![redis-distributed-lock Graphviz architecture diagram](../../docs/images/readme-diagrams/redis-distributed-lock-readme-architecture-01.png)
-
 ![distributed lock Architecture diagram](../../docs/images/readme-diagrams/redis-distributed-lock-architecture-01.png)
+
+![redis-distributed-lock Graphviz architecture diagram](../../docs/images/readme-diagrams/redis-distributed-lock-readme-architecture-01.png)
 
 ---
 

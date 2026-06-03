@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1555" height="184" viewBox="0 0 1555 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1886" height="222" viewBox="0 0 1886 222" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;messaging/kafka/src/main/kotlin/io/bluetape4k/workshop/messaging/kafka/KafkaApplication.kt&quot;,&quot;messaging/kafka/src/main/kotlin/io/bluetape4k/workshop/messaging/kafka/KafkaTopics.kt&quot;,&quot;messaging/kafka/src/main/kotlin/io/bluetape4k/workshop/messaging/kafka/config/KafkaConfig.kt&quot;,&quot;messaging/kafka/src/main/kotlin/io/bluetape4k/workshop/messaging/kafka/controller/GreetingController.kt&quot;,&quot;messaging/kafka/src/main/kotlin/io/bluetape4k/workshop/messaging/kafka/filters/RedirectWebFilter.kt&quot;,&quot;messaging/kafka/src/main/kotlin/io/bluetape4k/workshop/messaging/kafka/listener/CoroutineSimpleMessageHandler.kt&quot;,&quot;messaging/kafka/src/main/kotlin/io/bluetape4k/workshop/messaging/kafka/listener/GreetingMessageHandler.kt&quot;,&quot;messaging/kafka/src/main/kotlin/io/bluetape4k/workshop/messaging/kafka/listener/KafkaMessageHandler.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,38 +9,38 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1555" height="184"/>
-  <rect class="frame" x="10" y="10" width="1535" height="164" rx="18"/>
+  <rect class="canvas" width="1886" height="222"/>
+  <rect class="frame" x="10" y="10" width="1866" height="202" rx="18"/>
   <g>
-    <polyline class="connector" points="231.7,91.6 231.7,91.6 328.4,91.6 328.4,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="286.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="546.6,91.6 546.6,91.6 635.4,91.6 635.4,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="597.8" y="76.1" text-anchor="middle">uses</text>
-    <polyline class="connector" points="836.2,108.3 836.2,108.3 949.4,108.3 949.4,108.3" marker-end="url(#arrow)"/><text class="edge-label" x="899.6" y="37.4" text-anchor="middle">uses</text>
-    <polyline class="connector" points="836.2,74.9 836.2,74.9 949.4,74.9 949.4,74.9" marker-end="url(#arrow)"/><text class="edge-label" x="899.6" y="114.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="1178.1,91.6 1178.1,91.6 1283.0,91.6 1283.0,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="1237.5" y="76.1" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="322.0,110.9 322.0,110.9 453.6,110.9 453.6,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="394.7" y="95.4" text-anchor="middle">invokes</text>
+    <polyline class="connector" points="778.2,110.9 778.2,110.9 1013.7,110.9 1013.7,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="902.8" y="95.4" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="1231.3,110.9 1231.3,110.9 1362.9,110.9 1362.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1303.8" y="95.4" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1552.3,110.9 1552.3,110.9 1675.9,110.9 1675.9,110.9" marker-end="url(#arrow)"/><text class="edge-label" x="1620.9" y="95.4" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="41.5" width="202.9" height="100.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="129.4" y="74.6">Entry / Tests</tspan><tspan x="129.4" y="97.6">KafkaApplication /</tspan><tspan x="129.4" y="120.6">EmbeddedKafkaTest</tspan></text>
+      <rect x="28.0" y="28.0" width="293.4" height="165.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="174.7" y="84.9">Entry &amp; Verification</tspan><tspan class="node-detail" x="174.7" y="106.9">KafkaApplication</tspan><tspan class="node-detail" x="174.7" y="122.9">EmbeddedKafkaTest</tspan><tspan class="node-detail" x="174.7" y="138.9">GreetingControllerScopeTest</tspan><tspan class="node-detail" x="174.7" y="154.9">Messaging Kafka tests</tspan></text>
     </g>
     <g class="node" data-node="api">
-      <rect x="342.9" y="28.0" width="202.9" height="127.2" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="444.3" y="63.1">API / Adapter</tspan><tspan x="444.3" y="86.1">KafkaConfig /</tspan><tspan x="444.3" y="109.1">GreetingController /</tspan><tspan x="444.3" y="132.1">RedirectWebFilter</tspan></text>
+      <rect x="468.1" y="28.0" width="309.4" height="165.7" rx="15" fill="#EEF7FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="622.8" y="84.9">API &amp; Adapters</tspan><tspan class="node-detail" x="622.8" y="106.9">KafkaConfig</tspan><tspan class="node-detail" x="622.8" y="122.9">GreetingController</tspan><tspan class="node-detail" x="622.8" y="138.9">RedirectWebFilter</tspan><tspan class="node-detail" x="622.8" y="154.9">CoroutineSimpleMessageHandler</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="649.8" y="28.0" width="185.9" height="127.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="742.7" y="63.1">Repository / Infra</tspan><tspan x="742.7" y="86.1">KafkaTopics /</tspan><tspan x="742.7" y="109.1">GreetingRequest /</tspan><tspan x="742.7" y="132.1">GreetingResult</tspan></text>
+      <rect x="1028.1" y="41.5" width="202.4" height="138.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1129.3" y="92.9">Repository &amp; Infra</tspan><tspan class="node-detail" x="1129.3" y="114.9">KafkaTopics</tspan><tspan class="node-detail" x="1129.3" y="130.9">GreetingRequest</tspan><tspan class="node-detail" x="1129.3" y="146.9">GreetingResult</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="963.6" y="41.5" width="213.9" height="100.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1070.6" y="74.6">bluetape4k APIs</tspan><tspan x="1070.6" y="97.6">workshop / kafka4 /</tspan><tspan x="1070.6" y="120.6">testcontainers</tspan></text>
+      <rect x="1377.2" y="41.5" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1464.4" y="92.9">bluetape4k APIs</tspan><tspan class="node-detail" x="1464.4" y="114.9">workshop</tspan><tspan class="node-detail" x="1464.4" y="130.9">kafka4</tspan><tspan class="node-detail" x="1464.4" y="146.9">testcontainers</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1297.5" y="55.0" width="228.9" height="73.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1411.9" y="86.1">Runtime</tspan><tspan x="1411.9" y="109.1">Kafka / Testcontainers</tspan></text>
+      <rect x="1690.3" y="55.0" width="167.4" height="111.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1774.0" y="100.9">Runtime</tspan><tspan class="node-detail" x="1774.0" y="122.9">Kafka</tspan><tspan class="node-detail" x="1774.0" y="138.9">Testcontainers</tspan></text>
     </g>
   </g>
 </svg>

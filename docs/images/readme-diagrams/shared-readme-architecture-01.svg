@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1236" height="184" viewBox="0 0 1236 184" role="img" aria-label="Source-derived README architecture diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1399" height="195" viewBox="0 0 1399 195" role="img" aria-label="Source-derived README architecture diagram">
   <metadata>{&quot;sourceEvidence&quot;:[&quot;shared/src/main/kotlin/io/bluetape4k/workshop/shared/web/RestClientExtensions.kt&quot;,&quot;shared/src/main/kotlin/io/bluetape4k/workshop/shared/web/WebClientExtensions.kt&quot;,&quot;shared/src/main/kotlin/io/bluetape4k/workshop/shared/web/WebTestClientExtensions.kt&quot;,&quot;shared/src/test/kotlin/io/bluetape4k/workshop/shared/AbstractSharedTest.kt&quot;,&quot;shared/src/test/kotlin/io/bluetape4k/workshop/shared/web/AbstractSpringTest.kt&quot;,&quot;shared/src/test/kotlin/io/bluetape4k/workshop/shared/web/RestClientExtensionsTest.kt&quot;,&quot;shared/src/test/kotlin/io/bluetape4k/workshop/shared/web/WebClientExtensionsTest.kt&quot;,&quot;shared/src/test/kotlin/io/bluetape4k/workshop/shared/web/WebTestClientExtensionsTest.kt&quot;]}</metadata>
   <defs>
     <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
@@ -9,33 +9,33 @@
       .canvas { fill: #F8FBFD; }
       .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
       .node rect { stroke-width: 1.6; }
-      .node-label { font-family:"Architects Daughter"; font-size: 18px; fill: #102033; }
-      .edge-label { font-family:"Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
+      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
+      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .edge-label { font-family: "Comic Mono"; font-size: 13px; fill: #102033; paint-order: stroke; stroke: #FFFFFF; stroke-width: 4px; stroke-linejoin: round; }
       .connector { fill: none; stroke: #637383; stroke-width: 2; stroke-linecap: square; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1236" height="184"/>
-  <rect class="frame" x="10" y="10" width="1216" height="164" rx="18"/>
+  <rect class="canvas" width="1399" height="195"/>
+  <rect class="frame" x="10" y="10" width="1379" height="175" rx="18"/>
   <g>
-    <polyline class="connector" points="232.5,91.6 232.5,91.6 329.4,91.6 329.4,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="287.9" y="76.1" text-anchor="middle">calls</text>
-    <polyline class="connector" points="582.5,103.8 582.5,103.8 695.3,103.8 695.3,103.8" marker-end="url(#arrow)"/><text class="edge-label" x="645.8" y="37.4" text-anchor="middle">uses</text>
-    <polyline class="connector" points="582.5,79.4 582.5,79.4 695.3,79.4 695.3,79.4" marker-end="url(#arrow)"/><text class="edge-label" x="645.8" y="114.8" text-anchor="middle">extends</text>
-    <polyline class="connector" points="932.2,91.6 932.2,91.6 1037.4,91.6 1037.4,91.6" marker-end="url(#arrow)"/><text class="edge-label" x="991.6" y="76.1" text-anchor="middle">adapts</text>
+    <polyline class="connector" points="244.1,97.4 244.1,97.4 479.5,97.4 479.5,97.4" marker-end="url(#arrow)"/><text class="edge-label" x="368.7" y="81.9" text-anchor="middle">persists / publishes</text>
+    <polyline class="connector" points="744.2,97.4 744.2,97.4 875.5,97.4 875.5,97.4" marker-end="url(#arrow)"/><text class="edge-label" x="816.8" y="81.9" text-anchor="middle">extends</text>
+    <polyline class="connector" points="1065.2,97.4 1065.2,97.4 1188.8,97.4 1188.8,97.4" marker-end="url(#arrow)"/><text class="edge-label" x="1133.8" y="81.9" text-anchor="middle">adapts</text>
     <g class="node" data-node="entry">
-      <rect x="28.0" y="55.0" width="203.9" height="73.2" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="129.9" y="86.1">Entry / Tests</tspan><tspan x="129.9" y="109.1">AbstractSharedTest</tspan></text>
+      <rect x="28.0" y="28.0" width="215.4" height="138.7" rx="15" fill="#FFF8E7" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="135.7" y="79.4">Entry &amp; Verification</tspan><tspan class="node-detail" x="135.7" y="101.4">AbstractSharedTest</tspan><tspan class="node-detail" x="135.7" y="117.4">AbstractSpringTest</tspan><tspan class="node-detail" x="135.7" y="133.4">Shared tests</tspan></text>
     </g>
     <g class="node" data-node="infra">
-      <rect x="343.9" y="28.0" width="237.9" height="127.2" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="462.8" y="63.1">Repository / Infra</tspan><tspan x="462.8" y="86.1">RestClientExtensions /</tspan><tspan x="462.8" y="109.1">WebClientExtensions /</tspan><tspan x="462.8" y="132.1">WebTestClientExtensions</tspan></text>
+      <rect x="494.1" y="28.0" width="249.4" height="138.7" rx="15" fill="#F5F0FF" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="618.8" y="79.4">Repository &amp; Infra</tspan><tspan class="node-detail" x="618.8" y="101.4">RestClientExtensions</tspan><tspan class="node-detail" x="618.8" y="117.4">WebClientExtensions</tspan><tspan class="node-detail" x="618.8" y="133.4">WebTestClientExtensions</tspan></text>
     </g>
     <g class="node" data-node="bt">
-      <rect x="709.8" y="55.0" width="221.9" height="73.2" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="820.7" y="86.1">bluetape4k APIs</tspan><tspan x="820.7" y="109.1">io / coroutines / netty</tspan></text>
+      <rect x="890.1" y="28.0" width="174.4" height="138.7" rx="15" fill="#EAF7F0" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="977.3" y="79.4">bluetape4k APIs</tspan><tspan class="node-detail" x="977.3" y="101.4">io</tspan><tspan class="node-detail" x="977.3" y="117.4">coroutines</tspan><tspan class="node-detail" x="977.3" y="133.4">netty</tspan></text>
     </g>
     <g class="node" data-node="runtime">
-      <rect x="1051.7" y="55.0" width="155.9" height="73.2" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
-      <text class="node-label" text-anchor="middle"><tspan x="1129.6" y="86.1">Runtime</tspan><tspan x="1129.6" y="109.1">Testcontainers</tspan></text>
+      <rect x="1203.2" y="55.0" width="167.4" height="84.7" rx="15" fill="#FFF1F1" stroke="#88A3B5"/>
+      <text text-anchor="middle"><tspan class="node-title" x="1286.9" y="95.4">Runtime</tspan><tspan class="node-detail" x="1286.9" y="117.4">Testcontainers</tspan></text>
     </g>
   </g>
 </svg>

@@ -1,10 +1,8 @@
-graph 1 13.912 1.1017
-node entry 1.3848 0.52188 2.7696 1.0438 "Example Family\nConcurrent programming in\nJava with virtual threads" rounded,filled box #88A3B5 #FFF8E7
-node infra 5.0554 0.52188 2.2383 1.0438 "Library Layer\ncore / virtualthread /\ncoroutines" rounded,filled box #88A3B5 #F5F0FF
-node bt 8.6271 0.52188 2.2383 1.0438 "bluetape4k APIs\ncore / virtualthread /\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
-node runtime 12.454 0.52188 2.9154 1.0438 "Runtime\nSQL / R2DBC / Redis / AWS\n/ S3" rounded,filled box #88A3B5 #FFF1F1
-edge entry infra 4 2.7777 0.52188 2.7777 0.52188 3.7889 0.52188 3.7889 0.52188 calls 3.3529 0.61042 solid #637383
-edge infra bt 4 6.1806 0.34792 6.1806 0.34792 7.3588 0.34792 7.3588 0.34792 uses 6.8413 1.0132 solid #637383
-edge infra bt 4 6.1806 0.69583 6.1806 0.69583 7.3588 0.69583 7.3588 0.69583 extends 6.8413 0.20764 solid #637383
-edge bt runtime 4 9.7546 0.52188 9.7546 0.52188 10.844 0.52188 10.844 0.52188 adapts 10.371 0.61042 solid #637383
+graph 1 9.8181 2.8877
+node entry 1.6792 0.58187 3.3583 1.1637 "Example Family\nConcurrent programming in Java\nwith virtual threads" rounded,filled box #88A3B5 #FFF8E7
+node bt 5.7944 2.1652 1.8167 1.445 "bluetape4k APIs\ncore\nvirtualthread\ncoroutines" rounded,filled box #88A3B5 #EAF7F0
+node runtime 8.9826 2.1652 1.6708 1.445 "Runtime\nSQL / R2DBC\nRedis\nAWS / S3" rounded,filled box #88A3B5 #FFF1F1
+node api 1.6792 2.1652 0.75 0.60125 api rounded,filled box #88A3B5 #F6FAFF
+edge bt runtime 4 6.7123 2.1652 6.7123 2.1652 7.9994 2.1652 7.9994 2.1652 adapts 7.425 2.2537 solid #637383
+edge api bt 4 2.0626 2.1652 2.0626 2.1652 4.7363 2.1652 4.7363 2.1652 extends 4.1222 2.2537 solid #637383
 stop

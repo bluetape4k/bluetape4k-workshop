@@ -1,14 +1,13 @@
-graph 1 21.701 1.1017
-node entry 1.7702 0.52188 3.5404 0.7625 "Entry / Tests\nAbstractSocialNetworkSuspendTest" rounded,filled box #88A3B5 #FFF8E7
-node api 6.2169 0.52188 3.0196 1.0438 "API / Adapter\nSocialNetworkService /\nSocialNetworkSuspendService" rounded,filled box #88A3B5 #EEF7FF
-node service 10.278 0.52188 2.9362 1.0438 "Service / Domain\nConnectionRecommendation /\nSocialNetworkSchema" rounded,filled box #88A3B5 #F1F8E9
-node infra 13.996 0.52188 2.3321 1.0438 "Library Layer\ndependencies / graph /\nlogging" rounded,filled box #88A3B5 #F5F0FF
-node bt 17.661 0.52188 2.3321 1.0438 "bluetape4k APIs\ndependencies / graph /\nlogging" rounded,filled box #88A3B5 #EAF7F0
-node runtime 20.889 0.52188 1.6238 0.7625 "Runtime\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
-edge entry api 4 3.5468 0.52188 3.5468 0.52188 4.5582 0.52188 4.5582 0.52188 calls 4.1237 0.61042 solid #637383
-edge api service 4 7.7349 0.52188 7.7349 0.52188 8.6597 0.52188 8.6597 0.52188 uses 8.2683 0.61042 solid #637383
-edge service infra 4 11.753 0.52188 11.753 0.52188 12.678 0.52188 12.678 0.52188 uses 12.288 0.61042 solid #637383
-edge infra bt 4 15.171 0.34792 15.171 0.34792 16.344 0.34792 16.344 0.34792 uses 15.828 1.0132 solid #637383
-edge infra bt 4 15.171 0.69583 15.171 0.69583 16.344 0.69583 16.344 0.69583 extends 15.828 0.20764 solid #637383
-edge bt runtime 4 18.836 0.52188 18.836 0.52188 19.926 0.52188 19.926 0.52188 adapts 19.452 0.61042 solid #637383
+graph 1 24.362 1.445
+node entry 1.8302 0.7225 3.6604 1.445 "Entry & Verification\nAbstractSocialNetworkSuspendTest\nAbstractSocialNetworkTest\nGraph Social Network tests" rounded,filled box #88A3B5 #FFF8E7
+node api 6.758 0.7225 3.1396 1.1637 "API & Adapters\nSocialNetworkService\nSocialNetworkSuspendService" rounded,filled box #88A3B5 #EEF7FF
+node service 11.472 0.7225 2.9 1.1637 "Service & Domain\nConnectionRecommendation\nSocialNetworkSchema" rounded,filled box #88A3B5 #F1F8E9
+node infra 16.681 0.7225 2.2958 0.8825 "Framework Layer\nTestcontainers neo4j" rounded,filled box #88A3B5 #F5F0FF
+node bt 20.265 0.7225 1.8167 1.445 "bluetape4k APIs\ndependencies\ngraph\nlogging" rounded,filled box #88A3B5 #EAF7F0
+node runtime 23.49 0.7225 1.7437 0.8825 "Runtime\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+edge entry api 4 3.6686 0.7225 3.6686 0.7225 5.036 0.7225 5.036 0.7225 invokes 4.4243 0.81104 solid #637383
+edge api service 4 8.3343 0.7225 8.3343 0.7225 9.8701 0.7225 9.8701 0.7225 delegates 9.175 0.81104 solid #637383
+edge service infra 4 12.93 0.7225 12.93 0.7225 15.383 0.7225 15.383 0.7225 "persists / publishes" 14.228 0.81104 solid #637383
+edge infra bt 4 17.835 0.7225 17.835 0.7225 19.21 0.7225 19.21 0.7225 extends 18.593 0.81104 solid #637383
+edge bt runtime 4 21.181 0.7225 21.181 0.7225 22.468 0.7225 22.468 0.7225 adapts 21.896 0.81104 solid #637383
 stop
