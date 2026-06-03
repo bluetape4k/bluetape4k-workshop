@@ -26,11 +26,11 @@ digraph G {
     fontsize=11
   ];
 
-  entry [label="Graph Demo Surface\nAbstractKnowledgeGraphSuspendTest\nAbstractKnowledgeGraphTest\nGraph Knowledge Graph tests", fillcolor="#FFF8E7"];
-  service [label="Graph Service Layer\nKnowledgeGraphService\nKnowledgeGraphSuspendService", fillcolor="#F1F8E9"];
-  infra [label="Graph Operations\nKnowledgeGraphSchema", fillcolor="#F5F0FF"];
-  bt [label="bluetape4k Graph APIs\ndependencies\ngraph\nlogging", fillcolor="#EAF7F0"];
-  runtime [label="Graph Backends\nTestcontainers", fillcolor="#FFF1F1"];
+  entry [label="Entry & Verification\nAbstractKnowledgeGraphSuspendTest\nAbstractKnowledgeGraphTest\nGraph Knowledge Graph tests", fillcolor="#FFF8E7"];
+  service [label="Service & Domain\nKnowledgeGraphService\nKnowledgeGraphSuspendService", fillcolor="#F1F8E9"];
+  infra [label="Repository & Infra\nKnowledgeGraphSchema", fillcolor="#F5F0FF"];
+  bt [label="bluetape4k APIs\ndependencies\ngraph\nlogging", fillcolor="#EAF7F0"];
+  runtime [label="Runtime\nTestcontainers", fillcolor="#FFF1F1"];
 
   entry -> service [label="delegates"];
   service -> infra [label="persists / publishes"];

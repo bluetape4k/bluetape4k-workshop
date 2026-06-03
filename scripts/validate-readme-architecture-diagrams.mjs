@@ -5,6 +5,12 @@ import path from "node:path";
 
 const root = process.cwd();
 const diagramDir = path.join(root, "docs/images/readme-diagrams");
+const preservedArchitectureSlugs = new Set([
+  "graph-abuser-detection-readme-architecture-01.svg",
+  "graph-knowledge-graph-readme-architecture-01.svg",
+  "graph-recommendation-readme-architecture-01.svg",
+  "graph-social-network-readme-architecture-01.svg",
+]);
 const failures = [];
 const tolerance = 0.2;
 const clearance = 8;
@@ -170,6 +176,7 @@ function validateFile(file) {
 
 const files = fs.readdirSync(diagramDir)
   .filter((name) => name.endsWith("-readme-architecture-01.svg"))
+  .filter((name) => !preservedArchitectureSlugs.has(name))
   .map((name) => path.join(diagramDir, name))
   .sort();
 

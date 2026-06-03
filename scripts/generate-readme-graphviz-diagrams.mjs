@@ -1010,6 +1010,10 @@ const renderEnv = fontconfigEnv();
 
 const dirs = walkReadmes(root)
   .filter((dir) => dir !== root)
+  .filter((dir) => {
+    const rel = path.relative(root, dir).replaceAll(path.sep, "/");
+    return !rel.startsWith("graph/");
+  })
   .sort();
 
 let generated = 0;

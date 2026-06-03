@@ -20,6 +20,8 @@ README SVG/PNG with a layered layout instead of the raw Graphviz horizontal pipe
 - Added domain-specific layer and card labels for AWS, Exposed, messaging, graph, observability,
   Redis, rate limit, Spring Data, Spring Boot, security, and virtual-thread examples.
 - Removed visible architecture edge labels; semantic labels remain as SVG `data-label` metadata.
+- Restored the four existing `graph/` architecture assets and excluded them from the generic
+  generator/validator because those module-specific diagrams explain the graph examples better.
 - Removed generated Flow sections from README files.
 - Removed duplicate Architecture sections and duplicate image targets.
 - Kept README parity between `README.md` and `README.ko.md`.
@@ -29,7 +31,8 @@ README SVG/PNG with a layered layout instead of the raw Graphviz horizontal pipe
 - `node scripts/validate-readme-language.mjs`
 - `node scripts/validate-readme-parity.mjs`
 - `node scripts/validate-sequence-diagrams.mjs`
-- `node scripts/validate-readme-architecture-diagrams.mjs`
+- `node scripts/validate-readme-architecture-diagrams.mjs` for 87 generated architecture SVGs,
+  excluding the four preserved `graph/` assets by explicit filename
 - architecture asset gate: 91 SVGs, missing pairs 0, bad font families 0
 - architecture route gate: orthogonal paths, boundary endpoints, endpoint angles, and non-endpoint
   node-interior/clearance checks for all 91 SVGs
@@ -49,4 +52,5 @@ especially when same-layer connector labels are present.
 
 Repeated connector complaints must be promoted into generator validation immediately. Same-layer
 card pairs need enough canvas width, enough horizontal gap, side-to-side routing when their centers
-align, and no visible edge-label boxes over connector paths.
+align, and no visible edge-label boxes over connector paths. Do not overwrite module-specific
+architecture assets that are already more explanatory than the generic generator output.

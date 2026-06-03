@@ -1,11 +1,11 @@
-graph 1 21.194 1.445
-node entry 1.8979 0.7225 3.7958 1.445 "Graph Demo Surface\nAbstractKnowledgeGraphSuspendTest\nAbstractKnowledgeGraphTest\nGraph Knowledge Graph tests" rounded,filled box #88A3B5 #FFF8E7
-node service 7.1278 0.7225 3.275 1.1637 "Graph Service Layer\nKnowledgeGraphService\nKnowledgeGraphSuspendService" rounded,filled box #88A3B5 #F1F8E9
-node infra 12.655 0.7225 2.5563 0.8825 "Graph Operations\nKnowledgeGraphSchema" rounded,filled box #88A3B5 #F5F0FF
-node bt 16.671 0.7225 2.4208 1.445 "bluetape4k Graph APIs\ndependencies\ngraph\nlogging" rounded,filled box #88A3B5 #EAF7F0
-node runtime 20.26 0.7225 1.8688 0.8825 "Graph Backends\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
+graph 1 20.465 1.445
+node entry 1.8979 0.7225 3.7958 1.445 "Entry & Verification\nAbstractKnowledgeGraphSuspendTest\nAbstractKnowledgeGraphTest\nGraph Knowledge Graph tests" rounded,filled box #88A3B5 #FFF8E7
+node service 7.1278 0.7225 3.275 1.1637 "Service & Domain\nKnowledgeGraphService\nKnowledgeGraphSuspendService" rounded,filled box #88A3B5 #F1F8E9
+node infra 12.655 0.7225 2.5563 0.8825 "Repository & Infra\nKnowledgeGraphSchema" rounded,filled box #88A3B5 #F5F0FF
+node bt 16.369 0.7225 1.8167 1.445 "bluetape4k APIs\ndependencies\ngraph\nlogging" rounded,filled box #88A3B5 #EAF7F0
+node runtime 19.593 0.7225 1.7437 0.8825 "Runtime\nTestcontainers" rounded,filled box #88A3B5 #FFF1F1
 edge entry service 4 3.8045 0.7225 3.8045 0.7225 5.3406 0.7225 5.3406 0.7225 delegates 4.6431 0.81104 solid #637383
 edge service infra 4 8.7748 0.7225 8.7748 0.7225 11.227 0.7225 11.227 0.7225 "persists / publishes" 10.071 0.81104 solid #637383
-edge infra bt 4 13.942 0.7225 13.942 0.7225 15.31 0.7225 15.31 0.7225 extends 14.697 0.81104 solid #637383
-edge bt runtime 4 17.886 0.7225 17.886 0.7225 19.176 0.7225 19.176 0.7225 adapts 18.603 0.81104 solid #637383
+edge infra bt 4 13.938 0.7225 13.938 0.7225 15.311 0.7225 15.311 0.7225 extends 14.697 0.81104 solid #637383
+edge bt runtime 4 17.284 0.7225 17.284 0.7225 18.572 0.7225 18.572 0.7225 adapts 17.999 0.81104 solid #637383
 stop
