@@ -1,0 +1,182 @@
+name: Examples
+
+on:
+  schedule:
+    - cron: '0 22 * * 0'  # Weekly backend example coverage, Sunday UTC 22:00 (Monday KST 07:00)
+  push:
+    branches: [ develop, main ]
+    paths:
+      - 'exposed/webflux-r2dbc/**'
+      - 'spring-data/r2dbc-webflux-exposed/**'
+      - 'spring-boot/cache-caffeine/**'
+      - 'spring-boot/cache-redis/**'
+      - 'spring-boot/resilience4j-coroutines/**'
+      - 'json/jackson-examples/**'
+      - 'json/jsonview-examples/**'
+      - 'messaging/kafka/**'
+      - 'shared/**'
+      - 'buildSrc/**'
+      - 'gradle/**'
+      - '*.gradle.kts'
+      - 'settings.gradle.kts'
+      - '.github/workflows/Examples.yml'
+  pull_request:
+    branches: [ develop, main ]
+    paths:
+      - 'exposed/webflux-r2dbc/**'
+      - 'spring-data/r2dbc-webflux-exposed/**'
+      - 'spring-boot/cache-caffeine/**'
+      - 'spring-boot/cache-redis/**'
+      - 'spring-boot/resilience4j-coroutines/**'
+      - 'json/jackson-examples/**'
+      - 'json/jsonview-examples/**'
+      - 'messaging/kafka/**'
+      - 'shared/**'
+      - 'buildSrc/**'
+      - 'gradle/**'
+      - '*.gradle.kts'
+      - 'settings.gradle.kts'
+      - '.github/workflows/Examples.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  JAVA_VERSION: '21'
+  JAVA_DISTRIBUTION: 'temurin'
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  validate-wrapper:
+    name: Validate Gradle Wrapper
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: gradle/actions/wrapper-validation@v6
+
+  smoke-examples:
+    name: Smoke Examples (H2/default)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: validate-wrapper
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-java@v5
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: wrapper
+          cache-read-only: ${{ github.event_name == 'pull_request' }}
+
+      # Representative non-container examples:
+      # - spring-data-r2dbc-webflux-exposed: data access + Exposed consumer path
+      # - spring-boot-cache-caffeine: local cache path
+      # - spring-boot-resilience4j-coroutines: resilience path
+      # - jackson/jsonview examples: serialization path
+      - name: Run H2/default examples
+        run: >-
+          ./gradlew
+          :spring-data-r2dbc-webflux-exposed:test
+          :spring-boot-cache-caffeine:test
+          :spring-boot-resilience4j-coroutines:test
+          :jackson-examples:test
+          :jsonview-examples:test
+          --continue
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
+
+      - name: Upload smoke example test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: smoke-example-test-results
+          path: |
+            spring-data/r2dbc-webflux-exposed/build/test-results/test/*.xml
+            spring-data/r2dbc-webflux-exposed/build/reports/tests/test/
+            spring-boot/cache-caffeine/build/test-results/test/*.xml
+            spring-boot/cache-caffeine/build/reports/tests/test/
+            spring-boot/resilience4j-coroutines/build/test-results/test/*.xml
+            spring-boot/resilience4j-coroutines/build/reports/tests/test/
+            json/jackson-examples/build/test-results/test/*.xml
+            json/jackson-examples/build/reports/tests/test/
+            json/jsonview-examples/build/test-results/test/*.xml
+            json/jsonview-examples/build/reports/tests/test/
+          retention-days: 7
+
+  container-examples:
+    name: Container Examples (sequential)
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    needs: validate-wrapper
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-java@v5
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: wrapper
+          cache-read-only: ${{ github.event_name == 'pull_request' }}
+
+      # Representative Testcontainers examples run in one sequential lane:
+      # - exposed-webflux-r2dbc: PostgreSQL-backed Exposed R2DBC consumer path
+      # - spring-boot-cache-redis: Redis-backed cache path
+      # - messaging-kafka: Kafka-backed messaging path
+      - name: Run container-backed examples
+        run: >-
+          ./gradlew
+          :exposed-webflux-r2dbc:test
+          :spring-boot-cache-redis:test
+          :messaging-kafka:test
+          --continue
+          --max-workers=1
+        env:
+          GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false"
+          TESTCONTAINERS_RYUK_DISABLED: "true"
+          DOCKER_HOST: "unix:///var/run/docker.sock"
+
+      - name: Upload container example test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: container-example-test-results
+          path: |
+            exposed/webflux-r2dbc/build/test-results/test/*.xml
+            exposed/webflux-r2dbc/build/reports/tests/test/
+            spring-boot/cache-redis/build/test-results/test/*.xml
+            spring-boot/cache-redis/build/reports/tests/test/
+            messaging/kafka/build/test-results/test/*.xml
+            messaging/kafka/build/reports/tests/test/
+          retention-days: 7
+
+  examples-status:
+    name: Examples Status
+    runs-on: ubuntu-latest
+    needs:
+      - smoke-examples
+      - container-examples
+    if: always()
+    steps:
+      - name: Check Examples result
+        env:
+          RESULTS: ${{ join(needs.*.result, ',') }}
+        run: |
+          echo "Examples results: $RESULTS"
+          if echo "$RESULTS" | grep -qE "failure|cancelled"; then
+            echo "Examples failed"
+            exit 1
+          fi
+          echo "Examples passed"
