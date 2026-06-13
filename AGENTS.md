@@ -1,5 +1,10 @@
 # AGENTS.md - bluetape4k-workshop
 
+This repository inherits the workspace guidance from `../AGENTS.md`.
+Read and follow the workspace root guide first. This file only adds
+repo-specific layout, commands, domain rules, and local exceptions.
+
+
 Backend examples using bluetape4k libraries.
 
 - Kotlin 2.3.21
@@ -46,8 +51,6 @@ names.
 | `virtualthreads/` | Virtual threads with MVC/WebFlux |
 | `shared/` | Shared test utilities |
 
-Root README visual assets live under `docs/assets/`.
-
 ## Rules
 
 - Dependency versions live in `gradle/libs.versions.toml`.
@@ -72,13 +75,10 @@ Use only `bluetape4k-dependencies` BOM for version management.
 Reason: `bluetape4k-dependencies` overrides individual library BOMs in Gradle's version resolution.
 Importing both creates redundancy and version confusion — the individual BOM may silently lose.
 
-## Cross-Repo Lesson Guards
+## Repo-Specific Guards
 
-- Before issue, PR, workflow, dependency, or module-registration work, query GNO
-  for this repo in both `bluetape4k-github` and `bluetape4k-docs`.
-- For added, converted, archived, or moved workshop modules, update
-  `settings.gradle.kts`, README locale sets, validation matrix, smoke/full
-  workflow groups, stale-check scripts, and lessons in the same branch.
-- Consumer examples must use the `bluetape4k-dependencies` BOM only. Run
-  Testcontainers-backed validation sequentially and keep smoke modules separate
-  from full container-backed modules.
+- For added, converted, archived, or moved workshop modules, update the
+  validation matrix, smoke/full workflow groups, stale-check scripts, and
+  lessons in the same branch.
+- Consumer examples must use the `bluetape4k-dependencies` BOM only. Keep smoke
+  modules separate from full container-backed modules.
