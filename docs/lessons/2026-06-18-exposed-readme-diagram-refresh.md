@@ -38,6 +38,13 @@ configuration, JDBC-only schema initialization, and PostgreSQL tables. The
 sequence diagram should show Flow/repository calls inside the coroutine R2DBC
 transaction, not a Reactor-style or blocking-thread story.
 
+For `exposed/javers-audit`, keep the architecture focused on the service-level
+audit boundary. The useful reader contract is that `ProductAuditService` writes
+JaVers snapshots first, then mutates the Exposed current row; `diff` stays
+value-only and does not write to either store. A single-table ERD is still useful
+when it clarifies that relational storage is only the latest `products` row and
+not JaVers history.
+
 ## Verification
 
 - Source checked for `@Transactional`, `virtualFuture { transaction(db) }`,
@@ -63,6 +70,10 @@ transaction, not a Reactor-style or blocking-thread story.
   were switched to `docs/images/readme-diagrams/*readme-*`, and architecture,
   sequence, and ERD PNGs were rendered with CairoSVG and visually inspected as a
   contact sheet.
+- `exposed/javers-audit` stale non-README architecture assets were removed, the
+  architecture and sequence diagrams were redrawn from `ProductAuditService` and
+  `ProductTable`, a single-table ERD was added, and the rendered contact sheet
+  plus high-risk sequence/architecture PNGs were visually inspected.
 
 ## Future guidance
 
@@ -83,3 +94,6 @@ especially after marker `refX` or marker width changes.
 If a persistence layer looks cramped, increase the canvas and the layer/card
 height together instead of only shrinking text or moving the label. The layer
 title area counts as real visual space when judging top and bottom margins.
+If an architecture diagram needs call-order hints, prefer card text and sequence
+diagrams over route chips. Remove chips that sit on top of connector lines even
+when the chip text is accurate.

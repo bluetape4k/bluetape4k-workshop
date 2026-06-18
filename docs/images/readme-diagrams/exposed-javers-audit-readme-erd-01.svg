@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="760" viewBox="0 0 1180 760" role="img" aria-labelledby="title desc">
+  <title id="title">exposed/javers-audit products table</title>
+  <desc id="desc">ERD-style table diagram for the ProductTable used by the JaVers audit workshop module.</desc>
+  <defs>
+    <style>
+      svg{background:#f8fafc}
+      .frame{fill:#ffffff;stroke:#d8e4ef;stroke-width:2}
+      .title{font-family:"Architects Daughter";font-size:40px;fill:#142033}
+      .subtitle,.cell,.footer{font-family:"Comic Mono";fill:#435469}
+      .subtitle{font-size:16px}.cell{font-size:16px}.footer{font-size:13px;fill:#617384}
+      .table{fill:#fffaf2;stroke:#c59352;stroke-width:2.4}
+      .head{fill:#fff0d8;stroke:#c59352;stroke-width:0}
+      .tableTitle{font-family:"Architects Daughter";font-size:30px;fill:#142033}
+      .pk{fill:#fff7d6;stroke:#d5a531;stroke-width:1.8}
+      .colLine{stroke:#ecd7b6;stroke-width:1.4}
+      .note{fill:#f6fbff;stroke:#b8d2e7;stroke-width:1.8}
+    </style>
+  </defs>
+  <rect class="frame" x="28" y="28" width="1124" height="704" rx="18"/>
+  <text class="title" x="590" y="88" text-anchor="middle">ProductTable Current Row</text>
+  <text class="subtitle" x="590" y="120" text-anchor="middle">JaVers keeps snapshot history; Exposed stores the latest Product row in one table.</text>
+
+  <rect class="table" x="265" y="185" width="650" height="336" rx="10"/>
+  <rect class="head" x="265" y="185" width="650" height="66" rx="10"/>
+  <text class="tableTitle" x="590" y="228" text-anchor="middle">products</text>
+  <line class="colLine" x1="265" y1="251" x2="915" y2="251"/>
+
+  <rect class="pk" x="305" y="280" width="44" height="22" rx="11"/>
+  <text class="cell" x="385" y="298">id</text>
+  <text class="cell" x="622" y="298">LONG</text>
+  <text class="cell" x="760" y="298">PRIMARY KEY</text>
+  <line class="colLine" x1="305" y1="322" x2="875" y2="322"/>
+  <text class="cell" x="385" y="357">name</text>
+  <text class="cell" x="622" y="357">VARCHAR(255)</text>
+  <text class="cell" x="760" y="357">current product name</text>
+  <line class="colLine" x1="305" y1="381" x2="875" y2="381"/>
+  <text class="cell" x="385" y="416">price</text>
+  <text class="cell" x="622" y="416">DECIMAL(19,4)</text>
+  <text class="cell" x="760" y="416">exact decimal value</text>
+  <line class="colLine" x1="305" y1="440" x2="875" y2="440"/>
+  <text class="cell" x="385" y="475">category</text>
+  <text class="cell" x="622" y="475">VARCHAR(100)</text>
+  <text class="cell" x="760" y="475">diff test field</text>
+
+  <rect class="note" x="240" y="574" width="700" height="62" rx="12"/>
+  <text class="subtitle" x="590" y="600" text-anchor="middle">There are no relational history tables in this workshop module.</text>
+  <text class="subtitle" x="590" y="624" text-anchor="middle">Snapshot history lives in the JaVers repository configured by the test.</text>
+  <text class="footer" x="590" y="695" text-anchor="middle">Schema source: ProductTable.kt</text>
+</svg>
