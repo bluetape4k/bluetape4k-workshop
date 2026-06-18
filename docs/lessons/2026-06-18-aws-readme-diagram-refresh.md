@@ -22,6 +22,9 @@ README diagrams for the root `aws` module, `s3-spring-cloud`, and
 The AWS module README now explains the two local-first S3 paths from the reader
 viewpoint. The S3 sequence omits low-value log-only participants and shows the
 actual bucket/object flow through `S3Client`, `S3Template`, S3, and Floci.
+The storage abstraction module now pairs a static profile-selection architecture
+view with a request sequence that keeps `alt` regions translucent so lifelines,
+calls, and labels remain readable through the branch frame.
 
 ## Verification
 
@@ -36,3 +39,6 @@ actual bucket/object flow through `S3Client`, `S3Template`, S3, and Floci.
 Before accepting a README diagram refresh, inspect the final PNG, not only the
 SVG source. Icons can easily cover labels after a late layout change; resize or
 move the card before committing.
+When a layer has title/detail text, reserve that label band before centering the
+inner cards. Equal outer layer margins are not enough if the cards visually
+crowd or cover the label area.

@@ -1,93 +1,133 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="580" viewBox="0 0 1060 580" role="img" aria-label="AWS Storage Abstraction Architecture">
-<defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
-    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
-  </marker>
-  <style>
-    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:40px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Mono","Comic Sans MS","Comic Sans","Comic Neue",cursive;font-size:14px;font-weight:400;fill:#536273}
-    .label{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:25px;font-weight:400;fill:#102033}
-    .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
-    .tinyLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:18px;font-weight:400;fill:#102033}
-    .mono{font-family:"Comic Mono","Comic Sans MS","Comic Sans","Comic Neue",cursive;font-size:12px;font-weight:400;fill:#102033}
-    .small{font-family:"Comic Mono","Comic Sans MS","Comic Sans","Comic Neue",cursive;font-size:12px;font-weight:400;fill:#536273}
-    .card{stroke-width:2.1;filter:url(#shadow)}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
-    .dashed{stroke:#758297;stroke-width:2.1;stroke-dasharray:7 6;fill:none;marker-end:url(#arrow)}
-  </style>
-</defs>
-<rect class="canvas" width="1060" height="580"/>
-<rect class="frame" x="24" y="20" width="1012" height="540" rx="28"/>
-<text class="title" x="60" y="70">AWS Storage Abstraction Architecture</text>
-<text class="subtitle" x="60" y="98">Spring Profiles - AWS SDK v2 - Coroutines - FlociServer (Testcontainers)</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="900" viewBox="0 0 1500 900" role="img" aria-labelledby="title desc">
+  <title id="title">AWS Storage Abstraction Architecture</title>
+  <desc id="desc">Architecture diagram showing a Spring profile selected StorageService interface with local, S3, and S3 presigned implementations.</desc>
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="7" stdDeviation="7" flood-color="#18304a" flood-opacity="0.13"/>
+    </filter>
+    <marker id="arrow-blue" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2f6de0"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2f8b57"/>
+    </marker>
+    <marker id="arrow-purple" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#7953b6"/>
+    </marker>
+    <g id="s3-icon">
+      <rect x="0" y="0" width="64" height="64" rx="8" fill="#7aa116"/>
+      <g transform="translate(11 10)" fill="#ffffff">
+        <path d="M36.759,23.948 L36.993,22.131 C39.166,23.385 39.842,24.121 40.037,24.424 C39.713,24.485 38.832,24.509 36.759,23.948 Z M19.5,11 C9.125,11 2.382,8.488 2,6.696 L2,6.511 C2.349,5.392 8.14,2 19.5,2 C30.84,2 36.632,5.381 37,6.505 L37,6.616 C36.724,8.446 29.961,11 19.5,11 Z M34.818,23.362 C30.053,21.797 23.912,18.979 21.594,17.888 C21.535,16.786 20.628,15.906 19.512,15.906 C18.358,15.906 17.418,16.845 17.418,18 C17.418,19.154 18.358,20.094 19.512,20.094 C19.969,20.094 20.389,19.942 20.733,19.693 C23.132,20.822 29.619,23.798 34.558,25.38 L32.837,38.724 C32.583,40.352 27.919,42 19.497,42 C11.072,42 6.405,40.352 6.155,38.751 L2.435,9.814 C5.945,11.915 12.749,13 19.5,13 C26.25,13 33.054,11.915 36.565,9.815 L34.818,23.362 Z M39,6.5 C39,3.431 30.661,0 19.5,0 C8.339,0 0,3.431 0,6.5 L0,7.043 L4.174,39.033 C4.875,43.516 15.123,44 19.497,44 C23.869,44 34.113,43.516 34.818,39.007 L36.501,25.947 C37.778,26.279 38.812,26.456 39.616,26.455 C40.606,26.455 41.273,26.203 41.697,25.697 C42.047,25.281 42.185,24.756 42.085,24.221 C41.857,23 40.403,21.712 37.37,20.044 L37.27,19.989 L39,7.044 L39,6.5 Z"/>
+      </g>
+    </g>
+    <g id="localstack-icon">
+      <path d="M42 54 L58 38 C59 37 58 35 56 35 H42 C41 35 40 36 40 37 V52 C40 54 41 55 42 54 Z" fill="#5f47d8"/>
+      <path d="M10 30 H26 C27 30 28 29 28 28 V12 C28 10 26 9 25 10 L9 26 C8 27 8 30 10 30 Z" fill="#6f86ff"/>
+      <path d="M42 27 H58 C59 27 60 26 60 25 V9 C60 8 59 7 58 7 H42 C41 7 40 8 40 9 V25 C40 26 41 27 42 27 Z" fill="#64dfe8"/>
+      <path d="M31 43 H53 C54 43 55 42 55 41 V34 C55 33 54 32 53 32 H37 C36 32 35 31 35 30 V14 C35 13 34 12 33 12 H26 C25 12 24 13 24 14 V41 C24 42 25 43 26 43 H31 Z" fill="#67a7ff"/>
+    </g>
+    <style>
+      svg{background:#f6f8fb}
+      .frame{fill:#ffffff;stroke:#d8e2ed;stroke-width:2}
+      .title{font-family:"Architects Daughter";font-size:46px;fill:#142033}
+      .subtitle,.detail,.mono,.chip{font-family:"Comic Mono";fill:#526274}
+      .subtitle{font-size:17px}
+      .layer{fill:#f9fbfd;stroke:#d8e2ed;stroke-width:1.8}
+      .layerTitle{font-family:"Architects Daughter";font-size:28px;fill:#1b3048}
+      .layerDetail{font-family:"Comic Mono";font-size:13px;fill:#5a6979}
+      .card{stroke-width:2.2;filter:url(#shadow)}
+      .cardTitle{font-family:"Architects Daughter";font-size:27px;fill:#142033}
+      .smallTitle{font-family:"Architects Daughter";font-size:24px;fill:#142033}
+      .detail{font-size:14px}
+      .mono{font-size:13px;fill:#2e3f52}
+      .chip{font-size:13px;fill:#223246}
+      .edge{fill:none;stroke-width:3.8;stroke-linecap:round;stroke-linejoin:round}
+      .note{fill:#ffffff;stroke:#d8e2ed;stroke-width:1.6}
+    </style>
+  </defs>
 
-<!-- Arrows drawn first so cards render on top -->
-<!-- StorageApplication → StorageService (straight) -->
-<path class="line" d="M530 172 L530 222"/>
-<!-- StorageService → LocalStorageService (left) -->
-<path class="line" d="M404 276 L404 302 L222 302 L222 328"/>
-<!-- StorageService → S3StorageService (center straight) -->
-<path class="line" d="M530 276 L530 328"/>
-<!-- StorageService → S3PresignedStorageService (right) -->
-<path class="line" d="M656 276 L656 302 L858 302 L858 328"/>
-<!-- LocalStorageService → Local Filesystem (straight) -->
-<path class="line" d="M222 396 L222 446"/>
-<!-- S3StorageService → S3 Compatible Storage (straight) -->
-<path class="line" d="M540 396 L540 446"/>
-<!-- S3PresignedStorageService → S3 Compatible Storage (routes left to cx) -->
-<path class="line" d="M858 396 L858 421 L726 421 L726 446"/>
+  <rect class="frame" x="30" y="26" width="1440" height="848" rx="24"/>
+  <text id="titleText" class="title" x="750" y="82" text-anchor="middle">AWS Storage Abstraction</text>
+  <text class="subtitle" x="750" y="116" text-anchor="middle">One coroutine StorageService contract; Spring profiles select local files, S3, or presigned S3 URLs.</text>
 
-<!-- StorageApplication -->
-<g transform="translate(278,118)">
-  <rect class="card" x="0" y="0" width="504" height="54" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="label" x="252" y="34" text-anchor="middle">StorageApplication</text>
-</g>
+  <g id="layers">
+    <rect class="layer" x="78" y="155" width="312" height="590" rx="16"/>
+    <text class="layerTitle" x="110" y="198">Application boundary</text>
+    <text class="layerDetail" x="112" y="222">code depends on interface only</text>
 
-<!-- StorageService interface -->
-<g transform="translate(278,222)">
-  <rect class="card" x="0" y="0" width="504" height="54" rx="12" fill="#E9F7F6" stroke="#45A7A1"/>
-  <text class="smallLabel" x="252" y="21" text-anchor="middle">StorageService</text>
-  <text class="small" x="252" y="41" text-anchor="middle">interface: upload - download - getUrl - delete</text>
-</g>
+    <rect class="layer" x="430" y="155" width="590" height="590" rx="16"/>
+    <text class="layerTitle" x="462" y="198">Profile-selected services</text>
+    <text class="layerDetail" x="464" y="222">local, s3, or s3-presigned</text>
 
-<!-- LocalStorageService -->
-<g transform="translate(82,328)">
-  <rect class="card" x="0" y="0" width="280" height="68" rx="12" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="140" y="22" text-anchor="middle">LocalStorageService</text>
-  <text class="small" x="140" y="40" text-anchor="middle">java.nio.file.Files</text>
-  <text class="mono" x="140" y="57" text-anchor="middle">@Profile("local")</text>
-</g>
+    <rect class="layer" x="1042" y="155" width="380" height="590" rx="16"/>
+    <text class="layerTitle" x="1074" y="198">Storage target</text>
+    <text class="layerDetail" x="1076" y="222">filesystem or S3-compatible endpoint</text>
+  </g>
 
-<!-- S3StorageService -->
-<g transform="translate(400,328)">
-  <rect class="card" x="0" y="0" width="280" height="68" rx="12" fill="#E8F3FF" stroke="#5B8DEF"/>
-  <text class="smallLabel" x="140" y="22" text-anchor="middle">S3StorageService</text>
-  <text class="small" x="140" y="40" text-anchor="middle">S3Client - withContext(IO)</text>
-  <text class="mono" x="140" y="57" text-anchor="middle">@Profile("s3")</text>
-</g>
+  <g id="connections">
+    <path class="edge" d="M 235 303 V 340" stroke="#2f6de0" marker-end="url(#arrow-blue)"/>
+    <path class="edge" d="M 352 380 H 480" stroke="#2f8b57" marker-end="url(#arrow-green)"/>
+    <path class="edge" d="M 352 487 H 480" stroke="#2f6de0" marker-end="url(#arrow-blue)"/>
+    <path class="edge" d="M 352 594 H 480" stroke="#7953b6" marker-end="url(#arrow-purple)"/>
+    <path class="edge" d="M 980 380 H 1100" stroke="#2f8b57" marker-end="url(#arrow-green)"/>
+    <path class="edge" d="M 980 487 H 1100" stroke="#2f6de0" marker-end="url(#arrow-blue)"/>
+    <path class="edge" d="M 980 594 H 1100" stroke="#7953b6" marker-end="url(#arrow-purple)"/>
+  </g>
 
-<!-- S3PresignedStorageService -->
-<g transform="translate(718,328)">
-  <rect class="card" x="0" y="0" width="280" height="68" rx="12" fill="#F1ECFF" stroke="#8A72D6"/>
-  <text class="tinyLabel" x="140" y="19" text-anchor="middle">S3Presigned</text>
-  <text class="tinyLabel" x="140" y="37" text-anchor="middle">StorageService</text>
-  <text class="small" x="140" y="52" text-anchor="middle">S3Client - S3Presigner (15 min TTL)</text>
-  <text class="mono" x="140" y="65" text-anchor="middle">@Profile("s3-presigned")</text>
-</g>
+  <g id="application-cards">
+    <rect class="card" x="118" y="240" width="234" height="63" rx="12" fill="#e8f3ff" stroke="#5b8def"/>
+    <text class="smallTitle" x="235" y="268" text-anchor="middle">StorageApplication</text>
+    <text class="detail" x="235" y="289" text-anchor="middle">Spring Boot entrypoint</text>
 
-<!-- Local Filesystem backend -->
-<g transform="translate(82,446)">
-  <rect class="card" x="0" y="0" width="280" height="64" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="smallLabel" x="140" y="22" text-anchor="middle">Local Filesystem</text>
-  <text class="small" x="140" y="44" text-anchor="middle">java.nio.file.Files - /tmp - no Docker</text>
-</g>
+    <rect class="card" x="118" y="340" width="234" height="294" rx="14" fill="#e9f7f6" stroke="#45a7a1"/>
+    <text class="cardTitle" x="235" y="381" text-anchor="middle">StorageService</text>
+    <text class="detail" x="235" y="415" text-anchor="middle">upload(key, bytes, type)</text>
+    <text class="detail" x="235" y="442" text-anchor="middle">download(key)</text>
+    <text class="detail" x="235" y="469" text-anchor="middle">getUrl(key)</text>
+    <text class="detail" x="235" y="496" text-anchor="middle">delete(key)</text>
+    <rect x="151" y="554" width="168" height="34" rx="17" fill="#ffffff" stroke="#9ccfd0"/>
+    <text class="mono" x="235" y="575" text-anchor="middle">suspend functions</text>
+  </g>
 
-<!-- S3 Compatible Storage backend -->
-<g transform="translate(454,446)">
-  <rect class="card" x="0" y="0" width="544" height="64" rx="12" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="smallLabel" x="272" y="22" text-anchor="middle">S3 Compatible Storage</text>
-  <text class="small" x="272" y="44" text-anchor="middle">FlociServer (Testcontainers) - AWS S3 (production)</text>
-</g>
+  <g id="implementation-cards">
+    <rect class="card" x="480" y="332" width="500" height="96" rx="14" fill="#eaf7ef" stroke="#58a978"/>
+    <text class="cardTitle" x="730" y="367" text-anchor="middle">LocalStorageService</text>
+    <text class="detail" x="730" y="394" text-anchor="middle">java.nio.file.Files under storage.local.base-path</text>
+    <text class="mono" x="730" y="414" text-anchor="middle">@Profile("local") - no Docker</text>
+
+    <rect class="card" x="480" y="439" width="500" height="96" rx="14" fill="#e8f3ff" stroke="#5b8def"/>
+    <text class="cardTitle" x="730" y="474" text-anchor="middle">S3StorageService</text>
+    <text class="detail" x="730" y="501" text-anchor="middle">S3Client put/get/delete inside Dispatchers.IO</text>
+    <text class="mono" x="730" y="521" text-anchor="middle">@Profile("s3") - direct S3 URL</text>
+
+    <rect class="card" x="480" y="546" width="500" height="96" rx="14" fill="#f1ecff" stroke="#8a72d6"/>
+    <text class="cardTitle" x="730" y="581" text-anchor="middle">S3PresignedStorageService</text>
+    <text class="detail" x="730" y="608" text-anchor="middle">S3Client plus S3Presigner for GET links</text>
+    <text class="mono" x="730" y="628" text-anchor="middle">@Profile("s3-presigned") - default 900s TTL</text>
+  </g>
+
+  <g id="target-cards">
+    <rect class="card" x="1100" y="332" width="292" height="96" rx="14" fill="#fff7e6" stroke="#d6a441"/>
+    <path d="M1132 373 h28 l10 10 v26 h-48 v-36 z" fill="#f5c762" stroke="#9d7621" stroke-width="2"/>
+    <path d="M1132 373 v-12 h18 l8 12" fill="#ffe29a" stroke="#9d7621" stroke-width="2"/>
+    <text class="smallTitle" x="1272" y="368" text-anchor="middle">Local filesystem</text>
+    <text class="detail" x="1272" y="396" text-anchor="middle">file:// URL</text>
+    <text class="detail" x="1272" y="416" text-anchor="middle">/tmp workshop storage</text>
+
+    <rect class="card" x="1100" y="449" width="292" height="173" rx="14" fill="#eef8ef" stroke="#66a65d"/>
+    <use href="#s3-icon" x="1126" y="488" width="58" height="58"/>
+    <use href="#localstack-icon" x="1134" y="560" width="48" height="48"/>
+    <text class="smallTitle" x="1284" y="489" text-anchor="middle">S3-compatible</text>
+    <text class="smallTitle" x="1284" y="519" text-anchor="middle">bucket</text>
+    <text class="detail" x="1284" y="548" text-anchor="middle">workshop bucket</text>
+    <text class="detail" x="1284" y="574" text-anchor="middle">FlociServer in tests</text>
+    <text class="detail" x="1284" y="600" text-anchor="middle">AWS S3 in production</text>
+    <text class="mono" x="1284" y="617" text-anchor="middle">X-Amz-Expires=900</text>
+  </g>
+
+  <g id="reader-note">
+    <rect class="note" x="88" y="786" width="1324" height="52" rx="14"/>
+    <text class="smallTitle" x="112" y="820">Reader cue</text>
+    <text class="detail" x="260" y="819">Switch profiles to change the backend; application code keeps the same StorageService dependency and coroutine contract.</text>
+  </g>
 </svg>

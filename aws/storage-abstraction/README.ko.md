@@ -4,15 +4,26 @@
 
 ## 예제 시나리오
 
-이 예제는 작은 `StorageService` 경계 뒤에 로컬 파일, S3 객체 저장소, S3 pre-signed URL 백엔드를 둡니다. 애플리케이션 코드는 같은 인터페이스를 사용하고, Spring profile만 바꿔 backend를 전환합니다.
-
-## 시퀀스 다이어그램
-
-Spring Profile을 통해 애플리케이션 코드를 바꾸지 않고 로컬 파일 시스템, AWS S3, S3 pre-signed URL 백엔드를 전환하는 플러그형 스토리지 전략을 보여 줍니다.
+이 예제는 coroutine 기반 `StorageService` 경계 뒤에 로컬 파일, S3 객체
+저장소, S3 pre-signed GET URL 선택지를 둡니다. 애플리케이션 코드는 같은
+인터페이스를 사용하고, Spring profile이 구현체를 선택합니다.
 
 ## 아키텍처
 
 ![Storage Abstraction Workshop architecture diagram](../../docs/images/readme-diagrams/aws-storage-abstraction-architecture-01.png)
+
+핵심 경계는 `StorageService`입니다. `local`, `s3`, `s3-presigned` profile은
+서로 다른 bean을 선택하지만 호출자는 계속 같은 `upload`, `download`,
+`getUrl`, `delete` 메서드를 사용합니다.
+
+## 요청 흐름
+
+![Storage Abstraction Workshop request sequence](../../docs/images/readme-diagrams/aws-storage-abstraction-sequence-01.png)
+
+`upload`, `download`, `delete`는 blocking filesystem 또는 AWS SDK 호출을
+`Dispatchers.IO`에서 실행합니다. `getUrl`은 `local`과 `s3` profile에서는
+직접 URL을 반환하고, `s3-presigned`에서는 제한 시간 pre-signed GET URL을
+반환합니다.
 
 ## 주요 기능
 
