@@ -2,146 +2,55 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
-
-This example exercises **Spring Modulith JPA Demo** as a runnable Spring Modulith event boundary workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
-
-## Sequence Diagram
-
-![jpa-demo sequence diagram](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-sequence-02.png)
-
-Spring Modulith application with four logical modules — `organization`, `department`, `employee`, and `gateway` —
-connected through internal module APIs and Spring application events, verified by Modulith's structural tests.
-
-Based on [sample-spring-modulith](https://github.com/piomin/sample-spring-modulith).
-
-## Module Dependency Structure
-
-![jpa demo Architecture diagram](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-diagram-01.png)
+This module is a Spring Modulith service sample backed by Spring Data JPA and
+H2. It splits the application into `organization`, `department`, `employee`, and
+`gateway` modules, then verifies the module structure with Spring Modulith tests.
 
 ## Architecture
 
-![Spring Modulith JPA Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-architecture-01.png)
+![Spring Modulith JPA architecture](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-architecture-01.png)
 
-The application is divided into four logical modules:
+The gateway exposes REST endpoints and talks only to each module's external API.
+Internal APIs are used between domain modules when a module needs read models
+owned by another module.
 
-| Module | Responsibility |
-|---|---|
-| `organization` | Manages `Organization` entity; publishes `OrganizationAddEvent` / `OrganizationRemoveEvent` |
-| `department` | Manages `Department` entity; depends on `organization` via internal API |
-| `employee` | Manages `Employee` entity; depends on `organization` via internal API |
-| `gateway` | Exposes all modules over a single REST API (`/organizations/**`) |
+## Organization Event Flow
 
-## Used bluetape4k Features
+![Spring Modulith JPA event flow](../../docs/images/readme-diagrams/spring-modulith-jpa-demo-readme-flow-01.png)
 
-| Module | Feature | Usage |
+Adding an organization saves the JPA entity and publishes `OrganizationAddEvent`.
+Department listens with `@ApplicationModuleListener` and creates default
+departments. Removing an organization publishes `OrganizationRemoveEvent`, which
+department uses to delete departments for that organization.
+
+## Modules
+
+| Module | Public contract | Persistence | Responsibility |
+|---|---|---|---|
+| `organization` | `OrganizationExternalAPI` | `OrganizationRepository` | Add/remove organizations and assemble organization views. |
+| `department` | `DepartmentExternalAPI`, `DepartmentInternalAPI` | `DepartmentRepository` | Manage departments and enrich them with employees. |
+| `employee` | `EmployeeExternalAPI`, `EmployeeInternalAPI` | `EmployeeRepository` | Manage employees and provide organization/department lookups. |
+| `gateway` | REST controller under `/api` | none | Exposes module APIs through HTTP. |
+
+## REST API
+
+| Method | Path | Result |
 |---|---|---|
-| `bluetape4k-logging` | `KLogging()` | Lazy-lambda structured logging in all management services |
-| `bluetape4k-hibernate` | Hibernate extensions | JPA entity mapping helpers and type converters |
-| `bluetape4k-idgenerators` | ID generation | Snowflake / TSID-based entity ID generation |
-| `bluetape4k-spring-boot4-core` | Spring Boot 4 auto-config | Test utilities and application context helpers |
-| `bluetape4k-testcontainers` | Testcontainers launcher | Infrastructure (Zipkin) container management in integration tests |
+| `GET` | `/api/organizations/{id}/with-departments` | Organization with departments. |
+| `GET` | `/api/organizations/{id}/with-departments-and-employees` | Organization view with nested module data. |
+| `GET` | `/api/departments/{id}/with-employees` | Department with employees. |
+| `POST` | `/api/organizations` | Add organization and publish organization-add event. |
+| `POST` | `/api/departments` | Add department. |
+| `POST` | `/api/employees` | Add employee. |
 
-## bluetape4k Before / After
+## Runtime
 
-### `KLogging()` in service layer
+The demo uses in-memory H2 through Spring Data JPA. Actuator endpoints are
+exposed for the sample, and tracing sampling is set to `1.0` in
+`application.yml`.
 
-```kotlin
-// Before — SLF4J directly
-private val log = LoggerFactory.getLogger(OrganizationManagement::class.java)
-log.info("Adding organization: " + organizationDTO)
-
-// After — KLogging() companion (lazy, zero-cost when info is disabled)
-companion object : KLogging()
-log.info { "Adding organization: $organizationDTO" }
-```
-
-### Event publishing with bluetape4k ID generators
-
-```kotlin
-// Before — manual UUID or database-sequence ID
-data class OrganizationAddEvent(val id: Long, val source: Any? = null)
-
-@Transactional
-fun add(dto: OrganizationDTO): OrganizationDTO {
-    val saved = repository.save(mapper.toEntity(dto))
-    events.publishEvent(OrganizationAddEvent(saved.id!!, saved))
-    return mapper.toDTO(saved)
-}
-
-// After — same pattern, but entity ID generated by bluetape4k-idgenerators (Snowflake)
-// No manual sequence management; IDs are time-sortable and unique across nodes
-```
-
-### Module API boundary — External vs Internal
-
-```kotlin
-// Before — direct service injection across module boundary (tightly coupled)
-@Service
-class GatewayManagement(
-    private val organizationManagement: OrganizationManagement,  // internal class
-)
-
-// After — inject only the ExternalAPI interface (module contract)
-@Service
-class GatewayManagement(
-    private val organizationAPI: OrganizationExternalAPI,  // public contract only
-)
-```
-
-## Observability
-
-The `jpa-demo` module includes Micrometer tracing with OpenTelemetry and Zipkin export:
-
-```yaml
-management:
-  tracing:
-    sampling:
-      probability: 1.0
-spring:
-  modulith:
-    republish-outstanding-events-on-restart: true
-```
-
-Zipkin is started automatically via Testcontainers in integration tests.
-
-## Running
+## Build and Test
 
 ```bash
-./gradlew :spring-modulith-jpa-demo:bootRun
+./gradlew :spring-modulith:jpa-demo:test
 ```
-
-REST API is available at `http://localhost:8080/organizations`.
-OpenAPI docs: `http://localhost:8080/swagger-ui.html`
-
-## Tests
-
-```bash
-./gradlew :spring-modulith-jpa-demo:test
-```
-
-Modulith structure verification:
-
-```kotlin
-@Test
-fun `verify module structure`() {
-    ApplicationModules.of(SpringModulith::class.java).verify()
-}
-```
-
-## Operational Notes
-
-- H2 in-memory database is used; swap for a persistent database in production.
-- `blueprints4k-testcontainers` manages Zipkin via `GenericContainer`; ensure Docker is running for tests with tracing enabled.
-- Module boundaries are enforced by `ApplicationModules.verify()`; cross-module internal type access will fail fast in tests.
-
-## References
-
-- [Spring Modulith Reference](https://docs.spring.io/spring-modulith/reference/index.html)
-- [Guide to Modulith with Spring Boot](https://piotrminkowski.com/2023/10/13/guide-to-modulith-with-spring-boot/)
-- [bluetape4k-idgenerators](https://github.com/bluetape4k/bluetape4k-projects)
-
-## TODO
-
-- [ ] Implement `spring-modulith-events-exposed` as an alternative to `spring-modulith-events-jpa`
-  ([Issue #25](https://github.com/bluetape4k/bluetape4k-projects/issues/25))
