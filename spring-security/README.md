@@ -2,34 +2,40 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+This directory groups three Spring Security examples: servlet MVC form login,
+WebFlux form login, and WebFlux JWT resource server security. Use this README as
+the map, then open each submodule for endpoint-level details.
 
-This example exercises **Spring Security Workshop** as a runnable Spring Security request protection workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+## Architecture
 
-## Architecture Diagram
+![Spring Security workshop architecture](../docs/images/readme-diagrams/spring-security-readme-architecture-01.png)
 
-![Spring Security Workshop Graphviz architecture diagram](../docs/images/readme-diagrams/spring-security-readme-architecture-01.png)
+All examples use an in-memory `user/password` account for tests and local runs.
+The MVC and WebFlux form-login modules protect `/user/**` with `ROLE_USER`. The
+JWT module protects all exchanges with OAuth2 resource server JWT support and
+adds token issuing infrastructure.
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.springsecurity` as the source of truth when comparing this README with the code.
+## Modules
 
-## Sequence Diagram
+| Module | Stack | Security focus |
+|---|---|---|
+| [`mvc/hello`](mvc/hello) | Spring MVC | `SecurityFilterChain`, custom `/log-in`, in-memory user, protected `/user/index`. |
+| [`webflux/hello-security`](webflux/hello-security) | Spring WebFlux | `SecurityWebFilterChain`, reactive user details, custom `/log-in`, protected `/user/index`. |
+| [`webflux/jwt`](webflux/jwt) | Spring WebFlux + OAuth2 Resource Server | RSA-backed `JwtEncoder`, `ReactiveJwtDecoder`, bearer-token error handling, authenticated API calls. |
 
-This is a collection of MVC and WebFlux security examples using Spring Security.
+## Common Request Shape
 
-## Submodule Layout
+![Spring Security workshop filter flow](../docs/images/readme-diagrams/spring-security-readme-flow-01.png)
 
-## Security Filter Chain Flow
+The servlet and reactive stacks use different filter implementations, but the
+reader-facing flow is the same: public routes pass, protected routes require a
+matched authentication mechanism, and unauthorized requests are redirected or
+rejected according to the module's security style.
 
-![Security Filter Chain diagram](../docs/images/readme-diagrams/spring-security-diagram-02.png)
+## Build and Test
 
-## References
-
-### Documents
-
-* [Spring Security Reference](https://docs.spring.io/spring-security/reference/)
-
-### Examples
-
-* [spring-security-samples](https://github.com/spring-projects/spring-security-samples)
-* [Spring Security OAuth Resource Server demo](https://github.com/arthuroz/spring-security-multi-tenancy)
-* [Java Spring Security Example](https://github.com/Yoh0xFF/java-spring-security-example)
+```bash
+./gradlew :spring-security:mvc:hello:test
+./gradlew :spring-security:webflux:hello-security:test
+./gradlew :spring-security:webflux:jwt:test
+```
