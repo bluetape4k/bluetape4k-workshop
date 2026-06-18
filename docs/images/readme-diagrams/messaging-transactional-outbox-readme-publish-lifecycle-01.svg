@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="820" viewBox="0 0 1600 820" role="img" aria-label="Transactional outbox publish lifecycle diagram">
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/></marker>
+    <marker id="arrowRed" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#DC2626"/></marker>
+    <style>
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.lane{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.laneLabel{font-family:"Architects Daughter";font-size:25px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:28px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}.line{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+    </style>
+  </defs>
+  <rect class="canvas" width="1600" height="820"/>
+  <rect class="frame" x="24" y="24" width="1552" height="772" rx="24"/>
+  <text class="title" x="800" y="68" text-anchor="middle">Outbox publish lifecycle</text>
+  <text class="subtitle" x="800" y="98" text-anchor="middle">A committed PENDING row is retried until it becomes PUBLISHED or exhausts retry budget.</text>
+
+  <rect class="lane" x="64" y="134" width="1472" height="220" rx="18"/>
+  <text class="laneLabel" x="96" y="174">Order transaction</text>
+  <g filter="url(#shadow)">
+    <rect x="96" y="222" width="222" height="86" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
+    <text class="cardTitle" x="207" y="258" text-anchor="middle">REST command</text>
+    <text class="cardText" x="207" y="284" text-anchor="middle">POST or PUT</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="374" y="208" width="230" height="114" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="489" y="250" text-anchor="middle">OrderService</text>
+    <text class="cardText" x="489" y="280" text-anchor="middle">one Spring transaction</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="676" y="208" width="230" height="114" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
+    <text class="cardTitle" x="791" y="250" text-anchor="middle">orders row</text>
+    <text class="cardText" x="791" y="280" text-anchor="middle">domain state</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="978" y="208" width="254" height="114" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
+    <text class="cardTitle" x="1105" y="250" text-anchor="middle">outbox row</text>
+    <text class="cardText" x="1105" y="280" text-anchor="middle">status = PENDING</text>
+  </g>
+
+  <rect class="lane" x="64" y="418" width="1472" height="294" rx="18"/>
+  <text class="laneLabel" x="96" y="458">Publisher transaction</text>
+  <g filter="url(#shadow)">
+    <rect x="160" y="520" width="236" height="106" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="278" y="560" text-anchor="middle">Scheduler poll</text>
+    <text class="cardText" x="278" y="590" text-anchor="middle">PENDING or FAILED</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="470" y="520" width="236" height="106" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="588" y="560" text-anchor="middle">publishEvent(id)</text>
+    <text class="cardText" x="588" y="590" text-anchor="middle">skip if final state</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="780" y="520" width="214" height="106" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
+    <text class="cardTitle" x="887" y="560" text-anchor="middle">Kafka send</text>
+    <text class="cardText" x="887" y="590" text-anchor="middle">topic order-events</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1068" y="470" width="220" height="94" rx="16" fill="#DCFCE7" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="1178" y="506" text-anchor="middle">PUBLISHED</text>
+    <text class="cardText" x="1178" y="532" text-anchor="middle">processed_at set</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1068" y="620" width="220" height="94" rx="16" fill="#FEF3C7" stroke="#D97706" stroke-width="1.7"/>
+    <text class="cardTitle" x="1178" y="656" text-anchor="middle">FAILED</text>
+    <text class="cardText" x="1178" y="682" text-anchor="middle">retry_count + 1</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1354" y="620" width="138" height="94" rx="16" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.7"/>
+    <text class="cardTitle" x="1423" y="656" text-anchor="middle">DEAD</text>
+    <text class="cardText" x="1423" y="682" text-anchor="middle">after 3 tries</text>
+  </g>
+
+  <path class="line" d="M 318 265 L 374 265" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 604 265 L 676 265" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 906 265 L 978 265" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 1105 322 L 1105 372 L 278 372 L 278 520" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 396 573 L 470 573" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 706 573 L 780 573" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 994 548 L 1068 518" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 994 598 L 1068 668" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 1288 668 L 1354 668" stroke="#DC2626" marker-end="url(#arrowRed)"/>
+</svg>
