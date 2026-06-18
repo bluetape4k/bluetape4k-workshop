@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="760" viewBox="0 0 1500 760" role="img" aria-label="Coroutine trace flow diagram">
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
+    <style>
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.lane{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.laneLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:27px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}.line{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+    </style>
+  </defs>
+  <rect class="canvas" width="1500" height="760"/>
+  <rect class="frame" x="24" y="24" width="1452" height="712" rx="24"/>
+  <text class="title" x="750" y="66" text-anchor="middle">Coroutine trace propagation</text>
+  <text class="subtitle" x="750" y="94" text-anchor="middle">withObservationSuspending keeps observation scope around delays, WebClient await, and cancellation boundaries.</text>
+
+  <rect class="lane" x="64" y="132" width="1372" height="240" rx="18"/>
+  <text class="laneLabel" x="96" y="172">/coroutine/todos/{id}</text>
+  <g filter="url(#shadow)">
+    <rect x="106" y="224" width="196" height="86" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
+    <text class="cardTitle" x="204" y="260" text-anchor="middle">Controller</text>
+    <text class="cardText" x="204" y="286" text-anchor="middle">suspend handler</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="374" y="210" width="220" height="114" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="484" y="252" text-anchor="middle">pre-processing</text>
+    <text class="cardText" x="484" y="282" text-anchor="middle">delay(200)</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="666" y="210" width="220" height="114" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
+    <text class="cardTitle" x="776" y="252" text-anchor="middle">get-todo-by-id</text>
+    <text class="cardText" x="776" y="282" text-anchor="middle">WebClient await</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="958" y="210" width="220" height="114" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="1068" y="252" text-anchor="middle">post-processing</text>
+    <text class="cardText" x="1068" y="282" text-anchor="middle">delay(300)</text>
+  </g>
+
+  <rect class="lane" x="64" y="430" width="1372" height="214" rx="18"/>
+  <text class="laneLabel" x="96" y="470">Observation semantics</text>
+  <g filter="url(#shadow)">
+    <rect x="250" y="520" width="250" height="86" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="375" y="556" text-anchor="middle">Coroutine context</text>
+    <text class="cardText" x="375" y="582" text-anchor="middle">not thread-local only</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="626" y="520" width="250" height="86" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
+    <text class="cardTitle" x="751" y="556" text-anchor="middle">Cancellation</text>
+    <text class="cardText" x="751" y="582" text-anchor="middle">rethrow, not error</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1002" y="520" width="250" height="86" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
+    <text class="cardTitle" x="1127" y="556" text-anchor="middle">Zipkin trace</text>
+    <text class="cardText" x="1127" y="582" text-anchor="middle">nested spans</text>
+  </g>
+
+  <path class="line" d="M 302 267 L 374 267" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 594 267 L 666 267" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 886 267 L 958 267" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 484 324 L 484 402 L 375 402 L 375 520" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 776 324 L 776 520" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 1068 324 L 1068 402 L 1127 402 L 1127 520" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+</svg>
