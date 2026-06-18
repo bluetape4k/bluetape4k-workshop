@@ -2,20 +2,24 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+## 개요
 
-이 예제는 **Jackson Examples**를 실행 가능한 JSON serialization 워크플로우 워크샵 조각으로 다룹니다. 개발자가 가장 먼저 확인할 흐름인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄여 주는 라이브러리/프레임워크 API 관찰에 초점을 둡니다.
+이 모듈은 bluetape4k의 `Jackson.defaultJsonMapper`로 Jackson 3.x 직렬화 패턴을 보여줍니다.
+공유 mapper는 Kotlin, Java Time, Blackbird module을 이미 등록하므로 예제는 mapper bootstrap
+코드가 아니라 annotation 동작에 집중합니다.
 
-## 아키텍처 다이어그램
+## 아키텍처
 
-![Jackson Examples Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/json-jackson-examples-readme-architecture-01.png)
+![Jackson examples 아키텍처](../../docs/images/readme-diagrams/json-jackson-examples-readme-architecture-01.png)
 
-이 모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성을 중심으로 구성됩니다. 이 README를 코드와 비교할 때는 `io.bluetape4k.workshop.json` 패키지를 기준으로 삼습니다.
+테스트 suite가 실행 가능한 가이드입니다. `AbstractJacksonTest`는 mapper, faker 데이터,
+JsonPath parsing을 제공하고, 각 annotation 예제는 field filtering, polymorphism, root
+wrapping, circular reference, Java Time formatting, dynamic properties처럼 하나의 JSON shape
+관심사를 분리해서 보여줍니다.
 
-## 시퀀스 다이어그램
+## 직렬화 흐름
 
-Jackson 3.x 라이브러리를 사용해 JSON 데이터를 Java 객체로 변환하거나 Java 객체를 JSON 데이터로 변환하는 방법을 설명합니다.
-bluetape4k의 `Jackson.defaultJsonMapper`는 KotlinModules와 JavaTimeModules를 자동 등록하므로 Kotlin data class와 Java Time API를 바로 직렬화할 수 있습니다.
+![Jackson examples 직렬화 흐름](../../docs/images/readme-diagrams/json-jackson-examples-readme-flow-01.png)
 
 ## 사용한 bluetape4k 기능
 

@@ -2,20 +2,23 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+## Overview
 
-This example exercises **Jackson Examples** as a runnable JSON serialization workflow workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+This module demonstrates Jackson 3.x serialization patterns with bluetape4k's
+`Jackson.defaultJsonMapper`. The shared mapper already registers the Kotlin, Java Time, and
+Blackbird modules, so the examples can focus on annotation behavior instead of mapper bootstrap code.
 
-## Architecture Diagram
+## Architecture
 
-![Jackson Examples Graphviz architecture diagram](../../docs/images/readme-diagrams/json-jackson-examples-readme-architecture-01.png)
+![Jackson examples architecture](../../docs/images/readme-diagrams/json-jackson-examples-readme-architecture-01.png)
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.json` as the source of truth when comparing this README with the code.
+The test suite is the executable guide. `AbstractJacksonTest` provides the mapper, faker data, and
+JsonPath parsing; each annotation example isolates one JSON shape concern such as field filtering,
+polymorphism, root wrapping, circular references, Java Time formatting, or dynamic properties.
 
-## Sequence Diagram
+## Serialization Flow
 
-Describes how to convert JSON data to Java objects or Java objects to JSON data using the Jackson 3.x library.
-Automatically registers KotlinModules and JavaTimeModules with bluetape4k's `Jackson.defaultJsonMapper` to instantly serialize Kotlin data classes and Java Time APIs.
+![Jackson examples serialization flow](../../docs/images/readme-diagrams/json-jackson-examples-readme-flow-01.png)
 
 ## bluetape4k features used
 

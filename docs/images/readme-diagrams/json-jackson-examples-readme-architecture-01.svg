@@ -1,95 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="756" viewBox="0 0 1320 756" role="img" aria-label="Jackson Examples architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;json/jackson-examples/src/main/kotlin/io/bluetape4k/workshop/jackson/JsonPathSupport.kt&quot;,&quot;json/jackson-examples/src/test/kotlin/io/bluetape4k/workshop/jackson/AbstractJacksonTest.kt&quot;,&quot;json/jackson-examples/src/test/kotlin/io/bluetape4k/workshop/jackson/annotations/CyclicExample.kt&quot;,&quot;json/jackson-examples/src/test/kotlin/io/bluetape4k/workshop/jackson/annotations/CyclicWithOwnerExample.kt&quot;,&quot;json/jackson-examples/src/test/kotlin/io/bluetape4k/workshop/jackson/annotations/DynamicAttributeExample.kt&quot;,&quot;json/jackson-examples/src/test/kotlin/io/bluetape4k/workshop/jackson/annotations/IgnoreExample.kt&quot;,&quot;json/jackson-examples/src/test/kotlin/io/bluetape4k/workshop/jackson/annotations/JavaTimeExample.kt&quot;,&quot;json/jackson-examples/src/test/kotlin/io/bluetape4k/workshop/jackson/annotations/JsonUnwrappedExample.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1380" height="840" viewBox="0 0 1380 840" role="img" aria-label="Jackson examples architecture diagram">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.18"/></filter>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/></marker>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .canvas { fill: #F8FAFC; }
+      .frame { fill: #FFFFFF; stroke: #D6E0E8; stroke-width: 1.4; }
+      .title { font-family: "Architects Daughter"; font-size: 34px; fill: #102033; }
+      .subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
+      .layerTitle { font-family: "Architects Daughter"; font-size: 22px; fill: #102033; }
+      .cardTitle { font-family: "Architects Daughter"; font-size: 23px; fill: #102033; }
+      .cardText { font-family: "Comic Mono"; font-size: 14px; fill: #415166; }
+      .line { fill: none; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="756"/>
-  <rect class="frame" x="16" y="16" width="1288" height="724" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Jackson Examples</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Json example runtime and module dependencies</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="132.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="164.0">Example Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="202.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="218.0">adapters</tspan></text>
-    </g>
-    <g class="layer" data-layer="service">
-      <rect x="46.0" y="264.0" width="1228.0" height="132.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="284.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="314.0">Application Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="352.0">services, domain</tspan><tspan class="layer-detail" x="151.0" y="368.0">rules, use cases</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="414.0" width="1228.0" height="132.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="434.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="464.0">Integration Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="502.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="518.0">adapters, helpers</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="564.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="584.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="614.0">Runtime Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="644.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="660.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="676.0">JVM</tspan></text>
-    </g>
-    <g class="edge" data-edge="entry0-&gt;service0" data-label="starts">
-      <path d="M 760.0 226.0 L 760.0 255.0 L 760.0 284.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 1096.0 526.0 L 1096.0 555.0 L 760.0 555.0 L 760.0 584.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Abstract Jackson Test | jackson">
-      <rect x="610.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="176.5">Abstract Jackson Test</tspan><tspan class="node-detail" x="760.0" y="200.5">jackson</tspan></text>
-    </g>
-    <g class="node" data-node="service0" data-lines="Json Path Support | jackson">
-      <rect x="610.0" y="284.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="326.5">Json Path Support</tspan><tspan class="node-detail" x="760.0" y="350.5">jackson</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="jackson3 | bluetape4k APIs">
-      <rect x="274.0" y="434.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="476.5">jackson3</tspan><tspan class="node-detail" x="424.0" y="500.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="core | bluetape4k APIs">
-      <rect x="610.0" y="434.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="476.5">core</tspan><tspan class="node-detail" x="760.0" y="500.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="coroutines | bluetape4k APIs">
-      <rect x="946.0" y="434.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="476.5">coroutines</tspan><tspan class="node-detail" x="1096.0" y="500.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="In-memory / JVM | Runtime Dependencies">
-      <rect x="610.0" y="584.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="626.5">In-memory / JVM</tspan><tspan class="node-detail" x="760.0" y="650.5">Runtime Dependencies</tspan></text>
-    </g>
+  <rect class="canvas" width="1380" height="840"/>
+  <rect class="frame" x="18" y="18" width="1344" height="804" rx="24"/>
+  <text class="title" x="690" y="58" text-anchor="middle">Jackson examples</text>
+  <text class="subtitle" x="690" y="84" text-anchor="middle">Jackson 3 mapper defaults plus annotation-focused serialization tests</text>
+
+  <rect x="54" y="116" width="1272" height="138" rx="20" fill="#EAF3FF" stroke="#9DB9D8" stroke-width="1.5"/>
+  <text class="layerTitle" x="88" y="150">Shared test harness</text>
+  <g filter="url(#shadow)">
+    <rect x="190" y="148" width="288" height="74" rx="12" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.5"/>
+    <text class="cardTitle" x="334" y="176" text-anchor="middle">AbstractJacksonTest</text>
+    <text class="cardText" x="334" y="200" text-anchor="middle">mapper, faker, JsonPath config</text>
   </g>
+  <g filter="url(#shadow)">
+    <rect x="546" y="148" width="288" height="74" rx="12" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.5"/>
+    <text class="cardTitle" x="690" y="176" text-anchor="middle">Jackson.defaultJsonMapper</text>
+    <text class="cardText" x="690" y="200" text-anchor="middle">Kotlin, JavaTime, Blackbird</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="902" y="148" width="288" height="74" rx="12" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.5"/>
+    <text class="cardTitle" x="1046" y="176" text-anchor="middle">JsonPathSupport</text>
+    <text class="cardText" x="1046" y="200" text-anchor="middle">typed readAs helper</text>
+  </g>
+
+  <rect x="54" y="286" width="1272" height="220" rx="20" fill="#EAF8F0" stroke="#93C5A7" stroke-width="1.5"/>
+  <text class="layerTitle" x="88" y="320">Annotation scenarios</text>
+  <g filter="url(#shadow)"><rect x="110" y="356" width="220" height="76" rx="12" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.5"/><text class="cardTitle" x="220" y="385" text-anchor="middle">Field shape</text><text class="cardText" x="220" y="410" text-anchor="middle">ignore, rename, unwrapped</text></g>
+  <g filter="url(#shadow)"><rect x="400" y="356" width="220" height="76" rx="12" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.5"/><text class="cardTitle" x="510" y="385" text-anchor="middle">View and raw JSON</text><text class="cardText" x="510" y="410" text-anchor="middle">JsonView, RawValue</text></g>
+  <g filter="url(#shadow)"><rect x="690" y="356" width="220" height="76" rx="12" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.5"/><text class="cardTitle" x="800" y="385" text-anchor="middle">Object graph</text><text class="cardText" x="800" y="410" text-anchor="middle">polymorphism, cyclic refs</text></g>
+  <g filter="url(#shadow)"><rect x="980" y="356" width="220" height="76" rx="12" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.5"/><text class="cardTitle" x="1090" y="385" text-anchor="middle">Dynamic and time</text><text class="cardText" x="1090" y="410" text-anchor="middle">AnyGetter, JavaTime</text></g>
+
+  <rect x="54" y="538" width="1272" height="150" rx="20" fill="#FFF7E8" stroke="#D8B86E" stroke-width="1.5"/>
+  <text class="layerTitle" x="88" y="572">Reader workflow</text>
+  <g filter="url(#shadow)"><rect x="178" y="596" width="246" height="62" rx="12" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.5"/><text class="cardTitle" x="301" y="620" text-anchor="middle">Kotlin model</text><text class="cardText" x="301" y="642" text-anchor="middle">data class or class</text></g>
+  <g filter="url(#shadow)"><rect x="566" y="596" width="246" height="62" rx="12" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.5"/><text class="cardTitle" x="689" y="620" text-anchor="middle">JSON document</text><text class="cardText" x="689" y="642" text-anchor="middle">writeValue and readValue</text></g>
+  <g filter="url(#shadow)"><rect x="954" y="596" width="246" height="62" rx="12" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.5"/><text class="cardTitle" x="1077" y="620" text-anchor="middle">JsonPath assertion</text><text class="cardText" x="1077" y="642" text-anchor="middle">verify shape and values</text></g>
+
+  <path class="line" d="M 334 222 L 334 270 L 220 270 L 220 356" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 690 222 L 690 270 L 800 270 L 800 356" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 1046 222 L 1046 270 L 1090 270 L 1090 356" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 220 432 L 220 520 L 301 520 L 301 596" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 800 432 L 800 520 L 689 520 L 689 596" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 1090 432 L 1090 520 L 1077 520 L 1077 596" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 424 627 L 566 627" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 812 627 L 954 627" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
 </svg>
