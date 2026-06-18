@@ -2,25 +2,24 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+이 모듈은 하나의 `ProductCacheService` 계약 뒤에 있는 7가지 캐시 전략을 벤치마크합니다. 특정 캐시가 항상 더 빠르다는 결론이 아니라, 워크로드에 맞는 캐시 형태를 고르기 위한 비교 자료입니다.
 
-이 예제는 **cache-benchmark** 모듈을 실행 가능한 Spring Boot 애플리케이션 기능 예제로 보여줍니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 사용 방식을 중심으로 설명합니다.
+- `kotlinx-benchmark`가 JMH 스타일 warmup과 iteration을 제공합니다.
+- H2는 persistence layer를 로컬이고 반복 가능한 상태로 유지합니다.
+- Redis-backed profile은 bluetape4k Testcontainers로 Redis를 시작합니다.
+- Caffeine, Spring Cache Redis, Redisson near cache, manual read/write policy를 같은 연산으로 측정합니다.
 
-## 아키텍처 다이어그램
+## 아키텍처
 
-![cache-benchmark Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-cache-benchmark-readme-architecture-01.png)
+![cache-benchmark architecture](../../docs/images/readme-diagrams/spring-boot-cache-benchmark-readme-architecture-01.png)
 
-이 모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성을 중심으로 구성됩니다. 이 README와 코드를 비교할 때는 `io.bluetape4k.workshop.springboot` 패키지를 기준으로 삼습니다.
-
-## 시퀀스 다이어그램
-
-H2 인메모리 데이터베이스와 Redis를 사용하는 Spring Boot 서비스에서 7가지 캐시 전략의 성능을 비교합니다.
-
-**kotlinx-benchmark**(JMH 기반)로 구축되어 벤치마크가 실제 JVM steady-state 처리량을 반영합니다.
+각 benchmark profile은 새로운 H2 database URL과 `RedisServer.Launcher.redis`에서 받은 Redis 연결 속성으로 Spring context를 시작합니다. 모든 서비스가 `ProductCacheService`를 구현하므로, 비즈니스 로직 차이가 아니라 캐시 정책 차이를 비교합니다.
 
 ## 시나리오
 
 ![7 Cache Strategy Comparison](../../docs/images/readme-diagrams/cache-benchmark-scenario-01.png)
+
+프로파일은 직접 DB 접근, local cache, shared Redis cache, two-tier near cache, explicit read-through, synchronous write-through, asynchronous write-behind update를 모두 포함합니다.
 
 ## 7가지 캐시 프로파일
 
