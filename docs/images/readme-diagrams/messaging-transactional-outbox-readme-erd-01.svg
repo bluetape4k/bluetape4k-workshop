@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="760" viewBox="0 0 1500 760" role="img" aria-label="Transactional outbox ERD">
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#475569"/></marker>
+    <style>
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.tableHead{font-family:"Architects Daughter";font-size:30px;fill:#102033}.col{font-family:"Comic Mono";font-size:17px;fill:#1E293B}.type{font-family:"Comic Mono";font-size:15px;fill:#64748B}.key{font-family:"Comic Mono";font-size:14px;fill:#0F766E}.line{fill:none;stroke:#475569;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+    </style>
+  </defs>
+  <rect class="canvas" width="1500" height="760"/>
+  <rect class="frame" x="24" y="24" width="1452" height="712" rx="24"/>
+  <text class="title" x="750" y="68" text-anchor="middle">Transactional outbox schema</text>
+  <text class="subtitle" x="750" y="98" text-anchor="middle">orders owns domain state; outbox_events stores aggregate-neutral publish state and retry metadata.</text>
+
+  <g filter="url(#shadow)">
+    <rect x="112" y="154" width="500" height="494" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.8"/>
+    <rect x="112" y="154" width="500" height="64" rx="16" fill="#DBEAFE" stroke="#2563EB" stroke-width="1.8"/>
+    <text class="tableHead" x="362" y="196" text-anchor="middle">orders</text>
+    <text class="key" x="148" y="252">PK</text><text class="col" x="188" y="252">id</text><text class="type" x="438" y="252">BIGSERIAL</text>
+    <text class="col" x="188" y="294">customer_id</text><text class="type" x="438" y="294">VARCHAR(100)</text>
+    <text class="col" x="188" y="336">product</text><text class="type" x="438" y="336">VARCHAR(255)</text>
+    <text class="col" x="188" y="378">quantity</text><text class="type" x="438" y="378">INTEGER</text>
+    <text class="col" x="188" y="420">status</text><text class="type" x="438" y="420">OrderStatus</text>
+    <text class="col" x="188" y="462">created_at</text><text class="type" x="438" y="462">DATETIME</text>
+    <text class="col" x="188" y="504">updated_at</text><text class="type" x="438" y="504">DATETIME</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="892" y="128" width="496" height="548" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.8"/>
+    <rect x="892" y="128" width="496" height="64" rx="16" fill="#FED7AA" stroke="#D97706" stroke-width="1.8"/>
+    <text class="tableHead" x="1140" y="170" text-anchor="middle">outbox_events</text>
+    <text class="key" x="928" y="226">PK</text><text class="col" x="968" y="226">id</text><text class="type" x="1208" y="226">BIGSERIAL</text>
+    <text class="col" x="968" y="268">aggregate_type</text><text class="type" x="1208" y="268">VARCHAR(100)</text>
+    <text class="key" x="928" y="310">LK</text><text class="col" x="968" y="310">aggregate_id</text><text class="type" x="1208" y="310">VARCHAR(100)</text>
+    <text class="col" x="968" y="352">event_type</text><text class="type" x="1208" y="352">VARCHAR(100)</text>
+    <text class="col" x="968" y="394">payload</text><text class="type" x="1208" y="394">TEXT</text>
+    <text class="col" x="968" y="436">status</text><text class="type" x="1208" y="436">OutboxStatus</text>
+    <text class="col" x="968" y="478">retry_count</text><text class="type" x="1208" y="478">INTEGER</text>
+    <text class="col" x="968" y="520">created_at</text><text class="type" x="1208" y="520">DATETIME</text>
+    <text class="col" x="968" y="562">processed_at</text><text class="type" x="1208" y="562">DATETIME?</text>
+  </g>
+
+  <path class="line" d="M 612 252 L 742 252 L 742 310 L 892 310" marker-end="url(#arrow)"/>
+  <text class="type" x="750" y="230" text-anchor="middle">logical aggregate link</text>
+  <text class="type" x="750" y="338" text-anchor="middle">not a DB foreign key</text>
+</svg>
