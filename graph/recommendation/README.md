@@ -2,7 +2,7 @@
 
 [한국어](README.ko.md) | English
 
-## Sequence Diagram
+## Overview
 
 Graph-based product and follow recommendations for a social commerce domain, built on
 [bluetape4k-graph](https://github.com/bluetape4k/bluetape4k-graph) with TinkerGraph,
@@ -12,7 +12,7 @@ Neo4j, and Memgraph backends.
 
 ## Architecture
 
-![graph-recommendation Graphviz architecture diagram](../../docs/images/readme-diagrams/graph-recommendation-readme-architecture-01.png)
+![graph-recommendation architecture diagram](../../docs/images/readme-diagrams/graph-recommendation-readme-architecture-01.png)
 
 | Layer | Components |
 |-------|-----------|
@@ -26,7 +26,7 @@ Neo4j, and Memgraph backends.
 
 ## Domain Model
 
-![Domain Model](docs/images/readme-diagrams/recommendation-domain-model.png)
+![Domain Model](../../docs/images/readme-diagrams/graph-recommendation-readme-domain-model-01.png)
 
 * A `User` vertex carries `userId` and `name`.
 * A `Product` vertex carries `productId`, `name`, and `category`.
@@ -36,6 +36,8 @@ Neo4j, and Memgraph backends.
 ---
 
 ## Algorithms
+
+![Recommendation algorithm flow](../../docs/images/readme-diagrams/graph-recommendation-readme-algorithms-01.png)
 
 ### Collaborative Filtering — `recommendProducts()`
 
