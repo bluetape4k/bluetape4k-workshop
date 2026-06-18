@@ -15,7 +15,7 @@ bluetape4k 워크샵 모듈로, 그래프 기반 어뷰저(abuser) 탐지를 시
 
 블로킹 서비스(`AbuserDetectionService`)와 코루틴 서비스(`AbuserDetectionSuspendService`) 두 가지가 제공됩니다. 기본 테스트는 Docker 없이 인-프로세스 TinkerGraph를 사용하며, Neo4j와 Memgraph 통합 테스트는 선택적으로 실행할 수 있습니다.
 
-## 예제 시나리오
+## 시드 Identity Graph
 
 ![사기 탐지 예제 그래프](../../docs/images/readme-diagrams/graph-abuser-detection-readme-example-graph-01.png)
 
