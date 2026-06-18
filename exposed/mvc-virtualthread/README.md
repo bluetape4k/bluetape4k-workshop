@@ -2,85 +2,54 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+`exposed/mvc-virtualthread` is a Spring MVC + Exposed JDBC example that runs blocking database work on Java virtual threads.
 
-This example exercises **exposed/mvc-virtualthread** as a runnable Exposed data access workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
-
-## Sequence Diagram
-
-Spring MVC + Virtual Threads + Exposed JDBC — **no `@Transactional`**.
+The important constraint is that this module does not use Spring `@Transactional`. Tomcat, services, and repositories share an `ExecutorService` created with `Executors.newVirtualThreadPerTaskExecutor()`, and database work is wrapped explicitly with `virtualFuture(executor) { transaction(db) { ... } }`.
 
 ## Architecture
 
-![exposed/mvc-virtualthread architecture diagram](../../docs/images/readme-diagrams/exposed-mvc-virtualthread-architecture-01.png)
+![exposed/mvc-virtualthread architecture](../../docs/images/readme-diagrams/exposed-mvc-virtualthread-readme-architecture-01.png)
 
-## Used bluetape4k Features
+| Area | Implementation | Reader contract |
+|---|---|---|
+| MVC request execution | `TomcatConfig` assigns the shared executor to Tomcat's protocol handler. | Blocking MVC handlers can run without tying each request to a platform thread. |
+| Executor lifecycle | `virtualThreadExecutor()` creates a per-task virtual-thread executor and registers it with `ShutdownQueue`. | The module owns one shared VT executor and shuts it down consistently. |
+| Repository calls | `AuthorRepository`, `BookRepository`, `ProductRepository`, `OrderRepository`, and `OrderLineRepository` return `VirtualFuture<T>`. | Simple CRUD methods open their own `transaction(db)` inside a virtual-thread task. |
+| Order placement | `OrderService.placeOrder()` owns the full order transaction. | Stock locking, order-line writes, and stock decrement happen in one explicit transaction. |
+| Error handling | `GlobalExceptionHandler` unwraps `ExecutionException` and `CompletionException`. | Exceptions thrown inside `Future.get()` still become meaningful HTTP responses. |
 
-| Feature | Artifact | Code location | Benefit |
-|---------|----------|---------------|---------|
-| `KLogging` | `bluetape4k-logging` | Every service class | Lazy lambda logging |
-| `virtualFuture(executor) { }` | `bluetape4k-virtualthread-api` | `AuthorService.kt`, `OrderService.kt` | Submits blocking JDBC work to VT executor — no coroutine/reactor needed |
-| `ShutdownQueue.register(executor)` | `bluetape4k-virtualthread-api` | `TomcatConfig.kt` | Graceful shutdown of VT executor without manual lifecycle management |
-| `bluetape4k-virtualthread-jdk21` | `bluetape4k-virtualthread-jdk21` | runtime classpath | JDK 21 virtual thread provider |
-| `Fakers.faker` | `bluetape4k-junit5` | Test base classes | Deterministic fake data generation |
-| `shouldBeEqualTo` matchers | `bluetape4k-assertions` | All test classes | Readable Kotlin-idiomatic assertions |
-| `PostgreSQLServer.Launcher.postgres` | `bluetape4k-testcontainers` | `AbstractMvcVirtualthreadTest` | Singleton Testcontainers PostgreSQL — no `@Testcontainers` boilerplate |
+## Order Placement Flow
 
-## bluetape4k Before / After
+![exposed/mvc-virtualthread order placement sequence](../../docs/images/readme-diagrams/exposed-mvc-virtualthread-readme-sequence-01.png)
 
-### Virtual Thread DB execution
+`OrderService.placeOrder()` submits one `virtualFuture` task and opens one Exposed transaction inside it. The service sorts request lines by `productId`, locks each product row with `SELECT ... FOR UPDATE`, writes order lines, and decrements `products.stock`.
 
-```kotlin
-// Before — @Transactional with potential pinning risk under virtual threads
-@Service
-class AuthorService(private val repo: AuthorRepository) {
-    @Transactional
-    fun save(dto: AuthorDTO): AuthorDTO {
-        return repo.insert(dto)      // synchronized monitor → pins the carrier thread
-    }
-}
+If stock is not available, the service throws `InsufficientStockException` from inside the transaction. `Future.get()` wraps that failure, and `GlobalExceptionHandler` unwraps it so the MVC layer returns a stock-conflict response instead of leaking a generic execution error.
 
-// After — bluetape4k virtualFuture: explicit VT submission, no @Transactional
-@Service
-class AuthorService(
-    private val repo: AuthorRepository,
-    private val executor: ExecutorService,
-) {
-    fun save(dto: AuthorDTO): AuthorDTO =
-        virtualFuture(executor) {
-            transaction(db) { repo.insert(dto) }
-        }.get()
-}
-```
+## Schema
 
-### Executor lifecycle management
+![exposed/mvc-virtualthread schema ERD](../../docs/images/readme-diagrams/exposed-mvc-virtualthread-readme-erd-01.png)
 
-```kotlin
-// Before — manual PreDestroy or ApplicationListener
-@Bean
-fun virtualThreadExecutor(): ExecutorService {
-    val exec = Executors.newVirtualThreadPerTaskExecutor()
-    // Remember to shut it down somewhere...
-    return exec
-}
+| Table | Purpose |
+|---|---|
+| `authors`, `books` | Author/book CRUD uses plain Exposed `Table` definitions and repository-level transactions. |
+| `products` | Product stock is the concurrency-sensitive value guarded by row locks. |
+| `orders`, `order_lines` | Order placement writes the header and line rows in the same transaction that decrements stock. |
 
-// After — bluetape4k ShutdownQueue: zero-boilerplate graceful shutdown
-@Bean
-fun virtualThreadExecutor(): ExecutorService {
-    val exec = Executors.newVirtualThreadPerTaskExecutor()
-    ShutdownQueue.register(exec)   // automatically called on JVM shutdown
-    return exec
-}
-```
+## Key Code Paths
 
-## Key Patterns
-
-- **VT Executor bean**: `@Bean fun virtualThreadExecutor(): ExecutorService` in `TomcatConfig` + `TomcatProtocolHandlerCustomizer`.
-- **TX pattern**: `virtualFuture(executor) { transaction(db) { ... } }.get()` — NOT `@Transactional`.
-- **Exception unwrapping**: `GlobalExceptionHandler` handles `ExecutionException`/`CompletionException` wrapping from `Future.get()`.
-- **`@Transactional` free**: verified via `rg "@Transactional" src/main/` → 0 results.
+| File | What to inspect |
+|---|---|
+| `config/TomcatConfig.kt` | Shared virtual-thread executor and Tomcat protocol-handler customization. |
+| `config/DatabaseInitializer.kt` | Schema creation and seed data executed through the VT executor. |
+| `repository/*Repository.kt` | `VirtualFuture<T>` repository methods with explicit `transaction(db)` blocks. |
+| `service/OrderService.kt` | Stock locking, rollback behavior, and `Future.get()` boundary. |
+| `config/GlobalExceptionHandler.kt` | Unwrapping of virtual-future failures for MVC responses. |
+| `domain/*Table.kt` | Plain Exposed table definitions used by the ERD. |
 
 ## Running
+
+The application expects PostgreSQL at `jdbc:postgresql://localhost:5432/exposedmvcvt` with `postgres/postgres`.
 
 ```bash
 ./gradlew :exposed-mvc-virtualthread:bootRun
@@ -93,10 +62,10 @@ fun virtualThreadExecutor(): ExecutorService {
 ./gradlew :exposed-mvc-virtualthread:test
 ```
 
-| Test Class | Coverage |
-|-----------|---------|
-| `AuthorControllerTest` | Author + Book CRUD |
-| `ProductControllerTest` | Product CRUD |
-| `OrderControllerTest` | Order place, cancel, 404/409 cases |
-| `PlaceOrderRollbackTest` | Rollback on stock failure |
-| `ConcurrentPlaceOrderTest` | N=10 VT threads, stock=1 → 1 success, 9 conflicts (409) |
+| Test class | Coverage |
+|---|---|
+| `AuthorControllerTest` | Author and book CRUD endpoints. |
+| `ProductControllerTest` | Product CRUD endpoints. |
+| `OrderControllerTest` | Order placement, cancellation, 404, and stock-conflict cases. |
+| `PlaceOrderRollbackTest` | Rollback when stock is insufficient. |
+| `ConcurrentPlaceOrderTest` | Concurrent virtual-thread requests where only one request can consume the last stock item. |

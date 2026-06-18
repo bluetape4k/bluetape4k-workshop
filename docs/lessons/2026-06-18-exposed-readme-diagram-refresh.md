@@ -23,6 +23,14 @@ decrement, and rollback path belong in a sequence diagram. The schema section
 needs a separate ERD because column names, types, keys, and FK ownership are
 reader-facing information, not prose-only metadata.
 
+For `exposed/mvc-virtualthread`, keep the README centered on the virtual-thread
+boundary rather than generic CRUD. The architecture diagram should show Tomcat,
+the shared `ExecutorService`, repository `VirtualFuture<T>` methods, the
+service-owned order transaction, exception unwrapping, and PostgreSQL tables.
+Use a sequence diagram for `Future.get()`, `transaction(db)`, row locking,
+rollback, and exception unwrap behavior. Use a separate ERD because this module
+uses plain Exposed `Table` definitions without the MVC JDBC audit columns.
+
 ## Verification
 
 - Source checked for `@Transactional`, `virtualFuture { transaction(db) }`,
@@ -40,6 +48,10 @@ reader-facing information, not prose-only metadata.
 - Branch-level README diagrams were re-rendered with the same fixed-size
   arrowhead family: `15px` primary, `13.5px` return/secondary, and `12px`
   small schema links.
+- `exposed/mvc-virtualthread` Graphviz artifacts were removed, README image
+  links were switched to `docs/images/readme-diagrams/*readme-*`, and
+  architecture, sequence, and ERD PNGs were rendered with CairoSVG and visually
+  inspected as a contact sheet.
 
 ## Future guidance
 
@@ -57,3 +69,6 @@ to explain FK ownership. Keep relationship lines outside column text corridors.
 When arrowhead size changes, re-check path endpoints numerically and visually.
 A line can look plausible at a glance while its endpoint lands beside a card,
 especially after marker `refX` or marker width changes.
+If a persistence layer looks cramped, increase the canvas and the layer/card
+height together instead of only shrinking text or moving the label. The layer
+title area counts as real visual space when judging top and bottom margins.

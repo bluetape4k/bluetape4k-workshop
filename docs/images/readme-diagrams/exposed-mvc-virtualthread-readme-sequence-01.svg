@@ -1,0 +1,155 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1840" height="1340" viewBox="0 0 1840 1340" role="img" aria-labelledby="title desc">
+  <title id="title">exposed/mvc-virtualthread order placement sequence</title>
+  <desc id="desc">Sequence showing a Spring MVC request waiting on a VirtualFuture, executing one Exposed transaction on a virtual thread, and unwrapping stock failures.</desc>
+  <defs>
+    <style>
+      svg{background:#f8fafc}
+      .title{font-family:"Architects Daughter";font-size:40px;fill:#263238}
+      .subtitle,.msg,.note,.footer{font-family:"Comic Mono";fill:#36464f}
+      .subtitle{font-size:18px}.msg{font-size:14px}.note{font-size:13px}.footer{font-size:14px;fill:#60727d}
+      .participant{font-family:"Architects Daughter";font-size:22px;fill:#1f3138}
+      .role{font-family:"Comic Mono";font-size:13px;fill:#546a73}
+      .frame{fill:#fbfcf8;stroke:#41545d;stroke-width:3}
+      .header{fill:#ffffff;stroke:#546e7a;stroke-width:2}
+      .vtHeader{fill:#f2f6ff;stroke:#667eb9;stroke-width:2}
+      .dbHeader{fill:#fffaf2;stroke:#8c6f33;stroke-width:2}
+      .lifeline{stroke:#9aaab1;stroke-width:2;stroke-dasharray:7 8}
+      .activation{fill:#e6f2ec;stroke:#5b7e67;stroke-width:1.5}
+      .vtActivation{fill:#edf2ff;stroke:#667eb9;stroke-width:1.5}
+      .txActivation{fill:#fff4df;stroke:#a56f2a;stroke-width:1.5}
+      .dbActivation{fill:#fff0d8;stroke:#8c6f33;stroke-width:1.5}
+      .call{fill:none;stroke:#3f7d9c;stroke-width:3;marker-end:url(#arrowCall)}
+      .vt{fill:none;stroke:#667eb9;stroke-width:3;marker-end:url(#arrowVt)}
+      .db{fill:none;stroke:#8c6f33;stroke-width:3;marker-end:url(#arrowDb)}
+      .return{fill:none;stroke:#8f795b;stroke-width:2.5;stroke-dasharray:8 6;marker-end:url(#arrowReturn)}
+      .error{fill:none;stroke:#b75c55;stroke-width:3;marker-end:url(#arrowError)}
+      .branch{fill:none;stroke:#78909c;stroke-width:3;stroke-dasharray:12 7}
+      .branchDivider{stroke:#78909c;stroke-width:3;stroke-dasharray:12 8}
+      .branchGood{fill:#eef7f0;stroke:#6e8f4f;stroke-width:1.8}
+      .branchBad{fill:#fff0ef;stroke:#b75c55;stroke-width:1.8}
+      .label{fill:#ffffff;stroke:#d7e0e4;stroke-width:1.5}
+      .label.callLabel{stroke:#9cc2d1}.label.vtLabel{stroke:#a9b8e0}.label.dbLabel{stroke:#cba76c}.label.returnLabel{stroke:#c8b38f}.label.errorLabel{stroke:#d99a94}
+      .badge{stroke-width:1.8}
+      .badge.callBadge{fill:#eaf4f8;stroke:#3f7d9c}.badge.vtBadge{fill:#edf2ff;stroke:#667eb9}.badge.dbBadge{fill:#fff0d8;stroke:#8c6f33}.badge.returnBadge{fill:#fff7e8;stroke:#8f795b}.badge.errorBadge{fill:#fff0ef;stroke:#b75c55}
+      .badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}
+      .msg.callText,.badgeText.callText{fill:#2f6f8e}.msg.vtText,.badgeText.vtText{fill:#5269a8}.msg.dbText,.badgeText.dbText{fill:#7a5f24}.msg.returnText,.badgeText.returnText{fill:#755d3d}.msg.errorText,.badgeText.errorText{fill:#a24742}
+      .dbIconStroke{stroke:#8c6f33}
+    </style>
+    <marker id="arrowCall" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3f7d9c"/></marker>
+    <marker id="arrowVt" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#667eb9"/></marker>
+    <marker id="arrowDb" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#8c6f33"/></marker>
+    <marker id="arrowReturn" markerUnits="userSpaceOnUse" markerWidth="13.5" markerHeight="13.5" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#8f795b"/></marker>
+    <marker id="arrowError" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#b75c55"/></marker>
+    <g id="smallDbIcon">
+      <path d="M10 18v22c0 6 32 6 32 0V18" fill="#fff0d8" stroke="#8c6f33" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M10 29c0 6 32 6 32 0" fill="none" stroke="#8c6f33" stroke-width="2.4" stroke-linecap="round"/>
+      <ellipse cx="26" cy="18" rx="16" ry="6" fill="#fff0d8" stroke="#8c6f33" stroke-width="3"/>
+    </g>
+  </defs>
+
+  <rect x="24" y="24" width="1792" height="1292" rx="20" class="frame"/>
+  <text x="920" y="78" text-anchor="middle" class="title">Virtual Thread Order Placement Flow</text>
+  <text x="920" y="108" text-anchor="middle" class="subtitle">The request thread waits on VirtualFuture.get(); the JDBC work runs inside one explicit Exposed transaction.</text>
+
+  <rect x="60" y="150" width="150" height="68" rx="10" class="header"/>
+  <text x="135" y="179" text-anchor="middle" class="participant">Client</text>
+  <text x="135" y="201" text-anchor="middle" class="role">HTTP caller</text>
+  <rect x="250" y="150" width="220" height="68" rx="10" class="header"/>
+  <text x="360" y="179" text-anchor="middle" class="participant">OrderController</text>
+  <text x="360" y="201" text-anchor="middle" class="role">MVC endpoint</text>
+  <rect x="545" y="150" width="210" height="68" rx="10" class="header"/>
+  <text x="650" y="179" text-anchor="middle" class="participant">OrderService</text>
+  <text x="650" y="201" text-anchor="middle" class="role">no @Transactional</text>
+  <rect x="830" y="150" width="230" height="68" rx="10" class="vtHeader"/>
+  <text x="945" y="179" text-anchor="middle" class="participant">VT Executor</text>
+  <text x="945" y="201" text-anchor="middle" class="role">virtualFuture block</text>
+  <rect x="1135" y="150" width="230" height="68" rx="10" class="header"/>
+  <text x="1250" y="179" text-anchor="middle" class="participant">Exposed TX</text>
+  <text x="1250" y="201" text-anchor="middle" class="role">transaction(db)</text>
+  <rect x="1450" y="150" width="210" height="68" rx="10" class="dbHeader"/>
+  <use href="#smallDbIcon" x="1460" y="161"/>
+  <text x="1565" y="179" text-anchor="middle" class="participant">PostgreSQL</text>
+  <text x="1565" y="201" text-anchor="middle" class="role">JDBC tables</text>
+
+  <line x1="135" y1="218" x2="135" y2="1200" class="lifeline"/>
+  <line x1="360" y1="218" x2="360" y2="1200" class="lifeline"/>
+  <line x1="650" y1="218" x2="650" y2="1200" class="lifeline"/>
+  <line x1="945" y1="218" x2="945" y2="1200" class="lifeline"/>
+  <line x1="1250" y1="218" x2="1250" y2="1200" class="lifeline"/>
+  <line x1="1565" y1="218" x2="1565" y2="1200" class="lifeline"/>
+
+  <rect x="642" y="330" width="16" height="820" rx="8" class="activation"/>
+  <rect x="937" y="395" width="16" height="690" rx="8" class="vtActivation"/>
+  <rect x="1242" y="455" width="16" height="560" rx="8" class="txActivation"/>
+  <rect x="1557" y="540" width="16" height="430" rx="8" class="dbActivation"/>
+
+  <path class="call" d="M 135 300 H 360"/>
+  <rect class="label callLabel" x="80" y="266" width="230" height="36" rx="18"/>
+  <circle class="badge callBadge" cx="106" cy="284" r="14"/><text class="badgeText callText" x="106" y="289" text-anchor="middle">1</text>
+  <text class="msg callText" x="155" y="289">POST /orders</text>
+
+  <path class="call" d="M 360 350 H 650"/>
+  <rect class="label callLabel" x="392" y="316" width="250" height="36" rx="18"/>
+  <circle class="badge callBadge" cx="418" cy="334" r="14"/><text class="badgeText callText" x="418" y="339" text-anchor="middle">2</text>
+  <text class="msg callText" x="452" y="339">placeOrder(request)</text>
+
+  <path class="vt" d="M 650 430 H 945"/>
+  <rect class="label vtLabel" x="670" y="374" width="315" height="36" rx="18"/>
+  <circle class="badge vtBadge" cx="696" cy="392" r="14"/><text class="badgeText vtText" x="696" y="397" text-anchor="middle">3</text>
+  <text class="msg vtText" x="730" y="397">virtualFuture(executor) { ... }</text>
+
+  <path class="vt" d="M 945 492 H 1250"/>
+  <rect class="label vtLabel" x="990" y="438" width="255" height="36" rx="18"/>
+  <circle class="badge vtBadge" cx="1016" cy="456" r="14"/><text class="badgeText vtText" x="1016" y="461" text-anchor="middle">4</text>
+  <text class="msg vtText" x="1050" y="461">transaction(db)</text>
+
+  <path class="db" d="M 1250 540 H 1565"/>
+  <rect class="label dbLabel" x="1290" y="504" width="295" height="36" rx="18"/>
+  <circle class="badge dbBadge" cx="1316" cy="522" r="14"/><text class="badgeText dbText" x="1316" y="527" text-anchor="middle">5</text>
+  <text class="msg dbText" x="1350" y="527">INSERT orders row</text>
+
+  <path class="vt" d="M 945 634 H 1250"/>
+  <rect class="label vtLabel" x="796" y="574" width="430" height="36" rx="18"/>
+  <circle class="badge vtBadge" cx="822" cy="592" r="14"/><text class="badgeText vtText" x="822" y="597" text-anchor="middle">6</text>
+  <text class="msg vtText" x="856" y="597">sort request lines by productId</text>
+
+  <rect x="70" y="660" width="1665" height="360" rx="18" class="branch"/>
+  <rect x="96" y="686" width="330" height="34" rx="17" class="branchGood"/>
+  <text x="118" y="708" class="note">for each sorted line: stock available</text>
+  <path class="db" d="M 1250 755 H 1565"/>
+  <rect class="label dbLabel" x="1285" y="718" width="315" height="36" rx="18"/>
+  <circle class="badge dbBadge" cx="1311" cy="736" r="14"/><text class="badgeText dbText" x="1311" y="741" text-anchor="middle">7</text>
+  <text class="msg dbText" x="1345" y="741">SELECT products FOR UPDATE</text>
+  <path class="return" d="M 1565 812 H 1250"/>
+  <rect class="label returnLabel" x="1315" y="776" width="250" height="36" rx="18"/>
+  <circle class="badge returnBadge" cx="1341" cy="794" r="14"/><text class="badgeText returnText" x="1341" y="799" text-anchor="middle">8</text>
+  <text class="msg returnText" x="1375" y="799">locked row + stock</text>
+  <path class="db" d="M 1250 870 H 1565"/>
+  <rect class="label dbLabel" x="1298" y="834" width="285" height="36" rx="18"/>
+  <circle class="badge dbBadge" cx="1324" cy="852" r="14"/><text class="badgeText dbText" x="1324" y="857" text-anchor="middle">9</text>
+  <text class="msg dbText" x="1358" y="857">INSERT order_lines</text>
+  <path class="db" d="M 1250 945 H 1565"/>
+  <rect class="label dbLabel" x="1278" y="909" width="325" height="36" rx="18"/>
+  <circle class="badge dbBadge" cx="1304" cy="927" r="14"/><text class="badgeText dbText" x="1304" y="932" text-anchor="middle">10</text>
+  <text class="msg dbText" x="1342" y="932">UPDATE products.stock</text>
+
+  <line x1="70" y1="1020" x2="1735" y2="1020" class="branchDivider"/>
+  <rect x="96" y="1038" width="220" height="34" rx="17" class="branchBad"/>
+  <text x="118" y="1060" class="note">else: stock short</text>
+  <path class="error" d="M 1250 1090 H 650"/>
+  <rect class="label errorLabel" x="720" y="1054" width="365" height="36" rx="18"/>
+  <circle class="badge errorBadge" cx="746" cy="1072" r="14"/><text class="badgeText errorText" x="746" y="1077" text-anchor="middle">11</text>
+  <text class="msg errorText" x="780" y="1077">throw InsufficientStockException</text>
+
+  <path class="return" d="M 945 1145 H 650"/>
+  <rect class="label returnLabel" x="696" y="1110" width="255" height="36" rx="18"/>
+  <circle class="badge returnBadge" cx="722" cy="1128" r="14"/><text class="badgeText returnText" x="722" y="1133" text-anchor="middle">12</text>
+  <text class="msg returnText" x="756" y="1133">future.get() unwrap path</text>
+
+  <path class="error" d="M 650 1190 H 360"/>
+  <rect class="label errorLabel" x="410" y="1155" width="265" height="36" rx="18"/>
+  <circle class="badge errorBadge" cx="436" cy="1173" r="14"/><text class="badgeText errorText" x="436" y="1178" text-anchor="middle">13</text>
+  <text class="msg errorText" x="470" y="1178">409 on stock conflict</text>
+
+  <text x="920" y="1268" text-anchor="middle" class="footer">No Spring @Transactional proxy is involved; the explicit Exposed transaction is inside the virtualFuture block.</text>
+</svg>
