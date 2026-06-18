@@ -2,21 +2,15 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+이 모듈은 workshop 예제가 사용하는 작은 HTTP client 및 integration-test helper를 제공합니다. 실행 가능한 application이 아니라, `RestClient`, `WebClient`, `WebTestClient` 호출을 간결하게 만들기 위한 shared utility dependency입니다.
 
-이 예제는 **Bluetape4k Workshop Shared**를 실행 가능한 shared workshop utilities 워크숍 조각으로 다룹니다. 개발자가 가장 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄여 주는 라이브러리와 프레임워크 API를 중심으로 설명합니다.
+## Utility Map
 
-## 아키텍처 다이어그램
+![Bluetape4k Workshop Shared utility map](../docs/images/readme-diagrams/shared-readme-architecture-01.png)
 
-![Bluetape4k Workshop Shared Graphviz 아키텍처 다이어그램](../docs/images/readme-diagrams/shared-readme-architecture-01.png)
+## Test Helper Flow
 
-이 모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성을 중심으로 구성됩니다. README와 코드를 비교할 때는 `io.bluetape4k.workshop.shared` 패키지를 기준으로 삼습니다.
-
-## 시퀀스 다이어그램
-
-이 모듈은 Bluetape4k Workshop 예제 전반에서 사용하는 shared utilities를 제공합니다.
-
-대부분의 기능은 이미 `Bluetape4k`가 제공하지만, 워크숍 예제가 추가 유틸리티를 필요로 할 때 이 모듈이 그 빈틈을 채웁니다.
+![Bluetape4k Workshop Shared WebTestClient flow](../docs/images/readme-diagrams/shared-readme-test-flow-01.png)
 
 ## 핵심 기능
 
