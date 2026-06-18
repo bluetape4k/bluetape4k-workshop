@@ -2,135 +2,44 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+## 이 예제가 보여 주는 것
 
-이 예제는 **Spring Cloud Gateway Sample**을 실행 가능한 Spring Cloud 통합 워크샵 조각으로 다룹니다. 개발자가 먼저 확인할 흐름인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄여 주는 라이브러리와 프레임워크 API 관찰에 초점을 둡니다.
+이 모듈은 Spring Cloud Gateway가 route predicate와 filter를 Kotlin DSL로 조합하는 방식을 보여 줍니다. path routing, host routing, rewrite filter, Resilience4j circuit breaker fallback, Redis-backed request rate limiting, 간단한 WebSocket proxy route를 함께 확인합니다.
 
 ## 아키텍처 다이어그램
 
-![Spring Cloud Gateway Sample Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/spring-cloud-gateway-example-readme-architecture-01.png)
+![Spring Cloud Gateway route architecture](../../docs/images/readme-diagrams/spring-cloud-gateway-example-readme-architecture-01.png)
 
-이 모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제에서 사용하는 런타임 의존성을 중심으로 구성됩니다. 이 README와 코드를 비교할 때는 `io.bluetape4k.workshop.springcloud` 패키지를 기준으로 삼으세요.
+아키텍처는 route matching, filter behavior, upstream target, stateful rate-limit storage를 나누어 보여 줍니다.
+
+## Route 흐름
+
+![Spring Cloud Gateway route flow](../../docs/images/readme-diagrams/spring-cloud-gateway-example-readme-flow-01.png)
 
 ## 참고 사항
 
 이 예제는 Bucket4j를 사용하지 않습니다. Spring Cloud의 내장 Redis-backed Rate Limiter와 Resilience4j Circuit Breaker를 보여 줍니다.
 
-## 리소스
+## Routes
 
--[Spring cloud gateway with Resilience4j circuit breaker](https://medium.com/@mahmoud.romeh/spring-cloud-gateway-with-resilience4j-circuit-breaker-4f46d86822f0)
--[spring-cloud-gateway](https://github.com/m-thirumal/spring-cloud-gateway)
+| Route | Match | Filters | Target |
+|---|---|---|---|
+| `path_route` | `GET /get` | `prefixPath("/httpbin")` | `https://nghttp2.org/` |
+| `host_route` | `Host: *.myhost.org` | `prefixPath("/httpbin")` | `https://nghttp2.org/` |
+| `rewrite_route` | `Host: *.rewrite.org` | prefix + `/foo/{segment}` rewrite | `https://nghttp2.org/` |
+| `circuitbreaker_route` | `Host: *.circuitbreaker.org` | Resilience4j circuit breaker `slowcmd` | `https://nghttp2.org/` |
+| `circuitbreaker_fallback_route` | `Host: *.circuitbreakerfallback.org` | circuit breaker + `forward:/circuitbreaker/fallback` | local fallback |
+| `limit_route` | `Host: *.limited.org` and `/anything/**` | Redis `RequestRateLimiter` with `UserKeyResolver` | `https://nghttp2.org/` |
+| `websocket_route` | `/echo` | WebSocket proxy | `ws://localhost:9000` |
 
-몇 가지 route 방식과 filter를 보여 주는 sample입니다.
+## HTTP 샘플
 
-`DemogatewayApplication`을 실행하세요.
-
-## 샘플
-
-```
-$ http :8080/get
-HTTP/1.1 200 OK
-Access-Control-Allow-Credentials: true
-Access-Control-Allow-Origin: *
-Cache-Control: no-cache, no-store, max-age=0, must-revalidate
-Connection: keep-alive
-Content-Length: 257
-Content-Type: application/json
-Date: Fri, 13 Oct 2017 15:36:12 GMT
-Expires: 0
-Pragma: no-cache
-Server: meinheld/0.6.1
-Via: 1.1 vegur
-X-Content-Type-Options: nosniff
-X-Frame-Options: DENY
-X-Powered-By: Flask
-X-Processed-Time: 0.00123405456543
-X-XSS-Protection: 1 ; mode=block
-
-{
-    "args": {},
-    "headers": {
-        "Accept": "*/*",
-        "Accept-Encoding": "gzip, deflate",
-        "Connection": "close",
-        "Host": "httpbin.org",
-        "User-Agent": "HTTPie/0.9.8"
-    },
-    "origin": "207.107.158.66",
-    "url": "http://httpbin.org/get"
-}
-
-$ http :8080/headers Host:www.myhost.org
-HTTP/1.1 200 OK
-Access-Control-Allow-Credentials: true
-Access-Control-Allow-Origin: *
-Cache-Control: no-cache, no-store, max-age=0, must-revalidate
-Connection: keep-alive
-Content-Length: 175
-Content-Type: application/json
-Date: Fri, 13 Oct 2017 15:36:35 GMT
-Expires: 0
-Pragma: no-cache
-Server: meinheld/0.6.1
-Via: 1.1 vegur
-X-Content-Type-Options: nosniff
-X-Frame-Options: DENY
-X-Powered-By: Flask
-X-Processed-Time: 0.0012538433075
-X-XSS-Protection: 1 ; mode=block
-
-{
-    "headers": {
-        "Accept": "*/*",
-        "Accept-Encoding": "gzip, deflate",
-        "Connection": "close",
-        "Host": "httpbin.org",
-        "User-Agent": "HTTPie/0.9.8"
-    }
-}
-
-$ http :8080/foo/get Host:www.rewrite.org
-HTTP/1.1 200 OK
-Access-Control-Allow-Credentials: true
-Access-Control-Allow-Origin: *
-Cache-Control: no-cache, no-store, max-age=0, must-revalidate
-Connection: keep-alive
-Content-Length: 257
-Content-Type: application/json
-Date: Fri, 13 Oct 2017 15:36:51 GMT
-Expires: 0
-Pragma: no-cache
-Server: meinheld/0.6.1
-Via: 1.1 vegur
-X-Content-Type-Options: nosniff
-X-Frame-Options: DENY
-X-Powered-By: Flask
-X-Processed-Time: 0.000664949417114
-X-XSS-Protection: 1 ; mode=block
-
-{
-    "args": {},
-    "headers": {
-        "Accept": "*/*",
-        "Accept-Encoding": "gzip, deflate",
-        "Connection": "close",
-        "Host": "httpbin.org",
-        "User-Agent": "HTTPie/0.9.8"
-    },
-    "origin": "207.107.158.66",
-    "url": "http://httpbin.org/get"
-}
-
-$ http :8080/delay/2 Host:www.circuitbreaker.org
-HTTP/1.1 504 Gateway Timeout
-Cache-Control: no-cache, no-store, max-age=0, must-revalidate
-Expires: 0
-Pragma: no-cache
-X-Content-Type-Options: nosniff
-X-Frame-Options: DENY
-X-XSS-Protection: 1 ; mode=block
-content-length: 0
-
+```bash
+http :8080/get
+http :8080/headers Host:www.myhost.org
+http :8080/foo/get Host:www.rewrite.org
+http :8080/delay/3 Host:www.circuitbreakerfallback.org
+http :8080/anything/1 Host:www.limited.org X-BLUETAPE4K-UID:user-a
 ```
 
 ## Websocket 샘플
@@ -155,4 +64,9 @@ server와 client 어느 쪽에서든 입력하면 message가 적절히 전달됩
 
 redis가 localhost:6379에서 실행 중인지 확인하세요(brew, apt 또는 docker 사용).
 
-그런 다음 `DemogatewayApplicationTests`를 실행합니다. 테스트가 통과하면 호출 중 하나가 429 TO_MANY_REQUESTS HTTP status를 받았다는 뜻입니다.
+그런 다음 `DemogatewayApplicationTests`를 실행합니다. 테스트가 통과하면 호출 중 하나가 429 TOO_MANY_REQUESTS HTTP status를 받았다는 뜻입니다.
+
+## 리소스
+
+- [Spring Cloud Gateway with Resilience4j circuit breaker](https://medium.com/@mahmoud.romeh/spring-cloud-gateway-with-resilience4j-circuit-breaker-4f46d86822f0)
+- [spring-cloud-gateway sample](https://github.com/m-thirumal/spring-cloud-gateway)
