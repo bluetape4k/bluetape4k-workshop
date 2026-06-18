@@ -1,161 +1,59 @@
-# Spring Data R2DBC Demo
+# Spring Data R2DBC Examples
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+This module is a test-driven workshop for Spring Data R2DBC with Kotlin. It does
+not expose an HTTP API. Instead, each package focuses on one persistence concern:
+coroutine repositories, declarative reactive transactions, entity callbacks, and
+Query-by-Example.
 
-This example exercises **Spring Data R2DBC Demo** as a runnable Spring Data persistence workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+## Architecture
 
-## Architecture Diagram
+![Spring Data R2DBC examples architecture](../../docs/images/readme-diagrams/spring-data-r2dbc-examples-readme-architecture-01.png)
 
-![Spring Data R2DBC Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-examples-readme-architecture-01.png)
+The examples share the same in-memory H2 R2DBC runtime, but each package owns its
+own Spring test configuration and schema setup.
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.springdata` as the source of truth when comparing this README with the code.
+| Package | What to inspect | Main point |
+|---|---|---|
+| `r2dbc.basics` | `CustomerRepositoryIntegrationTest`, `TransactionalServiceIntegrationTest` | Coroutine CRUD operations, annotated query methods, and rollback behavior from `@Transactional suspend fun`. |
+| `r2dbc.entitycallback` | `ApplicationConfiguration`, `CustomerRepositoryIntegrationTest` | `BeforeConvertCallback` assigns IDs from an H2 sequence before insert. |
+| `r2dbc.queryexample` | `PersonRepositoryIntegrationTest` | Spring Data Query-by-Example with Kotlin-friendly `buildExampleMatcher(...)`. |
 
-## Sequence Diagram
+## Test Flow
 
-![Spring Data R2DBC Demo sequence diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-examples-sequence-01.png)
+![Spring Data R2DBC examples test flow](../../docs/images/readme-diagrams/spring-data-r2dbc-examples-readme-flow-01.png)
 
-## References
+The important behavior is visible in tests:
 
-* [Spring Data Examples - r2dbc/example](https://github.com/spring-projects/spring-data-examples/tree/main/r2dbc/example)
-* [Spring Data Examples - r2dbc/query-by-example](https://github.com/spring-projects/spring-data-examples/tree/main/r2dbc/query-by-example)
+1. The test configuration starts a Spring context with R2DBC repositories.
+2. Each test prepares a small H2 schema through `DatabaseClient` or a
+   `ConnectionFactoryInitializer`.
+3. Repository operations are exercised through coroutine `Flow`, suspend
+   functions, or Reactor publishers converted with coroutine adapters.
+4. Assertions verify rows, query matches, generated IDs, and transaction
+   rollback.
 
-* [Spring Data R2DBC and Kotlin Coroutines](https://xebia.com/blog/spring-data-r2dbc-and-kotlin-coroutines/)
-* [Kotlin + Spring Webflux + R2DBC](https://dgahn.tistory.com/8)
+## Schema
 
-This project shows some sample usage of the work-in-progress R2DBC support for Spring Data.
+![Spring Data R2DBC examples schema ERD](../../docs/images/readme-diagrams/spring-data-r2dbc-examples-readme-erd-01.png)
 
-### Interesting bits to look at
+`customer` is recreated by both the basics and entity-callback tests. The
+entity-callback slice uses a `primary_key` sequence to set `Customer.id` before
+conversion. `person` belongs to the Query-by-Example tests.
 
-- `InfrastructureConfiguration` - sets up a R2DBC `ConnectionFactory` based on the R2DBC H2
-  driver (https://github.com/r2dbc/r2dbc-h2[r2dbc-h2]), a `DatabaseClient` and a `R2dbcRepositoryFactory` to eventually
-  create a `CustomerRepository`.
-- `CustomerRepository` - a standard Spring Data reactive CRUD repository exposing query methods using manually defined
-  queries
-- `CustomerRepositoryIntegrationTests` - to initialize the database with some setup SQL and the inserting and
-  reading `Customer` instances.
-- `TransactionalService` - uses declarative transaction to apply a transactional boundary to repository operations.
+## bluetape4k APIs Used
 
-This project contains samples of Query-by-Example of Spring Data R2DBC.
-
-### Support for Query-by-Example
-
-Query by Example (QBE) is a user-friendly querying technique with a simple interface.
-It allows dynamic query creation and does not require to write queries containing field names.
-In fact, Query by Example does not require to write queries using SQL at all.
-
-An `Example` takes a data object (usually the entity object or a subtype of it) and a specification how to match
-properties.
-You can use Query by Example with Repositories.
-
-```kotlin
-interface PersonRepository:
-    CoroutineCrudRepository<Person, Long>,
-    CoroutineQueryByExampleExecutor<Person>
-
-val example = Example.of(Person("", "Snow", 0))
-repository.findAll(example).toList()
-
-val matcher = ExampleMatcher.buildExampleMatcher(Person::lastname.name)
-    .withMatcher(Person::lastname.name, GenericPropertyMatchers.exact())
-    .withIgnoreNullValues()
-val example = Example.of(Person("", "White", 0), matcher)
-repository.count(example)
-```
-
-## Processing Flow
-
-![Spring Data R2DBC Demo Diagram 1](../../docs/images/readme-diagrams/spring-data-r2dbc-examples-readme-sequence-01.png)
-
-## Used bluetape4k Features
-
-| Feature | Artifact | Code location | Benefit |
-|---|---|---|---|
-| `connectionFactoryInitializer { }` | `bluetape4k-r2dbc` | `ApplicationConfiguration.kt` | DSL for creating `ConnectionFactoryInitializer` — reduces boilerplate configuration code |
-| `buildExampleMatcher(vararg props)` | `bluetape4k-spring-boot4-r2dbc` | `PersonRepositoryIntegrationTest` | QBE `ExampleMatcher` DSL — type-safe matcher construction without string property names |
-| `asLong()` / `toUtf8Bytes()` | `bluetape4k-core` | `ApplicationConfiguration.kt` | Extension functions for `Row` column value conversion and string -> UTF-8 byte conversion |
-| `KLoggingChannel` | `bluetape4k-logging` | All companion objects | Structured logging that includes coroutine context |
-| `shouldBeEqualTo`, `shouldNotBeNull` | `bluetape4k-core` | All tests | Readable assertions such as `shouldBeEqualTo` and `shouldContainSame` |
-
-## bluetape4k Before / After
-
-### `connectionFactoryInitializer { }` vs Manual Bean Creation
-
-```kotlin
-// Before — standard Spring R2DBC style (write bean creation manually)
-@Bean
-fun initializer(connectionFactory: ConnectionFactory): ConnectionFactoryInitializer {
-    val initializer = ConnectionFactoryInitializer()
-    initializer.setConnectionFactory(connectionFactory)
-    val populator = ResourceDatabasePopulator()
-    populator.addScript(ClassPathResource("schema.sql"))
-    initializer.setDatabasePopulator(populator)
-    return initializer
-}
-
-// After — bluetape4k DSL (concise lambda builder)
-@Bean
-fun initializer(connectionFactory: ConnectionFactory): ConnectionFactoryInitializer =
-    connectionFactoryInitializer(connectionFactory) {
-        setDatabasePopulator(ResourceDatabasePopulator(ByteArrayResource(sql.toUtf8Bytes())))
-    }
-```
-
-### `buildExampleMatcher` vs Manual ExampleMatcher Configuration
-
-```kotlin
-// Before — standard ExampleMatcher (manual string property names)
-val matcher = ExampleMatcher.matching()
-    .withIgnorePaths("age")
-    .withMatcher("lastname", GenericPropertyMatchers.exact())
-    .withIgnoreNullValues()
-
-// After — bluetape4k buildExampleMatcher (type-safe property references)
-val matcher = ExampleMatcher.buildExampleMatcher(Person::lastname.name)
-    .withMatcher(Person::lastname.name, GenericPropertyMatchers.exact())
-    .withIgnoreNullValues()
-```
-
-## Cancellation, Structured Concurrency, and Context Propagation
-
-### R2DBC Flow and Coroutine Cancellation
-
-The `Flow`-returning methods in `CoroutineCrudRepository` propagate coroutine cancellation signals
-to the R2DBC publisher. If a `runTest { }` block times out or throws an exception in a test,
-the subscription collecting `Flow<Customer>` is automatically cancelled and the connection is
-returned to the DB connection pool.
-
-```kotlin
-// Flow cancellation propagation example
-runTest {
-    val job = launch {
-        repository.findAll()        // Flux -> Flow conversion
-            .collect { customer ->
-                // when job.cancel() is called while this collect lambda is running
-                // the R2DBC subscription is cancelled immediately and the connection returns to the pool
-            }
-    }
-    delay(100)
-    job.cancel()  // -> the upstream R2DBC Flux is also cancelled
-}
-```
-
-### `@Transactional` + Coroutine Context Propagation
-
-`TransactionalService` uses `@Transactional suspend fun`.
-Spring R2DBC propagates transaction context through Reactor Context, and the `ReactorContext`
-element from `kotlinx-coroutines-reactor` connects it with the coroutine context.
-
-```kotlin
-// TransactionalService.kt
-@Transactional
-suspend fun insert(customer: Customer): Customer =
-    repository.save(customer)  // runs in the same transaction context
-```
+| API | Where | Why it matters |
+|---|---|---|
+| `connectionFactoryInitializer { }` | `entitycallback/ApplicationConfiguration.kt` | Creates the R2DBC initializer with less Spring boilerplate. |
+| `asLong()` | `entitycallback/ApplicationConfiguration.kt` | Converts the sequence value from the R2DBC row. |
+| `toUtf8Bytes()` | `entitycallback/ApplicationConfiguration.kt` | Builds a byte-backed SQL resource for schema initialization. |
+| `Person::class.buildExampleMatcher(...)` | `queryexample/PersonRepositoryIntegrationTest.kt` | Keeps QBE matcher fields tied to Kotlin property names. |
+| `runSuspendIO` | Integration tests | Runs suspend test blocks on the intended dispatcher. |
 
 ## Build and Test
 
 ```bash
-./gradlew :spring-data-r2dbc-examples:test
+./gradlew :spring-data:r2dbc-examples:test
 ```
