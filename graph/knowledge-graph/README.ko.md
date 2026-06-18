@@ -2,15 +2,15 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
-
-이 예제는 **graph-knowledge-graph** 모듈을 실행 가능한 그래프 도메인 모델링 예제로 보여줍니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 사용 방식을 중심으로 설명합니다.
-
-## 시퀀스 다이어그램
+## 아키텍처
 
 [bluetape4k-graph](https://github.com/bluetape4k/bluetape4k-graph) 라이브러리를 활용한 지식 그래프(knowledge graph) 구축 및 탐색 예제입니다.
+동일한 그래프 모델을 블로킹 서비스와 코루틴 서비스로 제공하고, 같은 서비스 로직을 TinkerGraph, Neo4j,
+Memgraph 백엔드에서 실행합니다.
 
 > **관련 이슈:** [bluetape4k-workshop #11](https://github.com/bluetape4k/bluetape4k-workshop/issues/11)
+
+![graph-knowledge-graph 아키텍처 다이어그램](../../docs/images/readme-diagrams/graph-knowledge-graph-readme-architecture-01.png)
 
 ## 개요
 
@@ -26,15 +26,11 @@
 - 두 엔티티 사이의 연관 경로 추론 (깊이/건수 제한)
 - 동일한 서비스 로직을 여러 그래프 백엔드(TinkerGraph, Neo4j, Memgraph)에서 실행
 
-## 아키텍처
-
-![graph-knowledge-graph Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/graph-knowledge-graph-readme-architecture-01.png)
-
 ## 도메인 모델
 
 시드 그래프는 **기술 도메인** 시나리오를 사용합니다:
 
-![Knowledge Graph Domain Model](docs/images/readme-diagrams/graph-knowledge-graph-domain-model-01.png)
+![Knowledge Graph Domain Model](../../docs/images/readme-diagrams/graph-knowledge-graph-readme-domain-model-01.png)
 
 ### 버텍스 타입
 
@@ -54,7 +50,7 @@
 
 ### 시드 토폴로지
 
-![Knowledge Graph Seed Topology](docs/images/readme-diagrams/graph-knowledge-graph-seed-topology-01.png)
+![Knowledge Graph Seed Topology](../../docs/images/readme-diagrams/graph-knowledge-graph-readme-seed-topology-01.png)
 
 ## 핵심 기능
 

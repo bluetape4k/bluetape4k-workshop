@@ -1,9 +1,0 @@
-graph 1 5.684 2.0625
-node document 1.2778 1.1389 0.97222 0.51389 "\N" rounded,filled record #90a4c8 #eef4ff
-node entity 3.1389 1.1389 0.75 0.51389 "\N" rounded,filled record #90a4c8 #eef4ff
-node entity_target 5.099 1.8056 1.1701 0.51389 "\N" rounded,filled record #90a4c8 #eef4ff
-node concept 5.099 0.48611 0.80556 0.51389 "\N" rounded,filled record #90a4c8 #eef4ff
-edge document entity 4 1.7668 1.1389 1.7668 1.1389 2.599 1.1389 2.599 1.1389 solid black
-edge entity entity_target 7 3.5191 1.1389 3.9523 1.1389 4.6007 1.1389 4.6007 1.1389 4.6007 1.1389 4.6007 1.3898 4.6007 1.3898 solid black
-edge entity concept 7 3.1424 0.88464 3.1424 0.70135 3.1424 0.48611 3.1424 0.48611 3.1424 0.48611 4.5336 0.48611 4.5336 0.48611 solid black
-stop

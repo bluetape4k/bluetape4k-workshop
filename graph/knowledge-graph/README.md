@@ -2,16 +2,16 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+## Architecture
 
-This example exercises **graph-knowledge-graph** as a runnable graph-domain modeling workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
-
-## Sequence Diagram
-
-A workshop example demonstrating knowledge graph construction and traversal using
-the [bluetape4k-graph](https://github.com/bluetape4k/bluetape4k-graph) library.
+This module demonstrates knowledge graph construction and traversal with
+the [bluetape4k-graph](https://github.com/bluetape4k/bluetape4k-graph) library. It exposes the
+same graph model through blocking and coroutine services, then runs the same service logic against
+TinkerGraph, Neo4j, and Memgraph backends.
 
 > **Related issue:** [bluetape4k-workshop #11](https://github.com/bluetape4k/bluetape4k-workshop/issues/11)
+
+![graph-knowledge-graph architecture diagram](../../docs/images/readme-diagrams/graph-knowledge-graph-readme-architecture-01.png)
 
 ## Overview
 
@@ -28,15 +28,11 @@ It shows how to:
 - Infer association paths between distant entities with a bounded depth/count limit
 - Run the same service logic against multiple graph backends (TinkerGraph, Neo4j, Memgraph)
 
-## Architecture
-
-![graph-knowledge-graph Graphviz architecture diagram](../../docs/images/readme-diagrams/graph-knowledge-graph-readme-architecture-01.png)
-
 ## Domain Model
 
 The seed graph uses a **technology domain** scenario:
 
-![Knowledge Graph Domain Model](docs/images/readme-diagrams/graph-knowledge-graph-domain-model-01.png)
+![Knowledge Graph Domain Model](../../docs/images/readme-diagrams/graph-knowledge-graph-readme-domain-model-01.png)
 
 ### Vertex types
 
@@ -56,7 +52,7 @@ The seed graph uses a **technology domain** scenario:
 
 ### Seed topology
 
-![Knowledge Graph Seed Topology](docs/images/readme-diagrams/graph-knowledge-graph-seed-topology-01.png)
+![Knowledge Graph Seed Topology](../../docs/images/readme-diagrams/graph-knowledge-graph-readme-seed-topology-01.png)
 
 ## Core Features
 

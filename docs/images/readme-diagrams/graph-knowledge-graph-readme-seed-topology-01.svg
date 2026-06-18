@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="960" viewBox="0 0 1500 960" role="img" aria-label="graph-knowledge-graph seed topology diagram">
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.18"/></filter>
+    <marker id="arrowMention" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
+    <marker id="arrowRelated" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
+    <marker id="arrowClassify" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/></marker>
+    <style>
+      .canvas { fill: #F8FAFC; }
+      .frame { fill: #FFFFFF; stroke: #D6E0E8; stroke-width: 1.4; }
+      .title { font-family: "Architects Daughter"; font-size: 34px; fill: #102033; }
+      .subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
+      .section { font-family: "Architects Daughter"; font-size: 22px; fill: #102033; }
+      .nodeTitle { font-family: "Architects Daughter"; font-size: 25px; fill: #102033; }
+      .nodeText { font-family: "Comic Mono"; font-size: 14px; fill: #415166; }
+      .legend { font-family: "Comic Mono"; font-size: 13px; fill: #415166; }
+      .line { fill: none; stroke-width: 3.1; stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+  </defs>
+  <rect class="canvas" width="1500" height="960"/>
+  <rect class="frame" x="18" y="18" width="1464" height="924" rx="24"/>
+  <text class="title" x="750" y="58" text-anchor="middle">KnowledgeGraphSeed topology</text>
+  <text class="subtitle" x="750" y="84" text-anchor="middle">Two source documents mention four technology entities, which relate to each other and classify under concepts.</text>
+
+  <rect x="58" y="116" width="1384" height="640" rx="22" fill="#EEF6FF" stroke="#A7BED8" stroke-width="1.5"/>
+  <text class="section" x="92" y="152">Documents</text>
+  <text class="section" x="640" y="152">Entities</text>
+  <text class="section" x="1130" y="152">Concepts</text>
+
+  <g filter="url(#shadow)">
+    <rect x="98" y="214" width="340" height="86" rx="16" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.5"/>
+    <text class="nodeTitle" x="268" y="246" text-anchor="middle">Kotlin in Action</text>
+    <text class="nodeText" x="268" y="272" text-anchor="middle">doc-kotlin-guide</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="98" y="456" width="340" height="86" rx="16" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.5"/>
+    <text class="nodeTitle" x="268" y="488" text-anchor="middle">Spring Boot Reference</text>
+    <text class="nodeText" x="268" y="514" text-anchor="middle">doc-spring-guide</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="600" y="184" width="270" height="78" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.5"/>
+    <text class="nodeTitle" x="735" y="214" text-anchor="middle">Kotlin</text>
+    <text class="nodeText" x="735" y="239" text-anchor="middle">Language</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="600" y="330" width="270" height="78" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.5"/>
+    <text class="nodeTitle" x="735" y="360" text-anchor="middle">Coroutines</text>
+    <text class="nodeText" x="735" y="385" text-anchor="middle">Library</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="600" y="476" width="270" height="78" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.5"/>
+    <text class="nodeTitle" x="735" y="506" text-anchor="middle">Spring</text>
+    <text class="nodeText" x="735" y="531" text-anchor="middle">Framework</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="600" y="622" width="270" height="78" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.5"/>
+    <text class="nodeTitle" x="735" y="652" text-anchor="middle">JVM</text>
+    <text class="nodeText" x="735" y="677" text-anchor="middle">Platform</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="1080" y="184" width="340" height="78" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.5"/>
+    <text class="nodeTitle" x="1250" y="214" text-anchor="middle">Programming Language</text>
+    <text class="nodeText" x="1250" y="239" text-anchor="middle">software</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1080" y="330" width="340" height="78" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.5"/>
+    <text class="nodeTitle" x="1250" y="360" text-anchor="middle">Software Library</text>
+    <text class="nodeText" x="1250" y="385" text-anchor="middle">software</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1080" y="476" width="340" height="78" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.5"/>
+    <text class="nodeTitle" x="1250" y="506" text-anchor="middle">Application Framework</text>
+    <text class="nodeText" x="1250" y="531" text-anchor="middle">software</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1080" y="622" width="340" height="78" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.5"/>
+    <text class="nodeTitle" x="1250" y="652" text-anchor="middle">Runtime Platform</text>
+    <text class="nodeText" x="1250" y="677" text-anchor="middle">infrastructure</text>
+  </g>
+
+  <path class="line" d="M 438 238 L 600 218" stroke="#16A34A" marker-end="url(#arrowMention)"/>
+  <path class="line" d="M 438 276 L 536 276 L 536 648 L 600 648" stroke="#16A34A" marker-end="url(#arrowMention)"/>
+  <path class="line" d="M 438 478 L 536 478 L 536 510 L 600 510" stroke="#16A34A" marker-end="url(#arrowMention)"/>
+  <path class="line" d="M 438 514 L 564 514 L 564 248 L 600 248" stroke="#16A34A" marker-end="url(#arrowMention)"/>
+
+  <path class="line" d="M 735 262 L 735 330" stroke="#2563EB" marker-end="url(#arrowRelated)"/>
+  <path class="line" d="M 735 408 L 735 476" stroke="#2563EB" marker-end="url(#arrowRelated)"/>
+  <path class="line" d="M 870 515 L 946 515 L 946 661 L 870 661" stroke="#2563EB" marker-end="url(#arrowRelated)"/>
+  <path class="line" d="M 870 223 L 980 223 L 980 661 L 870 661" stroke="#2563EB" marker-end="url(#arrowRelated)"/>
+
+  <path class="line" d="M 870 223 L 1080 223" stroke="#C47A12" marker-end="url(#arrowClassify)"/>
+  <path class="line" d="M 870 369 L 1080 369" stroke="#C47A12" marker-end="url(#arrowClassify)"/>
+  <path class="line" d="M 870 515 L 1080 515" stroke="#C47A12" marker-end="url(#arrowClassify)"/>
+  <path class="line" d="M 870 661 L 1080 661" stroke="#C47A12" marker-end="url(#arrowClassify)"/>
+
+  <rect x="88" y="790" width="1324" height="96" rx="16" fill="#FFFFFF" stroke="#D5E0E8" stroke-width="1.4"/>
+  <circle cx="132" cy="826" r="7" fill="#16A34A"/>
+  <text class="legend" x="150" y="831">MENTIONS: document -> entity</text>
+  <circle cx="470" cy="826" r="7" fill="#2563EB"/>
+  <text class="legend" x="488" y="831">RELATED_TO: entity -> entity</text>
+  <circle cx="820" cy="826" r="7" fill="#C47A12"/>
+  <text class="legend" x="838" y="831">IS_A: entity -> concept</text>
+  <text class="legend" x="750" y="862" text-anchor="middle">Kotlin to Spring path: Kotlin -> Coroutines -> Spring</text>
+</svg>
