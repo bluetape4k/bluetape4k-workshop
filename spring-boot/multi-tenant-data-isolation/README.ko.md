@@ -2,27 +2,23 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
-
-이 예제는 **멀티 테넌트 데이터 격리** 모듈을 실행 가능한 Spring Boot 애플리케이션 기능 예제로 보여줍니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 사용 방식을 중심으로 설명합니다.
+이 모듈은 tenant-safe read/write, cache key, lock key, rate-limit bucket,
+Micrometer tag를 함께 검증합니다. 실행 환경은 H2와 인메모리 helper로 가볍게 유지해서
+테스트에서 격리 계약을 바로 확인할 수 있게 했습니다.
 
 ## 아키텍처 다이어그램
 
-![멀티 테넌트 데이터 격리 Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/spring-boot-multi-tenant-data-isolation-readme-architecture-01.png)
+![멀티 테넌트 데이터 격리 아키텍처 다이어그램](../../docs/images/readme-diagrams/spring-boot-multi-tenant-data-isolation-readme-architecture-01.png)
 
-모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성으로 구성됩니다. README와 코드를 비교할 때는 `io.bluetape4k.workshop.springboot` 패키지 아래의 구현을 기준으로 삼습니다.
+## 격리 시나리오
 
-## 시퀀스 다이어그램
+![Tenant Data Isolation scenario](../../docs/images/readme-diagrams/spring-boot-multi-tenant-data-isolation-readme-scenario-01.png)
 
 테넌트별 데이터 접근, 캐시 키, 락 키, rate-limit 버킷, 메트릭 태그를 안전하게 분리하는 고급 Spring Boot 워크숍입니다.
 
 ## 개요
 
 Repository 쿼리, 캐시 키, 락 키, rate-limit 버킷이 공용 리소스 ID만 사용하면 테넌트 간 데이터가 새어 나갈 수 있습니다. 이 모듈은 H2, 인메모리 lock, fixed-window rate-limit bucket으로 실행 환경을 가볍게 유지하고, 테스트로 격리 경계를 증명합니다.
-
-## 시나리오
-
-![Tenant Data Isolation](../../docs/images/readme-diagrams/multi-tenant-data-isolation-scenario-01.png)
 
 ## 주요 구성
 
