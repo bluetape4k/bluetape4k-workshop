@@ -1,109 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="826" viewBox="0 0 1320 826" role="img" aria-label="CBOR in Spring Boot MVC architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-boot/cbor-mvc/src/main/kotlin/io/bluetape4k/workshop/cbor/CborApplication.kt&quot;,&quot;spring-boot/cbor-mvc/src/main/kotlin/io/bluetape4k/workshop/cbor/CborConfig.kt&quot;,&quot;spring-boot/cbor-mvc/src/main/kotlin/io/bluetape4k/workshop/cbor/course/CourseController.kt&quot;,&quot;spring-boot/cbor-mvc/src/main/kotlin/io/bluetape4k/workshop/cbor/course/CourseModels.kt&quot;,&quot;spring-boot/cbor-mvc/src/main/kotlin/io/bluetape4k/workshop/cbor/course/CourseRepository.kt&quot;,&quot;spring-boot/cbor-mvc/src/test/kotlin/io/bluetape4k/workshop/cbor/CborApplicationTest.kt&quot;,&quot;spring-boot/cbor-mvc/src/test/kotlin/io/bluetape4k/workshop/cbor/CborConfigTest.kt&quot;,&quot;spring-boot/cbor-mvc/build.gradle.kts&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
-  <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
-    <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
-    </style>
-  </defs>
-  <rect class="canvas" width="1320" height="826"/>
-  <rect class="frame" x="16" y="16" width="1288" height="794" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">CBOR in Spring Boot MVC</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Spring Boot application feature and runtime integration</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="242.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="207.5">Spring Boot</tspan><tspan class="layer-title" x="151.0" y="230.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="257.0">apps, controllers,</tspan><tspan class="layer-detail" x="151.0" y="273.0">scheduled tests</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="374.0" width="1228.0" height="242.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="394.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="467.5">Boot Integration</tspan><tspan class="layer-title" x="151.0" y="490.5">Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="509.0">auto-config,</tspan><tspan class="layer-detail" x="151.0" y="525.0">clients,</tspan><tspan class="layer-detail" x="151.0" y="541.0">repositories</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="634.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="654.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="672.5">Runtime</tspan><tspan class="layer-title" x="151.0" y="695.5">Dependencies</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="714.0">database, cache,</tspan><tspan class="layer-detail" x="151.0" y="730.0">messaging,</tspan><tspan class="layer-detail" x="151.0" y="746.0">containers</tspan></text>
-    </g>
-    <g class="edge" data-edge="api0-&gt;infra0" data-label="uses">
-      <path d="M 424.0 336.0 L 424.0 365.0 L 424.0 394.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 1096.0 596.0 L 1096.0 625.0 L 760.0 625.0 L 760.0 654.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Cbor Application | application bootstrap">
-      <rect x="274.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="176.5">Cbor Application</tspan><tspan class="node-detail" x="424.0" y="200.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry1" data-lines="Cbor Application Test | cbor">
-      <rect x="610.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="176.5">Cbor Application Test</tspan><tspan class="node-detail" x="760.0" y="200.5">cbor</tspan></text>
-    </g>
-    <g class="node" data-node="entry2" data-lines="Cbor Config Test | cbor">
-      <rect x="946.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="176.5">Cbor Config Test</tspan><tspan class="node-detail" x="1096.0" y="200.5">cbor</tspan></text>
-    </g>
-    <g class="node" data-node="api0" data-lines="Course Controller | HTTP adapter">
-      <rect x="274.0" y="244.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="286.5">Course Controller</tspan><tspan class="node-detail" x="424.0" y="310.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Cbor Config | configuration">
-      <rect x="274.0" y="394.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="436.5">Cbor Config</tspan><tspan class="node-detail" x="424.0" y="460.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="infra1" data-lines="Course Models | course">
-      <rect x="610.0" y="394.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="436.5">Course Models</tspan><tspan class="node-detail" x="760.0" y="460.5">course</tspan></text>
-    </g>
-    <g class="node" data-node="infra2" data-lines="Course Repository | repository">
-      <rect x="946.0" y="394.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="436.5">Course Repository</tspan><tspan class="node-detail" x="1096.0" y="460.5">repository</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k Boot APIs">
-      <rect x="274.0" y="504.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="546.5">workshop</tspan><tspan class="node-detail" x="424.0" y="570.5">bluetape4k Boot APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="jackson3 | bluetape4k Boot APIs">
-      <rect x="610.0" y="504.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="546.5">jackson3</tspan><tspan class="node-detail" x="760.0" y="570.5">bluetape4k Boot APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="coroutines | bluetape4k Boot APIs">
-      <rect x="946.0" y="504.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="546.5">coroutines</tspan><tspan class="node-detail" x="1096.0" y="570.5">bluetape4k Boot APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="In-memory / JVM | Boot Runtime">
-      <rect x="610.0" y="654.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="696.5">In-memory / JVM</tspan><tspan class="node-detail" x="760.0" y="720.5">Boot Runtime</tspan></text>
-    </g>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" width="1660" height="820" viewBox="0 0 1660 820" role="img" aria-label="CBOR MVC architecture">
+  <defs><filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter><marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker><marker id="arrowTeal" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#0891B2"/></marker><style>.canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{stroke-width:1.6;rx:22}.title{font-family:"Architects Daughter";font-size:40px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#51606F}.layerTitle{font-family:"Architects Daughter";font-size:29px;fill:#243447}.cardTitle{font-family:"Architects Daughter";font-size:28px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.line{fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}</style></defs>
+  <rect class="canvas" width="1660" height="820"/><rect class="frame" x="24" y="24" width="1612" height="772" rx="24"/>
+  <text class="title" x="830" y="72" text-anchor="middle">Spring MVC CBOR endpoint</text><text class="subtitle" x="830" y="106" text-anchor="middle">The controller returns the same Course model while JacksonCborHttpMessageConverter serializes application/cbor responses.</text>
+  <rect class="layer" x="86" y="154" width="1488" height="150" fill="#EFF6FF" stroke="#BFDBFE"/><text class="layerTitle" x="126" y="198">Clients under test</text>
+  <g filter="url(#shadow)"><rect x="180" y="222" width="280" height="60" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="320" y="260" text-anchor="middle">RestTemplate</text></g>
+  <g filter="url(#shadow)"><rect x="610" y="222" width="280" height="60" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="750" y="260" text-anchor="middle">RestClient</text></g>
+  <g filter="url(#shadow)"><rect x="1040" y="222" width="280" height="60" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="1180" y="260" text-anchor="middle">WebClient</text></g>
+  <rect class="layer" x="86" y="364" width="1488" height="170" fill="#F0FDF4" stroke="#BBF7D0"/><text class="layerTitle" x="126" y="408">MVC serialization</text>
+  <g filter="url(#shadow)"><rect x="250" y="444" width="360" height="72" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="430" y="476" text-anchor="middle">CborConfig</text><text class="cardText" x="430" y="502" text-anchor="middle">JacksonCborHttpMessageConverter</text></g>
+  <g filter="url(#shadow)"><rect x="910" y="444" width="360" height="72" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="1090" y="476" text-anchor="middle">CourseController</text><text class="cardText" x="1090" y="502" text-anchor="middle">GET /courses/{id}</text></g>
+  <rect class="layer" x="86" y="594" width="1488" height="120" fill="#FFF7ED" stroke="#FED7AA"/><text class="layerTitle" x="126" y="638">Course model</text>
+  <g filter="url(#shadow)"><rect x="330" y="666" width="280" height="52" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="470" y="700" text-anchor="middle">CourseRepository</text></g>
+  <g filter="url(#shadow)"><rect x="785" y="666" width="280" height="52" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="925" y="700" text-anchor="middle">Course</text></g>
+  <g filter="url(#shadow)"><rect x="1210" y="666" width="240" height="52" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="1330" y="700" text-anchor="middle">Student / Phone</text></g>
+  <path class="line" d="M 320 282 L 430 444" stroke="#2563EB" marker-end="url(#arrowBlue)"/><path class="line" d="M 750 282 L 430 444" stroke="#2563EB" marker-end="url(#arrowBlue)"/><path class="line" d="M 1180 282 L 430 444" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 610 480 L 910 480" stroke="#0891B2" marker-end="url(#arrowTeal)"/><path class="line" d="M 1090 516 L 1090 560 L 470 560 L 470 666" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
+  <path class="line" d="M 610 692 L 785 692" stroke="#0891B2" marker-end="url(#arrowTeal)"/><path class="line" d="M 1065 692 L 1210 692" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
 </svg>
