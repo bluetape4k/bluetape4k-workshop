@@ -2,7 +2,7 @@
 
 [English](README.md) | 한국어
 
-## 시퀀스 다이어그램
+## 개요
 
 [bluetape4k-graph](https://github.com/bluetape4k/bluetape4k-graph) 기반의 소셜 커머스 도메인 상품 추천 및 팔로우 추천 예제.
 TinkerGraph, Neo4j, Memgraph 백엔드를 지원합니다.
@@ -11,7 +11,7 @@ TinkerGraph, Neo4j, Memgraph 백엔드를 지원합니다.
 
 ## 아키텍처
 
-![graph-recommendation Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/graph-recommendation-readme-architecture-01.png)
+![graph-recommendation 아키텍처 다이어그램](../../docs/images/readme-diagrams/graph-recommendation-readme-architecture-01.png)
 
 | 계층 | 구성 요소 |
 |------|-----------|
@@ -25,7 +25,7 @@ TinkerGraph, Neo4j, Memgraph 백엔드를 지원합니다.
 
 ## 도메인 모델
 
-![Domain Model](docs/images/readme-diagrams/recommendation-domain-model.png)
+![Domain Model](../../docs/images/readme-diagrams/graph-recommendation-readme-domain-model-01.png)
 
 * `User` 버텍스: `userId`, `name` 속성
 * `Product` 버텍스: `productId`, `name`, `category` 속성
@@ -35,6 +35,8 @@ TinkerGraph, Neo4j, Memgraph 백엔드를 지원합니다.
 ---
 
 ## 알고리즘
+
+![추천 알고리즘 흐름](../../docs/images/readme-diagrams/graph-recommendation-readme-algorithms-01.png)
 
 ### 협업 필터링 — `recommendProducts()`
 
