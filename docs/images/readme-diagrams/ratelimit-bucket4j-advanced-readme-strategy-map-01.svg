@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1660" height="650" viewBox="0 0 1660 650" role="img" aria-label="Bucket4j advanced strategy map">
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#D97706"/></marker>
+    <style>
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.cardTitle{font-family:"Architects Daughter";font-size:30px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:16px;fill:#415166}.small{font-family:"Comic Mono";font-size:14px;fill:#64748B}.line{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+    </style>
+  </defs>
+  <rect class="canvas" width="1660" height="650"/>
+  <rect class="frame" x="24" y="24" width="1612" height="602" rx="24"/>
+  <text class="title" x="830" y="70" text-anchor="middle">Rate-limit strategy map</text>
+  <text class="subtitle" x="830" y="102" text-anchor="middle">Each path prefix has a separate identity key, bucket policy, and missing-identity response.</text>
+
+  <g filter="url(#shadow)">
+    <rect x="92" y="166" width="398" height="428" rx="18" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.8"/>
+    <text class="cardTitle" x="291" y="216" text-anchor="middle">IP strategy</text>
+    <text class="cardText" x="291" y="258" text-anchor="middle">GET /api/anonymous/hello</text>
+    <text class="cardText" x="291" y="306" text-anchor="middle">key: ip:&lt;address&gt;</text>
+    <text class="cardText" x="291" y="354" text-anchor="middle">20 tokens / 10s</text>
+    <text class="cardText" x="291" y="382" text-anchor="middle">100 tokens / minute</text>
+    <text class="small" x="291" y="450" text-anchor="middle">IP comes from remote address unless</text>
+    <text class="small" x="291" y="476" text-anchor="middle">ratelimit.trust-proxy=true.</text>
+    <text class="small" x="291" y="530" text-anchor="middle">unknown IP uses shared unknown bucket.</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="632" y="166" width="398" height="428" rx="18" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.8"/>
+    <text class="cardTitle" x="831" y="216" text-anchor="middle">User strategy</text>
+    <text class="cardText" x="831" y="258" text-anchor="middle">GET /api/authenticated/hello</text>
+    <text class="cardText" x="831" y="306" text-anchor="middle">key: user:&lt;userId&gt;</text>
+    <text class="cardText" x="831" y="354" text-anchor="middle">50 tokens / 10s</text>
+    <text class="cardText" x="831" y="382" text-anchor="middle">200 tokens / minute</text>
+    <text class="small" x="831" y="450" text-anchor="middle">Requires X-User-ID request header.</text>
+    <text class="small" x="831" y="504" text-anchor="middle">Missing user ID returns 401.</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="1172" y="166" width="398" height="428" rx="18" fill="#FFF7ED" stroke="#D97706" stroke-width="1.8"/>
+    <text class="cardTitle" x="1371" y="216" text-anchor="middle">Combined strategy</text>
+    <text class="cardText" x="1371" y="258" text-anchor="middle">GET /api/sensitive/hello</text>
+    <text class="cardText" x="1371" y="306" text-anchor="middle">key: combined:&lt;ip&gt;:&lt;userId&gt;</text>
+    <text class="cardText" x="1371" y="354" text-anchor="middle">10 tokens / 10s</text>
+    <text class="cardText" x="1371" y="382" text-anchor="middle">50 tokens / minute</text>
+    <text class="small" x="1371" y="450" text-anchor="middle">Requires X-User-ID; IP may fall back</text>
+    <text class="small" x="1371" y="476" text-anchor="middle">to the shared unknown bucket.</text>
+    <text class="small" x="1371" y="530" text-anchor="middle">Missing user ID returns 400.</text>
+  </g>
+
+  <path class="line" d="M 490 380 L 632 380" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 1030 380 L 1172 380" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <text class="small" x="560" y="350" text-anchor="middle">same Redis</text>
+  <text class="small" x="1100" y="350" text-anchor="middle">same proxy</text>
+</svg>

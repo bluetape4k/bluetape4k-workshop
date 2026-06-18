@@ -1,19 +1,22 @@
-# bucket4j-advanced — Advanced Rate Limit Strategies
+# bucket4j-advanced - Advanced Rate Limit Strategies
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
-
-This example exercises **bucket4j-advanced — Advanced Rate Limit Strategies** as a runnable rate limiting workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
-
-## Sequence Diagram
-
-A Spring Boot WebFlux + Coroutines workshop module demonstrating three distinct Bucket4j
-rate-limit identity strategies backed by Redis (Lettuce).
+`bucket4j-advanced` demonstrates three independent Bucket4j rate-limit strategies on Spring
+WebFlux coroutine filters. Each filter owns one path prefix, one identity key shape, and one bucket
+configuration. All buckets are stored through the same Redis/Lettuce proxy manager.
 
 ## Architecture
 
-![bucket4j-advanced — Advanced Rate Limit Strategies architecture diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-advanced-architecture-01.png)
+![bucket4j-advanced architecture diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-advanced-readme-architecture-01.png)
+
+The filters are isolated by path prefix: anonymous traffic uses an IP bucket, authenticated traffic
+uses `X-User-ID`, and sensitive traffic combines IP and user ID. Rate-limit failures return standard
+headers; internal limiter errors fail open so the example endpoint remains available.
+
+## Strategy Map
+
+![bucket4j-advanced strategy map](../../docs/images/readme-diagrams/ratelimit-bucket4j-advanced-readme-strategy-map-01.png)
 
 ## Rate-Limit Strategies
 

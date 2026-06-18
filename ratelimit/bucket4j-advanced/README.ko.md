@@ -1,18 +1,23 @@
-# bucket4j-advanced — Advanced Rate Limit Strategies
+# bucket4j-advanced - Advanced Rate Limit Strategies
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
-
-이 예제는 **bucket4j-advanced — Advanced Rate Limit Strategies**를 실행 가능한 요청 속도 제한 워크숍 조각으로 다룹니다. 개발자가 먼저 확인할 흐름인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄여 주는 라이브러리와 프레임워크 API 관찰에 초점을 맞춥니다.
-
-## 시퀀스 다이어그램
-
-Spring Boot WebFlux + Coroutines 워크숍 모듈로, Redis(Lettuce)를 백엔드로 사용하는 세 가지 Bucket4j 요청 제한 식별 전략을 보여 줍니다.
+`bucket4j-advanced`는 Spring WebFlux coroutine filter에서 세 가지 독립 Bucket4j rate-limit
+전략을 보여줍니다. 각 filter는 하나의 path prefix, 하나의 identity key 형태, 하나의 bucket
+설정을 소유합니다. Bucket 상태는 모두 같은 Redis/Lettuce proxy manager를 통해 저장합니다.
 
 ## 아키텍처
 
-![bucket4j-advanced — Advanced Rate Limit Strategies Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/ratelimit-bucket4j-advanced-architecture-01.png)
+![bucket4j-advanced architecture diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-advanced-readme-architecture-01.png)
+
+필터는 path prefix로 분리됩니다. Anonymous traffic은 IP bucket을 사용하고, authenticated
+traffic은 `X-User-ID`를 사용하며, sensitive traffic은 IP와 user ID를 조합합니다. Rate-limit
+실패는 표준 header를 반환하고, limiter 내부 오류는 fail-open으로 처리해 예제 endpoint 가용성을
+유지합니다.
+
+## Strategy Map
+
+![bucket4j-advanced strategy map](../../docs/images/readme-diagrams/ratelimit-bucket4j-advanced-readme-strategy-map-01.png)
 
 ## 요청 제한 전략
 
