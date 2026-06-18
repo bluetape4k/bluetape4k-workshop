@@ -1,38 +1,53 @@
-# Spring Data Elasticsearch Example with Spring Boot 4 and Elasticsearch 8
+# Spring Data Elasticsearch WebFlux
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+This module exposes a coroutine-based WebFlux REST API for `Book` documents stored in
+Elasticsearch. It demonstrates how Spring WebFlux controllers can call Kotlin coroutine
+services, Spring Data coroutine repositories, and `ReactiveElasticsearchTemplate` without
+blocking the request path.
 
-This example exercises **Spring Data Elasticsearch Example with Spring Boot 4 and Elasticsearch 8** as a runnable Spring Data persistence workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+## What this example shows
 
-## Architecture Diagram
+![Spring Data Elasticsearch WebFlux architecture](../../docs/images/readme-diagrams/spring-data-elasticsearch-webflux-readme-architecture-01.png)
 
-![Spring Data Elasticsearch Example with Spring Boot 4 and Elasticsearch 8 Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-data-elasticsearch-webflux-readme-architecture-01.png)
+The application starts a Testcontainers `ElasticsearchOssServer`, configures Spring Data
+Elasticsearch with the container URL, and enables reactive Elasticsearch repositories and
+auditing. HTTP requests enter `BookController`, pass through validation and service rules,
+and are persisted in the `books` index.
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.springdata` as the source of truth when comparing this README with the code.
+## Request flow
 
-## Sequence Diagram
+![Spring Data Elasticsearch WebFlux request flow](../../docs/images/readme-diagrams/spring-data-elasticsearch-webflux-readme-flow-01.png)
 
-![Spring Data Elasticsearch Example with Spring Boot 4 and Elasticsearch 8 sequence diagram](../../docs/images/readme-diagrams/spring-data-elasticsearch-webflux-sequence-01.png)
+The public API is centered on `/v1/books`:
 
-## Introduction
+| Method | Path | Service operation |
+|---|---|---|
+| `GET` | `/v1/books` | Load all books through `BookRepository.findAll()`. |
+| `POST` | `/v1/books` | Validate `ModifyBookRequest`, reject duplicate ISBNs, then save. |
+| `GET` | `/v1/books/{isbn}` | Resolve a book by ISBN or return `404`. |
+| `GET` | `/v1/books/query?title=...&author=...` | Build a native bool query with title and author matches. |
+| `PUT` | `/v1/books/{id}` | Replace the stored document while preserving the id. |
+| `DELETE` | `/v1/books/{id}` | Delete an existing document or return `404`. |
 
-This example demonstrates how to use Spring Data Elasticsearch to do simple CRUD operations.
+## Domain and validation
 
-You can find the tutorial about this example at this
-link: [Getting started with Spring Data Elasticsearch](https://www.geekyhacker.com/getting-started-with-spring-data-elasticsearch/)
+`Book` documents are stored in the `books` index with `title`, `authorName`,
+`publicationYear`, `isbn`, and the Spring Data document `id`. `ModifyBookRequest` validates
+blank fields and uses `PublicationYearValidator` to reject future publication years.
 
-For this example, we created a Book controller that allows doing the following operations with Elasticsearch:
+`BookExceptionHandler` maps `BookNotFoundException` to `404` and duplicated ISBNs to
+`400`, so controller methods can stay focused on request-to-service routing.
 
-- Get the list of all books
-- Create a book
-- Update a book by Id
-- Delete a book by Id
-- Search for a book by ISBN
-- Fuzzy search for books by author and title
+## Testing notes
+
+The integration tests use `WebTestClient`, recreate the `books` index before each test, and
+refresh the index after writes so searches observe the new documents. The test classes are
+currently disabled because the Elasticsearch Java client stack in this sample line is
+Jackson 2 based while the Spring Boot 4 baseline uses Jackson 3.
 
 ## References
 
-- [Spring Data Elasticsearch - Reference Documentation](https://docs.spring.io/spring-data/elasticsearch/docs/current/reference/html/)
-- [How to use Spring Data Elasticsearch NativeSearchQuery](https://juntcom.tistory.com/149)
+- [Spring Data Elasticsearch Reference Documentation](https://docs.spring.io/spring-data/elasticsearch/reference/)
+- [Spring WebFlux Reference Documentation](https://docs.spring.io/spring-framework/reference/web/webflux.html)

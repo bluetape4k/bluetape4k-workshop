@@ -1,37 +1,53 @@
-# Spring Data Elasticsearch Example with Spring Boot 4 and Elasticsearch 8
+# Spring Data Elasticsearch WebFlux
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+이 모듈은 Elasticsearch에 저장되는 `Book` 문서를 대상으로 coroutine 기반 WebFlux REST
+API를 제공합니다. Spring WebFlux controller가 Kotlin coroutine service,
+Spring Data coroutine repository, `ReactiveElasticsearchTemplate`을 호출하면서 request
+path를 blocking하지 않는 구성을 보여 줍니다.
 
-이 예제는 **Spring Data Elasticsearch Example with Spring Boot 4 and Elasticsearch 8**을 실행 가능한 Spring Data 영속성 워크샵 조각으로 다룹니다. 개발자가 먼저 확인할 흐름인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄여 주는 라이브러리와 프레임워크 API 관찰에 초점을 둡니다.
+## 이 예제가 보여 주는 것
 
-## 아키텍처 다이어그램
+![Spring Data Elasticsearch WebFlux architecture](../../docs/images/readme-diagrams/spring-data-elasticsearch-webflux-readme-architecture-01.png)
 
-![Spring Data Elasticsearch Example with Spring Boot 4 and Elasticsearch 8 Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/spring-data-elasticsearch-webflux-readme-architecture-01.png)
+애플리케이션은 Testcontainers `ElasticsearchOssServer`를 시작하고, container URL로
+Spring Data Elasticsearch client를 구성하며, reactive Elasticsearch repository와 auditing을
+활성화합니다. HTTP 요청은 `BookController`로 들어와 validation과 service rule을 거친 뒤
+`books` index에 저장됩니다.
 
-이 모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제에서 사용하는 런타임 의존성을 중심으로 구성됩니다. 이 README와 코드를 비교할 때는 `io.bluetape4k.workshop.springdata` 패키지를 기준으로 삼으세요.
+## Request 흐름
 
-## 시퀀스 다이어그램
+![Spring Data Elasticsearch WebFlux request flow](../../docs/images/readme-diagrams/spring-data-elasticsearch-webflux-readme-flow-01.png)
 
-![Spring Data Elasticsearch Example with Spring Boot 4 and Elasticsearch 8 sequence diagram](../../docs/images/readme-diagrams/spring-data-elasticsearch-webflux-sequence-01.png)
+Public API는 `/v1/books`를 중심으로 구성됩니다.
 
-## 소개
+| Method | Path | Service operation |
+|---|---|---|
+| `GET` | `/v1/books` | `BookRepository.findAll()`로 모든 book을 조회합니다. |
+| `POST` | `/v1/books` | `ModifyBookRequest`를 검증하고 중복 ISBN을 거부한 뒤 저장합니다. |
+| `GET` | `/v1/books/{isbn}` | ISBN으로 book을 찾고 없으면 `404`를 반환합니다. |
+| `GET` | `/v1/books/query?title=...&author=...` | title과 author match 조건으로 native bool query를 만듭니다. |
+| `PUT` | `/v1/books/{id}` | 저장된 document의 id를 유지하면서 내용을 교체합니다. |
+| `DELETE` | `/v1/books/{id}` | 존재하는 document를 삭제하고 없으면 `404`를 반환합니다. |
 
-이 예제는 Spring Data Elasticsearch로 간단한 CRUD 작업을 수행하는 방법을 보여 줍니다.
+## Domain and validation
 
-이 예제에 대한 tutorial은 다음 링크에서 확인할 수 있습니다: [Getting started with Spring Data Elasticsearch](https://www.geekyhacker.com/getting-started-with-spring-data-elasticsearch/)
+`Book` document는 `books` index에 `title`, `authorName`, `publicationYear`, `isbn`,
+Spring Data document `id`로 저장됩니다. `ModifyBookRequest`는 blank field를 검증하고
+`PublicationYearValidator`로 미래 publication year를 거부합니다.
 
-이 예제에서는 Elasticsearch로 다음 작업을 수행할 수 있는 Book controller를 만들었습니다.
+`BookExceptionHandler`는 `BookNotFoundException`을 `404`로, duplicated ISBN을 `400`으로
+매핑하므로 controller method는 request-to-service routing에 집중할 수 있습니다.
 
-- 모든 book 목록 조회
-- book 생성
-- Id로 book 수정
-- Id로 book 삭제
-- ISBN으로 book 검색
-- author와 title로 book fuzzy search
+## Testing notes
+
+Integration test는 `WebTestClient`를 사용하고, 각 테스트 전에 `books` index를 재생성하며,
+write 이후 검색이 새 document를 볼 수 있도록 index를 refresh합니다. 테스트 class들은 현재
+비활성화되어 있습니다. 이 sample line의 Elasticsearch Java client stack은 Jackson 2 기반인
+반면 Spring Boot 4 baseline은 Jackson 3를 사용하기 때문입니다.
 
 ## 참고
 
-- [Spring Data Elasticsearch - Reference Documentation](https://docs.spring.io/spring-data/elasticsearch/docs/current/reference/html/)
-- [How to use Spring Data Elasticsearch NativeSearchQuery](https://juntcom.tistory.com/149)
+- [Spring Data Elasticsearch Reference Documentation](https://docs.spring.io/spring-data/elasticsearch/reference/)
+- [Spring WebFlux Reference Documentation](https://docs.spring.io/spring-framework/reference/web/webflux.html)

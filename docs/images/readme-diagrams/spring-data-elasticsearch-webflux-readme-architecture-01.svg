@@ -1,158 +1,109 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1334" viewBox="0 0 1320 1334" role="img" aria-label="Spring Data Elasticsearch Example with Spring Boot 4 and Elasticsearch 8 architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-data/elasticsearch-webflux/src/main/kotlin/io/bluetape4k/workshop/elasticsearch/ElasticsearchApplication.kt&quot;,&quot;spring-data/elasticsearch-webflux/src/main/kotlin/io/bluetape4k/workshop/elasticsearch/config/ElasticsearchClientConfig.kt&quot;,&quot;spring-data/elasticsearch-webflux/src/main/kotlin/io/bluetape4k/workshop/elasticsearch/config/JacksonConfig.kt&quot;,&quot;spring-data/elasticsearch-webflux/src/main/kotlin/io/bluetape4k/workshop/elasticsearch/config/NettyConfig.kt&quot;,&quot;spring-data/elasticsearch-webflux/src/main/kotlin/io/bluetape4k/workshop/elasticsearch/config/SwaggerConfig.kt&quot;,&quot;spring-data/elasticsearch-webflux/src/main/kotlin/io/bluetape4k/workshop/elasticsearch/controller/BookController.kt&quot;,&quot;spring-data/elasticsearch-webflux/src/main/kotlin/io/bluetape4k/workshop/elasticsearch/domain/dto/ModifyBookRequest.kt&quot;,&quot;spring-data/elasticsearch-webflux/src/main/kotlin/io/bluetape4k/workshop/elasticsearch/domain/exception/BookNotFoundException.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1840" height="1040" viewBox="0 0 1840 1040">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .canvas { fill: #fbfcff; }
+      .title { font-family: "Architects Daughter", "Comic Sans MS", cursive; font-size: 42px; fill: #102033; }
+      .subtitle { font-family: "Comic Mono", "SFMono-Regular", monospace; font-size: 16px; fill: #536270; }
+      .layer-title { font-family: "Architects Daughter", "Comic Sans MS", cursive; font-size: 28px; fill: #263445; }
+      .card-title { font-family: "Architects Daughter", "Comic Sans MS", cursive; font-size: 27px; fill: #102033; }
+      .card-small { font-family: "Comic Mono", "SFMono-Regular", monospace; font-size: 15px; fill: #394959; }
+      .tiny { font-family: "Comic Mono", "SFMono-Regular", monospace; font-size: 13px; fill: #5b6978; }
+      .layer-api { fill: #eef6ff; stroke: #9cc8ff; }
+      .layer-service { fill: #eefaf2; stroke: #9ad8ae; }
+      .layer-data { fill: #fff8eb; stroke: #ffc879; }
+      .layer-runtime { fill: #fff1f0; stroke: #ffaaa3; }
+      .card-blue { fill: #ffffff; stroke: #2f6df6; }
+      .card-green { fill: #ffffff; stroke: #18964a; }
+      .card-orange { fill: #ffffff; stroke: #f07d22; }
+      .card-red { fill: #ffffff; stroke: #f04438; }
+      .line-blue { fill: none; stroke: #2f6df6; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+      .line-green { fill: none; stroke: #18a558; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+      .line-orange { fill: none; stroke: #f07d22; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+      .line-red { fill: none; stroke: #f04438; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
+    <marker id="ew-arrow-blue" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6"/>
+    </marker>
+    <marker id="ew-arrow-green" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558"/>
+    </marker>
+    <marker id="ew-arrow-orange" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22"/>
+    </marker>
+    <marker id="ew-arrow-red" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438"/>
+    </marker>
   </defs>
-  <rect class="canvas" width="1320" height="1334"/>
-  <rect class="frame" x="16" y="16" width="1288" height="1302" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Spring Data Elasticsearch Example with Spring Boot 4 and Elasticsearch 8</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Spring Data repositories, reactive APIs, and backing stores</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="476.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="436.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="324.5">Data Access</tspan><tspan class="layer-title" x="151.0" y="347.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="374.0">apps, handlers,</tspan><tspan class="layer-detail" x="151.0" y="390.0">repository tests</tspan></text>
-    </g>
-    <g class="layer" data-layer="service">
-      <rect x="46.0" y="608.0" width="1228.0" height="132.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="628.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="646.5">Data Service</tspan><tspan class="layer-title" x="151.0" y="669.5">Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="688.0">query use cases,</tspan><tspan class="layer-detail" x="151.0" y="704.0">transaction</tspan><tspan class="layer-detail" x="151.0" y="720.0">boundaries</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="758.0" width="1228.0" height="366.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="778.0" width="174" height="326.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="913.5">Repository</tspan><tspan class="layer-title" x="151.0" y="936.5">Integration</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="963.0">Spring Data, R2DBC,</tspan><tspan class="layer-detail" x="151.0" y="979.0">Mongo, Redis</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="1142.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="1162.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="1192.0">Database Runtime</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1222.0">SQL, MongoDB,</tspan><tspan class="layer-detail" x="151.0" y="1238.0">Elasticsearch,</tspan><tspan class="layer-detail" x="151.0" y="1254.0">Redis</tspan></text>
-    </g>
-    <g class="edge" data-edge="api4-&gt;service0" data-label="delegates">
-      <path d="M 424.0 570.0 L 424.0 599.0 L 760.0 599.0 L 760.0 628.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
-    </g>
-    <g class="edge" data-edge="service0-&gt;infra0" data-label="persists / publishes">
-      <path d="M 760.0 720.0 L 760.0 749.0 L 424.0 749.0 L 424.0 778.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 760.0 1104.0 L 760.0 1133.0 L 592.0 1133.0 L 592.0 1162.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Elasticsearch | Application | application bootstrap">
-      <rect x="274.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="171.5">Elasticsearch</tspan><tspan class="node-title" x="424.0" y="195.5">Application</tspan><tspan class="node-detail" x="424.0" y="219.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry1" data-lines="Abstract Elasticsearch | Application Test | elasticsearch">
-      <rect x="610.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="171.5">Abstract Elasticsearch</tspan><tspan class="node-title" x="760.0" y="195.5">Application Test</tspan><tspan class="node-detail" x="760.0" y="219.5">elasticsearch</tspan></text>
-    </g>
-    <g class="node" data-node="entry2" data-lines="Elasticsearch Client | Config Test | configuration">
-      <rect x="946.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="171.5">Elasticsearch Client</tspan><tspan class="node-title" x="1096.0" y="195.5">Config Test</tspan><tspan class="node-detail" x="1096.0" y="219.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="entry3" data-lines="Book Controller Test | HTTP adapter">
-      <rect x="274.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="300.5">Book Controller Test</tspan><tspan class="node-detail" x="424.0" y="324.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="entry4" data-lines="Book Repository Test | repository">
-      <rect x="610.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="300.5">Book Repository Test</tspan><tspan class="node-detail" x="760.0" y="324.5">repository</tspan></text>
-    </g>
-    <g class="node" data-node="api0" data-lines="Netty Config | configuration">
-      <rect x="946.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="300.5">Netty Config</tspan><tspan class="node-detail" x="1096.0" y="324.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="api1" data-lines="Book Controller | HTTP adapter">
-      <rect x="274.0" y="368.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="410.5">Book Controller</tspan><tspan class="node-detail" x="424.0" y="434.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api2" data-lines="Default Book Service | service component">
-      <rect x="610.0" y="368.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="410.5">Default Book Service</tspan><tspan class="node-detail" x="760.0" y="434.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="api3" data-lines="Book Exception Handler | handlers">
-      <rect x="946.0" y="368.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="410.5">Book Exception Handler</tspan><tspan class="node-detail" x="1096.0" y="434.5">handlers</tspan></text>
-    </g>
-    <g class="node" data-node="api4" data-lines="Redirect Web Filter | webfilter">
-      <rect x="274.0" y="478.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="520.5">Redirect Web Filter</tspan><tspan class="node-detail" x="424.0" y="544.5">webfilter</tspan></text>
-    </g>
-    <g class="node" data-node="service0" data-lines="Book Service | service component">
-      <rect x="610.0" y="628.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="670.5">Book Service</tspan><tspan class="node-detail" x="760.0" y="694.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Elasticsearch Client | Config | configuration">
-      <rect x="274.0" y="778.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="815.5">Elasticsearch Client</tspan><tspan class="node-title" x="424.0" y="839.5">Config</tspan><tspan class="node-detail" x="424.0" y="863.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="infra1" data-lines="Jackson Config | configuration">
-      <rect x="610.0" y="785.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="827.5">Jackson Config</tspan><tspan class="node-detail" x="760.0" y="851.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="infra2" data-lines="Swagger Config | configuration">
-      <rect x="946.0" y="785.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="827.5">Swagger Config</tspan><tspan class="node-detail" x="1096.0" y="851.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="infra3" data-lines="Modify Book Request | domain model">
-      <rect x="274.0" y="902.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="944.5">Modify Book Request</tspan><tspan class="node-detail" x="424.0" y="968.5">domain model</tspan></text>
-    </g>
-    <g class="node" data-node="infra4" data-lines="Book Not Found Exception | domain model">
-      <rect x="610.0" y="902.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="944.5">Book Not Found Exception</tspan><tspan class="node-detail" x="760.0" y="968.5">domain model</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k Data APIs">
-      <rect x="946.0" y="902.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="944.5">workshop</tspan><tspan class="node-detail" x="1096.0" y="968.5">bluetape4k Data APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="testcontainers | bluetape4k Data APIs">
-      <rect x="274.0" y="1012.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="1054.5">testcontainers</tspan><tspan class="node-detail" x="424.0" y="1078.5">bluetape4k Data APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="jackson3 | bluetape4k Data APIs">
-      <rect x="610.0" y="1012.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1054.5">jackson3</tspan><tspan class="node-detail" x="760.0" y="1078.5">bluetape4k Data APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="Elasticsearch | Database Runtime">
-      <rect x="442.0" y="1162.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="592.0" y="1204.5">Elasticsearch</tspan><tspan class="node-detail" x="592.0" y="1228.5">Database Runtime</tspan></text>
-    </g>
-    <g class="node" data-node="runtime1" data-lines="Testcontainers | Database Runtime">
-      <rect x="778.0" y="1162.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="928.0" y="1204.5">Testcontainers</tspan><tspan class="node-detail" x="928.0" y="1228.5">Database Runtime</tspan></text>
-    </g>
+
+  <rect class="canvas" x="0" y="0" width="1840" height="1040"/>
+  <rect x="24" y="24" width="1792" height="992" rx="22" fill="#ffffff" stroke="#d7e0eb" stroke-width="2"/>
+
+  <text class="title" x="920" y="72" text-anchor="middle">WebFlux book API over Elasticsearch</text>
+  <text class="subtitle" x="920" y="102" text-anchor="middle">Coroutine controllers route validated book requests to repository and native query paths.</text>
+
+  <rect class="layer-api" x="80" y="140" width="1680" height="185" rx="18" stroke-width="2"/>
+  <text class="layer-title" x="112" y="184">HTTP API layer</text>
+  <rect class="card-blue" x="150" y="220" width="300" height="76" rx="10" stroke-width="2"/>
+  <text class="card-title" x="300" y="251" text-anchor="middle">WebFlux request</text>
+  <text class="card-small" x="300" y="275" text-anchor="middle">/v1/books endpoints</text>
+  <rect class="card-blue" x="590" y="220" width="300" height="76" rx="10" stroke-width="2"/>
+  <text class="card-title" x="740" y="251" text-anchor="middle">BookController</text>
+  <text class="card-small" x="740" y="275" text-anchor="middle">suspend REST methods</text>
+  <rect class="card-blue" x="1030" y="220" width="300" height="76" rx="10" stroke-width="2"/>
+  <text class="card-title" x="1180" y="251" text-anchor="middle">ModifyBookRequest</text>
+  <text class="card-small" x="1180" y="275" text-anchor="middle">Bean validation</text>
+  <rect class="card-blue" x="1470" y="220" width="220" height="76" rx="10" stroke-width="2"/>
+  <text class="card-title" x="1580" y="251" text-anchor="middle">Swagger</text>
+  <text class="card-small" x="1580" y="275" text-anchor="middle">API docs</text>
+
+  <rect class="layer-service" x="80" y="365" width="1680" height="195" rx="18" stroke-width="2"/>
+  <text class="layer-title" x="112" y="409">Coroutine service layer</text>
+  <rect class="card-green" x="235" y="450" width="330" height="82" rx="10" stroke-width="2"/>
+  <text class="card-title" x="400" y="483" text-anchor="middle">DefaultBookService</text>
+  <text class="card-small" x="400" y="508" text-anchor="middle">CRUD and ISBN rules</text>
+  <rect class="card-green" x="755" y="450" width="330" height="82" rx="10" stroke-width="2"/>
+  <text class="card-title" x="920" y="483" text-anchor="middle">NativeQuery builder</text>
+  <text class="card-small" x="920" y="508" text-anchor="middle">title + author bool match</text>
+  <rect class="card-green" x="1275" y="450" width="330" height="82" rx="10" stroke-width="2"/>
+  <text class="card-title" x="1440" y="483" text-anchor="middle">BookExceptionHandler</text>
+  <text class="card-small" x="1440" y="508" text-anchor="middle">404 and 400 responses</text>
+
+  <rect class="layer-data" x="80" y="600" width="1680" height="195" rx="18" stroke-width="2"/>
+  <text class="layer-title" x="112" y="644">Spring Data Elasticsearch layer</text>
+  <rect class="card-orange" x="180" y="685" width="360" height="82" rx="10" stroke-width="2"/>
+  <text class="card-title" x="360" y="718" text-anchor="middle">BookRepository</text>
+  <text class="card-small" x="360" y="743" text-anchor="middle">CoroutineCrudRepository</text>
+  <rect class="card-orange" x="650" y="685" width="410" height="82" rx="10" stroke-width="2"/>
+  <text class="card-title" x="855" y="718" text-anchor="middle">ReactiveElasticsearchTemplate</text>
+  <text class="card-small" x="855" y="743" text-anchor="middle">native search result stream</text>
+  <rect class="card-orange" x="1170" y="685" width="390" height="82" rx="10" stroke-width="2"/>
+  <text class="card-title" x="1365" y="718" text-anchor="middle">ElasticsearchClientConfig</text>
+  <text class="card-small" x="1365" y="743" text-anchor="middle">container URL + basic auth</text>
+
+  <rect class="layer-runtime" x="80" y="835" width="1680" height="125" rx="18" stroke-width="2"/>
+  <text class="layer-title" x="112" y="878">Runtime</text>
+  <rect class="card-red" x="710" y="866" width="420" height="70" rx="10" stroke-width="2"/>
+  <g transform="translate(745 879) scale(0.66)">
+    <circle cx="34" cy="34" r="30" fill="#00bfb3"/>
+    <path d="M 17 36 A 18 18 0 0 1 52 30" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+    <path d="M 20 47 A 18 18 0 0 0 53 45" fill="none" stroke="#f2c94c" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="54" cy="31" r="8" fill="#343741"/>
   </g>
+  <text class="card-title" x="950" y="895" text-anchor="middle">Elasticsearch OSS</text>
+  <text class="card-small" x="950" y="918" text-anchor="middle">Testcontainers books index</text>
+  <rect class="card-red" x="1260" y="866" width="260" height="70" rx="10" stroke-width="2"/>
+  <text class="card-title" x="1390" y="895" text-anchor="middle">NettyConfig</text>
+  <text class="card-small" x="1390" y="918" text-anchor="middle">reactive resources</text>
+
+  <path class="line-blue" d="M 450 258 L 578 258" marker-end="url(#ew-arrow-blue)"/>
+  <path class="line-blue" d="M 890 258 L 1018 258" marker-end="url(#ew-arrow-blue)"/>
+  <path class="line-green" d="M 740 296 L 740 344 L 400 344 L 400 438" marker-end="url(#ew-arrow-green)"/>
+  <path class="line-green" d="M 1180 296 L 1180 344 L 920 344 L 920 438" marker-end="url(#ew-arrow-green)"/>
+  <path class="line-green" d="M 740 296 L 740 344 L 1440 344 L 1440 438" marker-end="url(#ew-arrow-green)"/>
+
+  <path class="line-orange" d="M 400 532 L 400 673" marker-end="url(#ew-arrow-orange)"/>
+  <path class="line-orange" d="M 920 532 L 920 673" marker-end="url(#ew-arrow-orange)"/>
+  <path class="line-orange" d="M 1365 767 L 1365 820 L 1040 820 L 1040 854" marker-end="url(#ew-arrow-orange)"/>
+  <path class="line-red" d="M 360 767 L 360 820 L 820 820 L 820 854" marker-end="url(#ew-arrow-red)"/>
+  <path class="line-red" d="M 855 767 L 855 854" marker-end="url(#ew-arrow-red)"/>
 </svg>
