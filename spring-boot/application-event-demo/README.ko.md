@@ -2,55 +2,54 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+이 모듈은 WebFlux 기반 Spring Boot 애플리케이션에서 Spring Application Event를 발행하는 두 가지 실전 방식을 보여 줍니다.
 
-이 예제는 **Spring Application Event Demo**를 실행 가능한 Spring Boot 애플리케이션 기능 워크숍 조각으로 다룹니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄여 주는 라이브러리와 프레임워크 API 관찰에 초점을 둡니다.
+- `CustomEventPublisher`를 통해 컨트롤러에서 직접 발행합니다.
+- `@AspectEventEmitter`와 AOP advice를 통해 선언적으로 발행합니다.
 
-## 아키텍처 다이어그램
+## 아키텍처
 
-![Spring Application Event Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-application-event-demo-readme-architecture-01.png)
+![Spring Application Event Demo architecture](../../docs/images/readme-diagrams/spring-boot-application-event-demo-readme-architecture-01.png)
 
-이 모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성을 중심으로 구성됩니다. README와 코드를 비교할 때는 `io.bluetape4k.workshop.springboot` 패키지를 기준으로 삼습니다.
+두 경로는 모두 Spring `ApplicationEventPublisher`에서 만납니다. 직접 발행 경로는 `CustomEvent`를 명시적으로 만들고, AOP 경로는 어노테이션이 붙은 서비스 메서드를 가로채서 설정된 SpEL 표현식을 평가한 뒤 `AspectEvent`를 만듭니다.
 
-## 시퀀스 다이어그램
+## 직접 CustomEvent 발행 흐름
 
-![Spring Application Event Demo sequence diagram](../../docs/images/readme-diagrams/spring-boot-application-event-demo-sequence-01.png)
+![Direct CustomEvent publishing flow](../../docs/images/readme-diagrams/spring-boot-application-event-demo-sequence-01.png)
 
-Reactor와 코루틴으로 Spring Application Event를 비동기 발행하고 수신하는 패턴을 보여 줍니다.
+`CustomEventController`는 `GET /event?message=...`를 제공하고 `CustomEventPublisher.publish(message)`를 두 번 호출합니다. 이벤트는 세 가지 리스너 스타일로 소비됩니다.
 
-## AOP 기반 이벤트 흐름
+- `CustomEventListener`: `ApplicationListener<CustomEvent>` 구현체입니다.
+- `AnnotatedCustomEventListener`: 일반 `@EventListener` 핸들러입니다.
+- `AnnotatedCoroutineCustomEventListener`: suspend 작업을 Reactor `mono(Dispatchers.IO)`로 감싼 리스너입니다.
 
-![AOP diagram](../../docs/images/readme-diagrams/spring-boot-application-event-demo-sequence-02.png)
+## AOP AspectEvent 발행 흐름
 
-## 두 가지 이벤트 발행 방식
+![AOP AspectEvent publishing flow](../../docs/images/readme-diagrams/spring-boot-application-event-demo-sequence-02.png)
 
-### 1. 직접 발행(`custom/`)
+`MyEventService.someOperation()`은 도메인 작업에만 집중합니다. `AspectEventPublisherAspect`는 이벤트 발행 관심사를 처리합니다.
 
-`ApplicationEventPublisher`를 직접 주입하고 컴포넌트에서 이벤트를 발행합니다.
+1. `@AspectEventEmitter`가 붙은 메서드를 가로챕니다.
+2. `joinPoint.proceed()`로 대상 메서드를 실행합니다.
+3. 반환값을 기준으로 어노테이션의 `params` SpEL을 평가합니다.
+4. 설정된 이벤트 타입을 만들고 Spring을 통해 발행합니다.
 
-```kotlin
-@Component
-class CustomEventPublisher(private val publisher: ApplicationEventPublisher) {
-    fun publish(message: String) = publisher.publishEvent(CustomEvent(this, message))
-}
+## 사용법
+
+애플리케이션을 실행하고 직접 발행 엔드포인트를 호출합니다.
+
+```bash
+./gradlew :spring-boot:application-event-demo:bootRun
+curl "http://localhost:8080/event?message=hello"
 ```
 
-리스너는 일반 동기 방식과 코루틴 기반 비동기 방식으로 모두 제공됩니다.
-- `CustomEventListener` — `@EventListener`로 이벤트를 동기 수신합니다.
-- `AnnotatedCoroutineCustomEventListener` — `@EventListener`와 suspend 함수로 이벤트를 비동기 수신합니다.
+집중 테스트를 실행합니다.
 
-### 2. AOP 기반 발행(`aspect/`)
-
-메서드가 실행될 때 AOP를 통해 이벤트를 자동 발행합니다.
-
-```kotlin
-@AspectEventEmitter  // Automatically publishes an event when a method with this annotation executes
-fun doSomething(): Result { ... }
+```bash
+./gradlew :spring-boot:application-event-demo:test
 ```
 
-- `AspectEventPublisherAspect` — Around Advice로 이벤트를 캡처하고 발행합니다.
-- `AspectEventListener` — 동기 이벤트 수신자입니다.
-- `CoroutineAspectEventListener` — 코루틴 기반 비동기 이벤트 수신자입니다.
+`CustomEventPublisherTest`는 `WebTestClient`로 HTTP 발행 경로를 검증합니다. `AspectFlowEventEmitterTest`는 aspect가 반환된 `OperationParams.id`에서 메시지를 만들어 `AspectEvent`를 발행하는지 검증합니다.
 
 ## 참고
 

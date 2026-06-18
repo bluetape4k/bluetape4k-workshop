@@ -1,162 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1390" viewBox="0 0 1320 1390" role="img" aria-label="Spring Application Event Demo architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-boot/application-event-demo/src/main/kotlin/io/bluetape4k/workshop/application/event/EventApplication.kt&quot;,&quot;spring-boot/application-event-demo/src/main/kotlin/io/bluetape4k/workshop/application/event/aspect/AspectEvent.kt&quot;,&quot;spring-boot/application-event-demo/src/main/kotlin/io/bluetape4k/workshop/application/event/aspect/AspectEventEmitter.kt&quot;,&quot;spring-boot/application-event-demo/src/main/kotlin/io/bluetape4k/workshop/application/event/aspect/AspectEventPublisherAspect.kt&quot;,&quot;spring-boot/application-event-demo/src/main/kotlin/io/bluetape4k/workshop/application/event/aspect/MyEventService.kt&quot;,&quot;spring-boot/application-event-demo/src/main/kotlin/io/bluetape4k/workshop/application/event/aspect/listeners/AspectEventListener.kt&quot;,&quot;spring-boot/application-event-demo/src/main/kotlin/io/bluetape4k/workshop/application/event/aspect/listeners/CoroutineAspectEventListener.kt&quot;,&quot;spring-boot/application-event-demo/src/main/kotlin/io/bluetape4k/workshop/application/event/config/NettyConfig.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1720" height="920" viewBox="0 0 1720 920" role="img" aria-label="Spring application event demo architecture">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker>
+    <marker id="arrowTeal" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#0891B2"/></marker>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}
+      .title{font-family:"Architects Daughter";font-size:40px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#51606F}
+      .layer{stroke-width:1.6;rx:22}.layerTitle{font-family:"Architects Daughter";font-size:28px;fill:#243447}
+      .cardTitle{font-family:"Architects Daughter";font-size:28px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}
+      .line{fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}.lineLabel{font-family:"Comic Mono";font-size:14px;fill:#334155}
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="1390"/>
-  <rect class="frame" x="16" y="16" width="1288" height="1358" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Spring Application Event Demo</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Spring Boot application feature and runtime integration</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="394.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="354.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="283.5">Spring Boot</tspan><tspan class="layer-title" x="151.0" y="306.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="333.0">apps, controllers,</tspan><tspan class="layer-detail" x="151.0" y="349.0">scheduled tests</tspan></text>
-    </g>
-    <g class="layer" data-layer="service">
-      <rect x="46.0" y="526.0" width="1228.0" height="256.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="546.0" width="174" height="216.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="638.0">Feature Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="668.0">services,</tspan><tspan class="layer-detail" x="151.0" y="684.0">resilience, events,</tspan><tspan class="layer-detail" x="151.0" y="700.0">cache policy</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="800.0" width="1228.0" height="380.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="820.0" width="174" height="340.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="962.5">Boot Integration</tspan><tspan class="layer-title" x="151.0" y="985.5">Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1004.0">auto-config,</tspan><tspan class="layer-detail" x="151.0" y="1020.0">clients,</tspan><tspan class="layer-detail" x="151.0" y="1036.0">repositories</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="1198.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="1218.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="1236.5">Runtime</tspan><tspan class="layer-title" x="151.0" y="1259.5">Dependencies</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1278.0">database, cache,</tspan><tspan class="layer-detail" x="151.0" y="1294.0">messaging,</tspan><tspan class="layer-detail" x="151.0" y="1310.0">containers</tspan></text>
-    </g>
-    <g class="edge" data-edge="api4-&gt;service0" data-label="delegates">
-      <path d="M 760.0 488.0 L 760.0 517.0 L 424.0 517.0 L 424.0 546.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
-    </g>
-    <g class="edge" data-edge="service5-&gt;infra0" data-label="persists / publishes">
-      <path d="M 1096.0 762.0 L 1096.0 791.0 L 424.0 791.0 L 424.0 820.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 424.0 1160.0 L 424.0 1189.0 L 760.0 1189.0 L 760.0 1218.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Event Application | application bootstrap">
-      <rect x="274.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="183.5">Event Application</tspan><tspan class="node-detail" x="424.0" y="207.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry1" data-lines="Aspect Flow Event | Emitter Test | aspect">
-      <rect x="610.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="171.5">Aspect Flow Event</tspan><tspan class="node-title" x="760.0" y="195.5">Emitter Test</tspan><tspan class="node-detail" x="760.0" y="219.5">aspect</tspan></text>
-    </g>
-    <g class="node" data-node="entry2" data-lines="Custom Event Publisher | Test | custom">
-      <rect x="946.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="171.5">Custom Event Publisher</tspan><tspan class="node-title" x="1096.0" y="195.5">Test</tspan><tspan class="node-detail" x="1096.0" y="219.5">custom</tspan></text>
-    </g>
-    <g class="node" data-node="api0" data-lines="Aspect Event Listener | listeners">
-      <rect x="274.0" y="265.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="307.5">Aspect Event Listener</tspan><tspan class="node-detail" x="424.0" y="331.5">listeners</tspan></text>
-    </g>
-    <g class="node" data-node="api1" data-lines="Coroutine Aspect Event | Listener | listeners">
-      <rect x="610.0" y="258.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="295.5">Coroutine Aspect Event</tspan><tspan class="node-title" x="760.0" y="319.5">Listener</tspan><tspan class="node-detail" x="760.0" y="343.5">listeners</tspan></text>
-    </g>
-    <g class="node" data-node="api2" data-lines="Netty Config | configuration">
-      <rect x="946.0" y="265.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="307.5">Netty Config</tspan><tspan class="node-detail" x="1096.0" y="331.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="api3" data-lines="Custom Event Controller | HTTP adapter">
-      <rect x="274.0" y="389.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="431.5">Custom Event Controller</tspan><tspan class="node-detail" x="424.0" y="455.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api4" data-lines="Annotated Coroutine | Custom Event Listener | listeners">
-      <rect x="610.0" y="382.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="419.5">Annotated Coroutine</tspan><tspan class="node-title" x="760.0" y="443.5">Custom Event Listener</tspan><tspan class="node-detail" x="760.0" y="467.5">listeners</tspan></text>
-    </g>
-    <g class="node" data-node="service0" data-lines="Aspect Event Publisher | Aspect | aspect">
-      <rect x="274.0" y="546.0" width="300.0" height="106.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="583.5">Aspect Event Publisher</tspan><tspan class="node-title" x="424.0" y="607.5">Aspect</tspan><tspan class="node-detail" x="424.0" y="631.5">aspect</tspan></text>
-    </g>
-    <g class="node" data-node="service1" data-lines="My Event Service | service component">
-      <rect x="610.0" y="553.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="595.5">My Event Service</tspan><tspan class="node-detail" x="760.0" y="619.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="service2" data-lines="Custom Event Publisher | custom">
-      <rect x="946.0" y="553.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="595.5">Custom Event Publisher</tspan><tspan class="node-detail" x="1096.0" y="619.5">custom</tspan></text>
-    </g>
-    <g class="node" data-node="service3" data-lines="Aspect Event | aspect">
-      <rect x="274.0" y="670.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="712.5">Aspect Event</tspan><tspan class="node-detail" x="424.0" y="736.5">aspect</tspan></text>
-    </g>
-    <g class="node" data-node="service4" data-lines="Aspect Event Emitter | aspect">
-      <rect x="610.0" y="670.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="712.5">Aspect Event Emitter</tspan><tspan class="node-detail" x="760.0" y="736.5">aspect</tspan></text>
-    </g>
-    <g class="node" data-node="service5" data-lines="Custom Event | custom">
-      <rect x="946.0" y="670.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="712.5">Custom Event</tspan><tspan class="node-detail" x="1096.0" y="736.5">custom</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Spring boot4 | dependencies | Spring Boot Layer">
-      <rect x="274.0" y="820.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="857.5">Spring boot4</tspan><tspan class="node-title" x="424.0" y="881.5">dependencies</tspan><tspan class="node-detail" x="424.0" y="905.5">Spring Boot Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra1" data-lines="Spring boot | autoconfigure lib | Spring Boot Layer">
-      <rect x="610.0" y="820.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="857.5">Spring boot</tspan><tspan class="node-title" x="760.0" y="881.5">autoconfigure lib</tspan><tspan class="node-detail" x="760.0" y="905.5">Spring Boot Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra2" data-lines="Spring boot | autoconfigure processor | Spring Boot Layer">
-      <rect x="946.0" y="820.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="857.5">Spring boot</tspan><tspan class="node-title" x="1096.0" y="881.5">autoconfigure processor</tspan><tspan class="node-detail" x="1096.0" y="905.5">Spring Boot Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra3" data-lines="Spring boot | configuration processor | Spring Boot Layer">
-      <rect x="274.0" y="944.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="981.5">Spring boot</tspan><tspan class="node-title" x="424.0" y="1005.5">configuration processor</tspan><tspan class="node-detail" x="424.0" y="1029.5">Spring Boot Layer</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k Boot APIs">
-      <rect x="610.0" y="951.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="993.5">workshop</tspan><tspan class="node-detail" x="760.0" y="1017.5">bluetape4k Boot APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="io | bluetape4k Boot APIs">
-      <rect x="946.0" y="951.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="993.5">io</tspan><tspan class="node-detail" x="1096.0" y="1017.5">bluetape4k Boot APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="coroutines | bluetape4k Boot APIs">
-      <rect x="274.0" y="1068.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="1110.5">coroutines</tspan><tspan class="node-detail" x="424.0" y="1134.5">bluetape4k Boot APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="In-memory / JVM | Boot Runtime">
-      <rect x="610.0" y="1218.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1260.5">In-memory / JVM</tspan><tspan class="node-detail" x="760.0" y="1284.5">Boot Runtime</tspan></text>
-    </g>
-  </g>
+  <rect class="canvas" width="1720" height="920"/>
+  <rect class="frame" x="24" y="24" width="1672" height="872" rx="24"/>
+  <text class="title" x="860" y="72" text-anchor="middle">Spring Application Event demo</text>
+  <text class="subtitle" x="860" y="106" text-anchor="middle">Two publishing styles share Spring ApplicationEventPublisher while showing synchronous and coroutine listener choices.</text>
+
+  <rect class="layer" x="90" y="160" width="1540" height="160" fill="#EFF6FF" stroke="#BFDBFE"/>
+  <text class="layerTitle" x="130" y="202">Entry points</text>
+  <g filter="url(#shadow)"><rect x="210" y="220" width="300" height="76" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="360" y="252" text-anchor="middle">CustomEventController</text><text class="cardText" x="360" y="278" text-anchor="middle">GET /event?message=...</text></g>
+  <g filter="url(#shadow)"><rect x="690" y="220" width="300" height="76" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="840" y="252" text-anchor="middle">MyEventService</text><text class="cardText" x="840" y="278" text-anchor="middle">@AspectEventEmitter</text></g>
+  <g filter="url(#shadow)"><rect x="1170" y="220" width="300" height="76" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="1320" y="252" text-anchor="middle">Spring Boot Test</text><text class="cardText" x="1320" y="278" text-anchor="middle">WebTestClient + output capture</text></g>
+
+  <rect class="layer" x="90" y="380" width="1540" height="230" fill="#F0FDF4" stroke="#BBF7D0"/>
+  <text class="layerTitle" x="130" y="422">Publishing adapters</text>
+  <g filter="url(#shadow)"><rect x="190" y="460" width="340" height="110" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="360" y="498" text-anchor="middle">CustomEventPublisher</text><text class="cardText" x="360" y="528" text-anchor="middle">builds CustomEvent</text><text class="cardText" x="360" y="554" text-anchor="middle">calls publishEvent(event)</text></g>
+  <g filter="url(#shadow)"><rect x="670" y="450" width="340" height="130" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="840" y="488" text-anchor="middle">AspectEventPublisherAspect</text><text class="cardText" x="840" y="518" text-anchor="middle">@Around proceeds target</text><text class="cardText" x="840" y="544" text-anchor="middle">SpEL extracts event message</text><text class="cardText" x="840" y="570" text-anchor="middle">builds AspectEvent</text></g>
+  <g filter="url(#shadow)"><rect x="1160" y="460" width="320" height="110" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="1320" y="498" text-anchor="middle">ApplicationEventPublisher</text><text class="cardText" x="1320" y="528" text-anchor="middle">Spring dispatch boundary</text><text class="cardText" x="1320" y="554" text-anchor="middle">CustomEvent / AspectEvent</text></g>
+
+  <rect class="layer" x="90" y="670" width="1540" height="150" fill="#FFF7ED" stroke="#FED7AA"/>
+  <text class="layerTitle" x="130" y="712">Listeners</text>
+  <g filter="url(#shadow)"><rect x="190" y="738" width="250" height="62" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="315" y="777" text-anchor="middle">ApplicationListener</text></g>
+  <g filter="url(#shadow)"><rect x="520" y="738" width="250" height="62" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="645" y="777" text-anchor="middle">@EventListener</text></g>
+  <g filter="url(#shadow)"><rect x="850" y="738" width="270" height="62" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="985" y="777" text-anchor="middle">Coroutine listener</text></g>
+  <g filter="url(#shadow)"><rect x="1200" y="738" width="270" height="62" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="1335" y="777" text-anchor="middle">Aspect listeners</text></g>
+
+  <path class="line" d="M 360 296 L 360 460" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 840 296 L 840 450" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 530 500 L 600 500 L 600 432 L 1320 432 L 1320 460" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
+  <path class="line" d="M 1010 515 L 1160 515" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
+  <path class="line" d="M 1320 570 L 1320 640 L 1335 640 L 1335 738" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
+  <path class="line" d="M 1320 640 L 985 640 L 985 738" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
+  <path class="line" d="M 1320 640 L 645 640 L 645 738" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
+  <path class="line" d="M 1320 640 L 315 640 L 315 738" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
 </svg>
