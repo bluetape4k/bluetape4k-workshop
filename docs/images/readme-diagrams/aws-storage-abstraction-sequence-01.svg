@@ -2,10 +2,10 @@
   <title id="title">AWS Storage Abstraction Request Sequence</title>
   <desc id="desc">Sequence diagram showing StorageService upload, download, getUrl, and delete behavior across local, S3, and presigned S3 profiles.</desc>
   <defs>
-    <marker id="callArrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3f7d9c"/></marker>
-    <marker id="workArrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6e8f4f"/></marker>
-    <marker id="returnArrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9b7d54"/></marker>
-    <marker id="presignArrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#7953b6"/></marker>
+    <marker id="callArrow" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3f7d9c"/></marker>
+    <marker id="workArrow" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6e8f4f"/></marker>
+    <marker id="returnArrow" markerWidth="13.5" markerHeight="13.5" viewBox="0 0 10 10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9b7d54"/></marker>
+    <marker id="presignArrow" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#7953b6"/></marker>
     <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#0f172a" flood-opacity="0.10"/></filter>
     <g id="s3-icon-small">
       <rect x="0" y="0" width="42" height="42" rx="6" fill="#7aa116"/>

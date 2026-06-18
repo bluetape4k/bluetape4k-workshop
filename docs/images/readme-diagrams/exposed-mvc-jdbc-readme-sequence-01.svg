@@ -1,0 +1,162 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1840" height="1360" viewBox="0 0 1840 1360" role="img" aria-labelledby="title desc">
+  <title id="title">exposed/mvc-jdbc order placement sequence</title>
+  <desc id="desc">Sequence showing OrderService creating an order, sorting order lines, locking product rows, writing order lines, decrementing stock, and rolling back when stock is insufficient.</desc>
+  <defs>
+    <style>
+      svg{background:#f8fafc}
+      .title{font-family:"Architects Daughter";font-size:40px;fill:#263238}
+      .subtitle,.msg,.note,.footer{font-family:"Comic Mono";fill:#36464f}
+      .subtitle{font-size:18px}.msg{font-size:14px}.note{font-size:13px}.footer{font-size:14px;fill:#60727d}
+      .participant{font-family:"Architects Daughter";font-size:22px;fill:#1f3138}
+      .role{font-family:"Comic Mono";font-size:13px;fill:#546a73}
+      .frame{fill:#fbfcf8;stroke:#41545d;stroke-width:3}
+      .header{fill:#ffffff;stroke:#546e7a;stroke-width:2}
+      .dbHeader{fill:#fffaf2;stroke:#8c6f33;stroke-width:2}
+      .lifeline{stroke:#9aaab1;stroke-width:2;stroke-dasharray:7 8}
+      .activation{fill:#e6f2ec;stroke:#5b7e67;stroke-width:1.5}
+      .repoActivation{fill:#fff4df;stroke:#a56f2a;stroke-width:1.5}
+      .dbActivation{fill:#fff0d8;stroke:#8c6f33;stroke-width:1.5}
+      .call{fill:none;stroke:#3f7d9c;stroke-width:3;marker-end:url(#arrowCall)}
+      .repo{fill:none;stroke:#9b6b2f;stroke-width:3;marker-end:url(#arrowRepo)}
+      .db{fill:none;stroke:#8c6f33;stroke-width:3;marker-end:url(#arrowDb)}
+      .return{fill:none;stroke:#8f795b;stroke-width:2.5;stroke-dasharray:8 6;marker-end:url(#arrowReturn)}
+      .error{fill:none;stroke:#b75c55;stroke-width:3;marker-end:url(#arrowError)}
+      .branch{fill:none;stroke:#78909c;stroke-width:3;stroke-dasharray:12 7}
+      .branchDivider{stroke:#78909c;stroke-width:3;stroke-dasharray:12 8}
+      .branchGood{fill:#eef7f0;stroke:#6e8f4f;stroke-width:1.8}
+      .branchBad{fill:#fff0ef;stroke:#b75c55;stroke-width:1.8}
+      .label{fill:#ffffff;stroke:#d7e0e4;stroke-width:1.5}
+      .label.callLabel{stroke:#9cc2d1}.label.repoLabel{stroke:#d2ad7c}.label.dbLabel{stroke:#cba76c}.label.returnLabel{stroke:#c8b38f}.label.errorLabel{stroke:#d99a94}
+      .badge{stroke-width:1.8}
+      .badge.callBadge{fill:#eaf4f8;stroke:#3f7d9c}.badge.repoBadge{fill:#fff4df;stroke:#9b6b2f}.badge.dbBadge{fill:#fff0d8;stroke:#8c6f33}.badge.returnBadge{fill:#fff7e8;stroke:#8f795b}.badge.errorBadge{fill:#fff0ef;stroke:#b75c55}
+      .badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}
+      .msg.callText,.badgeText.callText{fill:#2f6f8e}.msg.repoText,.badgeText.repoText{fill:#835a27}.msg.dbText,.badgeText.dbText{fill:#7a5f24}.msg.returnText,.badgeText.returnText{fill:#755d3d}.msg.errorText,.badgeText.errorText{fill:#a24742}
+      .dbIconStroke{stroke:#8c6f33}
+    </style>
+    <marker id="arrowCall" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3f7d9c"/></marker>
+    <marker id="arrowRepo" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9b6b2f"/></marker>
+    <marker id="arrowDb" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#8c6f33"/></marker>
+    <marker id="arrowReturn" markerUnits="userSpaceOnUse" markerWidth="13.5" markerHeight="13.5" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#8f795b"/></marker>
+    <marker id="arrowError" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#b75c55"/></marker>
+    <g id="smallDbIcon">
+      <path d="M10 18v22c0 6 32 6 32 0V18" fill="#fff0d8" stroke="#8c6f33" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M10 29c0 6 32 6 32 0" fill="none" stroke="#8c6f33" stroke-width="2.4" stroke-linecap="round"/>
+      <ellipse cx="26" cy="18" rx="16" ry="6" fill="#fff0d8" stroke="#8c6f33" stroke-width="3"/>
+    </g>
+  </defs>
+
+  <rect x="24" y="24" width="1792" height="1312" rx="20" class="frame"/>
+  <text x="850" y="78" text-anchor="middle" class="title">Order Placement Locking Flow</text>
+  <text x="850" y="108" text-anchor="middle" class="subtitle">OrderService sorts line items, locks product rows, writes order lines, and rolls back when stock is insufficient.</text>
+
+  <rect x="60" y="150" width="150" height="68" rx="10" class="header"/>
+  <text x="135" y="179" text-anchor="middle" class="participant">Client</text>
+  <text x="135" y="201" text-anchor="middle" class="role">HTTP caller</text>
+  <rect x="250" y="150" width="200" height="68" rx="10" class="header"/>
+  <text x="350" y="179" text-anchor="middle" class="participant">OrderController</text>
+  <text x="350" y="201" text-anchor="middle" class="role">MVC endpoint</text>
+  <rect x="510" y="150" width="200" height="68" rx="10" class="header"/>
+  <text x="610" y="179" text-anchor="middle" class="participant">OrderService</text>
+  <text x="610" y="201" text-anchor="middle" class="role">@Transactional</text>
+  <rect x="765" y="150" width="190" height="68" rx="10" class="header"/>
+  <text x="860" y="179" text-anchor="middle" class="participant">OrderRepository</text>
+  <text x="860" y="201" text-anchor="middle" class="role">order header</text>
+  <rect x="1000" y="150" width="210" height="68" rx="10" class="header"/>
+  <text x="1105" y="179" text-anchor="middle" class="participant">ProductRepository</text>
+  <text x="1105" y="201" text-anchor="middle" class="role">row lock + stock</text>
+  <rect x="1235" y="150" width="240" height="68" rx="10" class="header"/>
+  <text x="1355" y="179" text-anchor="middle" class="participant">OrderLineRepo</text>
+  <text x="1355" y="201" text-anchor="middle" class="role">OrderLineRepository</text>
+  <rect x="1490" y="150" width="180" height="68" rx="10" class="dbHeader"/>
+  <use href="#smallDbIcon" x="1502" y="164"/>
+  <text x="1608" y="179" text-anchor="middle" class="participant">PostgreSQL</text>
+  <text x="1608" y="201" text-anchor="middle" class="role">JDBC tables</text>
+
+  <line x1="135" y1="218" x2="135" y2="1208" class="lifeline"/>
+  <line x1="350" y1="218" x2="350" y2="1208" class="lifeline"/>
+  <line x1="610" y1="218" x2="610" y2="1208" class="lifeline"/>
+  <line x1="860" y1="218" x2="860" y2="1208" class="lifeline"/>
+  <line x1="1105" y1="218" x2="1105" y2="1208" class="lifeline"/>
+  <line x1="1355" y1="218" x2="1355" y2="1208" class="lifeline"/>
+  <line x1="1595" y1="218" x2="1595" y2="1208" class="lifeline"/>
+
+  <rect x="603" y="356" width="14" height="850" rx="6" class="activation"/>
+  <rect x="853" y="424" width="14" height="96" rx="6" class="repoActivation"/>
+  <rect x="1098" y="650" width="14" height="392" rx="6" class="repoActivation"/>
+  <rect x="1348" y="790" width="14" height="190" rx="6" class="repoActivation"/>
+  <rect x="1588" y="468" width="14" height="520" rx="6" class="dbActivation"/>
+
+  <rect x="82" y="270" width="202" height="34" rx="17" class="label callLabel"/>
+  <circle cx="106" cy="287" r="13" class="badge callBadge"/><text x="106" y="292" text-anchor="middle" class="badgeText callText">1</text>
+  <text x="130" y="292" class="msg callText">POST /orders</text>
+  <path d="M 135 326 L 350 326" class="call"/>
+
+  <rect x="382" y="330" width="252" height="34" rx="17" class="label callLabel"/>
+  <circle cx="406" cy="347" r="13" class="badge callBadge"/><text x="406" y="352" text-anchor="middle" class="badgeText callText">2</text>
+  <text x="430" y="352" class="msg callText">placeOrder(request)</text>
+  <path d="M 350 386 L 610 386" class="call"/>
+
+  <rect x="652" y="404" width="224" height="34" rx="17" class="label repoLabel"/>
+  <circle cx="676" cy="421" r="13" class="badge repoBadge"/><text x="676" y="426" text-anchor="middle" class="badgeText repoText">3</text>
+  <text x="700" y="426" class="msg repoText">orderRepo.insert()</text>
+  <path d="M 617 456 L 860 456" class="repo"/>
+
+  <rect x="1092" y="444" width="322" height="34" rx="17" class="label dbLabel"/>
+  <circle cx="1116" cy="461" r="13" class="badge dbBadge"/><text x="1116" y="466" text-anchor="middle" class="badgeText dbText">4</text>
+  <text x="1140" y="466" class="msg dbText">insert orders row, return generated id</text>
+  <path d="M 867 500 L 1595 500" class="db"/>
+
+  <rect x="495" y="538" width="300" height="38" rx="19" class="label callLabel"/>
+  <circle cx="522" cy="557" r="13" class="badge callBadge"/><text x="522" y="562" text-anchor="middle" class="badgeText callText">5</text>
+  <text x="548" y="562" class="msg callText">sort req.lines by productId</text>
+
+  <rect x="55" y="600" width="1590" height="530" rx="14" class="branch"/>
+  <rect x="80" y="618" width="325" height="30" rx="15" class="branchGood"/>
+  <text x="102" y="638" class="note">for each sorted line: stock available</text>
+
+  <rect x="680" y="648" width="332" height="34" rx="17" class="label repoLabel"/>
+  <circle cx="704" cy="665" r="13" class="badge repoBadge"/><text x="704" y="670" text-anchor="middle" class="badgeText repoText">6</text>
+  <text x="728" y="670" class="msg repoText">findByIdForUpdate(productId)</text>
+  <path d="M 617 706 L 1105 706" class="repo"/>
+
+  <rect x="1186" y="688" width="278" height="34" rx="17" class="label dbLabel"/>
+  <circle cx="1210" cy="705" r="13" class="badge dbBadge"/><text x="1210" y="710" text-anchor="middle" class="badgeText dbText">7</text>
+  <text x="1234" y="710" class="msg dbText">SELECT products FOR UPDATE</text>
+  <path d="M 1112 746 L 1595 746" class="db"/>
+
+  <rect x="740" y="766" width="302" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="764" cy="783" r="13" class="badge returnBadge"/><text x="764" y="788" text-anchor="middle" class="badgeText returnText">8</text>
+  <text x="788" y="788" class="msg returnText">locked product + current stock</text>
+  <path d="M 1595 824 L 1105 824 L 610 824" class="return"/>
+
+  <rect x="736" y="840" width="328" height="34" rx="17" class="label repoLabel"/>
+  <circle cx="760" cy="857" r="13" class="badge repoBadge"/><text x="760" y="862" text-anchor="middle" class="badgeText repoText">9</text>
+  <text x="784" y="862" class="msg repoText">insert order_lines row</text>
+  <path d="M 617 896 L 1355 896" class="repo"/>
+
+  <rect x="1176" y="910" width="284" height="34" rx="17" class="label dbLabel"/>
+  <circle cx="1200" cy="927" r="13" class="badge dbBadge"/><text x="1200" y="932" text-anchor="middle" class="badgeText dbText">10</text>
+  <text x="1228" y="932" class="msg dbText">INSERT order_lines</text>
+  <path d="M 1362 968 L 1595 968" class="db"/>
+
+  <rect x="678" y="970" width="334" height="34" rx="17" class="label repoLabel"/>
+  <circle cx="702" cy="987" r="13" class="badge repoBadge"/><text x="702" y="992" text-anchor="middle" class="badgeText repoText">11</text>
+  <text x="730" y="992" class="msg repoText">decrementStock(productId, qty)</text>
+  <path d="M 617 1024 L 1105 1024" class="repo"/>
+
+  <line x1="55" y1="1044" x2="1645" y2="1044" class="branchDivider"/>
+  <rect x="80" y="1062" width="280" height="30" rx="15" class="branchBad"/>
+  <text x="102" y="1082" class="note">else: stock short</text>
+
+  <rect x="412" y="1080" width="382" height="34" rx="17" class="label errorLabel"/>
+  <circle cx="436" cy="1097" r="13" class="badge errorBadge"/><text x="436" y="1102" text-anchor="middle" class="badgeText errorText">12</text>
+  <text x="464" y="1102" class="msg errorText">throw InsufficientStockException; rollback</text>
+  <path d="M 610 1124 L 350 1124 L 135 1124" class="error"/>
+
+  <rect x="368" y="1152" width="322" height="34" rx="17" class="label returnLabel"/>
+  <circle cx="392" cy="1169" r="13" class="badge returnBadge"/><text x="392" y="1174" text-anchor="middle" class="badgeText returnText">13</text>
+  <text x="420" y="1174" class="msg returnText">success returns persisted order</text>
+  <path d="M 610 1200 L 350 1200 L 135 1200" class="return"/>
+
+  <text x="850" y="1224" text-anchor="middle" class="footer">The transaction commits only after every sorted line locks, writes, and decrements successfully.</text>
+</svg>

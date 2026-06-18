@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1260" viewBox="0 0 1920 1260">
 <defs>
-<marker id="arrow-blue" markerWidth="13" markerHeight="13" refX="11" refY="6.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 13 6.5 L 0 13 Z" fill="#2f6feb"/></marker>
-<marker id="arrow-green" markerWidth="13" markerHeight="13" refX="11" refY="6.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 13 6.5 L 0 13 Z" fill="#169b6b"/></marker>
-<marker id="arrow-amber" markerWidth="13" markerHeight="13" refX="11" refY="6.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 13 6.5 L 0 13 Z" fill="#d47400"/></marker>
-<marker id="arrow-purple" markerWidth="13" markerHeight="13" refX="11" refY="6.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 13 6.5 L 0 13 Z" fill="#805ad5"/></marker>
+<marker id="arrow-blue" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#2f6feb"/></marker>
+<marker id="arrow-green" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#169b6b"/></marker>
+<marker id="arrow-amber" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#d47400"/></marker>
+<marker id="arrow-purple" viewBox="0 0 10 10" markerWidth="15" markerHeight="15" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#805ad5"/></marker>
 <style><![CDATA[
 
 @font-face { font-family:'Architects Daughter'; src:local('Architects Daughter'); }
