@@ -2,47 +2,63 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+## 이 예제가 보여주는 것
 
-이 예제는 **Gateway Demo**를 실행 가능한 게이트웨이와 다운스트림 서비스 조정 워크샵 조각으로 다룹니다. 개발자가 가장 먼저 확인할 흐름인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄여 주는 라이브러리/프레임워크 API 관찰에 초점을 둡니다.
+`gateway` 예제는 세 개의 Spring Boot 애플리케이션으로 작은 Spring Cloud
+Gateway 시스템을 실행합니다.
 
-![Gateway Demo scenario diagram](../docs/images/readme-diagrams/gateway-api-gateway-scenario-01.png)
+- `api-gateway`는 `8080`에서 public path를 받아 로컬 서비스로 라우팅합니다.
+- `customers`는 `8081`에서 `/api/v1/customers`를 제공합니다.
+- `orders`는 `8082`에서 `/api/v1/orders`, `/api/v1/products`를 제공합니다.
 
-## 아키텍처 다이어그램
+Gateway는 Swagger UI도 노출하고, Redis bucket cache를 사용하는 Bucket4j
+rate limit 필터를 적용합니다.
 
-![Gateway Demo Graphviz 아키텍처 다이어그램](../docs/images/readme-diagrams/gateway-readme-architecture-01.png)
+## 런타임 개요
 
-이 모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성을 중심으로 구성됩니다. 이 README를 코드와 비교할 때는 `io.bluetape4k.workshop.gateway` 패키지를 기준으로 삼습니다.
+![Gateway Demo architecture](../docs/images/readme-diagrams/gateway-readme-architecture-01.png)
 
-## 시퀀스 다이어그램
+요청은 downstream service port로 직접 들어가지 않고 gateway를 통해
+들어갑니다. `application.yml`은 `/customer-service/**`를 customer service로,
+`/order-service/**`를 order service로 매핑하고 `RewritePath`로 내부
+controller의 일반 `/api/v1/...` path에 맞춥니다.
 
-Spring Cloud API Gateway를 사용해 내부 서비스인 Customer API와 Order API를 API Gateway를 통해 서비스하는 예제입니다.
+## 모듈
 
-## 사용 방법
+| Module | Port | Responsibility |
+|---|---:|---|
+| [`api-gateway`](api-gateway/README.ko.md) | `8080` | Spring Cloud Gateway routes, Swagger aggregation, Redis-backed Bucket4j filter |
+| [`customers`](customers/README.ko.md) | `8081` | Customer WebFlux API |
+| [`orders`](orders/README.ko.md) | `8082` | Order and product WebFlux APIs |
 
-customer(8081)와 order(8082) 서비스를 먼저 실행한 뒤 gateway-demo(8080)를 실행합니다.
+## 예제 실행
 
-`httpie`를 사용해 API Gateway를 통해 Customer API와 Order API를 호출합니다.
-
-### 1. Customer API 사용
+customer와 order 서비스를 먼저 실행한 뒤 gateway를 실행합니다.
 
 ```bash
-$ http://localhost:8080/customer-api/customers
+./gradlew :customers:bootRun
+./gradlew :orders:bootRun
+./gradlew :api-gateway:bootRun
 ```
 
-### 2. Order, Product API 실행
-
-```bash
-$ http localhost:8080/order-api/orders
-```
+API는 gateway를 통해 호출합니다.
 
 ```bash
-$ http localhost:8080/product-api/products
+http :8080/customer-service/api/v1/customers
+http :8080/order-service/api/v1/orders
+http :8080/order-service/api/v1/products
+http :8080/swagger-ui.html
 ```
+
+## 소스 기준점
+
+- `gateway/api-gateway/src/main/resources/application.yml`
+- `gateway/customers/src/main/resources/application.yml`
+- `gateway/orders/src/main/resources/application.yml`
+- `gateway/api-gateway/ApiGateway.http`
 
 ## 참고 자료
 
 - [Spring Cloud Gateway](https://spring.io/projects/spring-cloud-gateway)
 - [Spring Cloud Gateway: Implementing Routes in Microservices](https://medium.com/@AlexanderObregon/spring-cloud-gateway-implementing-routes-in-microservices-29094a0f8845)
-- [Swagger Integration with Spring Cloud Gateway - Part 2] (https://medium.com/@pubuduc.14/swagger-openapi-specification-3-integration-with-spring-cloud-gateway-part-2-1d670d4ab69a)
-- [API Gateway Service - Spring Cloud Gateway - Add Filter](https://kingchan223.tistory.com/398)
+- [Swagger Integration with Spring Cloud Gateway - Part 2](https://medium.com/@pubuduc.14/swagger-openapi-specification-3-integration-with-spring-cloud-gateway-part-2-1d670d4ab69a)
