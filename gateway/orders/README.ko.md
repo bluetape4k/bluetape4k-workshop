@@ -2,25 +2,35 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+## 이 모듈이 보여주는 것
 
-이 예제는 **Gateway Orders Service** 모듈을 실행 가능한 게이트웨이와 하위 서비스 연동 예제로 보여줍니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 사용 방식을 중심으로 설명합니다.
+`orders`는 gateway workshop에서 사용하는 order backend입니다. Spring Boot
+WebFlux 애플리케이션으로 `8082`에서 실행되며, 두 개의 suspend controller를
+제공합니다.
 
-## 시퀀스 다이어그램
+- `GET /api/v1/orders`
+- `GET /api/v1/products`
 
-Gateway 워크숍의 주문 서비스 예제입니다. 상품과 주문 API를 제공하고, 루트 경로를 Swagger UI로 리다이렉트하며, order 백엔드로 `8082` 포트에서 실행됩니다.
+두 controller는 `Uuid.V7`로 샘플 UUID v7 식별자를 생성합니다.
 
 ## 아키텍처
 
-![Gateway Orders Service Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/gateway-orders-readme-architecture-01.png)
+![Gateway Orders Service architecture](../../docs/images/readme-diagrams/gateway-orders-readme-architecture-01.png)
 
-## 이 모듈에서 확인할 내용
+이 서비스에는 database 의존성이 없습니다. In-memory 샘플 product와 order를
+반환하므로, gateway 예제는 route forwarding과 path rewrite 동작에 집중할 수
+있습니다.
 
-- `GET /api/v1/products` WebFlux 컨트롤러 엔드포인트.
-- `GET /api/v1/orders` WebFlux 컨트롤러 엔드포인트.
-- 샘플 상품과 주문에 사용하는 UUID v7 ID 생성.
-- `/`에서 `/swagger-ui.html`로의 루트 경로 리다이렉트.
-- 로컬 워크숍 관찰성을 위한 Actuator 엔드포인트 노출.
+## 런타임 계약
+
+| Concern | Source-backed behavior |
+|---|---|
+| Orders API | `GET /api/v1/orders`가 Winter, Spring 샘플 주문 두 개를 반환 |
+| Products API | `GET /api/v1/products`가 샘플 상품 두 개를 반환 |
+| IDs | `Uuid.V7.nextIdAsString()`으로 샘플 order/product identifier 생성 |
+| Swagger landing page | `RedirectWebFilter`가 `/`를 `/swagger-ui.html`로 rewrite |
+| Observability | Actuator endpoint를 노출하고, Micrometer URI filter가 management/API-doc path를 제외 |
+| AOT | `application.yml`에서 `spring.aot.enabled=true` |
 
 ## 실행
 
@@ -28,27 +38,28 @@ Gateway 워크숍의 주문 서비스 예제입니다. 상품과 주문 API를 �
 ./gradlew :orders:bootRun
 ```
 
-실행 후 다음 주소를 확인합니다.
+확인할 endpoint:
 
-- Swagger UI: `http://localhost:8082/swagger-ui.html`
-- Products API: `http://localhost:8082/api/v1/products`
-- Orders API: `http://localhost:8082/api/v1/orders`
-- Actuator endpoints: `http://localhost:8082/actuator`
+```bash
+http :8082/api/v1/orders
+http :8082/api/v1/products
+http :8082/swagger-ui.html
+http :8082/actuator
+```
 
-## 사용된 Bluetape4k 기능
+## bluetape4k 사용 지점
 
-| 모듈 | 기능 | 사용 위치 |
-|------|------|---------|
-| `bluetape4k-logging` | `KLoggingChannel()`, `KLogging()` | 컨트롤러와 설정의 코루틴 안전 구조화 로깅 |
-| `bluetape4k-idgenerators` | `Uuid` (UUID v7) | 상품과 주문 ID 생성 (타입 안전 UUID v7) |
-| `bluetape4k-support` | `uninitialized()`, `unsafeLazy` | 주입 빈의 지연 필드 초기화 |
-| `bluetape4k-assertions` | `shouldBeFalse` | 간결한 테스트 단언문 |
-| `bluetape4k-junit5` | `runSuspendIO { }` | suspend 기반 통합 테스트 실행기 |
+| Library | Usage |
+|---|---|
+| `bluetape4k-logging` | application, config, filter, controllers의 `KLoggingChannel()` |
+| `bluetape4k-idgenerators` | Order와 product 샘플 ID를 위한 UUID v7 |
+| `bluetape4k-support` | Swagger 설정의 `uninitialized()`, `unsafeLazy` |
+| `bluetape4k-coroutines` | Suspend WebFlux controller endpoints |
 
-## 소스 맵
+## 소스 기준점
 
-- `OrderApplication.kt`는 Spring Boot 애플리케이션을 시작합니다.
-- `ProductController.kt`는 샘플 상품을 반환합니다.
-- `OrderController.kt`는 샘플 주문을 반환합니다.
-- `OrderConfig.kt`, `SwaggerConfig.kt`, `ObservationConfig.kt`는 서비스 메타데이터, OpenAPI, 관찰성 설정을 제공합니다.
-- `application.yml`은 `spring.application.name=Orders`, AOT, `8082` 포트, management endpoint 노출을 설정합니다.
+- `src/main/kotlin/io/bluetape4k/workshop/gateway/orders/controller/OrderController.kt`
+- `src/main/kotlin/io/bluetape4k/workshop/gateway/orders/controller/ProductController.kt`
+- `src/main/kotlin/io/bluetape4k/workshop/gateway/orders/filters/RedirectWebFilter.kt`
+- `src/main/kotlin/io/bluetape4k/workshop/gateway/orders/config/managements/ObservationConfig.kt`
+- `src/main/resources/application.yml`
