@@ -1,174 +1,43 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1416" viewBox="0 0 1320 1416" role="img" aria-label="Spring Modulith Events Deep Dive architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-modulith/events-deep-dive/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/events/a/fundamentals/quickstart/Application.kt&quot;,&quot;spring-modulith/events-deep-dive/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/events/a/fundamentals/quickstart/Order.kt&quot;,&quot;spring-modulith/events-deep-dive/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/events/a/fundamentals/quickstart/OrderListeners.kt&quot;,&quot;spring-modulith/events-deep-dive/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/events/a/fundamentals/quickstart/OrderManagement.kt&quot;,&quot;spring-modulith/events-deep-dive/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/events/a/fundamentals/quickstart/OrderRepository.kt&quot;,&quot;spring-modulith/events-deep-dive/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/events/a/fundamentals/springdata/Application.kt&quot;,&quot;spring-modulith/events-deep-dive/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/events/a/fundamentals/springdata/Order.kt&quot;,&quot;spring-modulith/events-deep-dive/src/main/kotlin/io/bluetape4k/workshop/spring/modulith/events/a/fundamentals/springdata/OrderListeners.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1760" height="940" viewBox="0 0 1760 940">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .bg{fill:#f8fafc}.title{font-family:'Architects Daughter','Comic Sans MS',cursive;font-size:34px;fill:#18212f}
+      .layer-title{font-family:'Architects Daughter','Comic Sans MS',cursive;font-size:26px;fill:#344154}
+      .card-title{font-family:'Architects Daughter','Comic Sans MS',cursive;font-size:27px;fill:#101827}
+      .body{font-family:'Comic Mono','Comic Sans MS',monospace;font-size:18px;fill:#364152}.small{font-family:'Comic Mono','Comic Sans MS',monospace;font-size:15px;fill:#475569}
+      .layer{stroke-width:1.5;rx:22;ry:22}.card{fill:#fff;stroke:#cbd5e1;stroke-width:1.5;rx:18;ry:18}.line{fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
     </style>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#2563eb"/></marker>
+    <marker id="arrow-green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#059669"/></marker>
   </defs>
-  <rect class="canvas" width="1320" height="1416"/>
-  <rect class="frame" x="16" y="16" width="1288" height="1384" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Spring Modulith Events Deep Dive</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Modulith example runtime and module dependencies</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="462.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="422.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="329.0">Example Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="367.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="383.0">adapters</tspan></text>
-    </g>
-    <g class="layer" data-layer="service">
-      <rect x="46.0" y="594.0" width="1228.0" height="242.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="614.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="699.0">Application Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="737.0">services, domain</tspan><tspan class="layer-detail" x="151.0" y="753.0">rules, use cases</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="854.0" width="1228.0" height="352.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="874.0" width="174" height="312.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="1014.0">Integration Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1052.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="1068.0">adapters, helpers</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="1224.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="1244.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="1274.0">Runtime Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1304.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="1320.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="1336.0">JVM</tspan></text>
-    </g>
-    <g class="edge" data-edge="api4-&gt;service0" data-label="delegates">
-      <path d="M 424.0 556.0 L 424.0 585.0 L 424.0 614.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
-    </g>
-    <g class="edge" data-edge="service5-&gt;infra0" data-label="persists / publishes">
-      <path d="M 1096.0 816.0 L 1096.0 845.0 L 424.0 845.0 L 424.0 874.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 760.0 1186.0 L 760.0 1215.0 L 760.0 1244.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Application | application bootstrap">
-      <rect x="274.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="176.5">Application</tspan><tspan class="node-detail" x="424.0" y="200.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry1" data-lines="Application | application bootstrap">
-      <rect x="610.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="176.5">Application</tspan><tspan class="node-detail" x="760.0" y="200.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry2" data-lines="Application | application bootstrap">
-      <rect x="946.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="176.5">Application</tspan><tspan class="node-detail" x="1096.0" y="200.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry3" data-lines="Application | application bootstrap">
-      <rect x="274.0" y="244.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="286.5">Application</tspan><tspan class="node-detail" x="424.0" y="310.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry4" data-lines="Application | application bootstrap">
-      <rect x="610.0" y="244.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="286.5">Application</tspan><tspan class="node-detail" x="760.0" y="310.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="api0" data-lines="Order Listeners | quickstart">
-      <rect x="946.0" y="244.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="286.5">Order Listeners</tspan><tspan class="node-detail" x="1096.0" y="310.5">quickstart</tspan></text>
-    </g>
-    <g class="node" data-node="api1" data-lines="Order Listeners | springdata">
-      <rect x="274.0" y="354.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="396.5">Order Listeners</tspan><tspan class="node-detail" x="424.0" y="420.5">springdata</tspan></text>
-    </g>
-    <g class="node" data-node="api2" data-lines="Order Listeners | transactions">
-      <rect x="610.0" y="354.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="396.5">Order Listeners</tspan><tspan class="node-detail" x="760.0" y="420.5">transactions</tspan></text>
-    </g>
-    <g class="node" data-node="api3" data-lines="Inventory | inventory">
-      <rect x="946.0" y="354.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="396.5">Inventory</tspan><tspan class="node-detail" x="1096.0" y="420.5">inventory</tspan></text>
-    </g>
-    <g class="node" data-node="api4" data-lines="String Aggregate | util">
-      <rect x="274.0" y="464.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="506.5">String Aggregate</tspan><tspan class="node-detail" x="424.0" y="530.5">util</tspan></text>
-    </g>
-    <g class="node" data-node="service0" data-lines="Order Management | quickstart">
-      <rect x="274.0" y="614.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="656.5">Order Management</tspan><tspan class="node-detail" x="424.0" y="680.5">quickstart</tspan></text>
-    </g>
-    <g class="node" data-node="service1" data-lines="Order Management | springdata">
-      <rect x="610.0" y="614.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="656.5">Order Management</tspan><tspan class="node-detail" x="760.0" y="680.5">springdata</tspan></text>
-    </g>
-    <g class="node" data-node="service2" data-lines="Order Management | transactions">
-      <rect x="946.0" y="614.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="656.5">Order Management</tspan><tspan class="node-detail" x="1096.0" y="680.5">transactions</tspan></text>
-    </g>
-    <g class="node" data-node="service3" data-lines="Inventory | inventory">
-      <rect x="274.0" y="724.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="766.5">Inventory</tspan><tspan class="node-detail" x="424.0" y="790.5">inventory</tspan></text>
-    </g>
-    <g class="node" data-node="service4" data-lines="Order Management | order">
-      <rect x="610.0" y="724.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="766.5">Order Management</tspan><tspan class="node-detail" x="760.0" y="790.5">order</tspan></text>
-    </g>
-    <g class="node" data-node="service5" data-lines="Order Management | order">
-      <rect x="946.0" y="724.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="766.5">Order Management</tspan><tspan class="node-detail" x="1096.0" y="790.5">order</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Order Repository | repository">
-      <rect x="274.0" y="874.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="916.5">Order Repository</tspan><tspan class="node-detail" x="424.0" y="940.5">repository</tspan></text>
-    </g>
-    <g class="node" data-node="infra1" data-lines="Order | springdata">
-      <rect x="610.0" y="874.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="916.5">Order</tspan><tspan class="node-detail" x="760.0" y="940.5">springdata</tspan></text>
-    </g>
-    <g class="node" data-node="infra2" data-lines="Order Repository | repository">
-      <rect x="946.0" y="874.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="916.5">Order Repository</tspan><tspan class="node-detail" x="1096.0" y="940.5">repository</tspan></text>
-    </g>
-    <g class="node" data-node="infra3" data-lines="Order | transactions">
-      <rect x="274.0" y="984.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="1026.5">Order</tspan><tspan class="node-detail" x="424.0" y="1050.5">transactions</tspan></text>
-    </g>
-    <g class="node" data-node="infra4" data-lines="Order Repository | repository">
-      <rect x="610.0" y="984.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1026.5">Order Repository</tspan><tspan class="node-detail" x="760.0" y="1050.5">repository</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="hibernate | bluetape4k APIs">
-      <rect x="946.0" y="984.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="1026.5">hibernate</tspan><tspan class="node-detail" x="1096.0" y="1050.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="idgenerators | bluetape4k APIs">
-      <rect x="274.0" y="1094.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="1136.5">idgenerators</tspan><tspan class="node-detail" x="424.0" y="1160.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="spring | bluetape4k APIs">
-      <rect x="610.0" y="1094.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1136.5">spring</tspan><tspan class="node-detail" x="760.0" y="1160.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="SQL / R2DBC | Runtime Dependencies">
-      <rect x="610.0" y="1244.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1286.5">SQL / R2DBC</tspan><tspan class="node-detail" x="760.0" y="1310.5">Runtime Dependencies</tspan></text>
-    </g>
-  </g>
+  <rect class="bg" width="1760" height="940"/>
+  <text class="title" x="70" y="70">Spring Modulith Events Deep Dive</text>
+
+  <rect class="layer" x="70" y="120" width="1620" height="190" fill="#eff6ff" stroke="#bfdbfe"/>
+  <text class="layer-title" x="105" y="165">Fundamentals</text>
+  <rect class="card" x="140" y="205" width="650" height="70"/>
+  <text class="card-title" x="170" y="248">Quickstart events</text>
+  <text class="body" x="430" y="248">publisher + listeners</text>
+  <rect class="card" x="970" y="205" width="650" height="70"/>
+  <text class="card-title" x="1000" y="248">Spring Data aggregate events</text>
+
+  <rect class="layer" x="70" y="365" width="1620" height="190" fill="#f0fdf4" stroke="#bbf7d0"/>
+  <text class="layer-title" x="105" y="410">Transactions</text>
+  <rect class="card" x="555" y="450" width="650" height="70"/>
+  <text class="card-title" x="585" y="485">Transactional publication</text>
+  <text class="body" x="585" y="512">plain vs after-commit listener</text>
+
+  <rect class="layer" x="70" y="610" width="1620" height="220" fill="#faf5ff" stroke="#ddd6fe"/>
+  <text class="layer-title" x="105" y="655">Architecture comparison</text>
+  <rect class="card" x="140" y="700" width="650" height="80"/>
+  <text class="card-title" x="170" y="742">Before</text>
+  <text class="body" x="170" y="770">OrderManagement calls Inventory directly</text>
+  <rect class="card" x="970" y="700" width="650" height="80"/>
+  <text class="card-title" x="1000" y="742">After</text>
+  <text class="body" x="1000" y="770">OrderCompleted crosses module boundary</text>
+
+  <path class="line" d="M465 275 L465 335 L880 335 L880 450" stroke="#2563eb" marker-end="url(#arrow)"/>
+  <path class="line" d="M1295 275 L1295 335 L880 335" stroke="#2563eb"/>
+  <path class="line" d="M880 520 L880 585 L465 585 L465 700" stroke="#059669" marker-end="url(#arrow-green)"/>
+  <path class="line" d="M880 585 L1295 585 L1295 700" stroke="#059669" marker-end="url(#arrow-green)"/>
 </svg>

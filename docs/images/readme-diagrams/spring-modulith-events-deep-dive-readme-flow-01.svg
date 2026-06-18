@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1740" height="880" viewBox="0 0 1740 880">
+  <defs>
+    <style>
+      .bg{fill:#f8fafc}.title{font-family:'Architects Daughter','Comic Sans MS',cursive;font-size:34px;fill:#18212f}
+      .card-title{font-family:'Architects Daughter','Comic Sans MS',cursive;font-size:27px;fill:#101827}
+      .body{font-family:'Comic Mono','Comic Sans MS',monospace;font-size:18px;fill:#364152}
+      .lane{fill:#f1f5f9;stroke:#cbd5e1;stroke-width:1.3;rx:22;ry:22}.card{fill:#fff;stroke:#cbd5e1;stroke-width:1.5;rx:18;ry:18}
+      .line{fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+    </style>
+    <marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#2563eb"/></marker>
+    <marker id="arrow-green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#059669"/></marker>
+  </defs>
+  <rect class="bg" width="1740" height="880"/>
+  <text class="title" x="70" y="70">Before and After Module Flow</text>
+
+  <rect class="lane" x="80" y="130" width="730" height="610"/>
+  <rect class="lane" x="930" y="130" width="730" height="610"/>
+  <text class="card-title" x="120" y="180">Before: direct dependency</text>
+  <text class="card-title" x="970" y="180">After: event boundary</text>
+
+  <rect class="card" x="155" y="240" width="580" height="80"/>
+  <text class="card-title" x="185" y="288">OrderManagement</text>
+  <text class="body" x="185" y="316">completeOrder(order)</text>
+  <rect class="card" x="155" y="400" width="580" height="80"/>
+  <text class="card-title" x="185" y="448">OrderRepository</text>
+  <text class="body" x="185" y="476">save(order)</text>
+  <rect class="card" x="155" y="560" width="580" height="80"/>
+  <text class="card-title" x="185" y="608">Inventory</text>
+  <text class="body" x="185" y="636">direct updateInventoryFor(order)</text>
+
+  <rect class="card" x="1005" y="240" width="580" height="80"/>
+  <text class="card-title" x="1035" y="288">OrderManagement</text>
+  <text class="body" x="1035" y="316">save(order.complete())</text>
+  <rect class="card" x="1005" y="400" width="580" height="80"/>
+  <text class="card-title" x="1035" y="448">OrderCompleted</text>
+  <text class="body" x="1035" y="476">aggregate event</text>
+  <rect class="card" x="1005" y="560" width="580" height="80"/>
+  <text class="card-title" x="1035" y="608">Inventory listener</text>
+  <text class="body" x="1035" y="636">@EventListener reacts</text>
+
+  <path class="line" d="M445 320 L445 400" stroke="#2563eb" marker-end="url(#arrow-blue)"/>
+  <path class="line" d="M445 480 L445 560" stroke="#2563eb" marker-end="url(#arrow-blue)"/>
+  <path class="line" d="M1295 320 L1295 400" stroke="#059669" marker-end="url(#arrow-green)"/>
+  <path class="line" d="M1295 480 L1295 560" stroke="#059669" marker-end="url(#arrow-green)"/>
+</svg>
