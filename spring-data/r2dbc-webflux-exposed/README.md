@@ -2,120 +2,66 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
-
-This example exercises **R2DBC + WebFlux + Exposed ORM** as a runnable Spring Data persistence workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
-
-## Sequence Diagram
-
-![r2dbc-webflux-exposed sequence diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-exposed-readme-sequence-01.png)
-
-Spring Data R2DBC + Spring WebFlux + JetBrains Exposed ORM, using **bluetape4k `R2dbcRepository`**
-for a coroutine-first data access layer. Exposed table DSL handles schema definition; Spring WebFlux
-(functional + annotation routes) handles HTTP.
+This module shows a coroutine WebFlux API backed by JetBrains Exposed R2DBC. It
+contains two HTTP entrypoint styles over the same `UserService`: an annotation
+controller under `/api/users` and a functional router under `/users`.
 
 ## Architecture
 
-![R2DBC + WebFlux + Exposed ORM Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-exposed-readme-architecture-01.png)
+![R2DBC WebFlux Exposed architecture](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-exposed-readme-architecture-01.png)
 
-## Used bluetape4k Features
+`UserService` owns the transaction boundary with `suspendTransaction(db = ...)`.
+`UserExposedRepository` inherits common CRUD from bluetape4k
+`R2dbcRepository<Int, UserRecord>` and implements only user-specific operations.
 
-| Feature | Artifact | Code location | Benefit |
-|---------|----------|---------------|---------|
-| `R2dbcRepository<ID, Entity>` | `bluetape4k-exposed-r2dbc` | `UserExposedRepository.kt` | Abstract base providing `findAll()`, `findById()`, `count()`, `deleteById()` via Exposed DSL |
-| `KLoggingChannel` | `bluetape4k-logging` | `ExposedR2dbcConfig.kt`, `UserService.kt` | Coroutine-aware structured logging |
-| `bluetape4k-coroutines` | `bluetape4k-coroutines` | Service layer | Coroutine scope helpers |
-| `Runtimex.availableProcessors` | `bluetape4k-core` | `ExposedR2dbcConfig.kt` | CPU-aware connection pool sizing |
+## Request Flow
 
-## bluetape4k Before / After
+![R2DBC WebFlux Exposed request flow](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-exposed-readme-flow-01.png)
 
-### Exposed R2DBC repository with `R2dbcRepository`
+The application also seeds sample data on startup. `SchemaInitializer` creates
+the Exposed table and inserts four users when the table is empty.
 
-```kotlin
-// Before — manual Exposed R2DBC CRUD (repeated per entity)
-class UserRepository {
-    suspend fun findAll(): List<UserRecord> = suspendedTransaction {
-        UserTable.selectAll().map { it.toUserRecord() }
-    }
-    suspend fun findById(id: Int): UserRecord? = suspendedTransaction {
-        UserTable.selectAll().where { UserTable.id eq id }.singleOrNull()?.toUserRecord()
-    }
-    suspend fun deleteById(id: Int): Int = suspendedTransaction {
-        UserTable.deleteWhere { UserTable.id eq id }
-    }
-    // count(), existsById(), findPage()... each written manually
-}
+## Schema
 
-// After — bluetape4k R2dbcRepository: inherit CRUD, implement only what's custom
-@Repository
-class UserExposedRepository : R2dbcRepository<Int, UserRecord> {
-    override val table: UserTable = UserTable
-    override fun extractId(entity: UserRecord): Int = entity.id
-    override suspend fun ResultRow.toEntity(): UserRecord = toUserRecord()
+![R2DBC WebFlux Exposed users ERD](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-exposed-readme-erd-01.png)
 
-    // Custom operations only — all standard CRUD is inherited
-    suspend fun upsert(user: UserRecord) {
-        table.upsert(where = { table.id eq user.id }) {
-            it[table.name] = user.name
-            it[table.email] = user.email
-        }
-    }
-}
-```
+The Exposed table is `users`. `login` and `email` are unique, `name` is indexed,
+and `avatar` is nullable.
 
-### R2DBC connection pool with `Runtimex`
+## API Surface
 
-```kotlin
-// Before — hardcoded pool size
-.maxSize(50)
+| Style | Method | Path | Handler |
+|---|---|---|---|
+| Annotation | `GET` | `/api/users` | `UserController.findAll()` |
+| Annotation | `GET` | `/api/users/search?email=...` | `UserController.search(...)` |
+| Annotation | `GET` | `/api/users/{id}` | `UserController.findUserById(...)` |
+| Annotation | `POST` | `/api/users` | `UserController.addUser(...)` |
+| Annotation | `PUT` | `/api/users/{id}` | `UserController.updateUser(...)` |
+| Annotation | `DELETE` | `/api/users/{id}` | `UserController.deleteUser(...)` |
+| Functional | `GET` | `/users` | `UserHandler.findAll(...)` |
+| Functional | `GET` | `/users/search?email=...` | `UserHandler.search(...)` |
+| Functional | `GET` | `/users/{id}` | `UserHandler.findUser(...)` |
+| Functional | `POST` | `/users` | `UserHandler.addUser(...)` |
+| Functional | `PUT` | `/users/{id}` | `UserHandler.updateUser(...)` |
+| Functional | `DELETE` | `/users/{id}` | `UserHandler.deleteUser(...)` |
 
-// After — bluetape4k Runtimex: CPU-adaptive sizing
-.maxSize(max(Runtimex.availableProcessors * 8, 100))
-```
+## bluetape4k APIs Used
 
-## Components
-
-| Class | Role |
-|---|---|
-| `UserSchema` | Exposed table definition (`Users` table) |
-| `UserExposedRepository` | Repository implemented with the Exposed R2DBC DSL |
-| `UserService` | Business logic (suspend functions) |
-| `UserController` | `@RestController` annotation-style REST API |
-| `UserHandler` | WebFlux functional-router style handler |
-| `ExposedR2dbcConfig` | R2DBC + Exposed integration configuration |
-| `SchemaInitializer` | Automatic schema creation at application startup |
-
-## Exposed R2DBC Usage Pattern
-
-```kotlin
-// Exposed table definition
-object Users : LongIdTable("users") {
-    val name = varchar("name", 255)
-    val email = varchar("email", 255).uniqueIndex()
-}
-
-// Use the Exposed DSL inside an R2DBC transaction in the repository
-suspend fun findById(id: Long): User? = suspendedTransaction {
-    Users.selectAll().where { Users.id eq id }.singleOrNull()?.toUser()
-}
-```
-
-## REST API
-
-| Method | Path | Description |
+| API | Where | Why it matters |
 |---|---|---|
-| GET | `/users` | List all users |
-| GET | `/users/{id}` | Fetch a user |
-| POST | `/users` | Create a user |
-| DELETE | `/users/{id}` | Delete a user |
+| `R2dbcRepository<ID, Entity>` | `UserExposedRepository.kt` | Supplies common Exposed R2DBC CRUD operations. |
+| `Runtimex.availableProcessors` | `ExposedR2dbcConfig.kt` | Sizes the R2DBC connection pool from CPU capacity. |
+| `asIntOrNull()` | `UserHandler.kt` | Validates functional-route path variables without throwing parser errors. |
+| `KLoggingChannel` | Configuration, service, handler, initializer | Keeps coroutine-aware structured logging consistent. |
 
 ## Run
 
 ```bash
-./gradlew :spring-data-r2dbc-webflux-exposed:bootRun
+./gradlew :spring-data:r2dbc-webflux-exposed:bootRun
 ```
 
-## References
+## Test
 
-- [POC WebFlux-R2DBC H2-Kotlin](https://github.com/razvn/webflux-r2dbc-kotlin)
-- [Bluetape4k Exposed R2DBC module](https://github.com/bluetape4k/bluetape4k-projects)
+```bash
+./gradlew :spring-data:r2dbc-webflux-exposed:test
+```
