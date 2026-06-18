@@ -2,92 +2,43 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
-
-This example exercises **Spring Security MVC Hello** as a runnable Spring Security request protection workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
-
-## Sequence Diagram
-
-![hello sequence diagram](../../../docs/images/readme-diagrams/spring-security-mvc-hello-readme-sequence-01.png)
-
-Spring MVC security example with a custom login page, an in-memory user, and role-protected user content.
+This module is the servlet MVC form-login example. It protects `/user/**` with
+`ROLE_USER`, serves a custom login page at `/log-in`, and uses an in-memory
+`user/password` account encoded with BCrypt.
 
 ## Architecture
 
-![Spring Security MVC Hello Graphviz architecture diagram](../../../docs/images/readme-diagrams/spring-security-mvc-hello-readme-architecture-01.png)
+![Spring Security MVC hello architecture](../../../docs/images/readme-diagrams/spring-security-mvc-hello-readme-architecture-01.png)
 
-## What This Module Shows
+## Security Rules
 
-- MVC controller mappings for `/`, `/user/index`, and `/log-in`.
-- `SecurityFilterChain` configured through the Kotlin DSL.
-- Public access for `/`, `/css/**`, and the login page.
-- `ROLE_USER` protection for `/user/**`.
-- In-memory user credentials encoded with `BCryptPasswordEncoder`.
+| Path | Rule | View |
+|---|---|---|
+| `/` | `permitAll` | `index` |
+| `/css/**` | `permitAll` | static assets |
+| `/log-in` | login page | `login` |
+| `/user/**` | `ROLE_USER` | `user/index` |
 
-## Running
+## Test Coverage
+
+`MainControllerTest` verifies the behavior with MockMvc:
+
+- `/` returns `200 OK` without authentication.
+- `/user/index` redirects to `/log-in` when anonymous.
+- valid `user/password` form login authenticates.
+- invalid credentials remain unauthenticated.
+- an authenticated session can access `/user/index`.
+
+## Run
 
 ```bash
-./gradlew :spring-security-mvc-hello:bootRun
+./gradlew :spring-security:mvc:hello:bootRun
 ```
 
-Then open `http://localhost:8080/` and sign in with:
+Open `http://localhost:8080/` and sign in with `user` / `password`.
 
-- Username: `user`
-- Password: `password`
+## Test
 
-## Used bluetape4k Features
-
-| Module | Feature | Usage |
-|---|---|---|
-| `bluetape4k-logging` | `KLogging()` | Companion-object logger with lazy-lambda messages in `SecurityConfig` |
-| `bluetape4k-junit5` | `bluetape4k-junit5` test base | JUnit 5 integration via `AbstractSecurityApplicationTest` |
-
-## bluetape4k Before / After
-
-### `KLogging()` vs plain SLF4J
-
-```kotlin
-// Before — SLF4J LoggerFactory
-private val log = LoggerFactory.getLogger(SecurityConfig::class.java)
-log.info("SecurityConfig initialized")
-
-// After — KLogging() companion object (lazy lambda, zero-cost when disabled)
-companion object : KLogging()
-log.info { "SecurityConfig initialized" }
+```bash
+./gradlew :spring-security:mvc:hello:test
 ```
-
-### Kotlin DSL Security configuration vs Java-style
-
-```kotlin
-// Before — Java-style builder chaining
-http
-    .authorizeHttpRequests { it.requestMatchers("/").permitAll() }
-    .formLogin { it.loginPage("/log-in") }
-    .build()
-
-// After — Kotlin DSL (Spring Security invoke extension)
-http {
-    authorizeHttpRequests {
-        authorize("/", permitAll)
-        authorize("/css/**", permitAll)
-        authorize("/user/**", hasAuthority("ROLE_USER"))
-    }
-    formLogin {
-        loginPage = "/log-in"
-    }
-}
-```
-
-## Security Filter Chain
-
-## Operational Notes
-
-- In-memory user credentials are for demo purposes only; replace with a real `UserDetailsService` in production.
-- `BCryptPasswordEncoder` strength defaults to 10; increase to 12+ for production workloads.
-- Thymeleaf cache is disabled (`spring.thymeleaf.cache: false`) in `application.yml` for local development only.
-
-## Source Map
-
-- `MainController.kt` maps the MVC pages.
-- `SecurityConfig.kt` defines authorization rules, form login, password encoding, and the in-memory user.
-- `application.yml` enables AOT and keeps Thymeleaf templates uncached for local development.
