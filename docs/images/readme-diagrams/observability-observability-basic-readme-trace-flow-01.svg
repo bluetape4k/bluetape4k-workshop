@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1580" height="650" viewBox="0 0 1580 650" role="img" aria-label="Observability basic trace propagation flow">
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker>
+    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A"/></marker>
+    <marker id="arrowCyan" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#0891B2"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#D97706"/></marker>
+    <style>
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.band{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.bandLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:29px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.label{font-family:"Comic Mono";font-size:14px;fill:#475569}.line{fill:none;stroke-width:3.6;stroke-linecap:round;stroke-linejoin:round}.soft{stroke-dasharray:8 8}
+    </style>
+  </defs>
+  <rect class="canvas" width="1580" height="650"/>
+  <rect class="frame" x="24" y="24" width="1532" height="602" rx="24"/>
+  <text class="title" x="790" y="70" text-anchor="middle">Trace propagation flow</text>
+  <text class="subtitle" x="790" y="102" text-anchor="middle">The real tracer path is tested separately from TestObservationRegistry-only service assertions.</text>
+
+  <rect class="band" x="70" y="146" width="1440" height="196" rx="18"/>
+  <text class="bandLabel" x="100" y="184">Runtime request</text>
+  <rect class="band" x="70" y="392" width="1440" height="210" rx="18"/>
+  <text class="bandLabel" x="100" y="430">Test split</text>
+
+  <g filter="url(#shadow)">
+    <rect x="128" y="222" width="178" height="92" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
+    <text class="cardTitle" x="217" y="260" text-anchor="middle">Inbound HTTP</text>
+    <text class="cardText" x="217" y="288" text-anchor="middle">server span</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="420" y="206" width="238" height="124" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="539" y="250" text-anchor="middle">observed()</text>
+    <text class="cardText" x="539" y="282" text-anchor="middle">order.service.fetch</text>
+    <text class="cardText" x="539" y="306" text-anchor="middle">finally stop</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="772" y="206" width="238" height="124" rx="16" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.7"/>
+    <text class="cardTitle" x="891" y="250" text-anchor="middle">WebClient</text>
+    <text class="cardText" x="891" y="282" text-anchor="middle">client span</text>
+    <text class="cardText" x="891" y="306" text-anchor="middle">inject traceparent</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1124" y="206" width="238" height="124" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
+    <rect x="1154" y="244" width="54" height="38" rx="10" fill="#FFFBEB" stroke="#D97706" stroke-width="2.2"/>
+    <circle cx="1172" cy="263" r="7" fill="#D97706"/>
+    <text class="cardTitle" x="1278" y="252" text-anchor="middle">Inventory API</text>
+    <text class="cardText" x="1278" y="286" text-anchor="middle">receives header</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="150" y="478" width="298" height="92" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
+    <text class="cardTitle" x="299" y="516" text-anchor="middle">OrderControllerTest</text>
+    <text class="cardText" x="299" y="544" text-anchor="middle">TestObservationRegistry</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="642" y="478" width="298" height="92" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="791" y="516" text-anchor="middle">OrderServiceTest</text>
+    <text class="cardText" x="791" y="544" text-anchor="middle">span lifecycle + errors</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1134" y="478" width="298" height="92" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
+    <text class="cardTitle" x="1283" y="516" text-anchor="middle">TracePropagationTest</text>
+    <text class="cardText" x="1283" y="544" text-anchor="middle">@AutoConfigureTracing</text>
+  </g>
+
+  <path class="line" d="M 306 268 L 420 268" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 658 268 L 772 268" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 1010 268 L 1124 268" stroke="#0891B2" marker-end="url(#arrowCyan)"/>
+  <path class="line soft" d="M 448 524 L 642 524" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line soft" d="M 940 524 L 1134 524" stroke="#D97706" marker-end="url(#arrowAmber)"/>
+  <text class="label" x="545" y="490" text-anchor="middle">no real tracer</text>
+  <text class="label" x="1037" y="490" text-anchor="middle">real tracer path</text>
+</svg>
