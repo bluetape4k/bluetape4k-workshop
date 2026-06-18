@@ -1,82 +1,58 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="660" viewBox="0 0 1320 660" role="img" aria-label="Vert.x WebClient Examples architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;vertx/vertx-webclient/src/test/kotlin/io/bluetape4k/workshop/vertx/webclient/CoroutineExamples.kt&quot;,&quot;vertx/vertx-webclient/src/test/kotlin/io/bluetape4k/workshop/vertx/webclient/RequestExamples.kt&quot;,&quot;vertx/vertx-webclient/src/test/kotlin/io/bluetape4k/workshop/vertx/webclient/ResponseExamples.kt&quot;,&quot;vertx/vertx-webclient/src/test/kotlin/io/bluetape4k/workshop/vertx/webclient/SimpleExamples.kt&quot;,&quot;vertx/vertx-webclient/build.gradle.kts&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="820" viewBox="0 0 1680 820">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .bg { fill: #f8fafc; }
+      .title { font-family: 'Architects Daughter', 'Comic Sans MS', cursive; font-size: 34px; fill: #172033; }
+      .layer-title { font-family: 'Architects Daughter', 'Comic Sans MS', cursive; font-size: 26px; fill: #344154; }
+      .card-title { font-family: 'Architects Daughter', 'Comic Sans MS', cursive; font-size: 27px; fill: #101827; }
+      .body { font-family: 'Comic Mono', 'Comic Sans MS', monospace; font-size: 18px; fill: #364152; }
+      .small { font-family: 'Comic Mono', 'Comic Sans MS', monospace; font-size: 16px; fill: #4b5563; }
+      .layer { stroke-width: 1.5; rx: 24; ry: 24; }
+      .card { fill: #fff; stroke: #cbd5e1; stroke-width: 1.5; rx: 18; ry: 18; }
+      .line { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
     </style>
+    <marker id="arrow-blue" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#059669"/>
+    </marker>
   </defs>
-  <rect class="canvas" width="1320" height="660"/>
-  <rect class="frame" x="16" y="16" width="1288" height="628" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Vert.x WebClient Examples</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Vertx example runtime and module dependencies</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="146.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="106.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="171.0">Example Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="209.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="225.0">adapters</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="278.0" width="1228.0" height="132.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="298.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="328.0">Integration Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="366.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="382.0">adapters, helpers</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="428.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="448.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="478.0">Runtime Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="508.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="524.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="540.0">JVM</tspan></text>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 1096.0 390.0 L 1096.0 419.0 L 760.0 419.0 L 760.0 448.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Vert.x WebClient | Examples | Example Entrypoints">
-      <rect x="610.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="171.5">Vert.x WebClient</tspan><tspan class="node-title" x="760.0" y="195.5">Examples</tspan><tspan class="node-detail" x="760.0" y="219.5">Example Entrypoints</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="io | bluetape4k APIs">
-      <rect x="274.0" y="298.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="340.5">io</tspan><tspan class="node-detail" x="424.0" y="364.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="jdbc | bluetape4k APIs">
-      <rect x="610.0" y="298.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="340.5">jdbc</tspan><tspan class="node-detail" x="760.0" y="364.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="vertx | bluetape4k APIs">
-      <rect x="946.0" y="298.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="340.5">vertx</tspan><tspan class="node-detail" x="1096.0" y="364.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="SQL / R2DBC | Runtime Dependencies">
-      <rect x="610.0" y="448.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="490.5">SQL / R2DBC</tspan><tspan class="node-detail" x="760.0" y="514.5">Runtime Dependencies</tspan></text>
-    </g>
-  </g>
+  <rect class="bg" width="1680" height="820"/>
+  <text class="title" x="70" y="70">Vert.x WebClient Example Flow</text>
+
+  <rect class="layer" x="70" y="120" width="1540" height="170" fill="#eff6ff" stroke="#bfdbfe"/>
+  <text class="layer-title" x="105" y="165">Local server fixtures</text>
+  <rect class="card" x="125" y="200" width="330" height="60"/>
+  <text class="body" x="155" y="237">SimpleServer</text>
+  <rect class="card" x="495" y="200" width="330" height="60"/>
+  <text class="body" x="525" y="237">CoroutineServer</text>
+  <rect class="card" x="865" y="200" width="330" height="60"/>
+  <text class="body" x="895" y="237">PostStringServer</text>
+  <rect class="card" x="1235" y="200" width="330" height="60"/>
+  <text class="body" x="1265" y="237">JsonServer</text>
+
+  <rect class="layer" x="70" y="355" width="1540" height="190" fill="#f0fdf4" stroke="#bbf7d0"/>
+  <text class="layer-title" x="105" y="400">WebClient requests</text>
+  <rect class="card" x="180" y="445" width="360" height="60"/>
+  <text class="body" x="210" y="482">GET + BodyCodec.string()</text>
+  <rect class="card" x="660" y="445" width="360" height="60"/>
+  <text class="body" x="690" y="482">PUT body + BodyHandler</text>
+  <rect class="card" x="1140" y="445" width="360" height="60"/>
+  <text class="body" x="1170" y="482">JSON BodyCodec mapping</text>
+
+  <rect class="layer" x="70" y="610" width="1540" height="130" fill="#fefce8" stroke="#fde68a"/>
+  <text class="layer-title" x="105" y="655">Coroutine test harness</text>
+  <rect class="card" x="320" y="675" width="430" height="50"/>
+  <text class="small" x="350" y="706">send().coAwait() avoids callback nesting</text>
+  <rect class="card" x="930" y="675" width="430" height="50"/>
+  <text class="small" x="960" y="706">withSuspendTestContext reports failures</text>
+
+  <path class="line" d="M290 260 L290 445" stroke="#2563eb" marker-end="url(#arrow-blue)"/>
+  <path class="line" d="M660 260 L660 330 L360 330 L360 445" stroke="#2563eb" marker-end="url(#arrow-blue)"/>
+  <path class="line" d="M1030 260 L1030 330 L840 330 L840 445" stroke="#2563eb" marker-end="url(#arrow-blue)"/>
+  <path class="line" d="M1400 260 L1400 445" stroke="#2563eb" marker-end="url(#arrow-blue)"/>
+  <path class="line" d="M360 505 L360 675" stroke="#059669" marker-end="url(#arrow-green)"/>
+  <path class="line" d="M840 505 L840 585 L535 585 L535 675" stroke="#059669" marker-end="url(#arrow-green)"/>
+  <path class="line" d="M1320 505 L1320 585 L1145 585 L1145 675" stroke="#059669" marker-end="url(#arrow-green)"/>
 </svg>
