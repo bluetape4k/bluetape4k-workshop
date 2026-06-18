@@ -1,110 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="894" viewBox="0 0 1320 894" role="img" aria-label="Spring Boot Cache Resilience architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-boot/cache-resilience/src/main/kotlin/io/bluetape4k/workshop/cache/resilience/CacheResilienceApplication.kt&quot;,&quot;spring-boot/cache-resilience/src/main/kotlin/io/bluetape4k/workshop/cache/resilience/config/ResilientCacheConfig.kt&quot;,&quot;spring-boot/cache-resilience/src/main/kotlin/io/bluetape4k/workshop/cache/resilience/service/ResilientProductService.kt&quot;,&quot;spring-boot/cache-resilience/src/test/kotlin/io/bluetape4k/workshop/cache/resilience/ResilientCacheServiceTest.kt&quot;,&quot;spring-boot/cache-resilience/build.gradle.kts&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
-  <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
-    <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
-    </style>
-  </defs>
-  <rect class="canvas" width="1320" height="894"/>
-  <rect class="frame" x="16" y="16" width="1288" height="862" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Spring Boot Cache Resilience</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Spring Boot application feature and runtime integration</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="146.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="106.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="159.5">Spring Boot</tspan><tspan class="layer-title" x="151.0" y="182.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="209.0">apps, controllers,</tspan><tspan class="layer-detail" x="151.0" y="225.0">scheduled tests</tspan></text>
-    </g>
-    <g class="layer" data-layer="service">
-      <rect x="46.0" y="278.0" width="1228.0" height="146.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="298.0" width="174" height="106.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="335.0">Feature Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="365.0">services,</tspan><tspan class="layer-detail" x="151.0" y="381.0">resilience, events,</tspan><tspan class="layer-detail" x="151.0" y="397.0">cache policy</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="442.0" width="1228.0" height="242.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="462.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="535.5">Boot Integration</tspan><tspan class="layer-title" x="151.0" y="558.5">Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="577.0">auto-config,</tspan><tspan class="layer-detail" x="151.0" y="593.0">clients,</tspan><tspan class="layer-detail" x="151.0" y="609.0">repositories</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="702.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="722.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="740.5">Runtime</tspan><tspan class="layer-title" x="151.0" y="763.5">Dependencies</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="782.0">database, cache,</tspan><tspan class="layer-detail" x="151.0" y="798.0">messaging,</tspan><tspan class="layer-detail" x="151.0" y="814.0">containers</tspan></text>
-    </g>
-    <g class="edge" data-edge="entry1-&gt;service0" data-label="starts">
-      <path d="M 928.0 240.0 L 928.0 269.0 L 760.0 269.0 L 760.0 298.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
-    </g>
-    <g class="edge" data-edge="service0-&gt;infra0" data-label="persists / publishes">
-      <path d="M 760.0 404.0 L 760.0 433.0 L 424.0 433.0 L 424.0 462.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 424.0 664.0 L 424.0 693.0 L 592.0 693.0 L 592.0 722.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Cache Resilience | Application | application bootstrap">
-      <rect x="442.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="592.0" y="171.5">Cache Resilience</tspan><tspan class="node-title" x="592.0" y="195.5">Application</tspan><tspan class="node-detail" x="592.0" y="219.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry1" data-lines="Resilient Cache Service | Test | resilience">
-      <rect x="778.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="928.0" y="171.5">Resilient Cache Service</tspan><tspan class="node-title" x="928.0" y="195.5">Test</tspan><tspan class="node-detail" x="928.0" y="219.5">resilience</tspan></text>
-    </g>
-    <g class="node" data-node="service0" data-lines="Resilient Product | Service | service component">
-      <rect x="610.0" y="298.0" width="300.0" height="106.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="335.5">Resilient Product</tspan><tspan class="node-title" x="760.0" y="359.5">Service</tspan><tspan class="node-detail" x="760.0" y="383.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Resilient Cache Config | configuration">
-      <rect x="274.0" y="462.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="504.5">Resilient Cache Config</tspan><tspan class="node-detail" x="424.0" y="528.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k Boot APIs">
-      <rect x="610.0" y="462.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="504.5">workshop</tspan><tspan class="node-detail" x="760.0" y="528.5">bluetape4k Boot APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="junit5 | bluetape4k Boot APIs">
-      <rect x="946.0" y="462.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="504.5">junit5</tspan><tspan class="node-detail" x="1096.0" y="528.5">bluetape4k Boot APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="testcontainers | bluetape4k Boot APIs">
-      <rect x="274.0" y="572.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="614.5">testcontainers</tspan><tspan class="node-detail" x="424.0" y="638.5">bluetape4k Boot APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="Redis | Boot Runtime">
-      <rect x="442.0" y="722.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="592.0" y="764.5">Redis</tspan><tspan class="node-detail" x="592.0" y="788.5">Boot Runtime</tspan></text>
-    </g>
-    <g class="node" data-node="runtime1" data-lines="Testcontainers | Boot Runtime">
-      <rect x="778.0" y="722.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="928.0" y="764.5">Testcontainers</tspan><tspan class="node-detail" x="928.0" y="788.5">Boot Runtime</tspan></text>
-    </g>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" width="1780" height="900" viewBox="0 0 1780 900" role="img" aria-label="Cache resilience architecture">
+  <defs><filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter><marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker><marker id="arrowRed" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#DC2626"/></marker><marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A"/></marker><style>.canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{stroke-width:1.6;rx:22}.title{font-family:"Architects Daughter";font-size:40px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#51606F}.layerTitle{font-family:"Architects Daughter";font-size:29px;fill:#243447}.cardTitle{font-family:"Architects Daughter";font-size:28px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.line{fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}</style></defs>
+  <rect class="canvas" width="1780" height="900"/><rect class="frame" x="24" y="24" width="1732" height="852" rx="24"/>
+  <text class="title" x="890" y="72" text-anchor="middle">Redis cache with Caffeine fallback</text><text class="subtitle" x="890" y="106" text-anchor="middle">ResilientProductService wraps Redis reads with Resilience4j and falls back to a short-lived local Caffeine cache when Redis is unhealthy.</text>
+  <rect class="layer" x="84" y="154" width="1612" height="150" fill="#EFF6FF" stroke="#BFDBFE"/><text class="layerTitle" x="124" y="198">Service boundary</text>
+  <g filter="url(#shadow)"><rect x="190" y="220" width="310" height="64" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="345" y="260" text-anchor="middle">API / tests</text></g>
+  <g filter="url(#shadow)"><rect x="710" y="210" width="360" height="84" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="890" y="244" text-anchor="middle">ResilientProductService</text><text class="cardText" x="890" y="272" text-anchor="middle">get, put, evict product values</text></g>
+  <g filter="url(#shadow)"><rect x="1280" y="220" width="310" height="64" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="1435" y="260" text-anchor="middle">Actuator health</text></g>
+  <rect class="layer" x="84" y="364" width="1612" height="190" fill="#F0FDF4" stroke="#BBF7D0"/><text class="layerTitle" x="124" y="408">Resilience policy</text>
+  <g filter="url(#shadow)"><rect x="180" y="450" width="340" height="76" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="350" y="482" text-anchor="middle">SuspendDecorators</text><text class="cardText" x="350" y="508" text-anchor="middle">supplier + fallback chain</text></g>
+  <g filter="url(#shadow)"><rect x="720" y="438" width="340" height="100" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="890" y="470" text-anchor="middle">CircuitBreaker</text><text class="cardText" x="890" y="496" text-anchor="middle">redis-cache, 5-call window</text><text class="cardText" x="890" y="522" text-anchor="middle">OPEN waits 5 seconds</text></g>
+  <g filter="url(#shadow)"><rect x="1260" y="450" width="340" height="76" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="1430" y="482" text-anchor="middle">Caffeine fallback</text><text class="cardText" x="1430" y="508" text-anchor="middle">30-second local TTL</text></g>
+  <rect class="layer" x="84" y="614" width="1612" height="150" fill="#FFF7ED" stroke="#FED7AA"/><text class="layerTitle" x="124" y="658">Runtime and chaos</text>
+  <g filter="url(#shadow)"><rect x="190" y="690" width="330" height="58" rx="14" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.7"/><text class="cardTitle" x="355" y="727" text-anchor="middle">Redis</text></g>
+  <g filter="url(#shadow)"><rect x="725" y="690" width="330" height="58" rx="14" fill="#FFFFFF" stroke="#DC2626" stroke-width="1.7"/><text class="cardTitle" x="890" y="727" text-anchor="middle">Toxiproxy</text></g>
+  <g filter="url(#shadow)"><rect x="1260" y="690" width="330" height="58" rx="14" fill="#FFFFFF" stroke="#DC2626" stroke-width="1.7"/><text class="cardTitle" x="1425" y="727" text-anchor="middle">timeout toxic</text></g>
+  <path class="line" d="M 500 252 L 710 252" stroke="#2563EB" marker-end="url(#arrowBlue)"/><path class="line" d="M 1070 252 L 1280 252" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 890 294 L 890 438" stroke="#16A34A" marker-end="url(#arrowGreen)"/><path class="line" d="M 720 488 L 520 488" stroke="#16A34A" marker-end="url(#arrowGreen)"/><path class="line" d="M 1060 488 L 1260 488" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 350 526 L 350 690" stroke="#DC2626" marker-end="url(#arrowRed)"/><path class="line" d="M 890 538 L 890 690" stroke="#DC2626" marker-end="url(#arrowRed)"/>
+  <path class="line" d="M 1055 719 L 1260 719" stroke="#DC2626" marker-end="url(#arrowRed)"/><path class="line" d="M 725 719 L 520 719" stroke="#DC2626" marker-end="url(#arrowRed)"/>
 </svg>

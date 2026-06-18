@@ -2,21 +2,24 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+이 모듈은 장애를 견디는 cache read path를 보여 줍니다.
 
-이 예제는 **Spring Boot Cache Resilience** 모듈을 실행 가능한 Spring Boot 애플리케이션 기능 예제로 보여줍니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 사용 방식을 중심으로 설명합니다.
-
-## 시퀀스 다이어그램
-
-Resilience4j CircuitBreaker를 사용한 Redis 기본 캐시 + Caffeine 로컬 폴백 패턴입니다.
-Toxiproxy로 실제 네트워크 장애를 주입해 CircuitBreaker 상태 머신(`CLOSED → OPEN → HALF-OPEN → CLOSED`) 전체를 검증합니다.
+- Redis가 primary cache입니다.
+- Caffeine이 local fallback cache입니다.
+- Resilience4j CircuitBreaker가 Redis read를 보호합니다.
+- Toxiproxy가 integration test에서 실제 Redis network failure를 주입합니다.
 
 ## 아키텍처
 
-![Spring Boot Cache Resilience Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/spring-boot-cache-resilience-readme-architecture-01.png)
+![Spring Boot Cache Resilience architecture](../../docs/images/readme-diagrams/spring-boot-cache-resilience-readme-architecture-01.png)
 
-요청 흐름, CircuitBreaker 상태 머신(CLOSED → OPEN → HALF-OPEN → CLOSED),
-통합 테스트에서 사용하는 ToxiproxyServer 카오스 주입을 다이어그램으로 확인할 수 있습니다.
+`ResilientProductService`는 `SuspendDecorators`와 `redis-cache` CircuitBreaker로 Redis read를 감쌉니다. Write는 Caffeine을 먼저 갱신한 뒤 Redis를 시도하므로, Redis가 불안정해도 process-local fallback 값을 유지합니다.
+
+## CircuitBreaker 흐름
+
+![Spring Boot Cache Resilience state flow](../../docs/images/readme-diagrams/spring-boot-cache-resilience-readme-state-flow-01.png)
+
+Integration test는 전체 상태 머신을 직접 구동합니다. Redis가 정상일 때는 breaker가 `CLOSED`이고, timeout 주입 후 `OPEN`이 되며, 서비스는 Caffeine으로 fallback합니다. 대기 시간이 지난 뒤 probe가 성공하면 breaker가 다시 닫힙니다.
 
 ## 이 모듈에서 확인할 내용
 
