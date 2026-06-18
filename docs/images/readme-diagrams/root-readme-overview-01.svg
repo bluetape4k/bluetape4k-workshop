@@ -1,85 +1,105 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="960" height="520" viewBox="0 0 960 520" role="img" aria-label="Workshop Architecture Overview">
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1260" viewBox="0 0 1920 1260">
 <defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.09"/></filter>
-  <marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto" markerUnits="strokeWidth">
-    <path d="M1,1 L8,4.5 L1,8 Z" fill="#758297"/>
-  </marker>
-  <style>
-    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:38px;font-weight:400;fill:#102033}
-    .subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:14px;font-weight:400;fill:#536273}
-    .smallLabel{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:21px;font-weight:400;fill:#102033}
-    .mono{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#102033}
-    .small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:12px;font-weight:400;fill:#536273}
-    .card{stroke-width:2.1;filter:url(#shadow)}
-    .line{stroke:#758297;stroke-width:2.1;fill:none;marker-end:url(#arrow)}
-  </style>
-</defs>
-<rect class="canvas" width="960" height="520"/>
-<rect class="frame" x="24" y="20" width="912" height="476" rx="20"/>
+<marker id="arrow-blue" markerWidth="13" markerHeight="13" refX="11" refY="6.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 13 6.5 L 0 13 Z" fill="#2f6feb"/></marker>
+<marker id="arrow-green" markerWidth="13" markerHeight="13" refX="11" refY="6.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 13 6.5 L 0 13 Z" fill="#169b6b"/></marker>
+<marker id="arrow-amber" markerWidth="13" markerHeight="13" refX="11" refY="6.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 13 6.5 L 0 13 Z" fill="#d47400"/></marker>
+<marker id="arrow-purple" markerWidth="13" markerHeight="13" refX="11" refY="6.5" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 13 6.5 L 0 13 Z" fill="#805ad5"/></marker>
+<style><![CDATA[
 
-<!-- Title -->
-<text class="title" x="48" y="66">Workshop Overview</text>
-<text class="subtitle" x="48" y="90">All modules · Kotlin 2.3 + Java 25 + Spring Boot 4 + bluetape4k 1.5</text>
+@font-face { font-family:'Architects Daughter'; src:local('Architects Daughter'); }
+@font-face { font-family:'Comic Mono'; src:local('Comic Mono'); }
+svg { background:#f6f9fc; }
+.frame { fill:#fff; stroke:#91abd0; stroke-width:3.1; }
+.title { font-family:'Architects Daughter','Comic Sans MS',cursive; font-size:58px; fill:#182a44; }
+.subtitle,.small,.pill-sub,.note,.label { font-family:'Comic Mono','SFMono-Regular',monospace; fill:#52657f; }
+.subtitle { font-size:23px; font-weight:700; }
+.small { font-size:19px; font-weight:600; }
+.note { font-size:18px; font-weight:600; }
+.layer-title { font-family:'Architects Daughter','Comic Sans MS',cursive; font-size:33px; fill:#1f344f; }
+.pill-title { font-family:'Architects Daughter','Comic Sans MS',cursive; font-size:29px; fill:#1f344f; }
+.pill-sub { font-size:16px; font-weight:700; }
+.layer-blue { fill:#eaf3ff; stroke:#94b5e6; stroke-width:2.7; }
+.layer-green { fill:#e9f8f0; stroke:#88cfb5; stroke-width:2.7; }
+.layer-amber { fill:#fff6e7; stroke:#e6bf68; stroke-width:2.7; }
+.layer-purple { fill:#f3edff; stroke:#b7a2e8; stroke-width:2.7; }
+.pill-blue { fill:#fff; stroke:#4f8ff7; stroke-width:2.7; }
+.pill-green { fill:#fff; stroke:#19a974; stroke-width:2.7; }
+.pill-amber { fill:#fff; stroke:#dc8a00; stroke-width:2.7; }
+.pill-purple { fill:#fff; stroke:#925fe8; stroke-width:2.7; }
+.flow-blue { fill:none; stroke:#2f6feb; stroke-width:3.2; stroke-linecap:round; }
+.flow-green { fill:none; stroke:#169b6b; stroke-width:3.2; stroke-linecap:round; }
+.flow-amber { fill:none; stroke:#d47400; stroke-width:3.2; stroke-linecap:round; }
+.flow-purple { fill:none; stroke:#805ad5; stroke-width:3.2; stroke-linecap:round; }
+.label { font-size:17px; font-weight:700; fill:#3d5069; }
+.footer { fill:#f8fbff; stroke:#d4e1ef; stroke-width:2.1; }
 
-<!-- Top: Workshop description band -->
-<rect class="card" x="36" y="104" width="886" height="48" rx="14" fill="#E8F3FF" stroke="#5B8DEF"/>
-<text class="smallLabel" x="479" y="124" text-anchor="middle">bluetape4k Workshop — Backend Examples using bluetape4k Libraries</text>
-<text class="small" x="479" y="143" text-anchor="middle">aws · exposed · gateway · gatling · messaging · observability · ratelimit · reactive · redis · spring-boot · spring-data · vertx · virtualthreads</text>
-
-<!-- Middle 3-col -->
-<!-- Backend Frameworks -->
-<rect class="card" x="36" y="188" width="270" height="172" rx="14" fill="#EAF7EF" stroke="#58A978"/>
-<text class="smallLabel" x="171" y="216" text-anchor="middle">Backend Frameworks</text>
-<text class="small" x="171" y="237" text-anchor="middle">Spring Boot 4 WebFlux</text>
-<text class="small" x="171" y="255" text-anchor="middle">Spring MVC · Coroutines</text>
-<text class="small" x="171" y="273" text-anchor="middle">Resilience4j · Rate Limit</text>
-<text class="small" x="171" y="291" text-anchor="middle">Spring Security MVC/WebFlux</text>
-<text class="small" x="171" y="309" text-anchor="middle">Vert.x · Virtual Threads</text>
-<text class="small" x="171" y="327" text-anchor="middle">Spring Cloud Gateway</text>
-<text class="small" x="171" y="345" text-anchor="middle">Quarkus · Mutiny Reactive</text>
-
-<!-- Data Access -->
-<rect class="card" x="344" y="188" width="270" height="172" rx="14" fill="#FFF3D9" stroke="#D6A441"/>
-<text class="smallLabel" x="479" y="216" text-anchor="middle">Data Access</text>
-<text class="small" x="479" y="237" text-anchor="middle">JetBrains Exposed ORM</text>
-<text class="small" x="479" y="255" text-anchor="middle">Spring Data R2DBC</text>
-<text class="small" x="479" y="273" text-anchor="middle">Spring Data JPA / QueryDSL</text>
-<text class="small" x="479" y="291" text-anchor="middle">Spring Data MongoDB</text>
-<text class="small" x="479" y="309" text-anchor="middle">Spring Data Elasticsearch</text>
-<text class="small" x="479" y="327" text-anchor="middle">Hibernate Reactive Panache</text>
-<text class="small" x="479" y="345" text-anchor="middle">Vert.x SQL Client</text>
-
-<!-- Infrastructure -->
-<rect class="card" x="652" y="188" width="270" height="172" rx="14" fill="#FDECEF" stroke="#DC6B82"/>
-<text class="smallLabel" x="787" y="216" text-anchor="middle">Infrastructure</text>
-<text class="small" x="787" y="237" text-anchor="middle">Redis (Redisson/Lettuce)</text>
-<text class="small" x="787" y="255" text-anchor="middle">Kafka · Kafka Reply</text>
-<text class="small" x="787" y="273" text-anchor="middle">Micrometer Observation</text>
-<text class="small" x="787" y="291" text-anchor="middle">Distributed Tracing</text>
-<text class="small" x="787" y="309" text-anchor="middle">AWS S3 / Spring Cloud</text>
-<text class="small" x="787" y="327" text-anchor="middle">Leader Election · Locks</text>
-<text class="small" x="787" y="345" text-anchor="middle">Gatling Performance Tests</text>
-
-<!-- Arrows from top band to middle cols -->
-<line class="line" x1="200" y1="152" x2="171" y2="188"/>
-<line class="line" x1="480" y1="152" x2="479" y2="188"/>
-<line class="line" x1="760" y1="152" x2="787" y2="188"/>
-
-<!-- Bottom: bluetape4k + Testcontainers -->
-<rect class="card" x="36" y="396" width="420" height="80" rx="14" fill="#F1ECFF" stroke="#8A72D6"/>
-<text class="smallLabel" x="246" y="424" text-anchor="middle">bluetape4k Libraries</text>
-<text class="small" x="246" y="444" text-anchor="middle">bluetape4k-logging · bluetape4k-junit5</text>
-<text class="small" x="246" y="462" text-anchor="middle">bluetape4k-coroutines · bluetape4k-exposed</text>
-
-<rect class="card" x="502" y="396" width="420" height="80" rx="14" fill="#E9F7F6" stroke="#45A7A1"/>
-<text class="smallLabel" x="712" y="424" text-anchor="middle">Testcontainers + Test Stack</text>
-<text class="small" x="712" y="444" text-anchor="middle">PostgreSQL · Redis · Kafka · MongoDB</text>
-<text class="small" x="712" y="462" text-anchor="middle">JUnit 5 · MockK · ZGC · Java 25</text>
-
-<!-- Arrows mid → bottom -->
-<line class="line" x1="171" y1="360" x2="246" y2="396"/>
-<line class="line" x1="479" y1="360" x2="400" y2="396"/>
-<line class="line" x1="600" y1="360" x2="650" y2="396"/>
-<line class="line" x1="787" y1="360" x2="750" y2="396"/>
+]]></style></defs>
+<rect x="56" y="48" width="1808" height="1164" rx="34" class="frame"/>
+<text x="960.0" y="128" class="title" text-anchor="middle">Bluetape4k Workshop Overview</text>
+<text x="960.0" y="178" class="subtitle" text-anchor="middle">Pick a learning domain, run a small module, then graduate to container-backed production patterns.</text>
+<rect x="122" y="230" width="1676" height="238" rx="22" class="layer-blue"/>
+<text x="164" y="288" class="layer-title" text-anchor="start">Choose a learning domain</text>
+<text x="164" y="322" class="small" text-anchor="start">Start from the backend problem you want to practice.</text>
+<rect x="500" y="352" width="222" height="86" rx="14" class="pill-blue"/>
+<text x="611.0" y="390" class="pill-title" text-anchor="middle">Data access</text>
+<text x="611.0" y="422" class="pill-sub" text-anchor="middle">Exposed / R2DBC</text>
+<rect x="760" y="352" width="222" height="86" rx="14" class="pill-blue"/>
+<text x="871.0" y="390" class="pill-title" text-anchor="middle">Spring Boot</text>
+<text x="871.0" y="422" class="pill-sub" text-anchor="middle">cache / web / resilience</text>
+<rect x="1020" y="352" width="222" height="86" rx="14" class="pill-blue"/>
+<text x="1131.0" y="390" class="pill-title" text-anchor="middle">Messaging</text>
+<text x="1131.0" y="422" class="pill-sub" text-anchor="middle">Kafka / outbox</text>
+<rect x="1280" y="352" width="222" height="86" rx="14" class="pill-blue"/>
+<text x="1391.0" y="390" class="pill-title" text-anchor="middle">Ops patterns</text>
+<text x="1391.0" y="422" class="pill-sub" text-anchor="middle">observability / security</text>
+<rect x="122" y="548" width="1676" height="242" rx="22" class="layer-green"/>
+<text x="164" y="606" class="layer-title" text-anchor="start">Run the smallest useful example</text>
+<text x="164" y="640" class="small" text-anchor="start">Basic modules are fast; advanced modules add containers and cross-layer behavior.</text>
+<rect x="280" y="656" width="252" height="88" rx="14" class="pill-green"/>
+<text x="406.0" y="694" class="pill-title" text-anchor="middle">Basic path</text>
+<text x="406.0" y="726" class="pill-sub" text-anchor="middle">in-memory or one infra</text>
+<rect x="590" y="656" width="252" height="88" rx="14" class="pill-green"/>
+<text x="716.0" y="694" class="pill-title" text-anchor="middle">Advanced path</text>
+<text x="716.0" y="726" class="pill-sub" text-anchor="middle">multi-layer examples</text>
+<rect x="900" y="656" width="252" height="88" rx="14" class="pill-green"/>
+<text x="1026.0" y="694" class="pill-title" text-anchor="middle">Container proof</text>
+<text x="1026.0" y="726" class="pill-sub" text-anchor="middle">PostgreSQL / Redis / Kafka</text>
+<rect x="1210" y="656" width="252" height="88" rx="14" class="pill-green"/>
+<text x="1336.0" y="694" class="pill-title" text-anchor="middle">Local cloud</text>
+<text x="1336.0" y="726" class="pill-sub" text-anchor="middle">LocalStack / S3 / SQS</text>
+<rect x="122" y="882" width="780" height="194" rx="22" class="layer-amber"/>
+<text x="164" y="940" class="layer-title" text-anchor="start">Framework and runtime choices</text>
+<text x="164" y="974" class="small" text-anchor="start">Pick the runtime lane after the example proves the core behavior.</text>
+<rect x="238" y="986" width="156" height="66" rx="14" class="pill-amber"/>
+<text x="316.0" y="1024" class="pill-title" text-anchor="middle">MVC</text>
+<text x="316.0" y="1042" class="pill-sub" text-anchor="middle">runtime lane</text>
+<rect x="436" y="986" width="178" height="66" rx="14" class="pill-amber"/>
+<text x="525.0" y="1024" class="pill-title" text-anchor="middle">WebFlux</text>
+<text x="525.0" y="1042" class="pill-sub" text-anchor="middle">runtime lane</text>
+<rect x="658" y="986" width="202" height="66" rx="14" class="pill-amber"/>
+<text x="759.0" y="1024" class="pill-title" text-anchor="middle">Vert.x / Ktor</text>
+<text x="759.0" y="1042" class="pill-sub" text-anchor="middle">runtime lane</text>
+<rect x="1018" y="882" width="780" height="194" rx="22" class="layer-purple"/>
+<text x="1060" y="940" class="layer-title" text-anchor="start">Production concerns</text>
+<text x="1060" y="974" class="small" text-anchor="start">Add one operational concern at a time.</text>
+<rect x="1124" y="986" width="178" height="66" rx="14" class="pill-purple"/>
+<text x="1213.0" y="1024" class="pill-title" text-anchor="middle">Resilience</text>
+<text x="1213.0" y="1042" class="pill-sub" text-anchor="middle">system pattern</text>
+<rect x="1342" y="986" width="168" height="66" rx="14" class="pill-purple"/>
+<text x="1426.0" y="1024" class="pill-title" text-anchor="middle">Tracing</text>
+<text x="1426.0" y="1042" class="pill-sub" text-anchor="middle">system pattern</text>
+<rect x="1540" y="986" width="210" height="66" rx="14" class="pill-purple"/>
+<text x="1645.0" y="1024" class="pill-title" text-anchor="middle">Leader / Graph</text>
+<text x="1645.0" y="1042" class="pill-sub" text-anchor="middle">system pattern</text>
+<path d="M 960 468 L 960 548" class="flow-blue" marker-end="url(#arrow-blue)"/>
+<text x="990" y="512" class="label" text-anchor="start">select module</text>
+<path d="M 520 790 L 520 882" class="flow-green" marker-end="url(#arrow-green)"/>
+<text x="548" y="842" class="label" text-anchor="start">wire runtime</text>
+<path d="M 1410 790 L 1410 882" class="flow-purple" marker-end="url(#arrow-purple)"/>
+<text x="1438" y="842" class="label" text-anchor="start">add concerns</text>
+<path d="M 532 700 L 590 700" class="flow-green" marker-end="url(#arrow-green)"/>
+<path d="M 842 700 L 900 700" class="flow-green" marker-end="url(#arrow-green)"/>
+<path d="M 1152 700 L 1210 700" class="flow-green" marker-end="url(#arrow-green)"/>
+<rect x="150" y="1140" width="1620" height="54" rx="16" class="footer"/>
+<text x="960.0" y="1174" class="note" text-anchor="middle">Source code is the authority; README diagrams show what to run, what it proves, and when to move deeper.</text>
 </svg>

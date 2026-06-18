@@ -8,11 +8,13 @@
 
 [English](README.md) | 한국어
 
-[bluetape4k](https://github.com/bluetape4k) 라이브러리를 Spring Boot 4, JetBrains Exposed,
-Redis, Kafka, Observability 스택, 가상 스레드, Vert.x, 클라우드 네이티브 패턴과 통합하는
-실행 가능한 백엔드 예제 모음입니다.
+[bluetape4k](https://github.com/bluetape4k) 라이브러리가 실제 Spring Boot 4, Exposed,
+Redis, Kafka, 관찰 가능성, 가상 스레드, Vert.x, 클라우드 네이티브 워크로드 안에서
+어떻게 동작하는지 확인하는 실행 가능한 백엔드 예제 모음입니다.
 
 ![Workshop workbench](./docs/assets/workshop-workbench.png)
+
+![Bluetape4k Workshop Overview](./docs/images/readme-diagrams/root-readme-overview-01.png)
 
 ---
 
@@ -32,12 +34,21 @@ Redis, Kafka, Observability 스택, 가상 스레드, Vert.x, 클라우드 네�
 
 **요구 사항**: JDK 21+, Docker (Testcontainers)
 
+이 저장소는 실행 가능한 cookbook처럼 사용합니다.
+
+1. 지금 해결하려는 백엔드 문제와 가장 가까운 도메인을 고릅니다.
+2. 전체 저장소를 빌드하기 전에 하나의 모듈 테스트부터 실행합니다.
+3. Testcontainers 또는 다계층 동작이 필요할 때 Basic 모듈에서 Advanced 모듈로 이동합니다.
+4. 모듈 README를 source와 함께 읽습니다. 최종 계약은 source code입니다.
+
 ---
 
 ## 도메인 카탈로그
 
 모듈은 여섯 개의 학습 도메인으로 구성됩니다.
 각 도메인에는 **Basic** (독립적, 최소 인프라)과 **Advanced** (다계층, Testcontainers) 모듈이 있습니다.
+
+![Workshop Module Composition](./docs/images/readme-charts/root-readme-module-chart-01.png)
 
 ### 1. 데이터 접근
 

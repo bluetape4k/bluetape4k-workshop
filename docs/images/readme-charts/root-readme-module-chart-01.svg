@@ -1,22 +1,69 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1036" viewBox="0 0 1400 1036" role="img" aria-labelledby="title desc">
-  <title id="title">Bluetape4k Workshop module composition</title><desc id="desc">Module composition chart generated from current source layout.</desc>
-  <defs><filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#203040" flood-opacity="0.09"/></filter>
-    <style>.canvas{fill:#F6F9FC}.frame{fill:#FFFFFF;stroke:#D7E2EC;stroke-width:2}.title{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:42px;fill:#22344A;font-weight:400}.subtitle{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:17px;fill:#536476;font-weight:400}.group{filter:url(#shadow);stroke-width:2}.gtitle{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:24px;fill:#22344A;font-weight:400}.label{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:15px;fill:#34465B;font-weight:400}.small{font-family:"Comic Sans MS","Comic Sans","Comic Neue",Arial,sans-serif;font-size:13px;fill:#627184;font-weight:400}.axis{font-family:"Architects Daughter","Comic Sans MS","Comic Sans",cursive;font-size:22px;fill:#22344A;font-weight:400}</style>
-  </defs><rect class="canvas" width="1400" height="1036"/><rect class="frame" x="36" y="28" width="1328" height="980" rx="24"/>
-<text class="title" x="72" y="82">Bluetape4k Workshop module composition</text><text class="subtitle" x="76" y="114">Current source-backed group counts for README orientation.</text>
-<text class="axis" x="95" y="191">Shared foundation</text><rect x="385" y="165" width="820" height="34" rx="10" fill="#EEF4F9" stroke="#D7E2EC"/><rect x="385" y="165" width="63" height="34" rx="10" fill="#E8F3FF" stroke="#75A9E8" stroke-width="2"/><text class="label" x="468" y="183" dominant-baseline="middle">1</text>
-<text class="axis" x="95" y="243">Exposed modules</text><rect x="385" y="217" width="820" height="34" rx="10" fill="#EEF4F9" stroke="#D7E2EC"/><rect x="385" y="217" width="315" height="34" rx="10" fill="#EAF7EF" stroke="#69B888" stroke-width="2"/><text class="label" x="720" y="235" dominant-baseline="middle">5</text>
-<text class="axis" x="95" y="295">Spring Boot</text><rect x="385" y="269" width="820" height="34" rx="10" fill="#EEF4F9" stroke="#D7E2EC"/><rect x="385" y="269" width="756" height="34" rx="10" fill="#FFF3D9" stroke="#D9AA4D" stroke-width="2"/><text class="label" x="1161" y="287" dominant-baseline="middle">12</text>
-<text class="axis" x="95" y="347">Spring Data</text><rect x="385" y="321" width="820" height="34" rx="10" fill="#EEF4F9" stroke="#D7E2EC"/><rect x="385" y="321" width="630" height="34" rx="10" fill="#FDECEF" stroke="#DB7890" stroke-width="2"/><text class="label" x="1035" y="339" dominant-baseline="middle">10</text>
-<text class="axis" x="95" y="399">Spring Security</text><rect x="385" y="373" width="820" height="34" rx="10" fill="#EEF4F9" stroke="#D7E2EC"/><rect x="385" y="373" width="189" height="34" rx="10" fill="#E9F7F6" stroke="#55B5AF" stroke-width="2"/><text class="label" x="594" y="391" dominant-baseline="middle">3</text>
-<text class="axis" x="95" y="451">Virtual Threads</text><rect x="385" y="425" width="820" height="34" rx="10" fill="#EEF4F9" stroke="#D7E2EC"/><rect x="385" y="425" width="189" height="34" rx="10" fill="#F1ECFF" stroke="#A58BE3" stroke-width="2"/><text class="label" x="594" y="443" dominant-baseline="middle">3</text>
-<text class="axis" x="95" y="503">Docker</text><rect x="385" y="477" width="820" height="34" rx="10" fill="#EEF4F9" stroke="#D7E2EC"/><rect x="385" y="477" width="126" height="34" rx="10" fill="#F7F1E7" stroke="#B68C55" stroke-width="2"/><text class="label" x="531" y="495" dominant-baseline="middle">2</text>
-<text class="axis" x="95" y="555">Gateway</text><rect x="385" y="529" width="820" height="34" rx="10" fill="#EEF4F9" stroke="#D7E2EC"/><rect x="385" y="529" width="189" height="34" rx="10" fill="#EEF6D9" stroke="#91AA58" stroke-width="2"/><text class="label" x="594" y="547" dominant-baseline="middle">3</text>
-<text class="axis" x="95" y="607">Kotlin</text><rect x="385" y="581" width="820" height="34" rx="10" fill="#EEF4F9" stroke="#D7E2EC"/><rect x="385" y="581" width="189" height="34" rx="10" fill="#E8F3FF" stroke="#75A9E8" stroke-width="2"/><text class="label" x="594" y="599" dominant-baseline="middle">3</text>
-<text class="axis" x="95" y="659">Messaging</text><rect x="385" y="633" width="820" height="34" rx="10" fill="#EEF4F9" stroke="#D7E2EC"/><rect x="385" y="633" width="126" height="34" rx="10" fill="#EAF7EF" stroke="#69B888" stroke-width="2"/><text class="label" x="531" y="651" dominant-baseline="middle">2</text>
-<text class="axis" x="95" y="711">Observability</text><rect x="385" y="685" width="820" height="34" rx="10" fill="#EEF4F9" stroke="#D7E2EC"/><rect x="385" y="685" width="126" height="34" rx="10" fill="#FFF3D9" stroke="#D9AA4D" stroke-width="2"/><text class="label" x="531" y="703" dominant-baseline="middle">2</text>
-<text class="axis" x="95" y="763">Rate limiting</text><rect x="385" y="737" width="820" height="34" rx="10" fill="#EEF4F9" stroke="#D7E2EC"/><rect x="385" y="737" width="189" height="34" rx="10" fill="#FDECEF" stroke="#DB7890" stroke-width="2"/><text class="label" x="594" y="755" dominant-baseline="middle">3</text>
-<text class="axis" x="95" y="815">Redis</text><rect x="385" y="789" width="820" height="34" rx="10" fill="#EEF4F9" stroke="#D7E2EC"/><rect x="385" y="789" width="126" height="34" rx="10" fill="#E9F7F6" stroke="#55B5AF" stroke-width="2"/><text class="label" x="531" y="807" dominant-baseline="middle">2</text>
-<text class="axis" x="95" y="867">Vert.x</text><rect x="385" y="841" width="820" height="34" rx="10" fill="#EEF4F9" stroke="#D7E2EC"/><rect x="385" y="841" width="189" height="34" rx="10" fill="#F1ECFF" stroke="#A58BE3" stroke-width="2"/><text class="label" x="594" y="859" dominant-baseline="middle">3</text>
-<text class="axis" x="95" y="919">Additional examples</text><rect x="385" y="893" width="820" height="34" rx="10" fill="#EEF4F9" stroke="#D7E2EC"/><rect x="385" y="893" width="820" height="34" rx="10" fill="#F7F1E7" stroke="#B68C55" stroke-width="2"/><text class="label" x="1225" y="911" dominant-baseline="middle">13</text>
-<text class="small" x="700.0" y="991" text-anchor="middle">Counts exclude buildSrc and generated build outputs.</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="820" viewBox="0 0 1680 820">
+<defs><style><![CDATA[
+
+@font-face { font-family:'Architects Daughter'; src:local('Architects Daughter'); }
+@font-face { font-family:'Comic Mono'; src:local('Comic Mono'); }
+svg { background:#f6f9fc; }
+.frame { fill:#fff; stroke:#d5e2f0; stroke-width:2.4; }
+.title { font-family:'Architects Daughter','Comic Sans MS',cursive; font-size:48px; fill:#1f344f; }
+.subtitle,.axis,.desc,.value,.note { font-family:'Comic Mono','SFMono-Regular',monospace; fill:#536782; font-weight:700; }
+.subtitle { font-size:19px; }
+.axis { font-size:15px; }
+.desc { font-size:14px; fill:#60738d; }
+.value { font-size:17px; fill:#33465f; }
+.label { font-family:'Architects Daughter','Comic Sans MS',cursive; font-size:25px; fill:#20344d; }
+.plot { fill:#fbfdff; stroke:#d4e1ef; stroke-width:2; }
+.track { fill:#eaf2fa; stroke:#d3e0ee; stroke-width:1.4; }
+.bar0 { fill:#6aa3f7; } .bar1 { fill:#5ab88d; } .bar2 { fill:#e4af45; }
+.bar3 { fill:#9b82dd; } .bar4 { fill:#5db7bd; } .bar5 { fill:#f07f7a; }
+.grid { stroke:#dce7f2; stroke-width:1.1; }
+.footer { fill:#f8fbff; stroke:#d4e1ef; stroke-width:2; }
+
+]]></style></defs>
+<rect x="42" y="36" width="1596" height="748" rx="32" class="frame"/>
+<text x="92" y="104" class="title">Workshop Module Composition</text>
+<text x="92" y="144" class="subtitle">Counts are grouped for README navigation; source of truth is settings.gradle.kts and module directories.</text>
+<rect x="112" y="190" width="1456" height="500" rx="20" class="plot"/>
+<path d="M 560.0 224 L 560.0 634" class="grid"/>
+<text x="560.0" y="664" class="axis" text-anchor="middle">0</text>
+<path d="M 795.0 224 L 795.0 634" class="grid"/>
+<text x="795.0" y="664" class="axis" text-anchor="middle">5</text>
+<path d="M 1030.0 224 L 1030.0 634" class="grid"/>
+<text x="1030.0" y="664" class="axis" text-anchor="middle">10</text>
+<path d="M 1265.0 224 L 1265.0 634" class="grid"/>
+<text x="1265.0" y="664" class="axis" text-anchor="middle">15</text>
+<path d="M 1500.0 224 L 1500.0 634" class="grid"/>
+<text x="1500.0" y="664" class="axis" text-anchor="middle">20</text>
+<text x="166" y="266" class="label">Spring Boot Ops</text>
+<text x="166" y="290" class="desc">cache, resilience, WebFlux, websocket</text>
+<rect x="560" y="242" width="940" height="30" rx="8" class="track"/>
+<rect x="560" y="242" width="799.0" height="30" rx="8" class="bar0"/>
+<text x="1331.0" y="263" class="value" text-anchor="end">17 modules</text>
+<text x="166" y="332" class="label">Data Access</text>
+<text x="166" y="356" class="desc">Exposed, Spring Data, JPA, R2DBC</text>
+<rect x="560" y="308" width="940" height="30" rx="8" class="track"/>
+<rect x="560" y="308" width="893.0" height="30" rx="8" class="bar1"/>
+<text x="1425.0" y="329" class="value" text-anchor="end">19 modules</text>
+<text x="166" y="398" class="label">Architecture Extensions</text>
+<text x="166" y="422" class="desc">gateway, rate limit, Redis, leader, AWS, graph</text>
+<rect x="560" y="374" width="940" height="30" rx="8" class="track"/>
+<rect x="560" y="374" width="893.0" height="30" rx="8" class="bar2"/>
+<text x="1425.0" y="395" class="value" text-anchor="end">19 modules</text>
+<text x="166" y="464" class="label">Async / Reactive</text>
+<text x="166" y="488" class="desc">coroutines, virtual threads, Vert.x, Ktor</text>
+<rect x="560" y="440" width="940" height="30" rx="8" class="track"/>
+<rect x="560" y="440" width="517.0" height="30" rx="8" class="bar3"/>
+<text x="1105.0" y="461" class="value" text-anchor="start">11 modules</text>
+<text x="166" y="530" class="label">Messaging / Integration</text>
+<text x="166" y="554" class="desc">Kafka, outbox, JSON, image, IO</text>
+<rect x="560" y="506" width="940" height="30" rx="8" class="track"/>
+<rect x="560" y="506" width="376.0" height="30" rx="8" class="bar4"/>
+<text x="964.0" y="527" class="value" text-anchor="start">8 modules</text>
+<text x="166" y="596" class="label">Observability / Performance</text>
+<text x="166" y="620" class="desc">Micrometer tracing and Gatling</text>
+<rect x="560" y="572" width="940" height="30" rx="8" class="track"/>
+<rect x="560" y="572" width="282.0" height="30" rx="8" class="bar5"/>
+<text x="870.0" y="593" class="value" text-anchor="start">6 modules</text>
+<rect x="112" y="720" width="1456" height="46" rx="14" class="footer"/>
+<text x="840" y="750" class="note" text-anchor="middle">Direction: breadth of runnable examples, not architectural importance or runtime weight.</text>
+</svg>
