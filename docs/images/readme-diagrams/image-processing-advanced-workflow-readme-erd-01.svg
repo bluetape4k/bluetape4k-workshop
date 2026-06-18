@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1660" height="960" viewBox="0 0 1660 960" role="img" aria-label="image-processing advanced workflow persistence ERD">
+  <defs>
+    <marker id="fkArrow" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" viewBox="0 0 10 10" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#667F8C"/>
+    </marker>
+    <style>
+      svg { background: #F8FAFC; }
+      .frame { fill: #FFFFFF; stroke: #D9E5EC; stroke-width: 2; }
+      .title { font-family: "Architects Daughter"; font-size: 42px; fill: #152437; }
+      .subtitle, .footer { font-family: "Comic Mono"; fill: #405260; }
+      .subtitle { font-size: 17px; }
+      .footer { font-size: 14px; fill: #617684; }
+      .table { fill: #FFFFFF; stroke: #78909C; stroke-width: 2.4; }
+      .assets { stroke: #6F9FC5; }
+      .objects { stroke: #72A57F; }
+      .jobs { stroke: #B8944F; }
+      .events { stroke: #C98272; }
+      .assetHeader { fill: #EEF7FF; }
+      .objectHeader { fill: #EEFAF1; }
+      .jobHeader { fill: #FFF7E8; }
+      .eventHeader { fill: #FFF1EF; }
+      .tableName { font-family: "Architects Daughter"; font-size: 28px; fill: #152437; }
+      .col { font-family: "Comic Mono"; font-size: 17px; fill: #344955; }
+      .type { font-family: "Comic Mono"; font-size: 16px; fill: #657783; }
+      .pk { fill: #FFF8DC; stroke: #C9A33A; stroke-width: 1.4; }
+      .fk { fill: #EDF7FF; stroke: #73A7CF; stroke-width: 1.4; }
+      .rel { fill: none; stroke: #667F8C; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; marker-end: url(#fkArrow); }
+      .labelBox { fill: #FFFFFF; stroke: #D7E0E4; stroke-width: 1.3; }
+      .relLabel { font-family: "Comic Mono"; font-size: 14px; fill: #536975; }
+    </style>
+  </defs>
+  <rect class="frame" x="30" y="28" width="1600" height="904" rx="18"/>
+  <text class="title" x="830" y="82" text-anchor="middle">Image Processing Persistence ERD</text>
+  <text class="subtitle" x="830" y="114" text-anchor="middle">Assets deduplicate by checksum; jobs record runs; events record step history; objects store original and variant URLs.</text>
+
+  <g id="assets">
+    <rect class="table assets" x="96" y="172" width="460" height="434" rx="10"/>
+    <rect class="assetHeader" x="96" y="172" width="460" height="58" rx="10"/>
+    <text class="tableName" x="326" y="210" text-anchor="middle">image_assets</text>
+    <rect class="pk" x="124" y="254" width="50" height="24" rx="12"/><text class="col" x="192" y="273">id</text><text class="type" x="474" y="273" text-anchor="end">BIGSERIAL PK</text>
+    <text class="col" x="192" y="311">external_id</text><text class="type" x="474" y="311" text-anchor="end">VARCHAR(36) UQ</text>
+    <text class="col" x="192" y="349">original_filename</text><text class="type" x="474" y="349" text-anchor="end">VARCHAR(255)?</text>
+    <text class="col" x="192" y="387">content_type</text><text class="type" x="474" y="387" text-anchor="end">VARCHAR(100)?</text>
+    <text class="col" x="192" y="425">byte_size</text><text class="type" x="474" y="425" text-anchor="end">BIGINT?</text>
+    <text class="col" x="192" y="463">width, height</text><text class="type" x="474" y="463" text-anchor="end">INTEGER?</text>
+    <text class="col" x="192" y="501">checksum</text><text class="type" x="474" y="501" text-anchor="end">VARCHAR(64) UQ</text>
+    <text class="col" x="192" y="539">status</text><text class="type" x="474" y="539" text-anchor="end">PROCESSING READY FAILED</text>
+    <text class="col" x="192" y="577">audit columns</text><text class="type" x="474" y="577" text-anchor="end">created and updated</text>
+  </g>
+
+  <g id="objects">
+    <rect class="table objects" x="722" y="154" width="460" height="394" rx="10"/>
+    <rect class="objectHeader" x="722" y="154" width="460" height="58" rx="10"/>
+    <text class="tableName" x="952" y="192" text-anchor="middle">image_objects</text>
+    <rect class="pk" x="750" y="236" width="50" height="24" rx="12"/><text class="col" x="818" y="255">id</text><text class="type" x="1100" y="255" text-anchor="end">BIGSERIAL PK</text>
+    <rect class="fk" x="750" y="274" width="50" height="24" rx="12"/><text class="col" x="818" y="293">image_asset_id</text><text class="type" x="1100" y="293" text-anchor="end">FK assets.id</text>
+    <text class="col" x="818" y="331">kind</text><text class="type" x="1100" y="331" text-anchor="end">ORIGINAL VARIANT</text>
+    <text class="col" x="818" y="369">variant_name</text><text class="type" x="1100" y="369" text-anchor="end">VARCHAR(100)?</text>
+    <text class="col" x="818" y="407">s3_key</text><text class="type" x="1100" y="407" text-anchor="end">VARCHAR(512)</text>
+    <text class="col" x="818" y="445">public_url</text><text class="type" x="1100" y="445" text-anchor="end">TEXT</text>
+    <text class="col" x="818" y="483">width, height</text><text class="type" x="1100" y="483" text-anchor="end">INTEGER?</text>
+    <text class="col" x="818" y="521">byte_size, format</text><text class="type" x="1100" y="521" text-anchor="end">BIGINT?, VARCHAR?</text>
+  </g>
+
+  <g id="jobs">
+    <rect class="table jobs" x="722" y="614" width="460" height="280" rx="10"/>
+    <rect class="jobHeader" x="722" y="614" width="460" height="58" rx="10"/>
+    <text class="tableName" x="952" y="652" text-anchor="middle">image_processing_jobs</text>
+    <rect class="pk" x="750" y="696" width="50" height="24" rx="12"/><text class="col" x="818" y="715">id</text><text class="type" x="1100" y="715" text-anchor="end">BIGSERIAL PK</text>
+    <rect class="fk" x="750" y="734" width="50" height="24" rx="12"/><text class="col" x="818" y="753">image_asset_id</text><text class="type" x="1100" y="753" text-anchor="end">FK assets.id</text>
+    <text class="col" x="818" y="791">status</text><text class="type" x="1100" y="791" text-anchor="end">RUNNING SUCCEEDED FAILED</text>
+    <text class="col" x="818" y="829">requested_variants</text><text class="type" x="1100" y="829" text-anchor="end">JSONB list</text>
+    <text class="col" x="818" y="867">timing and error</text><text class="type" x="1100" y="867" text-anchor="end">started, finished, duration</text>
+  </g>
+
+  <g id="events">
+    <rect class="table events" x="1280" y="614" width="300" height="280" rx="10"/>
+    <rect class="eventHeader" x="1280" y="614" width="300" height="58" rx="10"/>
+    <text class="tableName" x="1430" y="652" text-anchor="middle">image_processing_events</text>
+    <rect class="pk" x="1302" y="696" width="50" height="24" rx="12"/><text class="col" x="1364" y="715">id</text>
+    <rect class="fk" x="1302" y="734" width="50" height="24" rx="12"/><text class="col" x="1364" y="753">job_id</text>
+    <text class="col" x="1364" y="791">step</text><text class="type" x="1546" y="791" text-anchor="end">VALIDATION...</text>
+    <text class="col" x="1364" y="829">status</text><text class="type" x="1546" y="829" text-anchor="end">COMPLETED FAILED</text>
+    <text class="col" x="1364" y="867">message, payload</text><text class="type" x="1546" y="867" text-anchor="end">TEXT?, JSONB?</text>
+  </g>
+
+  <path class="rel" d="M 556 294 H 722"/>
+  <path class="rel" d="M 556 754 H 722"/>
+  <path class="rel" d="M 1182 754 H 1280"/>
+  <rect class="labelBox" x="596" y="248" width="92" height="28" rx="14"/>
+  <text class="relLabel" x="642" y="267" text-anchor="middle">1 asset</text>
+  <rect class="labelBox" x="618" y="326" width="122" height="28" rx="14"/>
+  <text class="relLabel" x="679" y="345" text-anchor="middle">many objects</text>
+  <rect class="labelBox" x="596" y="708" width="92" height="28" rx="14"/>
+  <text class="relLabel" x="642" y="727" text-anchor="middle">1 asset</text>
+  <rect class="labelBox" x="618" y="786" width="104" height="28" rx="14"/>
+  <text class="relLabel" x="670" y="805" text-anchor="middle">many jobs</text>
+  <rect class="labelBox" x="1204" y="708" width="78" height="28" rx="14"/>
+  <text class="relLabel" x="1243" y="727" text-anchor="middle">1 job</text>
+  <rect class="labelBox" x="1198" y="786" width="98" height="28" rx="14"/>
+  <text class="relLabel" x="1247" y="805" text-anchor="middle">many events</text>
+  <text class="footer" x="830" y="922" text-anchor="middle">`image_objects` uses a DB-created partial unique constraint for one original and one row per variant name.</text>
+</svg>

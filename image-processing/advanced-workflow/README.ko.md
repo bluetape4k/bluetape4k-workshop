@@ -2,19 +2,36 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+## 개요
 
-이 예제는 **image-processing-advanced-workflow** 모듈을 실행 가능한 이미지 처리 워크플로우 예제로 보여줍니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 사용 방식을 중심으로 설명합니다.
+**image-processing-advanced-workflow**는 이미지를 검증하고, checksum으로 중복을 판별하고,
+Java 25 libvips로 WebP 파생 이미지를 생성하고, 모든 객체를 Bluetape4k `ImageStorage`로
+저장한 뒤 job/event 이력을 영속화하는 Spring Boot 4 업로드 workflow입니다.
 
-![image-processing-advanced-workflow 시나리오 다이어그램](../../docs/images/readme-diagrams/image-processing-advanced-workflow-scenario-01.png)
-
-## 시퀀스 다이어그램
-
-업로드된 이미지를 검증하고, 원본을 저장하고, Java 25 libvips로 WebP 파생 이미지를 생성한 뒤, 모든 객체를 Bluetape4k `ImageStorage`로 저장하고 unsigned public URL을 반환하는 Spring Boot 4 고급 예제입니다.
+메인 경로는 unsigned public URL을 반환합니다. 운영에서는 S3 또는 CDN이 연결된 public
+bucket을 사용하고, 개발 중에는 local storage backend를 사용하면 됩니다.
 
 ## 아키텍처
 
-![image-processing-advanced-workflow Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/image-processing-advanced-workflow-architecture-01.png)
+![image-processing-advanced-workflow 아키텍처](../../docs/images/readme-diagrams/image-processing-advanced-workflow-readme-architecture-01.png)
+
+Controller는 업로드 작업 전체를 `ImageDerivativeWorkflowService`에 위임합니다. Workflow
+service는 검증, libvips 파생 이미지 생성, object key 생성, `ImageStorage` 업로드, public
+URL 해석, Micrometer metric, Exposed 기반 persistence를 조율합니다.
+
+## 처리 흐름
+
+![image-processing-advanced-workflow 처리 흐름](../../docs/images/readme-diagrams/image-processing-advanced-workflow-readme-flow-01.png)
+
+이 workflow는 작은 saga로 동작합니다.
+
+- `T1 recordJobStart`는 asset/job row를 만들거나 재사용하고, 이미 `READY`인 중복 이미지는 바로 응답합니다.
+- 정상 경로는 validation, VIPS processing, upload, completion event를 기록합니다.
+- 실패 시 업로드된 object를 정리한 뒤 `NonCancellable` IO block에서 job/asset 실패 상태를 기록합니다.
+
+## Persistence 모델
+
+![image-processing-advanced-workflow persistence ERD](../../docs/images/readme-diagrams/image-processing-advanced-workflow-readme-erd-01.png)
 
 ## 사용한 Bluetape4k 기능
 

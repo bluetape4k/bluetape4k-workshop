@@ -2,19 +2,36 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+## Overview
 
-This example exercises **image-processing-advanced-workflow** as a runnable image-processing workflow workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+**image-processing-advanced-workflow** is a Spring Boot 4 upload workflow that validates an image,
+deduplicates it by checksum, generates WebP derivatives with Java 25 libvips, stores every object
+through Bluetape4k `ImageStorage`, and persists job/event history for later inspection.
 
-![image-processing-advanced-workflow scenario diagram](../../docs/images/readme-diagrams/image-processing-advanced-workflow-scenario-01.png)
-
-## Sequence Diagram
-
-Advanced Spring Boot 4 workflow for uploaded images: validate, store the original, generate WebP derivatives with Java 25 libvips, store every object through Bluetape4k `ImageStorage`, and return unsigned public URLs.
+The main path returns unsigned public URLs. Use S3 or a CDN-backed public bucket in production, and
+the local storage backend for development.
 
 ## Architecture
 
-![image-processing-advanced-workflow architecture diagram](../../docs/images/readme-diagrams/image-processing-advanced-workflow-architecture-01.png)
+![image-processing-advanced-workflow architecture](../../docs/images/readme-diagrams/image-processing-advanced-workflow-readme-architecture-01.png)
+
+The controller delegates all upload work to `ImageDerivativeWorkflowService`. The workflow service
+coordinates validation, libvips derivative processing, object-key generation, `ImageStorage`
+uploads, public URL resolution, Micrometer metrics, and Exposed-backed persistence.
+
+## Processing Flow
+
+![image-processing-advanced-workflow processing flow](../../docs/images/readme-diagrams/image-processing-advanced-workflow-readme-flow-01.png)
+
+The workflow is a small saga:
+
+- `T1 recordJobStart` creates or reuses the asset/job rows and short-circuits `READY` duplicates.
+- The happy path records validation, VIPS processing, upload, and completion events.
+- Failures clean up uploaded objects, then record job and asset failure in a `NonCancellable` IO block.
+
+## Persistence Model
+
+![image-processing-advanced-workflow persistence ERD](../../docs/images/readme-diagrams/image-processing-advanced-workflow-readme-erd-01.png)
 
 ## Used Bluetape4k Features
 
