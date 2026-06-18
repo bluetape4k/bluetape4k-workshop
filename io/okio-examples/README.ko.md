@@ -2,21 +2,23 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+## 개요
 
-이 예제는 **Okio Examples**를 실행 가능한 I/O 유틸리티 워크플로우 워크샵 조각으로 다룹니다. 개발자가 가장 먼저 확인할 흐름인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄여 주는 라이브러리/프레임워크 API 관찰에 초점을 둡니다.
+이 모듈은 워크샵에서 사용하는 Okio `Source`, `Sink`, `Buffer`, coroutine interop 예제를
+모아 둔 곳입니다. bluetape4k가 Okio stream을 Base64, compression, encryption, file
+channel, socket, pipe, hashing, suspend-friendly I/O로 어떻게 감싸는지 확인할 때 유용합니다.
 
-## 아키텍처 다이어그램
+## 아키텍처
 
-![Okio Examples Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/io-okio-examples-readme-architecture-01.png)
+![Okio examples 아키텍처](../../docs/images/readme-diagrams/io-okio-examples-readme-architecture-01.png)
 
-이 모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성을 중심으로 구성됩니다. 이 README를 코드와 비교할 때는 `io.bluetape4k.workshop.io` 패키지를 기준으로 삼습니다.
+`io.bluetape4k.okio` 아래 코드는 Okio 핵심 계약을 감싸는 composable wrapper로 구성됩니다.
+각 wrapper는 `Source` 또는 `Sink` 형태를 유지하므로 buffering, file channel, socket,
+coroutine adapter와 함께 계층적으로 조합할 수 있습니다.
 
-## 시퀀스 다이어그램
+## Stream 흐름
 
-[Okio](Provides an example using the https://github.com/square/okio/) 라이브러리를 사용하는 예제입니다.
-
-## I/O 흐름 구성
+![Okio examples stream wrapper 흐름](../../docs/images/readme-diagrams/io-okio-examples-readme-flow-01.png)
 
 ---
 
@@ -50,12 +52,6 @@ val bs = "East Sea and Baekdu Mountain".encodeUtf8()
 bs.hex()    // "eb8f99ed95b4ebacbceab3bc20ebb0b1eb9190ec82b0ec9db4"
 bs.base64() // Base64 encoded string
 ```
-
----
-
-## 클래스 계층 다이어그램
-
-![okio examples Class Structure 2 diagram](../../docs/images/readme-diagrams/io-okio-examples-diagram-02.png)
 
 ---
 

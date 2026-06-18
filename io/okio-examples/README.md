@@ -2,21 +2,23 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+## Overview
 
-This example exercises **Okio Examples** as a runnable I/O utility workflow workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+This module collects Okio `Source`, `Sink`, `Buffer`, and coroutine interop examples used by the
+workshop. It is useful when you want to understand how bluetape4k wraps Okio streams for Base64,
+compression, encryption, file channels, sockets, pipes, hashing, and suspend-friendly I/O.
 
-## Architecture Diagram
+## Architecture
 
-![Okio Examples Graphviz architecture diagram](../../docs/images/readme-diagrams/io-okio-examples-readme-architecture-01.png)
+![Okio examples architecture](../../docs/images/readme-diagrams/io-okio-examples-readme-architecture-01.png)
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.io` as the source of truth when comparing this README with the code.
+The code under `io.bluetape4k.okio` is organized as composable wrappers around Okio's core
+contracts. Each wrapper keeps the `Source` or `Sink` shape, so it can be layered with buffering,
+file channels, sockets, or coroutine adapters.
 
-## Sequence Diagram
+## Stream Flow
 
-[Okio](Provides an example using the https://github.com/square/okio/) library.
-
-## I/O flow configuration
+![Okio examples stream wrapper flow](../../docs/images/readme-diagrams/io-okio-examples-readme-flow-01.png)
 
 ---
 
@@ -50,12 +52,6 @@ val bs = "East Sea and Baekdu Mountain".encodeUtf8()
 bs.hex()    // "eb8f99ed95b4ebacbceab3bc20ebb0b1eb9190ec82b0ec9db4"
 bs.base64() // Base64 encoded string
 ```
-
----
-
-## Class Hierarchy Diagram
-
-![okio examples Class Structure 2 diagram](../../docs/images/readme-diagrams/io-okio-examples-diagram-02.png)
 
 ---
 
