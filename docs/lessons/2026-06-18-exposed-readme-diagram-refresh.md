@@ -29,3 +29,6 @@ reader to infer FK ownership from ASCII arrows and source files.
 For root workshop READMEs, explain how a reader should choose a submodule.
 Avoid reusing a submodule sequence diagram as the root visual unless the root
 README is specifically about that scenario.
+After a root module pass, scan direct child README files before moving to a
+different top-level module; root diagrams do not replace submodule README
+refreshes when each child has its own runnable artifact and Graphviz remnants.
