@@ -2,82 +2,45 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
-
-This example exercises **Spring Modulith Events Deep Dive** as a runnable Spring Modulith event boundary workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
-
-## Sequence Diagram
-
-![events-deep-dive sequence diagram](../../docs/images/readme-diagrams/spring-modulith-events-deep-dive-readme-sequence-01.png)
-
-Spring Modulith event publication examples that move from basic application events to transactional publication and module-boundary verification.
+This module is a focused Spring Modulith event workshop. It starts with plain
+Spring application events, moves through aggregate events and transactional
+listeners, and finishes with a before/after comparison of direct module calls
+versus event-based module boundaries.
 
 ## Architecture
 
-![Spring Modulith Events Deep Dive Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-modulith-events-deep-dive-readme-architecture-01.png)
+![Spring Modulith events architecture](../../docs/images/readme-diagrams/spring-modulith-events-deep-dive-readme-architecture-01.png)
 
-## What This Module Shows
+Each package is intentionally small so tests can show one event concern at a
+time.
 
-- Quickstart publication with `ApplicationEventPublisher` and `OrderCompleted`.
-- Spring Data repository-based completion flow.
-- Transactional publication behavior around order completion.
-- A before/after architecture comparison for direct inventory calls versus module events.
-- Modulith tests that verify module structure and integration behavior.
+| Package | What it demonstrates |
+|---|---|
+| `a/fundamentals/quickstart` | `ApplicationEventPublisher`, `ApplicationListener`, and `@EventListener`. |
+| `a/fundamentals/springdata` | `StringAggregate.registerEvent(...)` published when a Spring Data repository saves the aggregate. |
+| `b/transactions` | `@Transactional` order completion, plain `@EventListener`, and `@TransactionalEventListener` behavior. |
+| `c/architecture/before` | Order service directly depends on inventory and calls it inside the completion flow. |
+| `d/architecture/after` | Order publishes `OrderCompleted`; inventory reacts through an event listener. |
 
-## Running
+## Event Flow
+
+![Spring Modulith events flow](../../docs/images/readme-diagrams/spring-modulith-events-deep-dive-readme-flow-01.png)
+
+The after architecture keeps the order module free from an inventory dependency.
+Module tests verify that boundary, while integration tests verify the event
+delivery behavior.
+
+## Test Map
+
+| Test | Purpose |
+|---|---|
+| `OrderEventPublicationTests` | Verifies publication from quickstart, Spring Data aggregate, and transaction examples. |
+| `OrderManagementTest` | Shows the direct before-architecture dependency and failure coupling. |
+| `OrderModuleTest` | Verifies Modulith module structure. |
+| `OrderIntegrationTest` | Verifies event-driven inventory handling in the after architecture. |
+
+## Build and Test
 
 ```bash
-./gradlew :spring-modulith-events-deep-dive:test
+./gradlew :spring-modulith:events-deep-dive:test
 ```
-
-## Used bluetape4k Features
-
-| Module | Feature | Usage |
-|---|---|---|
-| `bluetape4k-logging` | `KLogging()` | Lazy-lambda structured logging in `OrderManagement` and all event listeners |
-| `bluetape4k-junit5` | JUnit 5 extensions | Test base support, `@ApplicationModuleTest` integration |
-
-## bluetape4k Before / After
-
-### `KLogging()` in event-driven components
-
-```kotlin
-// Before — SLF4J directly
-private val log = LoggerFactory.getLogger(OrderManagement::class.java)
-log.info("Completing order. order=" + order)
-
-// After — KLogging() companion object (lazy, zero-cost interpolation)
-companion object : KLogging()
-log.info { "Completing order. order=$order" }
-```
-
-### Event listener patterns — Spring vs Modulith
-
-```kotlin
-// Before — plain Spring @EventListener (no transactional guarantee)
-@EventListener
-fun on(event: Order.OrderCompleted) {
-    log.info { "Received event: $event" }
-}
-
-// After — @TransactionalEventListener (executes after TX commit)
-@TransactionalEventListener
-fun on(event: Order.OrderCompleted) {
-    log.info { "Received event: $event" }
-}
-```
-
-## Operational Notes
-
-- `@TransactionalEventListener` runs after the outer transaction commits; if the listener fails, the original transaction is **not** rolled back.
-- Use `@ApplicationModuleListener` (Spring Modulith) instead of plain `@EventListener` to enforce module-boundary semantics.
-- `ApplicationModuleTest` verifies that no module depends on internal types of another module.
-
-## Source Map
-
-- `a/fundamentals/quickstart` publishes events directly from `OrderManagement`.
-- `a/fundamentals/springdata` persists completed orders through Spring Data.
-- `b/transactions` demonstrates transactional event publication.
-- `c/architecture/before` couples order completion directly to inventory updates.
-- `d/architecture/after` separates order and inventory behavior through a module boundary.
-- `src/test/kotlin/.../events` contains the Modulith verification and integration tests.
