@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120" role="img" aria-labelledby="title desc">
+  <title id="title">docker/compose-demo sequence</title>
+  <desc id="desc">Sequence showing a JUnit test starting DockerComposeContainer, waiting for services, resolving mapped ports, and running assertions.</desc>
+  <defs>
+    <style>
+      svg{background:#f8fafc}
+      .title{font-family:"Architects Daughter";font-size:40px;fill:#263238}.subtitle,.msg,.note,.footer{font-family:"Comic Mono";fill:#36464f}
+      .subtitle{font-size:17px}.msg{font-size:14px}.note{font-size:13px}.footer{font-size:14px;fill:#60727d}
+      .participant{font-family:"Architects Daughter";font-size:21px;fill:#1f3138}.role{font-family:"Comic Mono";font-size:13px;fill:#546a73}
+      .frame{fill:#fbfcf8;stroke:#41545d;stroke-width:3}.header{fill:#fff;stroke:#546e7a;stroke-width:2}.lifeline{stroke:#9aaab1;stroke-width:2;stroke-dasharray:7 8}
+      .activation{fill:#e6f2ec;stroke:#5b7e67;stroke-width:1.5}.call{fill:none;stroke:#3f7d9c;stroke-width:3;marker-end:url(#callArrow)}
+      .composeLine{fill:none;stroke:#6e8f4f;stroke-width:3;marker-end:url(#composeArrow)}.serviceLine{fill:none;stroke:#9b6b2f;stroke-width:3;marker-end:url(#serviceArrow)}
+      .return{fill:none;stroke:#9b7d54;stroke-width:2.5;stroke-dasharray:8 6;marker-end:url(#returnArrow)}.disabled{fill:none;stroke:#8995a1;stroke-width:2.8;stroke-dasharray:8 7;marker-end:url(#disabledArrow)}
+      .alt{fill:#fff;fill-opacity:.24;stroke:#78909c;stroke-width:3;stroke-dasharray:12 7}.branchOk{fill:#eef7f0;stroke:#6e8f4f;stroke-width:1.8}.branchOff{fill:#f2f4f7;stroke:#98a2b3;stroke-width:1.8}
+      .label{fill:#fff;stroke:#d7e0e4;stroke-width:1.5}.callLabel{stroke:#9cc2d1}.composeLabel{stroke:#b6c9a4}.serviceLabel{stroke:#d2ad7c}.returnLabel{stroke:#c8b38f}.offLabel{stroke:#aeb8c2}
+      .badge{stroke-width:1.8}.callBadge{fill:#eaf4f8;stroke:#3f7d9c}.composeBadge{fill:#eef7f0;stroke:#6e8f4f}.serviceBadge{fill:#fff4df;stroke:#9b6b2f}.returnBadge{fill:#fff7e8;stroke:#9b7d54}.offBadge{fill:#f2f4f7;stroke:#8995a1}
+      .badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}.callText,.badgeText.callText{fill:#2f6f8e}.composeText,.badgeText.composeText{fill:#55783f}.serviceText,.badgeText.serviceText{fill:#835a27}.returnText,.badgeText.returnText{fill:#7f6038}.offText,.badgeText.offText{fill:#687482}
+    </style>
+    <marker id="callArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3f7d9c"/></marker>
+    <marker id="composeArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#6e8f4f"/></marker>
+    <marker id="serviceArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9b6b2f"/></marker>
+    <marker id="returnArrow" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9b7d54"/></marker>
+    <marker id="disabledArrow" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#8995a1"/></marker>
+  </defs>
+  <rect x="24" y="24" width="1552" height="1072" rx="20" class="frame"/>
+  <text x="800" y="78" text-anchor="middle" class="title">Docker Compose Test Flow</text>
+  <text x="800" y="108" text-anchor="middle" class="subtitle">The test declares exposed services, waits for listening ports, then talks to mapped host ports.</text>
+
+  <rect x="80" y="150" width="160" height="68" rx="10" class="header"/><text x="160" y="179" text-anchor="middle" class="participant">JUnit Test</text><text x="160" y="201" text-anchor="middle" class="role">test method</text>
+  <rect x="330" y="150" width="250" height="68" rx="10" class="header"/><text x="455" y="179" text-anchor="middle" class="participant">DockerComposeContainer</text><text x="455" y="201" text-anchor="middle" class="role">Testcontainers</text>
+  <rect x="700" y="150" width="210" height="68" rx="10" class="header"/><text x="805" y="179" text-anchor="middle" class="participant">Compose File</text><text x="805" y="201" text-anchor="middle" class="role">docker/*.yml</text>
+  <rect x="1030" y="150" width="220" height="68" rx="10" class="header"/><text x="1140" y="179" text-anchor="middle" class="participant">Service Container</text><text x="1140" y="201" text-anchor="middle" class="role">Redis/Postgres/Elastic</text>
+  <rect x="1350" y="150" width="170" height="68" rx="10" class="header"/><text x="1435" y="179" text-anchor="middle" class="participant">Client Check</text><text x="1435" y="201" text-anchor="middle" class="role">assertion</text>
+
+  <line x1="160" y1="218" x2="160" y2="1000" class="lifeline"/><line x1="455" y1="218" x2="455" y2="1000" class="lifeline"/><line x1="805" y1="218" x2="805" y2="1000" class="lifeline"/><line x1="1140" y1="218" x2="1140" y2="1000" class="lifeline"/><line x1="1435" y1="218" x2="1435" y2="1000" class="lifeline"/>
+  <rect x="448" y="308" width="14" height="520" rx="6" class="activation"/><rect x="1133" y="500" width="14" height="250" rx="6" class="activation"/>
+
+  <rect x="70" y="260" width="1460" height="580" rx="14" class="alt"/>
+  <rect x="96" y="278" width="340" height="30" rx="15" class="branchOk"/><text x="118" y="298" class="note">active compose services</text>
+  <rect x="92" y="334" width="382" height="34" rx="17" class="label callLabel"/><circle cx="116" cy="351" r="13" class="badge callBadge"/><text x="116" y="356" text-anchor="middle" class="badgeText callText">1</text><text x="140" y="356" class="msg callText">create DockerComposeContainer(File(...))</text>
+  <path d="M 160 390 L 455 390" class="call"/>
+  <rect x="520" y="410" width="386" height="34" rx="17" class="label composeLabel"/><circle cx="544" cy="427" r="13" class="badge composeBadge"/><text x="544" y="432" text-anchor="middle" class="badgeText composeText">2</text><text x="568" y="432" class="msg composeText">load docker-compose-redis/postgres/multiple.yml</text>
+  <path d="M 462 470 L 805 470" class="composeLine"/>
+  <rect x="518" y="500" width="412" height="34" rx="17" class="label composeLabel"/><circle cx="542" cy="517" r="13" class="badge composeBadge"/><text x="542" y="522" text-anchor="middle" class="badgeText composeText">3</text><text x="566" y="522" class="msg composeText">withExposedService(name, port, Wait.forListeningPort())</text>
+  <path d="M 462 560 L 1140 560" class="composeLine"/>
+  <rect x="940" y="596" width="322" height="34" rx="17" class="label serviceLabel"/><circle cx="964" cy="613" r="13" class="badge serviceBadge"/><text x="964" y="618" text-anchor="middle" class="badgeText serviceText">4</text><text x="988" y="618" class="msg serviceText">container starts and listens</text>
+  <path d="M 1140 648 L 1140 704" class="serviceLine"/>
+  <rect x="690" y="690" width="326" height="34" rx="17" class="label returnLabel"/><circle cx="714" cy="707" r="13" class="badge returnBadge"/><text x="714" y="712" text-anchor="middle" class="badgeText returnText">5</text><text x="738" y="712" class="msg returnText">host + mapped port returned</text>
+  <path d="M 1140 742 L 455 742" class="return"/>
+
+  <rect x="70" y="875" width="1460" height="122" rx="14" class="alt"/>
+  <rect x="96" y="893" width="360" height="30" rx="15" class="branchOff"/><text x="118" y="913" class="note">multiple.yml Redis branch is intentionally inactive</text>
+  <rect x="530" y="933" width="482" height="34" rx="17" class="label offLabel"/><circle cx="554" cy="950" r="13" class="badge offBadge"/><text x="554" y="955" text-anchor="middle" class="badgeText offText">6</text><text x="578" y="955" class="msg offText">Redis service and Redis test path are commented/disabled</text>
+  <path d="M 805 987 L 1140 987" class="disabled"/>
+
+  <rect x="1080" y="760" width="354" height="34" rx="17" class="label callLabel"/><circle cx="1104" cy="777" r="13" class="badge callBadge"/><text x="1104" y="782" text-anchor="middle" class="badgeText callText">7</text><text x="1128" y="782" class="msg callText">Redisson map or isRunning assertion</text>
+  <path d="M 455 802 L 1435 802" class="call"/>
+  <text x="800" y="1050" text-anchor="middle" class="footer">Use docker-compose-plugin for the maintained Compose workflow when DockerComposeContainer is unreliable locally.</text>
+</svg>

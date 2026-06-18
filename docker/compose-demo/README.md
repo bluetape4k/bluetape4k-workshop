@@ -2,39 +2,51 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+## What This Module Shows
 
-This example exercises **docker compose-demo** as a runnable Docker Compose test infrastructure workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+This module demonstrates Testcontainers' `DockerComposeContainer` against
+module-local Compose files. Each test loads a `docker/docker-compose-*.yml`
+file, declares the service name and port with `withExposedService`, waits for the
+service to listen, then checks the mapped host port or client behavior.
 
-## Architecture Diagram
+Use `docker-compose-plugin` for new Compose-driven tests when you need the
+maintained Docker Compose workflow. This module remains useful for understanding
+the legacy `DockerComposeContainer` contract and its local troubleshooting
+points.
 
-![docker compose-demo Graphviz architecture diagram](../../docs/images/readme-diagrams/docker-compose-demo-readme-architecture-01.png)
+## Architecture
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.docker` as the source of truth when comparing this README with the code.
+![docker compose-demo architecture diagram](../../docs/images/readme-diagrams/docker-compose-demo-readme-architecture-01.png)
 
-## Sequence Diagram
+The active service set is source-backed by the three Compose files:
 
-# FIXME
+| Test | Compose file | Active services |
+|---|---|---|
+| `DockerComposeRedisTest` | `docker-compose-redis.yml` | Redis `6379` |
+| `DockerComposePostgresTest` | `docker-compose-postgres.yml` | PostgreSQL `5432` |
+| `MultipleServiceTest` | `docker-compose-multiple.yml` | Elasticsearch `9200`, PostgreSQL `5432` |
 
-Currently `DockerComposeContainer` is not running properly.
-We recommend using `docker-compose-plugin`.
+`docker-compose-multiple.yml` contains a commented Redis service, and the Redis
+test path in `MultipleServiceTest` is disabled. Keep that distinction visible
+when changing the example.
 
-## outline
+## Runtime Flow
 
-This example shows how to run multiple containers from `docker-compose.yml` files using `DockerComposeContainer` and `Testcontainers`.
+![docker compose-demo sequence diagram](../../docs/images/readme-diagrams/docker-compose-demo-readme-sequence-01.png)
 
-## reference
+## Usage
 
-* [Docker Compose Module](https://www.testcontainers.org/modules/docker_compose/)
-* [How to run Docker Compose with Testcontainers](https://codeal.medium.com/how-to-run-docker-compose-with-testcontainers-7d1ba73afeeb)
-* [Simple and Powerful Integration Tests with Gradle and Docker-Compose](https://codeal.medium.com/guide-simple-and-powerful-integration-tests-with-gradle-and-docker-compose-7a27bd06a0cd)
+```bash
+./gradlew :docker-compose-demo:test
+```
 
-## Throuble Shooting
+## Troubleshooting
 
 ### Q. `Container startup failed for image alpine/socat:1.7.4.3-r0` When an exception occurs
 
-[alpine/socat container pinned at old version lacking arm64 platform](https://github.com/testcontainers/testcontainers-java/issues/5279)
-Refer to and add `socat.container.image=alpine/socat:latest` to the `~/.testcontainers.properties` file.
+This can happen when the Docker Compose module uses an old `alpine/socat` image
+without an arm64 platform. Add a newer socat image to
+`~/.testcontainers.properties`.
 
 ```shell
 $ grep socat ~/.testcontainers.properties
@@ -43,9 +55,16 @@ socat.container.image=alpine/socat:latest
 
 ### Q. When using an image that is only supported by linux/amd64 architecture
 
-Please add the necessary libraries to `build.gradle.kts` to run Docker image for linux/amd64 platform on Apple Silicon M1.
+Keep the JNA dependencies in `build.gradle.kts` when running amd64-only Docker
+images on Apple Silicon.
 
 ```kotlin
 testImplementation(Libs.jna)
 testImplementation(Libs.jna_platform)
 ```
+
+## References
+
+* [Docker Compose Module](https://www.testcontainers.org/modules/docker_compose/)
+* [How to run Docker Compose with Testcontainers](https://codeal.medium.com/how-to-run-docker-compose-with-testcontainers-7d1ba73afeeb)
+* [Simple and Powerful Integration Tests with Gradle and Docker-Compose](https://codeal.medium.com/guide-simple-and-powerful-integration-tests-with-gradle-and-docker-compose-7a27bd06a0cd)

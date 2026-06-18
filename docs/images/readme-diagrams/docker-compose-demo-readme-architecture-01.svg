@@ -1,101 +1,100 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="660" viewBox="0 0 1320 660" role="img" aria-label="docker compose-demo architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;docker/compose-demo/src/test/kotlin/io/bluetape4k/workshop/docker/DockerComposePostgresTest.kt&quot;,&quot;docker/compose-demo/src/test/kotlin/io/bluetape4k/workshop/docker/DockerComposeRedisTest.kt&quot;,&quot;docker/compose-demo/src/test/kotlin/io/bluetape4k/workshop/docker/MultipleServiceTest.kt&quot;,&quot;docker/compose-demo/build.gradle.kts&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1040" viewBox="0 0 1680 1040" role="img" aria-labelledby="title desc">
+  <title id="title">docker/compose-demo architecture</title>
+  <desc id="desc">Architecture showing DockerComposeContainer tests loading Redis, PostgreSQL, and Elasticsearch services from module compose files.</desc>
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      svg{background:#f8fafc}
+      .frame{fill:#fff;stroke:#d8e4ef;stroke-width:2}
+      .title{font-family:"Architects Daughter";font-size:42px;fill:#142033}
+      .subtitle,.small,.footer{font-family:"Comic Mono";fill:#435469}
+      .subtitle{font-size:17px}.small{font-size:15px}.footer{font-size:13px;fill:#5f7181}
+      .layer{stroke:#d7e5ee;stroke-width:2}.tests{fill:#f6fbff}.compose{fill:#f8fcf7}.services{fill:#fffcf6}.contract{fill:#faf8ff}
+      .layerTitle{font-family:"Architects Daughter";font-size:28px;fill:#1f3448}
+      .card{stroke-width:2.4}.testCard{fill:#eef7ff;stroke:#7aa6cf}.composeCard{fill:#effaf2;stroke:#75a985}.pgCard{fill:#fff7e8;stroke:#c59352}.redisCard{fill:#fff2f1;stroke:#c66a60}.elasticCard{fill:#f7f1ff;stroke:#9b83c7}.disabledCard{fill:#f1f3f6;stroke:#aeb8c2;stroke-dasharray:8 6}
+      .cardTitle{font-family:"Architects Daughter";font-size:26px;fill:#142033}.dimTitle{font-family:"Architects Daughter";font-size:26px;fill:#7c8793}
+      .line{fill:none;stroke:#52748d;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#arrow)}
+      .pgLine{fill:none;stroke:#9b6b2f;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#pgArrow)}
+      .redisLine{fill:none;stroke:#b74d46;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#redisArrow)}
+      .elasticLine{fill:none;stroke:#735ba8;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#elasticArrow)}
+      .disabledLine{fill:none;stroke:#8995a1;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:8 7;marker-end:url(#disabledArrow)}
+      .dockerIconFill{fill:#e8f3ff;stroke:#2563eb;stroke-width:3}.dbIcon{fill:#fff0d8;stroke:#8c6f33;stroke-width:3}.redisIcon{fill:#f04438;stroke:#9f1c18;stroke-width:3}.elasticIcon{fill:#f7f1ff;stroke:#735ba8;stroke-width:3}
     </style>
+    <marker id="arrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#52748d"/></marker>
+    <marker id="pgArrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9b6b2f"/></marker>
+    <marker id="redisArrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#b74d46"/></marker>
+    <marker id="elasticArrow" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#735ba8"/></marker>
+    <marker id="disabledArrow" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#8995a1"/></marker>
+    <g id="dockerIcon">
+      <rect class="dockerIconFill" x="0" y="0" width="66" height="58" rx="12"/>
+      <rect x="14" y="24" width="10" height="8" fill="#2563eb"/><rect x="27" y="24" width="10" height="8" fill="#2563eb"/><rect x="40" y="24" width="10" height="8" fill="#2563eb"/>
+      <rect x="27" y="13" width="10" height="8" fill="#2563eb"/><path d="M12 36h42c-5 11-15 17-28 17-8 0-14-4-14-17Z" fill="#60a5fa" stroke="#2563eb" stroke-width="2"/>
+    </g>
+    <g id="postgresIcon">
+      <rect x="0" y="0" width="66" height="66" rx="12" fill="#fffaf2" stroke="#28485a" stroke-width="4"/>
+      <ellipse cx="33" cy="20" rx="18" ry="8" class="dbIcon"/>
+      <path d="M15 20v27c0 6 9 10 18 10s18-4 18-10V20" class="dbIcon" stroke-linejoin="round"/>
+      <path d="M15 34c0 6 9 10 18 10s18-4 18-10" fill="none" stroke="#8c6f33" stroke-width="3"/>
+    </g>
+    <g id="redisIcon">
+      <rect x="0" y="0" width="66" height="66" rx="12" fill="#fff2f1" stroke="#9f1c18" stroke-width="4"/>
+      <path class="redisIcon" d="M16 24 33 15 50 24 33 33Z"/><path class="redisIcon" d="M16 34 33 25 50 34 33 43Z"/><path class="redisIcon" d="M16 44 33 35 50 44 33 53Z"/>
+    </g>
+    <g id="elasticIcon">
+      <rect x="0" y="0" width="66" height="66" rx="12" fill="#f7f1ff" stroke="#735ba8" stroke-width="4"/>
+      <circle cx="33" cy="33" r="20" fill="#facc15" stroke="#735ba8" stroke-width="3"/>
+      <path d="M33 13a20 20 0 0 1 19 14H33Z" fill="#06b6d4"/>
+      <path d="M33 53a20 20 0 0 1-19-14h19Z" fill="#ec4899"/>
+    </g>
   </defs>
-  <rect class="canvas" width="1320" height="660"/>
-  <rect class="frame" x="16" y="16" width="1288" height="628" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">docker compose-demo</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Docker example runtime and module dependencies</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="146.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="106.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="171.0">Example Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="209.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="225.0">adapters</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="278.0" width="1228.0" height="146.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="298.0" width="174" height="106.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="335.0">Integration Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="373.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="389.0">adapters, helpers</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="442.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="462.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="492.0">Runtime Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="522.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="538.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="554.0">JVM</tspan></text>
-    </g>
-    <g class="edge" data-edge="entry2-&gt;infra0" data-label="uses">
-      <path d="M 1096.0 233.0 L 1096.0 269.0 L 424.0 269.0 L 424.0 305.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="bt0-&gt;runtime0" data-label="adapts">
-      <path d="M 1096.0 397.0 L 1096.0 429.5 L 424.0 429.5 L 424.0 462.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Docker Compose Postgres | Test | docker">
-      <rect x="274.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="171.5">Docker Compose Postgres</tspan><tspan class="node-title" x="424.0" y="195.5">Test</tspan><tspan class="node-detail" x="424.0" y="219.5">docker</tspan></text>
-    </g>
-    <g class="node" data-node="entry1" data-lines="Docker Compose Redis | Test | docker">
-      <rect x="610.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="171.5">Docker Compose Redis</tspan><tspan class="node-title" x="760.0" y="195.5">Test</tspan><tspan class="node-detail" x="760.0" y="219.5">docker</tspan></text>
-    </g>
-    <g class="node" data-node="entry2" data-lines="Multiple Service Test | docker">
-      <rect x="946.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="183.5">Multiple Service Test</tspan><tspan class="node-detail" x="1096.0" y="207.5">docker</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Testcontainers lib | Framework Layer">
-      <rect x="274.0" y="305.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="347.5">Testcontainers lib</tspan><tspan class="node-detail" x="424.0" y="371.5">Framework Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra1" data-lines="Testcontainers junit | jupiter | Framework Layer">
-      <rect x="610.0" y="298.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="335.5">Testcontainers junit</tspan><tspan class="node-title" x="760.0" y="359.5">jupiter</tspan><tspan class="node-detail" x="760.0" y="383.5">Framework Layer</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="core | bluetape4k APIs">
-      <rect x="946.0" y="305.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="347.5">core</tspan><tspan class="node-detail" x="1096.0" y="371.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="SQL / R2DBC | Runtime Dependencies">
-      <rect x="274.0" y="462.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="504.5">SQL / R2DBC</tspan><tspan class="node-detail" x="424.0" y="528.5">Runtime Dependencies</tspan></text>
-    </g>
-    <g class="node" data-node="runtime1" data-lines="Redis | Runtime Dependencies">
-      <rect x="610.0" y="462.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="504.5">Redis</tspan><tspan class="node-detail" x="760.0" y="528.5">Runtime Dependencies</tspan></text>
-    </g>
-    <g class="node" data-node="runtime2" data-lines="Elasticsearch | Runtime Dependencies">
-      <rect x="946.0" y="462.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="504.5">Elasticsearch</tspan><tspan class="node-detail" x="1096.0" y="528.5">Runtime Dependencies</tspan></text>
-    </g>
-  </g>
+
+  <rect class="frame" x="30" y="28" width="1620" height="984" rx="18"/>
+  <text class="title" x="840" y="84" text-anchor="middle">Docker Compose Test Infrastructure</text>
+  <text class="subtitle" x="840" y="116" text-anchor="middle">JUnit tests hand compose files to Testcontainers, then assert exposed services through mapped ports.</text>
+
+  <rect class="layer tests" x="70" y="160" width="1540" height="205" rx="14"/>
+  <text class="layerTitle" x="102" y="202">JUnit entrypoints</text>
+  <rect class="card testCard" x="125" y="245" width="360" height="76" rx="10"/>
+  <text class="cardTitle" x="305" y="276" text-anchor="middle">DockerComposeRedisTest</text>
+  <text class="small" x="305" y="302" text-anchor="middle">redis map round-trip through Redisson</text>
+  <rect class="card testCard" x="660" y="245" width="360" height="76" rx="10"/>
+  <text class="cardTitle" x="840" y="276" text-anchor="middle">DockerComposePostgresTest</text>
+  <text class="small" x="840" y="302" text-anchor="middle">container running + mapped 5432</text>
+  <rect class="card testCard" x="1195" y="245" width="360" height="76" rx="10"/>
+  <text class="cardTitle" x="1375" y="276" text-anchor="middle">MultipleServiceTest</text>
+  <text class="small" x="1375" y="302" text-anchor="middle">Elasticsearch + PostgreSQL; Redis disabled</text>
+
+  <rect class="layer compose" x="70" y="420" width="1540" height="210" rx="14"/>
+  <text class="layerTitle" x="102" y="462">Compose orchestration</text>
+  <rect class="card composeCard" x="260" y="498" width="1160" height="78" rx="10"/>
+  <use href="#dockerIcon" x="292" y="508"/>
+  <text class="cardTitle" x="840" y="530" text-anchor="middle">DockerComposeContainer</text>
+  <text class="small" x="840" y="556" text-anchor="middle">File("docker/docker-compose-*.yml") + withExposedService(name, port, Wait.forListeningPort())</text>
+
+  <rect class="layer services" x="70" y="684" width="1540" height="218" rx="14"/>
+  <text class="layerTitle" x="102" y="726">Compose services</text>
+  <rect class="card redisCard" x="145" y="775" width="330" height="82" rx="10"/>
+  <use href="#redisIcon" x="170" y="783"/>
+  <text class="cardTitle" x="325" y="809" text-anchor="middle">Redis 7</text>
+  <text class="small" x="325" y="835" text-anchor="middle">redis:7, port 6379</text>
+  <rect class="card pgCard" x="675" y="775" width="330" height="82" rx="10"/>
+  <use href="#postgresIcon" x="700" y="783"/>
+  <text class="cardTitle" x="855" y="809" text-anchor="middle">PostgreSQL 18</text>
+  <text class="small" x="855" y="835" text-anchor="middle">postgres:18-alpine, port 5432</text>
+  <rect class="card elasticCard" x="1175" y="775" width="330" height="82" rx="10"/>
+  <use href="#elasticIcon" x="1200" y="783"/>
+  <text class="cardTitle" x="1355" y="809" text-anchor="middle">Elasticsearch 8</text>
+  <text class="small" x="1355" y="835" text-anchor="middle">single-node, port 9200</text>
+  <rect class="card disabledCard" x="1175" y="660" width="330" height="58" rx="10"/>
+  <text class="dimTitle" x="1340" y="694" text-anchor="middle">Redis in multiple.yml is commented out</text>
+
+  <rect class="layer contract" x="70" y="930" width="1540" height="52" rx="14"/>
+  <text class="footer" x="840" y="962" text-anchor="middle">Reader contract: this module demonstrates Docker Compose service exposure, not production container orchestration.</text>
+
+  <path class="line" d="M 305 321 V 445 H 610 V 498"/>
+  <path class="line" d="M 840 321 V 498"/>
+  <path class="line" d="M 1375 321 V 445 H 1070 V 498"/>
+  <path class="redisLine" d="M 610 576 V 704 H 310 V 775"/>
+  <path class="pgLine" d="M 840 576 V 775"/>
+  <path class="elasticLine" d="M 1070 576 V 704 H 1355 V 775"/>
+  <path class="disabledLine" d="M 1255 576 V 660"/>
 </svg>
