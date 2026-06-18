@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="620" viewBox="0 0 1320 620" role="img" aria-label="Kotlin coroutines flow testing pipeline">
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/>
+    </filter>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/>
+    </marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/>
+    </marker>
+    <style>
+      .canvas { fill: #F8FAFC; }
+      .frame { fill: #FFFFFF; stroke: #D6E0E8; stroke-width: 1.4; }
+      .lane { fill: #F8FAFC; stroke: #CBD5E1; stroke-width: 1.4; }
+      .title { font-family: "Architects Daughter"; font-size: 36px; fill: #102033; }
+      .subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
+      .laneLabel { font-family: "Architects Daughter"; font-size: 23px; fill: #172033; }
+      .cardTitle { font-family: "Architects Daughter"; font-size: 25px; fill: #102033; }
+      .cardText { font-family: "Comic Mono"; font-size: 14px; fill: #415166; }
+      .line { fill: none; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+  </defs>
+  <rect class="canvas" width="1320" height="620"/>
+  <rect class="frame" x="24" y="24" width="1272" height="572" rx="24"/>
+
+  <text class="title" x="660" y="66" text-anchor="middle">Flow test and debug path</text>
+  <text class="subtitle" x="660" y="94" text-anchor="middle">Examples build cold or channel-based flows, attach logging, then verify values, completion, cancellation, or failure.</text>
+
+  <rect class="lane" x="72" y="130" width="1176" height="176" rx="18"/>
+  <text class="laneLabel" x="100" y="164">Flow construction</text>
+  <g filter="url(#shadow)">
+    <rect x="116" y="200" width="230" height="72" rx="14" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.7"/>
+    <text class="cardTitle" x="231" y="230" text-anchor="middle">Source</text>
+    <text class="cardText" x="231" y="256" text-anchor="middle">flowOf, asFlow, flow { }</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="426" y="200" width="230" height="72" rx="14" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="541" y="230" text-anchor="middle">Operators</text>
+    <text class="cardText" x="541" y="256" text-anchor="middle">onEach, delay, transform</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="736" y="200" width="230" height="72" rx="14" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
+    <text class="cardTitle" x="851" y="230" text-anchor="middle">Flow.log()</text>
+    <text class="cardText" x="851" y="256" text-anchor="middle">emit, complete, error</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1046" y="200" width="150" height="72" rx="14" fill="#F8FAFC" stroke="#64748B" stroke-width="1.7"/>
+    <text class="cardTitle" x="1121" y="230" text-anchor="middle">Collect</text>
+    <text class="cardText" x="1121" y="256" text-anchor="middle">consumer path</text>
+  </g>
+
+  <rect class="lane" x="72" y="352" width="1176" height="166" rx="18"/>
+  <text class="laneLabel" x="100" y="386">Verification branches</text>
+  <g filter="url(#shadow)">
+    <rect x="206" y="428" width="250" height="66" rx="14" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.7"/>
+    <text class="cardTitle" x="331" y="456" text-anchor="middle">assertResult</text>
+    <text class="cardText" x="331" y="480" text-anchor="middle">expected values in order</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="536" y="428" width="250" height="66" rx="14" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="661" y="456" text-anchor="middle">Turbine test</text>
+    <text class="cardText" x="661" y="480" text-anchor="middle">awaitItem, awaitComplete</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="866" y="428" width="250" height="66" rx="14" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
+    <text class="cardTitle" x="991" y="456" text-anchor="middle">Cancel / failure</text>
+    <text class="cardText" x="991" y="480" text-anchor="middle">cancel, assertion error</text>
+  </g>
+
+  <path class="line" d="M 346 236 L 426 236" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 656 236 L 736 236" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 966 236 L 1046 236" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 1082 272 L 1082 324 L 331 324 L 331 428" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 1121 272 L 1121 348 L 661 348 L 661 428" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 1160 272 L 1160 372 L 991 372 L 991 428" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+</svg>

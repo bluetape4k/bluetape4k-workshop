@@ -2,133 +2,91 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+이 모듈은 Kotlin coroutine 동작을 테스트로 익히는 예제 모음입니다. 하나의 실행 서비스가 아니라,
+각 package가 하나의 coroutine 주제를 JUnit 테스트, coroutine test utility, logging helper,
+flow assertion과 함께 보여줍니다.
 
-이 예제는 **Coroutines Examples**를 실행 가능한 Kotlin 언어와 코루틴 패턴 예제로 보여줍니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 사용 방식을 중심으로 설명합니다.
-## 아키텍처 다이어그램
+## 학습 지도
 
-![Coroutines Examples Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/kotlin-coroutines-readme-architecture-01.png)
+![Coroutines examples learning map](../../docs/images/readme-diagrams/kotlin-coroutines-readme-architecture-01.png)
 
-모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성을 중심으로 구성됩니다. README와 코드를 비교할 때는 `io.bluetape4k.workshop.kotlin` 패키지 아래의 구현을 기준으로 삼습니다.
+처음에는 `guide/` package에서 기본 용어와 패턴을 익히고, 이후 builder, dispatcher, cancellation,
+flow/channel, context propagation, Spring scope lifecycle 예제로 넘어가면 됩니다.
 
-## 시퀀스 다이어그램
+## Flow 테스트와 디버깅 흐름
 
-Kotlin Coroutines의 핵심 개념을 익히기 위한 예제 모음입니다.
+![Flow test and debug path](../../docs/images/readme-diagrams/kotlin-coroutines-readme-flow-test-01.png)
 
-## 코루틴 구조 개요
+Flow 예제는 cold stream 또는 channel 기반 stream을 만들고, `Flow<T>.log()`로 emit/complete 이벤트를
+확인한 뒤 `assertResult`, Turbine, cancellation check, failure assertion으로 결과를 검증합니다.
 
 ## 예제 범주
 
-### 기초 (`guide/`)
-| 파일 | 상세 |
-|---|---|
-| `CoroutineBuilderExamples` | `launch`, `async`, `runBlocking` 빌더 사용법 |
-| `CoroutineContextExamples` | `CoroutineContext`, `Dispatcher` 이해 |
-| `SuspendExamples` | suspend 함수 작성 패턴 |
-| `FlowExamples` | Cold Stream `Flow` 기본 연산자 |
-| `SharedFlowExamples` | Hot Stream `SharedFlow` / `StateFlow` |
-| `ChannelExamples` | `Channel`을 사용하는 Producer-Consumer 패턴 |
-| `ChannelAsFlowExamples` | Channel을 Flow로 변환하는 패턴 |
-| `MDCContextExamples` | Log MDC와 Coroutine Context 통합 |
+| package | examples | 독자가 확인할 질문 |
+|---|---|---|
+| `guide/` | builders, context, suspend functions, flow, shared flow, channels, MDC | coroutine 기본 구성요소는 무엇인가? |
+| `builders/` | `coroutineScope`, `supervisorScope`, `withContext` | builder가 child job과 error propagation에 어떤 영향을 주는가? |
+| `dispatchers/` | Default, IO, custom pools, Main dispatcher override | 이 coroutine은 어떤 dispatcher/thread에서 실행되는가? |
+| `cancellation/` and `exceptions/` | cancellation propagation, `NonCancellable`, error handling | cancellation과 failure를 어떻게 모델링해야 하는가? |
+| `flow/` and `channels/` | `flowOf`, `asFlow`, `callbackFlow`, `channelFlow`, actors | cold stream, hot stream, channel은 어떻게 다르게 동작하는가? |
+| `context/` | `CounterCoroutineContext`, `UuidProviderCoroutineContext` | custom context element로 request-scope 상태를 어떻게 전달하는가? |
+| `scope/spring/` | `SpringCoroutineScope`, bean destroy hook | Spring bean이 coroutine `Job`을 소유하고 취소하려면 어떻게 해야 하는가? |
+| `tests/` | Turbine examples | 비동기 flow 동작을 테스트에서 어떻게 검증하는가? |
 
-### 취소 처리 (`cancellation/`)
-- `CancellationExamples` — 코루틴 취소 전파, `CancellationException` 처리, `NonCancellable` 활용
+## 사용한 bluetape4k 기능
 
-### 사용자 정의 CoroutineContext (`context/`)
-- `CounterCoroutineContext` — 상태를 가진 사용자 정의 Context Element
-- `UuidProviderCoroutineContext` — 요청마다 UUID를 제공하는 Context
-
-### 빌더 심화 (`builders/`)
-- `CoroutineBuilderExamples` — `supervisorScope`, `coroutineScope`, 오류 전파 차이
-- `CoroutineContextBuilderExamples` — `withContext`, Context 전환 패턴
-
-### Scope 관리 (`scope/`)
-- `CoroutineScopeExamples` — Structured Concurrency
-- `SpringCoroutineScopeTest` — Spring Bean 생명주기와 CoroutineScope 통합
-
-### Flow 테스트 (`tests/`)
-- `TurbineExamples` — [Turbine](Flow test using https://github.com/cashapp/turbine) 라이브러리
-
-## 사용된 bluetape4k 기능
-
-| 기능 | artifact | 코드 위치 | 장점 |
+| function | artifact | code location | advantage |
 |---|---|---|---|
-| `KLoggingChannel` | `bluetape4k-logging` | 모든 companion object | 코루틴 컨텍스트를 포함한 구조적 로깅, SLF4J MDC와 연동 |
-| `suspendLogging { }` | `bluetape4k-logging` | `DispatcherExamples` | suspend 컨텍스트에서 로그 메시지를 안전하게 구성 |
-| `coroutines.support.log` | `bluetape4k-coroutines` | `DispatcherExamples` | job에 이름 태그를 추가하고 완료 로그를 자동 출력 |
-| `Flow<T>.log()` | `bluetape4k-coroutines` | `FlowBuilderExamples`, `FlowLifecycleExamples` | flow 파이프라인 중간에서 emit 값을 로깅 |
-| `coroutines.tests.assertResult` | `bluetape4k-coroutines` | `FlowBuilderExamples`, `CallbackFlowExamples` | turbine 없이 flow 결과를 검증하는 테스트 유틸리티 |
-| `PropertyCoroutineContext` | `bluetape4k-coroutines` | `context/` package | 타입 안전 key-value store를 제공하는 사용자 정의 CoroutineContext 구현 |
-| `runSuspendTest { }` | `bluetape4k-junit5` | test full | JUnit 5에서 suspend 테스트를 실행하는 확장 함수 |
-| `Fakers` | `bluetape4k-junit5` | test fixture | JavaFaker 기반 테스트 데이터 생성 유틸리티 |
-| `OutputCapture` / `OutputCapturer` | `bluetape4k-junit5` | Output Verification Test | stdout/stderr 캡처 JUnit 5 확장 |
-| `bluetape4k-assertions` | `bluetape4k-core` | test full | Kluent 스타일의 읽기 쉬운 assertion (`shouldBeEqualTo`, `shouldNotBeNull` 등) |
-| `Uuid` (idgenerators) | `bluetape4k-idgenerators` | `UuidProviderCoroutineContext` | UUID v7을 포함한 다양한 ID 생성 전략 |
-| `withLoggingContext { }` | `bluetape4k-logging` | MDC integration example | Kotlin DSL 기반 MDC 컨텍스트 설정 |
+| `KLoggingChannel` | `bluetape4k-logging` | 여러 예제의 companion object | coroutine-aware lazy logging |
+| `suspendLogging { }` | `bluetape4k-logging` | `dispatchers/DispatcherExamples` | suspend context에서 log message 구성 |
+| `Job.log("name")` | `bluetape4k-coroutines` | dispatcher examples | launched job에 completion logging 추가 |
+| `Flow<T>.log()` | `bluetape4k-coroutines` | `flow/*`, `tests/TurbineExamples` | flow emit, completion, error event 기록 |
+| `assertResult(...)` | `bluetape4k-coroutines` | `flow/FlowBuilderExamples` | Turbine block 없이 flow 값 순서 검증 |
+| `runSuspendTest { }` / `runTest` | `bluetape4k-junit5`, kotlinx-coroutines-test | coroutine tests | JUnit 5에서 suspend 예제 실행 |
+| `OutputCapture` / `OutputCapturer` | `bluetape4k-junit5` | `scope/spring/SpringCoroutineScopeTest` | destroy 시점 출력 검증 |
+| `Uuid.V7` | `bluetape4k-idgenerators` | `context/UuidProviderCoroutineContext` | coroutine context를 통해 request-style identifier 제공 |
 
-## bluetape4k Before / After
+## 대표 패턴
 
-### 표준 Logger 대비 `KLoggingChannel`
+### Dispatcher logging
 
 ```kotlin
-// Before — Direct use of SLF4J LoggerFactory
-class MyClass {
-    companion object {
-        private val log = LoggerFactory.getLogger(MyClass::class.java)
-    }
-}
-
-// After — bluetape4k KLoggingChannel (with coroutine context)
-class MyClass {
-    companion object: KLoggingChannel()
-// Automatic creation of log property + Included in coroutine context information log
-}
-```
-
-### 일반 로그 호출 대비 `suspendLogging { }`
-
-```kotlin
-// Before — General log in coroutine (only includes thread information)
 launch(Dispatchers.IO) {
-    log.debug("Running on thread ${Thread.currentThread().name}")
-}
-
-// After — bluetape4k suspendLogging (includes coroutine name + thread information)
-launch(Dispatchers.IO) {
-    suspendLogging { "Running on thread ${Thread.currentThread().name}" }
-// Example output: [DefaultDispatcher-worker-1 @coroutine#3] Running on thread ...
-}
+    val threadName = Thread.currentThread().name
+    suspendLogging { "Running on thread $threadName" }
+}.log("IO")
 ```
 
-### `Flow<T>.log()` 디버깅 연산자
+### Flow 생성과 간단한 검증
 
 ```kotlin
-// Before — onEach + println to check intermediate values
-flow { emit(1); emit(2) }
-    .onEach { println("value: $it") }
-    .collect()
-
-// After — bluetape4k .log() extension function
-flow { emit(1); emit(2) }
-.log("my-flow") // Automatically log emit/complete/error events
-    .collect()
-```
-
-### Turbine 대비 `coroutines.tests.assertResult`
-
-```kotlin
-// Before — Requires Turbine library dependency
-someFlow.test {
-    awaitItem() shouldBeEqualTo 1
-    awaitItem() shouldBeEqualTo 2
-    awaitComplete()
+val function: suspend () -> String = suspend {
+    delay(1000)
+    "UserName"
 }
 
-// After — bluetape4k assertResult (no additional dependencies)
-someFlow.assertResult(1, 2)
+function.asFlow()
+    .log("function")
+    .assertResult("UserName")
 ```
+
+### Spring이 소유하는 coroutine scope
+
+```kotlin
+class MyBean: SpringCoroutineScope by SpringCoroutineScope() {
+    suspend fun run(input: Int) =
+        withContext(coroutineContext) {
+            delay(1000)
+            input
+        }
+}
+```
+
+`SpringCoroutineScope` 구현은 coroutine context의 `Job`을 노출하고 `destroy()`에서 취소합니다.
+Spring bean lifecycle에 맞춰 coroutine 작업을 정리할 때 쓰기 좋은 형태입니다.
 
 ## 참고
 
-- [Kotlin Coroutines Official Guide](https://kotlinlang.org/docs/coroutines-guide.html)
-- [Kotlin Flow official documentation](https://kotlinlang.org/docs/flow.html)
+- [Kotlin Coroutines official guide](https://kotlinlang.org/docs/coroutines-guide.html)
+- [Kotlin Flow documentation](https://kotlinlang.org/docs/flow.html)
+- [Turbine](https://github.com/cashapp/turbine)
