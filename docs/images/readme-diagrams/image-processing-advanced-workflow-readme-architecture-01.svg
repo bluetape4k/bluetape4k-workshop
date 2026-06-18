@@ -1,174 +1,130 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1404" viewBox="0 0 1320 1404" role="img" aria-label="image-processing-advanced-workflow architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;image-processing/advanced-workflow/src/main/kotlin/io/bluetape4k/workshop/imageprocessing/advanced/ImageProcessingAdvancedApplication.kt&quot;,&quot;image-processing/advanced-workflow/src/main/kotlin/io/bluetape4k/workshop/imageprocessing/advanced/config/ImageProcessingAdvancedProperties.kt&quot;,&quot;image-processing/advanced-workflow/src/main/kotlin/io/bluetape4k/workshop/imageprocessing/advanced/model/ImageObjectKind.kt&quot;,&quot;image-processing/advanced-workflow/src/main/kotlin/io/bluetape4k/workshop/imageprocessing/advanced/model/ImagePersistenceModels.kt&quot;,&quot;image-processing/advanced-workflow/src/main/kotlin/io/bluetape4k/workshop/imageprocessing/advanced/model/ImageProcessingModels.kt&quot;,&quot;image-processing/advanced-workflow/src/main/kotlin/io/bluetape4k/workshop/imageprocessing/advanced/persistence/ImagePersistenceService.kt&quot;,&quot;image-processing/advanced-workflow/src/main/kotlin/io/bluetape4k/workshop/imageprocessing/advanced/persistence/ImagePersistenceServiceImpl.kt&quot;,&quot;image-processing/advanced-workflow/src/main/kotlin/io/bluetape4k/workshop/imageprocessing/advanced/persistence/config/ImagePersistenceDatabaseInitializer.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="920" viewBox="0 0 1480 920" role="img" aria-label="image-processing advanced workflow architecture diagram">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.18"/></filter>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/></marker>
+    <marker id="arrowRose" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#D14F6B"/></marker>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .canvas { fill: #F8FAFC; }
+      .frame { fill: #FFFFFF; stroke: #D6E0E8; stroke-width: 1.4; }
+      .title { font-family: "Architects Daughter"; font-size: 34px; fill: #102033; }
+      .subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
+      .layerTitle { font-family: "Architects Daughter"; font-size: 22px; fill: #102033; }
+      .layerNote { font-family: "Comic Mono"; font-size: 13px; fill: #526273; }
+      .cardTitle { font-family: "Architects Daughter"; font-size: 23px; fill: #102033; }
+      .cardText { font-family: "Comic Mono"; font-size: 14px; fill: #415166; }
+      .line { fill: none; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
+    <g id="s3Icon">
+      <rect x="0" y="0" width="46" height="46" rx="8" fill="#7AA116"/>
+      <ellipse cx="23" cy="14" rx="14" ry="5" fill="#FFFFFF" opacity="0.92"/>
+      <path d="M 9 14 V 31 C 9 36 37 36 37 31 V 14" fill="none" stroke="#FFFFFF" stroke-width="3"/>
+      <path d="M 12 25 C 18 29 28 29 34 25" fill="none" stroke="#FFFFFF" stroke-width="2.2"/>
+    </g>
+    <g id="folderIcon">
+      <path d="M 4 14 H 18 L 23 20 H 42 V 38 H 4 Z" fill="#FDE68A" stroke="#B45309" stroke-width="2"/>
+      <path d="M 4 20 H 42" stroke="#B45309" stroke-width="2"/>
+    </g>
+    <g id="dbIcon">
+      <ellipse cx="24" cy="10" rx="18" ry="7" fill="#DBEAFE" stroke="#2563EB" stroke-width="2"/>
+      <path d="M 6 10 V 38 C 6 47 42 47 42 38 V 10" fill="#EFF6FF" stroke="#2563EB" stroke-width="2"/>
+      <path d="M 6 24 C 6 33 42 33 42 24" fill="none" stroke="#2563EB" stroke-width="2"/>
+      <path d="M 6 38 C 6 47 42 47 42 38" fill="none" stroke="#2563EB" stroke-width="2"/>
+    </g>
   </defs>
-  <rect class="canvas" width="1320" height="1404"/>
-  <rect class="frame" x="16" y="16" width="1288" height="1372" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">image-processing-advanced-workflow</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Image Processing example runtime and module dependencies</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="394.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="354.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="295.0">Example Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="333.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="349.0">adapters</tspan></text>
-    </g>
-    <g class="layer" data-layer="service">
-      <rect x="46.0" y="526.0" width="1228.0" height="270.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="546.0" width="174" height="230.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="645.0">Application Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="683.0">services, domain</tspan><tspan class="layer-detail" x="151.0" y="699.0">rules, use cases</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="814.0" width="1228.0" height="380.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="834.0" width="174" height="340.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="988.0">Integration Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1026.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="1042.0">adapters, helpers</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="1212.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="1232.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="1262.0">Runtime Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1292.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="1308.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="1324.0">JVM</tspan></text>
-    </g>
-    <g class="edge" data-edge="api2-&gt;service0" data-label="delegates">
-      <path d="M 760.0 488.0 L 760.0 517.0 L 424.0 517.0 L 424.0 546.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
-    </g>
-    <g class="edge" data-edge="service5-&gt;infra0" data-label="persists / publishes">
-      <path d="M 1096.0 769.0 L 1096.0 805.0 L 424.0 805.0 L 424.0 841.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 760.0 1174.0 L 760.0 1203.0 L 424.0 1203.0 L 424.0 1232.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Image Processing | Advanced Application | application bootstrap">
-      <rect x="274.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="171.5">Image Processing</tspan><tspan class="node-title" x="424.0" y="195.5">Advanced Application</tspan><tspan class="node-detail" x="424.0" y="219.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry1" data-lines="Image Processing | Advanced Properties Test | configuration">
-      <rect x="610.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="171.5">Image Processing</tspan><tspan class="node-title" x="760.0" y="195.5">Advanced Properties Test</tspan><tspan class="node-detail" x="760.0" y="219.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="entry2" data-lines="Abstract Image | Persistence Test | persistence">
-      <rect x="946.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="171.5">Abstract Image</tspan><tspan class="node-title" x="1096.0" y="195.5">Persistence Test</tspan><tspan class="node-detail" x="1096.0" y="219.5">persistence</tspan></text>
-    </g>
-    <g class="node" data-node="entry3" data-lines="Image Asset Repository | Test | persistence">
-      <rect x="274.0" y="258.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="295.5">Image Asset Repository</tspan><tspan class="node-title" x="424.0" y="319.5">Test</tspan><tspan class="node-detail" x="424.0" y="343.5">persistence</tspan></text>
-    </g>
-    <g class="node" data-node="entry4" data-lines="Image Persistence | Service Impl Test | persistence">
-      <rect x="610.0" y="258.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="295.5">Image Persistence</tspan><tspan class="node-title" x="760.0" y="319.5">Service Impl Test</tspan><tspan class="node-detail" x="760.0" y="343.5">persistence</tspan></text>
-    </g>
-    <g class="node" data-node="api0" data-lines="Image Persistence | Service Impl | persistence">
-      <rect x="946.0" y="258.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="295.5">Image Persistence</tspan><tspan class="node-title" x="1096.0" y="319.5">Service Impl</tspan><tspan class="node-detail" x="1096.0" y="343.5">persistence</tspan></text>
-    </g>
-    <g class="node" data-node="api1" data-lines="Image Derivatives | Controller | HTTP adapter">
-      <rect x="274.0" y="382.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="419.5">Image Derivatives</tspan><tspan class="node-title" x="424.0" y="443.5">Controller</tspan><tspan class="node-detail" x="424.0" y="467.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api2" data-lines="Image Processing | Exception Handler | web">
-      <rect x="610.0" y="382.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="419.5">Image Processing</tspan><tspan class="node-title" x="760.0" y="443.5">Exception Handler</tspan><tspan class="node-detail" x="760.0" y="467.5">web</tspan></text>
-    </g>
-    <g class="node" data-node="service0" data-lines="Image Processing | Advanced Properties | configuration">
-      <rect x="274.0" y="546.0" width="300.0" height="106.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="583.5">Image Processing</tspan><tspan class="node-title" x="424.0" y="607.5">Advanced Properties</tspan><tspan class="node-detail" x="424.0" y="631.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="service1" data-lines="Image Persistence Models | domain model">
-      <rect x="610.0" y="553.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="595.5">Image Persistence Models</tspan><tspan class="node-detail" x="760.0" y="619.5">domain model</tspan></text>
-    </g>
-    <g class="node" data-node="service2" data-lines="Image Persistence | Service | service component">
-      <rect x="946.0" y="546.0" width="300.0" height="106.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="583.5">Image Persistence</tspan><tspan class="node-title" x="1096.0" y="607.5">Service</tspan><tspan class="node-detail" x="1096.0" y="631.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="service3" data-lines="Image Persistence | Database Initializer | configuration">
-      <rect x="274.0" y="670.0" width="300.0" height="106.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="707.5">Image Persistence</tspan><tspan class="node-title" x="424.0" y="731.5">Database Initializer</tspan><tspan class="node-detail" x="424.0" y="755.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="service4" data-lines="Image Asset Repository | repository">
-      <rect x="610.0" y="677.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="719.5">Image Asset Repository</tspan><tspan class="node-detail" x="760.0" y="743.5">repository</tspan></text>
-    </g>
-    <g class="node" data-node="service5" data-lines="Image Object Repository | repository">
-      <rect x="946.0" y="677.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="719.5">Image Object Repository</tspan><tspan class="node-detail" x="1096.0" y="743.5">repository</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Image Object Kind | domain model">
-      <rect x="274.0" y="841.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="883.5">Image Object Kind</tspan><tspan class="node-detail" x="424.0" y="907.5">domain model</tspan></text>
-    </g>
-    <g class="node" data-node="infra1" data-lines="Image Persistence | Mappers | mapper">
-      <rect x="610.0" y="834.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="871.5">Image Persistence</tspan><tspan class="node-title" x="760.0" y="895.5">Mappers</tspan><tspan class="node-detail" x="760.0" y="919.5">mapper</tspan></text>
-    </g>
-    <g class="node" data-node="infra2" data-lines="Image Processing Event | Repository | repository">
-      <rect x="946.0" y="834.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="871.5">Image Processing Event</tspan><tspan class="node-title" x="1096.0" y="895.5">Repository</tspan><tspan class="node-detail" x="1096.0" y="919.5">repository</tspan></text>
-    </g>
-    <g class="node" data-node="infra3" data-lines="Image Processing Job | Repository | repository">
-      <rect x="274.0" y="958.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="995.5">Image Processing Job</tspan><tspan class="node-title" x="424.0" y="1019.5">Repository</tspan><tspan class="node-detail" x="424.0" y="1043.5">repository</tspan></text>
-    </g>
-    <g class="node" data-node="infra4" data-lines="Image Asset Status | domain model">
-      <rect x="610.0" y="965.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1007.5">Image Asset Status</tspan><tspan class="node-detail" x="760.0" y="1031.5">domain model</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k APIs">
-      <rect x="946.0" y="965.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="1007.5">workshop</tspan><tspan class="node-detail" x="1096.0" y="1031.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="core | bluetape4k APIs">
-      <rect x="274.0" y="1082.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="1124.5">core</tspan><tspan class="node-detail" x="424.0" y="1148.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="coroutines | bluetape4k APIs">
-      <rect x="610.0" y="1082.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1124.5">coroutines</tspan><tspan class="node-detail" x="760.0" y="1148.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="SQL / R2DBC | Runtime Dependencies">
-      <rect x="274.0" y="1232.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="1274.5">SQL / R2DBC</tspan><tspan class="node-detail" x="424.0" y="1298.5">Runtime Dependencies</tspan></text>
-    </g>
-    <g class="node" data-node="runtime1" data-lines="AWS / S3 | Runtime Dependencies">
-      <rect x="610.0" y="1232.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1274.5">AWS / S3</tspan><tspan class="node-detail" x="760.0" y="1298.5">Runtime Dependencies</tspan></text>
-    </g>
-    <g class="node" data-node="runtime2" data-lines="Testcontainers | Runtime Dependencies">
-      <rect x="946.0" y="1232.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="1274.5">Testcontainers</tspan><tspan class="node-detail" x="1096.0" y="1298.5">Runtime Dependencies</tspan></text>
-    </g>
+  <rect class="canvas" width="1480" height="920"/>
+  <rect class="frame" x="18" y="18" width="1444" height="884" rx="24"/>
+  <text class="title" x="740" y="58" text-anchor="middle">image-processing-advanced-workflow</text>
+  <text class="subtitle" x="740" y="84" text-anchor="middle">Upload validation, Java 25 VIPS derivatives, object storage, public URLs, and persistent job history</text>
+
+  <rect x="54" y="116" width="1372" height="132" rx="20" fill="#EAF3FF" stroke="#9DB9D8" stroke-width="1.5"/>
+  <text class="layerTitle" x="86" y="150">HTTP API</text>
+  <text class="layerNote" x="86" y="174">create derivatives and read persisted status</text>
+  <g filter="url(#shadow)">
+    <rect x="380" y="146" width="300" height="74" rx="12" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.5"/>
+    <text class="cardTitle" x="530" y="174" text-anchor="middle">POST /api/images/derivatives</text>
+    <text class="cardText" x="530" y="198" text-anchor="middle">multipart upload, 201 response</text>
   </g>
+  <g filter="url(#shadow)">
+    <rect x="800" y="146" width="300" height="74" rx="12" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.5"/>
+    <text class="cardTitle" x="950" y="174" text-anchor="middle">GET asset and history</text>
+    <text class="cardText" x="950" y="198" text-anchor="middle">detail, jobs, step events</text>
+  </g>
+
+  <rect x="54" y="280" width="1372" height="190" rx="20" fill="#EAF8F0" stroke="#93C5A7" stroke-width="1.5"/>
+  <text class="layerTitle" x="86" y="314">Workflow service</text>
+  <g filter="url(#shadow)">
+    <rect x="112" y="354" width="260" height="82" rx="12" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.5"/>
+    <text class="cardTitle" x="242" y="384" text-anchor="middle">UploadImageValidator</text>
+    <text class="cardText" x="242" y="410" text-anchor="middle">size, MIME, magic bytes</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="416" y="342" width="342" height="106" rx="12" fill="#F7FFF9" stroke="#86B89B" stroke-width="1.5"/>
+    <text class="cardTitle" x="587" y="372" text-anchor="middle">ImageDerivativeWorkflowService</text>
+    <text class="cardText" x="587" y="398" text-anchor="middle">timeout and request semaphore</text>
+    <text class="cardText" x="587" y="421" text-anchor="middle">T1 start, T2 success, T3 failure</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="818" y="354" width="316" height="82" rx="12" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.5"/>
+    <text class="cardTitle" x="976" y="384" text-anchor="middle">FfmVipsDerivativeProcessor</text>
+    <text class="cardText" x="976" y="410" text-anchor="middle">thumb-128, card-320, detail-1024</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1190" y="354" width="220" height="82" rx="12" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.5"/>
+    <text class="cardTitle" x="1300" y="384" text-anchor="middle">ImageKeyFactory</text>
+    <text class="cardText" x="1300" y="410" text-anchor="middle">safe object keys</text>
+  </g>
+
+  <rect x="54" y="502" width="1372" height="156" rx="20" fill="#FFF7E8" stroke="#D8B86E" stroke-width="1.5"/>
+  <text class="layerTitle" x="86" y="536">Bluetape4k image runtime</text>
+  <g filter="url(#shadow)">
+    <rect x="224" y="560" width="260" height="70" rx="12" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.5"/>
+    <text class="cardTitle" x="354" y="589" text-anchor="middle">ImageStorage</text>
+    <text class="cardText" x="354" y="613" text-anchor="middle">upload, delete, health, metrics</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="610" y="560" width="260" height="70" rx="12" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.5"/>
+    <text class="cardTitle" x="740" y="589" text-anchor="middle">VIPS Java 25</text>
+    <text class="cardText" x="740" y="613" text-anchor="middle">decode, resize, WebP encode</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="996" y="560" width="260" height="70" rx="12" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.5"/>
+    <text class="cardTitle" x="1126" y="589" text-anchor="middle">PublicImageUrlResolver</text>
+    <text class="cardText" x="1126" y="613" text-anchor="middle">unsigned public URLs</text>
+  </g>
+
+  <rect x="54" y="690" width="1372" height="132" rx="20" fill="#F2F5F8" stroke="#B3BFCA" stroke-width="1.5"/>
+  <text class="layerTitle" x="86" y="724">Infrastructure targets</text>
+  <g filter="url(#shadow)">
+    <rect x="236" y="732" width="250" height="64" rx="12" fill="#FFFFFF" stroke="#A7B3BF" stroke-width="1.5"/>
+    <use href="#folderIcon" x="254" y="742"/>
+    <text class="cardTitle" x="384" y="760" text-anchor="middle">Local storage</text>
+    <text class="cardText" x="384" y="783" text-anchor="middle">default backend</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="566" y="732" width="250" height="64" rx="12" fill="#FFFFFF" stroke="#A7B3BF" stroke-width="1.5"/>
+    <use href="#s3Icon" x="586" y="741"/>
+    <text class="cardTitle" x="706" y="760" text-anchor="middle">S3 bucket</text>
+    <text class="cardText" x="706" y="783" text-anchor="middle">production option</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="910" y="732" width="250" height="64" rx="12" fill="#FFFFFF" stroke="#A7B3BF" stroke-width="1.5"/>
+    <use href="#dbIcon" x="928" y="740"/>
+    <text class="cardTitle" x="1048" y="760" text-anchor="middle">PostgreSQL</text>
+    <text class="cardText" x="1048" y="783" text-anchor="middle">assets, jobs, events</text>
+  </g>
+
+  <path class="line" d="M 530 220 L 530 264 L 592 264 L 592 342" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 950 220 L 950 264 L 592 264 L 592 342" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 372 395 L 416 395" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 758 395 L 818 395" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 1134 395 L 1190 395" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 587 448 L 587 486 L 354 486 L 354 560" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 976 436 L 976 486 L 740 486 L 740 560" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 1300 436 L 1300 486 L 1126 486 L 1126 560" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 354 630 L 354 732" stroke="#D14F6B" marker-end="url(#arrowRose)"/>
+  <path class="line" d="M 354 630 L 354 674 L 706 674 L 706 732" stroke="#D14F6B" marker-end="url(#arrowRose)"/>
+  <path class="line" d="M 587 448 L 587 674 L 1048 674 L 1048 732" stroke="#D14F6B" marker-end="url(#arrowRose)"/>
 </svg>

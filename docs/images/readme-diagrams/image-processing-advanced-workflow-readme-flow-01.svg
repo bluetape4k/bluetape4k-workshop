@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1540" height="820" viewBox="0 0 1540 820" role="img" aria-label="image-processing advanced workflow saga flow diagram">
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.18"/></filter>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/></marker>
+    <marker id="arrowRose" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#D14F6B"/></marker>
+    <style>
+      .canvas { fill: #F8FAFC; }
+      .frame { fill: #FFFFFF; stroke: #D6E0E8; stroke-width: 1.4; }
+      .title { font-family: "Architects Daughter"; font-size: 34px; fill: #102033; }
+      .subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
+      .section { font-family: "Architects Daughter"; font-size: 24px; fill: #102033; }
+      .cardTitle { font-family: "Architects Daughter"; font-size: 23px; fill: #102033; }
+      .cardText { font-family: "Comic Mono"; font-size: 14px; fill: #415166; }
+      .note { font-family: "Comic Mono"; font-size: 13px; fill: #536170; }
+      .line { fill: none; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+  </defs>
+  <rect class="canvas" width="1540" height="820"/>
+  <rect class="frame" x="18" y="18" width="1504" height="784" rx="24"/>
+  <text class="title" x="770" y="58" text-anchor="middle">Upload derivative saga</text>
+  <text class="subtitle" x="770" y="84" text-anchor="middle">The service records durable state before processing, emits step events, and cleans uploaded objects on failure.</text>
+
+  <rect x="58" y="124" width="338" height="594" rx="22" fill="#EAF3FF" stroke="#9DB9D8" stroke-width="1.5"/>
+  <text class="section" x="227" y="162" text-anchor="middle">Accept and start</text>
+  <g filter="url(#shadow)">
+    <rect x="94" y="196" width="266" height="72" rx="14" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.5"/>
+    <text class="cardTitle" x="227" y="224" text-anchor="middle">Validate upload</text>
+    <text class="cardText" x="227" y="248" text-anchor="middle">size, MIME, magic bytes</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="94" y="322" width="266" height="82" rx="14" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.5"/>
+    <text class="cardTitle" x="227" y="352" text-anchor="middle">T1 recordJobStart</text>
+    <text class="cardText" x="227" y="378" text-anchor="middle">checksum dedup and job row</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="94" y="472" width="266" height="82" rx="14" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.5"/>
+    <text class="cardTitle" x="227" y="502" text-anchor="middle">AlreadyReady path</text>
+    <text class="cardText" x="227" y="528" text-anchor="middle">return cached DB response</text>
+  </g>
+  <path class="line" d="M 227 268 L 227 322" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 227 404 L 227 472" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+
+  <rect x="438" y="124" width="338" height="594" rx="22" fill="#EAF8F0" stroke="#93C5A7" stroke-width="1.5"/>
+  <text class="section" x="607" y="162" text-anchor="middle">Process and upload</text>
+  <g filter="url(#shadow)">
+    <rect x="474" y="196" width="266" height="82" rx="14" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.5"/>
+    <text class="cardTitle" x="607" y="226" text-anchor="middle">VIPS processing</text>
+    <text class="cardText" x="607" y="252" text-anchor="middle">decode, pixel budget, WebP</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="474" y="332" width="266" height="82" rx="14" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.5"/>
+    <text class="cardTitle" x="607" y="362" text-anchor="middle">Upload original</text>
+    <text class="cardText" x="607" y="388" text-anchor="middle">images/{id}/original/file</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="474" y="468" width="266" height="96" rx="14" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.5"/>
+    <text class="cardTitle" x="607" y="500" text-anchor="middle">Upload variants</text>
+    <text class="cardText" x="607" y="526" text-anchor="middle">thumb-128, card-320</text>
+    <text class="cardText" x="607" y="548" text-anchor="middle">detail-1024 as WebP</text>
+  </g>
+  <path class="line" d="M 607 278 L 607 332" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 607 414 L 607 468" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+
+  <rect x="818" y="124" width="338" height="594" rx="22" fill="#FFF7E8" stroke="#D8B86E" stroke-width="1.5"/>
+  <text class="section" x="987" y="162" text-anchor="middle">Persist outcome</text>
+  <g filter="url(#shadow)">
+    <rect x="854" y="196" width="266" height="82" rx="14" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.5"/>
+    <text class="cardTitle" x="987" y="226" text-anchor="middle">Append step events</text>
+    <text class="cardText" x="987" y="252" text-anchor="middle">VALIDATION, VIPS, S3_UPLOAD</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="854" y="332" width="266" height="82" rx="14" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.5"/>
+    <text class="cardTitle" x="987" y="362" text-anchor="middle">T2 record success</text>
+    <text class="cardText" x="987" y="388" text-anchor="middle">objects upsert, asset READY</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="854" y="468" width="266" height="96" rx="14" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.5"/>
+    <text class="cardTitle" x="987" y="500" text-anchor="middle">Build response</text>
+    <text class="cardText" x="987" y="526" text-anchor="middle">original, primary thumbnail</text>
+    <text class="cardText" x="987" y="548" text-anchor="middle">public variant URLs</text>
+  </g>
+  <path class="line" d="M 987 278 L 987 332" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 987 414 L 987 468" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+
+  <rect x="1198" y="124" width="284" height="594" rx="22" fill="#FFF1F2" stroke="#E2A0AC" stroke-width="1.5"/>
+  <text class="section" x="1340" y="162" text-anchor="middle">Failure branch</text>
+  <g filter="url(#shadow)">
+    <rect x="1234" y="214" width="212" height="86" rx="14" fill="#FFFFFF" stroke="#D89AA8" stroke-width="1.5"/>
+    <text class="cardTitle" x="1340" y="246" text-anchor="middle">Cleanup uploads</text>
+    <text class="cardText" x="1340" y="272" text-anchor="middle">delete stored keys in reverse</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1234" y="376" width="212" height="86" rx="14" fill="#FFFFFF" stroke="#D89AA8" stroke-width="1.5"/>
+    <text class="cardTitle" x="1340" y="408" text-anchor="middle">T3 record failure</text>
+    <text class="cardText" x="1340" y="434" text-anchor="middle">job FAILED, asset FAILED</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1234" y="538" width="212" height="86" rx="14" fill="#FFFFFF" stroke="#D89AA8" stroke-width="1.5"/>
+    <text class="cardTitle" x="1340" y="570" text-anchor="middle">NonCancellable</text>
+    <text class="cardText" x="1340" y="596" text-anchor="middle">final DB writes survive cancel</text>
+  </g>
+  <path class="line" d="M 1340 300 L 1340 376" stroke="#D14F6B" marker-end="url(#arrowRose)"/>
+  <path class="line" d="M 1340 462 L 1340 538" stroke="#D14F6B" marker-end="url(#arrowRose)"/>
+  <path class="line" d="M 360 363 L 414 363 L 414 237 L 474 237" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 740 516 L 798 516 L 798 237 L 854 237" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 740 516 L 760 516 L 760 606 L 1184 606 L 1184 257 L 1234 257" stroke="#D14F6B" marker-end="url(#arrowRose)"/>
+  <text class="note" x="770" y="762" text-anchor="middle">Happy-path event emission propagates cancellation; final success and failure markers are written in NonCancellable IO blocks.</text>
+</svg>
