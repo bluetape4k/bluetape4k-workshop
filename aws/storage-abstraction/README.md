@@ -4,16 +4,26 @@
 
 ## Example Scenario
 
-This example puts a small `StorageService` boundary in front of three backends: local files, S3 object storage, and S3 pre-signed URLs. Switch the backend with Spring profiles while keeping application code on the same interface.
-
-## Sequence Diagram
-
-Demonstrates a pluggable storage strategy that switches between local filesystem,
-AWS S3, and S3 pre-signed URL backends via Spring Profile — without changing application code.
+This example puts a small coroutine `StorageService` boundary in front of three
+runtime choices: local files, S3 object storage, and S3 pre-signed GET URLs.
+Application code keeps the same interface while Spring profiles choose the
+implementation.
 
 ## Architecture
 
 ![Storage Abstraction Workshop architecture diagram](../../docs/images/readme-diagrams/aws-storage-abstraction-architecture-01.png)
+
+The important boundary is `StorageService`. The `local`, `s3`, and
+`s3-presigned` profiles select different beans, but callers still use the same
+`upload`, `download`, `getUrl`, and `delete` methods.
+
+## Request Flow
+
+![Storage Abstraction Workshop request sequence](../../docs/images/readme-diagrams/aws-storage-abstraction-sequence-01.png)
+
+`upload`, `download`, and `delete` run blocking filesystem or AWS SDK calls on
+`Dispatchers.IO`. `getUrl` returns a direct local/S3 URL for the `local` and
+`s3` profiles, and a time-limited pre-signed GET URL for `s3-presigned`.
 
 ## Key Features
 
