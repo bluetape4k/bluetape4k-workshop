@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="650" viewBox="0 0 1180 650">
+  <defs>
+    <style>
+      .bg{fill:#f8fafc}.title{font-family:'Architects Daughter','Comic Sans MS',cursive;font-size:34px;fill:#18212f}
+      .table{fill:#fff;stroke:#b6c2d1;stroke-width:1.6;rx:16;ry:16}.head{fill:#dbeafe}
+      .name{font-family:'Architects Daughter','Comic Sans MS',cursive;font-size:30px;fill:#101827}
+      .col{font-family:'Comic Mono','Comic Sans MS',monospace;font-size:20px;fill:#263244}.note{font-family:'Comic Mono','Comic Sans MS',monospace;font-size:17px;fill:#475569}
+    </style>
+  </defs>
+  <rect class="bg" width="1180" height="650"/>
+  <text class="title" x="70" y="70">Users Table</text>
+
+  <g transform="translate(110 135)">
+    <rect class="table" width="470" height="330"/>
+    <path class="head" d="M0,16 Q0,0 16,0 H454 Q470,0 470,16 V74 H0 Z"/>
+    <text class="name" x="34" y="50">USERS</text>
+    <text class="col" x="34" y="115">PK  id       INT identity</text>
+    <text class="col" x="34" y="160">IX  name     VARCHAR(255)</text>
+    <text class="col" x="34" y="205">UQ  login    VARCHAR(255)</text>
+    <text class="col" x="34" y="250">UQ  email    VARCHAR(255)</text>
+    <text class="col" x="34" y="295">    avatar   VARCHAR(255) nullable</text>
+  </g>
+
+  <rect x="670" y="165" width="380" height="130" rx="18" ry="18" fill="#fff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text class="name" x="700" y="210">Defined by Exposed</text>
+  <text class="note" x="700" y="248">UserSchema.UserTable</text>
+  <rect x="670" y="350" width="380" height="130" rx="18" ry="18" fill="#fff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text class="name" x="700" y="395">Seeded on startup</text>
+  <text class="note" x="700" y="433">four sample UserRecord rows</text>
+</svg>
