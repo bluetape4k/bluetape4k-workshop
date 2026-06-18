@@ -1,13 +1,55 @@
-# Rate Limit per user with Bucket4j in Spring Webflux
+# WebFlux user rate limit with Bucket4j
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+This module demonstrates per-user rate limiting for Spring WebFlux endpoints with Bucket4j and a
+Redis-backed distributed bucket store. Both reactive and coroutine endpoints are present. Only the
+`/api/v1/reactive/**` and `/api/v1/coroutines/**` paths are rate limited; `/api/v2/**` paths pass
+through unchanged so the behavior is easy to compare.
 
-This example exercises **Rate Limit per user with Bucket4j in Spring Webflux** as a runnable rate limiting workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+## Architecture
 
-## Architecture Diagram
+![WebFlux Bucket4j architecture diagram](../../docs/images/readme-diagrams/ratelimit-bucker4j-bluetape4k-webflux-readme-architecture-01.png)
 
-![Rate Limit per user with Bucket4j in Spring Webflux Graphviz architecture diagram](../../docs/images/readme-diagrams/ratelimit-bucker4j-bluetape4k-webflux-readme-architecture-01.png)
+The filters resolve a user key from `X-Bluetape4k-UID` first and fall back to the remote host.
+`UserRateLimitWebFilter` uses `DistributedRateLimiter`, while `AsyncUserRateLimitWebFilter` uses
+`DistributedSuspendRateLimiter` through a coroutine bridge. Both limiter beans share the same
+Bucket4j configuration and Redis/Lettuce proxy manager.
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.ratelimit` as the source of truth when comparing this README with the code.
+## Filter Decision Flow
+
+![WebFlux Bucket4j filter decision flow](../../docs/images/readme-diagrams/ratelimit-bucker4j-bluetape4k-webflux-readme-filter-flow-01.png)
+
+When a target path has a key and a token is consumed, the request continues and
+`X-Bluetape4k-Remaining-Token` is written. Missing keys return `400 Bad Request`. Empty buckets return
+`429 Too Many Requests`. Exceptions in the rate-limit path are logged and the request is allowed to
+continue so the limiter does not become an availability dependency for the demo endpoint.
+
+## Rate-Limited Paths
+
+| Path | Handler | Rate limit |
+|---|---|---|
+| `/api/v1/reactive/hello` | `ReactiveController.helloV1()` | yes |
+| `/api/v1/coroutines/hello` | `CoroutineController.helloV1()` | yes |
+| `/api/v2/reactive/hello` | `ReactiveController.helloV2()` | no |
+| `/api/v2/coroutines/hello` | `CoroutineController.helloV2()` | no |
+
+## Bucket Policy
+
+| Limit | Refill |
+|---|---|
+| 10 tokens | interval refill every 10 seconds |
+| 100 tokens | greedy refill, 10 tokens per minute |
+
+Bucket state is stored through `LettuceBasedProxyManager` and expires after enough time to refill to
+the maximum capacity.
+
+## Smoke Checks
+
+```bash
+./gradlew :ratelimit-bucker4j-bluetape4k-webflux:test
+./gradlew :ratelimit-bucker4j-bluetape4k-webflux:bootRun
+```
+
+Use `UserLateLimit.http` to call the v1/v2 endpoints repeatedly and compare accepted, throttled, and
+unfiltered responses.
