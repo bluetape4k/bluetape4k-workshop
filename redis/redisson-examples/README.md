@@ -2,21 +2,17 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+This module is a test-backed catalog of [Redisson](https://redisson.org/) features. It groups distributed locks, semaphores, objects, pub/sub, collections, Redis Streams, local cached maps, and read/write-through cache examples behind one shared Redis fixture.
 
-This example exercises **Redisson Examples** as a runnable Redis-backed coordination workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+## Example Catalog
 
-## Architecture Diagram
+![Redisson Examples catalog](../../docs/images/readme-diagrams/redis-redisson-examples-readme-architecture-01.png)
 
-![Redisson Examples architecture diagram](../../docs/images/readme-diagrams/redis-redisson-examples-architecture-01.png)
+## Test Runtime
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.redis` as the source of truth when comparing this README with the code.
+![Redisson Examples runtime](../../docs/images/readme-diagrams/redis-redisson-examples-readme-runtime-01.png)
 
-## Sequence Diagram
-
-This collection of examples uses distributed synchronization objects from the Redis client library [Redisson](https://redisson.org/).
-It uses bluetape4k's `RedissonCodecs.LZ4ForyComposite`, `localCachedMap()`, `streamAddArgsOf()`, `VirtualThreadExecutor`, `RedisServer.Launcher`, and test concurrency helpers.
-It automatically starts a Redis container with Testcontainers and runs integration tests against it.
+`AbstractRedissonTest` starts Redis with `RedisServer.Launcher.redis`, creates a tuned `RedissonClient` with `RedissonCodecs.LZ4ForyComposite` and `VirtualThreadExecutor`, enables Redis keyspace notifications through raw Lettuce commands, and gives each example reproducible random names.
 
 ## Example Categories
 

@@ -1,121 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="964" viewBox="0 0 1320 964" role="img" aria-label="Redisson Examples architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/AbstractRedissonTest.kt&quot;,&quot;redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/RedissonClientConfigTest.kt&quot;,&quot;redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/collections/BlockingDequeExamples.kt&quot;,&quot;redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/collections/BoundedBlockingQueueExamples.kt&quot;,&quot;redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/collections/ListMultimapCacheExamples.kt&quot;,&quot;redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/collections/LocalCachedMapExamples.kt&quot;,&quot;redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/collections/LocalCachedMapTest.kt&quot;,&quot;redis/redisson-examples/src/test/kotlin/io/bluetape4k/workshop/redisson/collections/PriorityDequeExamples.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1640" height="720" viewBox="0 0 1640 720" role="img" aria-label="Redisson examples catalog">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:28px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.line{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="964"/>
-  <rect class="frame" x="16" y="16" width="1288" height="932" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Redisson Examples</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Redis-backed coordination, cache, and stream examples</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="256.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="216.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="214.5">Redis Example</tspan><tspan class="layer-title" x="151.0" y="237.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="264.0">apps, tests, HTTP</tspan><tspan class="layer-detail" x="151.0" y="280.0">endpoints</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="388.0" width="1228.0" height="366.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="408.0" width="174" height="326.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="543.5">Redis Integration</tspan><tspan class="layer-title" x="151.0" y="566.5">Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="585.0">Lettuce, Redisson,</tspan><tspan class="layer-detail" x="151.0" y="601.0">serializers,</tspan><tspan class="layer-detail" x="151.0" y="617.0">helpers</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="772.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="792.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="822.0">Redis Runtime</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="860.0">standalone,</tspan><tspan class="layer-detail" x="151.0" y="876.0">cluster, containers</tspan></text>
-    </g>
-    <g class="edge" data-edge="entry3-&gt;infra0" data-label="uses">
-      <path d="M 424.0 350.0 L 424.0 379.0 L 424.0 408.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 424.0 734.0 L 424.0 763.0 L 424.0 792.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Abstract Redisson Test | redisson">
-      <rect x="274.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="183.5">Abstract Redisson Test</tspan><tspan class="node-detail" x="424.0" y="207.5">redisson</tspan></text>
-    </g>
-    <g class="node" data-node="entry1" data-lines="Redisson Client Config | Test | redisson">
-      <rect x="610.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="171.5">Redisson Client Config</tspan><tspan class="node-title" x="760.0" y="195.5">Test</tspan><tspan class="node-detail" x="760.0" y="219.5">redisson</tspan></text>
-    </g>
-    <g class="node" data-node="entry2" data-lines="Local Cached Map Test | collections">
-      <rect x="946.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="183.5">Local Cached Map Test</tspan><tspan class="node-detail" x="1096.0" y="207.5">collections</tspan></text>
-    </g>
-    <g class="node" data-node="entry3" data-lines="Jdbc Config Test | readwritethrough">
-      <rect x="274.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="300.5">Jdbc Config Test</tspan><tspan class="node-detail" x="424.0" y="324.5">readwritethrough</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Spring boot starter jdbc | lib | Redis Client Layer">
-      <rect x="274.0" y="408.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="445.5">Spring boot starter jdbc</tspan><tspan class="node-title" x="424.0" y="469.5">lib</tspan><tspan class="node-detail" x="424.0" y="493.5">Redis Client Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra1" data-lines="Spring boot starter data | redis lib | Redis Client Layer">
-      <rect x="610.0" y="408.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="445.5">Spring boot starter data</tspan><tspan class="node-title" x="760.0" y="469.5">redis lib</tspan><tspan class="node-detail" x="760.0" y="493.5">Redis Client Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra2" data-lines="Spring boot starter data | redis test | Redis Client Layer">
-      <rect x="946.0" y="408.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="445.5">Spring boot starter data</tspan><tspan class="node-title" x="1096.0" y="469.5">redis test</tspan><tspan class="node-detail" x="1096.0" y="493.5">Redis Client Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra3" data-lines="Spring boot starter test | Redis Client Layer">
-      <rect x="274.0" y="532.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="574.5">Spring boot starter test</tspan><tspan class="node-detail" x="424.0" y="598.5">Redis Client Layer</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="redis | bluetape4k Redis APIs">
-      <rect x="610.0" y="532.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="574.5">redis</tspan><tspan class="node-detail" x="760.0" y="598.5">bluetape4k Redis APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="redisson | bluetape4k Redis APIs">
-      <rect x="946.0" y="532.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="574.5">redisson</tspan><tspan class="node-detail" x="1096.0" y="598.5">bluetape4k Redis APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="testcontainers | bluetape4k Redis APIs">
-      <rect x="274.0" y="642.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="684.5">testcontainers</tspan><tspan class="node-detail" x="424.0" y="708.5">bluetape4k Redis APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="SQL / R2DBC | Redis Runtime">
-      <rect x="274.0" y="792.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="834.5">SQL / R2DBC</tspan><tspan class="node-detail" x="424.0" y="858.5">Redis Runtime</tspan></text>
-    </g>
-    <g class="node" data-node="runtime1" data-lines="Redis | Redis Runtime">
-      <rect x="610.0" y="792.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="834.5">Redis</tspan><tspan class="node-detail" x="760.0" y="858.5">Redis Runtime</tspan></text>
-    </g>
-    <g class="node" data-node="runtime2" data-lines="AWS / S3 | Redis Runtime">
-      <rect x="946.0" y="792.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="834.5">AWS / S3</tspan><tspan class="node-detail" x="1096.0" y="858.5">Redis Runtime</tspan></text>
-    </g>
+  <rect class="canvas" width="1640" height="720"/>
+  <rect class="frame" x="24" y="24" width="1592" height="672" rx="24"/>
+  <text class="title" x="820" y="70" text-anchor="middle">Redisson examples catalog</text>
+  <text class="subtitle" x="820" y="102" text-anchor="middle">The module is a test-backed catalog of Redisson locks, objects, collections, pub/sub, streams, and read/write-through cache patterns.</text>
+  <g filter="url(#shadow)">
+    <rect x="620" y="148" width="400" height="94" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/>
+    <circle cx="666" cy="194" r="23" fill="#FEE2E2" stroke="#DC2626" stroke-width="2.2"/>
+    <text x="666" y="203" text-anchor="middle" font-family="Comic Mono" font-size="16" fill="#B91C1C">R</text>
+    <text class="cardTitle" x="850" y="188" text-anchor="middle">RedissonClient</text>
+    <text class="cardText" x="850" y="216" text-anchor="middle">shared Testcontainers Redis backend</text>
   </g>
+  <rect class="layer" x="72" y="306" width="338" height="250" rx="18"/>
+  <text class="layerLabel" x="100" y="344">Locks and semaphores</text>
+  <g filter="url(#shadow)"><rect x="110" y="392" width="262" height="102" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="241" y="430" text-anchor="middle">Synchronization</text><text class="cardText" x="241" y="462" text-anchor="middle">RLock, RFencedLock</text><text class="cardText" x="241" y="488" text-anchor="middle">Semaphore, CountDownLatch</text></g>
+  <rect class="layer" x="462" y="306" width="338" height="250" rx="18"/>
+  <text class="layerLabel" x="490" y="344">Objects and pub/sub</text>
+  <g filter="url(#shadow)"><rect x="500" y="392" width="262" height="102" rx="16" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="631" y="430" text-anchor="middle">Distributed objects</text><text class="cardText" x="631" y="462" text-anchor="middle">Bucket, AtomicLong, HLL</text><text class="cardText" x="631" y="488" text-anchor="middle">Topic and ReliableTopic</text></g>
+  <rect class="layer" x="852" y="306" width="338" height="250" rx="18"/>
+  <text class="layerLabel" x="880" y="344">Collections and streams</text>
+  <g filter="url(#shadow)"><rect x="890" y="392" width="262" height="102" rx="16" fill="#F0FDFA" stroke="#0D9488" stroke-width="1.7"/><text class="cardTitle" x="1021" y="430" text-anchor="middle">Redis structures</text><text class="cardText" x="1021" y="462" text-anchor="middle">LocalCachedMap, Stream</text><text class="cardText" x="1021" y="488" text-anchor="middle">Queue, SortedSet, RingBuffer</text></g>
+  <rect class="layer" x="1242" y="306" width="326" height="250" rx="18"/>
+  <text class="layerLabel" x="1270" y="344">Read/write-through</text>
+  <g filter="url(#shadow)"><rect x="1280" y="392" width="250" height="102" rx="16" fill="#FFFBEB" stroke="#D97706" stroke-width="1.7"/><text class="cardTitle" x="1405" y="430" text-anchor="middle">Cache as SOR</text><text class="cardText" x="1405" y="462" text-anchor="middle">ReadWriteThrough</text><text class="cardText" x="1405" y="488" text-anchor="middle">JDBC-backed Actor table</text></g>
 </svg>
