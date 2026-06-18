@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="720" viewBox="0 0 1600 720" role="img" aria-label="Spring WebMVC Bucket4j Caffeine request flow">
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker>
+    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A"/></marker>
+    <marker id="arrowRose" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#E11D48"/></marker>
+    <style>
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.band{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.bandLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:29px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.label{font-family:"Comic Mono";font-size:14px;fill:#475569}.line{fill:none;stroke-width:3.6;stroke-linecap:round;stroke-linejoin:round}.soft{stroke-dasharray:8 8}
+    </style>
+  </defs>
+  <rect class="canvas" width="1600" height="720"/>
+  <rect class="frame" x="24" y="24" width="1552" height="672" rx="24"/>
+  <text class="title" x="800" y="70" text-anchor="middle">Caffeine request flow</text>
+  <text class="subtitle" x="800" y="102" text-anchor="middle">The starter filter consumes local cache-backed tokens before the servlet controller runs.</text>
+
+  <rect class="band" x="72" y="148" width="1456" height="214" rx="18"/>
+  <text class="bandLabel" x="102" y="186">Runtime path</text>
+  <rect class="band" x="72" y="418" width="1456" height="160" rx="18"/>
+  <text class="bandLabel" x="102" y="456">Test profile quotas</text>
+
+  <g filter="url(#shadow)">
+    <rect x="132" y="226" width="194" height="88" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
+    <text class="cardTitle" x="229" y="262" text-anchor="middle">Request</text>
+    <text class="cardText" x="229" y="290" text-anchor="middle">/hello or /world</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="464" y="216" width="248" height="108" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="588" y="256" text-anchor="middle">Bucket4j Filter</text>
+    <text class="cardText" x="588" y="288" text-anchor="middle">consume one token</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="850" y="216" width="228" height="108" rx="16" fill="#FFFBEB" stroke="#D97706" stroke-width="1.7"/>
+    <text class="cardTitle" x="964" y="256" text-anchor="middle">Caffeine Cache</text>
+    <text class="cardText" x="964" y="288" text-anchor="middle">buckets / buckets_test</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1216" y="216" width="194" height="108" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="1313" y="256" text-anchor="middle">Controller</text>
+    <text class="cardText" x="1313" y="288" text-anchor="middle">or 429 response</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="288" y="478" width="270" height="72" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
+    <text class="cardTitle" x="423" y="522" text-anchor="middle">/hello: 5 / 10s</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="690" y="478" width="270" height="72" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="825" y="522" text-anchor="middle">/world: 10 / 10s</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1092" y="478" width="270" height="72" rx="16" fill="#FEE2E2" stroke="#E11D48" stroke-width="1.7"/>
+    <text class="cardTitle" x="1227" y="522" text-anchor="middle">empty -> 429</text>
+  </g>
+
+  <path class="line" d="M 326 270 L 464 270" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 712 270 L 850 270" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 1078 270 L 1216 270" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line soft" d="M 588 324 L 588 386 L 1227 386 L 1227 478" stroke="#E11D48" marker-end="url(#arrowRose)"/>
+  <text class="label" x="936" y="374" text-anchor="middle">bucket exhausted</text>
+</svg>

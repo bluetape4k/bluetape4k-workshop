@@ -1,65 +1,50 @@
-# Spring Boot WebMVC with Bucket4j and Caffeine Demo
+# Spring WebMVC Bucket4j with Caffeine
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+This module demonstrates servlet-based rate limiting with the Bucket4j Spring Boot starter and a
+Caffeine JCache store. It is intentionally local and blocking: no Redis, no distributed proxy
+manager, and no WebFlux filter code. The sample is useful when a single WebMVC instance needs a
+small in-memory bucket store.
 
-This example exercises **Spring Boot WebMVC with Bucket4j and Caffeine Demo** as a runnable rate limiting workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+## Architecture
 
-## Architecture Diagram
+![Spring WebMVC Bucket4j Caffeine architecture](../../docs/images/readme-diagrams/ratelimit-bucket4j-caffeine-web-readme-architecture-01.png)
 
-![Spring Boot WebMVC with Bucket4j and Caffeine Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-caffeine-web-readme-architecture-01.png)
+`CaffeineApplication` enables Spring caching, `IndexController` exposes `/hello` and `/world`, and
+the Bucket4j starter installs the servlet filter from `application.yml`. Bucket state is stored in
+the Caffeine JCache cache named `buckets`.
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.ratelimit` as the source of truth when comparing this README with the code.
+## Request Flow
 
-## Sequence Diagram
+![Spring WebMVC Bucket4j Caffeine request flow](../../docs/images/readme-diagrams/ratelimit-bucket4j-caffeine-web-readme-request-flow-01.png)
 
-![Spring Boot WebMVC with Bucket4j and Caffeine Demo sequence diagram](../../docs/images/readme-diagrams/ratelimit-bucket4j-caffeine-web-sequence-01.png)
+The default application profile applies one catch-all `url: .*` limit. The servlet test profile uses
+two explicit URL rules so the test can prove different quotas:
 
-## application.yml Configuration Example
-
-```yaml
-spring:
-  cache:
-    jcache:
-      provider: com.github.benmanes.caffeine.jcache.spi.CaffeineCachingProvider
-    cache-names:
-      - buckets
-    caffeine:
-      spec: maximumSize=1000000,expireAfterAccess=3600s
-
-bucket4j:
-  enabled: true
-  filters:
-    - cache-name: buckets
-      url: .*                      # Apply to all URLs
-      rate-limits:
-        - bandwidths:
-            - capacity: 10         # Maximum number of bucket tokens
-              refill-capacity: 1   # Tokens refilled each interval
-              time: 1
-              unit: seconds
-              initial-capacity: 20 # Initial token count (allows burst)
-              refill-speed: interval
-```
+| Profile | URL rule | Capacity |
+|---|---|---|
+| `application.yml` | `.*` | 10 capacity, 1 token per second, initial capacity 20 |
+| `application-servlet.yml` | `^(/hello).*` | 5 requests per 10 seconds |
+| `application-servlet.yml` | `^(/world).*` | 10 requests per 10 seconds |
 
 ## Key Components
 
 | Class / File | Role |
-|---------------|------|
-| `CaffeineApplication.kt` | Spring Boot entry point, `@SpringBootApplication` |
-| `IndexController.kt` | Provides the `GET /hello` and `GET /world` endpoints |
-| `application.yml` | Caffeine JCache + Bucket4j filter configuration |
-| `ServletRateLimitTest.kt` | Rate Limit integration test based on `@SpringBootTest` |
+|---|---|
+| `CaffeineApplication.kt` | Spring Boot entry point with `@EnableCaching`. |
+| `IndexController.kt` | Provides `GET /hello` and `GET /world`. |
+| `application.yml` | Caffeine JCache and Bucket4j starter configuration. |
+| `ServletRateLimitTest.kt` | Verifies remaining-token headers and 429 responses. |
 
 ## Constraints and Alternatives
 
 | Item | Details |
-|------|------|
-| Store | Caffeine JCache — **synchronous (blocking)** only |
-| Applicable Server | Spring Boot WebMVC (Servlet-based) |
-| Asynchronous Alternatives | Redis (`LettuceBasedProxyManager`), Hazelcast |
-| Virtual Threads Alternative | `spring.threads.virtual.enabled=true` + WebMVC |
+|---|---|
+| Store | Caffeine JCache, local to one JVM. |
+| Server model | Spring Boot WebMVC servlet stack. |
+| Blocking behavior | Suitable for simple local demos; not a distributed quota store. |
+| Distributed alternative | Redis/Lettuce or Hazelcast-backed Bucket4j proxy manager. |
 
 ## Build and Test
 
