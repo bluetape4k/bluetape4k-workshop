@@ -2,19 +2,18 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
-
-This example exercises **Module Protobuf in Spring Boot MVC** as a runnable Spring Boot application feature workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+This module shows Spring MVC content negotiation for generated Protobuf messages.
+`ProtobufHttpMessageConverter` serializes the generated `Course` message returned
+by `CourseController`, while `ProtobufConverter` demonstrates JSON interop for
+tests and tooling.
 
 ## Architecture Diagram
 
-![Module Protobuf in Spring Boot MVC Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-protobuf-mvc-readme-architecture-01.png)
+![Module Protobuf in Spring Boot MVC architecture diagram](../../docs/images/readme-diagrams/spring-boot-protobuf-mvc-readme-architecture-01.png)
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.springboot` as the source of truth when comparing this README with the code.
+## Request Flow
 
-## Sequence Diagram
-
-![Module Protobuf in Spring Boot MVC sequence diagram](../../docs/images/readme-diagrams/spring-boot-protobuf-mvc-sequence-01.png)
+![Module Protobuf in Spring Boot MVC request flow diagram](../../docs/images/readme-diagrams/spring-boot-protobuf-mvc-readme-flow-01.png)
 
 This example shows how to send and receive server data in Protobuf format.
 
