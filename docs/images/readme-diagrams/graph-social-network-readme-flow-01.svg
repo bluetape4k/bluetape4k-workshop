@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1360" height="760" viewBox="0 0 1360 760" role="img" aria-label="graph-social-network traversal flow diagram">
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.18"/></filter>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/></marker>
+    <style>
+      .canvas { fill: #F8FAFC; }
+      .frame { fill: #FFFFFF; stroke: #D6E0E8; stroke-width: 1.4; }
+      .title { font-family: "Architects Daughter"; font-size: 34px; fill: #102033; }
+      .subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
+      .section { font-family: "Architects Daughter"; font-size: 24px; fill: #102033; }
+      .cardTitle { font-family: "Architects Daughter"; font-size: 23px; fill: #102033; }
+      .cardText { font-family: "Comic Mono"; font-size: 14px; fill: #415166; }
+      .note { font-family: "Comic Mono"; font-size: 13px; fill: #536170; }
+      .line { fill: none; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+  </defs>
+  <rect class="canvas" width="1360" height="760"/>
+  <rect class="frame" x="18" y="18" width="1324" height="724" rx="24"/>
+  <text class="title" x="680" y="58" text-anchor="middle">Traversal and recommendation flow</text>
+  <text class="subtitle" x="680" y="84" text-anchor="middle">The test seed makes degree traversal, FOAF ranking, colleagues, and paths easy to inspect.</text>
+
+  <rect x="58" y="122" width="386" height="552" rx="22" fill="#EAF8F0" stroke="#93C5A7" stroke-width="1.5"/>
+  <text class="section" x="251" y="160" text-anchor="middle">Degree traversal</text>
+  <g filter="url(#shadow)">
+    <rect x="116" y="190" width="270" height="72" rx="14" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.5"/>
+    <text class="cardTitle" x="251" y="218" text-anchor="middle">Seed: alice</text>
+    <text class="cardText" x="251" y="242" text-anchor="middle">getDirectConnections</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="116" y="316" width="270" height="72" rx="14" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.5"/>
+    <text class="cardTitle" x="251" y="344" text-anchor="middle">Depth 1</text>
+    <text class="cardText" x="251" y="368" text-anchor="middle">bob via KNOWS</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="116" y="442" width="270" height="82" rx="14" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.5"/>
+    <text class="cardTitle" x="251" y="472" text-anchor="middle">Depth 2 candidates</text>
+    <text class="cardText" x="251" y="498" text-anchor="middle">carol, dave</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="116" y="588" width="270" height="72" rx="14" fill="#FFFFFF" stroke="#86B89B" stroke-width="1.5"/>
+    <text class="cardTitle" x="251" y="616" text-anchor="middle">Nth-degree result</text>
+    <text class="cardText" x="251" y="640" text-anchor="middle">remove closer vertices</text>
+  </g>
+  <path class="line" d="M 251 262 L 251 316" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 251 388 L 251 442" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 251 524 L 251 588" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+
+  <rect x="488" y="122" width="386" height="552" rx="22" fill="#EAF3FF" stroke="#9DB9D8" stroke-width="1.5"/>
+  <text class="section" x="681" y="160" text-anchor="middle">FOAF recommendation</text>
+  <g filter="url(#shadow)">
+    <rect x="546" y="190" width="270" height="72" rx="14" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.5"/>
+    <text class="cardTitle" x="681" y="218" text-anchor="middle">Direct friends</text>
+    <text class="cardText" x="681" y="242" text-anchor="middle">bob</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="546" y="316" width="270" height="82" rx="14" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.5"/>
+    <text class="cardTitle" x="681" y="346" text-anchor="middle">Depth-2 candidates</text>
+    <text class="cardText" x="681" y="372" text-anchor="middle">exclude alice and direct friends</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="546" y="452" width="270" height="82" rx="14" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.5"/>
+    <text class="cardTitle" x="681" y="482" text-anchor="middle">Mutual count</text>
+    <text class="cardText" x="681" y="508" text-anchor="middle">carol via bob, dave via bob</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="546" y="588" width="270" height="72" rx="14" fill="#FFFFFF" stroke="#8EA9C2" stroke-width="1.5"/>
+    <text class="cardTitle" x="681" y="616" text-anchor="middle">Ranked result</text>
+    <text class="cardText" x="681" y="640" text-anchor="middle">count desc, personId asc</text>
+  </g>
+  <path class="line" d="M 681 262 L 681 316" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 681 398 L 681 452" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 681 534 L 681 588" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+
+  <rect x="918" y="122" width="386" height="552" rx="22" fill="#FFF7E8" stroke="#D8B86E" stroke-width="1.5"/>
+  <text class="section" x="1111" y="160" text-anchor="middle">Path and workplace queries</text>
+  <g filter="url(#shadow)">
+    <rect x="976" y="190" width="270" height="72" rx="14" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.5"/>
+    <text class="cardTitle" x="1111" y="218" text-anchor="middle">Shortest path</text>
+    <text class="cardText" x="1111" y="242" text-anchor="middle">alice -> bob -> dave</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="976" y="316" width="270" height="82" rx="14" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.5"/>
+    <text class="cardTitle" x="1111" y="346" text-anchor="middle">All paths</text>
+    <text class="cardText" x="1111" y="372" text-anchor="middle">bounded by maxDepth 1..6</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="976" y="452" width="270" height="82" rx="14" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.5"/>
+    <text class="cardTitle" x="1111" y="482" text-anchor="middle">Colleagues</text>
+    <text class="cardText" x="1111" y="508" text-anchor="middle">alice -> acme &lt;- bob</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="976" y="588" width="270" height="72" rx="14" fill="#FFFFFF" stroke="#C99A35" stroke-width="1.5"/>
+    <text class="cardTitle" x="1111" y="616" text-anchor="middle">Mutual connections</text>
+    <text class="cardText" x="1111" y="640" text-anchor="middle">alice and dave share bob</text>
+  </g>
+  <path class="line" d="M 1111 262 L 1111 316" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 1111 398 L 1111 452" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 1111 534 L 1111 588" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <text class="note" x="680" y="714" text-anchor="middle">All traversal APIs use KNOWS unless the query explicitly crosses WORKS_AT for colleagues.</text>
+</svg>

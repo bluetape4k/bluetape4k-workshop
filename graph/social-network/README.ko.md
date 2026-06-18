@@ -2,21 +2,25 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+## 개요
 
-이 예제는 **graph-social-network** 모듈을 실행 가능한 그래프 도메인 모델링 예제로 보여줍니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 사용 방식을 중심으로 설명합니다.
+**graph-social-network**는 [bluetape4k-graph](https://github.com/bluetape4k/bluetape4k-graph)를
+사용한 LinkedIn 스타일 그래프 도메인 예제입니다. 사람, 회사, 전문 네트워크 관계, 탐색
+쿼리를 TinkerGraph, Neo4j, Memgraph에서 같은 서비스 계약으로 다루는 방법을 보여줍니다.
 
-## 시퀀스 다이어그램
-
-[bluetape4k-graph](https://github.com/bluetape4k/bluetape4k-graph)를 사용한 LinkedIn 스타일 소셜 네트워크 그래프 예제입니다.
-
-**Person–Company 관계 모델링**, **다중 홉 BFS 탐색**, **FOAF 추천**, **최단 경로 탐색**을 TinkerGraph(인메모리), Neo4j, Memgraph 백엔드로 시연합니다.
+작지만 완전한 소셜 그래프를 확인하고 싶을 때 이 모듈을 보면 됩니다. 멱등 vertex 생성,
+양방향 `KNOWS`, 단방향 `FOLLOWS`, 회사 연결 `WORKS_AT`, FOAF 추천, 동료 탐색,
+최단 경로 탐색을 한 흐름에서 확인할 수 있습니다.
 
 ---
 
 ## 아키텍처
 
-![graph-social-network Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/graph-social-network-readme-architecture-01.png)
+![graph-social-network 아키텍처](../../docs/images/readme-diagrams/graph-social-network-readme-architecture-01.png)
+
+블로킹 서비스와 코루틴 서비스는 같은 소셜 네트워크 기능을 제공합니다. 두 서비스 모두
+`GraphOperations` 또는 `GraphSuspendOperations`를 통해 typed schema를 기록하고, 선택한
+그래프 백엔드에서 동일한 탐색 계약을 실행합니다.
 
 ```
 graph/social-network/
@@ -43,7 +47,7 @@ graph/social-network/
 
 ## 그래프 스키마
 
-![그래프 도메인 모델](docs/images/readme-diagrams/social-network-domain-model.png)
+![graph-social-network 도메인 모델](../../docs/images/readme-diagrams/graph-social-network-readme-domain-model-01.png)
 
 ### Vertex 레이블
 
@@ -61,6 +65,8 @@ graph/social-network/
 | `WORKS_AT` | `Person` → `Company` | `role`, `startDate`, `endDate`, `isCurrent` |
 
 ## 시드 토폴로지 (테스트 데이터)
+
+![graph-social-network 탐색 및 추천 흐름](../../docs/images/readme-diagrams/graph-social-network-readme-flow-01.png)
 
 ```
 alice ──KNOWS──► bob ──KNOWS──► carol ──KNOWS──► dave

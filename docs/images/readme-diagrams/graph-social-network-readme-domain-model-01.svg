@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="720" viewBox="0 0 1240 720" role="img" aria-label="graph-social-network domain model diagram">
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.18"/></filter>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/></marker>
+    <style>
+      .canvas { fill: #F8FAFC; }
+      .frame { fill: #FFFFFF; stroke: #D6E0E8; stroke-width: 1.4; }
+      .title { font-family: "Architects Daughter"; font-size: 34px; fill: #102033; }
+      .subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
+      .cardTitle { font-family: "Architects Daughter"; font-size: 28px; fill: #102033; }
+      .cardText { font-family: "Comic Mono"; font-size: 15px; fill: #415166; }
+      .edgeTitle { font-family: "Architects Daughter"; font-size: 21px; fill: #102033; }
+      .edgeText { font-family: "Comic Mono"; font-size: 13px; fill: #415166; }
+      .line { fill: none; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+  </defs>
+  <rect class="canvas" width="1240" height="720"/>
+  <rect class="frame" x="18" y="18" width="1204" height="684" rx="24"/>
+  <text class="title" x="620" y="58" text-anchor="middle">Social network schema</text>
+  <text class="subtitle" x="620" y="84" text-anchor="middle">Person-to-person edges stay separate from Person-to-company work history.</text>
+
+  <g filter="url(#shadow)">
+    <rect x="118" y="278" width="310" height="184" rx="18" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.8"/>
+    <text class="cardTitle" x="273" y="322" text-anchor="middle">Person</text>
+    <text class="cardText" x="273" y="358" text-anchor="middle">personId</text>
+    <text class="cardText" x="273" y="384" text-anchor="middle">name</text>
+    <text class="cardText" x="273" y="410" text-anchor="middle">title</text>
+    <text class="cardText" x="273" y="436" text-anchor="middle">location</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="812" y="278" width="310" height="184" rx="18" fill="#FFF7ED" stroke="#D97706" stroke-width="1.8"/>
+    <text class="cardTitle" x="967" y="322" text-anchor="middle">Company</text>
+    <text class="cardText" x="967" y="358" text-anchor="middle">companyId</text>
+    <text class="cardText" x="967" y="384" text-anchor="middle">name</text>
+    <text class="cardText" x="967" y="410" text-anchor="middle">industry</text>
+    <text class="cardText" x="967" y="436" text-anchor="middle">location</text>
+  </g>
+
+  <path class="line" d="M 273 278 L 273 214 L 168 214 L 168 278" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 318 278 L 318 214 L 423 214 L 423 278" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 428 370 L 812 370" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="128" y="128" width="238" height="84" rx="14" fill="#FFFFFF" stroke="#D5E0E8" stroke-width="1.4"/>
+    <text class="edgeTitle" x="247" y="159" text-anchor="middle">KNOWS</text>
+    <text class="edgeText" x="247" y="184" text-anchor="middle">Person -> Person</text>
+    <text class="edgeText" x="247" y="204" text-anchor="middle">stored as two directed edges</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="430" y="128" width="238" height="84" rx="14" fill="#FFFFFF" stroke="#D5E0E8" stroke-width="1.4"/>
+    <text class="edgeTitle" x="549" y="159" text-anchor="middle">FOLLOWS</text>
+    <text class="edgeText" x="549" y="184" text-anchor="middle">Person -> Person</text>
+    <text class="edgeText" x="549" y="204" text-anchor="middle">one directed edge only</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="500" y="512" width="240" height="92" rx="14" fill="#FFFFFF" stroke="#D5E0E8" stroke-width="1.4"/>
+    <text class="edgeTitle" x="620" y="544" text-anchor="middle">WORKS_AT</text>
+    <text class="edgeText" x="620" y="570" text-anchor="middle">Person -> Company</text>
+    <text class="edgeText" x="620" y="590" text-anchor="middle">role, startDate, isCurrent</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="778" y="128" width="300" height="104" rx="16" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1.4"/>
+    <text class="edgeTitle" x="928" y="162" text-anchor="middle">Query boundaries</text>
+    <text class="edgeText" x="928" y="190" text-anchor="middle">degree and FOAF use KNOWS only</text>
+    <text class="edgeText" x="928" y="212" text-anchor="middle">colleagues cross WORKS_AT</text>
+  </g>
+</svg>
