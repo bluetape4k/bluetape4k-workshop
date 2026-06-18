@@ -2,9 +2,12 @@
 
 [한국어](README.ko.md) | English
 
-This module demonstrates a small audit boundary: the same immutable `Product`
-value is committed to JaVers for history and diff queries, while Exposed stores
-the current row in `ProductTable`.
+This module shows the smallest useful audit boundary for an Exposed model. The
+same immutable `Product` value is committed to JaVers for history and diff
+queries, while Exposed JDBC stores only the current row in `ProductTable`.
+
+Use it when you want the write order and ownership split to be obvious before
+adding web controllers, event publishing, or an external JaVers repository.
 
 ![exposed/javers-audit architecture diagram](../../docs/images/readme-diagrams/exposed-javers-audit-readme-architecture-01.png)
 
@@ -16,15 +19,18 @@ the current row in `ProductTable`.
 
 | Operation | Source-backed behavior |
 |---|---|
-| `save(author, product)` | Validates the author, commits the product to JaVers, then upserts the current row through Exposed JDBC |
-| `delete(author, product)` | Records a JaVers terminal snapshot with `commitShallowDelete`, then deletes the Exposed row |
+| `save(author, product)` | Validates the author, commits the product to JaVers, then upserts the latest row through Exposed JDBC |
+| `delete(author, product)` | Records a terminal JaVers snapshot with `commitShallowDelete`, then deletes the Exposed row |
 | `getHistory(productId)` | Queries JaVers snapshots by instance id and returns them oldest-first |
-| `getLatestSnapshot(productId)` | Uses bluetape4k `latestSnapshotOrNull<Product>()` for the current audit state |
-| `diff(old, new)` | Compares two values without writing to JaVers or the database |
+| `getLatestSnapshot(productId)` | Uses bluetape4k `latestSnapshotOrNull<Product>()` to read the current audit state |
+| `diff(old, new)` | Compares two immutable values without writing to JaVers or the database |
 
 ## Product Schema
 
-`ProductTable` is intentionally small so the audit behavior is easy to inspect.
+`ProductTable` is intentionally small so the storage boundary is easy to inspect.
+JaVers history is not modeled as relational tables in this module.
+
+![exposed/javers-audit ERD diagram](../../docs/images/readme-diagrams/exposed-javers-audit-readme-erd-01.png)
 
 | Column | Type | Notes |
 |---|---|---|

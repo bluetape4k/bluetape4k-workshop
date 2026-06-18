@@ -2,9 +2,12 @@
 
 [English](README.md) | 한국어
 
-이 모듈은 작은 audit boundary를 보여줍니다. 같은 immutable `Product` 값을
-JaVers에는 이력과 diff 조회용으로 commit하고, Exposed에는 현재 row를
-`ProductTable`에 저장합니다.
+이 모듈은 Exposed 모델에 audit boundary를 붙이는 가장 작은 형태를 보여줍니다.
+같은 immutable `Product` 값을 JaVers에는 history와 diff 조회용으로 commit하고,
+Exposed JDBC에는 `ProductTable`의 현재 row만 저장합니다.
+
+웹 컨트롤러, 이벤트 발행, 외부 JaVers repository를 붙이기 전에 write 순서와
+저장소 책임 분리를 먼저 확인할 때 적합합니다.
 
 ![exposed/javers-audit architecture diagram](../../docs/images/readme-diagrams/exposed-javers-audit-readme-architecture-01.png)
 
@@ -16,15 +19,18 @@ JaVers에는 이력과 diff 조회용으로 commit하고, Exposed에는 현재 r
 
 | Operation | 소스 기준 동작 |
 |---|---|
-| `save(author, product)` | author를 검증하고, product를 JaVers에 commit한 뒤 Exposed JDBC로 현재 row를 upsert |
+| `save(author, product)` | author를 검증하고, product를 JaVers에 commit한 뒤 Exposed JDBC로 최신 row를 upsert |
 | `delete(author, product)` | `commitShallowDelete`로 JaVers terminal snapshot을 남긴 뒤 Exposed row 삭제 |
 | `getHistory(productId)` | instance id로 JaVers snapshot을 조회하고 오래된 순서로 반환 |
 | `getLatestSnapshot(productId)` | bluetape4k `latestSnapshotOrNull<Product>()`로 현재 audit state 조회 |
-| `diff(old, new)` | JaVers나 DB에 쓰지 않고 두 value를 비교 |
+| `diff(old, new)` | JaVers나 DB에 쓰지 않고 두 immutable value를 비교 |
 
 ## Product Schema
 
-`ProductTable`은 audit 동작을 쉽게 확인할 수 있도록 작게 유지합니다.
+`ProductTable`은 저장소 경계를 쉽게 확인할 수 있도록 작게 유지합니다.
+이 모듈에서 JaVers history는 관계형 테이블로 모델링하지 않습니다.
+
+![exposed/javers-audit ERD diagram](../../docs/images/readme-diagrams/exposed-javers-audit-readme-erd-01.png)
 
 | Column | Type | Notes |
 |---|---|---|
