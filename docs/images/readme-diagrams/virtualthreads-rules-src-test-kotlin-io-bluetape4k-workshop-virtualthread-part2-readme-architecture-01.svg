@@ -1,64 +1,55 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="660" viewBox="0 0 1320 660" role="img" aria-label="part2 architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/part2/Rule2WriteBlockingSynchronousCode.kt&quot;,&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/part2/Rule3DoNotPoolVirtualThreads.kt&quot;,&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/part2/Rule4UseSemaphoreInsteadOfFixedThreadPools.kt&quot;,&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/part2/Rule5UseThreadLocalVariablesCarefully.kt&quot;,&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/part2/Rule6UseSynchronizedBlocksAndMethodsCarefully.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1740" height="900" viewBox="0 0 1740 900">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .bg { fill: #f8fafc; }
+      .title { font-family: 'Architects Daughter', 'Comic Sans MS', cursive; font-size: 34px; fill: #172033; }
+      .layer-title { font-family: 'Architects Daughter', 'Comic Sans MS', cursive; font-size: 26px; fill: #344154; }
+      .body { font-family: 'Comic Mono', 'Comic Sans MS', monospace; font-size: 18px; fill: #364152; }
+      .small { font-family: 'Comic Mono', 'Comic Sans MS', monospace; font-size: 16px; fill: #4b5563; }
+      .layer { stroke-width: 1.5; rx: 24; ry: 24; }
+      .avoid { fill: #fff1f2; stroke: #fecdd3; stroke-width: 1.5; rx: 18; ry: 18; }
+      .prefer { fill: #f0fdf4; stroke: #bbf7d0; stroke-width: 1.5; rx: 18; ry: 18; }
+      .line { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
     </style>
+    <marker id="arrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb"/>
+    </marker>
   </defs>
-  <rect class="canvas" width="1320" height="660"/>
-  <rect class="frame" x="16" y="16" width="1288" height="628" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">part2</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">virtual-thread execution model and blocking boundary examples</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="132.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="152.5">Request/Test</tspan><tspan class="layer-title" x="151.0" y="175.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="202.0">MVC/WebFlux tests,</tspan><tspan class="layer-detail" x="151.0" y="218.0">sample endpoints</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="264.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="284.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="314.0">JVM Runtime</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="344.0">virtual threads,</tspan><tspan class="layer-detail" x="151.0" y="360.0">platform threads,</tspan><tspan class="layer-detail" x="151.0" y="376.0">containers</tspan></text>
-    </g>
-    <g class="edge" data-edge="entry0-&gt;runtime0" data-label="runs on">
-      <path d="M 760.0 226.0 L 760.0 255.0 L 760.0 284.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="part2 | Virtual Thread Surface">
-      <rect x="610.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="176.5">part2</tspan><tspan class="node-detail" x="760.0" y="200.5">Virtual Thread Surface</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="In-memory / JVM | JVM Thread Runtime">
-      <rect x="610.0" y="284.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="326.5">In-memory / JVM</tspan><tspan class="node-detail" x="760.0" y="350.5">JVM Thread Runtime</tspan></text>
-    </g>
-  </g>
+  <rect class="bg" width="1740" height="900"/>
+  <text class="title" x="70" y="70">Virtual Thread Usage Rules</text>
+
+  <rect class="layer" x="70" y="120" width="760" height="665" fill="#fff1f2" stroke="#fecdd3"/>
+  <text class="layer-title" x="105" y="165">Avoid carrying platform-thread habits</text>
+  <rect class="avoid" x="130" y="215" width="640" height="70"/>
+  <text class="body" x="165" y="257">CompletableFuture chains for simple blocking work</text>
+  <rect class="avoid" x="130" y="325" width="640" height="70"/>
+  <text class="body" x="165" y="367">cached/fixed pools for virtual threads</text>
+  <rect class="avoid" x="130" y="435" width="640" height="70"/>
+  <text class="body" x="165" y="477">fixed thread pools as resource quotas</text>
+  <rect class="avoid" x="130" y="545" width="640" height="70"/>
+  <text class="body" x="165" y="587">broad inherited ThreadLocal state</text>
+  <rect class="avoid" x="130" y="655" width="640" height="70"/>
+  <text class="body" x="165" y="697">synchronized sections that can pin carriers</text>
+
+  <rect class="layer" x="910" y="120" width="760" height="665" fill="#f0fdf4" stroke="#bbf7d0"/>
+  <text class="layer-title" x="945" y="165">Prefer virtual-thread-friendly boundaries</text>
+  <rect class="prefer" x="970" y="215" width="640" height="70"/>
+  <text class="body" x="1005" y="257">synchronous code on per-task virtual executor</text>
+  <rect class="prefer" x="970" y="325" width="640" height="70"/>
+  <text class="body" x="1005" y="367">newVirtualThreadPerTaskExecutor()</text>
+  <rect class="prefer" x="970" y="435" width="640" height="70"/>
+  <text class="body" x="1005" y="477">Semaphore around the constrained resource</text>
+  <rect class="prefer" x="970" y="545" width="640" height="70"/>
+  <text class="body" x="1005" y="587">ScopedValue or explicit bounded context</text>
+  <rect class="prefer" x="970" y="655" width="640" height="70"/>
+  <text class="body" x="1005" y="697">ReentrantLock and Kotlin withLock</text>
+
+  <rect class="layer" x="320" y="820" width="1100" height="50" fill="#fefce8" stroke="#fde68a"/>
+  <text class="small" x="390" y="852">Rule2 to Rule6 tests compare each avoid/prefer pair with executable assertions</text>
+
+  <path class="line" d="M770 250 L970 250" stroke="#2563eb" marker-end="url(#arrow)"/>
+  <path class="line" d="M770 360 L970 360" stroke="#2563eb" marker-end="url(#arrow)"/>
+  <path class="line" d="M770 470 L970 470" stroke="#2563eb" marker-end="url(#arrow)"/>
+  <path class="line" d="M770 580 L970 580" stroke="#2563eb" marker-end="url(#arrow)"/>
+  <path class="line" d="M770 690 L970 690" stroke="#2563eb" marker-end="url(#arrow)"/>
 </svg>

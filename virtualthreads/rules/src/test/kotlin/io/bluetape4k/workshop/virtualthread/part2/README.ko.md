@@ -1,198 +1,36 @@
-# part2
+# Virtual Thread Usage Rules
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+이 package는 Java virtual thread의 "do and do not" rule에 집중합니다. 테스트는
+platform-thread 습관과 virtual-thread-friendly alternative를 나란히 비교합니다.
 
-이 예제는 **part2** 모듈을 실행 가능한 가상 스레드 실행 예제로 보여줍니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 사용 방식을 중심으로 설명합니다.
+## 아키텍처
 
-## 아키텍처 다이어그램
+![Virtual thread usage rules architecture](../../../../../../../../../../docs/images/readme-diagrams/virtualthreads-rules-src-test-kotlin-io-bluetape4k-workshop-virtualthread-part2-readme-architecture-01.png)
 
-![part2 Graphviz 아키텍처 다이어그램](../../../../../../../../../../docs/images/readme-diagrams/virtualthreads-rules-src-test-kotlin-io-bluetape4k-workshop-virtualthread-part2-readme-architecture-01.png)
+## Rules
 
-모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성으로 구성됩니다. README와 코드를 비교할 때는 `io.bluetape4k.workshop.virtualthreads` 패키지 아래의 구현을 기준으로 삼습니다.
+| Rule | Avoid | Prefer |
+|---|---|---|
+| Blocking workflow | 단순 blocking step을 callback-heavy `CompletableFuture` chain으로 표현 | `newVirtualThreadPerTaskExecutor()` 위의 synchronous code |
+| Thread creation | Virtual thread를 caching하거나 pooling | Thread-per-task virtual thread executor |
+| Concurrency limits | Fixed thread pool을 quota mechanism처럼 사용 | 제한 대상 resource 주변의 `Semaphore` |
+| Context | 넓게 상속되는 `ThreadLocal` state | `ScopedValue` 또는 명시적 bounded context |
+| Exclusive access | Carrier thread pinning을 유발할 수 있는 `synchronized` block | `ReentrantLock`과 Kotlin `withLock` |
 
-## 코드 예제
+## Test Files
 
-### 스레드당 요청 모델에서는 블로킹 동기 코드를 작성하세요
+| File | Main lesson |
+|---|---|
+| `Rule2WriteBlockingSynchronousCode` | Virtual thread는 단순 blocking workflow를 다시 읽기 쉽게 만듭니다 |
+| `Rule3DoNotPoolVirtualThreads` | Virtual thread는 저렴합니다. thread가 아니라 제한 대상 resource를 pool/limit합니다 |
+| `Rule4UseSemaphoreInsteadOfFixedThreadPools` | Per-task virtual thread는 유지하고 concurrent access는 semaphore로 제한합니다 |
+| `Rule5UseThreadLocalVariablesCarefully` | 우발적인 context inheritance를 피하고 bounded scope를 선호합니다 |
+| `Rule6UseSynchronizedBlocksAndMethodsCarefully` | Virtual-thread-aware code에서는 pinning-prone synchronized section을 피합니다 |
 
-다음 비차단 비동기 코드는 가상 스레드를 사용해도 큰 이점을 얻기 어렵습니다. `CompletableFuture` 클래스가 이미 실행기의 워커 스레드를 단계 사이에서 재사용하기 때문입니다.
+## 테스트
 
-<sub>다음 코드는 비동기 다단계 워크플로우를 단순화한 예입니다. 먼저 오래 걸리는 두 메서드를 호출해 EUR 기준 상품 가격과 EUR/USD 환율을 가져옵니다. 그 결과로 순 상품 가격을 계산한 뒤, 순 상품 가격을 받아 세금 금액을 반환하는 세 번째 장기 실행 메서드를 호출합니다. 마지막으로 순 가격과 세금 금액으로 총 상품 가격을 계산합니다.</sub>
-
-```java
-public void useAsynchronousCode() throws InterruptedException, ExecutionException {
-    CompletableFuture.supplyAsync(this::readPriceInEur)
-            .thenCombine(CompletableFuture.supplyAsync(this::readExchangeRateEurToUsd), (price, exchangeRate) -> price * exchangeRate)
-            .thenCompose(amount -> CompletableFuture.supplyAsync(() -> amount * (1 + readTax(amount))))
-            .whenComplete((grossAmountInUsd, t) -> {
-                if (t == null) {
-                    assertEquals(108, grossAmountInUsd.intValue());
-                } else {
-                    fail(t);
-                }
-            })
-            .get();
-}
-```
-
-다음 블로킹 동기 코드는 이전의 복잡한 코드와 같은 시간에 같은 값을 반환하면서도 훨씬 단순하므로, 가상 스레드를 사용할 때 이점을 얻습니다.
-
-```java
-public void useSynchronousCode() throws InterruptedException, ExecutionException {
-    try (var executorService = Executors.newVirtualThreadPerTaskExecutor()) {
-        Future<Integer> priceInEur = executorService.submit(this::readPriceInEur);
-        Future<Float> exchangeRateEurToUsd = executorService.submit(this::readExchangeRateEurToUsd);
-        float netAmountInUsd = priceInEur.get() * exchangeRateEurToUsd.get();
-
-        Future<Float> tax = executorService.submit(() -> readTax(netAmountInUsd));
-        float grossAmountInUsd = netAmountInUsd * (1 + tax.get());
-        assertEquals(108, (int) grossAmountInUsd);
-    }
-}
-```
-
-### 가상 스레드를 풀링하지 마세요
-
-다음 코드는 작업 사이에서 가상 스레드를 재사용하려고 캐시 스레드 풀 실행기를 불필요하게 사용합니다.
-
-```java
-public void poolVirtualThreads() {
-    try (var executorService = Executors.newCachedThreadPool(Thread.ofVirtual().factory())) {
-        assertEquals("java.util.concurrent.ThreadPoolExecutor", executorService.getClass().getName());
-
-        executorService.submit(() -> {
-            sleep(1000);
-            System.out.println("run");
-        });
-    }
-}
-```
-
-다음 코드는 각 작업마다 새 스레드를 만드는 _thread-per-task_ 가상 스레드 실행기를 올바르게 사용합니다.
-
-```java
-public void createVirtualThreadPerTask() {
-    try (var executorService = Executors.newVirtualThreadPerTaskExecutor()) {
-        assertEquals("java.util.concurrent.ThreadPerTaskExecutor", executorService.getClass().getName());
-
-        executorService.submit(() -> {
-            sleep(1000);
-            System.out.println("run");
-        });
-    }
-}
-```
-
-### 동시성 제한에는 고정 스레드 풀 대신 세마포어를 사용하세요
-
-다음 코드는 공유 리소스에 접근할 때 동시성을 제한하려고 고정 크기 스레드 풀을 사용하므로, 가상 스레드의 이점을 얻지 못합니다.
-
-```java
-private final ExecutorService executorService = Executors.newFixedThreadPool(8);
-
-public String useFixedExecutorServiceToLimitConcurrency() throws ExecutionException, InterruptedException {
-    Future<String> future = executorService.submit(this::sharedResource ());
-    return future.get();
-}
-```
-
-다음 코드는 공유 리소스에 접근할 때 `Semaphore`로 동시성을 제한하므로, 가상 스레드의 이점을 얻을 수 있습니다.
-
-```java
-private final Semaphore semaphore = new Semaphore(8);
-
-public String useSemaphoreToLimitConcurrency() throws InterruptedException {
-    semaphore.acquire();
-    try {
-        return sharedResource();
-    } finally {
-        semaphore.release();
-    }
-}
-```
-
-### 스레드 로컬 변수는 신중하게 사용하거나 scoped value로 전환하세요
-
-다음 코드는 스레드 로컬 변수가 변경 가능하고, 부모 스레드에서 시작한 자식 스레드로 상속되며, 제거될 때까지 존재한다는 점을 보여줍니다.
-
-```java
-private final InheritableThreadLocal<String> threadLocal = new InheritableThreadLocal<>();
-
-public void useThreadLocalVariable() throws InterruptedException {
-    threadLocal.set("zero");
-    assertEquals("zero", threadLocal.get());
-
-    threadLocal.set("one");
-    assertEquals("one", threadLocal.get());
-
-    Thread childThread = new Thread(() -> {
-        assertEquals("one", threadLocal.get());
-    });
-    childThread.start();
-    childThread.join();
-
-    threadLocal.remove();
-    assertNull(threadLocal.get());
-}
-```
-
-다음 코드는 scoped value가 불변이고, 구조적 동시성 스코프에서 재사용되며, 제한된 컨텍스트 안에서만 존재한다는 점을 보여줍니다.
-
-```java
-private final ScopedValue<String> scopedValue = ScopedValue.newInstance();
-
-public void useScopedValue() {
-    ScopedValue.where(scopedValue, "zero").run(
-            () -> {
-                assertEquals("zero", scopedValue.get());
-                ScopedValue.where(scopedValue, "one").run(
-                        () -> assertEquals("one", scopedValue.get())
-                );
-                assertEquals("zero", scopedValue.get());
-
-                try (var scope = new StructuredTaskScope.ShutdownOnFailure()) {
-                    scope.fork(() -> {
-                                assertEquals("zero", scopedValue.get());
-                                return -1;
-                            }
-                    );
-                    scope.join().throwIfFailed();
-                } catch (InterruptedException | ExecutionException e) {
-                    fail(e);
-                }
-            }
-    );
-
-    assertThrows(NoSuchElementException.class, scopedValue::get);
-}
-```
-
-### synchronized 블록과 메서드는 신중하게 사용하거나 reentrant lock으로 전환하세요
-
-다음 코드는 명시적 객체 락을 사용하는 _synchronized_ 블록으로 가상 스레드 pinning을 유발합니다.
-
-```java
-private final Object lockObject = new Object();
-
-public String useSynchronizedBlockForExclusiveAccess() {
-    synchronized (lockObject) {
-        return exclusiveResource();
-    }
-}
-```
-
-다음 코드는 가상 스레드 pinning을 유발하지 않는 `ReentrantLock`을 사용합니다.
-
-```java
-private final ReentrantLock reentrantLock = new ReentrantLock();
-
-public String useReentrantLockForExclusiveAccess() {
-    reentrantLock.lock();
-    try {
-        return exclusiveResource();
-    } finally {
-        reentrantLock.unlock();
-    }
-}
+```bash
+./gradlew :virtualthreads-rules:test --tests '*part2*'
 ```
