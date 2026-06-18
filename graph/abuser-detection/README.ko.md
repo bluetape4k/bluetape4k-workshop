@@ -2,13 +2,14 @@
 
 [English](README.md) | 한국어
 
-## 아키텍처 다이어그램
+## 아키텍처
 
-모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성으로 구성됩니다. README와 코드를 비교할 때는 `io.bluetape4k.workshop.graph` 패키지 아래의 구현을 기준으로 삼습니다.
+이 모듈은 그래프 기반 어뷰저 탐지 모델을 시연합니다. 동일한 identity graph 연산을 블로킹 서비스와
+코루틴 서비스로 제공하고, 기본 테스트는 TinkerGraph, 통합 테스트는 Neo4j/Memgraph 백엔드로 검증합니다.
 
 ![graph-abuser-detection 아키텍처 다이어그램](../../docs/images/readme-diagrams/graph-abuser-detection-readme-architecture-01.png)
 
-## 시퀀스 다이어그램
+## 이 모듈이 보여주는 것
 
 bluetape4k 워크샵 모듈로, 그래프 기반 어뷰저(abuser) 탐지를 시연합니다. 이 모듈은 사용자 계정과 공유 식별자(디바이스, IP 주소, 해시된 전화번호, 결제 토큰)를 연결하는 **신원 그래프(identity graph)**를 구축하고, 그래프 알고리즘을 적용하여 어뷰저 클러스터, 의심스러운 연결 경로, 추천인 루프, PageRank 기반 위험 점수를 탐지합니다.
 
@@ -16,12 +17,19 @@ bluetape4k 워크샵 모듈로, 그래프 기반 어뷰저(abuser) 탐지를 시
 
 ## 예제 시나리오
 
-![사기 탐지 예제 그래프](docs/images/readme-diagrams/abuser-detection-example-graph.png)
+![사기 탐지 예제 그래프](../../docs/images/readme-diagrams/graph-abuser-detection-readme-example-graph-01.png)
 
-동일한 디바이스, 결제 토큰, IP 주소를 공유하는 사용자는 잠재적 어뷰저 클러스터로 탐지됩니다.
-위 다이어그램은 User A(사기 행위자)와 User B(공범)가 `Device-1`과 결제 토큰을 공유하는 상황을 보여줍니다.
-`findAbuseCluster("userA")` 호출 시 두 사용자를 하나의 클러스터로 반환합니다.
-User C는 IP 주소만 공유하며(예: VPN 출구 노드), 클러스터 포함 여부는 별도 판단이 필요합니다.
+동일한 디바이스, 결제 토큰, 전화번호 해시, IP 주소를 공유하는 사용자는 잠재적 어뷰저 클러스터로 탐지됩니다.
+위 다이어그램은 테스트 seed를 그대로 반영합니다. `user-1`, `user-2`, `user-3`는 `device-A`를 공유하고,
+`user-1`과 `user-2`는 `ipA`도 공유합니다. `unrelated-user`는 `device-B`만 사용하므로 `user-1` 기준
+클러스터에 포함되지 않습니다.
+
+## 클러스터 탐지 흐름
+
+![graph-abuser-detection 클러스터 탐지 흐름](../../docs/images/readme-diagrams/graph-abuser-detection-readme-flow-01.png)
+
+`findAbuseCluster(seedUserId)`는 식별자 엣지만 탐색합니다. `REFERRED_BY` 엣지는 이 BFS에서 의도적으로
+제외되며, `detectReferralLoops`에서 별도로 사용됩니다.
 
 ## 그래프 스키마
 
