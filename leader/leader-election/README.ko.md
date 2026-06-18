@@ -2,111 +2,49 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+이 모듈은 Redis 기반 리더 선출로 scheduled background job을 보호하는 방법을 보여줍니다. 모든 애플리케이션 인스턴스가 같은 scheduler를 실행하지만, `bluetape4k-leader`가 선출된 인스턴스 하나만 guarded job을 실행하게 합니다.
 
-이 예제는 **Leader Election Workshop** 모듈을 실행 가능한 리더 선출 조정 예제로 보여줍니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 사용 방식을 중심으로 설명합니다.
-
-## 개요
-
-다중 인스턴스(멀티 파드) 배포 환경에서는 캐시 워밍, 아웃박스 발행, 오래된 워크플로 정리 같은
-스케줄 백그라운드 잡이 **정확히 하나의 인스턴스**에서만 실행되어야 합니다.
-이 모듈은 `bluetape4k-leader`의 `LettuceLeaderElector`를 사용해 모든 실행 인스턴스에서
-단일 실행을 보장하는 방법을 보여줍니다.
+캐시 워밍, 오래된 워크플로 정리, lock assertion, lease extension 확인처럼 멀티 파드 환경에서 동시에 실행되면 안 되는 작업을 다룰 때 참고할 수 있습니다.
 
 ## 아키텍처
 
-![Leader Election Workshop Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/leader-leader-election-readme-architecture-01.png)
+![Leader election architecture](../../docs/images/readme-diagrams/leader-leader-election-readme-architecture-01.png)
 
-여러 앱 인스턴스가 Redis `SET NX EX`로 분산 락을 경쟁합니다.  
-**선출된 리더** 인스턴스만 각 `LeaderGuardedJob`을 실행합니다.
+`LeaderElectionConfig`는 Redis client, blocking `ListeningLeaderElector`, coroutine-friendly `LettuceSuspendLeaderElector`를 만듭니다. Blocking elector는 `LeaderScheduledJobService`가 사용하고, suspend elector는 별도 Lettuce connection을 가진 `SuspendLeaderService`에서 시연합니다.
 
-## 사용된 Bluetape4k 기능
+## 선출 흐름
 
-| 기능 | 아티팩트 | 용도 |
-|------|----------|------|
-| `bluetape4k-leader-core` | `bluetape4k.leader.core` | `LeaderElector` 인터페이스, `LeaderElectionOptions` |
-| `bluetape4k-leader-redis-lettuce` | `bluetape4k.leader.redis.lettuce` | `LettuceLeaderElector` — Redis 기반 구현체 |
-| `bluetape4k-logging` | `bluetape4k.logging` | `KLogging` companion + 람다 로깅 확장 |
-| `bluetape4k-junit5` | `bluetape4k.junit5` | `MultithreadingTester` — 동시 선출 테스트 |
-| `bluetape4k-testcontainers` | `bluetape4k.testcontainers` | `RedisServer.Launcher.redis` 싱글턴 패턴 |
-| `bluetape4k-assertions` | `bluetape4k.assertions` | `shouldBeEqualTo`, `shouldNotBeNull`, `shouldHaveSize` |
+![Leader election flow](../../docs/images/readme-diagrams/leader-leader-election-readme-election-flow-01.png)
 
-## 주요 패턴
+1. 모든 인스턴스가 설정된 fixed delay마다 `LeaderScheduledJobService`를 트리거합니다.
+2. 각 `LeaderGuardedJob`은 고유한 `lockName`을 제공합니다.
+3. `runIfLeader(lockName) { ... }`가 `waitTime`, `leaseTime`으로 Redis lock 획득을 시도합니다.
+4. Winner는 `job.execute()`를 실행하고 block 종료 시 lock을 해제합니다.
+5. 선출되지 못한 인스턴스는 `null`을 받고 job body를 실행하지 않습니다.
+6. `ListeningLeaderElector`는 elected, revoked, skipped event를 listener와 Flow consumer에 전달합니다.
 
-### 1. Leader-Guarded Job 인터페이스
+## 핵심 계약
 
-```kotlin
-interface LeaderGuardedJob {
-    val lockName: String   // 잡별 고유 Redis 키
-    fun execute()          // 선출된 리더에서만 호출됨
-}
-```
+| 영역 | 계약 |
+|------|------|
+| Lock backend | `LettuceLeaderElector`가 Lettuce를 통해 Redis `SET NX EX` 방식의 lock을 사용합니다. |
+| Job uniqueness | 중복 `LeaderGuardedJob.lockName`은 Spring context 시작 시 실패합니다. |
+| Job isolation | 각 job은 자체 `try/catch`로 감싸며, 하나의 실패가 다음 job 실행을 막지 않습니다. |
+| Duration binding | Spring은 `java.time.Duration`으로 바인딩하고, `LeaderElectionOptions`에는 명시적으로 `toKotlinDuration()` 값을 전달합니다. |
+| Event observation | `LeaderEventListenerService`는 callback listener와 Flow collection 패턴을 모두 보여줍니다. |
+| Coroutine path | `SuspendLeaderService`는 별도 Redis connection으로 suspend leader work를 시연합니다. |
 
-### 2. LettuceLeaderElector를 이용한 리더 선출
+## 주요 타입
 
-```kotlin
-val result: T? = leaderElector.runIfLeader(job.lockName) {
-    job.execute()   // 이 인스턴스가 락을 획득한 경우에만 실행
-}
-// result == null → 리더가 아님 (스킵)
-// result != null → 리더로 선출되어 실행 완료
-```
-
-### 3. Duration 타입 변환 (중요)
-
-`@ConfigurationProperties`는 `java.time.Duration`으로 바인딩됩니다.  
-`LeaderElectionOptions`는 `kotlin.time.Duration`을 요구합니다.  
-**반드시 변환해야 합니다**:
-
-```kotlin
-LeaderElectionOptions(
-    waitTime  = props.waitTime.toKotlinDuration(),   // ← 필수
-    leaseTime = props.leaseTime.toKotlinDuration(),  // ← 필수
-)
-```
-
-### 4. 스케줄러에서 잡 격리
-
-각 잡은 독립적인 `try/catch`로 감쌉니다. 하나의 잡이 실패해도 나머지 잡 실행을 막지 않습니다:
-
-```kotlin
-jobs.forEach { job ->
-    try {
-        val result = leaderElector.runIfLeader(job.lockName) { job.execute() }
-        if (result != null) log.info { "[LEADER] ${job.lockName} executed" }
-        else log.debug { "[SKIPPED] ${job.lockName}" }
-    } catch (e: Exception) {
-        log.error(e) { "[ERROR] ${job.lockName}: ${e.message}" }
-    }
-}
-```
-
-## 클래스 다이어그램
-
-![클래스 다이어그램](../../docs/images/readme-diagrams/leader-class-diagram.png)
-
-## 시퀀스 다이어그램
-
-![리더 선출 시퀀스](../../docs/images/readme-diagrams/leader-election-sequence.png)
-
-## 실행 방법
-
-### 애플리케이션 시작
-
-```bash
-# localhost:6379에 Redis가 실행 중이어야 합니다
-./gradlew :leader-leader-election:bootRun
-```
-
-### 테스트 실행
-
-```bash
-# 전체 테스트 실행 (smoke 테스트는 기본 제외)
-./gradlew :leader-leader-election:test
-
-# smoke 테스트 포함 실행 (타이밍 민감, 수동/야간 실행용)
-./gradlew :leader-leader-election:test -Djunit.jupiter.execution.exclude.tags=
-```
+| 타입 | 역할 |
+|------|------|
+| `LeaderElectionProperties` | `leader.*` 설정을 바인딩하고 `leaseTime >= waitTime`을 검증합니다. |
+| `LeaderElectionConfig` | Redis, blocking elector, listening wrapper, suspend elector를 구성합니다. |
+| `LeaderScheduledJobService` | 현재 인스턴스가 lock을 획득한 경우에만 등록된 `LeaderGuardedJob`을 실행합니다. |
+| `LeaderGuardedJob` | exactly-one-instance 실행이 필요한 job의 marker contract입니다. |
+| `CacheWarmupJob`, `StaleWorkflowCleanupJob` | 실제 scheduled job 예제입니다. |
+| `LeaderEventListenerService` | elected, revoked, skipped event를 집계하고 로그로 남깁니다. |
+| `SuspendLeaderService` | coroutine-first `runIfLeader` 예제입니다. |
 
 ## 설정
 
@@ -114,23 +52,52 @@ jobs.forEach { job ->
 leader:
   redis:
     url: redis://localhost:6379
-  wait-time: 2s         # 락 획득 대기 시간
-  lease-time: 30s       # 락 TTL (Redis 키 만료 시간)
-  job-fixed-delay: PT10S  # 잡 실행 간격 (fixed delay)
+  wait-time: 2s
+  lease-time: 30s
+  job-fixed-delay: PT10S
 ```
 
-## 테스트 커버리지
+`lease-time`은 `wait-time` 이상이어야 하며, 잘못된 설정이면 모듈이 빠르게 실패합니다.
 
-| 테스트 | 클래스 | 설명 |
-|--------|--------|------|
-| T0 | `LeaderElectionContextTest` | Spring Boot 컨텍스트가 모든 리더 빈과 함께 로드됨 |
-| T1 | `LeaderElectionSingleRunnerTest` | 단일 인스턴스가 락을 획득하고 실행함 |
-| T2 | `ConcurrentLeaderElectionTest` | 3개 동시 인스턴스 중 정확히 1개만 당선 (`MultithreadingTester`) |
-| T3 | `LeaderElectionJobRecoveryTest` | 예외 후 락이 해제되고 재선출 성공 |
-| T4 | `MultiJobIndependenceTest` | lockName이 다른 두 잡이 모두 실행됨 |
-| T5 *(smoke)* | `LeaseExpiryTest` | 학습용: lease TTL 만료 동작 |
-| T6 *(smoke)* | `RedisFailureTest` | 학습용: Redis 장애 시 예외 전파 |
-| T7 | `LockReleaseTest` | `finally { unlock }`으로 즉시 재획득 가능 |
-| P3-11 | `DuplicateLockNameTest` | 중복 lockName은 시작 시 `IllegalStateException` 발생 |
-| P3-12 | `JobIsolationTest` | 실패한 잡이 후속 잡 실행을 막지 않음 |
-| P3-13 | `PropertiesValidationTest` | `leaseTime < waitTime`이면 `IllegalArgumentException` 발생 |
+## 실행
+
+```bash
+# localhost:6379 Redis 필요
+./gradlew :leader-leader-election:bootRun
+
+# 기본 테스트는 timing-sensitive smoke test를 제외합니다
+./gradlew :leader-leader-election:test
+
+# smoke test를 수동 또는 nightly에서 포함
+./gradlew :leader-leader-election:test -Djunit.jupiter.execution.exclude.tags=
+```
+
+## 테스트 맵
+
+| 테스트 클래스 | 보호하는 동작 |
+|---------------|--------------|
+| `LeaderElectionContextTest` | Spring context와 leader bean 구성이 정상 로드됩니다. |
+| `LeaderElectionSingleRunnerTest` | 단일 인스턴스가 lock-protected block을 획득하고 실행합니다. |
+| `ConcurrentLeaderElectionTest` | 동시 contender 중 정확히 하나의 winner만 나옵니다. |
+| `LeaderElectionJobRecoveryTest` | 예외 후 lock이 해제되어 이후 재선출이 가능합니다. |
+| `MultiJobIndependenceTest` | 서로 다른 lock name이 job을 분리합니다. |
+| `DuplicateLockNameTest` | 중복 job lock name은 빠르게 실패합니다. |
+| `JobIsolationTest` | 실패한 job이 후속 job 실행을 막지 않습니다. |
+| `PropertiesValidationTest` | 잘못된 duration 순서를 거부합니다. |
+| `LeaderEventListenerTest` | listener와 Flow event observation이 연결되어 있습니다. |
+| `SuspendLeaderServiceTest` | coroutine leader election 경로가 정상 실행됩니다. |
+| `LeaseExpiryTest`, `RedisFailureTest` | TTL과 Redis 장애 같은 timing-sensitive smoke 동작을 확인합니다. |
+
+## 의존성
+
+```kotlin
+implementation(libs.bluetape4k.leader.core)
+implementation(libs.bluetape4k.leader.redis.lettuce)
+implementation(libs.lettuce.core)
+implementation(libs.bluetape4k.logging)
+implementation(libs.spring.boot.autoconfigure.lib)
+implementation(libs.spring.boot.starter.actuator)
+testImplementation(libs.bluetape4k.testcontainers)
+testImplementation(libs.bluetape4k.junit5)
+testImplementation(libs.bluetape4k.assertions)
+```

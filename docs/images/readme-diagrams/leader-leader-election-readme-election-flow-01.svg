@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="700" viewBox="0 0 1480 700" role="img" aria-label="Leader election flow diagram">
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/></marker>
+    <marker id="arrowRed" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#DC2626"/></marker>
+    <marker id="arrowSlate" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#64748B"/></marker>
+    <style>
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.cardTitle{font-family:"Architects Daughter";font-size:27px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}.line{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+    </style>
+  </defs>
+  <rect class="canvas" width="1480" height="700"/>
+  <rect class="frame" x="24" y="24" width="1432" height="652" rx="24"/>
+  <text class="title" x="740" y="66" text-anchor="middle">Election and guarded job flow</text>
+  <text class="subtitle" x="740" y="94" text-anchor="middle">Concurrent instances attempt the same Redis lock; the winner executes the job and every attempt emits observable election events.</text>
+
+  <g filter="url(#shadow)">
+    <rect x="82" y="144" width="224" height="96" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
+    <text class="cardTitle" x="194" y="181" text-anchor="middle">Instance A</text>
+    <text class="cardText" x="194" y="208" text-anchor="middle">LeaderScheduledJob</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="82" y="302" width="224" height="96" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
+    <text class="cardTitle" x="194" y="339" text-anchor="middle">Instance B</text>
+    <text class="cardText" x="194" y="366" text-anchor="middle">LeaderScheduledJob</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="82" y="460" width="224" height="96" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
+    <text class="cardTitle" x="194" y="497" text-anchor="middle">Instance C</text>
+    <text class="cardText" x="194" y="524" text-anchor="middle">LeaderScheduledJob</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="438" y="286" width="238" height="128" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="557" y="326" text-anchor="middle">runIfLeader</text>
+    <text class="cardText" x="557" y="356" text-anchor="middle">lockName per job</text>
+    <text class="cardText" x="557" y="380" text-anchor="middle">waitTime + leaseTime</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="804" y="274" width="212" height="152" rx="16" fill="#FFF1F2" stroke="#DC2626" stroke-width="1.8"/>
+    <g transform="translate(875 298)">
+      <path d="M 35 0 L 70 18 L 35 36 L 0 18 Z" fill="#DC2626"/>
+      <path d="M 35 22 L 70 40 L 35 58 L 0 40 Z" fill="#EF4444"/>
+      <path d="M 35 44 L 70 62 L 35 80 L 0 62 Z" fill="#F87171"/>
+      <path d="M 35 0 L 70 18 L 35 36 L 0 18 Z" fill="none" stroke="#991B1B" stroke-width="2"/>
+      <path d="M 35 22 L 70 40 L 35 58 L 0 40 Z" fill="none" stroke="#991B1B" stroke-width="2"/>
+      <path d="M 35 44 L 70 62 L 35 80 L 0 62 Z" fill="none" stroke="#991B1B" stroke-width="2"/>
+    </g>
+    <text class="cardTitle" x="910" y="400" text-anchor="middle">Redis lock</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="1146" y="148" width="238" height="108" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
+    <text class="cardTitle" x="1265" y="188" text-anchor="middle">Winner</text>
+    <text class="cardText" x="1265" y="216" text-anchor="middle">executes job body</text>
+    <text class="cardText" x="1265" y="240" text-anchor="middle">then releases lock</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1146" y="326" width="238" height="108" rx="16" fill="#F8FAFC" stroke="#64748B" stroke-width="1.7"/>
+    <text class="cardTitle" x="1265" y="366" text-anchor="middle">Skipped</text>
+    <text class="cardText" x="1265" y="394" text-anchor="middle">runIfLeader returns null</text>
+    <text class="cardText" x="1265" y="418" text-anchor="middle">job does not run</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1146" y="504" width="238" height="108" rx="16" fill="#FEF2F2" stroke="#DC2626" stroke-width="1.7"/>
+    <text class="cardTitle" x="1265" y="544" text-anchor="middle">Events</text>
+    <text class="cardText" x="1265" y="572" text-anchor="middle">Elected, Revoked, Skipped</text>
+    <text class="cardText" x="1265" y="596" text-anchor="middle">listener + Flow collector</text>
+  </g>
+
+  <path class="line" d="M 306 192 L 382 192 L 382 330 L 438 330" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 306 350 L 438 350" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 306 508 L 382 508 L 382 370 L 438 370" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 676 350 L 804 350" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 1016 350 L 1082 350 L 1082 202 L 1146 202" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 1016 350 L 1084 350 L 1084 380 L 1146 380" stroke="#64748B" marker-end="url(#arrowSlate)"/>
+  <path class="line" d="M 910 426 L 910 558 L 1146 558" stroke="#DC2626" marker-end="url(#arrowRed)"/>
+</svg>
