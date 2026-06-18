@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1700" height="940" viewBox="0 0 1700 940">
+  <defs>
+    <style>
+      .canvas { fill: #fbfcff; }
+      .title { font-family: "Architects Daughter", "Comic Sans MS", cursive; font-size: 42px; fill: #102033; }
+      .subtitle { font-family: "Comic Mono", "SFMono-Regular", monospace; font-size: 16px; fill: #536270; }
+      .entity-title { font-family: "Architects Daughter", "Comic Sans MS", cursive; font-size: 29px; fill: #102033; }
+      .col { font-family: "Comic Mono", "SFMono-Regular", monospace; font-size: 20px; fill: #243447; }
+      .col-muted { font-family: "Comic Mono", "SFMono-Regular", monospace; font-size: 17px; fill: #5a6876; }
+      .note { font-family: "Comic Mono", "SFMono-Regular", monospace; font-size: 16px; fill: #4c5968; }
+      .table { fill: #ffffff; stroke: #2f6df6; stroke-width: 2.4; }
+      .header { fill: #eaf3ff; stroke: #2f6df6; stroke-width: 2.4; }
+      .row { stroke: #d9e4f2; stroke-width: 1.6; }
+      .rel { fill: none; stroke: #18a558; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+      .note-card { fill: #fff8eb; stroke: #f07d22; stroke-width: 2; }
+    </style>
+  </defs>
+  <rect class="canvas" x="0" y="0" width="1700" height="940"/>
+  <rect x="24" y="24" width="1652" height="892" rx="22" fill="#ffffff" stroke="#d7e0eb" stroke-width="2"/>
+  <text class="title" x="850" y="78" text-anchor="middle">R2DBC sample schema</text>
+  <text class="subtitle" x="850" y="108" text-anchor="middle">schema.sql creates posts, comments, and members for the coroutine R2DBC sample.</text>
+
+  <g transform="translate(100 185)">
+    <rect class="table" width="430" height="330" rx="12"/>
+    <rect class="header" width="430" height="72" rx="12"/>
+    <path class="row" d="M 0 60 L 430 60 M 0 118 L 430 118 M 0 176 L 430 176 M 0 234 L 430 234"/>
+    <text class="entity-title" x="215" y="45" text-anchor="middle">POSTS</text>
+    <text class="col" x="30" y="105">PK</text><text class="col" x="95" y="105">id</text><text class="col-muted" x="280" y="105">BIGINT IDENTITY</text>
+    <text class="col" x="95" y="163">title</text><text class="col-muted" x="280" y="163">VARCHAR(255)</text>
+    <text class="col" x="95" y="221">content</text><text class="col-muted" x="280" y="221">VARCHAR(1024)</text>
+  </g>
+
+  <g transform="translate(635 185)">
+    <rect class="table" width="430" height="330" rx="12"/>
+    <rect class="header" width="430" height="72" rx="12"/>
+    <path class="row" d="M 0 60 L 430 60 M 0 118 L 430 118 M 0 176 L 430 176 M 0 234 L 430 234"/>
+    <text class="entity-title" x="215" y="45" text-anchor="middle">COMMENTS</text>
+    <text class="col" x="30" y="105">PK</text><text class="col" x="95" y="105">id</text><text class="col-muted" x="280" y="105">BIGINT IDENTITY</text>
+    <text class="col" x="30" y="163">REF</text><text class="col" x="95" y="163">post_id</text><text class="col-muted" x="280" y="163">BIGINT</text>
+    <text class="col" x="95" y="221">content</text><text class="col-muted" x="280" y="221">VARCHAR(1024)</text>
+  </g>
+
+  <g transform="translate(1170 185)">
+    <rect class="table" width="430" height="390" rx="12"/>
+    <rect class="header" width="430" height="72" rx="12"/>
+    <path class="row" d="M 0 60 L 430 60 M 0 118 L 430 118 M 0 176 L 430 176 M 0 234 L 430 234 M 0 292 L 430 292"/>
+    <text class="entity-title" x="215" y="45" text-anchor="middle">MEMBERS</text>
+    <text class="col" x="30" y="105">PK</text><text class="col" x="95" y="105">id</text><text class="col-muted" x="280" y="105">BIGINT IDENTITY</text>
+    <text class="col" x="95" y="163">name</text><text class="col-muted" x="280" y="163">VARCHAR(255)</text>
+    <text class="col" x="95" y="221">age</text><text class="col-muted" x="280" y="221">INT</text>
+    <text class="col" x="95" y="279">email</text><text class="col-muted" x="280" y="279">VARCHAR(255)</text>
+  </g>
+
+  <path class="rel" d="M 530 350 L 623 350"/>
+  <path class="rel" d="M 530 330 L 530 370"/>
+  <path class="rel" d="M 623 350 L 598 330 M 623 350 L 598 350 M 623 350 L 598 370"/>
+
+  <rect class="note-card" x="330" y="660" width="520" height="90" rx="12"/>
+  <text class="note" x="590" y="695" text-anchor="middle">comments.post_id is queried as a logical relationship.</text>
+  <text class="note" x="590" y="724" text-anchor="middle">schema.sql does not declare an FK constraint.</text>
+  <rect class="note-card" x="920" y="660" width="520" height="90" rx="12"/>
+  <text class="note" x="1180" y="695" text-anchor="middle">members is independent and is covered by</text>
+  <text class="note" x="1180" y="724" text-anchor="middle">CoroutineCrudRepository&lt;Member, Long&gt;.</text>
+</svg>
