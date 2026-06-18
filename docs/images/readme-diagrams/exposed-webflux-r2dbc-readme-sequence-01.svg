@@ -1,0 +1,152 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1840" height="1320" viewBox="0 0 1840 1320" role="img" aria-labelledby="title desc">
+  <title id="title">exposed/webflux-r2dbc order placement sequence</title>
+  <desc id="desc">Sequence showing a WebFlux coroutine request entering a service-owned Exposed R2DBC suspend transaction, locking product rows, writing order lines, updating stock, and returning stock conflicts.</desc>
+  <defs>
+    <style>
+      svg{background:#f8fafc}
+      .title{font-family:"Architects Daughter";font-size:40px;fill:#263238}
+      .subtitle,.msg,.note,.footer{font-family:"Comic Mono";fill:#36464f}
+      .subtitle{font-size:18px}.msg{font-size:14px}.note{font-size:13px}.footer{font-size:14px;fill:#60727d}
+      .participant{font-family:"Architects Daughter";font-size:22px;fill:#1f3138}
+      .role{font-family:"Comic Mono";font-size:13px;fill:#546a73}
+      .frame{fill:#fbfcf8;stroke:#41545d;stroke-width:3}
+      .header{fill:#ffffff;stroke:#546e7a;stroke-width:2}
+      .svcHeader{fill:#eefaf1;stroke:#6d9978;stroke-width:2}
+      .txHeader{fill:#f2f6ff;stroke:#667eb9;stroke-width:2}
+      .repoHeader{fill:#fff7e8;stroke:#9c6f27;stroke-width:2}
+      .dbHeader{fill:#fffaf2;stroke:#8c6f33;stroke-width:2}
+      .lifeline{stroke:#9aaab1;stroke-width:2;stroke-dasharray:7 8}
+      .activation{fill:#e6f2ec;stroke:#5b7e67;stroke-width:1.5}
+      .txActivation{fill:#edf2ff;stroke:#667eb9;stroke-width:1.5}
+      .repoActivation{fill:#fff7e8;stroke:#9c6f27;stroke-width:1.5}
+      .dbActivation{fill:#fff0d8;stroke:#8c6f33;stroke-width:1.5}
+      .call{fill:none;stroke:#3f7d9c;stroke-width:3;marker-end:url(#arrowCall)}
+      .tx{fill:none;stroke:#667eb9;stroke-width:3;marker-end:url(#arrowTx)}
+      .repo{fill:none;stroke:#9c6f27;stroke-width:3;marker-end:url(#arrowRepo)}
+      .db{fill:none;stroke:#8c6f33;stroke-width:3;marker-end:url(#arrowDb)}
+      .return{fill:none;stroke:#8f795b;stroke-width:2.5;stroke-dasharray:8 6;marker-end:url(#arrowReturn)}
+      .error{fill:none;stroke:#b75c55;stroke-width:3;marker-end:url(#arrowError)}
+      .branch{fill:none;stroke:#78909c;stroke-width:3;stroke-dasharray:12 7}
+      .branchDivider{stroke:#78909c;stroke-width:3;stroke-dasharray:12 8}
+      .branchGood{fill:#eef7f0;stroke:#6e8f4f;stroke-width:1.8}
+      .branchBad{fill:#fff0ef;stroke:#b75c55;stroke-width:1.8}
+      .label{fill:#ffffff;stroke:#d7e0e4;stroke-width:1.5}
+      .label.callLabel{stroke:#9cc2d1}.label.txLabel{stroke:#a9b8e0}.label.repoLabel{stroke:#d0aa6a}.label.dbLabel{stroke:#cba76c}.label.returnLabel{stroke:#c8b38f}.label.errorLabel{stroke:#d99a94}
+      .badge{stroke-width:1.8}
+      .badge.callBadge{fill:#eaf4f8;stroke:#3f7d9c}.badge.txBadge{fill:#edf2ff;stroke:#667eb9}.badge.repoBadge{fill:#fff7e8;stroke:#9c6f27}.badge.dbBadge{fill:#fff0d8;stroke:#8c6f33}.badge.returnBadge{fill:#fff7e8;stroke:#8f795b}.badge.errorBadge{fill:#fff0ef;stroke:#b75c55}
+      .badgeText{font-family:"Comic Mono";font-size:12px;font-weight:700}
+      .msg.callText,.badgeText.callText{fill:#2f6f8e}.msg.txText,.badgeText.txText{fill:#5269a8}.msg.repoText,.badgeText.repoText{fill:#7b581f}.msg.dbText,.badgeText.dbText{fill:#7a5f24}.msg.returnText,.badgeText.returnText{fill:#755d3d}.msg.errorText,.badgeText.errorText{fill:#a24742}
+    </style>
+    <marker id="arrowCall" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#3f7d9c"/></marker>
+    <marker id="arrowTx" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#667eb9"/></marker>
+    <marker id="arrowRepo" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#9c6f27"/></marker>
+    <marker id="arrowDb" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#8c6f33"/></marker>
+    <marker id="arrowReturn" markerUnits="userSpaceOnUse" markerWidth="13.5" markerHeight="13.5" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#8f795b"/></marker>
+    <marker id="arrowError" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#b75c55"/></marker>
+    <g id="smallDbIcon">
+      <path d="M10 18v22c0 6 32 6 32 0V18" fill="#fff0d8" stroke="#8c6f33" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M10 29c0 6 32 6 32 0" fill="none" stroke="#8c6f33" stroke-width="2.4" stroke-linecap="round"/>
+      <ellipse cx="26" cy="18" rx="16" ry="6" fill="#fff0d8" stroke="#8c6f33" stroke-width="3"/>
+    </g>
+  </defs>
+
+  <rect x="24" y="24" width="1792" height="1272" rx="20" class="frame"/>
+  <text x="920" y="78" text-anchor="middle" class="title">R2DBC Order Placement Flow</text>
+  <text x="920" y="108" text-anchor="middle" class="subtitle">The service opens one suspendTransaction; Flow results are collected inside the transaction boundary.</text>
+
+  <rect x="60" y="150" width="150" height="68" rx="10" class="header"/>
+  <text x="135" y="179" text-anchor="middle" class="participant">Client</text>
+  <text x="135" y="201" text-anchor="middle" class="role">HTTP caller</text>
+  <rect x="250" y="150" width="220" height="68" rx="10" class="header"/>
+  <text x="360" y="179" text-anchor="middle" class="participant">OrderController</text>
+  <text x="360" y="201" text-anchor="middle" class="role">suspend endpoint</text>
+  <rect x="545" y="150" width="210" height="68" rx="10" class="svcHeader"/>
+  <text x="650" y="179" text-anchor="middle" class="participant">OrderService</text>
+  <text x="650" y="201" text-anchor="middle" class="role">transaction owner</text>
+  <rect x="835" y="150" width="230" height="68" rx="10" class="txHeader"/>
+  <text x="950" y="179" text-anchor="middle" class="participant">R2DBC TX</text>
+  <text x="950" y="201" text-anchor="middle" class="role">suspendTransaction</text>
+  <rect x="1135" y="150" width="250" height="68" rx="10" class="repoHeader"/>
+  <text x="1260" y="179" text-anchor="middle" class="participant">Repositories</text>
+  <text x="1260" y="201" text-anchor="middle" class="role">Flow + suspend queries</text>
+  <rect x="1470" y="150" width="220" height="68" rx="10" class="dbHeader"/>
+  <use href="#smallDbIcon" x="1480" y="161"/>
+  <text x="1585" y="179" text-anchor="middle" class="participant">PostgreSQL</text>
+  <text x="1585" y="201" text-anchor="middle" class="role">R2DBC connection</text>
+
+  <line x1="135" y1="218" x2="135" y2="1180" class="lifeline"/>
+  <line x1="360" y1="218" x2="360" y2="1180" class="lifeline"/>
+  <line x1="650" y1="218" x2="650" y2="1180" class="lifeline"/>
+  <line x1="950" y1="218" x2="950" y2="1180" class="lifeline"/>
+  <line x1="1260" y1="218" x2="1260" y2="1180" class="lifeline"/>
+  <line x1="1585" y1="218" x2="1585" y2="1180" class="lifeline"/>
+
+  <rect x="642" y="330" width="16" height="805" rx="8" class="activation"/>
+  <rect x="942" y="415" width="16" height="650" rx="8" class="txActivation"/>
+  <rect x="1252" y="500" width="16" height="480" rx="8" class="repoActivation"/>
+  <rect x="1577" y="565" width="16" height="380" rx="8" class="dbActivation"/>
+
+  <path class="call" d="M 135 300 H 360"/>
+  <rect class="label callLabel" x="80" y="266" width="230" height="36" rx="18"/>
+  <circle class="badge callBadge" cx="106" cy="284" r="14"/><text class="badgeText callText" x="106" y="289" text-anchor="middle">1</text>
+  <text class="msg callText" x="155" y="289">POST /orders</text>
+
+  <path class="call" d="M 360 350 H 650"/>
+  <rect class="label callLabel" x="392" y="316" width="250" height="36" rx="18"/>
+  <circle class="badge callBadge" cx="418" cy="334" r="14"/><text class="badgeText callText" x="418" y="339" text-anchor="middle">2</text>
+  <text class="msg callText" x="452" y="339">placeOrder(request)</text>
+
+  <path class="tx" d="M 650 430 H 950"/>
+  <rect class="label txLabel" x="690" y="374" width="300" height="36" rx="18"/>
+  <circle class="badge txBadge" cx="716" cy="392" r="14"/><text class="badgeText txText" x="716" y="397" text-anchor="middle">3</text>
+  <text class="msg txText" x="750" y="397">suspendTransaction(db)</text>
+
+  <path class="repo" d="M 950 510 H 1260"/>
+  <rect class="label repoLabel" x="994" y="456" width="285" height="36" rx="18"/>
+  <circle class="badge repoBadge" cx="1020" cy="474" r="14"/><text class="badgeText repoText" x="1020" y="479" text-anchor="middle">4</text>
+  <text class="msg repoText" x="1054" y="479">orderRepo.insert()</text>
+
+  <path class="db" d="M 1260 565 H 1585"/>
+  <rect class="label dbLabel" x="1302" y="528" width="282" height="36" rx="18"/>
+  <circle class="badge dbBadge" cx="1328" cy="546" r="14"/><text class="badgeText dbText" x="1328" y="551" text-anchor="middle">5</text>
+  <text class="msg dbText" x="1362" y="551">INSERT orders row</text>
+
+  <path class="tx" d="M 650 640 H 950"/>
+  <rect class="label txLabel" x="720" y="586" width="405" height="36" rx="18"/>
+  <circle class="badge txBadge" cx="746" cy="604" r="14"/><text class="badgeText txText" x="746" y="609" text-anchor="middle">6</text>
+  <text class="msg txText" x="780" y="609">sort request lines by productId</text>
+
+  <rect x="70" y="690" width="1665" height="310" rx="18" class="branch"/>
+  <rect x="96" y="716" width="330" height="34" rx="17" class="branchGood"/>
+  <text x="118" y="738" class="note">for each sorted line: stock available</text>
+  <path class="repo" d="M 950 780 H 1260"/>
+  <rect class="label repoLabel" x="986" y="742" width="330" height="36" rx="18"/>
+  <circle class="badge repoBadge" cx="1012" cy="760" r="14"/><text class="badgeText repoText" x="1012" y="765" text-anchor="middle">7</text>
+  <text class="msg repoText" x="1046" y="765">productRepo.findByIdForUpdate()</text>
+  <path class="db" d="M 1260 835 H 1585"/>
+  <rect class="label dbLabel" x="1305" y="797" width="305" height="36" rx="18"/>
+  <circle class="badge dbBadge" cx="1331" cy="815" r="14"/><text class="badgeText dbText" x="1331" y="820" text-anchor="middle">8</text>
+  <text class="msg dbText" x="1365" y="820">SELECT product FOR UPDATE</text>
+  <path class="return" d="M 1585 908 H 1260"/>
+  <rect class="label returnLabel" x="1325" y="854" width="250" height="36" rx="18"/>
+  <circle class="badge returnBadge" cx="1351" cy="872" r="14"/><text class="badgeText returnText" x="1351" y="877" text-anchor="middle">9</text>
+  <text class="msg returnText" x="1385" y="877">locked row + stock</text>
+  <path class="db" d="M 1260 950 H 1585"/>
+  <rect class="label dbLabel" x="1298" y="912" width="330" height="36" rx="18"/>
+  <circle class="badge dbBadge" cx="1324" cy="930" r="14"/><text class="badgeText dbText" x="1324" y="935" text-anchor="middle">10</text>
+  <text class="msg dbText" x="1362" y="935">INSERT line + UPDATE stock</text>
+
+  <line x1="70" y1="1000" x2="1735" y2="1000" class="branchDivider"/>
+  <rect x="96" y="1018" width="220" height="34" rx="17" class="branchBad"/>
+  <text x="118" y="1040" class="note">else: stock short</text>
+  <path class="error" d="M 950 1088 H 650"/>
+  <rect class="label errorLabel" x="675" y="1034" width="360" height="36" rx="18"/>
+  <circle class="badge errorBadge" cx="701" cy="1052" r="14"/><text class="badgeText errorText" x="701" y="1057" text-anchor="middle">11</text>
+  <text class="msg errorText" x="735" y="1057">throw InsufficientStockException</text>
+  <path class="error" d="M 650 1142 H 360"/>
+  <rect class="label errorLabel" x="410" y="1090" width="265" height="36" rx="18"/>
+  <circle class="badge errorBadge" cx="436" cy="1108" r="14"/><text class="badgeText errorText" x="436" y="1113" text-anchor="middle">12</text>
+  <text class="msg errorText" x="470" y="1113">409 stock conflict</text>
+
+  <text x="920" y="1248" text-anchor="middle" class="footer">Repositories are intentionally thin: the service decides when Flow is collected and when the R2DBC transaction ends.</text>
+</svg>

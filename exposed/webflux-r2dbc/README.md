@@ -2,76 +2,54 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+`exposed/webflux-r2dbc` is a Spring WebFlux example that uses Kotlin coroutines with Exposed R2DBC.
 
-This example exercises **exposed/webflux-r2dbc** as a runnable Exposed data access workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
-
-## Sequence Diagram
-
-WebFlux + Coroutines + Exposed R2DBC — fully reactive/coroutine data access.
+The module keeps transaction ownership in the service layer. Repositories expose `Flow<T>` reads and `suspend` writes, while services wrap those calls with `suspendTransaction(db = r2dbcDatabase)`. The only JDBC path is startup schema initialization through Hikari.
 
 ## Architecture
 
-![exposed/webflux-r2dbc architecture diagram](../../docs/images/readme-diagrams/exposed-webflux-r2dbc-architecture-01.png)
+![exposed/webflux-r2dbc architecture](../../docs/images/readme-diagrams/exposed-webflux-r2dbc-readme-architecture-01.png)
 
-## Used bluetape4k Features
+| Area | Implementation | Reader contract |
+|---|---|---|
+| Web API | `AuthorController`, `BookController`, `ProductController`, and `OrderController` expose suspend WebFlux endpoints. | Request handling stays coroutine-first. |
+| R2DBC runtime | `ExposedR2dbcConfig` creates `ConnectionFactoryOptions`, a `ConnectionPool`, and `R2dbcDatabase`. | Exposed R2DBC work runs through the pool-backed database with `Dispatchers.IO`. |
+| Service transaction boundary | `AuthorService`, `BookService`, and `OrderService` call `suspendTransaction(db = db)`. | Flow reads are collected inside the transaction before writes on the same connection. |
+| Repository primitives | Repositories return `Flow<DTO>` for selects and provide suspend insert/update/delete methods. | Repositories stay thin and do not decide transaction lifetime. |
+| Schema initialization | `DatabaseInitializer` converts the R2DBC URL to JDBC and uses Hikari once at startup. | Blocking JDBC is limited to schema creation, not request processing. |
 
-| Feature | Artifact | Code location | Benefit |
-|---------|----------|---------------|---------|
-| `KLoggingChannel` | `bluetape4k-logging` | Every companion object | Coroutine-aware structured logging (MDC propagation) |
-| `bluetape4k-coroutines` | `bluetape4k-coroutines` | Service, concurrency tests | Coroutine scope helpers and Flow utilities |
-| `Fakers.faker` | `bluetape4k-junit5` | Test base classes | Deterministic fake data generation |
-| `shouldBeEqualTo` matchers | `bluetape4k-assertions` | All test classes | Readable Kotlin-idiomatic assertions |
-| `PostgreSQLServer.Launcher.postgres` | `bluetape4k-testcontainers` | `AbstractWebfluxR2dbcTest` | Singleton Testcontainers PostgreSQL — started once, shared across all tests |
+## Order Placement Flow
 
-## bluetape4k Before / After
+![exposed/webflux-r2dbc order placement sequence](../../docs/images/readme-diagrams/exposed-webflux-r2dbc-readme-sequence-01.png)
 
-### Coroutine-safe R2DBC transactions with Exposed
+`OrderService.placeOrder()` opens one coroutine R2DBC transaction. Inside that transaction it inserts the order header, sorts request lines by `productId`, locks each product row with `FOR UPDATE`, writes the order line, and decrements stock.
 
-```kotlin
-// Before — Reactor chain: verbose, no structured concurrency
-fun findAll(): Flux<Author> =
-    Mono.fromCallable { db.transaction { AuthorTable.selectAll().toList() } }
-        .flatMapMany { Flux.fromIterable(it) }
-        .subscribeOn(Schedulers.boundedElastic())
+If stock is short, `InsufficientStockException` is thrown inside the same `suspendTransaction` scope and WebFlux returns a conflict response through `GlobalExceptionHandler`.
 
-// After — bluetape4k suspendTransaction: idiomatic coroutine, Flow-aware
-fun findAll(): Flow<Author> = flow {
-    suspendTransaction(db = db) {
-        AuthorTable.selectAll()
-            .map { it.toAuthor() }
-            .forEach { emit(it) }
-    }
-}
-```
+## Schema
 
-### Testcontainers singleton pattern
+![exposed/webflux-r2dbc schema ERD](../../docs/images/readme-diagrams/exposed-webflux-r2dbc-readme-erd-01.png)
 
-```kotlin
-// Before — new container per test class → slow, resource-heavy
-@Testcontainers
-abstract class AbstractTest {
-    @Container
-    val postgres = PostgreSQLContainer("postgres:15")
-}
+| Table | Purpose |
+|---|---|
+| `authors`, `books` | Author/book CRUD uses plain Exposed `Table` definitions and service-owned R2DBC transactions. |
+| `products` | Product stock is locked and decremented during order placement. |
+| `orders`, `order_lines` | Order placement writes the order header and line rows in the same R2DBC transaction. |
 
-// After — bluetape4k singleton launcher: one container for the entire test suite
-abstract class AbstractWebfluxR2dbcTest {
-    companion object {
-        val postgres = PostgreSQLServer.Launcher.postgres   // shared singleton
-    }
-}
-```
+## Key Code Paths
 
-## Key Patterns
-
-- **Repository layer**: `fun findAll(): Flow<T>`, `suspend fun findById(): T?` — no TX at repo level.
-- **Service layer**: `suspendTransaction(db = db) { repo.findAll().toList() }` — Flow consumed INSIDE TX.
-- **Schema init**: One-shot JDBC via HikariDataSource + `try/finally { ds.close() }` at startup.
-- **Concurrent test**: `runBlocking { coroutineScope { List(N) { async(Dispatchers.IO) { ... } }.awaitAll() } }`.
-- **Open-cursor fix**: `.toList()` before mutations — never stream Flow while issuing deletes on same connection.
+| File | What to inspect |
+|---|---|
+| `config/ExposedR2dbcConfig.kt` | Pool-backed `R2dbcDatabase` and coroutine dispatcher configuration. |
+| `config/DatabaseInitializer.kt` | One-shot JDBC schema creation through Hikari. |
+| `author/service/*Service.kt` | `suspendTransaction` ownership and Flow collection rules. |
+| `order/service/OrderService.kt` | Product lock ordering, stock conflict, and order write transaction. |
+| `*/repository/*Repository.kt` | Thin Flow and suspend query primitives. |
+| `*/schema/*Table.kt` | Plain Exposed table definitions used by the ERD. |
 
 ## Running
+
+The application expects PostgreSQL at `r2dbc:postgresql://localhost:5432/exposedwebflux` with `postgres/postgres`.
 
 ```bash
 ./gradlew :exposed-webflux-r2dbc:bootRun
@@ -84,8 +62,8 @@ abstract class AbstractWebfluxR2dbcTest {
 ./gradlew :exposed-webflux-r2dbc:test
 ```
 
-| Test Class | Coverage |
-|-----------|---------|
-| `AuthorControllerTest` | Author + Book CRUD |
-| `OrderControllerTest` | Order place, cancel, 404/409 cases |
-| `ConcurrentPlaceOrderTest` | N=10 coroutines, stock=1 → 1 success + 9 conflicts (409) |
+| Test class | Coverage |
+|---|---|
+| `AuthorControllerTest` | Author and book CRUD endpoints. |
+| `OrderControllerTest` | Order placement, cancellation, 404, and stock-conflict cases. |
+| `ConcurrentPlaceOrderTest` | Concurrent coroutine requests where only one request can consume the last stock item. |
