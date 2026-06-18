@@ -1,154 +1,102 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1238" viewBox="0 0 1320 1238" role="img" aria-label="Gatling Load Testing Tutorial for Kotlin architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;gatling/virtualthread-simulation/src/main/kotlin/io/bluetape4k/workshop/gatling/KotlinGatlingApplication.kt&quot;,&quot;gatling/virtualthread-simulation/src/main/kotlin/io/bluetape4k/workshop/gatling/config/AsyncConfig.kt&quot;,&quot;gatling/virtualthread-simulation/src/main/kotlin/io/bluetape4k/workshop/gatling/config/TomcatConfig.kt&quot;,&quot;gatling/virtualthread-simulation/src/main/kotlin/io/bluetape4k/workshop/gatling/controller/AsyncTaskController.kt&quot;,&quot;gatling/virtualthread-simulation/src/main/kotlin/io/bluetape4k/workshop/gatling/controller/SyncTaskController.kt&quot;,&quot;gatling/virtualthread-simulation/src/main/kotlin/io/bluetape4k/workshop/gatling/service/AsyncTaskService.kt&quot;,&quot;gatling/virtualthread-simulation/src/main/kotlin/io/bluetape4k/workshop/gatling/service/SyncTaskService.kt&quot;,&quot;gatling/virtualthread-simulation/src/test/kotlin/io/bluetape4k/workshop/gatling/AbstractGatlingTest.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1700" height="980" viewBox="0 0 1700 980" role="img" aria-label="Gatling virtual thread simulation architecture">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
+    <filter id="shadow" x="-8%" y="-10%" width="116%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#5b7282" flood-opacity="0.15"/>
     </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
+    <marker id="blueArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#457b9d"/></marker>
+    <marker id="greenArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#5f8f5b"/></marker>
+    <marker id="goldArrow" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#a87332"/></marker>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .canvas { fill: #f7fafc; }
+      .frame { fill: #fffefd; stroke: #cdd8df; stroke-width: 2; }
+      .title { font-family: "Architects Daughter"; font-size: 38px; fill: #1d2b38; }
+      .subtitle { font-family: "Comic Mono"; font-size: 16px; fill: #516172; }
+      .layerTitle { font-family: "Architects Daughter"; font-size: 24px; fill: #263747; }
+      .cardTitle { font-family: "Architects Daughter"; font-size: 25px; fill: #1d2b38; }
+      .cardText { font-family: "Comic Mono"; font-size: 15px; fill: #42515f; }
+      .smallText { font-family: "Comic Mono"; font-size: 13px; fill: #566575; }
+      .layer { stroke-width: 1.6; }
+      .card { stroke-width: 2.2; filter: url(#shadow); }
+      .lineBlue { fill: none; stroke: #457b9d; stroke-width: 4.2; marker-end: url(#blueArrow); stroke-linecap: round; stroke-linejoin: round; }
+      .lineGreen { fill: none; stroke: #5f8f5b; stroke-width: 4.2; marker-end: url(#greenArrow); stroke-linecap: round; stroke-linejoin: round; }
+      .lineGold { fill: none; stroke: #a87332; stroke-width: 3.8; marker-end: url(#goldArrow); stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 9 8; }
+      .label { font-family: "Comic Mono"; font-size: 14px; font-weight: 700; }
+      .labelBox { fill: #ffffff; stroke-width: 1.4; }
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="1238"/>
-  <rect class="frame" x="16" y="16" width="1288" height="1206" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Gatling Load Testing Tutorial for Kotlin</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Gatling example runtime and module dependencies</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="380.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="340.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="288.0">Example Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="326.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="342.0">adapters</tspan></text>
-    </g>
-    <g class="layer" data-layer="service">
-      <rect x="46.0" y="512.0" width="1228.0" height="132.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="532.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="562.0">Application Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="600.0">services, domain</tspan><tspan class="layer-detail" x="151.0" y="616.0">rules, use cases</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="662.0" width="1228.0" height="366.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="682.0" width="174" height="326.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="829.0">Integration Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="867.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="883.0">adapters, helpers</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="1046.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="1066.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="1096.0">Runtime Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1126.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="1142.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="1158.0">JVM</tspan></text>
-    </g>
-    <g class="edge" data-edge="api2-&gt;service0" data-label="delegates">
-      <path d="M 424.0 474.0 L 424.0 503.0 L 424.0 532.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
-    </g>
-    <g class="edge" data-edge="service2-&gt;infra0" data-label="persists / publishes">
-      <path d="M 1096.0 624.0 L 1096.0 653.0 L 424.0 653.0 L 424.0 682.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 424.0 1008.0 L 424.0 1037.0 L 424.0 1066.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Kotlin Gatling | Application | application bootstrap">
-      <rect x="274.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="171.5">Kotlin Gatling</tspan><tspan class="node-title" x="424.0" y="195.5">Application</tspan><tspan class="node-detail" x="424.0" y="219.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry1" data-lines="Abstract Gatling Test | gatling">
-      <rect x="610.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="183.5">Abstract Gatling Test</tspan><tspan class="node-detail" x="760.0" y="207.5">gatling</tspan></text>
-    </g>
-    <g class="node" data-node="entry2" data-lines="Async Task Controller | Test | HTTP adapter">
-      <rect x="946.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="171.5">Async Task Controller</tspan><tspan class="node-title" x="1096.0" y="195.5">Test</tspan><tspan class="node-detail" x="1096.0" y="219.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="entry3" data-lines="Sync Task Controller | Test | HTTP adapter">
-      <rect x="274.0" y="258.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="295.5">Sync Task Controller</tspan><tspan class="node-title" x="424.0" y="319.5">Test</tspan><tspan class="node-detail" x="424.0" y="343.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api0" data-lines="Tomcat Config | configuration">
-      <rect x="610.0" y="265.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="307.5">Tomcat Config</tspan><tspan class="node-detail" x="760.0" y="331.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="api1" data-lines="Async Task Controller | HTTP adapter">
-      <rect x="946.0" y="265.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="307.5">Async Task Controller</tspan><tspan class="node-detail" x="1096.0" y="331.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api2" data-lines="Sync Task Controller | HTTP adapter">
-      <rect x="274.0" y="382.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="424.5">Sync Task Controller</tspan><tspan class="node-detail" x="424.0" y="448.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="service0" data-lines="Async Config | configuration">
-      <rect x="274.0" y="532.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="574.5">Async Config</tspan><tspan class="node-detail" x="424.0" y="598.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="service1" data-lines="Async Task Service | service component">
-      <rect x="610.0" y="532.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="574.5">Async Task Service</tspan><tspan class="node-detail" x="760.0" y="598.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="service2" data-lines="Sync Task Service | service component">
-      <rect x="946.0" y="532.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="574.5">Sync Task Service</tspan><tspan class="node-detail" x="1096.0" y="598.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Spring boot | autoconfigure lib | Framework Layer">
-      <rect x="274.0" y="682.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="719.5">Spring boot</tspan><tspan class="node-title" x="424.0" y="743.5">autoconfigure lib</tspan><tspan class="node-detail" x="424.0" y="767.5">Framework Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra1" data-lines="Spring boot | autoconfigure processor | Framework Layer">
-      <rect x="610.0" y="682.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="719.5">Spring boot</tspan><tspan class="node-title" x="760.0" y="743.5">autoconfigure processor</tspan><tspan class="node-detail" x="760.0" y="767.5">Framework Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra2" data-lines="Spring boot | configuration processor | Framework Layer">
-      <rect x="946.0" y="682.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="719.5">Spring boot</tspan><tspan class="node-title" x="1096.0" y="743.5">configuration processor</tspan><tspan class="node-detail" x="1096.0" y="767.5">Framework Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra3" data-lines="Spring boot devtools | Framework Layer">
-      <rect x="274.0" y="806.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="848.5">Spring boot devtools</tspan><tspan class="node-detail" x="424.0" y="872.5">Framework Layer</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k APIs">
-      <rect x="610.0" y="806.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="848.5">workshop</tspan><tspan class="node-detail" x="760.0" y="872.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="io | bluetape4k APIs">
-      <rect x="946.0" y="806.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="848.5">io</tspan><tspan class="node-detail" x="1096.0" y="872.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="jackson3 | bluetape4k APIs">
-      <rect x="274.0" y="916.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="958.5">jackson3</tspan><tspan class="node-detail" x="424.0" y="982.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="SQL / R2DBC | Runtime Dependencies">
-      <rect x="274.0" y="1066.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="1108.5">SQL / R2DBC</tspan><tspan class="node-detail" x="424.0" y="1132.5">Runtime Dependencies</tspan></text>
-    </g>
-    <g class="node" data-node="runtime1" data-lines="MongoDB | Runtime Dependencies">
-      <rect x="610.0" y="1066.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1108.5">MongoDB</tspan><tspan class="node-detail" x="760.0" y="1132.5">Runtime Dependencies</tspan></text>
-    </g>
-    <g class="node" data-node="runtime2" data-lines="AWS / S3 | Runtime Dependencies">
-      <rect x="946.0" y="1066.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="1108.5">AWS / S3</tspan><tspan class="node-detail" x="1096.0" y="1132.5">Runtime Dependencies</tspan></text>
-    </g>
-  </g>
+
+  <rect class="canvas" width="1700" height="980"/>
+  <rect class="frame" x="28" y="28" width="1644" height="924" rx="24"/>
+  <text class="title" x="850" y="84" text-anchor="middle">Gatling Virtual Thread Simulation</text>
+  <text class="subtitle" x="850" y="114" text-anchor="middle">Gatling drives sync and async delay endpoints on a virtual-thread enabled Spring Boot app.</text>
+
+  <rect class="layer" x="82" y="164" width="352" height="650" rx="18" fill="#eef6ff" stroke="#b5cfe8"/>
+  <text class="layerTitle" x="258" y="207" text-anchor="middle">Load Driver</text>
+
+  <rect class="layer" x="492" y="164" width="760" height="650" rx="18" fill="#f3fbf0" stroke="#b7d4ae"/>
+  <text class="layerTitle" x="872" y="207" text-anchor="middle">Spring Boot Runtime</text>
+
+  <rect class="layer" x="1310" y="164" width="308" height="650" rx="18" fill="#fff8ea" stroke="#dec289"/>
+  <text class="layerTitle" x="1464" y="207" text-anchor="middle">Execution Policy</text>
+
+  <rect class="card" x="136" y="266" width="244" height="132" rx="14" fill="#ffffff" stroke="#8eb4d6"/>
+  <text class="cardTitle" x="258" y="314" text-anchor="middle">SyncTaskSimulation</text>
+  <text class="cardText" x="258" y="346" text-anchor="middle">/sync/1, /sync/2</text>
+  <text class="smallText" x="258" y="374" text-anchor="middle">10 -> 20 closed users</text>
+
+  <rect class="card" x="136" y="500" width="244" height="132" rx="14" fill="#ffffff" stroke="#8eb4d6"/>
+  <text class="cardTitle" x="258" y="548" text-anchor="middle">AsyncTaskSimulation</text>
+  <text class="cardText" x="258" y="580" text-anchor="middle">/async/1, /async/2</text>
+  <text class="smallText" x="258" y="608" text-anchor="middle">10 -> 20 closed users</text>
+
+  <rect class="card" x="550" y="252" width="282" height="126" rx="14" fill="#ffffff" stroke="#91b884"/>
+  <text class="cardTitle" x="691" y="296" text-anchor="middle">Sync Controller</text>
+  <text class="cardText" x="691" y="328" text-anchor="middle">GET /sync/{seconds}</text>
+  <text class="smallText" x="691" y="354" text-anchor="middle">returns elapsed millis</text>
+
+  <rect class="card" x="910" y="252" width="282" height="126" rx="14" fill="#ffffff" stroke="#91b884"/>
+  <text class="cardTitle" x="1051" y="296" text-anchor="middle">Async Controller</text>
+  <text class="cardText" x="1051" y="328" text-anchor="middle">GET /async/{seconds}</text>
+  <text class="smallText" x="1051" y="354" text-anchor="middle">returns elapsed millis</text>
+
+  <rect class="card" x="550" y="470" width="282" height="112" rx="14" fill="#f9fbff" stroke="#9db4c8"/>
+  <text class="cardTitle" x="691" y="512" text-anchor="middle">SyncTaskService</text>
+  <text class="cardText" x="691" y="544" text-anchor="middle">Thread.sleep(seconds)</text>
+
+  <rect class="card" x="910" y="470" width="282" height="112" rx="14" fill="#f9fbff" stroke="#9db4c8"/>
+  <text class="cardTitle" x="1051" y="512" text-anchor="middle">AsyncTaskService</text>
+  <text class="cardText" x="1051" y="544" text-anchor="middle">@Async delay(seconds)</text>
+
+  <rect class="card" x="618" y="666" width="506" height="92" rx="14" fill="#fffdf6" stroke="#c39a56"/>
+  <text class="cardTitle" x="871" y="704" text-anchor="middle">WebTestClient Tests</text>
+  <text class="smallText" x="871" y="732" text-anchor="middle">random-port smoke checks for /sync/1 and /async/1</text>
+
+  <rect class="card" x="1352" y="260" width="224" height="132" rx="14" fill="#fffefa" stroke="#d2a85e"/>
+  <text class="cardTitle" x="1464" y="305" text-anchor="middle">TomcatConfig</text>
+  <text class="cardText" x="1464" y="337" text-anchor="middle">request executor</text>
+  <text class="smallText" x="1464" y="364" text-anchor="middle">virtual thread per task</text>
+
+  <rect class="card" x="1352" y="510" width="224" height="142" rx="14" fill="#fffefa" stroke="#d2a85e"/>
+  <text class="cardTitle" x="1464" y="555" text-anchor="middle">AsyncConfig</text>
+  <text class="cardText" x="1464" y="587" text-anchor="middle">applicationTaskExecutor</text>
+  <text class="smallText" x="1464" y="614" text-anchor="middle">virtual threads + MDC</text>
+
+  <path class="lineBlue" d="M 380 332 H 550"/>
+  <rect class="labelBox" x="404" y="290" width="92" height="30" rx="15" stroke="#8eb4d6"/>
+  <text class="label" x="450" y="310" text-anchor="middle" fill="#457b9d">sync load</text>
+
+  <path class="lineBlue" d="M 380 566 H 452 V 420 H 870 V 315 H 910"/>
+  <rect class="labelBox" x="470" y="382" width="102" height="30" rx="15" stroke="#8eb4d6"/>
+  <text class="label" x="521" y="402" text-anchor="middle" fill="#457b9d">async load</text>
+
+  <path class="lineGreen" d="M 691 378 V 470"/>
+  <path class="lineGreen" d="M 1051 378 V 470"/>
+  <path class="lineGold" d="M 1192 315 H 1352"/>
+  <rect class="labelBox" x="1218" y="273" width="100" height="30" rx="15" stroke="#d5a656"/>
+  <text class="label" x="1268" y="293" text-anchor="middle" fill="#a87332">requests</text>
+
+  <path class="lineGold" d="M 1192 526 H 1270 V 581 H 1352"/>
+  <rect class="labelBox" x="1216" y="548" width="100" height="30" rx="15" stroke="#d5a656"/>
+  <text class="label" x="1266" y="568" text-anchor="middle" fill="#a87332">@Async</text>
 </svg>
