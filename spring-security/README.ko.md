@@ -2,34 +2,39 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+이 디렉터리는 세 가지 Spring Security 예제를 묶습니다. Servlet MVC form login,
+WebFlux form login, WebFlux JWT resource server security입니다. 이 README는 전체
+지도이며, endpoint 수준의 세부 내용은 각 하위 모듈 README에서 확인합니다.
 
-이 예제는 **Spring Security Workshop**을 실행 가능한 Spring Security request protection 워크샵 조각으로 다룹니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 관찰에 초점을 맞춥니다.
+## 아키텍처
 
-## 아키텍처 다이어그램
+![Spring Security workshop architecture](../docs/images/readme-diagrams/spring-security-readme-architecture-01.png)
 
-![Spring Security Workshop Graphviz 아키텍처 다이어그램](../docs/images/readme-diagrams/spring-security-readme-architecture-01.png)
+모든 예제는 테스트와 로컬 실행을 위해 in-memory `user/password` 계정을 사용합니다.
+MVC와 WebFlux form-login 모듈은 `/user/**`를 `ROLE_USER`로 보호합니다. JWT 모듈은
+OAuth2 resource server JWT 지원으로 모든 exchange를 보호하고 token 발급 인프라를
+추가합니다.
 
-이 모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제에서 사용하는 런타임 의존성을 중심으로 구성됩니다. README와 코드를 비교할 때는 `io.bluetape4k.workshop.springsecurity` 패키지를 기준으로 삼습니다.
+## Modules
 
-## 시퀀스 다이어그램
+| Module | Stack | Security focus |
+|---|---|---|
+| [`mvc/hello`](mvc/hello) | Spring MVC | `SecurityFilterChain`, custom `/log-in`, in-memory user, protected `/user/index`. |
+| [`webflux/hello-security`](webflux/hello-security) | Spring WebFlux | `SecurityWebFilterChain`, reactive user details, custom `/log-in`, protected `/user/index`. |
+| [`webflux/jwt`](webflux/jwt) | Spring WebFlux + OAuth2 Resource Server | RSA 기반 `JwtEncoder`, `ReactiveJwtDecoder`, bearer-token error handling, authenticated API calls. |
 
-Spring Security를 사용하는 MVC와 WebFlux security 예제 모음입니다.
+## Common Request Shape
 
-## 하위 모듈 구성
+![Spring Security workshop filter flow](../docs/images/readme-diagrams/spring-security-readme-flow-01.png)
 
-## Security Filter Chain Flow
+Servlet과 reactive stack은 서로 다른 filter 구현을 사용하지만, 독자가 이해할 흐름은
+같습니다. Public route는 통과하고, protected route는 module에 맞는 인증 방식이
+필요하며, 인증되지 않은 요청은 security style에 따라 redirect되거나 reject됩니다.
 
-![Security Filter Chain diagram](../docs/images/readme-diagrams/spring-security-diagram-02.png)
+## 빌드와 테스트
 
-## 참고 자료
-
-### 문서
-
-* [Spring Security Reference](https://docs.spring.io/spring-security/reference/)
-
-### 예제
-
-* [spring-security-samples](https://github.com/spring-projects/spring-security-samples)
-* [Spring Security OAuth Resource Server demo](https://github.com/arthuroz/spring-security-multi-tenancy)
-* [Java Spring Security Example](https://github.com/Yoh0xFF/java-spring-security-example)
+```bash
+./gradlew :spring-security:mvc:hello:test
+./gradlew :spring-security:webflux:hello-security:test
+./gradlew :spring-security:webflux:jwt:test
+```
