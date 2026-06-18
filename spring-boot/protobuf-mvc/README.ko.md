@@ -2,19 +2,17 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
-
-이 예제는 **Module Protobuf in Spring Boot MVC**를 실행 가능한 Spring Boot 애플리케이션 기능 워크숍 조각으로 다룹니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄여 주는 라이브러리와 프레임워크 API 관찰에 초점을 둡니다.
+이 모듈은 Spring MVC content negotiation으로 generated Protobuf message를 반환하는 흐름을 보여줍니다.
+`CourseController`가 반환한 generated `Course` message는 `ProtobufHttpMessageConverter`가 직렬화하고,
+`ProtobufConverter`는 테스트와 도구에서 JSON 상호 변환을 확인할 때 사용합니다.
 
 ## 아키텍처 다이어그램
 
-![Module Protobuf in Spring Boot MVC Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-protobuf-mvc-readme-architecture-01.png)
+![Module Protobuf in Spring Boot MVC 아키텍처 다이어그램](../../docs/images/readme-diagrams/spring-boot-protobuf-mvc-readme-architecture-01.png)
 
-이 모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성을 중심으로 구성됩니다. README와 코드를 비교할 때는 `io.bluetape4k.workshop.springboot` 패키지를 기준으로 삼습니다.
+## 요청 흐름
 
-## 시퀀스 다이어그램
-
-![Module Protobuf in Spring Boot MVC sequence diagram](../../docs/images/readme-diagrams/spring-boot-protobuf-mvc-sequence-01.png)
+![Module Protobuf in Spring Boot MVC 요청 흐름 다이어그램](../../docs/images/readme-diagrams/spring-boot-protobuf-mvc-readme-flow-01.png)
 
 이 예제는 서버 데이터를 Protobuf 형식으로 보내고 받는 방법을 보여 줍니다.
 
