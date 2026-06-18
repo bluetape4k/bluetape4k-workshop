@@ -2,17 +2,18 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
-
-This example exercises **Problem Web Demo** as a runnable Spring Boot application feature workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+This module shows how WebFlux controllers return standardized RFC 9457 Problem
+Details when task-domain exceptions or Resilience4j failures occur. The important
+path is controller exception -> `RestApiExceptionHandler` -> Zalando
+`ProblemHandling` response.
 
 ## Architecture Diagram
 
-![Problem Web Demo architecture diagram](../../docs/images/readme-diagrams/spring-boot-problem-architecture-01.png)
+![Problem Web Demo architecture diagram](../../docs/images/readme-diagrams/spring-boot-problem-readme-architecture-01.png)
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.springboot` as the source of truth when comparing this README with the code.
+## Error Flow
 
-## Sequence Diagram
+![Problem Web Demo error flow diagram](../../docs/images/readme-diagrams/spring-boot-problem-readme-flow-01.png)
 
 This error-handling example combines Spring Boot 4, which includes built-in RFC 9457 Problem Details support, with Zalando Problem Spring Web.
 It uses bluetape4k `KLogging` and `bluetape4k-resilience4j` to convert Circuit Breaker related exceptions into the RFC 9457 format.
