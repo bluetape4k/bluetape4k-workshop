@@ -2,14 +2,29 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+This module contains small Kotlin implementations of classic design patterns. The examples are
+organized as source packages rather than a runnable application: each package keeps the pattern
+interfaces, concrete implementations, and a short README focused on how the Kotlin code models the
+pattern.
 
-This example exercises **Kotlin Design Patterns** as a runnable Kotlin language and coroutine patterns workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+## Pattern catalog
 
-## Architecture Diagram
+![Kotlin design pattern examples](../../docs/images/readme-diagrams/kotlin-design-patterns-readme-architecture-01.png)
 
-![Kotlin Design Patterns Graphviz architecture diagram](../../docs/images/readme-diagrams/kotlin-design-patterns-readme-architecture-01.png)
+## Implemented patterns
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.kotlin` as the source of truth when comparing this README with the code.
+| package | pattern | implementation focus |
+|---|---|---|
+| `abstractFactory/` | Abstract Factory | `FactoryMaker` selects an `ElfKingdomFactory` or `OrcKingdomFactory`; each factory creates a consistent `Castle`, `King`, and `Army` family |
+| `builder/` | Builder | `Hero.Builder` keeps required constructor data separate from optional fluent steps; `HeroDataClass` shows the Kotlin default-argument alternative |
+| `lazyLoading/` | Lazy Loading | `HolderNative`, `HolderThreadSafe`, `HolderKotlinLazy`, and coroutine `DeferredValue` defer expensive `Heavy` construction |
+| `singleton/` | Singleton | Enum, Kotlin `object`, eager singleton, lazy singleton, holder idiom, and lock-based variants are compared |
 
-## Implemented pattern
+## How to read the module
+
+1. Open the package README for the pattern you want.
+2. Compare the diagram with the source files in the same package.
+3. Use the Kotlin examples as implementation sketches, not framework infrastructure.
+
+The examples intentionally stay small so the pattern mechanics are visible without unrelated
+application code.

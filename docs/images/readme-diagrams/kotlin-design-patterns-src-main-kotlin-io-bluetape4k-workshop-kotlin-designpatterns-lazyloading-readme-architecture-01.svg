@@ -1,97 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="716" viewBox="0 0 1320 716" role="img" aria-label="lazyLoading architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/lazyLoading/Heavy.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/lazyLoading/HolderKotlinLazy.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/lazyLoading/HolderNative.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/lazyLoading/HolderThreadSafe.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/lazyLoading/coroutines/HeavyDeferred.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/lazyLoading/coroutines/HeavyDeferredValue.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1360" height="760" viewBox="0 0 1360 760" role="img" aria-label="Lazy Loading pattern diagram">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .canvas{fill:#F8FAFC}.frame{fill:#fff;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.label{font-family:"Architects Daughter";font-size:22px;fill:#172033}.cardTitle{font-family:"Architects Daughter";font-size:25px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}.line{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="716"/>
-  <rect class="frame" x="16" y="16" width="1288" height="684" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">lazyLoading</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Kotlin example runtime and module dependencies</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="132.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="164.0">Example Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="202.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="218.0">adapters</tspan></text>
-    </g>
-    <g class="layer" data-layer="service">
-      <rect x="46.0" y="264.0" width="1228.0" height="242.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="284.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="369.0">Application Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="407.0">services, domain</tspan><tspan class="layer-detail" x="151.0" y="423.0">rules, use cases</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="524.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="544.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="574.0">Runtime Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="604.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="620.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="636.0">JVM</tspan></text>
-    </g>
-    <g class="edge" data-edge="entry0-&gt;service0" data-label="starts">
-      <path d="M 760.0 226.0 L 760.0 255.0 L 424.0 255.0 L 424.0 284.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
-    </g>
-    <g class="edge" data-edge="service5-&gt;runtime0" data-label="runs on">
-      <path d="M 1096.0 486.0 L 1096.0 515.0 L 760.0 515.0 L 760.0 544.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="lazyLoading | Example Entrypoints">
-      <rect x="610.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="176.5">lazyLoading</tspan><tspan class="node-detail" x="760.0" y="200.5">Example Entrypoints</tspan></text>
-    </g>
-    <g class="node" data-node="service0" data-lines="Heavy | component">
-      <rect x="274.0" y="284.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="326.5">Heavy</tspan><tspan class="node-detail" x="424.0" y="350.5">component</tspan></text>
-    </g>
-    <g class="node" data-node="service1" data-lines="Holder Kotlin Lazy | component">
-      <rect x="610.0" y="284.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="326.5">Holder Kotlin Lazy</tspan><tspan class="node-detail" x="760.0" y="350.5">component</tspan></text>
-    </g>
-    <g class="node" data-node="service2" data-lines="Holder Native | component">
-      <rect x="946.0" y="284.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="326.5">Holder Native</tspan><tspan class="node-detail" x="1096.0" y="350.5">component</tspan></text>
-    </g>
-    <g class="node" data-node="service3" data-lines="Holder Thread Safe | component">
-      <rect x="274.0" y="394.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="436.5">Holder Thread Safe</tspan><tspan class="node-detail" x="424.0" y="460.5">component</tspan></text>
-    </g>
-    <g class="node" data-node="service4" data-lines="Heavy Deferred | coroutines">
-      <rect x="610.0" y="394.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="436.5">Heavy Deferred</tspan><tspan class="node-detail" x="760.0" y="460.5">coroutines</tspan></text>
-    </g>
-    <g class="node" data-node="service5" data-lines="Heavy Deferred Value | coroutines">
-      <rect x="946.0" y="394.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="436.5">Heavy Deferred Value</tspan><tspan class="node-detail" x="1096.0" y="460.5">coroutines</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="SQL / R2DBC | Runtime Dependencies">
-      <rect x="610.0" y="544.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="586.5">SQL / R2DBC</tspan><tspan class="node-detail" x="760.0" y="610.5">Runtime Dependencies</tspan></text>
-    </g>
-  </g>
+  <rect class="canvas" width="1360" height="760"/>
+  <rect class="frame" x="26" y="24" width="1308" height="712" rx="24"/>
+  <text class="title" x="680" y="66" text-anchor="middle">Lazy Loading</text>
+  <text class="subtitle" x="680" y="94" text-anchor="middle">Each holder keeps construction cheap until the caller actually asks for the expensive Heavy value.</text>
+
+  <rect class="layer" x="74" y="132" width="850" height="498" rx="18"/>
+  <text class="label" x="102" y="166">Holder strategies</text>
+  <g filter="url(#shadow)"><rect x="116" y="196" width="250" height="68" rx="14" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/><text class="cardTitle" x="241" y="224" text-anchor="middle">HolderNative</text><text class="cardText" x="241" y="248" text-anchor="middle">lateinit first access</text></g>
+  <g filter="url(#shadow)"><rect x="116" y="296" width="250" height="68" rx="14" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/><text class="cardTitle" x="241" y="324" text-anchor="middle">HolderThreadSafe</text><text class="cardText" x="241" y="348" text-anchor="middle">ReentrantLock guard</text></g>
+  <g filter="url(#shadow)"><rect x="116" y="396" width="250" height="68" rx="14" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/><text class="cardTitle" x="241" y="424" text-anchor="middle">HolderKotlinLazy</text><text class="cardText" x="241" y="448" text-anchor="middle">lazy SYNCHRONIZED</text></g>
+  <g filter="url(#shadow)"><rect x="116" y="526" width="250" height="68" rx="14" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="241" y="554" text-anchor="middle">HeavyDeferredValue</text><text class="cardText" x="241" y="578" text-anchor="middle">DeferredValue await</text></g>
+  <g filter="url(#shadow)"><rect x="470" y="526" width="250" height="68" rx="14" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="595" y="554" text-anchor="middle">HeavyDeferred</text><text class="cardText" x="595" y="578" text-anchor="middle">suspend getHeavy()</text></g>
+
+  <g filter="url(#shadow)"><rect x="1014" y="186" width="240" height="420" rx="18" fill="#FFFFFF" stroke="#64748B" stroke-width="1.8"/><text class="cardTitle" x="1134" y="382" text-anchor="middle">Heavy instance</text><text class="cardText" x="1134" y="412" text-anchor="middle">constructed once on demand</text></g>
+
+  <path class="line" d="M 366 230 L 1014 230" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 366 330 L 1014 330" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 366 430 L 1014 430" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 366 560 L 470 560" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 720 560 L 1014 560" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
 </svg>

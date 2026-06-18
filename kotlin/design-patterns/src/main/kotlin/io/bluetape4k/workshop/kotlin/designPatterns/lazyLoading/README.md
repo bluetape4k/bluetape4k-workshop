@@ -1,49 +1,32 @@
-# lazyLoading
+# Lazy Loading
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+Lazy Loading delays expensive initialization until a value is actually requested. This package uses
+`Heavy` as the expensive object and compares native, lock-guarded, Kotlin `lazy`, and coroutine
+`DeferredValue` holders.
 
-This example exercises **lazyLoading** as a runnable Kotlin language and coroutine patterns workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+## Architecture
 
-## Architecture Diagram
+![Lazy Loading pattern](../../../../../../../../../../../docs/images/readme-diagrams/kotlin-design-patterns-src-main-kotlin-io-bluetape4k-workshop-kotlin-designpatterns-lazyloading-readme-architecture-01.png)
 
-![lazyLoading Graphviz architecture diagram](../../../../../../../../../../../docs/images/readme-diagrams/kotlin-design-patterns-src-main-kotlin-io-bluetape4k-workshop-kotlin-designpatterns-lazyloading-readme-architecture-01.png)
+## Source map
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.kotlin` as the source of truth when comparing this README with the code.
+| source | role |
+|---|---|
+| `Heavy` | expensive object; sleeps during construction to make creation visible |
+| `HolderNative` | initializes a `lateinit` property on first `getHeavy()` |
+| `HolderThreadSafe` | protects first initialization with `ReentrantLock` |
+| `HolderKotlinLazy` | uses Kotlin `lazy(LazyThreadSafetyMode.SYNCHRONIZED)` |
+| `coroutines/HeavyDeferredValue` | defers suspend initialization through `DeferredValue` |
 
-## Sequence Diagram
+## Usage shape
 
----
-layout: pattern
-title: Lazy Loading
-folder: lazy-loading
-permalink: /patterns/lazy-loading/
-categories: Other
-tags:
-    - Java
-    - Difficulty-Beginner
-    - Idiom
-    - Performance
----
+```kotlin
+val holder = HolderKotlinLazy()
 
-## Purpose
+// Heavy is not created by holder construction.
+val heavy = holder.getHeavy()
+```
 
-Lazy Loading is a design pattern often used to postpone initialization of an object until it is needed.
-If used properly, they can contribute to the operational efficiency of the program.
-
-![Lazy Loading](./doc/lazy-loading.png "Lazy Loading")
-
-## How to apply
-
-The Lazy Loading method is used in the following cases:
-
-* When eager loading is expensive or the object to be loaded may not be needed at all.
-
-## Real examples
-
-* JPA annotations @OneToOne, @OneToMany, @ManyToOne, @ManyToMany and fetch = FetchType.LAZY
-
-## reference
-
-* [J2EE Design Patterns](http://www.amazon.com/J2EE-Design-Patterns-William-Crawford/dp/0596004273/ref=sr_1_2)
+Use lazy loading when eager creation is expensive and the caller may not need the value at all.

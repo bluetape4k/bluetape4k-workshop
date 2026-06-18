@@ -2,13 +2,27 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+이 모듈은 고전적인 design pattern을 작은 Kotlin 구현으로 보여줍니다. 실행 애플리케이션이 아니라
+source package별 예제 모음이며, 각 package에는 pattern interface, concrete implementation,
+그리고 코드 구조를 설명하는 짧은 README가 있습니다.
 
-이 예제는 **Kotlin Design Patterns**를 실행 가능한 Kotlin 언어와 코루틴 패턴 예제로 보여줍니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 사용 방식을 중심으로 설명합니다.
-## 아키텍처 다이어그램
+## Pattern catalog
 
-![Kotlin Design Patterns Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/kotlin-design-patterns-readme-architecture-01.png)
-
-모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성을 중심으로 구성됩니다. README와 코드를 비교할 때는 `io.bluetape4k.workshop.kotlin` 패키지 아래의 구현을 기준으로 삼습니다.
+![Kotlin design pattern examples](../../docs/images/readme-diagrams/kotlin-design-patterns-readme-architecture-01.png)
 
 ## 구현된 패턴
+
+| package | pattern | 구현 초점 |
+|---|---|---|
+| `abstractFactory/` | Abstract Factory | `FactoryMaker`가 `ElfKingdomFactory` 또는 `OrcKingdomFactory`를 선택하고, 각 factory가 일관된 `Castle`, `King`, `Army` family를 생성 |
+| `builder/` | Builder | `Hero.Builder`가 필수 생성 데이터와 optional fluent step을 분리하고, `HeroDataClass`가 Kotlin default argument 대안을 보여줌 |
+| `lazyLoading/` | Lazy Loading | `HolderNative`, `HolderThreadSafe`, `HolderKotlinLazy`, coroutine `DeferredValue`가 비용이 큰 `Heavy` 생성을 지연 |
+| `singleton/` | Singleton | Enum, Kotlin `object`, eager singleton, lazy singleton, holder idiom, lock 기반 variant 비교 |
+
+## 읽는 순서
+
+1. 보고 싶은 pattern의 package README를 엽니다.
+2. diagram과 같은 package의 source file을 비교합니다.
+3. 이 예제는 framework infrastructure가 아니라 pattern mechanics를 보여주는 Kotlin sketch로 읽으면 됩니다.
+
+예제는 의도적으로 작게 유지되어 pattern 구조만 눈에 들어오도록 했습니다.
