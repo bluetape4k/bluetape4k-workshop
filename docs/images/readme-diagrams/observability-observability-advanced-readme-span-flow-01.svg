@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1660" height="880" viewBox="0 0 1660 880" role="img" aria-label="Observability advanced span flow diagram">
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker>
+    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A"/></marker>
+    <marker id="arrowAmber" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#D97706"/></marker>
+    <marker id="arrowRose" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#E11D48"/></marker>
+    <style>
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.band{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.bandLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:30px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.label{font-family:"Comic Mono";font-size:14px;fill:#475569}.line{fill:none;stroke-width:3.6;stroke-linecap:round;stroke-linejoin:round}.soft{stroke-dasharray:8 8}
+    </style>
+  </defs>
+  <rect class="canvas" width="1660" height="880"/>
+  <rect class="frame" x="24" y="24" width="1612" height="832" rx="24"/>
+  <text class="title" x="830" y="70" text-anchor="middle">Cache-aside span flow</text>
+  <text class="subtitle" x="830" y="102" text-anchor="middle">The same service span keeps cache hit, cache miss, DB lookup, cache write, and Redis soft-fail behavior readable.</text>
+
+  <rect class="band" x="70" y="150" width="1520" height="182" rx="18"/>
+  <text class="bandLabel" x="102" y="188">Request span</text>
+  <rect class="band" x="70" y="382" width="1520" height="294" rx="18"/>
+  <text class="bandLabel" x="102" y="420">Cache-aside branches</text>
+  <rect class="band" x="70" y="712" width="1520" height="86" rx="18"/>
+  <text class="bandLabel" x="102" y="756">Soft-fail rule</text>
+
+  <g filter="url(#shadow)">
+    <rect x="138" y="218" width="214" height="90" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
+    <text class="cardTitle" x="245" y="256" text-anchor="middle">HTTP GET</text>
+    <text class="cardText" x="245" y="284" text-anchor="middle">/users/{id}</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="462" y="208" width="252" height="110" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="588" y="250" text-anchor="middle">user.service.get</text>
+    <text class="cardText" x="588" y="280" text-anchor="middle">parent manual span</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="824" y="208" width="252" height="110" rx="16" fill="#F8FAFC" stroke="#475569" stroke-width="1.7"/>
+    <text class="cardTitle" x="950" y="250" text-anchor="middle">observed()</text>
+    <text class="cardText" x="950" y="280" text-anchor="middle">scope + finally stop</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1186" y="208" width="252" height="110" rx="16" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.7"/>
+    <text class="cardTitle" x="1312" y="250" text-anchor="middle">Registry</text>
+    <text class="cardText" x="1312" y="280" text-anchor="middle">parent-child tree</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="118" y="470" width="286" height="136" rx="16" fill="#FFF1F2" stroke="#E11D48" stroke-width="1.7"/>
+    <rect x="148" y="506" width="68" height="30" rx="15" fill="#FFE4E6" stroke="#E11D48" stroke-width="2.4"/>
+    <path d="M 148 521 C 148 539 216 539 216 521" fill="none" stroke="#E11D48" stroke-width="2.4"/>
+    <text class="cardTitle" x="306" y="512" text-anchor="middle">user.cache</text>
+    <text class="cardTitle" x="306" y="548" text-anchor="middle">get</text>
+    <text class="cardText" x="306" y="578" text-anchor="middle">Redis read; hit or miss</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="520" y="432" width="230" height="108" rx="16" fill="#DCFCE7" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="635" y="474" text-anchor="middle">Cache hit</text>
+    <text class="cardText" x="635" y="506" text-anchor="middle">return cached User</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="520" y="574" width="230" height="82" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
+    <text class="cardTitle" x="635" y="626" text-anchor="middle">Cache miss</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="888" y="562" width="258" height="108" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
+    <ellipse cx="932" cy="598" rx="31" ry="12" fill="#DBEAFE" stroke="#2563EB" stroke-width="2.4"/>
+    <path d="M 901 598 L 901 626 C 901 642 963 642 963 626 L 963 598" fill="#DBEAFE" stroke="#2563EB" stroke-width="2.4"/>
+    <text class="cardTitle" x="1040" y="598" text-anchor="middle">user.db</text>
+    <text class="cardTitle" x="1040" y="632" text-anchor="middle">find</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1268" y="562" width="250" height="108" rx="16" fill="#FFF1F2" stroke="#E11D48" stroke-width="1.7"/>
+    <rect x="1298" y="590" width="62" height="28" rx="14" fill="#FFE4E6" stroke="#E11D48" stroke-width="2.4"/>
+    <path d="M 1298 604 C 1298 621 1360 621 1360 604" fill="none" stroke="#E11D48" stroke-width="2.4"/>
+    <text class="cardTitle" x="1442" y="598" text-anchor="middle">user.cache</text>
+    <text class="cardTitle" x="1442" y="632" text-anchor="middle">put</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="560" y="724" width="548" height="58" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
+    <text class="cardText" x="834" y="758" text-anchor="middle">Redis errors become miss/skip; cancellation is rethrown.</text>
+  </g>
+
+  <path class="line" d="M 352 263 L 462 263" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 714 263 L 824 263" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 1076 263 L 1186 263" stroke="#0891B2" marker-end="url(#arrowBlue)"/>
+
+  <path class="line" d="M 588 318 L 588 354 L 261 354 L 261 470" stroke="#E11D48" marker-end="url(#arrowRose)"/>
+  <path class="line" d="M 404 520 L 520 486" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 404 570 L 520 615" stroke="#D97706" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 750 615 L 888 615" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 1146 615 L 1268 615" stroke="#E11D48" marker-end="url(#arrowRose)"/>
+
+  <path class="line soft" d="M 261 606 L 261 753 L 560 753" stroke="#D97706" marker-end="url(#arrowAmber)"/>
+  <path class="line soft" d="M 1393 670 L 1393 753 L 1108 753" stroke="#D97706" marker-end="url(#arrowAmber)"/>
+  <text class="label" x="448" y="466" text-anchor="middle">hit</text>
+  <text class="label" x="448" y="638" text-anchor="middle">miss</text>
+  <text class="label" x="402" y="738" text-anchor="middle">read failure</text>
+  <text class="label" x="1242" y="738" text-anchor="middle">write failure</text>
+</svg>

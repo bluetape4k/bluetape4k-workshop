@@ -2,62 +2,74 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
-
-이 예제는 **observability-advanced** 모듈을 실행 가능한 메트릭, 트레이싱, 관측 예제로 보여줍니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 사용 방식을 중심으로 설명합니다.
-
-## 시퀀스 다이어그램
-
-HTTP(WebFlux), 코루틴 서비스, H2 데이터베이스(Exposed JDBC), Redis 캐시에 걸쳐
-다계층 스팬 계측을 보여주는 전체 스택 Observability 워크샵 예제.
+`observability-advanced`는 WebFlux 컨트롤러, 코루틴 서비스, Redis 캐시, Exposed JDBC
+영속화 사이에서 Micrometer Observation을 어떻게 유지하는지 보여줍니다. 예제는 작지만 실제
+서비스에서 먼저 깨지기 쉬운 지점을 다룹니다. cache hit/miss별 span 모양, dispatcher 이동,
+Redis soft-fail, 성공/실패 양쪽에서의 span 종료가 핵심입니다.
 
 ## 아키텍처
 
-![observability-advanced Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/observability-observability-advanced-architecture-01.png)
+![observability-advanced architecture diagram](../../docs/images/readme-diagrams/observability-observability-advanced-readme-architecture-01.png)
 
-## 스팬 트리
+HTTP 계층은 suspend endpoint를 노출합니다. `UserService`는 cache-aside 결정을 소유하고
+상위 `user.service.*` span을 만듭니다. Redis 작업은 `UserCacheRepository`가 감싸고,
+DB 호출은 `UserRepository`에 남겨 `withContext(Dispatchers.IO) { transaction { ... } }`
+안에서 실행합니다. 로컬 `observed()` helper는 코루틴 resume 뒤에도 Micrometer scope가
+이어지게 만들고, `finally`에서 항상 observation을 stop합니다.
 
-**캐시 미스 경로:**
-```
-http.server.requests              (auto)
-  └─ user.service.get             (manual)
-       ├─ user.cache.get          (manual — returns null)
-       ├─ user.db.find            (manual)
-       └─ user.cache.put          (manual)
+## Span Flow
+
+![observability-advanced span flow diagram](../../docs/images/readme-diagrams/observability-observability-advanced-readme-span-flow-01.png)
+
+Cache hit은 `user.cache.get`에서 끝나고 DB span을 만들지 않습니다. Cache miss는
+`user.db.find`로 이어지고 값이 있으면 `user.cache.put`까지 진행합니다. Redis read/write
+실패는 warn 로그 후 cache miss 또는 cache write skip으로 처리하지만, `CancellationException`은
+다시 던져 structured concurrency를 보존합니다.
+
+## Span Trees
+
+Cache miss:
+
+```text
+http.server.requests
+  └─ user.service.get
+       ├─ user.cache.get
+       ├─ user.db.find
+       └─ user.cache.put
 ```
 
-**캐시 히트 경로:**
-```
-http.server.requests              (auto)
-  └─ user.service.get             (manual)
-       └─ user.cache.get          (manual — returns User)
+Cache hit:
+
+```text
+http.server.requests
+  └─ user.service.get
+       └─ user.cache.get
 ```
 
 ## 핵심 개념
 
 | 개념 | 구현 |
-|------|------|
-| 다계층 스팬 | 서비스 + 캐시 계층에 `observed()` 헬퍼 적용 |
-| 디스패처 경계 | `withObservation { withContext(IO) { transaction { } } }` (Observation OUTER) |
-| Redis Soft-fail | catch + log.warn, DB 폴백 |
-| Cache-aside 패턴 | get → miss → DB → put |
-| 긍정 테스트 어설션 | `TestObservationRegistryAssert.assertThat(testRegistry).hasObservationWithNameEqualTo(...)` |
-| 부정 테스트 어설션 | `TestObservationRegistryAssert.assertThat(testRegistry).hasNumberOfObservationsWithNameEqualTo(name, 0)` |
+|---|---|
+| 다계층 span | `observed()`가 service, cache, 선택된 DB 작업을 감싼다. |
+| Dispatcher 경계 | Coroutine `ThreadContextElement`로 Observation scope를 연다. |
+| Redis soft-fail | Cancellation이 아닌 Redis 예외는 로그 후 cache miss/skip으로 변환한다. |
+| Cache-aside 패턴 | `get -> miss -> DB -> put`; hit이면 DB span을 건너뛴다. |
+| 테스트 어설션 | `TestObservationRegistryAssert`로 필요한 span과 생기지 않아야 할 span을 함께 검증한다. |
 
 ## 사용한 Bluetape4k 기능
 
 | 기능 | 모듈 / Artifact | 코드 위치 | 이점 |
-|------|-----------------|-----------|------|
-| Micrometer Observation starter | `bluetape4k-micrometer` | `ObservationSupport.observed()`가 `ObservationRegistry.start(name)` 사용 | `Observation.Context`를 직접 조립하지 않고 bluetape4k Observation factory 재사용 |
-| 코루틴 친화 로깅 | `bluetape4k-logging` | `UserService`, `UserRepository`, `UserCacheRepository`, 테스트 base | lazy Kotlin logging과 trace/span MDC 출력 일관성 |
-| Redis/Redisson DSL | `bluetape4k-redisson`, `bluetape4k-redis` | `RedissonConfig` | `redissonClient {}` 설정 경로로 Redisson client 생성 |
-| Redis Testcontainer singleton | `bluetape4k-testcontainers` | `AbstractAdvancedTest` | 임의 `GenericContainer` 대신 `RedisServer.Launcher.redis` 재사용 |
-| 코루틴 테스트 runner | `bluetape4k-junit5` | `UserServiceTest`, `UserControllerTest` | 테스트 본문에서 `runBlocking` 없이 `runSuspendIO {}`로 suspend 통합 테스트 실행 |
-| Assertion DSL | `bluetape4k-assertions` | `UserServiceTest`, `UserControllerTest` | JUnit assertion API 대신 Kotlin 스타일 null/value assertion 사용 |
+|---|---|---|---|
+| Micrometer Observation starter | `bluetape4k-micrometer` | `ObservationSupport.observed()`가 `ObservationRegistry.start(name)` 호출 | `Observation.Context`를 직접 조립하지 않고 bluetape4k Observation factory를 재사용한다. |
+| 코루틴 친화 로깅 | `bluetape4k-logging` | `UserService`, `UserRepository`, `UserCacheRepository` | Lazy Kotlin logging과 trace/span MDC 출력을 일관되게 유지한다. |
+| Redis/Redisson DSL | `bluetape4k-redisson`, `bluetape4k-redis` | `RedissonConfig` | 간결한 Kotlin 설정으로 Redisson client를 만든다. |
+| Redis Testcontainer singleton | `bluetape4k-testcontainers` | `AbstractAdvancedTest` | 임의 container 대신 `RedisServer.Launcher.redis`를 재사용한다. |
+| 코루틴 테스트 runner | `bluetape4k-junit5` | `UserServiceTest`, `UserControllerTest` | 테스트 본문에서 `runBlocking` 없이 suspend 통합 테스트를 실행한다. |
+| Assertion DSL | `bluetape4k-assertions` | `UserServiceTest`, `UserControllerTest` | Kotlin 스타일 값/null assertion을 사용한다. |
 
 ## Before / After
 
-### Raw Micrometer 방식
+Micrometer를 직접 쓰면 lifecycle 처리를 모두 손으로 맞춰야 합니다.
 
 ```kotlin
 val observation = Observation.createNotStarted("user.service.get", registry)
@@ -78,7 +90,7 @@ try {
 }
 ```
 
-### Bluetape4k 지원 워크샵 방식
+이 예제는 같은 Micrometer 의미를 suspend 친화 wrapper 뒤에 둡니다.
 
 ```kotlin
 suspend fun getById(id: Long): User? =
@@ -90,29 +102,12 @@ suspend fun getById(id: Long): User? =
     }
 ```
 
-`observed()`는 `bluetape4k-micrometer`의 `ObservationRegistry.start(name)` 경로를 유지하면서,
-코루틴 context element로 Micrometer scope를 열고, `CancellationException`은 그대로 다시 던지며,
-실제 오류만 span error로 기록하고, 항상 span을 stop합니다. 그래서 수동
-`start/openScope/error/stop` 보일러플레이트 없이도 `withContext(Dispatchers.IO)` 경계에서
-부모-자식 span tree가 유지됩니다.
-
 ## 테스트 커버리지
 
-- `UserServiceTest`: 캐시 미스/히트 스팬, null 결과, 생성 스팬, 명시적 캐시 삭제로 DB 조회 강제
-- `UserControllerTest`: HTTP POST 생성, GET 캐시 미스, GET 캐시 히트
+- `UserServiceTest`: cache miss/hit span, null 결과, create span, 명시적 cache delete 후 DB 조회.
+- `UserControllerTest`: HTTP POST create, GET cache miss, GET cache hit.
 
-캐시 미스 서비스 테스트는 parent-child propagation도 검증합니다.
-
-```
-user.service.get
-  ├─ user.cache.get
-  ├─ user.db.find
-  └─ user.cache.put
-```
-
-## Smoke / Load 확인
-
-### 대상 smoke
+## Smoke 확인
 
 ```bash
 ./gradlew :observability-advanced:test
@@ -122,21 +117,7 @@ user.service.get
 사전 조건:
 
 - 통합 테스트의 Redis Testcontainer를 위해 Docker가 필요합니다.
-- Gradle이 사용할 수 있는 JDK 21+ toolchain이 필요합니다.
-
-### 유지하는 load/performance 예제
-
-이 모듈은 tracing/correlation 증명에 집중합니다. 부하 동작은 아래 성능 지향 모듈에 남깁니다.
-해당 모듈들은 지원되는 bluetape4k runtime helper를 보여주기 때문입니다.
-
-| 모듈 | 명령 | 중단 조건 |
-|------|------|-----------|
-| `gatling/virtualthread-simulation` | `./gradlew :gatling-virtualthread-simulation:gatlingRun` | Gatling assertion이 README 임계값 안에서 p95 latency와 success rate를 유지해야 함 |
-| `virtualthreads/spring-mvc-tomcat` | `./gradlew :virtualthreads-spring-mvc-tomcat:gatlingRun` | 문서화된 ramp profile에서 virtual-thread request handling이 악화되지 않아야 함 |
-| `virtualthreads/spring-webflux` | `./gradlew :virtualthreads-spring-webflux:gatlingRun` | dispatcher scenario가 error-rate regression 없이 끝나야 함 |
-
-로컬 load run은 error rate가 1%를 넘거나, p95 latency가 scenario README 임계값을 넘거나,
-컨테이너 CPU/메모리가 포화되거나, 애플리케이션 로그에 연결 실패가 반복되면 중단합니다.
+- Gradle이 사용할 수 있는 JDK 21+가 필요합니다.
 
 ## 설정
 
@@ -144,7 +125,7 @@ user.service.get
 workshop:
   observability:
     redis:
-      url: redis://localhost:6379  # override in tests via Testcontainers
+      url: redis://localhost:6379
 
 spring:
   datasource:
@@ -158,7 +139,7 @@ management:
 
 ## 의존성
 
-- `bluetape4k-micrometer` — 로컬 `observed()` 코루틴 래퍼 (finally-safe)
-- `bluetape4k-redisson` — `redissonClient {}` DSL (`io.bluetape4k.redis.redisson`)
-- `micrometer-context-propagation` — 디스패처 경계 스팬 연속성
-- `jetbrains-exposed-spring-boot4-starter` — Exposed 자동 구성
+- `bluetape4k-micrometer` - 로컬 `observed()` 코루틴 wrapper.
+- `bluetape4k-redisson` - `redissonClient {}` DSL.
+- `micrometer-context-propagation` - dispatcher 경계 span 연속성.
+- `jetbrains-exposed-spring-boot4-starter` - Exposed 자동 구성.
