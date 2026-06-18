@@ -1,146 +1,90 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1224" viewBox="0 0 1320 1224" role="img" aria-label="ktor-rest-coroutines architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;ktor/rest-coroutines/src/main/kotlin/io/bluetape4k/workshop/ktor/ApplicationModule.kt&quot;,&quot;ktor/rest-coroutines/src/main/kotlin/io/bluetape4k/workshop/ktor/Main.kt&quot;,&quot;ktor/rest-coroutines/src/main/kotlin/io/bluetape4k/workshop/ktor/domain/Book.kt&quot;,&quot;ktor/rest-coroutines/src/main/kotlin/io/bluetape4k/workshop/ktor/domain/DomainError.kt&quot;,&quot;ktor/rest-coroutines/src/main/kotlin/io/bluetape4k/workshop/ktor/json/Jackson3Support.kt&quot;,&quot;ktor/rest-coroutines/src/main/kotlin/io/bluetape4k/workshop/ktor/repository/BookRepository.kt&quot;,&quot;ktor/rest-coroutines/src/main/kotlin/io/bluetape4k/workshop/ktor/repository/InMemoryBookRepository.kt&quot;,&quot;ktor/rest-coroutines/src/main/kotlin/io/bluetape4k/workshop/ktor/routes/BookRoutes.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="760" viewBox="0 0 1480 760" role="img" aria-label="Ktor REST coroutines architecture diagram">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
+    <marker id="arrowTeal" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#0D9488"/></marker>
+    <marker id="arrowCyan" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#0891B2"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/></marker>
+    <marker id="arrowRed" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#DC2626"/></marker>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:23px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:27px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}.line{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="1224"/>
-  <rect class="frame" x="16" y="16" width="1288" height="1192" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">ktor-rest-coroutines</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Ktor example runtime and module dependencies</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="380.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="340.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="288.0">Example Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="326.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="342.0">adapters</tspan></text>
-    </g>
-    <g class="layer" data-layer="service">
-      <rect x="46.0" y="512.0" width="1228.0" height="242.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="532.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="617.0">Application Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="655.0">services, domain</tspan><tspan class="layer-detail" x="151.0" y="671.0">rules, use cases</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="772.0" width="1228.0" height="242.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="792.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="877.0">Integration Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="915.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="931.0">adapters, helpers</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="1032.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="1052.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="1082.0">Runtime Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1112.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="1128.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="1144.0">JVM</tspan></text>
-    </g>
-    <g class="edge" data-edge="api3-&gt;service0" data-label="delegates">
-      <path d="M 1096.0 467.0 L 1096.0 499.5 L 424.0 499.5 L 424.0 532.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
-    </g>
-    <g class="edge" data-edge="service3-&gt;infra0" data-label="persists / publishes">
-      <path d="M 424.0 734.0 L 424.0 763.0 L 424.0 792.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 424.0 994.0 L 424.0 1023.0 L 760.0 1023.0 L 760.0 1052.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Main | ktor">
-      <rect x="274.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="183.5">Main</tspan><tspan class="node-detail" x="424.0" y="207.5">ktor</tspan></text>
-    </g>
-    <g class="node" data-node="entry1" data-lines="Abstract Ktor Test | ktor">
-      <rect x="610.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="183.5">Abstract Ktor Test</tspan><tspan class="node-detail" x="760.0" y="207.5">ktor</tspan></text>
-    </g>
-    <g class="node" data-node="entry2" data-lines="In Memory Book | Repository Test | repository">
-      <rect x="946.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="171.5">In Memory Book</tspan><tspan class="node-title" x="1096.0" y="195.5">Repository Test</tspan><tspan class="node-detail" x="1096.0" y="219.5">repository</tspan></text>
-    </g>
-    <g class="node" data-node="entry3" data-lines="Book Routes Test | routes">
-      <rect x="274.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="300.5">Book Routes Test</tspan><tspan class="node-detail" x="424.0" y="324.5">routes</tspan></text>
-    </g>
-    <g class="node" data-node="entry4" data-lines="Book Stream Test | routes">
-      <rect x="610.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="300.5">Book Stream Test</tspan><tspan class="node-detail" x="760.0" y="324.5">routes</tspan></text>
-    </g>
-    <g class="node" data-node="api0" data-lines="Application Module | ktor">
-      <rect x="946.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="300.5">Application Module</tspan><tspan class="node-detail" x="1096.0" y="324.5">ktor</tspan></text>
-    </g>
-    <g class="node" data-node="api1" data-lines="In Memory Book | Repository | repository">
-      <rect x="274.0" y="368.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="405.5">In Memory Book</tspan><tspan class="node-title" x="424.0" y="429.5">Repository</tspan><tspan class="node-detail" x="424.0" y="453.5">repository</tspan></text>
-    </g>
-    <g class="node" data-node="api2" data-lines="Book Routes | routes">
-      <rect x="610.0" y="375.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="417.5">Book Routes</tspan><tspan class="node-detail" x="760.0" y="441.5">routes</tspan></text>
-    </g>
-    <g class="node" data-node="api3" data-lines="Health Routes | routes">
-      <rect x="946.0" y="375.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="417.5">Health Routes</tspan><tspan class="node-detail" x="1096.0" y="441.5">routes</tspan></text>
-    </g>
-    <g class="node" data-node="service0" data-lines="Jackson3 Support | json">
-      <rect x="274.0" y="532.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="574.5">Jackson3 Support</tspan><tspan class="node-detail" x="424.0" y="598.5">json</tspan></text>
-    </g>
-    <g class="node" data-node="service1" data-lines="Book Service | service component">
-      <rect x="610.0" y="532.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="574.5">Book Service</tspan><tspan class="node-detail" x="760.0" y="598.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="service2" data-lines="Book | domain model">
-      <rect x="946.0" y="532.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="574.5">Book</tspan><tspan class="node-detail" x="1096.0" y="598.5">domain model</tspan></text>
-    </g>
-    <g class="node" data-node="service3" data-lines="Domain Error | domain model">
-      <rect x="274.0" y="642.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="684.5">Domain Error</tspan><tspan class="node-detail" x="424.0" y="708.5">domain model</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Book Repository | repository">
-      <rect x="274.0" y="792.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="834.5">Book Repository</tspan><tspan class="node-detail" x="424.0" y="858.5">repository</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k APIs">
-      <rect x="610.0" y="792.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="834.5">workshop</tspan><tspan class="node-detail" x="760.0" y="858.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="core | bluetape4k APIs">
-      <rect x="946.0" y="792.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="834.5">core</tspan><tspan class="node-detail" x="1096.0" y="858.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="logging | bluetape4k APIs">
-      <rect x="274.0" y="902.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="944.5">logging</tspan><tspan class="node-detail" x="424.0" y="968.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="In-memory / JVM | Runtime Dependencies">
-      <rect x="610.0" y="1052.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1094.5">In-memory / JVM</tspan><tspan class="node-detail" x="760.0" y="1118.5">Runtime Dependencies</tspan></text>
-    </g>
+  <rect class="canvas" width="1480" height="760"/>
+  <rect class="frame" x="24" y="24" width="1432" height="712" rx="24"/>
+  <text class="title" x="740" y="66" text-anchor="middle">Ktor coroutine REST service</text>
+  <text class="subtitle" x="740" y="94" text-anchor="middle">Application.module wires Ktor plugins, book routes, coroutine service logic, and an in-memory hot stream repository.</text>
+
+  <rect class="layer" x="72" y="132" width="232" height="504" rx="18"/>
+  <text class="layerLabel" x="100" y="168">Client surface</text>
+  <g filter="url(#shadow)">
+    <rect x="108" y="308" width="160" height="118" rx="16" fill="#F8FAFC" stroke="#64748B" stroke-width="1.7"/>
+    <text class="cardTitle" x="188" y="350" text-anchor="middle">HTTP Client</text>
+    <text class="cardText" x="188" y="378" text-anchor="middle">JSON, SSE, NDJSON</text>
+    <text class="cardText" x="188" y="402" text-anchor="middle">curl or tests</text>
   </g>
+
+  <rect class="layer" x="332" y="132" width="830" height="504" rx="18"/>
+  <text class="layerLabel" x="360" y="168">Ktor application module</text>
+  <g filter="url(#shadow)">
+    <rect x="374" y="214" width="222" height="116" rx="16" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.7"/>
+    <text class="cardTitle" x="485" y="253" text-anchor="middle">CallLogging</text>
+    <text class="cardText" x="485" y="282" text-anchor="middle">request trace</text>
+    <text class="cardText" x="485" y="306" text-anchor="middle">KLoggingChannel</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="627" y="214" width="240" height="116" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="747" y="253" text-anchor="middle">ContentNegotiation</text>
+    <text class="cardText" x="747" y="282" text-anchor="middle">AppJson</text>
+    <text class="cardText" x="747" y="306" text-anchor="middle">kotlinx JSON</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="898" y="214" width="222" height="116" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
+    <text class="cardTitle" x="1009" y="253" text-anchor="middle">StatusPages</text>
+    <text class="cardText" x="1009" y="282" text-anchor="middle">400, 404, 409, 500</text>
+    <text class="cardText" x="1009" y="306" text-anchor="middle">typed error body</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="374" y="426" width="222" height="122" rx="16" fill="#EEF2FF" stroke="#6366F1" stroke-width="1.7"/>
+    <text class="cardTitle" x="485" y="468" text-anchor="middle">BookRoutes</text>
+    <text class="cardText" x="485" y="496" text-anchor="middle">CRUD endpoints</text>
+    <text class="cardText" x="485" y="520" text-anchor="middle">stream + export</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="627" y="426" width="222" height="122" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="738" y="468" text-anchor="middle">BookService</text>
+    <text class="cardText" x="738" y="496" text-anchor="middle">validation rules</text>
+    <text class="cardText" x="738" y="520" text-anchor="middle">domain errors</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="898" y="426" width="222" height="122" rx="16" fill="#F0FDFA" stroke="#0D9488" stroke-width="1.7"/>
+    <text class="cardTitle" x="1009" y="468" text-anchor="middle">Jackson3Support</text>
+    <text class="cardText" x="1009" y="496" text-anchor="middle">tools.jackson.*</text>
+    <text class="cardText" x="1009" y="520" text-anchor="middle">NDJSON writer</text>
+  </g>
+
+  <rect class="layer" x="1194" y="132" width="234" height="504" rx="18"/>
+  <text class="layerLabel" x="1222" y="168">In-memory state</text>
+  <g filter="url(#shadow)">
+    <rect x="1230" y="266" width="162" height="144" rx="16" fill="#FEFCE8" stroke="#CA8A04" stroke-width="1.7"/>
+    <text class="cardTitle" x="1311" y="308" text-anchor="middle">Repository</text>
+    <text class="cardText" x="1311" y="337" text-anchor="middle">ConcurrentHashMap</text>
+    <text class="cardText" x="1311" y="361" text-anchor="middle">save, update, delete</text>
+    <text class="cardText" x="1311" y="385" text-anchor="middle">findAll, findById</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1230" y="466" width="162" height="112" rx="16" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.7"/>
+    <text class="cardTitle" x="1311" y="505" text-anchor="middle">SharedFlow</text>
+    <text class="cardText" x="1311" y="533" text-anchor="middle">hot stream</text>
+    <text class="cardText" x="1311" y="557" text-anchor="middle">64 event buffer</text>
+  </g>
+
+  <path class="line" d="M 268 367 L 324 367 L 324 487 L 374 487" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 596 487 L 627 487" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 485 548 L 485 590 L 1009 590 L 1009 548" stroke="#0D9488" marker-end="url(#arrowTeal)"/>
+  <path class="line" d="M 849 487 L 872 487 L 872 366 L 1230 338" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 1311 466 L 1311 430 L 1150 430 L 1150 514 L 1120 514" stroke="#0891B2" marker-end="url(#arrowCyan)"/>
 </svg>
