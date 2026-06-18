@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="760" viewBox="0 0 1500 760" role="img" aria-label="Micrometer observation flow diagram">
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/></marker>
+    <style>
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.lane{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.laneLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:27px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}.line{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+    </style>
+  </defs>
+  <rect class="canvas" width="1500" height="760"/>
+  <rect class="frame" x="24" y="24" width="1452" height="712" rx="24"/>
+  <text class="title" x="750" y="66" text-anchor="middle">Greeting observation flow</text>
+  <text class="subtitle" x="750" y="94" text-anchor="middle">Both endpoint paths call the same service, but they create different observation names and key-values.</text>
+
+  <rect class="lane" x="64" y="132" width="1372" height="240" rx="18"/>
+  <text class="laneLabel" x="96" y="172">GET /greeting</text>
+  <g filter="url(#shadow)">
+    <rect x="112" y="226" width="196" height="86" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
+    <text class="cardTitle" x="210" y="262" text-anchor="middle">Controller</text>
+    <text class="cardText" x="210" y="288" text-anchor="middle">greet()</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="390" y="212" width="220" height="114" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="500" y="254" text-anchor="middle">sayHello()</text>
+    <text class="cardText" x="500" y="284" text-anchor="middle">greetingObservation</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="692" y="212" width="238" height="114" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
+    <text class="cardTitle" x="811" y="254" text-anchor="middle">observe { }</text>
+    <text class="cardText" x="811" y="284" text-anchor="middle">sayHelloInternal()</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="996" y="226" width="262" height="86" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
+    <text class="cardTitle" x="1127" y="262" text-anchor="middle">Observation events</text>
+    <text class="cardText" x="1127" y="288" text-anchor="middle">start / stop / log</text>
+  </g>
+
+  <rect class="lane" x="64" y="430" width="1372" height="240" rx="18"/>
+  <text class="laneLabel" x="96" y="470">GET /greeting/for?name=...</text>
+  <g filter="url(#shadow)">
+    <rect x="112" y="524" width="196" height="86" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
+    <text class="cardTitle" x="210" y="560" text-anchor="middle">Controller</text>
+    <text class="cardText" x="210" y="586" text-anchor="middle">greetWithName()</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="390" y="510" width="220" height="114" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="500" y="552" text-anchor="middle">sayHelloWithName</text>
+    <text class="cardText" x="500" y="582" text-anchor="middle">createNotStarted</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="692" y="510" width="238" height="114" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
+    <text class="cardTitle" x="811" y="552" text-anchor="middle">key-values</text>
+    <text class="cardText" x="811" y="582" text-anchor="middle">name + requestId</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1012" y="510" width="230" height="114" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="1127" y="552" text-anchor="middle">observeOrNull</text>
+    <text class="cardText" x="1127" y="582" text-anchor="middle">returns greeting</text>
+  </g>
+
+  <path class="line" d="M 308 269 L 390 269" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 610 269 L 692 269" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 930 269 L 996 269" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 308 567 L 390 567" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 610 567 L 692 567" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 930 567 L 1012 567" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+</svg>

@@ -2,177 +2,83 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
-
-This example exercises **Micrometer Observation with Spring MVC** as a runnable metrics, tracing, and observation workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
-
-## Sequence Diagram
-
-This example integrates the Micrometer Observation API with Spring MVC.
-It automatically attaches metrics and tracing to method execution through the `@Observed` annotation and `ObservationRegistry`.
+`observability/micrometer-observation` shows how a Spring MVC service can use Micrometer Observation directly and through
+`@Observed`. The module wires `ObservedAspect`, `ServerHttpObservationFilter`, and an `ObservationTextPublisher` handler
+around the application `ObservationRegistry`.
 
 ## Architecture
 
-![Micrometer Observation with Spring MVC Graphviz architecture diagram](../../docs/images/readme-diagrams/observability-micrometer-observation-readme-architecture-01.png)
+![Micrometer observation architecture](../../docs/images/readme-diagrams/observability-micrometer-observation-readme-architecture-01.png)
+
+The HTTP controller is intentionally excluded from `ObservedAspect` so the Spring HTTP observation remains the outer
+request span. `GreetingService` is the method-level observation target, and it also demonstrates manual observations with
+`Observation.createNotStarted(...)`.
+
+## Observation Flow
+
+![Micrometer observation flow](../../docs/images/readme-diagrams/observability-micrometer-observation-readme-flow-01.png)
+
+`sayHello()` uses a reusable `Observation` and `observe { ... }`. `sayHelloWithName(name)` creates a named observation,
+adds low/high cardinality key-values, and runs the block through the bluetape4k `observeOrNull` extension.
 
 ## Key Components
 
-| Class | Role |
+| Component | Role |
 |---|---|
-| `ObservationAspectConfig` | Registers `ObservedAspect` bean for `@Observed` AOP processing |
-| `ObservationLoggingConfig` | Registers an `ObservationHandler` that logs observation events |
-| `ObservationFilterConfig` | Filters specific observations (e.g., exclude actuator paths) |
-| `GreetingService` | Service with `@Observed` — span created automatically per method call |
-| `GreetingController` | REST endpoint (`/greeting`) |
-| `ObservationSupport` | `ObservationRegistry` utility extension functions |
+| `GreetingController` | Exposes `GET /greeting` and `GET /greeting/for?name=...`. |
+| `GreetingService` | `@Observed(name = "greetingService")`; creates manual nested observations for greeting methods. |
+| `ObservationAspectConfig` | Registers `ObservedAspect` and skips `@Controller` / `@RestController` classes. |
+| `ObservationFilterConfig` | Registers `ServerHttpObservationFilter` when an `ObservationRegistry` exists. |
+| `ObservationLoggingConfig` | Registers `ObservationTextPublisher` to log observation events. |
+| `ObservationSupport` | Adds Kotlin-friendly `observe`, `observeOrNull`, and `scopedOrNull` helpers. |
 
-## `@Observed` Usage
+## What to Inspect
 
-```kotlin
-@Service
-@Observed(name = "greeting.service")
-class GreetingService(private val registry: ObservationRegistry) {
+| Path | What it proves |
+|---|---|
+| `/greeting` | Calls `GreetingService.sayHello()` and emits a service observation around the internal greeting. |
+| `/greeting/for?name=Debop` | Emits `greetingService.sayHelloWithName` with `name` as a low-cardinality key and `requestId` as a high-cardinality key. |
+| `/actuator/prometheus` | Shows metrics exported through Spring Boot Actuator and Micrometer configuration. |
 
-    fun greet(name: String): String {
-        return Observation.createNotStarted("greet", registry)
-            .observe { "Hello, $name!" }
-    }
-}
-```
+## bluetape4k Usage
 
-### Fine-grained Span with Key-Values
+| Feature | Where | Why it matters |
+|---|---|---|
+| `KLogging` / `KotlinLogging.logger` | Service and observation logger config | Lazy Kotlin log lambdas keep observation logging concise. |
+| `debug {}` / `info {}` | Source files | Removes explicit `isDebugEnabled` checks. |
+| `observeOrNull` extension | `GreetingService.sayHelloWithName` | Wraps the observed block with a Kotlin-friendly nullable result contract. |
+| bluetape4k assertions | Tests | Keeps `ObservationRegistry` and tracing integration assertions compact. |
+
+## Example
 
 ```kotlin
 fun sayHelloWithName(name: String): String {
     return Observation.createNotStarted("$GREETING_SERVICE_NAME.sayHelloWithName", observationRegistry)
         .contextualName("sayHello-with-name")
-        .lowCardinalityKeyValue("name", name)       // searchable tag
-        .highCardinalityKeyValue("requestId", "1234") // high-cardinality for trace detail
+        .lowCardinalityKeyValue("name", name)
+        .highCardinalityKeyValue("requestId", "1234")
         .observeOrNull { "Hello, $name" }!!
 }
 ```
 
-## Used bluetape4k Features
-
-| Feature | Artifact | Code Location | Benefit |
-|---|---|---|---|
-| Structured logging (`KLogging`, `KotlinLogging.logger`) | `bluetape4k-logging` | `GreetingService`, `ObservationLoggingConfig` | Kotlin DSL lazy log lambdas — no unnecessary string allocation |
-| `debug {}` / `info {}` extension functions | `bluetape4k-logging` | All source files | Eliminates `if (log.isDebugEnabled)` boilerplate |
-| JUnit 5 extensions (`@TestInstance`, `shouldNotBeNull`, etc.) | `bluetape4k-junit5` | `ObservationRegistryTest` | Concise Kotlin-style assertion chains |
-| Jackson 3.x serialization support | `bluetape4k-jackson3` | REST API responses | Spring Boot 4 + Jackson 3 auto-configuration compatibility |
-
-## Before / After
-
-### Structured Logging (Kotlin DSL)
-
-```kotlin
-// Before — standard SLF4J
-import org.slf4j.LoggerFactory
-private val log = LoggerFactory.getLogger(GreetingService::class.java)
-
-fun sayHello(): String {
-    if (log.isDebugEnabled) {
-        log.debug("call sayHelloInternal")
-    }
-    return "Hello, World!"
-}
-
-// After — bluetape4k-logging
-import io.bluetape4k.logging.KLogging
-import io.bluetape4k.logging.debug
-
-companion object: KLogging()
-
-fun sayHello(): String {
-    log.debug { "call sayHelloInternal" }  // lazy lambda — no string construction unless debug is enabled
-    return "Hello, World!"
-}
-```
-
-### Observation Event Logging Handler
-
-```kotlin
-// Before — standard Micrometer ObservationHandler, manual logger creation
-@Configuration
-class ObservationLoggingConfig {
-    private val log = LoggerFactory.getLogger("ObservationLogger")
-
-    @Bean
-    fun observationLogger(): ObservationHandler<Observation.Context> {
-        return ObservationHandler { event ->
-            if (log.isDebugEnabled) log.debug("Observation event: $event")
-        }
-    }
-}
-
-// After — bluetape4k-logging + ObservationTextPublisher
-import io.bluetape4k.logging.KotlinLogging
-import io.bluetape4k.logging.debug
-
-@Configuration(proxyBeanMethods = false)
-class ObservationLoggingConfig {
-    private val logger = KotlinLogging.logger("io.bluetape4k.workshop.observation.ObservationLogger")
-
-    @Bean
-    fun observationLogger(): ObservationHandler<Observation.Context> {
-        return ObservationTextPublisher { logger.debug { it } }
-    }
-}
-```
-
-### `observeOrNull` — Null-Safe Observation Wrapper
-
-```kotlin
-// Before — standard Micrometer with manual null handling
-fun observe(registry: ObservationRegistry, block: () -> String?): String? {
-    val obs = Observation.createNotStarted("my-obs", registry).start()
-    return try {
-        block()
-    } catch (e: Exception) {
-        obs.error(e)
-        throw e
-    } finally {
-        obs.stop()
-    }
-}
-
-// After — bluetape4k observeOrNull extension (from ObservationSupport)
-fun sayHelloWithName(name: String): String {
-    return Observation.createNotStarted("greetingService.sayHelloWithName", observationRegistry)
-        .contextualName("sayHello-with-name")
-        .lowCardinalityKeyValue("name", name)
-        .observeOrNull { "Hello, $name" }!!  // null-safe, exception-aware wrapper
-}
-```
-
-## Observation Propagation Across Layers
-
-```
-HTTP Request
-    └── GreetingController         (outer span: HTTP server span)
-            └── GreetingService    (@Observed AOP span: greetingService)
-                    └── sayHelloWithName  (nested span: greetingService.sayHelloWithName)
-```
-
-`@Observed` at class level creates one span per method call. Nesting is handled automatically by `ObservationRegistry` thread-local state.
-
 ## Tests
 
-- `ObservationRegistryTest` — direct `ObservationRegistry` API verification
-- `GreetingServiceTracingIntegrationTest` — integration tracing validation with `TestObservationRegistry`
+```bash
+./gradlew :observability-micrometer-observation:test
+```
+
+The test suite covers direct `ObservationRegistry` usage and service tracing with `TestObservationRegistry`.
 
 ## Running
 
 ```bash
-# Start the application
 ./gradlew :observability-micrometer-observation:bootRun
-
-# Run tests
-./gradlew :observability-micrometer-observation:test
+curl "http://localhost:8080/greeting/for?name=Debop"
+curl "http://localhost:8080/actuator/prometheus"
 ```
 
 ## References
 
-- [Micrometer Observation official docs](https://micrometer.io/docs/observation)
-- [Spring Boot Actuator + Micrometer](https://docs.spring.io/spring-boot/reference/actuator/metrics.html)
-- [`micrometer-tracing-coroutines`](../micrometer-tracing-coroutines) — Coroutine tracing with `withObservationSuspending`
+- [Micrometer Observation](https://micrometer.io/docs/observation)
+- [Spring Boot Actuator metrics](https://docs.spring.io/spring-boot/reference/actuator/metrics.html)
+- [`micrometer-tracing-coroutines`](../micrometer-tracing-coroutines) - coroutine observation propagation.

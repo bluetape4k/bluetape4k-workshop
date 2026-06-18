@@ -1,150 +1,80 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1252" viewBox="0 0 1320 1252" role="img" aria-label="Micrometer Observation with Spring MVC architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;observability/micrometer-observation/src/main/kotlin/io/bluetape4k/workshop/observation/ObservationApp.kt&quot;,&quot;observability/micrometer-observation/src/main/kotlin/io/bluetape4k/workshop/observation/config/ObservationAspectConfig.kt&quot;,&quot;observability/micrometer-observation/src/main/kotlin/io/bluetape4k/workshop/observation/config/ObservationFilterConfig.kt&quot;,&quot;observability/micrometer-observation/src/main/kotlin/io/bluetape4k/workshop/observation/config/ObservationLoggingConfig.kt&quot;,&quot;observability/micrometer-observation/src/main/kotlin/io/bluetape4k/workshop/observation/controller/GreetingController.kt&quot;,&quot;observability/micrometer-observation/src/main/kotlin/io/bluetape4k/workshop/observation/controller/IndexController.kt&quot;,&quot;observability/micrometer-observation/src/main/kotlin/io/bluetape4k/workshop/observation/service/GreetingService.kt&quot;,&quot;observability/micrometer-observation/src/main/kotlin/io/bluetape4k/workshop/observation/support/ObservationSupport.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="760" viewBox="0 0 1500 760" role="img" aria-label="Micrometer observation architecture diagram">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/></marker>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:23px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:27px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}.label{font-family:"Comic Mono";font-size:13px;fill:#334155}.line{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="1252"/>
-  <rect class="frame" x="16" y="16" width="1288" height="1220" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Micrometer Observation with Spring MVC</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">observed requests, coroutine traces, and telemetry export</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="394.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="354.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="283.5">Observed Request</tspan><tspan class="layer-title" x="151.0" y="306.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="325.0">controllers,</tspan><tspan class="layer-detail" x="151.0" y="341.0">tracing apps, test</tspan><tspan class="layer-detail" x="151.0" y="357.0">probes</tspan></text>
-    </g>
-    <g class="layer" data-layer="service">
-      <rect x="46.0" y="526.0" width="1228.0" height="132.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="546.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="564.5">Instrumented</tspan><tspan class="layer-title" x="151.0" y="587.5">Service Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="614.0">coroutines, spans,</tspan><tspan class="layer-detail" x="151.0" y="630.0">observation scopes</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="676.0" width="1228.0" height="366.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="696.0" width="174" height="326.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="831.5">Telemetry</tspan><tspan class="layer-title" x="151.0" y="854.5">Integration</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="873.0">Micrometer,</tspan><tspan class="layer-detail" x="151.0" y="889.0">exporters,</tspan><tspan class="layer-detail" x="151.0" y="905.0">auto-config</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="1060.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="1080.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="1110.0">Telemetry Runtime</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1148.0">metrics, traces,</tspan><tspan class="layer-detail" x="151.0" y="1164.0">logs, test backends</tspan></text>
-    </g>
-    <g class="edge" data-edge="api4-&gt;service0" data-label="delegates">
-      <path d="M 1096.0 481.0 L 1096.0 513.5 L 592.0 513.5 L 592.0 546.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
-    </g>
-    <g class="edge" data-edge="service1-&gt;infra0" data-label="persists / publishes">
-      <path d="M 928.0 638.0 L 928.0 667.0 L 424.0 667.0 L 424.0 696.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 424.0 1022.0 L 424.0 1051.0 L 760.0 1051.0 L 760.0 1080.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Observation App | application bootstrap">
-      <rect x="274.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="183.5">Observation App</tspan><tspan class="node-detail" x="424.0" y="207.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry1" data-lines="Abstract Observation | Test | observation">
-      <rect x="610.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="171.5">Abstract Observation</tspan><tspan class="node-title" x="760.0" y="195.5">Test</tspan><tspan class="node-detail" x="760.0" y="219.5">observation</tspan></text>
-    </g>
-    <g class="node" data-node="entry2" data-lines="Observation Registry | Test | examples">
-      <rect x="946.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="171.5">Observation Registry</tspan><tspan class="node-title" x="1096.0" y="195.5">Test</tspan><tspan class="node-detail" x="1096.0" y="219.5">examples</tspan></text>
-    </g>
-    <g class="node" data-node="entry3" data-lines="Greeting Service Tracing | Integration Test | tracing">
-      <rect x="274.0" y="258.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="295.5">Greeting Service Tracing</tspan><tspan class="node-title" x="424.0" y="319.5">Integration Test</tspan><tspan class="node-detail" x="424.0" y="343.5">tracing</tspan></text>
-    </g>
-    <g class="node" data-node="api0" data-lines="Observation Aspect | Config | configuration">
-      <rect x="610.0" y="258.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="295.5">Observation Aspect</tspan><tspan class="node-title" x="760.0" y="319.5">Config</tspan><tspan class="node-detail" x="760.0" y="343.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="api1" data-lines="Observation Filter | Config | configuration">
-      <rect x="946.0" y="258.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="295.5">Observation Filter</tspan><tspan class="node-title" x="1096.0" y="319.5">Config</tspan><tspan class="node-detail" x="1096.0" y="343.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="api2" data-lines="Observation Logging | Config | configuration">
-      <rect x="274.0" y="382.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="419.5">Observation Logging</tspan><tspan class="node-title" x="424.0" y="443.5">Config</tspan><tspan class="node-detail" x="424.0" y="467.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="api3" data-lines="Greeting Controller | HTTP adapter">
-      <rect x="610.0" y="389.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="431.5">Greeting Controller</tspan><tspan class="node-detail" x="760.0" y="455.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api4" data-lines="Index Controller | HTTP adapter">
-      <rect x="946.0" y="389.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="431.5">Index Controller</tspan><tspan class="node-detail" x="1096.0" y="455.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="service0" data-lines="Greeting Service | service component">
-      <rect x="442.0" y="546.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="592.0" y="588.5">Greeting Service</tspan><tspan class="node-detail" x="592.0" y="612.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="service1" data-lines="Observation Support | support">
-      <rect x="778.0" y="546.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="928.0" y="588.5">Observation Support</tspan><tspan class="node-detail" x="928.0" y="612.5">support</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Spring boot | autoconfigure lib | Micrometer/Spring Layer">
-      <rect x="274.0" y="696.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="733.5">Spring boot</tspan><tspan class="node-title" x="424.0" y="757.5">autoconfigure lib</tspan><tspan class="node-detail" x="424.0" y="781.5">Micrometer/Spring Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra1" data-lines="Spring boot | autoconfigure processor | Micrometer/Spring Layer">
-      <rect x="610.0" y="696.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="733.5">Spring boot</tspan><tspan class="node-title" x="760.0" y="757.5">autoconfigure processor</tspan><tspan class="node-detail" x="760.0" y="781.5">Micrometer/Spring Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra2" data-lines="Spring boot | configuration processor | Micrometer/Spring Layer">
-      <rect x="946.0" y="696.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="733.5">Spring boot</tspan><tspan class="node-title" x="1096.0" y="757.5">configuration processor</tspan><tspan class="node-detail" x="1096.0" y="781.5">Micrometer/Spring Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra3" data-lines="Spring boot devtools | Micrometer/Spring Layer">
-      <rect x="274.0" y="820.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="862.5">Spring boot devtools</tspan><tspan class="node-detail" x="424.0" y="886.5">Micrometer/Spring Layer</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k Observability APIs">
-      <rect x="610.0" y="820.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="862.5">workshop</tspan><tspan class="node-detail" x="760.0" y="886.5">bluetape4k Observability APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="micrometer | bluetape4k Observability APIs">
-      <rect x="946.0" y="820.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="862.5">micrometer</tspan><tspan class="node-detail" x="1096.0" y="886.5">bluetape4k Observability APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="jackson3 | bluetape4k Observability APIs">
-      <rect x="274.0" y="930.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="972.5">jackson3</tspan><tspan class="node-detail" x="424.0" y="996.5">bluetape4k Observability APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="In-memory / JVM | Metrics / Trace Runtime">
-      <rect x="610.0" y="1080.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1122.5">In-memory / JVM</tspan><tspan class="node-detail" x="760.0" y="1146.5">Metrics / Trace Runtime</tspan></text>
-    </g>
+  <rect class="canvas" width="1500" height="760"/>
+  <rect class="frame" x="24" y="24" width="1452" height="712" rx="24"/>
+  <text class="title" x="750" y="66" text-anchor="middle">Micrometer Observation architecture</text>
+  <text class="subtitle" x="750" y="94" text-anchor="middle">Spring HTTP observation remains outermost; GreetingService creates method observations through ObservationRegistry.</text>
+
+  <rect class="layer" x="64" y="132" width="292" height="520" rx="18"/>
+  <text class="layerLabel" x="92" y="168">Web endpoints</text>
+  <g filter="url(#shadow)">
+    <rect x="104" y="234" width="212" height="120" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
+    <text class="cardTitle" x="210" y="278" text-anchor="middle">Greeting Controller</text>
+    <text class="cardText" x="210" y="310" text-anchor="middle">GET /greeting</text>
+    <text class="cardText" x="210" y="334" text-anchor="middle">GET /greeting/for</text>
   </g>
+  <g filter="url(#shadow)">
+    <rect x="104" y="438" width="212" height="94" rx="16" fill="#F8FAFC" stroke="#64748B" stroke-width="1.7"/>
+    <text class="cardTitle" x="210" y="474" text-anchor="middle">HTTP filter</text>
+    <text class="cardText" x="210" y="500" text-anchor="middle">ServerHttpObservation</text>
+  </g>
+
+  <rect class="layer" x="408" y="132" width="312" height="520" rx="18"/>
+  <text class="layerLabel" x="436" y="168">Service observations</text>
+  <g filter="url(#shadow)">
+    <rect x="448" y="250" width="232" height="130" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="564" y="296" text-anchor="middle">Greeting Service</text>
+    <text class="cardText" x="564" y="328" text-anchor="middle">@Observed greetingService</text>
+    <text class="cardText" x="564" y="352" text-anchor="middle">manual observations</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="448" y="438" width="232" height="94" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="564" y="474" text-anchor="middle">Observed Aspect</text>
+    <text class="cardText" x="564" y="500" text-anchor="middle">skips controllers</text>
+  </g>
+
+  <rect class="layer" x="772" y="132" width="292" height="520" rx="18"/>
+  <text class="layerLabel" x="800" y="168">Micrometer core</text>
+  <g filter="url(#shadow)">
+    <rect x="812" y="292" width="212" height="130" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
+    <text class="cardTitle" x="918" y="330" text-anchor="middle">Observation</text>
+    <text class="cardTitle" x="918" y="360" text-anchor="middle">Registry</text>
+    <text class="cardText" x="918" y="394" text-anchor="middle">events + key-values</text>
+  </g>
+
+  <rect class="layer" x="1116" y="132" width="320" height="520" rx="18"/>
+  <text class="layerLabel" x="1144" y="168">Handlers and exports</text>
+  <g filter="url(#shadow)">
+    <rect x="1156" y="214" width="240" height="106" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
+    <text class="cardTitle" x="1276" y="254" text-anchor="middle">Text Publisher</text>
+    <text class="cardText" x="1276" y="284" text-anchor="middle">ObservationTextPublisher</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1156" y="366" width="240" height="106" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="1276" y="406" text-anchor="middle">Actuator metrics</text>
+    <text class="cardText" x="1276" y="436" text-anchor="middle">Prometheus endpoint</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1156" y="518" width="240" height="84" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
+    <text class="cardTitle" x="1276" y="554" text-anchor="middle">Test registry</text>
+    <text class="cardText" x="1276" y="580" text-anchor="middle">integration assertions</text>
+  </g>
+
+  <path class="line" d="M 316 294 L 448 315" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 316 485 L 360 485 L 360 572 L 760 572 L 760 370 L 812 370" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 680 315 L 748 315 L 748 340 L 812 340" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 680 485 L 748 485 L 748 400 L 812 400" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 1024 338 L 1156 266" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 1024 374 L 1156 419" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 918 422 L 918 560 L 1156 560" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <text class="label" x="382" y="552">HTTP observation</text>
 </svg>
