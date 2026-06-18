@@ -2,17 +2,17 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
-
-이 예제는 **ID Generator Workshop**을 실행 가능한 Spring Boot 애플리케이션 기능 워크숍 조각으로 다룹니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄여 주는 라이브러리와 프레임워크 API 관찰에 초점을 둡니다.
+이 모듈은 `bluetape4k-idgenerators`가 제공하는 네 가지 ID 생성기 계열을
+Spring Boot WebFlux REST API로 노출합니다. 정렬 가능한 ID를 비교하거나,
+Snowflake `Long`을 역파싱하거나, 숫자 ID를 Hashids로 가리는 용도를 한 번에 확인할 수 있습니다.
 
 ## 아키텍처 다이어그램
 
-![ID Generator Workshop Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/spring-boot-idgenerator-architecture-01.png)
+![ID Generator Workshop 아키텍처 다이어그램](../../docs/images/readme-diagrams/spring-boot-idgenerator-readme-architecture-01.png)
 
-이 모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성을 중심으로 구성됩니다. README와 코드를 비교할 때는 `io.bluetape4k.workshop.springboot` 패키지를 기준으로 삼습니다.
+## 요청 흐름
 
-## 시퀀스 다이어그램
+![ID Generator Workshop 요청 흐름 다이어그램](../../docs/images/readme-diagrams/spring-boot-idgenerator-readme-sequence-01.png)
 
 이 통합 예제는 `bluetape4k-idgenerators`가 제공하는 네 가지 분산 ID 생성기를 Spring Boot WebFlux REST API로 노출합니다.
 Snowflake, ULID, KSUID, Hashids의 특성과 각 알고리즘의 운영상 주의점을 함께 다룹니다.
