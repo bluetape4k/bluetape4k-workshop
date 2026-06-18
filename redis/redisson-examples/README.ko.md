@@ -2,21 +2,17 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+이 모듈은 [Redisson](https://redisson.org/) 기능을 테스트로 검증하는 catalog입니다. 하나의 공통 Redis fixture 위에서 distributed lock, semaphore, object, pub/sub, collection, Redis Stream, local cached map, read/write-through cache 예제를 다룹니다.
 
-이 예제는 **Redisson 예제**를 실행 가능한 Redis 기반 coordination 워크숍 조각으로 다룹니다. 개발자가 가장 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄여 주는 라이브러리와 프레임워크 API를 중심으로 설명합니다.
+## 예제 카탈로그
 
-## 아키텍처 다이어그램
+![Redisson Examples catalog](../../docs/images/readme-diagrams/redis-redisson-examples-readme-architecture-01.png)
 
-![Redisson 예제 Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/redis-redisson-examples-architecture-01.png)
+## 테스트 Runtime
 
-이 모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성을 중심으로 구성됩니다. README와 코드를 비교할 때는 `io.bluetape4k.workshop.redis` 패키지를 기준으로 삼습니다.
+![Redisson Examples runtime](../../docs/images/readme-diagrams/redis-redisson-examples-readme-runtime-01.png)
 
-## 시퀀스 다이어그램
-
-이 예제 모음은 Redis client library인 [Redisson](https://redisson.org/)의 distributed synchronization object를 사용합니다.
-bluetape4k의 `RedissonCodecs.LZ4ForyComposite`, `localCachedMap()`, `streamAddArgsOf()`, `VirtualThreadExecutor`, `RedisServer.Launcher`, 테스트 concurrency helper를 사용합니다.
-Testcontainers로 Redis 컨테이너를 자동 시작하고 그 컨테이너를 대상으로 통합 테스트를 실행합니다.
+`AbstractRedissonTest`는 `RedisServer.Launcher.redis`로 Redis를 시작하고, `RedissonCodecs.LZ4ForyComposite`와 `VirtualThreadExecutor`를 사용하는 tuned `RedissonClient`를 만듭니다. 또한 raw Lettuce command로 Redis keyspace notification을 켜고, 각 예제에 재현 가능한 random name을 제공합니다.
 
 ## 예제 범주
 

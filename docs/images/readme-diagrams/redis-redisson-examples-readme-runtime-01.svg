@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1640" height="700" viewBox="0 0 1640 700" role="img" aria-label="Redisson examples runtime fixture">
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker>
+    <style>.canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.cardTitle{font-family:"Architects Daughter";font-size:28px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.line{fill:none;stroke-width:3.6;stroke-linecap:round;stroke-linejoin:round}</style>
+  </defs>
+  <rect class="canvas" width="1640" height="700"/>
+  <rect class="frame" x="24" y="24" width="1592" height="652" rx="24"/>
+  <text class="title" x="820" y="70" text-anchor="middle">Redisson test runtime</text>
+  <text class="subtitle" x="820" y="102" text-anchor="middle">AbstractRedissonTest builds one Redisson client with bluetape4k codec, virtual-thread executor, Redis container, and keyspace notifications.</text>
+  <g filter="url(#shadow)"><rect x="112" y="276" width="252" height="116" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="238" y="318" text-anchor="middle">RedisServer</text><text class="cardText" x="238" y="350" text-anchor="middle">Launcher.redis</text><text class="cardText" x="238" y="376" text-anchor="middle">Testcontainers singleton</text></g>
+  <g filter="url(#shadow)"><rect x="496" y="260" width="276" height="148" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="634" y="302" text-anchor="middle">Redisson Config</text><text class="cardText" x="634" y="334" text-anchor="middle">LZ4ForyComposite codec</text><text class="cardText" x="634" y="360" text-anchor="middle">VirtualThreadExecutor</text><text class="cardText" x="634" y="386" text-anchor="middle">pool + retry tuning</text></g>
+  <g filter="url(#shadow)"><rect x="904" y="260" width="276" height="148" rx="16" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="1042" y="302" text-anchor="middle">Test examples</text><text class="cardText" x="1042" y="334" text-anchor="middle">locks, objects, streams</text><text class="cardText" x="1042" y="360" text-anchor="middle">local cache and SOR</text><text class="cardText" x="1042" y="386" text-anchor="middle">random names per test</text></g>
+  <g filter="url(#shadow)"><rect x="1312" y="276" width="228" height="116" rx="16" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.7"/><text class="cardTitle" x="1426" y="318" text-anchor="middle">Raw Lettuce</text><text class="cardText" x="1426" y="350" text-anchor="middle">CONFIG SET AKE</text><text class="cardText" x="1426" y="376" text-anchor="middle">keyspace notifications</text></g>
+  <path class="line" d="M 364 334 L 496 334" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 772 334 L 904 334" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 1180 334 L 1312 334" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+</svg>
