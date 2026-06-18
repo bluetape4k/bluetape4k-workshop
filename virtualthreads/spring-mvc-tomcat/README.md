@@ -1,261 +1,80 @@
-# Spring Boot MVC + Virtual Thread + Embedded Tomcat Example
+# Spring MVC on Virtual Threads
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+This module shows a blocking Spring MVC application running on Java virtual
+threads with embedded Tomcat. It keeps the MVC programming model, but moves
+request handling, `@Async` work, and selected parallel tasks onto virtual-thread
+executors.
 
-This example exercises **Spring Boot MVC + Virtual Thread + Embedded Tomcat Example** as a runnable virtual-thread execution workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+## Architecture
 
-## Architecture Diagram
+![Spring MVC virtual thread architecture](../../docs/images/readme-diagrams/virtualthreads-spring-mvc-tomcat-readme-architecture-01.png)
 
-![Spring Boot MVC + Virtual Thread + Embedded Tomcat Example Graphviz architecture diagram](../../docs/images/readme-diagrams/virtualthreads-spring-mvc-tomcat-readme-architecture-01.png)
+## Request Flow
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.virtualthreads` as the source of truth when comparing this README with the code.
+![Spring MVC virtual thread request flow](../../docs/images/readme-diagrams/virtualthreads-spring-mvc-tomcat-readme-flow-01.png)
 
-## Sequence Diagram
+## What To Look At
 
-This example uses Virtual Threads in Spring Boot MVC.
+| Area | Code | What it demonstrates |
+|---|---|---|
+| Tomcat request executor | `config/TomcatConfig` | Replaces Tomcat's protocol handler executor with `newVirtualThreadPerTaskExecutor()` |
+| Spring `@Async` | `config/AsyncConfig` | Runs async methods on a virtual-thread executor and keeps MDC context |
+| Explicit executor bean | `config/VirtualThreadConfig` | Provides a named virtual-thread-per-task executor for helper APIs |
+| Parallel blocking work | `controller/VirtualThreadController` | Uses `structuredTaskScopeAll` and `virtualFutureAll` for many blocking tasks |
+| MVC + JPA endpoints | `controller/MemberController`, `controller/TeamController` | Runs repository calls from MVC endpoints and virtual-thread helpers |
+| Blocking HTTP call | `controller/HttpbinController` | Calls the Testcontainers-backed httpbin service from a blocking MVC endpoint |
 
-## Virtual Thread Processing Model
+## Endpoints
 
-## Environment Setup
+| Endpoint | Purpose |
+|---|---|
+| `GET /virtual-thread` | Confirms the request is handled in the virtual-thread setup and triggers `@Async` work |
+| `GET /virtual-thread/multi` | Runs 100 blocking subtasks with `structuredTaskScopeAll` |
+| `GET /virtual-thread/virtualFutureAll` | Runs 100 blocking subtasks with `virtualFutureAll` |
+| `GET /member`, `GET /member/{id}` | Reads JPA members through the MVC controller |
+| `POST /member/search` | Runs the Querydsl-backed member search |
+| `GET /team`, `GET /team/{id}`, `GET /team/name/{name}` | Reads team data through the MVC controller |
+| `GET /httpbin/block/{seconds}` | Exercises a blocking external HTTP call through the httpbin test server |
 
-Install JDK 25 by referring to [Applying Virtual Threads in Kotlin + Spring Boot](https://jsonobject.tistory.com/631). This example uses JDK 25.
-
-### Spring Boot Configuration
+## Configuration
 
 ```yaml
 spring:
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  tomcat:
     threads:
-        virtual:
-            enabled: true   # Enable Virtual Thread support
+      max: 800
+      min-spare: 20
 ```
 
-### Tomcat Virtual Thread Executor
+`TomcatConfig` is the decisive sample code: it customizes the embedded Tomcat
+protocol handler so each request can run on a virtual thread. The application
+uses an in-memory H2 database by default and initializes sample `Team` and
+`Member` rows at startup.
 
-```kotlin
-/**
- * Configure Tomcat ProtocolHandler to use a Virtual Thread executor
- */
-@Configuration
-class TomcatConfig {
-
-    @Bean
-    fun protocolHandlerVirtualThreadExecutorCustomizer(): TomcatProtocolHandlerCustomizer<*> {
-        return TomcatProtocolHandlerCustomizer<ProtocolHandler> { protocolHandler ->
-            protocolHandler.executor = Executors.newVirtualThreadPerTaskExecutor()
-        }
-    }
-}
-```
-
-### `@Async` with Virtual Threads
-
-```kotlin
-@Configuration(proxyBeanMethods = false)
-@EnableAsync
-class AsyncConfig {
-
-    @Bean(TaskExecutionAutoConfiguration.APPLICATION_TASK_EXECUTOR_BEAN_NAME)
-    fun asyncTaskExecutor(): AsyncTaskExecutor {
-        val factory = Thread.ofVirtual().name("async-vt-exec-", 0).factory()
-        return TaskExecutorAdapter(Executors.newThreadPerTaskExecutor(factory)).apply {
-            setTaskDecorator(LoggingTaskDecorator())
-        }
-    }
-}
-```
-
-### Kotlin Coroutines with Virtual Thread Dispatcher
-
-```kotlin
-val Dispatchers.VirtualThread: CoroutineDispatcher
-    get() = Executors.newVirtualThreadPerTaskExecutor().asCoroutineDispatcher()
-```
-
-## Used bluetape4k Features
-
-| Feature | Artifact | Code Location | Benefit |
-|---|---|---|---|
-| `structuredTaskScopeAll` | `bluetape4k-virtualthread-api` | `VirtualThreadController.multipleTasks()` | Removes `StructuredTaskScope.ShutdownOnFailure` boilerplate; auto-aggregates exceptions |
-| `virtualFutureAll` | `bluetape4k-virtualthread-api` | `VirtualThreadController.multipleTasksWithVirtualFuture()` | One-liner parallel Virtual Thread execution vs `CompletableFuture.allOf` |
-| `KLoggingChannel` | `bluetape4k-logging` | `VirtualThreadController`, `AsyncConfig` | Coroutine context-aware logger companion object |
-| `KLogging` | `bluetape4k-logging` | `AsyncConfig` | SLF4J companion object logger |
-| Hibernate extensions | `bluetape4k-hibernate` | JPA Entity/Repository | Spring Boot 4 + Hibernate 6/7 auto-configuration |
-| Cache support | `bluetape4k-cache-core` | Cache configuration | Caffeine + JCache integration |
-| Testcontainers wrapper | `bluetape4k-testcontainers` | `AbstractVirtualThreadMvcTest` | MySQL container singleton — auto-start and reuse |
-
-## Before / After
-
-### Parallel Virtual Thread Task Execution
-
-```kotlin
-// Before — JDK StructuredTaskScope direct usage (verbose)
-fun multipleTasks(): String {
-    val taskSize = 100
-    val factory = Thread.ofVirtual().name("vt-multi-", 0).factory()
-
-    StructuredTaskScope.ShutdownOnFailure().use { scope ->
-        repeat(taskSize) {
-            scope.fork {
-                Thread.sleep(Random.nextLong(500, 1000))
-            }
-        }
-        scope.join().throwIfFailed()
-    }
-    return "Done $taskSize tasks"
-}
-
-// After — bluetape4k structuredTaskScopeAll
-import io.bluetape4k.concurrent.virtualthread.structuredTaskScopeAll
-
-fun multipleTasks(): String {
-    val taskSize = 100
-    structuredTaskScopeAll("multi", factory) { scope ->
-        repeat(taskSize) {
-            scope.fork {
-                Thread.sleep(Random.nextLong(500, 1000))
-                log.debug { "Task $it done. (${Thread.currentThread()})" }
-            }
-        }
-        scope.join().throwIfFailed()
-        Unit
-    }
-    return "Run multiple[$taskSize] tasks. (${Thread.currentThread()})"
-}
-```
-
-### CompletableFuture-Based Parallel Virtual Thread Execution
-
-```kotlin
-// Before — manual CompletableFuture.allOf + VirtualThread executor management
-fun multipleTasksWithFuture(): String {
-    val executor = Executors.newVirtualThreadPerTaskExecutor()
-    val futures = List(100) { i ->
-        CompletableFuture.runAsync({
-            Thread.sleep(1000)
-        }, executor)
-    }
-    CompletableFuture.allOf(*futures.toTypedArray()).get()
-    executor.shutdown()
-    return "Done"
-}
-
-// After — bluetape4k virtualFutureAll
-import io.bluetape4k.concurrent.virtualthread.virtualFutureAll
-
-fun multipleTasksWithVirtualFuture(): String {
-    val tasks = List(100) {
-        { Thread.sleep(1000) }
-    }
-    virtualFutureAll(tasks, executor).await()
-    return "Run multiple[100] tasks. (${Thread.currentThread()})"
-}
-```
-
-## Virtual Thread vs Platform Thread Performance Comparison
-
-The following table summarizes observed behavior when both server configurations handle the same
-Gatling load (10→400 concurrent users, 30s ramp):
-
-| Metric | Platform Thread (default Tomcat) | Virtual Thread |
-|---|---|---|
-| **Thread pool limit** | ~200 threads (Tomcat default) | Unbounded (one VT per request) |
-| **Blocking I/O behavior** | OS thread blocked (pool pressure) | Carrier thread released (no blocking) |
-| **Memory per thread** | ~1 MB stack | ~few KB heap per VT |
-| **Context switch cost** | OS kernel context switch | JVM scheduler — cheaper |
-| **Throughput (blocking endpoints)** | Degrades at > 200 concurrent | Scales linearly |
-| **p99 response time (400 users)** | Spikes under load | Remains stable |
-| **Suitable for** | CPU-bound workloads | I/O-bound workloads (DB, HTTP, file) |
-
-> Note: Virtual Threads do **not** improve CPU-bound workloads. Benefits appear only when threads
-> spend significant time blocked on I/O (DB queries, external HTTP calls, file reads).
-
-### When Virtual Threads Shine
-
-```
-Scenario: 400 concurrent DB queries (each blocks 50ms)
-
-Platform threads:
-    200-thread pool → 200 queries in parallel → 200 queries wait in queue
-    → average response time ≈ 100ms (50ms active + 50ms queue wait)
-
-Virtual threads:
-    400 VTs scheduled on ~8 carrier threads → all 400 in progress concurrently
-    → average response time ≈ 50ms (no queue wait)
-```
-
-## Load Testing with Gatling
-
-### Step 1 — Start the Application
+## Run
 
 ```bash
 ./gradlew :virtualthreads-spring-mvc-tomcat:bootRun
 ```
 
-### Step 2 — Run Simulations
+Run the JPA load scenario after the application starts:
 
 ```bash
-# All simulations
-./gradlew :virtualthreads-spring-mvc-tomcat:gatlingRun
-
-# Specific simulation
-./gradlew :virtualthreads-spring-mvc-tomcat:gatlingRun --simulation simulations.VirtualThreadSimulation
 ./gradlew :virtualthreads-spring-mvc-tomcat:gatlingRun --simulation simulations.JpaSimulation
 ```
 
-### Step 3 — View Reports
+Gatling reports are written under
+`virtualthreads/spring-mvc-tomcat/build/reports/gatling/`.
 
-Reports are generated in `build/reports/gatling/<simulation-name>-<timestamp>/index.html`.
+## Test
 
-### Stop Conditions
-
-Simulations end when the injection profile completes. To add assertion gates:
-
-```kotlin
-init {
-    setUp(
-        scn.injectClosed(rampConcurrentUsers(10).to(400).during(30.seconds.toJavaDuration()))
-    ).protocols(httpProtocol)
-     .assertions(
-         global().responseTime().percentile(95.0).lt(500),   // p95 < 500ms
-         global().successfulRequests().percent().gt(99.0)     // error rate < 1%
-     )
-}
+```bash
+./gradlew :virtualthreads-spring-mvc-tomcat:test
 ```
-
-## Performance Measurement
-
-### Find Member by Id API
-
-This API calls `/api/members/{id}` to retrieve `Member` information.
-
-![gatling](doc/FindMemberById.png)
-
-### JPA Find All Teams API
-
-This API calls `/api/teams` to retrieve `Team` information.
-
-![gatling](doc/JpaFindAllTeams.png)
-
-## Prerequisites
-
-- Docker (for Testcontainers MySQL)
-- JDK 25
-- Port 8080 available
-
-## References
-
-### Spring Boot with Virtual Threads
-
-- [Applying Virtual Threads in Kotlin + Spring Boot](https://jsonobject.tistory.com/631)
-- [A guide to using virtual threads with Spring Boot](https://bell-sw.com/blog/a-guide-to-using-virtual-threads-with-spring-boot/)
-- [Virtual Threads in Springboot 3.2](https://medium.com/nerd-for-tech/virtual-threads-in-springboot-3-2-9a7250429809?)
-
-### Gatling
-
-- [gatling/gatling-gradle-plugin-demo-kotlin](https://github.com/gatling/gatling-gradle-plugin-demo-kotlin)
-- [Stress Testing with Gatling & Kotlin - Part 2](https://medium.com/@mdportnov/stress-testing-with-gatling-kotlin-part-2-1eb13d489dc9)
-- [boot-vt-benchmark](https://github.com/olegonsoftware/boot-vt-benchmark)
-- [Gatling Gradle Plugin](https://docs.gatling.io/reference/extensions/build-tools/gradle-plugin/)
-- [Kotlin Gatling Tutorial](https://github.com/mdportnov/kotlin-gatling-tutorial)

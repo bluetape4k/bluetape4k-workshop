@@ -1,260 +1,80 @@
-# Spring Boot MVC + Virtual Thread + Embedded Tomcat Example
+# Spring MVC on Virtual Threads
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+이 모듈은 embedded Tomcat 기반의 blocking Spring MVC application을 Java virtual
+thread 위에서 실행하는 예제입니다. MVC programming model은 유지하면서 request
+handling, `@Async` 작업, 일부 parallel blocking task를 virtual-thread executor로
+옮깁니다.
 
-이 예제는 **Spring Boot MVC + Virtual Thread + Embedded Tomcat Example**을 실행 가능한 virtual-thread execution 워크샵 조각으로 다룹니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 관찰에 초점을 맞춥니다.
+## 아키텍처
 
-## 아키텍처 다이어그램
+![Spring MVC virtual thread architecture](../../docs/images/readme-diagrams/virtualthreads-spring-mvc-tomcat-readme-architecture-01.png)
 
-![Spring Boot MVC + Virtual Thread + Embedded Tomcat Example Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/virtualthreads-spring-mvc-tomcat-readme-architecture-01.png)
+## Request Flow
 
-이 모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제에서 사용하는 런타임 의존성을 중심으로 구성됩니다. README와 코드를 비교할 때는 `io.bluetape4k.workshop.virtualthreads` 패키지를 기준으로 삼습니다.
+![Spring MVC virtual thread request flow](../../docs/images/readme-diagrams/virtualthreads-spring-mvc-tomcat-readme-flow-01.png)
 
-## 시퀀스 다이어그램
+## 무엇을 볼 것인가
 
-이 예제는 Spring Boot MVC에서 Virtual Thread를 사용합니다.
+| Area | Code | What it demonstrates |
+|---|---|---|
+| Tomcat request executor | `config/TomcatConfig` | Tomcat protocol handler executor를 `newVirtualThreadPerTaskExecutor()`로 교체합니다 |
+| Spring `@Async` | `config/AsyncConfig` | Async method를 virtual-thread executor에서 실행하고 MDC context를 유지합니다 |
+| Explicit executor bean | `config/VirtualThreadConfig` | Helper API가 사용할 virtual-thread-per-task executor를 제공합니다 |
+| Parallel blocking work | `controller/VirtualThreadController` | `structuredTaskScopeAll`, `virtualFutureAll`로 여러 blocking task를 실행합니다 |
+| MVC + JPA endpoints | `controller/MemberController`, `controller/TeamController` | MVC endpoint와 virtual-thread helper에서 repository call을 실행합니다 |
+| Blocking HTTP call | `controller/HttpbinController` | Testcontainers 기반 httpbin service를 blocking MVC endpoint에서 호출합니다 |
 
-## Virtual Thread 처리 모델
+## Endpoints
 
-## 환경 설정
+| Endpoint | Purpose |
+|---|---|
+| `GET /virtual-thread` | Virtual-thread setup에서 request가 처리되는지 확인하고 `@Async` 작업을 실행합니다 |
+| `GET /virtual-thread/multi` | `structuredTaskScopeAll`로 100개 blocking subtask를 실행합니다 |
+| `GET /virtual-thread/virtualFutureAll` | `virtualFutureAll`로 100개 blocking subtask를 실행합니다 |
+| `GET /member`, `GET /member/{id}` | MVC controller를 통해 JPA member를 조회합니다 |
+| `POST /member/search` | Querydsl 기반 member search를 실행합니다 |
+| `GET /team`, `GET /team/{id}`, `GET /team/name/{name}` | MVC controller를 통해 team data를 조회합니다 |
+| `GET /httpbin/block/{seconds}` | httpbin test server를 통해 blocking external HTTP call을 실행합니다 |
 
-[Applying Virtual Threads in Kotlin + Spring Boot](https://jsonobject.tistory.com/631)를 참고해 JDK 25를 설치하세요. 이 예제는 JDK 25를 사용합니다.
-
-### Spring Boot 설정
+## 설정
 
 ```yaml
 spring:
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  tomcat:
     threads:
-        virtual:
-            enabled: true   # Enable Virtual Thread support
+      max: 800
+      min-spare: 20
 ```
 
-### Tomcat Virtual Thread Executor
+핵심 sample code는 `TomcatConfig`입니다. Embedded Tomcat protocol handler를
+customize해서 request가 virtual thread에서 실행될 수 있게 합니다. Application은
+기본적으로 in-memory H2 database를 사용하며 startup 시 sample `Team`, `Member`
+row를 초기화합니다.
 
-```kotlin
-/**
- * Configure Tomcat ProtocolHandler to use a Virtual Thread executor
- */
-@Configuration
-class TomcatConfig {
-
-    @Bean
-    fun protocolHandlerVirtualThreadExecutorCustomizer(): TomcatProtocolHandlerCustomizer<*> {
-        return TomcatProtocolHandlerCustomizer<ProtocolHandler> { protocolHandler ->
-            protocolHandler.executor = Executors.newVirtualThreadPerTaskExecutor()
-        }
-    }
-}
-```
-
-### Virtual Threads를 사용하는 `@Async`
-
-```kotlin
-@Configuration(proxyBeanMethods = false)
-@EnableAsync
-class AsyncConfig {
-
-    @Bean(TaskExecutionAutoConfiguration.APPLICATION_TASK_EXECUTOR_BEAN_NAME)
-    fun asyncTaskExecutor(): AsyncTaskExecutor {
-        val factory = Thread.ofVirtual().name("async-vt-exec-", 0).factory()
-        return TaskExecutorAdapter(Executors.newThreadPerTaskExecutor(factory)).apply {
-            setTaskDecorator(LoggingTaskDecorator())
-        }
-    }
-}
-```
-
-### Virtual Thread Dispatcher를 사용하는 Kotlin Coroutines
-
-```kotlin
-val Dispatchers.VirtualThread: CoroutineDispatcher
-    get() = Executors.newVirtualThreadPerTaskExecutor().asCoroutineDispatcher()
-```
-
-## 사용한 bluetape4k 기능
-
-| 기능 | Artifact | 코드 위치 | 이점 |
-|---|---|---|---|
-| `structuredTaskScopeAll` | `bluetape4k-virtualthread-api` | `VirtualThreadController.multipleTasks()` | `StructuredTaskScope.ShutdownOnFailure` boilerplate를 제거하고 exception을 자동으로 aggregate합니다 |
-| `virtualFutureAll` | `bluetape4k-virtualthread-api` | `VirtualThreadController.multipleTasksWithVirtualFuture()` | `CompletableFuture.allOf` 대비 한 줄로 parallel Virtual Thread execution을 수행합니다 |
-| `KLoggingChannel` | `bluetape4k-logging` | `VirtualThreadController`, `AsyncConfig` | Coroutine context-aware logger companion object입니다 |
-| `KLogging` | `bluetape4k-logging` | `AsyncConfig` | SLF4J companion object logger입니다 |
-| Hibernate extensions | `bluetape4k-hibernate` | JPA Entity/Repository | Spring Boot 4 + Hibernate 6/7 auto-configuration입니다 |
-| Cache support | `bluetape4k-cache-core` | Cache configuration | Caffeine + JCache integration입니다 |
-| Testcontainers wrapper | `bluetape4k-testcontainers` | `AbstractVirtualThreadMvcTest` | MySQL container singleton으로, 자동 시작과 재사용을 제공합니다 |
-
-## Before / After
-
-### Parallel Virtual Thread Task Execution
-
-```kotlin
-// Before — JDK StructuredTaskScope direct usage (verbose)
-fun multipleTasks(): String {
-    val taskSize = 100
-    val factory = Thread.ofVirtual().name("vt-multi-", 0).factory()
-
-    StructuredTaskScope.ShutdownOnFailure().use { scope ->
-        repeat(taskSize) {
-            scope.fork {
-                Thread.sleep(Random.nextLong(500, 1000))
-            }
-        }
-        scope.join().throwIfFailed()
-    }
-    return "Done $taskSize tasks"
-}
-
-// After — bluetape4k structuredTaskScopeAll
-import io.bluetape4k.concurrent.virtualthread.structuredTaskScopeAll
-
-fun multipleTasks(): String {
-    val taskSize = 100
-    structuredTaskScopeAll("multi", factory) { scope ->
-        repeat(taskSize) {
-            scope.fork {
-                Thread.sleep(Random.nextLong(500, 1000))
-                log.debug { "Task $it done. (${Thread.currentThread()})" }
-            }
-        }
-        scope.join().throwIfFailed()
-        Unit
-    }
-    return "Run multiple[$taskSize] tasks. (${Thread.currentThread()})"
-}
-```
-
-### CompletableFuture 기반 Parallel Virtual Thread Execution
-
-```kotlin
-// Before — manual CompletableFuture.allOf + VirtualThread executor management
-fun multipleTasksWithFuture(): String {
-    val executor = Executors.newVirtualThreadPerTaskExecutor()
-    val futures = List(100) { i ->
-        CompletableFuture.runAsync({
-            Thread.sleep(1000)
-        }, executor)
-    }
-    CompletableFuture.allOf(*futures.toTypedArray()).get()
-    executor.shutdown()
-    return "Done"
-}
-
-// After — bluetape4k virtualFutureAll
-import io.bluetape4k.concurrent.virtualthread.virtualFutureAll
-
-fun multipleTasksWithVirtualFuture(): String {
-    val tasks = List(100) {
-        { Thread.sleep(1000) }
-    }
-    virtualFutureAll(tasks, executor).await()
-    return "Run multiple[100] tasks. (${Thread.currentThread()})"
-}
-```
-
-## Virtual Thread vs Platform Thread 성능 비교
-
-다음 표는 두 server configuration이 동일한 Gatling load(10->400 concurrent users, 30s ramp)를 처리할 때 관찰되는 동작을 요약합니다.
-
-| Metric | Platform Thread (default Tomcat) | Virtual Thread |
-|---|---|---|
-| **Thread pool limit** | ~200 threads(Tomcat default) | Unbounded(one VT per request) |
-| **Blocking I/O behavior** | OS thread blocked(pool pressure) | Carrier thread released(no blocking) |
-| **Memory per thread** | ~1 MB stack | ~few KB heap per VT |
-| **Context switch cost** | OS kernel context switch | JVM scheduler — cheaper |
-| **Throughput (blocking endpoints)** | > 200 concurrent에서 저하 | 선형적으로 확장 |
-| **p99 response time (400 users)** | 부하에서 급증 | 안정적으로 유지 |
-| **Suitable for** | CPU-bound workloads | I/O-bound workloads(DB, HTTP, file) |
-
-> Note: Virtual Threads do **not** improve CPU-bound workloads. Benefits appear only when threads
-> spend significant time blocked on I/O (DB queries, external HTTP calls, file reads).
-
-### Virtual Threads가 빛나는 경우
-
-```
-Scenario: 400 concurrent DB queries (each blocks 50ms)
-
-Platform threads:
-    200-thread pool → 200 queries in parallel → 200 queries wait in queue
-    → average response time ≈ 100ms (50ms active + 50ms queue wait)
-
-Virtual threads:
-    400 VTs scheduled on ~8 carrier threads → all 400 in progress concurrently
-    → average response time ≈ 50ms (no queue wait)
-```
-
-## Gatling으로 Load Testing
-
-### Step 1 — Application 시작
+## 실행
 
 ```bash
 ./gradlew :virtualthreads-spring-mvc-tomcat:bootRun
 ```
 
-### Step 2 — Simulation 실행
+Application을 띄운 뒤 JPA load scenario를 실행합니다.
 
 ```bash
-# All simulations
-./gradlew :virtualthreads-spring-mvc-tomcat:gatlingRun
-
-# Specific simulation
-./gradlew :virtualthreads-spring-mvc-tomcat:gatlingRun --simulation simulations.VirtualThreadSimulation
 ./gradlew :virtualthreads-spring-mvc-tomcat:gatlingRun --simulation simulations.JpaSimulation
 ```
 
-### Step 3 — Report 확인
+Gatling report는 `virtualthreads/spring-mvc-tomcat/build/reports/gatling/` 아래에
+생성됩니다.
 
-Report는 `build/reports/gatling/<simulation-name>-<timestamp>/index.html`에 생성됩니다.
+## 테스트
 
-### Stop Conditions
-
-Assertion gate를 추가하려면 다음과 같이 설정합니다.
-
-```kotlin
-init {
-    setUp(
-        scn.injectClosed(rampConcurrentUsers(10).to(400).during(30.seconds.toJavaDuration()))
-    ).protocols(httpProtocol)
-     .assertions(
-         global().responseTime().percentile(95.0).lt(500),   // p95 < 500ms
-         global().successfulRequests().percent().gt(99.0)     // error rate < 1%
-     )
-}
+```bash
+./gradlew :virtualthreads-spring-mvc-tomcat:test
 ```
-
-## 성능 측정
-
-### Find Member by Id API
-
-이 API는 `/api/members/{id}`를 호출해 `Member` 정보를 조회합니다.
-
-![gatling](doc/FindMemberById.png)
-
-### JPA Find All Teams API
-
-이 API는 `/api/teams`를 호출해 `Team` 정보를 조회합니다.
-
-![gatling](doc/JpaFindAllTeams.png)
-
-## 사전 요구 사항
-
-- Docker(Testcontainers MySQL용)
-- JDK 25
-- 사용 가능한 8080 port
-
-## 참고 자료
-
-### Spring Boot with Virtual Threads
-
-- [Applying Virtual Threads in Kotlin + Spring Boot](https://jsonobject.tistory.com/631)
-- [A guide to using virtual threads with Spring Boot](https://bell-sw.com/blog/a-guide-to-using-virtual-threads-with-spring-boot/)
-- [Virtual Threads in Springboot 3.2](https://medium.com/nerd-for-tech/virtual-threads-in-springboot-3-2-9a7250429809?)
-
-### Gatling
-
-- [gatling/gatling-gradle-plugin-demo-kotlin](https://github.com/gatling/gatling-gradle-plugin-demo-kotlin)
-- [Stress Testing with Gatling & Kotlin - Part 2](https://medium.com/@mdportnov/stress-testing-with-gatling-kotlin-part-2-1eb13d489dc9)
-- [boot-vt-benchmark](https://github.com/olegonsoftware/boot-vt-benchmark)
-- [Gatling Gradle Plugin](https://docs.gatling.io/reference/extensions/build-tools/gradle-plugin/)
-- [Kotlin Gatling Tutorial](https://github.com/mdportnov/kotlin-gatling-tutorial)
