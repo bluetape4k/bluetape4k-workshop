@@ -1,81 +1,47 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="660" viewBox="0 0 1320 660" role="img" aria-label="Spring Data Redis - Streams Examples architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-data/redis-examples/src/main/kotlin/io/bluetape4k/workshop/redis/stream/SensorData.kt&quot;,&quot;spring-data/redis-examples/src/main/kotlin/io/bluetape4k/workshop/redis/stream/sync/CapturingStreamListener.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1700" height="900" viewBox="0 0 1700 900">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .bg{fill:#f8fafc}.title{font-family:'Architects Daughter','Comic Sans MS',cursive;font-size:34px;fill:#18212f}
+      .layer-title{font-family:'Architects Daughter','Comic Sans MS',cursive;font-size:26px;fill:#344154}
+      .card-title{font-family:'Architects Daughter','Comic Sans MS',cursive;font-size:27px;fill:#101827}
+      .body{font-family:'Comic Mono','Comic Sans MS',monospace;font-size:18px;fill:#364152}.small{font-family:'Comic Mono','Comic Sans MS',monospace;font-size:15px;fill:#475569}
+      .layer{stroke-width:1.5;rx:22;ry:22}.card{fill:#fff;stroke:#cbd5e1;stroke-width:1.5;rx:18;ry:18}.line{fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+      .redis{fill:#dc2626}.redis2{fill:#ef4444}.redis3{fill:#f87171}
     </style>
+    <marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#2563eb"/></marker>
+    <marker id="arrow-green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#059669"/></marker>
   </defs>
-  <rect class="canvas" width="1320" height="660"/>
-  <rect class="frame" x="16" y="16" width="1288" height="628" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Spring Data Redis - Streams Examples</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Spring Data repositories, reactive APIs, and backing stores</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="146.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="106.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="159.5">Data Access</tspan><tspan class="layer-title" x="151.0" y="182.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="209.0">apps, handlers,</tspan><tspan class="layer-detail" x="151.0" y="225.0">repository tests</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="278.0" width="1228.0" height="132.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="298.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="316.5">Repository</tspan><tspan class="layer-title" x="151.0" y="339.5">Integration</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="366.0">Spring Data, R2DBC,</tspan><tspan class="layer-detail" x="151.0" y="382.0">Mongo, Redis</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="428.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="448.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="478.0">Database Runtime</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="508.0">SQL, MongoDB,</tspan><tspan class="layer-detail" x="151.0" y="524.0">Elasticsearch,</tspan><tspan class="layer-detail" x="151.0" y="540.0">Redis</tspan></text>
-    </g>
-    <g class="edge" data-edge="api0-&gt;infra0" data-label="uses">
-      <path d="M 928.0 240.0 L 928.0 269.0 L 760.0 269.0 L 760.0 298.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="infra0-&gt;runtime0" data-label="backs">
-      <path d="M 760.0 390.0 L 760.0 419.0 L 760.0 448.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Spring Data Redis - | Streams Examples | Data Demo Surface">
-      <rect x="442.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="592.0" y="171.5">Spring Data Redis -</tspan><tspan class="node-title" x="592.0" y="195.5">Streams Examples</tspan><tspan class="node-detail" x="592.0" y="219.5">Data Demo Surface</tspan></text>
-    </g>
-    <g class="node" data-node="api0" data-lines="Capturing Stream | Listener | sync">
-      <rect x="778.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="928.0" y="171.5">Capturing Stream</tspan><tspan class="node-title" x="928.0" y="195.5">Listener</tspan><tspan class="node-detail" x="928.0" y="219.5">sync</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Sensor Data | component">
-      <rect x="610.0" y="298.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="340.5">Sensor Data</tspan><tspan class="node-detail" x="760.0" y="364.5">component</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="Redis | Database Runtime">
-      <rect x="610.0" y="448.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="490.5">Redis</tspan><tspan class="node-detail" x="760.0" y="514.5">Database Runtime</tspan></text>
-    </g>
+  <rect class="bg" width="1700" height="900"/>
+  <text class="title" x="70" y="70">Redis Stream API Examples</text>
+
+  <rect class="layer" x="70" y="120" width="1560" height="185" fill="#eff6ff" stroke="#bfdbfe"/>
+  <text class="layer-title" x="105" y="165">Record factory</text>
+  <rect class="card" x="560" y="200" width="580" height="70"/>
+  <text class="card-title" x="590" y="243">SensorData</text>
+  <text class="body" x="815" y="243">StringRecord for my-stream</text>
+
+  <rect class="layer" x="70" y="360" width="1560" height="210" fill="#f0fdf4" stroke="#bbf7d0"/>
+  <text class="layer-title" x="105" y="405">Spring Data Redis stream APIs</text>
+  <rect class="card" x="220" y="445" width="500" height="80"/>
+  <text class="card-title" x="250" y="490">StringRedisTemplate</text>
+  <text class="body" x="250" y="518">sync StreamOperations</text>
+  <rect class="card" x="980" y="445" width="500" height="80"/>
+  <text class="card-title" x="1010" y="490">ReactiveStringRedisTemplate</text>
+  <text class="body" x="1010" y="518">reactive StreamOperations</text>
+
+  <rect class="layer" x="70" y="635" width="1560" height="185" fill="#fff7ed" stroke="#fed7aa"/>
+  <text class="layer-title" x="105" y="680">Redis runtime</text>
+  <rect class="card" x="590" y="710" width="520" height="75"/>
+  <g transform="translate(635 730)">
+    <rect class="redis3" x="0" y="26" width="58" height="18" rx="5"/>
+    <rect class="redis2" x="0" y="13" width="58" height="18" rx="5"/>
+    <rect class="redis" x="0" y="0" width="58" height="18" rx="5"/>
   </g>
+  <text class="card-title" x="720" y="756">Redis Testcontainer</text>
+  <text class="body" x="720" y="780">stream key: my-stream</text>
+
+  <path class="line" d="M850 270 L850 330 L470 330 L470 445" stroke="#2563eb" marker-end="url(#arrow-blue)"/>
+  <path class="line" d="M850 270 L850 330 L1230 330 L1230 445" stroke="#059669" marker-end="url(#arrow-green)"/>
+  <path class="line" d="M470 525 L470 600 L760 600 L760 710" stroke="#2563eb" marker-end="url(#arrow-blue)"/>
+  <path class="line" d="M1230 525 L1230 600 L940 600 L940 710" stroke="#059669" marker-end="url(#arrow-green)"/>
 </svg>

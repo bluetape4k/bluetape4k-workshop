@@ -1,8 +1,0 @@
-graph 1 9.9118 2.4658
-node entry0 1.9031 0.44125 3.8063 0.8825 "Spring Data Redis - Streams Examples\nData Demo Surface" rounded,filled box #88A3B5 #FFF8E7
-node api0 1.9031 2.0246 2.8063 0.8825 "Capturing Stream Listener\nsync" rounded,filled box #88A3B5 #EEF7FF
-node infra0 5.8361 2.0246 1.5042 0.8825 "Sensor Data\ncomponent" rounded,filled box #88A3B5 #F5F0FF
-node runtime0 8.9306 2.0246 1.9625 0.8825 "Redis\nDatabase Runtime" rounded,filled box #88A3B5 #FFF1F1
-edge api0 infra0 4 3.3119 2.0246 3.3119 2.0246 4.9337 2.0246 4.9337 2.0246 uses 4.4451 2.1131 solid #637383
-edge infra0 runtime0 4 6.5971 2.0246 6.5971 2.0246 7.8014 2.0246 7.8014 2.0246 backs 7.2687 2.1131 solid #637383
-stop

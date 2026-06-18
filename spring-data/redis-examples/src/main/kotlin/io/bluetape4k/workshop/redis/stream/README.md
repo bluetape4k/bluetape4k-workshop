@@ -1,100 +1,44 @@
-# Spring Data Redis - Streams Examples
+# Spring Data Redis Streams
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+This package demonstrates Redis Streams through Spring Data Redis sync and
+reactive APIs. The examples use a single stream key, `my-stream`, and sensor
+records built by `SensorData`.
 
-This example exercises **Spring Data Redis - Streams Examples** as a runnable Spring Data persistence workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+## Architecture
 
-## Architecture Diagram
+![Redis stream architecture](../../../../../../../../../../docs/images/readme-diagrams/spring-data-redis-examples-src-main-kotlin-io-bluetape4k-workshop-redis-stream-readme-architecture-01.png)
 
-![Spring Data Redis - Streams Examples Graphviz architecture diagram](../../../../../../../../../../docs/images/readme-diagrams/spring-data-redis-examples-src-main-kotlin-io-bluetape4k-workshop-redis-stream-readme-architecture-01.png)
+`RedisStreamConfiguration` creates both a `StreamMessageListenerContainer` for
+the imperative API and a `StreamReceiver` for the reactive API. Both connect to
+the same Redis Testcontainer.
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.springdata` as the source of truth when comparing this README with the code.
+## Stream Flow
 
-## Sequence Diagram
+![Redis stream flow](../../../../../../../../../../docs/images/readme-diagrams/spring-data-redis-examples-src-main-kotlin-io-bluetape4k-workshop-redis-stream-readme-flow-01.png)
 
-The [Redis Stream](https://redis.io/topics/streams-intro) is a new data type introduced with Redis 5.0 modelling log
-data structure.
-Spring Data Redis supports _Redis Streams_ via both the imperative and the reactive API.
+The tests cover the same stream behavior from two API styles:
 
-## Imperative API
+1. `XADD` writes fixed IDs such as `1234-0` and `1234-1`.
+2. Redis rejects a lower timestamp ID after newer records exist.
+3. Auto-generated IDs append the next timestamp/sequence value.
+4. `XREAD` can read from the start of `my-stream` or resume after a known ID.
+5. Continuous reads use either `StreamMessageListenerContainer.receive(...)` or
+   `StreamReceiver.receive(...)`.
 
-**Basic Usage**
+## Key Classes
 
-```java
+| Class | Role |
+|---|---|
+| `SensorData` | Creates `StringRecord` values with `sensor-id`, `temperature`, and optional `checksum`. |
+| `RedisStreamConfiguration` | Provides sync and reactive stream listener infrastructure. |
+| `CapturingStreamListener` | Collects sync listener records for assertions. |
+| `SyncStreamApiTest` | Exercises `StringRedisTemplate.opsForStream()`. |
+| `ReactiveStreamApiTest` | Exercises `ReactiveStringRedisTemplate.opsForStream()` and `StreamReceiver`. |
 
-@Autowired
-RedisTemplate template;
+## Build and Test
 
-StringRecord record = StreamRecords.string(…)
-        .withStreamKey("my-stream");
-RecordId id = template.streamOps().add(record);
-
-List<...>records=template.
-
-streamOps().
-
-read(count(2),from(id));
-```
-
-**ContinuousRead Read**
-
-```java
-
-@Autowired
-RedisConnectionFactory factory;
-
-StreamListener<String, MapRecord<…>listener=
-        (msg)->{
-        // ...
-        };
-
-StreamMessageListenerContainer container = StreamMessageListenerContainer.create(factory));
-
-        container.
-
-receive(StreamOffset.fromStart("my-stream"),listener);
-```
-
-## Reactive API
-
-**Basic Usage**
-
-```java
-
-@Autowired
-ReactiveRedisTemplate template;
-
-StringRecord record = StreamRecords.string(…)
-        .withStreamKey("my-stream");
-Mono<RecordId> id = template.streamOps().add(record);
-
-Flux<...>records=template.
-
-streamOps().
-
-read(count(2),from(id));
-```
-
-**ContinuousRead Read**
-
-```java
-
-@Autowired
-ReactiveRedisConnectionFactory factory;
-
-StreamReceiver receiver = StreamReceiver.create(factory));
-
-        container.
-
-receive(StreamOffset.fromStart("my-stream"))
-        .
-
-doOnNext((msg)->{
-        // ...
-        })
-        .
-
-subscribe();
+```bash
+./gradlew :spring-data:redis-examples:test --tests '*StreamApiTest'
 ```
