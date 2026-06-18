@@ -2,19 +2,17 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
-
-이 예제는 **spring-boot/idempotency** 모듈을 실행 가능한 Spring Boot 애플리케이션 기능 워크샵 조각으로 보여줍니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 사용 방식을 중심으로 설명합니다.
-
-## 시퀀스 다이어그램
-
-![spring-boot/idempotency sequence diagram](../../docs/images/readme-diagrams/spring-boot-idempotency-sequence-01.png)
-
-Redis(Redisson)와 Spring Boot WebFlux + Kotlin Coroutines를 사용해 **Idempotency Key** 패턴으로 duplicate-safe command handling을 구현합니다.
+이 모듈은 **Idempotency-Key** 헤더로 중복 주문 생성을 막는 WebFlux 예제입니다.
+첫 `POST /api/orders` 요청의 응답을 Redisson `RMapCache`에 5분 동안 저장하고,
+같은 key로 재시도하면 새 주문을 만들지 않고 원래 응답 body를 그대로 반환합니다.
 
 ## 아키텍처
 
-![spring-boot/idempotency Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-idempotency-readme-architecture-01.png)
+![spring-boot/idempotency architecture diagram](../../docs/images/readme-diagrams/spring-boot-idempotency-readme-architecture-01.png)
+
+## 요청 흐름
+
+![spring-boot/idempotency request flow diagram](../../docs/images/readme-diagrams/spring-boot-idempotency-sequence-01.png)
 
 ## 핵심 기능
 

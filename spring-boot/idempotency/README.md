@@ -2,19 +2,18 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
-
-This example exercises **spring-boot/idempotency** as a runnable Spring Boot application feature workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
-
-## Sequence Diagram
-
-![spring-boot/idempotency sequence diagram](../../docs/images/readme-diagrams/spring-boot-idempotency-sequence-01.png)
-
-Duplicate-safe command handling with **Idempotency Key** pattern using Redis (Redisson) and Spring Boot WebFlux + Kotlin Coroutines.
+This module shows duplicate-safe order creation with the **Idempotency-Key** header.
+The first successful `POST /api/orders` stores its response in a Redisson `RMapCache`
+for 5 minutes; retries with the same key return the original response body instead
+of creating another order.
 
 ## Architecture
 
-![spring-boot/idempotency Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-idempotency-readme-architecture-01.png)
+![spring-boot/idempotency architecture diagram](../../docs/images/readme-diagrams/spring-boot-idempotency-readme-architecture-01.png)
+
+## Request Flow
+
+![spring-boot/idempotency request flow diagram](../../docs/images/readme-diagrams/spring-boot-idempotency-sequence-01.png)
 
 ## Core Features
 
