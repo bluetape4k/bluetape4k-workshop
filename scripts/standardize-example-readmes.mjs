@@ -96,11 +96,11 @@ function ensureTitleAndSwitch(text, title, lang) {
 
 function imagesFor(rel) {
   const slug = moduleName(rel);
-  const graphvizSlug = diagramSlug(rel);
+  const readmeSlug = diagramSlug(rel);
   const files = fs.readdirSync(path.join(root, imageDir)).filter((file) => file.endsWith(".png"));
   const matching = files.filter((file) => file.startsWith(`${slug}-`));
   const exact = (needle) => matching.find((file) => file.includes(needle));
-  const readmeArchitecture = `${graphvizSlug}-readme-architecture-01.png`;
+  const readmeArchitecture = `${readmeSlug}-readme-architecture-01.png`;
   const detailedArchitecture = matching.find((file) =>
     !file.includes("readme-architecture")
       && !file.includes("sequence")
@@ -160,8 +160,8 @@ function enSections(rel, title, images) {
   const flowImage = images.flow && images.flow !== images.architecture ? images.flow : undefined;
   const sequenceImage = images.sequence && images.sequence !== images.flow ? images.sequence : undefined;
   return {
-    scenario: `## Example Scenario\n\nThis example exercises **${title}** as a runnable ${domain} workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.\n${imageMarkdown(rel, images.scenario, `${title} scenario diagram`)}`,
-    architecture: `## Architecture Diagram\n\nThe module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under \`io.bluetape4k.workshop.${domainOf(rel).replace(/-/g, "")}\` as the source of truth when comparing this README with the code.\n${imageMarkdown(rel, images.architecture, `${title} architecture diagram`)}`,
+    scenario: `## Example Scenario\n\nThis example shows **${title}** as a runnable ${domain} path. Use it to see the module setup, the main runtime flow, and the library APIs that remove repetitive infrastructure code.\n${imageMarkdown(rel, images.scenario, `${title} scenario diagram`)}`,
+    architecture: `## Architecture Diagram\n\nThe diagram separates the sample entrypoint, the bluetape4k or framework layer, and the runtime dependency used by the example so the execution path is easy to follow.\n${imageMarkdown(rel, images.architecture, `${title} architecture diagram`)}`,
     flow: flowImage ? `## Flow Diagram\n\n![${title} flow diagram](${path.posix.relative(rel, `${imageDir}/${flowImage}`)})\n` : "",
     sequence: sequenceImage ? `## Sequence Diagram\n\n![${title} sequence diagram](${path.posix.relative(rel, `${imageDir}/${sequenceImage}`)})\n` : "",
   };
@@ -215,7 +215,7 @@ function ensureArchitectureImage(text, rel, title, images, lang) {
   const heading = lang === "en"
     ? /^(##\s+.*Architecture.*)$/im
     : /^(##\s+.*아키텍처.*)$/im;
-  const alt = lang === "en" ? `${title} Graphviz architecture diagram` : `${title} Graphviz 아키텍처 다이어그램`;
+  const alt = lang === "en" ? `${title} architecture diagram` : `${title} 아키텍처 다이어그램`;
   const markdown = imageMarkdown(rel, image, alt).trimEnd();
   return text.replace(heading, `$1\n\n${markdown}`);
 }

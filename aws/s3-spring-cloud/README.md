@@ -4,19 +4,19 @@
 
 ## Example Scenario
 
-This example exercises **Spring Cloud AWS S3 Demo** as a runnable AWS integration workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+This example shows the smallest local S3 path for Spring Cloud AWS: configure an S3 client, create buckets, upload objects, list them, and read an object through Spring's `ResourceLoader`.
 
 ## Architecture Diagram
 
-![Spring Cloud AWS S3 Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/aws-s3-spring-cloud-readme-architecture-01.png)
+![Spring Cloud AWS S3 Demo architecture diagram](../../docs/images/readme-diagrams/aws-s3-spring-cloud-readme-architecture-01.png)
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.aws` as the source of truth when comparing this README with the code.
+The diagram separates the Spring Boot sample, Spring Cloud AWS abstractions, AWS SDK calls, and the local S3-compatible runtime used by the tests.
 
 ## Sequence Diagram
 
 ![Spring Cloud AWS S3 Demo sequence diagram](../../docs/images/readme-diagrams/aws-s3-spring-cloud-sequence-01.png)
 
-This is an example of using the S3 service using [Spring Cloud AWS](https://github.com/awspring/spring-cloud-aws)).
+This example uses [Spring Cloud AWS](https://github.com/awspring/spring-cloud-aws) and AWS SDK v2 to create buckets, store objects, list objects, and read S3 resources through Spring's Resource abstraction.
 
 ## Main features
 
@@ -26,7 +26,7 @@ This is an example of using the S3 service using [Spring Cloud AWS](https://gith
 | file upload | `S3Template.store(bucket, key, content)` — Spring Cloud AWS abstraction |
 | View file list | `S3Client.listObjects { it.bucket(...) }` — Enumerate objects within a bucket |
 | Read Resources | `ResourceLoader.getResource("s3://bucket/key")` — Spring Resource abstraction |
-| local test | `LocalStackServer` (Testcontainers) — S3 emulation locally without actual AWS |
+| local test | `FlociServer` (Testcontainers) — S3-compatible AWS emulator locally without actual AWS |
 
 ## How to set up
 
@@ -35,22 +35,21 @@ This is an example of using the S3 service using [Spring Cloud AWS](https://gith
 ```kotlin
 implementation("io.awspring.cloud:spring-cloud-aws-starter-s3")
 implementation("software.amazon.awssdk:s3")
-testImplementation("io.bluetape4k:bluetape4k-testcontainers")  // LocalStackServer
+testImplementation("io.bluetape4k:bluetape4k-testcontainers")  // FlociServer
 ```
 
-### Register S3Client bean (LocalStack integration)
+### Register S3Client bean (Floci integration)
 
 ```kotlin
+private val s3Server = FlociServer.Launcher.floci.withServices("s3")
+
 @Bean
-fun s3Client(): S3Client {
-    return S3Client.builder()
-.endpointOverride(s3Server.endpoint) // LocalStack endpoint
-        .region(Region.of(s3Server.region))
-        .credentialsProvider(
-            staticCredentialsProviderOf(s3Server.accessKey, s3Server.secretKey)
-        )
+fun s3Client(): S3Client =
+    S3Client.builder()
+        .endpointOverride(s3Server.awsEndpoint)
+        .region(Region.of(s3Server.regionName))
+        .credentialsProvider(staticCredentialsProviderOf(s3Server.awsAccessKey, s3Server.awsSecretKey))
         .build()
-}
 ```
 
 ### Setting `application.yml` when connecting to actual AWS
@@ -94,5 +93,5 @@ val content = resource.inputStream.bufferedReader().readText()
 
 ## Test prerequisites
 
-- Requires Docker daemon to run (Testcontainers automatically starts LocalStack container)
-- No need for actual AWS credentials — LocalStack emulates the S3 API locally
+- Requires Docker daemon to run (Testcontainers automatically starts the Floci container)
+- No need for actual AWS credentials — Floci provides the local S3-compatible API
