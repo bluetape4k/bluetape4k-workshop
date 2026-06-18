@@ -1,9 +1,0 @@
-graph 1 6.8174 7.2158
-node entry0 1.5073 0.44125 3.0146 0.8825 "Docker Compose Plugin Test\ncompose" rounded,filled box #88A3B5 #FFF8E7
-node bt0 1.5073 2.0246 1.8167 0.8825 "io\nbluetape4k APIs" rounded,filled box #88A3B5 #EAF7F0
-node bt1 1.5073 3.6079 1.8167 0.8825 "junit5\nbluetape4k APIs" rounded,filled box #88A3B5 #EAF7F0
-node runtime0 5.6382 3.6079 2.3583 0.8825 "SQL / R2DBC\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
-node runtime1 1.5073 5.1913 2.3583 0.8825 "Redis\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
-node runtime2 1.5073 6.7746 2.3583 0.8825 "Elasticsearch\nRuntime Dependencies" rounded,filled box #88A3B5 #FFF1F1
-edge bt1 runtime0 4 2.4241 3.6079 2.4241 3.6079 4.3104 3.6079 4.3104 3.6079 adapts 3.7368 3.6965 solid #637383
-stop
