@@ -2,44 +2,51 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
-
-이 예제는 **observability-basic** 모듈을 실행 가능한 메트릭, 트레이싱, 관측 예제로 보여줍니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 사용 방식을 중심으로 설명합니다.
-
-## 시퀀스 다이어그램
-
-WebFlux HTTP 엔드포인트, 코루틴 서비스, 아웃바운드 WebClient 호출에 걸쳐
-Micrometer Observation + W3C 트레이스 전파를 보여주는 최소 Observability 워크샵 예제.
-
-인프라(DB, Redis, Kafka) 불필요. 다운스트림 시뮬레이션에 MockWebServer 사용.
+`observability-basic`은 워크샵에서 가장 작은 tracing 예제입니다. WebFlux suspend endpoint가
+자동 HTTP server span을 만들고, `OrderService`가 수동 `order.service.fetch` span을 하나
+추가하며, Spring Boot가 관리하는 `WebClient.Builder`가 downstream inventory 호출에 W3C
+`traceparent`를 전파합니다. Smoke 경로에는 DB, Redis, Kafka, 외부 collector가 필요 없습니다.
 
 ## 아키텍처
 
-![observability-basic Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/observability-observability-basic-architecture-01.png)
+![observability-basic architecture diagram](../../docs/images/readme-diagrams/observability-observability-basic-readme-architecture-01.png)
 
-## 스팬 트리
+이 예제는 수동 계측을 `OrderService.getOrder()` 한 곳에 둡니다. `InventoryClient`는 직접 span을
+만들지 않습니다. Micrometer WebClient 계측이 `http.client.requests`를 만들고, 자동 구성된
+`WebClient.Builder`를 통해 trace header를 주입합니다.
 
-```
-http.server.requests            (auto — Spring Boot)
-  └─ order.service.fetch        (manual — observed())
-       └─ http.client.requests  (auto — Micrometer WebClient)
+## Trace Propagation Flow
+
+![observability-basic trace propagation flow](../../docs/images/readme-diagrams/observability-observability-basic-readme-trace-flow-01.png)
+
+`TracePropagationTest`는 실제 Micrometer + OpenTelemetry tracing을 사용해 MockWebServer로 나가는
+요청에 `traceparent` header가 들어가는지 확인합니다. `TestObservationRegistry`로 registry를
+교체하는 controller 테스트와 분리한 이유는, test registry에는 실제 tracer가 붙어 있지 않기 때문입니다.
+
+## Span Tree
+
+```text
+http.server.requests
+  └─ order.service.fetch
+       └─ http.client.requests
             └─ downstream inventory service
 ```
 
 ## 핵심 개념
 
 | 개념 | 구현 |
-|------|------|
-| 수동 스팬 | `observed("order.service.fetch", registry) { }` |
-| W3C traceparent 전파 | Spring Boot `WebClient.Builder` 빈을 통해 자동 전파 |
-| 테스트 어설션 | `TestObservationRegistry` (Zipkin 불필요) |
-| 4xx 처리 | `onStatus(4xx) { Mono.empty() }` → null 반환 |
-| 5xx 처리 | `onStatus(5xx) { resp.createException() }` → 예외 전파 |
+|---|---|
+| 수동 span | `observed("order.service.fetch", registry) { }`가 order 조립을 감싼다. |
+| W3C 전파 | Spring Boot `WebClient.Builder`가 `traceparent`를 자동 주입한다. |
+| Test registry | `TestObservationRegistry`로 Zipkin 없이 service span lifecycle을 검증한다. |
+| 4xx 처리 | `awaitExchangeOrNull { 4xx -> null }`로 order 없음 처리. |
+| 5xx 처리 | `createExceptionAndAwait()`로 upstream 실패를 전파한다. |
 
 ## 테스트 커버리지
 
-- `OrderServiceTest`: 스팬 생명주기(시작/중지), 에러 기록, 취소 안전성
-- `OrderControllerTest`: HTTP 200 통합 테스트, W3C traceparent 헤더 전파
+- `OrderServiceTest`: span lifecycle, error recording, cancellation safety.
+- `OrderControllerTest`: HTTP 200과 not-found 통합 동작.
+- `TracePropagationTest`: outbound `traceparent` header가 MockWebServer에 도달하는지 검증.
 
 ## 설정
 
@@ -56,12 +63,19 @@ management:
   otlp:
     tracing:
       export:
-        enabled: false  # set true to export to OTel collector
+        enabled: false
+```
+
+## Smoke 확인
+
+```bash
+./gradlew :observability-basic:test
+./gradlew :observability-basic:bootRun
 ```
 
 ## 의존성
 
-- `bluetape4k-micrometer` — `observed()` 코루틴 헬퍼 (stop-safe wrapper; ObservationSupport.kt 참조)
-- `micrometer-tracing-bridge-otel` — W3C 전파를 위한 OTel 브리지
-- `micrometer-context-propagation` — reactor ↔ 코루틴 컨텍스트 브리징
-- `spring-boot-starter-opentelemetry` — WebClient 계측 자동 구성
+- `bluetape4k-micrometer` - 로컬 `observed()` 코루틴 helper.
+- `micrometer-tracing-bridge-otel` - W3C 전파를 위한 OpenTelemetry bridge.
+- `micrometer-context-propagation` - Reactor와 coroutine context bridging.
+- `spring-boot-starter-opentelemetry` - WebClient 계측 자동 구성.
