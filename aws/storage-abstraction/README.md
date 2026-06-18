@@ -2,7 +2,7 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+## Storage Boundary
 
 This example puts a small coroutine `StorageService` boundary in front of three
 runtime choices: local files, S3 object storage, and S3 pre-signed GET URLs.
