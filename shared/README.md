@@ -2,21 +2,15 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+This module provides small HTTP client and integration-test helpers used by workshop examples. It is not a runnable application; it is a shared utility dependency for modules that need concise `RestClient`, `WebClient`, or `WebTestClient` calls.
 
-This example exercises **Bluetape4k Workshop Shared** as a runnable shared workshop utilities workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+## Utility Map
 
-## Architecture Diagram
+![Bluetape4k Workshop Shared utility map](../docs/images/readme-diagrams/shared-readme-architecture-01.png)
 
-![Bluetape4k Workshop Shared Graphviz architecture diagram](../docs/images/readme-diagrams/shared-readme-architecture-01.png)
+## Test Helper Flow
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.shared` as the source of truth when comparing this README with the code.
-
-## Sequence Diagram
-
-This module provides shared utilities used across Bluetape4k Workshop examples.
-
-Most features are already provided by `Bluetape4k`, but this module fills the gaps when workshop examples need additional utilities.
+![Bluetape4k Workshop Shared WebTestClient flow](../docs/images/readme-diagrams/shared-readme-test-flow-01.png)
 
 ## Key Features
 

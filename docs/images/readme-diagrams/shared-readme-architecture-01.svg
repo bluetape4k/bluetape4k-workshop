@@ -1,113 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="868" viewBox="0 0 1320 868" role="img" aria-label="Bluetape4k Workshop Shared architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;shared/src/main/kotlin/io/bluetape4k/workshop/shared/web/RestClientExtensions.kt&quot;,&quot;shared/src/main/kotlin/io/bluetape4k/workshop/shared/web/WebClientExtensions.kt&quot;,&quot;shared/src/main/kotlin/io/bluetape4k/workshop/shared/web/WebTestClientExtensions.kt&quot;,&quot;shared/src/test/kotlin/io/bluetape4k/workshop/shared/AbstractSharedTest.kt&quot;,&quot;shared/src/test/kotlin/io/bluetape4k/workshop/shared/web/AbstractSpringTest.kt&quot;,&quot;shared/src/test/kotlin/io/bluetape4k/workshop/shared/web/RestClientExtensionsTest.kt&quot;,&quot;shared/src/test/kotlin/io/bluetape4k/workshop/shared/web/WebClientExtensionsTest.kt&quot;,&quot;shared/src/test/kotlin/io/bluetape4k/workshop/shared/web/WebTestClientExtensionsTest.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="680" viewBox="0 0 1600 680" role="img" aria-label="Workshop shared utility map">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
-    <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
-    </style>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
+    <style>.canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:28px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}</style>
   </defs>
-  <rect class="canvas" width="1320" height="868"/>
-  <rect class="frame" x="16" y="16" width="1288" height="836" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Bluetape4k Workshop Shared</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Shared example runtime and module dependencies</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="270.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="230.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="233.0">Example Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="271.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="287.0">adapters</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="402.0" width="1228.0" height="256.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="422.0" width="174" height="216.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="514.0">Integration Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="552.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="568.0">adapters, helpers</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="676.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="696.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="726.0">Runtime Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="756.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="772.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="788.0">JVM</tspan></text>
-    </g>
-    <g class="edge" data-edge="entry4-&gt;infra0" data-label="uses">
-      <path d="M 760.0 364.0 L 760.0 396.5 L 424.0 396.5 L 424.0 429.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 1096.0 638.0 L 1096.0 667.0 L 760.0 667.0 L 760.0 696.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Abstract Shared Test | shared">
-      <rect x="274.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="183.5">Abstract Shared Test</tspan><tspan class="node-detail" x="424.0" y="207.5">shared</tspan></text>
-    </g>
-    <g class="node" data-node="entry1" data-lines="Abstract Spring Test | web">
-      <rect x="610.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="183.5">Abstract Spring Test</tspan><tspan class="node-detail" x="760.0" y="207.5">web</tspan></text>
-    </g>
-    <g class="node" data-node="entry2" data-lines="Rest Client Extensions | Test | web">
-      <rect x="946.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="171.5">Rest Client Extensions</tspan><tspan class="node-title" x="1096.0" y="195.5">Test</tspan><tspan class="node-detail" x="1096.0" y="219.5">web</tspan></text>
-    </g>
-    <g class="node" data-node="entry3" data-lines="Web Client Extensions | Test | web">
-      <rect x="274.0" y="258.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="295.5">Web Client Extensions</tspan><tspan class="node-title" x="424.0" y="319.5">Test</tspan><tspan class="node-detail" x="424.0" y="343.5">web</tspan></text>
-    </g>
-    <g class="node" data-node="entry4" data-lines="Web Test Client | Extensions Test | web">
-      <rect x="610.0" y="258.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="295.5">Web Test Client</tspan><tspan class="node-title" x="760.0" y="319.5">Extensions Test</tspan><tspan class="node-detail" x="760.0" y="343.5">web</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Rest Client Extensions | web">
-      <rect x="274.0" y="429.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="471.5">Rest Client Extensions</tspan><tspan class="node-detail" x="424.0" y="495.5">web</tspan></text>
-    </g>
-    <g class="node" data-node="infra1" data-lines="Web Client Extensions | web">
-      <rect x="610.0" y="429.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="471.5">Web Client Extensions</tspan><tspan class="node-detail" x="760.0" y="495.5">web</tspan></text>
-    </g>
-    <g class="node" data-node="infra2" data-lines="Web Test Client | Extensions | web">
-      <rect x="946.0" y="422.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="459.5">Web Test Client</tspan><tspan class="node-title" x="1096.0" y="483.5">Extensions</tspan><tspan class="node-detail" x="1096.0" y="507.5">web</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="io | bluetape4k APIs">
-      <rect x="274.0" y="546.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="588.5">io</tspan><tspan class="node-detail" x="424.0" y="612.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="coroutines | bluetape4k APIs">
-      <rect x="610.0" y="546.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="588.5">coroutines</tspan><tspan class="node-detail" x="760.0" y="612.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="netty | bluetape4k APIs">
-      <rect x="946.0" y="546.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="588.5">netty</tspan><tspan class="node-detail" x="1096.0" y="612.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="Testcontainers | Runtime Dependencies">
-      <rect x="610.0" y="696.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="738.5">Testcontainers</tspan><tspan class="node-detail" x="760.0" y="762.5">Runtime Dependencies</tspan></text>
-    </g>
-  </g>
+  <rect class="canvas" width="1600" height="680"/>
+  <rect class="frame" x="24" y="24" width="1552" height="632" rx="24"/>
+  <text class="title" x="800" y="72" text-anchor="middle">Workshop shared utilities</text>
+  <text class="subtitle" x="800" y="104" text-anchor="middle">A small helper module for HTTP clients and integration-test request assertions used by workshop examples.</text>
+  <rect class="layer" x="72" y="160" width="330" height="374" rx="18"/>
+  <text class="layerLabel" x="100" y="198">Synchronous client</text>
+  <g filter="url(#shadow)"><rect x="112" y="280" width="250" height="124" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="237" y="324" text-anchor="middle">RestClient</text><text class="cardText" x="237" y="356" text-anchor="middle">GET, HEAD, POST</text><text class="cardText" x="237" y="382" text-anchor="middle">PUT, PATCH, DELETE</text></g>
+  <rect class="layer" x="450" y="160" width="330" height="374" rx="18"/>
+  <text class="layerLabel" x="478" y="198">Reactive client</text>
+  <g filter="url(#shadow)"><rect x="490" y="280" width="250" height="124" rx="16" fill="#F0FDFA" stroke="#0D9488" stroke-width="1.7"/><text class="cardTitle" x="615" y="324" text-anchor="middle">WebClient</text><text class="cardText" x="615" y="356" text-anchor="middle">value, Publisher, Flow</text><text class="cardText" x="615" y="382" text-anchor="middle">body() / bodyValue()</text></g>
+  <rect class="layer" x="828" y="160" width="330" height="374" rx="18"/>
+  <text class="layerLabel" x="856" y="198">Integration tests</text>
+  <g filter="url(#shadow)"><rect x="868" y="280" width="250" height="124" rx="16" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="993" y="324" text-anchor="middle">WebTestClient</text><text class="cardText" x="993" y="356" text-anchor="middle">exchange + status</text><text class="cardText" x="993" y="382" text-anchor="middle">one-line assertions</text></g>
+  <rect class="layer" x="1206" y="160" width="322" height="374" rx="18"/>
+  <text class="layerLabel" x="1234" y="198">HTTP fixture</text>
+  <g filter="url(#shadow)"><rect x="1246" y="280" width="242" height="124" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="1367" y="318" text-anchor="middle">Spring Test Base</text><text class="cardText" x="1367" y="348" text-anchor="middle">AbstractSpringTest</text><text class="cardText" x="1367" y="374" text-anchor="middle">BluetapeHttpServer</text><text class="cardText" x="1367" y="400" text-anchor="middle">httpbin baseUrl</text></g>
 </svg>
