@@ -2,85 +2,54 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+`exposed/mvc-virtualthread`는 Spring MVC와 Exposed JDBC를 조합하고, 블로킹 데이터베이스 작업을 Java virtual thread에서 실행하는 예제입니다.
 
-이 예제는 **exposed/mvc-virtualthread**를 실행 가능한 Exposed 데이터 접근 워크숍 조각으로 다룹니다. 개발자가 가장 먼저 확인하는 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄여 주는 라이브러리와 프레임워크 API 관찰에 초점을 둡니다.
-
-## 시퀀스 다이어그램
-
-Spring MVC + Virtual Threads + Exposed JDBC 조합이며 **`@Transactional`을 사용하지 않습니다**.
+이 모듈의 핵심은 Spring `@Transactional`을 사용하지 않는다는 점입니다. Tomcat, service, repository가 `Executors.newVirtualThreadPerTaskExecutor()`로 만든 `ExecutorService`를 공유하고, 데이터베이스 작업은 `virtualFuture(executor) { transaction(db) { ... } }`로 명시적으로 감쌉니다.
 
 ## 아키텍처
 
-![exposed/mvc-virtualthread Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/exposed-mvc-virtualthread-architecture-01.png)
+![exposed/mvc-virtualthread architecture](../../docs/images/readme-diagrams/exposed-mvc-virtualthread-readme-architecture-01.png)
 
-## 사용한 bluetape4k 기능
+| 영역 | 구현 | 독자가 확인할 계약 |
+|---|---|---|
+| MVC request 실행 | `TomcatConfig`가 공유 executor를 Tomcat protocol handler에 지정합니다. | 블로킹 MVC handler가 platform thread에 고정되지 않고 실행됩니다. |
+| Executor lifecycle | `virtualThreadExecutor()`가 per-task virtual-thread executor를 만들고 `ShutdownQueue`에 등록합니다. | 모듈은 하나의 공유 VT executor를 소유하고 일관되게 종료합니다. |
+| Repository 호출 | `AuthorRepository`, `BookRepository`, `ProductRepository`, `OrderRepository`, `OrderLineRepository`가 `VirtualFuture<T>`를 반환합니다. | 단순 CRUD 메서드는 virtual-thread task 안에서 각자 `transaction(db)`를 엽니다. |
+| Order placement | `OrderService.placeOrder()`가 주문 전체 transaction을 소유합니다. | stock lock, order-line write, stock decrement가 하나의 명시적 transaction에서 수행됩니다. |
+| Error handling | `GlobalExceptionHandler`가 `ExecutionException`, `CompletionException`을 unwrap합니다. | `Future.get()` 내부 실패도 의미 있는 HTTP 응답으로 변환됩니다. |
 
-| 기능 | Artifact | 코드 위치 | 이점 |
-|---------|----------|---------------|---------|
-| `KLogging` | `bluetape4k-logging` | 모든 서비스 클래스 | 지연 lambda logging |
-| `virtualFuture(executor) { }` | `bluetape4k-virtualthread-api` | `AuthorService.kt`, `OrderService.kt` | 블로킹 JDBC 작업을 VT executor에 제출 — coroutine/reactor 불필요 |
-| `ShutdownQueue.register(executor)` | `bluetape4k-virtualthread-api` | `TomcatConfig.kt` | 직접 lifecycle을 관리하지 않아도 VT executor를 graceful shutdown |
-| `bluetape4k-virtualthread-jdk21` | `bluetape4k-virtualthread-jdk21` | runtime classpath | JDK 21 virtual thread provider |
-| `Fakers.faker` | `bluetape4k-junit5` | 테스트 base class | 결정적 fake data 생성 |
-| `shouldBeEqualTo` matchers | `bluetape4k-assertions` | 모든 테스트 클래스 | 읽기 쉬운 Kotlin idiomatic assertion |
-| `PostgreSQLServer.Launcher.postgres` | `bluetape4k-testcontainers` | `AbstractMvcVirtualthreadTest` | Singleton Testcontainers PostgreSQL — `@Testcontainers` boilerplate 없음 |
+## 주문 처리 흐름
 
-## bluetape4k 적용 전 / 적용 후
+![exposed/mvc-virtualthread order placement sequence](../../docs/images/readme-diagrams/exposed-mvc-virtualthread-readme-sequence-01.png)
 
-### Virtual Thread DB 실행
+`OrderService.placeOrder()`는 하나의 `virtualFuture` task를 제출하고 그 안에서 하나의 Exposed transaction을 엽니다. service는 요청 라인을 `productId` 기준으로 정렬하고, 각 product row를 `SELECT ... FOR UPDATE`로 잠근 뒤 order line을 쓰고 `products.stock`을 감소시킵니다.
 
-```kotlin
-// Before — @Transactional with potential pinning risk under virtual threads
-@Service
-class AuthorService(private val repo: AuthorRepository) {
-    @Transactional
-    fun save(dto: AuthorDTO): AuthorDTO {
-        return repo.insert(dto)      // synchronized monitor → pins the carrier thread
-    }
-}
+재고가 부족하면 service는 transaction 내부에서 `InsufficientStockException`을 던집니다. `Future.get()`은 이 실패를 감싸지만, `GlobalExceptionHandler`가 다시 unwrap하므로 MVC 계층은 generic execution error가 아니라 stock-conflict 응답을 반환합니다.
 
-// After — bluetape4k virtualFuture: explicit VT submission, no @Transactional
-@Service
-class AuthorService(
-    private val repo: AuthorRepository,
-    private val executor: ExecutorService,
-) {
-    fun save(dto: AuthorDTO): AuthorDTO =
-        virtualFuture(executor) {
-            transaction(db) { repo.insert(dto) }
-        }.get()
-}
-```
+## 스키마
 
-### Executor lifecycle 관리
+![exposed/mvc-virtualthread schema ERD](../../docs/images/readme-diagrams/exposed-mvc-virtualthread-readme-erd-01.png)
 
-```kotlin
-// Before — manual PreDestroy or ApplicationListener
-@Bean
-fun virtualThreadExecutor(): ExecutorService {
-    val exec = Executors.newVirtualThreadPerTaskExecutor()
-    // Remember to shut it down somewhere...
-    return exec
-}
+| 테이블 | 역할 |
+|---|---|
+| `authors`, `books` | Author/book CRUD는 plain Exposed `Table` 정의와 repository-level transaction을 사용합니다. |
+| `products` | Product stock은 row lock으로 보호되는 concurrency-sensitive 값입니다. |
+| `orders`, `order_lines` | 주문 처리는 header와 line row를 쓰고 같은 transaction에서 stock을 감소시킵니다. |
 
-// After — bluetape4k ShutdownQueue: zero-boilerplate graceful shutdown
-@Bean
-fun virtualThreadExecutor(): ExecutorService {
-    val exec = Executors.newVirtualThreadPerTaskExecutor()
-    ShutdownQueue.register(exec)   // automatically called on JVM shutdown
-    return exec
-}
-```
+## 주요 코드 경로
 
-## 핵심 패턴
-
-- **VT Executor bean**: `TomcatConfig`의 `@Bean fun virtualThreadExecutor(): ExecutorService` + `TomcatProtocolHandlerCustomizer`.
-- **TX pattern**: `virtualFuture(executor) { transaction(db) { ... } }.get()` — `@Transactional` 아님.
-- **Exception unwrapping**: `GlobalExceptionHandler`가 `Future.get()`에서 감싼 `ExecutionException`/`CompletionException`을 처리합니다.
-- **`@Transactional` 없음**: `rg "@Transactional" src/main/` 결과 0건으로 확인합니다.
+| 파일 | 확인할 내용 |
+|---|---|
+| `config/TomcatConfig.kt` | 공유 virtual-thread executor와 Tomcat protocol-handler customization. |
+| `config/DatabaseInitializer.kt` | VT executor를 통한 schema creation과 seed data. |
+| `repository/*Repository.kt` | 명시적 `transaction(db)`를 사용하는 `VirtualFuture<T>` repository method. |
+| `service/OrderService.kt` | Stock locking, rollback behavior, `Future.get()` boundary. |
+| `config/GlobalExceptionHandler.kt` | MVC response를 위한 virtual-future failure unwrapping. |
+| `domain/*Table.kt` | ERD에 표시한 plain Exposed table definitions. |
 
 ## 실행
+
+애플리케이션은 `jdbc:postgresql://localhost:5432/exposedmvcvt`의 PostgreSQL과 `postgres/postgres` 계정을 기대합니다.
 
 ```bash
 ./gradlew :exposed-mvc-virtualthread:bootRun
@@ -94,9 +63,9 @@ fun virtualThreadExecutor(): ExecutorService {
 ```
 
 | 테스트 클래스 | 범위 |
-|-----------|---------|
-| `AuthorControllerTest` | Author + Book CRUD |
-| `ProductControllerTest` | Product CRUD |
-| `OrderControllerTest` | Order place, cancel, 404/409 cases |
-| `PlaceOrderRollbackTest` | Rollback on stock failure |
-| `ConcurrentPlaceOrderTest` | N=10 VT threads, stock=1 → 1 success, 9 conflicts (409) |
+|---|---|
+| `AuthorControllerTest` | Author, book CRUD endpoint. |
+| `ProductControllerTest` | Product CRUD endpoint. |
+| `OrderControllerTest` | Order placement, cancellation, 404, stock-conflict case. |
+| `PlaceOrderRollbackTest` | Stock 부족 시 rollback. |
+| `ConcurrentPlaceOrderTest` | 마지막 stock item을 여러 virtual-thread request가 동시에 소비하려 할 때 하나만 성공하는지 확인합니다. |

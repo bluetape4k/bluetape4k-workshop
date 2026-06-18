@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1720" height="1080" viewBox="0 0 1720 1080" role="img" aria-labelledby="title desc">
+  <title id="title">exposed/mvc-virtualthread schema ERD</title>
+  <desc id="desc">Entity relationship diagram for authors, books, products, orders, and order_lines tables used by the Exposed MVC virtual thread example.</desc>
+  <defs>
+    <style>
+      svg{background:#f8fafc}
+      .frame{fill:#ffffff;stroke:#d9e5ec;stroke-width:2}
+      .title{font-family:"Architects Daughter";font-size:42px;fill:#152437}
+      .subtitle,.footer{font-family:"Comic Mono";fill:#405260}
+      .subtitle{font-size:17px}.footer{font-size:14px;fill:#617684}
+      .table{fill:#ffffff;stroke:#78909c;stroke-width:2.4}
+      .authors{stroke:#6f9fc5}.books{stroke:#72a57f}.products{stroke:#b8944f}.orders{stroke:#9b82c4}.lines{stroke:#c98272}
+      .header{fill:#eef7ff}.booksHeader{fill:#eefaf1}.productsHeader{fill:#fff7e8}.ordersHeader{fill:#f6f0ff}.linesHeader{fill:#fff1ef}
+      .tableName{font-family:"Architects Daughter";font-size:28px;fill:#152437}
+      .col{font-family:"Comic Mono";font-size:17px;fill:#344955}
+      .type{font-family:"Comic Mono";font-size:16px;fill:#657783}
+      .pk{fill:#fff8dc;stroke:#c9a33a;stroke-width:1.4}
+      .fk{fill:#edf7ff;stroke:#73a7cf;stroke-width:1.4}
+      .rel{fill:none;stroke:#667f8c;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#fkArrow)}
+      .relLabel{font-family:"Comic Mono";font-size:14px;fill:#536975}
+      .labelBox{fill:#ffffff;stroke:#d7e0e4;stroke-width:1.3}
+    </style>
+    <marker id="fkArrow" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 10 10" refX="9" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#667f8c"/>
+    </marker>
+  </defs>
+
+  <rect class="frame" x="30" y="28" width="1660" height="1024" rx="18"/>
+  <text class="title" x="860" y="82" text-anchor="middle">MVC Virtual Thread Domain Tables</text>
+  <text class="subtitle" x="860" y="114" text-anchor="middle">Plain Exposed Table definitions; order placement mutates product stock inside one explicit transaction.</text>
+
+  <g id="authors">
+    <rect class="table authors" x="95" y="190" width="430" height="260" rx="10"/>
+    <rect class="header authorsHeader" x="95" y="190" width="430" height="58" rx="10"/>
+    <text class="tableName" x="310" y="228" text-anchor="middle">authors</text>
+    <rect class="pk" x="122" y="272" width="50" height="24" rx="12"/><text class="col" x="190" y="291">id</text><text class="type" x="440" y="291" text-anchor="end">BIGSERIAL PK</text>
+    <text class="col" x="190" y="329">first_name</text><text class="type" x="440" y="329" text-anchor="end">VARCHAR(100)</text>
+    <text class="col" x="190" y="367">last_name</text><text class="type" x="440" y="367" text-anchor="end">VARCHAR(100)</text>
+    <text class="col" x="190" y="405">email</text><text class="type" x="440" y="405" text-anchor="end">VARCHAR(255) UQ</text>
+  </g>
+
+  <g id="books">
+    <rect class="table books" x="725" y="190" width="430" height="260" rx="10"/>
+    <rect class="booksHeader" x="725" y="190" width="430" height="58" rx="10"/>
+    <text class="tableName" x="940" y="228" text-anchor="middle">books</text>
+    <rect class="pk" x="752" y="272" width="50" height="24" rx="12"/><text class="col" x="820" y="291">id</text><text class="type" x="1070" y="291" text-anchor="end">BIGSERIAL PK</text>
+    <text class="col" x="820" y="329">title</text><text class="type" x="1070" y="329" text-anchor="end">VARCHAR(200)</text>
+    <text class="col" x="820" y="367">publish_date</text><text class="type" x="1070" y="367" text-anchor="end">VARCHAR(20)</text>
+    <rect class="fk" x="752" y="388" width="50" height="24" rx="12"/><text class="col" x="820" y="407">author_id</text><text class="type" x="1070" y="407" text-anchor="end">FK authors.id</text>
+  </g>
+
+  <g id="products">
+    <rect class="table products" x="95" y="645" width="430" height="240" rx="10"/>
+    <rect class="productsHeader" x="95" y="645" width="430" height="58" rx="10"/>
+    <text class="tableName" x="310" y="683" text-anchor="middle">products</text>
+    <rect class="pk" x="122" y="727" width="50" height="24" rx="12"/><text class="col" x="190" y="746">id</text><text class="type" x="440" y="746" text-anchor="end">BIGSERIAL PK</text>
+    <text class="col" x="190" y="784">name</text><text class="type" x="440" y="784" text-anchor="end">VARCHAR(200)</text>
+    <text class="col" x="190" y="822">price</text><text class="type" x="440" y="822" text-anchor="end">DECIMAL(12,2)</text>
+    <text class="col" x="190" y="860">stock</text><text class="type" x="440" y="860" text-anchor="end">INTEGER</text>
+  </g>
+
+  <g id="order_lines">
+    <rect class="table lines" x="665" y="615" width="430" height="300" rx="10"/>
+    <rect class="linesHeader" x="665" y="615" width="430" height="58" rx="10"/>
+    <text class="tableName" x="880" y="653" text-anchor="middle">order_lines</text>
+    <rect class="pk" x="692" y="697" width="50" height="24" rx="12"/><text class="col" x="760" y="716">id</text><text class="type" x="1010" y="716" text-anchor="end">BIGSERIAL PK</text>
+    <rect class="fk" x="692" y="735" width="50" height="24" rx="12"/><text class="col" x="760" y="754">order_id</text><text class="type" x="1010" y="754" text-anchor="end">FK orders.id</text>
+    <rect class="fk" x="692" y="773" width="50" height="24" rx="12"/><text class="col" x="760" y="792">product_id</text><text class="type" x="1010" y="792" text-anchor="end">FK products.id</text>
+    <text class="col" x="760" y="830">quantity</text><text class="type" x="1010" y="830" text-anchor="end">INTEGER</text>
+    <text class="col" x="760" y="868">unit_price</text><text class="type" x="1010" y="868" text-anchor="end">DECIMAL(12,2)</text>
+  </g>
+
+  <g id="orders">
+    <rect class="table orders" x="1225" y="645" width="430" height="240" rx="10"/>
+    <rect class="ordersHeader" x="1225" y="645" width="430" height="58" rx="10"/>
+    <text class="tableName" x="1440" y="683" text-anchor="middle">orders</text>
+    <rect class="pk" x="1252" y="727" width="50" height="24" rx="12"/><text class="col" x="1320" y="746">id</text><text class="type" x="1570" y="746" text-anchor="end">BIGSERIAL PK</text>
+    <text class="col" x="1320" y="784">customer_id</text><text class="type" x="1570" y="784" text-anchor="end">BIGINT</text>
+    <text class="col" x="1320" y="822">order_date</text><text class="type" x="1570" y="822" text-anchor="end">BIGINT epoch ms</text>
+    <text class="col" x="1320" y="860">status</text><text class="type" x="1570" y="860" text-anchor="end">VARCHAR(20)</text>
+  </g>
+
+  <path class="rel" d="M 525 407 H 725"/>
+  <rect class="labelBox" x="575" y="336" width="100" height="28" rx="14"/>
+  <text class="relLabel" x="625" y="355" text-anchor="middle">1 author</text>
+  <rect class="labelBox" x="655" y="472" width="102" height="28" rx="14"/>
+  <text class="relLabel" x="706" y="491" text-anchor="middle">many books</text>
+
+  <path class="rel" d="M 1225 754 H 1095"/>
+  <rect class="labelBox" x="1122" y="690" width="82" height="28" rx="14"/>
+  <text class="relLabel" x="1163" y="709" text-anchor="middle">order</text>
+
+  <path class="rel" d="M 525 792 H 665"/>
+  <rect class="labelBox" x="535" y="828" width="118" height="28" rx="14"/>
+  <text class="relLabel" x="594" y="847" text-anchor="middle">product row</text>
+
+  <text class="footer" x="860" y="1000" text-anchor="middle">Order lines reference both an order header and a product row; products.stock is mutated under SELECT FOR UPDATE.</text>
+</svg>
