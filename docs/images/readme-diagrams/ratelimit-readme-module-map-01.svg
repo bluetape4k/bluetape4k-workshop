@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1640" height="720" viewBox="0 0 1640 720" role="img" aria-label="Rate limiter module map">
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
+    <marker id="arrowOrange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#EA580C"/></marker>
+    <style>
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:28px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.line{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+    </style>
+  </defs>
+  <rect class="canvas" width="1640" height="720"/>
+  <rect class="frame" x="24" y="24" width="1592" height="672" rx="24"/>
+  <text class="title" x="820" y="72" text-anchor="middle">Rate limiter workshop modules</text>
+  <text class="subtitle" x="820" y="104" text-anchor="middle">Choose between a bluetape4k Redis limiter, advanced strategy filters, starter Redis, and starter Caffeine.</text>
+
+  <rect class="layer" x="72" y="148" width="348" height="440" rx="18"/>
+  <text class="layerLabel" x="100" y="186">Recommended path</text>
+  <g filter="url(#shadow)">
+    <rect x="110" y="246" width="272" height="146" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/>
+    <circle cx="154" cy="298" r="24" fill="#FEE2E2" stroke="#DC2626" stroke-width="2.4"/>
+    <text x="154" y="307" text-anchor="middle" font-family="Comic Mono" font-size="16" fill="#B91C1C">R</text>
+    <text class="cardTitle" x="270" y="286" text-anchor="middle">bt4k WebFlux</text>
+    <text class="cardText" x="270" y="322" text-anchor="middle">User token or IP key</text>
+    <text class="cardText" x="270" y="348" text-anchor="middle">DistributedRateLimiter</text>
+    <text class="cardText" x="270" y="374" text-anchor="middle">Redis Lettuce store</text>
+  </g>
+
+  <rect class="layer" x="472" y="148" width="348" height="440" rx="18"/>
+  <text class="layerLabel" x="500" y="186">Strategy lab</text>
+  <g filter="url(#shadow)">
+    <rect x="510" y="246" width="272" height="146" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
+    <text class="cardTitle" x="646" y="292" text-anchor="middle">Advanced filters</text>
+    <text class="cardText" x="646" y="326" text-anchor="middle">IP, user, combined keys</text>
+    <text class="cardText" x="646" y="352" text-anchor="middle">standard retry headers</text>
+    <text class="cardText" x="646" y="378" text-anchor="middle">Redis proxy manager</text>
+  </g>
+
+  <rect class="layer" x="872" y="148" width="304" height="440" rx="18"/>
+  <text class="layerLabel" x="900" y="186">Starter + Redis</text>
+  <g filter="url(#shadow)">
+    <rect x="910" y="246" width="228" height="146" rx="16" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.7"/>
+    <circle cx="940" cy="298" r="24" fill="#FEE2E2" stroke="#DC2626" stroke-width="2.4"/>
+    <text x="940" y="307" text-anchor="middle" font-family="Comic Mono" font-size="16" fill="#B91C1C">R</text>
+    <text class="cardTitle" x="1058" y="292" text-anchor="middle">Redis starter</text>
+    <text class="cardText" x="1050" y="326" text-anchor="middle">filter-method: webflux</text>
+    <text class="cardText" x="1050" y="352" text-anchor="middle">shared bucket state</text>
+    <text class="cardText" x="1050" y="378" text-anchor="middle">starter configuration</text>
+  </g>
+
+  <rect class="layer" x="1228" y="148" width="340" height="440" rx="18"/>
+  <text class="layerLabel" x="1256" y="186">Starter + local cache</text>
+  <g filter="url(#shadow)">
+    <rect x="1266" y="246" width="264" height="146" rx="16" fill="#FFFBEB" stroke="#D97706" stroke-width="1.7"/>
+    <rect x="1286" y="288" width="64" height="30" rx="15" fill="#FEF3C7" stroke="#D97706" stroke-width="2.4"/>
+    <path d="M 1286 303 C 1286 322 1350 322 1350 303" fill="none" stroke="#D97706" stroke-width="2.4"/>
+    <text class="cardTitle" x="1454" y="292" text-anchor="middle">Caffeine servlet</text>
+    <text class="cardText" x="1450" y="326" text-anchor="middle">filter-method: servlet</text>
+    <text class="cardText" x="1450" y="352" text-anchor="middle">single JVM buckets</text>
+    <text class="cardText" x="1450" y="378" text-anchor="middle">local/dev fit</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="520" y="480" width="600" height="72" rx="16" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.7"/>
+    <text class="cardTitle" x="820" y="516" text-anchor="middle">Token bucket behavior</text>
+    <text class="cardText" x="820" y="542" text-anchor="middle">consume one token, allow while available, return 429 when exhausted</text>
+  </g>
+
+  <path class="line" d="M 382 320 L 510 320" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 782 320 L 910 320" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 1138 320 L 1266 320" stroke="#EA580C" marker-end="url(#arrowOrange)"/>
+  <path class="line" d="M 646 392 L 646 480" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 1024 392 L 1024 480" stroke="#EA580C" marker-end="url(#arrowOrange)"/>
+</svg>

@@ -2,83 +2,50 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+This directory groups the Bucket4j rate-limit workshop modules. Use it as a map: pick the module by identity model, storage model, and Spring stack before opening the detailed README in each submodule.
 
-This example exercises **Rate Limiter Examples** as a runnable rate limiting workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+## Module Map
 
-## Architecture Diagram
+![Rate limiter module map](../docs/images/readme-diagrams/ratelimit-readme-module-map-01.png)
 
-![Rate Limiter Examples Graphviz architecture diagram](../docs/images/readme-diagrams/ratelimit-readme-architecture-01.png)
+The recommended path is `bucker4j-bluetape4k-webflux` when you want a bluetape4k `DistributedRateLimiter` and user-token-based buckets. `bucket4j-advanced` is the policy lab for IP, user, and combined-key filters. `bucket4j-redis` keeps the Bucket4j starter model but stores tokens in Redis. `bucket4j-caffeine-web` is the local WebMVC starter example for a single JVM.
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.ratelimit` as the source of truth when comparing this README with the code.
+## Selection Flow
 
-## Sequence Diagram
+![Rate limiter module selection flow](../docs/images/readme-diagrams/ratelimit-readme-selection-flow-01.png)
 
-![Rate Limiter Examples sequence diagram](../docs/images/readme-diagrams/ratelimit-bucket4j-caffeine-web-sequence-01.png)
+Start with the key you need. User-token or mixed identity work belongs in the bluetape4k modules. IP-only starter behavior belongs in the Redis or Caffeine starter modules. Redis examples demonstrate shared bucket state; the Caffeine example demonstrates local servlet filtering.
 
-## Submodule Structure
+## Modules
 
-![ratelimit Architecture diagram](../docs/images/readme-diagrams/ratelimit-diagram-01.png)
+| Module | Use it for | Stack | Store | Identity |
+|---|---|---|---|---|
+| `bucker4j-bluetape4k-webflux` | Recommended bluetape4k WebFlux limiter | WebFlux + coroutines | Redis (Lettuce) | User token or IP |
+| `bucket4j-advanced` | Comparing IP, user, and combined-key policies | WebFlux + coroutines | Redis (Lettuce) | IP, user, combined |
+| `bucket4j-redis` | Bucket4j starter with distributed token state | WebFlux + Reactor/coroutines | Redis (Lettuce) | URL/IP-oriented starter rules |
+| `bucket4j-caffeine-web` | Local starter behavior without Redis | Spring WebMVC | Caffeine JCache | URL/IP-oriented starter rules |
 
-## bucket4j-bluetape4k-webflux (Recommended)
+## Shared Concepts
 
-This example uses the user-token-based RateLimiter provided by `bluetape4k-bucket4j`.
+All modules demonstrate token bucket decisions:
 
-It supports both IP-based and user-token-based rate limiting, and uses Redis as the bucket store.
+| Concept | Meaning |
+|---|---|
+| Bucket capacity | Maximum tokens available in a window |
+| Refill | How and when tokens return to the bucket |
+| Key resolver | The value used to isolate one caller's bucket from another |
+| Store | Where bucket state is held: local Caffeine or shared Redis |
+| Exhausted bucket | Request is rejected with `429 Too Many Requests` |
 
-## bucket4j-caffeine-web
+The bluetape4k WebFlux examples also expose response headers such as `X-Bluetape4k-Remaining-Token` or standard `X-RateLimit-Remaining` / `Retry-After`, depending on the module.
 
-This example uses `bucket4j-spring-boot-starter`. It provides an IP-based Rate Limiter and is intended for local use.
-
-## bucket4j-redis
-
-This example uses `bucket4j-spring-boot-starter`. It provides an IP-based Rate Limiter.
-
-## Module Comparison
-
-| Item | `bucker4j-bluetape4k-webflux` | `bucket4j-redis` | `bucket4j-caffeine-web` |
-|---|---|---|---|
-| **Recommended?** | Recommended | Standard | Local/development use |
-| **Identity Basis** | User token / IP | IP | IP |
-| **Store** | Redis (Lettuce) | Redis (Lettuce) | Caffeine (in-memory) |
-| **Stack** | WebFlux + coroutines | WebFlux + coroutines | WebMVC (Servlet) |
-| **Distributed Support** | Yes | Yes | No (single node) |
-| **Library** | `bluetape4k-bucket4j` | `bucket4j-spring-boot-starter` | `bucket4j-spring-boot-starter` |
-
-## Rate Limit Strategy
-
-### Token Bucket Algorithm
-
-Bucket4j uses the Token Bucket algorithm. If tokens remain in the bucket, the request is allowed; if they are exhausted, it returns `429 Too Many Requests`.
-
-```
-bucker4j-bluetape4k-webflux bucket configuration example:
-- Refill 10 tokens in one batch every 10 seconds (prevents bursts)
-- Refill 10 tokens gradually every 1 minute (up to 100)
-```
-
-### Key-Based Separation
-
-`bucker4j-bluetape4k-webflux` separates buckets by generating a unique key for each request.
-
-| Key Strategy | Class | Description |
-|---|---|---|
-| User token | `UserKeyResolver` | Based on the Authorization header or token |
-| IP address | IP-based KeyResolver | Separates buckets by client IP |
-
-### WebFilter Flow
-
-![WebFilter diagram](../docs/images/readme-diagrams/ratelimit-diagram-02.png)
-
-The remaining token count is delivered to the client through the `X-Bluetape4k-Remaining-Token` response header.
-
-## Running
+## Run
 
 ```bash
-# Redis required (Docker)
-docker run -d -p 6379:6379 redis
-
 ./gradlew :bucker4j-bluetape4k-webflux:bootRun
+./gradlew :bucket4j-advanced:bootRun
 ./gradlew :bucket4j-redis:bootRun
 ./gradlew :bucket4j-caffeine-web:bootRun
 ```
+
+Redis-backed modules use the repository's Testcontainers-based tests. For manual runs, provide a reachable Redis instance and match the module's `application.yml` properties.
