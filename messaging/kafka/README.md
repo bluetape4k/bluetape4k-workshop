@@ -2,129 +2,69 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+This module is a Spring Kafka 4 workshop slice for publishing messages from a coroutine-friendly WebFlux controller and consuming them with `@KafkaListener` handlers.
 
-This example exercises **Kafka Demo** as a runnable message-driven workflow workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+It starts Kafka through `KafkaServer.Launcher.kafka`, so the sample and tests can use a Testcontainers-backed broker without hand-written container lifecycle code.
 
-## Architecture Diagram
+## Architecture
 
-![Kafka Demo architecture diagram](../../docs/images/readme-diagrams/messaging-kafka-architecture-01.png)
+![Kafka demo architecture](../../docs/images/readme-diagrams/messaging-kafka-readme-architecture-01.png)
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.messaging` as the source of truth when comparing this README with the code.
+`GreetingController` exposes suspend endpoints and publishes through `KafkaTemplate.suspendSend()` from `bluetape4k-kafka4`. Spring Kafka listeners then consume the configured topics.
 
-## Sequence Diagram
+## Message Flow
 
-![Kafka Demo sequence diagram](../../docs/images/readme-diagrams/messaging-kafka-sequence-01.png)
+![Kafka demo message flow](../../docs/images/readme-diagrams/messaging-kafka-readme-message-flow-01.png)
 
-This is a basic message publishing and consuming example that uses Spring Kafka.
-It starts Testcontainers Kafka automatically with bluetape4k's `KafkaServer.Launcher`, and handles the Spring Kafka 4 publishing path in a coroutine-friendly way with `suspendSend()` from `bluetape4k-kafka4`.
+| Endpoint | Kafka path |
+|----------|------------|
+| `GET /greeting?message=...` | Publishes a string to `simple.topic.1`; `SimpleMessageHandler` logs it. |
+| `POST /greeting` | Publishes a `GreetingRequest` to `greeting.topic.1`; `GreetingMessageHandler` returns a `GreetingResult` with `@SendTo(logger.topic.1)`; `LoggerMessageHandler` stores the result. |
 
-## Key Components
+## Main Types
 
-| Class | Role |
-|---|---|
-| `KafkaApplication` | Starts Testcontainers Kafka automatically with `KafkaServer.Launcher.kafka` |
-| `KafkaConfig` | Configures the `KafkaTemplate` bean |
-| `GreetingController` | `suspend` endpoint that publishes messages with `KafkaTemplate.suspendSend()` |
-| `SimpleMessageHandler` | Consumes string messages from `TOPIC_SIMPLE` |
-| `GreetingMessageHandler` | Consumes JSON object messages from `TOPIC_GREETING` |
-| `LoggerMessageHandler` | Logs all topics |
+| Type | Role |
+|------|------|
+| `KafkaApplication` | Starts the Testcontainers Kafka singleton through `KafkaServer.Launcher.kafka`. |
+| `KafkaConfig` | Enables Kafka and provides `ProducerFactory<String, Any>` plus `KafkaTemplate<String, Any>`. |
+| `GreetingController` | Provides suspend HTTP endpoints and waits for send completion with `suspendSend`. |
+| `SimpleMessageHandler` | Consumes `TOPIC_SIMPLE` string messages. |
+| `GreetingMessageHandler` | Consumes `GreetingRequest` and relays `GreetingResult` to the logger topic. |
+| `LoggerMessageHandler` | Consumes `GreetingResult` and keeps received messages for assertions. |
 
-## Used bluetape4k Features
+## Topics
 
-| Feature | Artifact | Code Location | Benefit |
-|---|---|---|---|
-| `KafkaServer.Launcher.kafka` | `bluetape4k-testcontainers` | `KafkaApplication` companion | Testcontainers Kafka singleton that starts automatically without `application.yml` |
-| `KafkaOperations.suspendSend()` | `bluetape4k-kafka4` | `GreetingController` | Waits for Spring Kafka 4 `KafkaTemplate` publish results in coroutine style inside a suspend function |
-| `KLoggingChannel` | `bluetape4k-logging` | All companion objects | Structured logging with coroutine context |
-| `uninitialized()` | `bluetape4k-core` | `GreetingController` | Type-safe alternative to `lateinit` initialization |
+| Constant | Topic |
+|----------|-------|
+| `KafkaTopics.TOPIC_SIMPLE` | `simple.topic.1` |
+| `KafkaTopics.TOPIC_GREETING` | `greeting.topic.1` |
+| `KafkaTopics.TOPIC_LOGGER` | `logger.topic.1` |
 
-## bluetape4k Before / After
+## Coroutine Boundary
 
-### `KafkaServer.Launcher` vs Manual Testcontainers Setup
+`KafkaOperations.suspendSend()` is the coroutine-friendly publishing boundary. It lets the suspend controller wait for Spring Kafka 4 send results without exposing callers to callback code.
 
-```kotlin
-// Before — manual @DynamicPropertySource + KafkaContainer management
-@SpringBootTest
-class KafkaTest {
-    companion object {
-        @Container
-        val kafka = KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.4.0"))
+`@KafkaListener` methods remain regular functions. The disabled `CoroutineSimpleMessageHandler` is kept as a reference for that limitation; listener methods themselves should not be modeled as suspend endpoints.
 
-        @JvmStatic
-        @DynamicPropertySource
-        fun kafkaProperties(registry: DynamicPropertyRegistry) {
-            registry.add("spring.kafka.bootstrap-servers") { kafka.bootstrapServers }
-        }
-    }
-}
-
-// After — KafkaServer.Launcher.kafka singleton (starts automatically on app startup)
-@SpringBootApplication
-class KafkaApplication {
-    companion object: KLoggingChannel() {
-        val kafka = KafkaServer.Launcher.kafka  // done in one line
-    }
-}
-```
-
-### `KLoggingChannel` — Coroutine Logging
-
-```kotlin
-// Before
-private val logger = LoggerFactory.getLogger(SimpleMessageHandler::class.java)
-logger.debug("Received message: {}", message)
-
-// After — KLoggingChannel (lazy lambda + coroutine MDC context)
-companion object: KLoggingChannel()
-log.debug { "Received message: $message" }
-```
-
-## Message Publishing Examples
-
-```kotlin
-// Publish a string message
-kafkaTemplate.suspendSend(KafkaTopics.TOPIC_SIMPLE, "Hello Kafka")
-
-// Publish a JSON object message
-kafkaTemplate.suspendSend(KafkaTopics.TOPIC_GREETING, GreetingRequest("Alice", "Hello"))
-```
-
-## @KafkaListener — Coroutine Limitations
-
-> **Note**: `@KafkaListener` does not officially support `suspend` functions or Reactor.
-> `CoroutineSimpleMessageHandler` is disabled (`// @Component`) and kept for reference.
-
-```kotlin
-// @Component disabled — KafkaListener does not support suspend
-class CoroutineSimpleMessageHandler {
-    @KafkaListener(topics = [TOPIC_SIMPLE])
-    suspend fun handleWithCoroutines(message: String) { ... }  // does not work
-}
-
-// Alternative: wrap with mono { }
-@KafkaListener(topics = [TOPIC_SIMPLE])
-fun handleWithMono(message: String): Mono<Void> = mono {
-    delay(100)
-    null
-}
-```
-
-## Running
+## Run
 
 ```bash
 ./gradlew :messaging-kafka:bootRun
-# Or run tests
 ./gradlew :messaging-kafka:test
 ```
 
-## Related Modules
+## Dependencies
 
-- [`messaging/kafka-reply`](../kafka-reply) — Request-reply pattern with `ReplyingKafkaTemplate`
+```kotlin
+implementation(libs.bluetape4k.kafka4)
+implementation(libs.bluetape4k.testcontainers)
+implementation(libs.spring.boot.starter.webflux.lib)
+implementation(libs.spring.kafka.lib)
+implementation(libs.kafka.clients)
+implementation(libs.testcontainers.kafka)
+testImplementation(libs.spring.kafka.test)
+```
 
-## References
+## Related Module
 
-- [Spring Kafka official docs](https://docs.spring.io/spring-kafka/reference/)
-- [Apache Kafka](https://kafka.apache.org/documentation/)
-- [bluetape4k-testcontainers](https://github.com/bluetape4k/bluetape4k-projects)
-- [bluetape4k-kafka4](https://github.com/bluetape4k/bluetape4k-projects)
+- [`messaging/kafka-reply`](../kafka-reply) shows request-reply messaging with `ReplyingKafkaTemplate`.
