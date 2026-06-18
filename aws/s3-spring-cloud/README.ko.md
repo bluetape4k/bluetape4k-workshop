@@ -2,17 +2,17 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+## 로컬 S3 워크플로우
 
 이 예제는 Spring Cloud AWS로 로컬 S3 흐름을 가장 작게 실행합니다. S3 client 설정, 버킷 생성, 객체 업로드, 목록 조회, Spring `ResourceLoader`를 통한 객체 읽기를 한 번에 확인합니다.
 
-## 아키텍처 다이어그램
+## 아키텍처
 
 ![Spring Cloud AWS S3 Demo 아키텍처 다이어그램](../../docs/images/readme-diagrams/aws-s3-spring-cloud-readme-architecture-01.png)
 
 다이어그램은 Spring Boot 샘플, Spring Cloud AWS 추상화, AWS SDK 호출, 테스트가 사용하는 로컬 S3 호환 런타임을 분리해서 보여 줍니다.
 
-## 시퀀스 다이어그램
+## Request Flow
 
 ![Spring Cloud AWS S3 Demo sequence diagram](../../docs/images/readme-diagrams/aws-s3-spring-cloud-sequence-01.png)
 

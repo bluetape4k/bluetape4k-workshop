@@ -2,17 +2,17 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+## Local S3 Workflow
 
 This example shows the smallest local S3 path for Spring Cloud AWS: configure an S3 client, create buckets, upload objects, list them, and read an object through Spring's `ResourceLoader`.
 
-## Architecture Diagram
+## Architecture
 
 ![Spring Cloud AWS S3 Demo architecture diagram](../../docs/images/readme-diagrams/aws-s3-spring-cloud-readme-architecture-01.png)
 
 The diagram separates the Spring Boot sample, Spring Cloud AWS abstractions, AWS SDK calls, and the local S3-compatible runtime used by the tests.
 
-## Sequence Diagram
+## Request Flow
 
 ![Spring Cloud AWS S3 Demo sequence diagram](../../docs/images/readme-diagrams/aws-s3-spring-cloud-sequence-01.png)
 
