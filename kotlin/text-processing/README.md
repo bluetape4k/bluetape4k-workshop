@@ -2,127 +2,72 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+This module demonstrates in-process text utilities built on `bluetape4k-text` and small Kotlin
+helpers. It covers three reader-visible tasks: abuse-word filtering, language detection, and text
+normalization before search or indexing.
 
-This example exercises **kotlin/text-processing** as a runnable Kotlin language and coroutine patterns workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+## Architecture
 
-![kotlin/text-processing scenario diagram](../../docs/images/readme-diagrams/kotlin-text-processing-scenario-01.png)
+![kotlin/text-processing architecture](../../docs/images/readme-diagrams/kotlin-text-processing-readme-architecture-01.png)
 
-## Architecture Diagram
+## Processing flow
 
-![kotlin/text-processing Graphviz architecture diagram](../../docs/images/readme-diagrams/kotlin-text-processing-readme-architecture-01.png)
+![kotlin/text-processing flow](../../docs/images/readme-diagrams/kotlin-text-processing-scenario-01.png)
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.kotlin` as the source of truth when comparing this README with the code.
+## Components
 
-## Sequence Diagram
-
-Text processing workshop module using [bluetape4k-text](https://github.com/bluetape4k/bluetape4k-text) libraries.
-
-Demonstrates three practical text-processing scenarios:
-
-| Class | BT Module | Feature |
+| class | backing API | contract |
 |---|---|---|
-| `AbuseWordFilter` | `text-search` | Multi-keyword filtering via AhoCorasick automaton |
-| `LanguageDetectionService` | `lingua` | Language detection for Korean / English / Japanese |
-| `TextNormalizer` | (pure Kotlin) | Whitespace normalization and keyword extraction |
+| `AbuseWordFilter` | `AhoCorasickAutomaton` from `text-search` | Case-insensitive NFC matching with overlaps; masks matched spans with `*` |
+| `LanguageDetectionService` | Lingua detector from `bluetape4k-text-lingua` | Reuses one detector and returns `null` for blank or unknown text |
+| `TextNormalizer` | pure Kotlin object | Lowercases text, collapses whitespace, extracts deduplicated keywords |
 
----
+## Usage
 
-## Scenario
-
----
-
-## Core Features
-
-### AbuseWordFilter — AhoCorasick multi-keyword search
-
-Builds an immutable, thread-safe Aho-Corasick automaton at construction time. All subsequent
-`containsAbuse`, `filterText`, and `findMatches` calls run in **O(text length + matches)** time,
-regardless of how many registered keywords there are.
+### Abuse-word filtering
 
 ```kotlin
 val filter = AbuseWordFilter(listOf("spam", "abuse", "badword"))
 
 filter.containsAbuse("There is some spam here")   // true
 filter.filterText("No spam allowed")              // "No **** allowed"
-filter.findMatches("spam and abuse")              // 2 AhoCorasickMatch objects
+filter.findMatches("spam and abuse")              // AhoCorasickMatch list
 ```
 
-**Before / After — why AhoCorasick beats naive `String.contains` loops:**
+The automaton is built once from the keyword collection. After construction, matching is a single
+pass over the input text plus the number of matches.
 
-```kotlin
-// Naive approach — O(keywords × text) — scans the text once per keyword
-val words = listOf("spam", "abuse", "hate", /* ... 1000 more ... */)
-val found = words.any { text.contains(it, ignoreCase = true) }
-
-// AhoCorasick — O(text + matches) — one pass regardless of keyword count
-val filter = AbuseWordFilter(words)
-val found = filter.containsAbuse(text)
-```
-
-For 1 000 keywords on a 10 000-character message the naive approach makes up to
-10 000 000 character comparisons. The automaton makes exactly 10 000.
-
-### LanguageDetectionService — Lingua-backed language detection
-
-Wraps the [Lingua](https://github.com/pemistahl/lingua) language detector. The underlying
-language models are loaded once and reused across all calls.
+### Language detection
 
 ```kotlin
 val service = LanguageDetectionService()
 
-service.detectLanguage("Hello, World!")     // Language.ENGLISH
-service.detectLanguage("Hello.") // Language.KOREAN
-service.detectLanguage("東京は首都です。")    // Language.JAPANESE
+service.detectLanguage("Hello, World!")      // Language.ENGLISH
+service.detectLanguage("안녕하세요.")         // Language.KOREAN
+service.detectLanguage("東京は首都です。")      // Language.JAPANESE
 
-// Confidence values for all plausible languages
 val scores = service.computeConfidenceValues("This is English text.")
-// { ENGLISH -> 0.97, DUTCH -> 0.01, ... }
 ```
 
-### TextNormalizer — lightweight text normalisation
+Reuse one `LanguageDetectionService` instance when possible because language detector construction is
+expensive.
 
-Stateless `object` for pre-processing text before indexing or search:
+### Text normalization
 
 ```kotlin
-TextNormalizer.normalize("  Hello   WORLD  ")      // "hello world"
-TextNormalizer.extractKeywords("the quick brown fox")   // ["the", "quick", "brown", "fox"]
+TextNormalizer.normalize("  Hello   WORLD  ")                 // "hello world"
+TextNormalizer.extractKeywords("the quick brown fox")          // ["the", "quick", "brown", "fox"]
 TextNormalizer.extractKeywords("a b quick", minKeywordLength = 4) // ["quick"]
 ```
 
----
+## Dependencies
 
-## Configuration
-
-No external services required. All processing runs in-process.
-
-The `bluetape4k-text` libraries are independently versioned under `io.github.bluetape4k.text`:
-
-| Dependency | Version |
-|---|---|
-| `io.github.bluetape4k.text:text-search` | 0.1.2 |
-| `io.github.bluetape4k.text:lingua` | 0.1.2 |
-
----
-
-## Dependency Instructions
-
-Add to `build.gradle.kts`:
+The module uses the repository version catalog:
 
 ```kotlin
 dependencies {
     implementation(libs.bluetape4k.text.search)
     implementation(libs.bluetape4k.text.lingua)
+    implementation(libs.bluetape4k.text.korean)
 }
-```
-
-Ensure the version catalog entry exists:
-
-```toml
-[versions]
-bluetape4k-text = "0.1.2"
-
-[libraries]
-bluetape4k-text-search = { module = "io.github.bluetape4k.text:text-search", version.ref = "bluetape4k-text" }
-bluetape4k-text-lingua = { module = "io.github.bluetape4k.text:lingua", version.ref = "bluetape4k-text" }
 ```

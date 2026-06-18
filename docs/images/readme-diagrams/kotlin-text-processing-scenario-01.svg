@@ -1,91 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="520" viewBox="0 0 1400 520" role="img" aria-label="Text Processing Scenarios">
-<defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="arrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
-    <path d="M2,2 L12,7 L2,12 Z" fill="#758297"/>
-  </marker>
-  <style>
-    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter";font-size:34px;fill:#102033}
-    .subtitle{font-family:"Comic Mono";font-size:14px;fill:#536273}
-    .label{font-family:"Architects Daughter";font-size:20px;fill:#102033}
-    .mono{font-family:"Comic Mono";font-size:12px;fill:#536273}
-    .card{stroke-width:2;filter:url(#shadow)}
-    .line{stroke:#758297;stroke-width:2;fill:none;marker-end:url(#arrow)}
-  </style>
-</defs>
-<rect class="canvas" width="1400" height="520"/>
-<rect class="frame" x="28" y="24" width="1344" height="472" rx="20"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="460" viewBox="0 0 1320 460" role="img" aria-label="Kotlin text processing scenario flow diagram">
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/></marker>
+    <style>
+      .canvas{fill:#F8FAFC}.frame{fill:#fff;stroke:#D6E0E8;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.cardTitle{font-family:"Architects Daughter";font-size:25px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}.line{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+    </style>
+  </defs>
+  <rect class="canvas" width="1320" height="460"/>
+  <rect class="frame" x="24" y="24" width="1272" height="412" rx="24"/>
+  <text class="title" x="660" y="66" text-anchor="middle">Text processing flow</text>
+  <text class="subtitle" x="660" y="94" text-anchor="middle">Raw text can be normalized, searched for abuse words, or classified by language, then asserted in tests.</text>
 
-<text class="title" x="52" y="68">3 Text Processing Scenarios</text>
-<text class="subtitle" x="52" y="92">bluetape4k-text: AhoCorasick keyword search · Lingua language detection · text normalization</text>
+  <g filter="url(#shadow)"><rect x="82" y="210" width="220" height="84" rx="16" fill="#F8FAFC" stroke="#64748B" stroke-width="1.7"/><text class="cardTitle" x="192" y="244" text-anchor="middle">Raw text</text><text class="cardText" x="192" y="270" text-anchor="middle">message or sentence</text></g>
+  <g filter="url(#shadow)"><rect x="380" y="210" width="220" height="84" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/><text class="cardTitle" x="490" y="244" text-anchor="middle">Normalize</text><text class="cardText" x="490" y="270" text-anchor="middle">lowercase + whitespace</text></g>
+  <g filter="url(#shadow)"><rect x="698" y="132" width="250" height="84" rx="16" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.7"/><text class="cardTitle" x="823" y="166" text-anchor="middle">Abuse filter</text><text class="cardText" x="823" y="192" text-anchor="middle">mask and match spans</text></g>
+  <g filter="url(#shadow)"><rect x="698" y="290" width="250" height="84" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="823" y="324" text-anchor="middle">Language detect</text><text class="cardText" x="823" y="350" text-anchor="middle">top language + confidence</text></g>
+  <g filter="url(#shadow)"><rect x="1030" y="210" width="220" height="84" rx="16" fill="#F8FAFC" stroke="#64748B" stroke-width="1.7"/><text class="cardTitle" x="1140" y="244" text-anchor="middle">JUnit tests</text><text class="cardText" x="1140" y="270" text-anchor="middle">assertions per contract</text></g>
 
-<!--
-  BOUNDING BOXES:
-  Input: x=52-252 y=130-390
-  Scenario 1: x=320-680 y=120-220, Output 1: x=760-1140 y=120-220
-  Scenario 2: x=320-680 y=250-350, Output 2: x=760-1140 y=250-350
-  Scenario 3: x=320-680 y=380-460, Output 3: x=760-1140 y=380-460
-  Arrows: horizontal at fixed y per row, no crossing possible
--->
-
-<!-- Input column -->
-<g transform="translate(52,130)">
-  <rect class="card" x="0" y="0" width="200" height="260" rx="14" fill="#E0ECFF" stroke="#4A7ADB"/>
-  <text class="label" x="100" y="36" text-anchor="middle">Input Text</text>
-  <text class="mono" x="100" y="70" text-anchor="middle">user content</text>
-  <text class="mono" x="100" y="92" text-anchor="middle">multi-language</text>
-  <text class="mono" x="100" y="114" text-anchor="middle">raw whitespace</text>
-</g>
-
-<!-- Scenario 1: AbuseWordFilter -->
-<g transform="translate(320,120)">
-  <rect class="card" x="0" y="0" width="360" height="100" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="label" x="180" y="28" text-anchor="middle">AbuseWordFilter</text>
-  <text class="mono" x="180" y="52" text-anchor="middle">AhoCorasick automaton · O(text + matches)</text>
-  <text class="mono" x="180" y="72" text-anchor="middle">containsAbuse · filterText · findMatches</text>
-</g>
-<g transform="translate(760,120)">
-  <rect class="card" x="0" y="0" width="380" height="100" rx="12" fill="#FDECEF" stroke="#DC6B82"/>
-  <text class="label" x="190" y="28" text-anchor="middle">Filtered Content</text>
-  <text class="mono" x="190" y="52" text-anchor="middle">"No **** allowed" (masked)</text>
-  <text class="mono" x="190" y="72" text-anchor="middle">AhoCorasickMatch objects</text>
-</g>
-
-<!-- Scenario 2: LanguageDetection -->
-<g transform="translate(320,250)">
-  <rect class="card" x="0" y="0" width="360" height="100" rx="12" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="label" x="180" y="28" text-anchor="middle">LanguageDetectionService</text>
-  <text class="mono" x="180" y="52" text-anchor="middle">Lingua-backed · Korean / English / Japanese</text>
-  <text class="mono" x="180" y="72" text-anchor="middle">detectLanguage · detectMultiple</text>
-</g>
-<g transform="translate(760,250)">
-  <rect class="card" x="0" y="0" width="380" height="100" rx="12" fill="#EAF7EF" stroke="#58A978"/>
-  <text class="label" x="190" y="28" text-anchor="middle">Language Result</text>
-  <text class="mono" x="190" y="52" text-anchor="middle">KOREAN (confidence: 0.98)</text>
-  <text class="mono" x="190" y="72" text-anchor="middle">per-paragraph detection</text>
-</g>
-
-<!-- Scenario 3: TextNormalizer -->
-<g transform="translate(320,380)">
-  <rect class="card" x="0" y="0" width="360" height="80" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="label" x="180" y="28" text-anchor="middle">TextNormalizer</text>
-  <text class="mono" x="180" y="52" text-anchor="middle">whitespace normalize · keyword extraction</text>
-</g>
-<g transform="translate(760,380)">
-  <rect class="card" x="0" y="0" width="380" height="80" rx="12" fill="#FFF3D9" stroke="#D6A441"/>
-  <text class="label" x="190" y="28" text-anchor="middle">Normalized Text</text>
-  <text class="mono" x="190" y="52" text-anchor="middle">trimmed · collapsed · keywords list</text>
-</g>
-
-<!-- Arrows: Input → Scenarios (from Input right edge, orthogonal to each row center) -->
-<path class="line" d="M252,170 L318,170"/>
-<path class="line" d="M252,300 L318,300"/>
-<!-- Input bottom is y=390. TextNormalizer center is y=420. Route: right then down then right -->
-<path class="line" d="M252,370 L286,370 L286,420 L318,420"/>
-
-<!-- Arrows: Scenarios → Outputs (horizontal) -->
-<path class="line" d="M680,170 L758,170"/>
-<path class="line" d="M680,300 L758,300"/>
-<path class="line" d="M680,420 L758,420"/>
+  <path class="line" d="M 302 252 L 380 252" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 600 252 L 650 252 L 650 174 L 698 174" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 600 252 L 650 252 L 650 332 L 698 332" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 948 174 L 988 174 L 988 252 L 1030 252" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 948 332 L 988 332 L 988 252 L 1030 252" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
 </svg>
