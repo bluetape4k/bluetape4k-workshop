@@ -2,144 +2,42 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+This module demonstrates ZooKeeper-backed leader election with Apache Curator and `bluetape4k-leader-zookeeper`. It covers both exactly-one-instance execution and group-leader execution where up to `N` instances may hold a slot at the same time.
 
-This example exercises **Leader ZooKeeper Workshop** as a runnable leader-election coordination workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
-
-## Sequence Diagram
-
-A Spring Boot workshop example demonstrating **ZooKeeper-based distributed leader election**
-for scheduled jobs in multi-instance deployments, using the `bluetape4k-leader-zookeeper` library.
-
-## Overview
-
-In a multi-instance (multi-pod) deployment, scheduled background jobs must run on **exactly one
-instance** at a time (single-leader) or up to **N instances** simultaneously (group-leader).
-This module demonstrates how to use `bluetape4k-leader-zookeeper` (Apache Curator 5.9) to
-guarantee correct concurrent execution via ZooKeeper ephemeral nodes.
+Use this example when a service already depends on ZooKeeper or when leadership should be tied to ZooKeeper sessions and ephemeral znodes instead of Redis-style lease TTLs.
 
 ## Architecture
 
-![Leader ZooKeeper Workshop Graphviz architecture diagram](../../docs/images/readme-diagrams/leader-leader-zookeeper-readme-architecture-01.png)
+![ZooKeeper leader election architecture](../../docs/images/readme-diagrams/leader-leader-zookeeper-readme-architecture-01.png)
 
-Multiple app instances compete for ZooKeeper locks backed by
-[Apache Curator](https://curator.apache.org/) `InterProcessMutex` (single-leader) and
-`InterProcessSemaphoreV2` (group-leader). Only the **elected leader(s)** execute each
-scheduled job.
+`LeaderZookeeperConfig` creates one shared `CuratorFramework` client and four electors:
 
-## ⚠️ R16 — ZooKeeper Has No TTL (Critical Difference from Redis)
+| Elector | Service | Behavior |
+|---------|---------|----------|
+| `ZooKeeperLeaderElector` | `BlockingLeaderService` | Single leader, blocking caller. |
+| `ZooKeeperSuspendLeaderElector` | `SuspendLeaderZkService` | Single leader, suspend caller. |
+| `ZooKeeperLeaderGroupElector` | `GroupLeaderService` | Up to `groupMaxLeaders` blocking holders. |
+| `ZooKeeperSuspendLeaderGroupElector` | `SuspendGroupLeaderService` | Up to `groupMaxLeaders` coroutine holders. |
 
-ZooKeeper uses **session-bound ephemeral znodes** for leader election:
+## Election Semantics
 
-- Leadership is held until the ZooKeeper **session expires** or is explicitly released.
-- There is **no lease TTL**. Setting `LeaderElectionOptions.autoExtend = true` emits a `WARN`
-  log and is silently ignored.
-- On process crash or network partition, the ZooKeeper session times out
-  (`sessionTimeoutMs`, default 60 s), then the ephemeral znode is automatically deleted,
-  triggering re-election.
+![ZooKeeper leader election flow](../../docs/images/readme-diagrams/leader-leader-zookeeper-readme-election-flow-01.png)
 
-**Practical guidance:**
-- `leaseTime` / `autoExtend` are intentionally absent from `LeaderZookeeperProperties`.
-- Tune `sessionTimeoutMs` relative to your job interval for acceptable failover latency.
-- Use `waitTime` to bound how long a candidate waits before giving up on lock acquisition.
+Single-leader election uses a ZooKeeper mutex path: one candidate owns the ephemeral znode and runs the job; the others receive `null`.
 
-## Used Bluetape4k Features
+Group-leader election uses semaphore-style znodes: up to `groupMaxLeaders` candidates enter at the same time, and the rest receive `null` when no slot becomes available within `waitTime`.
 
-| Feature | Artifact | Usage |
-|---------|----------|-------|
-| `bluetape4k-leader-zookeeper` | `bluetape4k.leader.zookeeper` | `ZooKeeperLeaderElector`, `ZooKeeperSuspendLeaderElector`, `ZooKeeperLeaderGroupElector`, `ZooKeeperSuspendLeaderGroupElector` |
-| `bluetape4k-logging` | `bluetape4k.logging` | `KLogging` / `KLoggingChannel` + lambda logging |
-| `bluetape4k-junit5` | `bluetape4k.junit5` | `MultithreadingTester`, `SuspendedJobTester` for concurrent tests |
-| `bluetape4k-testcontainers` | `bluetape4k.testcontainers` | `ZooKeeperServer.Launcher.zookeeper` singleton pattern |
-| `bluetape4k-assertions` | `bluetape4k.assertions` | `shouldBeEqualTo`, `shouldBeTrue`, `assertFailsWith` |
+## Critical ZooKeeper Difference
 
-## Key Patterns
+ZooKeeper has no Redis-style lock TTL. Leadership is bound to the ZooKeeper session:
 
-### 1. Blocking Single-Leader Election
+| Redis leader election | ZooKeeper leader election |
+|-----------------------|---------------------------|
+| Lease expires by TTL. | Ephemeral znode disappears when the session expires. |
+| `leaseTime` and auto-extension matter. | `leaseTime` is absent and `autoExtend` is ignored by design. |
+| Failover latency follows lock TTL. | Failover latency follows `sessionTimeoutMs`. |
 
-```kotlin
-@Scheduled(fixedDelayString = "\${leader.zookeeper.job-fixed-delay}")
-fun scheduledJob() {
-    val result = leaderElector.runIfLeader("my-job") {
-        // runs only on the elected leader instance
-        doWork()
-    }
-    // result == null  →  this instance is not the leader (skipped)
-    // result != null  →  this instance was elected and executed the action
-}
-```
-
-### 2. Suspend Single-Leader Election (Coroutines)
-
-```kotlin
-@Scheduled(fixedDelayString = "\${leader.zookeeper.suspend-job-fixed-delay}")
-fun scheduledSuspendJob() {
-    runBlocking {
-        suspendLeaderElector.runIfLeader("my-suspend-job") {
-            delay(100)   // ZK acquire is done in Dispatchers.IO
-            doWork()
-        }
-    }
-}
-```
-
-### 3. Group-Leader Election (up to N simultaneous holders)
-
-```kotlin
-@Scheduled(fixedDelayString = "\${leader.zookeeper.group-job-fixed-delay}")
-fun scheduledGroupJob() {
-    // Up to `groupMaxLeaders` instances run concurrently
-    groupElector.runIfLeader("group-job") {
-        doGroupWork()
-    }
-}
-```
-
-### 4. Bean Configuration
-
-```kotlin
-@Bean
-fun zookeeperLeaderElector(curator: CuratorFramework, props: LeaderZookeeperProperties) =
-    ZooKeeperLeaderElector(
-        client = curator,
-        basePath = "${props.basePath}/single",
-        options = LeaderElectionOptions(waitTime = props.waitTime.toKotlinDuration()),
-    )
-
-@Bean
-fun zookeeperGroupElector(curator: CuratorFramework, props: LeaderZookeeperProperties) =
-    ZooKeeperLeaderGroupElector(
-        client = curator,
-        basePath = "${props.basePath}/group",
-        options = LeaderGroupElectionOptions(
-            maxLeaders = props.groupMaxLeaders,
-            waitTime = props.waitTime.toKotlinDuration(),
-        ),
-    )
-```
-
-### 5. CuratorFramework Setup
-
-```kotlin
-@Bean
-fun curatorFramework(props: LeaderZookeeperProperties): CuratorFramework {
-    val client = CuratorFrameworkFactory.newClient(
-        props.zookeeper.connectString,
-        props.zookeeper.sessionTimeoutMs,
-        props.zookeeper.connectionTimeoutMs,
-        ExponentialBackoffRetry(1000, 3),
-    )
-    // Register connection state listener BEFORE start()
-    client.connectionStateListenable.addListener(ConnectionStateListener { _, newState ->
-        log.info { "ZooKeeper connection state changed: $newState" }
-    })
-    client.start()
-    check(client.blockUntilConnected(props.zookeeper.blockUntilConnectedSeconds, TimeUnit.SECONDS)) {
-        "Could not connect to ZooKeeper within ${props.zookeeper.blockUntilConnectedSeconds}s"
-    }
-    return client
-}
-```
+Tune `sessionTimeoutMs` relative to the scheduled job interval. Short values fail over faster but can cause unnecessary re-election during transient network pauses.
 
 ## Configuration
 
@@ -147,62 +45,67 @@ fun curatorFramework(props: LeaderZookeeperProperties): CuratorFramework {
 leader:
   zookeeper:
     zookeeper:
-      connect-string: localhost:2181          # ZooKeeper connection string
-      session-timeout-ms: 60000              # Failover window on hard crash
-      connection-timeout-ms: 15000           # Initial connection timeout
-      block-until-connected-seconds: 10      # Startup readiness timeout
-    base-path: /workshop/leader-zookeeper    # ZooKeeper base path for all election znodes
-    wait-time: 2s                            # Max wait time to acquire the lock
-    group-max-leaders: 2                     # Max simultaneous group-leader holders
-    job-fixed-delay: PT10S                   # Blocking single-leader job interval
-    suspend-job-fixed-delay: PT12S           # Suspend single-leader job interval
-    group-job-fixed-delay: PT15S             # Blocking group-leader job interval
-    suspend-group-job-fixed-delay: PT18S     # Suspend group-leader job interval
+      connect-string: localhost:2181
+      session-timeout-ms: 60000
+      connection-timeout-ms: 15000
+      block-until-connected-seconds: 10
+    base-path: /workshop/leader-zookeeper
+    wait-time: 2s
+    group-max-leaders: 2
+    job-fixed-delay: PT10S
+    suspend-job-fixed-delay: PT12S
+    group-job-fixed-delay: PT15S
+    suspend-group-job-fixed-delay: PT18S
 ```
 
-> **Note:** `leaseTime` and `autoExtend` are intentionally absent — see [R16 note](#️-r16--zookeeper-has-no-ttl-critical-difference-from-redis).
+`base-path`, `connect-string`, timeout values, and `group-max-leaders` are validated during configuration binding. `CuratorFramework` is closed explicitly if startup cannot connect within `block-until-connected-seconds`.
 
-## Running
-
-### Start the application
+## Run
 
 ```bash
-# Requires ZooKeeper running on localhost:2181
+# Requires ZooKeeper on localhost:2181
 ./gradlew :leader-leader-zookeeper:bootRun
-```
 
-### Run tests
-
-```bash
-# Run all tests (smoke tests excluded by default)
+# Default tests exclude timing-sensitive smoke tests
 ./gradlew :leader-leader-zookeeper:test
 
-# Run with explicit tag filter
+# Include smoke tests manually or in nightly runs
 ./gradlew :leader-leader-zookeeper:test -Djunit.jupiter.execution.exclude.tags=
 ```
 
-## Test Coverage
+## Test Map
 
-| Test | Class | Description |
-|------|-------|-------------|
-| T0 | `LeaderZookeeperContextTest` | Spring Boot context loads; all 4 elector beans present |
-| T1 | `BlockingSingleLeaderTest` | Single blocking leader: `runIfLeader`, `runAsyncIfLeader`, exception isolation |
-| T2 | `ConcurrentBlockingLeaderTest` | 8 threads compete; at least 3 executions within `waitTime=500ms` |
-| T3 | `SuspendSingleLeaderTest` | Suspend single leader: result returned + 8 coroutines serialize correctly |
-| T4 | `GroupLeaderTest` | `maxLeaders=2` admits exactly 2 simultaneous blocking holders (`MultithreadingTester`) |
-| T5 | `SuspendGroupLeaderTest` | `maxLeaders=2` admits exactly 2 simultaneous coroutine holders (`SuspendedJobTester`) |
-| T6 | `ExtensionFunctionTest` | Extension API: `runBlockingIfLeader`, `runAsyncIfLeader`, `runSuspendIfLeader`, `runGroupIfLeader` |
-| T7 | `R16AutoExtendIgnoredTest` | `autoExtend=true` emits WARN and is silently ignored (R16 contract) |
-| T8 | `SessionLossFailoverTest` | Session loss via `zookeeperClient.zooKeeper.close()`; re-election succeeds after reconnect |
-| T9 | `LeaderZookeeperPropertiesValidationTest` | Blank `basePath`, zero `groupMaxLeaders`, blank `connectString` fail validation |
+| Test class | What it protects |
+|------------|------------------|
+| `LeaderZookeeperContextTest` | Spring context loads all four elector beans. |
+| `BlockingSingleLeaderTest` | Blocking single-leader execution and exception isolation. |
+| `ConcurrentBlockingLeaderTest` | Concurrent contenders serialize through the ZooKeeper lock. |
+| `SuspendSingleLeaderTest` | Coroutine single-leader execution returns the expected result. |
+| `GroupLeaderTest` | `maxLeaders=2` admits exactly two blocking holders. |
+| `SuspendGroupLeaderTest` | `maxLeaders=2` admits exactly two coroutine holders. |
+| `ExtensionFunctionTest` | Blocking, async, suspend, and group helper APIs remain usable. |
+| `R16AutoExtendIgnoredTest` | `autoExtend=true` warns and is ignored for ZooKeeper. |
+| `SessionLossFailoverTest` | Session loss removes ephemeral nodes and allows re-election. |
+| `LeaderZookeeperPropertiesValidationTest` | Invalid paths, connection strings, or group sizes fail fast. |
 
-## Production Considerations
+## Production Notes
 
 | Concern | Guidance |
 |---------|----------|
-| **ACL** | Use `CuratorFrameworkFactory.builder().aclProvider(...)` in production |
-| **TLS / SASL** | Configure `ZooKeeperTls.setZKTLSConfig(...)` and appropriate `javax.net.ssl` properties |
-| **Ensemble** | Use `host1:2181,host2:2181,host3:2181` for high availability |
-| **Session timeout** | Set `sessionTimeoutMs` to 3–5× your job interval to avoid spurious re-elections |
-| **Thread safety** | `CuratorFramework` and all elector instances are thread-safe and safe to share |
-| **Spring Boot version** | Compatible with Spring Boot 4.x and Java 21+ |
+| ACL | Configure a Curator `aclProvider`; the workshop uses development defaults. |
+| TLS / SASL | Configure ZooKeeper client security outside this minimal example. |
+| Ensemble | Use a multi-node connection string such as `host1:2181,host2:2181,host3:2181`. |
+| Session timeout | Set `sessionTimeoutMs` to a value that balances failover latency and network jitter. |
+| Thread safety | `CuratorFramework` and the elector beans are safe to share as Spring singletons. |
+
+## Dependencies
+
+```kotlin
+implementation(libs.bluetape4k.leader.zookeeper)
+implementation(libs.bluetape4k.logging)
+implementation(libs.spring.boot.autoconfigure.lib)
+implementation(libs.spring.boot.starter.actuator)
+testImplementation(libs.bluetape4k.testcontainers)
+testImplementation(libs.bluetape4k.junit5)
+testImplementation(libs.bluetape4k.assertions)
+```
