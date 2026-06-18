@@ -1,133 +1,63 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="950" viewBox="0 0 1320 950" role="img" aria-label="Redis Examples architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-data/redis-examples/src/main/kotlin/io/bluetape4k/workshop/redis/RedisApplication.kt&quot;,&quot;spring-data/redis-examples/src/main/kotlin/io/bluetape4k/workshop/redis/movie/model/Actor.kt&quot;,&quot;spring-data/redis-examples/src/main/kotlin/io/bluetape4k/workshop/redis/movie/model/Movie.kt&quot;,&quot;spring-data/redis-examples/src/main/kotlin/io/bluetape4k/workshop/redis/movie/model/MovieActor.kt&quot;,&quot;spring-data/redis-examples/src/main/kotlin/io/bluetape4k/workshop/redis/movie/model/MovieActorReference.kt&quot;,&quot;spring-data/redis-examples/src/main/kotlin/io/bluetape4k/workshop/redis/movie/repository/ActorRepository.kt&quot;,&quot;spring-data/redis-examples/src/main/kotlin/io/bluetape4k/workshop/redis/movie/repository/MovieActorReferenceRepository.kt&quot;,&quot;spring-data/redis-examples/src/main/kotlin/io/bluetape4k/workshop/redis/movie/repository/MovieActorRepository.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1760" height="980" viewBox="0 0 1760 980">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .bg{fill:#f8fafc}.title{font-family:'Architects Daughter','Comic Sans MS',cursive;font-size:34px;fill:#18212f}
+      .layer-title{font-family:'Architects Daughter','Comic Sans MS',cursive;font-size:26px;fill:#344154}
+      .card-title{font-family:'Architects Daughter','Comic Sans MS',cursive;font-size:27px;fill:#101827}
+      .body{font-family:'Comic Mono','Comic Sans MS',monospace;font-size:18px;fill:#364152}.small{font-family:'Comic Mono','Comic Sans MS',monospace;font-size:15px;fill:#475569}
+      .layer{stroke-width:1.5;rx:22;ry:22}.card{fill:#fff;stroke:#cbd5e1;stroke-width:1.5;rx:18;ry:18}
+      .line{fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}.redis{fill:#dc2626}.redis2{fill:#ef4444}.redis3{fill:#f87171}
     </style>
+    <marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#2563eb"/></marker>
+    <marker id="arrow-green" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#059669"/></marker>
+    <marker id="arrow-purple" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#7c3aed"/></marker>
   </defs>
-  <rect class="canvas" width="1320" height="950"/>
-  <rect class="frame" x="16" y="16" width="1288" height="918" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Redis Examples</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Spring Data repositories, reactive APIs, and backing stores</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="256.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="216.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="214.5">Data Access</tspan><tspan class="layer-title" x="151.0" y="237.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="264.0">apps, handlers,</tspan><tspan class="layer-detail" x="151.0" y="280.0">repository tests</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="388.0" width="1228.0" height="352.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="408.0" width="174" height="312.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="536.5">Repository</tspan><tspan class="layer-title" x="151.0" y="559.5">Integration</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="586.0">Spring Data, R2DBC,</tspan><tspan class="layer-detail" x="151.0" y="602.0">Mongo, Redis</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="758.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="778.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="808.0">Database Runtime</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="838.0">SQL, MongoDB,</tspan><tspan class="layer-detail" x="151.0" y="854.0">Elasticsearch,</tspan><tspan class="layer-detail" x="151.0" y="870.0">Redis</tspan></text>
-    </g>
-    <g class="edge" data-edge="api0-&gt;infra0" data-label="uses">
-      <path d="M 1096.0 350.0 L 1096.0 379.0 L 424.0 379.0 L 424.0 408.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 760.0 720.0 L 760.0 749.0 L 424.0 749.0 L 424.0 778.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Redis Application | application bootstrap">
-      <rect x="274.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="176.5">Redis Application</tspan><tspan class="node-detail" x="424.0" y="200.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry1" data-lines="Abstract Redis Test | redis">
-      <rect x="610.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="176.5">Abstract Redis Test</tspan><tspan class="node-detail" x="760.0" y="200.5">redis</tspan></text>
-    </g>
-    <g class="node" data-node="entry2" data-lines="Geo Operations Test | commands">
-      <rect x="946.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="176.5">Geo Operations Test</tspan><tspan class="node-detail" x="1096.0" y="200.5">commands</tspan></text>
-    </g>
-    <g class="node" data-node="entry3" data-lines="Key Operations Test | commands">
-      <rect x="274.0" y="251.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="293.5">Key Operations Test</tspan><tspan class="node-detail" x="424.0" y="317.5">commands</tspan></text>
-    </g>
-    <g class="node" data-node="entry4" data-lines="Movie Repository Test | movie">
-      <rect x="610.0" y="251.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="293.5">Movie Repository Test</tspan><tspan class="node-detail" x="760.0" y="317.5">movie</tspan></text>
-    </g>
-    <g class="node" data-node="api0" data-lines="Capturing Stream | Listener | sync">
-      <rect x="946.0" y="244.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="281.5">Capturing Stream</tspan><tspan class="node-title" x="1096.0" y="305.5">Listener</tspan><tspan class="node-detail" x="1096.0" y="329.5">sync</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Actor | domain model">
-      <rect x="274.0" y="408.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="450.5">Actor</tspan><tspan class="node-detail" x="424.0" y="474.5">domain model</tspan></text>
-    </g>
-    <g class="node" data-node="infra1" data-lines="Movie | domain model">
-      <rect x="610.0" y="408.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="450.5">Movie</tspan><tspan class="node-detail" x="760.0" y="474.5">domain model</tspan></text>
-    </g>
-    <g class="node" data-node="infra2" data-lines="Movie Actor | domain model">
-      <rect x="946.0" y="408.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="450.5">Movie Actor</tspan><tspan class="node-detail" x="1096.0" y="474.5">domain model</tspan></text>
-    </g>
-    <g class="node" data-node="infra3" data-lines="Movie Actor Reference | domain model">
-      <rect x="274.0" y="518.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="560.5">Movie Actor Reference</tspan><tspan class="node-detail" x="424.0" y="584.5">domain model</tspan></text>
-    </g>
-    <g class="node" data-node="infra4" data-lines="Actor Repository | repository">
-      <rect x="610.0" y="518.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="560.5">Actor Repository</tspan><tspan class="node-detail" x="760.0" y="584.5">repository</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k Data APIs">
-      <rect x="946.0" y="518.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="560.5">workshop</tspan><tspan class="node-detail" x="1096.0" y="584.5">bluetape4k Data APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="redis | bluetape4k Data APIs">
-      <rect x="274.0" y="628.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="670.5">redis</tspan><tspan class="node-detail" x="424.0" y="694.5">bluetape4k Data APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="spring | bluetape4k Data APIs">
-      <rect x="610.0" y="628.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="670.5">spring</tspan><tspan class="node-detail" x="760.0" y="694.5">bluetape4k Data APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="SQL / R2DBC | Database Runtime">
-      <rect x="274.0" y="778.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="820.5">SQL / R2DBC</tspan><tspan class="node-detail" x="424.0" y="844.5">Database Runtime</tspan></text>
-    </g>
-    <g class="node" data-node="runtime1" data-lines="Redis | Database Runtime">
-      <rect x="610.0" y="778.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="820.5">Redis</tspan><tspan class="node-detail" x="760.0" y="844.5">Database Runtime</tspan></text>
-    </g>
-    <g class="node" data-node="runtime2" data-lines="Kafka | Database Runtime">
-      <rect x="946.0" y="778.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="820.5">Kafka</tspan><tspan class="node-detail" x="1096.0" y="844.5">Database Runtime</tspan></text>
-    </g>
+  <rect class="bg" width="1760" height="980"/>
+  <text class="title" x="70" y="70">Spring Data Redis Examples</text>
+
+  <rect class="layer" x="70" y="120" width="1620" height="250" fill="#eff6ff" stroke="#bfdbfe"/>
+  <text class="layer-title" x="105" y="165">Example areas</text>
+  <rect class="card" x="125" y="205" width="330" height="105"/>
+  <text class="card-title" x="155" y="245">Person repository</text>
+  <text class="body" x="155" y="276">hash, index, reference</text>
+  <rect class="card" x="515" y="205" width="330" height="105"/>
+  <text class="card-title" x="545" y="245">Movie repository</text>
+  <text class="body" x="545" y="276">movie, actor, relation</text>
+  <rect class="card" x="905" y="205" width="330" height="105"/>
+  <text class="card-title" x="935" y="245">Commands</text>
+  <text class="body" x="935" y="276">key and geo operations</text>
+  <rect class="card" x="1295" y="205" width="330" height="105"/>
+  <text class="card-title" x="1325" y="245">Reactive + Streams</text>
+  <text class="body" x="1325" y="276">reactive ops and stream tests</text>
+
+  <rect class="layer" x="70" y="430" width="1620" height="220" fill="#f0fdf4" stroke="#bbf7d0"/>
+  <text class="layer-title" x="105" y="475">Spring Data Redis APIs</text>
+  <rect class="card" x="190" y="515" width="410" height="85"/>
+  <text class="card-title" x="220" y="555">Redis repositories</text>
+  <text class="body" x="220" y="582">CrudRepository + QBE</text>
+  <rect class="card" x="675" y="515" width="410" height="85"/>
+  <text class="card-title" x="705" y="555">Redis templates</text>
+  <text class="body" x="705" y="582">sync and reactive operations</text>
+  <rect class="card" x="1160" y="515" width="410" height="85"/>
+  <text class="card-title" x="1190" y="555">Stream API</text>
+  <text class="body" x="1190" y="582">consumer group tests</text>
+
+  <rect class="layer" x="70" y="710" width="1620" height="170" fill="#fff7ed" stroke="#fed7aa"/>
+  <text class="layer-title" x="105" y="755">Runtime</text>
+  <rect class="card" x="645" y="765" width="470" height="80"/>
+  <g transform="translate(690 785)">
+    <rect class="redis3" x="0" y="26" width="58" height="18" rx="5"/>
+    <rect class="redis2" x="0" y="13" width="58" height="18" rx="5"/>
+    <rect class="redis" x="0" y="0" width="58" height="18" rx="5"/>
   </g>
+  <text class="card-title" x="775" y="810">Redis Testcontainer</text>
+  <text class="body" x="775" y="837">host/port from spring.data.redis</text>
+
+  <path class="line" d="M290 310 L290 515" stroke="#2563eb" marker-end="url(#arrow-blue)"/>
+  <path class="line" d="M680 310 L680 390 L395 390 L395 515" stroke="#2563eb" marker-end="url(#arrow-blue)"/>
+  <path class="line" d="M1070 310 L1070 390 L880 390 L880 515" stroke="#059669" marker-end="url(#arrow-green)"/>
+  <path class="line" d="M1460 310 L1460 515" stroke="#7c3aed" marker-end="url(#arrow-purple)"/>
+  <path class="line" d="M395 600 L395 680 L770 680 L770 765" stroke="#2563eb" marker-end="url(#arrow-blue)"/>
+  <path class="line" d="M880 600 L880 765" stroke="#059669" marker-end="url(#arrow-green)"/>
+  <path class="line" d="M1365 600 L1365 680 L990 680 L990 765" stroke="#7c3aed" marker-end="url(#arrow-purple)"/>
 </svg>
