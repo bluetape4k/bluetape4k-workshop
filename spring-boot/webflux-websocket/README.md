@@ -2,25 +2,29 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+## What this example shows
 
-This example exercises **Webflux & Websockets Demo** as a runnable Spring Boot application feature workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+This module demonstrates raw WebFlux WebSocket streaming without STOMP. A browser connects to
+`/event-emitter`, `ReactiveWebSocketHandler` turns generated quote JSON into WebSocket text messages, and
+the same `QuoteGenerator` also backs the `/quotes` NDJSON HTTP routes used by tests.
 
 ## Architecture Diagram
 
-![Webflux & Websockets Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-webflux-websocket-readme-architecture-01.png)
+![WebFlux WebSocket quote architecture](../../docs/images/readme-diagrams/spring-boot-webflux-websocket-readme-architecture-01.png)
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.springboot` as the source of truth when comparing this README with the code.
+The architecture separates the static page, WebSocket handler mapping, quote generation, NDJSON routes, and
+Netty runtime tuning.
 
-## Sequence Diagram
+## Quote Streaming Flow
 
-![Webflux & Websockets Demo sequence diagram](../../docs/images/readme-diagrams/spring-boot-webflux-websocket-sequence-01.png)
+![WebFlux WebSocket quote streaming flow](../../docs/images/readme-diagrams/spring-boot-webflux-websocket-readme-flow-01.png)
 
 Original source: [sample-webflux-websockets](https://github.com/ketangit/sample-webflux-websockets)
 
 ## Introduction
 
-This example demonstrates asynchronous WebSocket communication with WebFlux.
+This example demonstrates asynchronous quote delivery over WebSocket and coroutine-friendly HTTP streaming
+over `application/x-ndjson`.
 
 ## Main Components
 

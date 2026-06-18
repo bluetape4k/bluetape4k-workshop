@@ -2,25 +2,29 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+## 이 예제가 보여 주는 것
 
-이 예제는 **Webflux & Websockets Demo**를 실행 가능한 Spring Boot 애플리케이션 기능 워크샵 조각으로 다룹니다. 개발자가 먼저 확인할 흐름인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄여 주는 라이브러리와 프레임워크 API 관찰에 초점을 둡니다.
+이 모듈은 STOMP 없이 raw WebFlux WebSocket streaming을 보여 줍니다. 브라우저는 `/event-emitter`에
+연결하고, `ReactiveWebSocketHandler`는 생성된 quote JSON을 WebSocket text message로 바꾸어 전송합니다.
+같은 `QuoteGenerator`는 테스트가 사용하는 `/quotes` NDJSON HTTP route도 제공합니다.
 
 ## 아키텍처 다이어그램
 
-![Webflux & Websockets Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-webflux-websocket-readme-architecture-01.png)
+![WebFlux WebSocket quote architecture](../../docs/images/readme-diagrams/spring-boot-webflux-websocket-readme-architecture-01.png)
 
-이 모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제에서 사용하는 런타임 의존성을 중심으로 구성됩니다. 이 README와 코드를 비교할 때는 `io.bluetape4k.workshop.springboot` 패키지를 기준으로 삼으세요.
+아키텍처는 static page, WebSocket handler mapping, quote generation, NDJSON route, Netty runtime tuning을
+나누어 보여 줍니다.
 
-## 시퀀스 다이어그램
+## Quote Streaming 흐름
 
-![Webflux & Websockets Demo sequence diagram](../../docs/images/readme-diagrams/spring-boot-webflux-websocket-sequence-01.png)
+![WebFlux WebSocket quote streaming flow](../../docs/images/readme-diagrams/spring-boot-webflux-websocket-readme-flow-01.png)
 
 원본 소스: [sample-webflux-websockets](https://github.com/ketangit/sample-webflux-websockets)
 
 ## 소개
 
-이 예제는 WebFlux를 사용한 비동기 WebSocket 통신을 보여 줍니다.
+이 예제는 WebSocket을 통한 비동기 quote 전달과 `application/x-ndjson` 기반 coroutine-friendly HTTP
+streaming을 함께 보여 줍니다.
 
 ## 주요 구성 요소
 
