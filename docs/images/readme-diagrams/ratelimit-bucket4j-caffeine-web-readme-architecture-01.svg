@@ -1,109 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="840" viewBox="0 0 1320 840" role="img" aria-label="Spring Boot WebMVC with Bucket4j and Caffeine Demo architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;ratelimit/bucket4j-caffeine-web/src/main/kotlin/io/bluetape4k/workshop/bucket4j/CaffeineApplication.kt&quot;,&quot;ratelimit/bucket4j-caffeine-web/src/main/kotlin/io/bluetape4k/workshop/bucket4j/IndexController.kt&quot;,&quot;ratelimit/bucket4j-caffeine-web/src/test/kotlin/io/bluetape4k/workshop/bucket4j/ServletRateLimitTest.kt&quot;,&quot;ratelimit/bucket4j-caffeine-web/build.gradle.kts&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1540" height="680" viewBox="0 0 1540 680" role="img" aria-label="Spring WebMVC Bucket4j Caffeine architecture">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#D97706"/></marker>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:29px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.line{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="840"/>
-  <rect class="frame" x="16" y="16" width="1288" height="808" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Spring Boot WebMVC with Bucket4j and Caffeine Demo</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">rate-limit policy, token buckets, and backing stores</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="132.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="164.0">Request Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="194.0">web filters,</tspan><tspan class="layer-detail" x="151.0" y="210.0">controllers, test</tspan><tspan class="layer-detail" x="151.0" y="226.0">clients</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="264.0" width="1228.0" height="366.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="284.0" width="174" height="326.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="419.5">Bucket Storage</tspan><tspan class="layer-title" x="151.0" y="442.5">Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="469.0">Bucket4j, Redis,</tspan><tspan class="layer-detail" x="151.0" y="485.0">Caffeine, helpers</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="648.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="668.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="698.0">Runtime Store</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="736.0">Redis, cache, local</tspan><tspan class="layer-detail" x="151.0" y="752.0">JVM</tspan></text>
-    </g>
-    <g class="edge" data-edge="api0-&gt;infra0" data-label="uses">
-      <path d="M 1096.0 226.0 L 1096.0 255.0 L 424.0 255.0 L 424.0 284.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 424.0 610.0 L 424.0 639.0 L 760.0 639.0 L 760.0 668.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Caffeine Application | application bootstrap">
-      <rect x="274.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="176.5">Caffeine Application</tspan><tspan class="node-detail" x="424.0" y="200.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry1" data-lines="Servlet Rate Limit Test | bucket4j">
-      <rect x="610.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="176.5">Servlet Rate Limit Test</tspan><tspan class="node-detail" x="760.0" y="200.5">bucket4j</tspan></text>
-    </g>
-    <g class="node" data-node="api0" data-lines="Index Controller | HTTP adapter">
-      <rect x="946.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="176.5">Index Controller</tspan><tspan class="node-detail" x="1096.0" y="200.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Spring boot | autoconfigure lib | Bucket4j Layer">
-      <rect x="274.0" y="284.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="321.5">Spring boot</tspan><tspan class="node-title" x="424.0" y="345.5">autoconfigure lib</tspan><tspan class="node-detail" x="424.0" y="369.5">Bucket4j Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra1" data-lines="Spring boot | autoconfigure processor | Bucket4j Layer">
-      <rect x="610.0" y="284.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="321.5">Spring boot</tspan><tspan class="node-title" x="760.0" y="345.5">autoconfigure processor</tspan><tspan class="node-detail" x="760.0" y="369.5">Bucket4j Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra2" data-lines="Spring boot | configuration processor | Bucket4j Layer">
-      <rect x="946.0" y="284.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="321.5">Spring boot</tspan><tspan class="node-title" x="1096.0" y="345.5">configuration processor</tspan><tspan class="node-detail" x="1096.0" y="369.5">Bucket4j Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra3" data-lines="Spring boot devtools | Bucket4j Layer">
-      <rect x="274.0" y="408.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="450.5">Spring boot devtools</tspan><tspan class="node-detail" x="424.0" y="474.5">Bucket4j Layer</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k RateLimit APIs">
-      <rect x="610.0" y="408.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="450.5">workshop</tspan><tspan class="node-detail" x="760.0" y="474.5">bluetape4k RateLimit APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="jackson3 | bluetape4k RateLimit APIs">
-      <rect x="946.0" y="408.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="450.5">jackson3</tspan><tspan class="node-detail" x="1096.0" y="474.5">bluetape4k RateLimit APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="junit5 | bluetape4k RateLimit APIs">
-      <rect x="274.0" y="518.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="560.5">junit5</tspan><tspan class="node-detail" x="424.0" y="584.5">bluetape4k RateLimit APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="Redis | Bucket Runtime">
-      <rect x="610.0" y="668.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="710.5">Redis</tspan><tspan class="node-detail" x="760.0" y="734.5">Bucket Runtime</tspan></text>
-    </g>
+  <rect class="canvas" width="1540" height="680"/>
+  <rect class="frame" x="24" y="24" width="1492" height="632" rx="24"/>
+  <text class="title" x="770" y="70" text-anchor="middle">WebMVC Bucket4j with Caffeine</text>
+  <text class="subtitle" x="770" y="102" text-anchor="middle">The starter installs a servlet filter and stores local bucket state in Caffeine JCache.</text>
+
+  <rect class="layer" x="72" y="144" width="288" height="430" rx="18"/>
+  <text class="layerLabel" x="100" y="182">Servlet app</text>
+  <g filter="url(#shadow)">
+    <rect x="112" y="236" width="208" height="112" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
+    <text class="cardTitle" x="216" y="278" text-anchor="middle">IndexController</text>
+    <text class="cardText" x="216" y="310" text-anchor="middle">GET /hello</text>
+    <text class="cardText" x="216" y="336" text-anchor="middle">GET /world</text>
   </g>
+  <g filter="url(#shadow)">
+    <rect x="112" y="422" width="208" height="86" rx="16" fill="#F8FAFC" stroke="#475569" stroke-width="1.7"/>
+    <text class="cardTitle" x="216" y="458" text-anchor="middle">@EnableCaching</text>
+    <text class="cardText" x="216" y="486" text-anchor="middle">CaffeineApplication</text>
+  </g>
+
+  <rect class="layer" x="438" y="144" width="314" height="430" rx="18"/>
+  <text class="layerLabel" x="466" y="182">Bucket4j starter</text>
+  <g filter="url(#shadow)">
+    <rect x="482" y="226" width="226" height="124" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="595" y="270" text-anchor="middle">Servlet Filter</text>
+    <text class="cardText" x="595" y="302" text-anchor="middle">url rules from YAML</text>
+    <text class="cardText" x="595" y="328" text-anchor="middle">returns 429 when empty</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="482" y="422" width="226" height="86" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
+    <text class="cardTitle" x="595" y="458" text-anchor="middle">Response Headers</text>
+    <text class="cardText" x="595" y="486" text-anchor="middle">X-Rate-Limit-Remaining</text>
+  </g>
+
+  <rect class="layer" x="830" y="144" width="302" height="430" rx="18"/>
+  <text class="layerLabel" x="858" y="182">Local bucket store</text>
+  <g filter="url(#shadow)">
+    <rect x="852" y="256" width="258" height="142" rx="16" fill="#FFFBEB" stroke="#D97706" stroke-width="1.7"/>
+    <rect x="884" y="294" width="70" height="32" rx="16" fill="#FEF3C7" stroke="#D97706" stroke-width="2.6"/>
+    <path d="M 884 310 C 884 330 954 330 954 310" fill="none" stroke="#D97706" stroke-width="2.6"/>
+    <text class="cardTitle" x="1040" y="310" text-anchor="middle">Caffeine</text>
+    <text class="cardText" x="1040" y="344" text-anchor="middle">JCache buckets</text>
+    <text class="cardText" x="1040" y="370" text-anchor="middle">local JVM state</text>
+  </g>
+
+  <rect class="layer" x="1210" y="144" width="258" height="430" rx="18"/>
+  <text class="layerLabel" x="1238" y="182">Verification</text>
+  <g filter="url(#shadow)">
+    <rect x="1250" y="274" width="178" height="108" rx="16" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.7"/>
+    <text class="cardTitle" x="1339" y="316" text-anchor="middle">Servlet Test</text>
+    <text class="cardText" x="1339" y="348" text-anchor="middle">5/s and 10/s rules</text>
+  </g>
+
+  <path class="line" d="M 320 292 L 482 288" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 708 288 L 852 327" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 1110 327 L 1250 328" stroke="#D97706" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 595 350 L 595 422" stroke="#D97706" marker-end="url(#arrowAmber)"/>
 </svg>
