@@ -1,129 +1,68 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="978" viewBox="0 0 1320 978" role="img" aria-label="Spring Security WebFlux JWT architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-security/webflux/jwt/src/main/kotlin/io/bluetape4k/workshop/spring/security/webflux/jwt/JwtApplication.kt&quot;,&quot;spring-security/webflux/jwt/src/main/kotlin/io/bluetape4k/workshop/spring/security/webflux/jwt/config/JwtConfig.kt&quot;,&quot;spring-security/webflux/jwt/src/main/kotlin/io/bluetape4k/workshop/spring/security/webflux/jwt/controller/HelloController.kt&quot;,&quot;spring-security/webflux/jwt/src/main/kotlin/io/bluetape4k/workshop/spring/security/webflux/jwt/controller/TokenController.kt&quot;,&quot;spring-security/webflux/jwt/src/test/kotlin/io/bluetape4k/workshop/spring/security/webflux/jwt/AbstractJwtApplicationTest.kt&quot;,&quot;spring-security/webflux/jwt/src/test/kotlin/io/bluetape4k/workshop/spring/security/webflux/jwt/controller/HelloControllerTest.kt&quot;,&quot;spring-security/webflux/jwt/build.gradle.kts&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1700" height="900" viewBox="0 0 1700 900">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .bg { fill: #f8fafc; }
+      .title { font-family: 'Architects Daughter', 'Comic Sans MS', cursive; font-size: 34px; fill: #172033; }
+      .lane-title { font-family: 'Architects Daughter', 'Comic Sans MS', cursive; font-size: 26px; fill: #344154; }
+      .card-title { font-family: 'Architects Daughter', 'Comic Sans MS', cursive; font-size: 27px; fill: #101827; }
+      .body { font-family: 'Comic Mono', 'Comic Sans MS', monospace; font-size: 18px; fill: #364152; }
+      .small { font-family: 'Comic Mono', 'Comic Sans MS', monospace; font-size: 16px; fill: #4b5563; }
+      .lane { stroke-width: 1.5; rx: 24; ry: 24; }
+      .card { fill: #fff; stroke: #cbd5e1; stroke-width: 1.5; rx: 18; ry: 18; }
+      .line { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
     </style>
+    <marker id="arrow-blue" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#059669"/>
+    </marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#b45309"/>
+    </marker>
   </defs>
-  <rect class="canvas" width="1320" height="978"/>
-  <rect class="frame" x="16" y="16" width="1288" height="946" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Spring Security WebFlux JWT</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">security filters, authentication flows, and protected endpoints</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="256.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="216.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="214.5">Protected Request</tspan><tspan class="layer-title" x="151.0" y="237.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="256.0">controllers,</tspan><tspan class="layer-detail" x="151.0" y="272.0">filters, test</tspan><tspan class="layer-detail" x="151.0" y="288.0">clients</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="388.0" width="1228.0" height="380.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="408.0" width="174" height="340.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="550.5">Security</tspan><tspan class="layer-title" x="151.0" y="573.5">Integration</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="592.0">Spring Security,</tspan><tspan class="layer-detail" x="151.0" y="608.0">token services,</tspan><tspan class="layer-detail" x="151.0" y="624.0">helpers</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="786.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="806.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="836.0">Identity Runtime</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="874.0">users, tokens,</tspan><tspan class="layer-detail" x="151.0" y="890.0">local JVM</tspan></text>
-    </g>
-    <g class="edge" data-edge="api2-&gt;infra0" data-label="uses">
-      <path d="M 1096.0 350.0 L 1096.0 379.0 L 424.0 379.0 L 424.0 408.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 424.0 748.0 L 424.0 777.0 L 424.0 806.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Jwt Application | application bootstrap">
-      <rect x="274.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="183.5">Jwt Application</tspan><tspan class="node-detail" x="424.0" y="207.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry1" data-lines="Abstract Jwt Application | Test | jwt">
-      <rect x="610.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="171.5">Abstract Jwt Application</tspan><tspan class="node-title" x="760.0" y="195.5">Test</tspan><tspan class="node-detail" x="760.0" y="219.5">jwt</tspan></text>
-    </g>
-    <g class="node" data-node="entry2" data-lines="Hello Controller Test | HTTP adapter">
-      <rect x="946.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="183.5">Hello Controller Test</tspan><tspan class="node-detail" x="1096.0" y="207.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api0" data-lines="Jwt Config | configuration">
-      <rect x="274.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="300.5">Jwt Config</tspan><tspan class="node-detail" x="424.0" y="324.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="api1" data-lines="Hello Controller | HTTP adapter">
-      <rect x="610.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="300.5">Hello Controller</tspan><tspan class="node-detail" x="760.0" y="324.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api2" data-lines="Token Controller | HTTP adapter">
-      <rect x="946.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="300.5">Token Controller</tspan><tspan class="node-detail" x="1096.0" y="324.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Spring boot starter | security | Spring Security Layer">
-      <rect x="274.0" y="408.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="445.5">Spring boot starter</tspan><tspan class="node-title" x="424.0" y="469.5">security</tspan><tspan class="node-detail" x="424.0" y="493.5">Spring Security Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra1" data-lines="Spring boot starter | oauth2 resource server | Spring Security Layer">
-      <rect x="610.0" y="408.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="445.5">Spring boot starter</tspan><tspan class="node-title" x="760.0" y="469.5">oauth2 resource server</tspan><tspan class="node-detail" x="760.0" y="493.5">Spring Security Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra2" data-lines="Spring security test | Spring Security Layer">
-      <rect x="946.0" y="415.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="457.5">Spring security test</tspan><tspan class="node-detail" x="1096.0" y="481.5">Spring Security Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra3" data-lines="Spring boot starter | webflux lib | Spring Security Layer">
-      <rect x="274.0" y="532.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="569.5">Spring boot starter</tspan><tspan class="node-title" x="424.0" y="593.5">webflux lib</tspan><tspan class="node-detail" x="424.0" y="617.5">Spring Security Layer</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k Security APIs">
-      <rect x="610.0" y="539.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="581.5">workshop</tspan><tspan class="node-detail" x="760.0" y="605.5">bluetape4k Security APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="jackson3 | bluetape4k Security APIs">
-      <rect x="946.0" y="539.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="581.5">jackson3</tspan><tspan class="node-detail" x="1096.0" y="605.5">bluetape4k Security APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="junit5 | bluetape4k Security APIs">
-      <rect x="274.0" y="656.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="698.5">junit5</tspan><tspan class="node-detail" x="424.0" y="722.5">bluetape4k Security APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="SQL / R2DBC | Security Runtime">
-      <rect x="274.0" y="806.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="848.5">SQL / R2DBC</tspan><tspan class="node-detail" x="424.0" y="872.5">Security Runtime</tspan></text>
-    </g>
-    <g class="node" data-node="runtime1" data-lines="Redis | Security Runtime">
-      <rect x="610.0" y="806.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="848.5">Redis</tspan><tspan class="node-detail" x="760.0" y="872.5">Security Runtime</tspan></text>
-    </g>
-    <g class="node" data-node="runtime2" data-lines="AWS / S3 | Security Runtime">
-      <rect x="946.0" y="806.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="848.5">AWS / S3</tspan><tspan class="node-detail" x="1096.0" y="872.5">Security Runtime</tspan></text>
-    </g>
-  </g>
+  <rect class="bg" width="1700" height="900"/>
+  <text class="title" x="70" y="70">WebFlux JWT Token Issue and Bearer Validation</text>
+
+  <rect class="lane" x="70" y="120" width="750" height="650" fill="#eff6ff" stroke="#bfdbfe"/>
+  <text class="lane-title" x="110" y="165">Issue token with HTTP Basic</text>
+  <rect class="card" x="160" y="220" width="560" height="74"/>
+  <text class="card-title" x="195" y="255">POST /token</text>
+  <text class="body" x="195" y="280">Basic user/password</text>
+  <rect class="card" x="160" y="360" width="560" height="74"/>
+  <text class="card-title" x="195" y="395">MapReactiveUserDetailsService</text>
+  <text class="body" x="195" y="420">BCrypt demo user, authority app</text>
+  <rect class="card" x="160" y="500" width="560" height="74"/>
+  <text class="card-title" x="195" y="535">NimbusJwtEncoder</text>
+  <text class="body" x="195" y="560">issuer self, subject user, scope app</text>
+  <rect class="card" x="230" y="640" width="420" height="58"/>
+  <text class="body" x="270" y="676">private key signs token</text>
+
+  <rect class="lane" x="880" y="120" width="750" height="650" fill="#f0fdf4" stroke="#bbf7d0"/>
+  <text class="lane-title" x="920" y="165">Validate bearer token</text>
+  <rect class="card" x="980" y="220" width="560" height="74"/>
+  <text class="card-title" x="1015" y="255">GET /</text>
+  <text class="body" x="1015" y="280">Authorization: Bearer token</text>
+  <rect class="card" x="980" y="360" width="560" height="74"/>
+  <text class="card-title" x="1015" y="395">SecurityWebFilterChain</text>
+  <text class="body" x="1015" y="420">anyExchange authenticated, CSRF off</text>
+  <rect class="card" x="980" y="500" width="560" height="74"/>
+  <text class="card-title" x="1015" y="535">NimbusReactiveJwtDecoder</text>
+  <text class="body" x="1015" y="560">public key validates bearer token</text>
+  <rect class="card" x="1050" y="640" width="420" height="58"/>
+  <text class="body" x="1090" y="676">HelloController returns greeting</text>
+
+  <rect class="lane" x="320" y="805" width="1060" height="60" fill="#fefce8" stroke="#fde68a"/>
+  <text class="body" x="365" y="842">WebTestClient checks: token issuance, bearer success, mock-user success, unauthenticated 401</text>
+
+  <path class="line" d="M440 294 L440 360" stroke="#2563eb" marker-end="url(#arrow-blue)"/>
+  <path class="line" d="M440 434 L440 500" stroke="#2563eb" marker-end="url(#arrow-blue)"/>
+  <path class="line" d="M440 574 L440 640" stroke="#b45309" marker-end="url(#arrow-amber)"/>
+  <path class="line" d="M650 670 L935 670 L935 257 L980 257" stroke="#059669" marker-end="url(#arrow-green)"/>
+
+  <path class="line" d="M1260 294 L1260 360" stroke="#059669" marker-end="url(#arrow-green)"/>
+  <path class="line" d="M1260 434 L1260 500" stroke="#059669" marker-end="url(#arrow-green)"/>
+  <path class="line" d="M1260 574 L1260 640" stroke="#059669" marker-end="url(#arrow-green)"/>
+  <path class="line" d="M440 698 L440 805" stroke="#2563eb" marker-end="url(#arrow-blue)"/>
+  <path class="line" d="M1260 698 L1260 805" stroke="#059669" marker-end="url(#arrow-green)"/>
 </svg>
