@@ -2,22 +2,27 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+## 이 예제가 보여 주는 것
 
-이 예제는 **STOMP WebSocket Example**을 실행 가능한 Spring Boot 애플리케이션 기능 워크숍 조각으로 다룹니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄여 주는 라이브러리와 프레임워크 API 관찰에 초점을 둡니다.
+이 모듈은 Spring Boot STOMP WebSocket의 가장 작은 흐름을 보여 줍니다. SockJS/STOMP 클라이언트가
+`/gs-guide-websocket`에 연결하고, `/app/hello`로 `HelloMessage`를 보낸 뒤, `/topic/greetings`에서
+broadcast된 `Greeting`을 받습니다. Tomcat은 virtual-thread executor를 사용하므로 blocking controller
+delay가 있어도 별도 broker 구현 없이 런타임 경계를 확인할 수 있습니다.
 
 ## 아키텍처 다이어그램
 
-![STOMP WebSocket Example Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-stomp-websocket-readme-architecture-01.png)
+![STOMP WebSocket architecture](../../docs/images/readme-diagrams/spring-boot-stomp-websocket-readme-architecture-01.png)
 
-이 모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성을 중심으로 구성됩니다. README와 코드를 비교할 때는 `io.bluetape4k.workshop.springboot` 패키지를 기준으로 삼습니다.
+아키텍처는 transport 설정, application destination routing, simple broker topic, 그리고 같은 메시지
+계약을 검증하는 테스트/static client를 나누어 보여 줍니다.
 
-## 시퀀스 다이어그램
+## Greeting 흐름
 
-![STOMP WebSocket Example sequence diagram](../../docs/images/readme-diagrams/spring-boot-stomp-websocket-sequence-01.png)
+![STOMP WebSocket greeting flow](../../docs/images/readme-diagrams/spring-boot-stomp-websocket-readme-sequence-01.png)
 
 Spring Boot에서 STOMP 프로토콜을 사용하는 WebSocket 서버 예제입니다.
-Virtual Threads가 활성화된 Tomcat에서 실행됩니다.
+SockJS endpoint를 등록하고, `/app` destination은 controller method로 라우팅하며, `/topic` 메시지는
+Spring의 in-memory simple broker가 broadcast합니다.
 
 ## 구성 요소
 
@@ -95,7 +100,9 @@ class GreetingController {
 
 ## Virtual Thread 통합
 
-`TomcatConfig`는 WebSocket 핸들러가 Virtual Threads에서 실행되도록 Tomcat에 Virtual Thread Executor를 적용합니다. 이를 통해 스레드 풀 고갈 없이 많은 동시 연결을 효율적으로 처리할 수 있습니다.
+`TomcatConfig`는 Tomcat protocol handler에 virtual-thread executor를 적용합니다. 이 샘플의 controller는
+짧은 blocking delay를 포함하므로 런타임 경계를 확인하기 쉽고, 메시지 계약은 일반적인 Spring STOMP
+계약 그대로 유지됩니다.
 
 ## 테스트
 

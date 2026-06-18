@@ -2,22 +2,27 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+## What this example shows
 
-This example exercises **STOMP WebSocket Example** as a runnable Spring Boot application feature workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+This module shows the smallest Spring Boot STOMP WebSocket path: a SockJS/STOMP client connects to
+`/gs-guide-websocket`, sends `HelloMessage` to `/app/hello`, and receives a broadcast `Greeting` from
+`/topic/greetings`. The example also keeps Tomcat on a virtual-thread executor so the blocking controller
+delay is easy to see without turning the sample into a custom broker implementation.
 
 ## Architecture Diagram
 
-![STOMP WebSocket Example Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-stomp-websocket-readme-architecture-01.png)
+![STOMP WebSocket architecture](../../docs/images/readme-diagrams/spring-boot-stomp-websocket-readme-architecture-01.png)
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.springboot` as the source of truth when comparing this README with the code.
+The architecture separates transport setup, application routing, the simple broker topic, and the test/static
+clients that prove the same message contract.
 
-## Sequence Diagram
+## Greeting Flow
 
-![STOMP WebSocket Example sequence diagram](../../docs/images/readme-diagrams/spring-boot-stomp-websocket-sequence-01.png)
+![STOMP WebSocket greeting flow](../../docs/images/readme-diagrams/spring-boot-stomp-websocket-readme-sequence-01.png)
 
 This is a WebSocket server example that uses the STOMP protocol in Spring Boot.
-It runs on Tomcat with Virtual Threads enabled.
+It registers a SockJS endpoint, routes `/app` destinations to controller methods, and broadcasts `/topic`
+messages through Spring's in-memory simple broker.
 
 ## Components
 
@@ -95,7 +100,9 @@ class GreetingController {
 
 ## Virtual Thread Integration
 
-`TomcatConfig` applies a Virtual Thread Executor to Tomcat so WebSocket handlers run on Virtual Threads. This enables efficient handling of large numbers of concurrent connections without exhausting the thread pool.
+`TomcatConfig` applies a virtual-thread executor to Tomcat's protocol handler. In this sample the controller
+contains a short blocking delay, so the configuration makes the runtime boundary explicit while the message
+contract remains the usual Spring STOMP contract.
 
 ## Test
 
