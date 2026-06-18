@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="640" viewBox="0 0 1320 640" role="img" aria-label="JsonView endpoint field contract diagram">
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/>
+    </filter>
+    <style>
+      .canvas { fill: #F8FAFC; }
+      .frame { fill: #FFFFFF; stroke: #D6E0E8; stroke-width: 1.4; }
+      .title { font-family: "Architects Daughter"; font-size: 36px; fill: #102033; }
+      .subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
+      .rowTitle { font-family: "Architects Daughter"; font-size: 25px; fill: #102033; }
+      .rowText { font-family: "Comic Mono"; font-size: 14px; fill: #415166; }
+      .chipText { font-family: "Comic Mono"; font-size: 15px; fill: #172033; }
+      .noteTitle { font-family: "Architects Daughter"; font-size: 22px; fill: #102033; }
+      .noteText { font-family: "Comic Mono"; font-size: 14px; fill: #415166; }
+    </style>
+  </defs>
+  <rect class="canvas" width="1320" height="640"/>
+  <rect class="frame" x="24" y="24" width="1272" height="592" rx="24"/>
+
+  <text class="title" x="660" y="66" text-anchor="middle">Endpoint view contract</text>
+  <text class="subtitle" x="660" y="94" text-anchor="middle">Each handler returns the same ArticleDTO; the selected JsonView controls the serialized fields.</text>
+
+  <g filter="url(#shadow)">
+    <rect x="76" y="132" width="1168" height="92" rx="16" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.7"/>
+    <text class="rowTitle" x="116" y="171">Public list</text>
+    <text class="rowText" x="116" y="197">GET /articles</text>
+    <rect x="384" y="154" width="118" height="42" rx="12" fill="#DBEAFE" stroke="#60A5FA"/>
+    <text class="chipText" x="443" y="181" text-anchor="middle">id</text>
+    <rect x="522" y="154" width="150" height="42" rx="12" fill="#DBEAFE" stroke="#60A5FA"/>
+    <text class="chipText" x="597" y="181" text-anchor="middle">title</text>
+    <rect x="692" y="154" width="170" height="42" rx="12" fill="#DBEAFE" stroke="#60A5FA"/>
+    <text class="chipText" x="777" y="181" text-anchor="middle">category</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="76" y="248" width="1168" height="92" rx="16" fill="#F8FAFC" stroke="#94A3B8" stroke-width="1.7"/>
+    <text class="rowTitle" x="116" y="287">Detail</text>
+    <text class="rowText" x="116" y="313">GET /articles/{id}</text>
+    <rect x="354" y="270" width="104" height="42" rx="12" fill="#E2E8F0" stroke="#94A3B8"/>
+    <text class="chipText" x="406" y="297" text-anchor="middle">id</text>
+    <rect x="476" y="270" width="124" height="42" rx="12" fill="#E2E8F0" stroke="#94A3B8"/>
+    <text class="chipText" x="538" y="297" text-anchor="middle">title</text>
+    <rect x="618" y="270" width="146" height="42" rx="12" fill="#E2E8F0" stroke="#94A3B8"/>
+    <text class="chipText" x="691" y="297" text-anchor="middle">category</text>
+    <rect x="782" y="270" width="146" height="42" rx="12" fill="#E2E8F0" stroke="#94A3B8"/>
+    <text class="chipText" x="855" y="297" text-anchor="middle">content</text>
+    <rect x="946" y="270" width="118" height="42" rx="12" fill="#E2E8F0" stroke="#94A3B8"/>
+    <text class="chipText" x="1005" y="297" text-anchor="middle">views</text>
+    <rect x="1082" y="270" width="118" height="42" rx="12" fill="#E2E8F0" stroke="#94A3B8"/>
+    <text class="chipText" x="1141" y="297" text-anchor="middle">likes</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="76" y="364" width="1168" height="92" rx="16" fill="#FFF7ED" stroke="#FDBA74" stroke-width="1.7"/>
+    <text class="rowTitle" x="116" y="403">Analytics</text>
+    <text class="rowText" x="116" y="429">GET /articles/{id}/analytics</text>
+    <rect x="460" y="386" width="150" height="42" rx="12" fill="#FED7AA" stroke="#F59E0B"/>
+    <text class="chipText" x="535" y="413" text-anchor="middle">views</text>
+    <rect x="630" y="386" width="150" height="42" rx="12" fill="#FED7AA" stroke="#F59E0B"/>
+    <text class="chipText" x="705" y="413" text-anchor="middle">likes</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="76" y="480" width="1168" height="92" rx="16" fill="#ECFDF5" stroke="#86EFAC" stroke-width="1.7"/>
+    <text class="rowTitle" x="116" y="519">Internal</text>
+    <text class="rowText" x="116" y="545">GET /articles/{id}/internal</text>
+    <rect x="354" y="502" width="104" height="42" rx="12" fill="#DCFCE7" stroke="#22C55E"/>
+    <text class="chipText" x="406" y="529" text-anchor="middle">id</text>
+    <rect x="476" y="502" width="124" height="42" rx="12" fill="#DCFCE7" stroke="#22C55E"/>
+    <text class="chipText" x="538" y="529" text-anchor="middle">title</text>
+    <rect x="618" y="502" width="146" height="42" rx="12" fill="#DCFCE7" stroke="#22C55E"/>
+    <text class="chipText" x="691" y="529" text-anchor="middle">category</text>
+    <rect x="782" y="502" width="124" height="42" rx="12" fill="#DCFCE7" stroke="#22C55E"/>
+    <text class="chipText" x="844" y="529" text-anchor="middle">views</text>
+    <rect x="924" y="502" width="124" height="42" rx="12" fill="#DCFCE7" stroke="#22C55E"/>
+    <text class="chipText" x="986" y="529" text-anchor="middle">likes</text>
+    <text class="noteTitle" x="1132" y="514" text-anchor="middle">content</text>
+    <text class="noteText" x="1132" y="542" text-anchor="middle">not in any view</text>
+  </g>
+</svg>

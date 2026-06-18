@@ -1,134 +1,103 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1114" viewBox="0 0 1320 1114" role="img" aria-label="JsonView in Spring Boot Demo architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;json/jsonview-examples/src/main/kotlin/io/bluetape4k/workshop/jsonview/JsonViewApplication.kt&quot;,&quot;json/jsonview-examples/src/main/kotlin/io/bluetape4k/workshop/jsonview/config/JacksonConfig.kt&quot;,&quot;json/jsonview-examples/src/main/kotlin/io/bluetape4k/workshop/jsonview/controller/ArticleController.kt&quot;,&quot;json/jsonview-examples/src/main/kotlin/io/bluetape4k/workshop/jsonview/dto/ArticleDTO.kt&quot;,&quot;json/jsonview-examples/src/main/kotlin/io/bluetape4k/workshop/jsonview/dto/Views.kt&quot;,&quot;json/jsonview-examples/src/test/kotlin/io/bluetape4k/workshop/jsonview/AbstractJsonViewApplicationTest.kt&quot;,&quot;json/jsonview-examples/src/test/kotlin/io/bluetape4k/workshop/jsonview/controller/ArticleControllerTest.kt&quot;,&quot;json/jsonview-examples/build.gradle.kts&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1380" height="780" viewBox="0 0 1380 780" role="img" aria-label="JsonView examples architecture diagram">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.17"/>
     </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/>
     </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/>
     </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/>
     </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
+    <marker id="arrowSlate" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 12 6 L 0 12 Z" fill="#64748B"/>
     </marker>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .canvas { fill: #F8FAFC; }
+      .frame { fill: #FFFFFF; stroke: #D6E0E8; stroke-width: 1.4; }
+      .layerApi { fill: #EFF6FF; stroke: #93C5FD; stroke-width: 1.5; }
+      .layerContract { fill: #ECFDF5; stroke: #86EFAC; stroke-width: 1.5; }
+      .layerRuntime { fill: #FFF7ED; stroke: #FDBA74; stroke-width: 1.5; }
+      .title { font-family: "Architects Daughter"; font-size: 36px; fill: #102033; }
+      .subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
+      .layerLabel { font-family: "Architects Daughter"; font-size: 22px; fill: #172033; }
+      .cardTitle { font-family: "Architects Daughter"; font-size: 25px; fill: #102033; }
+      .cardText { font-family: "Comic Mono"; font-size: 14px; fill: #415166; }
+      .line { fill: none; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="1114"/>
-  <rect class="frame" x="16" y="16" width="1288" height="1082" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">JsonView in Spring Boot Demo</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Json example runtime and module dependencies</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="256.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="216.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="226.0">Example Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="264.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="280.0">adapters</tspan></text>
-    </g>
-    <g class="layer" data-layer="service">
-      <rect x="46.0" y="388.0" width="1228.0" height="132.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="408.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="438.0">Application Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="476.0">services, domain</tspan><tspan class="layer-detail" x="151.0" y="492.0">rules, use cases</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="538.0" width="1228.0" height="366.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="558.0" width="174" height="326.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="705.0">Integration Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="743.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="759.0">adapters, helpers</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="922.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="942.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="972.0">Runtime Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1002.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="1018.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="1034.0">JVM</tspan></text>
-    </g>
-    <g class="edge" data-edge="api0-&gt;service0" data-label="delegates">
-      <path d="M 424.0 350.0 L 424.0 379.0 L 424.0 408.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
-    </g>
-    <g class="edge" data-edge="service2-&gt;infra0" data-label="persists / publishes">
-      <path d="M 1096.0 500.0 L 1096.0 529.0 L 424.0 529.0 L 424.0 558.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 424.0 884.0 L 424.0 913.0 L 760.0 913.0 L 760.0 942.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Json View Application | application bootstrap">
-      <rect x="274.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="183.5">Json View Application</tspan><tspan class="node-detail" x="424.0" y="207.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry1" data-lines="Abstract Json View | Application Test | jsonview">
-      <rect x="610.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="171.5">Abstract Json View</tspan><tspan class="node-title" x="760.0" y="195.5">Application Test</tspan><tspan class="node-detail" x="760.0" y="219.5">jsonview</tspan></text>
-    </g>
-    <g class="node" data-node="entry2" data-lines="Article Controller Test | HTTP adapter">
-      <rect x="946.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="183.5">Article Controller Test</tspan><tspan class="node-detail" x="1096.0" y="207.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api0" data-lines="Article Controller | HTTP adapter">
-      <rect x="274.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="300.5">Article Controller</tspan><tspan class="node-detail" x="424.0" y="324.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="service0" data-lines="Jackson Config | configuration">
-      <rect x="274.0" y="408.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="450.5">Jackson Config</tspan><tspan class="node-detail" x="424.0" y="474.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="service1" data-lines="Article DTO | dto">
-      <rect x="610.0" y="408.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="450.5">Article DTO</tspan><tspan class="node-detail" x="760.0" y="474.5">dto</tspan></text>
-    </g>
-    <g class="node" data-node="service2" data-lines="Views | dto">
-      <rect x="946.0" y="408.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="450.5">Views</tspan><tspan class="node-detail" x="1096.0" y="474.5">dto</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Spring boot | autoconfigure lib | Framework Layer">
-      <rect x="274.0" y="558.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="595.5">Spring boot</tspan><tspan class="node-title" x="424.0" y="619.5">autoconfigure lib</tspan><tspan class="node-detail" x="424.0" y="643.5">Framework Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra1" data-lines="Spring boot | autoconfigure processor | Framework Layer">
-      <rect x="610.0" y="558.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="595.5">Spring boot</tspan><tspan class="node-title" x="760.0" y="619.5">autoconfigure processor</tspan><tspan class="node-detail" x="760.0" y="643.5">Framework Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra2" data-lines="Spring boot | configuration processor | Framework Layer">
-      <rect x="946.0" y="558.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="595.5">Spring boot</tspan><tspan class="node-title" x="1096.0" y="619.5">configuration processor</tspan><tspan class="node-detail" x="1096.0" y="643.5">Framework Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra3" data-lines="Spring boot devtools | Framework Layer">
-      <rect x="274.0" y="682.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="724.5">Spring boot devtools</tspan><tspan class="node-detail" x="424.0" y="748.5">Framework Layer</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k APIs">
-      <rect x="610.0" y="682.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="724.5">workshop</tspan><tspan class="node-detail" x="760.0" y="748.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="jackson3 | bluetape4k APIs">
-      <rect x="946.0" y="682.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="724.5">jackson3</tspan><tspan class="node-detail" x="1096.0" y="748.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="core | bluetape4k APIs">
-      <rect x="274.0" y="792.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="834.5">core</tspan><tspan class="node-detail" x="424.0" y="858.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="SQL / R2DBC | Runtime Dependencies">
-      <rect x="610.0" y="942.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="984.5">SQL / R2DBC</tspan><tspan class="node-detail" x="760.0" y="1008.5">Runtime Dependencies</tspan></text>
-    </g>
+  <rect class="canvas" width="1380" height="780"/>
+  <rect class="frame" x="28" y="24" width="1324" height="732" rx="24"/>
+
+  <text class="title" x="690" y="66" text-anchor="middle">JsonView response filtering</text>
+  <text class="subtitle" x="690" y="94" text-anchor="middle">Spring endpoints choose a view, Jackson serializes only that view's ArticleDTO fields.</text>
+
+  <rect class="layerApi" x="64" y="124" width="1252" height="162" rx="18"/>
+  <text class="layerLabel" x="92" y="158">HTTP API</text>
+  <g filter="url(#shadow)">
+    <rect x="112" y="184" width="246" height="74" rx="12" fill="#FFFFFF" stroke="#3B82F6" stroke-width="1.6"/>
+    <text class="cardTitle" x="235" y="214" text-anchor="middle">GET /articles</text>
+    <text class="cardText" x="235" y="240" text-anchor="middle">@JsonView(Public)</text>
   </g>
+  <g filter="url(#shadow)">
+    <rect x="414" y="184" width="246" height="74" rx="12" fill="#FFFFFF" stroke="#64748B" stroke-width="1.6"/>
+    <text class="cardTitle" x="537" y="214" text-anchor="middle">GET /articles/{id}</text>
+    <text class="cardText" x="537" y="240" text-anchor="middle">no view, full DTO</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="716" y="184" width="246" height="74" rx="12" fill="#FFFFFF" stroke="#D97706" stroke-width="1.6"/>
+    <text class="cardTitle" x="839" y="214" text-anchor="middle">GET /{id}/analytics</text>
+    <text class="cardText" x="839" y="240" text-anchor="middle">@JsonView(Analytics)</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1018" y="184" width="246" height="74" rx="12" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.6"/>
+    <text class="cardTitle" x="1141" y="214" text-anchor="middle">GET /{id}/internal</text>
+    <text class="cardText" x="1141" y="240" text-anchor="middle">@JsonView(Internal)</text>
+  </g>
+
+  <rect class="layerContract" x="64" y="324" width="1252" height="186" rx="18"/>
+  <text class="layerLabel" x="92" y="358">Controller contract</text>
+  <g filter="url(#shadow)">
+    <rect x="126" y="390" width="286" height="88" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/>
+    <text class="cardTitle" x="269" y="425" text-anchor="middle">ArticleController</text>
+    <text class="cardText" x="269" y="452" text-anchor="middle">Flow and suspend handlers</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="548" y="390" width="286" height="88" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="691" y="425" text-anchor="middle">ArticleDTO</text>
+    <text class="cardText" x="691" y="452" text-anchor="middle">id, title, category, content</text>
+    <text class="cardText" x="691" y="472" text-anchor="middle">views, likes</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="970" y="390" width="286" height="88" rx="14" fill="#FFFFFF" stroke="#D97706" stroke-width="1.7"/>
+    <text class="cardTitle" x="1113" y="425" text-anchor="middle">Views hierarchy</text>
+    <text class="cardText" x="1113" y="452" text-anchor="middle">Public + Analytics</text>
+    <text class="cardText" x="1113" y="472" text-anchor="middle">Internal inherits both</text>
+  </g>
+
+  <rect class="layerRuntime" x="64" y="548" width="1252" height="148" rx="18"/>
+  <text class="layerLabel" x="92" y="582">Serialization and verification</text>
+  <g filter="url(#shadow)">
+    <rect x="132" y="616" width="326" height="58" rx="12" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.6"/>
+    <text class="cardTitle" x="295" y="649" text-anchor="middle">Jackson.defaultJsonMapper</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="556" y="616" width="270" height="58" rx="12" fill="#FFFFFF" stroke="#D97706" stroke-width="1.6"/>
+    <text class="cardTitle" x="691" y="649" text-anchor="middle">Filtered JSON response</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="946" y="616" width="270" height="58" rx="12" fill="#FFFFFF" stroke="#64748B" stroke-width="1.6"/>
+    <text class="cardTitle" x="1081" y="649" text-anchor="middle">ArticleControllerTest</text>
+  </g>
+
+  <path class="line" d="M 269 286 L 269 390" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 412 434 L 548 434" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 834 434 L 970 434" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 691 478 L 691 616" stroke="#D97706" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 458 645 L 556 645" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 826 645 L 946 645" stroke="#64748B" marker-end="url(#arrowSlate)"/>
 </svg>
