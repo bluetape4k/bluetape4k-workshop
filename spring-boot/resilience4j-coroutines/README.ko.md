@@ -2,19 +2,24 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+## 이 예제가 보여 주는 것
 
-이 예제는 **Spring Boot 4 + Resilience4j + Coroutines Workshop**을 실행 가능한 Spring Boot 애플리케이션 기능 워크숍 조각으로 다룹니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄여 주는 라이브러리와 프레임워크 API 관찰에 초점을 둡니다.
-
-## 시퀀스 다이어그램
-
-기반 예제: [resilience4j-spring-boot3-demo](https://github.com/resilience4j/resilience4j-spring-boot3-demo)
+이 모듈은 Spring Boot 4 애플리케이션에서 Resilience4j 적용 방식이 달라지는 지점을 비교합니다.
+blocking controller, Reactor `Mono`/`Flux`, `CompletableFuture`, Kotlin `suspend` 함수, Kotlin `Flow`,
+그리고 bluetape4k `SuspendDecorators` API를 같은 설정 위에서 확인합니다. 어떤 resilience 규칙을
+annotation으로 둘지, Reactor/Future wrapper로 둘지, 명시적인 coroutine decorator로 둘지 판단할 때 유용합니다.
 
 ## 아키텍처
 
-![Spring Boot 4 + Resilience4j + Coroutines Workshop Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-readme-architecture-01.png)
+![Spring Boot Resilience4j coroutine architecture](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-readme-architecture-01.png)
 
-### Circuit Breaker 상태 머신
+## 요청 및 Decorator 흐름
+
+![Spring Boot Resilience4j coroutine request and decorator flow](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-readme-flow-01.png)
+
+## Circuit Breaker 상태 머신
+
+![Spring Boot Resilience4j circuit breaker state machine](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-readme-state-machine-01.png)
 
 ## 개요
 
@@ -80,9 +85,10 @@ override suspend fun suspendSuccess(): String = "Hello World"
 
 호출에 마감 시간을 강제합니다. `Mono`, `Flux`, `CompletableFuture`와 함께 동작합니다.
 
-> **⚠️ 경고:** Resilience4j 2.4.x에서 `@TimeLimiter`는 Kotlin `suspend` 함수와 **호환되지 않습니다**.
-> 설정된 시간 이후 실제 `TimeoutException`을 발생시키며, 조용히 무시되지 않습니다.
-> 코루틴 timeout 강제에는 `kotlinx.coroutines.withTimeout`을 사용합니다.
+> **Coroutine 참고:** 이 모듈은 Kotlin `suspend` 함수에 `@TimeLimiter`를 의도적으로 적용하지 않습니다.
+> `suspendTimeout()`은 3초 동안 지연된 뒤 정상 완료됩니다. 해당 endpoint 주변에 Resilience4j timeout
+> wrapper가 없기 때문입니다. coroutine 호출에 deadline이 필요하다면 `kotlinx.coroutines.withTimeout`
+> 또는 명시적인 programmatic decorator를 사용합니다.
 >
 > ```kotlin
 > withTimeout(2_000L) { slowSuspendOperation() }
@@ -98,8 +104,8 @@ override suspend fun suspendSuccess(): String = "Hello World"
 |---|---|---|
 | `@CircuitBreaker` + `suspend` | ✅ | AOP proxy가 suspend 함수를 올바르게 감쌉니다. |
 | `@Bulkhead` + `suspend` | ✅ | Semaphore bulkhead가 suspend와 동작합니다. |
-| `@Retry` + `suspend` | ⚠️ | suspend에 대한 애노테이션 기반 retry에는 알려진 버그가 있습니다. `CoDecorators`를 사용합니다. |
-| `@TimeLimiter` + `suspend` | ❌ | 실제 `TimeoutException`을 발생시킵니다. 대신 `withTimeout {}`을 사용합니다. |
+| `@Retry` + `suspend` | ⚠️ | Annotation 동작에는 제한이 있습니다. 명시적인 retry chain에는 `SuspendDecorators`를 사용합니다. |
+| `@TimeLimiter` + `suspend` | ❌ | 이 endpoint에서는 사용하지 않습니다. `withTimeout {}` 또는 programmatic decorator를 사용합니다. |
 | `@Retry` + `Flow` | ❌ | 적용되지 않습니다. `Flow.retry(retry)` 확장을 사용합니다. |
 | suspend용 CircuitBreaker fallback | ⚠️ | fallback 메서드는 non-suspend여야 합니다. |
 | suspend/reactive metric 업데이트 | ⚠️ | async 경로는 registry를 동기적으로 갱신하지 않습니다. |

@@ -2,19 +2,24 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+## What this example shows
 
-This example exercises **Spring Boot 4 + Resilience4j + Coroutines Workshop** as a runnable Spring Boot application feature workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
-
-## Sequence Diagram
-
-Based on: [resilience4j-spring-boot3-demo](https://github.com/resilience4j/resilience4j-spring-boot3-demo)
+This module compares the Resilience4j paths that behave differently in a Spring Boot 4 application:
+blocking controllers, Reactor `Mono`/`Flux`, `CompletableFuture`, Kotlin `suspend` functions, Kotlin `Flow`,
+and the bluetape4k `SuspendDecorators` API. It is useful when deciding whether a resilience rule should be
+an annotation, a Reactor/Future wrapper, or an explicit coroutine decorator.
 
 ## Architecture
 
-![Spring Boot 4 + Resilience4j + Coroutines Workshop Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-readme-architecture-01.png)
+![Spring Boot Resilience4j coroutine architecture](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-readme-architecture-01.png)
 
-### Circuit Breaker State Machine
+## Request and Decorator Flow
+
+![Spring Boot Resilience4j coroutine request and decorator flow](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-readme-flow-01.png)
+
+## Circuit Breaker State Machine
+
+![Spring Boot Resilience4j circuit breaker state machine](../../docs/images/readme-diagrams/spring-boot-resilience4j-coroutines-readme-state-machine-01.png)
 
 ## Overview
 
@@ -83,9 +88,10 @@ override suspend fun suspendSuccess(): String = "Hello World"
 
 Enforces a deadline on calls. Works with `Mono`, `Flux`, and `CompletableFuture`.
 
-> **⚠️ Warning:** `@TimeLimiter` is **NOT compatible** with Kotlin `suspend` functions in
-> Resilience4j 2.4.x. It causes an actual `TimeoutException` after the configured duration,
-> not a silent no-op. Use `kotlinx.coroutines.withTimeout` for coroutine timeout enforcement:
+> **Coroutine note:** this module deliberately does not apply `@TimeLimiter` to Kotlin `suspend`
+> functions. `suspendTimeout()` delays for three seconds and completes normally because there is no
+> Resilience4j timeout wrapper around that endpoint. Use `kotlinx.coroutines.withTimeout` or a
+> programmatic decorator when a coroutine call needs a deadline:
 >
 > ```kotlin
 > withTimeout(2_000L) { slowSuspendOperation() }
@@ -101,8 +107,8 @@ Limits the number of calls within a time window. Backend B demonstrates IP-based
 |---|---|---|
 | `@CircuitBreaker` + `suspend` | ✅ | AOP proxy wraps suspend function correctly |
 | `@Bulkhead` + `suspend` | ✅ | Semaphore bulkhead works with suspend |
-| `@Retry` + `suspend` | ⚠️ | Annotation-based retry on suspend has known bugs; use `CoDecorators` |
-| `@TimeLimiter` + `suspend` | ❌ | Causes actual `TimeoutException`; use `withTimeout {}` instead |
+| `@Retry` + `suspend` | ⚠️ | Annotation behavior is limited; use `SuspendDecorators` for explicit retry chains |
+| `@TimeLimiter` + `suspend` | ❌ | Not used in this endpoint; use `withTimeout {}` or a programmatic decorator |
 | `@Retry` + `Flow` | ❌ | Not applied; use `Flow.retry(retry)` extension |
 | CircuitBreaker fallback for `suspend` | ⚠️ | Fallback method must be non-suspend |
 | Metrics update for suspend/reactive | ⚠️ | Async paths do not update registry synchronously |

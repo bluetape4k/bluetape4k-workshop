@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="820" viewBox="0 0 1500 820" role="img" aria-label="Spring Boot Resilience4j circuit breaker state machine">
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A"/>
+    </marker>
+    <marker id="arrowRed" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 14 7 L 0 14 Z" fill="#DC2626"/>
+    </marker>
+    <style>
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}
+      .title{font-family:"Architects Daughter";font-size:42px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#51606F}
+      .stateTitle{font-family:"Architects Daughter";font-size:38px;fill:#102033}.stateText{font-family:"Comic Mono";font-size:16px;fill:#415166}
+      .line{fill:none;stroke-width:3.6;stroke-linecap:round;stroke-linejoin:round}.label{font-family:"Comic Mono";font-size:15px;fill:#334155}
+      .noteTitle{font-family:"Architects Daughter";font-size:27px;fill:#102033}.noteText{font-family:"Comic Mono";font-size:15px;fill:#415166}
+    </style>
+  </defs>
+  <rect class="canvas" width="1500" height="820"/>
+  <rect class="frame" x="24" y="24" width="1452" height="772" rx="26"/>
+  <text class="title" x="750" y="76" text-anchor="middle">CircuitBreaker lifecycle in the tests</text>
+  <text class="subtitle" x="750" y="110" text-anchor="middle">Failure rate opens the breaker; probe calls decide whether traffic resumes or remains protected.</text>
+
+  <g filter="url(#shadow)">
+    <rect x="110" y="240" width="330" height="150" rx="20" fill="#ECFDF5" stroke="#16A34A" stroke-width="2"/>
+    <text class="stateTitle" x="275" y="296" text-anchor="middle">CLOSED</text>
+    <text class="stateText" x="275" y="328" text-anchor="middle">normal traffic passes</text>
+    <text class="stateText" x="275" y="354" text-anchor="middle">failures are counted</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="585" y="240" width="330" height="150" rx="20" fill="#FEF2F2" stroke="#DC2626" stroke-width="2"/>
+    <text class="stateTitle" x="750" y="296" text-anchor="middle">OPEN</text>
+    <text class="stateText" x="750" y="328" text-anchor="middle">calls are rejected</text>
+    <text class="stateText" x="750" y="354" text-anchor="middle">fallback may respond</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1060" y="240" width="330" height="150" rx="20" fill="#EFF6FF" stroke="#2563EB" stroke-width="2"/>
+    <text class="stateTitle" x="1225" y="296" text-anchor="middle">HALF_OPEN</text>
+    <text class="stateText" x="1225" y="328" text-anchor="middle">limited probe calls</text>
+    <text class="stateText" x="1225" y="354" text-anchor="middle">measure recovery</text>
+  </g>
+
+  <path class="line" d="M 440 315 L 585 315" stroke="#DC2626" marker-end="url(#arrowRed)"/>
+  <text class="label" x="512" y="292" text-anchor="middle">failure rate threshold</text>
+  <path class="line" d="M 915 315 L 1060 315" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <text class="label" x="987" y="292" text-anchor="middle">wait duration elapsed</text>
+  <path class="line" d="M 1225 390 L 1225 490 L 275 490 L 275 390" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <text class="label" x="750" y="472" text-anchor="middle">probe calls succeed</text>
+  <path class="line" d="M 1060 353 L 930 438 L 820 390" stroke="#DC2626" marker-end="url(#arrowRed)"/>
+  <text class="label" x="988" y="424" text-anchor="middle">probe fails</text>
+
+  <g filter="url(#shadow)">
+    <rect x="210" y="600" width="1080" height="86" rx="18" fill="#FEFCE8" stroke="#FACC15" stroke-width="1.6"/>
+    <text class="noteTitle" x="750" y="636" text-anchor="middle">What the workshop tests check</text>
+    <text class="noteText" x="750" y="666" text-anchor="middle">Circuit state, fallback behavior, retry attempts, and registry-backed metrics are asserted independently.</text>
+  </g>
+</svg>
