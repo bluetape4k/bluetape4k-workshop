@@ -1,69 +1,31 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1420" height="1371" viewBox="0 0 1420 1371" role="img" aria-label="Idempotency Key Check Flow">
-<defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="arrowBlue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M1 1 L7 4 L1 7 Z" fill="#5b8def"/></marker>
-  <marker id="arrowTeal" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M1 1 L7 4 L1 7 Z" fill="#45a7a1"/></marker>
-  <style>
-    .canvas{fill:#f7f9fc}
-    .frame{fill:#ffffff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter";font-size:34px;fill:#102033}
-    .subtitle{font-family:"Comic Mono";font-size:13px;fill:#536273}
-    .actor{font-family:"Architects Daughter";font-size:17px;fill:#102033}
-    .message{font-family:"Comic Mono";font-size:12px;fill:#263445;paint-order:stroke;stroke:#ffffff;stroke-width:4px;stroke-linejoin:round}
-    .detail{font-family:"Comic Mono";font-size:11px;fill:#536273}
-    .lifeline{stroke:#b8c4d3;stroke-width:1.4;stroke-dasharray:7 6}
-    .call{stroke:#5b8def;stroke-width:2.15;fill:none;marker-end:url(#arrowBlue)}
-    .return{stroke:#45a7a1;stroke-width:2.05;stroke-dasharray:7 5;fill:none;marker-end:url(#arrowTeal)}
-    .box{stroke-width:1.8;filter:url(#shadow)}
-  </style>
-</defs>
-<rect class="canvas" width="1420" height="1371"/>
-<rect class="frame" x="24" y="20" width="1372" height="1331" rx="18"/>
-<text class="title" x="48" y="58">Idempotency Key Check Flow</text>
-<text class="subtitle" x="50" y="84">Idempotency-Key header: cache HIT (replay 200) vs MISS (create 201)</text>
-<rect class="box" x="40" y="108" width="220" height="58" rx="10" fill="#e8f3ff" stroke="#7aa0c4"/>
-<text class="actor" x="150" y="137" text-anchor="middle" dominant-baseline="middle">Client HTTP</text>
-<line class="lifeline" x1="150" y1="166" x2="150" y2="1313"/>
-<rect class="box" x="320" y="108" width="220" height="58" rx="10" fill="#eaf7ef" stroke="#7aa0c4"/>
-<text class="actor" x="430" y="137" text-anchor="middle" dominant-baseline="middle">Order Controller</text>
-<line class="lifeline" x1="430" y1="166" x2="430" y2="1313"/>
-<rect class="box" x="600" y="108" width="220" height="58" rx="10" fill="#fff3d9" stroke="#7aa0c4"/>
-<text class="actor" x="710" y="137" text-anchor="middle" dominant-baseline="middle">Idempotency Service</text>
-<line class="lifeline" x1="710" y1="166" x2="710" y2="1313"/>
-<rect class="box" x="880" y="108" width="220" height="58" rx="10" fill="#f1ecff" stroke="#7aa0c4"/>
-<text class="actor" x="990" y="137" text-anchor="middle" dominant-baseline="middle">Redis RMapCache</text>
-<line class="lifeline" x1="990" y1="166" x2="990" y2="1313"/>
-<rect class="box" x="1160" y="108" width="220" height="58" rx="10" fill="#fdecef" stroke="#7aa0c4"/>
-<text class="actor" x="1270" y="137" text-anchor="middle" dominant-baseline="middle">Order Service</text>
-<line class="lifeline" x1="1270" y1="166" x2="1270" y2="1313"/>
-<path class="call" d="M150 205 L430 205"/>
-<rect class="message-label" x="75" y="219" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="290" y="234.5" text-anchor="middle" dominant-baseline="middle">1. POST /api/orders Idempotency-Key: &lt;uuid&gt;</text>
-<path class="call" d="M430 313 L710 313"/>
-<rect class="message-label" x="355" y="327" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="570" y="342.5" text-anchor="middle" dominant-baseline="middle">2. processOrder(key, request)</text>
-<path class="call" d="M710 421 L990 421"/>
-<rect class="message-label" x="635" y="435" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="850" y="450.5" text-anchor="middle" dominant-baseline="middle">3. GET key from cache</text>
-<path class="return" d="M990 529 L710 529"/>
-<rect class="message-label" x="635" y="543" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="850" y="558.5" text-anchor="middle" dominant-baseline="middle">4. CachedResponse (OrderResponse)</text>
-<path class="return" d="M430 637 L150 637"/>
-<rect class="message-label" x="75" y="651" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="290" y="666.5" text-anchor="middle" dominant-baseline="middle">5. IdempotencyResult.Replay → 200 OK</text>
-<path class="return" d="M710 745 L430 745"/>
-<rect class="message-label" x="355" y="759" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="570" y="774.5" text-anchor="middle" dominant-baseline="middle">6. Idempotency Service to Order Controller</text>
-<path class="return" d="M990 853 L710 853"/>
-<rect class="message-label" x="635" y="867" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="850" y="882.5" text-anchor="middle" dominant-baseline="middle">7. null (key not found)</text>
-<path class="call" d="M710 961 L1270 961"/>
-<rect class="message-label" x="710" y="975" width="560" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="990" y="990.5" text-anchor="middle" dominant-baseline="middle">8. processNewOrder(request)</text>
-<path class="call" d="M710 1069 L990 1069"/>
-<rect class="message-label" x="635" y="1083" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="850" y="1098.5" text-anchor="middle" dominant-baseline="middle">9. putIfAbsent(key, response, TTL=5min)</text>
-<path class="return" d="M710 1177 L150 1177"/>
-<rect class="message-label" x="150" y="1191" width="560" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="430" y="1206.5" text-anchor="middle" dominant-baseline="middle">10. IdempotencyResult.Created → 201</text>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1700" height="980" viewBox="0 0 1700 980" role="img" aria-label="Idempotency request flow">
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.15"/></filter>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker>
+    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A"/></marker>
+    <marker id="arrowRed" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#DC2626"/></marker>
+    <style>.canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:40px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#51606F}.cardTitle{font-family:"Architects Daughter";font-size:29px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.line{fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}.msg{font-family:"Comic Mono";font-size:15px;fill:#334155}.noteTitle{font-family:"Architects Daughter";font-size:24px;fill:#102033}.life{stroke:#94A3B8;stroke-width:1.7;stroke-dasharray:8 8}.region{fill-opacity:.58;stroke-width:1.6;rx:18}</style>
+  </defs>
+  <rect class="canvas" width="1700" height="980"/><rect class="frame" x="24" y="24" width="1652" height="932" rx="24"/>
+  <text class="title" x="850" y="72" text-anchor="middle">Idempotency-Key request flow</text><text class="subtitle" x="850" y="106" text-anchor="middle">The first key stores a response; hits and concurrent losers replay the cached body with HTTP 200.</text>
+  <g filter="url(#shadow)"><rect x="100" y="154" width="220" height="72" rx="14" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="210" y="188" text-anchor="middle">Client</text><text class="cardText" x="210" y="212" text-anchor="middle">retry-capable caller</text></g>
+  <g filter="url(#shadow)"><rect x="430" y="154" width="280" height="72" rx="14" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="570" y="188" text-anchor="middle">OrderController</text><text class="cardText" x="570" y="212" text-anchor="middle">header guard</text></g>
+  <g filter="url(#shadow)"><rect x="820" y="154" width="300" height="72" rx="14" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="970" y="188" text-anchor="middle">IdempotencyService</text><text class="cardText" x="970" y="212" text-anchor="middle">withContext(IO)</text></g>
+  <g filter="url(#shadow)"><rect x="1230" y="154" width="230" height="72" rx="14" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="1345" y="188" text-anchor="middle">RMapCache</text><text class="cardText" x="1345" y="212" text-anchor="middle">idempotency:orders</text></g>
+  <g filter="url(#shadow)"><rect x="1490" y="144" width="160" height="96" rx="14" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.7"/><ellipse cx="1570" cy="170" rx="32" ry="10" fill="#FECACA" stroke="#DC2626" stroke-width="2"/><path d="M1538 170 L1538 204 C1538 210 1553 215 1570 215 C1587 215 1602 210 1602 204 L1602 170" fill="#FEE2E2" stroke="#DC2626" stroke-width="2"/><path d="M1538 188 C1538 194 1553 199 1570 199 C1587 199 1602 194 1602 188" fill="none" stroke="#DC2626" stroke-width="2"/><text class="cardTitle" x="1570" y="230" text-anchor="middle">Redis</text></g>
+  <line class="life" x1="210" y1="238" x2="210" y2="878"/><line class="life" x1="570" y1="238" x2="570" y2="878"/><line class="life" x1="970" y1="238" x2="970" y2="878"/><line class="life" x1="1345" y1="238" x2="1345" y2="878"/><line class="life" x1="1570" y1="250" x2="1570" y2="878"/>
+  <rect class="region" x="76" y="286" width="1558" height="112" fill="#FEFCE8" stroke="#FACC15"/><text class="noteTitle" x="118" y="326">Header validation</text>
+  <path class="line" d="M 210 352 L 570 352" stroke="#2563EB" marker-end="url(#arrowBlue)"/><text class="msg" x="390" y="334" text-anchor="middle">POST /api/orders + Idempotency-Key</text>
+  <path class="line" d="M 570 378 L 210 378" stroke="#DC2626" marker-end="url(#arrowRed)"/><text class="msg" x="390" y="404" text-anchor="middle">missing or blank key -> HTTP 400</text>
+  <rect class="region" x="76" y="440" width="1558" height="206" fill="#ECFDF5" stroke="#86EFAC"/><text class="noteTitle" x="118" y="480">First accepted key</text>
+  <path class="line" d="M 570 516 L 970 516" stroke="#16A34A" marker-end="url(#arrowGreen)"/><text class="msg" x="770" y="498" text-anchor="middle">processOrder(key, request)</text>
+  <path class="line" d="M 970 552 L 1345 552" stroke="#16A34A" marker-end="url(#arrowGreen)"/><text class="msg" x="1158" y="534" text-anchor="middle">cache.get(key) == null</text>
+  <path class="line" d="M 1345 586 L 1570 586" stroke="#DC2626" marker-end="url(#arrowRed)"/><text class="msg" x="1458" y="568" text-anchor="middle">putIfAbsent TTL 5m</text>
+  <path class="line" d="M 970 620 L 570 620" stroke="#16A34A" marker-end="url(#arrowGreen)"/><text class="msg" x="770" y="602" text-anchor="middle">Created(CachedResponse)</text>
+  <rect class="region" x="76" y="688" width="1558" height="204" fill="#EFF6FF" stroke="#93C5FD"/><text class="noteTitle" x="118" y="728">Retry or concurrent loser</text>
+  <path class="line" d="M 210 762 L 570 762" stroke="#2563EB" marker-end="url(#arrowBlue)"/><text class="msg" x="390" y="744" text-anchor="middle">same key retry</text>
+  <path class="line" d="M 570 792 L 970 792" stroke="#2563EB" marker-end="url(#arrowBlue)"/><text class="msg" x="770" y="774" text-anchor="middle">request maps to same cache key</text>
+  <path class="line" d="M 970 822 L 1345 822" stroke="#16A34A" marker-end="url(#arrowGreen)"/><text class="msg" x="1158" y="804" text-anchor="middle">get hit or putIfAbsent previous</text>
+  <path class="line" d="M 570 854 L 210 854" stroke="#2563EB" marker-end="url(#arrowBlue)"/><text class="msg" x="390" y="880" text-anchor="middle">HTTP 200 with original OrderResponse</text>
 </svg>

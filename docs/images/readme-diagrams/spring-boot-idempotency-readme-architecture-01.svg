@@ -1,113 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="840" viewBox="0 0 1320 840" role="img" aria-label="spring-boot/idempotency architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-boot/idempotency/src/main/kotlin/io/bluetape4k/workshop/idempotency/IdempotencyApplication.kt&quot;,&quot;spring-boot/idempotency/src/main/kotlin/io/bluetape4k/workshop/idempotency/config/RedissonConfig.kt&quot;,&quot;spring-boot/idempotency/src/main/kotlin/io/bluetape4k/workshop/idempotency/controller/OrderController.kt&quot;,&quot;spring-boot/idempotency/src/main/kotlin/io/bluetape4k/workshop/idempotency/model/OrderModels.kt&quot;,&quot;spring-boot/idempotency/src/main/kotlin/io/bluetape4k/workshop/idempotency/service/IdempotencyService.kt&quot;,&quot;spring-boot/idempotency/src/test/kotlin/io/bluetape4k/workshop/idempotency/AbstractIdempotencyTest.kt&quot;,&quot;spring-boot/idempotency/src/test/kotlin/io/bluetape4k/workshop/idempotency/controller/OrderControllerTest.kt&quot;,&quot;spring-boot/idempotency/build.gradle.kts&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1740" height="900" viewBox="0 0 1740 900" role="img" aria-label="Idempotent order architecture">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
-    <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
-    </style>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker>
+    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A"/></marker>
+    <marker id="arrowRed" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#DC2626"/></marker>
+    <style>.canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{stroke-width:1.6;rx:22}.title{font-family:"Architects Daughter";font-size:40px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#51606F}.layerTitle{font-family:"Architects Daughter";font-size:29px;fill:#243447}.cardTitle{font-family:"Architects Daughter";font-size:29px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.small{font-family:"Comic Mono";font-size:14px;fill:#51606F}.line{fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}.label{font-family:"Comic Mono";font-size:14px;fill:#334155}</style>
   </defs>
-  <rect class="canvas" width="1320" height="840"/>
-  <rect class="frame" x="16" y="16" width="1288" height="808" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">spring-boot/idempotency</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Spring Boot application feature and runtime integration</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="256.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="216.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="214.5">Spring Boot</tspan><tspan class="layer-title" x="151.0" y="237.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="264.0">apps, controllers,</tspan><tspan class="layer-detail" x="151.0" y="280.0">scheduled tests</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="388.0" width="1228.0" height="242.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="408.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="481.5">Boot Integration</tspan><tspan class="layer-title" x="151.0" y="504.5">Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="523.0">auto-config,</tspan><tspan class="layer-detail" x="151.0" y="539.0">clients,</tspan><tspan class="layer-detail" x="151.0" y="555.0">repositories</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="648.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="668.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="686.5">Runtime</tspan><tspan class="layer-title" x="151.0" y="709.5">Dependencies</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="728.0">database, cache,</tspan><tspan class="layer-detail" x="151.0" y="744.0">messaging,</tspan><tspan class="layer-detail" x="151.0" y="760.0">containers</tspan></text>
-    </g>
-    <g class="edge" data-edge="api1-&gt;infra0" data-label="uses">
-      <path d="M 760.0 350.0 L 760.0 379.0 L 424.0 379.0 L 424.0 408.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 760.0 610.0 L 760.0 639.0 L 592.0 639.0 L 592.0 668.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Idempotency Application | application bootstrap">
-      <rect x="274.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="183.5">Idempotency Application</tspan><tspan class="node-detail" x="424.0" y="207.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry1" data-lines="Abstract Idempotency | Test | idempotency">
-      <rect x="610.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="171.5">Abstract Idempotency</tspan><tspan class="node-title" x="760.0" y="195.5">Test</tspan><tspan class="node-detail" x="760.0" y="219.5">idempotency</tspan></text>
-    </g>
-    <g class="node" data-node="entry2" data-lines="Order Controller Test | HTTP adapter">
-      <rect x="946.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="183.5">Order Controller Test</tspan><tspan class="node-detail" x="1096.0" y="207.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api0" data-lines="Order Controller | HTTP adapter">
-      <rect x="274.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="300.5">Order Controller</tspan><tspan class="node-detail" x="424.0" y="324.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api1" data-lines="Idempotency Service | service component">
-      <rect x="610.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="300.5">Idempotency Service</tspan><tspan class="node-detail" x="760.0" y="324.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Redisson Config | configuration">
-      <rect x="274.0" y="408.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="450.5">Redisson Config</tspan><tspan class="node-detail" x="424.0" y="474.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="infra1" data-lines="Order Models | domain model">
-      <rect x="610.0" y="408.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="450.5">Order Models</tspan><tspan class="node-detail" x="760.0" y="474.5">domain model</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k Boot APIs">
-      <rect x="946.0" y="408.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="450.5">workshop</tspan><tspan class="node-detail" x="1096.0" y="474.5">bluetape4k Boot APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="jackson3 | bluetape4k Boot APIs">
-      <rect x="274.0" y="518.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="560.5">jackson3</tspan><tspan class="node-detail" x="424.0" y="584.5">bluetape4k Boot APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="core | bluetape4k Boot APIs">
-      <rect x="610.0" y="518.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="560.5">core</tspan><tspan class="node-detail" x="760.0" y="584.5">bluetape4k Boot APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="Redis | Boot Runtime">
-      <rect x="442.0" y="668.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="592.0" y="710.5">Redis</tspan><tspan class="node-detail" x="592.0" y="734.5">Boot Runtime</tspan></text>
-    </g>
-    <g class="node" data-node="runtime1" data-lines="Testcontainers | Boot Runtime">
-      <rect x="778.0" y="668.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="928.0" y="710.5">Testcontainers</tspan><tspan class="node-detail" x="928.0" y="734.5">Boot Runtime</tspan></text>
-    </g>
-  </g>
+  <rect class="canvas" width="1740" height="900"/><rect class="frame" x="24" y="24" width="1692" height="852" rx="24"/>
+  <text class="title" x="870" y="72" text-anchor="middle">Idempotent order boundary</text>
+  <text class="subtitle" x="870" y="106" text-anchor="middle">WebFlux validates Idempotency-Key, Redisson performs atomic cache writes, and Redis keeps replayable order responses for 5 minutes.</text>
+  <rect class="layer" x="88" y="154" width="1564" height="158" fill="#EFF6FF" stroke="#BFDBFE"/><text class="layerTitle" x="128" y="199">HTTP contract</text>
+  <g filter="url(#shadow)"><rect x="200" y="222" width="300" height="64" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="350" y="261" text-anchor="middle">Client or WebTestClient</text></g>
+  <g filter="url(#shadow)"><rect x="700" y="212" width="340" height="84" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="870" y="246" text-anchor="middle">OrderController</text><text class="cardText" x="870" y="272" text-anchor="middle">POST /api/orders</text></g>
+  <g filter="url(#shadow)"><rect x="1240" y="212" width="310" height="84" rx="14" fill="#FEFCE8" stroke="#CA8A04" stroke-width="1.7"/><text class="cardTitle" x="1395" y="246" text-anchor="middle">Header guard</text><text class="cardText" x="1395" y="272" text-anchor="middle">missing or blank -> 400</text></g>
+  <rect class="layer" x="88" y="374" width="1564" height="190" fill="#F0FDF4" stroke="#BBF7D0"/><text class="layerTitle" x="128" y="420">Idempotency service</text>
+  <g filter="url(#shadow)"><rect x="240" y="452" width="360" height="84" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="420" y="486" text-anchor="middle">IdempotencyService</text><text class="cardText" x="420" y="512" text-anchor="middle">Created or Replay result</text></g>
+  <g filter="url(#shadow)"><rect x="720" y="442" width="340" height="104" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="890" y="474" text-anchor="middle">RMapCache</text><text class="cardText" x="890" y="500" text-anchor="middle">idempotency:orders</text><text class="cardText" x="890" y="524" text-anchor="middle">get + putIfAbsent TTL 5m</text></g>
+  <g filter="url(#shadow)"><rect x="1200" y="452" width="300" height="84" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="1350" y="486" text-anchor="middle">CachedResponse</text><text class="cardText" x="1350" y="512" text-anchor="middle">HTTP status + body</text></g>
+  <rect class="layer" x="88" y="634" width="1564" height="154" fill="#FFF7ED" stroke="#FED7AA"/><text class="layerTitle" x="128" y="680">Runtime cache</text>
+  <g filter="url(#shadow)"><rect x="280" y="706" width="330" height="58" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="445" y="743" text-anchor="middle">RedissonConfig</text></g>
+  <g filter="url(#shadow)"><rect x="750" y="696" width="330" height="78" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="915" y="728" text-anchor="middle">RedissonClient</text><text class="cardText" x="915" y="754" text-anchor="middle">single server config</text></g>
+  <g filter="url(#shadow)"><rect x="1220" y="684" width="320" height="102" rx="14" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.7"/><ellipse cx="1285" cy="718" rx="35" ry="11" fill="#FECACA" stroke="#DC2626" stroke-width="2"/><path d="M1250 718 L1250 758 C1250 764 1266 770 1285 770 C1304 770 1320 764 1320 758 L1320 718" fill="#FEE2E2" stroke="#DC2626" stroke-width="2"/><path d="M1250 738 C1250 744 1266 750 1285 750 C1304 750 1320 744 1320 738" fill="none" stroke="#DC2626" stroke-width="2"/><text class="cardTitle" x="1400" y="722" text-anchor="middle">Redis</text><text class="cardText" x="1400" y="748" text-anchor="middle">Testcontainer</text><text class="small" x="1400" y="770" text-anchor="middle">RedisServer.Launcher</text></g>
+  <path class="line" d="M 500 254 L 700 254" stroke="#2563EB" marker-end="url(#arrowBlue)"/><text class="label" x="600" y="236" text-anchor="middle">Idempotency-Key</text>
+  <path class="line" d="M 1040 254 L 1240 254" stroke="#2563EB" marker-end="url(#arrowBlue)"/><text class="label" x="1140" y="236" text-anchor="middle">validate header</text>
+  <path class="line" d="M 870 296 L 870 338 L 420 338 L 420 452" stroke="#16A34A" marker-end="url(#arrowGreen)"/><text class="label" x="631" y="324" text-anchor="middle">valid order request</text>
+  <path class="line" d="M 600 494 L 720 494" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 1060 494 L 1200 494" stroke="#16A34A" marker-end="url(#arrowGreen)"/><text class="label" x="1130" y="476" text-anchor="middle">cache value</text>
+  <path class="line" d="M 890 546 L 890 632 L 915 632 L 915 696" stroke="#EA580C" marker-end="url(#arrowRed)"/><text class="label" x="1002" y="618" text-anchor="middle">Redisson map ops</text>
+  <path class="line" d="M 610 735 L 750 735" stroke="#EA580C" marker-end="url(#arrowRed)"/>
+  <path class="line" d="M 1080 735 L 1220 735" stroke="#DC2626" marker-end="url(#arrowRed)"/>
 </svg>
