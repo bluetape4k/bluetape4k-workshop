@@ -1,114 +1,70 @@
-# R2DBC + Spring WebFlux (Functional Router)
+# R2DBC + Spring WebFlux
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
-
-이 예제는 **R2DBC + Spring WebFlux (Functional Router)**를 실행 가능한 Spring Data 영속성 워크샵 조각으로 다룹니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 관찰에 초점을 맞춥니다.
-
-## 시퀀스 다이어그램
-
-![R2DBC + Spring WebFlux (Functional Router) sequence diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-sequence-01.png)
-
-Spring Data R2DBC를 WebFlux functional endpoint(Handler + Router) 및 Kotlin coroutines와 함께 사용합니다.
-H2 in-memory database를 사용합니다.
+이 모듈은 Spring Data R2DBC와 in-memory H2 database를 사용하는 coroutine
+Spring WebFlux users API입니다. `/api/users` 아래의 annotation endpoint와
+`/users` 아래의 functional route를 모두 포함합니다.
 
 ## 아키텍처
 
-![R2DBC + Spring WebFlux (Functional Router) Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-readme-architecture-01.png)
+![R2DBC WebFlux architecture](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-readme-architecture-01.png)
 
-## 사용한 bluetape4k 기능
+`UserService`는 transaction boundary를 유지하고, persistence 작업은 Spring Data
+`CoroutineCrudRepository<User, Int>`인 `UserRepository`에 위임합니다. email 조회는
+custom query method로 제공합니다.
 
-| 기능 | Artifact | 코드 위치 | 이점 |
-|---------|----------|---------------|---------|
-| `KLoggingChannel` | `bluetape4k-logging` | `UserService.kt`, `UserHandler.kt` | Coroutine-aware structured logging입니다 |
-| `bluetape4k-coroutines` | `bluetape4k-coroutines` | Service layer | Coroutine scope와 Flow utility입니다 |
-| `bluetape4k-r2dbc` | `bluetape4k-r2dbc` | R2DBC configuration | R2DBC connection helper와 extension입니다 |
-| `bluetape4k-assertions` | `bluetape4k-core` | 모든 test class | `shouldBeEqualTo`, `shouldNotBeNull` 같은 읽기 쉬운 assertion입니다 |
+## 요청 흐름
 
-## bluetape4k Before / After
+![R2DBC WebFlux request flow](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-readme-flow-01.png)
 
-### `@Transactional`을 사용하는 coroutine 기반 service
+`WebfluxR2dbcConfiguration`은 database 초기화도 담당합니다.
+`ConnectionFactoryInitializer`가 `data/schema.sql`을 먼저 실행하고
+`data/data.sql`을 이어서 실행합니다. 이 모듈에서는 R2DBC embedded database
+초기화를 명시적으로 처리합니다.
 
-```kotlin
-// Before — Reactor Mono/Flux API: verbose chain
-@Service
-class UserService(private val repository: UserRepository) {
-    fun findAll(): Flux<User> = repository.findAll()
+## Schema
 
-    fun addUser(user: UserDTO): Mono<User> =
-        repository.save(user.toModel())
-            .doOnNext { log.info("Saved user: $it") }
-}
+![R2DBC WebFlux users ERD](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-readme-erd-01.png)
 
-// After — bluetape4k KLoggingChannel + coroutine-first style
-@Service
-@Transactional(readOnly = true)
-class UserService(private val repository: UserRepository) {
-    companion object : KLoggingChannel()
+테이블은 시작 시 SQL resource로 다시 준비됩니다. H2 URL은
+`CASE_INSENSITIVE_IDENTIFIERS=TRUE`를 켜서 Spring Data generated SQL, custom lower
+case SQL, unquoted H2 table definition이 일관되게 해석되도록 합니다.
 
-    fun findAll(): Flow<User> = repository.findAll()
+## API Surface
 
-    @Transactional
-    suspend fun addUser(user: UserDTO): User? {
-        log.debug { "Save new user. ${user.toModel()}" }
-        return repository.save(user.toModel())
-    }
-}
-```
+| 방식 | Method | Path | Handler |
+|---|---|---|---|
+| Annotation | `GET` | `/api/users` | `UserController.findAll()` |
+| Annotation | `GET` | `/api/users/search?email=...` | `UserController.search(...)` |
+| Annotation | `GET` | `/api/users/{id}` | `UserController.findUserById(...)` |
+| Annotation | `POST` | `/api/users` | `UserController.addUser(...)` |
+| Annotation | `PUT` | `/api/users/{id}` | `UserController.updateUser(...)` |
+| Annotation | `DELETE` | `/api/users/{id}` | `UserController.deleteUser(...)` |
+| Functional | `GET` | `/users` | `UserHandler.findAll(...)` |
+| Functional | `GET` | `/users/search?email=...` | `UserHandler.search(...)` |
+| Functional | `GET` | `/users/{id}` | `UserHandler.findUser(...)` |
+| Functional | `POST` | `/users` | `UserHandler.addUser(...)` |
+| Functional | `PUT` | `/users/{id}` | `UserHandler.updateUser(...)` |
+| Functional | `DELETE` | `/users/{id}` | `UserHandler.deleteUser(...)` |
 
-### `coRouter`를 사용하는 functional routing
+## Runtime Notes
 
-```kotlin
-// Before — annotation-based controller
-@RestController
-@RequestMapping("/users")
-class UserController {
-    @GetMapping
-    fun findAll() = repository.findAll()
-}
-
-// After — WebFlux coRouter (functional endpoint, suspend handlers)
-@Bean
-fun routes(handler: UserHandler) = coRouter {
-    "/users".nest {
-        GET("", handler::findAll)
-        GET("/{id}", handler::findById)
-        POST("", handler::save)
-        DELETE("/{id}", handler::delete)
-    }
-}
-```
-
-## 설정 스타일
-
-annotation-based controller 대신 **functional endpoint**를 사용합니다.
-
-```kotlin
-// Router: path definitions
-@Bean
-fun routes(handler: UserHandler) = coRouter {
-    "/users".nest {
-        GET("", handler::findAll)
-        GET("/{id}", handler::findById)
-        POST("", handler::save)
-        DELETE("/{id}", handler::delete)
-    }
-}
-
-// Handler: request handling (suspend function)
-suspend fun findAll(request: ServerRequest): ServerResponse =
-    ServerResponse.ok().bodyAndAwait(userRepository.findAll())
-```
-
-## Annotation-Based Controller와 비교
-
-| 스타일 | 특징 |
+| Component | 역할 |
 |---|---|
-| Functional(이 모듈) | Router와 Handler 분리, 명시적인 path definition |
-| Annotation-based(`r2dbc-webflux-exposed`) | `@RestController` + `@GetMapping` |
+| `NettyConfig` | Reactor Netty keep-alive, backlog, timeout, connection provider, event loop을 조정합니다. |
+| `ConnectionFactoryInitializer` | schema SQL과 seed SQL을 정해진 순서로 실행합니다. |
+| `UserDTO.toModel(...)` | 요청 payload를 저장용 `User` entity로 변환합니다. |
+| `asIntOrNull()` | Functional route path variable을 parser 예외 없이 검증합니다. |
 
-## 참고 자료
+## 실행
 
-- [Spring WebFlux Functional Endpoints](https://docs.spring.io/spring-framework/reference/web/webflux-functional.html)
-- [POC WebFlux-R2DBC H2-Kotlin](https://github.com/razvn/webflux-r2dbc-kotlin)
+```bash
+./gradlew :spring-data:r2dbc-webflux:bootRun
+```
+
+## 테스트
+
+```bash
+./gradlew :spring-data:r2dbc-webflux:test
+```

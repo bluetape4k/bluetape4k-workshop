@@ -1,114 +1,69 @@
-# R2DBC + Spring WebFlux (Functional Router)
+# R2DBC + Spring WebFlux
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
-
-This example exercises **R2DBC + Spring WebFlux (Functional Router)** as a runnable Spring Data persistence workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
-
-## Sequence Diagram
-
-![R2DBC + Spring WebFlux (Functional Router) sequence diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-sequence-01.png)
-
-Spring Data R2DBC with WebFlux functional endpoints (Handler + Router) and Kotlin coroutines.
-Uses H2 in-memory database.
+This module is a coroutine Spring WebFlux users API backed by Spring Data R2DBC
+and an in-memory H2 database. It includes both annotation-style endpoints under
+`/api/users` and functional routes under `/users`.
 
 ## Architecture
 
-![R2DBC + Spring WebFlux (Functional Router) Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-readme-architecture-01.png)
+![R2DBC WebFlux architecture](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-readme-architecture-01.png)
 
-## Used bluetape4k Features
+`UserService` keeps the transaction boundary and delegates persistence to
+`UserRepository`, a Spring Data `CoroutineCrudRepository<User, Int>` with one
+custom query for email lookup.
 
-| Feature | Artifact | Code location | Benefit |
-|---------|----------|---------------|---------|
-| `KLoggingChannel` | `bluetape4k-logging` | `UserService.kt`, `UserHandler.kt` | Coroutine-aware structured logging |
-| `bluetape4k-coroutines` | `bluetape4k-coroutines` | Service layer | Coroutine scope and Flow utilities |
-| `bluetape4k-r2dbc` | `bluetape4k-r2dbc` | R2DBC configuration | R2DBC connection helpers and extensions |
-| `bluetape4k-assertions` | `bluetape4k-core` | All test classes | `shouldBeEqualTo`, `shouldNotBeNull` readable assertions |
+## Request Flow
 
-## bluetape4k Before / After
+![R2DBC WebFlux request flow](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-readme-flow-01.png)
 
-### Coroutine-based service with `@Transactional`
+`WebfluxR2dbcConfiguration` also owns database initialization. It runs
+`data/schema.sql` and then `data/data.sql` through a `ConnectionFactoryInitializer`
+because R2DBC embedded database initialization is handled explicitly here.
 
-```kotlin
-// Before — Reactor Mono/Flux API: verbose chain
-@Service
-class UserService(private val repository: UserRepository) {
-    fun findAll(): Flux<User> = repository.findAll()
+## Schema
 
-    fun addUser(user: UserDTO): Mono<User> =
-        repository.save(user.toModel())
-            .doOnNext { log.info("Saved user: $it") }
-}
+![R2DBC WebFlux users ERD](../../docs/images/readme-diagrams/spring-data-r2dbc-webflux-readme-erd-01.png)
 
-// After — bluetape4k KLoggingChannel + coroutine-first style
-@Service
-@Transactional(readOnly = true)
-class UserService(private val repository: UserRepository) {
-    companion object : KLoggingChannel()
+The table is recreated from SQL resources at startup. The H2 URL enables
+`CASE_INSENSITIVE_IDENTIFIERS=TRUE` so Spring Data generated SQL, custom lower
+case SQL, and the unquoted H2 table definition resolve consistently.
 
-    fun findAll(): Flow<User> = repository.findAll()
+## API Surface
 
-    @Transactional
-    suspend fun addUser(user: UserDTO): User? {
-        log.debug { "Save new user. ${user.toModel()}" }
-        return repository.save(user.toModel())
-    }
-}
-```
+| Style | Method | Path | Handler |
+|---|---|---|---|
+| Annotation | `GET` | `/api/users` | `UserController.findAll()` |
+| Annotation | `GET` | `/api/users/search?email=...` | `UserController.search(...)` |
+| Annotation | `GET` | `/api/users/{id}` | `UserController.findUserById(...)` |
+| Annotation | `POST` | `/api/users` | `UserController.addUser(...)` |
+| Annotation | `PUT` | `/api/users/{id}` | `UserController.updateUser(...)` |
+| Annotation | `DELETE` | `/api/users/{id}` | `UserController.deleteUser(...)` |
+| Functional | `GET` | `/users` | `UserHandler.findAll(...)` |
+| Functional | `GET` | `/users/search?email=...` | `UserHandler.search(...)` |
+| Functional | `GET` | `/users/{id}` | `UserHandler.findUser(...)` |
+| Functional | `POST` | `/users` | `UserHandler.addUser(...)` |
+| Functional | `PUT` | `/users/{id}` | `UserHandler.updateUser(...)` |
+| Functional | `DELETE` | `/users/{id}` | `UserHandler.deleteUser(...)` |
 
-### Functional routing with `coRouter`
+## Runtime Notes
 
-```kotlin
-// Before — annotation-based controller
-@RestController
-@RequestMapping("/users")
-class UserController {
-    @GetMapping
-    fun findAll() = repository.findAll()
-}
-
-// After — WebFlux coRouter (functional endpoint, suspend handlers)
-@Bean
-fun routes(handler: UserHandler) = coRouter {
-    "/users".nest {
-        GET("", handler::findAll)
-        GET("/{id}", handler::findById)
-        POST("", handler::save)
-        DELETE("/{id}", handler::delete)
-    }
-}
-```
-
-## Configuration Style
-
-It uses **functional endpoints** instead of annotation-based controllers:
-
-```kotlin
-// Router: path definitions
-@Bean
-fun routes(handler: UserHandler) = coRouter {
-    "/users".nest {
-        GET("", handler::findAll)
-        GET("/{id}", handler::findById)
-        POST("", handler::save)
-        DELETE("/{id}", handler::delete)
-    }
-}
-
-// Handler: request handling (suspend function)
-suspend fun findAll(request: ServerRequest): ServerResponse =
-    ServerResponse.ok().bodyAndAwait(userRepository.findAll())
-```
-
-## Comparison with Annotation-Based Controllers
-
-| Style | Characteristics |
+| Component | Purpose |
 |---|---|
-| Functional (this module) | Router and Handler separation, explicit path definitions |
-| Annotation-based (`r2dbc-webflux-exposed`) | `@RestController` + `@GetMapping` |
+| `NettyConfig` | Tunes Reactor Netty keep-alive, backlog, timeouts, connection provider, and event loops. |
+| `ConnectionFactoryInitializer` | Runs schema and seed SQL in a deterministic order. |
+| `UserDTO.toModel(...)` | Converts request payloads into the persisted `User` entity. |
+| `asIntOrNull()` | Validates functional-route path variables without parser exceptions. |
 
-## References
+## Run
 
-- [Spring WebFlux Functional Endpoints](https://docs.spring.io/spring-framework/reference/web/webflux-functional.html)
-- [POC WebFlux-R2DBC H2-Kotlin](https://github.com/razvn/webflux-r2dbc-kotlin)
+```bash
+./gradlew :spring-data:r2dbc-webflux:bootRun
+```
+
+## Test
+
+```bash
+./gradlew :spring-data:r2dbc-webflux:test
+```
