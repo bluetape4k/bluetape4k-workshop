@@ -2,7 +2,7 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+## 스토리지 경계
 
 이 예제는 coroutine 기반 `StorageService` 경계 뒤에 로컬 파일, S3 객체
 저장소, S3 pre-signed GET URL 선택지를 둡니다. 애플리케이션 코드는 같은
