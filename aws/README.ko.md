@@ -1,53 +1,54 @@
-# AWS Demo
+# AWS Workshop
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+AWS 워크샵은 로컬에서 검증할 수 있는 S3 예제 두 가지를 제공합니다. Spring Cloud AWS와
+`S3Template` 흐름을 작게 실행해 보고 싶다면 `s3-spring-cloud/`를 사용합니다. 로컬 파일,
+S3, pre-signed S3 URL 사이를 Spring profile로 전환하는 서비스 경계를 보고 싶다면
+`storage-abstraction/`을 사용합니다.
 
-이 예제는 **AWS Demo**를 실행 가능한 AWS 통합 워크샵 조각으로 다룹니다. 개발자가 가장 먼저 확인할 흐름인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄여 주는 라이브러리/프레임워크 API 관찰에 초점을 둡니다.
+## 아키텍처
 
-## 아키텍처 다이어그램
+![AWS Workshop architecture diagram](../docs/images/readme-diagrams/aws-readme-architecture-01.png)
 
-![AWS Demo Graphviz architecture diagram](../docs/images/readme-diagrams/aws-readme-architecture-01.png)
+두 모듈 모두 테스트와 샘플에서 로컬 AWS 호환 인프라를 사용하므로 실제 AWS 자격 증명 없이
+S3 동작을 확인할 수 있습니다.
 
-이 모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성을 중심으로 구성됩니다. 이 README를 코드와 비교할 때는 `io.bluetape4k.workshop.aws` 패키지를 기준으로 삼습니다.
+## 모듈 가이드
 
-## 시퀀스 다이어그램
+| module | Gradle task path | use it for |
+| --- | --- | --- |
+| `s3-spring-cloud/` | `:aws-s3-spring-cloud` | Spring Cloud AWS `S3Template`, AWS SDK v2 `S3Client`, 버킷 생성, 객체 업로드, 객체 목록 조회, `ResourceLoader` 접근을 확인합니다. |
+| `storage-abstraction/` | `:aws-storage-abstraction` | `local`, `s3`, `s3-presigned` profile을 가진 `StorageService`, coroutine 친화적인 blocking I/O 경계, pre-signed URL 동작을 확인합니다. |
 
-![AWS Demo sequence diagram](../docs/images/readme-diagrams/aws-s3-spring-cloud-sequence-01.png)
+## 런타임 모델
 
-AWS Java SDK V2와 [Spring Cloud AWS](https://github.com/awspring/spring-cloud-aws))를 사용하는 예제를 제공합니다.
+| concern | implementation |
+| --- | --- |
+| AWS endpoint | 샘플 또는 테스트가 `bluetape4k-testcontainers`의 로컬 AWS 호환 에뮬레이터를 시작합니다. |
+| Credentials | 에뮬레이터가 제공하는 정적 로컬 자격 증명을 사용하며, 로컬 검증에는 실제 AWS 자격 증명이 필요하지 않습니다. |
+| S3 client | AWS SDK v2 `S3Client`를 사용합니다. storage abstraction 모듈은 blocking 호출을 `Dispatchers.IO`로 감쌉니다. |
+| Spring integration | `s3-spring-cloud/`는 Spring Cloud AWS `S3Template`과 `ResourceLoader`를, `storage-abstraction/`은 Spring profile을 사용합니다. |
 
-## 모듈 구조
+## 실행
 
-| module | directory | explanation |
-|------|----------|------|
-| S3 Spring Cloud | `s3-spring-cloud/` | Spring Cloud AWS + AWS SDK v2 기반 S3 버킷 생성/파일 업로드/다운로드 예제 |
+```bash
+./gradlew :aws-s3-spring-cloud:test
+./gradlew :aws-storage-abstraction:test
+```
+
+backend별 동작을 비교하려면 profile 기반 storage 샘플을 직접 실행합니다.
+
+```bash
+./gradlew :aws-storage-abstraction:bootRun --args='--spring.profiles.active=local'
+./gradlew :aws-storage-abstraction:bootRun --args='--spring.profiles.active=s3'
+./gradlew :aws-storage-abstraction:bootRun --args='--spring.profiles.active=s3-presigned'
+```
 
 ## 전제 조건
 
-| item | explanation |
-|------|------|
-| Docker | Testcontainers가 LocalStack 컨테이너를 자동으로 시작하므로 Docker 데몬이 실행 중이어야 합니다. |
-| AWS Credentials | 로컬 테스트는 LocalStack 에뮬레이터를 사용하므로 실제 AWS 자격 증명이 필요하지 않습니다. |
-| Java 25 | `--enable-preview` 플래그를 사용하며 Java 25 이상이 필요합니다. |
-| Kotlin 2.x | 멀티플랫폼 호환 Kotlin 코루틴 기반 코드를 포함합니다. |
-
-## 핵심 라이브러리
-
-| library | Version/Role |
-|-----------|----------|
-| `software.amazon.awssdk:s3` | AWS SDK v2 — S3 Low-Level API |
-| `io.awspring.cloud:spring-cloud-aws-starter-s3` | Spring Cloud AWS — `S3Template` 고수준 추상화 |
-| `io.bluetape4k:bluetape4k-testcontainers` | `LocalStackServer` — Testcontainers 기반 LocalStack 래퍼 |
-| `io.bluetape4k:bluetape4k-aws` | `staticCredentialsProviderOf`, `createBucket` 등 bluetape4k AWS 확장 함수 |
-
-## 빌드 및 테스트
-
-```bash
-# AWS
-./gradlew :aws:s3-spring-cloud:build
-
-# AWS
-./gradlew :aws:s3-spring-cloud:test
-```
+| item | requirement |
+| --- | --- |
+| JDK | Java 21 이상. |
+| Docker | 에뮬레이터 기반 테스트와 S3 샘플 실행에 필요합니다. |
+| AWS account | 로컬 워크샵 경로에는 필요하지 않습니다. |

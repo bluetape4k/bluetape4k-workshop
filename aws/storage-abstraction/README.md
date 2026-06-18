@@ -4,7 +4,7 @@
 
 ## Example Scenario
 
-This example exercises **Storage Abstraction Workshop** as a runnable AWS integration workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+This example puts a small `StorageService` boundary in front of three backends: local files, S3 object storage, and S3 pre-signed URLs. Switch the backend with Spring profiles while keeping application code on the same interface.
 
 ## Sequence Diagram
 

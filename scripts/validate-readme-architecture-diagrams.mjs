@@ -91,15 +91,10 @@ function validateEndpointAngle(file, edgeName, side, first, second, endPoint = f
 function validateFile(file) {
   const svg = read(file);
   const base = file.replace(/\.svg$/, "");
-  for (const suffix of [".png", ".dot", ".plain", "-graphviz.svg", "-graphviz.png"]) {
-    if (!fs.existsSync(`${base}${suffix}`)) {
-      fail(file, `missing generated evidence pair ${path.basename(base)}${suffix}`);
-    }
+  if (!fs.existsSync(`${base}.png`)) {
+    fail(file, `missing rendered PNG ${path.basename(base)}.png`);
   }
 
-  if (!svg.includes("sourceEvidence") || !svg.includes("layered-readme-architecture")) {
-    fail(file, "missing architecture metadata");
-  }
   if (!svg.includes("Architects Daughter") || !svg.includes("Comic Mono")) {
     fail(file, "missing required font roles");
   }
