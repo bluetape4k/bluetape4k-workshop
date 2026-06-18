@@ -31,6 +31,13 @@ Use a sequence diagram for `Future.get()`, `transaction(db)`, row locking,
 rollback, and exception unwrap behavior. Use a separate ERD because this module
 uses plain Exposed `Table` definitions without the MVC JDBC audit columns.
 
+For `exposed/webflux-r2dbc`, keep transaction ownership explicit in the service
+layer. The architecture diagram should separate suspend WebFlux controllers,
+service-owned `suspendTransaction`, thin Flow repositories, R2DBC pool/database
+configuration, JDBC-only schema initialization, and PostgreSQL tables. The
+sequence diagram should show Flow/repository calls inside the coroutine R2DBC
+transaction, not a Reactor-style or blocking-thread story.
+
 ## Verification
 
 - Source checked for `@Transactional`, `virtualFuture { transaction(db) }`,
@@ -52,6 +59,10 @@ uses plain Exposed `Table` definitions without the MVC JDBC audit columns.
   links were switched to `docs/images/readme-diagrams/*readme-*`, and
   architecture, sequence, and ERD PNGs were rendered with CairoSVG and visually
   inspected as a contact sheet.
+- `exposed/webflux-r2dbc` Graphviz artifacts were removed, README image links
+  were switched to `docs/images/readme-diagrams/*readme-*`, and architecture,
+  sequence, and ERD PNGs were rendered with CairoSVG and visually inspected as a
+  contact sheet.
 
 ## Future guidance
 

@@ -2,76 +2,54 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+`exposed/webflux-r2dbc`는 Kotlin coroutine과 Exposed R2DBC를 사용하는 Spring WebFlux 예제입니다.
 
-이 예제는 **exposed/webflux-r2dbc**를 실행 가능한 Exposed 데이터 접근 워크숍 조각으로 다룹니다. 개발자가 먼저 확인할 흐름인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄여 주는 라이브러리와 프레임워크 API 관찰에 초점을 맞춥니다.
-
-## 시퀀스 다이어그램
-
-WebFlux + Coroutines + Exposed R2DBC로 완전한 리액티브/코루틴 데이터 접근을 구성합니다.
+이 모듈은 transaction 소유권을 service layer에 둡니다. Repository는 `Flow<T>` read와 `suspend` write를 제공하고, service가 `suspendTransaction(db = r2dbcDatabase)`로 호출을 감쌉니다. JDBC 경로는 Hikari를 통한 startup schema initialization에만 사용됩니다.
 
 ## 아키텍처
 
-![exposed/webflux-r2dbc Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/exposed-webflux-r2dbc-architecture-01.png)
+![exposed/webflux-r2dbc architecture](../../docs/images/readme-diagrams/exposed-webflux-r2dbc-readme-architecture-01.png)
 
-## 사용한 bluetape4k 기능
+| 영역 | 구현 | 독자가 확인할 계약 |
+|---|---|---|
+| Web API | `AuthorController`, `BookController`, `ProductController`, `OrderController`가 suspend WebFlux endpoint를 제공합니다. | Request handling은 coroutine-first로 유지됩니다. |
+| R2DBC runtime | `ExposedR2dbcConfig`가 `ConnectionFactoryOptions`, `ConnectionPool`, `R2dbcDatabase`를 만듭니다. | Exposed R2DBC 작업은 pool-backed database와 `Dispatchers.IO`에서 실행됩니다. |
+| Service transaction boundary | `AuthorService`, `BookService`, `OrderService`가 `suspendTransaction(db = db)`를 호출합니다. | 같은 connection에서 write하기 전에 Flow read를 transaction 안에서 collect합니다. |
+| Repository primitives | Repository는 select에 `Flow<DTO>`, insert/update/delete에 suspend method를 제공합니다. | Repository는 얇게 유지되고 transaction lifetime을 결정하지 않습니다. |
+| Schema initialization | `DatabaseInitializer`가 R2DBC URL을 JDBC URL로 바꾸고 startup 시 Hikari를 한 번 사용합니다. | Blocking JDBC는 schema creation에만 쓰이고 request processing에는 쓰이지 않습니다. |
 
-| 기능 | 아티팩트 | 코드 위치 | 이점 |
-|---------|----------|---------------|---------|
-| `KLoggingChannel` | `bluetape4k-logging` | 모든 companion object | 코루틴을 인식하는 구조적 로깅(MDC 전파) |
-| `bluetape4k-coroutines` | `bluetape4k-coroutines` | 서비스, 동시성 테스트 | 코루틴 스코프 헬퍼와 Flow 유틸리티 |
-| `Fakers.faker` | `bluetape4k-junit5` | 테스트 베이스 클래스 | 결정적인 가짜 데이터 생성 |
-| `shouldBeEqualTo` matchers | `bluetape4k-assertions` | 모든 테스트 클래스 | 읽기 쉬운 Kotlin 관용 assertion |
-| `PostgreSQLServer.Launcher.postgres` | `bluetape4k-testcontainers` | `AbstractWebfluxR2dbcTest` | 싱글턴 Testcontainers PostgreSQL. 한 번 시작해 모든 테스트가 공유합니다. |
+## 주문 처리 흐름
 
-## bluetape4k 적용 전 / 후
+![exposed/webflux-r2dbc order placement sequence](../../docs/images/readme-diagrams/exposed-webflux-r2dbc-readme-sequence-01.png)
 
-### Exposed를 사용한 코루틴 안전 R2DBC 트랜잭션
+`OrderService.placeOrder()`는 하나의 coroutine R2DBC transaction을 엽니다. 그 안에서 order header를 insert하고, 요청 라인을 `productId` 기준으로 정렬한 뒤 각 product row를 `FOR UPDATE`로 잠그고 order line을 쓰며 stock을 감소시킵니다.
 
-```kotlin
-// Before — Reactor chain: verbose, no structured concurrency
-fun findAll(): Flux<Author> =
-    Mono.fromCallable { db.transaction { AuthorTable.selectAll().toList() } }
-        .flatMapMany { Flux.fromIterable(it) }
-        .subscribeOn(Schedulers.boundedElastic())
+재고가 부족하면 같은 `suspendTransaction` scope 안에서 `InsufficientStockException`을 던지고, WebFlux는 `GlobalExceptionHandler`를 통해 conflict 응답을 반환합니다.
 
-// After — bluetape4k suspendTransaction: idiomatic coroutine, Flow-aware
-fun findAll(): Flow<Author> = flow {
-    suspendTransaction(db = db) {
-        AuthorTable.selectAll()
-            .map { it.toAuthor() }
-            .forEach { emit(it) }
-    }
-}
-```
+## 스키마
 
-### Testcontainers 싱글턴 패턴
+![exposed/webflux-r2dbc schema ERD](../../docs/images/readme-diagrams/exposed-webflux-r2dbc-readme-erd-01.png)
 
-```kotlin
-// Before — new container per test class → slow, resource-heavy
-@Testcontainers
-abstract class AbstractTest {
-    @Container
-    val postgres = PostgreSQLContainer("postgres:15")
-}
+| 테이블 | 역할 |
+|---|---|
+| `authors`, `books` | Author/book CRUD는 plain Exposed `Table` 정의와 service-owned R2DBC transaction을 사용합니다. |
+| `products` | Product stock은 주문 처리 중 lock 후 감소됩니다. |
+| `orders`, `order_lines` | 주문 처리는 order header와 line row를 같은 R2DBC transaction에서 씁니다. |
 
-// After — bluetape4k singleton launcher: one container for the entire test suite
-abstract class AbstractWebfluxR2dbcTest {
-    companion object {
-        val postgres = PostgreSQLServer.Launcher.postgres   // shared singleton
-    }
-}
-```
+## 주요 코드 경로
 
-## 핵심 패턴
-
-- **리포지토리 계층**: `fun findAll(): Flow<T>`, `suspend fun findById(): T?` — 리포지토리 레벨에는 TX를 두지 않습니다.
-- **서비스 계층**: `suspendTransaction(db = db) { repo.findAll().toList() }` — Flow는 TX 안에서 소비합니다.
-- **스키마 초기화**: 시작 시 HikariDataSource와 `try/finally { ds.close() }`를 사용하는 일회성 JDBC 초기화입니다.
-- **동시성 테스트**: `runBlocking { coroutineScope { List(N) { async(Dispatchers.IO) { ... } }.awaitAll() } }`.
-- **열린 커서 수정**: 같은 커넥션에서 삭제를 실행하면서 Flow를 스트리밍하지 않도록, 변경 전에 `.toList()`를 호출합니다.
+| 파일 | 확인할 내용 |
+|---|---|
+| `config/ExposedR2dbcConfig.kt` | Pool-backed `R2dbcDatabase`와 coroutine dispatcher configuration. |
+| `config/DatabaseInitializer.kt` | Hikari를 통한 one-shot JDBC schema creation. |
+| `author/service/*Service.kt` | `suspendTransaction` ownership과 Flow collection rule. |
+| `order/service/OrderService.kt` | Product lock ordering, stock conflict, order write transaction. |
+| `*/repository/*Repository.kt` | 얇은 Flow/suspend query primitive. |
+| `*/schema/*Table.kt` | ERD에 표시한 plain Exposed table definitions. |
 
 ## 실행
+
+애플리케이션은 `r2dbc:postgresql://localhost:5432/exposedwebflux`의 PostgreSQL과 `postgres/postgres` 계정을 기대합니다.
 
 ```bash
 ./gradlew :exposed-webflux-r2dbc:bootRun
@@ -84,8 +62,8 @@ abstract class AbstractWebfluxR2dbcTest {
 ./gradlew :exposed-webflux-r2dbc:test
 ```
 
-| 테스트 클래스 | 커버리지 |
-|-----------|---------|
-| `AuthorControllerTest` | Author + Book CRUD |
-| `OrderControllerTest` | Order place, cancel, 404/409 cases |
-| `ConcurrentPlaceOrderTest` | N=10 coroutines, stock=1 → 1 success + 9 conflicts (409) |
+| 테스트 클래스 | 범위 |
+|---|---|
+| `AuthorControllerTest` | Author, book CRUD endpoint. |
+| `OrderControllerTest` | Order placement, cancellation, 404, stock-conflict case. |
+| `ConcurrentPlaceOrderTest` | 마지막 stock item을 여러 coroutine request가 동시에 소비하려 할 때 하나만 성공하는지 확인합니다. |
