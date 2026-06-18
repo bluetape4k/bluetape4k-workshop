@@ -1,117 +1,79 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="950" viewBox="0 0 1320 950" role="img" aria-label="Spring Webflux with Bucket4j and Redis architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;ratelimit/bucket4j-redis/src/main/kotlin/io/bluetape4k/workshop/bucket4j/Bucket4jRedisApplication.kt&quot;,&quot;ratelimit/bucket4j-redis/src/main/kotlin/io/bluetape4k/workshop/bucket4j/config/LettuceConfiguration.kt&quot;,&quot;ratelimit/bucket4j-redis/src/main/kotlin/io/bluetape4k/workshop/bucket4j/controller/CoroutineController.kt&quot;,&quot;ratelimit/bucket4j-redis/src/main/kotlin/io/bluetape4k/workshop/bucket4j/controller/DebugMetricHandler.kt&quot;,&quot;ratelimit/bucket4j-redis/src/main/kotlin/io/bluetape4k/workshop/bucket4j/controller/ReactiveController.kt&quot;,&quot;ratelimit/bucket4j-redis/src/test/kotlin/io/bluetape4k/workshop/bucket4j/AbstractRateLimitTest.kt&quot;,&quot;ratelimit/bucket4j-redis/src/test/kotlin/io/bluetape4k/workshop/bucket4j/controller/CoroutineRateLimitTest.kt&quot;,&quot;ratelimit/bucket4j-redis/src/test/kotlin/io/bluetape4k/workshop/bucket4j/controller/ReactiveRateLimitTest.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="700" viewBox="0 0 1600 700" role="img" aria-label="Spring WebFlux Bucket4j Redis architecture">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
+    <marker id="arrowRose" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#E11D48"/></marker>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:29px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.line{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}.soft{stroke-dasharray:8 8}
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="950"/>
-  <rect class="frame" x="16" y="16" width="1288" height="918" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Spring Webflux with Bucket4j and Redis</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">rate-limit policy, token buckets, and backing stores</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="366.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="326.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="281.0">Request Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="311.0">web filters,</tspan><tspan class="layer-detail" x="151.0" y="327.0">controllers, test</tspan><tspan class="layer-detail" x="151.0" y="343.0">clients</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="498.0" width="1228.0" height="242.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="518.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="591.5">Bucket Storage</tspan><tspan class="layer-title" x="151.0" y="614.5">Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="641.0">Bucket4j, Redis,</tspan><tspan class="layer-detail" x="151.0" y="657.0">Caffeine, helpers</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="758.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="778.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="808.0">Runtime Store</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="846.0">Redis, cache, local</tspan><tspan class="layer-detail" x="151.0" y="862.0">JVM</tspan></text>
-    </g>
-    <g class="edge" data-edge="api2-&gt;infra0" data-label="uses">
-      <path d="M 424.0 460.0 L 424.0 489.0 L 424.0 518.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 424.0 720.0 L 424.0 749.0 L 592.0 749.0 L 592.0 778.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Bucket4j Redis | Application | application bootstrap">
-      <rect x="274.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="171.5">Bucket4j Redis</tspan><tspan class="node-title" x="424.0" y="195.5">Application</tspan><tspan class="node-detail" x="424.0" y="219.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry1" data-lines="Abstract Rate Limit Test | bucket4j">
-      <rect x="610.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="183.5">Abstract Rate Limit Test</tspan><tspan class="node-detail" x="760.0" y="207.5">bucket4j</tspan></text>
-    </g>
-    <g class="node" data-node="entry2" data-lines="Coroutine Rate Limit | Test | HTTP adapter">
-      <rect x="946.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="171.5">Coroutine Rate Limit</tspan><tspan class="node-title" x="1096.0" y="195.5">Test</tspan><tspan class="node-detail" x="1096.0" y="219.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="entry3" data-lines="Reactive Rate Limit Test | HTTP adapter">
-      <rect x="274.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="300.5">Reactive Rate Limit Test</tspan><tspan class="node-detail" x="424.0" y="324.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api0" data-lines="Coroutine Controller | HTTP adapter">
-      <rect x="610.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="300.5">Coroutine Controller</tspan><tspan class="node-detail" x="760.0" y="324.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api1" data-lines="Debug Metric Handler | HTTP adapter">
-      <rect x="946.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="300.5">Debug Metric Handler</tspan><tspan class="node-detail" x="1096.0" y="324.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api2" data-lines="Reactive Controller | HTTP adapter">
-      <rect x="274.0" y="368.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="410.5">Reactive Controller</tspan><tspan class="node-detail" x="424.0" y="434.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Lettuce Configuration | configuration">
-      <rect x="274.0" y="518.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="560.5">Lettuce Configuration</tspan><tspan class="node-detail" x="424.0" y="584.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k RateLimit APIs">
-      <rect x="610.0" y="518.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="560.5">workshop</tspan><tspan class="node-detail" x="760.0" y="584.5">bluetape4k RateLimit APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="jackson3 | bluetape4k RateLimit APIs">
-      <rect x="946.0" y="518.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="560.5">jackson3</tspan><tspan class="node-detail" x="1096.0" y="584.5">bluetape4k RateLimit APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="junit5 | bluetape4k RateLimit APIs">
-      <rect x="274.0" y="628.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="670.5">junit5</tspan><tspan class="node-detail" x="424.0" y="694.5">bluetape4k RateLimit APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="Redis | Bucket Runtime">
-      <rect x="442.0" y="778.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="592.0" y="820.5">Redis</tspan><tspan class="node-detail" x="592.0" y="844.5">Bucket Runtime</tspan></text>
-    </g>
-    <g class="node" data-node="runtime1" data-lines="Testcontainers | Bucket Runtime">
-      <rect x="778.0" y="778.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="928.0" y="820.5">Testcontainers</tspan><tspan class="node-detail" x="928.0" y="844.5">Bucket Runtime</tspan></text>
-    </g>
+  <rect class="canvas" width="1600" height="700"/>
+  <rect class="frame" x="24" y="24" width="1552" height="652" rx="24"/>
+  <text class="title" x="800" y="72" text-anchor="middle">WebFlux Bucket4j with Redis</text>
+  <text class="subtitle" x="800" y="104" text-anchor="middle">A WebFlux filter consumes shared bucket tokens through Lettuce-backed Redis before coroutine or reactive handlers run.</text>
+
+  <rect class="layer" x="72" y="146" width="300" height="448" rx="18"/>
+  <text class="layerLabel" x="100" y="184">WebFlux endpoints</text>
+  <g filter="url(#shadow)">
+    <rect x="82" y="238" width="280" height="112" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
+    <text class="cardTitle" x="222" y="280" text-anchor="middle">CoroutineController</text>
+    <text class="cardText" x="222" y="312" text-anchor="middle">/coroutines/hello</text>
+    <text class="cardText" x="222" y="338" text-anchor="middle">/coroutines/world</text>
   </g>
+  <g filter="url(#shadow)">
+    <rect x="82" y="420" width="280" height="112" rx="16" fill="#F0FDFA" stroke="#0D9488" stroke-width="1.7"/>
+    <text class="cardTitle" x="222" y="462" text-anchor="middle">ReactiveController</text>
+    <text class="cardText" x="222" y="494" text-anchor="middle">/reactive/hello</text>
+    <text class="cardText" x="222" y="520" text-anchor="middle">/reactive/world</text>
+  </g>
+
+  <rect class="layer" x="440" y="146" width="330" height="448" rx="18"/>
+  <text class="layerLabel" x="468" y="184">Bucket4j starter</text>
+  <g filter="url(#shadow)">
+    <rect x="488" y="232" width="234" height="126" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="605" y="276" text-anchor="middle">WebFlux Filter</text>
+    <text class="cardText" x="605" y="308" text-anchor="middle">filter-method: webflux</text>
+    <text class="cardText" x="605" y="334" text-anchor="middle">returns 429 when empty</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="488" y="430" width="234" height="84" rx="16" fill="#FEE2E2" stroke="#E11D48" stroke-width="1.7"/>
+    <text class="cardTitle" x="605" y="466" text-anchor="middle">JSON Limit Reply</text>
+    <text class="cardText" x="605" y="494" text-anchor="middle">custom body + headers</text>
+  </g>
+
+  <rect class="layer" x="840" y="146" width="320" height="448" rx="18"/>
+  <text class="layerLabel" x="868" y="184">Shared bucket state</text>
+  <g filter="url(#shadow)">
+    <rect x="882" y="250" width="236" height="150" rx="16" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.7"/>
+    <circle cx="935" cy="300" r="28" fill="#FEE2E2" stroke="#DC2626" stroke-width="2.4"/>
+    <text x="935" y="310" text-anchor="middle" font-family="Comic Mono" font-size="18" fill="#B91C1C">R</text>
+    <text class="cardTitle" x="1034" y="292" text-anchor="middle">Redis</text>
+    <text class="cardText" x="1034" y="326" text-anchor="middle">cache-to-use:</text>
+    <text class="cardText" x="1034" y="352" text-anchor="middle">redis-lettuce</text>
+    <text class="cardText" x="1034" y="378" text-anchor="middle">cache: buckets</text>
+  </g>
+
+  <rect class="layer" x="1228" y="146" width="300" height="448" rx="18"/>
+  <text class="layerLabel" x="1256" y="184">Verification profile</text>
+  <g filter="url(#shadow)">
+    <rect x="1268" y="240" width="220" height="112" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
+    <text class="cardTitle" x="1378" y="282" text-anchor="middle">Hello quota</text>
+    <text class="cardText" x="1378" y="314" text-anchor="middle">5 requests / 10s</text>
+    <text class="cardText" x="1378" y="340" text-anchor="middle">coroutine + reactive</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1268" y="420" width="220" height="112" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="1378" y="462" text-anchor="middle">World quota</text>
+    <text class="cardText" x="1378" y="494" text-anchor="middle">10 requests / 10s</text>
+    <text class="cardText" x="1378" y="520" text-anchor="middle">same Redis store</text>
+  </g>
+
+  <path class="line" d="M 362 294 L 488 294" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 362 476 L 410 476 L 410 322 L 488 322" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 722 294 L 882 312" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 1118 326 L 1268 296" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 1118 354 L 1202 354 L 1202 476 L 1268 476" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line soft" d="M 605 358 L 605 430" stroke="#E11D48" marker-end="url(#arrowRose)"/>
 </svg>
