@@ -1,97 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="744" viewBox="0 0 1320 744" role="img" aria-label="singleton architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/singleton/EnumIvoryTower.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/singleton/InitializingOnDemandHolderIdiom.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/singleton/IvoryTower.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/singleton/IvoryTowerObject.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/singleton/KotlinSingleton.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/singleton/ThreadSafeDoubleCheckLocking.kt&quot;,&quot;kotlin/design-patterns/src/main/kotlin/io/bluetape4k/workshop/kotlin/designPatterns/singleton/ThreadSafeLazyLoadedIvoryTower.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="640" viewBox="0 0 1320 640" role="img" aria-label="Singleton pattern diagram">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .canvas{fill:#F8FAFC}.frame{fill:#fff;stroke:#D6E0E8;stroke-width:1.4}.layerK{fill:#EFF6FF;stroke:#93C5FD;stroke-width:1.5}.layerJ{fill:#ECFDF5;stroke:#86EFAC;stroke-width:1.5}.layerL{fill:#FFF7ED;stroke:#FDBA74;stroke-width:1.5}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.label{font-family:"Architects Daughter";font-size:22px;fill:#172033}.cardTitle{font-family:"Architects Daughter";font-size:24px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="744"/>
-  <rect class="frame" x="16" y="16" width="1288" height="712" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">singleton</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Kotlin example runtime and module dependencies</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="132.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="164.0">Example Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="202.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="218.0">adapters</tspan></text>
-    </g>
-    <g class="layer" data-layer="service">
-      <rect x="46.0" y="264.0" width="1228.0" height="270.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="284.0" width="174" height="230.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="383.0">Application Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="421.0">services, domain</tspan><tspan class="layer-detail" x="151.0" y="437.0">rules, use cases</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="552.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="572.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="602.0">Runtime Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="632.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="648.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="664.0">JVM</tspan></text>
-    </g>
-    <g class="edge" data-edge="entry0-&gt;service0" data-label="starts">
-      <path d="M 760.0 226.0 L 760.0 258.5 L 424.0 258.5 L 424.0 291.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
-    </g>
-    <g class="edge" data-edge="service5-&gt;runtime0" data-label="runs on">
-      <path d="M 1096.0 514.0 L 1096.0 543.0 L 760.0 543.0 L 760.0 572.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="singleton | Example Entrypoints">
-      <rect x="610.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="176.5">singleton</tspan><tspan class="node-detail" x="760.0" y="200.5">Example Entrypoints</tspan></text>
-    </g>
-    <g class="node" data-node="service0" data-lines="Enum Ivory Tower | component">
-      <rect x="274.0" y="291.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="333.5">Enum Ivory Tower</tspan><tspan class="node-detail" x="424.0" y="357.5">component</tspan></text>
-    </g>
-    <g class="node" data-node="service1" data-lines="Initializing On Demand | Holder Idiom | component">
-      <rect x="610.0" y="284.0" width="300.0" height="106.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="321.5">Initializing On Demand</tspan><tspan class="node-title" x="760.0" y="345.5">Holder Idiom</tspan><tspan class="node-detail" x="760.0" y="369.5">component</tspan></text>
-    </g>
-    <g class="node" data-node="service2" data-lines="Ivory Tower | component">
-      <rect x="946.0" y="291.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="333.5">Ivory Tower</tspan><tspan class="node-detail" x="1096.0" y="357.5">component</tspan></text>
-    </g>
-    <g class="node" data-node="service3" data-lines="Ivory Tower Object | component">
-      <rect x="274.0" y="415.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="457.5">Ivory Tower Object</tspan><tspan class="node-detail" x="424.0" y="481.5">component</tspan></text>
-    </g>
-    <g class="node" data-node="service4" data-lines="Kotlin Singleton | component">
-      <rect x="610.0" y="415.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="457.5">Kotlin Singleton</tspan><tspan class="node-detail" x="760.0" y="481.5">component</tspan></text>
-    </g>
-    <g class="node" data-node="service5" data-lines="Thread Safe Double Check | Locking | component">
-      <rect x="946.0" y="408.0" width="300.0" height="106.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="445.5">Thread Safe Double Check</tspan><tspan class="node-title" x="1096.0" y="469.5">Locking</tspan><tspan class="node-detail" x="1096.0" y="493.5">component</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="In-memory / JVM | Runtime Dependencies">
-      <rect x="610.0" y="572.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="614.5">In-memory / JVM</tspan><tspan class="node-detail" x="760.0" y="638.5">Runtime Dependencies</tspan></text>
-    </g>
-  </g>
+  <rect class="canvas" width="1320" height="640"/>
+  <rect class="frame" x="24" y="24" width="1272" height="592" rx="24"/>
+  <text class="title" x="660" y="66" text-anchor="middle">Singleton implementations</text>
+  <text class="subtitle" x="660" y="94" text-anchor="middle">The package compares Kotlin-native, enum, eager, lazy, holder, and lock-based singleton forms.</text>
+
+  <rect class="layerK" x="70" y="136" width="370" height="380" rx="18"/>
+  <text class="label" x="98" y="170">Kotlin-native</text>
+  <g filter="url(#shadow)"><rect x="112" y="220" width="286" height="76" rx="14" fill="#FFFFFF" stroke="#3B82F6" stroke-width="1.7"/><text class="cardTitle" x="255" y="252" text-anchor="middle">IvoryTowerObject</text><text class="cardText" x="255" y="278" text-anchor="middle">object instance</text></g>
+  <g filter="url(#shadow)"><rect x="112" y="344" width="286" height="76" rx="14" fill="#FFFFFF" stroke="#3B82F6" stroke-width="1.7"/><text class="cardTitle" x="255" y="376" text-anchor="middle">KotlinSingleton</text><text class="cardText" x="255" y="402" text-anchor="middle">companion lazy INSTANCE</text></g>
+
+  <rect class="layerJ" x="476" y="136" width="370" height="380" rx="18"/>
+  <text class="label" x="504" y="170">Java-style access</text>
+  <g filter="url(#shadow)"><rect x="518" y="220" width="286" height="76" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="661" y="252" text-anchor="middle">EnumIvoryTower</text><text class="cardText" x="661" y="278" text-anchor="middle">single enum INSTANCE</text></g>
+  <g filter="url(#shadow)"><rect x="518" y="344" width="286" height="76" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="661" y="376" text-anchor="middle">IvoryTower</text><text class="cardText" x="661" y="402" text-anchor="middle">private constructor + getInstance</text></g>
+
+  <rect class="layerL" x="882" y="136" width="370" height="380" rx="18"/>
+  <text class="label" x="910" y="170">Lazy and lock guarded</text>
+  <g filter="url(#shadow)"><rect x="924" y="196" width="286" height="76" rx="14" fill="#FFFFFF" stroke="#D97706" stroke-width="1.7"/><text class="cardTitle" x="1067" y="228" text-anchor="middle">Holder idiom</text><text class="cardText" x="1067" y="254" text-anchor="middle">nested holder loads on demand</text></g>
+  <g filter="url(#shadow)"><rect x="924" y="296" width="286" height="76" rx="14" fill="#FFFFFF" stroke="#D97706" stroke-width="1.7"/><text class="cardTitle" x="1067" y="328" text-anchor="middle">Lazy loaded tower</text><text class="cardText" x="1067" y="354" text-anchor="middle">ReentrantLock around instance</text></g>
+  <g filter="url(#shadow)"><rect x="924" y="396" width="286" height="76" rx="14" fill="#FFFFFF" stroke="#D97706" stroke-width="1.7"/><text class="cardTitle" x="1067" y="428" text-anchor="middle">Double-check lock</text><text class="cardText" x="1067" y="454" text-anchor="middle">@Volatile plus ReentrantLock</text></g>
 </svg>
