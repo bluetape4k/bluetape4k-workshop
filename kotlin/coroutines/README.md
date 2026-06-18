@@ -2,134 +2,93 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+This module is a test-driven catalog for Kotlin coroutine behavior. It is not a single runnable
+service; each package demonstrates one coroutine topic with JUnit tests, coroutine test utilities,
+logging helpers, and flow assertions.
 
-This example exercises **Coroutines Examples** as a runnable Kotlin language and coroutine patterns workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+## Learning map
 
-## Architecture Diagram
+![Coroutines examples learning map](../../docs/images/readme-diagrams/kotlin-coroutines-readme-architecture-01.png)
 
-![Coroutines Examples Graphviz architecture diagram](../../docs/images/readme-diagrams/kotlin-coroutines-readme-architecture-01.png)
+Start with the `guide/` package when learning the basic coroutine vocabulary, then move into
+builders, dispatchers, cancellation, flow/channel examples, context propagation, and Spring scope
+lifecycle examples.
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.kotlin` as the source of truth when comparing this README with the code.
+## Flow test and debug path
 
-## Sequence Diagram
+![Flow test and debug path](../../docs/images/readme-diagrams/kotlin-coroutines-readme-flow-test-01.png)
 
-A collection of examples to learn the core concepts of Kotlin Coroutines.
+Flow examples build cold or channel-backed streams, attach `Flow<T>.log()` to observe emit/complete
+events, and then verify the result through `assertResult`, Turbine, cancellation checks, or failure
+assertions.
 
-## Coroutine structure overview
+## Example categories
 
-## Example Category
-
-### Basics (`guide/`)
-| file | detail |
-|---|---|
-| `CoroutineBuilderExamples` | How to use `launch`, `async`, `runBlocking` builders |
-| `CoroutineContextExamples` | Understand `CoroutineContext`, `Dispatcher` |
-| `SuspendExamples` | pattern for writing suspend functions |
-| `FlowExamples` | Cold Stream `Flow` Basic Operator |
-| `SharedFlowExamples` | Hot Stream `SharedFlow` / `StateFlow` |
-| `ChannelExamples` | Producer-Consumer pattern using `Channel` |
-| `ChannelAsFlowExamples` | Pattern to convert Channel to Flow |
-| `MDCContextExamples` | Log MDC and Coroutine Context integration |
-
-### Cancellation processing (`cancellation/`)
-- `CancellationExamples` — Propagate coroutine cancellation, handle `CancellationException`, utilize `NonCancellable`
-
-### Custom CoroutineContext (`context/`)
-- `CounterCoroutineContext` — Custom Context Element with state
-- `UuidProviderCoroutineContext` — UUID provided for each request Context
-
-### Builder Advanced (`builders/`)
-- `CoroutineBuilderExamples` — `supervisorScope`, `coroutineScope`, error propagation difference
-- `CoroutineContextBuilderExamples` — `withContext`, Context switching pattern
-
-### Scope Management (`scope/`)
-- `CoroutineScopeExamples` — Structured Concurrency
-- `SpringCoroutineScopeTest` — Spring Bean life cycle and CoroutineScope integration
-
-### Flow Test (`tests/`)
-- `TurbineExamples` — [Turbine](Flow test using https://github.com/cashapp/turbine) library
+| package | examples | reader question |
+|---|---|---|
+| `guide/` | builders, context, suspend functions, flow, shared flow, channels, MDC | What are the basic coroutine primitives? |
+| `builders/` | `coroutineScope`, `supervisorScope`, `withContext` | How do builders affect child jobs and error propagation? |
+| `dispatchers/` | Default, IO, custom pools, Main dispatcher override | Which thread or dispatcher runs this coroutine? |
+| `cancellation/` and `exceptions/` | cancellation propagation, `NonCancellable`, error handling | How should cancellation and failures be modeled? |
+| `flow/` and `channels/` | `flowOf`, `asFlow`, `callbackFlow`, `channelFlow`, actors | How do cold streams, hot streams, and channels behave? |
+| `context/` | `CounterCoroutineContext`, `UuidProviderCoroutineContext` | How do custom context elements carry request-scoped state? |
+| `scope/spring/` | `SpringCoroutineScope`, bean destroy hook | How can a Spring bean own and cancel a coroutine `Job`? |
+| `tests/` | Turbine examples | How do tests assert asynchronous flow behavior? |
 
 ## bluetape4k features used
 
 | function | artifact | code location | advantage |
 |---|---|---|---|
-| `KLoggingChannel` | `bluetape4k-logging` | All companion objects | Structured logging including coroutine context; Linked with SLF4J MDC |
-| `suspendLogging { }` | `bluetape4k-logging` | `DispatcherExamples` | Building log messages safely in suspend context |
-| `coroutines.support.log` | `bluetape4k-coroutines` | `DispatcherExamples` | Add name tag to job and automatically print completion log |
-| `Flow<T>.log()` | `bluetape4k-coroutines` | `FlowBuilderExamples`, `FlowLifecycleExamples` | Logging emit values ​​in the middle of the flow pipeline |
-| `coroutines.tests.assertResult` | `bluetape4k-coroutines` | `FlowBuilderExamples`, `CallbackFlowExamples` | Test utility that verifies flow results without turbine |
-| `PropertyCoroutineContext` | `bluetape4k-coroutines` | `context/` package | Custom CoroutineContext implementation with type-safe key-value store |
-| `runSuspendTest { }` | `bluetape4k-junit5` | test full | Extension function to run suspend tests in JUnit 5 |
-| `Fakers` | `bluetape4k-junit5` | test fixture | JavaFaker-based test data generation utility |
-| `OutputCapture` / `OutputCapturer` | `bluetape4k-junit5` | Output Verification Test | stdout/stderr capture JUnit 5 extension |
-| `bluetape4k-assertions` | `bluetape4k-core` | test full | Kluent-style highly readable assertions (`shouldBeEqualTo`, `shouldNotBeNull`, etc.) |
-| `Uuid` (idgenerators) | `bluetape4k-idgenerators` | `UuidProviderCoroutineContext` | Various ID generation strategies, including UUID v7 |
-| `withLoggingContext { }` | `bluetape4k-logging` | MDC integration example | Kotlin DSL-based MDC context setting |
+| `KLoggingChannel` | `bluetape4k-logging` | companion objects across examples | Lazy coroutine-aware logging |
+| `suspendLogging { }` | `bluetape4k-logging` | `dispatchers/DispatcherExamples` | Builds log messages from suspend contexts |
+| `Job.log("name")` | `bluetape4k-coroutines` | dispatcher examples | Adds completion logging to launched jobs |
+| `Flow<T>.log()` | `bluetape4k-coroutines` | `flow/*`, `tests/TurbineExamples` | Logs flow emit, completion, and error events |
+| `assertResult(...)` | `bluetape4k-coroutines` | `flow/FlowBuilderExamples` | Verifies flow values without a full Turbine block |
+| `runSuspendTest { }` / `runTest` | `bluetape4k-junit5`, kotlinx-coroutines-test | coroutine tests | Runs suspend examples under JUnit 5 |
+| `OutputCapture` / `OutputCapturer` | `bluetape4k-junit5` | `scope/spring/SpringCoroutineScopeTest` | Verifies destroy-time output |
+| `Uuid.V7` | `bluetape4k-idgenerators` | `context/UuidProviderCoroutineContext` | Provides request-style identifiers through coroutine context |
 
-## bluetape4k Before / After
+## Representative patterns
 
-### `KLoggingChannel` vs Standard Logger
+### Dispatcher logging
 
 ```kotlin
-// Before — Direct use of SLF4J LoggerFactory
-class MyClass {
-    companion object {
-        private val log = LoggerFactory.getLogger(MyClass::class.java)
-    }
-}
-
-// After — bluetape4k KLoggingChannel (with coroutine context)
-class MyClass {
-    companion object: KLoggingChannel()
-// Automatic creation of log property + Included in coroutine context information log
-}
-```
-
-### `suspendLogging { }` vs general log call
-
-```kotlin
-// Before — General log in coroutine (only includes thread information)
 launch(Dispatchers.IO) {
-    log.debug("Running on thread ${Thread.currentThread().name}")
-}
-
-// After — bluetape4k suspendLogging (includes coroutine name + thread information)
-launch(Dispatchers.IO) {
-    suspendLogging { "Running on thread ${Thread.currentThread().name}" }
-// Example output: [DefaultDispatcher-worker-1 @coroutine#3] Running on thread ...
-}
+    val threadName = Thread.currentThread().name
+    suspendLogging { "Running on thread $threadName" }
+}.log("IO")
 ```
 
-### `Flow<T>.log()` Debugging operators
+### Flow construction and compact assertion
 
 ```kotlin
-// Before — onEach + println to check intermediate values
-flow { emit(1); emit(2) }
-    .onEach { println("value: $it") }
-    .collect()
-
-// After — bluetape4k .log() extension function
-flow { emit(1); emit(2) }
-.log("my-flow") // Automatically log emit/complete/error events
-    .collect()
-```
-
-### `coroutines.tests.assertResult` vs Turbine
-
-```kotlin
-// Before — Requires Turbine library dependency
-someFlow.test {
-    awaitItem() shouldBeEqualTo 1
-    awaitItem() shouldBeEqualTo 2
-    awaitComplete()
+val function: suspend () -> String = suspend {
+    delay(1000)
+    "UserName"
 }
 
-// After — bluetape4k assertResult (no additional dependencies)
-someFlow.assertResult(1, 2)
+function.asFlow()
+    .log("function")
+    .assertResult("UserName")
 ```
 
-## reference
+### Spring-owned coroutine scope
 
-- [Kotlin Coroutines Official Guide](https://kotlinlang.org/docs/coroutines-guide.html)
-- [Kotlin Flow official documentation](https://kotlinlang.org/docs/flow.html)
+```kotlin
+class MyBean: SpringCoroutineScope by SpringCoroutineScope() {
+    suspend fun run(input: Int) =
+        withContext(coroutineContext) {
+            delay(1000)
+            input
+        }
+}
+```
+
+The `SpringCoroutineScope` implementation exposes the `Job` from its coroutine context and cancels
+it from `destroy()`, which fits Spring bean lifecycle cleanup.
+
+## References
+
+- [Kotlin Coroutines official guide](https://kotlinlang.org/docs/coroutines-guide.html)
+- [Kotlin Flow documentation](https://kotlinlang.org/docs/flow.html)
+- [Turbine](https://github.com/cashapp/turbine)
