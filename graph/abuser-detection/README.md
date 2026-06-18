@@ -21,7 +21,7 @@ Both a blocking service (`AbuserDetectionService`) and a coroutine-friendly serv
 (`AbuserDetectionSuspendService`) are provided. Tests run against TinkerGraph (in-process,
 no Docker) by default, with optional Neo4j and Memgraph integration tests.
 
-## Example Scenario
+## Seed Identity Graph
 
 ![Fraud Detection Example Graph](../../docs/images/readme-diagrams/graph-abuser-detection-readme-example-graph-01.png)
 
