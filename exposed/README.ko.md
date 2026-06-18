@@ -2,7 +2,7 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+## 모듈 가이드
 
 **Exposed Examples** 그룹은 이 워크샵에서 사용하는 데이터 접근 방식을
 비교합니다. Spring MVC + Exposed JDBC, 같은 JDBC 모델을 Java virtual

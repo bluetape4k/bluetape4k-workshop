@@ -2,7 +2,7 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+## Module Guide
 
 The **Exposed Examples** group compares the data-access choices used in this
 workshop: plain Spring MVC with Exposed JDBC, the same JDBC model on Java
