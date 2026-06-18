@@ -1,121 +1,96 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="950" viewBox="0 0 1320 950" role="img" aria-label="Gateway Customers Service architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;gateway/customers/src/main/kotlin/io/bluetape4k/workshop/gateway/customer/CustomerApplication.kt&quot;,&quot;gateway/customers/src/main/kotlin/io/bluetape4k/workshop/gateway/customer/config/CustomerConfig.kt&quot;,&quot;gateway/customers/src/main/kotlin/io/bluetape4k/workshop/gateway/customer/config/managements/ObservationConfig.kt&quot;,&quot;gateway/customers/src/main/kotlin/io/bluetape4k/workshop/gateway/customer/config/managements/SwaggerConfig.kt&quot;,&quot;gateway/customers/src/main/kotlin/io/bluetape4k/workshop/gateway/customer/controller/CustomerContoller.kt&quot;,&quot;gateway/customers/src/main/kotlin/io/bluetape4k/workshop/gateway/customer/filters/RedirectWebFilter.kt&quot;,&quot;gateway/customers/src/main/kotlin/io/bluetape4k/workshop/gateway/customer/model/Customer.kt&quot;,&quot;gateway/customers/build.gradle.kts&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="880" viewBox="0 0 1500 880" role="img" aria-label="Gateway customers service architecture">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
+    <filter id="shadow" x="-8%" y="-10%" width="116%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#5b7282" flood-opacity="0.15"/>
     </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
+    <marker id="blueArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#457b9d"/></marker>
+    <marker id="greenArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#5f8f5b"/></marker>
+    <marker id="goldArrow" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#a87332"/></marker>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .canvas { fill: #f7fafc; }
+      .frame { fill: #fffefd; stroke: #cdd8df; stroke-width: 2; }
+      .title { font-family: "Architects Daughter"; font-size: 38px; fill: #1d2b38; }
+      .subtitle { font-family: "Comic Mono"; font-size: 16px; fill: #516172; }
+      .layerTitle { font-family: "Architects Daughter"; font-size: 24px; fill: #263747; }
+      .cardTitle { font-family: "Architects Daughter"; font-size: 26px; fill: #1d2b38; }
+      .cardText { font-family: "Comic Mono"; font-size: 15px; fill: #42515f; }
+      .smallText { font-family: "Comic Mono"; font-size: 13px; fill: #566575; }
+      .layer { stroke-width: 1.6; }
+      .card { stroke-width: 2.2; filter: url(#shadow); }
+      .lineBlue { fill: none; stroke: #457b9d; stroke-width: 4.2; marker-end: url(#blueArrow); stroke-linecap: round; stroke-linejoin: round; }
+      .lineGreen { fill: none; stroke: #5f8f5b; stroke-width: 4.2; marker-end: url(#greenArrow); stroke-linecap: round; stroke-linejoin: round; }
+      .lineGold { fill: none; stroke: #a87332; stroke-width: 3.8; marker-end: url(#goldArrow); stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 9 8; }
+      .label { font-family: "Comic Mono"; font-size: 14px; font-weight: 700; }
+      .labelBox { fill: #ffffff; stroke-width: 1.4; }
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="950"/>
-  <rect class="frame" x="16" y="16" width="1288" height="918" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Gateway Customers Service</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Gateway example runtime and module dependencies</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="242.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="219.0">Example Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="257.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="273.0">adapters</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="374.0" width="1228.0" height="366.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="394.0" width="174" height="326.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="541.0">Integration Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="579.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="595.0">adapters, helpers</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="758.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="778.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="808.0">Runtime Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="838.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="854.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="870.0">JVM</tspan></text>
-    </g>
-    <g class="edge" data-edge="api4-&gt;infra0" data-label="uses">
-      <path d="M 1096.0 336.0 L 1096.0 365.0 L 424.0 365.0 L 424.0 394.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 424.0 720.0 L 424.0 749.0 L 760.0 749.0 L 760.0 778.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Customer Application | application bootstrap">
-      <rect x="274.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="176.5">Customer Application</tspan><tspan class="node-detail" x="424.0" y="200.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="api0" data-lines="Customer Config | configuration">
-      <rect x="610.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="176.5">Customer Config</tspan><tspan class="node-detail" x="760.0" y="200.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="api1" data-lines="Observation Config | configuration">
-      <rect x="946.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="176.5">Observation Config</tspan><tspan class="node-detail" x="1096.0" y="200.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="api2" data-lines="Swagger Config | configuration">
-      <rect x="274.0" y="244.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="286.5">Swagger Config</tspan><tspan class="node-detail" x="424.0" y="310.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="api3" data-lines="Customer Contoller | HTTP adapter">
-      <rect x="610.0" y="244.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="286.5">Customer Contoller</tspan><tspan class="node-detail" x="760.0" y="310.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api4" data-lines="Redirect Web Filter | filters">
-      <rect x="946.0" y="244.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="286.5">Redirect Web Filter</tspan><tspan class="node-detail" x="1096.0" y="310.5">filters</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Spring boot | autoconfigure lib | Framework Layer">
-      <rect x="274.0" y="394.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="431.5">Spring boot</tspan><tspan class="node-title" x="424.0" y="455.5">autoconfigure lib</tspan><tspan class="node-detail" x="424.0" y="479.5">Framework Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra1" data-lines="Spring boot | autoconfigure processor | Framework Layer">
-      <rect x="610.0" y="394.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="431.5">Spring boot</tspan><tspan class="node-title" x="760.0" y="455.5">autoconfigure processor</tspan><tspan class="node-detail" x="760.0" y="479.5">Framework Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra2" data-lines="Spring boot | configuration processor | Framework Layer">
-      <rect x="946.0" y="394.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="431.5">Spring boot</tspan><tspan class="node-title" x="1096.0" y="455.5">configuration processor</tspan><tspan class="node-detail" x="1096.0" y="479.5">Framework Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra3" data-lines="Spring boot devtools | Framework Layer">
-      <rect x="274.0" y="518.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="560.5">Spring boot devtools</tspan><tspan class="node-detail" x="424.0" y="584.5">Framework Layer</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k APIs">
-      <rect x="610.0" y="518.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="560.5">workshop</tspan><tspan class="node-detail" x="760.0" y="584.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="jackson3 | bluetape4k APIs">
-      <rect x="946.0" y="518.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="560.5">jackson3</tspan><tspan class="node-detail" x="1096.0" y="584.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="netty | bluetape4k APIs">
-      <rect x="274.0" y="628.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="670.5">netty</tspan><tspan class="node-detail" x="424.0" y="694.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="In-memory / JVM | Runtime Dependencies">
-      <rect x="610.0" y="778.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="820.5">In-memory / JVM</tspan><tspan class="node-detail" x="760.0" y="844.5">Runtime Dependencies</tspan></text>
-    </g>
-  </g>
+
+  <rect class="canvas" width="1500" height="880"/>
+  <rect class="frame" x="28" y="28" width="1444" height="824" rx="24"/>
+  <text class="title" x="750" y="84" text-anchor="middle">Customers Service</text>
+  <text class="subtitle" x="750" y="114" text-anchor="middle">A small WebFlux backend for the gateway workshop, running on port 8081.</text>
+
+  <rect class="layer" x="82" y="164" width="300" height="560" rx="18" fill="#eef6ff" stroke="#b5cfe8"/>
+  <text class="layerTitle" x="232" y="207" text-anchor="middle">Caller</text>
+
+  <rect class="layer" x="442" y="164" width="608" height="560" rx="18" fill="#f3fbf0" stroke="#b7d4ae"/>
+  <text class="layerTitle" x="746" y="207" text-anchor="middle">Customer Application</text>
+
+  <rect class="layer" x="1110" y="164" width="308" height="560" rx="18" fill="#fff8ea" stroke="#dec289"/>
+  <text class="layerTitle" x="1264" y="207" text-anchor="middle">Support</text>
+
+  <rect class="card" x="132" y="302" width="200" height="136" rx="14" fill="#ffffff" stroke="#8eb4d6"/>
+  <text class="cardTitle" x="232" y="354" text-anchor="middle">Gateway</text>
+  <text class="cardText" x="232" y="386" text-anchor="middle">forwards to :8081</text>
+  <text class="smallText" x="232" y="414" text-anchor="middle">/api/v1/customers</text>
+
+  <rect class="card" x="132" y="512" width="200" height="108" rx="14" fill="#ffffff" stroke="#8eb4d6"/>
+  <text class="cardTitle" x="232" y="554" text-anchor="middle">Browser</text>
+  <text class="cardText" x="232" y="586" text-anchor="middle">opens /</text>
+
+  <rect class="card" x="498" y="250" width="418" height="126" rx="14" fill="#ffffff" stroke="#91b884"/>
+  <text class="cardTitle" x="707" y="294" text-anchor="middle">Customer Controller</text>
+  <text class="cardText" x="707" y="326" text-anchor="middle">GET /api/v1/customers</text>
+  <text class="smallText" x="707" y="352" text-anchor="middle">suspend endpoint returns sample data</text>
+
+  <rect class="card" x="498" y="432" width="418" height="86" rx="14" fill="#f9fbff" stroke="#9db4c8"/>
+  <text class="cardTitle" x="707" y="469" text-anchor="middle">Customer</text>
+  <text class="smallText" x="707" y="496" text-anchor="middle">Winter, Spring</text>
+
+  <rect class="card" x="498" y="592" width="418" height="126" rx="14" fill="#fffdf6" stroke="#c39a56"/>
+  <text class="cardTitle" x="707" y="636" text-anchor="middle">RedirectWebFilter</text>
+  <text class="cardText" x="707" y="668" text-anchor="middle">/ -> /swagger-ui.html</text>
+  <text class="smallText" x="707" y="694" text-anchor="middle">default landing page</text>
+
+  <rect class="card" x="1160" y="258" width="210" height="118" rx="14" fill="#fffefa" stroke="#d2a85e"/>
+  <text class="cardTitle" x="1265" y="300" text-anchor="middle">SwaggerConfig</text>
+  <text class="smallText" x="1265" y="329" text-anchor="middle">OpenAPI metadata</text>
+  <text class="smallText" x="1265" y="352" text-anchor="middle">BuildProperties</text>
+
+  <rect class="card" x="1160" y="460" width="210" height="130" rx="14" fill="#fffefa" stroke="#d2a85e"/>
+  <text class="cardTitle" x="1265" y="502" text-anchor="middle">Observation</text>
+  <text class="smallText" x="1265" y="532" text-anchor="middle">ObservedAspect</text>
+  <text class="smallText" x="1265" y="555" text-anchor="middle">MeterFilter excludes</text>
+  <text class="smallText" x="1265" y="578" text-anchor="middle">actuator/api-docs</text>
+
+  <path class="lineBlue" d="M 332 370 H 498"/>
+  <rect class="labelBox" x="356" y="328" width="112" height="30" rx="15" stroke="#8eb4d6"/>
+  <text class="label" x="412" y="348" text-anchor="middle" fill="#457b9d">service API</text>
+
+  <path class="lineGreen" d="M 707 376 V 432"/>
+  <rect class="labelBox" x="730" y="388" width="116" height="30" rx="15" stroke="#91b884"/>
+  <text class="label" x="788" y="408" text-anchor="middle" fill="#5f8f5b">returns list</text>
+
+  <path class="lineGold" d="M 332 566 H 456 V 655 H 498"/>
+  <rect class="labelBox" x="356" y="606" width="88" height="30" rx="15" stroke="#d5a656"/>
+  <text class="label" x="400" y="626" text-anchor="middle" fill="#a87332">root</text>
+
+  <path class="lineGold" d="M 916 655 H 1070 V 317 H 1160"/>
+  <rect class="labelBox" x="944" y="536" width="116" height="30" rx="15" stroke="#d5a656"/>
+  <text class="label" x="1002" y="556" text-anchor="middle" fill="#a87332">swagger</text>
+
+  <path class="lineGold" d="M 916 313 H 1084 V 525 H 1160"/>
+  <rect class="labelBox" x="966" y="268" width="116" height="30" rx="15" stroke="#d5a656"/>
+  <text class="label" x="1024" y="288" text-anchor="middle" fill="#a87332">metrics</text>
 </svg>

@@ -2,24 +2,28 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+## 이 모듈이 보여주는 것
 
-이 예제는 **Gateway Customers Service** 모듈을 실행 가능한 게이트웨이와 하위 서비스 연동 예제로 보여줍니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 사용 방식을 중심으로 설명합니다.
-
-## 시퀀스 다이어그램
-
-Gateway 워크숍의 고객 서비스 예제입니다. 작은 WebFlux API를 제공하고, 루트 경로를 Swagger UI로 리다이렉트하며, customer 백엔드로 `8081` 포트에서 실행됩니다.
+`customers`는 gateway workshop에서 사용하는 customer backend입니다.
+Spring Boot WebFlux 애플리케이션으로 `8081`에서 실행되며,
+`GET /api/v1/customers` suspend controller를 제공합니다.
 
 ## 아키텍처
 
-![Gateway Customers Service Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/gateway-customers-readme-architecture-01.png)
+![Gateway Customers Service architecture](../../docs/images/readme-diagrams/gateway-customers-readme-architecture-01.png)
 
-## 이 모듈에서 확인할 내용
+이 서비스에는 database 의존성이 없습니다. `CustomerContoller`는 `Winter`,
+`Spring` 두 개의 샘플 `Customer` 값을 반환하므로, gateway 예제는 persistence
+대신 routing 동작에 집중할 수 있습니다.
 
-- `GET /api/v1/customers` WebFlux 컨트롤러 엔드포인트.
-- `CustomerContoller`가 반환하는 샘플 고객 데이터.
-- `RedirectWebFilter`를 통한 `/`에서 `/swagger-ui.html`로의 리다이렉트.
-- 로컬 워크숍 관찰성을 위한 Actuator 엔드포인트 노출.
+## 런타임 계약
+
+| Concern | Source-backed behavior |
+|---|---|
+| HTTP API | `GET /api/v1/customers`가 customer JSON 배열을 반환 |
+| Swagger landing page | `RedirectWebFilter`가 `/`를 `/swagger-ui.html`로 rewrite |
+| Observability | Actuator endpoint를 노출하고, Micrometer URI filter가 management/API-doc path를 제외 |
+| AOT | `application.yml`에서 `spring.aot.enabled=true` |
 
 ## 실행
 
@@ -27,23 +31,25 @@ Gateway 워크숍의 고객 서비스 예제입니다. 작은 WebFlux API를 제
 ./gradlew :customers:bootRun
 ```
 
-실행 후 다음 주소를 확인합니다.
+확인할 endpoint:
 
-- Swagger UI: `http://localhost:8081/swagger-ui.html`
-- Customer API: `http://localhost:8081/api/v1/customers`
-- Actuator endpoints: `http://localhost:8081/actuator`
+```bash
+http :8081/api/v1/customers
+http :8081/swagger-ui.html
+http :8081/actuator
+```
 
-## 사용된 Bluetape4k 기능
+## bluetape4k 사용 지점
 
-| 모듈 | 기능 | 사용 위치 |
-|------|------|---------|
-| `bluetape4k-logging` | `KLoggingChannel()` | 컨트롤러와 서비스의 코루틴 안전 구조화 로깅 |
-| `bluetape4k-support` | `uninitialized()`, `unsafeLazy` | 주입 빈의 지연 필드 초기화 |
-| `bluetape4k-junit5` | `runSuspendIO { }` | suspend 기반 통합 테스트 실행기 |
+| Library | Usage |
+|---|---|
+| `bluetape4k-logging` | application, config, filter, controller의 `KLoggingChannel()` |
+| `bluetape4k-support` | Swagger 설정의 `uninitialized()`, `unsafeLazy` |
+| `bluetape4k-coroutines` | Suspend WebFlux controller endpoint |
 
-## 소스 맵
+## 소스 기준점
 
-- `CustomerApplication.kt`는 Spring Boot 애플리케이션을 시작합니다.
-- `CustomerContoller.kt`는 customer API를 정의합니다.
-- `CustomerConfig.kt`, `SwaggerConfig.kt`, `ObservationConfig.kt`는 서비스 메타데이터, OpenAPI, 관찰성 설정을 제공합니다.
-- `application.yml`은 `spring.application.name=Customers`, AOT, `8081` 포트, management endpoint 노출을 설정합니다.
+- `src/main/kotlin/io/bluetape4k/workshop/gateway/customer/controller/CustomerContoller.kt`
+- `src/main/kotlin/io/bluetape4k/workshop/gateway/customer/filters/RedirectWebFilter.kt`
+- `src/main/kotlin/io/bluetape4k/workshop/gateway/customer/config/managements/ObservationConfig.kt`
+- `src/main/resources/application.yml`

@@ -2,48 +2,54 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+## What This Module Shows
 
-This example exercises **Gateway Customers Service** as a runnable gateway and downstream service coordination workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
-
-## Sequence Diagram
-
-Customer service example for the Gateway workshop. It exposes a small WebFlux API, redirects the root path to Swagger UI, and runs as the customer backend on port `8081`.
+`customers` is the customer backend used by the gateway workshop. It runs as a
+Spring Boot WebFlux application on `8081` and exposes a small suspend controller
+at `GET /api/v1/customers`.
 
 ## Architecture
 
-![Gateway Customers Service Graphviz architecture diagram](../../docs/images/readme-diagrams/gateway-customers-readme-architecture-01.png)
+![Gateway Customers Service architecture](../../docs/images/readme-diagrams/gateway-customers-readme-architecture-01.png)
 
-## What This Module Shows
+The service has no database dependency. `CustomerContoller` returns two sample
+`Customer` values, `Winter` and `Spring`, so the gateway example can focus on
+routing instead of persistence.
 
-- WebFlux controller endpoint at `GET /api/v1/customers`.
-- Sample customer payloads returned from `CustomerContoller`.
-- Root-path redirect from `/` to `/swagger-ui.html` through `RedirectWebFilter`.
-- Actuator endpoint exposure for local workshop observability.
+## Runtime Contract
 
-## Running
+| Concern | Source-backed behavior |
+|---|---|
+| HTTP API | `GET /api/v1/customers` returns a JSON array of customers |
+| Swagger landing page | `/` is rewritten to `/swagger-ui.html` by `RedirectWebFilter` |
+| Observability | Actuator endpoints are exposed; Micrometer URI filter excludes management and API-doc paths |
+| AOT | `spring.aot.enabled=true` in `application.yml` |
+
+## Run
 
 ```bash
 ./gradlew :customers:bootRun
 ```
 
-Then open:
+Open:
 
-- Swagger UI: `http://localhost:8081/swagger-ui.html`
-- Customer API: `http://localhost:8081/api/v1/customers`
-- Actuator endpoints: `http://localhost:8081/actuator`
+```bash
+http :8081/api/v1/customers
+http :8081/swagger-ui.html
+http :8081/actuator
+```
 
-## Used Bluetape4k Features
+## bluetape4k Usage
 
-| Module | Feature | Usage |
-|--------|---------|-------|
-| `bluetape4k-logging` | `KLoggingChannel()` | Coroutine-aware structured logging in controllers and services |
-| `bluetape4k-support` | `uninitialized()`, `unsafeLazy` | Deferred field initialization for injected beans |
-| `bluetape4k-junit5` | `runSuspendIO { }` | Suspend-based integration test runner |
+| Library | Usage |
+|---|---|
+| `bluetape4k-logging` | `KLoggingChannel()` in the application, config, filter, and controller |
+| `bluetape4k-support` | `uninitialized()` and `unsafeLazy` in Swagger configuration |
+| `bluetape4k-coroutines` | Suspend WebFlux controller endpoint |
 
-## Source Map
+## Source References
 
-- `CustomerApplication.kt` starts the Spring Boot application.
-- `CustomerContoller.kt` defines the customer API.
-- `CustomerConfig.kt`, `SwaggerConfig.kt`, and `ObservationConfig.kt` provide service metadata, OpenAPI, and observation support.
-- `application.yml` sets `spring.application.name=Customers`, AOT, port `8081`, and management endpoint exposure.
+- `src/main/kotlin/io/bluetape4k/workshop/gateway/customer/controller/CustomerContoller.kt`
+- `src/main/kotlin/io/bluetape4k/workshop/gateway/customer/filters/RedirectWebFilter.kt`
+- `src/main/kotlin/io/bluetape4k/workshop/gateway/customer/config/managements/ObservationConfig.kt`
+- `src/main/resources/application.yml`
