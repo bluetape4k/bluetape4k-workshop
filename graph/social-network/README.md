@@ -2,21 +2,26 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+## Overview
 
-This example exercises **graph-social-network** as a runnable graph-domain modeling workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+**graph-social-network** is a LinkedIn-style graph-domain example built with
+[bluetape4k-graph](https://github.com/bluetape4k/bluetape4k-graph). It shows how to model people,
+companies, professional relationships, and traversal queries with the same service contract across
+TinkerGraph, Neo4j, and Memgraph.
 
-## Sequence Diagram
-
-LinkedIn-style social network graph example using [bluetape4k-graph](https://github.com/bluetape4k/bluetape4k-graph).
-
-Demonstrates **Person–Company relationship modelling**, **multi-hop BFS traversal**, **FOAF recommendation**, and **shortest-path search** against TinkerGraph (in-memory), Neo4j, and Memgraph backends.
+Use this module when you want to inspect a small but complete social graph: idempotent vertex
+creation, bidirectional `KNOWS` edges, one-way `FOLLOWS` edges, `WORKS_AT` company links,
+FOAF recommendations, colleague lookup, and path traversal.
 
 ---
 
 ## Architecture
 
-![graph-social-network Graphviz architecture diagram](../../docs/images/readme-diagrams/graph-social-network-readme-architecture-01.png)
+![graph-social-network architecture](../../docs/images/readme-diagrams/graph-social-network-readme-architecture-01.png)
+
+The blocking and coroutine services expose the same social-network operations. Both services write
+the typed schema through `GraphOperations` or `GraphSuspendOperations`, then run the same traversal
+contracts on the selected graph backend.
 
 ```
 graph/social-network/
@@ -43,7 +48,7 @@ graph/social-network/
 
 ## Graph Schema
 
-![Graph Domain Model](docs/images/readme-diagrams/social-network-domain-model.png)
+![graph-social-network domain model](../../docs/images/readme-diagrams/graph-social-network-readme-domain-model-01.png)
 
 ### Vertex Labels
 
@@ -61,6 +66,8 @@ graph/social-network/
 | `WORKS_AT` | `Person` → `Company` | `role`, `startDate`, `endDate`, `isCurrent` |
 
 ## Seed Topology (test data)
+
+![graph-social-network traversal and recommendation flow](../../docs/images/readme-diagrams/graph-social-network-readme-flow-01.png)
 
 ```
 alice ──KNOWS──► bob ──KNOWS──► carol ──KNOWS──► dave
