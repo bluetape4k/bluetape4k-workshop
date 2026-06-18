@@ -2,97 +2,41 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
-
-This example exercises **Spring Security WebFlux Hello** as a runnable Spring Security request protection workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
-
-## Sequence Diagram
-
-![hello-security sequence diagram](../../../docs/images/readme-diagrams/spring-security-webflux-hello-security-readme-sequence-01.png)
-
-Reactive Spring Security example with WebFlux controllers, a custom login page, and an in-memory reactive user.
+This module is the reactive WebFlux form-login example. It protects `/user/**`
+with `ROLE_USER`, serves a custom login page at `/log-in`, and uses
+`MapReactiveUserDetailsService` with a BCrypt-encoded `user/password` account.
 
 ## Architecture
 
-![Spring Security WebFlux Hello Graphviz architecture diagram](../../../docs/images/readme-diagrams/spring-security-webflux-hello-security-readme-architecture-01.png)
+![Spring Security WebFlux hello architecture](../../../docs/images/readme-diagrams/spring-security-webflux-hello-security-readme-architecture-01.png)
 
-## What This Module Shows
+## Security Rules
 
-- WebFlux controller mappings for `/`, `/user/index`, and `/log-in`.
-- `SecurityWebFilterChain` configured through the reactive Kotlin DSL.
-- Public access for `/`, `/css/**`, and `/log-in`.
-- `ROLE_USER` protection for `/user/**`.
-- `MapReactiveUserDetailsService` with a BCrypt-encoded in-memory user.
+| Path | Rule | Handler |
+|---|---|---|
+| `/` | `permitAll` | `MainController.index()` |
+| `/css/**` | `permitAll` | static assets |
+| `/log-in` | login page | `MainController.login()` |
+| `/user/**` | `ROLE_USER` | `MainController.userIndex()` |
 
-## Running
+## Test Coverage
+
+`MainControllerTest` verifies the behavior with `WebTestClient`:
+
+- `/` returns an unsecured page without authentication.
+- `/user/index` redirects anonymous users to `/log-in`.
+- `@WithMockUser` can access `/user/index`.
+
+## Run
 
 ```bash
 ./gradlew :spring-security-webflux-hello-security:bootRun
 ```
 
-Then open `http://localhost:8080/` and sign in with:
+Open `http://localhost:8080/` and sign in with `user` / `password`.
 
-- Username: `user`
-- Password: `password`
+## Test
 
-## Used bluetape4k Features
-
-| Module | Feature | Usage |
-|---|---|---|
-| `bluetape4k-logging` | `KLoggingChannel()` | Coroutine-aware structured logging in `SecurityConfiguration` |
-| `bluetape4k-coroutines` | Coroutine/Reactor bridge | Coroutines + Reactor integration for WebFlux security |
-| `bluetape4k-junit5` | `runSuspendIO { }` | Suspend-based integration test runner |
-
-## bluetape4k Before / After
-
-### `KLoggingChannel()` vs plain logger in reactive code
-
-```kotlin
-// Before — SLF4J (no coroutine MDC propagation)
-private val log = LoggerFactory.getLogger(SecurityConfiguration::class.java)
-
-// After — KLoggingChannel (coroutine context-aware, MDC propagation in WebFlux)
-companion object : KLoggingChannel()
-log.info { "SecurityWebFilterChain configured" }
+```bash
+./gradlew :spring-security-webflux-hello-security:test
 ```
-
-### Reactive Security DSL — Kotlin invoke extension
-
-```kotlin
-// Before — Java-style reactive security builder
-http
-    .authorizeExchange { spec ->
-        spec.pathMatchers("/").permitAll()
-            .pathMatchers("/user/**").hasAuthority("ROLE_USER")
-    }
-    .formLogin { spec -> spec.loginPage("/log-in") }
-    .build()
-
-// After — Kotlin DSL via ServerHttpSecurity.invoke
-return http {
-    authorizeExchange {
-        authorize("/log-in", permitAll)
-        authorize("/", permitAll)
-        authorize("/css/**", permitAll)
-        authorize("/user/**", hasAuthority("ROLE_USER"))
-    }
-    formLogin {
-        loginPage = "/log-in"
-    }
-}
-```
-
-## Security Filter Chain (WebFlux)
-
-## Operational Notes
-
-- `MapReactiveUserDetailsService` holds users in memory; replace with a database-backed `ReactiveUserDetailsService` for production.
-- `BCryptPasswordEncoder` is shared between `SecurityConfiguration` and `MapReactiveUserDetailsService` via Spring DI.
-- Reactive security runs entirely on Reactor threads; never use blocking calls inside `SecurityWebFilterChain` lambdas.
-
-## Source Map
-
-- `KotlinWebfluxApplication.kt` starts the reactive Spring Boot application.
-- `MainController.kt` maps the view routes.
-- `SecurityConfiguration.kt` defines reactive authorization rules, form login, password encoding, and the in-memory user.
-- `application.yml` sets port `8080`, enables AOT, and disables Thymeleaf cache for local development.
