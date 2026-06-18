@@ -2,19 +2,17 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+이 모듈은 Spring MVC가 `Course` resource를 JSON 대신 CBOR(`application/cbor`)로 반환하는 방법을 보여 줍니다. Controller code는 평범하게 유지하고, 핵심은 `JacksonCborHttpMessageConverter`를 MVC message converter chain에 등록하는 것입니다.
 
-이 예제는 **CBOR in Spring Boot MVC**를 실행 가능한 Spring Boot 애플리케이션 기능 워크숍 조각으로 다룹니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄여 주는 라이브러리와 프레임워크 API 관찰에 초점을 둡니다.
+## 아키텍처
 
-## 아키텍처 다이어그램
+![CBOR in Spring Boot MVC architecture](../../docs/images/readme-diagrams/spring-boot-cbor-mvc-readme-architecture-01.png)
 
-![CBOR in Spring Boot MVC Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-cbor-mvc-readme-architecture-01.png)
+`CborConfig`는 CBOR converter를 등록하고 in-memory `CourseRepository`를 준비합니다. 테스트는 CBOR encoder/decoder를 설정한 `RestTemplate`, `RestClient`, `WebClient`로 endpoint를 호출합니다.
 
-이 모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성을 중심으로 구성됩니다. README와 코드를 비교할 때는 `io.bluetape4k.workshop.springboot` 패키지를 기준으로 삼습니다.
+## 요청 흐름
 
-## 시퀀스 다이어그램
-
-![CBOR in Spring Boot MVC sequence diagram](../../docs/images/readme-diagrams/spring-boot-cbor-mvc-sequence-01.png)
+![CBOR in Spring Boot MVC request flow](../../docs/images/readme-diagrams/spring-boot-cbor-mvc-sequence-01.png)
 
 이 예제는 일반 JSON 대신 바이너리 JSON 형식인 CBOR(Concise Binary Object Representation)을 REST API 통신 형식으로 사용하는 방법을 보여 줍니다.
 
