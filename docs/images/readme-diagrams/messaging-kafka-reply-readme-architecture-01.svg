@@ -1,125 +1,83 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="964" viewBox="0 0 1320 964" role="img" aria-label="Kafka Reply Demo architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;messaging/kafka-reply/src/main/kotlin/io/bluetape4k/workshop/kafka/KafkaApplication.kt&quot;,&quot;messaging/kafka-reply/src/main/kotlin/io/bluetape4k/workshop/kafka/ping/PingApplication.kt&quot;,&quot;messaging/kafka-reply/src/main/kotlin/io/bluetape4k/workshop/kafka/ping/PingController.kt&quot;,&quot;messaging/kafka-reply/src/main/kotlin/io/bluetape4k/workshop/kafka/pong/PongApplication.kt&quot;,&quot;messaging/kafka-reply/src/main/kotlin/io/bluetape4k/workshop/kafka/pong/PongHandler.kt&quot;,&quot;messaging/kafka-reply/src/test/kotlin/io/bluetape4k/workshop/kafka/PingPongApplicationTest.kt&quot;,&quot;messaging/kafka-reply/build.gradle.kts&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="760" viewBox="0 0 1500 760" role="img" aria-label="Kafka reply architecture diagram">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#2563EB"/></marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#16A34A"/></marker>
+    <marker id="arrowAmber" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 12 6 L 0 12 Z" fill="#C47A12"/></marker>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:36px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:14px;fill:#51606F}.layerLabel{font-family:"Architects Daughter";font-size:23px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:27px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:14px;fill:#415166}.line{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.kafkaText{font-family:"Architects Daughter";font-size:27px;fill:#102033}
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="964"/>
-  <rect class="frame" x="16" y="16" width="1288" height="932" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Kafka Reply Demo</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">message producers, consumers, and broker-backed flows</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="256.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="216.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="226.0">Messaging Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="264.0">apps, controllers,</tspan><tspan class="layer-detail" x="151.0" y="280.0">producer tests</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="388.0" width="1228.0" height="366.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="408.0" width="174" height="326.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="543.5">Broker</tspan><tspan class="layer-title" x="151.0" y="566.5">Integration Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="585.0">topics, templates,</tspan><tspan class="layer-detail" x="151.0" y="601.0">serializers,</tspan><tspan class="layer-detail" x="151.0" y="617.0">helpers</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="772.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="792.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="822.0">Broker Runtime</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="852.0">Kafka,</tspan><tspan class="layer-detail" x="151.0" y="868.0">Testcontainers,</tspan><tspan class="layer-detail" x="151.0" y="884.0">delivery state</tspan></text>
-    </g>
-    <g class="edge" data-edge="api1-&gt;infra0" data-label="uses">
-      <path d="M 1096.0 343.0 L 1096.0 375.5 L 424.0 375.5 L 424.0 408.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 424.0 734.0 L 424.0 763.0 L 592.0 763.0 L 592.0 792.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Kafka Application | application bootstrap">
-      <rect x="274.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="176.5">Kafka Application</tspan><tspan class="node-detail" x="424.0" y="200.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry1" data-lines="Ping Application | application bootstrap">
-      <rect x="610.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="176.5">Ping Application</tspan><tspan class="node-detail" x="760.0" y="200.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry2" data-lines="Pong Application | application bootstrap">
-      <rect x="946.0" y="134.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="176.5">Pong Application</tspan><tspan class="node-detail" x="1096.0" y="200.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry3" data-lines="Ping Pong Application | Test | kafka">
-      <rect x="274.0" y="244.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="281.5">Ping Pong Application</tspan><tspan class="node-title" x="424.0" y="305.5">Test</tspan><tspan class="node-detail" x="424.0" y="329.5">kafka</tspan></text>
-    </g>
-    <g class="node" data-node="api0" data-lines="Ping Controller | HTTP adapter">
-      <rect x="610.0" y="251.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="293.5">Ping Controller</tspan><tspan class="node-detail" x="760.0" y="317.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api1" data-lines="Pong Handler | pong">
-      <rect x="946.0" y="251.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="293.5">Pong Handler</tspan><tspan class="node-detail" x="1096.0" y="317.5">pong</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Spring kafka lib | Spring Kafka Layer">
-      <rect x="274.0" y="408.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="450.5">Spring kafka lib</tspan><tspan class="node-detail" x="424.0" y="474.5">Spring Kafka Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra1" data-lines="Spring kafka test | Spring Kafka Layer">
-      <rect x="610.0" y="408.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="450.5">Spring kafka test</tspan><tspan class="node-detail" x="760.0" y="474.5">Spring Kafka Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra2" data-lines="Spring data commons | Spring Kafka Layer">
-      <rect x="946.0" y="408.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="450.5">Spring data commons</tspan><tspan class="node-detail" x="1096.0" y="474.5">Spring Kafka Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra3" data-lines="Spring boot | autoconfigure lib | Spring Kafka Layer">
-      <rect x="274.0" y="518.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="555.5">Spring boot</tspan><tspan class="node-title" x="424.0" y="579.5">autoconfigure lib</tspan><tspan class="node-detail" x="424.0" y="603.5">Spring Kafka Layer</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k Kafka APIs">
-      <rect x="610.0" y="525.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="567.5">workshop</tspan><tspan class="node-detail" x="760.0" y="591.5">bluetape4k Kafka APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="kafka4 | bluetape4k Kafka APIs">
-      <rect x="946.0" y="525.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="567.5">kafka4</tspan><tspan class="node-detail" x="1096.0" y="591.5">bluetape4k Kafka APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="testcontainers | bluetape4k Kafka APIs">
-      <rect x="274.0" y="642.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="684.5">testcontainers</tspan><tspan class="node-detail" x="424.0" y="708.5">bluetape4k Kafka APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="Kafka | Kafka Broker Runtime">
-      <rect x="442.0" y="792.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="592.0" y="834.5">Kafka</tspan><tspan class="node-detail" x="592.0" y="858.5">Kafka Broker Runtime</tspan></text>
-    </g>
-    <g class="node" data-node="runtime1" data-lines="Testcontainers | Kafka Broker Runtime">
-      <rect x="778.0" y="792.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="928.0" y="834.5">Testcontainers</tspan><tspan class="node-detail" x="928.0" y="858.5">Kafka Broker Runtime</tspan></text>
-    </g>
+  <rect class="canvas" width="1500" height="760"/>
+  <rect class="frame" x="24" y="24" width="1452" height="712" rx="24"/>
+  <text class="title" x="750" y="66" text-anchor="middle">Kafka request-reply architecture</text>
+  <text class="subtitle" x="750" y="94" text-anchor="middle">PingApplication sends through ReplyingKafkaTemplate; PongApplication replies with @SendTo through Kafka topics.</text>
+
+  <rect class="layer" x="64" y="132" width="282" height="510" rx="18"/>
+  <text class="layerLabel" x="92" y="168">HTTP client</text>
+  <g filter="url(#shadow)">
+    <rect x="104" y="318" width="202" height="112" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
+    <text class="cardTitle" x="205" y="362" text-anchor="middle">GET /ping</text>
+    <text class="cardText" x="205" y="394" text-anchor="middle">expects pong body</text>
   </g>
+
+  <rect class="layer" x="390" y="132" width="386" height="510" rx="18"/>
+  <text class="layerLabel" x="418" y="168">PingApplication</text>
+  <g filter="url(#shadow)">
+    <rect x="430" y="206" width="276" height="106" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
+    <text class="cardTitle" x="568" y="248" text-anchor="middle">PingController</text>
+    <text class="cardText" x="568" y="278" text-anchor="middle">suspend GET handler</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="430" y="358" width="276" height="128" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="568" y="400" text-anchor="middle">ReplyingKafkaTemplate</text>
+    <text class="cardText" x="568" y="430" text-anchor="middle">sendAndReceive(record)</text>
+    <text class="cardText" x="568" y="454" text-anchor="middle">onSuccess / onFailure</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="430" y="526" width="276" height="84" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
+    <text class="cardTitle" x="568" y="562" text-anchor="middle">Reply listener</text>
+    <text class="cardText" x="568" y="588" text-anchor="middle">container topic: replies</text>
+  </g>
+
+  <rect class="layer" x="820" y="132" width="298" height="510" rx="18"/>
+  <text class="layerLabel" x="848" y="168">Kafka runtime</text>
+  <g filter="url(#shadow)">
+    <rect x="862" y="200" width="214" height="126" rx="16" fill="#F8FAFC" stroke="#111827" stroke-width="1.7"/>
+    <g transform="translate(912 220)">
+      <circle cx="22" cy="48" r="13" fill="#111827"/>
+      <circle cx="72" cy="20" r="13" fill="#111827"/>
+      <circle cx="72" cy="76" r="13" fill="#111827"/>
+      <path d="M 34 42 L 60 27" stroke="#111827" stroke-width="5" stroke-linecap="round"/>
+      <path d="M 34 54 L 60 70" stroke="#111827" stroke-width="5" stroke-linecap="round"/>
+    </g>
+    <text class="kafkaText" x="969" y="306" text-anchor="middle">Kafka</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="862" y="370" width="214" height="100" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
+    <text class="cardTitle" x="969" y="408" text-anchor="middle">pingpong</text>
+    <text class="cardText" x="969" y="438" text-anchor="middle">request topic</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="862" y="510" width="214" height="100" rx="16" fill="#FFF7ED" stroke="#D97706" stroke-width="1.7"/>
+    <text class="cardTitle" x="969" y="548" text-anchor="middle">replies</text>
+    <text class="cardText" x="969" y="578" text-anchor="middle">reply topic</text>
+  </g>
+
+  <rect class="layer" x="1162" y="132" width="274" height="510" rx="18"/>
+  <text class="layerLabel" x="1190" y="168">PongApplication</text>
+  <g filter="url(#shadow)">
+    <rect x="1198" y="328" width="202" height="128" rx="16" fill="#ECFDF5" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="1299" y="374" text-anchor="middle">PongHandler</text>
+    <text class="cardText" x="1299" y="406" text-anchor="middle">@KafkaListener</text>
+    <text class="cardText" x="1299" y="430" text-anchor="middle">@SendTo reply</text>
+  </g>
+
+  <path class="line" d="M 306 374 L 370 374 L 370 259 L 430 259" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 568 312 L 568 358" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 706 422 L 862 422" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 1076 420 L 1148 420 L 1148 392 L 1198 392" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 1198 428 L 1138 428 L 1138 560 L 1076 560" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
+  <path class="line" d="M 862 560 L 784 560 L 784 568 L 706 568" stroke="#C47A12" marker-end="url(#arrowAmber)"/>
 </svg>
