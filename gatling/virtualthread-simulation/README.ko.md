@@ -1,182 +1,66 @@
-# Gatling Load Testing Tutorial for Kotlin
+# Gatling Virtual Thread Simulation
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+## 이 모듈이 보여주는 것
 
-이 예제는 **Gatling Load Testing Tutorial for Kotlin**을 실행 가능한 부하 테스트 워크샵 조각으로 다룹니다. 개발자가 가장 먼저 확인할 흐름인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄여 주는 라이브러리/프레임워크 API 관찰에 초점을 둡니다.
+이 모듈은 Spring Boot 애플리케이션이 virtual thread를 사용할 때 두 HTTP
+endpoint를 Gatling 부하로 비교합니다.
 
-## 시퀀스 다이어그램
+- `GET /sync/{seconds}`는 request path에서 blocking `Thread.sleep(...)`을 실행합니다.
+- `GET /async/{seconds}`는 같은 delay를 virtual-thread executor 기반 `@Async` method로 위임합니다.
 
-원본: [github: mdportnov/kotlin-gatling-tutorial](https://github.com/mdportnov/kotlin-gatling-tutorial)
-
-원본은 MySQL을 사용하지만, 여기서는 편의를 위해 Testcontainers + MongoDB를 사용합니다.
-
-이 저장소는 웹 애플리케이션용으로 널리 쓰이는 오픈소스 부하 테스트 도구 Gatling을 소개하는
-글 ["Gatling Load Testing Tutorial"](https://medium.com/@mdportnov/stress-testing-with-gatling-kotlin-part-2-1eb13d489dc9)의 코드 예제와 리소스를 포함합니다.
+두 endpoint는 측정한 elapsed time을 millisecond로 반환합니다. Gatling
+simulation은 `/sync/1` 또는 `/async/1`을 호출하고, closed concurrent users를
+10초 동안 10명에서 20명으로 ramp합니다.
 
 ## 아키텍처
 
-![Gatling Load Testing Tutorial for Kotlin Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/gatling-virtualthread-simulation-readme-architecture-01.png)
+![Gatling virtual thread architecture](../../docs/images/readme-diagrams/gatling-virtualthread-simulation-readme-architecture-01.png)
 
-## 시뮬레이션 구조
+`TomcatConfig`는 `Executors.newVirtualThreadPerTaskExecutor()`를 Tomcat
+protocol handler executor로 설정합니다. `AsyncConfig`도 Spring
+`applicationTaskExecutor`를 virtual-thread executor로 노출하고,
+`LoggingTaskDecorator`로 MDC를 보존합니다.
 
-| Simulation Class | Endpoint | Injection Profile | Description |
-|---|---|---|---|
-| `SyncTaskSimulation` | `/sync/{id}` | 10초 동안 동시 사용자 10→20 ramp | Virtual Thread에서 실행되는 동기 블로킹 작업 |
-| `AsyncTaskSimulation` | `/async/{id}` | 10초 동안 동시 사용자 10→20 ramp | 비동기 논블로킹 작업 |
+## 부하 테스트 흐름
 
-```kotlin
-// SyncTaskSimulation — ramp load profile
-init {
-    setUp(
-        scn.injectClosed(rampConcurrentUsers(10).to(20).during(10.seconds.toJavaDuration()))
-    ).protocols(httpProtocol)
-}
-```
+![Gatling virtual thread flow](../../docs/images/readme-diagrams/gatling-virtualthread-simulation-readme-flow-01.png)
 
-## 시뮬레이션 실행
+Gatling을 실행하기 전에 애플리케이션이 `localhost:8080`에서 실행 중이어야
+합니다. Simulation class는 `src/gatling/kotlin/simulations` 아래에 있습니다.
 
-### Step 1 — 애플리케이션 시작
+## Simulation 구조
 
-애플리케이션은 MongoDB가 필요합니다. MongoDB는 Testcontainers로 자동 시작됩니다.
+| Simulation | Endpoint sequence | Injection profile |
+|---|---|---|
+| `SyncTaskSimulation` | `/sync/1`, `/sync/2` | `rampConcurrentUsers(10).to(20).during(10.seconds)` |
+| `AsyncTaskSimulation` | `/async/1`, `/async/2` | `rampConcurrentUsers(10).to(20).during(10.seconds)` |
+
+## 실행
+
+Spring Boot 애플리케이션을 먼저 실행합니다.
 
 ```bash
 ./gradlew :gatling-virtualthread-simulation:bootRun
 ```
 
-로그에 `Started KotlinGatlingApplication`이 보일 때까지 기다립니다.
-
-### Step 2 — 부하 테스트 실행
+모든 Gatling simulation을 실행합니다.
 
 ```bash
-# Run all Gatling simulations
 ./gradlew :gatling-virtualthread-simulation:gatlingRun
+```
 
-# Run a specific simulation by class name
+하나의 simulation만 실행할 수도 있습니다.
+
+```bash
 ./gradlew :gatling-virtualthread-simulation:gatlingRun --simulation simulations.SyncTaskSimulation
 ./gradlew :gatling-virtualthread-simulation:gatlingRun --simulation simulations.AsyncTaskSimulation
 ```
 
-### Step 3 — 리포트 보기
+리포트는 `build/reports/gatling/` 아래에 생성됩니다.
 
-리포트는 `build/reports/gatling/`에 생성됩니다. 가장 최신 timestamp 디렉터리의 `index.html`을 엽니다.
-
-```
-build/reports/gatling/
-└── synctasksimulation-<timestamp>/
-    └── index.html       ← open this
-```
-
-## 결과 해석
-
-### 리포트의 주요 지표
-
-| Metric | Good | Investigate |
-|---|---|---|
-| **Response time (mean)** | < 200ms | > 500ms |
-| **Response time (95th percentile)** | < 500ms | > 1000ms |
-| **Requests/sec (throughput)** | Stable plateau | Gradual decline |
-| **Error %** | 0% | > 1% |
-| **Active users** | Tracks injection profile | Flat-lines below target |
-
-### 부하 프로파일 주석
-
-Gatling 리포트 차트는 다음 단계를 보여 줍니다.
-
-1. **Ramp-up**: 사용자가 10초 동안 10명에서 20명으로 증가합니다.
-2. **Plateau**: 이 시뮬레이션에서는 설정하지 않았습니다. ramp는 10초 뒤 종료됩니다.
-3. **Response time distribution**: 히스토그램이 p50/p75/p95/p99를 보여 줍니다.
-
-### Virtual Thread 영향
-
-Virtual Thread가 활성화되어 있으면(`TomcatConfig`에서 설정) `SyncTaskService`의 블로킹 I/O가 OS 스레드를 고정하지 않습니다.
-Sync 엔드포인트는 Async 엔드포인트와 비슷한 지연 시간으로 같은 부하를 처리해야 합니다.
-
-```
-Platform thread model (before Virtual Threads):
-    10 concurrent requests → needs 10 OS threads → thread pool exhaustion at ~200 threads
-
-Virtual thread model:
-    10 concurrent requests → 10 virtual threads on 2–4 OS threads → no pool exhaustion
-```
-
-### 중지 조건
-
-Gatling 시뮬레이션은 다음 경우 중지됩니다.
-1. injection profile이 완료됩니다(정상 종료).
-2. `assertions` 블록이 설정되어 있고 threshold assertion이 실패합니다.
-3. JVM이 인터럽트됩니다(Ctrl+C).
-
-중지 조건을 추가하려면 다음과 같이 작성합니다.
-
-```kotlin
-init {
-    setUp(
-        scn.injectClosed(rampConcurrentUsers(10).to(20).during(10.seconds.toJavaDuration()))
-    ).protocols(httpProtocol)
-     .assertions(
-         global().responseTime().max().lt(1000),   // fail if any response > 1s
-         global().successfulRequests().percent().gt(99.0)  // fail if error rate > 1%
-     )
-}
-```
-
-## 사용한 bluetape4k 기능
-
-| Feature | Artifact | Code Location | Benefit |
-|---|---|---|---|
-| `KLogging` | `bluetape4k-logging` | `SyncTaskController`, `AsyncTaskController` | Kotlin DSL 지연 로깅 |
-| `KLoggingChannel` | `bluetape4k-logging` | `AsyncTaskService` | 코루틴 컨텍스트 인식 로깅 |
-| Testcontainers MongoDB wrapper | `bluetape4k-testcontainers` | `AbstractGatlingTest` | MongoDB singleton container, 테스트 간 재사용 |
-| Jackson 3.x support | `bluetape4k-jackson3` | REST API serialization | Spring Boot 4 + Jackson 3 자동 구성 |
-
-## Before / After
-
-### Tomcat Virtual Thread Configuration
-
-```kotlin
-// Before — no Virtual Thread configuration (platform thread pool)
-// Tomcat defaults: max 200 threads → bottleneck at high concurrency
-
-// After — Virtual Thread per request
-@Configuration
-class TomcatConfig {
-    @Bean
-    fun protocolHandlerVirtualThreadExecutorCustomizer(): TomcatProtocolHandlerCustomizer<*> {
-        return TomcatProtocolHandlerCustomizer<ProtocolHandler> { protocolHandler ->
-            protocolHandler.executor = Executors.newVirtualThreadPerTaskExecutor()
-        }
-    }
-}
-```
-
-### Async Configuration with Virtual Threads
-
-```kotlin
-// Before — standard async executor (fixed thread pool)
-@Configuration
-@EnableAsync
-class AsyncConfig {
-    @Bean
-    fun asyncTaskExecutor(): AsyncTaskExecutor =
-        SimpleAsyncTaskExecutor()
-
-// After — Virtual Thread per async task
-@Configuration(proxyBeanMethods = false)
-@EnableAsync
-class AsyncConfig {
-    @Bean(TaskExecutionAutoConfiguration.APPLICATION_TASK_EXECUTOR_BEAN_NAME)
-    fun asyncTaskExecutor(): AsyncTaskExecutor {
-        val factory = Thread.ofVirtual().name("async-vt-exec-", 0).factory()
-        return TaskExecutorAdapter(Executors.newThreadPerTaskExecutor(factory)).apply {
-            setTaskDecorator(LoggingTaskDecorator())
-        }
-    }
-}
-```
-
-## 시뮬레이션 결과
+## 결과 이미지
 
 ### Sync Task Simulation
 
@@ -188,16 +72,26 @@ class AsyncConfig {
 ![Async Task Simulation Results](./doc/async-task-simulation.png)
 ![Async Task Simulation Results RPS](./doc/async-task-simulation-rps.png)
 
-## 전제 조건
+## bluetape4k 사용 지점
 
-- Docker (Testcontainers MongoDB용)
-- JDK 25
-- `bootRun` 실행 시 8080 포트 사용 가능
+| Library | Usage |
+|---|---|
+| `bluetape4k-logging` | application, config, controllers, services의 `KLogging` |
+| `bluetape4k-io` | `gatling` configuration을 통해 Gatling source set에서 사용 가능 |
+| `bluetape4k-jackson3` | Spring Boot JSON serialization support |
+| `bluetape4k-coroutines` | Suspend-style WebTestClient assertion test support |
 
-## 리소스
+## 소스 기준점
 
-- [Gatling official website](https://gatling.io/)
-- [Gatling documentation](https://gatling.io/docs/)
+- `src/main/kotlin/io/bluetape4k/workshop/gatling/config/TomcatConfig.kt`
+- `src/main/kotlin/io/bluetape4k/workshop/gatling/config/AsyncConfig.kt`
+- `src/main/kotlin/io/bluetape4k/workshop/gatling/controller/SyncTaskController.kt`
+- `src/main/kotlin/io/bluetape4k/workshop/gatling/controller/AsyncTaskController.kt`
+- `src/gatling/kotlin/simulations/SyncTaskSimulation.kt`
+- `src/gatling/kotlin/simulations/AsyncTaskSimulation.kt`
+
+## 참고 자료
+
+- [Gatling Documentation](https://gatling.io/docs/)
 - [Gatling Gradle Plugin](https://docs.gatling.io/reference/extensions/build-tools/gradle-plugin/)
 - [Stress Testing with Gatling & Kotlin - Part 2](https://medium.com/@mdportnov/stress-testing-with-gatling-kotlin-part-2-1eb13d489dc9)
-- [Gatling community resources](https://gatling.io/community/)
