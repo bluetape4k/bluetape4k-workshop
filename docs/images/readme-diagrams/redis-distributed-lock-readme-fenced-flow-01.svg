@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1640" height="720" viewBox="0 0 1640 720" role="img" aria-label="Redis distributed lock fenced flow">
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker>
+    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A"/></marker>
+    <marker id="arrowRed" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#DC2626"/></marker>
+    <style>
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.band{fill:#F8FAFC;stroke:#CBD5E1;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.bandLabel{font-family:"Architects Daughter";font-size:24px;fill:#263548}.cardTitle{font-family:"Architects Daughter";font-size:28px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.label{font-family:"Comic Mono";font-size:14px;fill:#475569}.line{fill:none;stroke-width:3.6;stroke-linecap:round;stroke-linejoin:round}.soft{stroke-dasharray:8 8}
+    </style>
+  </defs>
+  <rect class="canvas" width="1640" height="720"/>
+  <rect class="frame" x="24" y="24" width="1592" height="672" rx="24"/>
+  <text class="title" x="820" y="70" text-anchor="middle">Fenced lock deduction flow</text>
+  <text class="subtitle" x="820" y="102" text-anchor="middle">Fencing tokens protect the stock update even when an old lock holder resumes after lease expiry.</text>
+
+  <rect class="band" x="72" y="148" width="1496" height="210" rx="18"/>
+  <text class="bandLabel" x="102" y="186">Acquire and guard</text>
+  <rect class="band" x="72" y="424" width="1496" height="154" rx="18"/>
+  <text class="bandLabel" x="102" y="462">Coroutine unlock safety</text>
+
+  <g filter="url(#shadow)"><rect x="126" y="238" width="218" height="78" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="235" y="272" text-anchor="middle">deduct(id, qty)</text><text class="cardText" x="235" y="298" text-anchor="middle">validate qty</text></g>
+  <g filter="url(#shadow)"><rect x="468" y="226" width="260" height="102" rx="16" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="598" y="266" text-anchor="middle">RFencedLock</text><text class="cardText" x="598" y="298" text-anchor="middle">token or timeout</text></g>
+  <g filter="url(#shadow)"><rect x="852" y="226" width="260" height="102" rx="16" fill="#FFFBEB" stroke="#D97706" stroke-width="1.7"/><text class="cardTitle" x="982" y="266" text-anchor="middle">FencedResource</text><text class="cardText" x="982" y="298" text-anchor="middle">CAS lastSeenToken</text></g>
+  <g filter="url(#shadow)"><rect x="1236" y="226" width="260" height="102" rx="16" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="1366" y="266" text-anchor="middle">InventoryStore</text><text class="cardText" x="1366" y="298" text-anchor="middle">applyChange(-qty)</text></g>
+
+  <g filter="url(#shadow)"><rect x="324" y="492" width="264" height="62" rx="16" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="456" y="526" text-anchor="middle">getLockId</text><text class="cardText" x="456" y="548" text-anchor="middle">coroutine identity</text></g>
+  <g filter="url(#shadow)"><rect x="704" y="492" width="264" height="62" rx="16" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="836" y="532" text-anchor="middle">tryLockAsync</text></g>
+  <g filter="url(#shadow)"><rect x="1084" y="492" width="264" height="62" rx="16" fill="#F0FDFA" stroke="#0D9488" stroke-width="1.7"/><text class="cardTitle" x="1216" y="526" text-anchor="middle">NonCancellable</text><text class="cardText" x="1216" y="548" text-anchor="middle">unlockAsync awaits</text></g>
+
+  <path class="line" d="M 344 277 L 468 277" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 728 277 L 852 277" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 1112 277 L 1236 277" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line soft" d="M 982 328 L 982 388 L 598 388 L 598 328" stroke="#DC2626" marker-end="url(#arrowRed)"/>
+  <text class="label" x="790" y="376" text-anchor="middle">stale token -> Rejected</text>
+  <path class="line" d="M 588 523 L 704 523" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 968 523 L 1084 523" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+</svg>
