@@ -84,7 +84,7 @@ data class FollowRecommendation(
 
 ---
 
-## 예제 시나리오
+## 시드 데이터와 기대 추천 결과
 
 ### 시드 데이터
 

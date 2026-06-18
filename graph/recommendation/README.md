@@ -86,7 +86,7 @@ data class FollowRecommendation(
 
 ---
 
-## Example Scenario
+## Seed Data And Expected Recommendations
 
 ### Seed Data
 
