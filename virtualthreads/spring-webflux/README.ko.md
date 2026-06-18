@@ -1,262 +1,82 @@
-# Spring WebFlux with Coroutines and Virtual Thread
+# Spring WebFlux Dispatcher Comparison
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+이 모듈은 Spring WebFlux application에서 네 가지 coroutine dispatcher 선택지를
+비교합니다: `Dispatchers.Default`, `Dispatchers.IO`, custom fixed pool,
+virtual-thread-per-task dispatcher. 각 controller가 같은 endpoint set을 제공하므로
+test와 Gatling scenario에서 path만 바꿔 동작을 비교할 수 있습니다.
 
-이 예제는 **Spring WebFlux with Coroutines and Virtual Thread** 모듈을 실행 가능한 가상 스레드 실행 예제로 보여줍니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 사용 방식을 중심으로 설명합니다.
+## 아키텍처
 
-## 아키텍처 다이어그램
+![Spring WebFlux dispatcher architecture](../../docs/images/readme-diagrams/virtualthreads-spring-webflux-readme-architecture-01.png)
 
-![Spring WebFlux with Coroutines and Virtual Thread Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/virtualthreads-spring-webflux-readme-architecture-01.png)
+## Request Flow
 
-이 모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제에서 사용하는 런타임 의존성을 중심으로 구성됩니다. README와 코드를 비교할 때는 `io.bluetape4k.workshop.virtualthreads` 패키지를 기준으로 삼습니다.
+![Spring WebFlux dispatcher request flow](../../docs/images/readme-diagrams/virtualthreads-spring-webflux-readme-flow-01.png)
 
-## 시퀀스 다이어그램
+## Dispatcher Paths
 
-이 예제는 Spring WebFlux 환경에서 여러 Coroutine Dispatcher의 성능을 비교합니다.
-
-## Dispatcher 처리 모델
-
-## Dispatcher 비교
-
-| Dispatcher | Thread Model | 적합한 작업 | Worker Threads |
-|---|---|---|---|
-| `Dispatchers.Default` | Shared thread pool | CPU-bound computation | `Runtime.availableProcessors() x 2` |
-| `Dispatchers.IO` | Elastic thread pool | Blocking I/O calls | 최대 64(configurable) |
-| Custom Fixed Pool | Fixed thread pool(size=16) | Bounded concurrency | 16 |
-| `Dispatchers.VT` | Virtual Thread per task | I/O-bound, high concurrency | 작은 carrier pool 위의 unbounded VTs |
-
-```kotlin
-// 1. Dispatchers.Default
-private val dispatcher: CoroutineDispatcher = Dispatchers.Default
-
-// 2. Dispatchers.IO
-private val dispatcher: CoroutineDispatcher = Dispatchers.IO
-
-// 3. Custom Fixed Thread Pool (size=16)
-private val dispatcher: CoroutineDispatcher =
-    Executors.newFixedThreadPool(16).asCoroutineDispatcher()
-
-// 4. Virtual Thread (bluetape4k Dispatchers.VT)
-import io.bluetape4k.concurrent.virtualthread.VT
-private val dispatcher: CoroutineDispatcher = Dispatchers.VT
-```
-
-## 사용한 bluetape4k 기능
-
-| 기능 | Artifact | 코드 위치 | 이점 |
-|---|---|---|---|
-| `Dispatchers.VT` | `bluetape4k-virtualthread-api` | `VirtualThreadDispatcherController` | `Executors.newVirtualThreadPerTaskExecutor().asCoroutineDispatcher()` 대신 사용할 수 있는 idiomatic property입니다 |
-| `KLoggingChannel` (coroutine logger) | `bluetape4k-logging` | 모든 controller | Coroutine context-aware logging과 MDC auto-propagation입니다 |
-| `uninitialized()` | `bluetape4k-core` | `AbstractDispatcherController` | `@Value` injected field를 위한 non-null `val` late initialization입니다 |
-| Coroutine extensions | `bluetape4k-coroutines` | Flow-based endpoints | `channelFlow`, `flatMapMerge`, coroutine Flow support입니다 |
-| IO utilities | `bluetape4k-io` | File/stream processing | Okio-based IO extension입니다 |
-| Jackson 3.x support | `bluetape4k-jackson3` | REST API serialization | Spring Boot 4 + Jackson 3 auto-configuration입니다 |
-| Testcontainers wrapper | `bluetape4k-testcontainers` | `AbstractWebfluxVirtualThreadTest` | External service container singleton입니다 |
-
-## Before / After
-
-### Virtual Thread Dispatcher 설정
-
-```kotlin
-// Before - standard JDK API (verbose)
-@RestController
-@RequestMapping("/virtual-thread")
-class VirtualThreadDispatcherController {
-
-    private val dispatcher: CoroutineDispatcher =
-        Executors.newVirtualThreadPerTaskExecutor().asCoroutineDispatcher()
-
-    @GetMapping("/deferred")
-    fun deferredEndpoint(): Deferred<Banner> = CoroutineScope(dispatcher).async {
-        delay(100)
-        randomBanner()
-    }
-}
-
-// After - bluetape4k Dispatchers.VT (idiomatic extension property)
-import io.bluetape4k.concurrent.virtualthread.VT
-
-@RestController
-@RequestMapping("/virtual-thread")
-class VirtualThreadDispatcherController {
-
-    private val dispatcher: CoroutineDispatcher = Dispatchers.VT
-
-    @GetMapping("/deferred")
-    fun deferredEndpoint(): Deferred<Banner> = CoroutineScope(dispatcher).async {
-        delay(100)
-        randomBanner()
-    }
-}
-```
-
-### `@Value` Field Lazy Initialization
-
-```kotlin
-// Before - lateinit var (nullable risk, IDE warning)
-@Value("\${server.port:8080}")
-private lateinit var port: String
-
-// After - bluetape4k uninitialized()
-import io.bluetape4k.support.uninitialized
-
-@Value("\${server.port:8080}")
-private val port: String = uninitialized()  // non-null val, injected by Spring
-```
-
-### Virtual Thread를 사용하는 Async Task
-
-```kotlin
-// Before - manual Executors + TaskExecutorAdapter
-@Configuration
-@EnableAsync
-class AsyncConfig {
-    @Bean
-    fun asyncTaskExecutor(): AsyncTaskExecutor {
-        return TaskExecutorAdapter(Executors.newVirtualThreadPerTaskExecutor())
-    }
-}
-
-// After - virtual thread factory with inheritInheritableThreadLocals for context propagation
-@Configuration(proxyBeanMethods = false)
-@EnableAsync
-class AsyncConfig {
-    companion object: KLoggingChannel()
-
-    private val virtualThreadFactory = Thread.ofVirtual()
-        .inheritInheritableThreadLocals(true)  // ensures ThreadLocal context propagation
-        .name("vt-executor-", 0)
-        .factory()
-
-    @Bean
-    fun asyncTaskExecutor(): AsyncTaskExecutor {
-        return TaskExecutorAdapter(Executors.newThreadPerTaskExecutor(virtualThreadFactory))
-    }
-}
-```
-
-## Virtual Thread vs Platform Thread 성능 비교
-
-다음 비교는 4개 endpoint(suspend, deferred, sequential-flow, concurrent-flow)에 대해 10명에서 400명까지 concurrent user를 30초 동안 ramping하는 Gatling stress test를 기반으로 합니다.
-
-| Metric | `Dispatchers.Default` | `Dispatchers.IO` | Custom 16-pool | `Dispatchers.VT` |
-|---|---|---|---|---|
-| **Thread limit** | CPU x 2(보통 8-16) | 64 | 16 | Unbounded VTs |
-| **I/O blocking behavior** | No blocking(async) | Blocking용으로 설계 | Pool thread block | VT가 park되고 carrier가 해제됨 |
-| **Throughput @ 400 users** | CPU-bound면 저하 | 좋음 | 16에서 포화 | 선형적으로 확장 |
-| **p99 response time** | 안정적(CPU) | 안정적(I/O) | > 16 concurrent에서 queueing | 안정적 |
-| **Memory overhead** | 낮음(shared pool) | 중간 | 낮음(fixed) | 낮음(VT는 heap object) |
-| **Best scenario** | Compute tasks | Blocking I/O calls | Controlled concurrency | Mixed I/O, high concurrency |
-
-`Dispatchers.VT`는 I/O-bound endpoint(database, external HTTP, file read)에 가장 적합합니다.
-순수 CPU computation에는 `Dispatchers.Default`가 여전히 최적입니다.
-
-### Throughput 비교(참고 수치)
-
-400 concurrent users, 30s ramp, mixed 4-endpoint scenario에서 관찰된 수치입니다.
-
-| Dispatcher | Throughput | p95 Response Time |
+| Path | Controller | Dispatcher |
 |---|---|---|
-| `Dispatchers.Default` | ~1200 req/s | 180ms |
-| `Dispatchers.IO` | ~1400 req/s | 200ms |
-| Custom 16-pool | ~600 req/s | 450ms |
-| `Dispatchers.VT` | ~1500 req/s | 190ms |
+| `/default/*` | `DefaultDispatcherController` | `Dispatchers.Default` |
+| `/io/*` | `IODispatcherController` | `Dispatchers.IO` |
+| `/custom/*` | `CustomDispatcherController` | `newFixedThreadPoolContext(2 * availableProcessors, "custom")` |
+| `/virtual-thread/*` | `VirtualThreadDispatcherController` | `Executors.newVirtualThreadPerTaskExecutor().asCoroutineDispatcher()` |
 
-## Gatling Stress Test Scenario
+## Shared Endpoints
 
-`ScenarioProvider` object는 4개 endpoint를 순차적으로 호출하는 shared scenario를 정의합니다.
+모든 dispatcher controller는 `AbstractDispatcherController`에서 같은 endpoint set을
+상속합니다.
 
-```kotlin
-object ScenarioProvider {
+| Endpoint | What it exercises |
+|---|---|
+| `GET /{path}` | 짧은 delay가 있는 simple suspend endpoint |
+| `GET /{path}/suspend` | WebFlux coroutine path에서 suspend function 실행 |
+| `GET /{path}/deferred` | `CoroutineScope(dispatcher).async { ... }` |
+| `GET /{path}/sequential-flow?size=4` | Sequential `Flow` emission |
+| `GET /{path}/concurrent-flow?size=4` | `flatMapMerge(size)` concurrent `Flow` emission |
+| `POST /{path}/request-as-flow` | Request body를 `Flow<JsonNode>`로 처리 |
+| `GET /httpbin/delay/mono/{seconds}` | Virtual-thread Reactor scheduler에서 subscribe하는 WebClient call |
+| `GET /httpbin/delay/suspend/{seconds}` | Virtual-thread coroutine dispatcher 안에서 await하는 WebClient call |
 
-    const val BASE_URL = "http://localhost:8080"
+## Runtime Configuration
 
-    fun getHttpProtocol(): HttpProtocolBuilder = http
-        .baseUrl(BASE_URL)
-        .acceptHeader("*/*")
+`NettyConfig`는 sample의 Reactor Netty resource를 조정합니다.
 
-    fun getScenario(dispatcherType: DispatcherType): ScenarioBuilder {
-        val basePath = dispatcherType.code
-        return scenario("$dispatcherType Simulation")
-            .exec(http("Suspend").get("/$basePath/suspend"))
-            .exec(http("Deferred").get("/$basePath/deferred"))
-            .exec(http("Sequential flow").get("/$basePath/sequential-flow"))
-            .exec(http("Concurrent flow").get("/$basePath/concurrent-flow"))
-    }
+| Setting | Purpose |
+|---|---|
+| `ConnectionProvider.maxConnections(10_000)` | Gatling run 중 높은 concurrency를 허용합니다 |
+| `LoopResources.create("event-loop", 4, maxOf(availableProcessors * 8, 64), true)` | WebFlux용 bounded event-loop group을 사용합니다 |
+| Read/write timeout handlers | Load test 중 멈춘 connection을 방지합니다 |
 
-    fun getRampConcurrentUsers(
-        start: Int = 10,
-        finish: Int = 400,
-        duration: Duration = 30.seconds.toJavaDuration()
-    ): ClosedInjectionStep {
-        return rampConcurrentUsers(start).to(finish).during(duration)
-    }
-}
-```
-
-네 가지 simulation class가 각 dispatcher를 독립적으로 테스트합니다.
-
-| Simulation | Dispatcher | Path |
-|---|---|---|
-| `DefaultCoroutineSimulation` | `Dispatchers.Default` | `/default/*` |
-| `IOCoroutineSimulation` | `Dispatchers.IO` | `/io/*` |
-| `CustomCoroutineSimulation` | Custom 16-pool | `/custom/*` |
-| `VirtualThreadCoroutineSimulation` | `Dispatchers.VT` | `/virtual-thread/*` |
+`AsyncConfig`는 inheritable thread-local propagation이 켜진 virtual-thread-backed
+Spring `AsyncTaskExecutor`도 제공합니다.
 
 ## 실행
-
-### Step 1 - Application 시작
 
 ```bash
 ./gradlew :virtualthreads-spring-webflux:bootRun
 ```
 
-### Step 2 - 모든 Simulation 실행
+모든 dispatcher simulation을 실행합니다.
 
 ```bash
 ./gradlew :virtualthreads-spring-webflux:gatlingRun
 ```
 
-### Step 3 - 특정 Simulation 실행
+Virtual-thread simulation만 실행합니다.
 
 ```bash
 ./gradlew :virtualthreads-spring-webflux:gatlingRun \
-    --simulation simulations.VirtualThreadCoroutineSimulation
+  --simulation simulations.VirtualThreadCoroutineSimulation
 ```
 
-### Step 4 - 결과 비교
+Gatling report는 `virtualthreads/spring-webflux/build/reports/gatling/` 아래에
+생성됩니다.
 
-Report는 `build/reports/gatling/`에 있습니다. 각 simulation directory의 `index.html`을 열어 response time distribution을 나란히 비교합니다.
+## 테스트
 
-### Stop Conditions
-
-Regression 발생 시 simulation을 중단하도록 assertion을 추가합니다.
-
-```kotlin
-init {
-    setUp(
-        scn.injectClosed(ScenarioProvider.getRampConcurrentUsers())
-    ).protocols(httpProtocol)
-     .assertions(
-         global().responseTime().percentile(99.0).lt(1000),   // p99 < 1s
-         global().successfulRequests().percent().gt(99.0)      // < 1% errors
-     )
-}
+```bash
+./gradlew :virtualthreads-spring-webflux:test
 ```
-
-## 사전 요구 사항
-
-- Docker(optional - 이 모듈은 외부 infrastructure가 필요하지 않음)
-- JDK 25
-- 사용 가능한 8080 port
-
-## 참고 자료
-
-- [Project Loom - Virtual Threads](https://openjdk.org/jeps/444)
-- [Kotlin Coroutines + Virtual Threads](https://kotlinlang.org/docs/coroutines-guide.html)
-- [Gatling Gradle Plugin](https://docs.gatling.io/reference/extensions/build-tools/gradle-plugin/)
-- [gatling/gatling-gradle-plugin-demo-kotlin](https://github.com/gatling/gatling-gradle-plugin-demo-kotlin)
-- [boot-vt-benchmark](https://github.com/olegonsoftware/boot-vt-benchmark)
-- [Stress Testing with Gatling & Kotlin - Part 2](https://medium.com/@mdportnov/stress-testing-with-gatling-kotlin-part-2-1eb13d489dc9)

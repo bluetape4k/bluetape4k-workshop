@@ -1,150 +1,89 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1252" viewBox="0 0 1320 1252" role="img" aria-label="Spring WebFlux with Coroutines and Virtual Thread architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;virtualthreads/spring-webflux/src/main/kotlin/io/bluetape4k/workshop/webflux/virtualthread/WebfluxVirtualThreadApp.kt&quot;,&quot;virtualthreads/spring-webflux/src/main/kotlin/io/bluetape4k/workshop/webflux/virtualthread/config/AsyncConfig.kt&quot;,&quot;virtualthreads/spring-webflux/src/main/kotlin/io/bluetape4k/workshop/webflux/virtualthread/config/NettyConfig.kt&quot;,&quot;virtualthreads/spring-webflux/src/main/kotlin/io/bluetape4k/workshop/webflux/virtualthread/config/SchedulingConfig.kt&quot;,&quot;virtualthreads/spring-webflux/src/main/kotlin/io/bluetape4k/workshop/webflux/virtualthread/controller/AbstractDispatcherController.kt&quot;,&quot;virtualthreads/spring-webflux/src/main/kotlin/io/bluetape4k/workshop/webflux/virtualthread/controller/CustomDispatcherController.kt&quot;,&quot;virtualthreads/spring-webflux/src/main/kotlin/io/bluetape4k/workshop/webflux/virtualthread/controller/DefaultDispatcherController.kt&quot;,&quot;virtualthreads/spring-webflux/src/main/kotlin/io/bluetape4k/workshop/webflux/virtualthread/controller/HttpbinController.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="1030" viewBox="0 0 1680 1030" role="img" aria-label="Spring WebFlux dispatcher architecture">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .bg { fill: #f8fafc; }
+      .title { font-family: 'Architects Daughter', 'Comic Sans MS', cursive; font-size: 34px; fill: #172033; }
+      .subtitle { font-family: 'Comic Mono', 'Comic Sans MS', monospace; font-size: 17px; fill: #5b6675; }
+      .layer-title { font-family: 'Architects Daughter', 'Comic Sans MS', cursive; font-size: 26px; fill: #263244; }
+      .card-title { font-family: 'Architects Daughter', 'Comic Sans MS', cursive; font-size: 28px; fill: #111827; }
+      .body { font-family: 'Comic Mono', 'Comic Sans MS', monospace; font-size: 17px; fill: #3d4654; }
+      .small { font-family: 'Comic Mono', 'Comic Sans MS', monospace; font-size: 15px; fill: #4b5563; }
+      .layer { stroke-width: 1.5; rx: 24; ry: 24; }
+      .card { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; rx: 18; ry: 18; }
+      .surface { fill: #eff6ff; stroke: #93c5fd; }
+      .webflux { fill: #eef2ff; stroke: #a5b4fc; }
+      .dispatch { fill: #f0fdf4; stroke: #86efac; }
+      .external { fill: #fff7ed; stroke: #fdba74; }
+      .line { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+      .icon-stroke { fill: none; stroke: #334155; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
     </style>
+    <marker id="blueArrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb"/>
+    </marker>
+    <marker id="greenArrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#16a34a"/>
+    </marker>
+    <marker id="orangeArrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#ea580c"/>
+    </marker>
   </defs>
-  <rect class="canvas" width="1320" height="1252"/>
-  <rect class="frame" x="16" y="16" width="1288" height="1220" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Spring WebFlux with Coroutines and Virtual Thread</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">virtual-thread execution model and blocking boundary examples</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="518.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="478.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="345.5">Request/Test</tspan><tspan class="layer-title" x="151.0" y="368.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="395.0">MVC/WebFlux tests,</tspan><tspan class="layer-detail" x="151.0" y="411.0">sample endpoints</tspan></text>
-    </g>
-    <g class="layer" data-layer="service">
-      <rect x="46.0" y="650.0" width="1228.0" height="132.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="670.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="700.0">Execution Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="730.0">virtual threads,</tspan><tspan class="layer-detail" x="151.0" y="746.0">coroutines,</tspan><tspan class="layer-detail" x="151.0" y="762.0">blocking work</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="800.0" width="1228.0" height="242.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="820.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="893.5">Thread Boundary</tspan><tspan class="layer-title" x="151.0" y="916.5">Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="943.0">dispatchers, JDBC,</tspan><tspan class="layer-detail" x="151.0" y="959.0">Tomcat, helpers</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="1060.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="1080.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="1110.0">JVM Runtime</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1140.0">virtual threads,</tspan><tspan class="layer-detail" x="151.0" y="1156.0">platform threads,</tspan><tspan class="layer-detail" x="151.0" y="1172.0">containers</tspan></text>
-    </g>
-    <g class="edge" data-edge="api4-&gt;service0" data-label="delegates">
-      <path d="M 424.0 612.0 L 424.0 641.0 L 592.0 641.0 L 592.0 670.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
-    </g>
-    <g class="edge" data-edge="service1-&gt;infra0" data-label="persists / publishes">
-      <path d="M 928.0 762.0 L 928.0 791.0 L 424.0 791.0 L 424.0 820.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 424.0 1022.0 L 424.0 1051.0 L 424.0 1080.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Webflux Virtual Thread | App | application bootstrap">
-      <rect x="274.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="171.5">Webflux Virtual Thread</tspan><tspan class="node-title" x="424.0" y="195.5">App</tspan><tspan class="node-detail" x="424.0" y="219.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry1" data-lines="Abstract Webflux Virtual | Thread Test | virtualthread">
-      <rect x="610.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="171.5">Abstract Webflux Virtual</tspan><tspan class="node-title" x="760.0" y="195.5">Thread Test</tspan><tspan class="node-detail" x="760.0" y="219.5">virtualthread</tspan></text>
-    </g>
-    <g class="node" data-node="entry2" data-lines="Abstract Dispatcher | Controller Test | HTTP adapter">
-      <rect x="946.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="171.5">Abstract Dispatcher</tspan><tspan class="node-title" x="1096.0" y="195.5">Controller Test</tspan><tspan class="node-detail" x="1096.0" y="219.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="entry3" data-lines="Custom Dispatcher | Controller Test | HTTP adapter">
-      <rect x="274.0" y="258.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="295.5">Custom Dispatcher</tspan><tspan class="node-title" x="424.0" y="319.5">Controller Test</tspan><tspan class="node-detail" x="424.0" y="343.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="entry4" data-lines="Default Dispatcher | Controller Test | HTTP adapter">
-      <rect x="610.0" y="258.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="295.5">Default Dispatcher</tspan><tspan class="node-title" x="760.0" y="319.5">Controller Test</tspan><tspan class="node-detail" x="760.0" y="343.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api0" data-lines="Netty Config | configuration">
-      <rect x="946.0" y="265.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="307.5">Netty Config</tspan><tspan class="node-detail" x="1096.0" y="331.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="api1" data-lines="Scheduling Config | configuration">
-      <rect x="274.0" y="389.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="431.5">Scheduling Config</tspan><tspan class="node-detail" x="424.0" y="455.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="api2" data-lines="Abstract Dispatcher | Controller | HTTP adapter">
-      <rect x="610.0" y="382.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="419.5">Abstract Dispatcher</tspan><tspan class="node-title" x="760.0" y="443.5">Controller</tspan><tspan class="node-detail" x="760.0" y="467.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api3" data-lines="Custom Dispatcher | Controller | HTTP adapter">
-      <rect x="946.0" y="382.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="419.5">Custom Dispatcher</tspan><tspan class="node-title" x="1096.0" y="443.5">Controller</tspan><tspan class="node-detail" x="1096.0" y="467.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api4" data-lines="Default Dispatcher | Controller | HTTP adapter">
-      <rect x="274.0" y="506.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="543.5">Default Dispatcher</tspan><tspan class="node-title" x="424.0" y="567.5">Controller</tspan><tspan class="node-detail" x="424.0" y="591.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="service0" data-lines="Banner | domain model">
-      <rect x="442.0" y="670.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="592.0" y="712.5">Banner</tspan><tspan class="node-detail" x="592.0" y="736.5">domain model</tspan></text>
-    </g>
-    <g class="node" data-node="service1" data-lines="Dispatcher Type | domain model">
-      <rect x="778.0" y="670.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="928.0" y="712.5">Dispatcher Type</tspan><tspan class="node-detail" x="928.0" y="736.5">domain model</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Async Config | configuration">
-      <rect x="274.0" y="820.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="862.5">Async Config</tspan><tspan class="node-detail" x="424.0" y="886.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k Coroutine APIs">
-      <rect x="610.0" y="820.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="862.5">workshop</tspan><tspan class="node-detail" x="760.0" y="886.5">bluetape4k Coroutine APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="core | bluetape4k Coroutine APIs">
-      <rect x="946.0" y="820.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="862.5">core</tspan><tspan class="node-detail" x="1096.0" y="886.5">bluetape4k Coroutine APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="virtualthread | bluetape4k Coroutine APIs">
-      <rect x="274.0" y="930.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="972.5">virtualthread</tspan><tspan class="node-detail" x="424.0" y="996.5">bluetape4k Coroutine APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="SQL / R2DBC | JVM Thread Runtime">
-      <rect x="274.0" y="1080.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="1122.5">SQL / R2DBC</tspan><tspan class="node-detail" x="424.0" y="1146.5">JVM Thread Runtime</tspan></text>
-    </g>
-    <g class="node" data-node="runtime1" data-lines="Elasticsearch | JVM Thread Runtime">
-      <rect x="610.0" y="1080.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1122.5">Elasticsearch</tspan><tspan class="node-detail" x="760.0" y="1146.5">JVM Thread Runtime</tspan></text>
-    </g>
-    <g class="node" data-node="runtime2" data-lines="Testcontainers | JVM Thread Runtime">
-      <rect x="946.0" y="1080.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="1122.5">Testcontainers</tspan><tspan class="node-detail" x="1096.0" y="1146.5">JVM Thread Runtime</tspan></text>
-    </g>
-  </g>
+
+  <rect class="bg" width="1680" height="1030"/>
+  <text class="title" x="70" y="66">Spring WebFlux Dispatcher Comparison</text>
+  <text class="subtitle" x="70" y="96">Same coroutine endpoints, four dispatcher choices, Netty runtime tuning, and virtual-thread HTTP calls</text>
+
+  <rect class="layer surface" x="70" y="135" width="1540" height="175"/>
+  <text class="layer-title" x="105" y="180">Request Surface</text>
+  <rect class="card" x="180" y="205" width="330" height="70"/>
+  <text class="card-title" x="345" y="249" text-anchor="middle">WebTestClient</text>
+  <rect class="card" x="675" y="205" width="330" height="70"/>
+  <text class="card-title" x="840" y="249" text-anchor="middle">Gatling Scenarios</text>
+  <rect class="card" x="1170" y="205" width="310" height="70"/>
+  <text class="card-title" x="1325" y="249" text-anchor="middle">HTTP Clients</text>
+
+  <rect class="layer webflux" x="70" y="360" width="1540" height="250"/>
+  <text class="layer-title" x="105" y="405">WebFlux Runtime</text>
+  <rect class="card" x="150" y="445" width="330" height="95"/>
+  <path class="icon-stroke" d="M190 482h44m-44 18h44m-22-36v54"/>
+  <text class="card-title" x="340" y="482" text-anchor="middle">Reactor Netty</text>
+  <text class="body" x="340" y="512" text-anchor="middle">event loops + timeouts</text>
+  <rect class="card" x="560" y="445" width="350" height="95"/>
+  <text class="card-title" x="735" y="482" text-anchor="middle">Abstract Controller</text>
+  <text class="body" x="735" y="512" text-anchor="middle">shared coroutine endpoints</text>
+  <rect class="card" x="990" y="445" width="260" height="95"/>
+  <text class="card-title" x="1120" y="482" text-anchor="middle">Httpbin</text>
+  <text class="body" x="1120" y="512" text-anchor="middle">mono + suspend calls</text>
+  <rect class="card" x="1320" y="445" width="230" height="95"/>
+  <text class="card-title" x="1435" y="482" text-anchor="middle">@Async</text>
+  <text class="body" x="1435" y="512" text-anchor="middle">VT executor</text>
+
+  <rect class="layer dispatch" x="70" y="660" width="1540" height="195"/>
+  <text class="layer-title" x="105" y="705">Dispatcher Controllers</text>
+  <rect class="card" x="150" y="735" width="300" height="75"/>
+  <text class="card-title" x="300" y="767" text-anchor="middle">Default</text>
+  <text class="small" x="300" y="792" text-anchor="middle">Dispatchers.Default</text>
+  <rect class="card" x="520" y="735" width="300" height="75"/>
+  <text class="card-title" x="670" y="767" text-anchor="middle">IO</text>
+  <text class="small" x="670" y="792" text-anchor="middle">Dispatchers.IO</text>
+  <rect class="card" x="890" y="735" width="300" height="75"/>
+  <text class="card-title" x="1040" y="767" text-anchor="middle">Custom</text>
+  <text class="small" x="1040" y="792" text-anchor="middle">fixed dispatcher</text>
+  <rect class="card" x="1260" y="735" width="300" height="75"/>
+  <text class="card-title" x="1410" y="767" text-anchor="middle">Virtual Thread</text>
+  <text class="small" x="1410" y="792" text-anchor="middle">executor.asCoroutineDispatcher()</text>
+
+  <rect class="layer external" x="70" y="900" width="1540" height="90"/>
+  <text class="layer-title" x="105" y="954">External Blocking Service</text>
+  <rect class="card" x="960" y="912" width="470" height="62"/>
+  <path class="icon-stroke" d="M1010 943h38m-30-15h22m-22 30h22"/>
+  <text class="card-title" x="1235" y="952" text-anchor="middle">Testcontainers Httpbin</text>
+
+  <path class="line" d="M1325 275 L1325 333 L315 333 L315 445" stroke="#2563eb" marker-end="url(#blueArrow)"/>
+  <path class="line" d="M840 275 L840 332 L315 332 L315 445" stroke="#2563eb" marker-end="url(#blueArrow)"/>
+  <path class="line" d="M315 540 L315 635 L300 635 L300 735" stroke="#16a34a" marker-end="url(#greenArrow)"/>
+  <path class="line" d="M735 540 L735 635 L670 635 L670 735" stroke="#16a34a" marker-end="url(#greenArrow)"/>
+  <path class="line" d="M735 540 L735 635 L1040 635 L1040 735" stroke="#16a34a" marker-end="url(#greenArrow)"/>
+  <path class="line" d="M735 540 L735 635 L1410 635 L1410 735" stroke="#16a34a" marker-end="url(#greenArrow)"/>
+  <path class="line" d="M1120 540 L1120 635 L1410 635 L1410 735" stroke="#16a34a" marker-end="url(#greenArrow)"/>
+  <path class="line" d="M1120 540 L1120 625 L1585 625 L1585 885 L1235 885 L1235 912" stroke="#ea580c" marker-end="url(#orangeArrow)"/>
 </svg>
