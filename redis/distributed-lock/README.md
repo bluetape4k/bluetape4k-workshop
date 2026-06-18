@@ -2,20 +2,21 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
-
-This example exercises **redis-distributed-lock** as a runnable Redis-backed coordination workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
-
-## Sequence Diagram
-
-Demonstrates distributed locking strategies using Redisson, from unsafe shared mutable state through
-thread-safe locks to fenced (token-based) locks and their coroutine-native counterpart.
+This module demonstrates Redis-backed inventory deduction under contention. It starts with an unsafe in-memory race, then adds Redisson `RLock`, blocking `RFencedLock`, and coroutine-native fenced locking with `NonCancellable` unlock.
 
 ---
 
 ## Architecture
 
-![redis-distributed-lock architecture diagram](../../docs/images/readme-diagrams/redis-distributed-lock-architecture-01.png)
+![redis-distributed-lock architecture diagram](../../docs/images/readme-diagrams/redis-distributed-lock-readme-architecture-01.png)
+
+---
+
+## Fenced Lock Flow
+
+![redis-distributed-lock fenced flow diagram](../../docs/images/readme-diagrams/redis-distributed-lock-readme-fenced-flow-01.png)
+
+The fenced variants issue a monotonic token from Redis, pass that token into `FencedResource`, and update `InventoryStore` only when the token is not older than `lastSeenToken`. The suspending variant adds `getLockId(lockName)` and `withContext(NonCancellable)` so cancellation cannot interrupt `unlockAsync(lockId).await()`.
 
 ---
 

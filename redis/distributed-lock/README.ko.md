@@ -2,20 +2,21 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
-
-이 예제는 **redis-distributed-lock** 모듈을 실행 가능한 Redis 기반 조정 워크샵 조각으로 보여줍니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 사용 방식을 중심으로 설명합니다.
-
-## 시퀀스 다이어그램
-
-Redisson을 사용한 분산 락 전략을 시연합니다. 안전하지 않은 공유 가변 상태부터
-스레드 안전 락, 펜싱(토큰 기반) 락, 코루틴 네이티브 구현까지 다룹니다.
+이 모듈은 Redis-backed inventory deduction을 contention 상황에서 검증합니다. 먼저 lock 없는 in-memory race로 oversell을 증명하고, Redisson `RLock`, blocking `RFencedLock`, `NonCancellable` unlock을 포함한 coroutine-native fenced lock으로 안전성을 단계별로 비교합니다.
 
 ---
 
 ## 아키텍처
 
-![redis-distributed-lock Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/redis-distributed-lock-architecture-01.png)
+![redis-distributed-lock architecture diagram](../../docs/images/readme-diagrams/redis-distributed-lock-readme-architecture-01.png)
+
+---
+
+## Fenced Lock 흐름
+
+![redis-distributed-lock fenced flow diagram](../../docs/images/readme-diagrams/redis-distributed-lock-readme-fenced-flow-01.png)
+
+Fenced variant는 Redis에서 단조 증가 token을 받고, 그 token을 `FencedResource`에 전달한 뒤 `lastSeenToken`보다 오래되지 않은 경우에만 `InventoryStore`를 갱신합니다. Suspending variant는 `getLockId(lockName)`과 `withContext(NonCancellable)`을 추가해 cancellation이 `unlockAsync(lockId).await()`를 끊지 못하게 합니다.
 
 ---
 
