@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1840" height="980" viewBox="0 0 1840 980" role="img" aria-label="Spring Cloud Gateway route flow">
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.15"/></filter>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker>
+    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A"/></marker>
+    <marker id="arrowOrange" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#EA580C"/></marker>
+    <style>
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.lane{stroke-width:1.6;rx:24}
+      .title{font-family:"Architects Daughter";font-size:42px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#51606F}
+      .laneTitle{font-family:"Architects Daughter";font-size:31px;fill:#243447}.cardTitle{font-family:"Architects Daughter";font-size:30px;fill:#102033}
+      .cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.line{fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}
+      .label{font-family:"Comic Mono";font-size:14px;fill:#334155}
+    </style>
+  </defs>
+  <rect class="canvas" width="1840" height="980"/>
+  <rect class="frame" x="24" y="24" width="1792" height="932" rx="26"/>
+  <text class="title" x="920" y="74" text-anchor="middle">Gateway route outcomes</text>
+  <text class="subtitle" x="920" y="108" text-anchor="middle">Most routes forward to nghttp2; protected routes either fallback locally, consume Redis quota, or proxy WebSocket traffic.</text>
+
+  <g filter="url(#shadow)"><rect x="115" y="192" width="250" height="72" rx="14" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="240" y="226" text-anchor="middle">Client</text><text class="cardText" x="240" y="250" text-anchor="middle">HTTP or WebSocket</text></g>
+  <g filter="url(#shadow)"><rect x="520" y="180" width="310" height="96" rx="14" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="675" y="214" text-anchor="middle">RouteLocator</text><text class="cardText" x="675" y="240" text-anchor="middle">path, host, rewrite</text><text class="cardText" x="675" y="264" text-anchor="middle">circuit, limit, websocket</text></g>
+  <g filter="url(#shadow)"><rect x="1020" y="180" width="330" height="96" rx="14" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="1185" y="214" text-anchor="middle">Selected filter chain</text><text class="cardText" x="1185" y="240" text-anchor="middle">prefix, rewrite, circuit</text><text class="cardText" x="1185" y="264" text-anchor="middle">rate limit, proxy</text></g>
+  <g filter="url(#shadow)"><rect x="1485" y="192" width="240" height="72" rx="14" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="1605" y="226" text-anchor="middle">Outcome</text><text class="cardText" x="1605" y="250" text-anchor="middle">forward or reject</text></g>
+  <path class="line" d="M 365 228 L 520 228" stroke="#2563EB" marker-end="url(#arrowBlue)"/><text class="label" x="442" y="210" text-anchor="middle">match request</text>
+  <path class="line" d="M 830 228 L 1020 228" stroke="#16A34A" marker-end="url(#arrowGreen)"/><text class="label" x="925" y="210" text-anchor="middle">apply filters</text>
+  <path class="line" d="M 1350 228 L 1485 228" stroke="#EA580C" marker-end="url(#arrowOrange)"/><text class="label" x="1418" y="210" text-anchor="middle">route result</text>
+
+  <rect class="lane" x="84" y="340" width="1672" height="112" fill="#EFF6FF" stroke="#BFDBFE"/>
+  <text class="laneTitle" x="124" y="386">Normal forwarding</text>
+  <path class="line" d="M 380 408 L 1450 408" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <text class="label" x="915" y="390" text-anchor="middle">prefixPath and optional rewrite forward to https://nghttp2.org/httpbin</text>
+
+  <rect class="lane" x="84" y="506" width="1672" height="118" fill="#FEF2F2" stroke="#FCA5A5"/>
+  <text class="laneTitle" x="124" y="552">Circuit breaker branch</text>
+  <path class="line" d="M 380 586 L 800 586" stroke="#EA580C" marker-end="url(#arrowOrange)"/>
+  <text class="label" x="590" y="568" text-anchor="middle">slowcmd opens or times out</text>
+  <path class="line" d="M 800 586 L 1450 586" stroke="#EA580C" marker-end="url(#arrowOrange)"/>
+  <text class="label" x="1125" y="568" text-anchor="middle">forward:/circuitbreaker/fallback returns local text</text>
+
+  <rect class="lane" x="84" y="678" width="1672" height="118" fill="#FFF7ED" stroke="#FED7AA"/>
+  <text class="laneTitle" x="124" y="724">Rate limit branch</text>
+  <g filter="url(#shadow)">
+    <rect x="780" y="718" width="280" height="58" rx="14" fill="#FFFFFF" stroke="#DC2626" stroke-width="1.7"/>
+    <g transform="translate(804 730) scale(.65)"><path d="M 0 14 L 34 0 L 68 14 L 34 28 Z" fill="#DC2626"/><path d="M 0 28 L 34 14 L 68 28 L 34 42 Z" fill="#EF4444"/><path d="M 0 42 L 34 28 L 68 42 L 34 56 Z" fill="#F87171"/></g>
+    <text class="cardTitle" x="955" y="755" text-anchor="middle">Redis quota</text>
+  </g>
+  <path class="line" d="M 380 748 L 780 748" stroke="#EA580C" marker-end="url(#arrowOrange)"/>
+  <path class="line" d="M 1060 748 L 1450 748" stroke="#EA580C" marker-end="url(#arrowOrange)"/>
+  <text class="label" x="1255" y="730" text-anchor="middle">allow upstream or return 429</text>
+
+  <rect class="lane" x="84" y="840" width="1672" height="82" fill="#F0FDF4" stroke="#BBF7D0"/>
+  <text class="laneTitle" x="124" y="890">WebSocket branch</text>
+  <path class="line" d="M 380 884 L 1450 884" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <text class="label" x="915" y="866" text-anchor="middle">/echo proxies frames to ws://localhost:9000</text>
+</svg>
