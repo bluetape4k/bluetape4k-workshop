@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1760" height="940" viewBox="0 0 1760 940" role="img" aria-label="STOMP WebSocket greeting sequence">
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker>
+    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A"/></marker>
+    <marker id="arrowOrange" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#EA580C"/></marker>
+    <style>
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}
+      .title{font-family:"Architects Daughter";font-size:42px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#51606F}
+      .cardTitle{font-family:"Architects Daughter";font-size:30px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}
+      .life{stroke:#94A3B8;stroke-width:1.7;stroke-dasharray:8 8}.line{fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}
+      .msg{font-family:"Comic Mono";font-size:15px;fill:#334155}.region{fill-opacity:.55;stroke-width:1.6;rx:18}
+      .noteTitle{font-family:"Architects Daughter";font-size:26px;fill:#102033}
+    </style>
+  </defs>
+  <rect class="canvas" width="1760" height="940"/>
+  <rect class="frame" x="24" y="24" width="1712" height="892" rx="26"/>
+  <text class="title" x="880" y="74" text-anchor="middle">Greeting over STOMP</text>
+  <text class="subtitle" x="880" y="108" text-anchor="middle">The browser and integration test follow the same connect, subscribe, send, and message delivery contract.</text>
+
+  <g filter="url(#shadow)">
+    <rect x="88" y="154" width="240" height="74" rx="14" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
+    <text class="cardTitle" x="208" y="188" text-anchor="middle">Client</text>
+    <text class="cardText" x="208" y="212" text-anchor="middle">SockJS or test</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="455" y="154" width="290" height="74" rx="14" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/>
+    <text class="cardTitle" x="600" y="188" text-anchor="middle">STOMP endpoint</text>
+    <text class="cardText" x="600" y="212" text-anchor="middle">/gs-guide-websocket</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="870" y="154" width="280" height="74" rx="14" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/>
+    <text class="cardTitle" x="1010" y="188" text-anchor="middle">GreetingController</text>
+    <text class="cardText" x="1010" y="212" text-anchor="middle">@MessageMapping</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="1275" y="154" width="310" height="74" rx="14" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.7"/>
+    <text class="cardTitle" x="1430" y="188" text-anchor="middle">SimpleBroker</text>
+    <text class="cardText" x="1430" y="212" text-anchor="middle">/topic/greetings</text>
+  </g>
+  <line class="life" x1="208" y1="244" x2="208" y2="812"/>
+  <line class="life" x1="600" y1="244" x2="600" y2="812"/>
+  <line class="life" x1="1010" y1="244" x2="1010" y2="812"/>
+  <line class="life" x1="1430" y1="244" x2="1430" y2="812"/>
+
+  <rect class="region" x="70" y="286" width="1620" height="160" fill="#EFF6FF" stroke="#93C5FD"/>
+  <text class="noteTitle" x="112" y="328">Connect and subscribe</text>
+  <path class="line" d="M 208 366 L 600 366" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <text class="msg" x="404" y="348" text-anchor="middle">CONNECT ws://.../gs-guide-websocket</text>
+  <path class="line" d="M 208 412 L 1430 412" stroke="#EA580C" marker-end="url(#arrowOrange)"/>
+  <text class="msg" x="820" y="394" text-anchor="middle">SUBSCRIBE /topic/greetings</text>
+
+  <rect class="region" x="70" y="500" width="1620" height="230" fill="#ECFDF5" stroke="#86EFAC"/>
+  <text class="noteTitle" x="112" y="542">Send and broadcast</text>
+  <path class="line" d="M 208 586 L 600 586" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <text class="msg" x="404" y="568" text-anchor="middle">SEND /app/hello { name }</text>
+  <path class="line" d="M 600 632 L 1010 632" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <text class="msg" x="805" y="614" text-anchor="middle">route to @MessageMapping("/hello")</text>
+  <path class="line" d="M 1010 678 L 1430 678" stroke="#EA580C" marker-end="url(#arrowOrange)"/>
+  <text class="msg" x="1220" y="660" text-anchor="middle">return Greeting("Hello, name!")</text>
+  <path class="line" d="M 1430 780 L 208 780" stroke="#EA580C" marker-end="url(#arrowOrange)"/>
+  <text class="msg" x="819" y="806" text-anchor="middle">MESSAGE frame delivered to subscriber</text>
+</svg>
