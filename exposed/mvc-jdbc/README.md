@@ -1,96 +1,64 @@
-# exposed-mvc-jdbc
+# exposed/mvc-jdbc
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
-
-This example exercises **exposed-mvc-jdbc** as a runnable Exposed data access workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
-
-## Sequence Diagram
-
-Spring MVC + JetBrains Exposed JDBC using **bluetape4k-exposed** table base classes
-and repository interfaces for type-safe, boilerplate-free data access.
+`exposed/mvc-jdbc` is a Spring MVC example that runs JetBrains Exposed over
+blocking JDBC. It demonstrates two persistence styles in the same application:
+bluetape4k repository inheritance for simple Author/Book CRUD, and explicit
+Exposed SQL for order placement where row locks and rollback behavior matter.
 
 ## Architecture
 
-![exposed-mvc-jdbc architecture diagram](../../docs/images/readme-diagrams/exposed-mvc-jdbc-architecture-01.png)
+![exposed-mvc-jdbc architecture diagram](../../docs/images/readme-diagrams/exposed-mvc-jdbc-readme-architecture-01.png)
 
-## Domain Model
+The module keeps the HTTP layer thin. Controllers delegate to Spring services,
+services define the transaction boundary, and repositories own the Exposed table
+access. PostgreSQL is the runtime database in the sample configuration and in
+the Testcontainers-backed tests.
 
-```
-AuthorTable (AuditableLongIdTable)        BookTable (LongIdTable)
-┌──────────────────────────────┐          ┌──────────────────────────────┐
-│ id          BIGSERIAL PK     │◄─────────│ id          BIGSERIAL PK     │
-│ first_name  VARCHAR(100)     │          │ title       VARCHAR(200)      │
-│ last_name   VARCHAR(100)     │          │ publish_date VARCHAR(20)      │
-│ email       VARCHAR(255) UQ  │          │ author_id   FK → authors.id  │
-│ created_by  VARCHAR(128)     │          └──────────────────────────────┘
-│ created_at  TIMESTAMP        │
-│ updated_by  VARCHAR(128)?    │
-│ updated_at  TIMESTAMP?       │
-└──────────────────────────────┘
-```
+| Area | Implementation | Reader contract |
+|---|---|---|
+| Author and Book CRUD | `AuthorRepository`, `BookRepository` | `LongAuditableJdbcRepository` and `LongJdbcRepository` provide inherited CRUD, paging, counting, existence checks, delete, and batch helpers. |
+| Author audit columns | `AuthorTable : AuditableLongIdTable` | `id`, primary key, and audit columns come from bluetape4k instead of being repeated in the example. |
+| Book lookup by author | `BookRepository.findByAuthorId` | Uses `findBy({ BookTable.authorId eq EntityID(...) })` instead of handwritten select boilerplate. |
+| Order placement | `OrderService.placeOrder` | Creates the order, sorts lines by `productId`, locks each product row, inserts order lines, and decrements stock in one transaction. |
+| Stock conflict | `InsufficientStockException` | Insufficient stock aborts the transaction, so partial order lines and stock changes are rolled back. |
 
-## Used bluetape4k Features
+## Order Placement Flow
 
-| Feature | Module / Artifact | Code reference | Benefit |
-|---------|-------------------|----------------|---------|
-| `AuditableLongIdTable` | `bluetape4k-exposed-core` | `AuthorTable.kt` | Audit columns (`createdAt`, `createdBy`, `updatedAt`, `updatedBy`) auto-wired |
-| `LongAuditableJdbcRepository` | `bluetape4k-exposed-jdbc` | `AuthorRepository.kt` | `findAll()`, `findById()`, `findPage()`, `count()`, `existsById()`, `deleteById()`, `batchInsert()`, `auditedUpdateById()` all inherited |
-| `LongJdbcRepository` | `bluetape4k-exposed-jdbc` | `BookRepository.kt` | Same CRUD inheritance for non-audited table |
-| `findBy(vararg filters)` | `bluetape4k-exposed-jdbc` | `BookRepository.findByAuthorId` | Type-safe predicate query — no manual `selectAll().where {}` |
-| `KLogging` | `bluetape4k-logging` | Every service/config class | Lazy lambda logging |
-| `PostgreSQLServer.Launcher` | `bluetape4k-testcontainers` | `AbstractMvcJdbcTest` | Singleton TC container |
+![exposed-mvc-jdbc order placement sequence](../../docs/images/readme-diagrams/exposed-mvc-jdbc-readme-sequence-01.png)
 
-## Before / After
+`placeOrder()` intentionally sorts requested lines by `productId` before taking
+locks. Each product is read through `ProductRepository.findByIdForUpdate()`,
+which issues Exposed's `forUpdate()` query. The service only writes an order
+line and decrements stock after the locked row proves enough inventory exists.
 
-### Table definition
+## Schema
 
-```kotlin
-// ❌ Before — manual id + primaryKey + no audit
-object AuthorTable : Table("authors") {
-    val id = long("id").autoIncrement()
-    override val primaryKey = PrimaryKey(id)
-}
+![exposed-mvc-jdbc schema ERD](../../docs/images/readme-diagrams/exposed-mvc-jdbc-readme-erd-01.png)
 
-// ✅ After — bluetape4k AuditableLongIdTable
-object AuthorTable : AuditableLongIdTable("authors") {
-    // id, primaryKey, createdAt, createdBy, updatedAt, updatedBy are inherited
-}
-```
+| Table | Key columns | Purpose |
+|---|---|---|
+| `authors` | `id`, `first_name`, `last_name`, `email`, audit columns | Audited CRUD example backed by `AuditableLongIdTable`. |
+| `books` | `id`, `title`, `publish_date`, `author_id` | Non-audited CRUD example with a typed FK to `authors`. |
+| `products` | `id`, `name`, `price`, `stock` | Product catalog rows locked during order placement. |
+| `orders` | `id`, `customer_id`, `order_date`, `status` | Order header row inserted before processing sorted order lines. |
+| `order_lines` | `id`, `order_id`, `product_id`, `quantity`, `unit_price` | Line rows inserted only after the locked product row has enough stock. |
 
-### Repository
+## Useful Code Paths
 
-```kotlin
-// ❌ Before — 35 lines of boilerplate CRUD
-class AuthorRepository {
-    fun findAll() = AuthorTable.selectAll().map { it.toAuthorDTO() }
-    fun findById(id: Long) = AuthorTable.selectAll().where { AuthorTable.id eq id }.singleOrNull()?.toAuthorDTO()
-    fun deleteById(id: Long) { AuthorTable.deleteWhere { AuthorTable.id eq id } }
-    // no findPage(), no batchInsert()
-}
-
-// ✅ After — declare intent only
-class AuthorRepository : LongAuditableJdbcRepository<AuthorDTO, AuthorTable> {
-    override val table = AuthorTable
-    override fun extractId(entity: AuthorDTO) = entity.id
-    override fun ResultRow.toEntity() = toAuthorDTO()
-    // All CRUD + pagination + batch + audited-update inherited
-}
-```
-
-## Key Patterns
-
-- **Declarative TX**: `@Transactional(readOnly = true)` on read methods, `@Transactional` on mutations.
-- **SELECT FOR UPDATE**: `ProductTable.selectAll().where{...}.forUpdate()` for TOCTOU prevention.
-- **Stock check**: `if (stock < quantity) throw InsufficientStockException(productId)` — NOT `require()`.
-- **cancelOrder rows check**: `val rows = update{...}; if (rows == 0) throw NoSuchElementException(...)`.
-- **Lock ordering**: `req.lines.sortedBy { it.productId }` before iterating to prevent deadlock.
+| File | What to inspect |
+|---|---|
+| `author/schema/AuthorTable.kt` | bluetape4k audited table inheritance. |
+| `author/repository/AuthorRepository.kt` | Minimal repository implementation over inherited CRUD. |
+| `author/repository/BookRepository.kt` | `findBy` predicate usage for a typed author lookup. |
+| `order/service/OrderService.kt` | `@Transactional`, lock ordering, stock check, rollback trigger, and cancel-row check. |
+| `order/repository/ProductRepository.kt` | `forUpdate()` and atomic stock decrement expression. |
+| `config/DatabaseInitializer.kt` | Schema creation and seed data for the runnable workshop. |
 
 ## Running
 
 ```bash
-# Requires PostgreSQL — use Docker:
 docker run -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:15
 
 ./gradlew :exposed-mvc-jdbc:bootRun
@@ -101,13 +69,7 @@ docker run -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:15
 
 ```bash
 ./gradlew :exposed-mvc-jdbc:test
-# Testcontainers PostgreSQL launched automatically
 ```
 
-| Test Class | Coverage |
-|-----------|---------|
-| `AuthorControllerTest` | Author + Book CRUD |
-| `ProductControllerTest` | Product CRUD |
-| `OrderControllerTest` | Order place, cancel, 404 cases |
-| `PlaceOrderRollbackTest` | 3-table rollback on stock failure |
-| `ConcurrentPlaceOrderTest` | N=10 threads, stock=1 → exactly 1 success, 9 conflicts |
+The tests start PostgreSQL through `PostgreSQLServer.Launcher` and cover Author,
+Book, Product, Order, rollback, and concurrent stock-conflict scenarios.

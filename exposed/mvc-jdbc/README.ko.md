@@ -1,95 +1,63 @@
-# exposed-mvc-jdbc
+# exposed/mvc-jdbc
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
-
-이 예제는 **exposed-mvc-jdbc**를 실행 가능한 Exposed 데이터 접근 워크숍 조각으로 다룹니다. 개발자가 가장 먼저 확인하는 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄여 주는 라이브러리와 프레임워크 API 관찰에 초점을 둡니다.
-
-## 시퀀스 다이어그램
-
-Spring MVC + JetBrains Exposed JDBC 예제입니다. **bluetape4k-exposed**의 table base class와 repository interface를 사용해 type-safe하고 boilerplate 없는 데이터 접근을 구성합니다.
+`exposed/mvc-jdbc`는 Spring MVC 위에서 JetBrains Exposed JDBC를 blocking 방식으로
+사용하는 예제입니다. 단순 Author/Book CRUD에는 bluetape4k repository 상속을 쓰고,
+재고 락과 롤백이 중요한 주문 처리에는 명시적인 Exposed SQL을 사용합니다.
 
 ## 아키텍처
 
-![exposed-mvc-jdbc Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/exposed-mvc-jdbc-architecture-01.png)
+![exposed-mvc-jdbc architecture diagram](../../docs/images/readme-diagrams/exposed-mvc-jdbc-readme-architecture-01.png)
 
-## 도메인 모델
+이 모듈의 HTTP 계층은 얇게 유지됩니다. Controller는 Spring service에 위임하고,
+service가 transaction boundary를 정의하며, repository가 Exposed table 접근을
+담당합니다. 샘플 설정과 Testcontainers 기반 테스트 모두 PostgreSQL을 런타임
+데이터베이스로 사용합니다.
 
-```
-AuthorTable (AuditableLongIdTable)        BookTable (LongIdTable)
-┌──────────────────────────────┐          ┌──────────────────────────────┐
-│ id          BIGSERIAL PK     │◄─────────│ id          BIGSERIAL PK     │
-│ first_name  VARCHAR(100)     │          │ title       VARCHAR(200)      │
-│ last_name   VARCHAR(100)     │          │ publish_date VARCHAR(20)      │
-│ email       VARCHAR(255) UQ  │          │ author_id   FK → authors.id  │
-│ created_by  VARCHAR(128)     │          └──────────────────────────────┘
-│ created_at  TIMESTAMP        │
-│ updated_by  VARCHAR(128)?    │
-│ updated_at  TIMESTAMP?       │
-└──────────────────────────────┘
-```
+| 영역 | 구현 | 독자가 확인할 계약 |
+|---|---|---|
+| Author/Book CRUD | `AuthorRepository`, `BookRepository` | `LongAuditableJdbcRepository`와 `LongJdbcRepository`가 CRUD, paging, count, exists, delete, batch helper를 상속으로 제공합니다. |
+| Author audit column | `AuthorTable : AuditableLongIdTable` | `id`, primary key, audit column을 예제에서 반복 선언하지 않고 bluetape4k table base가 제공합니다. |
+| Author별 Book 조회 | `BookRepository.findByAuthorId` | 직접 `selectAll()`을 쓰지 않고 `findBy({ BookTable.authorId eq EntityID(...) })`를 사용합니다. |
+| 주문 생성 | `OrderService.placeOrder` | 주문 header를 만들고, line을 `productId`로 정렬한 뒤, product row를 잠그고, order line 삽입과 stock 감소를 한 transaction에서 처리합니다. |
+| 재고 부족 | `InsufficientStockException` | 재고가 부족하면 transaction이 중단되어 부분 order line과 stock 변경이 rollback됩니다. |
 
-## 사용한 bluetape4k 기능
+## 주문 처리 흐름
 
-| 기능 | 모듈 / Artifact | 코드 참조 | 이점 |
-|---------|-------------------|----------------|---------|
-| `AuditableLongIdTable` | `bluetape4k-exposed-core` | `AuthorTable.kt` | Audit column(`createdAt`, `createdBy`, `updatedAt`, `updatedBy`) 자동 연결 |
-| `LongAuditableJdbcRepository` | `bluetape4k-exposed-jdbc` | `AuthorRepository.kt` | `findAll()`, `findById()`, `findPage()`, `count()`, `existsById()`, `deleteById()`, `batchInsert()`, `auditedUpdateById()` 모두 상속 |
-| `LongJdbcRepository` | `bluetape4k-exposed-jdbc` | `BookRepository.kt` | Non-audited table에도 동일한 CRUD 상속 제공 |
-| `findBy(vararg filters)` | `bluetape4k-exposed-jdbc` | `BookRepository.findByAuthorId` | Type-safe predicate query — 직접 `selectAll().where {}` 작성 불필요 |
-| `KLogging` | `bluetape4k-logging` | 모든 서비스/config 클래스 | 지연 lambda logging |
-| `PostgreSQLServer.Launcher` | `bluetape4k-testcontainers` | `AbstractMvcJdbcTest` | Singleton TC container |
+![exposed-mvc-jdbc order placement sequence](../../docs/images/readme-diagrams/exposed-mvc-jdbc-readme-sequence-01.png)
 
-## 적용 전 / 적용 후
+`placeOrder()`는 row lock을 잡기 전에 요청 line을 `productId` 기준으로 정렬합니다.
+각 상품은 `ProductRepository.findByIdForUpdate()`로 읽으며, 이 경로가 Exposed의
+`forUpdate()` query를 실행합니다. Service는 locked row의 재고가 충분할 때만 order
+line을 쓰고 stock을 감소시킵니다.
 
-### Table definition
+## 스키마
 
-```kotlin
-// ❌ Before — manual id + primaryKey + no audit
-object AuthorTable : Table("authors") {
-    val id = long("id").autoIncrement()
-    override val primaryKey = PrimaryKey(id)
-}
+![exposed-mvc-jdbc schema ERD](../../docs/images/readme-diagrams/exposed-mvc-jdbc-readme-erd-01.png)
 
-// ✅ After — bluetape4k AuditableLongIdTable
-object AuthorTable : AuditableLongIdTable("authors") {
-    // id, primaryKey, createdAt, createdBy, updatedAt, updatedBy are inherited
-}
-```
+| Table | 주요 column | 역할 |
+|---|---|---|
+| `authors` | `id`, `first_name`, `last_name`, `email`, audit columns | `AuditableLongIdTable` 기반 audited CRUD 예제입니다. |
+| `books` | `id`, `title`, `publish_date`, `author_id` | `authors`로 typed FK를 갖는 non-audited CRUD 예제입니다. |
+| `products` | `id`, `name`, `price`, `stock` | 주문 처리 중 row lock을 잡는 상품 재고 테이블입니다. |
+| `orders` | `id`, `customer_id`, `order_date`, `status` | 정렬된 order line을 처리하기 전에 생성하는 주문 header입니다. |
+| `order_lines` | `id`, `order_id`, `product_id`, `quantity`, `unit_price` | locked product row의 재고가 충분할 때만 삽입되는 주문 line입니다. |
 
-### Repository
+## 주요 코드 경로
 
-```kotlin
-// ❌ Before — 35 lines of boilerplate CRUD
-class AuthorRepository {
-    fun findAll() = AuthorTable.selectAll().map { it.toAuthorDTO() }
-    fun findById(id: Long) = AuthorTable.selectAll().where { AuthorTable.id eq id }.singleOrNull()?.toAuthorDTO()
-    fun deleteById(id: Long) { AuthorTable.deleteWhere { AuthorTable.id eq id } }
-    // no findPage(), no batchInsert()
-}
-
-// ✅ After — declare intent only
-class AuthorRepository : LongAuditableJdbcRepository<AuthorDTO, AuthorTable> {
-    override val table = AuthorTable
-    override fun extractId(entity: AuthorDTO) = entity.id
-    override fun ResultRow.toEntity() = toAuthorDTO()
-    // All CRUD + pagination + batch + audited-update inherited
-}
-```
-
-## 핵심 패턴
-
-- **Declarative TX**: 조회 메서드에는 `@Transactional(readOnly = true)`, 변경 메서드에는 `@Transactional`을 둡니다.
-- **SELECT FOR UPDATE**: TOCTOU 방지를 위해 `ProductTable.selectAll().where{...}.forUpdate()`를 사용합니다.
-- **Stock check**: `require()`가 아니라 `if (stock < quantity) throw InsufficientStockException(productId)`를 사용합니다.
-- **cancelOrder rows check**: `val rows = update{...}; if (rows == 0) throw NoSuchElementException(...)`.
-- **Lock ordering**: deadlock 방지를 위해 순회 전에 `req.lines.sortedBy { it.productId }`로 정렬합니다.
+| 파일 | 확인할 내용 |
+|---|---|
+| `author/schema/AuthorTable.kt` | bluetape4k audited table inheritance. |
+| `author/repository/AuthorRepository.kt` | 상속된 CRUD 위에 최소 구현만 둔 repository. |
+| `author/repository/BookRepository.kt` | typed author 조회를 위한 `findBy` predicate 사용. |
+| `order/service/OrderService.kt` | `@Transactional`, lock ordering, stock check, rollback trigger, cancel-row check. |
+| `order/repository/ProductRepository.kt` | `forUpdate()`와 stock 감소 update expression. |
+| `config/DatabaseInitializer.kt` | 실행 가능한 예제를 위한 schema 생성과 seed data. |
 
 ## 실행
 
 ```bash
-# Requires PostgreSQL — use Docker:
 docker run -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:15
 
 ./gradlew :exposed-mvc-jdbc:bootRun
@@ -100,13 +68,7 @@ docker run -p 5432:5432 -e POSTGRES_PASSWORD=postgres postgres:15
 
 ```bash
 ./gradlew :exposed-mvc-jdbc:test
-# Testcontainers PostgreSQL launched automatically
 ```
 
-| 테스트 클래스 | 범위 |
-|-----------|---------|
-| `AuthorControllerTest` | Author + Book CRUD |
-| `ProductControllerTest` | Product CRUD |
-| `OrderControllerTest` | Order place, cancel, 404 cases |
-| `PlaceOrderRollbackTest` | 3-table rollback on stock failure |
-| `ConcurrentPlaceOrderTest` | N=10 threads, stock=1 → exactly 1 success, 9 conflicts |
+테스트는 `PostgreSQLServer.Launcher`로 PostgreSQL을 시작하고 Author, Book, Product,
+Order, rollback, concurrent stock-conflict 시나리오를 검증합니다.
