@@ -1,170 +1,170 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1334" viewBox="0 0 1320 1334" role="img" aria-label="Exposed Examples architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;exposed/javers-audit/src/main/kotlin/io/bluetape4k/workshop/exposed/javers/model/Product.kt&quot;,&quot;exposed/javers-audit/src/main/kotlin/io/bluetape4k/workshop/exposed/javers/model/ProductTable.kt&quot;,&quot;exposed/javers-audit/src/main/kotlin/io/bluetape4k/workshop/exposed/javers/service/ProductAuditService.kt&quot;,&quot;exposed/mvc-jdbc/src/main/kotlin/io/bluetape4k/workshop/exposed/mvc/jdbc/ExposedMvcJdbcApp.kt&quot;,&quot;exposed/mvc-jdbc/src/main/kotlin/io/bluetape4k/workshop/exposed/mvc/jdbc/author/controller/AuthorController.kt&quot;,&quot;exposed/mvc-jdbc/src/main/kotlin/io/bluetape4k/workshop/exposed/mvc/jdbc/author/controller/BookController.kt&quot;,&quot;exposed/mvc-jdbc/src/main/kotlin/io/bluetape4k/workshop/exposed/mvc/jdbc/author/dto/AuthorDTO.kt&quot;,&quot;exposed/mvc-jdbc/src/main/kotlin/io/bluetape4k/workshop/exposed/mvc/jdbc/author/mapper/AuthorMappers.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1900" height="1160" viewBox="0 0 1900 1160" role="img" aria-labelledby="title desc">
+  <title id="title">Exposed Workshop Module Map</title>
+  <desc id="desc">Architecture diagram comparing the four exposed workshop modules by HTTP style, transaction boundary, and persistence target.</desc>
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="125%">
+      <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#22334a" flood-opacity="0.12"/>
     </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
+    <marker id="arrow-blue" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#386fd8"/>
     </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
+    <marker id="arrow-green" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2f8b57"/>
     </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
+    <marker id="arrow-purple" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#7c5bc4"/>
     </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
+    <marker id="arrow-amber" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#c47a2c"/>
     </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
+    <g id="db-icon">
+      <ellipse cx="30" cy="11" rx="23" ry="8" fill="#d7ecff" stroke="#2e6fa8" stroke-width="3"/>
+      <path d="M7 11 V43 C7 48 17 52 30 52 C43 52 53 48 53 43 V11" fill="#f0f7ff" stroke="#2e6fa8" stroke-width="3"/>
+      <path d="M7 27 C7 32 17 36 30 36 C43 36 53 32 53 27" fill="none" stroke="#2e6fa8" stroke-width="3"/>
+      <path d="M7 43 C7 48 17 52 30 52 C43 52 53 48 53 43" fill="none" stroke="#2e6fa8" stroke-width="3"/>
+    </g>
+    <g id="database-server-icon">
+      <rect x="0" y="0" width="64" height="64" rx="10" fill="#fffaf2" stroke="#28485a" stroke-width="3"/>
+      <path d="M13 18v24c0 5 8 9 19 9s19-4 19-9V18" fill="#fff0d8" stroke="#8c6f33" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M13 30c0 5 8 9 19 9s19-4 19-9" fill="none" stroke="#8c6f33" stroke-width="2.8" stroke-linecap="round"/>
+      <path d="M13 42c0 5 8 9 19 9s19-4 19-9" fill="none" stroke="#8c6f33" stroke-width="2.8" stroke-linecap="round"/>
+      <ellipse cx="32" cy="18" rx="19" ry="7" fill="#fff0d8" stroke="#8c6f33" stroke-width="3"/>
+    </g>
+    <g id="postgres-icon" transform="scale(2.45)">
+      <path fill="#336791" d="M23.56 14.72a.53.53 0 0 0-.06-.12c-.14-.26-.48-.34-1.01-.23-1.65.34-2.29.13-2.53-.02 1.34-2.05 2.45-4.52 3.04-6.83.27-1.05.8-3.52.12-4.73a1.56 1.56 0 0 0-.15-.24C21.69.91 19.8.02 17.51 0c-1.49-.02-2.77.35-3.12.48a9.45 9.45 0 0 0-.51-.08 8.04 8.04 0 0 0-1.31-.13c-1.18-.02-2.2.26-3.05.84-.86-.32-4.79-1.65-7.22.08C.94 2.15.31 3.87.43 6.3c.04.82.51 3.33 1.24 5.74.46 1.51.94 2.7 1.43 3.58.55.99 1.13 1.59 1.71 1.79.45.15 1.13.14 1.86-.73.8-.96 1.59-1.83 1.94-2.21.44.24.91.36 1.39.38a11 11 0 0 0-.25.31c-.34.43-.41.52-1.5.74-.31.06-1.13.23-1.15.81 0 .12.03.23.09.33.23.42.92.61 1.02.63 1.33.33 2.5.09 3.37-.68-.02 2.23.08 4.42.35 5.09.22.55.76 1.9 2.47 1.9.25 0 .53-.03.83-.09 1.78-.38 2.56-1.17 2.86-2.91.15-.87.4-2.88.54-4.1.02-.07.04-.12.06-.14 0 0 .07-.05.43.03a.37.37 0 0 0 .04.01l.25.02h.02c.85.04 1.91-.14 2.53-.43.64-.3 1.81-1.03 1.6-1.67zM2.37 11.88C1.63 9.44 1.19 6.99 1.16 6.3 1.05 4.13 1.58 2.62 2.72 1.81c1.84-1.3 4.84-.54 6.11-.13l-.01.01c-2.02 2.04-1.98 5.54-1.97 5.75 0 .08.01.2.02.36.03.59.1 1.68-.07 2.92-.16 1.15.19 2.28.97 3.09.08.08.16.16.25.24-.35.37-1.1 1.19-1.9 2.16-.57.68-.96.55-1.09.51-.39-.13-.81-.59-1.24-1.32-.48-.84-.96-2.03-1.42-3.51zm6.01 5.09c-.17-.04-.33-.11-.43-.18.09-.04.24-.09.48-.14 1.28-.26 1.48-.45 1.91-1 .1-.13.21-.27.37-.44a.35.35 0 0 0 .07-.13c.17-.15.27-.11.44-.04.16.06.31.26.37.48.03.1.06.29-.05.44-.9 1.27-2.22 1.25-3.17 1.01zm2.09-3.99-.05.14c-.13.36-.26.69-.33 1-.67 0-1.32-.29-1.81-.8-.63-.66-.91-1.57-.78-2.5.18-1.31.12-2.45.08-3.06l-.01-.22c.3-.26 1.67-1 2.64-.77.45.1.72.41.83.93.58 2.7.08 3.83-.33 4.74-.08.19-.16.36-.23.55zm7.36 4.57c-.02.18-.04.38-.06.6l-.15.44a.35.35 0 0 0-.02.11c-.01.47-.05.65-.11.87-.06.23-.14.49-.18 1.06-.11 1.41-.88 2.23-2.42 2.56-1.52.33-1.78-.5-2.02-1.22l-.08-.23c-.22-.59-.19-1.41-.16-2.56.02-.56-.02-1.9-.33-2.65 0-.29.01-.59.02-.89a.35.35 0 0 0-.02-.11 1.5 1.5 0 0 0-.04-.21c-.12-.43-.42-.79-.78-.94-.14-.06-.4-.17-.72-.09.07-.28.18-.59.31-.92l.05-.14c.06-.16.13-.33.21-.5.43-.95 1.01-2.25.38-5.18-.24-1.1-1.03-1.63-2.23-1.51-.72.07-1.38.37-1.71.53l-.2.1c.09-1.11.44-3.17 1.74-4.48.1-.1.2-.19.3-.28a.35.35 0 0 0 .14-.06c.75-.57 1.69-.85 2.8-.83.41.01.8.03 1.17.08 1.94.35 3.24 1.45 4.04 2.38.81.96 1.26 1.93 1.43 2.45-1.32-.13-2.22.13-2.68.78-.99 1.42.54 4.17 1.28 5.5.14.24.25.45.29.54.24.58.55.97.78 1.26.07.09.14.17.19.25-.4.12-1.12.38-1.06 1.72-.01.16-.04.45-.08.81-.05.21-.07.46-.1.77zm.89-1.62c-.04-.83.27-.92.6-1.01l.14-.04a1.2 1.2 0 0 0 .13.1c.57.38 1.58.42 3.01.13-.2.18-.52.4-.95.6-.41.19-1.1.33-1.75.36-.72.03-1.09-.08-1.17-.15zm.57-9.27c-.01.35-.05.67-.11 1-.06.36-.11.73-.13 1.18-.01.44.04.89.09 1.33.11.89.22 1.8-.21 2.7a3.5 3.5 0 0 1-.19-.39c-.05-.13-.17-.33-.33-.62-.62-1.1-2.06-3.69-1.32-4.74.38-.54 1.34-.57 2.18-.46zm.23 7.01-.09-.11-.04-.04c.73-1.2.58-2.39.46-3.44-.05-.43-.1-.84-.09-1.22.01-.41.07-.75.12-1.09.06-.42.13-.84.11-1.35.01-.05.02-.12.01-.19-.05-.49-.6-1.94-1.73-3.25-.61-.71-1.49-1.5-2.69-2.04.53-.11 1.23-.2 2.02-.19 2.05.05 3.67.81 4.82 2.28.03.04.05.07.07.1.72 1.36-.28 6.28-2.99 10.54zM10.71 7.55c-.03.18-.31.42-.62.42h-.08c-.19-.03-.38-.14-.51-.32-.05-.06-.12-.18-.11-.28.01-.04.03-.1.09-.15.12-.09.35-.12.61-.09.32.04.64.19.61.42zm7.93-.41c.01.08-.05.2-.15.31-.07.07-.21.2-.41.22h-.07c-.29 0-.54-.23-.56-.37-.02-.18.26-.31.56-.35.3-.04.61.01.64.19z"/>
+    </g>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      svg{background:#f7fafc}
+      .frame{fill:#ffffff;stroke:#d6e1eb;stroke-width:2}
+      .title{font-family:"Architects Daughter";font-size:48px;fill:#142033}
+      .subtitle,.detail,.mono,.footer{font-family:"Comic Mono";fill:#516273}
+      .subtitle{font-size:17px}
+      .layer{fill:#fbfdff;stroke:#d8e4ee;stroke-width:1.8}
+      .layerTitle{font-family:"Architects Daughter";font-size:28px;fill:#1b3048}
+      .layerDetail{font-family:"Comic Mono";font-size:13px;fill:#647285}
+      .card{stroke-width:2.2;filter:url(#shadow)}
+      .cardTitle{font-family:"Architects Daughter";font-size:28px;fill:#142033}
+      .smallTitle{font-family:"Architects Daughter";font-size:25px;fill:#142033}
+      .detail{font-size:14px}
+      .mono{font-size:13px;fill:#2f4052}
+      .edge{fill:none;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round}
+      .note{fill:#ffffff;stroke:#d8e4ee;stroke-width:1.6}
+      .chip{font-family:"Comic Mono";font-size:13px;fill:#304154}
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="1334"/>
-  <rect class="frame" x="16" y="16" width="1288" height="1302" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Exposed Examples</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">HTTP services, Exposed repositories, and SQL runtime</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="490.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="450.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="343.0">Web/API Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="373.0">controllers, app</tspan><tspan class="layer-detail" x="151.0" y="389.0">bootstraps, HTTP</tspan><tspan class="layer-detail" x="151.0" y="405.0">tests</tspan></text>
-    </g>
-    <g class="layer" data-layer="service">
-      <rect x="46.0" y="622.0" width="1228.0" height="242.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="642.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="727.0">Application Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="765.0">services, domain</tspan><tspan class="layer-detail" x="151.0" y="781.0">rules, transactions</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="882.0" width="1228.0" height="242.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="902.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="975.5">Exposed</tspan><tspan class="layer-title" x="151.0" y="998.5">Persistence Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1017.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="1033.0">tables, mappers,</tspan><tspan class="layer-detail" x="151.0" y="1049.0">helpers</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="1142.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="1162.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="1192.0">SQL Runtime</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1230.0">R2DBC/JDBC, Redis,</tspan><tspan class="layer-detail" x="151.0" y="1246.0">containers</tspan></text>
-    </g>
-    <g class="edge" data-edge="api4-&gt;service0" data-label="delegates">
-      <path d="M 424.0 584.0 L 424.0 613.0 L 424.0 642.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
-    </g>
-    <g class="edge" data-edge="service5-&gt;infra0" data-label="persists / publishes">
-      <path d="M 1096.0 844.0 L 1096.0 873.0 L 424.0 873.0 L 424.0 902.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="infra4-&gt;runtime0" data-label="backs">
-      <path d="M 760.0 1104.0 L 760.0 1133.0 L 424.0 1133.0 L 424.0 1162.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Exposed Mvc Jdbc App | application bootstrap">
-      <rect x="274.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="183.5">Exposed Mvc Jdbc App</tspan><tspan class="node-detail" x="424.0" y="207.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry1" data-lines="Exposed Mvc Virtual | Thread App | application bootstrap">
-      <rect x="610.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="171.5">Exposed Mvc Virtual</tspan><tspan class="node-title" x="760.0" y="195.5">Thread App</tspan><tspan class="node-detail" x="760.0" y="219.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry2" data-lines="Exposed Webflux R2dbc | App | application bootstrap">
-      <rect x="946.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="171.5">Exposed Webflux R2dbc</tspan><tspan class="node-title" x="1096.0" y="195.5">App</tspan><tspan class="node-detail" x="1096.0" y="219.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry3" data-lines="Product Audit Service | Test | verification">
-      <rect x="274.0" y="258.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="295.5">Product Audit Service</tspan><tspan class="node-title" x="424.0" y="319.5">Test</tspan><tspan class="node-detail" x="424.0" y="343.5">verification</tspan></text>
-    </g>
-    <g class="node" data-node="entry4" data-lines="Abstract Mvc Jdbc Test | verification">
-      <rect x="610.0" y="265.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="307.5">Abstract Mvc Jdbc Test</tspan><tspan class="node-detail" x="760.0" y="331.5">verification</tspan></text>
-    </g>
-    <g class="node" data-node="api0" data-lines="Author Controller | HTTP adapter">
-      <rect x="946.0" y="265.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="307.5">Author Controller</tspan><tspan class="node-detail" x="1096.0" y="331.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api1" data-lines="Book Controller | HTTP adapter">
-      <rect x="274.0" y="382.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="424.5">Book Controller</tspan><tspan class="node-detail" x="424.0" y="448.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api2" data-lines="Global Exception Handler | configuration">
-      <rect x="610.0" y="382.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="424.5">Global Exception Handler</tspan><tspan class="node-detail" x="760.0" y="448.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="api3" data-lines="Order Controller | HTTP adapter">
-      <rect x="946.0" y="382.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="424.5">Order Controller</tspan><tspan class="node-detail" x="1096.0" y="448.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api4" data-lines="Product Controller | HTTP adapter">
-      <rect x="274.0" y="492.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="534.5">Product Controller</tspan><tspan class="node-detail" x="424.0" y="558.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="service0" data-lines="Product Audit Service | service component">
-      <rect x="274.0" y="642.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="684.5">Product Audit Service</tspan><tspan class="node-detail" x="424.0" y="708.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="service1" data-lines="Author Service | service component">
-      <rect x="610.0" y="642.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="684.5">Author Service</tspan><tspan class="node-detail" x="760.0" y="708.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="service2" data-lines="Database Initializer | configuration">
-      <rect x="946.0" y="642.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="684.5">Database Initializer</tspan><tspan class="node-detail" x="1096.0" y="708.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="service3" data-lines="Order Service | service component">
-      <rect x="274.0" y="752.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="794.5">Order Service</tspan><tspan class="node-detail" x="424.0" y="818.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="service4" data-lines="Author Repository | repository">
-      <rect x="610.0" y="752.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="794.5">Author Repository</tspan><tspan class="node-detail" x="760.0" y="818.5">repository</tspan></text>
-    </g>
-    <g class="node" data-node="service5" data-lines="Book Repository | repository">
-      <rect x="946.0" y="752.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="794.5">Book Repository</tspan><tspan class="node-detail" x="1096.0" y="818.5">repository</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Product | domain model">
-      <rect x="274.0" y="902.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="944.5">Product</tspan><tspan class="node-detail" x="424.0" y="968.5">domain model</tspan></text>
-    </g>
-    <g class="node" data-node="infra1" data-lines="Product Table | domain model">
-      <rect x="610.0" y="902.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="944.5">Product Table</tspan><tspan class="node-detail" x="760.0" y="968.5">domain model</tspan></text>
-    </g>
-    <g class="node" data-node="infra2" data-lines="Author DTO | dto">
-      <rect x="946.0" y="902.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="944.5">Author DTO</tspan><tspan class="node-detail" x="1096.0" y="968.5">dto</tspan></text>
-    </g>
-    <g class="node" data-node="infra3" data-lines="Author Mappers | mapper">
-      <rect x="274.0" y="1012.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="1054.5">Author Mappers</tspan><tspan class="node-detail" x="424.0" y="1078.5">mapper</tspan></text>
-    </g>
-    <g class="node" data-node="infra4" data-lines="Author Repository | repository">
-      <rect x="610.0" y="1012.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1054.5">Author Repository</tspan><tspan class="node-detail" x="760.0" y="1078.5">repository</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="SQL / R2DBC | SQL Test Runtime">
-      <rect x="274.0" y="1162.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="1204.5">SQL / R2DBC</tspan><tspan class="node-detail" x="424.0" y="1228.5">SQL Test Runtime</tspan></text>
-    </g>
-    <g class="node" data-node="runtime1" data-lines="Redis | SQL Test Runtime">
-      <rect x="610.0" y="1162.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1204.5">Redis</tspan><tspan class="node-detail" x="760.0" y="1228.5">SQL Test Runtime</tspan></text>
-    </g>
-    <g class="node" data-node="runtime2" data-lines="Elasticsearch | SQL Test Runtime">
-      <rect x="946.0" y="1162.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="1204.5">Elasticsearch</tspan><tspan class="node-detail" x="1096.0" y="1228.5">SQL Test Runtime</tspan></text>
-    </g>
+
+  <rect class="frame" x="36" y="34" width="1828" height="1092" rx="24"/>
+  <text id="titleText" class="title" x="950" y="92" text-anchor="middle">Exposed Workshop Examples</text>
+  <text class="subtitle" x="950" y="127" text-anchor="middle">Pick the module by HTTP style and transaction boundary; each sample keeps the same reader-facing domain shape.</text>
+
+  <g id="layers">
+    <rect class="layer" x="76" y="164" width="1748" height="288" rx="18"/>
+    <text class="layerTitle" x="112" y="207">Runnable modules</text>
+    <text class="layerDetail" x="114" y="230">Spring MVC, virtual threads, WebFlux/R2DBC, and JaVers audit slices</text>
+
+    <rect class="layer" x="76" y="488" width="1748" height="190" rx="18"/>
+    <text class="layerTitle" x="112" y="531">Transaction boundary</text>
+    <text class="layerDetail" x="114" y="554">where Exposed work is committed or suspended</text>
+
+    <rect class="layer" x="76" y="720" width="1748" height="238" rx="18"/>
+    <text class="layerTitle" x="112" y="763">Persistence runtime</text>
+    <text class="layerDetail" x="114" y="786">database or audit repository used by tests and local runs</text>
+  </g>
+
+  <g id="edges">
+    <path class="edge" d="M 490 405 V 560" stroke="#c47a2c" marker-end="url(#arrow-amber)"/>
+    <path class="edge" d="M 490 668 V 815" stroke="#c47a2c" marker-end="url(#arrow-amber)"/>
+
+    <path class="edge" d="M 870 405 V 560" stroke="#2f8b57" marker-end="url(#arrow-green)"/>
+    <path class="edge" d="M 870 668 V 815" stroke="#2f8b57" marker-end="url(#arrow-green)"/>
+
+    <path class="edge" d="M 1250 405 V 560" stroke="#7c5bc4" marker-end="url(#arrow-purple)"/>
+    <path class="edge" d="M 1250 668 V 815" stroke="#7c5bc4" marker-end="url(#arrow-purple)"/>
+
+    <path class="edge" d="M 1630 405 V 560" stroke="#386fd8" marker-end="url(#arrow-blue)"/>
+    <path class="edge" d="M 1630 668 V 815" stroke="#386fd8" marker-end="url(#arrow-blue)"/>
+  </g>
+
+  <g id="module-cards">
+    <rect class="card" x="330" y="258" width="320" height="147" rx="14" fill="#fff5e8" stroke="#d79a50"/>
+    <text class="cardTitle" x="490" y="296" text-anchor="middle">javers-audit</text>
+    <text class="detail" x="490" y="326" text-anchor="middle">ProductAuditService</text>
+    <text class="detail" x="490" y="350" text-anchor="middle">commit, diff, history</text>
+    <text class="mono" x="490" y="378" text-anchor="middle">JaVers + Exposed JDBC</text>
+
+    <rect class="card" x="710" y="258" width="320" height="147" rx="14" fill="#eaf7ef" stroke="#62aa7a"/>
+    <text class="cardTitle" x="870" y="296" text-anchor="middle">mvc-jdbc</text>
+    <text class="detail" x="870" y="326" text-anchor="middle">Spring MVC controllers</text>
+    <text class="detail" x="870" y="350" text-anchor="middle">Author/Book + Order APIs</text>
+    <text class="mono" x="870" y="378" text-anchor="middle">blocking JDBC sample</text>
+
+    <rect class="card" x="1090" y="258" width="320" height="147" rx="14" fill="#f3edff" stroke="#8b72d6"/>
+    <text class="cardTitle" x="1250" y="296" text-anchor="middle">mvc-virtualthread</text>
+    <text class="detail" x="1250" y="326" text-anchor="middle">Spring MVC on Tomcat VT</text>
+    <text class="detail" x="1250" y="350" text-anchor="middle">repository futures</text>
+    <text class="mono" x="1250" y="378" text-anchor="middle">JDBC without @Transactional</text>
+
+    <rect class="card" x="1470" y="258" width="320" height="147" rx="14" fill="#e8f3ff" stroke="#5b8def"/>
+    <text class="cardTitle" x="1630" y="296" text-anchor="middle">webflux-r2dbc</text>
+    <text class="detail" x="1630" y="326" text-anchor="middle">WebFlux controllers</text>
+    <text class="detail" x="1630" y="350" text-anchor="middle">suspend services + Flow</text>
+    <text class="mono" x="1630" y="378" text-anchor="middle">non-blocking R2DBC sample</text>
+  </g>
+
+  <g id="tx-cards">
+    <rect class="card" x="330" y="560" width="320" height="108" rx="14" fill="#fffaf2" stroke="#d79a50"/>
+    <text class="smallTitle" x="490" y="598" text-anchor="middle">JaVers commit first</text>
+    <text class="detail" x="490" y="626" text-anchor="middle">commit / shallow delete</text>
+    <text class="mono" x="490" y="648" text-anchor="middle">then transaction { upsert/delete }</text>
+
+    <rect class="card" x="710" y="560" width="320" height="108" rx="14" fill="#f0fbf4" stroke="#62aa7a"/>
+    <text class="smallTitle" x="870" y="598" text-anchor="middle">@Transactional</text>
+    <text class="detail" x="870" y="626" text-anchor="middle">Spring owns JDBC boundary</text>
+    <text class="mono" x="870" y="648" text-anchor="middle">SELECT FOR UPDATE in service use case</text>
+
+    <rect class="card" x="1090" y="560" width="320" height="108" rx="14" fill="#f8f3ff" stroke="#8b72d6"/>
+    <text class="smallTitle" x="1250" y="598" text-anchor="middle">virtualFuture</text>
+    <text class="detail" x="1250" y="626" text-anchor="middle">ExecutorService carrier</text>
+    <text class="mono" x="1250" y="648" text-anchor="middle">transaction(db) inside VT task</text>
+
+    <rect class="card" x="1470" y="560" width="320" height="108" rx="14" fill="#f0f7ff" stroke="#5b8def"/>
+    <text class="smallTitle" x="1630" y="598" text-anchor="middle">suspendTransaction</text>
+    <text class="detail" x="1630" y="626" text-anchor="middle">Coroutine service boundary</text>
+    <text class="mono" x="1630" y="648" text-anchor="middle">R2dbcDatabase + Flow repositories</text>
+  </g>
+
+  <g id="runtime-cards">
+    <rect class="card" x="330" y="815" width="320" height="135" rx="14" fill="#fffaf2" stroke="#d79a50"/>
+    <use href="#database-server-icon" x="350" y="850"/>
+    <text class="smallTitle" x="520" y="855" text-anchor="middle">H2 + JaVers</text>
+    <text class="detail" x="520" y="886" text-anchor="middle">in-memory audit repository</text>
+    <text class="detail" x="520" y="912" text-anchor="middle">ProductTable row state</text>
+
+    <rect class="card" x="710" y="815" width="320" height="135" rx="14" fill="#f0fbf4" stroke="#62aa7a"/>
+    <use href="#postgres-icon" x="731" y="850"/>
+    <text class="smallTitle" x="900" y="846" text-anchor="middle">PostgreSQL</text>
+    <text class="smallTitle" x="900" y="876" text-anchor="middle">JDBC</text>
+    <text class="detail" x="900" y="906" text-anchor="middle">Testcontainers-backed tests</text>
+    <text class="detail" x="900" y="930" text-anchor="middle">schema created by initializer</text>
+
+    <rect class="card" x="1090" y="815" width="320" height="135" rx="14" fill="#f8f3ff" stroke="#8b72d6"/>
+    <use href="#postgres-icon" x="1111" y="850"/>
+    <text class="smallTitle" x="1280" y="846" text-anchor="middle">PostgreSQL</text>
+    <text class="smallTitle" x="1280" y="876" text-anchor="middle">JDBC</text>
+    <text class="detail" x="1280" y="906" text-anchor="middle">virtual-thread blocking work</text>
+    <text class="detail" x="1280" y="930" text-anchor="middle">deadlock-safe product ordering</text>
+
+    <rect class="card" x="1470" y="815" width="320" height="135" rx="14" fill="#f0f7ff" stroke="#5b8def"/>
+    <use href="#postgres-icon" x="1491" y="850"/>
+    <text class="smallTitle" x="1660" y="846" text-anchor="middle">PostgreSQL</text>
+    <text class="smallTitle" x="1660" y="876" text-anchor="middle">R2DBC</text>
+    <text class="detail" x="1660" y="906" text-anchor="middle">reactive driver + pool</text>
+    <text class="detail" x="1660" y="930" text-anchor="middle">JDBC initializer for schema</text>
+  </g>
+
+  <g id="domain-note">
+    <rect class="note" x="330" y="1030" width="1460" height="58" rx="14"/>
+    <text class="smallTitle" x="364" y="1065">Reader contract</text>
+    <text class="footer" x="592" y="1064">MVC and WebFlux modules implement Author/Book plus Product/Order/OrderLine CRUD; audit focuses on Product history and diff.</text>
   </g>
 </svg>
