@@ -1,26 +1,31 @@
-# Vert.x Demo
+# Vert.x Workshop
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+This directory groups the Vert.x examples used in the workshop. Start here when
+you want to choose between coroutine verticles, SQL client usage, and WebClient
+request/response examples.
 
-This example exercises **Vert.x Demo** as a runnable Vert.x reactive service workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+## Module Map
 
-## Architecture Diagram
+![Vert.x workshop module map](../docs/images/readme-diagrams/vertx-readme-architecture-01.png)
 
-![Vert.x Demo Graphviz architecture diagram](../docs/images/readme-diagrams/vertx-readme-architecture-01.png)
+## Modules
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.vertx` as the source of truth when comparing this README with the code.
+| Module | Reader question | Main focus |
+|---|---|---|
+| [`coroutines`](coroutines/README.md) | How does a coroutine verticle run an HTTP service? | `CoroutineVerticle`, routing, WebClient calls, H2/JDBC rating lookup |
+| [`vertx-sqlclient`](vertx-sqlclient/README.md) | How do Vert.x SQL clients map rows and templates? | JDBC pool, SQL client templates, MySQL/PostgreSQL clients, data objects |
+| [`vertx-webclient`](vertx-webclient/README.md) | How do WebClient request and response APIs behave? | request creation, response decoding, coroutine-style client calls |
 
-## Sequence Diagram
+## Common Stack
 
-![Vert.x Demo sequence diagram](../docs/images/readme-diagrams/vertx-coroutines-sequence-01.png)
-
-## Module Structure
-
-![vertx Architecture diagram](../docs/images/readme-diagrams/vertx-diagram-01.png)
+- Vert.x core and Kotlin coroutine bindings.
+- `bluetape4k-vertx` helper APIs.
+- `kotlinx-coroutines-reactor` for reactive/coroutine interop.
+- JUnit 5 plus Vert.x test support for executable examples.
 
 ## References
 
-* [Vertx Documents](https://vertx.io/docs/)
-* [Vertx Lang Kotlin Coroutines](https://vertx.io/docs/vertx-lang-kotlin-coroutines/kotlin/)
+- [Vert.x documentation](https://vertx.io/docs/)
+- [Vert.x Kotlin coroutines](https://vertx.io/docs/vertx-lang-kotlin-coroutines/kotlin/)
