@@ -1,62 +1,39 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1420" height="1047" viewBox="0 0 1420 1047" role="img" aria-label="AOP-Based Event Publishing">
-<defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="arrowBlue" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M1 1 L7 4 L1 7 Z" fill="#5b8def"/></marker>
-  <marker id="arrowTeal" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M1 1 L7 4 L1 7 Z" fill="#45a7a1"/></marker>
-  <style>
-    .canvas{fill:#f7f9fc}
-    .frame{fill:#ffffff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter";font-size:34px;fill:#102033}
-    .subtitle{font-family:"Comic Mono";font-size:13px;fill:#536273}
-    .actor{font-family:"Architects Daughter";font-size:17px;fill:#102033}
-    .message{font-family:"Comic Mono";font-size:12px;fill:#263445;paint-order:stroke;stroke:#ffffff;stroke-width:4px;stroke-linejoin:round}
-    .detail{font-family:"Comic Mono";font-size:11px;fill:#536273}
-    .lifeline{stroke:#b8c4d3;stroke-width:1.4;stroke-dasharray:7 6}
-    .call{stroke:#5b8def;stroke-width:2.15;fill:none;marker-end:url(#arrowBlue)}
-    .return{stroke:#45a7a1;stroke-width:2.05;stroke-dasharray:7 5;fill:none;marker-end:url(#arrowTeal)}
-    .box{stroke-width:1.8;filter:url(#shadow)}
-  </style>
-</defs>
-<rect class="canvas" width="1420" height="1047"/>
-<rect class="frame" x="24" y="20" width="1372" height="1007" rx="18"/>
-<text class="title" x="48" y="58">AOP-Based Event Publishing</text>
-<text class="subtitle" x="50" y="84">AspectEventPublisherAspect @Around → publishEvent → AspectEventListener / CoroutineListener</text>
-<rect class="box" x="40" y="108" width="220" height="58" rx="10" fill="#e8f3ff" stroke="#7aa0c4"/>
-<text class="actor" x="150" y="137" text-anchor="middle" dominant-baseline="middle">MyEvent Service</text>
-<line class="lifeline" x1="150" y1="166" x2="150" y2="989"/>
-<rect class="box" x="320" y="108" width="220" height="58" rx="10" fill="#eaf7ef" stroke="#7aa0c4"/>
-<text class="actor" x="430" y="130" text-anchor="middle" dominant-baseline="middle">Aspect Publisher</text>
-<text class="actor" x="430" y="144" text-anchor="middle" dominant-baseline="middle">@Around advice</text>
-<line class="lifeline" x1="430" y1="166" x2="430" y2="989"/>
-<rect class="box" x="600" y="108" width="220" height="58" rx="10" fill="#fff3d9" stroke="#7aa0c4"/>
-<text class="actor" x="710" y="137" text-anchor="middle" dominant-baseline="middle">AppEvent Publisher</text>
-<line class="lifeline" x1="710" y1="166" x2="710" y2="989"/>
-<rect class="box" x="880" y="108" width="220" height="58" rx="10" fill="#f1ecff" stroke="#7aa0c4"/>
-<text class="actor" x="990" y="137" text-anchor="middle" dominant-baseline="middle">Aspect Event</text>
-<line class="lifeline" x1="990" y1="166" x2="990" y2="989"/>
-<rect class="box" x="1160" y="108" width="220" height="58" rx="10" fill="#fdecef" stroke="#7aa0c4"/>
-<text class="actor" x="1270" y="130" text-anchor="middle" dominant-baseline="middle">Coroutine Aspect</text>
-<text class="actor" x="1270" y="144" text-anchor="middle" dominant-baseline="middle">EventListener</text>
-<line class="lifeline" x1="1270" y1="166" x2="1270" y2="989"/>
-<path class="call" d="M150 205 L430 205"/>
-<rect class="message-label" x="75" y="219" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="290" y="234.5" text-anchor="middle" dominant-baseline="middle">1. doWork() — @AspectEmitter triggers</text>
-<path class="return" d="M430 313 L150 313"/>
-<rect class="message-label" x="75" y="327" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="290" y="342.5" text-anchor="middle" dominant-baseline="middle">2. @Around intercept / proceed()</text>
-<path class="call" d="M430 421 L710 421"/>
-<rect class="message-label" x="355" y="435" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="570" y="450.5" text-anchor="middle" dominant-baseline="middle">3. publishEvent(AspectEvent)</text>
-<path class="call" d="M710 529 L990 529"/>
-<rect class="message-label" x="635" y="543" width="430" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="850" y="558.5" text-anchor="middle" dominant-baseline="middle">4. @EventListener (AspectEvent)</text>
-<path class="call" d="M990 637 L1080 637 L1080 665 L1002 665"/>
-<rect class="message-label" x="985" y="679" width="330" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="1150" y="694.5" text-anchor="middle" dominant-baseline="middle">5. handle (sync)</text>
-<path class="call" d="M710 745 L1270 745"/>
-<rect class="message-label" x="710" y="759" width="560" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="990" y="774.5" text-anchor="middle" dominant-baseline="middle">6. @EventListener suspend(AspectEvent)</text>
-<path class="call" d="M1270 853 L1348 853 L1348 881 L1282 881"/>
-<rect class="message-label" x="1065" y="895" width="330" height="31" rx="7" fill="#ffffff" opacity="0.96" stroke="#dbe3ee"/>
-<text class="message" x="1230" y="910.5" text-anchor="middle" dominant-baseline="middle">7. handle (suspend)</text>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1660" height="860" viewBox="0 0 1660 860" role="img" aria-label="AOP aspect event publishing flow">
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.15"/></filter>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker>
+    <marker id="arrowTeal" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#0891B2"/></marker>
+    <style>
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}
+      .title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}
+      .actor{font-family:"Architects Daughter";font-size:25px;fill:#102033}.actorText{font-family:"Comic Mono";font-size:14px;fill:#51606F}
+      .lifeline{stroke:#CBD5E1;stroke-width:1.6;stroke-dasharray:8 8}.msg{font-family:"Comic Mono";font-size:15px;fill:#334155}
+      .line{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}.noteTitle{font-family:"Architects Daughter";font-size:24px;fill:#102033}.note{font-family:"Comic Mono";font-size:14px;fill:#415166}
+    </style>
+  </defs>
+  <rect class="canvas" width="1660" height="860"/>
+  <rect class="frame" x="24" y="24" width="1612" height="812" rx="24"/>
+  <text class="title" x="830" y="72" text-anchor="middle">AOP AspectEvent publishing</text>
+  <text class="subtitle" x="830" y="104" text-anchor="middle">@AspectEventEmitter lets the service stay focused on the operation while advice creates and publishes the AspectEvent.</text>
+
+  <g filter="url(#shadow)"><rect x="70" y="150" width="240" height="76" rx="14" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/><text class="actor" x="190" y="182" text-anchor="middle">Test code</text><text class="actorText" x="190" y="206" text-anchor="middle">someOperation(params)</text></g>
+  <g filter="url(#shadow)"><rect x="400" y="150" width="230" height="76" rx="14" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/><text class="actor" x="515" y="182" text-anchor="middle">MyEventService</text><text class="actorText" x="515" y="206" text-anchor="middle">annotated method</text></g>
+  <g filter="url(#shadow)"><rect x="720" y="150" width="280" height="76" rx="14" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.7"/><text class="actor" x="860" y="182" text-anchor="middle">Aspect Advice</text><text class="actorText" x="860" y="206" text-anchor="middle">proceed + SpEL</text></g>
+  <g filter="url(#shadow)"><rect x="1080" y="150" width="250" height="76" rx="14" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.7"/><text class="actor" x="1205" y="182" text-anchor="middle">Spring Publisher</text><text class="actorText" x="1205" y="206" text-anchor="middle">publishEvent</text></g>
+  <g filter="url(#shadow)"><rect x="1410" y="150" width="180" height="76" rx="14" fill="#FDF2F8" stroke="#DB2777" stroke-width="1.7"/><text class="actor" x="1500" y="182" text-anchor="middle">Aspect listeners</text><text class="actorText" x="1500" y="206" text-anchor="middle">sync + mono</text></g>
+
+  <line class="lifeline" x1="190" y1="226" x2="190" y2="700"/>
+  <line class="lifeline" x1="515" y1="226" x2="515" y2="700"/>
+  <line class="lifeline" x1="860" y1="226" x2="860" y2="700"/>
+  <line class="lifeline" x1="1205" y1="226" x2="1205" y2="700"/>
+  <line class="lifeline" x1="1500" y1="226" x2="1500" y2="700"/>
+
+  <path class="line" d="M 190 285 L 515 285" stroke="#2563EB" marker-end="url(#arrowBlue)"/><text class="msg" x="352" y="270" text-anchor="middle">1. call annotated service</text>
+  <path class="line" d="M 860 365 L 515 365" stroke="#2563EB" marker-end="url(#arrowBlue)"/><text class="msg" x="688" y="350" text-anchor="middle">2. @Around proceed()</text>
+  <path class="line" d="M 515 445 L 860 445" stroke="#0891B2" marker-end="url(#arrowTeal)"/><text class="msg" x="688" y="430" text-anchor="middle">3. return OperationParams</text>
+  <path class="line" d="M 860 525 L 1205 525" stroke="#0891B2" marker-end="url(#arrowTeal)"/><text class="msg" x="1032" y="510" text-anchor="middle">4. publishEvent(AspectEvent)</text>
+  <path class="line" d="M 1205 605 L 1500 605" stroke="#0891B2" marker-end="url(#arrowTeal)"/><text class="msg" x="1352" y="590" text-anchor="middle">5. dispatch AspectEvent</text>
+
+  <g filter="url(#shadow)"><rect x="920" y="650" width="520" height="96" rx="16" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.5"/><text class="noteTitle" x="950" y="686">Event payload</text><text class="note" x="950" y="714">The annotation SpEL builds MyAspectParams from the returned id,</text><text class="note" x="950" y="738">then the aspect wraps it in AspectEvent before Spring dispatches it.</text></g>
 </svg>

@@ -2,55 +2,54 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+This module shows two practical ways to publish Spring application events from a WebFlux Spring Boot application:
 
-This example exercises **Spring Application Event Demo** as a runnable Spring Boot application feature workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+- Direct publishing from a controller through `CustomEventPublisher`.
+- Declarative publishing through `@AspectEventEmitter` and an AOP advice.
 
-## Architecture Diagram
+## Architecture
 
-![Spring Application Event Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-application-event-demo-readme-architecture-01.png)
+![Spring Application Event Demo architecture](../../docs/images/readme-diagrams/spring-boot-application-event-demo-readme-architecture-01.png)
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.springboot` as the source of truth when comparing this README with the code.
+Both paths meet at Spring `ApplicationEventPublisher`. The direct path builds a `CustomEvent` explicitly, while the AOP path intercepts an annotated service method, evaluates the configured SpEL expression, and builds an `AspectEvent`.
 
-## Sequence Diagram
+## Direct CustomEvent Flow
 
-![Spring Application Event Demo sequence diagram](../../docs/images/readme-diagrams/spring-boot-application-event-demo-sequence-01.png)
+![Direct CustomEvent publishing flow](../../docs/images/readme-diagrams/spring-boot-application-event-demo-sequence-01.png)
 
-Shows patterns for publishing and receiving Spring Application Events asynchronously with Reactor and coroutines.
+`CustomEventController` exposes `GET /event?message=...` and calls `CustomEventPublisher.publish(message)` twice. The event is consumed by three listener styles:
 
-## AOP-Based Event Flow
+- `CustomEventListener`, an `ApplicationListener<CustomEvent>` implementation.
+- `AnnotatedCustomEventListener`, a regular `@EventListener` handler.
+- `AnnotatedCoroutineCustomEventListener`, a Reactor `mono(Dispatchers.IO)` wrapper around suspend work.
 
-![AOP diagram](../../docs/images/readme-diagrams/spring-boot-application-event-demo-sequence-02.png)
+## AOP AspectEvent Flow
 
-## Two Event Publishing Approaches
+![AOP AspectEvent publishing flow](../../docs/images/readme-diagrams/spring-boot-application-event-demo-sequence-02.png)
 
-### 1. Direct Publishing (`custom/`)
+`MyEventService.someOperation()` stays focused on domain work. `AspectEventPublisherAspect` handles the publishing concern:
 
-Inject `ApplicationEventPublisher` directly and publish events from the component.
+1. Intercepts methods annotated with `@AspectEventEmitter`.
+2. Calls the target method with `joinPoint.proceed()`.
+3. Evaluates the annotation `params` SpEL against the returned value.
+4. Creates the configured event type and publishes it through Spring.
 
-```kotlin
-@Component
-class CustomEventPublisher(private val publisher: ApplicationEventPublisher) {
-    fun publish(message: String) = publisher.publishEvent(CustomEvent(this, message))
-}
+## Usage
+
+Run the application and call the direct endpoint:
+
+```bash
+./gradlew :spring-boot:application-event-demo:bootRun
+curl "http://localhost:8080/event?message=hello"
 ```
 
-Listeners are provided in both regular and coroutine-based asynchronous styles:
-- `CustomEventListener` — Receives events synchronously with `@EventListener`
-- `AnnotatedCoroutineCustomEventListener` — Receives events asynchronously with `@EventListener` + a suspend function
+Run the focused tests:
 
-### 2. AOP-Based Publishing (`aspect/`)
-
-Publishes events automatically through AOP when a method executes.
-
-```kotlin
-@AspectEventEmitter  // Automatically publishes an event when a method with this annotation executes
-fun doSomething(): Result { ... }
+```bash
+./gradlew :spring-boot:application-event-demo:test
 ```
 
-- `AspectEventPublisherAspect` — Captures and publishes events through Around Advice
-- `AspectEventListener` — Synchronous event receiver
-- `CoroutineAspectEventListener` — Coroutine-based asynchronous event receiver
+`CustomEventPublisherTest` verifies the HTTP publishing path with `WebTestClient`. `AspectFlowEventEmitterTest` verifies that the aspect emits an `AspectEvent` whose message is created from the returned `OperationParams.id`.
 
 ## References
 
