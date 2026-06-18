@@ -2,22 +2,19 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+This module shows how a Spring Boot application can test Redis Cluster behavior without manually wiring six Redis containers. `RedisClusterServer.Launcher.redisCluster` starts the 3-master / 3-replica cluster, Spring Data Redis uses the injected cluster node list, and `NumberService` proves binary reads and writes through `clusterConnection`.
 
-This example exercises **Redis Cluster Demo** as a runnable Redis-backed coordination workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+## Architecture
 
-## Architecture Diagram
+![Redis Cluster Demo architecture](../../docs/images/readme-diagrams/redis-cluster-demo-readme-architecture-01.png)
 
-![Redis Cluster Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/redis-cluster-demo-readme-architecture-01.png)
+The example keeps two boundaries separate. Spring Data Redis proves cluster routing and slot behavior. The low-level `bluetape4k-lettuce` smoke test separately proves typed codec and coroutine-friendly async waiting against a standalone Redis server.
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.redis` as the source of truth when comparing this README with the code.
+## NumberService Flow
 
-## Sequence Diagram
+![Redis Cluster Demo number service flow](../../docs/images/readme-diagrams/redis-cluster-demo-readme-number-flow-01.png)
 
-This example starts Redis Cluster automatically with `RedisClusterServer.Launcher` from `bluetape4k-testcontainers`,
-then verifies Spring Data Redis Cluster Operations.
-
-## Redis Cluster Topology
+`NumberService` opens `StringRedisTemplate.requiredConnectionFactory.clusterConnection`, writes `number.toByteArray()` as the key, writes `(number * 2).toByteArray()` as the value, then reads the bytes back as `Int`.
 
 ## Key Components
 
@@ -37,7 +34,7 @@ spring:
   data:
     redis:
       cluster:
-        nodes: ${testcontainers.redis.cluster.nodes}  # Injected by Testcontainers
+        nodes: ${testcontainers.redis-cluster.nodes}  # Injected by Testcontainers
       lettuce:
         cluster:
           refresh:

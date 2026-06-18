@@ -2,22 +2,19 @@
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+이 모듈은 여섯 개 Redis container를 직접 배선하지 않고 Spring Boot에서 Redis Cluster 동작을 테스트하는 방법을 보여줍니다. `RedisClusterServer.Launcher.redisCluster`가 3 master / 3 replica cluster를 시작하고, Spring Data Redis는 주입된 cluster node list를 사용하며, `NumberService`는 `clusterConnection`을 통한 binary read/write를 검증합니다.
 
-이 예제는 **Redis Cluster 데모**를 실행 가능한 Redis 기반 coordination 워크숍 조각으로 다룹니다. 개발자가 가장 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄여 주는 라이브러리와 프레임워크 API를 중심으로 설명합니다.
+## 아키텍처
 
-## 아키텍처 다이어그램
+![Redis Cluster Demo architecture](../../docs/images/readme-diagrams/redis-cluster-demo-readme-architecture-01.png)
 
-![Redis Cluster 데모 Graphviz 아키텍처 다이어그램](../../docs/images/readme-diagrams/redis-cluster-demo-readme-architecture-01.png)
+예제는 두 경계를 분리합니다. Spring Data Redis는 cluster routing과 slot 동작을 입증합니다. Low-level `bluetape4k-lettuce` smoke test는 별도의 standalone Redis server에서 typed codec과 coroutine-friendly async wait만 검증합니다.
 
-이 모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제가 사용하는 런타임 의존성을 중심으로 구성됩니다. README와 코드를 비교할 때는 `io.bluetape4k.workshop.redis` 패키지를 기준으로 삼습니다.
+## NumberService 흐름
 
-## 시퀀스 다이어그램
+![Redis Cluster Demo number service flow](../../docs/images/readme-diagrams/redis-cluster-demo-readme-number-flow-01.png)
 
-이 예제는 `bluetape4k-testcontainers`의 `RedisClusterServer.Launcher`로 Redis Cluster를 자동 시작한 뒤,
-Spring Data Redis Cluster Operations를 검증합니다.
-
-## Redis Cluster Topology
+`NumberService`는 `StringRedisTemplate.requiredConnectionFactory.clusterConnection`을 열고, `number.toByteArray()`를 key로, `(number * 2).toByteArray()`를 value로 저장한 뒤 bytes를 다시 `Int`로 읽습니다.
 
 ## 핵심 구성 요소
 
@@ -37,7 +34,7 @@ spring:
   data:
     redis:
       cluster:
-        nodes: ${testcontainers.redis.cluster.nodes}  # Injected by Testcontainers
+        nodes: ${testcontainers.redis-cluster.nodes}  # Injected by Testcontainers
       lettuce:
         cluster:
           refresh:
