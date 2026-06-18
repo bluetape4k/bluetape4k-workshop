@@ -1,90 +1,54 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="660" viewBox="0 0 1320 660" role="img" aria-label="Concurrent programming in Java with virtual threads architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/AbstractVirtualThreadTest.kt&quot;,&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/part1/Example1_PlatformAndVirtualThread.kt&quot;,&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/part1/Example2_PlatformAndVirtualThreadBuilder.kt&quot;,&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/part1/Example3_CreateStartedAndUnstartedVirtualThread.kt&quot;,&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/part1/Example4_VirtualThreadFactory.kt&quot;,&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/part1/Example5_VirtualThreadPerTaskExecutor.kt&quot;,&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/part2/Rule2WriteBlockingSynchronousCode.kt&quot;,&quot;virtualthreads/rules/src/test/kotlin/io/bluetape4k/workshop/virtualthread/part2/Rule3DoNotPoolVirtualThreads.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1650" height="840" viewBox="0 0 1650 840">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .bg { fill: #f8fafc; }
+      .title { font-family: 'Architects Daughter', 'Comic Sans MS', cursive; font-size: 34px; fill: #172033; }
+      .layer-title { font-family: 'Architects Daughter', 'Comic Sans MS', cursive; font-size: 26px; fill: #344154; }
+      .card-title { font-family: 'Architects Daughter', 'Comic Sans MS', cursive; font-size: 27px; fill: #101827; }
+      .body { font-family: 'Comic Mono', 'Comic Sans MS', monospace; font-size: 18px; fill: #364152; }
+      .small { font-family: 'Comic Mono', 'Comic Sans MS', monospace; font-size: 16px; fill: #4b5563; }
+      .layer { stroke-width: 1.5; rx: 24; ry: 24; }
+      .card { fill: #fff; stroke: #cbd5e1; stroke-width: 1.5; rx: 18; ry: 18; }
+      .line { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
     </style>
+    <marker id="arrow" viewBox="0 0 10 10" markerWidth="12" markerHeight="12" refX="9" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#2563eb"/>
+    </marker>
   </defs>
-  <rect class="canvas" width="1320" height="660"/>
-  <rect class="frame" x="16" y="16" width="1288" height="628" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Concurrent programming in Java with virtual threads</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">virtual-thread execution model and blocking boundary examples</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="146.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="106.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="159.5">Request/Test</tspan><tspan class="layer-title" x="151.0" y="182.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="209.0">MVC/WebFlux tests,</tspan><tspan class="layer-detail" x="151.0" y="225.0">sample endpoints</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="278.0" width="1228.0" height="132.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="298.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="316.5">Thread Boundary</tspan><tspan class="layer-title" x="151.0" y="339.5">Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="366.0">dispatchers, JDBC,</tspan><tspan class="layer-detail" x="151.0" y="382.0">Tomcat, helpers</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="428.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="448.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="478.0">JVM Runtime</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="508.0">virtual threads,</tspan><tspan class="layer-detail" x="151.0" y="524.0">platform threads,</tspan><tspan class="layer-detail" x="151.0" y="540.0">containers</tspan></text>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 1096.0 390.0 L 1096.0 419.0 L 424.0 419.0 L 424.0 448.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Abstract Virtual Thread | Test | virtualthread">
-      <rect x="610.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="171.5">Abstract Virtual Thread</tspan><tspan class="node-title" x="760.0" y="195.5">Test</tspan><tspan class="node-detail" x="760.0" y="219.5">virtualthread</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="core | bluetape4k Coroutine APIs">
-      <rect x="274.0" y="298.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="340.5">core</tspan><tspan class="node-detail" x="424.0" y="364.5">bluetape4k Coroutine APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="virtualthread | bluetape4k Coroutine APIs">
-      <rect x="610.0" y="298.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="340.5">virtualthread</tspan><tspan class="node-detail" x="760.0" y="364.5">bluetape4k Coroutine APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="coroutines | bluetape4k Coroutine APIs">
-      <rect x="946.0" y="298.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="340.5">coroutines</tspan><tspan class="node-detail" x="1096.0" y="364.5">bluetape4k Coroutine APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="SQL / R2DBC | JVM Thread Runtime">
-      <rect x="274.0" y="448.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="490.5">SQL / R2DBC</tspan><tspan class="node-detail" x="424.0" y="514.5">JVM Thread Runtime</tspan></text>
-    </g>
-    <g class="node" data-node="runtime1" data-lines="Redis | JVM Thread Runtime">
-      <rect x="610.0" y="448.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="490.5">Redis</tspan><tspan class="node-detail" x="760.0" y="514.5">JVM Thread Runtime</tspan></text>
-    </g>
-    <g class="node" data-node="runtime2" data-lines="AWS / S3 | JVM Thread Runtime">
-      <rect x="946.0" y="448.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="490.5">AWS / S3</tspan><tspan class="node-detail" x="1096.0" y="514.5">JVM Thread Runtime</tspan></text>
-    </g>
-  </g>
+  <rect class="bg" width="1650" height="840"/>
+  <text class="title" x="70" y="70">Virtual Thread Rules Workshop</text>
+
+  <rect class="layer" x="70" y="120" width="1510" height="220" fill="#eff6ff" stroke="#bfdbfe"/>
+  <text class="layer-title" x="105" y="165">Example groups</text>
+  <rect class="card" x="135" y="215" width="410" height="80"/>
+  <text class="card-title" x="170" y="250">Part 1: creation APIs</text>
+  <text class="small" x="170" y="276">builder, factory, per-task executor</text>
+  <rect class="card" x="620" y="215" width="410" height="80"/>
+  <text class="card-title" x="655" y="250">Part 2: usage rules</text>
+  <text class="small" x="655" y="276">pooling, semaphore, context, locks</text>
+  <rect class="card" x="1105" y="215" width="410" height="80"/>
+  <text class="card-title" x="1140" y="250">Part 3: Kotlin integration</text>
+  <text class="small" x="1140" y="276">coroutines and structured scopes</text>
+
+  <rect class="layer" x="70" y="405" width="1510" height="280" fill="#f0fdf4" stroke="#bbf7d0"/>
+  <text class="layer-title" x="105" y="450">Rules readers apply</text>
+  <rect class="card" x="160" y="500" width="330" height="60"/>
+  <text class="body" x="190" y="537">per task, not pooled</text>
+  <rect class="card" x="540" y="500" width="330" height="60"/>
+  <text class="body" x="570" y="537">Semaphore for limits</text>
+  <rect class="card" x="920" y="500" width="330" height="60"/>
+  <text class="body" x="950" y="537">avoid broad ThreadLocal</text>
+  <rect class="card" x="1300" y="500" width="220" height="60"/>
+  <text class="body" x="1330" y="537">prefer locks</text>
+  <rect class="card" x="595" y="600" width="460" height="50"/>
+  <text class="small" x="625" y="632">StructuredTaskScope for fork-and-join results</text>
+
+  <rect class="layer" x="70" y="735" width="1510" height="60" fill="#fefce8" stroke="#fde68a"/>
+  <text class="body" x="520" y="772">Run ./gradlew :virtualthreads-rules:test to execute the examples</text>
+
+  <path class="line" d="M340 295 L340 500" stroke="#2563eb" marker-end="url(#arrow)"/>
+  <path class="line" d="M825 295 L825 390 L705 390 L705 500" stroke="#2563eb" marker-end="url(#arrow)"/>
+  <path class="line" d="M825 295 L825 390 L1085 390 L1085 500" stroke="#2563eb" marker-end="url(#arrow)"/>
+  <path class="line" d="M1310 295 L1310 390 L1410 390 L1410 500" stroke="#2563eb" marker-end="url(#arrow)"/>
+  <path class="line" d="M1310 295 L1310 390 L825 390 L825 600" stroke="#2563eb" marker-end="url(#arrow)"/>
 </svg>
