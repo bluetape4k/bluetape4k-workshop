@@ -1,138 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1238" viewBox="0 0 1320 1238" role="img" aria-label="Spring WebFlux + Coroutines architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-boot/webflux-coroutines/src/main/kotlin/io/bluetape4k/workshop/coroutines/CoroutineApplication.kt&quot;,&quot;spring-boot/webflux-coroutines/src/main/kotlin/io/bluetape4k/workshop/coroutines/config/NettyConfig.kt&quot;,&quot;spring-boot/webflux-coroutines/src/main/kotlin/io/bluetape4k/workshop/coroutines/config/WebClientConfig.kt&quot;,&quot;spring-boot/webflux-coroutines/src/main/kotlin/io/bluetape4k/workshop/coroutines/controller/DefaultCoroutineController.kt&quot;,&quot;spring-boot/webflux-coroutines/src/main/kotlin/io/bluetape4k/workshop/coroutines/controller/IOCoroutineController.kt&quot;,&quot;spring-boot/webflux-coroutines/src/main/kotlin/io/bluetape4k/workshop/coroutines/controller/VTCoroutineController.kt&quot;,&quot;spring-boot/webflux-coroutines/src/main/kotlin/io/bluetape4k/workshop/coroutines/handler/CoroutineHandler.kt&quot;,&quot;spring-boot/webflux-coroutines/src/main/kotlin/io/bluetape4k/workshop/coroutines/model/Banner.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1840" height="940" viewBox="0 0 1840 940" role="img" aria-label="Spring WebFlux coroutine architecture">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.15"/></filter>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker>
+    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A"/></marker>
+    <marker id="arrowOrange" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#EA580C"/></marker>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{stroke-width:1.6;rx:24}
+      .title{font-family:"Architects Daughter";font-size:42px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#51606F}
+      .layerTitle{font-family:"Architects Daughter";font-size:31px;fill:#243447}.cardTitle{font-family:"Architects Daughter";font-size:30px;fill:#102033}
+      .cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.line{fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}
+      .label{font-family:"Comic Mono";font-size:14px;fill:#334155}
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="1238"/>
-  <rect class="frame" x="16" y="16" width="1288" height="1206" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Spring WebFlux + Coroutines</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Spring Boot application feature and runtime integration</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="504.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="464.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="338.5">Spring Boot</tspan><tspan class="layer-title" x="151.0" y="361.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="388.0">apps, controllers,</tspan><tspan class="layer-detail" x="151.0" y="404.0">scheduled tests</tspan></text>
-    </g>
-    <g class="layer" data-layer="service">
-      <rect x="46.0" y="636.0" width="1228.0" height="132.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="656.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="686.0">Feature Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="716.0">services,</tspan><tspan class="layer-detail" x="151.0" y="732.0">resilience, events,</tspan><tspan class="layer-detail" x="151.0" y="748.0">cache policy</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="786.0" width="1228.0" height="242.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="806.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="879.5">Boot Integration</tspan><tspan class="layer-title" x="151.0" y="902.5">Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="921.0">auto-config,</tspan><tspan class="layer-detail" x="151.0" y="937.0">clients,</tspan><tspan class="layer-detail" x="151.0" y="953.0">repositories</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="1046.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="1066.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="1084.5">Runtime</tspan><tspan class="layer-title" x="151.0" y="1107.5">Dependencies</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1126.0">database, cache,</tspan><tspan class="layer-detail" x="151.0" y="1142.0">messaging,</tspan><tspan class="layer-detail" x="151.0" y="1158.0">containers</tspan></text>
-    </g>
-    <g class="edge" data-edge="api4-&gt;service0" data-label="delegates">
-      <path d="M 424.0 598.0 L 424.0 627.0 L 760.0 627.0 L 760.0 656.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
-    </g>
-    <g class="edge" data-edge="service0-&gt;infra0" data-label="persists / publishes">
-      <path d="M 760.0 748.0 L 760.0 777.0 L 424.0 777.0 L 424.0 806.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 424.0 1008.0 L 424.0 1037.0 L 760.0 1037.0 L 760.0 1066.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Coroutine Application | application bootstrap">
-      <rect x="274.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="183.5">Coroutine Application</tspan><tspan class="node-detail" x="424.0" y="207.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry1" data-lines="Abstract Coroutine | Application Test | coroutines">
-      <rect x="610.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="171.5">Abstract Coroutine</tspan><tspan class="node-title" x="760.0" y="195.5">Application Test</tspan><tspan class="node-detail" x="760.0" y="219.5">coroutines</tspan></text>
-    </g>
-    <g class="node" data-node="entry2" data-lines="Default Coroutine | Controller Test | HTTP adapter">
-      <rect x="946.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="171.5">Default Coroutine</tspan><tspan class="node-title" x="1096.0" y="195.5">Controller Test</tspan><tspan class="node-detail" x="1096.0" y="219.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="entry3" data-lines="IO Coroutine Controller | Test | HTTP adapter">
-      <rect x="274.0" y="258.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="295.5">IO Coroutine Controller</tspan><tspan class="node-title" x="424.0" y="319.5">Test</tspan><tspan class="node-detail" x="424.0" y="343.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="entry4" data-lines="VT Coroutine Controller | Test | HTTP adapter">
-      <rect x="610.0" y="258.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="295.5">VT Coroutine Controller</tspan><tspan class="node-title" x="760.0" y="319.5">Test</tspan><tspan class="node-detail" x="760.0" y="343.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api0" data-lines="Netty Config | configuration">
-      <rect x="946.0" y="265.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="307.5">Netty Config</tspan><tspan class="node-detail" x="1096.0" y="331.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="api1" data-lines="Default Coroutine | Controller | HTTP adapter">
-      <rect x="274.0" y="382.0" width="300.0" height="106.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="419.5">Default Coroutine</tspan><tspan class="node-title" x="424.0" y="443.5">Controller</tspan><tspan class="node-detail" x="424.0" y="467.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api2" data-lines="IO Coroutine Controller | HTTP adapter">
-      <rect x="610.0" y="389.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="431.5">IO Coroutine Controller</tspan><tspan class="node-detail" x="760.0" y="455.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api3" data-lines="VT Coroutine Controller | HTTP adapter">
-      <rect x="946.0" y="389.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="431.5">VT Coroutine Controller</tspan><tspan class="node-detail" x="1096.0" y="455.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api4" data-lines="Coroutine Handler | handler">
-      <rect x="274.0" y="506.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="548.5">Coroutine Handler</tspan><tspan class="node-detail" x="424.0" y="572.5">handler</tspan></text>
-    </g>
-    <g class="node" data-node="service0" data-lines="Banner | domain model">
-      <rect x="610.0" y="656.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="698.5">Banner</tspan><tspan class="node-detail" x="760.0" y="722.5">domain model</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Web Client Config | configuration">
-      <rect x="274.0" y="806.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="848.5">Web Client Config</tspan><tspan class="node-detail" x="424.0" y="872.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k Boot APIs">
-      <rect x="610.0" y="806.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="848.5">workshop</tspan><tspan class="node-detail" x="760.0" y="872.5">bluetape4k Boot APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="io | bluetape4k Boot APIs">
-      <rect x="946.0" y="806.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="848.5">io</tspan><tspan class="node-detail" x="1096.0" y="872.5">bluetape4k Boot APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="jackson3 | bluetape4k Boot APIs">
-      <rect x="274.0" y="916.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="958.5">jackson3</tspan><tspan class="node-detail" x="424.0" y="982.5">bluetape4k Boot APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="In-memory / JVM | Boot Runtime">
-      <rect x="610.0" y="1066.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1108.5">In-memory / JVM</tspan><tspan class="node-detail" x="760.0" y="1132.5">Boot Runtime</tspan></text>
-    </g>
-  </g>
+  <rect class="canvas" width="1840" height="940"/>
+  <rect class="frame" x="24" y="24" width="1792" height="892" rx="26"/>
+  <text class="title" x="920" y="74" text-anchor="middle">WebFlux coroutine execution map</text>
+  <text class="subtitle" x="920" y="108" text-anchor="middle">Annotation controllers and coRouter handlers share WebClient loopback, Flow examples, and tuned Reactor Netty resources.</text>
+
+  <rect class="layer" x="84" y="154" width="1672" height="150" fill="#EFF6FF" stroke="#BFDBFE"/>
+  <text class="layerTitle" x="124" y="198">HTTP entrypoints</text>
+  <g filter="url(#shadow)"><rect x="150" y="220" width="290" height="62" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="295" y="258" text-anchor="middle">Default Controller</text></g>
+  <g filter="url(#shadow)"><rect x="560" y="220" width="250" height="62" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="685" y="258" text-anchor="middle">IO Controller</text></g>
+  <g filter="url(#shadow)"><rect x="930" y="220" width="250" height="62" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="1055" y="258" text-anchor="middle">VT Controller</text></g>
+  <g filter="url(#shadow)"><rect x="1310" y="210" width="300" height="82" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="1460" y="244" text-anchor="middle">coRouter Handler</text><text class="cardText" x="1460" y="270" text-anchor="middle">/, /suspend, /flows</text></g>
+
+  <rect class="layer" x="84" y="366" width="1672" height="210" fill="#F0FDF4" stroke="#BBF7D0"/>
+  <text class="layerTitle" x="124" y="410">Coroutine strategy</text>
+  <g filter="url(#shadow)"><rect x="155" y="448" width="310" height="88" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="310" y="482" text-anchor="middle">Dispatchers.Default</text><text class="cardText" x="310" y="508" text-anchor="middle">baseline controller scope</text></g>
+  <g filter="url(#shadow)"><rect x="565" y="448" width="280" height="88" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="705" y="482" text-anchor="middle">Dispatchers.IO</text><text class="cardText" x="705" y="508" text-anchor="middle">blocking-friendly scope</text></g>
+  <g filter="url(#shadow)"><rect x="945" y="438" width="300" height="108" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="1095" y="472" text-anchor="middle">Dispatchers.VT</text><text class="cardText" x="1095" y="498" text-anchor="middle">virtual-thread dispatcher</text><text class="cardText" x="1095" y="522" text-anchor="middle">from bluetape4k</text></g>
+  <g filter="url(#shadow)"><rect x="1360" y="438" width="300" height="108" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="1510" y="472" text-anchor="middle">CoroutineHandler</text><text class="cardText" x="1510" y="498" text-anchor="middle">suspend ServerResponse</text><text class="cardText" x="1510" y="522" text-anchor="middle">bodyAndAwait / bodyValue</text></g>
+
+  <rect class="layer" x="84" y="640" width="1672" height="160" fill="#FFF7ED" stroke="#FED7AA"/>
+  <text class="layerTitle" x="124" y="684">Shared runtime helpers</text>
+  <g filter="url(#shadow)"><rect x="170" y="716" width="290" height="58" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="315" y="753" text-anchor="middle">Banner model</text></g>
+  <g filter="url(#shadow)"><rect x="580" y="704" width="310" height="82" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="735" y="738" text-anchor="middle">Flow.async</text><text class="cardText" x="735" y="764" text-anchor="middle">parallel retrieveBanner()</text></g>
+  <g filter="url(#shadow)"><rect x="1010" y="704" width="310" height="82" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="1165" y="738" text-anchor="middle">WebClient loopback</text><text class="cardText" x="1165" y="764" text-anchor="middle">httpGet("/suspend")</text></g>
+  <g filter="url(#shadow)"><rect x="1440" y="704" width="250" height="82" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="1565" y="738" text-anchor="middle">NettyConfig</text><text class="cardText" x="1565" y="764" text-anchor="middle">event loops and timeouts</text></g>
+
+  <path class="line" d="M 295 282 L 295 448" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 685 282 L 685 448" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 1055 282 L 1055 438" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 1460 292 L 1460 438" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 310 536 L 310 716" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 735 536 L 735 704" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 1095 546 L 1095 676 L 1165 676 L 1165 704" stroke="#EA580C" marker-end="url(#arrowOrange)"/>
+  <text class="label" x="1130" y="658" text-anchor="middle">self-call</text>
+  <path class="line" d="M 1510 546 L 1510 704" stroke="#EA580C" marker-end="url(#arrowOrange)"/>
 </svg>
