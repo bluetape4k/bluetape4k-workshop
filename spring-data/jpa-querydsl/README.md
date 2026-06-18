@@ -1,19 +1,47 @@
-# JPA & QueryDSL Example
+# JPA and Querydsl
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+This module demonstrates Spring Data JPA repositories with Querydsl custom search logic.
+It models `Team` and `Member`, projects joined query results into DTOs, and compares
+simple, deferred, and optimized count strategies for pageable search.
 
-This example exercises **JPA & QueryDSL Example** as a runnable Spring Data persistence workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+## What this example shows
 
-## Architecture Diagram
+![JPA Querydsl architecture](../../docs/images/readme-diagrams/spring-data-jpa-querydsl-readme-architecture-01.png)
 
-![JPA & QueryDSL Example Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-data-jpa-querydsl-readme-architecture-01.png)
+`MemberRepository` combines Spring Data `JpaRepository`, `QuerydslPredicateExecutor`, and
+`MemberRepositoryCustom`. The custom implementation uses `JPAQueryFactory` and generated
+`QMember`/`QTeam` types to build dynamic predicates from `MemberSearchCondition`.
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.springdata` as the source of truth when comparing this README with the code.
+## Domain ERD
 
-## Sequence Diagram
+![JPA Querydsl ERD](../../docs/images/readme-diagrams/spring-data-jpa-querydsl-readme-erd-01.png)
 
-![JPA & QueryDSL Example sequence diagram](../../docs/images/readme-diagrams/spring-data-jpa-querydsl-sequence-01.png)
+`Member` has an optional lazy `ManyToOne` relationship to `Team`. `Team.members` is the
+inverse collection mapped by `Member.team`, so `Team.addMember()` and
+`Member.changeTeam()` keep the two sides in sync in the sample domain model.
 
-JPA & QueryDSL example using Spring Boot.
+## Querydsl paths
+
+| Path | Method | What it demonstrates |
+|---|---|---|
+| Derived repository query | `findAllByName`, `findAllByTeam` | Standard Spring Data method-name queries over JPA entities. |
+| Dynamic DTO search | `search(MemberSearchCondition)` | `leftJoin(member.team, team)`, nullable predicates, and constructor projection to `MemberTeamDto`. |
+| Simple page | `searchPageSimple` | Separate content query and deprecated `fetchCount()` count query. |
+| Deferred count page | `searchPageComplex` | `PageableExecutionUtils.getPage()` defers the count query when possible. |
+| Optimized count page | `searchPageExtremeCountQuery` | Counts distinct member ids instead of fetching a full entity count. |
+
+## Test runtime
+
+The tests use `@DataJpaTest`, which starts an embedded H2 database. The JDBC URL is written
+as `jdbc:mysql://localhost:3306/test;` so H2 runs in MySQL compatibility mode for this
+slice. `InitMemberService` seeds `teamA`, `teamB`, and members before repository tests.
+
+## Key files
+
+- `Member.kt` and `Team.kt` define the JPA model and relationship helper methods.
+- `MemberRepository.kt` composes Spring Data and custom Querydsl repository contracts.
+- `MemberRepositoryImpl.kt` builds dynamic predicates, projections, sorting, and paging.
+- `SpringRepositoryQuerydslSupport.kt` shows a reusable Querydsl support base for custom repositories.
+- `QuerydslExamples.kt` contains focused Querydsl examples such as distinct, grouping, sorting, and projections.

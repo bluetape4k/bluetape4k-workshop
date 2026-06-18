@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <defs>
+    <style>
+      .canvas { fill: #fbfcff; }
+      .title { font-family: "Architects Daughter", "Comic Sans MS", cursive; font-size: 42px; fill: #102033; }
+      .subtitle { font-family: "Comic Mono", "SFMono-Regular", monospace; font-size: 16px; fill: #536270; }
+      .entity-title { font-family: "Architects Daughter", "Comic Sans MS", cursive; font-size: 30px; fill: #102033; }
+      .col { font-family: "Comic Mono", "SFMono-Regular", monospace; font-size: 21px; fill: #243447; }
+      .col-muted { font-family: "Comic Mono", "SFMono-Regular", monospace; font-size: 18px; fill: #5a6876; }
+      .note-title { font-family: "Architects Daughter", "Comic Sans MS", cursive; font-size: 25px; fill: #263445; }
+      .note { font-family: "Comic Mono", "SFMono-Regular", monospace; font-size: 16px; fill: #4c5968; }
+      .table { fill: #ffffff; stroke: #2f6df6; stroke-width: 2.4; }
+      .header { fill: #eaf3ff; stroke: #2f6df6; stroke-width: 2.4; }
+      .row { stroke: #d9e4f2; stroke-width: 1.6; }
+      .note-card { fill: #fff8eb; stroke: #f07d22; stroke-width: 2; }
+      .rel { fill: none; stroke: #18a558; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+      .label-box { fill: #ffffff; stroke: #b7c5d8; stroke-width: 1.4; }
+      .rel-label { font-family: "Comic Mono", "SFMono-Regular", monospace; font-size: 16px; fill: #314050; }
+    </style>
+  </defs>
+
+  <rect class="canvas" x="0" y="0" width="1600" height="900"/>
+  <rect x="24" y="24" width="1552" height="852" rx="22" fill="#ffffff" stroke="#d7e0eb" stroke-width="2"/>
+
+  <text class="title" x="800" y="78" text-anchor="middle">Member and Team ERD</text>
+  <text class="subtitle" x="800" y="108" text-anchor="middle">The Querydsl examples query one member table with an optional many-to-one team relationship.</text>
+
+  <g transform="translate(150 185)">
+    <rect class="table" x="0" y="0" width="470" height="310" rx="12"/>
+    <rect class="header" x="0" y="0" width="470" height="72" rx="12"/>
+    <path d="M 0 60 L 470 60" class="row"/>
+    <text class="entity-title" x="235" y="45" text-anchor="middle">TEAM</text>
+    <path d="M 0 118 L 470 118" class="row"/>
+    <path d="M 0 176 L 470 176" class="row"/>
+    <text class="col" x="32" y="105">PK</text>
+    <text class="col" x="102" y="105">id</text>
+    <text class="col-muted" x="300" y="105">BIGINT</text>
+    <text class="col" x="102" y="163">name</text>
+    <text class="col-muted" x="300" y="163">VARCHAR</text>
+    <text class="col-muted" x="102" y="228">Entity helper</text>
+    <text class="col" x="102" y="260">addMember(member)</text>
+  </g>
+
+  <g transform="translate(980 185)">
+    <rect class="table" x="0" y="0" width="470" height="390" rx="12"/>
+    <rect class="header" x="0" y="0" width="470" height="72" rx="12"/>
+    <path d="M 0 60 L 470 60" class="row"/>
+    <text class="entity-title" x="235" y="45" text-anchor="middle">MEMBER</text>
+    <path d="M 0 118 L 470 118" class="row"/>
+    <path d="M 0 176 L 470 176" class="row"/>
+    <path d="M 0 234 L 470 234" class="row"/>
+    <path d="M 0 292 L 470 292" class="row"/>
+    <text class="col" x="32" y="105">PK</text>
+    <text class="col" x="102" y="105">id</text>
+    <text class="col-muted" x="300" y="105">BIGINT</text>
+    <text class="col" x="102" y="163">name</text>
+    <text class="col-muted" x="300" y="163">VARCHAR</text>
+    <text class="col" x="102" y="221">age</text>
+    <text class="col-muted" x="300" y="221">INT NULL</text>
+    <text class="col" x="32" y="279">FK</text>
+    <text class="col" x="102" y="279">team_id</text>
+    <text class="col-muted" x="300" y="279">BIGINT NULL</text>
+    <text class="col-muted" x="102" y="342">ManyToOne(fetch = LAZY)</text>
+  </g>
+
+  <path class="rel" d="M 620 325 L 968 325"/>
+  <path class="rel" d="M 632 307 L 632 343"/>
+  <path class="rel" d="M 968 325 L 940 304 M 968 325 L 940 325 M 968 325 L 940 346"/>
+  <rect class="label-box" x="705" y="288" width="178" height="34" rx="8"/>
+  <text class="rel-label" x="794" y="310" text-anchor="middle">Team 1 to N Member</text>
+  <rect class="label-box" x="710" y="336" width="168" height="34" rx="8"/>
+  <text class="rel-label" x="794" y="358" text-anchor="middle">member.team nullable</text>
+
+  <rect class="note-card" x="170" y="650" width="560" height="110" rx="12"/>
+  <text class="note-title" x="450" y="690" text-anchor="middle">Relationship helper methods</text>
+  <text class="note" x="450" y="722" text-anchor="middle">Team.addMember() and Member.changeTeam() update both sides.</text>
+
+  <rect class="note-card" x="870" y="650" width="560" height="110" rx="12"/>
+  <text class="note-title" x="1150" y="690" text-anchor="middle">Querydsl projection target</text>
+  <text class="note" x="1150" y="722" text-anchor="middle">MemberTeamDto receives member and team fields from a left join.</text>
+</svg>
