@@ -2,62 +2,74 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
-
-This example exercises **observability-advanced** as a runnable metrics, tracing, and observation workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
-
-## Sequence Diagram
-
-Full-stack observability workshop demonstrating multi-layer span instrumentation
-across HTTP (WebFlux), coroutine service, H2 database (Exposed JDBC), and Redis cache.
+`observability-advanced` shows how to keep Micrometer observations coherent across a WebFlux
+controller, coroutine services, Redis cache access, and Exposed JDBC persistence. The sample is
+small enough to run locally, but it covers the contracts that usually break first in real services:
+cache hit/miss span shape, dispatcher hops, Redis soft-fail behavior, and span shutdown on both
+success and failure.
 
 ## Architecture
 
-![observability-advanced architecture diagram](../../docs/images/readme-diagrams/observability-observability-advanced-architecture-01.png)
+![observability-advanced architecture diagram](../../docs/images/readme-diagrams/observability-observability-advanced-readme-architecture-01.png)
+
+The HTTP layer exposes suspend endpoints. `UserService` owns the cache-aside decision and creates
+the high-level `user.service.*` spans. Redis operations are wrapped by `UserCacheRepository`, while
+database calls stay in `UserRepository` and run inside `withContext(Dispatchers.IO) { transaction { ... } }`.
+The local `observed()` helper keeps the Micrometer scope attached to coroutine resumes and always
+stops the observation in `finally`.
+
+## Span Flow
+
+![observability-advanced span flow diagram](../../docs/images/readme-diagrams/observability-observability-advanced-readme-span-flow-01.png)
+
+Cache hits stop after `user.cache.get`. Cache misses continue to `user.db.find` and then
+`user.cache.put`. Redis read/write failures are logged and treated as cache misses or skipped cache
+writes; `CancellationException` is rethrown so structured concurrency is preserved.
 
 ## Span Trees
 
-**Cache miss path:**
-```
-http.server.requests              (auto)
-  └─ user.service.get             (manual)
-       ├─ user.cache.get          (manual — returns null)
-       ├─ user.db.find            (manual)
-       └─ user.cache.put          (manual)
+Cache miss:
+
+```text
+http.server.requests
+  └─ user.service.get
+       ├─ user.cache.get
+       ├─ user.db.find
+       └─ user.cache.put
 ```
 
-**Cache hit path:**
-```
-http.server.requests              (auto)
-  └─ user.service.get             (manual)
-       └─ user.cache.get          (manual — returns User)
+Cache hit:
+
+```text
+http.server.requests
+  └─ user.service.get
+       └─ user.cache.get
 ```
 
 ## Key Concepts
 
 | Concept | Implementation |
-|---------|---------------|
-| Multi-layer spans | `observed()` helper at service + cache layers |
-| Dispatcher boundary | `withObservation { withContext(IO) { transaction { } } }` (Observation OUTER) |
-| Redis soft-fail | catch + log.warn, fallback to DB |
-| Cache-aside pattern | get → miss → DB → put |
-| Positive test assertions | `TestObservationRegistryAssert.assertThat(testRegistry).hasObservationWithNameEqualTo(...)` |
-| Negative test assertions | `TestObservationRegistryAssert.assertThat(testRegistry).hasNumberOfObservationsWithNameEqualTo(name, 0)` |
+|---|---|
+| Multi-layer spans | `observed()` wraps service, cache, and selected DB operations. |
+| Dispatcher boundary | Observation scope is opened through a coroutine `ThreadContextElement`. |
+| Redis soft-fail | Non-cancellation Redis exceptions are logged and converted to cache miss/skip behavior. |
+| Cache-aside pattern | `get -> miss -> DB -> put`; hit skips the database span. |
+| Test assertions | `TestObservationRegistryAssert` verifies required spans and absence of skipped spans. |
 
 ## Used Bluetape4k Features
 
 | Feature | Module / Artifact | Code Reference | Benefit |
 |---|---|---|---|
-| Micrometer observation starter | `bluetape4k-micrometer` | `ObservationSupport.observed()` uses `ObservationRegistry.start(name)` | Reuses the bluetape4k Observation factory instead of hand-building `Observation.Context` objects |
-| Coroutine-aware logging | `bluetape4k-logging` | `UserService`, `UserRepository`, `UserCacheRepository`, test base | Lazy Kotlin logging and consistent trace/span MDC output |
-| Redis/Redisson DSL | `bluetape4k-redisson`, `bluetape4k-redis` | `RedissonConfig` | Creates a Redisson client from a concise `redissonClient {}` configuration path |
-| Redis Testcontainer singleton | `bluetape4k-testcontainers` | `AbstractAdvancedTest` | Reuses `RedisServer.Launcher.redis` instead of ad-hoc `GenericContainer` setup |
-| Coroutine test runner | `bluetape4k-junit5` | `UserServiceTest`, `UserControllerTest` | Runs suspend integration tests with `runSuspendIO {}` without `runBlocking` in test bodies |
-| Assertion DSL | `bluetape4k-assertions` | `UserServiceTest`, `UserControllerTest` | Kotlin-style null/value assertions without JUnit assertion APIs |
+| Micrometer observation starter | `bluetape4k-micrometer` | `ObservationSupport.observed()` calls `ObservationRegistry.start(name)` | Reuses the bluetape4k Observation factory instead of hand-building contexts. |
+| Coroutine-aware logging | `bluetape4k-logging` | `UserService`, `UserRepository`, `UserCacheRepository` | Keeps lazy Kotlin logging and trace/span MDC output consistent. |
+| Redis/Redisson DSL | `bluetape4k-redisson`, `bluetape4k-redis` | `RedissonConfig` | Builds a Redisson client from concise Kotlin configuration. |
+| Redis Testcontainer singleton | `bluetape4k-testcontainers` | `AbstractAdvancedTest` | Reuses `RedisServer.Launcher.redis` instead of ad-hoc containers. |
+| Coroutine test runner | `bluetape4k-junit5` | `UserServiceTest`, `UserControllerTest` | Runs suspend integration tests without `runBlocking` in test bodies. |
+| Assertion DSL | `bluetape4k-assertions` | `UserServiceTest`, `UserControllerTest` | Uses Kotlin-style value and null assertions. |
 
 ## Before / After
 
-### Raw Micrometer approach
+Raw Micrometer code requires explicit lifecycle handling:
 
 ```kotlin
 val observation = Observation.createNotStarted("user.service.get", registry)
@@ -78,7 +90,7 @@ try {
 }
 ```
 
-### Bluetape4k-supported workshop approach
+The workshop keeps the same Micrometer semantics behind a suspend-friendly wrapper:
 
 ```kotlin
 suspend fun getById(id: Long): User? =
@@ -90,29 +102,12 @@ suspend fun getById(id: Long): User? =
     }
 ```
 
-`observed()` keeps the `bluetape4k-micrometer` `ObservationRegistry.start(name)` path,
-opens the Micrometer scope through a coroutine context element, rethrows
-`CancellationException`, records only real errors, and always stops the span. This removes
-manual `start/openScope/error/stop` boilerplate while keeping the parent-child span tree stable
-across `withContext(Dispatchers.IO)` boundaries.
-
 ## Test Coverage
 
-- `UserServiceTest`: cache miss/hit spans, null result, create spans, explicit cache delete forces DB lookup
-- `UserControllerTest`: HTTP POST create, GET cache miss, GET cache hit
+- `UserServiceTest`: cache miss/hit spans, null result, create spans, explicit cache delete before DB lookup.
+- `UserControllerTest`: HTTP POST create, GET cache miss, GET cache hit.
 
-The cache-miss service test also verifies parent-child propagation:
-
-```
-user.service.get
-  ├─ user.cache.get
-  ├─ user.db.find
-  └─ user.cache.put
-```
-
-## Smoke and Load Checks
-
-### Targeted smoke
+## Smoke Checks
 
 ```bash
 ./gradlew :observability-advanced:test
@@ -122,21 +117,7 @@ user.service.get
 Prerequisites:
 
 - Docker must be available for the Redis Testcontainer used by integration tests.
-- JDK 21+ toolchain must be available through Gradle.
-
-### Retained load/performance examples
-
-This module is the tracing/correlation proof. Load behavior remains in the retained
-performance-oriented modules because they demonstrate supported bluetape4k runtime helpers:
-
-| Module | Command | Stop condition |
-|---|---|---|
-| `gatling/virtualthread-simulation` | `./gradlew :gatling-virtualthread-simulation:gatlingRun` | Gatling assertions should keep p95 latency and success rate inside the README thresholds |
-| `virtualthreads/spring-mvc-tomcat` | `./gradlew :virtualthreads-spring-mvc-tomcat:gatlingRun` | Virtual-thread request handling should not degrade under the documented ramp profile |
-| `virtualthreads/spring-webflux` | `./gradlew :virtualthreads-spring-webflux:gatlingRun` | Dispatcher scenarios should complete without error-rate regression |
-
-Stop a local load run when error rate exceeds 1%, p95 latency exceeds the README threshold for
-the scenario, container CPU/memory saturates, or the application logs repeated connection failures.
+- JDK 21+ must be available through Gradle.
 
 ## Configuration
 
@@ -144,7 +125,7 @@ the scenario, container CPU/memory saturates, or the application logs repeated c
 workshop:
   observability:
     redis:
-      url: redis://localhost:6379  # override in tests via Testcontainers
+      url: redis://localhost:6379
 
 spring:
   datasource:
@@ -158,7 +139,7 @@ management:
 
 ## Dependencies
 
-- `bluetape4k-micrometer` — local `observed()` coroutine wrapper (finally-safe)
-- `bluetape4k-redisson` — `redissonClient {}` DSL (`io.bluetape4k.redis.redisson`)
-- `micrometer-context-propagation` — span continuity across dispatcher boundaries
-- `jetbrains-exposed-spring-boot4-starter` — Exposed auto-configuration
+- `bluetape4k-micrometer` - local `observed()` coroutine wrapper.
+- `bluetape4k-redisson` - `redissonClient {}` DSL.
+- `micrometer-context-propagation` - span continuity across dispatcher boundaries.
+- `jetbrains-exposed-spring-boot4-starter` - Exposed auto-configuration.
