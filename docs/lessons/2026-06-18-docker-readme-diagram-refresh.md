@@ -26,6 +26,12 @@ generic test infrastructure slice. The sequence diagram shows the actual
 `DockerComposeContainer` lifecycle: load file, declare exposed service, wait for
 listening port, resolve mapped port, and assert client behavior.
 
+For `docker/compose-plugin-demo`, the useful contract is different: Gradle owns
+the Compose lifecycle through `dockerCompose`, then exposes service host/port
+data to the test JVM. Keep Redis/PostgreSQL as the wired test services, and show
+Elasticsearch as a present compose file only when it is not part of
+`useComposeFiles`.
+
 ## Verification
 
 - Read the README, Kotlin tests, Gradle dependencies, and all compose files.
