@@ -2,47 +2,63 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+## What This Example Shows
 
-This example exercises **Gateway Demo** as a runnable gateway and downstream service coordination workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+The `gateway` examples run a small Spring Cloud Gateway system with three
+Spring Boot applications:
 
-![Gateway Demo scenario diagram](../docs/images/readme-diagrams/gateway-api-gateway-scenario-01.png)
+- `api-gateway` listens on `8080` and routes public paths to local services.
+- `customers` listens on `8081` and serves `/api/v1/customers`.
+- `orders` listens on `8082` and serves `/api/v1/orders` and `/api/v1/products`.
 
-## Architecture Diagram
+The gateway also exposes Swagger UI and applies Bucket4j rate limiting with a
+Redis-backed bucket cache.
 
-![Gateway Demo Graphviz architecture diagram](../docs/images/readme-diagrams/gateway-readme-architecture-01.png)
+## Runtime Overview
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.gateway` as the source of truth when comparing this README with the code.
+![Gateway Demo architecture](../docs/images/readme-diagrams/gateway-readme-architecture-01.png)
 
-## Sequence Diagram
+Requests enter through the gateway, not directly through the downstream service
+ports. `application.yml` maps `/customer-service/**` to the customer service and
+`/order-service/**` to the order service with `RewritePath`, so the downstream
+controllers keep their normal `/api/v1/...` paths.
 
-This is an example of using Spring Cloud API Gateway to service internal services Customer API and Order API through API Gateway.
+## Modules
 
-## How to use
+| Module | Port | Responsibility |
+|---|---:|---|
+| [`api-gateway`](api-gateway/README.md) | `8080` | Spring Cloud Gateway routes, Swagger aggregation, Redis-backed Bucket4j filter |
+| [`customers`](customers/README.md) | `8081` | Customer WebFlux API |
+| [`orders`](orders/README.md) | `8082` | Order and product WebFlux APIs |
 
-Run the customer (8081) and order (8082) services first, then gateway-demo (8080).
+## Run The Example
 
-Use `httpie` to call Customer API and Order API through API Gateway.
-
-### 1. Use Customer API
+Start the customer and order services first, then start the gateway.
 
 ```bash
-$ http://localhost:8080/customer-api/customers
+./gradlew :customers:bootRun
+./gradlew :orders:bootRun
+./gradlew :api-gateway:bootRun
 ```
 
-### 2. Run Order, Product API
+Call the APIs through the gateway:
 
 ```bash
-$ http localhost:8080/order-api/orders
+http :8080/customer-service/api/v1/customers
+http :8080/order-service/api/v1/orders
+http :8080/order-service/api/v1/products
+http :8080/swagger-ui.html
 ```
 
-```bash
-$ http localhost:8080/product-api/products
-```
+## Source References
 
-## reference
+- `gateway/api-gateway/src/main/resources/application.yml`
+- `gateway/customers/src/main/resources/application.yml`
+- `gateway/orders/src/main/resources/application.yml`
+- `gateway/api-gateway/ApiGateway.http`
+
+## References
 
 - [Spring Cloud Gateway](https://spring.io/projects/spring-cloud-gateway)
 - [Spring Cloud Gateway: Implementing Routes in Microservices](https://medium.com/@AlexanderObregon/spring-cloud-gateway-implementing-routes-in-microservices-29094a0f8845)
-- [Swagger Integration with Spring Cloud Gateway - Part 2] (https://medium.com/@pubuduc.14/swagger-openapi-specification-3-integration-with-spring-cloud-gateway-part-2-1d670d4ab69a)
-- [API Gateway Service - Spring Cloud Gateway - Add Filter](https://kingchan223.tistory.com/398)
+- [Swagger Integration with Spring Cloud Gateway - Part 2](https://medium.com/@pubuduc.14/swagger-openapi-specification-3-integration-with-spring-cloud-gateway-part-2-1d670d4ab69a)
