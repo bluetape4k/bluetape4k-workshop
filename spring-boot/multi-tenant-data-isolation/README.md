@@ -2,27 +2,24 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
-
-This example exercises **Multi-Tenant Data Isolation** as a runnable Spring Boot application feature workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+This module demonstrates tenant-safe reads, writes, cache keys, lock keys,
+rate-limit buckets, and Micrometer tags. It deliberately keeps runtime storage
+simple with H2 and in-memory helpers so the isolation contract is easy to inspect
+in tests.
 
 ## Architecture Diagram
 
-![Multi-Tenant Data Isolation Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-multi-tenant-data-isolation-readme-architecture-01.png)
+![Multi-Tenant Data Isolation architecture diagram](../../docs/images/readme-diagrams/spring-boot-multi-tenant-data-isolation-readme-architecture-01.png)
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.springboot` as the source of truth when comparing this README with the code.
+## Isolation Scenario
 
-## Sequence Diagram
+![Tenant Data Isolation scenario](../../docs/images/readme-diagrams/spring-boot-multi-tenant-data-isolation-readme-scenario-01.png)
 
 Advanced Spring Boot workshop for tenant-safe data access, cache keys, lock keys, rate-limit buckets, and metrics tags.
 
 ## Overview
 
 Tenant isolation fails when a repository query, cache key, lock key, or rate-limit bucket uses only a shared resource ID. This module keeps the infrastructure lightweight with H2, in-memory locks, and fixed-window rate-limit buckets, then proves the isolation boundary with executable tests.
-
-## Scenario
-
-![Tenant Data Isolation](../../docs/images/readme-diagrams/multi-tenant-data-isolation-scenario-01.png)
 
 ## Main Components
 

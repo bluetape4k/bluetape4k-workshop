@@ -1,146 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1128" viewBox="0 0 1320 1128" role="img" aria-label="Multi-Tenant Data Isolation architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-boot/multi-tenant-data-isolation/src/main/kotlin/io/bluetape4k/workshop/multitenant/MultiTenantDataIsolationApplication.kt&quot;,&quot;spring-boot/multi-tenant-data-isolation/src/main/kotlin/io/bluetape4k/workshop/multitenant/config/ExposedSchemaInitializer.kt&quot;,&quot;spring-boot/multi-tenant-data-isolation/src/main/kotlin/io/bluetape4k/workshop/multitenant/domain/InvoiceRecord.kt&quot;,&quot;spring-boot/multi-tenant-data-isolation/src/main/kotlin/io/bluetape4k/workshop/multitenant/domain/InvoiceTable.kt&quot;,&quot;spring-boot/multi-tenant-data-isolation/src/main/kotlin/io/bluetape4k/workshop/multitenant/domain/TenantId.kt&quot;,&quot;spring-boot/multi-tenant-data-isolation/src/main/kotlin/io/bluetape4k/workshop/multitenant/repository/TenantInvoiceRepository.kt&quot;,&quot;spring-boot/multi-tenant-data-isolation/src/main/kotlin/io/bluetape4k/workshop/multitenant/repository/UnsafeInvoiceRepository.kt&quot;,&quot;spring-boot/multi-tenant-data-isolation/src/main/kotlin/io/bluetape4k/workshop/multitenant/service/TenantInvoiceCache.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
-  <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
-    <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
-    </style>
-  </defs>
-  <rect class="canvas" width="1320" height="1128"/>
-  <rect class="frame" x="16" y="16" width="1288" height="1096" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Multi-Tenant Data Isolation</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Spring Boot application feature and runtime integration</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="146.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="106.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="159.5">Spring Boot</tspan><tspan class="layer-title" x="151.0" y="182.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="209.0">apps, controllers,</tspan><tspan class="layer-detail" x="151.0" y="225.0">scheduled tests</tspan></text>
-    </g>
-    <g class="layer" data-layer="service">
-      <rect x="46.0" y="278.0" width="1228.0" height="256.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="298.0" width="174" height="216.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="390.0">Feature Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="420.0">services,</tspan><tspan class="layer-detail" x="151.0" y="436.0">resilience, events,</tspan><tspan class="layer-detail" x="151.0" y="452.0">cache policy</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="552.0" width="1228.0" height="366.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="572.0" width="174" height="326.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="707.5">Boot Integration</tspan><tspan class="layer-title" x="151.0" y="730.5">Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="749.0">auto-config,</tspan><tspan class="layer-detail" x="151.0" y="765.0">clients,</tspan><tspan class="layer-detail" x="151.0" y="781.0">repositories</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="936.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="956.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="974.5">Runtime</tspan><tspan class="layer-title" x="151.0" y="997.5">Dependencies</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1016.0">database, cache,</tspan><tspan class="layer-detail" x="151.0" y="1032.0">messaging,</tspan><tspan class="layer-detail" x="151.0" y="1048.0">containers</tspan></text>
-    </g>
-    <g class="edge" data-edge="entry1-&gt;service0" data-label="starts">
-      <path d="M 928.0 233.0 L 928.0 265.5 L 424.0 265.5 L 424.0 298.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
-    </g>
-    <g class="edge" data-edge="service5-&gt;infra0" data-label="persists / publishes">
-      <path d="M 1096.0 514.0 L 1096.0 543.0 L 424.0 543.0 L 424.0 572.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 760.0 898.0 L 760.0 927.0 L 592.0 927.0 L 592.0 956.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Multi Tenant Data | Isolation Application | application bootstrap">
-      <rect x="442.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="592.0" y="171.5">Multi Tenant Data</tspan><tspan class="node-title" x="592.0" y="195.5">Isolation Application</tspan><tspan class="node-detail" x="592.0" y="219.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry1" data-lines="Tenant Isolation Test | multitenant">
-      <rect x="778.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="928.0" y="183.5">Tenant Isolation Test</tspan><tspan class="node-detail" x="928.0" y="207.5">multitenant</tspan></text>
-    </g>
-    <g class="node" data-node="service0" data-lines="Exposed Schema | Initializer | configuration">
-      <rect x="274.0" y="298.0" width="300.0" height="106.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="335.5">Exposed Schema</tspan><tspan class="node-title" x="424.0" y="359.5">Initializer</tspan><tspan class="node-detail" x="424.0" y="383.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="service1" data-lines="Tenant Invoice Cache | service component">
-      <rect x="610.0" y="305.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="347.5">Tenant Invoice Cache</tspan><tspan class="node-detail" x="760.0" y="371.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="service2" data-lines="Tenant Invoice Service | service component">
-      <rect x="946.0" y="305.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="347.5">Tenant Invoice Service</tspan><tspan class="node-detail" x="1096.0" y="371.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="service3" data-lines="Tenant Key Factory | service component">
-      <rect x="274.0" y="422.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="464.5">Tenant Key Factory</tspan><tspan class="node-detail" x="424.0" y="488.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="service4" data-lines="Tenant Lock Registry | service component">
-      <rect x="610.0" y="422.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="464.5">Tenant Lock Registry</tspan><tspan class="node-detail" x="760.0" y="488.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="service5" data-lines="Tenant Metrics | service component">
-      <rect x="946.0" y="422.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="464.5">Tenant Metrics</tspan><tspan class="node-detail" x="1096.0" y="488.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Invoice Record | domain model">
-      <rect x="274.0" y="572.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="614.5">Invoice Record</tspan><tspan class="node-detail" x="424.0" y="638.5">domain model</tspan></text>
-    </g>
-    <g class="node" data-node="infra1" data-lines="Invoice Table | domain model">
-      <rect x="610.0" y="572.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="614.5">Invoice Table</tspan><tspan class="node-detail" x="760.0" y="638.5">domain model</tspan></text>
-    </g>
-    <g class="node" data-node="infra2" data-lines="Tenant Id | domain model">
-      <rect x="946.0" y="572.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="614.5">Tenant Id</tspan><tspan class="node-detail" x="1096.0" y="638.5">domain model</tspan></text>
-    </g>
-    <g class="node" data-node="infra3" data-lines="Tenant Invoice | Repository | repository">
-      <rect x="274.0" y="682.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="719.5">Tenant Invoice</tspan><tspan class="node-title" x="424.0" y="743.5">Repository</tspan><tspan class="node-detail" x="424.0" y="767.5">repository</tspan></text>
-    </g>
-    <g class="node" data-node="infra4" data-lines="Unsafe Invoice | Repository | repository">
-      <rect x="610.0" y="682.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="719.5">Unsafe Invoice</tspan><tspan class="node-title" x="760.0" y="743.5">Repository</tspan><tspan class="node-detail" x="760.0" y="767.5">repository</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k Boot APIs">
-      <rect x="946.0" y="689.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="731.5">workshop</tspan><tspan class="node-detail" x="1096.0" y="755.5">bluetape4k Boot APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="junit5 | bluetape4k Boot APIs">
-      <rect x="274.0" y="806.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="848.5">junit5</tspan><tspan class="node-detail" x="424.0" y="872.5">bluetape4k Boot APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="assertions | bluetape4k Boot APIs">
-      <rect x="610.0" y="806.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="848.5">assertions</tspan><tspan class="node-detail" x="760.0" y="872.5">bluetape4k Boot APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="SQL / R2DBC | Boot Runtime">
-      <rect x="442.0" y="956.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="592.0" y="998.5">SQL / R2DBC</tspan><tspan class="node-detail" x="592.0" y="1022.5">Boot Runtime</tspan></text>
-    </g>
-    <g class="node" data-node="runtime1" data-lines="Redis | Boot Runtime">
-      <rect x="778.0" y="956.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="928.0" y="998.5">Redis</tspan><tspan class="node-detail" x="928.0" y="1022.5">Boot Runtime</tspan></text>
-    </g>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" width="1780" height="930" viewBox="0 0 1780 930" role="img" aria-label="Multi tenant data isolation architecture">
+  <defs><filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter><marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker><marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A"/></marker><marker id="arrowRed" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#DC2626"/></marker><style>.canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{stroke-width:1.6;rx:22}.title{font-family:"Architects Daughter";font-size:40px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#51606F}.layerTitle{font-family:"Architects Daughter";font-size:29px;fill:#243447}.cardTitle{font-family:"Architects Daughter";font-size:29px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.line{fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}.label{font-family:"Comic Mono";font-size:14px;fill:#334155}</style></defs>
+  <rect class="canvas" width="1780" height="930"/><rect class="frame" x="24" y="24" width="1732" height="882" rx="24"/>
+  <text class="title" x="890" y="72" text-anchor="middle">Tenant isolation boundaries</text><text class="subtitle" x="890" y="106" text-anchor="middle">TenantId is enforced in repository predicates and every non-database key used by cache, lock, rate limiter, and metrics.</text>
+  <rect class="layer" x="86" y="154" width="1608" height="150" fill="#EFF6FF" stroke="#BFDBFE"/><text class="layerTitle" x="126" y="198">Tested application service</text>
+  <g filter="url(#shadow)"><rect x="170" y="220" width="300" height="60" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="320" y="258" text-anchor="middle">TenantIsolationTest</text></g>
+  <g filter="url(#shadow)"><rect x="650" y="210" width="360" height="80" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="830" y="244" text-anchor="middle">TenantInvoiceService</text><text class="cardText" x="830" y="270" text-anchor="middle">read, write, lock, rate limit</text></g>
+  <g filter="url(#shadow)"><rect x="1200" y="210" width="330" height="80" rx="14" fill="#FEFCE8" stroke="#CA8A04" stroke-width="1.7"/><text class="cardTitle" x="1365" y="244" text-anchor="middle">TenantId</text><text class="cardText" x="1365" y="270" text-anchor="middle">tenant-alpha / tenant-beta</text></g>
+  <rect class="layer" x="86" y="366" width="1608" height="190" fill="#F0FDF4" stroke="#BBF7D0"/><text class="layerTitle" x="126" y="410">Isolation enforcement</text>
+  <g filter="url(#shadow)"><rect x="150" y="452" width="340" height="76" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="320" y="484" text-anchor="middle">TenantInvoiceRepository</text><text class="cardText" x="320" y="510" text-anchor="middle">tenant_id + invoice id</text></g>
+  <g filter="url(#shadow)"><rect x="590" y="452" width="320" height="76" rx="14" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.7"/><text class="cardTitle" x="750" y="484" text-anchor="middle">Unsafe repository</text><text class="cardText" x="750" y="510" text-anchor="middle">invoice id only baseline</text></g>
+  <g filter="url(#shadow)"><rect x="1010" y="442" width="340" height="96" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="1180" y="474" text-anchor="middle">TenantKeyFactory</text><text class="cardText" x="1180" y="500" text-anchor="middle">tenant:&lt;id&gt; prefixes</text><text class="cardText" x="1180" y="524" text-anchor="middle">cache, lock, rate-limit</text></g>
+  <g filter="url(#shadow)"><rect x="1450" y="452" width="190" height="76" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="1545" y="484" text-anchor="middle">Metrics</text><text class="cardText" x="1545" y="510" text-anchor="middle">tenant tag</text></g>
+  <rect class="layer" x="86" y="626" width="1608" height="174" fill="#FFF7ED" stroke="#FED7AA"/><text class="layerTitle" x="126" y="672">Runtime storage and guards</text>
+  <g filter="url(#shadow)"><rect x="140" y="704" width="320" height="76" rx="14" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.7"/><ellipse cx="204" cy="728" rx="34" ry="10" fill="#CFFAFE" stroke="#0891B2" stroke-width="2"/><path d="M170 728 L170 758 C170 764 185 769 204 769 C223 769 238 764 238 758 L238 728" fill="#ECFEFF" stroke="#0891B2" stroke-width="2"/><path d="M170 744 C170 750 185 755 204 755 C223 755 238 750 238 744" fill="none" stroke="#0891B2" stroke-width="2"/><text class="cardTitle" x="318" y="730" text-anchor="middle">H2 invoice table</text><text class="cardText" x="318" y="756" text-anchor="middle">tenant_invoices</text></g>
+  <g filter="url(#shadow)"><rect x="560" y="708" width="260" height="64" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="690" y="748" text-anchor="middle">Invoice cache</text></g>
+  <g filter="url(#shadow)"><rect x="920" y="708" width="260" height="64" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="1050" y="748" text-anchor="middle">Lock registry</text></g>
+  <g filter="url(#shadow)"><rect x="1280" y="708" width="300" height="64" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="1430" y="748" text-anchor="middle">Rate limiter</text></g>
+  <path class="line" d="M 470 250 L 650 250" stroke="#2563EB" marker-end="url(#arrowBlue)"/><path class="line" d="M 1010 250 L 1200 250" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 830 290 L 830 334 L 320 334 L 320 452" stroke="#16A34A" marker-end="url(#arrowGreen)"/><text class="label" x="544" y="320" text-anchor="middle">safe repository path</text>
+  <path class="line" d="M 830 290 L 830 350 L 750 350 L 750 452" stroke="#DC2626" marker-end="url(#arrowRed)"/><text class="label" x="914" y="374" text-anchor="middle">baseline leak proof</text>
+  <path class="line" d="M 1365 290 L 1365 340 L 1180 340 L 1180 442" stroke="#16A34A" marker-end="url(#arrowGreen)"/><text class="label" x="1272" y="324" text-anchor="middle">key prefix source</text>
+  <path class="line" d="M 1365 290 L 1545 290 L 1545 452" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 320 528 L 320 704" stroke="#0891B2" marker-end="url(#arrowBlue)"/><path class="line" d="M 1180 538 L 1180 596 L 690 596 L 690 708" stroke="#EA580C" marker-end="url(#arrowRed)"/>
+  <path class="line" d="M 1180 538 L 1180 596 L 1050 596 L 1050 708" stroke="#EA580C" marker-end="url(#arrowRed)"/><path class="line" d="M 1180 538 L 1180 596 L 1430 596 L 1430 708" stroke="#EA580C" marker-end="url(#arrowRed)"/>
 </svg>
