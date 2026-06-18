@@ -2,13 +2,15 @@
 
 [한국어](README.ko.md) | English
 
-## Architecture Diagram
+## Architecture
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.graph` as the source of truth when comparing this README with the code.
+This module demonstrates a graph-based abuse detection model. It exposes the same identity-graph
+operations through a blocking service and a coroutine service, then verifies both paths against
+TinkerGraph by default and Neo4j/Memgraph in integration tests.
 
 ![graph-abuser-detection architecture diagram](../../docs/images/readme-diagrams/graph-abuser-detection-readme-architecture-01.png)
 
-## Sequence Diagram
+## What This Module Shows
 
 A bluetape4k workshop module demonstrating graph-based abuser detection. The module builds an
 **identity graph** that links user accounts to shared identifiers — devices, IP addresses, hashed
@@ -21,12 +23,19 @@ no Docker) by default, with optional Neo4j and Memgraph integration tests.
 
 ## Example Scenario
 
-![Fraud Detection Example Graph](docs/images/readme-diagrams/abuser-detection-example-graph.png)
+![Fraud Detection Example Graph](../../docs/images/readme-diagrams/graph-abuser-detection-readme-example-graph-01.png)
 
-Users sharing the same device, payment token, or IP address are flagged as a potential abuse
-cluster. The diagram above shows User A (fraudster) and User B (accomplice) sharing `Device-1`
-and a payment token — `findAbuseCluster("userA")` returns both as a cluster.
-User C shares only an IP address (e.g. a VPN exit node) and may or may not belong to the cluster.
+Users sharing the same device, payment token, phone hash, or IP address are flagged as a potential
+abuse cluster. The diagram above mirrors the test seed: `user-1`, `user-2`, and `user-3` share
+`device-A`; `user-1` and `user-2` also share `ipA`. `unrelated-user` owns only `device-B`, so it
+does not appear in the cluster for `user-1`.
+
+## Cluster Detection Flow
+
+![graph-abuser-detection cluster detection flow](../../docs/images/readme-diagrams/graph-abuser-detection-readme-flow-01.png)
+
+`findAbuseCluster(seedUserId)` traverses only identifier edges. `REFERRED_BY` edges are intentionally
+excluded from this BFS and are used by `detectReferralLoops` instead.
 
 ## Graph Schema
 
