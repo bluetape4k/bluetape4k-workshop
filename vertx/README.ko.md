@@ -1,26 +1,31 @@
-# Vert.x Demo
+# Vert.x Workshop
 
 [English](README.md) | 한국어
 
-## 예제 시나리오
+이 디렉터리는 워크샵에서 사용하는 Vert.x 예제를 묶습니다. Coroutine verticle,
+SQL client 사용법, WebClient request/response 예제 중 무엇을 먼저 볼지 고를
+때 이 README에서 시작하면 됩니다.
 
-이 예제는 **Vert.x Demo**를 실행 가능한 Vert.x reactive service 워크샵 조각으로 다룹니다. 개발자가 먼저 확인할 경로인 모듈 설정, 샘플 또는 테스트 실행, 반복적인 인프라 코드를 줄이는 라이브러리 또는 프레임워크 API 관찰에 초점을 맞춥니다.
+## Module Map
 
-## 아키텍처 다이어그램
+![Vert.x workshop module map](../docs/images/readme-diagrams/vertx-readme-architecture-01.png)
 
-![Vert.x Demo Graphviz 아키텍처 다이어그램](../docs/images/readme-diagrams/vertx-readme-architecture-01.png)
+## Modules
 
-이 모듈은 샘플 진입점 또는 테스트 픽스처, bluetape4k 확장 계층, 예제에서 사용하는 런타임 의존성을 중심으로 구성됩니다. README와 코드를 비교할 때는 `io.bluetape4k.workshop.vertx` 패키지를 기준으로 삼습니다.
+| Module | Reader question | Main focus |
+|---|---|---|
+| [`coroutines`](coroutines/README.ko.md) | Coroutine verticle로 HTTP service를 어떻게 실행하나? | `CoroutineVerticle`, routing, WebClient 호출, H2/JDBC rating 조회 |
+| [`vertx-sqlclient`](vertx-sqlclient/README.ko.md) | Vert.x SQL client는 row와 template을 어떻게 매핑하나? | JDBC pool, SQL client templates, MySQL/PostgreSQL clients, data objects |
+| [`vertx-webclient`](vertx-webclient/README.ko.md) | WebClient request/response API는 어떻게 동작하나? | request 생성, response decoding, coroutine-style client calls |
 
-## 시퀀스 다이어그램
+## Common Stack
 
-![Vert.x Demo sequence diagram](../docs/images/readme-diagrams/vertx-coroutines-sequence-01.png)
+- Vert.x core와 Kotlin coroutine bindings.
+- `bluetape4k-vertx` helper APIs.
+- Reactive/coroutine interop을 위한 `kotlinx-coroutines-reactor`.
+- 실행 가능한 예제를 위한 JUnit 5와 Vert.x test support.
 
-## 모듈 구조
+## References
 
-![vertx Architecture diagram](../docs/images/readme-diagrams/vertx-diagram-01.png)
-
-## 참고 자료
-
-* [Vertx Documents](https://vertx.io/docs/)
-* [Vertx Lang Kotlin Coroutines](https://vertx.io/docs/vertx-lang-kotlin-coroutines/kotlin/)
+- [Vert.x documentation](https://vertx.io/docs/)
+- [Vert.x Kotlin coroutines](https://vertx.io/docs/vertx-lang-kotlin-coroutines/kotlin/)
