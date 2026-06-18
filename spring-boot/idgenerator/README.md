@@ -2,17 +2,17 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
-
-This example exercises **ID Generator Workshop** as a runnable Spring Boot application feature workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+This module exposes four `bluetape4k-idgenerators` families through a Spring Boot
+WebFlux REST API. It is useful when you need to compare sortable IDs, parse a
+Snowflake `Long`, or hide numeric IDs with reversible Hashids encoding.
 
 ## Architecture Diagram
 
-![ID Generator Workshop architecture diagram](../../docs/images/readme-diagrams/spring-boot-idgenerator-architecture-01.png)
+![ID Generator Workshop architecture diagram](../../docs/images/readme-diagrams/spring-boot-idgenerator-readme-architecture-01.png)
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.springboot` as the source of truth when comparing this README with the code.
+## Request Flow
 
-## Sequence Diagram
+![ID Generator Workshop request flow diagram](../../docs/images/readme-diagrams/spring-boot-idgenerator-readme-sequence-01.png)
 
 This integration example exposes four distributed ID generators from `bluetape4k-idgenerators` through a Spring Boot WebFlux REST API.
 It covers the characteristics of Snowflake, ULID, KSUID, and Hashids, along with operational cautions for each algorithm.
