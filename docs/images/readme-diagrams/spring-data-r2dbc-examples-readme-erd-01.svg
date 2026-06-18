@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="760" viewBox="0 0 1500 760">
+  <defs>
+    <style>
+      .bg{fill:#f8fafc}.title{font-family:'Architects Daughter','Comic Sans MS',cursive;font-size:34px;fill:#18212f}
+      .table{fill:#fff;stroke:#b6c2d1;stroke-width:1.6;rx:16;ry:16}.head1{fill:#dbeafe}.head2{fill:#dcfce7}.head3{fill:#fef3c7}
+      .name{font-family:'Architects Daughter','Comic Sans MS',cursive;font-size:28px;fill:#101827}
+      .col{font-family:'Comic Mono','Comic Sans MS',monospace;font-size:19px;fill:#263244}.note{font-family:'Comic Mono','Comic Sans MS',monospace;font-size:17px;fill:#475569}
+      .line{fill:none;stroke:#64748b;stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
+    </style>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="userSpaceOnUse"><path d="M1,1 L11,6 L1,11 Z" fill="#64748b"/></marker>
+  </defs>
+  <rect class="bg" width="1500" height="760"/>
+  <text class="title" x="70" y="70">R2DBC Example Schemas</text>
+
+  <g transform="translate(120 145)">
+    <rect class="table" width="360" height="250"/>
+    <path class="head1" d="M0,16 Q0,0 16,0 H344 Q360,0 360,16 V68 H0 Z"/>
+    <text class="name" x="30" y="45">CUSTOMER</text>
+    <text class="col" x="30" y="105">PK  id          SERIAL/BIGINT</text>
+    <text class="col" x="30" y="145">    firstname   VARCHAR(100)</text>
+    <text class="col" x="30" y="185">    lastname    VARCHAR(100)</text>
+    <text class="note" x="30" y="225">used by basics and callback tests</text>
+  </g>
+
+  <g transform="translate(585 145)">
+    <rect class="table" width="330" height="165"/>
+    <path class="head2" d="M0,16 Q0,0 16,0 H314 Q330,0 330,16 V68 H0 Z"/>
+    <text class="name" x="30" y="45">PRIMARY_KEY</text>
+    <text class="col" x="30" y="105">sequence value</text>
+    <text class="note" x="30" y="142">entity-callback only</text>
+  </g>
+
+  <g transform="translate(1020 145)">
+    <rect class="table" width="360" height="290"/>
+    <path class="head3" d="M0,16 Q0,0 16,0 H344 Q360,0 360,16 V68 H0 Z"/>
+    <text class="name" x="30" y="45">PERSON</text>
+    <text class="col" x="30" y="105">PK  id          SERIAL</text>
+    <text class="col" x="30" y="145">    firstname   VARCHAR(100)</text>
+    <text class="col" x="30" y="185">    lastname    VARCHAR(100)</text>
+    <text class="col" x="30" y="225">    age         INTEGER</text>
+    <text class="note" x="30" y="265">used by QBE tests</text>
+  </g>
+
+  <rect x="330" y="520" width="840" height="115" rx="18" ry="18" fill="#fff" stroke="#cbd5e1" stroke-width="1.5"/>
+  <text class="name" x="365" y="565">Schema scope</text>
+  <text class="note" x="365" y="600">Tables are recreated inside integration tests; there is no cross-table foreign key.</text>
+
+  <path class="line" d="M750 310 L750 385 L480 385" marker-end="url(#arrow)"/>
+  <text class="note" x="614" y="372">generates customer.id</text>
+</svg>
