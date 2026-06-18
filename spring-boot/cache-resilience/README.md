@@ -2,23 +2,24 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+This module demonstrates a resilient cache read path:
 
-This example exercises **Spring Boot Cache Resilience** as a runnable Spring Boot application feature workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
-
-## Sequence Diagram
-
-Redis primary cache with Caffeine local fallback using Resilience4j CircuitBreaker.
-Demonstrates the full circuit breaker state machine (`CLOSED → OPEN → HALF-OPEN → CLOSED`)
-driven by real network failures injected via Toxiproxy.
+- Redis is the primary cache.
+- Caffeine is the local fallback cache.
+- Resilience4j CircuitBreaker protects Redis reads.
+- Toxiproxy injects real Redis network failures in integration tests.
 
 ## Architecture
 
-![Spring Boot Cache Resilience Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-cache-resilience-readme-architecture-01.png)
+![Spring Boot Cache Resilience architecture](../../docs/images/readme-diagrams/spring-boot-cache-resilience-readme-architecture-01.png)
 
-The diagram shows the request flow, CircuitBreaker state machine
-(CLOSED → OPEN → HALF-OPEN → CLOSED), and the ToxiproxyServer chaos injection
-used in integration tests.
+`ResilientProductService` wraps Redis reads with `SuspendDecorators` and a `redis-cache` CircuitBreaker. Writes update Caffeine first and then attempt Redis, so the process keeps a usable fallback value even when Redis is unhealthy.
+
+## CircuitBreaker Flow
+
+![Spring Boot Cache Resilience state flow](../../docs/images/readme-diagrams/spring-boot-cache-resilience-readme-state-flow-01.png)
+
+The integration test drives the full state machine: healthy Redis keeps the breaker `CLOSED`, injected timeouts push it `OPEN`, the service falls back to Caffeine, and successful probes after the wait duration close the breaker again.
 
 ## What This Module Shows
 
