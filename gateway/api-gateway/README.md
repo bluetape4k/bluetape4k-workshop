@@ -2,117 +2,82 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
-
-This example exercises **Spring Cloud API Gateway Demo** as a runnable gateway and downstream service coordination workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
-
-![Spring Cloud API Gateway Demo scenario diagram](../../docs/images/readme-diagrams/gateway-api-gateway-scenario-01.png)
-
-## Architecture Diagram
-
-![Spring Cloud API Gateway Demo Graphviz architecture diagram](../../docs/images/readme-diagrams/gateway-api-gateway-readme-architecture-01.png)
-
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.gateway` as the source of truth when comparing this README with the code.
-
-## Sequence Diagram
-
-![api-gateway sequence diagram](../../docs/images/readme-diagrams/gateway-api-gateway-readme-sequence-01.png)
-
-Spring Cloud Gateway (WebFlux-based) demo that provides routing, Swagger UI aggregation,
-and Bucket4j token-bucket rate limiting for downstream Customer and Order microservices.
-
 ## What This Module Shows
 
-1. **Routing** — declarative route rules for Customer and Order services
-2. **Swagger aggregation** — single Swagger UI covering both downstream APIs
-3. **Rate limiting** — token-bucket rate limiter via Bucket4j backed by Redis (Lettuce) and Redisson
-4. **Circuit breaker** — Resilience4j integration for downstream failure isolation
-5. **Redirect filter** — custom `WebFilter` for request normalization
+`api-gateway` is the public Spring Cloud Gateway application for the gateway
+workshop. It listens on `8080`, rewrites public service prefixes, exposes
+Swagger UI, and applies a Redis-backed Bucket4j WebFlux rate-limit filter.
 
-## Used bluetape4k Features
+## Architecture
 
-| Module | Feature | Usage |
+![API Gateway architecture](../../docs/images/readme-diagrams/gateway-api-gateway-readme-architecture-01.png)
+
+The route table lives in `application.yml`:
+
+| Route | Public path | Target |
 |---|---|---|
-| `bluetape4k-logging` | `KLoggingChannel()` | Coroutine-aware structured logging in all components |
-| `bluetape4k-bucket4j` | Bucket4j extensions | Token-bucket rate limiter integration with Lettuce/Redisson |
-| `bluetape4k-resilience4j` | Resilience4j helpers | Circuit breaker integration for upstream routes |
-| `bluetape4k-cache-core` | Cache abstractions | Lettuce-backed distributed cache configuration |
-| `bluetape4k-coroutines` | Coroutine utilities | Coroutine dispatcher bridging for Reactor/WebFlux pipelines |
-| `bluetape4k-netty` | Netty extensions | Netty channel configuration helpers |
-| `bluetape4k-junit5` | `runSuspendIO { }` | Suspend-based integration test runner |
-| `bluetape4k-support` | `uninitialized()`, `unsafeLazy` | Deferred bean initialization helpers |
+| `customers` | `/customer-service/**` | `http://localhost:8081` with `RewritePath` |
+| `orders` | `/order-service/**` | `http://localhost:8082` with `RewritePath` |
+| `openapi` | `/v3/api-docs/**` | local gateway OpenAPI aggregation |
+| `websocket-example` | `/echo` | `ws://localhost:9000` |
 
-## bluetape4k Before / After
+`RedirectWebFilter` rewrites `/` to `/swagger-ui.html`. The default gateway
+filter adds `X-BLUETAPE4K-API: BLUETAPE4K.IO` to responses.
 
-### `KLoggingChannel` vs plain logger
+## Request Flow
 
-```kotlin
-// Before — SLF4J LoggerFactory directly
-private val log = LoggerFactory.getLogger(ApiGatewayDemoApplication::class.java)
-log.info("Starting GatewayApplication ...")
+![API Gateway request flow](../../docs/images/readme-diagrams/gateway-api-gateway-readme-sequence-01.png)
 
-// After — KLoggingChannel (coroutine MDC context propagation included)
-companion object : KLoggingChannel() {
-    init { log.info { "Starting GatewayApplication ..." } }   // lazy lambda
-}
-```
+The normal service path is:
 
-### Bucket4j rate limiter — Redis-backed
+1. Client calls a public gateway prefix.
+2. Bucket4j checks the Redis-backed bucket.
+3. Spring Cloud Gateway matches the route and rewrites the path.
+4. The downstream service receives its own `/api/v1/...` path.
 
-```kotlin
-// Before — manual Bucket/ProxyManager wiring
-val proxyManager = LettuceBasedProxyManager.builderFor(redisClient)
-    .withExpirationAfterWriteStrategy(ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(ofMinutes(1)))
-    .build()
+## bluetape4k Usage
 
-// After — bluetape4k-bucket4j fluent builder
-val bucket = bucket4j {
-    addLimit {
-        capacity(100)
-        refillGreedy(100, ofMinutes(1))
-    }
-}.build(proxyManager, key)
-```
+| Library | Usage |
+|---|---|
+| `bluetape4k-logging` | `KLoggingChannel()` for coroutine-aware component logging |
+| `bluetape4k-bucket4j` | Bucket4j WebFlux rate-limit integration |
+| `bluetape4k-cache-core` | Redis cache support used by the rate-limit configuration |
+| `bluetape4k-resilience4j` | Available gateway resilience integration dependency |
+| `bluetape4k-junit5` | `runSuspendIO { }` for suspend WebTestClient assertions |
+| `bluetape4k-support` | `uninitialized()` and `unsafeLazy` in Spring beans |
 
-## Configuration
+## Run
 
-`application.yml` key sections:
-
-```yaml
-spring:
-  cloud:
-    gateway:
-      server:
-        webflux:
-          routes:
-            - id: customers
-              uri: lb://customers
-              predicates:
-                - Path=/customers/**
-            - id: orders
-              uri: lb://orders
-              predicates:
-                - Path=/orders/**
-```
-
-## Running
+Start the downstream services first, then start the gateway.
 
 ```bash
-# Start the gateway
-./gradlew :gateway-api-gateway:bootRun
+./gradlew :customers:bootRun
+./gradlew :orders:bootRun
+./gradlew :api-gateway:bootRun
 ```
 
-Gateway listens on `http://localhost:8080`.
-Swagger UI: `http://localhost:8080/webjars/swagger-ui/index.html`
-
-## Tests
+Call the gateway:
 
 ```bash
-./gradlew :gateway-api-gateway:test
+http :8080/customer-service/api/v1/customers
+http :8080/order-service/api/v1/orders
+http :8080/order-service/api/v1/products
+http :8080/swagger-ui.html
 ```
 
-## References
+## Test
 
-- [Spring Cloud Gateway Reference](https://docs.spring.io/spring-cloud-gateway/reference/)
-- [Bucket4j Documentation](https://bucket4j.com/)
-- [bluetape4k-bucket4j](https://github.com/bluetape4k/bluetape4k-projects)
+```bash
+./gradlew :api-gateway:test
+```
+
+The current test scope verifies context loading and `/hello` responses through
+`WebTestClient`.
+
+## Source References
+
+- `src/main/resources/application.yml`
+- `src/main/kotlin/io/bluetape4k/workshop/gateway/filter/RedirectWebFilter.kt`
+- `src/main/kotlin/io/bluetape4k/workshop/gateway/config/managements/SwaggerConfig.kt`
+- `src/main/kotlin/io/bluetape4k/workshop/gateway/controller/IndexController.kt`
+- `ApiGateway.http`

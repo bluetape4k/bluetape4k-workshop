@@ -1,133 +1,133 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1088" viewBox="0 0 1320 1088" role="img" aria-label="Spring Cloud API Gateway Demo architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;gateway/api-gateway/src/main/kotlin/io/bluetape4k/workshop/gateway/ApiGatewayDemoApplication.kt&quot;,&quot;gateway/api-gateway/src/main/kotlin/io/bluetape4k/workshop/gateway/config/GatewayConfig.kt&quot;,&quot;gateway/api-gateway/src/main/kotlin/io/bluetape4k/workshop/gateway/config/managements/SwaggerConfig.kt&quot;,&quot;gateway/api-gateway/src/main/kotlin/io/bluetape4k/workshop/gateway/controller/IndexController.kt&quot;,&quot;gateway/api-gateway/src/main/kotlin/io/bluetape4k/workshop/gateway/filter/RedirectWebFilter.kt&quot;,&quot;gateway/api-gateway/src/test/kotlin/io/bluetape4k/workshop/gateway/AbstractGatewayTest.kt&quot;,&quot;gateway/api-gateway/src/test/kotlin/io/bluetape4k/workshop/gateway/controller/IndexControllerTest.kt&quot;,&quot;gateway/api-gateway/build.gradle.kts&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1780" height="1040" viewBox="0 0 1780 1040" role="img" aria-label="API Gateway module architecture">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
+    <filter id="shadow" x="-8%" y="-10%" width="116%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#5b7282" flood-opacity="0.16"/>
     </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
+    <marker id="blueArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#457b9d"/></marker>
+    <marker id="greenArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#5f8f5b"/></marker>
+    <marker id="redArrow" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="13" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#b44d49"/></marker>
+    <marker id="goldArrow" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" viewBox="0 0 10 10" refX="9" refY="5" orient="auto"><path d="M 0 0 L 10 5 L 0 10 Z" fill="#a87332"/></marker>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .canvas { fill: #f7fafc; }
+      .frame { fill: #fffefd; stroke: #cdd8df; stroke-width: 2; }
+      .title { font-family: "Architects Daughter"; font-size: 38px; fill: #1d2b38; }
+      .subtitle { font-family: "Comic Mono"; font-size: 16px; fill: #516172; }
+      .layerTitle { font-family: "Architects Daughter"; font-size: 24px; fill: #263747; }
+      .cardTitle { font-family: "Architects Daughter"; font-size: 25px; fill: #1d2b38; }
+      .cardText { font-family: "Comic Mono"; font-size: 15px; fill: #42515f; }
+      .smallText { font-family: "Comic Mono"; font-size: 13px; fill: #566575; }
+      .layer { stroke-width: 1.6; }
+      .card { stroke-width: 2.2; filter: url(#shadow); }
+      .lineBlue { fill: none; stroke: #457b9d; stroke-width: 4.2; marker-end: url(#blueArrow); stroke-linecap: round; stroke-linejoin: round; }
+      .lineGreen { fill: none; stroke: #5f8f5b; stroke-width: 4.2; marker-end: url(#greenArrow); stroke-linecap: round; stroke-linejoin: round; }
+      .lineRed { fill: none; stroke: #b44d49; stroke-width: 4.2; marker-end: url(#redArrow); stroke-linecap: round; stroke-linejoin: round; }
+      .lineGold { fill: none; stroke: #a87332; stroke-width: 3.8; marker-end: url(#goldArrow); stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 9 8; }
+      .label { font-family: "Comic Mono"; font-size: 14px; font-weight: 700; }
+      .labelBox { fill: #ffffff; stroke-width: 1.4; }
     </style>
+    <g id="redisIcon">
+      <rect x="0" y="0" width="72" height="72" rx="14" fill="#fff2f1" stroke="#a92823" stroke-width="4"/>
+      <path d="M17 25 36 15 55 25 36 35Z" fill="#d82c20"/>
+      <path d="M17 37 36 27 55 37 36 47Z" fill="#c82019"/>
+      <path d="M17 49 36 39 55 49 36 59Z" fill="#a92823"/>
+    </g>
+    <g id="gatewayIcon">
+      <rect x="0" y="0" width="72" height="72" rx="16" fill="#edf6ff" stroke="#315f85" stroke-width="4"/>
+      <path d="M18 22h36M18 36h36M18 50h36" stroke="#315f85" stroke-width="5" stroke-linecap="round"/>
+      <circle cx="26" cy="22" r="4" fill="#457b9d"/>
+      <circle cx="46" cy="36" r="4" fill="#457b9d"/>
+      <circle cx="26" cy="50" r="4" fill="#457b9d"/>
+    </g>
   </defs>
-  <rect class="canvas" width="1320" height="1088"/>
-  <rect class="frame" x="16" y="16" width="1288" height="1056" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Spring Cloud API Gateway Demo</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Gateway example runtime and module dependencies</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="366.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="326.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="281.0">Example Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="319.0">entrypoints, tests,</tspan><tspan class="layer-detail" x="151.0" y="335.0">adapters</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="498.0" width="1228.0" height="380.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="518.0" width="174" height="340.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="672.0">Integration Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="710.0">repositories,</tspan><tspan class="layer-detail" x="151.0" y="726.0">adapters, helpers</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="896.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="916.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="946.0">Runtime Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="976.0">external systems,</tspan><tspan class="layer-detail" x="151.0" y="992.0">containers, local</tspan><tspan class="layer-detail" x="151.0" y="1008.0">JVM</tspan></text>
-    </g>
-    <g class="edge" data-edge="api3-&gt;infra0" data-label="uses">
-      <path d="M 424.0 460.0 L 424.0 489.0 L 424.0 518.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 424.0 858.0 L 424.0 887.0 L 424.0 916.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Api Gateway Demo | Application | application bootstrap">
-      <rect x="274.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="171.5">Api Gateway Demo</tspan><tspan class="node-title" x="424.0" y="195.5">Application</tspan><tspan class="node-detail" x="424.0" y="219.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry1" data-lines="Abstract Gateway Test | gateway">
-      <rect x="610.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="183.5">Abstract Gateway Test</tspan><tspan class="node-detail" x="760.0" y="207.5">gateway</tspan></text>
-    </g>
-    <g class="node" data-node="entry2" data-lines="Index Controller Test | HTTP adapter">
-      <rect x="946.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="183.5">Index Controller Test</tspan><tspan class="node-detail" x="1096.0" y="207.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api0" data-lines="Gateway Config | configuration">
-      <rect x="274.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="300.5">Gateway Config</tspan><tspan class="node-detail" x="424.0" y="324.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="api1" data-lines="Swagger Config | configuration">
-      <rect x="610.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="300.5">Swagger Config</tspan><tspan class="node-detail" x="760.0" y="324.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="api2" data-lines="Index Controller | HTTP adapter">
-      <rect x="946.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="300.5">Index Controller</tspan><tspan class="node-detail" x="1096.0" y="324.5">HTTP adapter</tspan></text>
-    </g>
-    <g class="node" data-node="api3" data-lines="Redirect Web Filter | filter">
-      <rect x="274.0" y="368.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="410.5">Redirect Web Filter</tspan><tspan class="node-detail" x="424.0" y="434.5">filter</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Spring cloud starter | gateway server webflux | Framework Layer">
-      <rect x="274.0" y="518.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="555.5">Spring cloud starter</tspan><tspan class="node-title" x="424.0" y="579.5">gateway server webflux</tspan><tspan class="node-detail" x="424.0" y="603.5">Framework Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra1" data-lines="Spring cloud starter | loadbalancer | Framework Layer">
-      <rect x="610.0" y="518.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="555.5">Spring cloud starter</tspan><tspan class="node-title" x="760.0" y="579.5">loadbalancer</tspan><tspan class="node-detail" x="760.0" y="603.5">Framework Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra2" data-lines="Spring cloud test | support | Framework Layer">
-      <rect x="946.0" y="518.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="555.5">Spring cloud test</tspan><tspan class="node-title" x="1096.0" y="579.5">support</tspan><tspan class="node-detail" x="1096.0" y="603.5">Framework Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra3" data-lines="Spring boot | autoconfigure lib | Framework Layer">
-      <rect x="274.0" y="642.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="679.5">Spring boot</tspan><tspan class="node-title" x="424.0" y="703.5">autoconfigure lib</tspan><tspan class="node-detail" x="424.0" y="727.5">Framework Layer</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k APIs">
-      <rect x="610.0" y="649.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="691.5">workshop</tspan><tspan class="node-detail" x="760.0" y="715.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="jackson3 | bluetape4k APIs">
-      <rect x="946.0" y="649.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="691.5">jackson3</tspan><tspan class="node-detail" x="1096.0" y="715.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="netty | bluetape4k APIs">
-      <rect x="274.0" y="766.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="808.5">netty</tspan><tspan class="node-detail" x="424.0" y="832.5">bluetape4k APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="Redis | Runtime Dependencies">
-      <rect x="274.0" y="916.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="958.5">Redis</tspan><tspan class="node-detail" x="424.0" y="982.5">Runtime Dependencies</tspan></text>
-    </g>
-    <g class="node" data-node="runtime1" data-lines="AWS / S3 | Runtime Dependencies">
-      <rect x="610.0" y="916.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="958.5">AWS / S3</tspan><tspan class="node-detail" x="760.0" y="982.5">Runtime Dependencies</tspan></text>
-    </g>
-    <g class="node" data-node="runtime2" data-lines="Testcontainers | Runtime Dependencies">
-      <rect x="946.0" y="916.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="958.5">Testcontainers</tspan><tspan class="node-detail" x="1096.0" y="982.5">Runtime Dependencies</tspan></text>
-    </g>
-  </g>
+
+  <rect class="canvas" width="1780" height="1040"/>
+  <rect class="frame" x="28" y="28" width="1724" height="984" rx="24"/>
+  <text class="title" x="890" y="84" text-anchor="middle">API Gateway Module</text>
+  <text class="subtitle" x="890" y="114" text-anchor="middle">Routes, rewrites, Swagger, and Redis-backed Bucket4j support owned by api-gateway.</text>
+
+  <rect class="layer" x="80" y="164" width="350" height="700" rx="18" fill="#eef6ff" stroke="#b5cfe8"/>
+  <text class="layerTitle" x="255" y="207" text-anchor="middle">Gateway Entry</text>
+
+  <rect class="layer" x="486" y="164" width="580" height="700" rx="18" fill="#f3fbf0" stroke="#b7d4ae"/>
+  <text class="layerTitle" x="776" y="207" text-anchor="middle">Gateway Responsibilities</text>
+
+  <rect class="layer" x="1124" y="164" width="576" height="700" rx="18" fill="#fff8ea" stroke="#dec289"/>
+  <text class="layerTitle" x="1412" y="207" text-anchor="middle">Route Targets</text>
+
+  <rect class="card" x="132" y="298" width="246" height="142" rx="14" fill="#ffffff" stroke="#8eb4d6"/>
+  <text class="cardTitle" x="255" y="350" text-anchor="middle">HTTP Client</text>
+  <text class="cardText" x="255" y="382" text-anchor="middle">calls port 8080</text>
+  <text class="smallText" x="255" y="410" text-anchor="middle">service paths or /</text>
+
+  <rect class="card" x="132" y="520" width="246" height="118" rx="14" fill="#ffffff" stroke="#8eb4d6"/>
+  <text class="cardTitle" x="255" y="563" text-anchor="middle">WebTestClient</text>
+  <text class="cardText" x="255" y="595" text-anchor="middle">tests /hello</text>
+  <text class="smallText" x="255" y="620" text-anchor="middle">random port context</text>
+
+  <rect class="card" x="550" y="254" width="454" height="150" rx="14" fill="#ffffff" stroke="#91b884"/>
+  <use href="#gatewayIcon" x="586" y="294"/>
+  <text class="cardTitle" x="810" y="310" text-anchor="middle">Spring Cloud Gateway</text>
+  <text class="cardText" x="810" y="342" text-anchor="middle">application.yml route table</text>
+  <text class="smallText" x="810" y="369" text-anchor="middle">default response header + RewritePath</text>
+
+  <rect class="card" x="550" y="452" width="454" height="122" rx="14" fill="#fffdf6" stroke="#c39a56"/>
+  <text class="cardTitle" x="777" y="494" text-anchor="middle">RedirectWebFilter</text>
+  <text class="cardText" x="777" y="526" text-anchor="middle">/ -> /swagger-ui.html</text>
+  <text class="smallText" x="777" y="552" text-anchor="middle">keeps Swagger as default landing page</text>
+
+  <rect class="card" x="550" y="628" width="454" height="122" rx="14" fill="#fffdf6" stroke="#c39a56"/>
+  <text class="cardTitle" x="777" y="670" text-anchor="middle">SwaggerConfig</text>
+  <text class="cardText" x="777" y="702" text-anchor="middle">OpenAPI metadata bean</text>
+  <text class="smallText" x="777" y="728" text-anchor="middle">build properties + contact + license</text>
+
+  <rect class="card" x="604" y="812" width="346" height="112" rx="14" fill="#fff7f6" stroke="#bc544f"/>
+  <use href="#redisIcon" x="632" y="832"/>
+  <text class="cardTitle" x="822" y="858" text-anchor="middle">Redis</text>
+  <text class="cardText" x="822" y="890" text-anchor="middle">Bucket4j cache-to-use</text>
+
+  <rect class="card" x="1180" y="236" width="444" height="116" rx="14" fill="#fffefa" stroke="#d2a85e"/>
+  <text class="cardTitle" x="1402" y="278" text-anchor="middle">Customer Service</text>
+  <text class="cardText" x="1402" y="310" text-anchor="middle">http://localhost:8081</text>
+  <text class="smallText" x="1402" y="334" text-anchor="middle">receives /api/v1/customers</text>
+
+  <rect class="card" x="1180" y="408" width="444" height="126" rx="14" fill="#fffefa" stroke="#d2a85e"/>
+  <text class="cardTitle" x="1402" y="451" text-anchor="middle">Order Service</text>
+  <text class="cardText" x="1402" y="483" text-anchor="middle">http://localhost:8082</text>
+  <text class="smallText" x="1402" y="507" text-anchor="middle">orders + products endpoints</text>
+
+  <rect class="card" x="1180" y="590" width="444" height="112" rx="14" fill="#f9fbff" stroke="#9db4c8"/>
+  <text class="cardTitle" x="1402" y="632" text-anchor="middle">Gateway OpenAPI</text>
+  <text class="cardText" x="1402" y="664" text-anchor="middle">/v3/api-docs/**</text>
+  <text class="smallText" x="1402" y="688" text-anchor="middle">served by the gateway itself</text>
+
+  <rect class="card" x="1180" y="752" width="444" height="86" rx="14" fill="#f9fbff" stroke="#9db4c8" stroke-dasharray="8 7"/>
+  <text class="cardTitle" x="1402" y="788" text-anchor="middle">WebSocket Echo</text>
+  <text class="smallText" x="1402" y="816" text-anchor="middle">/echo -> ws://localhost:9000</text>
+
+  <path class="lineBlue" d="M 378 368 H 550"/>
+  <rect class="labelBox" x="400" y="326" width="122" height="30" rx="15" stroke="#8eb4d6"/>
+  <text class="label" x="461" y="346" text-anchor="middle" fill="#457b9d">port 8080</text>
+
+  <path class="lineGreen" d="M 1004 304 H 1180"/>
+  <rect class="labelBox" x="1028" y="261" width="124" height="30" rx="15" stroke="#91b884"/>
+  <text class="label" x="1090" y="281" text-anchor="middle" fill="#5f8f5b">customers</text>
+
+  <path class="lineGreen" d="M 1004 370 H 1088 V 471 H 1180"/>
+  <rect class="labelBox" x="1036" y="421" width="102" height="30" rx="15" stroke="#91b884"/>
+  <text class="label" x="1087" y="441" text-anchor="middle" fill="#5f8f5b">orders</text>
+
+  <path class="lineGold" d="M 1004 514 H 1100 V 646 H 1180"/>
+  <rect class="labelBox" x="1034" y="588" width="108" height="30" rx="15" stroke="#d5a656"/>
+  <text class="label" x="1088" y="608" text-anchor="middle" fill="#a87332">swagger</text>
+
+  <path class="lineGold" d="M 1004 337 H 1118 V 795 H 1180"/>
+  <rect class="labelBox" x="1062" y="736" width="92" height="30" rx="15" stroke="#d5a656"/>
+  <text class="label" x="1108" y="756" text-anchor="middle" fill="#a87332">/echo</text>
+
+  <path class="lineRed" d="M 777 750 V 812"/>
+  <rect class="labelBox" x="800" y="770" width="146" height="30" rx="15" stroke="#bc544f"/>
+  <text class="label" x="873" y="790" text-anchor="middle" fill="#b44d49">rate buckets</text>
+
+  <path class="lineBlue" d="M 378 579 H 506 V 327 H 550"/>
 </svg>

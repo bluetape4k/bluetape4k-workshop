@@ -33,3 +33,10 @@ optional `/echo` route.
 Do not make a parent README reuse a child module scenario diagram. Parent
 diagrams should explain orchestration and runtime boundaries; child diagrams
 should explain service internals.
+
+For `gateway/api-gateway`, keep README claims tied to `application.yml` rather
+than older Spring Cloud Gateway examples. The current routes use localhost
+targets, `/customer-service/**`, `/order-service/**`, `/v3/api-docs/**`, and
+`/echo`; do not document `lb://...` routes unless the source changes. Sequence
+diagrams should keep the root redirect branch separate from the service-route
+Bucket4j and rewrite branch.
