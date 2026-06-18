@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1580" height="760" viewBox="0 0 1580 760" role="img" aria-label="Caffeine cache lookup flow">
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.15"/></filter>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker>
+    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A"/></marker>
+    <style>.canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:38px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:15px;fill:#51606F}.cardTitle{font-family:"Architects Daughter";font-size:27px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.line{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}.msg{font-family:"Comic Mono";font-size:15px;fill:#334155}</style>
+  </defs>
+  <rect class="canvas" width="1580" height="760"/>
+  <rect class="frame" x="24" y="24" width="1532" height="712" rx="24"/>
+  <text class="title" x="790" y="72" text-anchor="middle">Caffeine lookup and eviction flow</text>
+  <text class="subtitle" x="790" y="104" text-anchor="middle">@Cacheable hides the local lookup while tests prove first-load latency, cache hit latency, and eviction behavior.</text>
+
+  <g filter="url(#shadow)"><rect x="92" y="170" width="240" height="78" rx="14" fill="#EFF6FF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="212" y="204" text-anchor="middle">Test caller</text><text class="cardText" x="212" y="230" text-anchor="middle">findByCode(KR)</text></g>
+  <g filter="url(#shadow)"><rect x="446" y="170" width="280" height="78" rx="14" fill="#F0FDF4" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="586" y="204" text-anchor="middle">CountryRepository</text><text class="cardText" x="586" y="230" text-anchor="middle">@Cacheable key country:code</text></g>
+  <g filter="url(#shadow)"><rect x="850" y="170" width="280" height="78" rx="14" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="990" y="204" text-anchor="middle">Caffeine cache</text><text class="cardText" x="990" y="230" text-anchor="middle">local in-memory entry</text></g>
+  <g filter="url(#shadow)"><rect x="1248" y="170" width="240" height="78" rx="14" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.7"/><text class="cardTitle" x="1368" y="204" text-anchor="middle">Country payload</text><text class="cardText" x="1368" y="230" text-anchor="middle">random 1 KiB fields</text></g>
+
+  <path class="line" d="M 212 322 L 586 322" stroke="#2563EB" marker-end="url(#arrowBlue)"/><text class="msg" x="399" y="306" text-anchor="middle">1. first lookup</text>
+  <path class="line" d="M 586 402 L 990 402" stroke="#2563EB" marker-end="url(#arrowBlue)"/><text class="msg" x="788" y="386" text-anchor="middle">2. cache miss, invoke method</text>
+  <path class="line" d="M 990 482 L 1368 482" stroke="#16A34A" marker-end="url(#arrowGreen)"/><text class="msg" x="1179" y="466" text-anchor="middle">3. store generated Country</text>
+  <path class="line" d="M 990 562 L 586 562" stroke="#16A34A" marker-end="url(#arrowGreen)"/><text class="msg" x="788" y="546" text-anchor="middle">4. next lookup is a fast cache hit</text>
+  <path class="line" d="M 586 642 L 990 642" stroke="#2563EB" marker-end="url(#arrowBlue)"/><text class="msg" x="788" y="626" text-anchor="middle">5. evictCache(code) removes entry</text>
+</svg>

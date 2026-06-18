@@ -1,142 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1238" viewBox="0 0 1320 1238" role="img" aria-label="Cache Caffeine Demo architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-boot/cache-caffeine/src/main/kotlin/io/bluetape4k/workshop/cache/caffeine/CaffeineCacheApplication.kt&quot;,&quot;spring-boot/cache-caffeine/src/main/kotlin/io/bluetape4k/workshop/cache/caffeine/config/CaffeineConfig.kt&quot;,&quot;spring-boot/cache-caffeine/src/main/kotlin/io/bluetape4k/workshop/cache/caffeine/config/SchedulingConfig.kt&quot;,&quot;spring-boot/cache-caffeine/src/main/kotlin/io/bluetape4k/workshop/cache/caffeine/domain/Country.kt&quot;,&quot;spring-boot/cache-caffeine/src/main/kotlin/io/bluetape4k/workshop/cache/caffeine/domain/CountryRepository.kt&quot;,&quot;spring-boot/cache-caffeine/src/main/kotlin/io/bluetape4k/workshop/cache/caffeine/prefetcher/CountryPrefetcher.kt&quot;,&quot;spring-boot/cache-caffeine/src/test/kotlin/io/bluetape4k/workshop/cache/caffeine/AbstractCaffeineCacheApplicationTest.kt&quot;,&quot;spring-boot/cache-caffeine/src/test/kotlin/io/bluetape4k/workshop/cache/caffeine/config/CaffeineCacheConfigTest.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1680" height="840" viewBox="0 0 1680 840" role="img" aria-label="Caffeine cache architecture">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
-    <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
-    </style>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker>
+    <marker id="arrowGreen" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#16A34A"/></marker>
+    <style>.canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{stroke-width:1.6;rx:22}.title{font-family:"Architects Daughter";font-size:40px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#51606F}.layerTitle{font-family:"Architects Daughter";font-size:29px;fill:#243447}.cardTitle{font-family:"Architects Daughter";font-size:28px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}.line{fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}</style>
   </defs>
-  <rect class="canvas" width="1320" height="1238"/>
-  <rect class="frame" x="16" y="16" width="1288" height="1206" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">Cache Caffeine Demo</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Spring Boot application feature and runtime integration</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="256.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="216.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="214.5">Spring Boot</tspan><tspan class="layer-title" x="151.0" y="237.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="264.0">apps, controllers,</tspan><tspan class="layer-detail" x="151.0" y="280.0">scheduled tests</tspan></text>
-    </g>
-    <g class="layer" data-layer="service">
-      <rect x="46.0" y="388.0" width="1228.0" height="242.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="408.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="493.0">Feature Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="523.0">services,</tspan><tspan class="layer-detail" x="151.0" y="539.0">resilience, events,</tspan><tspan class="layer-detail" x="151.0" y="555.0">cache policy</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="648.0" width="1228.0" height="380.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="668.0" width="174" height="340.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="810.5">Boot Integration</tspan><tspan class="layer-title" x="151.0" y="833.5">Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="852.0">auto-config,</tspan><tspan class="layer-detail" x="151.0" y="868.0">clients,</tspan><tspan class="layer-detail" x="151.0" y="884.0">repositories</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="1046.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="1066.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="1084.5">Runtime</tspan><tspan class="layer-title" x="151.0" y="1107.5">Dependencies</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1126.0">database, cache,</tspan><tspan class="layer-detail" x="151.0" y="1142.0">messaging,</tspan><tspan class="layer-detail" x="151.0" y="1158.0">containers</tspan></text>
-    </g>
-    <g class="edge" data-edge="api0-&gt;service0" data-label="delegates">
-      <path d="M 760.0 350.0 L 760.0 379.0 L 424.0 379.0 L 424.0 408.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
-    </g>
-    <g class="edge" data-edge="service3-&gt;infra0" data-label="persists / publishes">
-      <path d="M 424.0 610.0 L 424.0 639.0 L 424.0 668.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 424.0 1008.0 L 424.0 1037.0 L 760.0 1037.0 L 760.0 1066.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Caffeine Cache | Application | application bootstrap">
-      <rect x="274.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="171.5">Caffeine Cache</tspan><tspan class="node-title" x="424.0" y="195.5">Application</tspan><tspan class="node-detail" x="424.0" y="219.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry1" data-lines="Abstract Caffeine Cache | Application Test | caffeine">
-      <rect x="610.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="171.5">Abstract Caffeine Cache</tspan><tspan class="node-title" x="760.0" y="195.5">Application Test</tspan><tspan class="node-detail" x="760.0" y="219.5">caffeine</tspan></text>
-    </g>
-    <g class="node" data-node="entry2" data-lines="Caffeine Cache Config | Test | configuration">
-      <rect x="946.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="171.5">Caffeine Cache Config</tspan><tspan class="node-title" x="1096.0" y="195.5">Test</tspan><tspan class="node-detail" x="1096.0" y="219.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="entry3" data-lines="Country Repository Test | domain model">
-      <rect x="274.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="300.5">Country Repository Test</tspan><tspan class="node-detail" x="424.0" y="324.5">domain model</tspan></text>
-    </g>
-    <g class="node" data-node="api0" data-lines="Scheduling Config | configuration">
-      <rect x="610.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#EEF7FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="300.5">Scheduling Config</tspan><tspan class="node-detail" x="760.0" y="324.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="service0" data-lines="Caffeine Config | configuration">
-      <rect x="274.0" y="408.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="450.5">Caffeine Config</tspan><tspan class="node-detail" x="424.0" y="474.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="service1" data-lines="Country Repository | repository">
-      <rect x="610.0" y="408.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="450.5">Country Repository</tspan><tspan class="node-detail" x="760.0" y="474.5">repository</tspan></text>
-    </g>
-    <g class="node" data-node="service2" data-lines="Country Prefetcher | prefetcher">
-      <rect x="946.0" y="408.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="450.5">Country Prefetcher</tspan><tspan class="node-detail" x="1096.0" y="474.5">prefetcher</tspan></text>
-    </g>
-    <g class="node" data-node="service3" data-lines="Country | domain model">
-      <rect x="274.0" y="518.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="560.5">Country</tspan><tspan class="node-detail" x="424.0" y="584.5">domain model</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Spring boot starter | cache lib | Spring Boot Layer">
-      <rect x="274.0" y="668.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="705.5">Spring boot starter</tspan><tspan class="node-title" x="424.0" y="729.5">cache lib</tspan><tspan class="node-detail" x="424.0" y="753.5">Spring Boot Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra1" data-lines="Spring boot starter | cache test | Spring Boot Layer">
-      <rect x="610.0" y="668.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="705.5">Spring boot starter</tspan><tspan class="node-title" x="760.0" y="729.5">cache test</tspan><tspan class="node-detail" x="760.0" y="753.5">Spring Boot Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra2" data-lines="Spring boot | autoconfigure lib | Spring Boot Layer">
-      <rect x="946.0" y="668.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="705.5">Spring boot</tspan><tspan class="node-title" x="1096.0" y="729.5">autoconfigure lib</tspan><tspan class="node-detail" x="1096.0" y="753.5">Spring Boot Layer</tspan></text>
-    </g>
-    <g class="node" data-node="infra3" data-lines="Spring boot | autoconfigure processor | Spring Boot Layer">
-      <rect x="274.0" y="792.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="829.5">Spring boot</tspan><tspan class="node-title" x="424.0" y="853.5">autoconfigure processor</tspan><tspan class="node-detail" x="424.0" y="877.5">Spring Boot Layer</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k Boot APIs">
-      <rect x="610.0" y="799.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="841.5">workshop</tspan><tspan class="node-detail" x="760.0" y="865.5">bluetape4k Boot APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="cache | bluetape4k Boot APIs">
-      <rect x="946.0" y="799.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="841.5">cache</tspan><tspan class="node-detail" x="1096.0" y="865.5">bluetape4k Boot APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="jackson3 | bluetape4k Boot APIs">
-      <rect x="274.0" y="916.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="958.5">jackson3</tspan><tspan class="node-detail" x="424.0" y="982.5">bluetape4k Boot APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="In-memory / JVM | Boot Runtime">
-      <rect x="610.0" y="1066.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1108.5">In-memory / JVM</tspan><tspan class="node-detail" x="760.0" y="1132.5">Boot Runtime</tspan></text>
-    </g>
-  </g>
+  <rect class="canvas" width="1680" height="840"/>
+  <rect class="frame" x="24" y="24" width="1632" height="792" rx="24"/>
+  <text class="title" x="840" y="72" text-anchor="middle">Caffeine local cache demo</text>
+  <text class="subtitle" x="840" y="106" text-anchor="middle">Spring Cache annotations use a bluetape4k Caffeine DSL builder with virtual-thread executors and scheduled cache warming.</text>
+  <rect class="layer" x="86" y="156" width="1508" height="150" fill="#EFF6FF" stroke="#BFDBFE"/><text class="layerTitle" x="126" y="200">Application entry</text>
+  <g filter="url(#shadow)"><rect x="210" y="220" width="300" height="62" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="360" y="259" text-anchor="middle">CaffeineCacheApplication</text></g>
+  <g filter="url(#shadow)"><rect x="690" y="220" width="300" height="62" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="840" y="259" text-anchor="middle">Spring Boot tests</text></g>
+  <g filter="url(#shadow)"><rect x="1170" y="220" width="300" height="62" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="1320" y="259" text-anchor="middle">CountryPrefetcher</text></g>
+  <rect class="layer" x="86" y="366" width="1508" height="170" fill="#F0FDF4" stroke="#BBF7D0"/><text class="layerTitle" x="126" y="410">Cache configuration</text>
+  <g filter="url(#shadow)"><rect x="180" y="446" width="330" height="72" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="345" y="477" text-anchor="middle">CaffeineConfig</text><text class="cardText" x="345" y="502" text-anchor="middle">@EnableCaching</text></g>
+  <g filter="url(#shadow)"><rect x="660" y="436" width="360" height="92" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="840" y="468" text-anchor="middle">bluetape4k caffeine DSL</text><text class="cardText" x="840" y="494" text-anchor="middle">maximumSize 1000, expire 5m</text><text class="cardText" x="840" y="518" text-anchor="middle">VirtualThreadExecutor</text></g>
+  <g filter="url(#shadow)"><rect x="1170" y="446" width="300" height="72" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="1320" y="477" text-anchor="middle">TaskScheduler</text><text class="cardText" x="1320" y="502" text-anchor="middle">virtual scheduled thread</text></g>
+  <rect class="layer" x="86" y="596" width="1508" height="150" fill="#FFF7ED" stroke="#FED7AA"/><text class="layerTitle" x="126" y="640">Cached domain access</text>
+  <g filter="url(#shadow)"><rect x="245" y="668" width="310" height="58" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="400" y="705" text-anchor="middle">CountryRepository</text></g>
+  <g filter="url(#shadow)"><rect x="685" y="668" width="310" height="58" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="840" y="705" text-anchor="middle">cache:contries</text></g>
+  <g filter="url(#shadow)"><rect x="1125" y="668" width="310" height="58" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><text class="cardTitle" x="1280" y="705" text-anchor="middle">Country payload</text></g>
+  <path class="line" d="M 360 282 L 345 446" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 840 282 L 840 436" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 1320 282 L 1320 446" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 510 482 L 660 482" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 840 528 L 840 668" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 400 668 L 400 560 L 840 560 L 840 668" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 995 697 L 1125 697" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
+  <path class="line" d="M 1320 518 L 1320 596 L 400 596 L 400 668" stroke="#16A34A" marker-end="url(#arrowGreen)"/>
 </svg>
