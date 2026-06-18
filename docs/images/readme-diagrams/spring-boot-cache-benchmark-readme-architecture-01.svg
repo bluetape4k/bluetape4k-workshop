@@ -1,162 +1,53 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1210" viewBox="0 0 1320 1210" role="img" aria-label="cache-benchmark architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-boot/cache-benchmark/src/main/kotlin/io/bluetape4k/workshop/cache/benchmark/CacheBenchmarkApplication.kt&quot;,&quot;spring-boot/cache-benchmark/src/main/kotlin/io/bluetape4k/workshop/cache/benchmark/config/CacheConfig.kt&quot;,&quot;spring-boot/cache-benchmark/src/main/kotlin/io/bluetape4k/workshop/cache/benchmark/config/DataInitConfig.kt&quot;,&quot;spring-boot/cache-benchmark/src/main/kotlin/io/bluetape4k/workshop/cache/benchmark/config/RedisTemplateConfig.kt&quot;,&quot;spring-boot/cache-benchmark/src/main/kotlin/io/bluetape4k/workshop/cache/benchmark/config/RedissonConfig.kt&quot;,&quot;spring-boot/cache-benchmark/src/main/kotlin/io/bluetape4k/workshop/cache/benchmark/domain/Product.kt&quot;,&quot;spring-boot/cache-benchmark/src/main/kotlin/io/bluetape4k/workshop/cache/benchmark/domain/ProductRepository.kt&quot;,&quot;spring-boot/cache-benchmark/src/main/kotlin/io/bluetape4k/workshop/cache/benchmark/service/CaffeineService.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1840" height="980" viewBox="0 0 1840 980" role="img" aria-label="Cache benchmark architecture">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.16"/></filter>
+    <marker id="arrowBlue" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#2563EB"/></marker>
+    <marker id="arrowTeal" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse"><path d="M 0 0 L 14 7 L 0 14 Z" fill="#0891B2"/></marker>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.layer{stroke-width:1.6;rx:22}
+      .title{font-family:"Architects Daughter";font-size:40px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#51606F}
+      .layerTitle{font-family:"Architects Daughter";font-size:29px;fill:#243447}.cardTitle{font-family:"Architects Daughter";font-size:27px;fill:#102033}.cardText{font-family:"Comic Mono";font-size:15px;fill:#415166}
+      .line{fill:none;stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round}
     </style>
   </defs>
-  <rect class="canvas" width="1320" height="1210"/>
-  <rect class="frame" x="16" y="16" width="1288" height="1178" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">cache-benchmark</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Spring Boot application feature and runtime integration</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="256.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="216.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="214.5">Spring Boot</tspan><tspan class="layer-title" x="151.0" y="237.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="264.0">apps, controllers,</tspan><tspan class="layer-detail" x="151.0" y="280.0">scheduled tests</tspan></text>
-    </g>
-    <g class="layer" data-layer="service">
-      <rect x="46.0" y="388.0" width="1228.0" height="242.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="408.0" width="174" height="202.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="493.0">Feature Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="523.0">services,</tspan><tspan class="layer-detail" x="151.0" y="539.0">resilience, events,</tspan><tspan class="layer-detail" x="151.0" y="555.0">cache policy</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="648.0" width="1228.0" height="352.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="668.0" width="174" height="312.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="796.5">Boot Integration</tspan><tspan class="layer-title" x="151.0" y="819.5">Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="838.0">auto-config,</tspan><tspan class="layer-detail" x="151.0" y="854.0">clients,</tspan><tspan class="layer-detail" x="151.0" y="870.0">repositories</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="1018.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="1038.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="1056.5">Runtime</tspan><tspan class="layer-title" x="151.0" y="1079.5">Dependencies</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1098.0">database, cache,</tspan><tspan class="layer-detail" x="151.0" y="1114.0">messaging,</tspan><tspan class="layer-detail" x="151.0" y="1130.0">containers</tspan></text>
-    </g>
-    <g class="edge" data-edge="entry4-&gt;service0" data-label="starts">
-      <path d="M 760.0 350.0 L 760.0 379.0 L 424.0 379.0 L 424.0 408.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
-    </g>
-    <g class="edge" data-edge="service5-&gt;infra0" data-label="persists / publishes">
-      <path d="M 1096.0 610.0 L 1096.0 639.0 L 424.0 639.0 L 424.0 668.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 760.0 980.0 L 760.0 1009.0 L 424.0 1009.0 L 424.0 1038.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Cache Benchmark | Application | application bootstrap">
-      <rect x="274.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="171.5">Cache Benchmark</tspan><tspan class="node-title" x="424.0" y="195.5">Application</tspan><tspan class="node-detail" x="424.0" y="219.5">application bootstrap</tspan></text>
-    </g>
-    <g class="node" data-node="entry1" data-lines="Abstract Cache Benchmark | Test | benchmark">
-      <rect x="610.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="171.5">Abstract Cache Benchmark</tspan><tspan class="node-title" x="760.0" y="195.5">Test</tspan><tspan class="node-detail" x="760.0" y="219.5">benchmark</tspan></text>
-    </g>
-    <g class="node" data-node="entry2" data-lines="Caffeine Service Test | service component">
-      <rect x="946.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="183.5">Caffeine Service Test</tspan><tspan class="node-detail" x="1096.0" y="207.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="entry3" data-lines="Near Cache Service Test | service component">
-      <rect x="274.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="300.5">Near Cache Service Test</tspan><tspan class="node-detail" x="424.0" y="324.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="entry4" data-lines="No Cache Service Test | service component">
-      <rect x="610.0" y="258.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="300.5">No Cache Service Test</tspan><tspan class="node-detail" x="760.0" y="324.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="service0" data-lines="Cache Config | configuration">
-      <rect x="274.0" y="408.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="450.5">Cache Config</tspan><tspan class="node-detail" x="424.0" y="474.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="service1" data-lines="Caffeine Service | service component">
-      <rect x="610.0" y="408.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="450.5">Caffeine Service</tspan><tspan class="node-detail" x="760.0" y="474.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="service2" data-lines="Near Cache Service | service component">
-      <rect x="946.0" y="408.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="450.5">Near Cache Service</tspan><tspan class="node-detail" x="1096.0" y="474.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="service3" data-lines="No Cache Service | service component">
-      <rect x="274.0" y="518.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="560.5">No Cache Service</tspan><tspan class="node-detail" x="424.0" y="584.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="service4" data-lines="Product Cache Service | service component">
-      <rect x="610.0" y="518.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="560.5">Product Cache Service</tspan><tspan class="node-detail" x="760.0" y="584.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="service5" data-lines="Read Through Service | service component">
-      <rect x="946.0" y="518.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="560.5">Read Through Service</tspan><tspan class="node-detail" x="1096.0" y="584.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Data Init Config | configuration">
-      <rect x="274.0" y="668.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="710.5">Data Init Config</tspan><tspan class="node-detail" x="424.0" y="734.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="infra1" data-lines="Redis Template Config | configuration">
-      <rect x="610.0" y="668.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="710.5">Redis Template Config</tspan><tspan class="node-detail" x="760.0" y="734.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="infra2" data-lines="Redisson Config | configuration">
-      <rect x="946.0" y="668.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="710.5">Redisson Config</tspan><tspan class="node-detail" x="1096.0" y="734.5">configuration</tspan></text>
-    </g>
-    <g class="node" data-node="infra3" data-lines="Product | domain model">
-      <rect x="274.0" y="778.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="820.5">Product</tspan><tspan class="node-detail" x="424.0" y="844.5">domain model</tspan></text>
-    </g>
-    <g class="node" data-node="infra4" data-lines="Product Repository | repository">
-      <rect x="610.0" y="778.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="820.5">Product Repository</tspan><tspan class="node-detail" x="760.0" y="844.5">repository</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="workshop | bluetape4k Boot APIs">
-      <rect x="946.0" y="778.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="820.5">workshop</tspan><tspan class="node-detail" x="1096.0" y="844.5">bluetape4k Boot APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="redisson | bluetape4k Boot APIs">
-      <rect x="274.0" y="888.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="930.5">redisson</tspan><tspan class="node-detail" x="424.0" y="954.5">bluetape4k Boot APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="cache | bluetape4k Boot APIs">
-      <rect x="610.0" y="888.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="930.5">cache</tspan><tspan class="node-detail" x="760.0" y="954.5">bluetape4k Boot APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="SQL / R2DBC | Boot Runtime">
-      <rect x="274.0" y="1038.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="1080.5">SQL / R2DBC</tspan><tspan class="node-detail" x="424.0" y="1104.5">Boot Runtime</tspan></text>
-    </g>
-    <g class="node" data-node="runtime1" data-lines="Redis | Boot Runtime">
-      <rect x="610.0" y="1038.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1080.5">Redis</tspan><tspan class="node-detail" x="760.0" y="1104.5">Boot Runtime</tspan></text>
-    </g>
-    <g class="node" data-node="runtime2" data-lines="Testcontainers | Boot Runtime">
-      <rect x="946.0" y="1038.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="1080.5">Testcontainers</tspan><tspan class="node-detail" x="1096.0" y="1104.5">Boot Runtime</tspan></text>
-    </g>
-  </g>
+  <rect class="canvas" width="1840" height="980"/>
+  <rect class="frame" x="24" y="24" width="1792" height="932" rx="24"/>
+  <text class="title" x="920" y="72" text-anchor="middle">Cache benchmark runtime</text>
+  <text class="subtitle" x="920" y="106" text-anchor="middle">kotlinx-benchmark runs seven ProductCacheService implementations against H2, Caffeine, Redis, and Redisson near cache.</text>
+
+  <rect class="layer" x="80" y="152" width="1680" height="170" fill="#EFF6FF" stroke="#BFDBFE"/>
+  <text class="layerTitle" x="120" y="196">Benchmark harness</text>
+  <g filter="url(#shadow)"><rect x="220" y="222" width="300" height="76" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="370" y="254" text-anchor="middle">kotlinx-benchmark</text><text class="cardText" x="370" y="280" text-anchor="middle">JMH warmups + iterations</text></g>
+  <g filter="url(#shadow)"><rect x="760" y="212" width="320" height="96" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="920" y="246" text-anchor="middle">AbstractCacheBenchmark</text><text class="cardText" x="920" y="274" text-anchor="middle">SpringApplicationBuilder</text><text class="cardText" x="920" y="298" text-anchor="middle">one context per trial</text></g>
+  <g filter="url(#shadow)"><rect x="1300" y="222" width="300" height="76" rx="14" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.7"/><text class="cardTitle" x="1450" y="254" text-anchor="middle">Profile tasks</text><text class="cardText" x="1450" y="280" text-anchor="middle">noCache ... allProfiles</text></g>
+
+  <rect class="layer" x="80" y="382" width="1680" height="258" fill="#F0FDF4" stroke="#BBF7D0"/>
+  <text class="layerTitle" x="120" y="426">Cache strategy services</text>
+  <g filter="url(#shadow)"><rect x="140" y="464" width="218" height="72" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="249" y="496" text-anchor="middle">No Cache</text><text class="cardText" x="249" y="520" text-anchor="middle">direct repository</text></g>
+  <g filter="url(#shadow)"><rect x="396" y="464" width="218" height="72" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="505" y="496" text-anchor="middle">Caffeine</text><text class="cardText" x="505" y="520" text-anchor="middle">@Cacheable local</text></g>
+  <g filter="url(#shadow)"><rect x="652" y="464" width="218" height="72" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="761" y="496" text-anchor="middle">Redis Cache</text><text class="cardText" x="761" y="520" text-anchor="middle">@Cacheable remote</text></g>
+  <g filter="url(#shadow)"><rect x="908" y="464" width="218" height="72" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="1017" y="496" text-anchor="middle">Near Cache</text><text class="cardText" x="1017" y="520" text-anchor="middle">RLocalCachedMap</text></g>
+  <g filter="url(#shadow)"><rect x="1164" y="464" width="218" height="72" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="1273" y="496" text-anchor="middle">Read Through</text><text class="cardText" x="1273" y="520" text-anchor="middle">manual get-or-load</text></g>
+  <g filter="url(#shadow)"><rect x="524" y="552" width="260" height="72" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="654" y="584" text-anchor="middle">Write Through</text><text class="cardText" x="654" y="608" text-anchor="middle">sync Redis + DB</text></g>
+  <g filter="url(#shadow)"><rect x="1056" y="552" width="260" height="72" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="1186" y="584" text-anchor="middle">Write Behind</text><text class="cardText" x="1186" y="608" text-anchor="middle">cache now, DB async</text></g>
+  <g filter="url(#shadow)"><rect x="1482" y="464" width="218" height="72" rx="14" fill="#FFFFFF" stroke="#16A34A" stroke-width="1.7"/><text class="cardTitle" x="1591" y="496" text-anchor="middle">Common API</text><text class="cardText" x="1591" y="520" text-anchor="middle">ProductCacheService</text></g>
+
+  <rect class="layer" x="80" y="700" width="1680" height="160" fill="#FFF7ED" stroke="#FED7AA"/>
+  <text class="layerTitle" x="120" y="744">Runtime stores</text>
+  <g filter="url(#shadow)"><rect x="280" y="770" width="320" height="72" rx="14" fill="#FFFFFF" stroke="#EA580C" stroke-width="1.7"/><path d="M336 790 C336 780 376 780 376 790 L376 822 C376 832 336 832 336 822 Z M336 790 C336 800 376 800 376 790" fill="#FFEDD5" stroke="#EA580C" stroke-width="2"/><text class="cardTitle" x="456" y="804" text-anchor="middle">H2 database</text><text class="cardText" x="456" y="830" text-anchor="middle">ProductRepository</text></g>
+  <g filter="url(#shadow)"><rect x="760" y="770" width="320" height="72" rx="14" fill="#FFFFFF" stroke="#DC2626" stroke-width="1.7"/><rect x="810" y="790" width="28" height="28" rx="4" fill="#DC2626" transform="rotate(-12 824 804)"/><rect x="834" y="785" width="28" height="28" rx="4" fill="#EF4444" transform="rotate(-12 848 799)"/><rect x="826" y="812" width="28" height="28" rx="4" fill="#B91C1C" transform="rotate(-12 840 826)"/><text class="cardTitle" x="936" y="804" text-anchor="middle">Redis</text><text class="cardText" x="936" y="830" text-anchor="middle">Spring Redis + Redisson</text></g>
+  <g filter="url(#shadow)"><rect x="1240" y="770" width="320" height="72" rx="14" fill="#FFFFFF" stroke="#0891B2" stroke-width="1.7"/><text class="cardTitle" x="1400" y="804" text-anchor="middle">Testcontainers</text><text class="cardText" x="1400" y="830" text-anchor="middle">RedisServer.Launcher</text></g>
+
+  <path class="line" d="M 520 260 L 760 260" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 1080 260 L 1300 260" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 1450 298 L 1450 346 L 1591 346 L 1591 464" stroke="#2563EB" marker-end="url(#arrowBlue)"/>
+  <path class="line" d="M 249 536 L 249 668 L 440 668 L 440 770" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
+  <path class="line" d="M 505 536 L 505 668 L 440 668 L 440 770" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
+  <path class="line" d="M 654 624 L 654 668 L 440 668 L 440 770" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
+  <path class="line" d="M 761 536 L 761 668 L 920 668 L 920 770" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
+  <path class="line" d="M 1017 536 L 1017 668 L 920 668 L 920 770" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
+  <path class="line" d="M 1273 536 L 1273 668 L 920 668 L 920 770" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
+  <path class="line" d="M 1186 624 L 1186 668 L 920 668 L 920 770" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
+  <path class="line" d="M 1400 770 L 1400 724 L 920 724 L 920 770" stroke="#0891B2" marker-end="url(#arrowTeal)"/>
 </svg>

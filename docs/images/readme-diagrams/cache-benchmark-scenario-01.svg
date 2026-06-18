@@ -1,73 +1,30 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="680" viewBox="0 0 1400 680" role="img" aria-label="Cache Benchmark 7 Profiles">
-<defs>
-  <filter id="shadow" x="-8%" y="-8%" width="116%" height="116%"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.10"/></filter>
-  <marker id="arrow" markerWidth="14" markerHeight="14" refX="12" refY="7" orient="auto" markerUnits="userSpaceOnUse">
-    <path d="M2,2 L12,7 L2,12 Z" fill="#758297"/>
-  </marker>
-  <style>
-    .canvas{fill:#f7f9fc}.frame{fill:#fff;stroke:#d8e0ea;stroke-width:1.5}
-    .title{font-family:"Architects Daughter";font-size:34px;fill:#102033}
-    .subtitle{font-family:"Comic Mono";font-size:14px;fill:#536273}
-    .label{font-family:"Architects Daughter";font-size:16px;fill:#102033}
-    .mono{font-family:"Comic Mono";font-size:11px;fill:#536273}
-    .num{font-family:"Architects Daughter";font-size:14px;fill:#fff}
-    .bandlabel{font-family:"Architects Daughter";font-size:14px;fill:#758297}
-    .card{stroke-width:2;filter:url(#shadow)}
-    .line{stroke:#758297;stroke-width:2;fill:none;marker-end:url(#arrow)}
-  </style>
-</defs>
-<rect class="canvas" width="1400" height="680"/>
-<rect class="frame" x="28" y="24" width="1344" height="632" rx="20"/>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1780" height="960" viewBox="0 0 1780 960" role="img" aria-label="Seven cache strategy comparison">
+  <defs>
+    <filter id="shadow" x="-8%" y="-8%" width="116%" height="124%"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#64748B" flood-opacity="0.14"/></filter>
+    <style>
+      .canvas{fill:#F8FAFC}.frame{fill:#FFFFFF;stroke:#D6E0E8;stroke-width:1.4}.title{font-family:"Architects Daughter";font-size:40px;fill:#102033}.subtitle{font-family:"Comic Mono";font-size:16px;fill:#51606F}
+      .head{font-family:"Architects Daughter";font-size:28px;fill:#102033}.cellTitle{font-family:"Architects Daughter";font-size:25px;fill:#102033}.cellText{font-family:"Comic Mono";font-size:15px;fill:#415166}.tag{font-family:"Comic Mono";font-size:13px;fill:#334155}
+      .line{stroke:#CBD5E1;stroke-width:1.5}.badge{rx:12;stroke-width:1.4}
+    </style>
+  </defs>
+  <rect class="canvas" width="1780" height="960"/>
+  <rect class="frame" x="24" y="24" width="1732" height="912" rx="24"/>
+  <text class="title" x="890" y="72" text-anchor="middle">7 cache strategy comparison</text>
+  <text class="subtitle" x="890" y="106" text-anchor="middle">The benchmark keeps one ProductCacheService contract and swaps the read/write consistency trade-off.</text>
 
-<text class="title" x="52" y="68">Cache Benchmark Architecture</text>
-<text class="subtitle" x="52" y="92">kotlinx-benchmark (JMH) · ProductCacheService interface · 7 implementations · Spring Data JPA + H2 + Redis</text>
+  <text class="head" x="170" y="172" text-anchor="middle">Profile</text>
+  <text class="head" x="480" y="172" text-anchor="middle">Read path</text>
+  <text class="head" x="800" y="172" text-anchor="middle">Write path</text>
+  <text class="head" x="1120" y="172" text-anchor="middle">Shared state</text>
+  <text class="head" x="1440" y="172" text-anchor="middle">Best fit</text>
+  <line class="line" x1="90" y1="196" x2="1690" y2="196"/>
 
-<!-- Benchmark -->
-<g transform="translate(540,116)"><rect class="card" x="0" y="0" width="260" height="56" rx="12" fill="#E0ECFF" stroke="#4A7ADB"/><text class="label" x="130" y="24" text-anchor="middle">Benchmark (JMH)</text><text class="mono" x="130" y="44" text-anchor="middle">findById · save · warmup</text></g>
-
-<!-- ProductCacheService interface -->
-<g transform="translate(440,216)"><rect class="card" x="0" y="0" width="460" height="56" rx="12" fill="#EAF7EF" stroke="#58A978"/><text class="label" x="230" y="24" text-anchor="middle">ProductCacheService (interface)</text><text class="mono" x="230" y="44" text-anchor="middle">all 7 profiles implement this contract</text></g>
-
-<!-- 7 Profile implementations band -->
-<rect x="52" y="310" width="1292" height="108" rx="8" fill="#F1ECFF" stroke="#C8B8E8" stroke-width="1"/>
-<text class="bandlabel" x="66" y="330">7 Cache Profile Implementations</text>
-
-<!--
-  7 cards: 170px each, 12px gap = 7*170+6*12 = 1262px, start x=68
-  Centers: 153, 335, 517, 699, 881, 1063, 1245
--->
-<g transform="translate(68,340)"><circle cx="12" cy="-8" r="12" fill="#758297"/><text class="num" x="12" y="-3" text-anchor="middle">1</text><rect class="card" x="0" y="0" width="170" height="68" rx="8" fill="#f8f8f8" stroke="#aaa"/><text class="label" x="85" y="24" text-anchor="middle">No Cache</text><text class="mono" x="85" y="44" text-anchor="middle">direct DB · 1x</text></g>
-<g transform="translate(250,340)"><circle cx="12" cy="-8" r="12" fill="#58A978"/><text class="num" x="12" y="-3" text-anchor="middle">2</text><rect class="card" x="0" y="0" width="170" height="68" rx="8" fill="#EAF7EF" stroke="#58A978"/><text class="label" x="85" y="24" text-anchor="middle">Caffeine</text><text class="mono" x="85" y="44" text-anchor="middle">local · 60x read</text></g>
-<g transform="translate(432,340)"><circle cx="12" cy="-8" r="12" fill="#DC6B82"/><text class="num" x="12" y="-3" text-anchor="middle">3</text><rect class="card" x="0" y="0" width="170" height="68" rx="8" fill="#FDECEF" stroke="#DC6B82"/><text class="label" x="85" y="24" text-anchor="middle">Redis Cache</text><text class="mono" x="85" y="44" text-anchor="middle">shared · 5x read</text></g>
-<g transform="translate(614,340)"><circle cx="12" cy="-8" r="12" fill="#8A72D6"/><text class="num" x="12" y="-3" text-anchor="middle">4</text><rect class="card" x="0" y="0" width="170" height="68" rx="8" fill="#F1ECFF" stroke="#8A72D6"/><text class="label" x="85" y="24" text-anchor="middle">Near Cache</text><text class="mono" x="85" y="44" text-anchor="middle">Redisson 2-tier · 57x</text></g>
-<g transform="translate(796,340)"><circle cx="12" cy="-8" r="12" fill="#D6A441"/><text class="num" x="12" y="-3" text-anchor="middle">5</text><rect class="card" x="0" y="0" width="170" height="68" rx="8" fill="#FFF3D9" stroke="#D6A441"/><text class="label" x="85" y="24" text-anchor="middle">Read-Through</text><text class="mono" x="85" y="44" text-anchor="middle">manual Redis RT</text></g>
-<g transform="translate(978,340)"><circle cx="12" cy="-8" r="12" fill="#45A7A1"/><text class="num" x="12" y="-3" text-anchor="middle">6</text><rect class="card" x="0" y="0" width="170" height="68" rx="8" fill="#E9F7F6" stroke="#45A7A1"/><text class="label" x="85" y="24" text-anchor="middle">Write-Through</text><text class="mono" x="85" y="44" text-anchor="middle">sync Redis+DB</text></g>
-<g transform="translate(1160,340)"><circle cx="12" cy="-8" r="12" fill="#5B8DEF"/><text class="num" x="12" y="-3" text-anchor="middle">7</text><rect class="card" x="0" y="0" width="170" height="68" rx="8" fill="#E8F3FF" stroke="#5B8DEF"/><text class="label" x="85" y="24" text-anchor="middle">Write-Behind</text><text class="mono" x="85" y="44" text-anchor="middle">async · 2 classes</text></g>
-
-<!-- Backends -->
-<g transform="translate(220,520)">
-  <ellipse cx="120" cy="10" rx="120" ry="16" fill="#FFF3D9" stroke="#D6A441" stroke-width="2"/>
-  <rect x="0" y="10" width="240" height="36" fill="#FFF3D9" stroke="#D6A441" stroke-width="2"/>
-  <line x1="0" y1="10" x2="0" y2="46" stroke="#D6A441" stroke-width="2"/>
-  <line x1="240" y1="10" x2="240" y2="46" stroke="#D6A441" stroke-width="2"/>
-  <ellipse cx="120" cy="46" rx="120" ry="16" fill="#FFF3D9" stroke="#D6A441" stroke-width="2"/>
-  <text class="label" x="120" y="42" text-anchor="middle">H2 (Spring Data JPA)</text>
-</g>
-<g transform="translate(800,520)">
-  <ellipse cx="120" cy="10" rx="120" ry="16" fill="#FDECEF" stroke="#DC6B82" stroke-width="2"/>
-  <rect x="0" y="10" width="240" height="36" fill="#FDECEF" stroke="#DC6B82" stroke-width="2"/>
-  <line x1="0" y1="10" x2="0" y2="46" stroke="#DC6B82" stroke-width="2"/>
-  <line x1="240" y1="10" x2="240" y2="46" stroke="#DC6B82" stroke-width="2"/>
-  <ellipse cx="120" cy="46" rx="120" ry="16" fill="#FDECEF" stroke="#DC6B82" stroke-width="2"/>
-  <text class="label" x="120" y="42" text-anchor="middle">Redis</text>
-</g>
-
-<!-- ARROWS -->
-<!-- Benchmark → Interface (single vertical) -->
-<path class="line" d="M670,172 L670,214"/>
-<!-- Interface → Profile band (single vertical) -->
-<path class="line" d="M670,272 L670,308"/>
-<!-- Profile band → Backends (single line each) -->
-<path class="line" d="M400,418 L400,460 L340,460 L340,518"/>
-<path class="line" d="M900,418 L900,460 L920,460 L920,518"/>
+  <g filter="url(#shadow)"><rect x="90" y="228" width="1600" height="72" rx="16" fill="#FFFFFF" stroke="#E2E8F0"/><text class="cellTitle" x="170" y="270" text-anchor="middle">No Cache</text><text class="cellText" x="480" y="270" text-anchor="middle">DB on every read</text><text class="cellText" x="800" y="270" text-anchor="middle">DB only</text><text class="cellText" x="1120" y="270" text-anchor="middle">H2 repository</text><rect class="badge" x="1342" y="244" width="196" height="34" fill="#F1F5F9" stroke="#CBD5E1"/><text class="tag" x="1440" y="266" text-anchor="middle">baseline</text></g>
+  <g filter="url(#shadow)"><rect x="90" y="324" width="1600" height="72" rx="16" fill="#FFFFFF" stroke="#E2E8F0"/><text class="cellTitle" x="170" y="366" text-anchor="middle">Caffeine</text><text class="cellText" x="480" y="366" text-anchor="middle">local @Cacheable hit</text><text class="cellText" x="800" y="366" text-anchor="middle">DB + local cache put</text><text class="cellText" x="1120" y="366" text-anchor="middle">per JVM</text><rect class="badge" x="1342" y="340" width="196" height="34" fill="#DCFCE7" stroke="#86EFAC"/><text class="tag" x="1440" y="362" text-anchor="middle">single-node hot keys</text></g>
+  <g filter="url(#shadow)"><rect x="90" y="420" width="1600" height="72" rx="16" fill="#FFFFFF" stroke="#E2E8F0"/><text class="cellTitle" x="170" y="462" text-anchor="middle">Redis Cache</text><text class="cellText" x="480" y="462" text-anchor="middle">Spring Redis cache hit</text><text class="cellText" x="800" y="462" text-anchor="middle">DB + Redis put</text><text class="cellText" x="1120" y="462" text-anchor="middle">shared Redis TTL</text><rect class="badge" x="1342" y="436" width="196" height="34" fill="#FEE2E2" stroke="#FCA5A5"/><text class="tag" x="1440" y="458" text-anchor="middle">shared read cache</text></g>
+  <g filter="url(#shadow)"><rect x="90" y="516" width="1600" height="72" rx="16" fill="#FFFFFF" stroke="#E2E8F0"/><text class="cellTitle" x="170" y="558" text-anchor="middle">Near Cache</text><text class="cellText" x="480" y="558" text-anchor="middle">local map, then DB</text><text class="cellText" x="800" y="558" text-anchor="middle">DB + RLocalCachedMap</text><text class="cellText" x="1120" y="558" text-anchor="middle">Redis invalidation</text><rect class="badge" x="1342" y="532" width="196" height="34" fill="#DBEAFE" stroke="#93C5FD"/><text class="tag" x="1440" y="554" text-anchor="middle">multi-node hot keys</text></g>
+  <g filter="url(#shadow)"><rect x="90" y="612" width="1600" height="72" rx="16" fill="#FFFFFF" stroke="#E2E8F0"/><text class="cellTitle" x="170" y="654" text-anchor="middle">Read Through</text><text class="cellText" x="480" y="654" text-anchor="middle">Redis get-or-load</text><text class="cellText" x="800" y="654" text-anchor="middle">DB + Redis set</text><text class="cellText" x="1120" y="654" text-anchor="middle">shared Redis key</text><rect class="badge" x="1342" y="628" width="196" height="34" fill="#FEE2E2" stroke="#FCA5A5"/><text class="tag" x="1440" y="650" text-anchor="middle">explicit cache logic</text></g>
+  <g filter="url(#shadow)"><rect x="90" y="708" width="1600" height="72" rx="16" fill="#FFFFFF" stroke="#E2E8F0"/><text class="cellTitle" x="170" y="750" text-anchor="middle">Write Through</text><text class="cellText" x="480" y="750" text-anchor="middle">cache first, DB miss</text><text class="cellText" x="800" y="750" text-anchor="middle">sync DB + Redis</text><text class="cellText" x="1120" y="750" text-anchor="middle">stronger write path</text><rect class="badge" x="1342" y="724" width="196" height="34" fill="#FEF3C7" stroke="#FCD34D"/><text class="tag" x="1440" y="746" text-anchor="middle">consistency first</text></g>
+  <g filter="url(#shadow)"><rect x="90" y="804" width="1600" height="72" rx="16" fill="#FFFFFF" stroke="#E2E8F0"/><text class="cellTitle" x="170" y="846" text-anchor="middle">Write Behind</text><text class="cellText" x="480" y="846" text-anchor="middle">cache first, DB miss</text><text class="cellText" x="800" y="846" text-anchor="middle">Redis now, DB async</text><text class="cellText" x="1120" y="846" text-anchor="middle">eventual DB flush</text><rect class="badge" x="1342" y="820" width="196" height="34" fill="#FFEDD5" stroke="#FDBA74"/><text class="tag" x="1440" y="842" text-anchor="middle">bursty writes</text></g>
 </svg>

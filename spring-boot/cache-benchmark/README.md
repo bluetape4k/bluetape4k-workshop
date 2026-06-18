@@ -2,25 +2,24 @@
 
 [한국어](README.ko.md) | English
 
-## Example Scenario
+This module benchmarks seven cache strategies behind one `ProductCacheService` contract. It is meant for choosing a cache shape, not for proving that one cache is universally faster.
 
-This example exercises **cache-benchmark** as a runnable Spring Boot application feature workshop slice. It focuses on the path a developer would inspect first: configure the module, run the sample or tests, and observe the library or framework APIs that remove repetitive infrastructure code.
+- `kotlinx-benchmark` provides JMH-style warmups and iterations.
+- H2 keeps the persistence layer local and repeatable.
+- Redis is started through bluetape4k Testcontainers for Redis-backed profiles.
+- Caffeine, Spring Cache Redis, Redisson near cache, and manual read/write policies are measured with the same operations.
 
-## Architecture Diagram
+## Architecture
 
-![cache-benchmark Graphviz architecture diagram](../../docs/images/readme-diagrams/spring-boot-cache-benchmark-readme-architecture-01.png)
+![cache-benchmark architecture](../../docs/images/readme-diagrams/spring-boot-cache-benchmark-readme-architecture-01.png)
 
-The module is organized around the sample entry point or test fixture, the bluetape4k extension layer, and the runtime dependency used by the example. Keep the package under `io.bluetape4k.workshop.springboot` as the source of truth when comparing this README with the code.
-
-## Sequence Diagram
-
-Performance benchmark comparing 7 cache strategies for a Spring Boot service backed by an H2 in-memory database and Redis.
-
-Built with **kotlinx-benchmark** (JMH-based) so benchmarks reflect real JVM steady-state throughput.
+Each benchmark profile boots the Spring context with a fresh H2 database URL and Redis connection properties from `RedisServer.Launcher.redis`. The services all implement `ProductCacheService`, so the benchmark compares cache policy instead of business logic differences.
 
 ## Scenario
 
 ![7 Cache Strategy Comparison](../../docs/images/readme-diagrams/cache-benchmark-scenario-01.png)
+
+The profiles cover direct database access, local caching, shared Redis caching, two-tier near caching, explicit read-through, synchronous write-through, and asynchronous write-behind updates.
 
 ## 7 Cache Profiles
 
