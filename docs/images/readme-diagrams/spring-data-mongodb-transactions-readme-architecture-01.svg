@@ -1,146 +1,86 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="1280" viewBox="0 0 1320 1280" role="img" aria-label="mongo-transactions demo architecture diagram">
-  <metadata>{&quot;sourceEvidence&quot;:[&quot;spring-data/mongodb-transactions/src/main/kotlin/io/bluetape4k/workshop/mongodb/Process.kt&quot;,&quot;spring-data/mongodb-transactions/src/main/kotlin/io/bluetape4k/workshop/mongodb/State.kt&quot;,&quot;spring-data/mongodb-transactions/src/main/kotlin/io/bluetape4k/workshop/mongodb/coroutine/CoroutineManagedTransitionService.kt&quot;,&quot;spring-data/mongodb-transactions/src/main/kotlin/io/bluetape4k/workshop/mongodb/coroutine/CoroutineProcessRepository.kt&quot;,&quot;spring-data/mongodb-transactions/src/main/kotlin/io/bluetape4k/workshop/mongodb/imperative/ProcessRepository.kt&quot;,&quot;spring-data/mongodb-transactions/src/main/kotlin/io/bluetape4k/workshop/mongodb/imperative/TransitionService.kt&quot;,&quot;spring-data/mongodb-transactions/src/main/kotlin/io/bluetape4k/workshop/mongodb/reactive/ReactiveManagedTransitionService.kt&quot;,&quot;spring-data/mongodb-transactions/src/main/kotlin/io/bluetape4k/workshop/mongodb/reactive/ReactiveProcessRepository.kt&quot;],&quot;rendering&quot;:&quot;layered-readme-architecture&quot;,&quot;visualBaseline&quot;:&quot;graph module README architecture diagrams&quot;}</metadata>
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="980" viewBox="0 0 1800 980">
   <defs>
-    <filter id="softShadow" x="-8%" y="-8%" width="116%" height="124%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7890A5" flood-opacity="0.18"/>
-    </filter>
-    <marker id="arrow-api" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4F7DB5"/>
-    </marker>
-    <marker id="arrow-service" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#4A9667"/>
-    </marker>
-    <marker id="arrow-infra" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B18435"/>
-    </marker>
-    <marker id="arrow-bt" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#3E927D"/>
-    </marker>
-    <marker id="arrow-runtime" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="strokeWidth">
-      <path d="M 1 1 L 7 4 L 1 7 Z" fill="#B85E63"/>
-    </marker>
     <style>
-      .canvas { fill: #F8FBFD; }
-      .frame { fill: #FFFFFF; stroke: #D5E0E8; stroke-width: 1.2; }
-      .diagram-title { font-family: "Architects Daughter"; font-size: 31px; fill: #102033; }
-      .diagram-subtitle { font-family: "Comic Mono"; font-size: 14px; fill: #51606F; }
-      .layer-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .layer-detail { font-family: "Comic Mono"; font-size: 11px; fill: #536170; }
-      .node rect { stroke-width: 1.5; }
-      .node-title { font-family: "Architects Daughter"; font-size: 18px; fill: #102033; }
-      .node-detail { font-family: "Comic Mono"; font-size: 12px; fill: #465160; }
+      .canvas { fill: #fbfcff; }
+      .title { font-family: "Architects Daughter", "Comic Sans MS", cursive; font-size: 42px; fill: #102033; }
+      .subtitle { font-family: "Comic Mono", "SFMono-Regular", monospace; font-size: 16px; fill: #536270; }
+      .layer-title { font-family: "Architects Daughter", "Comic Sans MS", cursive; font-size: 28px; fill: #263445; }
+      .card-title { font-family: "Architects Daughter", "Comic Sans MS", cursive; font-size: 27px; fill: #102033; }
+      .card-small { font-family: "Comic Mono", "SFMono-Regular", monospace; font-size: 15px; fill: #394959; }
+      .layer-test { fill: #eef6ff; stroke: #9cc8ff; }
+      .layer-service { fill: #eefaf2; stroke: #9ad8ae; }
+      .layer-tx { fill: #fff8eb; stroke: #ffc879; }
+      .layer-runtime { fill: #fff1f0; stroke: #ffaaa3; }
+      .card-blue { fill: #ffffff; stroke: #2f6df6; }
+      .card-green { fill: #ffffff; stroke: #18964a; }
+      .card-orange { fill: #ffffff; stroke: #f07d22; }
+      .card-red { fill: #ffffff; stroke: #f04438; }
+      .line-blue { fill: none; stroke: #2f6df6; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+      .line-green { fill: none; stroke: #18a558; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+      .line-orange { fill: none; stroke: #f07d22; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+      .line-red { fill: none; stroke: #f04438; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
     </style>
+    <marker id="mt-blue" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6"/></marker>
+    <marker id="mt-green" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558"/></marker>
+    <marker id="mt-orange" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22"/></marker>
+    <marker id="mt-red" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438"/></marker>
   </defs>
-  <rect class="canvas" width="1320" height="1280"/>
-  <rect class="frame" x="16" y="16" width="1288" height="1248" rx="22"/>
-  <text class="diagram-title" x="660.0" y="58" text-anchor="middle">mongo-transactions demo</text>
-  <text class="diagram-subtitle" x="660.0" y="84" text-anchor="middle">Spring Data repositories, reactive APIs, and backing stores</text>
-  <g>
-    <g class="layer" data-layer="surface">
-      <rect x="46.0" y="114.0" width="1228.0" height="270.0" rx="18" fill="#EAF3FF" stroke="#9AB7D9"/>
-      <rect x="64.0" y="134.0" width="174" height="230.0" rx="14" fill="#FFFFFF" stroke="#9AB7D9" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="221.5">Data Access</tspan><tspan class="layer-title" x="151.0" y="244.5">Surface</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="271.0">apps, handlers,</tspan><tspan class="layer-detail" x="151.0" y="287.0">repository tests</tspan></text>
-    </g>
-    <g class="layer" data-layer="service">
-      <rect x="46.0" y="402.0" width="1228.0" height="270.0" rx="18" fill="#EAF7F0" stroke="#9CC7AE"/>
-      <rect x="64.0" y="422.0" width="174" height="230.0" rx="14" fill="#FFFFFF" stroke="#9CC7AE" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="509.5">Data Service</tspan><tspan class="layer-title" x="151.0" y="532.5">Layer</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="551.0">query use cases,</tspan><tspan class="layer-detail" x="151.0" y="567.0">transaction</tspan><tspan class="layer-detail" x="151.0" y="583.0">boundaries</tspan></text>
-    </g>
-    <g class="layer" data-layer="integration">
-      <rect x="46.0" y="690.0" width="1228.0" height="380.0" rx="18" fill="#FFF6E5" stroke="#D9B978"/>
-      <rect x="64.0" y="710.0" width="174" height="340.0" rx="14" fill="#FFFFFF" stroke="#D9B978" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="852.5">Repository</tspan><tspan class="layer-title" x="151.0" y="875.5">Integration</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="902.0">Spring Data, R2DBC,</tspan><tspan class="layer-detail" x="151.0" y="918.0">Mongo, Redis</tspan></text>
-    </g>
-    <g class="layer" data-layer="runtime">
-      <rect x="46.0" y="1088.0" width="1228.0" height="132.0" rx="18" fill="#F3F5F8" stroke="#B5C0CB"/>
-      <rect x="64.0" y="1108.0" width="174" height="92.0" rx="14" fill="#FFFFFF" stroke="#B5C0CB" opacity="0.92"/>
-      <text text-anchor="middle"><tspan class="layer-title" x="151.0" y="1138.0">Database Runtime</tspan></text>
-      <text text-anchor="middle"><tspan class="layer-detail" x="151.0" y="1168.0">SQL, MongoDB,</tspan><tspan class="layer-detail" x="151.0" y="1184.0">Elasticsearch,</tspan><tspan class="layer-detail" x="151.0" y="1200.0">Redis</tspan></text>
-    </g>
-    <g class="edge" data-edge="entry3-&gt;service0" data-label="starts">
-      <path d="M 424.0 364.0 L 424.0 393.0 L 424.0 422.0" fill="none" stroke="#4A9667" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-service)"/>
-    </g>
-    <g class="edge" data-edge="service3-&gt;infra0" data-label="persists / publishes">
-      <path d="M 424.0 652.0 L 424.0 684.5 L 424.0 717.0" fill="none" stroke="#B18435" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-infra)"/>
-    </g>
-    <g class="edge" data-edge="bt2-&gt;runtime0" data-label="adapts">
-      <path d="M 760.0 1050.0 L 760.0 1079.0 L 592.0 1079.0 L 592.0 1108.0" fill="none" stroke="#B85E63" stroke-width="2.1" stroke-linecap="square" stroke-linejoin="round" marker-end="url(#arrow-runtime)"/>
-    </g>
-    <g class="node" data-node="entry0" data-lines="Abstract Mongodb Test | mongodb">
-      <rect x="274.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="183.5">Abstract Mongodb Test</tspan><tspan class="node-detail" x="424.0" y="207.5">mongodb</tspan></text>
-    </g>
-    <g class="node" data-node="entry1" data-lines="Coroutine Managed | Transition Service Test | coroutine">
-      <rect x="610.0" y="134.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="171.5">Coroutine Managed</tspan><tspan class="node-title" x="760.0" y="195.5">Transition Service Test</tspan><tspan class="node-detail" x="760.0" y="219.5">coroutine</tspan></text>
-    </g>
-    <g class="node" data-node="entry2" data-lines="Transition Service Test | imperative">
-      <rect x="946.0" y="141.0" width="300.0" height="92.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="183.5">Transition Service Test</tspan><tspan class="node-detail" x="1096.0" y="207.5">imperative</tspan></text>
-    </g>
-    <g class="node" data-node="entry3" data-lines="Reactive Managed | Transition Service Test | reactive">
-      <rect x="274.0" y="258.0" width="300.0" height="106.0" rx="14" fill="#FFF8E7" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="295.5">Reactive Managed</tspan><tspan class="node-title" x="424.0" y="319.5">Transition Service Test</tspan><tspan class="node-detail" x="424.0" y="343.5">reactive</tspan></text>
-    </g>
-    <g class="node" data-node="service0" data-lines="Coroutine Managed | Transition Service | service component">
-      <rect x="274.0" y="422.0" width="300.0" height="106.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="459.5">Coroutine Managed</tspan><tspan class="node-title" x="424.0" y="483.5">Transition Service</tspan><tspan class="node-detail" x="424.0" y="507.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="service1" data-lines="Transition Service | service component">
-      <rect x="610.0" y="429.0" width="300.0" height="92.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="471.5">Transition Service</tspan><tspan class="node-detail" x="760.0" y="495.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="service2" data-lines="Reactive Managed | Transition Service | service component">
-      <rect x="946.0" y="422.0" width="300.0" height="106.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="459.5">Reactive Managed</tspan><tspan class="node-title" x="1096.0" y="483.5">Transition Service</tspan><tspan class="node-detail" x="1096.0" y="507.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="service3" data-lines="Reactive Transition | Service | service component">
-      <rect x="274.0" y="546.0" width="300.0" height="106.0" rx="14" fill="#F1F8E9" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="583.5">Reactive Transition</tspan><tspan class="node-title" x="424.0" y="607.5">Service</tspan><tspan class="node-detail" x="424.0" y="631.5">service component</tspan></text>
-    </g>
-    <g class="node" data-node="infra0" data-lines="Process | mongodb">
-      <rect x="274.0" y="717.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="759.5">Process</tspan><tspan class="node-detail" x="424.0" y="783.5">mongodb</tspan></text>
-    </g>
-    <g class="node" data-node="infra1" data-lines="State | mongodb">
-      <rect x="610.0" y="717.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="759.5">State</tspan><tspan class="node-detail" x="760.0" y="783.5">mongodb</tspan></text>
-    </g>
-    <g class="node" data-node="infra2" data-lines="Coroutine Process | Repository | repository">
-      <rect x="946.0" y="710.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="747.5">Coroutine Process</tspan><tspan class="node-title" x="1096.0" y="771.5">Repository</tspan><tspan class="node-detail" x="1096.0" y="795.5">repository</tspan></text>
-    </g>
-    <g class="node" data-node="infra3" data-lines="Process Repository | repository">
-      <rect x="274.0" y="841.0" width="300.0" height="92.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="883.5">Process Repository</tspan><tspan class="node-detail" x="424.0" y="907.5">repository</tspan></text>
-    </g>
-    <g class="node" data-node="infra4" data-lines="Reactive Process | Repository | repository">
-      <rect x="610.0" y="834.0" width="300.0" height="106.0" rx="14" fill="#F5F0FF" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="871.5">Reactive Process</tspan><tspan class="node-title" x="760.0" y="895.5">Repository</tspan><tspan class="node-detail" x="760.0" y="919.5">repository</tspan></text>
-    </g>
-    <g class="node" data-node="bt0" data-lines="testcontainers | bluetape4k Data APIs">
-      <rect x="946.0" y="841.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="1096.0" y="883.5">testcontainers</tspan><tspan class="node-detail" x="1096.0" y="907.5">bluetape4k Data APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt1" data-lines="coroutines | bluetape4k Data APIs">
-      <rect x="274.0" y="958.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="424.0" y="1000.5">coroutines</tspan><tspan class="node-detail" x="424.0" y="1024.5">bluetape4k Data APIs</tspan></text>
-    </g>
-    <g class="node" data-node="bt2" data-lines="idgenerators | bluetape4k Data APIs">
-      <rect x="610.0" y="958.0" width="300.0" height="92.0" rx="14" fill="#EAF7F0" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="760.0" y="1000.5">idgenerators</tspan><tspan class="node-detail" x="760.0" y="1024.5">bluetape4k Data APIs</tspan></text>
-    </g>
-    <g class="node" data-node="runtime0" data-lines="MongoDB | Database Runtime">
-      <rect x="442.0" y="1108.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="592.0" y="1150.5">MongoDB</tspan><tspan class="node-detail" x="592.0" y="1174.5">Database Runtime</tspan></text>
-    </g>
-    <g class="node" data-node="runtime1" data-lines="Testcontainers | Database Runtime">
-      <rect x="778.0" y="1108.0" width="300.0" height="92.0" rx="14" fill="#FFF1F1" stroke="#8FA6B6" filter="url(#softShadow)"/>
-      <text text-anchor="middle"><tspan class="node-title" x="928.0" y="1150.5">Testcontainers</tspan><tspan class="node-detail" x="928.0" y="1174.5">Database Runtime</tspan></text>
-    </g>
-  </g>
+  <rect class="canvas" x="0" y="0" width="1800" height="980"/>
+  <rect x="24" y="24" width="1752" height="932" rx="22" fill="#ffffff" stroke="#d7e0eb" stroke-width="2"/>
+  <text class="title" x="900" y="72" text-anchor="middle">MongoDB transaction styles</text>
+  <text class="subtitle" x="900" y="102" text-anchor="middle">Three service styles update the same Process document and verify commit versus rollback behavior.</text>
+
+  <rect class="layer-test" x="80" y="140" width="1640" height="160" rx="18" stroke-width="2"/>
+  <text class="layer-title" x="112" y="184">Test contexts</text>
+  <rect class="card-blue" x="150" y="215" width="310" height="66" rx="10" stroke-width="2"/>
+  <text class="card-title" x="305" y="243" text-anchor="middle">Imperative test</text>
+  <text class="card-small" x="305" y="265" text-anchor="middle">blocking MongoClient</text>
+  <rect class="card-blue" x="575" y="215" width="310" height="66" rx="10" stroke-width="2"/>
+  <text class="card-title" x="730" y="243" text-anchor="middle">Reactive test</text>
+  <text class="card-small" x="730" y="265" text-anchor="middle">reactive MongoClient</text>
+  <rect class="card-blue" x="1000" y="215" width="310" height="66" rx="10" stroke-width="2"/>
+  <text class="card-title" x="1155" y="243" text-anchor="middle">Coroutine test</text>
+  <text class="card-small" x="1155" y="265" text-anchor="middle">runSuspendIO assertions</text>
+
+  <rect class="layer-service" x="80" y="340" width="1640" height="205" rx="18" stroke-width="2"/>
+  <text class="layer-title" x="112" y="384">Transition services</text>
+  <rect class="card-green" x="135" y="430" width="330" height="82" rx="10" stroke-width="2"/>
+  <text class="card-title" x="300" y="463" text-anchor="middle">TransitionService</text>
+  <text class="card-small" x="300" y="488" text-anchor="middle">@Transactional fun run</text>
+  <rect class="card-green" x="535" y="430" width="330" height="82" rx="10" stroke-width="2"/>
+  <text class="card-title" x="700" y="463" text-anchor="middle">ReactiveTransition</text>
+  <text class="card-small" x="700" y="488" text-anchor="middle">Mono chain without AOP tx</text>
+  <rect class="card-green" x="935" y="430" width="330" height="82" rx="10" stroke-width="2"/>
+  <text class="card-title" x="1100" y="463" text-anchor="middle">ReactiveManaged</text>
+  <text class="card-small" x="1100" y="488" text-anchor="middle">@Transactional Mono</text>
+  <rect class="card-green" x="1335" y="430" width="330" height="82" rx="10" stroke-width="2"/>
+  <text class="card-title" x="1500" y="463" text-anchor="middle">CoroutineManaged</text>
+  <text class="card-small" x="1500" y="488" text-anchor="middle">@Transactional suspend</text>
+
+  <rect class="layer-tx" x="80" y="585" width="1640" height="150" rx="18" stroke-width="2"/>
+  <text class="layer-title" x="112" y="629">Transaction managers and repositories</text>
+  <rect class="card-orange" x="180" y="660" width="360" height="54" rx="10" stroke-width="2"/>
+  <text class="card-title" x="360" y="695" text-anchor="middle">MongoTransactionManager</text>
+  <rect class="card-orange" x="700" y="660" width="410" height="54" rx="10" stroke-width="2"/>
+  <text class="card-title" x="905" y="695" text-anchor="middle">ReactiveMongoTransactionManager</text>
+  <rect class="card-orange" x="1270" y="660" width="320" height="54" rx="10" stroke-width="2"/>
+  <text class="card-title" x="1430" y="695" text-anchor="middle">Process repositories</text>
+
+  <rect class="layer-runtime" x="80" y="775" width="1640" height="120" rx="18" stroke-width="2"/>
+  <text class="layer-title" x="112" y="818">Runtime</text>
+  <rect class="card-red" x="610" y="810" width="580" height="64" rx="10" stroke-width="2"/>
+  <g transform="translate(650 822)"><path d="M 32 0 C 12 24 15 50 33 64 C 51 46 51 20 32 0 Z" fill="#13aa52" stroke="#0f8d45" stroke-width="2"/><path d="M 33 12 C 30 27 31 43 34 58" fill="none" stroke="#ffffff" stroke-width="2.5"/></g>
+  <text class="card-title" x="930" y="840" text-anchor="middle">MongoDB Testcontainer</text>
+  <text class="card-small" x="930" y="864" text-anchor="middle">replica-set capable transaction runtime</text>
+
+  <path class="line-blue" d="M 305 281 L 305 418" marker-end="url(#mt-blue)"/>
+  <path class="line-blue" d="M 730 281 L 730 418" marker-end="url(#mt-blue)"/>
+  <path class="line-blue" d="M 1155 281 L 1500 281 L 1500 418" marker-end="url(#mt-blue)"/>
+  <path class="line-green" d="M 300 512 L 300 640 L 360 640 L 360 648" marker-end="url(#mt-green)"/>
+  <path class="line-green" d="M 1100 512 L 1100 640 L 905 640 L 905 648" marker-end="url(#mt-green)"/>
+  <path class="line-green" d="M 1500 512 L 1500 640 L 905 640 L 905 648" marker-end="url(#mt-green)"/>
+  <path class="line-green" d="M 700 512 L 700 640 L 1430 640 L 1430 648" marker-end="url(#mt-green)"/>
+  <path class="line-orange" d="M 360 714 L 360 755 L 830 755 L 830 798" marker-end="url(#mt-orange)"/>
+  <path class="line-orange" d="M 905 714 L 905 798" marker-end="url(#mt-orange)"/>
+  <path class="line-orange" d="M 1430 714 L 1430 755 L 1030 755 L 1030 798" marker-end="url(#mt-orange)"/>
 </svg>

@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="980" viewBox="0 0 1800 980">
+  <defs>
+    <style>
+      .canvas { fill: #fbfcff; }
+      .title { font-family: "Architects Daughter", "Comic Sans MS", cursive; font-size: 42px; fill: #102033; }
+      .subtitle { font-family: "Comic Mono", "SFMono-Regular", monospace; font-size: 16px; fill: #536270; }
+      .card-title { font-family: "Architects Daughter", "Comic Sans MS", cursive; font-size: 28px; fill: #102033; }
+      .card-small { font-family: "Comic Mono", "SFMono-Regular", monospace; font-size: 15px; fill: #394959; }
+      .label { font-family: "Comic Mono", "SFMono-Regular", monospace; font-size: 15px; fill: #314050; }
+      .card-blue { fill: #ffffff; stroke: #2f6df6; }
+      .card-green { fill: #ffffff; stroke: #18964a; }
+      .card-orange { fill: #ffffff; stroke: #f07d22; }
+      .card-red { fill: #ffffff; stroke: #f04438; }
+      .line-blue { fill: none; stroke: #2f6df6; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+      .line-green { fill: none; stroke: #18a558; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+      .line-orange { fill: none; stroke: #f07d22; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+      .line-red { fill: none; stroke: #f04438; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+      .label-box { fill: #ffffff; stroke: #d5dfec; stroke-width: 1.5; }
+      .band { fill: #f7fbff; stroke: #bfd7ff; stroke-width: 2; }
+    </style>
+    <marker id="mtf-blue" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#2f6df6"/></marker>
+    <marker id="mtf-green" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#18a558"/></marker>
+    <marker id="mtf-orange" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#f07d22"/></marker>
+    <marker id="mtf-red" viewBox="0 0 14 14" refX="12" refY="7" markerWidth="12" markerHeight="12" orient="auto" markerUnits="userSpaceOnUse"><path d="M 1 1 L 13 7 L 1 13 Z" fill="#f04438"/></marker>
+  </defs>
+  <rect class="canvas" x="0" y="0" width="1800" height="980"/>
+  <rect x="24" y="24" width="1752" height="932" rx="22" fill="#ffffff" stroke="#d7e0eb" stroke-width="2"/>
+  <text class="title" x="900" y="76" text-anchor="middle">Process transaction state flow</text>
+  <text class="subtitle" x="900" y="108" text-anchor="middle">start and finish update the document; verify decides whether the transaction commits or rolls back.</text>
+
+  <rect class="band" x="90" y="155" width="1620" height="690" rx="18"/>
+
+  <rect class="card-blue" x="130" y="270" width="260" height="96" rx="12" stroke-width="2.2"/>
+  <text class="card-title" x="260" y="309" text-anchor="middle">newProcess()</text>
+  <text class="card-small" x="260" y="338" text-anchor="middle">state = CREATED</text>
+
+  <rect class="card-orange" x="510" y="270" width="260" height="96" rx="12" stroke-width="2.2"/>
+  <text class="card-title" x="640" y="309" text-anchor="middle">start()</text>
+  <text class="card-small" x="640" y="338" text-anchor="middle">ACTIVE, count +1</text>
+
+  <rect class="card-orange" x="890" y="270" width="260" height="96" rx="12" stroke-width="2.2"/>
+  <text class="card-title" x="1020" y="309" text-anchor="middle">verify()</text>
+  <text class="card-small" x="1020" y="338" text-anchor="middle">id % 3 check</text>
+
+  <rect class="card-green" x="1270" y="190" width="300" height="96" rx="12" stroke-width="2.2"/>
+  <text class="card-title" x="1420" y="229" text-anchor="middle">finish()</text>
+  <text class="card-small" x="1420" y="258" text-anchor="middle">DONE, count +1</text>
+
+  <rect class="card-red" x="1270" y="430" width="300" height="96" rx="12" stroke-width="2.2"/>
+  <text class="card-title" x="1420" y="469" text-anchor="middle">rollback</text>
+  <text class="card-small" x="1420" y="498" text-anchor="middle">stored state = CREATED</text>
+
+  <rect class="card-green" x="660" y="655" width="480" height="88" rx="12" stroke-width="2.2"/>
+  <text class="card-title" x="900" y="690" text-anchor="middle">Transaction boundary</text>
+  <text class="card-small" x="900" y="718" text-anchor="middle">MongoTransactionManager or ReactiveMongoTransactionManager</text>
+
+  <path class="line-blue" d="M 390 318 L 498 318" marker-end="url(#mtf-blue)"/>
+  <path class="line-orange" d="M 770 318 L 878 318" marker-end="url(#mtf-orange)"/>
+  <path class="line-green" d="M 1150 318 L 1215 318 L 1215 238 L 1258 238" marker-end="url(#mtf-green)"/>
+  <path class="line-red" d="M 1150 318 L 1215 318 L 1215 478 L 1258 478" marker-end="url(#mtf-red)"/>
+
+  <rect class="label-box" x="1190" y="286" width="160" height="34" rx="8"/>
+  <text class="label" x="1270" y="308" text-anchor="middle">verify passes</text>
+  <rect class="label-box" x="1180" y="382" width="190" height="34" rx="8"/>
+  <text class="label" x="1275" y="404" text-anchor="middle">id % 3 == 0 fails</text>
+
+  <path class="line-blue" d="M 260 366 L 260 610 L 660 610 L 660 643" marker-end="url(#mtf-blue)"/>
+  <path class="line-orange" d="M 640 366 L 640 610 L 790 610 L 790 643" marker-end="url(#mtf-orange)"/>
+  <path class="line-orange" d="M 1020 366 L 1020 610 L 900 610 L 900 643" marker-end="url(#mtf-orange)"/>
+  <path class="line-green" d="M 1420 286 L 1420 610 L 1040 610 L 1040 643" marker-end="url(#mtf-green)"/>
+</svg>
